@@ -87,7 +87,7 @@
 
 - (void)deleteFromGecko;
 {
-  nsCOMPtr<nsIBrowserHistory> historyService = do_GetService("@mozilla.org/browser/global-history;1");
+  nsCOMPtr<nsIBrowserHistory> historyService = do_GetService("@mozilla.org/browser/global-history;2");
   if( !historyService )
     return;
 
@@ -136,25 +136,30 @@
   
   if( !mChildNodes ) [self nativeBuildChildCache];
   
-  HistoryItem * firstChild = [mChildNodes objectAtIndex:0];
-  if( [firstChild nativeIsExpandable] ) {
-    HistoryItem * grandChild = [firstChild nativeChildAtIndex:0];
-    //is it a leaf node?
-    if( ![grandChild nativeIsExpandable] )
-      return YES;
+  if ( [mChildNodes count] ) {
+    HistoryItem * firstChild = [mChildNodes objectAtIndex:0];
+    if( [firstChild nativeIsExpandable] ) {
+      HistoryItem * grandChild = [firstChild nativeChildAtIndex:0];
+      //is it a leaf node?
+      if( ![grandChild nativeIsExpandable] )
+        return YES;
+    }
   }
   return NO;
 }
 
 - (HistoryItem*)childAtIndex:(int)index;
 {
-  if( !kFlattenHistory )
+  if ( !kFlattenHistory )
     return [super childAtIndex:index];
-  if( ![self shouldUseGrandChildNodes] )
+  if ( ![self shouldUseGrandChildNodes] )
     return [super childAtIndex:index];
-  if( !mGrandChildNodes )
+  if ( !mGrandChildNodes )
     [self buildGrandChildCache];
-  return [mGrandChildNodes objectAtIndex:index];
+  HistoryItem* child = nil;
+  if (index < [mGrandChildNodes count])
+    child = [mGrandChildNodes objectAtIndex:index];
+  return child;
 }
 
 - (int)numChildren;
@@ -191,7 +196,8 @@
     int grandChildCount = [curChild nativeNumChildren];
     for( int j=0; j < grandChildCount; j++ ) {
       HistoryItem * curGrandChild = [curChild nativeChildAtIndex:j];
-      [grandChildNodes addObject:curGrandChild];
+      if (curGrandChild)
+        [grandChildNodes addObject:curGrandChild];
     }
   }
   NSArray * sorted = [grandChildNodes sortedArrayUsingSelector:@selector(historyItemDateCompare:)];

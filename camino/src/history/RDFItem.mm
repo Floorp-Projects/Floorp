@@ -173,9 +173,12 @@
 // 0- based
 - (RDFItem*)childAtIndex:(int)index;
 {
-  if( !mChildNodes )
+  RDFItem* child = nil;
+  if (!mChildNodes)
     [self buildChildCache];
-  return [mChildNodes objectAtIndex:index];
+  if (index < [mChildNodes count])
+    child = [mChildNodes objectAtIndex:index];
+  return child;
 }
 
 - (void)buildChildCache;

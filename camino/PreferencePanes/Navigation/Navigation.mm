@@ -200,7 +200,7 @@ const int kDefaultExpireDays = 9;
 //
 - (IBAction)clearGlobalHistory:(id)sender
 {
-  nsCOMPtr<nsIBrowserHistory> hist ( do_GetService("@mozilla.org/browser/global-history;1") );
+  nsCOMPtr<nsIBrowserHistory> hist ( do_GetService("@mozilla.org/browser/global-history;2") );
   if ( hist )
     hist->RemoveAllPages();
 }

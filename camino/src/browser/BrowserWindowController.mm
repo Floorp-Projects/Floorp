@@ -282,7 +282,7 @@ static NSArray* sToolbarDefaults = nil;
     NSArray* returnTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
     
-    nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;1");
+    nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;2");
     mGlobalHistory = globalHist;
     if ( mGlobalHistory )
       NS_ADDREF(mGlobalHistory);
