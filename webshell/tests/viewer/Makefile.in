@@ -55,21 +55,6 @@ EXPORT_RESOURCE_THROBBER := \
 	$(wildcard $(srcdir)/throbber/anim*.gif) \
 	$(NULL)
 
-TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_GFX_TOOLKIT)
-TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_WIDGET_TOOLKIT)
-
-ifeq ($(MOZ_GFX_TOOLKIT),xlib)
-TOOLKIT_GFX_XLIBRGB_LIB := -lxlibrgb
-endif
-
-# Hardcoding dlopen()'s?  This needs to get fixed.
-#
-TOOLKIT_CFLAGS := \
-	-DWIDGET_DLL=\"libwidget$(MOZ_WIDGET_TOOLKIT).$(DLL_SUFFIX)\" \
-	-DGFXWIN_DLL=\"libgfx$(MOZ_GFX_TOOLKIT).$(DLL_SUFFIX)\" \
-	$(TK_CFLAGS)
-
-
 TOOLKIT_CPPSRCS_beos := \
 	nsBeOSMain.cpp
 
@@ -127,10 +112,9 @@ BASE_LIBS =	     \
 
 GECKO_LIBS =			\
 	-lraptorwebwidget	\
-	$(TOOLKIT_WIDGET_LIB)	\
+	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 	-lraptorgfx		\
-	$(TOOLKIT_GFX_LIB)	\
-	$(TOOLKIT_GFX_XLIBRGB_LIB) \
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lraptorhtmlpars	\
 	-lexpat			\
 	-lxmltok		\
@@ -181,7 +165,7 @@ LIBS =		       \
 
 include $(topsrcdir)/config/config.mk
 
-CXXFLAGS += $(TOOLKIT_CFLAGS)
+CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -192,4 +176,3 @@ install:: $(PROGRAM) $(RUN_VIEWER_SCRIPT)
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
 	$(INSTALL) $(RUN_VIEWER_SCRIPT) $(DIST)/bin
-

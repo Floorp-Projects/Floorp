@@ -25,13 +25,6 @@ include $(topsrcdir)/config/config.mk
 
 PROGRAM = widget
 
-# Hardcoding dlopen()'s?  This needs to get fixed.
-#
-TOOLKIT_CXXFLAGS := \
-	-DWIDGET_DLL=\"libwidget$(MOZ_WIDGET_TOOLKIT).$(DLL_SUFFIX)\" \
-	-DGFX_DLL=\"libgfx$(MOZ_GFX_TOOLKIT).$(DLL_SUFFIX)\" \
-	$(TK_CFLAGS)
-
 CPPSRCS = \
 	main.cpp	 \
 	nsWidgetTest.cpp \
@@ -61,7 +54,6 @@ NET_LIBS = 	\
 endif
 
 LIBS = \
-	-lraptorgfx \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
@@ -71,24 +63,22 @@ LIBS = \
 	-lxpcom \
 	-lreg \
 	-l$(MOZ_LIB_JS_PREFIX)js \
-	-lwidget$(MOZ_WIDGET_TOOLKIT) \
-	-lgfx$(MOZ_GFX_TOOLKIT)    \
-	$(TK_LIBS) \
+	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 	-lraptorgfx \
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lxp \
 	-lraptorhtmlpars \
 	-lexpat \
 	-lxmltok \
 	-ljsurl \
 	-ljsdom \
-	-lraptorgfx \
 	$(NET_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
 
 CFLAGS += $(TOOLKIT_CFLAGS)
-CXXFLAGS += $(TOOLKIT_CXXFLAGS)
+CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
