@@ -17,6 +17,7 @@
  */
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
+#include "nsIHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIAtom.h"
 #include "nsIArena.h"
@@ -27,6 +28,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsDOMNodeList.h"
 #include "nsUnitConversion.h"
 #include "nsStyleUtil.h"
@@ -35,6 +37,9 @@
 #include "nsISizeOfHandler.h"
 
 #include "nsCSSInlineFrame.h"
+
+
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 nsresult
 NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
@@ -466,6 +471,21 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
+    if (aAttribute == nsHTMLAtoms::link) {
+      ParseColor(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::alink) {
+      ParseColor(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::vlink) {
+      ParseColor(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
   }
 
   // Use default attribute catching code
@@ -620,8 +640,10 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
               size = 3 + size;  // XXX should be BASEFONT, not three
             }
             size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normal.size);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normalFixed.size);
+            PRInt32 scaler = aPresContext->GetFontScaler();
+            float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normal.size, scaleFactor);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normalFixed.size, scaleFactor);
           }
         }
       }
@@ -769,6 +791,36 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         color->mColor = value.GetColorValue();
         aPresContext->SetDefaultColor(color->mColor);
       }
+
+      nsIHTMLDocument*  htmlDoc;
+      if (NS_OK == mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc)) {
+        nsIHTMLStyleSheet* styleSheet;
+        if (NS_OK == htmlDoc->GetAttributeStyleSheet(&styleSheet)) {
+          GetAttribute(nsHTMLAtoms::link, value);
+          if (eHTMLUnit_Color == value.GetUnit()) {
+            styleSheet->SetLinkColor(value.GetColorValue());
+          }
+
+          GetAttribute(nsHTMLAtoms::alink, value);
+          if (eHTMLUnit_Color == value.GetUnit()) {
+            styleSheet->SetActiveLinkColor(value.GetColorValue());
+          }
+
+          GetAttribute(nsHTMLAtoms::vlink, value);
+          if (eHTMLUnit_Color == value.GetUnit()) {
+            styleSheet->SetVisitedLinkColor(value.GetColorValue());
+          }
+        }
+      }
+
+      // set up the basefont (defaults to 3)
+      nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+      const nsFont& normal = aPresContext->GetDefaultFont(); 
+      const nsFont& normalFixed = aPresContext->GetDefaultFixedFont(); 
+      PRInt32 scaler = aPresContext->GetFontScaler();
+      float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+      font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)normal.size, scaleFactor);
+      font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)normalFixed.size, scaleFactor);
     }
   }
 }
