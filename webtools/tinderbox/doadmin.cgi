@@ -118,7 +118,8 @@ sub create_tree {
     $treename = $form{'treename'};
     my $repository = $form{'repository'};
     $modulename = $form{'modulename'};
-    $branchname = $form{'branchname'};
+    @branchlist = split(' ', $form{'branchname'});
+    @branchlist = ('HEAD') if (!$#branchlist);
 
     if( -r $treename ){
         chmod 0777, $treename;
@@ -128,7 +129,7 @@ sub create_tree {
     }
     open( F, ">$treename/treedata.pl" );
     print F "\$cvs_module='$modulename';\n";
-    print F "\$cvs_branch='$branchname';\n";
+    print F "\$cvs_branchlist='@branchlist';\n";
     if ($repository ne "") {
         print F "\$cvs_root='$repository';\n";
     }
