@@ -98,6 +98,11 @@
       lifetimeDays.disabled = true;
   }
 
+  function viewTutorial() {
+    window.openDialog
+      ("chrome://communicator/content/wallet/privacy.xul","tutorial","modal=no,chrome,resizable=yes,height=400,width=600", 0);
+  }  
+
   ]]>
   </script>
 
