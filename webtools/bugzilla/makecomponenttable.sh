@@ -53,7 +53,7 @@ insert into components (value, program, initialowner) values ("LDAP Tools", "Dir
 insert into components (value, program, initialowner) values ("Macintosh FE", "Mozilla", "sdagley@netscape.com");
 insert into components (value, program, initialowner) values ("Windows FE", "Mozilla", "blythe@netscape.com");
 insert into components (value, program, initialowner) values ("XFE", "Mozilla", "ramiro@netscape.com");
-insert into components (value, program, initialowner) values ("StubFE", "Mozilla", "toshok@netscape.com");
+insert into components (value, program, initialowner) values ("StubFE", "Mozilla", "rickg@netscape.com");
 insert into components (value, program, initialowner) values ("Aurora/RDF FE", "Mozilla", "don@netscape.com");
 insert into components (value, program, initialowner) values ("Aurora/RDF BE", "Mozilla", "guha@netscape.com");
 insert into components (value, program, initialowner) values ("Berkeley DB", "Mozilla", "montulli@netscape.com");
@@ -74,7 +74,7 @@ insert into components (value, program, initialowner) values ("Java Stubs", "Moz
 insert into components (value, program, initialowner) values ("JavaScript", "Mozilla", "mccabe@netscape.com");
 insert into components (value, program, initialowner) values ("JavaScript Debugger", "Mozilla", "jband@netscape.com");
 insert into components (value, program, initialowner) values ("JavaScript/Java Reflection", "Mozilla", "fur@netscape.com");
-insert into components (value, program, initialowner) values ("Layout", "Mozilla", "toshok@netscape.com");
+insert into components (value, program, initialowner) values ("Layout", "Mozilla", "rickg@netscape.com");
 insert into components (value, program, initialowner) values ("LibMocha", "Mozilla", "mlm@netscape.com");
 insert into components (value, program, initialowner) values ("MIMELib", "Mozilla", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("NetLib", "Mozilla", "gagan@netscape.com");
@@ -92,7 +92,7 @@ insert into components (value, program, initialowner) values ("XML", "Mozilla", 
 insert into components (value, program, initialowner) values ("XP-COM", "Mozilla", "scullin@netscape.com");
 insert into components (value, program, initialowner) values ("XP File Handling", "Mozilla", "atotic@netscape.com");
 insert into components (value, program, initialowner) values ("XP Miscellany", "Mozilla", "brendan@netscape.com");
-insert into components (value, program, initialowner) values ("XP Utilities", "Mozilla", "toshok@netscape.com");
+insert into components (value, program, initialowner) values ("XP Utilities", "Mozilla", "rickg@netscape.com");
 insert into components (value, program, initialowner) values ("Zlib", "Mozilla", "pnunn@netscape.com");
 
 
