@@ -91,6 +91,7 @@ Rights Reserved.
 
   <keyset id="mailKeys">
     <keyset id="tasksKeys"/>
+    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
   </keyset>
 
   <popupset>
