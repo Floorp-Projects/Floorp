@@ -27,6 +27,8 @@
 #include "nsICSSRule.h"
 #include "nsString.h"
 
+class nsISizeOfHandler;
+
 class nsIAtom;
 class nsIArena;
 class nsICSSDeclaration;
@@ -58,6 +60,8 @@ public:
   ~nsAttrSelector(void);
   PRBool Equals(const nsAttrSelector* aOther) const;
 
+  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
   PRInt32         mNameSpace;
   nsIAtom*        mAttr;
   PRUint8         mFunction;
@@ -88,7 +92,9 @@ public:
   void SetOperator(PRUnichar aOperator);
 
   PRInt32 CalcWeight(void) const;
-  
+
+  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
 public:
   PRInt32         mNameSpace;
   nsIAtom*        mTag;

@@ -1550,7 +1550,7 @@ nsGenericHTMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
   sum += (PRUint32) aInstanceSize;
   if (mAttributes) {
     PRUint32 attrs = 0;
-    mAttributes->SizeOf(aSizer, &attrs);
+    mAttributes->SizeOf(aSizer, attrs);
     sum += attrs;
   }
 #endif

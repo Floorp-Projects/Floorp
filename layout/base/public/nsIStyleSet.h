@@ -36,6 +36,8 @@ class nsIFrame;
 class nsIDocument;
 class nsIFrameManager;
 
+#include "nsVoidArray.h"
+class nsISizeOfHandler;
 
 // IID for the nsIStyleSet interface {e59396b0-b244-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SET_IID     \
@@ -180,9 +182,80 @@ public:
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
+  virtual void ResetUniqueStyleItems(void) = 0;
+
+#ifdef DEBUG_SC_SHARING
+  // add and remove from the cache of all contexts
+  NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext) = 0;
+  NS_IMETHOD RemoveStyleContext(nsIStyleContext *aNewStyleContext) = 0;
+#endif
 };
 
 extern NS_LAYOUT nsresult
   NS_NewStyleSet(nsIStyleSet** aInstancePtrResult);
+
+
+#define kUniqueItemsStartSize 128
+
+class nsUniqueStyleItems : private nsVoidArray
+{
+public :
+  // return a singleton instance of the nsUniqueStyleItems object
+  static nsUniqueStyleItems *GetUniqueStyleItems( void ){
+    if(mInstance == nsnull){
+      nsUniqueStyleItems *pInstance = new nsUniqueStyleItems;
+      NS_ASSERTION(pInstance == mInstance, "Singleton?");
+    }
+    return mInstance;
+  }
+  
+  void *GetItem(void *aPtr){
+    PRInt32 index = nsVoidArray::IndexOf(aPtr);
+    if( index != -1){
+      return nsVoidArray::ElementAt(index);
+    } else {
+      return nsnull;
+    }
+  }
+  
+  PRBool AddItem(void *aPtr){
+    if(nsVoidArray::IndexOf(aPtr) == -1){
+      return nsVoidArray::AppendElement(aPtr);
+    } else {
+      return PR_FALSE;
+    }
+  }
+  
+  PRBool RemoveItem(void *aPtr){
+    return nsVoidArray::RemoveElement(aPtr);
+  }
+
+  PRInt32 Count(void){ 
+    return nsVoidArray::Count(); 
+  }
+
+  void Clear(void){
+    nsVoidArray::Clear();
+  }
+protected:
+  // disallow these:
+  nsUniqueStyleItems( const nsUniqueStyleItems& src);
+  nsUniqueStyleItems& operator =(const nsUniqueStyleItems& src);
+
+  // make this accessable to factory only
+  nsUniqueStyleItems(void) : nsVoidArray(kUniqueItemsStartSize){
+    NS_ASSERTION(mInstance == nsnull, "singleton?");
+    mInstance=this;
+  }
+
+  static nsUniqueStyleItems *mInstance;
+};
+
+#define UNIQUE_STYLE_ITEMS(_name) \
+  nsUniqueStyleItems* ##_name = nsUniqueStyleItems::GetUniqueStyleItems(); \
+  NS_ASSERTION(##_name != nsnull, "UniqueItems cannot be null: error in nsUniqueStyleImtes factory");
+
 
 #endif /* nsIStyleSet_h___ */

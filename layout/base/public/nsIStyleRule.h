@@ -27,6 +27,8 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 
+class nsISizeOfHandler;
+
 class nsIStyleSheet;
 class nsIMutableStyleContext;
 class nsIPresContext;
@@ -51,6 +53,9 @@ public:
   NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) = 0;
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
 };
+
 
 #endif /* nsIStyleRule_h___ */

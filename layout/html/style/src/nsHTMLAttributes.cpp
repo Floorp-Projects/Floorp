@@ -33,6 +33,9 @@
 #include "nsIHTMLContent.h"
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
+#include "nsCOMPtr.h"
+
+#include "nsIStyleSet.h"
 
 static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
 
@@ -215,7 +218,6 @@ struct HTMLAttribute {
     return PR_FALSE;
   }
 
-#ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;
@@ -223,7 +225,6 @@ struct HTMLAttribute {
     *aResult = sizeof(*this);
     return NS_OK;
   }
-#endif
 
   nsIAtom*        mAttribute;
   nsHTMLValue     mValue;
@@ -320,15 +321,7 @@ public:
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
-#ifdef DEBUG
-  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    if (!aResult) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    *aResult = sizeof(*this);
-    return NS_OK;
-  }
-#endif
+  void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult);
 
   nsIHTMLStyleSheet*  mSheet;
   PRInt32             mUseCount;
@@ -780,6 +773,33 @@ nsHTMLMappedAttributes::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as nsHTMLMappedAttributes's size): 
+*    1) sizeof(*this)
+*
+*  Contained / Aggregated data (not reported as nsHTMLMappedAttributes's size):
+*    none
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void nsHTMLMappedAttributes::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
+{
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    // this is already accounted for
+    return;
+  }
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("HTMLMappedAttributes"));
+  aResult = sizeof(*this);
+  aSizer->AddSize(tag, aResult);
+}
+
 //--------------------
 
 const PRInt32 kNameBufferSize = 4;
@@ -842,7 +862,7 @@ public:
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+  void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult);
 
 protected:
   virtual nsresult SetAttributeName(nsIAtom* aAttrName, PRBool& aFound);
@@ -1503,14 +1523,18 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+void HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
 {
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
   PRUint32 sum = 0;
-#ifdef DEBUG
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    // this is already accounted for
+    return;
+  }
+
+  // XXX step through this again
   sum = sizeof(*this);
   if (mAttrNames != mNameBuffer) {
     sum += sizeof(*mAttrNames) * mAttrSize;
@@ -1519,7 +1543,7 @@ HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
     HTMLAttribute* ha = mFirstUnmapped;
     while (ha) {
       PRUint32 asum = 0;
-      ha->SizeOf(aSizer, &asum);
+      ha->SizeOf(aSizer, &asum);  // XXX Unique???
       sum += asum;
       ha = ha->mNext;
     }
@@ -1529,13 +1553,16 @@ HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
     aSizer->RecordObject((void*)mMapped, &recorded);
     if (!recorded) {
       PRUint32 asum = 0;
-      mMapped->SizeOf(aSizer, &asum);
+      mMapped->SizeOf(aSizer, asum);  // XXX Unique???
       sum += asum;
     }
   }
-#endif
-  *aResult = sum;
-  return NS_OK;
+
+  aResult = sum;
+
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("HTMLAttributesImpl"));
+  aSizer->AddSize(tag, aResult);
 }
 
 extern NS_HTML nsresult

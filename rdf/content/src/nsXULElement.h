@@ -59,6 +59,8 @@
 #include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
 
+class nsISizeOfHandler;
+
 class nsIDocument;
 class nsIRDFService;
 class nsISupportsArray;
@@ -503,6 +505,8 @@ public:
     NS_IMETHOD GetStrength(PRInt32& aStrength) const;
     NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
     NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
     
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER

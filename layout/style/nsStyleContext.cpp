@@ -45,9 +45,17 @@
 
 #include "nsIFrame.h"
 
+#include "nsCOMPtr.h"
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
+#include "nsIPresShell.h"
+
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
+
+//#ifdef DEBUG_SC_SHARING
+
 
 // --------------------
 // nsStyleFont
@@ -1673,6 +1681,8 @@ public:
 
   virtual void  List(FILE* out, PRInt32 aIndent);
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
 protected:
   void AppendChild(StyleContextImpl* aChild);
   void RemoveChild(StyleContextImpl* aChild);
@@ -1701,6 +1711,8 @@ protected:
   StyleContentImpl        mContent;
   StyleUserInterfaceImpl  mUserInterface;
 	StylePrintImpl					mPrint;
+
+  nsCOMPtr<nsIStyleSet>   mStyleSet;
 };
 
 static PRInt32 gLastDataCode;
@@ -1748,6 +1760,21 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   if (nsnull != mRules) {
     mRules->EnumerateForwards(HashStyleRule, &mRuleHash);
   }
+
+#ifdef DEBUG_SC_SHARING
+  // add this instance to the style set
+  nsIPresShell* shell = nsnull;
+  aPresContext->GetShell(&shell);
+  if (shell) {
+    shell->GetStyleSet( getter_AddRefs(mStyleSet) );
+    if (mStyleSet) {
+      // add it to the set: the set does NOT addref or release
+      // NOTE: QI here is not a good idea - this is the constructor so we are not whole yet...
+      mStyleSet->AddStyleContext((nsIStyleContext *)this);
+    }
+    NS_RELEASE( shell );
+  }
+#endif // DEBUG_SC_SHARING
 }
 
 StyleContextImpl::~StyleContextImpl()
@@ -1760,8 +1787,14 @@ StyleContextImpl::~StyleContextImpl()
   }
 
   NS_IF_RELEASE(mPseudoTag);
-
   NS_IF_RELEASE(mRules);
+
+#ifdef DEBUG_SC_SHARING
+  // remove this instance from the style set (remember, the set does not AddRef or Release us)
+  if (mStyleSet) {
+    mStyleSet->RemoveStyleContext((nsIStyleContext *)this);
+  }
+#endif // DEBUG_SC_SHARING
 }
 
 NS_IMPL_ADDREF(StyleContextImpl)
@@ -2443,6 +2476,123 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
       child->List(out, aIndent + 1);
       child = child->mNextSibling;
     } while (mEmptyChild != child);
+  }
+}
+
+
+/******************************************************************************
+* SizeOf method:
+*  
+*  Self (reported as StyleContextImpl's size): 
+*    1) sizeof(*this) which gets all of the data members
+*    2) adds in the size of the PseudoTag, if there is one
+*  
+*  Contained / Aggregated data (not reported as StyleContextImpl's size):
+*    1) the Style Rules in mRules are not counted as part of sizeof(*this)
+*       (though the size of the nsISupportsArray ptr. is) so we need to 
+*       count the rules seperately. For each rule in the mRules collection
+*       we call the SizeOf method and let it report itself.
+*
+*  Children / siblings / parents:
+*    1) We recurse over the mChild and mEmptyChild instances if they exist.
+*       These instances will then be accumulated seperately (not part of 
+*       the containing instance's size)
+*    2) We recurse over the siblings of the Child and Empty Child instances
+*       and count then seperately as well.
+*    3) We recurse over our direct siblings (if any).
+*   
+******************************************************************************/
+void StyleContextImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  static PRBool bDetailDumpDone = PR_FALSE;
+  if (!bDetailDumpDone) {
+    bDetailDumpDone = PR_TRUE;
+    PRUint32 totalSize=0;
+
+    printf( "Detailed StyleContextImpl dump: basic class sizes of members\n" );
+    printf( "*************************************\n");
+    printf( " - StyleFontImpl:          %ld\n", (long)sizeof(mFont) );
+    totalSize += (long)sizeof(mFont);
+    printf( " - StyleColorImpl:         %ld\n", (long)sizeof(mColor) );
+    totalSize += (long)sizeof(mColor);
+    printf( " - StyleSpacingImpl:       %ld\n", (long)sizeof(mSpacing) );
+    totalSize += (long)sizeof(mSpacing);
+    printf( " - StyleListImpl:          %ld\n", (long)sizeof(mList) );
+    totalSize += (long)sizeof(mList);
+    printf( " - StylePositionImpl:      %ld\n", (long)sizeof(mPosition) );
+    totalSize += (long)sizeof(mPosition);
+    printf( " - StyleTextImpl:          %ld\n", (long)sizeof(mText) );
+    totalSize += (long)sizeof(mText);
+    printf( " - StyleDisplayImpl:       %ld\n", (long)sizeof(mDisplay) );
+    totalSize += (long)sizeof(mDisplay);
+    printf( " - StyleTableImpl:         %ld\n", (long)sizeof(mTable) );
+    totalSize += (long)sizeof(mTable);
+    printf( " - StyleContentImpl:       %ld\n", (long)sizeof(mContent) );
+    totalSize += (long)sizeof(mContent);
+    printf( " - StyleUserInterfaceImpl: %ld\n", (long)sizeof(mUserInterface) );
+    totalSize += (long)sizeof(mUserInterface);
+	  printf( " - StylePrintImpl:         %ld\n", (long)sizeof(mPrint));
+    totalSize += (long)sizeof(mPrint);
+    printf( " - Total:                  %ld\n", (long)totalSize);
+    printf( "*************************************\n");
+  }
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    // object has already been accounted for
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("StyleContextImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  // add in the size of the member mPseudoTag
+  if(mPseudoTag){
+    mPseudoTag->SizeOf(aSizeOfHandler, &localSize);
+    aSize += localSize;
+  }
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  // size up the rules (if not already done)
+  // XXX - overhead of the collection???
+  if(mRules && uniqueItems->AddItem(mRules)){
+    PRUint32 curRule, ruleCount;
+    mRules->Count(&ruleCount);
+    if (ruleCount > 0) {
+      for (curRule = 0; curRule < ruleCount; curRule++) {
+        nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(curRule);
+        NS_ASSERTION(rule, "null entry in Rules list is bad news");
+        rule->SizeOf(aSizeOfHandler, localSize);
+        NS_RELEASE(rule);
+      }
+    }
+  }  
+  // now follow up with the child (and empty child) recursion
+  if (nsnull != mChild) {
+    StyleContextImpl* child = mChild;
+    do {
+      child->SizeOf(aSizeOfHandler, localSize);
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  if (nsnull != mEmptyChild) {
+    StyleContextImpl* child = mEmptyChild;
+    do {
+      child->SizeOf(aSizeOfHandler, localSize);
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
+  }
+  // and finally our direct siblings (if any)
+  if (nsnull != mNextSibling) {
+    mNextSibling->SizeOf(aSizeOfHandler, localSize);
   }
 }
 

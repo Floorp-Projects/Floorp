@@ -60,6 +60,10 @@ public:
   // value. Return back nullstr if no value is found
   static const nsCString& LookupPropertyValue(nsCSSProperty aProperty, PRInt32 aValue);
 
+  // Get a color name for a predefined color value like buttonhighlight or activeborder
+  // Sets the aStr param to the name of the propertyID
+  static PRBool GetColorName(PRInt32 aPropID, nsCString &aStr);
+
   static const PRInt32  kHintTable[];
 
   // Keyword/Enum value tables
