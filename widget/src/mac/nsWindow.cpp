@@ -862,6 +862,22 @@ void nsWindow::EndDraw()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
+#ifdef NS_DEBUG
+    if (debug_WantPaintFlashing() && event.rect ) {
+       Rect flashRect;
+       ::SetRect ( &flashRect, event.rect->x, event.rect->y, event.rect->x + event.rect->width,
+                    event.rect->y + event.rect->height );
+       ::InvertRect ( &flashRect );
+       for (int x = 0; x < 1000000; x++) ;
+       ::InvertRect ( &flashRect );
+       for (int x = 0; x < 1000000; x++) ;    
+       ::InvertRect ( &flashRect );
+       for (int x = 0; x < 1000000; x++) ;    
+       ::InvertRect ( &flashRect );
+       for (int x = 0; x < 1000000; x++) ;    
+    }
+#endif
+
 	// override this
   return PR_TRUE;
 }
