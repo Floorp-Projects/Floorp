@@ -27,6 +27,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMContextMenuListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
@@ -66,6 +67,7 @@ nsEventListenerManager::nsEventListenerManager()
   mEventListeners = nsnull;
   mMouseListeners = nsnull;
   mMouseMotionListeners = nsnull;
+  mContextMenuListeners = nsnull;
   mKeyListeners = nsnull;
   mLoadListeners = nsnull;
   mFocusListeners = nsnull;
@@ -87,6 +89,7 @@ nsEventListenerManager::~nsEventListenerManager()
   ReleaseListeners(&mEventListeners, PR_FALSE);
   ReleaseListeners(&mMouseListeners, PR_FALSE);
   ReleaseListeners(&mMouseMotionListeners, PR_FALSE);
+  ReleaseListeners(&mContextMenuListeners, PR_FALSE);
   ReleaseListeners(&mKeyListeners, PR_FALSE);
   ReleaseListeners(&mLoadListeners, PR_FALSE);
   ReleaseListeners(&mFocusListeners, PR_FALSE);
@@ -154,6 +157,9 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   }
   else if (aIID.Equals(kIDOMMouseMotionListenerIID)) {
     return &mMouseMotionListeners;
+  }
+  else if (aIID.Equals(kIDOMContextMenuListenerIID)) {
+    return &mContextMenuListeners;
   }
   else if (aIID.Equals(kIDOMKeyListenerIID)) {
     return &mKeyListeners;
@@ -442,6 +448,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
   else if (aType == nsLayoutAtoms::onmousemove) {
     aIID = kIDOMMouseMotionListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
+  }
+  else if (aType == nsLayoutAtoms::oncontextmenu) {
+    aIID = kIDOMContextMenuListenerIID;
+    *aFlags = NS_EVENT_BITS_CONTEXTMENU;
   }
   else if (aType == nsLayoutAtoms::onfocus) {
     aIID = kIDOMFocusListenerIID;
@@ -1089,6 +1099,52 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_MOUSE_MOVE:
                     subType = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  default:
+                    break;
+                }
+                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
+                }
+              }
+            }
+          }
+        }
+      }
+      break;
+
+    case NS_CONTEXTMENU:
+      if (nsnull != mContextMenuListeners) {
+        if (nsnull == *aDOMEvent) {
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
+        }
+        if (NS_OK == ret) {
+          for (int i=0; mContextMenuListeners && i<mContextMenuListeners->Count(); i++) {
+            nsListenerStruct *ls;
+            nsIDOMContextMenuListener *mContextMenuListener;
+
+            ls = (nsListenerStruct*)mContextMenuListeners->ElementAt(i);
+
+            if (ls->mFlags & aFlags) {
+              if (NS_OK == ls->mListener->QueryInterface(kIDOMContextMenuListenerIID, (void**)&mContextMenuListener)) {
+                switch(aEvent->message) {
+                  case NS_CONTEXTMENU:
+                    ret = mContextMenuListener->ContextMenu(*aDOMEvent);
+                    break;
+                  default:
+                    break;
+                }
+                NS_RELEASE(mContextMenuListener);
+              }
+              else {
+                PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
+                switch(aEvent->message) {
+                  case NS_CONTEXTMENU:
+                    subType = NS_EVENT_BITS_CONTEXTMENU;
+                    if (ls->mSubType & NS_EVENT_BITS_CONTEXTMENU) {
                       correctSubType = PR_TRUE;
                     }
                     break;
@@ -2183,6 +2239,7 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   ReleaseListeners(&mEventListeners, aScriptOnly);
   ReleaseListeners(&mMouseListeners, aScriptOnly);
   ReleaseListeners(&mMouseMotionListeners, aScriptOnly);
+  ReleaseListeners(&mContextMenuListeners, aScriptOnly);
   ReleaseListeners(&mKeyListeners, aScriptOnly);
   ReleaseListeners(&mLoadListeners, aScriptOnly);
   ReleaseListeners(&mFocusListeners, aScriptOnly);

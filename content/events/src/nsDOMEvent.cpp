@@ -46,7 +46,7 @@
 
 static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
-  "mouseout", "mousemove", "keydown", "keyup", "keypress",
+  "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "create", "close", "destroy", "command", "broadcast", "commandupdate",

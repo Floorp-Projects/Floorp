@@ -56,6 +56,7 @@ public:
     eDOMEvents_mouseover,
     eDOMEvents_mouseout,
     eDOMEvents_mousemove,
+    eDOMEvents_contextmenu,
     eDOMEvents_keydown,
     eDOMEvents_keyup,
     eDOMEvents_keypress,
