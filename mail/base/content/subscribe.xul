@@ -22,11 +22,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
 
-<dialog xmlns:NC="http://home.netscape.com/NC-rdf#" 
+<dialog id="subscribeWindow"
+        xmlns:NC="http://home.netscape.com/NC-rdf#" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&subscribeDialog.title;"
-        width="500"
-        height="400"
+        style="width: 44em; height: 33em;"
         persist="width height screenX screenY"
         onload="SubscribeOnLoad()"
         onunload="SubscribeOnUnload()"

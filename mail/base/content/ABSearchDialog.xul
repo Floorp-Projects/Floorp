@@ -33,15 +33,16 @@
 %SearchDialogDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window id="searchAddressBookWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="searchOnLoad();"
         onunload="searchOnUnload();"
         onclose="onSearchStop();"
         windowtype="mailnews:absearch"
         title="&abSearchDialogTitle.label;"
-        width="640" height="470"
-        persist="screenX screenY width height">
+        style="width: 52em; height: 36em;"
+        persist="screenX screenY width height sizemode">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
@@ -65,7 +66,7 @@
 
   <dummy class="usesMailWidgets"/>
     
-    <vbox flex="1">
+    <vbox id="searchTerms" flex="3" persist="height">
       <vbox>
         <hbox align="center">
           <label value="&abSearchHeading.label;" accesskey="&abSearchHeading.accesskey;"/>
@@ -101,14 +102,14 @@
 
     <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
 
-    <vbox flex="1">
+    <vbox id="searchResultListBox" flex="4" persist="height">
       <vbox id="searchResultListBox" flex="1" >
         <tree id="abResultsTree" flex="1" enableColumnDrag="true" class="plain"
               context="threadPaneContext"
               onclick="AbResultsPaneOnClick(event);"
               onselect="this.view.selectionChanged();"
               sortCol="GeneratedName"
-              persist="sortCol height">
+              persist="sortCol">
 
           <treecols id="abResultsTreeCols">
           <!-- these column ids must match up to the mork column names, except for GeneratedName, see nsIAddrDatabase.idl -->
