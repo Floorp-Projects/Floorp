@@ -2063,21 +2063,22 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 {
 #ifdef NS_DEBUG
   PRBool gsDebugWas = gsDebug;
-  gsDebug = PR_FALSE;  // turn on debug in this method
+  //gsDebug = PR_TRUE;  // turn on debug in this method
 #endif
   // iterate children, tell all row groups to ShrinkWrap
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
   PRInt32 tableHeight = 0;
   PRInt32 childCount = mChildCount;
-
+  nsIFrame * kidFrame;
   for (PRInt32 i = 0; i < childCount; i++)
   {
     PRInt32 childHeight=0;
     // for every child that is a rowFrame, set the row frame height  = sum of row heights
-    // XXX This is a n-squared algorithm. Use GetNextSibling() instead...
-    nsIFrame * kidFrame;
 
-    ChildAt(i, kidFrame); // frames are not ref counted
+    if (0==i)
+      ChildAt(i, kidFrame); // frames are not ref counted
+    else
+      kidFrame->GetNextSibling(kidFrame);
     NS_ASSERTION(nsnull != kidFrame, "bad kid frame");
     nsTableContentPtr kid;
      
@@ -2151,28 +2152,32 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
        */
       if (gsDebug==PR_TRUE) printf("Height Step 2...\n");
       rowGroupHeight=0;
+      nsTableRowFrame *rowFrame=nsnull;
       for (rowIndex = 0; rowIndex < numRows; rowIndex++)
       {
-        nsTableRowFrame *rowFrame;
+        // get the next row
+        if (0==rowIndex)
+          rowGroupFrame->ChildAt(rowIndex, (nsIFrame*&)rowFrame);
+        else
+          rowFrame->GetNextSibling((nsIFrame*&)rowFrame);
         PRInt32 numCells;
-
-        rowGroupFrame->ChildAt(rowIndex, (nsIFrame*&)rowFrame);
         rowFrame->ChildCount(numCells);
+        // check this row for a cell with rowspans
         for (PRInt32 cellIndex = 0; cellIndex < numCells; cellIndex++)
         {
+          // get the next cell
           nsTableCellFrame *cellFrame;
-
           rowFrame->ChildAt(cellIndex, (nsIFrame*&)cellFrame);
           PRInt32 rowSpan = cellFrame->GetRowSpan();
           if (1<rowSpan)
-          {
+          { // found a cell with rowspan > 1, determine it's height
             if (gsDebug==PR_TRUE) printf("  cell[%d,%d] has a rowspan = %d\n", rowIndex, cellIndex, rowSpan);
             PRInt32 heightOfRowsSpanned = 0;
             for (PRInt32 i=0; i<rowSpan; i++)
               heightOfRowsSpanned += rowHeights[i+rowIndex];
-            /* if the cell height fits in the rows, expand the cell height and slap it in */
-            nsSize  cellFrameSize;
 
+            /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
+            nsSize  cellFrameSize;
             cellFrame->GetSize(cellFrameSize);
             if (heightOfRowsSpanned>cellFrameSize.height)
             {
@@ -2181,8 +2186,8 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
               // Realign cell content based on new height
               cellFrame->VerticallyAlignChild(aPresContext);
             }
-            /* otherwise, we have a real mess on our hands.
-             * distribute the excess height to the rows effected, and to the cells in those rows
+            /* otherwise, distribute the excess height to the rows effected, and to the cells in those rows
+             * push all subsequent rows down by the total change in height of all the rows above it
              */
             else
             {
@@ -2190,12 +2195,13 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
               PRInt32 excessHeightPerRow = excessHeight/rowSpan;
               if (gsDebug==PR_TRUE) printf("  cell[%d,%d] does not fit, excessHeight = %d, excessHeightPerRow = %d\n", 
                       rowIndex, cellIndex, excessHeight, excessHeightPerRow);
-              // for the rows effected...
+              // for every row starting at the row with the spanning cell...
               for (i=rowIndex; i<numRows; i++)
               {
                 nsTableRowFrame *rowFrameToBeResized;
 
                 rowGroupFrame->ChildAt(i, (nsIFrame*&)rowFrameToBeResized);
+                // if the row is within the spanned range, resize the row and it's cells
                 if (i<rowIndex+rowSpan)
                 {
                   rowHeights[i] += excessHeightPerRow;
@@ -2232,14 +2238,17 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
                 }
                 // if we're dealing with a row below the row containing the spanning cell, 
                 // push that row down by the amount we've expanded the cell heights by
-                if (i>rowIndex)
+                if (i>=rowIndex && i!=0)
                 {
                   nsRect rowRect;
                    
                   rowFrameToBeResized->GetRect(rowRect);
-                  rowFrameToBeResized->MoveTo(rowRect.x, rowRect.y + (excessHeightPerRow*(i-rowIndex)));
-                  if (gsDebug==PR_TRUE) printf("      row %d moved to y-offset %d\n", i, 
-                                                rowRect.y + (excessHeightPerRow*(i-rowIndex)));
+                  nscoord delta = excessHeightPerRow*(i-rowIndex);
+                  if (delta > excessHeight)
+                    delta = excessHeight;
+                  rowFrameToBeResized->MoveTo(rowRect.x, rowRect.y + delta);
+                  if (gsDebug==PR_TRUE) printf("      row %d (%p) moved by %d to y-offset %d\n",  
+                                                i, rowFrameToBeResized, delta, rowRect.y + delta);
                 }
               }
             }
