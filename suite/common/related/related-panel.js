@@ -201,7 +201,9 @@ function Init()
 		debug("FAILURE to get observer service\n");
 	}
 
-	refetchRelatedLinks(Handler, ContentWindow.location);
+	if (ContentWindow) {
+		refetchRelatedLinks(Handler, ContentWindow.location);
+	}
 }
 
 
