@@ -321,7 +321,8 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
       damageArea.y = mRect.YMost();
       damageArea.width = aDesiredSize.width;
       damageArea.height = aDesiredSize.height - mRect.height;
-      if (aDesiredSize.height == mRect.height) {
+      if ((damageArea.height < 0) ||
+          (aDesiredSize.height == mRect.height)) {
         // Since we don't know what changed, assume it all changed.
         damageArea.y = 0;
         damageArea.height = aDesiredSize.height;
