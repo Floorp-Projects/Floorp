@@ -1224,7 +1224,7 @@ function OpenSearch(tabName, searchStr)
         }
 
 function BrowserReload() {
-    dump( "Sorry, command not implemented: " + window.event.srcElement + "\n" );
+    dump( "Sorry, command not implemented.\n" );
 }
 
 function hiddenWindowStartup()
