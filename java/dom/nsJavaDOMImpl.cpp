@@ -126,12 +126,7 @@ nsJavaDOMImpl::nsJavaDOMImpl()
 #ifdef DEBUG
   printf("classpath is \"%s\"\n", vm_args.classpath);
 #endif // DEBUG
-#ifdef XP_PC
-  // for some reason, vc++ 6.0 requires this cast
-  JNI_CreateJavaVM(&jvm, (void**) &env, &vm_args);
-#else
   JNI_CreateJavaVM(&jvm, &env, &vm_args);
-#endif
   delete[] p;
 
   gcClass = env->FindClass("org/mozilla/dom/DOMGarbageCollector");
