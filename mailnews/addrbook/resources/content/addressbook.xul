@@ -8,7 +8,82 @@
 <!ENTITY addressbookWindow.title "Address Book">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
-<!-- File menu items -->
+
+<!ENTITY fileMenu.label "File"> 
+<!ENTITY newMenu.label "New"> 
+<!ENTITY newNavCmd.label ".Navigator Window">  
+<!ENTITY newMessageCmd.label "Message">  
+<!ENTITY newBlankPageCmd.label ".Blank Page">  
+<!ENTITY newPageFromTemplate.label ".Page from Template">  
+<!ENTITY newPageFromWizard.label ".Page from Wizard">  
+<!ENTITY newCardCmd.label ".New Card...">  
+<!ENTITY newListCmd.label ".New List...">  
+<!ENTITY newAddressBookCmd.label ".New Address Book...">  
+<!ENTITY newDirectoryCmd.label ".New Directory...">  
+<!ENTITY callCmd.label ".Call">  
+<!ENTITY importCmd.label ".Import.."> 
+<!ENTITY exportCmd.label ".Export...">  
+<!ENTITY closeCmd.label ".Close">  
+<!ENTITY exitCmd.label "Exit">  
+<!ENTITY editMenu.label "Edit"> 
+<!ENTITY undoCmd.label ".Undo">  
+<!ENTITY redoCmd.label ".Redo">  
+<!ENTITY cutCmd.label ".Cut">  
+<!ENTITY copyCmd.label ".Copy">  
+<!ENTITY pasteCmd.label ".Paste">  
+<!ENTITY deleteCmd.label ".Delete">  
+<!ENTITY selectAllCmd.label ".Select All">  
+<!ENTITY selectMenu.label ".Search for..."> 
+<!ENTITY findAgainCmd.label ".Find Again">  
+<!ENTITY htmlDomainCmd.label ".HTML Domain...">  
+<!ENTITY abPropsCmd.label ".Properties">  
+<!ENTITY prefsCmd.label ".Preferences">
+<!ENTITY viewMenu.label "View"> 
+<!ENTITY showMenu.label ".Show"> 
+<!ENTITY showAbToolbarCmd.label ".Addressbook Toolbar">  
+<!ENTITY showAddressBook.label ".Address Books">  
+<!ENTITY sortMenu.label ".Sort"> 
+<!ENTITY sortByTypeCmd.label ".by Type">  
+<!ENTITY sortByNameCmd.label ".by Name">  
+<!ENTITY sortByEmailCmd.label ".by Email">  
+<!ENTITY sortByOrganizationCmd.label "by Organization">  
+<!ENTITY sortByNicknameCmd.label ".by Nickname">  
+<!ENTITY sortByPhoneCmd.label ".by Phone Number">  
+<!ENTITY sortByCityCmd.label ".by City">  
+<!ENTITY sortAscendingCmd.label ".Ascending">  
+<!ENTITY sortDescendingCmd.label ".Descending">  
+<!ENTITY communicatorMenu.label "Communicator">
+<!ENTITY navigatorCmd.label "Navigator">  
+<!ENTITY messengerCmd.label ".Messenger">  
+<!ENTITY composerCmd.label ".Composer">  
+<!ENTITY aimCmd.label ".AOL Instant Messenger Service">  
+<!ENTITY bookmarkMenu.label ".Bookmark"> 
+<!ENTITY addBookmarkCmd.label ".Add Bookmark">  
+<!ENTITY fileBookmarkCmd.label ".File Bookmark">  
+<!ENTITY editBookmarkCmd.label ".Edit Bookmark">  
+<!ENTITY newsgroupsCmd.label ".Newsgroups">  
+<!ENTITY addressBookCmd.label "Address Book">  
+<!ENTITY toolsMenu.label ".Tools"> 
+<!ENTITY historyCmd.label ".History">  
+<!ENTITY securityInfoCmd.label ".Security Info">  
+<!ENTITY messageCenterCmd.label ".Message Center">  
+<!ENTITY importUtilCmd.label ".Import Utility">  
+<!ENTITY javaConsoleCmd.label ".Java Console">  
+<!ENTITY windowCmd.label ".Window">  
+<!ENTITY helpMenu.label ".Help"> 
+<!ENTITY helpContentCmd.label ".Help Content">  
+<!ENTITY referenceLibraryCmd.label ".Reference Library">  
+<!ENTITY releaseNotesCmd.label ".Release Notes">  
+<!ENTITY productInfoCmd.label ".Produce Information and Support">  
+<!ENTITY softwareUpdatesCmd.label ".Software Updates">  
+<!ENTITY registerCmd.label ".Register Now">  
+<!ENTITY memberServicesCmd.label ".Member Services">  
+<!ENTITY internationalCmd.label ".International Users">  
+<!ENTITY securityCmd.label ".Security">  
+<!ENTITY netwatchCmd.label ".NetWatch">  
+<!ENTITY aboutPluginsCmd.label ".About Plug-ins">  
+<!ENTITY aboutFontCmd.label ".About Font Displayers">  
+<!ENTITY aboutCmd.label ".About Communicator...">  
 
 <!-- Toolbar items -->  
 <!ENTITY newcardButton.img "chrome://addressbook/skin/newcard.gif">
@@ -39,105 +114,105 @@
 <html:script src="chrome://addressbook/content/addressbook.js"/>
 
   <menubar>
-    <menu name="File">
-      <menu name="New">
-        <menuitem name=".Navigator Window" onclick="NewBrowserWindow();"/>
-        <menuitem name="Message" onclick="MsgNewMessage();"/>
-        <menuitem name=".Blank Page" onclick="NewBlankPage();"/>
+    <menu name="&fileMenu.label;">
+      <menu name="&newMenu.label;">
+        <menuitem name="&newNavCmd.label;" onclick="NewBrowserWindow();"/>
+        <menuitem name="&newMessageCmd.label;" onclick="MsgNewMessage();"/>
+        <menuitem name="&newBlankPageCmd.label;" onclick="NewBlankPage();"/>
         <separator/>
-        <menuitem name=".Page from Template" onclick="TemplatePage();"/>
-        <menuitem name=".Page from Wizard" onclick="WizardPage();"/>
+        <menuitem name="&newPageFromTemplate.label;" onclick="TemplatePage();"/>
+        <menuitem name="&newPageFromWizard.label;" onclick="WizardPage();"/>
       </menu>
-      <menuitem name=".New Card..." onclick="AbNewCard();"/>
-      <menuitem name=".New List..." onclick="AbNewList();"/>
-      <menuitem name=".New Address Book..." onclick="AbNewAddressBook();"/>
-      <menuitem name=".New Directory..." onclick="AbNewDirectoryt();"/>
+      <menuitem name="&newCardCmd.label;" onclick="AbNewCard();"/>
+      <menuitem name="&newListCmd.label;" onclick="AbNewList();"/>
+      <menuitem name="&newAddressBookCmd.label;" onclick="AbNewAddressBook();"/>
+      <menuitem name="&newDirectoryCmd.label;" onclick="AbNewDirectoryt();"/>
       <separator/>
-      <menuitem name=".Call" onclick="MsgCall();"/>
+      <menuitem name="&callCmd.label;" onclick="MsgCall();"/>
       <separator/>
-      <menuitem name=".Import.." onclick="AbImport();"/>
-      <menuitem name=".Export..." onclick="AbExport();"/>
+      <menuitem name="&importCmd.label;" onclick="AbImport();"/>
+      <menuitem name="&exportCmd.label;" onclick="AbExport();"/>
       <separator/>
-      <menuitem name=".Close" onclick="Close();"/>
-      <menuitem name="Exit" onclick="Exit();"/>
+      <menuitem name="&closeCmd.label;" onclick="Close();"/>
+      <menuitem name="&exitCmd.label;" onclick="Exit();"/>
     </menu>
-    <menu name="Edit">
-      <menuitem name=".Undo" onclick="AbEditUndo();"/>
-      <menuitem name=".Redo" onclick="AbEditRedo();"/>
+    <menu name="&editMenu.label;">
+      <menuitem name="&undoCmd.label;" onclick="AbEditUndo();"/>
+      <menuitem name="&redoCmd.label;" onclick="AbEditRedo();"/>
       <separator/>
-      <menuitem name=".Cut" onclick="AbEditCut();"/>
-      <menuitem name=".Copy" onclick="AbEditCopy();"/>
-      <menuitem name=".Paste" onclick="AbEditPaste();"/>
-      <menuitem name=".Delete" onclick="AbDelete();"/>
-      <menuitem name=".Select All" onclick="AbSelectAll();"/>
+      <menuitem name="&cutCmd.label;" onclick="AbEditCut();"/>
+      <menuitem name="&copyCmd.label;" onclick="AbEditCopy();"/>
+      <menuitem name="&pasteCmd.label;" onclick="AbEditPaste();"/>
+      <menuitem name="&deleteCmd.label;" onclick="AbDelete();"/>
+      <menuitem name="&selectAllCmd.label;" onclick="AbSelectAll();"/>
       <separator/>
-      <menuitem name=".Search for..." onclick="AbSearchFor();"/>
-      <menuitem name=".Find Again" onclick="AbFindAgain();"/>
+      <menuitem name="&selectMenu.label;" onclick="AbSearchFor();"/>
+      <menuitem name="&findAgainCmd.label;" onclick="AbFindAgain();"/>
       <separator/>
-      <menuitem name=".HTML Domain..." onclick="AbHTMLDomain();"/>
-      <menuitem name=".Properties" onclick="AbProperties();"/>
+      <menuitem name="&htmlDomainCmd.label;" onclick="AbHTMLDomain();"/>
+      <menuitem name="&abPropsCmd.label;" onclick="AbProperties();"/>
       <separator/>
-      <menuitem name="Preferences" onclick="MsgPreferences();"/>
+      <menuitem name="&prefsCmd.label;" onclick="MsgPreferences();"/>
     </menu>
-    <menu name="View">
-      <menu name=".Show">
-      <menuitem name=".Addressbook Toolbar" onclick="AbShowToolbar();"/>
-      <menuitem name=".Address Books" onclick="AbShowAddressBooks();"/>
+    <menu name="&viewMenu.label;">
+      <menu name="&showMenu.label;">
+      <menuitem name="&showAbToolbarCmd.label;" onclick="AbShowToolbar();"/>
+      <menuitem name="&showAddressBook.label;" onclick="AbShowAddressBooks();"/>
       </menu>
-      <menu name="Sort">
-        <menuitem name=".by Type" onclick="AbSortByType();"/>
-        <menuitem name=".by Name" onclick="AbSortByName();"/>
-        <menuitem name=".by Email" onclick="AbSortByEmail();"/>
-        <menuitem name=".by Organization" onclick="AbSortByOrganization();"/>
-        <menuitem name=".by Nickname" onclick="AbSortByNickname();"/>
-        <menuitem name=".by Phone Number" onclick="AbSortByPhoneNumber();"/>
-        <menuitem name=".by City" onclick="AbSortByCity();"/>
+      <menu name="&sortMenu.label;">
+        <menuitem name="&sortByTypeCmd.label;" onclick="AbSortByType();"/>
+        <menuitem name="&sortByNameCmd.label;" onclick="AbSortByName();"/>
+        <menuitem name="&sortByEmailCmd.label;" onclick="AbSortByEmail();"/>
+        <menuitem name="&sortByOrganizationCmd.label;" onclick="AbSortByOrganization();"/>
+        <menuitem name="&sortByNicknameCmd.label;" onclick="AbSortByNickname();"/>
+        <menuitem name="&sortByPhoneCmd.label;" onclick="AbSortByPhoneNumber();"/>
+        <menuitem name="&sortByCityCmd.label;" onclick="AbSortByCity();"/>
         <separator/>
-        <menuitem name=".Ascending" onclick="AbSortAscending();"/>
-        <menuitem name=".Descending" onclick="AbSortDescending();"/>
+        <menuitem name="&sortAscendingCmd.label;" onclick="AbSortAscending();"/>
+        <menuitem name="&sortDescendingCmd.label;" onclick="AbSortDescending();"/>
       </menu>
     </menu>
-    <menu name="Communicator">
-      <menuitem name="Navigator" onclick="NavigatorWindow();"/>
-      <menuitem name=".Messenger" onclick="MessengerWindow();"/>
-      <menuitem name=".Composer" onclick="ComposerWindow();"/>
-      <menuitem name=".AOL Instant Messenger Service" onclick="AIMService();"/>
+    <menu name="&communicatorMenu.label;">
+      <menuitem name="&navigatorCmd.label;" onclick="NavigatorWindow();"/>
+      <menuitem name="&messengerCmd.label;" onclick="MessengerWindow();"/>
+      <menuitem name="&composerCmd.label;" onclick="ComposerWindow();"/>
+      <menuitem name="&aimCmd.label;" onclick="AIMService();"/>
       <separator/>
-      <menu name=".Bookmarks">
-        <menuitem name=".Add Bookmark" onclick="AddBookmark();"/>
-        <menuitem name=".File Bookmark" onclick="FileBookmark();"/>
-        <menuitem name=".Edit Bookmark" onclick="EditBookmark();"/>
+      <menu name="&bookmarkMenu.label;">
+        <menuitem name="&addBookmarkCmd.label;" onclick="AddBookmark();"/>
+        <menuitem name="&fileBookmarkCmd.label;" onclick="FileBookmark();"/>
+        <menuitem name="&editBookmarkCmd.label;" onclick="EditBookmark();"/>
       </menu>
-      <menuitem name=".Newsgroups" onclick="Newsgroups();"/>
-      <menuitem name=".Address Book" onclick="AddressBook();"/>
+      <menuitem name="&newsgroupsCmd.label;" onclick="Newsgroups();"/>
+      <menuitem name="&addressBookCmd.label;" onclick="AddressBook();"/>
       <separator/>
-      <menu name=".Tools">
-        <menuitem name=".History" onclick="History();"/>
-        <menuitem name=".Security Info" onclick="SecurityInfo();"/>
-        <menuitem name=".Message Center" onclick="MessengerCenter();"/>
-        <menuitem name=".Import Utility" onclick="Import();"/>
-        <menuitem name=".Java Console" onclick="JavaConsole();"/>
+      <menu name="&toolsMenu.label;">
+        <menuitem name="&historyCmd.label;" onclick="History();"/>
+        <menuitem name="&securityInfoCmd.label;" onclick="SecurityInfo();"/>
+        <menuitem name="&messageCenterCmd.label;" onclick="MessengerCenter();"/>
+        <menuitem name="&importUtilCmd.label;" onclick="Import();"/>
+        <menuitem name="&javaConsoleCmd.label;" onclick="JavaConsole();"/>
       </menu>
       <separator/>
-      <menuitem name=".Window" onclick="WindowList();"/>
+      <menuitem name="&windowCmd.label;" onclick="WindowList();"/>
     </menu>
-    <menu name=".Help">
-      <menuitem name=".Help Content" onclick="Help();"/>
-      <menuitem name=".Reference Library" onclick="Help();"/>
-      <menuitem name=".Release Notes" onclick="Help();"/>
-      <menuitem name=".Produce Information and Support" onclick="Help();"/>
+    <menu name="&helpMenu.label;">
+      <menuitem name="&helpContentCmd.label;" onclick="Help();"/>
+      <menuitem name="&referenceLibraryCmd.label;" onclick="Help();"/>
+      <menuitem name="&releaseNotesCmd.label;" onclick="Help();"/>
+      <menuitem name="&productInfoCmd.label;" onclick="Help();"/>
       <separator/>
-      <menuitem name=".Software Updates" onclick="Help();"/>
-      <menuitem name=".Register Now" onclick="Help();"/>
-      <menuitem name=".Member Services" onclick="Help();"/>
+      <menuitem name="&softwareUpdatesCmd.label;" onclick="Help();"/>
+      <menuitem name="&registerCmd.label;" onclick="Help();"/>
+      <menuitem name="&memberServicesCmd.label;" onclick="Help();"/>
       <separator/>
-      <menuitem name=".International Users" onclick="Help();"/>
-      <menuitem name=".Security" onclick="Help();"/>
-      <menuitem name=".NetWatch" onclick="Help();"/>
+      <menuitem name="&internationalCmd.label;" onclick="Help();"/>
+      <menuitem name="&securityCmd.label;" onclick="Help();"/>
+      <menuitem name="&netwatchCmd.label;" onclick="Help();"/>
       <separator/>
-      <menuitem name=".About Plug-ins" onclick="About();"/>
-      <menuitem name=".About Font Displayers" onclick="About();"/>
-      <menuitem name=".About Communicator..." onclick="About();"/>
+      <menuitem name="&aboutPluginsCmd.label;" onclick="About();"/>
+      <menuitem name="&aboutFontCmd.label;" onclick="About();"/>
+      <menuitem name="&aboutCmd.label;" onclick="About();"/>
     </menu>
   </menubar>
 
