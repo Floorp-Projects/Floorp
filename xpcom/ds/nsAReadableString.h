@@ -1440,7 +1440,7 @@ basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsARead
     iterator end;
     
     aString.BeginReading(start);
-    aStrign.EndReading(end);
+    aString.EndReading(end);
 
     // First count the number of buffers
     PRInt32 buffer_count = 0;
