@@ -45,9 +45,10 @@
 #include "nsISeekableStream.h"
 #include "nsILineInputStream.h"
 #include "nsCOMPtr.h"
-#include "nsReadLine.h"
 #include "prlog.h"
 #include "prio.h"
+
+struct nsLineBuffer;
 
 ////////////////////////////////////////////////////////////////////////////////
 
