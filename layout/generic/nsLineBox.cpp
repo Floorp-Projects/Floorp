@@ -202,3 +202,56 @@ nsLineBox::CheckIsBlock() const
   return isBlock == IsBlock();
 }
 #endif
+
+//----------------------------------------------------------------------
+
+static nsLineBox* gDummyLines[1];
+
+nsLineIterator::nsLineIterator()
+{
+  mLines = nsnull;
+  mNumLines = 0;
+  mIndex = 0;
+}
+
+nsresult
+nsLineIterator::Init(nsLineBox* aLines)
+{
+  // Count the lines
+  PRInt32 numLines = 0;
+  nsLineBox* line = aLines;
+  while (line) {
+    numLines++;
+    line = line->mNext;
+  }
+  if (0 == numLines) {
+    // Use gDummyLines so that we don't need null pointer checks in
+    // the accessor methods
+    mLines = gDummyLines;
+    return NS_OK;
+  }
+
+  // Make a linear array of the lines
+  mLines = new nsLineBox*[numLines];
+  if (!mLines) {
+    // Use gDummyLines so that we don't need null pointer checks in
+    // the accessor methods
+    mLines = gDummyLines;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsLineBox** lp = mLines;
+  line = aLines;
+  while (line) {
+    *lp++ = line;
+    line = line->mNext;
+  }
+  mNumLines = numLines;
+  return NS_OK;
+}
+
+nsLineIterator::~nsLineIterator()
+{
+  if (mLines != gDummyLines) {
+    delete [] mLines;
+  }
+}
