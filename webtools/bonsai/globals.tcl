@@ -29,6 +29,7 @@ set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
 set mozilla_lxr_kludge TRUE
 
 set cvsadmin terry@mozilla.org
+set userdomain nowhere.nowhere
 set mysqluser nobody
 set mysqlpassword ""
 
