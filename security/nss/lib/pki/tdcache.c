@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.13 $ $Date: 2001/12/07 01:36:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.14 $ $Date: 2001/12/10 19:05:51 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -43,9 +43,17 @@ static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.13 $ $Da
 #include "pkit.h"
 #endif /* PKIT_H */
 
+#ifndef NSSPKI_H
+#include "nsspki.h"
+#endif /* NSSPKI_H */
+
 #ifndef PKI_H
 #include "pki.h"
 #endif /* PKI_H */
+
+#ifndef NSSBASE_H
+#include "nssbase.h"
+#endif /* NSSBASE_H */
 
 #ifndef BASE_H
 #include "base.h"
@@ -619,6 +627,8 @@ add_email_entry
     return nssrv;
 }
 
+extern const NSSError NSS_ERROR_CERTIFICATE_IN_CACHE;
+
 static PRStatus
 add_cert_to_cache
 (
@@ -638,7 +648,11 @@ add_cert_to_cache
 	log_cert_ref("attempted to add cert already in cache", cert);
 #endif
 	PZ_Unlock(td->cache->lock);
-	return PR_SUCCESS;
+	/* collision - most likely, somebody else already added the cert
+	 * to the cache before this thread got around to it.
+	 */
+	nss_SetError(NSS_ERROR_CERTIFICATE_IN_CACHE);
+	return PR_FAILURE;
     }
     /* create a new cache entry for this cert */
     nssrv = add_issuer_and_serial_entry(arena, td->cache, cert);
@@ -712,8 +726,26 @@ nssTrustDomain_AddCertsToCache
 )
 {
     PRUint32 i;
+    NSSError e;
     for (i=0; i<numCerts && certs[i]; i++) {
 	if (add_cert_to_cache(td, certs[i]) != PR_SUCCESS) {
+	    if ((e = NSS_GetError()) == NSS_ERROR_CERTIFICATE_IN_CACHE) {
+		/* collision - delete and replace the cert here in favor
+		 * of the already cached entry.  This is safe as long as
+		 * the cert being added here only has a single reference.
+		 * This should be the case as this function is only called
+		 * immediately following a traversal and before any certs
+		 * are returned to the caller.
+		 */
+		NSSCertificate *c;
+		c = nssTrustDomain_GetCertForIssuerAndSNFromCache(td,
+		                                            &certs[i]->issuer,
+		                                            &certs[i]->serial);
+		NSSCertificate_Destroy(certs[i]);
+		certs[i] = c;
+		NSS_ClearErrorStack();
+		continue;
+	    }
 	    return PR_FAILURE;
 	} 
     }
