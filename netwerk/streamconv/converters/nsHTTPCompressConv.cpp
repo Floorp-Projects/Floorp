@@ -106,7 +106,7 @@ nsHTTPCompressConv::AsyncConvertData(const char *aFromType,
         !PL_strncasecmp(aFromType, HTTP_X_COMPRESS_TYPE, sizeof(HTTP_X_COMPRESS_TYPE)-1))
         mMode = HTTP_COMPRESS_COMPRESS;
 
-    else if (!PL_strncasecmp(aFromType, HTTP_GZIP_TYPE, sizeof(HTTP_COMPRESS_TYPE)-1) ||
+    else if (!PL_strncasecmp(aFromType, HTTP_GZIP_TYPE, sizeof(HTTP_GZIP_TYPE)-1) ||
              !PL_strncasecmp(aFromType, HTTP_X_GZIP_TYPE, sizeof(HTTP_X_GZIP_TYPE)-1))
         mMode = HTTP_COMPRESS_GZIP;
 
