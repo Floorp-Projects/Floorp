@@ -1738,8 +1738,11 @@ struct PRFilePrivate {
     PRInt32 peekBufSize;
     PRInt32 peekBytes;
 #endif
-#if !defined(XP_UNIX)   /* BugZilla: 4090 */
-    PRBool  appendMode;                             
+#if !defined(_PR_HAVE_O_APPEND)
+    PRBool  appendMode; /* Some platforms don't have O_APPEND or its
+                         * equivalent, so they have to seek to end of
+                         * file on write if the file was opened in
+                         * append mode.  See Bugzilla 4090, 276330. */
 #endif
     _MDFileDesc md;
 #ifdef _PR_STRICT_ADDR_LEN

@@ -79,6 +79,8 @@
 #include <sys/select.h>
 #endif
 
+#define _PR_HAVE_O_APPEND
+
 #define PR_DIRECTORY_SEPARATOR		'/'
 #define PR_DIRECTORY_SEPARATOR_STR	"/"
 #define PR_PATH_SEPARATOR		':'
