@@ -290,8 +290,15 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
       || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
   {
-    mFrame->CallOnChange();
-    mFrame->SubmitAttempt();
+    if (mFrame)
+      mFrame->CallOnChange();
+    if (mFrame)//we must recheck frame since callonchange may cause a deletion of this frame!
+    {
+      nsAutoString blurValue;
+      mFrame->GetText(&blurValue,PR_FALSE);
+      mFocusedValue = blurValue;
+      mFrame->SubmitAttempt();
+    }
   }
   return NS_OK;
 }
@@ -363,7 +370,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
 
 NS_IMETHODIMP nsTextInputListener::EditAction()
 {
-  return mFrame->InternalContentChanged();
+  return mFrame?mFrame->InternalContentChanged():NS_ERROR_NULL_POINTER;
 }
 
 //END NS_IDOMSELECTIONLISTENER
@@ -393,23 +400,23 @@ nsTextInputListener::Blur (nsIDOMEvent* aEvent)
     return NS_OK;
     
   nsAutoString blurValue;
-  mFrame->GetText(&blurValue,PR_FALSE);
-  if (mFocusedValue.Compare(blurValue))//different fire onchange
-  {
-    mFrame->CallOnChange();
-  }
   nsCOMPtr<nsIEditor> editor;
   mFrame->GetEditor(getter_AddRefs(editor));
   if (editor)
   {
     editor->RemoveEditorObserver(this);
-  }
 
+  }  
+  mFrame->GetText(&blurValue,PR_FALSE);
+  if (mFocusedValue.Compare(blurValue))//different fire onchange
+  {
+    mFocusedValue = blurValue;
+    mFrame->CallOnChange();
+  }
   return NS_OK;
 }
-
-
 //END focuslistener
+
 
 NS_IMETHODIMP nsTextInputListener::WillDo(nsITransactionManager *aManager,
   nsITransaction *aTransaction, PRBool *aInterrupt)
@@ -1136,10 +1143,12 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
   }
 
 //unregister self from content
+  mTextListener->SetFrame(nsnull);
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
+  mTextListener->SetFrame(nsnull);
   }
   nsCOMPtr<nsIDOMEventReceiver> erP;
   if (mTextListener)
