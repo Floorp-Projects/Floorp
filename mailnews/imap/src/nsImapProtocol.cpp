@@ -5398,7 +5398,11 @@ void nsImapProtocol::FindMailboxesIfNecessary()
 
   // need to do this for every connection in order to see folders.
 #ifdef DOING_PSEUDO_MAILBOXES
-  if (GetServerStateParser().ServerIsAOLServer())
+  // check if this is an aol web mail server by checking for the host name the account wizard sets
+  // up for an aol web mail account - the host name itself is not used, but that's what we set it to, 
+  // so compare against it. A better solution would be to have the wizard set a special pref property on the
+  // server and perhaps we should do that for RTM
+  if (GetServerStateParser().ServerIsAOLServer() && GetImapHostName() && !nsCRT::strcmp(GetImapHostName(), "imap.mail.aol.com"))
     XAOL_Option("+READMBOX");
 #endif
 
@@ -6644,7 +6648,16 @@ nsImapCacheStreamListener::OnDataAvailable(nsIChannel * aChannel, nsISupports * 
   return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
+NS_IMPL_THREADSAFE_ADDREF(nsImapMockChannel)
+NS_IMPL_THREADSAFE_RELEASE(nsImapMockChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsImapMockChannel)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIImapMockChannel)
+   NS_INTERFACE_MAP_ENTRY(nsIImapMockChannel)
+   NS_INTERFACE_MAP_ENTRY(nsIChannel)
+   NS_INTERFACE_MAP_ENTRY(nsIRequest)
+NS_INTERFACE_MAP_END_THREADSAFE
+
 
 nsImapMockChannel::nsImapMockChannel()
 {
