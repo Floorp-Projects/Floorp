@@ -51,6 +51,15 @@
 class nsWindow;
 class nsMacWindow;
 
+#if !TARGET_CARBON
+// On OS9, we can't rely on the mouse location from the OS when we're
+// tracking the scrollwheel. That's because most drivers patch the OS
+// to make everyone think the mouse is hovering over the up/down scroll
+// arrow. As a result, we have to track it ourselves to get the correct
+// local mouse coordinate when determining where the mouse is for
+// scrolling. Luckily, OSX doesn't have this insanity.
+#define TRACK_MOUSE_LOC 1
+#endif
 
 #if UNIVERSAL_INTERFACES_VERSION < 0x0337
 enum {
@@ -112,11 +121,19 @@ public:
 	// DeleteObserver
 	virtual void	NotifyDelete(void* aDeletedObject);
 
+#if TRACK_MOUSE_LOC
+  void     SetGlobalPoint(Point inPoint);
+  Point    GetGlobalPoint() { return mLastGlobalMouseLoc; }
+#endif
+  
 private:
 
-	nsWindow*	mActiveWidget;
-	nsWindow*	mWidgetHit;
-	nsWindow*	mWidgetPointed;
+  nsWindow*	mActiveWidget;
+  nsWindow*	mWidgetHit;
+  nsWindow*	mWidgetPointed;
+#if TRACK_MOUSE_LOC
+  Point   mLastGlobalMouseLoc;
+#endif
 };
 
 
