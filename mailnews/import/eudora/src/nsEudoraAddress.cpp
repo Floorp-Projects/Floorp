@@ -734,39 +734,49 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 	fax.ReplaceSubstring( "\x03", " ");
 	phone.ReplaceSubstring( "\x03", " ");
 	name.ReplaceSubstring( "\x03", " ");
-		
+	
+	nsString	uniStr;
+
 	if (newRow) {
-		pDb->AddDisplayName( newRow, pCStr = displayName.ToNewCString());
+		uniStr = displayName;
+		pDb->AddDisplayName( newRow, pCStr = uniStr.ToNewUTF8String());
 		nsCRT::free( pCStr);
 				
-		pDb->AddNickName( newRow, pCStr = pEntry->m_name.ToNewCString());
+		uniStr = pEntry->m_name;
+		pDb->AddNickName( newRow, pCStr = uniStr.ToNewUTF8String());
 		nsCRT::free( pCStr);
 		
-		pDb->AddPrimaryEmail( newRow, pCStr = pData->m_email.ToNewCString());
+		uniStr = pData->m_email;
+		pDb->AddPrimaryEmail( newRow, pCStr = uniStr.ToNewUTF8String());
 		nsCRT::free( pCStr);
 		
 		if (!fax.IsEmpty()) {
-			pDb->AddFaxNumber( newRow, pCStr = fax.ToNewCString());
+			uniStr = fax;
+			pDb->AddFaxNumber( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!phone.IsEmpty()) {
-			pDb->AddHomePhone( newRow, pCStr = phone.ToNewCString());
+			uniStr = phone;
+			pDb->AddHomePhone( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!address.IsEmpty()) {
-			pDb->AddHomeAddress( newRow, pCStr = address.ToNewCString());
+			uniStr = address;
+			pDb->AddHomeAddress( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!address2.IsEmpty()) {
-			pDb->AddHomeAddress2( newRow, pCStr = address2.ToNewCString());
+			uniStr = address2;
+			pDb->AddHomeAddress2( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!note.IsEmpty()) {
-			pDb->AddNotes( newRow, pCStr = note.ToNewCString());
+			uniStr = note;
+			pDb->AddNotes( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 

@@ -934,7 +934,9 @@ void nsTextAddress::AddLdifRowToDatabase( void)
 void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot)
 {
     nsCAutoString colType(typeSlot);
-    nsCAutoString column(valueSlot);
+    // nsCAutoString column(valueSlot);
+	nsString		colValue = valueSlot;
+	char *			column = colValue.ToNewUTF8String();
 
 	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
 	switch ( firstByte )
@@ -1258,5 +1260,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	default:
 	  break; // default
 	}
+
+	nsCRT::free( column);
 }
 

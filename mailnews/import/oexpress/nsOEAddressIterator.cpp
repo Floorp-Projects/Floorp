@@ -244,23 +244,23 @@ PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILU
 	// We now have the required fields
 	// write them out followed by any optional fields!
 	if (!displayName.IsEmpty()) {
-		m_database->AddDisplayName( newRow, pCStr = displayName.ToNewCString());
+		m_database->AddDisplayName( newRow, pCStr = displayName.ToNewUTF8String());
 		nsCRT::free( pCStr);
 	}
 	if (!firstName.IsEmpty()) {
-		m_database->AddFirstName( newRow, pCStr = firstName.ToNewCString());
+		m_database->AddFirstName( newRow, pCStr = firstName.ToNewUTF8String());
 		nsCRT::free( pCStr);
 	}
 	if (!lastName.IsEmpty()) {
-		m_database->AddLastName( newRow, pCStr = lastName.ToNewCString());
+		m_database->AddLastName( newRow, pCStr = lastName.ToNewUTF8String());
 		nsCRT::free( pCStr);
 	}
 	if (!nickName.IsEmpty()) {
-		m_database->AddNickName( newRow, pCStr = nickName.ToNewCString());
+		m_database->AddNickName( newRow, pCStr = nickName.ToNewUTF8String());
 		nsCRT::free( pCStr);
 	}
 	if (!eMail.IsEmpty()) {
-		m_database->AddPrimaryEmail( newRow, pCStr = eMail.ToNewCString());
+		m_database->AddPrimaryEmail( newRow, pCStr = eMail.ToNewUTF8String());
 		nsCRT::free( pCStr);
 	}
 

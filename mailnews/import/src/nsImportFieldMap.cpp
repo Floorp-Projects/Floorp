@@ -235,7 +235,7 @@ NS_IMETHODIMP nsImportFieldMap::SetFieldValue(nsIAddrDatabase *database, nsIMdbR
 	nsresult rv;
 	
 	nsString str = value;
-	char *pVal = str.ToNewCString();
+	char *pVal = str.ToNewUTF8String();
 
 	switch( fieldNum) {
 	case 0:
