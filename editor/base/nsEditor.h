@@ -53,6 +53,10 @@ class nsIStringBundleService;
 class nsIStringBundle;
 class nsILocale;
 
+#ifdef ENABLE_JS_EDITOR_LOG
+class nsJSEditorLog;
+#endif // ENABLE_JS_EDITOR_LOG
+
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
 
@@ -77,11 +81,14 @@ private:
 
   nsVoidArray *mActionListeners;
   nsCOMPtr<nsIStringBundle> mStringBundle;
-
 protected:
   nsIDOMDocument * mDoc;
   // Services are not nsCOMPtr friendly
   nsIPref* mPrefs;
+
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsJSEditorLog *mJSEditorLog;
+#endif // ENABLE_JS_EDITOR_LOG
 
 public:
 

@@ -54,6 +54,10 @@
 #include "nsIContentIterator.h"
 #include "nsLayoutCID.h"
 
+#ifdef ENABLE_JS_EDITOR_LOG
+#include "nsJSEditorLog.h"
+#endif // ENABLE_JS_EDITOR_LOG
+
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
 #include "EditAggregateTxn.h"
@@ -290,6 +294,9 @@ nsEditor::nsEditor()
 ,  mUpdateCount(0)
 ,  mActionListeners(nsnull)
 ,  mDoc(nsnull)
+#ifdef ENABLE_JS_EDITOR_LOG
+,  mJSEditorLog(nsnull)
+#endif // ENABLE_JS_EDITOR_LOG
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -319,6 +326,14 @@ nsEditor::~nsEditor()
     delete mActionListeners;
     mActionListeners = 0;
   }
+
+#ifdef ENABLE_JS_EDITOR_LOG
+  if (mJSEditorLog)
+  {
+    delete mJSEditorLog;
+    mJSEditorLog = 0;
+  }
+#endif // ENABLE_JS_EDITOR_LOG
 
   // Release service pointers
   if (mPrefs)
@@ -518,8 +533,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 }
 
 // #define DEBUG_WITH_JS_EDITOR_LOG
-#ifdef DEBUG_WITH_JS_EDITOR_LOG
-#include "nsJSEditorLog.h"
+// #define DEBUG_WITH_JS_TXN_LOG
+#ifdef DEBUG_WITH_JS_TXN_LOG
+#include "nsJSTxnLog.h"
 #endif
 
 NS_IMETHODIMP
@@ -539,8 +555,8 @@ nsEditor::EnableUndo(PRBool aEnable)
         return NS_ERROR_NOT_AVAILABLE;
       }
 
-#ifdef DEBUG_WITH_JS_EDITOR_LOG
-      nsJSEditorLog *log = new nsJSEditorLog();
+#ifdef DEBUG_WITH_JS_TXN_LOG
+      nsJSTxnLog *log = new nsJSTxnLog();
       if (log)
       {
         NS_ADDREF(log);
@@ -548,6 +564,14 @@ nsEditor::EnableUndo(PRBool aEnable)
         NS_RELEASE(log);
       }
 #endif
+
+#ifdef ENABLE_JS_EDITOR_LOG
+#ifdef DEBUG_WITH_JS_EDITOR_LOG
+
+      mJSEditorLog = new nsJSEditorLog(this);
+
+#endif
+#endif // ENABLE_JS_EDITOR_LOG
     }
     mTxnMgr->SetMaxTransactionCount(-1);
   }
@@ -832,6 +856,13 @@ nsEditor::Do(nsITransaction *aTxn)
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Undo(aCount);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (gNoisy) { printf("Editor::Undo ----------\n"); }
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMSelection>selection;
@@ -861,6 +892,13 @@ nsEditor::Undo(PRUint32 aCount)
 NS_IMETHODIMP 
 nsEditor::Redo(PRUint32 aCount)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Redo(aCount);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (gNoisy) { printf("Editor::Redo ----------\n"); }
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMSelection>selection;
@@ -885,6 +923,13 @@ nsEditor::Redo(PRUint32 aCount)
 NS_IMETHODIMP 
 nsEditor::BeginTransaction()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->BeginTransaction();
+#endif // ENABLE_JS_EDITOR_LOG
+
   NS_PRECONDITION(mUpdateCount>=0, "bad state");
 
   nsCOMPtr<nsIDOMSelection>selection;
@@ -917,6 +962,13 @@ nsEditor::BeginTransaction()
 NS_IMETHODIMP 
 nsEditor::EndTransaction()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->EndTransaction();
+#endif // ENABLE_JS_EDITOR_LOG
+
   NS_PRECONDITION(mUpdateCount>0, "bad state");
 
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
@@ -955,6 +1007,13 @@ NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 // XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
 NS_IMETHODIMP nsEditor::SelectAll()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SelectAll();
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -990,6 +1049,13 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::Cut()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Cut();
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = mPresShell->GetSelection(getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res))
@@ -1008,6 +1074,13 @@ NS_IMETHODIMP nsEditor::Cut()
 
 NS_IMETHODIMP nsEditor::Copy()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Copy();
+#endif // ENABLE_JS_EDITOR_LOG
+
   //printf("nsEditor::Copy\n");
 
   return mPresShell->DoCopy();
@@ -1015,6 +1088,13 @@ NS_IMETHODIMP nsEditor::Copy()
 
 NS_IMETHODIMP nsEditor::Paste()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Paste();
+#endif // ENABLE_JS_EDITOR_LOG
+
   //printf("nsEditor::Paste\n");
   nsString stuffToPaste;
 
@@ -1304,6 +1384,15 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
 NS_IMETHODIMP 
 nsEditor::InsertText(const nsString& aStringToInsert)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertText(aStringToInsert);
+
+  nsAutoEditBatch aeb(this);
+#endif // ENABLE_JS_EDITOR_LOG
+
   EditAggregateTxn *aggTxn = nsnull;
   // Create the "delete current selection" txn
   nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName, &aggTxn);
@@ -1673,6 +1762,13 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
 NS_IMETHODIMP 
 nsEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->DeleteSelection(aAction);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult result;
 
   EditAggregateTxn *txn;
