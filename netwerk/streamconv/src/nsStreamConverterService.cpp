@@ -56,9 +56,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterServic
 
 ////////////////////////////////////////////////////////////
 // nsStreamConverterService methods
-nsStreamConverterService::nsStreamConverterService() {
+nsStreamConverterService::nsStreamConverterService() : mAdjacencyList(nsnull) {
     NS_INIT_ISUPPORTS();
-    mAdjacencyList = nsnull;
+}
+
+nsStreamConverterService::~nsStreamConverterService() {
+    NS_ASSERTION(mAdjacencyList, "init wasn't called, or the retval was ignored");
+    delete mAdjacencyList;
 }
 
 // Delete all the entries in the adjacency list
@@ -71,21 +75,16 @@ static PRBool PR_CALLBACK DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, voi
     return PR_TRUE;   
 };
 
-nsStreamConverterService::~nsStreamConverterService() {
-    // Clean up the adjacency list table.
-    mAdjacencyList->Reset(DeleteAdjacencyEntry, nsnull);
-    delete mAdjacencyList;
-}
-
 nsresult
 nsStreamConverterService::Init() {
-    mAdjacencyList = new nsHashtable();
+    mAdjacencyList = new nsObjectHashtable(nsnull, nsnull,
+                                           DeleteAdjacencyEntry, nsnull);
     if (!mAdjacencyList) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 // Builds the graph represented as an adjacency list (and built up in 
-// memory using an nsHashtable and nsISupportsArray combination).
+// memory using an nsObjectHashtable and nsISupportsArray combination).
 //
 // :BuildGraph() consults the category manager for all stream converter 
 // CONTRACTIDS then fills the adjacency list with edges.
@@ -236,7 +235,7 @@ nsStreamConverterService::ParseFromTo(const char *aContractID, nsCString &aFromR
     return NS_OK;
 }
 
-// nsHashtable enumerator functions.
+// nsObjectHashtable enumerator functions.
 
 // Initializes the BFS state table.
 static PRBool PR_CALLBACK InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
@@ -289,7 +288,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
     if (0 >= vertexCount) return NS_ERROR_FAILURE;
 
     // Create a corresponding color table for each vertex in the graph.
-    nsHashtable lBFSTable;
+    nsObjectHashtable lBFSTable(nsnull, nsnull, DeleteBFSEntry, nsnull);
     mAdjacencyList->Enumerate(InitBFSTable, &lBFSTable);
 
     NS_ASSERTION(lBFSTable.Count() == vertexCount, "strmconv BFS table init problem");
@@ -386,7 +385,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
         if (fromStr.Equals(key->GetString())) {
             // found it. We're done here.
             *aEdgeList = shortestPath;
-            lBFSTable.Reset(DeleteBFSEntry, nsnull);
             return NS_OK;
         }
 
@@ -413,7 +411,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
         data = predecessorData;
     }
 
-    lBFSTable.Reset(DeleteBFSEntry, nsnull);
     *aEdgeList = nsnull;
     return NS_ERROR_FAILURE; // couldn't find a stream converter or chain.
 
