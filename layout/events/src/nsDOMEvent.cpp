@@ -720,6 +720,18 @@ NS_METHOD nsDOMEvent::GetIsChar(PRBool* aIsChar)
   return NS_OK;
 }
 
+NS_METHOD nsDOMEvent::GetPreventDefault(PRBool* aReturn)
+{
+  if (!mEvent) {
+    *aReturn = PR_FALSE; 
+  }
+  else {
+    *aReturn = (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) ? PR_TRUE : PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
 //XXX The following four methods are for custom event dispatch inside the DOM.
 //They will be implemented post-beta
 NS_IMETHODIMP

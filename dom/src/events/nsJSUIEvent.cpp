@@ -514,6 +514,54 @@ UIEventInitUIEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 }
 
 
+//
+// Native method GetPreventDefault
+//
+PR_STATIC_CALLBACK(JSBool)
+NSUIEventGetPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMUIEvent *privateThis = (nsIDOMUIEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSUIEvent> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSUIEventIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRBool nativeRet;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_GETPREVENTDEFAULT, PR_FALSE);
+    }
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
+    }
+  }
+
+
+    result = nativeThis->GetPreventDefault(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for UIEvent
@@ -560,6 +608,7 @@ static JSPropertySpec UIEventProperties[] =
 static JSFunctionSpec UIEventMethods[] = 
 {
   {"initUIEvent",          UIEventInitUIEvent,     5},
+  {"getPreventDefault",          NSUIEventGetPreventDefault,     0},
   {0}
 };
 

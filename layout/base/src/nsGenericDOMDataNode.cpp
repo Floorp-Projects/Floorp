@@ -789,8 +789,10 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   }
   
   //Local handling stage
-  if (!(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) && nsnull != mListenerManager) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+    aEvent->flags |= aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+    aEvent->flags &= ~aFlags;
   }
 
   //Bubbling stage
