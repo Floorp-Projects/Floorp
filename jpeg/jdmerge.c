@@ -322,7 +322,7 @@ h2v2_merged_upsample (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
 		      JSAMPARRAY output_buf)
 {
-if (MMXAvailable)
+if (MMXAvailable && (cinfo->image_width >= 8))
 	h2v2_merged_upsample_mmx (cinfo, input_buf, in_row_group_ctr, output_buf);
 else
 	h2v2_merged_upsample_orig (cinfo, input_buf, in_row_group_ctr, output_buf);
@@ -438,6 +438,7 @@ h2v2_merged_upsample_mmx (j_decompress_ptr cinfo,
   int cols_asm = (cols >> 3);
   int diff = cols - (cols_asm<<3);
   int cols_asm_copy = cols_asm;
+
  ///////////////////////////////////////
 
   inptr00 = input_buf[0][in_row_group_ctr*2];
