@@ -837,6 +837,8 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
 */
 nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 {
+#if THIS_ROUTINE_DOESNT_COMPILE
+
   // allocate the out-param transaction
   nsresult result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
   if (NS_FAILED(result))
@@ -865,9 +867,9 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
           if(PR_FALSE==isCollapsed)
           {
             EditAggregateTxn *delSelTxn;
-            result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTtxn);
-            if ((NS_SUCCEEDED(result)) && (delSelTtxn)) {
-              (*aTxn)->AppendChild(delSelTtxn); 
+            result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
+            if ((NS_SUCCEEDED(result)) && (delSelTxn)) {
+              (*aTxn)->AppendChild(delSelTxn); 
             }
           }
           // at this point, we have a collapsed selection
@@ -899,6 +901,8 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
     NS_IF_RELEASE(*aTxn);
   }
   return result;
+#endif
+return NS_OK;
 }
 
 
