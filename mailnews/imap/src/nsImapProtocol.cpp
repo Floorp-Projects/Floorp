@@ -4770,7 +4770,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             m_runningUrl->GetImapAction(&imapAction);
 
             if (GetServerStateParser().LastCommandSuccessful() &&  (
-                imapAction == nsIImapUrl::nsImapAppendDraftFromFile ))
+                imapAction == nsIImapUrl::nsImapAppendDraftFromFile || imapAction == nsIImapUrl::nsImapAppendMsgFromFile ))
             {
               if (GetServerStateParser().GetCapabilityFlag() &
                     kUidplusCapability)
@@ -4794,7 +4794,11 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                     }
                 }
                 else if (m_imapExtensionSink)
-                { // *** code me to search for the newly appended message
+                {   // *** code me to search for the newly appended message
+                    // go to selected state
+                    AutoSubscribeToMailboxIfNecessary(mailboxName);
+                    SelectMailbox(mailboxName);
+
                     nsCString messageId;
                     rv = m_imapExtensionSink->GetMessageId(this, &messageId,
                                                        m_runningUrl);
@@ -4804,7 +4808,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                     {
                         command = "SEARCH SEEN HEADER Message-ID ";
                         command.Append(messageId);
-
+                        
                         // Clean up result sequence before issuing the cmd.
                         GetServerStateParser().ResetSearchResultSequence();
  

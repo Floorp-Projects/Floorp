@@ -3866,6 +3866,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   if (m_transactionManager && m_copyState->m_undoMsgTxn)
                       m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
                   ClearCopyState(aExitCode);
+                  sendEndCopyNotification = PR_TRUE;
               }
               else
                 NS_ASSERTION(PR_FALSE, "not clearing copy state");
@@ -4453,8 +4454,6 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
             PR_TRUE, PR_TRUE, nsnull, PR_FALSE);
           // we want to send this notification after the source messages have
           // been deleted.
-          if (mCopyListener)
-            mCopyListener->OnStopCopy(NS_OK);
           nsCOMPtr<nsIMsgLocalMailFolder> popFolder = do_QueryInterface(srcFolder); 
           if (popFolder)   //needed if move pop->imap to notify FE
             srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);

@@ -58,6 +58,7 @@ public:
     nsresult AddDstKey(nsMsgKey aKey);
     nsresult AddDstMsgSize(PRUint32 msgSize);
     nsresult SetSrcFolder(nsIMsgFolder* srcFolder);
+    nsresult GetSrcIsImap(PRBool *isImap);
     nsresult SetDstFolder(nsIMsgFolder* dstFolder);
     nsresult Init(nsIMsgFolder* srcFolder,
 				  nsIMsgFolder* dstFolder,

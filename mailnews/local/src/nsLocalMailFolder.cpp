@@ -2277,8 +2277,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
       }
     }
-
-    if (NS_SUCCEEDED(rv) && localUndoTxn && mCopyState->m_message)
+    PRBool isImap;
+    if (NS_SUCCEEDED(rv) && localUndoTxn)
+      localUndoTxn->GetSrcIsImap(&isImap);
+    if (NS_SUCCEEDED(rv) && localUndoTxn && (!isImap || !mCopyState->m_copyingMultipleMessages))
     {
       nsMsgKey aKey;
       mCopyState->m_message->GetMessageKey(&aKey);
@@ -2359,9 +2361,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
           srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
         
         nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
+        nsCOMPtr<nsIMsgCopyServiceListener> listener =do_QueryInterface(mCopyState->m_listener);
         
         if (!mCopyState->m_copyingMultipleMessages || multipleCopiesFinished)
           ClearCopyState(PR_TRUE);
+
+        if (listener) //notify after clearing the copy state;
+          listener->OnStopCopy(NS_OK);
+
         
         if (NS_SUCCEEDED(result))
           copyService->NotifyCompletion(srcSupport, this, rv);
@@ -2403,10 +2410,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
         mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
     
       nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
-    
-      if (mCopyState->m_listener) 
-        mCopyState->m_listener->OnStopCopy(NS_OK);
-      ClearCopyState(PR_TRUE); // ### we don't know if it succeeded
+      nsCOMPtr<nsIMsgCopyServiceListener> listener =do_QueryInterface(mCopyState->m_listener);
+      ClearCopyState(PR_TRUE);  //clear the copy state so that the next message from a different folder can be moved
+      if (listener) //notify after clearing the copy state;
+        listener->OnStopCopy(NS_OK);
+      // ### we don't know if it succeeded
       //passing in NS_OK because we only get in here if copy portion succeeded
     
       copyService->NotifyCompletion(srcSupport, this, NS_OK);
@@ -2436,6 +2444,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
     if (NS_SUCCEEDED(rv))
       localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
+  }
+  
+  if (localUndoTxn)
+  {
+    localUndoTxn->AddSrcKey(key);
+    localUndoTxn->AddDstKey(mCopyState->m_curDstKey);
   }
 
   // I think this is always true for online to offline copy

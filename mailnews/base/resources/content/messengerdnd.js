@@ -399,10 +399,11 @@ function DropOnFolderTree(event)
           }
           else {
             // fix this, will not work for multiple 3 panes
-            if (!ctrlKeydown) {
+            var sameServer = (sourceServer == targetServer);
+            if (!ctrlKeydown && sameServer) {
               SetNextMessageAfterDelete();
             }
-            messenger.CopyMessages(sourceFolder, targetFolder, list, !ctrlKeydown);
+            messenger.CopyMessages(sourceFolder, targetFolder, list, (!ctrlKeydown && sameServer));
           }
         }
         catch (ex) {

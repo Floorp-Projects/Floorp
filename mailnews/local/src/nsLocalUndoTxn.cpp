@@ -97,7 +97,12 @@ nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
     }
 	return NS_OK;
 }
-
+nsresult 
+nsLocalMoveCopyMsgTxn::GetSrcIsImap(PRBool *isImap)
+{
+  *isImap = m_srcIsImap4;
+  return NS_OK;
+}
 nsresult
 nsLocalMoveCopyMsgTxn::SetSrcFolder(nsIMsgFolder* srcFolder)
 {
