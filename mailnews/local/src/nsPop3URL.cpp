@@ -196,7 +196,7 @@ nsresult nsPop3URL::ParseUrl(const nsString& aSpec)
     }
 
 
-#if defined(XP_UNIX) || defined (XP_MAC)
+#if defined(XP_UNIX) || defined (XP_MAC) || defined(XP_BEOS)
     // Always leave the top level slash for absolute file paths under Mac and UNIX.
     // The code above sometimes results in stripping all of slashes
     // off. This only happens when a previously stripped url is asked to be

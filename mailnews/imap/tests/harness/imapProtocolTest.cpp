@@ -94,6 +94,11 @@
 #define ARTICLE_PATH_URL ARTICLE_PATH
 #endif
 
+#ifdef XP_BEOS
+#define ARTICLE_PATH "/tmp/tempArticle.eml"
+#define ARTICLE_PATH_URL ARTICLE_PATH
+#endif
+
 #ifdef XP_PC
 #define ARTICLE_PATH  "c:\\temp\\tempArticle.eml"
 #define ARTICLE_PATH_URL "C|/temp/tempArticle.eml"
