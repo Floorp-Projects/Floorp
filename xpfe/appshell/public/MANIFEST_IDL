@@ -8,4 +8,5 @@ nsIAppShellService.idl
 nsICommonDialogs.idl
 nsIDialogParamBlock.idl
 nsICmdLineService.idl
+nsISessionHistory.idl
 
