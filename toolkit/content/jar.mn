@@ -1,6 +1,7 @@
 toolkit.jar:
 +  content/global/MPL-1.1.html                (MPL-1.1.html)
    content/global/NPL-1.1.html                (NPL-1.1.html)
+   content/global/XPCNativeWrapper.js         (XPCNativeWrapper.js)
 +  content/global/contents.rdf                (contents.rdf)
 +  content/global-platform/contents.rdf       (contents-platform.rdf)
 +  content/global-region/contents.rdf         (contents-region.rdf)
