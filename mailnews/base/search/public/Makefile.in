@@ -48,6 +48,7 @@ XPIDLSRCS	= \
 		nsIMsgSearchAdapter.idl \
 		nsIMsgSearchSession.idl \
 		nsIMsgSearchScopeTerm.idl \
+		nsIMsgSearchNotify.idl \
 		nsIMsgSearchValidityTable.idl \
 		nsIMsgSearchValidityManager.idl \
 		nsMsgFilterCore.idl \
