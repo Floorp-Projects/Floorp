@@ -125,9 +125,9 @@
           
           if (btn) {
             btn.addEventListener("command", this._handleButtonCommand, true);
-            // don't set pre-defined labels on explicit buttons
-            if (btns.length == 0)
-             btn.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+aDlgType));
+            // don't override custom labels with pre-defined labels on explicit buttons
+            if (!btn.hasAttribute("label"))
+              btn.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+aDlgType));
             btn._dialog = this;
           }
           return btn;
