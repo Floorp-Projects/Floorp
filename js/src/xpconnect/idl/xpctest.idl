@@ -103,6 +103,8 @@ interface nsIEcho : nsISupports {
 
     void PseudoQueryInterface(in nsIIDRef uuid, 
                               [iid_is(uuid),retval] out nsQIResult result);
+
+    void DebugDumpJSStack();
 };
 
 /***************************************************************************/

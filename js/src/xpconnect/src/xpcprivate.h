@@ -116,6 +116,7 @@ class nsXPConnect : public nsIXPConnect
 
     NS_IMETHOD DebugDump(int depth);
     NS_IMETHOD DebugDumpObject(nsISupports* p, int depth);
+    NS_IMETHOD DebugDumpJSStack();
 
     NS_IMETHOD AbandonJSContext(JSContext* aJSContext);
 

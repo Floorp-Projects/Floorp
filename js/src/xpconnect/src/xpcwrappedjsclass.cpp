@@ -343,7 +343,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
     uint8 type_tag = type.TagPart();
     nsID* iid;
 
-    if(type.TagPart() == nsXPTType::T_INTERFACE)
+    if(type_tag == nsXPTType::T_INTERFACE)
     {
         if(NS_FAILED(GetInterfaceInfo()->
                 GetIIDForParam(methodIndex, &param, &iid)))
@@ -352,7 +352,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
         }
         *iidIsOwned = JS_TRUE;
     }
-    else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
+    else if(type_tag == nsXPTType::T_INTERFACE_IS)
     {
         uint8 argnum;
         nsresult rv;
