@@ -160,6 +160,8 @@ pull_doc:
 pull_autoconf:
 	cd $(DEPTH)/..; \
 	$(CVSCO_NGLAYOUT) mozilla/build/autoconf; \
+	$(CVSCO_NGLAYOUT) mozilla/build/hcc; \
+	$(CVSCO_NGLAYOUT) mozilla/build/hcpp; \
 	$(CVSCO_NGLAYOUT) mozilla/xpfe; \
 	$(CVSCO_NGLAYOUT) mozilla/Makefile.in; \
 	$(CVSCO_NGLAYOUT) mozilla/configure.in;
