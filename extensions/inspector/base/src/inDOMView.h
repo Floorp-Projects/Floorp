@@ -134,8 +134,8 @@ protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
 
-  PRBool mShowAnonymous;
-  PRBool mShowSubDocuments;
+  PRPackedBool mShowAnonymous;
+  PRPackedBool mShowSubDocuments;
   PRUint32 mFilters;
 
   nsCOMPtr<nsIDOMNode> mRootNode;
@@ -165,7 +165,12 @@ protected:
   void RemoveLink(inDOMViewNode* aNode);
   void ReplaceLink(inDOMViewNode* aNewNode, inDOMViewNode* aOldNode);
 
-  PRUint16 GetNodeTypeKey(PRUint16 aType);
+  inline PRUint16 GetNodeTypeKey(PRUint16 aType)
+  {
+    NS_ASSERTION(aType < 16, "You doofus");
+    return 1 << aType;
+  };
+
   nsresult GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult);
   nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray);
   nsresult AppendAttrsToArray(nsIDOMNamedNodeMap* aKids, nsISupportsArray* aArray);
