@@ -157,7 +157,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_SCROLLBAR;
       break;
     case eColor_threeddarkshadow:
-      idx = SYSCLR_BUTTONDEFAULT;
+      idx = SYSCLR_BUTTONDARK;
       break;
     case eColor_threedface:
       idx = SYSCLR_BUTTONMIDDLE;
@@ -191,6 +191,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       break;
     case eColor__moz_dialogtext:
       idx = SYSCLR_WINDOWTEXT;
+      break;
+    case eColor__moz_buttondefault:
+      idx = SYSCLR_BUTTONDEFAULT;
       break;
     default:
         idx = SYSCLR_WINDOW;

@@ -170,6 +170,7 @@ char* nsXPLookAndFeel::sColorPrefs[] =
   "ui.window",
   "ui.windowframe",
   "ui.windowtext",
+  "ui.-moz-buttondefault",
   "ui.-moz-field",
   "ui.-moz-fieldtext",
   "ui.-moz-dialog",

@@ -324,6 +324,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     	//get this colour by querying variation table, ows. default to Platinum/Lavendar
 		res = GetMacAccentColor(eColorOffset_mac_accentdarkestshadow, aColor, NS_RGB(0x00,0x00,0x55));
 	    break;
+    case eColor__moz_buttondefault:
+        res = GetMacBrushColor(kThemeBrushButtonActiveDarkShadow, aColor, NS_RGB(0x77,0x77,0x77));
+        break;
     default:
         NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
         aColor = NS_RGB(0xff,0xff,0xff);
