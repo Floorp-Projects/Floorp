@@ -688,15 +688,6 @@ PRInt32 _ToInteger(nsString2& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
     else if(('+'==theChar) || (' '==theChar)) { //stop in a good state if you see this...
       break;
     }
-/* The following block can be replaced with the next block
-    else if(('X'==theChar) || ('#'==theChar)) {  
-      if(10==aRadix) {
-        *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
-        result=0;
-      }
-      break;
-    }
----cut above here...*/
     else {
       //we've encountered a char that's not a legal number or sign
       *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
@@ -729,11 +720,13 @@ PRInt32 GetNumericSubstring(nsString2& aString,PRUint32& aRadix) {
   PRInt32 decPt=aString.FindChar(aString,'.',PR_TRUE,0);
   char*   cp = (kNotFound==decPt) ? aString.mStr + aString.mLength-1 : aString.mStr+decPt-1;
   
-  aRadix=10; //assume for starters...
+  aRadix=kRadixUnknown; //assume for starters...
 
   // Skip trailing non-numeric...
   while (cp >= aString.mStr) {
     if((*cp>='0') && (*cp<='9')){
+      if(kRadixUnknown==aRadix)
+        aRadix=kRadix10;
       break;
     }
     else if((*cp>='A') && (*cp<='F')) {
@@ -761,7 +754,7 @@ PRInt32 GetNumericSubstring(nsString2& aString,PRUint32& aRadix) {
     }
     else {
       if(('#'==(*cp)) || ('X'==(*cp))) 
-        aRadix=16;
+        aRadix=kRadix16;
       cp++; //move back by one
       break;
     }
@@ -773,40 +766,22 @@ PRInt32 GetNumericSubstring(nsString2& aString,PRUint32& aRadix) {
   return result;
 }
 
+
 /**
- * Perform numeric string to int conversion with given radix.
+ * This method tries to autodetect that radix given a string
  * @update	gess 10/01/98
- * @param   aErrorCode will contain error if one occurs
- * @param   aRadix tells us what base to expect the string in.
- * @return  int rep of string value
+ * @return  10,16,or 0 (meaning I don't know)
  */
-PRInt32 nsString2::ToInteger(PRInt32* anErrorCode) const {
-
-  /********************************************************************************
-    If you called this version, it's because you don't know which radix your
-    string is stored in (hex, dec, etc.).
-    This method will attempt to figure that out for you, and then call 
-    toInteger(err,radix). 
-    NOTE: If you know your string is in a given radix, then it's better to
-          call toInteger(err,radix) directly, because there are cases where
-          this method cannot make the correct determination. For example,
-          a string that contains "123" can not be differentiated (hex vs. dec).
-   ********************************************************************************/
-
-  //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
-  PRInt32 result=0;
+PRUint32 nsString2::DetermineRadix(void) {
+  PRUint32 result=kRadixUnknown;
   if(0<mLength) {
     nsAutoString2 theString(*this,eOneByte);
-    PRUint32  theRadix=10;
-    *anErrorCode=GetNumericSubstring(theString,theRadix);
-
-    if(NS_OK==*anErrorCode){
-      result=_ToInteger(theString,anErrorCode,theRadix);
-    }
+    if(NS_OK!=GetNumericSubstring(theString,result))
+      result=kRadixUnknown;
   }
-  else *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
   return result;
 }
+
 
 /**
  * Perform decimal numeric string to int conversion.
@@ -820,11 +795,15 @@ PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
   nsAutoString2 theString(*this,eOneByte);
-  PRUint32  theRadix=10;
+  PRUint32  theRadix=aRadix;
   PRInt32   result=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
 
   if(NS_OK==result){
-    result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
+    if(kAutoDetect==aRadix)
+      aRadix=theRadix;
+    if((kRadix10==aRadix) || (kRadix16==aRadix))
+      result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
+    else result=NS_ERROR_ILLEGAL_VALUE;
   }
 
   return result;
