@@ -159,6 +159,7 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
 
 nsIScriptNameSetRegistry* nsLayoutModule::gRegistry;
+nsICSSStyleSheet* nsLayoutModule::gUAStyleSheet = nsnull;
 
 nsLayoutModule::nsLayoutModule()
   : mInitialized(PR_FALSE)
@@ -247,6 +248,7 @@ nsLayoutModule::Shutdown()
   nsTextTransformer::Shutdown();
 
   NS_IF_RELEASE(gRegistry);
+  NS_IF_RELEASE(gUAStyleSheet);
 }
 
 NS_IMETHODIMP

@@ -179,14 +179,9 @@ public:
                              nsCOMPtr<nsIDocumentViewer>*);
 
   static nsICSSStyleSheet* GetUAStyleSheet() {
-    return gUAStyleSheet;
+    return nsLayoutModule::gUAStyleSheet;
   }
-
-public:
-  static nsCOMPtr<nsICSSStyleSheet> gUAStyleSheet;
 };
-
-nsCOMPtr<nsICSSStyleSheet> nsLayoutDLF::gUAStyleSheet;
 
 nsresult
 NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
@@ -255,7 +250,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
                             nsIContentViewer** aDocViewer)
 {
   nsresult rv = NS_OK;
-  if (!nsLayoutDLF::gUAStyleSheet) {
+  if (!GetUAStyleSheet()) {
     // Load the UA style sheet
     nsCOMPtr<nsIURI> uaURL;
     rv = NS_NewURI(getter_AddRefs(uaURL), UA_CSS_URL);
@@ -264,7 +259,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
       rv = NS_NewCSSLoader(getter_AddRefs(cssLoader));
       if (cssLoader) {
         PRBool complete;
-        rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(nsLayoutDLF::gUAStyleSheet), complete,
+        rv = cssLoader->LoadAgentSheet(uaURL, nsLayoutModule::gUAStyleSheet, complete,
                                        nsnull);
       }
     }
