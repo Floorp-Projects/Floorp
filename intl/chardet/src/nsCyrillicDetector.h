@@ -60,7 +60,7 @@
 #define NS_UK_STRING_PROBDETECTOR_CID \
 { 0x2002f784, 0x3960, 0x11d3, { 0xb3, 0xc3, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
-static PRUint8 *gCyrillicCls[5] =
+static const PRUint8 *gCyrillicCls[5] =
 {
    CP1251Map,
    KOI8Map,
@@ -91,7 +91,7 @@ class nsCyrillicDetector
 {
   public:
     nsCyrillicDetector(PRUint8 aItems, 
-                      PRUint8 ** aCyrillicClass, 
+                      const PRUint8 ** aCyrillicClass, 
                       const char **aCharsets) {
       mItems = aItems;
       mCyrillicClass = aCyrillicClass;
@@ -109,7 +109,7 @@ class nsCyrillicDetector
 
   private:
     PRUint8  mItems;
-    PRUint8 ** mCyrillicClass;
+    const PRUint8 ** mCyrillicClass;
     const char** mCharsets;
     PRUint32 mProb[NUM_CYR_CHARSET];
     PRUint8 mLastCls[NUM_CYR_CHARSET];
@@ -123,7 +123,7 @@ class nsCyrXPCOMDetector :
     // nsISupports interface
     NS_DECL_ISUPPORTS
     nsCyrXPCOMDetector(PRUint8 aItems, 
-                      PRUint8 ** aCyrillicClass, 
+                      const PRUint8 ** aCyrillicClass, 
                       const char **aCharsets);
     virtual ~nsCyrXPCOMDetector();
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
@@ -143,7 +143,7 @@ class nsCyrXPCOMStringDetector :
     // nsISupports interface
     NS_DECL_ISUPPORTS
     nsCyrXPCOMStringDetector(PRUint8 aItems, 
-                      PRUint8 ** aCyrillicClass, 
+                      const PRUint8 ** aCyrillicClass, 
                       const char **aCharsets);
     virtual ~nsCyrXPCOMStringDetector();
     NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 

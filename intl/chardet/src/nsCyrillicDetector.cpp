@@ -105,7 +105,7 @@ void nsCyrillicDetector::DataEnd()
 
 //---------------------------------------------------------------------
 nsCyrXPCOMDetector:: nsCyrXPCOMDetector(PRUint8 aItems, 
-                      PRUint8 ** aCyrillicClass, 
+                      const PRUint8 ** aCyrillicClass, 
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
@@ -160,7 +160,7 @@ void nsCyrXPCOMDetector::Report(const char* aCharset)
 
 //---------------------------------------------------------------------
 nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(PRUint8 aItems, 
-                      PRUint8 ** aCyrillicClass, 
+                      const PRUint8 ** aCyrillicClass, 
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
