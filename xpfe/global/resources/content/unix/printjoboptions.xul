@@ -52,14 +52,6 @@ Contributor(s):
       </row>
 
       <row>
-        <label value="&reverseGroup.label;"/>
-        <radiogroup id="reverseGroup" orient="horizontal">
-          <radio id="firstRadio" label="&firstRadio.label;"/>
-          <radio id="lastRadio" label="&lastRadio.label;"/>
-        </radiogroup>
-      </row>
-
-      <row>
         <label value="&colorGroup.label;"/>
         <radiogroup id="colorGroup" orient="horizontal">
           <radio id="grayRadio" label="&grayRadio.label;"/>

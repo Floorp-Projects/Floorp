@@ -4,10 +4,6 @@
 
 <!ENTITY cmdInput.label "Print Command:">
 
-<!ENTITY reverseGroup.label "Print:">
-<!ENTITY firstRadio.label "First Page First">
-<!ENTITY lastRadio.label "Last Page First">
-
 <!ENTITY colorGroup.label "Color:">
 <!ENTITY grayRadio.label "GrayScale">
 <!ENTITY colorRadio.label "Color">
