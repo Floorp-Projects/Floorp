@@ -62,6 +62,12 @@ fi
 
 export LD_LIBRARY_PATH
 
+##
+## Set FONTCONFIG_PATH for Xft/fontconfig
+##
+FONTCONFIG_PATH="/etc/fonts:${MOZILLA_FIVE_HOME}/res/Xft"
+export FONTCONFIG_PATH
+
 # Figure out if we need to ser LD_ASSUME_KERNEL for older versions of the JVM.
 
 function set_jvm_vars() {
