@@ -265,10 +265,17 @@ public:
   nsresult EvaluateScript(nsString& aScript,
                           PRInt32 aLineNo);
 
+  void NotifyBody() {
+    PRInt32 currentCount;
+    mBody->ChildCount(currentCount);
+    if (mBodyChildCount < currentCount) {
+      mDocument->ContentAppended(mBody, mBodyChildCount);
+    }
+    mBodyChildCount = currentCount;
+  }
 #ifdef DEBUG
   void ForceReflow() {
-    mDocument->ContentAppended(mBody, mBodyChildCount);
-    mBody->ChildCount(mBodyChildCount);
+    NotifyBody();
     mDirty = PR_FALSE;
   }
 #endif
@@ -1558,8 +1565,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   if (nsnull != mBody) {
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: layout final content"));
-    mDocument->ContentAppended(mBody, mBodyChildCount);
-    mBody->ChildCount(mBodyChildCount);
+    NotifyBody();
   }
   ScrollToRef();
 
@@ -1579,8 +1585,7 @@ HTMLContentSink::WillInterrupt()
     if (nsnull != mBody) {
       SINK_TRACE(SINK_TRACE_REFLOW,
                  ("HTMLContentSink::WillInterrupt: reflow content"));
-      mDocument->ContentAppended(mBody, mBodyChildCount);
-      mBody->ChildCount(mBodyChildCount);
+      NotifyBody();
     }
     mDirty = PR_FALSE;
   }
@@ -1809,8 +1814,7 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 
   if (didFlush) {
     // Trigger a reflow for the flushed text
-    mDocument->ContentAppended(mBody, mBodyChildCount);
-    mBody->ChildCount(mBodyChildCount);
+    NotifyBody();
   }
 
   return NS_OK;
@@ -2628,7 +2632,7 @@ HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
   }
 
   // Strip out whitespace in the name for navigator compatability
-  // XXX NAV QUIRK
+  // XXX NAV QUIRK -- XXX this should be done in the content node, not the sink
   nsHTMLValue name;
   aContent->GetHTMLAttribute(nsHTMLAtoms::name, name);
   if (eHTMLUnit_String == name.GetUnit()) {
@@ -2798,8 +2802,7 @@ HTMLContentSink::PreEvaluateScript()
     if (nsnull != mBody) {
       SINK_TRACE(SINK_TRACE_REFLOW,
                  ("HTMLContentSink::PreEvaluateScript: reflow content"));
-      mDocument->ContentAppended(mBody, mBodyChildCount);
-      mBody->ChildCount(mBodyChildCount);
+      NotifyBody();
     }
     mDirty = PR_FALSE;
   }
