@@ -691,10 +691,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_container_add(GTK_CONTAINER(parent), label);
   gtk_container_add(GTK_CONTAINER(window), parent);
 
-  gtk_widget_set_rc_style(parent);
-  gtk_widget_set_rc_style(label);
-  gtk_widget_realize(parent);
-  gtk_widget_realize(label);
+  gtk_widget_ensure_style(label);
 
   GetSystemFontInfo(label, &mDefaultFont, aPixelsToTwips);
 
@@ -707,9 +704,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
 
   gtk_container_add(GTK_CONTAINER(parent), entry);
   gtk_container_add(GTK_CONTAINER(window), parent);
-
-  gtk_widget_set_rc_style(entry);
-  gtk_widget_realize(entry);
+  gtk_widget_ensure_style(entry);
 
   GetSystemFontInfo(entry, &mFieldFont, aPixelsToTwips);
 
@@ -725,10 +720,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
   gtk_menu_append(GTK_MENU(menu), menuitem);
 
-  gtk_widget_set_rc_style(accel_label);
-  gtk_widget_set_rc_style(menu);
-  gtk_widget_realize(menu);
-  gtk_widget_realize(accel_label);
+  gtk_widget_ensure_style(accel_label);
 
   GetSystemFontInfo(accel_label, &mMenuFont, aPixelsToTwips);
 
@@ -744,11 +736,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_container_add(GTK_CONTAINER(parent), button);
   gtk_container_add(GTK_CONTAINER(window), parent);
 
-  gtk_widget_set_rc_style(button);
-  gtk_widget_set_rc_style(label);
-
-  gtk_widget_realize(button);
-  gtk_widget_realize(label);
+  gtk_widget_ensure_style(label);
 
   GetSystemFontInfo(label, &mButtonFont, aPixelsToTwips);
 
