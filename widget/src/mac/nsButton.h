@@ -19,66 +19,26 @@
 #ifndef nsButton_h__
 #define nsButton_h__
 
-//#include "nsdefs.h"
-#include "nsWindow.h"
+#include "nsMacControl.h"
 #include "nsIButton.h"
 
-/**
- * Native Mac button wrapper
- */
  
-class nsButton :  public nsWindow, public nsIButton
+class nsButton :  public nsMacControl, public nsIButton
 {
 
 public:
-  nsButton();
-  virtual ~nsButton();
+	nsButton();
+	virtual ~nsButton();
 
 	// nsISupports
 	NS_IMETHOD_(nsrefcnt) AddRef();
 	NS_IMETHOD_(nsrefcnt) Release();
 	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-    // nsIButton part
-  NS_IMETHOD     SetLabel(const nsString& aText);
-  NS_IMETHOD     GetLabel(nsString& aBuffer);
-
-  virtual PRBool OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool OnResize(nsSizeEvent &aEvent);
-  virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-  NS_IMETHOD     Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-  NS_IMETHOD     Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-
-  	
+	// nsIButton part
+	NS_IMETHOD     	SetLabel(const nsString& aText);
+	NS_IMETHOD     	GetLabel(nsString& aBuffer);
   
-  // Overriden from nsWindow
-  //virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
-  
-
-private:
-
-	void DrawWidget(PRBool	aMouseInside,nsIRenderingContext	*aRContext);
- 
-  nsString		  mLabel;
-  PRBool				mMouseDownInButton;
-  PRBool				mWidgetArmed;
-
-
 };
 
 #endif // nsButton_h__

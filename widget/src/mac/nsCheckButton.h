@@ -19,63 +19,29 @@
 #ifndef nsCheckButton_h__
 #define nsCheckButton_h__
 
-#include "nsWindow.h"
+#include "nsMacControl.h"
 #include "nsICheckButton.h"
 
 
-/**-------------------------------------------------------------------------------
- * nsCheckButton Class definition for the Macintosh
- * @update dc 10/16/98 
- */
-class nsCheckButton : public nsWindow,public nsICheckButton
+class nsCheckButton : public nsMacControl, public nsICheckButton
 {
 
 public:
-                           nsCheckButton();
-	virtual                 ~nsCheckButton();
+   	nsCheckButton();
+	virtual ~nsCheckButton();
 
 	// nsISupports
 	NS_IMETHOD_(nsrefcnt) AddRef();
 	NS_IMETHOD_(nsrefcnt) Release();
 	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
 
-
-  // nsICheckButton part
-  NS_IMETHOD     SetLabel(const nsString& aText);
-  NS_IMETHOD     GetLabel(nsString& aBuffer);
-  NS_IMETHOD 		 SetState(const PRBool aState);
-  NS_IMETHOD     GetState(PRBool& aState);
-  NS_IMETHOD     Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-  NS_IMETHOD     Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-
-	// event handling
-  virtual PRBool OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool OnResize(nsSizeEvent &aEvent);
-  virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-    
-
-private:
-	void DrawWidget(PRBool	aMouseInside);
-
-  nsString			mLabel;
-  PRBool				mMouseDownInButton;
-  PRBool				mWidgetArmed;
-  PRBool				mButtonSet;
+	// nsICheckButton part
+	NS_IMETHOD		SetLabel(const nsString& aText);
+	NS_IMETHOD		GetLabel(nsString& aBuffer);
+	NS_IMETHOD		SetState(const PRBool aState);
+	NS_IMETHOD		GetState(PRBool& aState);
 };
+
 
 #endif // nsCheckButton_h__

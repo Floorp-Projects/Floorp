@@ -131,6 +131,7 @@ static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);
 static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
@@ -253,10 +254,12 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 	bw->Close();
 	NS_RELEASE(bw);
 
+#ifndef XP_MAC
 	// XXX Really shouldn't just exit, we should just notify somebody...
 	if (0 == nsBrowserWindow::gBrowsers.Count()) {
 	  app->Exit();
 	}
+#endif
       }
       return result;
 
@@ -890,7 +893,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   NS_IF_ADDREF(mPrefs);
 
   // Create top level window
-  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
 					     (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;

@@ -99,6 +99,7 @@ nsRenderingContextMac :: nsRenderingContextMac()
   mCurrFontHandle = 0;
   mOffx = 0;
   mOffy = 0;
+  mMainRegion = nsnull;
   PushState();
 }
 
@@ -118,7 +119,13 @@ nsRenderingContextMac :: ~nsRenderingContextMac()
     ::DisposeRgn(mClipRegion);
     mClipRegion = nsnull;
   	}
-  	
+
+	if (mMainRegion)
+  	{
+    ::DisposeRgn(mMainRegion);
+    mMainRegion = nsnull;
+  	}
+
   mTMatrix = nsnull;
 
   // Destroy the State Machine
@@ -143,9 +150,9 @@ nsRenderingContextMac :: ~nsRenderingContextMac()
 
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, kRenderingContextIID)
-NS_IMPL_ADDREF(nsRenderingContextMac)
-NS_IMPL_RELEASE(nsRenderingContextMac)
+NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, kRenderingContextIID);
+NS_IMPL_ADDREF(nsRenderingContextMac);
+NS_IMPL_RELEASE(nsRenderingContextMac);
 
 //------------------------------------------------------------------------
 
@@ -165,12 +172,20 @@ PRInt32	offx,offy;
   mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
   mFrontBuffer = mRenderingSurface;
   
-  mMainRegion = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
+  RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
+	if (mMainRegion == nsnull)
+		mMainRegion = ::NewRgn();
+	if (mMainRegion)
+		::CopyRgn(widgetRgn, mMainRegion);
 
 	mOriSurface = mRenderingSurface;    // we need to know when we set back
   ::SetPort(mRenderingSurface);
   ::SetOrigin(-offx,-offy);
-  
+	::OffsetRgn(mMainRegion, -offx, -offy);
+
+	mOffx = -offx;
+	mOffy = -offy;
+
   return (CommonInit());
 }
 
@@ -204,7 +219,6 @@ nsresult nsRenderingContextMac :: CommonInit()
   mContext->GetAppUnitsToDevUnits(app2dev);
   mTMatrix->AddScale(app2dev, app2dev);
   this->SetColor(mCurrentColor);
-  
 
   return NS_OK;
 }
@@ -324,7 +338,7 @@ PRBool bEmpty = PR_FALSE;
     
     mOffy = state->mOffy;
     mOffx = state->mOffx;
-    ::SetOrigin(mOffy,mOffx);
+    //еее::SetOrigin(mOffy,mOffx);
     
     // Delete this graphics state object
     delete state;
@@ -499,11 +513,13 @@ void nsRenderingContextMac :: SetColor(nscolor aColor)
 RGBColor	thecolor;
 GrafPtr		curport;
 
+	#define COLOR8TOCOLOR16(color8)	 (color8 == 0xFF ? 0xFFFF : (color8 << 8))
+
 	GetPort(&curport);
 	SetPort(mRenderingSurface);
-	thecolor.red = NS_GET_R(aColor)<<8;
-	thecolor.green = NS_GET_G(aColor)<<8;
-	thecolor.blue = NS_GET_B(aColor)<<8;
+	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
+	thecolor.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
+	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));
 	::RGBForeColor(&thecolor);
   mCurrentColor = aColor ;
   SetPort(curport);

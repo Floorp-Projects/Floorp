@@ -33,6 +33,7 @@ NS_IMPL_RELEASE(nsFileWidget)
 //-------------------------------------------------------------------------
 nsFileWidget::nsFileWidget()
 {
+  NS_INIT_REFCNT();
   mIOwnEventLoop = PR_FALSE;
   mNumberOfFilters = 0;
 }
@@ -62,18 +63,9 @@ NS_IMETHODIMP   nsFileWidget:: Create(nsIWidget  *aParent,
 {
   mTitle = aTitle;
   mMode = aMode;
-	WindowPtr window = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
+	mWindowPtr = nsnull;
 
-  if (aParent) {
-    window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-    window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
   return NS_OK;
 
 }

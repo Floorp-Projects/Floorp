@@ -66,6 +66,21 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 { 0x18032ad5, 0xb265, 0x11d1, \
 { 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
+		//------------------------------------------
+		// TEMPORARY TEMPORARY TEMPORARY TEMPORARY
+		// This definition below will be removed after the Mac Widgets have landed.
+		// We'll then create a new class "nsIWindow" and use it on all the platforms.
+#ifdef XP_MAC
+// {18032AD6-B265-11d1-AA2A-000000000000}
+#define NS_IWINDOW_IID \
+{ 0x18032ad6, 0xb265, 0x11d1, \
+{ 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+#else
+#define NS_IWINDOW_IID	NS_IWIDGET_IID
+#endif
+		// TEMPORARY TEMPORARY TEMPORARY TEMPORARY
+		//------------------------------------------
+
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary

@@ -80,8 +80,10 @@ static PRBool			gInstalledColorMap = PR_FALSE;
 void  MyLoadImage(char *aFileName);
 
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);	//еее
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
@@ -210,7 +212,6 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
 nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
 {
     //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
-
     nsEventStatus result = nsEventStatus_eConsumeNoDefault;
     switch(aEvent->message) {
 
@@ -336,8 +337,13 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                         // a sort of random rect
                         nsRect rect;
                         scribbleData.drawPane->GetBounds(rect);
+#if 0
                         nscoord	x = rect.x;
                         nscoord	y = rect.y;
+#else
+                        nscoord	x = 0;
+                        nscoord	y = 0;
+#endif
                         nscoord width = rect.width;
                         nscoord height = rect.height;
 
@@ -368,7 +374,7 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                         	if (buf.Equals(image)) 
 	                        	{
 #ifdef XP_MAC
-                            char szFile[256] = "Macintosh%20HD/Source331%20Build%20Environment/mozilla/webshell/tests/viewer/samples/raptor.jpg";
+                            char szFile[256] = "file:///Raptor/moz/mozilla/webshell/tests/viewer/samples/raptor.jpg";
 #else
                             char szFile[256] = "S:\\mozilla\\dist\\WIN32_D.OBJ\\bin\\res\\samples\\raptor.jpg";
 #endif
@@ -474,6 +480,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
     nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+ 		nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -516,7 +523,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     //
     // create the main window
     //
-    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, 
+    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWindowIID, //еее
                                  (void **)&(scribbleData.mainWindow));
     nsRect rect(100, 100, 600, 700);
     scribbleData.mainWindow->Create((nsIWidget*)NULL, 
@@ -829,8 +836,12 @@ char *str;
       NS_RELEASE(deviceCtx);
       }
 
+#ifdef XP_MAC
+    strcpy(fileURL, aFileName);
+#else
     strcpy(fileURL, FILE_URL_PREFIX);
     strcpy(fileURL + strlen(FILE_URL_PREFIX), aFileName);
+#endif
 
 #ifdef XP_PC
     str = fileURL;

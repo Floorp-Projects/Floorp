@@ -21,123 +21,38 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
+#include "nsFont.h"
+#include "nsFontMetricsMac.h"
 
-NS_IMPL_ADDREF(nsCheckButton)
-NS_IMPL_RELEASE(nsCheckButton)
 
-#define DBG 0
-/**-------------------------------------------------------------------------------
- * nsCheckButton Constructor
- * @update  dc 08/31/98
- */
-nsCheckButton::nsCheckButton() : nsWindow(), nsICheckButton()
+NS_IMPL_ADDREF(nsCheckButton);
+NS_IMPL_RELEASE(nsCheckButton);
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsCheckButton::nsCheckButton() : nsMacControl(), nsICheckButton()
 {
+  NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsCheckButton");
-  mButtonSet = PR_FALSE;
+  SetControlType(checkBoxProc);
 }
 
-/**-------------------------------------------------------------------------------
- * the create method for a nsCheckButton, using a nsIWidget as the parent
- * @update  dc 08/31/98
- * @param  aParent -- the widget which will be this widgets parent in the tree
- * @param  aRect -- The bounds in parental coordinates of this widget
- * @param  aHandleEventFunction -- Procedures to be executed for this widget
- * @param  aContext -- device context to be used by this widget
- * @param  aAppShell -- 
- * @param  aToolkit -- toolkit to be used by this widget
- * @param  aInitData -- Initialization data used by frames
- * @return -- NS_OK if everything was created correctly
- */ 
-NS_IMETHODIMP nsCheckButton::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext */*aContext*/,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData */*aInitData*/) 
-{
-  mParent = aParent;
-  aParent->AddChild(this);
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-	
-	WindowPtr window = nsnull;
-
-  if (aParent) {
-    window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-    window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  mIsMainWindow = PR_FALSE;
-  mWindowMadeHere = PR_TRUE;
-	mWindowRecord = (WindowRecord*)window;
-	mWindowPtr = (WindowPtr)window;
-  
-  NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
-	if (window){
-	  InitToolkit(aToolkit, aParent);
-	  // InitDeviceContext(aContext, parentWidget);
-
-	  if (DBG) fprintf(stderr, "Parent 0x%x\n", window);
-
-		// Set the bounds to the local rect
-		SetBounds(aRect);
-
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
-
-	  // save the event callback function
-	  mEventCallback = aHandleEventFunction;
-	  
-	  mMouseDownInButton = PR_FALSE;
-	  mWidgetArmed = PR_FALSE;
-
-	  //InitCallbacks("nsButton");
-	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
-	}
-	return NS_OK;
-}
-
-/**-------------------------------------------------------------------------------
- * the create method for a checkbutton, using a nsNativeWidget as the parent
- * @update  dc 08/31/98
- * @param  aParent -- the widget which will be this widgets parent in the tree
- * @param  aRect -- The bounds in parental coordinates of this widget
- * @param  aHandleEventFunction -- Procedures to be executed for this widget
- * @param  aContext -- device context to be used by this widget
- * @param  aAppShell -- 
- * @param  aToolkit -- toolkit to be used by this widget
- * @param  aInitData -- Initialization data used by frames
- * @return -- NS_OK if everything was created correctly
- */ 
-NS_IMETHODIMP nsCheckButton::Create(nsNativeWidget /*aParent*/,
-                      const nsRect &/*aRect*/,
-                      EVENT_CALLBACK /*aHandleEventFunction*/,
-                      nsIDeviceContext */*aContext*/,
-                      nsIAppShell */*aAppShell*/,
-                      nsIToolkit */*aToolkit*/,
-                      nsWidgetInitData */*aInitData*/)
-{
-	NS_ERROR("This Widget must not use this Create method");
-	return NS_OK;
-}
-
-/**-------------------------------------------------------------------------------
- * Destuctor for the nsCheckButton
- * @update  dc 08/31/98
- */ 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
 nsCheckButton::~nsCheckButton()
 {
 }
 
-/**-------------------------------------------------------------------------------
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @update  gk 09/15/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- */ 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
 nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
@@ -153,246 +68,44 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
-
-/**-------------------------------------------------------------------------------
- * The onPaint handleer for a button -- this may change, inherited from windows
- * @update  dc 08/31/98
- * @param aEvent -- The paint event to respond to
- * @return -- PR_TRUE if painted, false otherwise
- */ 
-PRBool nsCheckButton::OnPaint(nsPaintEvent &aEvent)
-{
-	  
-	DrawWidget(FALSE);	
-  return PR_FALSE;
-}
-
-/**-------------------------------------------------------------------------------
- * Resizes the button, currently handles by nsWindow
- * @update  dc 08/31/98
- * @Param aEvent -- The event for this resize
- * @return -- True if the event was handled, PR_FALSE is always return for now
- */ 
-PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}
-
-/**-------------------------------------------------------------------------------
- * Resizes the Resizes the bounds
- * @update  dc 10/23/98
- * @Param aWidth -- The new width
- * @Param aHeight -- The new width
- * @Param aRepaint -- a boolean which tells if we need to repaint
- * @return -- True if the event was handled, NS_OK is always return for now
- */ 
-NS_IMETHODIMP nsCheckButton::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  
-   if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
- 
-  if (aRepaint){
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
-  	}
-  return(NS_OK);
-}
-    
-/**-------------------------------------------------------------------------------
- * Resizes the Resizes the bounds
- * @update  dc 10/23/98
- * @Param aX -- the left position of the bounds
- * @Param aY -- the top position of the bounds
- * @Param aWidth -- The new width
- * @Param aHeight -- The new width
- * @Param aRepaint -- a boolean which tells if we need to repaint
- * @return -- True if the event was handled, NS_OK is always return for now
- */ 
-NS_IMETHODIMP nsCheckButton::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-nsSizeEvent 	event;
-
-  mBounds.x      = aX;
-  mBounds.y      = aY;
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
-
-  if (aRepaint){
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
-  }
- 	return(NS_OK);
-}
-
-/**-------------------------------------------------------------------------------
- * DispatchMouseEvent handle an event for this checkbutton
- * @Param aEvent -- The mouse event to respond to for this button
- * @return -- True if the event was handled, PR_FALSE if we did not handle it.
- */ 
-PRBool 
-nsCheckButton::DispatchMouseEvent(nsMouseEvent &aEvent)
-{
-PRBool 	result;
-	
-	switch (aEvent.message){
-		case NS_MOUSE_LEFT_BUTTON_DOWN:
-			mMouseDownInButton = PR_TRUE;
-			DrawWidget(PR_TRUE);
-			result = nsWindow::DispatchMouseEvent(aEvent);
-			result = nsEventStatus_eConsumeDoDefault;
-			break;
-		case NS_MOUSE_LEFT_BUTTON_UP:
-			mMouseDownInButton = PR_FALSE;
-			if(mWidgetArmed==PR_TRUE)
-				{
-				result = nsWindow::DispatchMouseEvent(aEvent);
-				}
-			DrawWidget(PR_TRUE);
-			break;
-		case NS_MOUSE_EXIT:
-			DrawWidget(PR_FALSE);
-			mWidgetArmed = PR_FALSE;
-			result = nsWindow::DispatchMouseEvent(aEvent);
-			break;
-		case NS_MOUSE_ENTER:
-			DrawWidget(PR_TRUE);
-			mWidgetArmed = PR_TRUE;
-			result = nsWindow::DispatchMouseEvent(aEvent);
-			break;
-	}
-	
-	return result;
-}
-
-
-/**-------------------------------------------------------------------------------
- *  Draw in the different modes depending on the state of the mouse and checkbutton
- *  @update  dc 08/31/98
- *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
- *  @return  nothing is returned
- */
-void
-nsCheckButton::DrawWidget(PRBool	aMouseInside)
-{
-PRInt16		width,x,y,buttonSize=14;
-PRInt32		offX,offY;
-nsRect		theRect;
-Rect			macRect,rb;
-GrafPtr		thePort;
-RGBColor	blackColor = {0,0,0};
-RgnHandle	theRgn;
-Str255		tempString;
-
-	CalcOffset(offX,offY);
-	GetPort(&thePort);
-	::SetPort(mWindowPtr);
-	::SetOrigin(-offX,-offY);
-	GetBounds(theRect);
-	nsRectToMacRect(theRect,macRect);
-	theRgn = ::NewRgn();
-	::GetClip(theRgn);
-	::ClipRect(&macRect);
-	::PenNormal();
-	::RGBForeColor(&blackColor);
-	
-	
-	::PenSize(1,1);
-	::SetRect(&rb,macRect.left,(macRect.bottom-1)-buttonSize,macRect.left+buttonSize,macRect.bottom-1);
-	::EraseRect(&rb);
-	::FrameRect(&rb); 
-	
-	
-	StringToStr255(mLabel,tempString);
-	width = ::StringWidth(tempString);
-	x = macRect.left+buttonSize+5;
-	
-	::TextFont(0);
-	::TextSize(12);
-	::TextFace(bold);
-	y = macRect.bottom-1;
-	::MoveTo(x,y);
-	::DrawString(tempString);
-		
-	if(  (mButtonSet && !mMouseDownInButton) ||  
-	     (mMouseDownInButton && aMouseInside && !mButtonSet) ||
-	      (mMouseDownInButton && !aMouseInside && mButtonSet) ){
-		::MoveTo(rb.left,rb.top);
-		::LineTo(rb.right-1,rb.bottom-1);
-		
-		::MoveTo(rb.right-1,rb.top);
-		::LineTo(rb.left-1,rb.bottom-1);
-	}
-		
-	::PenSize(1,1);
-	::SetClip(theRgn);
-	::DisposeRgn(theRgn);
-	::SetOrigin(0,0);
-	::SetPort(thePort);
-}
-
-/**-------------------------------------------------------------------------------
- * Set the state for this checkButton
- * @update  dc 08/31/98
- * @param  aState -- boolean TRUE if checked, FALSE otherwise
- * @result NS_Ok 
- */
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(PRBool aState) 
 {
-int state = aState;
-  
-  mButtonSet = aState;
-  DrawWidget(PR_FALSE);
-  
-  return NS_OK;
-  
-  //if (mIsArmed) {
-    //mNewValue    = aState;
-    //mValueWasSet = PR_TRUE;
-  //}
-}
-
-/**-------------------------------------------------------------------------------
- * Get the check state.
- * @update  dc 08/31/98
- * @param aState PR_TRUE if checked. PR_FALSE if unchecked.
- * @result set to NS_OK if method successful
- */
-NS_METHOD nsCheckButton::GetState(PRBool& aState)
-{
-	aState = mButtonSet;
-  return NS_OK;
-}
-
-/**-------------------------------------------------------------------------------
- * Set the label for this object to be equal to aText
- * @update  dc 08/31/98
- * @param  Set the label to aText
- * @result NS_Ok if no errors
- */
-NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
-{
-	mLabel = aText;
+	mButtonSet = aState;
+	Invalidate(PR_TRUE);
 	return NS_OK;
 }
 
-/**-------------------------------------------------------------------------------
- * Set a buffer to be equal to this objects label
- * @update  dc 08/31/98
- * @param  Put the contents of the label into aBuffer
- * @result NS_Ok if no errors
- */
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsCheckButton::GetState(PRBool& aState)
+{
+	aState = mButtonSet;
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
+{
+	mLabel = aText;
+	Invalidate(PR_TRUE);
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
 	aBuffer = mLabel;
-  return NS_OK;
+	return NS_OK;
 }
