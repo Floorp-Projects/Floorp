@@ -202,7 +202,7 @@ sub init {
         }
         if ($params->param("emaillongdesc$id")) {
             if (my $list = $self->ListIDsForEmail($type, $email)) {
-                my $table = "longdescs_";
+                my $table = "longdescs_email_$id";
                 push(@supptables, "LEFT JOIN longdescs $table ON bugs.bug_id = $table.bug_id AND $table.who IN($list)");
                 push(@clist, "$table.who",'isnotnull');
             } else {
