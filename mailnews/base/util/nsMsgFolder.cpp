@@ -576,7 +576,6 @@ nsMsgFolder::parseURI(PRBool needServer)
       
     nsCAutoString newPath("");
 
-    char *newStr=nsnull;
 	nsCAutoString oldPath(result);
 	nsCAutoString pathPiece;
 
