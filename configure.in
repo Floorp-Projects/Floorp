@@ -986,7 +986,6 @@ case "$target" in
         _pwd=`pwd`
          CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
     fi
-    _WIN32_PERL=$PERL
     if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
         PERL="${CYGWIN_WRAPPER} -up ${PERL}"
         _CYGWIN_PERL=1
@@ -5317,26 +5316,16 @@ mingw*|cygwin*|msvc*|mks*)
     RC="\$(CYGWIN_WRAPPER) $RC"
     MIDL="\$(CYGWIN_WRAPPER) $MIDL"
     if test -z "${_CYGWIN_PERL}"; then
-        PERL="\$(CYGWIN_WRAPPER) $PERL"
+        PERL="${CYGWIN_WRAPPER} $PERL"
     fi
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
-    ;;
-esac
-
-my_srcdir=$srcdir
-case "$target_os" in
-msvc*|mks*|cygwin*|mingw*)
-    my_perl=$_WIN32_PERL
-    ;;
-*)
-    my_perl=$PERL
     ;;
 esac
 
 AC_SUBST(CYGDRIVE_MOUNT)
 
 dnl Get mozilla version from central milestone file
-MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
+MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_SUBST(MOZILLA_VERSION)
 
@@ -5447,7 +5436,7 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
+echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
 
