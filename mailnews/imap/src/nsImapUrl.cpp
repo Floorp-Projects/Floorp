@@ -436,7 +436,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     // more characters that is terminated with a colon.
     PRBool isAbsolute = PR_FALSE;
     char* cp;
-	char *imapPartOfUrl;
+	char *imapPartOfUrl = nsnull;
     char* ap = cSpec;
     char ch;
     while (0 != (ch = *ap)) 
@@ -515,15 +515,17 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         if (cp)
         {
             cp++;
-            PRInt32 slen = PL_strlen(cp);
-            m_search = (char*) PR_Malloc(slen+1);
+            PRInt32 cplen = PL_strlen(cp);
+            m_search = (char*) PR_Malloc(cplen+1);
             PL_strcpy(m_search, cp);
         }
 	}
 
-	m_file = PL_strdup(imapPartOfUrl);
-
-	ParseImapPart(imapPartOfUrl);
+    if (imapPartOfUrl)
+    {
+        m_file = PL_strdup(imapPartOfUrl);
+        ParseImapPart(imapPartOfUrl);
+    }
     delete [] cSpec;
 
     if (m_host)
@@ -555,7 +557,7 @@ void nsImapUrl::ReconstructSpec(void)
     PR_FREEIF(m_spec);
 
     char portBuffer[10];
-    if (-1 != m_port)
+    if (0 != m_port)
         PR_snprintf(portBuffer, 10, ":%d", m_port);
     else
         portBuffer[0] = '\0';
