@@ -384,7 +384,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsIWebShell* webShell;
   nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
-  nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
+  nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
 #ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
