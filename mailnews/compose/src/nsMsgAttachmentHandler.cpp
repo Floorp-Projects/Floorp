@@ -550,9 +550,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   mURL->GetSpec(getter_Copies(url_string));
 
 #ifdef XP_MAC
-  // do we need to add IMAP: to this list? nsMsgIsLocalFileURL returns PR_FALSE always for IMAP 
-  if ( (nsMsgIsLocalFile(url_string) &&	    
-	     (PL_strncasecmp(url_string, "mailbox:", 8) != 0)) )
+  if ( !m_bogus_attachment && nsMsgIsLocalFile(url_string))
 	{
 	  // convert the apple file to AppleDouble first, and then patch the
 		// address in the url.

@@ -567,6 +567,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		if (!m_plaintext)
 			goto FAILMEM;
 		m_plaintext->m_mime_delivery_state = this;
+		m_plaintext->m_bogus_attachment = PR_TRUE;
 
     char *tempURL = nsMsgPlatformFileToURL (*mHTMLFileSpec);
     if (!tempURL || NS_FAILED(nsMsgNewURL(&(m_plaintext->mURL), tempURL)))

@@ -68,16 +68,16 @@ nsMsgIsMacFile(char *aUrlString)
   }
 
   PRBool isMacFile = 
-       (!PL_strcasecmp(ext, "JPG")) ||
-       (!PL_strcasecmp(ext, "GIF")) ||
-       (!PL_strcasecmp(ext, "TIF")) ||
-       (!PL_strcasecmp(ext, "HTM")) ||
-       (!PL_strcasecmp(ext, "HTML")) ||
-       (!PL_strcasecmp(ext, "ART")) ||
-       (!PL_strcasecmp(ext, "XUL")) ||
-       (!PL_strcasecmp(ext, "XML")) ||
-       (!PL_strcasecmp(ext, "CSS")) ||
-       (!PL_strcasecmp(ext, "JS"));
+       PL_strcasecmp(ext, "JPG") &&
+       PL_strcasecmp(ext, "GIF") &&
+       PL_strcasecmp(ext, "TIF") &&
+       PL_strcasecmp(ext, "HTM") &&
+       PL_strcasecmp(ext, "HTML") &&
+       PL_strcasecmp(ext, "ART") &&
+       PL_strcasecmp(ext, "XUL") &&
+       PL_strcasecmp(ext, "XML") &&
+       PL_strcasecmp(ext, "CSS") &&
+       PL_strcasecmp(ext, "JS");
  
   PR_Free(ext);
   return isMacFile;
