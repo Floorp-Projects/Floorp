@@ -220,15 +220,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
       argv = bav;
   }
 
-  nsXPIDLCString cmdResult;
-
-  rv = cmdLineArgs->GetCmdLineValue("-install", getter_Copies(cmdResult));
-  if (NS_SUCCEEDED(rv) && cmdResult) {
-    gdk_rgb_set_install(TRUE);
-  }
-
-  gdk_rgb_init();
-
   return NS_OK;
 }
 
