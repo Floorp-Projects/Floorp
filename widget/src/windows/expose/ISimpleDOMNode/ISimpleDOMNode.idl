@@ -85,10 +85,12 @@ import "oaidl.idl";
         
 const long DISPID_NODE_NODEINFO   = -5900;
 const long DISPID_NODE_ATTRIBUTES = -5901;
-const long DISPID_NODE_COMPSTYLE  = -5902;
-const long DISPID_NODE_COMPSTYLEFORPROPS = -5903;
+const long DISPID_NODE_ATTRIBUTESFORNAMES = -5902;
+const long DISPID_NODE_COMPSTYLE  = -5903;
+const long DISPID_NODE_COMPSTYLEFORPROPS = -5904;
 
-[object, uuid(96917748-8922-4fd9-8a73-d72e8aad671a)]
+[object, uuid(772cf37b-261b-4b5e-87ba-ff629cfcab3a)]
+
 interface ISimpleDOMNode : IUnknown
 {
   const unsigned short NODETYPE_ELEMENT = 1;
@@ -118,6 +120,13 @@ interface ISimpleDOMNode : IUnknown
     [out, size_is(maxAttribs), length_is(*numAttribs)] short *nameSpaceID,  
     [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribValues,
     [out, retval] unsigned short *numAttribs
+  );
+
+  [propget, id(DISPID_NODE_ATTRIBUTESFORNAMES)] HRESULT attributesForNames(  
+    [in] unsigned short numAttribs,
+    [in, size_is(numAttribs), length_is(numAttribs)] BSTR *attribNames, 
+    [in, size_is(numAttribs), length_is(numAttribs)] short *nameSpaceID,  
+    [out, retval, size_is(numAttribs), length_is(numAttribs)] BSTR *attribValues
   );
 
   [propget, id(DISPID_NODE_COMPSTYLE)] HRESULT computedStyle(  

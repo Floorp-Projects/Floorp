@@ -51,6 +51,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIPresContext.h"
 #include "nsPromiseFlatString.h"
+#include "nsINameSpaceManager.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -220,6 +221,52 @@ STDMETHODIMP SimpleDOMNode::get_attributes(
   return S_OK; 
 }
         
+
+STDMETHODIMP SimpleDOMNode::get_attributesForNames( 
+    /* [in] */ unsigned short aNumAttribs,
+    /* [length_is][size_is][in] */ BSTR __RPC_FAR *aAttribNames,
+    /* [length_is][size_is][in] */ short __RPC_FAR *aNameSpaceID,
+    /* [length_is][size_is][retval] */ BSTR __RPC_FAR *aAttribValues)
+{
+  nsCOMPtr<nsIDOMElement> domElement;
+  nsCOMPtr<nsIContent> content;
+  GetElementAndContentFor(domElement, content);
+
+  if (!domElement || !content) 
+    return E_FAIL;
+
+  nsCOMPtr<nsIDocument> doc;
+  content->GetDocument(*getter_AddRefs(doc));
+  
+  if (!doc)
+    return E_FAIL;
+
+  nsCOMPtr<nsINameSpaceManager> nameSpaceManager;
+  doc->GetNameSpaceManager(*getter_AddRefs(nameSpaceManager));
+
+  PRInt32 index;
+
+  for (index = 0; index < aNumAttribs; index++) {
+    aAttribValues[index] = nsnull;
+    if (aAttribNames[index]) {
+      nsAutoString attributeValue, nameSpaceURI;
+      nsAutoString attributeName(nsDependentString(NS_STATIC_CAST(PRUnichar*,aAttribNames[index])));
+      nsresult rv;
+
+      if (aNameSpaceID[index]>0 && 
+        NS_SUCCEEDED(nameSpaceManager->GetNameSpaceURI(aNameSpaceID[index], nameSpaceURI)))
+          rv = domElement->GetAttributeNS(nameSpaceURI, attributeName, attributeValue);
+      else 
+        rv = domElement->GetAttribute(attributeName, attributeValue);
+
+      if (NS_SUCCEEDED(rv))
+        aAttribValues[index] = ::SysAllocString(attributeValue.get());
+    }
+  }
+
+  return S_OK; 
+}
+
 
 NS_IMETHODIMP SimpleDOMNode::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclaration **aCssDecl, PRUint32 *aLength)
 {
