@@ -28,6 +28,14 @@
 
 #include "nsIPopUpMenu.h"
 
+#include "nsCOMPtr.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
+#include "nsIPresContext.h"
+#include "nsIContent.h"
+#include "nsIWebShell.h"
+
 static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -78,7 +86,9 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mPopUpParent = nsnull;
   mTarget      = nsnull;
   mXULCommandListener = nsnull;
-  mIsSeparator = PR_FALSE;
+  mIsSeparator = false;
+  mWebShell    = nsnull;
+  mDOMElement  = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -109,7 +119,13 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 
   mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
-  mMenuItem = gtk_menu_item_new_with_label(nameStr);
+  if(!strcmp(nameStr, "separator")) {
+    mIsSeparator = true;
+    mMenuItem = gtk_menu_item_new();
+  }else{
+    mIsSeparator = false;
+    mMenuItem = gtk_menu_item_new_with_label(nameStr);
+  }
   gtk_widget_show(mMenuItem);
  
   gtk_signal_connect (GTK_OBJECT (mMenuItem), "activate",
@@ -323,13 +339,15 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  if(mXULCommandListener)
-    return mXULCommandListener->MenuSelected(aMenuEvent);
-
-  g_print("nsMenuItem::MenuSelected\n");
+  if(!mIsSeparator) {
+    g_print("nsMenuItem::MenuItemSelected\n");
+    DoCommand();
+  }else{
+    g_print("nsMenuItem::MenuItemSelected is separator\n");
+  }
   return nsEventStatus_eIgnore;
 }
-
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   if(mXULCommandListener)
@@ -338,13 +356,13 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
   g_print("nsMenuItem::MenuSelected\n");
   return nsEventStatus_eIgnore;
 }
-
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
   g_print("nsMenuItem::MenuDeselected\n");
   return nsEventStatus_eIgnore;
 }
-
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
@@ -354,7 +372,7 @@ nsEventStatus nsMenuItem::MenuConstruct(
   g_print("nsMenuItem::MenuConstruct\n");
   return nsEventStatus_eIgnore;
 }
-
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   g_print("nsMenuItem::MenuDestruct\n");
@@ -379,24 +397,76 @@ NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
 */
 NS_METHOD nsMenuItem::DoCommand()
 {
-	return NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
+ 
+  if(!mWebShell || !mDOMElement)
+    return rv;
+    
+  nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
+  contentViewerContainer = do_QueryInterface(mWebShell);
+  if (!contentViewerContainer) {
+      NS_ERROR("Webshell doesn't support the content viewer container interface");
+      g_print("Webshell doesn't support the content viewer container interface");
+      return rv;
+  }
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
+      NS_ERROR("Unable to retrieve content viewer.");
+      g_print("Unable to retrieve content viewer.");
+      return rv;
+  }
+
+  nsCOMPtr<nsIDocumentViewer> docViewer;
+  docViewer = do_QueryInterface(contentViewer);
+  if (!docViewer) {
+      NS_ERROR("Document viewer interface not supported by the content viewer.");
+      g_print("Document viewer interface not supported by the content viewer.");
+      return rv;
+  }
+
+  nsCOMPtr<nsIPresContext> presContext;
+  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
+      g_print("Unable to retrieve the doc viewer's presentation context.");
+      return rv;
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_MOUSE_EVENT;
+  event.message = NS_MOUSE_LEFT_CLICK;
+
+  nsCOMPtr<nsIContent> contentNode;
+  contentNode = do_QueryInterface(mDOMElement);
+  if (!contentNode) {
+      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+      g_print("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+      return rv;
+  }
+
+  rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  g_print("HandleDOMEvent called");
+  return rv;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 {
-	return NS_OK;
+  mDOMElement = aDOMElement;
+  return NS_OK;
 }
     
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
 {
-	return NS_OK;
+  return NS_OK;
 }
     
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 {
-	return NS_OK;
+  mWebShell = aWebShell;
+  return NS_OK;
 }
 
