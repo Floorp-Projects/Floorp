@@ -28,3 +28,6 @@ include <$(DEPTH)/config/config.mak>
 DIRS          = resources
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: jsconsole-clhandler.js
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\components
