@@ -1598,7 +1598,8 @@ nsDocument::BeginUpdate()
     observer->BeginUpdate(this);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1616,7 +1617,8 @@ nsDocument::EndUpdate()
     observer->EndUpdate(this);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1634,7 +1636,8 @@ nsDocument::BeginLoad()
     observer->BeginLoad(this);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1671,7 +1674,8 @@ nsDocument::EndLoad()
 
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1816,7 +1820,8 @@ nsDocument::ContentChanged(nsIContent* aContent,
     observer->ContentChanged(this, aContent, aSubContent);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1835,7 +1840,8 @@ nsDocument::ContentStatesChanged(nsIContent* aContent1,
     observer->ContentStatesChanged(this, aContent1, aContent2);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1857,7 +1863,8 @@ nsDocument::ContentAppended(nsIContent* aContainer,
     observer->ContentAppended(this, aContainer, aNewIndexInContainer);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1879,7 +1886,8 @@ nsDocument::ContentInserted(nsIContent* aContainer,
     observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1903,7 +1911,8 @@ nsDocument::ContentReplaced(nsIContent* aContainer,
                               aIndexInContainer);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1926,7 +1935,8 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
                              aChild, aIndexInContainer);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1963,7 +1973,8 @@ nsDocument::AttributeChanged(nsIContent* aChild,
       result = rv;
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
   }
@@ -1984,7 +1995,8 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
     observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
     else {
@@ -2006,7 +2018,8 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
     observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
     else {
@@ -2028,7 +2041,8 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
     observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
-    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+    if (i < mObservers.Count() &&
+        observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
     }
     else {
