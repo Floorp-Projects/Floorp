@@ -30,6 +30,7 @@ nsIRequestObserverProxy.idl
 nsIStreamProvider.idl
 nsIUploadChannel.idl
 nsIURI.idl
+nsIURIChecker.idl
 nsIURL.idl
 nsIURLParser.idl
 nsIWebFilters.idl
