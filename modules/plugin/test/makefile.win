@@ -23,7 +23,7 @@ LIBRARY_NAME	= npsimple
 
 DEPTH = ..\..\..
 
-REQUIRES = java plug xpcom
+REQUIRES = java plug xpcom raptor
 
 OBJS = .\$(OBJDIR)\npsimple.obj \
        .\$(OBJDIR)\stubs.obj \
@@ -76,7 +76,7 @@ GARBAGE	= $(GARBAGE) _gen
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)\plugimpl
+LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)\plugimpl -I$(PUBLIC)\raptor
 
 install:: $(DLL)
         $(MAKE_INSTALL) $(XPDIST)\classes11\Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
