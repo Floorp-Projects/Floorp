@@ -18,11 +18,12 @@
  * Contributor(s):
  */
 
-#include <nsIXRemoteService.h>
-#include <nsHashtable.h>
-#include <nsIDOMWindow.h>
-#include <nsIWidget.h>
-#include <nsCOMPtr.h>
+#include "nsIXRemoteService.h"
+#include "nsHashtable.h"
+#include "nsIDOMWindow.h"
+#include "nsIWidget.h"
+#include "nsCOMPtr.h"
+#include "nsIObserver.h"
 
 // {3dfe7324-1dd2-11b2-9ff2-8853f91e8a20}
 
@@ -30,7 +31,7 @@
   { 0x3dfe7324, 0x1dd2, 0x11b2, \
   { 0x9f, 0xf2, 0x88, 0x53, 0xf9, 0x1e, 0x8a, 0x20 } }
 
-class XRemoteService : public nsIXRemoteService {
+class XRemoteService : public nsIXRemoteService, public nsIObserver {
  public:
   XRemoteService();
   virtual ~XRemoteService();
@@ -40,6 +41,7 @@ class XRemoteService : public nsIXRemoteService {
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIXREMOTESERVICE
+  NS_DECL_NSIOBSERVER
 
  private:
 
