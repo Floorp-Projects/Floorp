@@ -1141,7 +1141,6 @@ void CreateLinuxInstaller()
 	char currentdir[_MAX_PATH];
 	_getcwd(currentdir,_MAX_PATH);
 	CopyDirectory(xpiDstPath, templinuxPath + xpiDir);
-	DeleteFile(templinuxPath + xpiDir + "\\N6Setup.exe");
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
 	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
 
@@ -1517,26 +1516,26 @@ int StartIB(CString parms, WIDGET *curWidget)
 	if (linuxOption == "Linux")
 	{
 		LinuxInvisible();
+		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
+		AddThirdParty();
+		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
+		CreateLinuxInstaller();
+		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	}
 	else
+	{
 		invisible();
 	
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
+		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
 
-	AddThirdParty();
+		AddThirdParty();
 
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
+		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
 
-	ReplaceINIFile();
+		ReplaceINIFile();
 	
-	if (linuxOption == "Linux")
-	{
-		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||||");
-		CreateLinuxInstaller();
+		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	}
-	
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-
 	SetCurrentDirectory(olddir);
 	CString TargetDir = GetGlobal("Root");
 	CString TargetFile = TargetDir + "wizardmachine.ini";
