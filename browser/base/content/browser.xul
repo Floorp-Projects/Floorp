@@ -29,16 +29,9 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
-%browserDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-%globalRegionDTD;
-<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
-%charsetDTD;
-]>
+# All DTD information is stored in a separate file so that it can be shared by
+# hiddenWindow.xul.
+#include content/browser-doctype.inc
 
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -52,15 +45,9 @@
         screenX="4" screenY="4"
         persist="screenX screenY width height sizemode"> 
 
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
+# All JS files that browser.xul wishes to include *must* go into the browser-scripts.inc file
+# so that they can be shared by hiddenWindow.xul.
+#include content/browser-scripts.inc
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
