@@ -174,7 +174,7 @@ nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                            PR_FALSE,
                                            &newStyleContext);
   if (newStyleContext != aCurrentStyle->get())
-    *aCurrentStyle = dont_QueryInterface(newStyleContext);
+    *aCurrentStyle = dont_AddRef(newStyleContext);
     
 } // RefreshStyleContext
 
