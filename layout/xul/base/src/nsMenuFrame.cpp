@@ -546,8 +546,12 @@ nsMenuFrame::ToggleMenuState()
       // a menubar item to toggle its submenu closed.
       OpenMenu(PR_FALSE);
       SelectMenu(PR_TRUE);
+      mMenuParent->SetActive(PR_FALSE);
     }
     else {
+      if (mMenuParent) {
+        mMenuParent->SetActive(PR_TRUE);
+      }
       OpenMenu(PR_TRUE);
     }
   }
@@ -555,8 +559,6 @@ nsMenuFrame::ToggleMenuState()
   if (mMenuParent) {
     // Make sure the current menu which is being toggled on
     // the menubar is highlighted
-    mMenuParent->SetActive(PR_FALSE);
-    mMenuParent->SetActive(PR_TRUE);
     mMenuParent->SetCurrentMenuItem(this);
     // We've successfully prevented the same click from both
     // dismissing and reopening this menu. 
