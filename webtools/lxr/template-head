@@ -71,17 +71,18 @@ function js_file_menu(file,d) {
 <P>
 <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
  <TR>
-  <TD ALIGN=LEFT VALIGN=CENTER>
-   <A HREF="http://www.mozilla.org/">Mozilla</A>
-   <A HREF="http://lxr.linux.no/blurb.html">Cross Reference</A><BR>
+  <TD ALIGN=LEFT COLSPAN=2>
+   <A HREF="/webtools/lxr/">Mozilla Cross Reference</A>:
    $banner
   </TD>
+ </TR>
+ <TR>
   <TD ALIGN=RIGHT VALIGN=CENTER>
    <TABLE CELLPADDING=0 CELLSPACING=0>
     <TR>
      <TD NOWRAP ID="ident">
       <FORM METHOD=GET ACTION="/webtools/lxr/ident">
-       <A HREF="/webtools/lxr/ident">Id</A>:
+       <A HREF="/webtools/lxr/ident">Identifier</A>:
        <INPUT TYPE=TEXT NAME="i" VALUE="" SIZE=6>
        <INPUT TYPE=SUBMIT VALUE="Find">
       </FORM>
@@ -105,7 +106,5 @@ function js_file_menu(file,d) {
   </TD>
  </TR>
 </TABLE>
-
-<P>
 <HR>
 <P>

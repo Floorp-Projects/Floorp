@@ -32,6 +32,7 @@
  </TR>
 </TABLE>
 <HR>
+<P>
 
 <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=4 WIDTH="100%">
  <TR>
@@ -47,11 +48,6 @@
    <A HREF="mailto:dawn@cannibal.mi.org,jwz@netscape.com">Dawn Endico</A> and
    <A HREF="mailto:dawn@cannibal.mi.org,jwz@netscape.com">Jamie Zawinski</A>
    with any comments or questions about this site.
-  </TD>
- </TR>
- <TR>
-  <TD ALIGN=CENTER COLSPAN=2>
-   <A HREF="/webtools/lxr/">Mozilla Cross Reference Home</A>
   </TD>
  </TR>
 </TABLE>
