@@ -36,6 +36,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
+#include "nsIPrintContext.h"
 
 /* ----------- nsTableCaptionFrame ---------- */
 
@@ -1444,9 +1445,12 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
         mMinCaptionWidth = maxElementSize.width;
       }
     }
-    if ((eReflowReason_Resize == aOuterRS.reason) && 
-        (aOuterRS.availableWidth == mPriorAvailWidth) &&
-        !mPrevInFlow) {
+
+    nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+
+    if ((!thePrinterContext) &&
+        (eReflowReason_Resize == aOuterRS.reason) && 
+        (aOuterRS.availableWidth == mPriorAvailWidth) ) {
       // don't do much if we are resize reflowed exactly like last time
       nsRect rect;
       GetRect(rect);
