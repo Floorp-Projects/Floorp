@@ -227,6 +227,8 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     NS_StartupLocalFile();
 
+    StartupSpecialSystemDirectory();
+
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
     if (gServiceManager == NULL)
@@ -726,6 +728,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     _FreeAutoLockStatics();
 #endif
 
+    ShutdownSpecialSystemDirectory();
+    
     nsMemoryImpl::Shutdown();
     nsThread::Shutdown();
     NS_PurgeAtomTable();

@@ -33,6 +33,11 @@
 #include <Types.h>
 #endif
 
+
+extern NS_COM void StartupSpecialSystemDirectory();
+extern NS_COM void ShutdownSpecialSystemDirectory();
+
+
 // SEE ALSO:
 //      mozilla/xpfe/appshell/public/nsFileLocations.h
 
