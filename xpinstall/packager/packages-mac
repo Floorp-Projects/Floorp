@@ -146,6 +146,7 @@ viewer:Components:Necko.shlb
 viewer:Components:Necko2.shlb 
 viewer:Components:necko.xpt 
 
+viewer:chrome:modern:*
 viewer:chrome:editor:*
 -viewer:chrome:editor:content:EditorInitPage.html
 -viewer:chrome:editor:content:EditorInitPagePlain.html
