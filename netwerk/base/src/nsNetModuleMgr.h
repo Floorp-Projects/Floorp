@@ -39,9 +39,10 @@
 #define ___nsNetModuleMgr_h__
 
 #include "nsINetModuleMgr.h"
+#include "nsNetModRegEntry.h"
 #include "prlock.h"
 #include "nspr.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 class nsNetModuleMgr : public nsINetModuleMgr {
 protected:
@@ -62,8 +63,8 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 
-    nsISupportsArray   *mEntries;
-    PRMonitor*          mMonitor;
+    nsCOMArray<nsINetModRegEntry> mEntries;
+    PRMonitor*                    mMonitor;
 };
 
 

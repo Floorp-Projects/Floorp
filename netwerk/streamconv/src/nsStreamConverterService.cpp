@@ -72,7 +72,7 @@ static PRBool PR_CALLBACK DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, voi
     SCTableData *entry = (SCTableData*)aData;
     NS_ASSERTION(entry->key && entry->data.edges, "malformed adjacency list entry");
     delete entry->key;
-    NS_RELEASE(entry->data.edges);
+    delete entry->data.edges;
     delete entry;
     return PR_TRUE;   
 };
@@ -166,15 +166,14 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        nsCOMPtr<nsISupportsArray> edgeArray;
-        rv = NS_NewISupportsArray(getter_AddRefs(edgeArray));
-        if (NS_FAILED(rv)) {
+        nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
+        if (!edgeArray) {
             delete newFromKey;
             data->key = nsnull;
             delete data;
-            return rv;
+            return NS_ERROR_OUT_OF_MEMORY;
         }
-        NS_ADDREF(data->data.edges = edgeArray.get());
+        data->data.edges = edgeArray;
 
         mAdjacencyList->Put(newFromKey, data);
         fromEdges = data;
@@ -192,30 +191,29 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        nsCOMPtr<nsISupportsArray> edgeArray;
-        rv = NS_NewISupportsArray(getter_AddRefs(edgeArray));
-        if (NS_FAILED(rv)) {
+        nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
+        if (!edgeArray) {
             delete newToKey;
             data->key = nsnull;
             delete data;
-            return rv;
+            return NS_ERROR_OUT_OF_MEMORY;
         }
-        NS_ADDREF(data->data.edges = edgeArray.get());
+        data->data.edges = edgeArray;
         mAdjacencyList->Put(newToKey, data);
     }
     
     // Now we know the FROM and TO types are represented as keys in the hashtable.
     // Let's "connect" the verticies, making an edge.
 
-    nsIAtom *vertex = NS_NewAtom(toStr.get()); 
+    nsCOMPtr<nsIAtom> vertex = do_GetAtom(toStr.get()); 
     if (!vertex) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ASSERTION(fromEdges, "something wrong in adjacency list construction");
     if (!fromEdges)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsISupportsArray> adjacencyList = fromEdges->data.edges;
-    return adjacencyList->AppendElement(vertex) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+    nsCOMArray<nsIAtom> *adjacencyList = fromEdges->data.edges;
+    return adjacencyList->AppendObject(vertex) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -342,7 +340,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
         SCTableData *data2 = (SCTableData*)mAdjacencyList->Get(currentHead);
         if (!data2) return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsISupportsArray> edges = data2->data.edges;
+        nsCOMArray<nsIAtom> *edges = data2->data.edges;
         NS_ASSERTION(edges, "something went wrong with BFS strmconv algorithm");
         if (!edges) return NS_ERROR_FAILURE;
 
@@ -355,12 +353,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
         NS_ASSERTION(headVertexState, "problem with the BFS strmconv algorithm");
         if (!headVertexState) return NS_ERROR_FAILURE;
 
-        PRUint32 edgeCount = 0;
-        rv = edges->Count(&edgeCount);
-        if (NS_FAILED(rv)) return rv;
+        PRInt32 edgeCount = edges->Count();
 
-        for (PRUint32 i = 0; i < edgeCount; i++) {
-            nsIAtom *curVertexAtom = (nsIAtom*)edges->ElementAt(i);
+        for (PRInt32 i = 0; i < edgeCount; i++) {
+            nsIAtom* curVertexAtom = edges->ObjectAt(i);
             nsAutoString curVertexStr;
             curVertexAtom->ToString(curVertexStr);
             nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 

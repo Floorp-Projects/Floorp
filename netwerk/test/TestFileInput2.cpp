@@ -41,7 +41,8 @@
 #include "nsIOutputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
+#include "nsISimpleEnumerator.h"
 #include "prinrval.h"
 #include "nsIFileStreams.h"
 #include "nsIFileChannel.h"
@@ -364,9 +365,7 @@ Test(CreateFun create, PRUint32 count,
     nsTimeSampler testTime;
     testTime.StartTime();
 
-    nsISupportsArray* threads;
-    rv = NS_NewISupportsArray(&threads);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewISupportsArray failed");
+    nsCOMArray<nsIThread> threads;
 
     nsCOMPtr<nsISimpleEnumerator> entries;
     rv = inDirSpec->GetDirectoryEntries(getter_AddRefs(entries));
@@ -413,7 +412,7 @@ Test(CreateFun create, PRUint32 count,
         rv = NS_NewThread(getter_AddRefs(thread), worker, 0, PR_JOINABLE_THREAD);
         if (NS_FAILED(rv)) goto done;
 
-        PRBool inserted = threads->InsertElementAt(thread, i);
+        PRBool inserted = threads.InsertObjectAt(thread, i);
         NS_ASSERTION(inserted, "not inserted");
 
         i++;
@@ -421,13 +420,11 @@ Test(CreateFun create, PRUint32 count,
 
     PRUint32 j;
     for (j = 0; j < i; j++) {
-        nsIThread* thread = (nsIThread*)threads->ElementAt(j);
-        if (NS_FAILED(rv)) goto done;
+        nsIThread* thread = threads.ObjectAt(j);
         thread->Join();
     }
 
   done:
-    NS_RELEASE(threads);
     NS_ASSERTION(rv == NS_OK, "failed");
 
     testTime.EndTime();
