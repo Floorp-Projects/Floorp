@@ -390,7 +390,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,115,48,50,14
 END
 
-IDD_FINDDLG DIALOG DISCARDABLE  30, 73, 236, 62
+IDD_FINDDLG DIALOG DISCARDABLE  30, 73, 239, 83
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Find"
@@ -398,14 +398,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Fi&nd what:",-1,4,8,42,8
     EDITTEXT        IDC_FIND_EDIT,47,7,128,12,ES_AUTOHSCROLL | WS_GROUP
-    CONTROL         "Match &whole word only",IDC_MATCH_WHOLE_WORD,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,26,90,12
     CONTROL         "Wra&p around",IDC_WRAP_AROUND,"Button",BS_AUTOCHECKBOX | 
-                    WS_GROUP | WS_TABSTOP,101,26,65,12
+                    WS_GROUP | WS_TABSTOP,47,45,65,12
     CONTROL         "Match &case",IDC_MATCH_CASE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,4,42,64,12
+                    WS_TABSTOP,47,29,64,12
     CONTROL         "Search &backwards",IDC_SEARCH_BACKWARDS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,101,42,75,12
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,62,75,12
     DEFPUSHBUTTON   "&Find Next",IDOK,182,5,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,182,23,50,14
 END
