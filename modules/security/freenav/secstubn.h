@@ -196,6 +196,10 @@ void
 SECNAV_signedAppletPrivileges(void *proto_win, char *javaPrin, 
 			      char *javaTarget, char *risk, int isCert);
 
+void
+SECNAV_signedAppletPrivilegesOnMozillaThread(void *proto_win, char *javaPrin,
+                                             char *javaTarget, char *risk, int isCert);
+
 char *
 SOB_JAR_list_certs (void);
 
