@@ -32,12 +32,13 @@ XPIDL_MODULE	= dom_events
 XPIDLSRCS =					\
 	nsIDOMDocumentEvent.idl			\
 	nsIDOMEvent.idl				\
+	nsIDOMNSEvent.idl			\
 	nsIDOMEventTarget.idl			\
 	nsIDOMKeyEvent.idl			\
 	nsIDOMMouseEvent.idl			\
 	nsIDOMMutationEvent.idl			\
-	nsIDOMNSUIEvent.idl			\
 	nsIDOMUIEvent.idl			\
+	nsIDOMNSUIEvent.idl			\
 	nsIDOMEventListener.idl			\
 	$(NULL)
 

@@ -1,9 +1,10 @@
 nsIDOMDocumentEvent.idl
 nsIDOMEvent.idl
+nsIDOMNSEvent.idl
 nsIDOMEventListener.idl
 nsIDOMEventTarget.idl
 nsIDOMKeyEvent.idl
 nsIDOMMouseEvent.idl
 nsIDOMMutationEvent.idl
-nsIDOMNSUIEvent.idl
 nsIDOMUIEvent.idl
+nsIDOMNSUIEvent.idl
