@@ -45,11 +45,11 @@ static PyObject *MyBool( PRBool v) {
 static PyObject *MyChar( char c) {
 	return PyString_FromStringAndSize(&c, 1);
 }
-static PyObject *MyWChar( wchar_t c) {
-	return PyUnicode_FromWideChar(&c, 1);
+static PyObject *MyUChar( PRUnichar c) {
+	return PyUnicodeUCS2_FromUnicode(&c, 1);
 }
 static PyObject *MyUnicode( PRUnichar *p) {
-	return PyUnicode_FromUnicode(p, nsCRT::strlen(p));
+	return PyUnicodeUCS2_FromUnicode(p, nsCRT::strlen(p));
 }
 static PyObject *MyISupports( nsISupports *p) {
 	return Py_nsISupports::PyObjectFromInterface(p, NS_GET_IID(nsISupports), PR_FALSE);
@@ -104,14 +104,14 @@ GET_SIMPLE(float, GetAsFloat, PyFloat_FromDouble);
 GET_SIMPLE(double, GetAsDouble, PyFloat_FromDouble);
 GET_SIMPLE(PRBool, GetAsBool, MyBool);
 GET_SIMPLE(char, GetAsChar, MyChar);
-GET_SIMPLE(PRUnichar, GetAsWChar, MyWChar);
+GET_SIMPLE(PRUnichar, GetAsWChar, MyUChar);
 GET_SIMPLE(nsISupports *, GetAsISupports, MyISupports);
 GET_SIMPLE(nsIID, GetAsID, Py_nsIID::PyObjectFromIID);
 
 GET_ALLOCATED(char *, GetAsString, PyString_FromString, nsMemory::Free);
 GET_ALLOCATED(PRUnichar *, GetAsWString, MyUnicode, nsMemory::Free);
 GET_ALLOCATED_SIZE(char *, GetAsStringWithSize, PyString_FromStringAndSize, nsMemory::Free);
-GET_ALLOCATED_SIZE(PRUnichar *, GetAsWStringWithSize, PyUnicode_FromUnicode, nsMemory::Free);
+GET_ALLOCATED_SIZE(PRUnichar *, GetAsWStringWithSize, PyUnicodeUCS2_FromUnicode, nsMemory::Free);
 
 static PyObject *GetAsInterface(PyObject *self, PyObject *args) {
 	nsIVariant *pI = GetI(self);

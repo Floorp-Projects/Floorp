@@ -51,11 +51,11 @@ extern PRInt32 _PyXPCOM_GetInterfaceCount(void);
 
 extern void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
 
-#ifdef XP_WIN
-// Can only assume dynamic loading on Windows.
 #define LOADER_LINKS_WITH_PYTHON
 
-#endif // XP_WIN
+#ifndef LOADER_LINKS_WITH_PYTHON
+extern void PyXPCOM_InterpreterState_Ensure();
+#endif
 
 PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManagerObsolete, PyMethods_IComponentManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
@@ -442,10 +442,6 @@ static struct PyMethodDef xpcom_methods[]=
 ////////////////////////////////////////////////////////////
 // Other helpers/global functions.
 //
-#ifndef PYXPCOM_USE_PYGILSTATE
-extern void PyXPCOM_InterpreterState_Ensure();
-#endif
-
 PRBool PyXPCOM_Globals_Ensure()
 {
 	PRBool rc = PR_TRUE;
