@@ -44,13 +44,14 @@ NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);
 NS_IMETHODIMP
 nsCodebasePrincipal::ToString(char **result)
 {
+      // STRING USE WARNING: perhaps |str| should be an |nsCAutoString|? -- scc
     nsAutoString buf;
-    buf += "[Codebase ";
+    buf.AppendWithConversion("[Codebase ");
     nsXPIDLCString origin;
     if (NS_FAILED(GetOrigin(getter_Copies(origin))))
         return NS_ERROR_FAILURE;
-    buf += origin;
-    buf += ']';
+    buf.AppendWithConversion(origin);
+    buf.AppendWithConversion(']');
     *result = buf.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -135,14 +136,17 @@ nsCodebasePrincipal::GetOrigin(char **origin)
     nsXPIDLCString s;
     if (NS_FAILED(mURI->GetScheme(getter_Copies(s))))
         return NS_ERROR_FAILURE;
-    nsAutoString t(s);
-    t += "://";
+
+      // STRING USE WARNING: perhaps |str| should be an |nsCAutoString|? -- scc
+    nsAutoString t;
+    t.AssignWithConversion(s);
+    t.AppendWithConversion("://");
     if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s)))) {
-        t.Append(s);
+        t.AppendWithConversion(s);
     } else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) {
         // Some URIs (e.g., nsSimpleURI) don't support host. Just
         // get the full spec.
-        t.Assign(s);
+        t.AssignWithConversion(s);
     } else {
         return NS_ERROR_FAILURE;
     }
