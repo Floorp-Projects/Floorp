@@ -54,7 +54,7 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
     nsIXPCSecurityManager* sm = ccx.GetXPCContext()
         ->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
     XPCWrappedNative * wrapper = ccx.GetWrapper();
-    if(!sm || NS_FAILED(sm->CanAccess(nsIXPCSecurityManager::ACCESS_CALL_METHOD,
+    if(sm && NS_FAILED(sm->CanAccess(nsIXPCSecurityManager::ACCESS_CALL_METHOD,
                                       &ccx, ccx, ccx.GetFlattenedJSObject(),
                                       wrapper->GetIdentityObject(),
                                       wrapper->GetClassInfo(),

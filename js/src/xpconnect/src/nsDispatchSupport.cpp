@@ -203,7 +203,7 @@ NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(JSContext * cx,
     nsIXPCSecurityManager* sm =
             ccx.GetXPCContext()->GetAppropriateSecurityManager(
                         nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
-    *aResult = sm && 
+    *aResult = !sm ||
         NS_SUCCEEDED(sm->CanCreateInstance(ccx, cid));
 
     if(!*aResult)
