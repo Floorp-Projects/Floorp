@@ -1323,7 +1323,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 		          addressToBeRemoved += NS_CONST_CAST(char*, (const char *)email);
 					  }
 
-            rv= RemoveDuplicateAddresses(_compFields->GetCc(), (char *)addressToBeRemoved, PR_TRUE, &resultStr);
+            rv= RemoveDuplicateAddresses(_compFields->GetCc(), addressToBeRemoved.get(), PR_TRUE, &resultStr);
 	          if (NS_SUCCEEDED(rv))
             {
               _compFields->SetCc(resultStr);
@@ -2212,7 +2212,7 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
 nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval)
 {
 	nsCAutoString unescapeURL(url);
-	nsUnescape(unescapeURL);
+	nsUnescape(NS_CONST_CAST(char*, unescapeURL.get()));
 	if (unescapeURL.IsEmpty())
 	{
 	  nsAutoString unicodeUrl;

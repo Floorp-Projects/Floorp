@@ -2878,8 +2878,8 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     // now extract lots of fun information...
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
     nsCAutoString unescapedSpec(aSpec);
-    nsUnescape(unescapedSpec);
-    mailnewsUrl->SetSpec((char *) unescapedSpec); // set the url spec...
+    nsUnescape(NS_CONST_CAST(char*, unescapedSpec.get()));
+    mailnewsUrl->SetSpec(unescapedSpec.get()); // set the url spec...
     
     nsXPIDLCString userName;
     nsXPIDLCString hostName;

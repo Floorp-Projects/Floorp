@@ -102,7 +102,7 @@ NS_IMPL_ISUPPORTS1(nsAddbookUrl, nsIURI)
 // addbook:add?vcard=begin%3Avcard%0Afn%3ARichard%20Pizzarro%0Aemail%3Binternet%3Arhp%40netscape.com%0Aend%3Avcard%0A
 //
 NS_IMETHODIMP 
-nsAddbookUrl::CrackAddURL(char *searchPart)
+nsAddbookUrl::CrackAddURL(const char *searchPart)
 {
   return NS_OK;
 }
@@ -115,12 +115,12 @@ nsAddbookUrl::CrackAddURL(char *searchPart)
 // addbook:printall?email=rhp@netscape.com&folder=Netscape%20Address%20Book
 //
 NS_IMETHODIMP 
-nsAddbookUrl::CrackPrintURL(char *searchPart, PRInt32 aOperation)
+nsAddbookUrl::CrackPrintURL(const char *searchPart, PRInt32 aOperation)
 {
   nsCString       emailAddr;
   nsCString       folderName;
 
-	char *rest = searchPart;
+	char *rest = NS_CONST_CAST(char*, searchPart);
 
   // okay, first, free up all of our old search part state.....
 	CleanupAddbookState();
@@ -166,13 +166,13 @@ nsAddbookUrl::CrackPrintURL(char *searchPart, PRInt32 aOperation)
 
   if (!emailAddr.IsEmpty())
   {
-    nsUnescape(emailAddr);
+    nsUnescape(NS_CONST_CAST(char*, emailAddr.get()));
     mAbCardProperty->SetCardValue(kPriEmailColumn, NS_ConvertASCIItoUCS2(emailAddr).GetUnicode());
   }
 
   if (!folderName.IsEmpty())
   {
-    nsUnescape(folderName);
+    nsUnescape(NS_CONST_CAST(char*, folderName.get()));
     mAbCardProperty->SetCardValue(kWorkAddressBook, NS_ConvertASCIItoUCS2(folderName).GetUnicode());
   }
   
@@ -256,7 +256,7 @@ nsresult nsAddbookUrl::ParseUrl()
 	}
   else if (!mOperationPart.IsEmpty())
   {
-    nsUnescape(mOperationPart);
+    nsUnescape(NS_CONST_CAST(char*, mOperationPart.get()));
   }
 
   mOperationPart.ToLowerCase();
@@ -264,17 +264,17 @@ nsresult nsAddbookUrl::ParseUrl()
   if (!nsCRT::strcmp(mOperationPart, "printone"))
   {
     mOperationType = nsIAddbookUrlOperation::PrintIndividual;
-    rv = CrackPrintURL(searchPart, mOperationType); 
+    rv = CrackPrintURL(searchPart.get(), mOperationType); 
   }
   else if (!nsCRT::strcmp(mOperationPart, "printall"))
   {
     mOperationType = nsIAddbookUrlOperation::PrintAddressBook;
-    rv = CrackPrintURL(searchPart, mOperationType); 
+    rv = CrackPrintURL(searchPart.get(), mOperationType); 
   }
   else if (!nsCRT::strcmp(mOperationPart, "add"))
   {
     mOperationType = nsIAddbookUrlOperation::AddToAddressBook;
-    rv = CrackAddURL(searchPart); 
+    rv = CrackAddURL(searchPart.get()); 
   }
   else
     mOperationType = nsIAddbookUrlOperation::InvalidUrl;

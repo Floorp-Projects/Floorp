@@ -257,7 +257,7 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
         nsCAutoString uidlCString("X-UIDL: ");
         uidlCString += uidlString;
         uidlCString += MSG_LINEBREAK;
-        WriteLineToMailbox(uidlCString);
+        WriteLineToMailbox(NS_CONST_CAST(char*, uidlCString.get()));
     }
     // WriteLineToMailbox("X-Mozilla-Status: 8000" MSG_LINEBREAK);
     char *statusLine = PR_smprintf(X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, flags);

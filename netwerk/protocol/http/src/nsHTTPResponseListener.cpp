@@ -503,7 +503,8 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
                     nsCString ts(trailerHeader);
                     ts.StripWhitespace();
 
-                    char *cp = ts;
+                    // XXXjag convert to new string code sometime
+                    char *cp = NS_CONST_CAST(char*, ts.get());
 
                     while (*cp) {
                         char * pp = PL_strchr(cp , ',');

@@ -707,7 +707,7 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
 
     char *statusLine;
     statusLine = PR_smprintf("HTTP/%s %3d %s", versionString, mStatus, 
-            (char*)mStatusString);
+                             mStatusString.get());
     if (!statusLine)
         return NS_ERROR_OUT_OF_MEMORY;
 

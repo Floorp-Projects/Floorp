@@ -1201,7 +1201,7 @@ nsPop3Protocol::GurlResponse()
 		/// the xpidl file which is preventing SetMailAccountURL from taking
 		// const char *. When that is fixed, we can remove this cast.
         if (m_nsIPop3Sink)
-            m_nsIPop3Sink->SetMailAccountURL((char *) m_commandResponse);
+            m_nsIPop3Sink->SetMailAccountURL(m_commandResponse.get());
     }
     else {
         m_pop3ConData->capability_flags &= ~POP3_HAS_GURL;

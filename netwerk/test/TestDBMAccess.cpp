@@ -82,7 +82,7 @@ int writeDBM(int cycles)
             nsCAutoString keyName("foo");
             keyName.AppendInt( x );
             
-            db_key.data = (char*)keyName;
+            db_key.data = NS_CONST_CAST(char*, keyName.get());
             db_key.size = keyName.Length();
             
             db_data.data = data;
@@ -95,7 +95,7 @@ int writeDBM(int cycles)
 #if USE_ENTRY_ID
             db_key.data = (void*)&x;
             db_key.size = sizeof(x);
-            db_data.data = (char*)keyName;
+            db_data.data = NS_CONST_CAST(char*, keyName.get());
             db_data.size = keyName.Length();
             
             if(0 != (*myDB->put)(myDB, &db_key, &db_data, 0)) {
@@ -203,7 +203,7 @@ writeFile(int cycles)
 
             fd = PR_OpenFile(filename, PR_WRONLY|PR_TRUNCATE, 0644);
             if (!fd)
-                printf("bad filename?  %s\n", (char*)filename);
+                printf("bad filename?  %s\n", filename.get());
 
             i2 = PR_IntervalNow();
 

@@ -170,21 +170,21 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 
 	// Now unescape any fields that need escaped...
 	if (!m_toPart.IsEmpty())
-		nsUnescape(m_toPart);
+		nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
 	if (!m_ccPart.IsEmpty())
-		nsUnescape(m_ccPart);
+		nsUnescape(NS_CONST_CAST(char*, m_ccPart.get()));
 	if (!m_subjectPart.IsEmpty())
-		nsUnescape(m_subjectPart);
+		nsUnescape(NS_CONST_CAST(char*, m_subjectPart.get()));
 	if (!m_newsgroupPart.IsEmpty())
-		nsUnescape(m_newsgroupPart);
+		nsUnescape(NS_CONST_CAST(char*, m_newsgroupPart.get()));
 	if (!m_referencePart.IsEmpty())
-		nsUnescape(m_referencePart);
+		nsUnescape(NS_CONST_CAST(char*, m_referencePart.get()));
 	if (!m_attachmentPart.IsEmpty())
-		nsUnescape(m_attachmentPart);
+		nsUnescape(NS_CONST_CAST(char*, m_attachmentPart.get()));
 	if (!m_bodyPart.IsEmpty())
-		nsUnescape(m_bodyPart);
+		nsUnescape(NS_CONST_CAST(char*, m_bodyPart.get()));
 	if (!m_newsHostPart.IsEmpty())
-		nsUnescape(m_newsHostPart);
+		nsUnescape(NS_CONST_CAST(char*, m_newsHostPart.get()));
 
 	return NS_OK;
 }
@@ -233,7 +233,7 @@ nsresult nsMailtoUrl::ParseUrl()
     PRUint32 numExtraChars = m_toPart.Mid(searchPart, startOfSearchPart, -1);
     if (!searchPart.IsEmpty())
     {
-		  ParseMailtoUrl(searchPart);
+      ParseMailtoUrl(NS_CONST_CAST(char*, searchPart.get()));
       // now we need to strip off the search part from the
       // to part....
       m_toPart.Cut(startOfSearchPart, numExtraChars);
@@ -241,7 +241,7 @@ nsresult nsMailtoUrl::ParseUrl()
 	}
   else if (!m_toPart.IsEmpty())
   {
-    nsUnescape(m_toPart);
+    nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
   }
 
   return rv;
@@ -453,8 +453,8 @@ nsSmtpUrl::SetRecipients(const char * aRecipientsList)
   NS_ENSURE_ARG(aRecipientsList);
   m_toPart = aRecipientsList;
   if (!m_toPart.IsEmpty())
-    nsUnescape(m_toPart);
-	return NS_OK;
+    nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
+  return NS_OK;
 }
 
 

@@ -48,8 +48,8 @@ protected:
 
   nsresult                      ParseUrl();         // This gets the ball rolling...
   
-  NS_METHOD                     CrackAddURL(char *searchPart);
-  NS_METHOD                     CrackPrintURL(char *searchPart, PRInt32 aOperation);
+  NS_METHOD                     CrackAddURL(const char *searchPart);
+  NS_METHOD                     CrackPrintURL(const char *searchPart, PRInt32 aOperation);
   NS_METHOD                     GetAbCardProperty(nsAbCardProperty **aAbCardProp);
 
   nsCString                     mOperationPart;     // string name of operation requested

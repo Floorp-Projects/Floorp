@@ -366,7 +366,7 @@ nsPSMSocketInfo::ProxyStepUp()
     nsCAutoString hostName;
     hostName.AssignWithConversion(mHostName);
     
-    return CMT_ProxyStepUp(mControl, mSocket, this, hostName);
+    return CMT_ProxyStepUp(mControl, mSocket, this, NS_CONST_CAST(char*,hostName.get()));
 }
 
 NS_IMETHODIMP

@@ -178,7 +178,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
       openingDiv += '"';
     }
     openingDiv += ">";
-    status = MimeObject_write(obj, openingDiv, openingDiv.Length(), PR_FALSE);
+    status = MimeObject_write(obj, NS_CONST_CAST(char*, openingDiv.get()), openingDiv.Length(), PR_FALSE);
     if (status < 0) return status;
   }
 

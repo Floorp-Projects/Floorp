@@ -295,9 +295,9 @@ PRInt32 nsInstallFile::Complete()
     {
         nsXPIDLCString path;
         mFinalFile->GetPath(getter_Copies(path));
-        VR_Install( NS_ConvertUCS2toUTF8(*mVersionRegistryName), 
-                    (char*)(const char*)path,  // DO NOT CHANGE THIS. 
-                    NS_ConvertUCS2toUTF8(*mVersionInfo), 
+        VR_Install( NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(*mVersionRegistryName).get()),
+                    NS_CONST_CAST(char*, path.get()),
+                    NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(*mVersionInfo).get()),
                     PR_FALSE );
     }
     
