@@ -78,6 +78,7 @@ CPPSRCS		= \
 		  BackForwardMenu.cpp \
 		  BookmarkFrame.cpp \
 		  BookmarkMenu.cpp \
+		  BuiltinTreeView.cpp \
 		  Button.cpp \
 		  BrowserDrop.cpp \
 		  BrowserFrame.cpp \
