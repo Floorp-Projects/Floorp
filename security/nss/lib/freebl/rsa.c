@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.30 2002/02/07 01:00:31 wtc%netscape.com Exp $
+ * $Id: rsa.c,v 1.31 2002/05/02 17:39:13 relyea%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -759,11 +759,13 @@ swap_in_key_value(PRArenaPool *arena, mp_int *mpval, SECItem *buffer)
     if ((unsigned int)len <= buffer->len) {
 	/* The new value is no longer than the old buffer, so use it */
 	err = mp_to_unsigned_octets(mpval, buffer->data, len);
+	if (err >= 0) err = MP_OKAY;
 	buffer->len = len;
     } else if (arena) {
 	/* The new value is longer, but working within an arena */
 	(void)SECITEM_AllocItem(arena, buffer, len);
 	err = mp_to_unsigned_octets(mpval, buffer->data, len);
+	if (err >= 0) err = MP_OKAY;
     } else {
 	/* The new value is longer, no arena, can't handle this key */
 	return SECFailure;
@@ -810,6 +812,7 @@ RSA_PrivateKeyCheck(RSAPrivateKey *key)
 	/* mind the p's and q's (and d_p's and d_q's) */
 	SECItem tmp;
 	mp_exch(&p, &q);
+	mp_exch(&d_p,&d_q);
 	tmp = key->prime1;
 	key->prime1 = key->prime2;
 	key->prime2 = tmp;
