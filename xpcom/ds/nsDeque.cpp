@@ -169,9 +169,12 @@ nsDeque& nsDeque::Erase() {
  * in the deque are stored sequentially
  *
  * If the deque actually overflows, there's very little we can do.
- * Perhaps this function should return its capacity.
+ * Perhaps this function should return PRBool/nsresult indicating success/failure.
  *
- * @return  *this
+ * @return  capacity of the deque
+ *          If the deque did not grow,
+ *          and you knew its capacity beforehand,
+ *          then this would be a way to indicate the failure.
  */
 PRInt32 nsDeque::GrowCapacity() {
   PRInt32 theNewSize=mCapacity<<2;
@@ -227,7 +230,7 @@ nsDeque& nsDeque::Push(void* aItem) {
  * This operation has the potential to cause the
  * underlying buffer to resize.
  *
- * --Commments for GrowCapcity() case
+ * --Commments for GrowCapacity() case
  * We've grown and shifted which means that the old
  * final element in the deque is now the first element
  * in the deque.  This is temporary.
@@ -367,13 +370,14 @@ nsDequeIterator nsDeque::Begin() const{
 
 /**
  * Create and return an iterator pointing to
- * the last of the queue. Note that this
- * takes the circular buffer semantics into account.
+ * the last item in the deque.
+ * Note that this takes the circular buffer semantics
+ * into account.
  *
- * @return  new deque iterator, init'ed to last item
+ * @return  new deque iterator, init'ed to the last item
  */
 nsDequeIterator nsDeque::End() const{
-  return nsDequeIterator(*this, mSize-1);
+  return nsDequeIterator(*this, mSize - 1);
 }
 
 /**
