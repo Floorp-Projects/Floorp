@@ -13,10 +13,6 @@
 #include "nsIPref.h"
 #include "nsIMemory.h"
 
-// Use a category to put a changeFont message onto the tab view
-@interface NSTabView (FontManagerDelegate)
-- (void)changeFont:(id)sender;
-@end
 
 @interface OrgMozillaChimeraPreferenceAppearance(Private)
 
@@ -41,11 +37,18 @@
 
 @end
 
+
 @implementation OrgMozillaChimeraPreferenceAppearance
 
 - (void) dealloc
 {
   [regionMappingTable release];
+}
+
+- (id)initWithBundle:(NSBundle *)bundle
+{
+  self = [super initWithBundle:bundle];
+  return self;
 }
 
 - (void) mainViewDidLoad
@@ -65,7 +68,10 @@
   [colorwellVisitedLinks setColor:[self getColorPref:"browser.visited_color" withSuccess:&gotPref]];
   
   [self setupFontRegionTable];
-  [NSFontManager sharedFontManager];
+
+  // prep the font panel
+  NSFontPanel	*fontPanel = [[NSFontManager sharedFontManager] fontPanel:YES];
+  //[fontPanel setBecomesKeyOnlyIfNeeded:NO];
 }
 
 - (void)willUnselect
@@ -85,8 +91,12 @@
   regionMappingTable = [[NSArray arrayWithContentsOfFile:resPath] retain];
 
   [self loadFontPrefs];
-
+  
   [tableViewFontRegion reloadData];
+
+  if ([tableViewFontRegion selectedRow] == 0)
+    [tableViewFontRegion selectRow:-1 byExtendingSelection:NO];	// make sure the next line triggers a change
+
   [tableViewFontRegion selectRow:0 byExtendingSelection:NO];		// trigger initial setup
 }
 
@@ -122,7 +132,9 @@
 - (IBAction)fontChoiceButtonClicked:(id)sender
 {  
   [self syncFontPanel];
-  [[NSFontManager sharedFontManager] orderFrontFontPanel:self];
+  
+  NSFontPanel	*fontPanel = [[NSFontManager sharedFontManager] fontPanel:YES];
+  [fontPanel makeKeyAndOrderFront:self];
 }
 
 - (IBAction)fontRegionListClicked:(id)sender
@@ -140,26 +152,33 @@
     /*
       For each region in the array, there is a dictionary of 
         {
-          region =
           code   =
+          region = (from localized strings file)
 
       to which we add here a sub-dictionary per font type, thus:
         
           serif = {
-              fontname =
-              fontsize = 
+              fontfamily = Times-Regular
+              fontsize = 16
             }
           sans-serif = {
-              fontname =
+              fontfamily =
               fontsize = 
               missing  = 		// set if a font is missing
             }
           monospace =   {
-              fontname =
+              fontfamily =
+              fontsize = 
+            }
+          cursive =   {
+              fontfamily =
               fontsize = 
             }
         }
     */
+    NSString 	*regionName = NSLocalizedStringFromTableInBundle(regionCode, @"RegionNames",
+        [NSBundle bundleForClass:[OrgMozillaChimeraPreferenceAppearance class]], @"");
+    [regionDict setObject:regionName forKey:@"region"];
     
     NSMutableDictionary *serifDict = [self makeDictFromPrefsForFontType:@"serif" andRegion:regionCode];
     [regionDict setObject:serifDict forKey:@"serif"];
@@ -169,6 +188,9 @@
 
     NSMutableDictionary *monoDict = [self makeDictFromPrefsForFontType:@"monospace" andRegion:regionCode];
     [regionDict setObject:monoDict forKey:@"monospace"];
+
+    NSMutableDictionary *cursDict = [self makeDictFromPrefsForFontType:@"cursive" andRegion:regionCode];
+    [regionDict setObject:cursDict forKey:@"cursive"];
   }
 
 }
@@ -185,6 +207,7 @@
     [self saveToPrefsEntriesInDict:(NSDictionary*)regionDict forFontType:@"serif"];
     [self saveToPrefsEntriesInDict:(NSDictionary*)regionDict forFontType:@"sans-serif"];
     [self saveToPrefsEntriesInDict:(NSDictionary*)regionDict forFontType:@"monospace"];
+    [self saveToPrefsEntriesInDict:(NSDictionary*)regionDict forFontType:@"cursive"];
   }
 }
 
@@ -206,7 +229,7 @@
 
   if (gotPref && gotSize)
   {
-    [fontDict setObject:fontName forKey:@"fontname"];
+    [fontDict setObject:fontName forKey:@"fontfamily"];
     [fontDict setObject:[NSNumber numberWithInt:fontSize] forKey:@"fontsize"];
   }	
 
@@ -220,7 +243,7 @@
 
   if (!fontTypeDict || !regionCode) return;
   
-  NSString	*fontName			= [fontTypeDict objectForKey:@"fontname"];
+  NSString	*fontName			= [fontTypeDict objectForKey:@"fontfamily"];
   int				fontSize			= [[fontTypeDict objectForKey:@"fontsize"] intValue];
     
   NSString	*fontPrefName	= [NSString stringWithFormat:@"font.name.%@.%@", fontType, regionCode];
@@ -249,7 +272,7 @@
 
   if (theFont)
   {
-    [fontTypeDict setObject:[theFont familyName] forKey:@"fontname"];
+    [fontTypeDict setObject:[theFont familyName] forKey:@"fontfamily"];
     [fontTypeDict setObject:[NSNumber numberWithInt:(int)[theFont pointSize]] forKey:@"fontsize"];
   }
 }
@@ -257,15 +280,20 @@
 - (NSFont*)getFontOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
 {
   NSDictionary	*fontTypeDict = [regionDict objectForKey:fontType];
-  NSString			*fontName 		= [fontTypeDict objectForKey:@"fontname"];
+  NSString			*fontName 		= [fontTypeDict objectForKey:@"fontfamily"];
   int						fontSize			= [[fontTypeDict objectForKey:@"fontsize"] intValue];
   
   NSFont				*returnFont = nil;
   
   if (fontName && fontSize > 0)
-    returnFont = [NSFont fontWithName:fontName size:fontSize];
+  {
+    // we can't use [NSFont fontWithName] here, because we only store font
+    // family names in the prefs file. So use the font manager instead
+    // returnFont = [NSFont fontWithName:fontName size:fontSize];
+    returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontName traits:0 weight:5 size:fontSize];
+  }
   else if (fontName)		// no size
-    returnFont = [NSFont fontWithName:fontName size:16.0];
+    returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontName traits:0 weight:5 size:16.0];
   
 /*
   if (returnFont == nil)
@@ -283,6 +311,7 @@
   [self setupFontSampleOfType:@"serif" 			fromDict:regionDict];
   [self setupFontSampleOfType:@"sans-serif" fromDict:regionDict];
   [self setupFontSampleOfType:@"monospace" 	fromDict:regionDict];
+  [self setupFontSampleOfType:@"cursive" 		fromDict:regionDict];
 }
 
 - (void)setupFontSampleOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
@@ -297,14 +326,14 @@
   // a string to display from the dict.
   NSMutableDictionary	*fontTypeDict = [regionDict objectForKey:fontType];
 
-  NSTextField		*textField = [self getFontSampleForType:fontType];
+  NSTextField		*sampleCell = [self getFontSampleForType:fontType];
   NSString			*displayString = nil;
   
   if (font == nil)
   {
     if (regionDict)
     {
-      NSString						*fontName 		= [fontTypeDict objectForKey:@"fontname"];
+      NSString						*fontName 		= [fontTypeDict objectForKey:@"fontfamily"];
       int									fontSize			= [[fontTypeDict objectForKey:@"fontsize"] intValue];
 
       // XXX localize
@@ -338,8 +367,8 @@
     [fontTypeDict removeObjectForKey:@"missing"];
   }
   
-  [textField setFont:font];
-  [textField setStringValue:displayString];
+  [sampleCell setFont:font];
+  [sampleCell setStringValue:displayString];
 }
 
 - (void)updateFontSampleOfType:(NSString *)fontType
@@ -350,8 +379,8 @@
 
   NSMutableDictionary	*regionDict	= [regionMappingTable objectAtIndex:selectedRow];
 
-  NSTextField		*textField 	= [self getFontSampleForType:fontType];
-  NSFont				*sampleFont = [[NSFontManager sharedFontManager] convertFont:[textField font]];
+  NSTextField		*sampleCell	= [self getFontSampleForType:fontType];
+  NSFont				*sampleFont = [[NSFontManager sharedFontManager] convertFont:[sampleCell font]];
 
   [self setFontSampleOfType:fontType withFont:sampleFont andDict:regionDict];
 }
@@ -367,6 +396,9 @@
   if ([fontType isEqualToString:@"monospace"])
     return fontSampleMonospace;
     
+  if ([fontType isEqualToString:@"cursive"])
+    return fontSampleCursive;
+
   return nil;
 }
 
@@ -389,6 +421,7 @@
   [self saveFontsToDict:regionDict forFontType:@"serif"];
   [self saveFontsToDict:regionDict forFontType:@"sans-serif"];
   [self saveFontsToDict:regionDict forFontType:@"monospace"];
+  [self saveFontsToDict:regionDict forFontType:@"cursive"];
 }
 
 @end
@@ -397,8 +430,6 @@
 
 - (void)tableViewSelectionDidChange:(NSNotification *)aNotification
 {
-  NSLog(@"Table selection changed");
-  
   if ([aNotification object] != tableViewFontRegion)
     return;
 
@@ -455,24 +486,6 @@
 {
   NSLog(@"theFontManager willIncludeFont %@", fontName);
   // filter out fonts for the selected language
-  return YES;
-}
-
-@end
-
-// Use a category to put a changeFont message onto the tab view (since this
-// is guaranteed to be in the repsonder chain. We've set the tab view's delegate
-// to be the file's owner in IB, so we just forward the message.
-@implementation NSTabView (FontManagerDelegate)
-
-- (void)changeFont:(id)sender
-{
-  [[self delegate] changeFont:sender];
-}
-
-- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
-{
-  NSLog(@"willIncludeFont called");
   return YES;
 }
 
