@@ -1945,7 +1945,7 @@ RDFTreeBuilderImpl::IsTreeProperty(nsIContent* aElement, nsIRDFResource* aProper
     // If we get here, we didn't find any tree property: so now
     // defaults start to kick in.
 
-    //#define TREE_PROPERTY_HACK
+#define TREE_PROPERTY_HACK
 #if defined(TREE_PROPERTY_HACK)
     if ((aProperty == kNC_child) ||
         (aProperty == kNC_Folder) ||

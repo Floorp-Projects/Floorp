@@ -39,8 +39,10 @@
 #include "prprf.h"
 #include "prlog.h"
 
+#if 0
 #ifdef XP_MAC
 #define HACK_DONT_USE_LIBREG 1
+#endif
 #endif
 
 #if HACK_DONT_USE_LIBREG
