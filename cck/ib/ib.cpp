@@ -936,10 +936,13 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 //Check to see if the User Agent string exists and if so then append -CCK to it ;
 	CString userAgent = GetGlobal("OrganizationName");
-	CString tempAgent ="CCK -";
-	if (userAgent)
-		tempAgent += userAgent;
-	SetGlobal("OrganizationName",tempAgent);
+    if (userAgent)
+    {
+        CString templeft = userAgent.Left(5);
+        if ((templeft.CompareNoCase("CCK -")) != 0)
+            userAgent = "CCK -" + userAgent;
+    }
+    SetGlobal("OrganizationName",userAgent);
 
 // check to see if the bmp for rshell background is bigger than 302KB;
 	HANDLE hFile;
