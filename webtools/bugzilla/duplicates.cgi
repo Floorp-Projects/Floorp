@@ -86,7 +86,7 @@ else
   }
   else
   {
-    &die_politely("There are no duplicate statistics for today or yesterday.");
+    &die_politely("There are no duplicate statistics for today ($today) or yesterday.");
   }
 }
 
@@ -158,7 +158,7 @@ if    ($sortby eq "delta")
 }
 elsif ($sortby eq "bug_no")
 {
-  @sortedcount = sort by_bug_no keys(%count);
+  @sortedcount = reverse sort by_bug_no keys(%count);
 }
 elsif ($sortby eq "dup_count")
 {
@@ -170,27 +170,39 @@ my $i = 0;
 foreach (@sortedcount)
 {
   my $id = $_;
-  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset " .
+  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset, bug_status" .
                  " FROM bugs WHERE bug_id = $id");
-  my ($component, $severity, $op_sys, $milestone, $summary, $groupset) = FetchSQLData();
+  my ($component, $severity, $op_sys, $milestone, $summary, $groupset, $bug_status) = FetchSQLData();
         next unless $groupset == 0;
         $summary = html_quote($summary);
-  print "<tr>";
-  print '<td><center><A HREF="show_bug.cgi?id=' . $id . '">';
-  print $id . "</A></center></td>";
-  print "<td><center>$count{$id}</center></td>";
-  if ($dobefore) 
-  {
-    print "<td><center>$delta{$id}</center></td>";
+
+  unless ( ($bug_status eq "VERIFIED") | ($bug_status eq "CLOSED") ) {
+    print "<tr>";
+    print '<td><center>';
+    if  ( ($bug_status eq "RESOLVED") ) {
+      print "<strike>";
+    }
+    print "<A HREF=\"show_bug.cgi?id=" . $id . "\">";
+    print $id . "</A>";
+    if  ( ($bug_status eq "RESOLVED") ) {
+      print "</strike>";
+    }
+    print "</center></td>";
+    print "<td><center>$count{$id}</center></td>";
+    if ($dobefore) 
+    {
+      print "<td><center>$delta{$id}</center></td>";
+    }
+    print "<td>$component</td>\n    ";
+    print "<td><center>$severity</center></td>";
+    print "<td><center>$op_sys</center></td>";
+    print "<td><center>$milestone</center></td>";
+    print "<td>$summary</td>";
+    print "</tr>\n";
+
+    $i++;
   }
-  print "<td>$component</td>\n    ";
-  print "<td><center>$severity</center></td>";
-  print "<td><center>$op_sys</center></td>";
-  print "<td><center>$milestone</center></td>";
-  print "<td>$summary</td>";
-  print "</tr>\n";
-  
-  $i++;
+
   if ($i == $maxrows)
   {
     last;
