@@ -165,7 +165,6 @@ private:
 
   PRUint8      *mImageBits;
   GdkPixmap    *mImagePixmap;
-  GdkGC        *mGC;
   PRUint8      *mAlphaBits;
   GdkPixmap    *mAlphaPixmap;
 
