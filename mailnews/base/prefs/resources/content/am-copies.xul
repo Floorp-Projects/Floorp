@@ -21,13 +21,9 @@
     <html:div>&fccMailFolder.label;</html:div>
     <html:select flex="100%"
          onchange="dump('value=' + event.target.value + '\n')"
-         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
          name="identity.fccFolder" 
          ref="msgaccounts:/">
-<!--
-    <html:input type="text" name="identity.fccFolder"/>
-    <html:optgroup/>
--->
     <template>
       <rule iscontainer="true" isempty="false">
           <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
@@ -59,7 +55,7 @@
     <html:div flex="34%">&draftMailFolder.label;</html:div>
     <html:select flex="66%"
          onchange="dump('value=' + event.target.value + '\n')"
-         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
          name="identity.draftFolder"
          ref="msgaccounts:/">
     <template>
@@ -78,7 +74,7 @@
     <html:div flex="34%">&templateMailFolder.label;</html:div>
     <html:select flex="66%"
          onchange="dump('value=' + event.target.value + '\n')"
-         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
          name="identity.stationaryFolder"
          ref="msgaccounts:/">
     <template>
@@ -97,7 +93,7 @@
     <html:div>&junkMailFolder.label;</html:div>
     <html:select flex="100%"
          onchange="dump('value=' + event.target.value + '\n')"
-         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
          name="identity.junkMailFolder"
          ref="msgaccounts:/">
     <template>
