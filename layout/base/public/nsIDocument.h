@@ -164,7 +164,8 @@ public:
   NS_IMETHOD ContentChanged(nsIContent* aContent,
                             nsISupports* aSubContent) = 0;
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                              nsIAtom* aAttribute) = 0;
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer) = 0;
   NS_IMETHOD ContentInserted(nsIContent* aContainer,

@@ -100,7 +100,8 @@ public:
    */
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
-                              nsIAtom*     aAttribute) = 0;
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint) = 0;  // See nsStyleConsts fot hint values
 
   /**
    * Notifcation that the content model has had data appended to the

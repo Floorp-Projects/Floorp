@@ -98,25 +98,29 @@ public:
 
   // Notifications of changes to the content mpodel
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer) = 0;
   NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer) = 0;
   NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              nsIContent*     aOldChild,
                              nsIContent*     aNewChild,
                              PRInt32         aIndexInContainer) = 0;
   NS_IMETHOD ContentRemoved(nsIPresContext*  aPresContext,
-                            nsIDocument*     aDocument,
                             nsIContent*      aContainer,
                             nsIContent*      aChild,
                             PRInt32          aIndexInContainer) = 0;
+
+  NS_IMETHOD ContentChanged(nsIPresContext*  aPresContext,
+                            nsIContent* aContent,
+                            nsISupports* aSubContent) = 0;
+  NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
 
   // xxx style rules enumeration
 
