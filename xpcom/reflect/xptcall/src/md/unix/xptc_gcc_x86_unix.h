@@ -49,6 +49,12 @@
 #define ATTRIBUTE_STDCALL
 #endif
 
+#ifdef MOZ_NEED_LEADING_UNDERSCORE
+#define SYMBOL_UNDERSCORE "_"
+#else
+#define SYMBOL_UNDERSCORE
+#endif
+
 /*
   What are those keeper functions?
 
