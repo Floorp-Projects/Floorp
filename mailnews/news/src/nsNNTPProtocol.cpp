@@ -755,6 +755,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 	  // our first state is a process state so drive the state machine...
 	  PRBool transportOpen = PR_FALSE;
 	  m_transport->IsTransportOpen(&transportOpen);
+	  m_runningURL->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
 	  if (transportOpen == PR_FALSE)
 	  {
 		  m_nextStateAfterResponse = m_nextState;
@@ -2603,10 +2604,13 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
     if(status == 0)
     {
+		SetFlag(NNTP_PAUSE_FOR_READ);
+#if 0 
         m_nextState = NNTP_ERROR;
         ClearFlag(NNTP_PAUSE_FOR_READ);
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-        return(MK_NNTP_SERVER_ERROR);
+#endif
+        return status;
     }
 
     if(!line)
@@ -4392,6 +4396,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 
 			   */
 				m_nextState = NEWS_FREE;
+				m_runningURL->SetUrlState(PR_FALSE, NS_OK);
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 			  if (cd->stream)
 				COMPLETE_STREAM;
@@ -4408,6 +4413,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 	            break;
 
 	        case NEWS_ERROR:
+				m_runningURL->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 				m_nextState = NEWS_FREE;
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 	            if(cd->stream)
