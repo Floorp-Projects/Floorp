@@ -26,13 +26,27 @@
 .bz_critical { color: red; }
 .bz_enhancement { color: #888; background-color: white; }
 
-/* Style secure bugs if the installation is not using bug groups.
- * Installations that *are* using bug groups are likely to be using
- * them for almost all bugs, in which case special styling is not
- * informative and generally a nuisance.
- */
-.bz_secure { color: black; background-color: lightgrey; }
-
 /* Align columns in the "change multiple bugs" form to the right. */
 table#form tr th { text-align: right; }
+
+table.bz_buglist td, table.bz_buglist th { 
+    padding-left: 20px;
+}
+
+/* For styling rows; by default striped white and gray */
+tr.bz_odd {
+    background-color: #e6e6e6;
+}
+
+tr.bz_even {
+}
+
+/* we use a first-child class and not the pseudo-class because IE
+ * doesn't support it :-( */
+tr.bz_secure td.first-child { 
+  background-image: url("../images/padlock.png");
+  background-position: center left;
+  background-repeat: no-repeat;
+  background-color: inherit;
+}
 

@@ -140,25 +140,29 @@
 [%############################################################################%]
 
 [% FOREACH bug = bugs %]
-  [% FLUSH IF loop.count() % 10 == 1 %]
+  [% count = loop.count() %]
+  [% FLUSH IF count % 10 == 1 %]
 
   [%# At the beginning of every hundred bugs in the list, start a new table. %]
-  [% IF loop.count() % 100 == 1 %]
+  [% IF count % 100 == 1 %]
     [% tableheader %]
   [% END %]
 
   <tr class="bz_[% bug.bug_severity FILTER css_class_quote %]
              bz_[% bug.priority FILTER css_class_quote %]
              bz_[% bug.bug_status FILTER css_class_quote %]
-             bz_[% bug.resolution FILTER css_class_quote %]
-             [%+ "bz_secure" IF bug.isingroups %]">
+             [%+ "bz_$bug.resolution" FILTER css_class_quote IF bug.resolution %]
+             [%+ "bz_secure" IF bug.isingroups %]
+             [%+ count % 2 == 1 ? "bz_odd" : "bz_even" %]
+             ">
+             
 
     [% IF dotweak %]
     <td>
       <input type="checkbox" name="id_[% bug.bug_id %]">
     </td>
     [% END %]
-    <td>
+    <td class="first-child">
       <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
     </td>
 
