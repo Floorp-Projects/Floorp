@@ -141,7 +141,7 @@ interface nsIMsgCompose : nsISupports {
 	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
 	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow, in nsIMsgProgress progress);
+	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in string accountKey, in nsIMsgWindow aMsgWindow, in nsIMsgProgress progress);
 
 	/* ... */
   void CloseWindow(in boolean reclycleIt);

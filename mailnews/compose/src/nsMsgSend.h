@@ -243,18 +243,19 @@ public:
   // message creation and send operations
   //
   nsresult    Init(
-                   nsIMsgIdentity  *aUserIdentity,
-			             nsMsgCompFields  *fields,
+                   nsIMsgIdentity   *aUserIdentity,
+                   const char       *aAccountKey,
+                   nsMsgCompFields  *fields,
                    nsFileSpec       *sendFileSpec,
-			             PRBool           digest_p,
-			             PRBool           dont_deliver_p,
-			             nsMsgDeliverMode mode,
+                   PRBool           digest_p,
+                   PRBool           dont_deliver_p,
+                   nsMsgDeliverMode mode,
                    nsIMsgDBHdr      *msgToReplace,
-			             const char       *attachment1_type,
-			             const char       *attachment1_body,
-			             PRUint32         attachment1_body_length,
-			             const nsMsgAttachmentData   *attachments,
-			             const nsMsgAttachedFile     *preloaded_attachments,
+                   const char       *attachment1_type,
+                   const char       *attachment1_body,
+                   PRUint32         attachment1_body_length,
+                   const nsMsgAttachmentData   *attachments,
+                   const nsMsgAttachedFile     *preloaded_attachments,
                    const char       *password);
 
   //
@@ -297,6 +298,7 @@ public:
   //
   nsMsgKey                  m_messageKey;        // jt -- Draft/Template support; newly created key
   nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
+  nsCString                 mAccountKey;
   nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)
   nsFileSpec                *mTempFileSpec;      // our temporary file
   

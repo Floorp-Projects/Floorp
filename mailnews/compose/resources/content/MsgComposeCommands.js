@@ -1673,7 +1673,7 @@ function GenericSendMessage( msgType )
         }
         msgWindow.SetDOMWindow(window);
 
-        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), msgWindow, progress);
+        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), getCurrentAccountKey(), msgWindow, progress);
       }
       catch (ex) {
         dump("failed to SendMsg: " + ex + "\n");
@@ -1949,6 +1949,7 @@ function FillIdentityListPopup(popup)
       item.className = "identity-popup-item";
       item.setAttribute("label", identity.identityName);
       item.setAttribute("value", identity.key);
+      item.setAttribute("accountkey", accounts[i].key);
       item.setAttribute("accountname", " - " + server.prettyName);
       popup.appendChild(item);
     }
@@ -1966,6 +1967,13 @@ function getCurrentIdentity()
     var identity = gAccountManager.getIdentity(identityKey);
 
     return identity;
+}
+
+function getCurrentAccountKey()
+{
+    // get the accounts key
+    var identityList = document.getElementById("msgIdentity");
+    return identityList.selectedItem.getAttribute("accountkey");
 }
 
 function getIdentityForKey(key)

@@ -398,7 +398,7 @@ nsresult nsMapiHook::BlindSendMail (unsigned long aSession, nsIMsgCompFields * a
     rv = pMsgCompose->Initialize(hiddenWindow, pMsgComposeParams) ;
     if (NS_FAILED(rv)) return rv ;
 
-    pMsgCompose->SendMsg(nsIMsgSend::nsMsgDeliverNow, pMsgId, nsnull, nsnull) ;
+    pMsgCompose->SendMsg(nsIMsgSend::nsMsgDeliverNow, pMsgId, nsnull, nsnull, nsnull) ;
     if (NS_FAILED(rv)) return rv ;
 
     // assign to interface pointer from nsCOMPtr to facilitate typecast below

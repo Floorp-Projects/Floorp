@@ -775,31 +775,22 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 }
 
 nsresult 
-nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, nsIMsgIdentity *aSenderIdentity, char **newsUrlSpec)
+nsNntpService::SetUpNntpUrlForPosting(const char *aAccountKey, char **newsUrlSpec)
 {
   nsresult rv = NS_OK;
-  NS_ENSURE_ARG_POINTER(nntpUrl);
-  NS_ENSURE_ARG_POINTER(newsgroupsNames);
-  if (*newsgroupsNames == '\0') return NS_ERROR_FAILURE;
 
-  nsCAutoString host;
-  nsXPIDLCString temphost;
+  nsXPIDLCString host;
   PRInt32 port;
 
   nsCOMPtr<nsIMsgIncomingServer> nntpServer;
-  rv = GetNntpServerByIdentity(aSenderIdentity, getter_AddRefs(nntpServer));
+  rv = GetNntpServerByAccount(aAccountKey, getter_AddRefs(nntpServer));
   if (NS_SUCCEEDED(rv) && nntpServer)
   {
-    nntpServer->GetRealHostName(getter_Copies(temphost));
-    host = temphost;
+    nntpServer->GetRealHostName(getter_Copies(host));
     nntpServer->GetPort(&port);
   }
 
-  // if we *still* don't have a hostname, use "news"
-  if (host.IsEmpty()) 
-    host = "news";
-
-  *newsUrlSpec = PR_smprintf("%s/%s:%d",kNewsRootURI, host.get(), port);
+  *newsUrlSpec = PR_smprintf("%s/%s:%d",kNewsRootURI, host.IsEmpty() ? "news" : host.get(), port);
   if (!*newsUrlSpec) return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -936,50 +927,30 @@ nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char
 }
 
 nsresult
-nsNntpService::GetNntpServerByIdentity(nsIMsgIdentity *aSenderIdentity, nsIMsgIncomingServer **aNntpServer)
+nsNntpService::GetNntpServerByAccount(const char *aAccountKey, nsIMsgIncomingServer **aNntpServer)
 {
   NS_ENSURE_ARG_POINTER(aNntpServer);
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (aSenderIdentity)
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (aAccountKey)
   {
-    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr <nsISupportsArray> servers;
-    accountManager->GetServersForIdentity(aSenderIdentity, getter_AddRefs(servers));
-    if (!servers) return NS_ERROR_FAILURE;
-
-    PRUint32 cnt = 0, i;
-    servers->Count(&cnt);
-    for (i=0; i<cnt; i++)
-    {
-      nsCOMPtr<nsIMsgIncomingServer> inServer; 
-      inServer = do_QueryElementAt(servers, i, &rv);
-      if(NS_FAILED(rv) || (!inServer))
-        continue;
-
-      nsXPIDLCString serverType;
-      rv = inServer->GetType(getter_Copies(serverType));
-      if(serverType.Equals("nntp"))
-      {
-        *aNntpServer = inServer;
-
-        NS_IF_ADDREF(*aNntpServer);
-        break;
-      }
-    }
-
-    // if we don't have a news host, find the first news server and use it
-    if (!*aNntpServer)
-      rv = accountManager->FindServer("","","nntp", aNntpServer);
+    nsCOMPtr <nsIMsgAccount> account;
+    rv = accountManager->GetAccount(aAccountKey, getter_AddRefs(account));
+    if (NS_SUCCEEDED(rv) && account)
+      rv = account->GetIncomingServer(aNntpServer);
   }
+
+  // if we don't have a news host, find the first news server and use it
+  if (NS_FAILED(rv) || !*aNntpServer)
+    rv = accountManager->FindServer("","","nntp", aNntpServer);
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIMsgIdentity *aSenderIdentity, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
+nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *aAccountKey, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
   // aMsgWindow might be null
   NS_ENSURE_ARG_POINTER(newsgroupsNames);
@@ -997,7 +968,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsXPIDLCString newsUrlSpec;
-  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, aSenderIdentity, getter_Copies(newsUrlSpec));
+  rv = SetUpNntpUrlForPosting(aAccountKey, getter_Copies(newsUrlSpec));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl, &rv);

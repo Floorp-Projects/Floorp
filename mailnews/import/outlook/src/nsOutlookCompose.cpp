@@ -662,6 +662,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	rv = m_pSendProxy->CreateAndSendMessage(
                     nsnull,			                  // no editor shell
 										m_pIdentity,	                // dummy identity
+                                                                                nsnull,                         // account key
 										m_pMsgFields,	                // message fields
 										PR_FALSE,		                  // digest = NO
 										PR_TRUE,		                  // dont_deliver = YES, make a file

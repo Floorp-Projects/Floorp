@@ -3092,6 +3092,7 @@ nsMsgComposeAndSend::SnarfAndCopyBody(const char  *attachment1_body,
 nsresult
 nsMsgComposeAndSend::Init(
               nsIMsgIdentity  *aUserIdentity,
+              const char *aAccountKey,
               nsMsgCompFields *fields,
               nsFileSpec      *sendFileSpec,
               PRBool digest_p,
@@ -3135,6 +3136,7 @@ nsMsgComposeAndSend::Init(
   mMsgToReplace = msgToReplace;
 
   mUserIdentity = aUserIdentity;
+  mAccountKey = aAccountKey;
   NS_ASSERTION(mUserIdentity, "Got null identity!\n");
   if (!mUserIdentity) return NS_ERROR_UNEXPECTED;
 
@@ -3528,8 +3530,8 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     if(NS_FAILED(rv))
       msgWindow = nsnull;
 
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mUserIdentity,
-      uriListener, msgWindow, nsnull);
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mAccountKey.get(),
+                                  uriListener, msgWindow, nsnull);
     if (NS_FAILED(rv)) return rv;
   }
   
@@ -3968,6 +3970,7 @@ NS_IMETHODIMP
 nsMsgComposeAndSend::CreateAndSendMessage(
               nsIEditor                         *aEditor,
               nsIMsgIdentity                    *aUserIdentity,
+              const char                        *aAccountKey,
               nsIMsgCompFields                  *fields,
               PRBool                            digest_p,
               PRBool                            dont_deliver_p,
@@ -4006,7 +4009,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
   if (aEditor)
     mEditor = aEditor;
 
-  rv = Init(aUserIdentity, (nsMsgCompFields *)fields, nsnull,
+  rv = Init(aUserIdentity, aAccountKey, (nsMsgCompFields *)fields, nsnull,
           digest_p, dont_deliver_p, mode, msgToReplace,
           attachment1_type, attachment1_body,
           attachment1_body_length,
@@ -4022,6 +4025,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 nsresult
 nsMsgComposeAndSend::SendMessageFile(
               nsIMsgIdentity                    *aUserIndentity,
+              const char                        *aAccountKey,
               nsIMsgCompFields                  *fields,
               nsIFileSpec                       *sendIFileSpec,
               PRBool                            deleteSendFileOnCompletion,
@@ -4077,11 +4081,11 @@ nsMsgComposeAndSend::SendMessageFile(
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = Init(aUserIndentity, (nsMsgCompFields *)fields, sendFileSpec,
-              digest_p, PR_FALSE, mode, msgToReplace, 
-              nsnull, nsnull, nsnull,
-              nsnull, nsnull,
-              password);
+  rv = Init(aUserIndentity, aAccountKey, (nsMsgCompFields *)fields, sendFileSpec,
+            digest_p, PR_FALSE, mode, msgToReplace, 
+            nsnull, nsnull, nsnull,
+            nsnull, nsnull,
+            password);
 
   if (NS_SUCCEEDED(rv))
     rv = DeliverMessage();
@@ -4484,15 +4488,32 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
      && ( mUserIdentity )
      )
   {
-    char    *key = nsnull;
+    char *buf = nsnull, *key = nsnull;
 
     if (NS_SUCCEEDED(mUserIdentity->GetKey(&key)) && (key))
     {
-      char *tmpLine = PR_smprintf(HEADER_X_MOZILLA_IDENTITY_KEY ": %s" CRLF, key);
-      if (tmpLine)
+      buf = PR_smprintf(HEADER_X_MOZILLA_IDENTITY_KEY ": %s" CRLF, key);
+      if (buf)
       {
-        PRInt32 len = strlen(tmpLine);
-        n = tempOutfile.write(tmpLine, len);
+        PRInt32 len = strlen(buf);
+        n = tempOutfile.write(buf, len);
+        PR_Free(buf);
+        if (n != len)
+        {
+          status = NS_ERROR_FAILURE;
+          goto FAIL;
+        }
+      }
+    }
+
+    if (!mAccountKey.IsEmpty())
+    {
+      buf = PR_smprintf(HEADER_X_MOZILLA_ACCOUNT_KEY ": %s" CRLF, mAccountKey.get());
+      if (buf)
+      {
+        PRInt32 len = strlen(buf);
+        n = tempOutfile.write(buf, len);
+        PR_Free(buf);
         if (n != len)
         {
           status = NS_ERROR_FAILURE;

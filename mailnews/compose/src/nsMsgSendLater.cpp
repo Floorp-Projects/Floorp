@@ -107,6 +107,7 @@ nsMsgSendLater::nsMsgSendLater()
   m_headersSize = 0;
 
   mIdentityKey = nsnull;
+  mAccountKey = nsnull;
 
   mRequestReturnReceipt = PR_FALSE;
 
@@ -124,6 +125,7 @@ nsMsgSendLater::~nsMsgSendLater()
   PR_Free(m_headers);
   PR_Free(mLeftoverBuffer);
   PR_Free(mIdentityKey);
+  PR_Free(mAccountKey);
 }
 
 // Stream is done...drive on!
@@ -551,6 +553,7 @@ nsMsgSendLater::CompleteMailFileSend()
     m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
   NS_ADDREF(this);  //TODO: We should remove this!!!
   rv = pMsgSend->SendMessageFile(identity,
+                                 mAccountKey,
                                  compFields, // nsIMsgCompFields *fields,
                                  mTempIFileSpec, // nsIFileSpec *sendFileSpec,
                                  PR_TRUE, // PRBool deleteSendFileOnCompletion,
@@ -810,6 +813,7 @@ nsMsgSendLater::BuildHeaders()
   PR_FREEIF(m_newshost);
   PR_FREEIF(m_fcc);
   PR_FREEIF(mIdentityKey);
+  PR_FREEIF(mAccountKey);
   m_flags = 0;
 
   while (buf < buf_end)
@@ -888,6 +892,11 @@ nsMsgSendLater::BuildHeaders()
         {
           prune_p = PR_TRUE;
           header = &mIdentityKey;
+        }
+        else if (!PL_strncasecmp(HEADER_X_MOZILLA_ACCOUNT_KEY, buf, end - buf))
+        {
+          prune_p = PR_TRUE;
+          header = &mAccountKey;
         }
         break;
       }

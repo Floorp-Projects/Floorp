@@ -160,6 +160,7 @@ private:
   char                      *mLeftoverBuffer;
   PRBool                    mRequestReturnReceipt;
   char                      *mIdentityKey;
+  char                      *mAccountKey;
 };
 
 

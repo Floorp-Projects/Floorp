@@ -823,7 +823,7 @@ nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *state
   return mStateListeners->RemoveElement(iSupports);
 }
 
-nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone)
+nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const char *accountKey, PRBool entityConversionDone)
 {
   nsresult rv = NS_OK;
     
@@ -941,6 +941,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       rv = mMsgSend->CreateAndSendMessage(
                     m_composeHTML ? m_editor.get() : nsnull,
                     identity,
+                    accountKey,
                     m_compFields, 
                     PR_FALSE,                           // PRBool                            digest_p,
                     PR_FALSE,                           // PRBool                            dont_deliver_p,
@@ -973,7 +974,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   return rv;
 }
 
-NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgWindow *aMsgWindow, nsIMsgProgress *progress)
+NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const char *accountKey, nsIMsgWindow *aMsgWindow, nsIMsgProgress *progress)
 {
   nsresult rv = NS_OK;
   PRBool entityConversionDone = PR_FALSE;
@@ -1117,7 +1118,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity
       }
   }
 
-  rv = _SendMsg(deliverMode, identity, entityConversionDone);
+  rv = _SendMsg(deliverMode, identity, accountKey, entityConversionDone);
   if (NS_FAILED(rv))
   {
     nsCOMPtr<nsIMsgSendReport> sendReport;

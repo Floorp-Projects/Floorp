@@ -65,7 +65,7 @@ interface nsINntpService : nsISupports {
    */
   void generateNewsHeaderValsForPosting(in string newsgroupsList, out string newsgroupsHeaderVal, out string newshostHeaderVal);
 
-  nsIURI postMessage(in nsIFileSpec fileToPost, in string newsgroupNames, in nsIMsgIdentity aSenderIdentity, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+  nsIURI postMessage(in nsIFileSpec fileToPost, in string newsgroupNames, in string aAccountKey, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
   nsIURI getNewNews(in nsINntpIncomingServer nntpServer, in string uri, in boolean getOld, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 

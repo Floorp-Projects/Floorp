@@ -186,8 +186,9 @@ interface nsIMsgSend : nsISupports
     const nsMsgDeliverMode nsMsgSendUnsent = 6;
 
     [noscript]
-    void createAndSendMessage(in nsIEditor                    aEditor,      
+    void createAndSendMessage(in nsIEditor                    aEditor,
                               in nsIMsgIdentity               aUserIdentity,
+                              in string                       aAccountKey,
                               in nsIMsgCompFields             fields,
                               in PRBool                       digest_p,
                               in PRBool                       dont_deliver_p,
@@ -207,6 +208,7 @@ interface nsIMsgSend : nsISupports
                               
     
     void sendMessageFile(in nsIMsgIdentity       aUserIdentity,
+                         in string               aAccountKey,
                          in nsIMsgCompFields     fields,
                          in nsIFileSpec          sendIFileSpec,
                          in PRBool               deleteSendFileOnCompletion,

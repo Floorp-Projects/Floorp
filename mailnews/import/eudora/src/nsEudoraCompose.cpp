@@ -696,6 +696,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 		rv = m_pSendProxy->CreateAndSendMessage(
                     nsnull,			                  // no editor shell
 										m_pIdentity,	                // dummy identity
+                                                                                nsnull,                         // account key
 										m_pMsgFields,	                // message fields
 										PR_FALSE,		                  // digest = NO
 										PR_TRUE,		                  // dont_deliver = YES, make a file
@@ -717,6 +718,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 		rv = m_pSendProxy->CreateAndSendMessage(
                     nsnull,			                  // no editor shell
 										m_pIdentity,	                // dummy identity
+                                                                                nsnull,                         // account key
 										m_pMsgFields,	                // message fields
 										PR_FALSE,		                  // digest = NO
 										PR_TRUE,		                  // dont_deliver = YES, make a file
