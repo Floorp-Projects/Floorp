@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLStyleElement.h"
+#include "nsIDOMLinkStyle.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -41,9 +42,10 @@ static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT
 static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 
 class nsHTMLStyleElement : public nsIDOMHTMLStyleElement,
-                    public nsIJSScriptObject,
-                    public nsIHTMLContent,
-                    public nsIStyleSheetLinkingElement
+                           public nsIJSScriptObject,
+                           public nsIHTMLContent,
+                           public nsIStyleSheetLinkingElement,
+                           public nsIDOMLinkStyle
 {
 public:
   nsHTMLStyleElement(nsINodeInfo *aNodeInfo);
@@ -81,6 +83,9 @@ public:
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
+
+  // nsIDOMLinkStyle
+  NS_DECL_IDOMLINKSTYLE
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -131,6 +136,11 @@ nsHTMLStyleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIStyleSheetLinkingElementIID)) {
     nsIStyleSheetLinkingElement* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMLinkStyle))) {
+    *aInstancePtr = (void*)(nsIDOMLinkStyle*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -274,3 +284,18 @@ nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }
+
+NS_IMETHODIMP
+nsHTMLStyleElement::GetSheet(nsIDOMStyleSheet** aSheet)
+{
+  NS_ENSURE_ARG_POINTER(aSheet);
+  *aSheet = 0;
+
+  if (mStyleSheet)
+    mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void **)aSheet);
+
+  // Always return NS_OK to avoid throwing JS exceptions if mStyleSheet
+  // is not a nsIDOMStyleSheet
+  return NS_OK;
+}
+

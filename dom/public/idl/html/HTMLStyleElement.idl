@@ -6,3 +6,13 @@
             attribute  DOMString            media;
             attribute  DOMString            type;
  };
+
+// Introduced in DOM Level 2:
+// Note: This interface is defined in several places so if you make changes
+// to the interface make sure that the changes make it into all places...
+interface LinkStyle {
+ /* IID: { 0x24d89a65, 0xf598, 0x481e, \
+  { 0xa2, 0x97, 0x23, 0xcc, 0x02, 0x59, 0x9b, 0xbd } } */
+
+  readonly attribute StyleSheet       sheet;
+};
