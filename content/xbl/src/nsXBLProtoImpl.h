@@ -76,6 +76,13 @@ public:
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; };
 
+protected:
+  // Function to call if compilation of a member fails.  When this is called,
+  // all members before aBrokenMember are compiled, compilation of
+  // aBrokenMember failed, and members after aBrokenMember are uncompiled.
+  // This function assumes that aBrokenMember is _not_ compiled.
+  void DestroyMembers(nsXBLProtoImplMember* aBrokenMember);
+  
 public:
   nsCString mClassName; // The name of the class. 
   void* mClassObject;   // The class object for the binding. We'll use this to pre-compile properties 
