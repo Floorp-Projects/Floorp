@@ -11,22 +11,22 @@
 ### Symbols you may have to hand annotate with #{code} or #{data}...
 ###
 
-CallCacheFlushers
-Flush_Allocate
-Flush_Free
-Flush_Reallocate
-InstallGarbageCollectorCacheFlusher
-InstallMallocHeapLowProc
-InstallMemoryCacheFlusher
-Memory_ReserveInMacHeap
+#CallCacheFlushers
+#Flush_Allocate
+#Flush_Free
+#Flush_Reallocate
+#InstallGarbageCollectorCacheFlusher
+#InstallMallocHeapLowProc
+#InstallMemoryCacheFlusher
+#Memory_ReserveInMacHeap
 calloc
 free
 malloc
-memsize
-memtotal
+#memsize
+#memtotal
 realloc
 #{data}
-gFastMemSmallSizeAllocators
+#gFastMemSmallSizeAllocators
 
 
 ###
