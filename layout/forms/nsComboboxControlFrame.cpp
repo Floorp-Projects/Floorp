@@ -1019,6 +1019,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsComboboxControlFrame", aReflowState.reason);
+
   aStatus = NS_FRAME_COMPLETE;
 
   REFLOW_COUNTER_REQUEST();
@@ -1860,7 +1862,12 @@ nsComboboxControlFrame::SelectionChanged()
       REFLOW_DEBUG_MSG3("**** SelectionChanged  Old[%s]  New[%s]\n", value.ToNewCString(), mTextStr.ToNewCString());
     }
     if (shouldSetValue) {
-      rv = mDisplayContent->SetText(mTextStr.GetUnicode(), mTextStr.Length(), PR_TRUE);
+      if (mTextStr.Length() == 0) {
+        nsAutoString space(" ");
+        rv = mDisplayContent->SetText(space.GetUnicode(), space.Length(), PR_TRUE);
+      } else {
+        rv = mDisplayContent->SetText(mTextStr.GetUnicode(), mTextStr.Length(), PR_TRUE);
+      }
       nsFrameState state;
       //mTextFrame->GetFrameState(&state);
       //state |= NS_FRAME_IS_DIRTY;
