@@ -351,9 +351,10 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont)
 
   switch (anID)
   {
-    case eSystemAttr_Font_Caption: 
-      ptrLogFont = &ncm.lfCaptionFont;
-      break;
+    // Caption in CSS is NOT the same as Caption on Windows
+    //case eSystemAttr_Font_Caption: 
+    //  ptrLogFont = &ncm.lfCaptionFont;
+    //  break;
 
     case eSystemAttr_Font_Icon: 
       ptrLogFont = &logFont;
@@ -388,6 +389,7 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont)
     case eSystemAttr_Font_PullDownMenu:
     case eSystemAttr_Font_List:
     case eSystemAttr_Font_Field:
+    case eSystemAttr_Font_Caption: 
       hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
       if (hGDI != NULL)
       {
@@ -433,6 +435,16 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont)
 
   // Do Size
   int pointSize = -MulDiv(ptrLogFont->lfHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
+  //printf("\n\n Default Font size: %dpt\n", pointSize);
+  // As far as I can tell the Default size 8pt
+  // increase it by 2 points to match Windows GUI
+  if (anID == eSystemAttr_Font_Button || 
+      anID == eSystemAttr_Font_Field ||
+      anID == eSystemAttr_Font_List ||
+      anID == eSystemAttr_Font_Widget ||
+      anID == eSystemAttr_Font_Caption) {
+    pointSize += 2;
+  }
   aFont->size = NSIntPointsToTwips(pointSize);
 
   return NS_OK;
