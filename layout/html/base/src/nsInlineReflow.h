@@ -63,7 +63,7 @@ public:
   void HorizontalAlignFrames(nsRect& aLineBox,
                              PRBool aIsLastLine = PR_FALSE);
 
-  void RelativePositionFrames();
+  void RelativePositionFrames(nsRect& aCombinedArea);
 
   PRInt32 GetCurrentFrameNum() const { return mFrameNum; }
 
@@ -166,6 +166,9 @@ protected:
     // Location and size of frame after its reflowed but before it is
     // positioned finally by VerticalAlignFrames
     nsRect mBounds;
+
+    // Combined area value from nsHTMLReflowMetrics
+    nsRect mCombinedArea;
 
     nsSize mMaxElementSize;
 

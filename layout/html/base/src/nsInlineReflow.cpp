@@ -483,6 +483,18 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   mSpaceManager->Translate(tx, ty);
 
   htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
+  // XXX could return this in aStatus to save a few cycles
+  // XXX could mandate that child sets up mCombinedArea too...
+  frame->GetFrameState(state);
+  if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+    pfd->mCombinedArea = aMetrics.mCombinedArea;
+  }
+  else {
+    pfd->mCombinedArea.x = 0;
+    pfd->mCombinedArea.y = 0;
+    pfd->mCombinedArea.width = aMetrics.width;
+    pfd->mCombinedArea.height = aMetrics.height;
+  }
   pfd->mBounds.width = aMetrics.width;
   pfd->mBounds.height = aMetrics.height;
 
@@ -949,12 +961,16 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aIsLastLine)
 }
 
 void
-nsInlineReflow::RelativePositionFrames()
+nsInlineReflow::RelativePositionFrames(nsRect& aCombinedArea)
 {
+  nscoord x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   nsPoint origin;
   PerFrameData* pfd = mFrameDataBase;
   PerFrameData* end = pfd + mFrameNum;
   for (; pfd < end; pfd++) {
+    nscoord x = pfd->mCombinedArea.x + pfd->mBounds.x;
+    nscoord y = pfd->mCombinedArea.y + pfd->mBounds.y;
+
     nsIFrame* kid = pfd->mFrame;
     const nsStylePosition* kidPosition;
     kid->GetStyleData(eStyleStruct_Position,
@@ -982,8 +998,24 @@ nsInlineReflow::RelativePositionFrames()
         break;
       }
       kid->MoveTo(origin.x + dx, origin.y + dy);
+      x += dx;
+      y += dy;
     }
+
+    // Compute min and max x/y values for the reflowed frame's
+    // combined areas
+    nscoord xmost = x + pfd->mCombinedArea.width;
+    nscoord ymost = y + pfd->mCombinedArea.height;
+    if (x < x0) x0 = x;
+    if (xmost > x1) x1 = xmost;
+    if (y < y0) y0 = y;
+    if (ymost > y1) y1 = ymost;
   }
+
+  aCombinedArea.x = x0;
+  aCombinedArea.y = y0;
+  aCombinedArea.width = x1 - x0;
+  aCombinedArea.height = y1 - y0;
 }
 
 // XXX performance todo: this computation can be cached in the
