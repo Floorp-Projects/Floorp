@@ -36,6 +36,7 @@
 #include "nsViewSourceHTML.h"
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
+#include "nsIElementObserver.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -1001,114 +1002,158 @@ void WriteTokenToLog(CToken* aToken) {
 }
 #endif
 
+/************************************************************** 
+  Define the a functor used to notify observers... 
+ **************************************************************/ 
+class nsObserverNotifier: public nsDequeFunctor{ 
+public: 
+  nsObserverNotifier(eHTMLTags aTag,PRUint32 aCount,const PRUnichar** aKeys,
+                     const PRUnichar** aValues,PRUint32 aUniqueKey){ 
+    mCount=aCount; 
+    mKeys=aKeys; 
+    mValues=aValues; 
+    mUniqueKey=aUniqueKey; 
+    mTag=aTag; 
+  } 
 
-/**
- * This gets called before we've handled a given start tag.
- * It's a generic hook to let us do pre processing.
- * @param   aToken contains the tag in question
- * @param   aChildTag is the tag itself.
- * @param   aNode is the node (tag) with associated attributes.
- * @return  TRUE if tag processing should continue; FALSE if the tag has been handled.
- */
-nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode){
-  nsresult result=NS_OK;
-  PRInt32  theAttrCount;
+  virtual void* operator()(void* anObject) { 
+    nsIElementObserver* theObserver= (nsIElementObserver*)anObject; 
+    if(theObserver) { 
+      mResult = theObserver->Notify(mUniqueKey,mTag,mCount,mKeys,mValues); 
+    } 
+    if(NS_OK==mResult) 
+      return 0; 
+    return anObject; 
+  } 
 
-    //first let's see if there's some skipped content to deal with...
-  if(gHTMLElements[aTag].mSkipTarget) {
-    result=CollectSkippedContent(aNode,theAttrCount);
-  }
+  const PRUnichar** mKeys; 
+  const PRUnichar** mValues; 
+  PRUint32          mCount; 
+  PRUint32          mUniqueKey; 
+  nsresult          mResult; 
+  eHTMLTags         mTag; 
+}; 
 
-  /**********************************************************
-     THIS WILL ULTIMATELY BECOME THE REAL OBSERVER API...
-   **********************************************************
-  static CObserverDictionary gObserverDictionary;
-  nsDeque*  theDeque=gObserverDictionary.GetObserversForTag(aTag);
-  if(theDeque){
-    int theSize=theDeque->GetSize();
-    int theIndex=0;
-    for(theIndex=0;theIndex<theSize;theIndex++){
-      nsIObserver* theObserver=theDeque->ObjectAt(theIndex);
-      if(theObserver){
-        theObserver->Notify();
-      }
-    }
-  }
-  */
+/** 
+ * This gets called before we've handled a given start tag. 
+ * It's a generic hook to let us do pre processing. 
+ * @param   aToken contains the tag in question 
+ * @param   aChildTag is the tag itself. 
+ * @param   aNode is the node (tag) with associated attributes. 
+ * @return  TRUE if tag processing should continue; FALSE if the tag has been handled. 
+ */ 
+nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode){ 
+  nsresult result=NS_OK; 
+  PRInt32 theAttrCount  = aNode.GetAttributeCount(); 
 
-  //**********************************************************
-  //XXX Hack until I get the node observer API in place...
+    //first let's see if there's some skipped content to deal with... 
+  if(gHTMLElements[aTag].mSkipTarget) { 
+    result=CollectSkippedContent(aNode,theAttrCount); 
+  } 
 
-  if(eHTMLTag_meta==aTag) {
-    PRInt32 theCount=aNode.GetAttributeCount();
-    if(1<theCount){
- 
-        //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-      const nsString& theKey=aNode.GetKeyAt(0);
-      if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) {
-        const nsString& theKey2=aNode.GetKeyAt(1);
-        if(theKey2.EqualsIgnoreCase("CONTENT")) {
-            nsScanner* theScanner=mParser->GetScanner();
-            if(theScanner) {
-              const nsString& theValue=aNode.GetValueAt(1);
-              PRInt32 charsetValueStart = theValue.RFind("charset=", PR_TRUE ) ;
-              if(kNotFound != charsetValueStart) {	
+  /********************************************************** 
+     THIS WILL ULTIMATELY BECOME THE REAL OBSERVER API... 
+   **********************************************************/ 
+  static CObserverDictionary gObserverDictionary; 
+  if(aTag < NS_HTML_TAG_MAX){ 
+    nsDeque*  theDeque=gObserverDictionary.GetObserversForTag(aTag); 
+    if(theDeque){ 
+      PRUint32 theDequeSize=theDeque->GetSize(); 
+      if(0<theDequeSize){
+        PRInt32 index = 0; 
+        const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
+        const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
+        for(index=0; index<theAttrCount && theAttrCount < 50; index++) {
+          theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
+          theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
+        } 
+
+        nsAutoString theCharsetKey("charset"); 
+        theKeys[index]=theCharsetKey.GetUnicode(); 
+        theValues[index] = nsParser::gHackMetaCharsetURL.GetUnicode(); 
+
+        CParserContext* pc=mParser->PeekContext(); 
+        void* theDocID=(pc) ? pc-> mKey : 0; 
+        nsObserverNotifier theNotifier(aTag,theAttrCount,theKeys,theValues,(PRUint32)theDocID); 
+        theDeque->FirstThat(theNotifier); 
+        result=theNotifier.mResult; 
+
+      }//if 
+    } 
+  } 
+
+  //********************************************************** 
+  //XXX Hack until I get the node observer API in place... 
+
+  if(eHTMLTag_meta==aTag) { 
+    PRInt32 theCount=aNode.GetAttributeCount(); 
+    if(1<theCount){ 
+  
+      //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1"> 
+      const nsString& theKey=aNode.GetKeyAt(0); 
+      if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) { 
+        const nsString& theKey2=aNode.GetKeyAt(1); 
+        if(theKey2.EqualsIgnoreCase("CONTENT")) { 
+            nsScanner* theScanner=mParser->GetScanner(); 
+            if(theScanner) { 
+              const nsString& theValue=aNode.GetValueAt(1); 
+              PRInt32 charsetValueStart = theValue.RFind("charset=", PR_TRUE ) ; 
+              if(kNotFound != charsetValueStart) { 
                  charsetValueStart += 8; // 8 = "charset=".length 
-                 PRInt32 charsetValueEnd = theValue.FindCharInSet("\'\";", charsetValueStart  );
+                 PRInt32 charsetValueEnd = theValue.FindCharInSet("\'\";", charsetValueStart  ); 
                  if(kNotFound == charsetValueEnd ) 
-                    charsetValueEnd = theValue.Length();
-                 nsAutoString theCharset;
-                 theValue.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
-                 theScanner->SetDocumentCharset(theCharset, kCharsetFromMetaTag);
-				 // XXX this should be delete after META charset really work
-				 nsParser::gHackMetaCharset = theCharset;
-              } //if
-          } //if
-        }
-      } //if
+                    charsetValueEnd = theValue.Length(); 
+                 nsAutoString theCharset; 
+                 theValue.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart); 
+                 theScanner->SetDocumentCharset(theCharset, kCharsetFromMetaTag); 
+     // XXX this should be delete after META charset really work 
+     nsParser::gHackMetaCharset = theCharset; 
+              } //if 
+          } //if 
+        } 
+      } //if 
 
-      else if(theKey.EqualsIgnoreCase("NAME")) {
-        const nsString& theValue1=aNode.GetValueAt(0);
-        if(theValue1.EqualsIgnoreCase("\"CRC\"")) {
-          const nsString& theKey2=aNode.GetKeyAt(1);
-          if(theKey2.EqualsIgnoreCase("CONTENT")) {
-            const nsString& theValue2=aNode.GetValueAt(1);
-            PRInt32 err=0;
-            mExpectedCRC32=theValue2.ToInteger(&err);          
-          } //if
-        } //if
-      } //else
+      else if(theKey.EqualsIgnoreCase("NAME")) { 
+        const nsString& theValue1=aNode.GetValueAt(0); 
+        if(theValue1.EqualsIgnoreCase("\"CRC\"")) { 
+          const nsString& theKey2=aNode.GetKeyAt(1); 
+          if(theKey2.EqualsIgnoreCase("CONTENT")) { 
+            const nsString& theValue2=aNode.GetValueAt(1); 
+            PRInt32 err=0; 
+            mExpectedCRC32=theValue2.ToInteger(&err); 
+          } //if 
+        } //if 
+      } //else 
 
-    } //if
-  }//if
+    } //if 
+  }//if 
 
-  //XXX Hack until I get the node observer API in place...
-  //**********************************************************
+  //XXX Hack until I get the node observer API in place... 
+  //********************************************************** 
 
-  if(NS_OK==result) {
-    result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
-  }
+  if(NS_OK==result) { 
+    result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK; 
+  } 
 
-
-  PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag);
+  PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag); 
 
     //this code is here to make sure the head is closed before we deal 
-    //with any tags that don't belong in the head.
-  if(NS_OK==result) {
-    if(mHasOpenHead){
-      static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace};
-      if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){
-        if(!isHeadChild){      
-          CEndToken     theToken(eHTMLTag_head);
-          nsCParserNode theNode(&theToken,mLineNumber);
-          result=CloseHead(theNode);
-        }
-      }
-    }
-  }
+    //with any tags that don't belong in the head. 
+  if(NS_OK==result) { 
+    if(mHasOpenHead){ 
+      static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace}; 
+      if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){ 
+        if(!isHeadChild){ 
+          CEndToken     theToken(eHTMLTag_head); 
+          nsCParserNode theNode(&theToken,mLineNumber); 
+          result=CloseHead(theNode); 
+        } 
+      } 
+    } 
+  } 
 
-  return result;
-}
+  return result; 
+} 
 
 /** 
  *  This method gets called when a start token has been encountered that the parent
@@ -1433,7 +1478,6 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
 
     CToken*       theToken;
     eHTMLTags     theTag;
-    nsDTDContext  temp;
     PRInt32       attrCount;
     nsresult      result      = NS_OK;
     PRInt32       theTopIndex = GetTopmostIndexOf(aTag);
@@ -1447,6 +1491,7 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
     PRInt32  theBadTokenCount   = mBodyContext->TokenCountAt(theBadContentIndex);
 
     if(theBadTokenCount > 0) {
+      nsDTDContext  temp;
       // Pause the main context and switch to the new context.
       mSink->BeginContext(theBadContentIndex);
  
@@ -1475,7 +1520,8 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
         theBadTokenCount--;
       }
       if(theTopIndex != mBodyContext->GetCount()) {
-         CloseContainersTo(mBodyContext->TagAt(theTopIndex),PR_TRUE);
+        eHTMLTags theTarget = mBodyContext->TagAt(theTopIndex);
+        CloseContainersTo(theTopIndex,theTarget,PR_TRUE);
       }
      
       // Bad-contents were successfully processed. Now, itz time to get
