@@ -31,6 +31,7 @@ const DataTypeArray = [
     Components.interfaces.nsIDataType.VTYPE_UTF8STRING          ,
     Components.interfaces.nsIDataType.VTYPE_CSTRING             ,
     Components.interfaces.nsIDataType.VTYPE_ASTRING             ,    
+    Components.interfaces.nsIDataType.VTYPE_EMPTY_ARRAY         ,               
     Components.interfaces.nsIDataType.VTYPE_EMPTY               
 ];
 
@@ -61,6 +62,7 @@ const ShortNames = [
  {name: "US", number: Components.interfaces.nsIDataType.VTYPE_UTF8STRING     },
  {name: "CS", number: Components.interfaces.nsIDataType.VTYPE_CSTRING        },
  {name: "AS", number: Components.interfaces.nsIDataType.VTYPE_ASTRING        },
+ {name: "EA", number: Components.interfaces.nsIDataType.VTYPE_EMPTY_ARRAY    },
  {name: "EM", number: Components.interfaces.nsIDataType.VTYPE_EMPTY          }
 ];
 
@@ -197,80 +199,82 @@ function TestDoubleConvert(value, comment, eq_fun, table) {
 // 
 
 const SingleConvertResultsTableFor_String_Foo = [
-/*I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EM    */
-  _e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e
+/*I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EA,EM    */
+  _e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e
 ];
 
 const SingleConvertResultsTableFor_String_5 = [
-/*I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EM    */
-  eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e
+/*I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EA,EM    */
+  eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e
 ];
 
 const SingleConvertResultsTableFor_Number_20 = [
-/*I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EM    */
-  eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e
+/*I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EA,EM    */
+  eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e
 ];
 
 const DoubleConvertResultsTableFor_String_Foo = [
-/*     I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EM      */
-/*I1*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I1*/
-/*I2*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I2*/
-/*I4*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I4*/
-/*I8*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I8*/
-/*U1*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U1*/
-/*U2*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U2*/
-/*U4*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U4*/
-/*U8*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U8*/
-/*FL*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*FL*/
-/*DB*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*DB*/
-/*BO*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*BO*/
-/*CH*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*CH*/
-/*WC*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*WC*/
-/*VD*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*VD*/
-/*ID*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*ID*/
-/*DS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*DS*/
-/*ST*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*ST*/
-/*WS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*WS*/
-/*NS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*NS*/
-/*IF*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*IF*/
-/*AR*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*AR*/
-/*Ss*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*Ss*/
-/*Ws*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*Ws*/
-/*US*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*US*/
-/*CS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*CS*/
-/*AS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*AS*/
-/*EM*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e] /*EM*/
+/*     I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EA,EM      */
+/*I1*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I1*/
+/*I2*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I2*/
+/*I4*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I4*/
+/*I8*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*I8*/
+/*U1*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U1*/
+/*U2*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U2*/
+/*U4*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U4*/
+/*U8*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*U8*/
+/*FL*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*FL*/
+/*DB*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*DB*/
+/*BO*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*BO*/
+/*CH*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*CH*/
+/*WC*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*WC*/
+/*VD*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*VD*/
+/*ID*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*ID*/
+/*DS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*DS*/
+/*ST*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*ST*/
+/*WS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*WS*/
+/*NS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*NS*/
+/*IF*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*IF*/
+/*AR*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*AR*/
+/*Ss*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*Ss*/
+/*Ws*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*Ws*/
+/*US*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*US*/
+/*CS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*CS*/
+/*AS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*AS*/
+/*EA*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*EA*/
+/*EM*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e] /*EM*/
 ];
 
 const DoubleConvertResultsTableFor_String_Five = [
-/*     I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EM      */
-/*I1*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*I1*/
-/*I2*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*I2*/
-/*I4*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*I4*/
-/*I8*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*I8*/
-/*U1*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*U1*/
-/*U2*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*U2*/
-/*U4*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*U4*/
-/*U8*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*U8*/
-/*FL*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*FL*/
-/*DB*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*DB*/
-/*BO*/[_T,_T,_T,_T,_T,_T,_T,_T,_T,_T,_T,NE,NE,_e,_e,_T,_T,_T,_e,_e,_e,_T,_T,_T,_T,_T,_e],/*BO*/
-/*CH*/[NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,_e,_e,NE,NE,NE,_e,_e,_e,NE,NE,NE,NE,NE,_e],/*CH*/
-/*WC*/[NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,_e,_e,NE,NE,NE,_e,_e,_e,NE,NE,NE,NE,NE,_e],/*WC*/
-/*VD*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*VD*/
-/*ID*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*ID*/
-/*DS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*DS*/
-/*ST*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*ST*/
-/*WS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*WS*/
-/*NS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*NS*/
-/*IF*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*IF*/
-/*AR*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*AR*/
-/*Ss*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*Ss*/
-/*Ws*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*Ws*/
-/*US*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*US*/
-/*CS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*CS*/
-/*AS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e],/*AS*/
-/*EM*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e] /*EM*/
+/*     I1,I2,I4,I8,U1,U2,U4,U8,FL,DB,BO,CH,WC,VD,ID,DS,ST,WS,NS,IF,AR,Ss,Ws,US,CS,AS,EA,EM      */
+/*I1*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*I1*/
+/*I2*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*I2*/
+/*I4*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*I4*/
+/*I8*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*I8*/
+/*U1*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*U1*/
+/*U2*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*U2*/
+/*U4*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*U4*/
+/*U8*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*U8*/
+/*FL*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*FL*/
+/*DB*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,_T,eq,eq,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*DB*/
+/*BO*/[_T,_T,_T,_T,_T,_T,_T,_T,_T,_T,_T,NE,NE,_e,_e,_T,_T,_T,_e,_e,_e,_T,_T,_T,_T,_T,_e,_e],/*BO*/
+/*CH*/[NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,_e,_e,NE,NE,NE,_e,_e,_e,NE,NE,NE,NE,NE,_e,_e],/*CH*/
+/*WC*/[NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,NE,_e,_e,NE,NE,NE,_e,_e,_e,NE,NE,NE,NE,NE,_e,_e],/*WC*/
+/*VD*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*VD*/
+/*ID*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*ID*/
+/*DS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*DS*/
+/*ST*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*ST*/
+/*WS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*WS*/
+/*NS*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*NS*/
+/*IF*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*IF*/
+/*AR*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*AR*/
+/*Ss*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*Ss*/
+/*Ws*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*Ws*/
+/*US*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*US*/
+/*CS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*CS*/
+/*AS*/[eq,eq,eq,eq,eq,eq,eq,eq,eq,eq,NE,NE,NE,_e,_e,eq,eq,eq,_e,_e,_e,eq,eq,eq,eq,eq,_e,_e],/*AS*/
+/*EA*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e],/*EA*/
+/*EM*/[_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e,_e] /*EM*/
 ];
 
 var values = [

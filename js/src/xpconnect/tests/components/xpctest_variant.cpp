@@ -257,6 +257,12 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
                                 du.u.array.mArrayValue);
         NS_ENSURE_SUCCESS(rv,rv);
         break;
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
+        if(inVarType != nsIDataType::VTYPE_EMPTY_ARRAY)
+            return NS_ERROR_CANNOT_CONVERT_DATA;
+        rv = outVar->SetAsEmptyArray();
+        NS_ENSURE_SUCCESS(rv,rv);
+        break;        
     case nsIDataType::VTYPE_EMPTY:
         if(inVarType != nsIDataType::VTYPE_EMPTY)
             return NS_ERROR_CANNOT_CONVERT_DATA;

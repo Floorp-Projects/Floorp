@@ -61,6 +61,7 @@ interface nsIDataType : nsISupports
     const PRUint16 VTYPE_UTF8STRING          = 23; // TD_UTF8STRING        = 23,
     const PRUint16 VTYPE_CSTRING             = 24; // TD_CSTRING           = 24,
     const PRUint16 VTYPE_ASTRING             = 25; // TD_ASTRING           = 25,
+    const PRUint16 VTYPE_EMPTY_ARRAY         = 254;
     const PRUint16 VTYPE_EMPTY               = 255;
 };
 
@@ -164,6 +165,7 @@ interface nsIWritableVariant : nsIVariant
 
     void setAsVoid();
     void setAsEmpty();
+    void setAsEmptyArray();
 
     void setFromVariant(in nsIVariant aValue);
 };

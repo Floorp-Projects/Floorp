@@ -161,6 +161,7 @@ public:
 
     static nsresult SetToVoid(nsDiscriminatedUnion* data);
     static nsresult SetToEmpty(nsDiscriminatedUnion* data);
+    static nsresult SetToEmptyArray(nsDiscriminatedUnion* data);
 
 protected:
     nsDiscriminatedUnion mData;
