@@ -32,7 +32,7 @@ export::
 	-mkdir $(CCKDIST)\CCKTool
 	-mkdir $(CCKDIST)\CCKTool\Configs
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default
-	-mkdir $(CCKDIST)\CCKTool\Configs\Default\CD
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Output
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Network
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\AnimLogo
@@ -47,8 +47,7 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup\NCIFiles
 
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp
-	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Cd
-	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Network
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Output
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\AnimLogo
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun
