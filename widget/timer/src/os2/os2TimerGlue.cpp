@@ -44,6 +44,8 @@
 
 #include "os2TimerGlue.h"
 
+static long long timers = 0;
+
 extern void CALLBACK FireTimeout(HWND aWindow, UINT aMessage, UINT aTimerID, 
                                  DWORD aTime);
 
@@ -135,19 +137,19 @@ UINT os2TimerGlue::SetTimer(HWND hWnd, UINT timerID, UINT aDelay)
 {
    HWND timerHWND;
    timerHWND = Get();
-   // Need a unique number for the timerID.  No way to get a unique timer ID
-   //  without passing in a null hwnd.  Since there are already tests in place
-   //  to ensure only one OS timer per nsTimer, this should be safe.  Could
-   //  really do away with the AddTimer/GetTimer stuff with this, but want to
-   //  keep this looking like Windows so will leave it in.  The only problem
-   //  is that we have to keep this id below 0x7fff.  This is the easy way
-   //  and likely to be safe.  If this doesn't work, we'll need to keep track
-   //  of what ID's we've used and what is still open.  Hopefully these id's
-   //  will be unique enough.   IBM-AKR
- 
-   ULONG ulTimerID = ((ULONG)timerID % (TID_USERMAX - 1)) + 1;
- 
-   ULONG newTimerID = WinStartTimer(NULLHANDLE, timerHWND, ulTimerID, aDelay);
+
+   int i;
+   // TODO - make this threadsafe
+   for (i=0;i<64;i++) {
+      if (!(timers & ((long long)1 << i))) {
+         timers |= ((long long)1 << i);
+         break;
+      }
+   }
+
+   NS_ASSERTION(i < 64,"Too many timers");
+
+   ULONG newTimerID = WinStartTimer(NULLHANDLE, timerHWND, i+0x1000, aDelay);
    return (UINT)newTimerID;
 }
 
@@ -156,6 +158,8 @@ BOOL os2TimerGlue::KillTimer(HWND hWnd, UINT timerID)
    HWND timerHWND;
    timerHWND = Get();
    WinStopTimer(NULLHANDLE, timerHWND, timerID);
+
+   timers ^= ((long long)1 << (timerID-0x1000));
 
    return TRUE;
 }
