@@ -1442,7 +1442,7 @@ nsMsgComposeAndSend::EnsureLineBreaks(const char *body, PRUint32 bodyLen)
         if (!newBody) {
           // in the worse case, the body will be solid, no linebreaks.
           // that will require us to insert a line break every LINE_BREAK_MAX bytes
-          PRUint32 worstCaseLen = bodyLen+((bodyLen/LINE_BREAK_MAX)*NS_LINEBREAK_LEN);
+          PRUint32 worstCaseLen = bodyLen+((bodyLen/LINE_BREAK_MAX)*NS_LINEBREAK_LEN)+1;
           newBody = (char *) PR_Malloc(worstCaseLen);
           if (!newBody) return NS_ERROR_OUT_OF_MEMORY;
           newBodyPos = newBody;
