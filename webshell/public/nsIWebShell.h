@@ -261,6 +261,11 @@ public:
 	NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent) = 0;
 
   /**
+   * Get the referrer of the link using this WebShell.
+   */
+  NS_IMETHOD GetReferrer(nsIURI **aReferrer) = 0;
+
+  /**
    * Return the current number of WebShells which are immediate children 
    * of the current WebShell.
    */
