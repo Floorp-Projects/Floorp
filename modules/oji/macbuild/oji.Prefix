@@ -5,5 +5,5 @@
 //
 //
 
-#include "MacPrefix.h"
+#include "MacSharedPrefix.h"
 #include "ojiConfig.h"
