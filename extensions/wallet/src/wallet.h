@@ -49,12 +49,6 @@ extern nsresult
 WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick);
 
 extern void
-WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName);
-
-extern void
-WLLT_Capture(nsIDocument* doc, nsString name, nsString value, nsString vcard);
-
-extern void
 WLLT_GetNopreviewListForViewer (nsString& aNopreviewList);
 
 extern void

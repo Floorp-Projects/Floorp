@@ -2304,17 +2304,11 @@ si_RemoveAllSignonData() {
     si_FullyLoaded = FALSE;
 }
 
-PUBLIC void
- SI_RememberSignonData
-       (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
-{
-}
-
 /*
  * Check for a signon submission and remember the data if so
  */
 PUBLIC void
-SI_RememberSignonData2
+SI_RememberSignonDat2
        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
 {
     int i, j;

@@ -110,22 +110,6 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Prefill
     return ::WLLT_Prefill(shell, url, quick);
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_OKToCapture
-        (PRBool* result, PRInt32 count, char* URLName) {
-//    ::WLLT_OKToCapture(result, count, URLName);
-*result = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
-        nsIDocument* doc,
-        nsString name,
-        nsString value,
-        nsString vcard) {
-//    ::WLLT_Capture(doc, name, value, vcard);
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){
     ::WLLT_PrefillReturn(results);
     return NS_OK;
@@ -163,18 +147,6 @@ NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsString& aNo
 
 NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsString& aPrefillList){
     ::WLLT_GetPrefillListForViewer(aPrefillList);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
-        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
-//    ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::SI_RestoreSignonData
-        (char* URLName, char* name, char** value) {
-    ::SINGSIGN_RestoreSignonData(URLName, name, value);
     return NS_OK;
 }
 
@@ -244,6 +216,8 @@ nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL
   return NS_OK;
 }
 
+#include "prmem.h"
+
 NS_IMETHODIMP
 #ifdef NECKO
 nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
@@ -254,151 +228,156 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
 #endif
 {
     nsresult rv = NS_OK;
-
     nsIContentViewerContainer *cont = nsnull;
-
     nsIWebShell *ws = nsnull;
 
     if (aLoader == nsnull) {
-        return rv;
+      return rv;
     }
-
     rv = aLoader->GetContainer(&cont);
-    if (NS_FAILED(rv)) {
-        return rv;
+    if (NS_FAILED(rv) || (cont == nsnull)) {
+      return rv;
     }
-    if (cont == nsnull) {
-        return rv;
-    }
-
- 
     rv = cont->QueryInterface(nsIWebShell::GetIID(), (void **)&ws);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(cont);
-        return rv;
+    if (NS_FAILED(rv) || (ws == nsnull)) {
+      NS_RELEASE(cont);
+      return rv;
     }
-    if (ws == nsnull) {
-        NS_RELEASE(cont);
-        return rv;
-    }
-
-   
     nsIContentViewer* cv = nsnull;
     rv = ws->GetContentViewer(&cv);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(ws);
-        NS_RELEASE(cont);
-        return rv;
+    if (NS_FAILED(rv) || (cv == nsnull)) {
+      NS_RELEASE(ws);
+      NS_RELEASE(cont);
+      return rv;
     }
-    if (cv == nsnull) {
-        NS_RELEASE(ws);
-        NS_RELEASE(cont);
-        return rv;
-    }
-           
     nsIDocumentViewer* docViewer = nsnull;
     rv = cv->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &docViewer);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(cv);
-        NS_RELEASE(ws);
-        NS_RELEASE(cont);
-        return rv;
+    if (NS_FAILED(rv) || (docViewer == nsnull)) {
+      NS_RELEASE(cv);
+      NS_RELEASE(ws);
+      NS_RELEASE(cont);
+      return rv;
     }
-    if (docViewer == nsnull) {
-        NS_RELEASE(cv);
-        NS_RELEASE(ws);
-        NS_RELEASE(cont);
-        return rv;
-    }
-  
     nsIDocument *doc = nsnull;
     rv = docViewer->GetDocument(doc);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(docViewer);
-        NS_RELEASE(cv);
-        NS_RELEASE(ws);
-        NS_RELEASE(cont);
-        return rv;
-    }
-    if (doc == nsnull) {
-        NS_RELEASE(docViewer);
-        NS_RELEASE(cv);
-        NS_RELEASE(ws);
-        NS_RELEASE(cont);
-        return rv;
+    if (NS_FAILED(rv) || (doc == nsnull)) {
+      NS_RELEASE(docViewer);
+      NS_RELEASE(cv);
+      NS_RELEASE(ws);
+      NS_RELEASE(cont);
+      return rv;
     }
   
-    nsIURI *docURL = nsnull;
-    docURL = doc->GetDocumentURL();
+    /* get url name as ascii string */
+    char *URLName = nsnull;
+    nsIURI* docURL = nsnull;
+#ifdef NECKO
+    char* spec;
+#else
+    const char* spec;
+#endif
+    while (doc) {
+      docURL = doc->GetDocumentURL();
+      if (nsnull != docURL) {
+        (void)docURL->GetSpec(&spec);
+        if (PL_strcmp(spec, "about:blank")) {
+          break;
+        }
+#ifdef NECKO
+        nsCRT::free(spec);
+#endif
+      }
+//??    doc = nsFormFrame::GetParentHTMLFrameDocument(doc);
+    }
+    if (nsnull != docURL) {
+      URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+      PL_strcpy(URLName, spec);
+      NS_IF_RELEASE(docURL);
+    }
+#ifdef NECKO
+    nsCRT::free(spec);
+#endif
 
     nsIDOMHTMLDocument *htmldoc = nsnull;
     rv = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
-    if ((NS_SUCCEEDED(rv)) && (nsnull != htmldoc)) {
-        nsIDOMHTMLCollection* forms = nsnull;
-        rv = htmldoc->GetForms(&forms);
-        if (nsnull != forms) {
-            PRUint32 numForms;
-            forms->GetLength(&numForms);
-            for (PRUint32 formX = 0; formX < numForms; formX++) {
-                nsIDOMNode* formNode = nsnull;
-                forms->Item(formX, &formNode);
-                if (nsnull != formNode) {
-                    nsIDOMHTMLFormElement* formElement = nsnull;
-                    rv = formNode->QueryInterface(kIDOMHTMLFormElementIID,
-                                                    (void**)&formElement);
-                    if ((NS_SUCCEEDED(rv)) && (nsnull != formElement)) {
-                        nsIDOMHTMLCollection* elements = nsnull;
-                        rv = formElement->GetElements(&elements);
-                        if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
-                            /* got to the form elements at long last */ 
-                            PRUint32 numElements;
-                            elements->GetLength(&numElements);
-                            for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
-                                nsIDOMNode* elementNode = nsnull;
-                                elements->Item(elementX, &elementNode);
-                                if (nsnull != elementNode) {
-                                    PRUint16 nodeType;
-                                    nsIDOMHTMLInputElement *inputElement = nsnull;
-                                    rv = elementNode->QueryInterface(
-                                            nsIDOMHTMLInputElement::GetIID(),
-                                            (void**)&inputElement);
-                                    if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-                                        nsAutoString type("");
-                                        rv = inputElement->GetType(type);
-                                        if (NS_SUCCEEDED(rv)) {
-                                            if ((type.Compare("text", PR_TRUE) == 0) ||
-                                                (type.Compare("password", PR_TRUE) == 0)) {
-                                                char* t = type.ToNewCString();
-                                                if (t) {
-                                                    delete[] t;
-                                                }
-                                        
-                                                nsAutoString field;
-                                                rv = inputElement->GetName(field);
-                                                if (NS_SUCCEEDED(rv)) {
-                                                    char* f = field.ToNewCString();
-                                                    if (f) {
-                                                        delete[] f;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        NS_RELEASE(inputElement);
-                                    }
-                                    NS_RELEASE(elementNode);
-                                }
-                            }
-                            NS_RELEASE(elements);
-                        }
-                        NS_RELEASE(formElement);
-                    }
-                    NS_RELEASE(formNode);
-                }
-            }
-            NS_RELEASE(forms);
-        }
-        NS_RELEASE(htmldoc);
+    if (NS_FAILED(rv) || (htmldoc == nsnull)) {
+      NS_RELEASE(docViewer);
+      NS_RELEASE(cv);
+      NS_RELEASE(ws);
+      NS_RELEASE(cont);
+      return rv;
     }
+
+    nsIDOMHTMLCollection* forms = nsnull;
+    rv = htmldoc->GetForms(&forms);
+    if (NS_FAILED(rv) || (forms == nsnull)) {
+      NS_RELEASE(htmldoc);
+      NS_RELEASE(docViewer);
+      NS_RELEASE(cv);
+      NS_RELEASE(ws);
+      NS_RELEASE(cont);
+      return rv;
+    }
+
+    PRUint32 numForms;
+    forms->GetLength(&numForms);
+    for (PRUint32 formX = 0; formX < numForms; formX++) {
+      nsIDOMNode* formNode = nsnull;
+      forms->Item(formX, &formNode);
+      if (nsnull != formNode) {
+        nsIDOMHTMLFormElement* formElement = nsnull;
+        rv = formNode->QueryInterface(kIDOMHTMLFormElementIID,
+                                        (void**)&formElement);
+        if ((NS_SUCCEEDED(rv)) && (nsnull != formElement)) {
+          nsIDOMHTMLCollection* elements = nsnull;
+          rv = formElement->GetElements(&elements);
+          if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
+            /* got to the form elements at long last */ 
+            PRUint32 numElements;
+            elements->GetLength(&numElements);
+            for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+              nsIDOMNode* elementNode = nsnull;
+              elements->Item(elementX, &elementNode);
+              if (nsnull != elementNode) {
+                nsIDOMHTMLInputElement *inputElement = nsnull;
+                rv = elementNode->QueryInterface(
+                        nsIDOMHTMLInputElement::GetIID(),
+                        (void**)&inputElement);
+                if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
+                  nsAutoString type("");
+                  rv = inputElement->GetType(type);
+                  if (NS_SUCCEEDED(rv)) {
+                    if ((type == "") || (type.Compare("text", PR_TRUE) == 0) ||
+                      (type.Compare("password", PR_TRUE) == 0)) {
+                      nsAutoString field;
+                      rv = inputElement->GetName(field);
+                      if (NS_SUCCEEDED(rv)) {
+                        char* nameString = field.ToNewCString();
+                        if (nameString) {
+                          char* valueString = NULL;
+                          SINGSIGN_RestoreSignonData(URLName, nameString, &valueString);
+                          nsAutoString value(valueString);                                    
+                          rv = inputElement->SetValue(value);
+                          delete[] nameString;
+                        }
+                      }
+                    }
+                  }
+                  NS_RELEASE(inputElement);
+                }
+                NS_RELEASE(elementNode);
+              }
+            }
+            NS_RELEASE(elements);
+          }
+          NS_RELEASE(formElement);
+        }
+        NS_RELEASE(formNode);
+      }
+    }
+
+    NS_RELEASE(forms);
+    NS_RELEASE(htmldoc);
     NS_RELEASE(docViewer);
     NS_RELEASE(cv);
     NS_RELEASE(ws);

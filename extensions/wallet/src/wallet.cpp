@@ -2472,135 +2472,12 @@ wallet_ClearStopwatch();
   }
 }
 
-/*
- * see if user wants to capture data on current page
- */
-
-PUBLIC void
-WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
-*result = PR_FALSE;
-return;
-  nsAutoString * url = new nsAutoString(urlName);
-//  static int level = 0;
-
-  /* see if this url is already on list of url's for which we don't want to capture */
-  wallet_InitializeURLList();
-  XP_List* URL_list = wallet_URL_list;
-  XP_List* dummy;
-  nsAutoString * value = new nsAutoString("nn");
-  if (!url || !value) {
-    *result = PR_FALSE;
-    return;
-  }
-  if (wallet_ReadFromList(*url, *value, dummy, URL_list)) {
-    if (value->CharAt(NO_CAPTURE) == 'y') {
-      *result = PR_FALSE;
-      return;
-    }
-  }
-
-//  if (level > 0) {
-//    *result = PR_FALSE;
-//    return;
-//  }
-//  level++;
-
-  /* ask user if we should capture the values on this form */
-  if (wallet_GetFormsCapturingPref() && (count>=3)) {
-    char * message = Wallet_Localize("WantToCaptureForm?");
-    char * checkMessage = Wallet_Localize("NeverSave");
-    PRBool checkValue;
-//    PRBool checkValue = PR_FALSE;
-//    *result = Wallet_Confirm(message);
-    *result = Wallet_CheckConfirm(message, checkMessage, &checkValue);
-    if (!(*result)) {
-      if (checkValue) {
-        /* add URL to list with NO_CAPTURE indicator set */
-        value->SetCharAt('y', NO_CAPTURE);
-        wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
-        wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
-      } else {
-        delete url;
-      }
-    }
-    PR_FREEIF(checkMessage);
-    PR_FREEIF(message);
-  } else {
-    *result = PR_FALSE;
-  }
-//  level--;
-}
-
-/*
- * capture the value of a form element
- */
-PUBLIC void
-WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
-return;
-  /* do nothing if there is no value */
-  if (!value.Length()) {
-    return;
-  }
-
-  /* read in the mappings if they are not already present */
-  if (!vcard.Length()) {
-    wallet_Initialize();
-    wallet_InitializeCurrentURL(doc);
-    if (Wallet_BadKey()) {
-      return;
-    }
-  }
-
-  nsAutoString oldValue;
-
-  /* is there a mapping from this field name to a schema name */
-  nsAutoString schema(vcard);
-  XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
-  XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
-  XP_List* SchemaToValue_list = wallet_SchemaToValue_list;
-  XP_List* dummy;
-
-  if (schema.Length() ||
-      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list)) ||
-      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list))) {
-
-    /* field to schema mapping already exists */
-
-    /* is this a new value for the schema */
-    if (!(wallet_ReadFromList(schema, oldValue, dummy, SchemaToValue_list)) || 
-        (oldValue != value)) {
-
-      /* this is a new value so store it */
-      nsAutoString * aValue = new nsAutoString(value);
-      nsAutoString * aSchema = new nsAutoString(schema);
-      dummy = 0;
-      wallet_WriteToList(*aSchema, *aValue, dummy, wallet_SchemaToValue_list);
-      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
-    }
-  } else {
-
-    /* no field to schema mapping so assume schema name is same as field name */
-
-    /* is this a new value for the schema */
-    if (!(wallet_ReadFromList(field, oldValue, dummy, SchemaToValue_list)) ||
-        (oldValue != value)) {
-
-      /* this is a new value so store it */
-      nsAutoString * aField = new nsAutoString(field);
-      nsAutoString * aValue = new nsAutoString(value);
-      dummy = 0;
-      wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
-      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
-    }
-  }
-}
-
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
 #define MAX_ARRAY_SIZE 500
 
 extern void
-SI_RememberSignonData2
+SI_RememberSignonDat2
   (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
 
 PUBLIC void
@@ -2699,7 +2576,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
       }
 
       /* save login if appropriate */
-      SI_RememberSignonData2
+      SI_RememberSignonDat2
         (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 
       /* save form if it meets all necessary conditions */

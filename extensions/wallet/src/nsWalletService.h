@@ -39,9 +39,6 @@ public:
     NS_IMETHOD WALLET_PreEdit(nsAutoString& walletList);
     NS_IMETHOD WALLET_PostEdit(nsAutoString walletList);
     NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, nsString url, PRBool quick);
-    NS_IMETHOD WALLET_Capture
-      (nsIDocument* doc, nsString name, nsString value, nsString vcard);
-    NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName);
     NS_IMETHOD WALLET_PrefillReturn(nsAutoString results);
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML();
@@ -52,10 +49,6 @@ public:
     NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList);
     NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList);
 
-    NS_IMETHOD SI_RememberSignonData
-        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
-    NS_IMETHOD SI_RestoreSignonData
-        (char* URLNAME, char* name, char** value);
     NS_IMETHOD SI_PromptUsernameAndPassword
         (char *prompt, char **username, char **password, char *URLName, PRBool &status);
     NS_IMETHOD SI_PromptPassword

@@ -48,9 +48,6 @@ struct nsIWalletService : public nsISupports
     NS_IMETHOD WALLET_PostEdit(nsAutoString walletList) = 0;
     NS_IMETHOD WALLET_ChangePassword() = 0;
     NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, nsString url, PRBool quick) = 0;
-    NS_IMETHOD WALLET_Capture
-      (nsIDocument* doc, nsString name, nsString value, nsString vcard) = 0;
-    NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName) = 0;
     NS_IMETHOD WALLET_PrefillReturn(nsAutoString results)=0;
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML()=0;
@@ -60,10 +57,6 @@ struct nsIWalletService : public nsISupports
     NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList)=0;
     NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList)=0;
     NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList)=0;
-    NS_IMETHOD SI_RememberSignonData
-        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) = 0;
-    NS_IMETHOD SI_RestoreSignonData
-        (char* URLNAME, char* name, char** value)=0;
 
     NS_IMETHOD SI_PromptUsernameAndPassword
         (char *prompt, char **username, char **password, char *URLName, PRBool &status)=0;
