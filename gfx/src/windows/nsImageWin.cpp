@@ -209,10 +209,13 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
       PRUint8 *pixels = mImageBits + 
 		                (mBHead->biHeight - aUpdateRect->y - aUpdateRect->height) * span + 
 		                aUpdateRect->x * 3;
-      PRUint8 *gamma = aContext->GetGammaTable();
+      PRUint8 *gamma;
+      float    gammaValue;
+      aContext->GetGammaTable(gamma);
+      aContext->GetGamma(gammaValue);
 
       // Gamma correct the image
-      if (aContext->GetGamma() != 1.0)
+      if (1.0 != gammaValue)
       {
         for (y = 0; y < aUpdateRect->height; y++)
         {

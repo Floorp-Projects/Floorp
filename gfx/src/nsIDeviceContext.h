@@ -100,8 +100,8 @@ public:
 
   //get and set the document zoom value used for display-time
   //scaling. default is 1.0 (no zoom)
-  virtual void SetZoom(float aZoom) = 0;
-  virtual float GetZoom() const = 0;
+  NS_IMETHOD  SetZoom(float aZoom) = 0;
+  NS_IMETHOD  GetZoom(float &aZoom) const = 0;
 
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
@@ -110,11 +110,11 @@ public:
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext) = 0;
 
   //functions for handling gamma correction of output device
-  virtual float GetGamma(void) = 0;
-  virtual void SetGamma(float aGamma) = 0;
+  NS_IMETHOD  GetGamma(float &aGamms) = 0;
+  NS_IMETHOD  SetGamma(float aGamma) = 0;
 
   //XXX the return from this really needs to be ref counted somehow. MMP
-  virtual PRUint8 * GetGammaTable(void) = 0;
+  NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable) = 0;
 
   virtual nsNativeWidget GetNativeWidget(void) = 0;
 

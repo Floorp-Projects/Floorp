@@ -190,22 +190,25 @@ nsIFontMetrics* DeviceContextImpl::GetMetricsFor(const nsFont& aFont)
   return mFontCache->GetMetricsFor(aFont);
 }
 
-void DeviceContextImpl :: SetZoom(float aZoom)
+NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
 {
   mZoom = aZoom;
+  return NS_OK;
 }
 
-float DeviceContextImpl :: GetZoom() const
+NS_IMETHODIMP DeviceContextImpl :: GetZoom(float &aZoom) const
 {
-  return mZoom;
+  aZoom = mZoom;
+  return NS_OK;
 }
 
-float DeviceContextImpl :: GetGamma(void)
+NS_IMETHODIMP DeviceContextImpl :: GetGamma(float &aGamma)
 {
-  return mGammaValue;
+  aGamma = mGammaValue;
+  return NS_OK;
 }
 
-void DeviceContextImpl :: SetGamma(float aGamma)
+NS_IMETHODIMP DeviceContextImpl :: SetGamma(float aGamma)
 {
   if (aGamma != mGammaValue)
   {
@@ -218,13 +221,14 @@ void DeviceContextImpl :: SetGamma(float aGamma)
 
     mGammaValue = aGamma;
   }
+  return NS_OK;
 }
 
-PRUint8 * DeviceContextImpl :: GetGammaTable(void)
+NS_IMETHODIMP DeviceContextImpl :: GetGammaTable(PRUint8 *&aGammaTable)
 {
   //XXX we really need to ref count this somehow. MMP
-
-  return mGammaTable;
+  aGammaTable = mGammaTable;
+  return NS_OK;
 }
 
 void DeviceContextImpl :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
