@@ -308,4 +308,27 @@ x_tr_valign_baseline.xml
 x_tr_id.xml
 x_tr_class.xml
 x_tr_style.xml
+backgr_simple-table.html
+backgr_simple-table-row-group.html
+backgr_simple-table-column-group.html
+backgr_simple-table-row.html
+backgr_simple-table-column.html
+backgr_simple-table-cell.html
+backgr_position-table.html
+backgr_position-table-row-group.html
+backgr_position-table-column-group.html
+backgr_position-table-row.html
+backgr_position-table-column.html
+backgr_position-table-cell.html
+backgr_layers-show.html
+backgr_layers-hide.html
+backgr_border-table.html
+backgr_border-table-row-group.html
+backgr_border-table-column-group.html
+backgr_border-table-row.html
+backgr_border-table-column.html
+backgr_border-table-cell.html
+backgr_layers-opacity.html
+backgr_fixed-bg.html
+
 
