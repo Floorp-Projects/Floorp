@@ -204,6 +204,7 @@ extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)
 
 #if defined(_PR_POLL_AVAILABLE)
+#include <poll.h>
 #define _MD_POLL(fds,nfds,timeout) syscall(SYS_poll,fds,nfds,timeout)
 #endif
 
