@@ -160,7 +160,7 @@ int Pluglet::Compare(const char *mimeType) {
     char *p2 = strchr(p1,';');
     while ( p1 != NULL && p1 < terminator ) {
         size_t n = sizeof(char) * ( ( (p2 == NULL) ? terminator : p2) - p1 );
-        if (strncmp(p1,mimeType,n) == 0) {
+        if (PL_strncasecmp(p1,mimeType,n) == 0) {
             return 1;
         }
         p1 = p2 ;
