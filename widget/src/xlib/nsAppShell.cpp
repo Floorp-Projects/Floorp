@@ -322,9 +322,11 @@ nsAppShell::DispatchEvent(XEvent *event)
   case Expose:
     HandleExposeEvent(event, widget);
     break;
+#if 0
   case ConfigureNotify:
     HandleConfigureNotifyEvent(event, widget);
     break;
+#endif
   case ButtonPress:
   case ButtonRelease:
     HandleButtonEvent(event, widget);
@@ -333,7 +335,7 @@ nsAppShell::DispatchEvent(XEvent *event)
     HandleMotionNotifyEvent(event, widget);
     break;
   default:
-    printf("Unhandled window event: Window 0x%lxd Got a %s event\n",
+    printf("Unhandled window event: Window 0x%lx Got a %s event\n",
            event->xany.window, event_names[event->type]);
     break;
   }
@@ -359,7 +361,7 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 {
   nsMouseEvent mevent;
   PRUint32 eventType = 0;
-  printf("Button event for window 0x%lxd button %d type %s\n",
+  printf("Button event for window 0x%lx button %d type %s\n",
          event->xany.window, event->xbutton.button, (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease"));
   switch(event->type) {
   case ButtonPress:
@@ -405,7 +407,7 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 {
-  printf("Expose event for window 0x%lxd %d %d %d %d\n", event->xany.window,
+  printf("Expose event for window 0x%lx %d %d %d %d\n", event->xany.window,
          event->xexpose.x, event->xexpose.y, event->xexpose.width, event->xexpose.height);
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
@@ -424,7 +426,7 @@ nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
 {
-  printf("ConfigureNotify event for window 0x%lxd %d %d %d %d\n",
+  printf("ConfigureNotify event for window 0x%lx %d %d %d %d\n",
          event->xconfigure.window,
          event->xconfigure.x, event->xconfigure.y,
          event->xconfigure.width, event->xconfigure.height);
