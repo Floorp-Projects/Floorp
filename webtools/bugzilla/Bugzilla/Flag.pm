@@ -373,21 +373,30 @@ sub modify {
 
         my $status = $data->{"flag-$id"};
         my $requestee_email = trim($data->{"requestee-$id"});
+
         
-        # Ignore flags the user didn't change.  A flag hasn't changed
-        # if its status and requestee remain the same.  Status is easy;
-        # we just compare the existing status with the submitted one.
-        # For requestee, however, we have to be careful not to compare
-        # the two if the flag isn't specifically requestable or isn't 
-        # being requested, otherwise we'll get false positives and think 
-        # the user changed the flag when they didn't.
-        next if 
-          $status eq $flag->{'status'}  # the flag's status hasn't changed, and:
-          && (!$flag->{'type'}->{'is_requesteeble'} 
-                                        # the flag isn't specifically requestable
-              || $status ne "?"         # or the flag isn't being requested
-              || ($flag->{'requestee'}  # or the requestee hasn't changed
-                  && ($requestee_email eq $flag->{'requestee'}->login)));
+        # Ignore flags the user didn't change. There are two components here:
+        # either the status changes (trivial) or the requestee changes.
+        # Change of either field will cause full update of the flag.
+
+        my $status_changed = ($status ne $flag->{'status'});
+        
+        # Requestee is considered changed, if all of the following apply:
+        # 1. Flag status is '?' (requested)
+        # 2. Flag can have a requestee
+        # 3. The requestee specified on the form is different from the 
+        #    requestee specified in the db.
+        
+        my $old_requestee = 
+          $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+
+        my $requestee_changed = 
+          ($status eq "?" && 
+           $flag->{'type'}->{'is_requesteeble'} &&
+           $old_requestee ne $requestee_email);
+           
+        next unless ($status_changed || $requestee_changed);
+
         
         # Since the status is validated, we know it's safe, but it's still
         # tainted, so we have to detaint it before using it in a query.
