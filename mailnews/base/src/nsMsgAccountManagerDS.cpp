@@ -157,16 +157,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
                                          PRBool aTruthValue,
                                          nsIRDFNode **target)
 {
-  nsresult rv = NS_RDF_NO_VALUE;
-#ifdef DEBUG_alecf
-  char *source_value=nsnull;
-  rv = source->GetValue(&source_value);
-  
-  char *property_value=nsnull;
-  rv = property->GetValue(&property_value);
-  printf("nsMsgAccountManagerDataSource::GetTarget(%s, %s, %s, ..)\n",
-         source_value, property_value, aTruthValue?"PR_TRUE":"PR_FALSE");
-#endif
   return NS_RDF_NO_VALUE;
 }
 
@@ -208,12 +198,6 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
     nsISupportsArray *servers;
     mAccountManager->GetAllServers(&servers);
 
-#ifdef DEBUG_alecf
-    char *property_value=nsnull;
-    rv = property->GetValue(&property_value);
-    printf("nsMsgAccountManagerDataSource::GetTargets(%s, %s, %s, ..)\n",
-           source_value, property_value, aTruthValue?"PR_TRUE":"PR_FALSE");
-#endif
     // fill up the nodes array with the RDF Resources for the servers
     serverCreationParams params = { nodes, getRDFService() };
     servers->EnumerateForwards(createServerResources, (void*)&params);
@@ -246,10 +230,6 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   rv = server->GetServerURI(&serverUri);
   if (NS_FAILED(rv)) return PR_TRUE;
 
-#ifdef DEBUG_alecf
-  printf("createServerResources: Adding %s\n", serverUri);
-#endif
-  
   // get the corresponding RDF resource
   // RDF will create the server resource if it doesn't already exist
   nsIRDFResource *serverResource;
