@@ -468,10 +468,19 @@ struct JSPrinter {
     Sprinter        sprinter;       /* base class state */
     JSArenaPool     pool;           /* string allocation pool */
     uintN           indent;         /* indentation in spaces */
-    JSBool          pretty;         /* pretty-print: indent, use newlines */
+    JSPackedBool    pretty;         /* pretty-print: indent, use newlines */
+    JSPackedBool    grouped;        /* in parenthesized expression context */
     JSScript        *script;        /* script being printed */
     JSScope         *scope;         /* script function scope */
 };
+
+/*
+ * Hack another flag, a la JS_DONT_PRETTY_PRINT, into uintN indent parameters
+ * to functions such as js_DecompileFunction and js_NewPrinter.  This time, as
+ * opposed to JS_DONT_PRETTY_PRINT back in the dark ages, we can assume that a
+ * uintN is at least 32 bits.
+ */
+#define JS_IN_GROUP_CONTEXT 0x10000
 
 JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
@@ -483,8 +492,9 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
     JS_InitArenaPool(&jp->pool, name, 256, 1);
-    jp->indent = indent;
+    jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
     jp->pretty = pretty;
+    jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;
     jp->script = NULL;
     jp->scope = NULL;
     return jp;
@@ -989,7 +999,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     }
 
                     /* Do the loop body. */
-                    js_puts(jp, ") {\n");
+                    js_printf(jp, ") {\n");
                     jp->indent += 4;
                     oplen = (cond) ? js_CodeSpec[pc[cond]].length : 0;
                     DECOMPILE_CODE(pc + cond + oplen, next - cond - oplen);
@@ -1913,8 +1923,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     }
                 } else {
                     if (!js_fun_toString(cx, ATOM_TO_OBJECT(atom),
-                                         JS_DONT_PRETTY_PRINT, 0, NULL,
-                                         &val)) {
+                                         (pc + len < endpc &&
+                                          pc[len] == JSOP_GROUP)
+                                         ? JS_IN_GROUP_CONTEXT |
+                                           JS_DONT_PRETTY_PRINT
+                                         : JS_DONT_PRETTY_PRINT,
+                                         0, NULL, &val)) {
                         return JS_FALSE;
                     }
                 }
@@ -2430,7 +2444,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
         js_puts(jp, "\n");
         js_printf(jp, "\t");
     } else {
-        if (fun->flags & JSFUN_LAMBDA)
+        if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
             js_puts(jp, "(");
     }
     if (fun->flags & JSFUN_GETTER)
@@ -2506,7 +2520,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     if (jp->pretty) {
         js_puts(jp, "\n");
     } else {
-        if (fun->flags & JSFUN_LAMBDA)
+        if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
             js_puts(jp, ")");
     }
     return JS_TRUE;
