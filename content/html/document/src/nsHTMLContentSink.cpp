@@ -938,10 +938,6 @@ MakeContentObject(nsHTMLTag aNodeType,
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
-  default:
-    rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    break;
-
   case eHTMLTag_a:
     rv = NS_NewHTMLAnchorElement(aResult, aNodeInfo);
     break;
@@ -987,6 +983,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_dir:
     rv = NS_NewHTMLDirectoryElement(aResult, aNodeInfo);
+    break;
+  case eHTMLTag_del:
+    rv = NS_NewHTMLDelElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_div:
   case eHTMLTag_noembed:
@@ -1057,6 +1056,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLInputElement(aResult, aNodeInfo);
     if (!aInsideNoXXXTag)
       SetForm(*aResult, aForm);
+    break;
+  case eHTMLTag_ins:
+    rv = NS_NewHTMLInsElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_isindex:
     rv = NS_NewHTMLIsIndexElement(aResult, aNodeInfo);
@@ -1194,6 +1196,9 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_unknown:
   case eHTMLTag_userdefined:
     rv = NS_NewHTMLUnknownElement(aResult, aNodeInfo);
+    break;
+  default:
+    rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
     break;
   }
 
@@ -1376,10 +1381,11 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     return rv;
   }
 
-  nsresult srv;
-  nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &srv);
-  if (NS_SUCCEEDED(srv)) {
-    srv = select->DoneAddingContent(PR_FALSE);
+  if (nodeType == eHTMLTag_select) {
+    nsCOMPtr<nsISelectElement> select(do_QueryInterface(content));
+    if (select) {
+      select->DoneAddingContent(PR_FALSE);
+    }
   }
 
   mStack[mStackPos].mType = nodeType;

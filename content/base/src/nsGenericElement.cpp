@@ -1663,8 +1663,11 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
                                     mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
                                     (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
-    
-    if (nsnull != mDocument) {
+
+    NS_WARN_IF_FALSE(slots->mScriptObject,
+                     "Eeek! Cound't create script object!");
+
+    if (mDocument && slots->mScriptObject) {
       aContext->AddNamedReference((void *)&slots->mScriptObject,
                                   slots->mScriptObject,
                                   "nsGenericElement::mScriptObject");
