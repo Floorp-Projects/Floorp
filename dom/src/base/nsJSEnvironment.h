@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
+#include "nsIObserver.h"
 
 class nsIScriptSecurityManager;
 // XXXbe vc5 sucks: must include nsIScriptNameSpaceManager.h to use nsCOMPtr with it
@@ -132,7 +133,7 @@ public:
 
 class nsIJSRuntimeService;
 
-class nsJSEnvironment {
+class nsJSEnvironment: nsIObserver {
 private:
   JSRuntime *mRuntime;
   nsIJSRuntimeService* mRuntimeService; /* XXXbe nsCOMPtr to service */
@@ -141,7 +142,10 @@ public:
   static nsJSEnvironment *sTheEnvironment;
 
   nsJSEnvironment();
-  ~nsJSEnvironment();
+  virtual ~nsJSEnvironment();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   nsIScriptContext* GetNewContext();
 
