@@ -495,8 +495,9 @@ nsGifAllocator::Calloc(PRUint32 items, PRUint32 size)
   PRUint32 totalsize = items * size;
   PRInt32 freeAllocatedBucket = -1;
   nsAutoLock autolock(mLock);
+  PRUint32 i;
 
-  for (PRUint32 i = 0; i < kNumBuckets; i++) {
+  for (i = 0; i < kNumBuckets; i++) {
     // if bucket is in use or has no memory, dont touch it.
     if (IsUsed(i) || !mMemBucket[i])
       continue;
