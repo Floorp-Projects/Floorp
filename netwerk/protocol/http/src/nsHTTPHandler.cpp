@@ -225,12 +225,17 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
     nsIURI* url;
     if (aBaseURI)
+    {
         rv = aBaseURI->Clone(&url);
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetRelativePath(aSpec);
+    }
     else
+    {
         rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = url->SetSpec((char*)aSpec);
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec((char*)aSpec);
+    }
 
     nsIURI* realUrl = nsnull;
     
