@@ -67,7 +67,7 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
         const nsXPTType& type = param.GetType();
         nsXPCMiniVariant* dp = &dispatchParams[i];
 
-        if(param.IsOut() || type.IsPointer())
+        if(param.IsOut() || !type.IsArithmetic())
         {
             dp->val.p = (void*) *ap;
             continue;
@@ -89,14 +89,13 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
         case nsXPTType::T_CHAR   : dp->val.c   = *((char*)   ap);       break;
         case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*)ap);       break;
         default:
-            // XXX deal with other types
-            NS_ASSERTION(0, "type not yet supported");
+            NS_ASSERTION(0, "bad type");
             break;
         }
     }
     *stackBytesToPop = ((uint32)ap) - ((uint32)args);
 
-    result = clazz->CallMethod(self, info, dispatchParams);
+    result = clazz->CallMethod(self, (uint16)methodIndex, info, dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;
@@ -129,6 +128,7 @@ static __declspec(naked) void SharedStub(void)
     }
 }
 
+// these macros get expanded (many times) in the file #included below
 #define STUB_ENTRY(n) \
 __declspec(naked) nsresult __stdcall nsXPCWrappedJS::Stub##n() \
 { __asm push n __asm jmp SharedStub }

@@ -53,47 +53,38 @@ public:
     JSBool IsReference() const
         {return (JSBool) (XPT_TDP_IS_REFERENCE(flags));}
 
+    JSBool IsArithmetic() const     // terminology from Harbison/Steele
+        {return flags <= T_WCHAR;}
+
+    JSBool IsInterfacePointer() const
+        {return (JSBool) (TagPart() == T_INTERFACE || 
+                          TagPart() == T_INTERFACE_IS);}
+
     uint8 TagPart() const
         {return (uint8) (flags & XPT_TDP_TAGMASK);}
 
     enum
     {
-        T_I8          = TD_INT8,
-        T_I16         = TD_INT16,
-        T_I32         = TD_INT32,
-        T_I64         = TD_INT64,
-        T_U8          = TD_UINT8,
-        T_U16         = TD_UINT16,
-        T_U32         = TD_UINT32,
-        T_U64         = TD_UINT64,
-        T_FLOAT       = TD_FLOAT,
-        T_DOUBLE      = TD_DOUBLE,
-        T_BOOL        = TD_BOOL,
-        T_CHAR        = TD_CHAR,
-        T_WCHAR       = TD_WCHAR,
-        T_VOID        = TD_VOID,
-
-        T_P_I8        = XPT_TDP_POINTER | TD_PINT8,  
-        T_P_I16       = XPT_TDP_POINTER | TD_PINT16, 
-        T_P_I32       = XPT_TDP_POINTER | TD_PINT32, 
-        T_P_I64       = XPT_TDP_POINTER | TD_PINT64, 
-        T_P_U8        = XPT_TDP_POINTER | TD_PUINT8, 
-        T_P_U16       = XPT_TDP_POINTER | TD_PUINT16,
-        T_P_U32       = XPT_TDP_POINTER | TD_PUINT32,
-        T_P_U64       = XPT_TDP_POINTER | TD_PUINT64,
-        T_P_FLOAT     = XPT_TDP_POINTER | TD_PFLOAT, 
-        T_P_DOUBLE    = XPT_TDP_POINTER | TD_PDOUBLE,
-        T_P_BOOL      = XPT_TDP_POINTER | TD_PBOOL,  
-        T_P_CHAR      = XPT_TDP_POINTER | TD_PCHAR,  
-        T_P_WCHAR     = XPT_TDP_POINTER | TD_PWCHAR, 
-        T_P_VOID      = XPT_TDP_POINTER | TD_PVOID,  
-        T_P_IID       = XPT_TDP_POINTER | TD_PNSIID,
-        T_BSTR        = XPT_TDP_POINTER | TD_PBSTR,  
-        T_P_CHAR_STR  = XPT_TDP_POINTER | TD_PSTRING, 
-        T_P_WCHAR_STR = XPT_TDP_POINTER | TD_PWSTRING,
-
-        T_INTERFACE     = TD_INTERFACE_TYPE,   
-        T_INTERFACE_IS  = TD_INTERFACE_IS_TYPE
+        T_I8           = TD_INT8             ,
+        T_I16          = TD_INT16            ,
+        T_I32          = TD_INT32            ,
+        T_I64          = TD_INT64            ,
+        T_U8           = TD_UINT8            ,
+        T_U16          = TD_UINT16           ,
+        T_U32          = TD_UINT32           ,
+        T_U64          = TD_UINT64           ,
+        T_FLOAT        = TD_FLOAT            ,
+        T_DOUBLE       = TD_DOUBLE           ,
+        T_BOOL         = TD_BOOL             ,
+        T_CHAR         = TD_CHAR             ,
+        T_WCHAR        = TD_WCHAR            ,
+        T_VOID         = TD_VOID             ,
+        T_IID          = TD_PNSIID           ,
+        T_BSTR         = TD_PBSTR            ,
+        T_CHAR_STR     = TD_PSTRING          ,
+        T_WCHAR_STR    = TD_PWSTRING         ,
+        T_INTERFACE    = TD_INTERFACE_TYPE   ,
+        T_INTERFACE_IS = TD_INTERFACE_IS_TYPE
     };
 // NO DATA - this a flyweight wrapper
 };

@@ -101,7 +101,7 @@ XPTParamDescriptor ResultParam[] = {
 
 XPTParamDescriptor QueryInterfaceParams[2] = {
     {XPT_PD_IN, {TD_PNSIID|XPT_TDP_POINTER|XPT_TDP_REFERENCE,0}},
-    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_INTERFACE_IS_TYPE,0}}
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_INTERFACE_IS_TYPE,0}}
 };
 
 XPTParamDescriptor TestParams[3] = {

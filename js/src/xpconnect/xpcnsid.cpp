@@ -30,6 +30,7 @@ public:
     ~IDData();  // no virtual functions
 
     JSBool  GetString(JSContext *cx, jsval *rval);
+    const nsID&  GetID() const {return mID;}
     JSBool  Equals(const IDData& r);
     void    Cleanup(JSContext *cx);
 private:
@@ -202,3 +203,16 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID)
         JS_SetPrivate(cx, obj, new IDData(aID));
     return obj;
 }
+
+const nsID*
+xpc_JSObjectToID(JSContext *cx, JSObject* obj)
+{
+    IDData* data;
+
+    if(!cx || !obj ||
+       !JS_InstanceOf(cx, obj, &nsID_class, NULL) ||
+       !(data = (IDData*) JS_GetPrivate(cx, obj)))
+        return NULL;
+
+    return &data->GetID();
+}        

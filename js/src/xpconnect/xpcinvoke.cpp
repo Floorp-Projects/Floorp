@@ -61,7 +61,7 @@ invoke_count_words(uint32 paramCount, nsXPCVariant* s)
             result++;
             break;
         default:
-            NS_ASSERTION(s->type.IsPointer(), "bad type");
+            // all the others are plain pointer types
             result++;
             break;
         }
@@ -95,7 +95,7 @@ invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVariant* s)
         case nsXPTType::T_CHAR   : *((char*)   d) = s->val.c;           break;
         case nsXPTType::T_WCHAR  : *((wchar_t*)d) = s->val.wc;          break;
         default:
-            NS_ASSERTION(s->type.IsPointer(), "bad type");
+            // all the others are plain pointer types
             *((void**)d) = s->val.p;
             break;
         }

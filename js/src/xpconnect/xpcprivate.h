@@ -144,6 +144,26 @@ class nsIXPCWrappedJSClass : public nsISupports
 
 /*************************/
 
+// nsXPCWrappedJSClass maintains an array of these things
+class XPCJSMemberDescriptor
+{
+private:
+    enum {
+        // these are all bitwise flags!
+        JSMD_REFLECTABLE = 0x1
+    };
+
+public:
+    JSBool IsReflectable() const {return flags & JSMD_REFLECTABLE;}
+    void SetReflectable(JSBool b) {if(b) flags |= JSMD_REFLECTABLE;
+                                   else  flags &= ~JSMD_REFLECTABLE;}
+    XPCJSMemberDescriptor(){}
+private:
+    uint16          flags;
+};
+
+/*************************/
+
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
@@ -164,7 +184,7 @@ public:
 
     JSObject* GetRootJSObject(JSObject* aJSObj);
 
-    NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper,
+    NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                         const nsXPTMethodInfo* info,
                         nsXPCMiniVariant* params);
 
@@ -180,10 +200,17 @@ private:
 
     JSObject*  CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID);
 
+    JSBool IsReflectable(uint16 i) const 
+        {return mDescriptors[i/32] & (1 << (i%32));}
+    void SetReflectable(uint16 i, JSBool b) 
+        {if(b) mDescriptors[i/32] |= (1 << (i%32));
+         else  mDescriptors[i/32] &= ~(1 << (i%32));}
+
 private:
     XPCContext* mXPCContext;
     nsIInterfaceInfo* mInfo;
     nsIID mIID;
+    uint32* mDescriptors;
 };
 
 /*************************/
@@ -242,23 +269,40 @@ private:
 /***************************************************************************/
 
 // nsXPCWrappedNativeClass maintains an array of these things
-struct XPCNativeMemberDescriptor
+class XPCNativeMemberDescriptor
 {
-    enum MemberCategory{
-        CONSTANT,
-        METHOD,
-        ATTRIB_RO,
-        ATTRIB_RW
+private:
+    enum {
+        // these are all bitwise flags!
+        NMD_CONSTANT    = 0x0, // categories...
+        NMD_METHOD      = 0x1,
+        NMD_ATTRIB_RO   = 0x2, 
+        NMD_ATTRIB_RW   = 0x3,
+        NMD_CAT_MASK    = 0x3, // & mask for the categories above
+        // any new bits start at 0x04
     };
 
+public:
     JSObject*       invokeFuncObj;
     jsid            id;  /* hashed name for quick JS property lookup */
     uintN           index; /* in InterfaceInfo for const, method, and get */
     uintN           index2; /* in InterfaceInfo for set */
-    MemberCategory  category;
+
+    JSBool IsConstant() const  {return (flags & NMD_CAT_MASK) == NMD_CONSTANT;}
+    JSBool IsMethod() const    {return (flags & NMD_CAT_MASK) == NMD_METHOD;}
+    JSBool IsAttribute() const {return (JSBool)((flags & NMD_CAT_MASK) & NMD_ATTRIB_RO);}
+    JSBool IsWritableAttribute() const {return (flags & NMD_CAT_MASK) == NMD_ATTRIB_RW;}
+    JSBool IsReadOnlyAttribute() const {return (flags & NMD_CAT_MASK) == NMD_ATTRIB_RO;}
+
+    void SetConstant()          {flags=(flags&~NMD_CAT_MASK)|NMD_CONSTANT;}
+    void SetMethod()            {flags=(flags&~NMD_CAT_MASK)|NMD_METHOD;}
+    void SetReadOnlyAttribute() {flags=(flags&~NMD_CAT_MASK)|NMD_ATTRIB_RO;}
+    void SetWritableAttribute() {flags=(flags&~NMD_CAT_MASK)|NMD_ATTRIB_RW;}
 
     XPCNativeMemberDescriptor()
         : invokeFuncObj(NULL), id(0){}
+private:
+    uint16          flags;
 };
 
 /*************************/
@@ -299,10 +343,10 @@ public:
                                                           JSObject* jsobj);
 
     int GetMemberCount() const {return mMemberCount;}
-    const XPCNativeMemberDescriptor* GetMemberDescriptor(int i) const
+    const XPCNativeMemberDescriptor* GetMemberDescriptor(uint16 i) const
     {
-        NS_PRECONDITION(i >= 0 && i < mMemberCount,"bad index");
-        return &mMembers[i];
+        NS_PRECONDITION(i < mMemberCount,"bad index");
+        return &mDescriptors[i];
     }
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
@@ -360,7 +404,7 @@ private:
     char* mName;
     nsIInterfaceInfo* mInfo;
     int mMemberCount;
-    XPCNativeMemberDescriptor* mMembers;
+    XPCNativeMemberDescriptor* mDescriptors;
 };
 
 /*************************/
@@ -430,16 +474,27 @@ xpc_InitIDClass(XPCContext* xpcc);
 JSObject*
 xpc_NewIDObject(JSContext *cx, const nsID& aID);
 
+const nsID*
+xpc_JSObjectToID(JSContext *cx, JSObject* obj);
+
 /***************************************************************************/
 // data convertion
 
-JSBool
-xpc_ConvertNativeData2JS(jsval* d, const void* s,
-                         const nsXPTType& type);
+// class here just for static methods
+class XPCConvert
+{
+public:
+    static JSBool IsMethodReflectable(const nsXPTMethodInfo& info);
 
-JSBool
-xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
-                         const nsXPTType& type);
+    static JSBool NativeData2JS(jsval* d, const void* s,
+                                const nsXPTType& type);
+
+    static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
+                                const nsXPTType& type, 
+                                nsIAllocator* al, const nsID* iid);
+private:
+    XPCConvert(); // not implemented
+};
 
 /***************************************************************************/
 
