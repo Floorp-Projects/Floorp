@@ -157,6 +157,14 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
 		PRUint32 				inbuflen,
 		PRUint32*				inscanlen
 );
+PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
 
 PRIVATE PRBool uScanAlways2Byte(
 		unsigned char*		in,
@@ -201,6 +209,7 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
 	uCheckAndScan2ByteGRPrefix8EA5,
 	uCheckAndScan2ByteGRPrefix8EA6,
 	uCheckAndScan2ByteGRPrefix8EA7,
+	uCheckAndScanAlways1ByteShiftGL,
 };
 
 /*=================================================================================
@@ -609,4 +618,22 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
 		*out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
 		return PR_TRUE;
 	}
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+	/*	Don't check inlen. The caller should ensure it is larger than 0 */
+	*inscanlen = 1;
+	*out = (PRUint16) in[0] | 0x80;
+
+	return PR_TRUE;
 }
