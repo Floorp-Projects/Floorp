@@ -32,7 +32,8 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 nsFindDialog::nsFindDialog(nsBrowserWindow * aBrowserWindow) :
   mBrowserWindow(aBrowserWindow),
   mFindBtn(nsnull),
-  mCancelBtn(nsnull)
+  mCancelBtn(nsnull),
+  mSearchDown(PR_TRUE)
 {
 }
 
@@ -44,13 +45,22 @@ nsFindDialog::~nsFindDialog()
 //---------------------------------------------------------------
 void nsFindDialog::Initialize(nsIXPBaseWindow * aWindow) 
 {
-  aWindow->FindDOMElement("find", mFindBtn);
-  aWindow->FindDOMElement("cancel", mCancelBtn);
+  aWindow->FindDOMElement("find",       mFindBtn);
+  aWindow->FindDOMElement("cancel",     mCancelBtn);
+  aWindow->FindDOMElement("searchup",     mUpRB);
+  aWindow->FindDOMElement("searchdown", mDwnRB);
+  aWindow->FindDOMElement("matchcase",  mMatchCaseCB);
 
   // XXX: Register event listening on each dom element. We should change this so
   // all DOM events are automatically passed through.
   aWindow->AddEventListener(mFindBtn);
   aWindow->AddEventListener(mCancelBtn);
+  aWindow->AddEventListener(mUpRB);
+  aWindow->AddEventListener(mDwnRB);
+
+  SetChecked(mUpRB, PR_FALSE);
+  SetChecked(mDwnRB, PR_TRUE);
+  SetChecked(mMatchCaseCB, PR_FALSE);
 }
 
 //-----------------------------------------------------------------
@@ -60,8 +70,18 @@ void nsFindDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindow * aWindo
   aMouseEvent->GetTarget(&node);
   if (node == mFindBtn) {
     DoFind(aWindow);
+
   } else if (node == mCancelBtn) {
     aWindow->SetVisible(PR_FALSE);
+
+  } else if (node == mUpRB) {
+    PRBool checked = !IsChecked(mUpRB); // We get the event before the widget get to change the value
+    SetChecked(mDwnRB, !checked);
+
+  } else if (node == mDwnRB) {
+    PRBool checked = !IsChecked(mDwnRB);// We get the event before the widget get to change the value
+    SetChecked(mUpRB, !checked);
+
   }
   NS_RELEASE(node);
 }
@@ -77,7 +97,6 @@ void nsFindDialog::Destroy(nsIXPBaseWindow * aWindow)
   aWindow->RemoveEventListener(mCancelBtn);
 }
 
-
 //---------------------------------------------------------------
 void
 nsFindDialog::DoFind(nsIXPBaseWindow * aWindow)
@@ -92,7 +111,10 @@ nsFindDialog::DoFind(nsIXPBaseWindow * aWindow)
       nsString str;
       PRBool foundIt = PR_FALSE;
       element->GetValue(str);
-      mBrowserWindow->FindNext(str, PR_FALSE, PR_TRUE, foundIt);
+      PRBool searchDown = IsChecked(mDwnRB);
+      PRBool matchcase  = IsChecked(mMatchCaseCB);
+
+      mBrowserWindow->FindNext(str, matchcase, searchDown, foundIt);
       if (foundIt) {
         mBrowserWindow->ForceRefresh();
       }
@@ -100,6 +122,31 @@ nsFindDialog::DoFind(nsIXPBaseWindow * aWindow)
       NS_RELEASE(element);
     }
     NS_RELEASE(textNode);
+  }
+}
+
+//---------------------------------------------------------------
+PRBool 
+nsFindDialog::IsChecked(nsIDOMElement * aNode)
+{
+  nsIDOMHTMLInputElement * element;
+  if (NS_OK == aNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
+    PRBool checked;
+    element->GetChecked(&checked);
+    NS_RELEASE(element);
+    return checked;
+  }
+  return PR_FALSE;
+}
+
+//---------------------------------------------------------------
+void  
+nsFindDialog::SetChecked(nsIDOMElement * aNode, PRBool aValue)
+{
+  nsIDOMHTMLInputElement * element;
+  if (NS_OK == aNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
+    element->SetChecked(aValue);
+    NS_RELEASE(element);
   }
 }
 

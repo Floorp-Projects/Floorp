@@ -43,10 +43,17 @@ public:
   virtual void DoFind(nsIXPBaseWindow * aWindow);
 
 protected:
+  PRBool IsChecked(nsIDOMElement * aNode);
+  void   SetChecked(nsIDOMElement * aNode, PRBool aValue);
 
   nsBrowserWindow * mBrowserWindow;
   nsIDOMElement   * mFindBtn;
   nsIDOMElement   * mCancelBtn;
+  nsIDOMElement   * mUpRB;
+  nsIDOMElement   * mDwnRB;
+  nsIDOMElement   * mMatchCaseCB;
+
+  PRBool            mSearchDown;
 
 };
 
