@@ -292,15 +292,24 @@ NS_IMETHODIMP oeICalContainerImpl::AddEvent( oeIICalEvent *icalevent, const char
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::AddEvent()\n" );
 #endif
+    nsresult rv;
     oeIICal *calendar;
-    GetCalendar(server , &calendar );
+    GetCalendar( server , &calendar );
     if( !calendar ) {
-        #ifdef ICAL_DEBUG
-        printf( "oeICalContainerImpl::AddEvent()-Error calendar not found\n" );
-        #endif
-        return NS_ERROR_FAILURE;
+        AddCalendar( server );
+        GetCalendar( server , &calendar );
+        if( !calendar ) {
+            #ifdef ICAL_DEBUG
+            printf( "oeICalContainerImpl::AddEvent()-Error cannot find or create calendar\n" );
+            #endif
+            return NS_ERROR_FAILURE;
+        } else {
+            rv = calendar->AddEvent( icalevent, retid );
+            RemoveCalendar( server );
+        }
+    } else {
+        rv = calendar->AddEvent( icalevent, retid );
     }
-    nsresult rv = calendar->AddEvent( icalevent, retid );
     return rv;
 }
 
