@@ -88,7 +88,7 @@ nsXSLContentSink::Init(nsITransformMediator* aTM,
                        nsIWebShell* aContainer)
 {
   nsresult rv;
-  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer);
+  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);
   mXSLTransformMediator = aTM;
 
   return rv;

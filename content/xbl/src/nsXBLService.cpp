@@ -1224,7 +1224,7 @@ nsXBLService::FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult)
   // through the work of breaking the circular references between
   // content sink, script loader, and document.
   nsCOMPtr<nsIXMLContentSink> xmlSink;
-  NS_NewXMLContentSink(getter_AddRefs(xmlSink), xmlDoc, aURI, nsnull);
+  NS_NewXMLContentSink(getter_AddRefs(xmlSink), xmlDoc, aURI, nsnull, nsnull);
   if (!xmlSink)
     return NS_ERROR_FAILURE;
 
