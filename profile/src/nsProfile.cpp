@@ -183,9 +183,8 @@ nsProfile::~nsProfile()
 /*
  * nsISupports Implementation
  */
-
-NS_IMPL_ADDREF(nsProfile)
-NS_IMPL_RELEASE(nsProfile)
+NS_IMPL_THREADSAFE_ADDREF(nsProfile)
+NS_IMPL_THREADSAFE_RELEASE(nsProfile)
 
 NS_INTERFACE_MAP_BEGIN(nsProfile)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProfile)
