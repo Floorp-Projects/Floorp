@@ -28,7 +28,6 @@ CSRCS		= \
 		  xp_cntxt.c \
 		  xp_core.c \
 		  xp_error.c \
-		  xp_hash.c \
 		  xp_intl.c \
 		  xp_ncent.c \
 		  xp_reg.c \
@@ -49,6 +48,7 @@ endif
 CSRCS +=          \
 	 	  xp_file.c \
 		  xp_list.c \
+		  xp_hash.c \
 		  allxpstr.c \
 		  $(NULL)
 

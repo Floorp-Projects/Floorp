@@ -42,6 +42,7 @@ OBJS=                                   \
         .\$(OBJDIR)\xp_stub.obj         \
         .\$(OBJDIR)\xp_file.obj         \
 	.\$(OBJDIR)\xp_list.obj		\
+	.\$(OBJDIR)\xp_hash.obj		\
         .\$(OBJDIR)\allxpstr.obj        \
         $(NULL)
 
