@@ -207,10 +207,14 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
       // If we have a document, and it has a script global, add the
       // event listener on the global.
 
-      // until we figure out how to handle multiple onloads, only
-      // onload on the root element (least surprise, hopefully)
-      if (mDocument &&
-          mDocument->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+      // Until we figure out how to handle multiple onloads, only
+      // onload on the root element (least surprise, hopefully).
+      // This test isn't ideal, as it's really checking for an
+      // empty document, which could happen with javascript DOM
+      // creation as well as for the root element of a document
+      // we're parsing.  But in famous last words, this code will
+      // be changing soon to allow multiple onloads per document.
+      if (mDocument && !mDocument->GetRootContent()) {
         nsCOMPtr<nsIDOMEventReceiver> receiver =
           do_QueryInterface(mDocument->GetScriptGlobalObject());
         if (receiver) {
