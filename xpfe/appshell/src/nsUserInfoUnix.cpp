@@ -146,7 +146,7 @@ nsUserInfo::GetDomain(char * *aDomain)
     domainname = buf.__domainname;
 #endif
 
-    if (domainname && nsCRT::strlen(domainname)) {   
+    if (domainname && domainname[0]) {   
         *aDomain = nsCRT::strdup(domainname);
         rv = NS_OK;
     }
@@ -154,7 +154,7 @@ nsUserInfo::GetDomain(char * *aDomain)
         // try to get the hostname from the nodename
         // on machines that use DHCP, domainname may not be set
         // but the nodename might.
-        if (buf.nodename && nsCRT::strlen(buf.nodename)) {
+        if (buf.nodename && buf.nodename[0]) {
             // if the nodename is foo.bar.org, use bar.org as the domain
             char *pos = strchr(buf.nodename,'.');
             if (pos) {
@@ -184,7 +184,7 @@ nsUserInfo::GetEmailAddress(char * *aEmailAddress)
     rv = GetDomain(getter_Copies(domain));
     if (NS_FAILED(rv)) return rv;
 
-    if ((const char *)username && (const char*)domain && nsCRT::strlen((const char *)username) && nsCRT::strlen((const char *)domain)) {
+    if (!username.IsEmpty() && !domain.IsEmpty()) {
         emailAddress = (const char *)username;
         emailAddress += "@";
         emailAddress += (const char *)domain;
