@@ -140,6 +140,7 @@ if ($build{most})
 #	$build{dist}		= 1;
 #	$build{dist_runtime}= 1;
 #	$build{resources}	= 1;
+    $build{xpidl}		= 1; # build idl compiler
 	$build{idl}         = 1;
 	$build{stubs}		= 1;
 	$build{runtime}		= 1;
