@@ -140,6 +140,7 @@ public:
   ~BloatEntry() {}
 
   PRUint32 GetClassSize() { return (PRUint32)mClassSize; }
+  const char* GetClassName() { return mClassName; }
 
   static void Clear(nsTraceRefcntStats* stats) {
     stats->mAddRefs = 0;
@@ -202,22 +203,11 @@ public:
     mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
 
-  static PRIntn DumpNewEntry(PLHashEntry *he, PRIntn i, void *arg) {
-    BloatEntry* entry = (BloatEntry*)he->value;
-    if (entry) {
-      nsresult rv = entry->Dump(i, (FILE*)arg, &entry->mNewStats);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Dump failed");
-      entry->Accumulate();
-    }
-    return HT_ENUMERATE_NEXT;
-  }
-
-  static PRIntn DumpAllEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
-      nsresult rv = entry->Dump(i, (FILE*)arg, &entry->mAllStats);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Dump failed");
+      NS_STATIC_CAST(nsVoidArray*, arg)->AppendElement(entry);
     }
     return HT_ENUMERATE_NEXT;
   }
@@ -248,7 +238,7 @@ public:
 
   nsresult DumpTotal(PRUint32 nClasses, FILE* out) {
     mClassSize /= mAllStats.mCreates;
-    return Dump(-1, out, &mAllStats);
+    return Dump(-1, out, nsTraceRefcnt::ALL_STATS);
   }
 
   static PRIntn DestroyEntry(PLHashEntry *he, PRIntn i, void *arg) {
@@ -281,13 +271,14 @@ public:
   static nsresult PrintDumpHeader(FILE* out, const char* msg) {
     fprintf(out, "\n== BloatView: %s\n\n", msg);
     fprintf(out, 
-        "     |<------Class----->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|\n");
+        "     |<----------------Class--------------->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|\n");
     fprintf(out,
-        "                          Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem      Mean       StdDev\n");
+        "                                              Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem      Mean       StdDev\n");
     return NS_OK;
   }
 
-  nsresult Dump(PRIntn i, FILE* out, nsTraceRefcntStats* stats) {
+  nsresult Dump(PRIntn i, FILE* out, nsTraceRefcnt::StatisticsType type) {
+    nsTraceRefcntStats* stats = (type == nsTraceRefcnt::NEW_STATS) ? &mNewStats : &mAllStats;
     if (gLogLeaksOnly && !HaveLeaks(stats)) {
       return NS_OK;
     }
@@ -312,7 +303,7 @@ public:
         stats->mCreates != 0 ||
         meanObjs != 0 ||
         stddevObjs != 0) {
-      fprintf(out, "%4d %-20.20s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
+      fprintf(out, "%4d %-40.40s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
               i+1, mClassName,
               (PRInt32)mClassSize,
               (nsCRT::strcmp(mClassName, "TOTAL"))
@@ -398,18 +389,14 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
   PRBool wasLogging = gLogging;
   gLogging = PR_FALSE;  // turn off logging for this method
   
-  BloatEntry total("TOTAL", 0);
-  PRIntn (*dump)(PLHashEntry *he, PRIntn i, void *arg);
   const char* msg;
   if (type == NEW_STATS) {
-    dump = BloatEntry::DumpNewEntry;
     if (gLogLeaksOnly)
       msg = "NEW (incremental) LEAK STATISTICS";
     else
       msg = "NEW (incremental) LEAK AND BLOAT STATISTICS";
   }
   else {
-    dump = BloatEntry::DumpAllEntry;
     if (gLogLeaksOnly)
       msg = "ALL (cumulative) LEAK STATISTICS";
     else
@@ -418,10 +405,36 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
   rv = BloatEntry::PrintDumpHeader(out, msg);
   if (NS_FAILED(rv)) goto done;
 
-  PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
-  total.DumpTotal(gBloatView->nentries, out);
+  {
+    BloatEntry total("TOTAL", 0);
+    PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
+    total.DumpTotal(gBloatView->nentries, out);
 
-  PL_HashTableEnumerateEntries(gBloatView, dump, out);
+    nsVoidArray entries;
+    PL_HashTableEnumerateEntries(gBloatView, BloatEntry::DumpEntry, &entries);
+
+    printf("nsTraceRefcnt::DumpStatistics: %d entries\n", entries.Count());
+
+    // Sort the entries alphabetically by classname.
+    PRInt32 i, j;
+    for (i = entries.Count() - 1; i >= 1; --i) {
+      for (j = i - 1; j >= 0; --j) {
+        BloatEntry* left  = NS_STATIC_CAST(BloatEntry*, entries[i]);
+        BloatEntry* right = NS_STATIC_CAST(BloatEntry*, entries[j]);
+
+        if (PL_strcmp(left->GetClassName(), right->GetClassName()) < 0) {
+          entries.ReplaceElementAt(right, i);
+          entries.ReplaceElementAt(left, j);
+        }
+      }
+    }
+
+    // Enumerate from back-to-front, so things come out in alpha order
+    for (i = 0; i < entries.Count(); ++i) {
+      BloatEntry* entry = NS_STATIC_CAST(BloatEntry*, entries[i]);
+      entry->Dump(i, out, type);
+    }
+  }
 
   if (gSerialNumbers) {
     fprintf(out, "\n\nSerial Numbers of Leaked Objects:\n");
