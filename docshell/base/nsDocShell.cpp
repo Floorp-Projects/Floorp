@@ -43,6 +43,7 @@
 #include "nsGfxCIID.h"
 #include "nsIPrompt.h"
 #include "nsTextFormatter.h"
+#include "nsIHTTPEventSink.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -187,7 +188,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
         else
             return NS_NOINTERFACE;
       }
-   else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)) ||
+   else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)) || aIID.Equals(NS_GET_IID(nsIHTTPEventSink)) ||
             aIID.Equals(NS_GET_IID(nsIWebProgress)))
    {
      nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
