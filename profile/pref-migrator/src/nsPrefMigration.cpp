@@ -145,6 +145,27 @@
 #endif /* XP_UNIX */
 
 #define PREMIGRATION_PREFIX "premigration."
+
+// this is for the hidden preference setting in mozilla/modules/libpref/src/init/mailnews.js
+// pref("mail.migration.copyMailFiles", true);
+//
+// see bugzilla bug 80035 (http://bugzilla.mozilla.org/show_bug.cgi?id=80035)
+//
+// the default value for this setting is true which means when migrating from
+// Netscape 4.x, mozilla will copy all the contents of Local Folders and Imap
+// Folder to the newly created subfolders of migrated mozilla profile
+// when this value is set to false, mozilla will not copy these contents and
+// still share them with Netscape 4.x
+//
+// Advantages of forbidding copy operation:
+//     reduce the disk usage
+//     quick migration
+// Disadvantage of forbidding copy operation:
+//     without perfect lock mechamism, there is possibility of data corruption
+//     when Netscape 4.x and mozilla run at the same time and access the same
+//     mail file at the same time
+#define PREF_MIGRATION_MODE_FOR_MAIL "mail.migration.copyMailFiles"
+
 #define PREF_MAIL_DIRECTORY "mail.directory"
 #define PREF_NEWS_DIRECTORY "news.directory"
 #define PREF_MAIL_IMAP_ROOT_DIR "mail.imap.root_dir"
@@ -535,7 +556,8 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
          enoughSpace             = PR_TRUE,
          localMailDriveDefault   = PR_FALSE,
          summaryMailDriveDefault = PR_FALSE,
-         newsDriveDefault        = PR_FALSE;
+         newsDriveDefault        = PR_FALSE,
+         copyMailFileInMigration = PR_TRUE;
 
   nsFileSpec localMailSpec,
              summaryMailSpec,
@@ -648,7 +670,12 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
   rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
   if (NS_FAILED(rv)) return rv;
-           
+
+  // get the migration mode for mail
+  rv = m_prefs->GetBoolPref(PREF_MIGRATION_MODE_FOR_MAIL, &copyMailFileInMigration);
+  if (NS_FAILED(rv))
+    return rv;
+
   if (serverType == POP_4X_MAIL_TYPE) {
     summaryMailDriveDefault = PR_TRUE; //summary files are only used in IMAP so just set it to true here.
     summaryMailDrive = profileDrive;   //just set the drive for summary files to be the same as the new profile
@@ -892,8 +919,8 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     }
   }
   else if (serverType == IMAP_4X_MAIL_TYPE) {
-      
-
+   if( copyMailFileInMigration )  // copy mail files in migration 
+   {
     rv = newIMAPLocalMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
@@ -963,6 +990,34 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       rv = m_prefs->SetFileXPref(PREF_MAIL_IMAP_ROOT_DIR, newIMAPMailPathFile);
       if (NS_FAILED(rv)) return rv;
     }
+   }
+   else
+   {
+    {
+      // temporarily go through nsFileSpec
+      nsFileSpec oldIMAPLocalMailPathSpec;
+      oldIMAPLocalMailPath->GetFileSpec(&oldIMAPLocalMailPathSpec);
+
+      nsCOMPtr<nsILocalFile> oldIMAPLocalMailPathFile;
+      NS_FileSpecToIFile(&oldIMAPLocalMailPathSpec,
+                         getter_AddRefs(oldIMAPLocalMailPathFile));
+
+      rv = m_prefs->SetFileXPref(PREF_MAIL_DIRECTORY, oldIMAPLocalMailPathFile);
+      if (NS_FAILED(rv)) return rv;
+    }
+    {
+      // temporarily go through nsFileSpec
+      nsFileSpec oldIMAPMailPathSpec;
+      oldIMAPMailPath->GetFileSpec(&oldIMAPMailPathSpec);
+
+      nsCOMPtr<nsILocalFile> oldIMAPMailPathFile;
+      NS_FileSpecToIFile(&oldIMAPMailPathSpec,
+                         getter_AddRefs(oldIMAPMailPathFile));
+
+      rv = m_prefs->SetFileXPref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPathFile);
+      if (NS_FAILED(rv)) return rv;
+    }
+   }
   }
 
 #ifdef HAVE_MOVEMAIL
@@ -1078,11 +1133,25 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = CopyAndRenameNewsrcFiles(newNewsPath);
   if (NS_FAILED(rv)) return rv;
 #endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
+
   if(serverType == IMAP_4X_MAIL_TYPE) {
+    if( copyMailFileInMigration )  // copy mail files in migration
+    {
     rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
     rv = DoTheCopyAndRename(oldIMAPLocalMailPath, newIMAPLocalMailPath, PR_TRUE, needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
+    }
+    else  // Copy & Rename filter files
+    {
+      // IMAP path
+      rv = DoTheCopyAndRename(oldIMAPMailPath, PR_TRUE, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
+      // if (NS_FAILED(rv)) return rv;  // don't care it
+      
+      // Local Folders path
+      rv = DoTheCopyAndRename(oldIMAPLocalMailPath, PR_TRUE, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
+      // if (NS_FAILED(rv)) return rv;  // don't care it
+    }
   }
   else if (serverType == POP_4X_MAIL_TYPE) {
     // we take care of the POP filter file later, in DoSpecialUpdates()
@@ -1546,6 +1615,67 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
   return NS_OK;
 }
 
+/*-------------------------------------------------------------------------
+ * DoTheCopyAndRename copies and renames files
+ *
+ * INPUT: aPath - the path
+ *
+ *        aReadSubdirs - if sub directories should be handled
+ *
+ *        aOldFile - old file name (used for renaming)
+ *
+ *        aNewFile - new file name (used for renaming)
+ *
+ * RETURNS: NS_OK if successful
+ *          NS_ERROR_FAILURE if failed
+ *
+ *--------------------------------------------------------------------------*/
+nsresult
+nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * aPathSpec, PRBool aReadSubdirs, const char *aOldName, const char *aNewName)
+{
+  if( !aOldName || !aNewName || !strcmp(aOldName, aNewName) )
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsFileSpec path, file;
+  
+  rv = aPathSpec->GetFileSpec(&path);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = aPathSpec->GetFileSpec(&file);
+  if (NS_FAILED(rv))
+    return rv;
+  file += aOldName;
+  
+  // Handle sub folders
+  for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++)
+  {
+    nsFileSpec fileOrDirName = dir.Spec(); //set first file or dir to a nsFileSpec
+    if (fileOrDirName.IsDirectory())
+    {
+      if( aReadSubdirs )
+      {
+        nsCOMPtr<nsIFileSpec>fileOrDirNameSpec;
+        rv = NS_NewFileSpecWithSpec(fileOrDirName, getter_AddRefs(fileOrDirNameSpec));
+        DoTheCopyAndRename(fileOrDirNameSpec, aReadSubdirs, aOldName, aNewName); /* re-enter the DoTheCopyAndRename function */
+      }
+      else
+        continue;
+    }
+  }
+
+  nsCOMPtr<nsILocalFile> localFileOld, localFileDirectory;
+  rv = NS_FileSpecToIFile(&file, getter_AddRefs(localFileOld));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = NS_FileSpecToIFile(&path, getter_AddRefs(localFileDirectory));
+  if (NS_FAILED(rv))
+    return rv;
+  nsAutoString newName = NS_ConvertUTF8toUCS2(aNewName);
+  localFileOld->CopyTo(localFileDirectory, newName);
+
+  return NS_OK;
+}
 
 nsresult
 nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, PRBool readSubdirs)

@@ -35,6 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// this is a hidden preference setting, see bugzilla bug 80035
+// (http://bugzilla.mozilla.org/show_bug.cgi?id=80035)
+//
+// the default value for this setting is true which means when migrating from
+// Netscape 4.x, mozilla will copy all the contents of Local Folders and Imap
+// Folder to the newly created subfolders of migrated mozilla profile
+// when this value is set to false, mozilla will not copy these contents and
+// still share them with Netscape 4.x
+//
+// Advantages of forbidding copy operation:
+//     reduce the disk usage
+//     quick migration
+// Disadvantage of forbidding copy operation:
+//     without perfect lock mechamism, there is possibility of data corruption
+//     when Netscape 4.x and mozilla run at the same time and access the same
+//     mail file at the same time
+pref("mail.migration.copyMailFiles", true);
+
 //mailnews.timeline_is_enabled should be set to true ONLY for perf measurement-timeline builds.
 pref("mailnews.timeline_is_enabled", false);
 
