@@ -245,7 +245,7 @@ public:
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName) = 0;
 
-  NS_IMETHOD GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult)=0;
+  NS_IMETHOD GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIContent* aChild, nsIFrame** aResult)=0;
 
 #ifdef NS_DEBUG
   /**

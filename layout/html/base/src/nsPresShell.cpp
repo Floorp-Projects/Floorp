@@ -2384,23 +2384,15 @@ PresShell::EndObservingDocument()
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
-static void CheckForFocus(nsIDocument* aDocument)
+static void CheckForFocus(nsPIDOMWindow* aOurWindow, nsIFocusController* aFocusController, nsIDocument* aDocument)
 {
   // Now that we have a root frame, set focus in to the presshell, but
   // only do this if our window is currently focused
   // Restore focus if we're the active window or a parent of a previously
   // active window.
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  aDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
-  nsCOMPtr<nsIFocusController> focusController;
-  ourWindow->GetRootFocusController(getter_AddRefs(focusController));
-
-  if (focusController) {
-    // Suppress the command dispatcher.
-    focusController->SetSuppressFocus(PR_TRUE, "PresShell suppression on Web page loads");
+  if (aFocusController) {
     nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-    focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+    aFocusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
     
     // See if the command dispatcher is holding on to an orphan window.
     // This happens when you move from an inner frame to an outer frame
@@ -2411,23 +2403,22 @@ static void CheckForFocus(nsIDocument* aDocument)
       if (!domDoc) {
         // We're pointing to garbage. Go ahead and let this
         // presshell take the focus.
-        focusedWindow = do_QueryInterface(ourWindow);
-        focusController->SetFocusedWindow(focusedWindow);
+        focusedWindow = do_QueryInterface(aOurWindow);
+        aFocusController->SetFocusedWindow(focusedWindow);
       }
     }
 
-    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(ourWindow);
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(aOurWindow);
     if (domWindow == focusedWindow) {
       PRBool active;
-      focusController->GetActive(&active);
-      focusController->SetFocusedElement(nsnull);
+      aFocusController->GetActive(&active);
+      aFocusController->SetFocusedElement(nsnull);
       if(active) {
         // We need to restore focus and make sure we null
         // out the focused element.
         domWindow->Focus();
       }
     }
-    focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
   }
 }
 
@@ -4461,6 +4452,16 @@ PresShell::IsPaintingSuppressed(PRBool* aResult)
 void
 PresShell::UnsuppressAndInvalidate()
 {
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
+  nsCOMPtr<nsIFocusController> focusController;
+  ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+    // Suppress focus.  The act of tearing down the old content viewer
+    // causes us to blur incorrectly.
+    focusController->SetSuppressFocus(PR_TRUE, "PresShell suppression on Web page loads");
+
   nsCOMPtr<nsISupports> container;
   nsCOMPtr<nsIContentViewer> cv;
   nsCOMPtr<nsIDocumentViewer> dv;
@@ -4488,7 +4489,10 @@ PresShell::UnsuppressAndInvalidate()
     ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
   }
 
-  CheckForFocus(mDocument);
+  CheckForFocus(ourWindow, focusController, mDocument);
+
+  if (focusController) // Unsuppress now that we've shown the new window and focused it.
+    focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
 }
 
 NS_IMETHODIMP

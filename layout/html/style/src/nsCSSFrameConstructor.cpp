@@ -7978,6 +7978,16 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
   if (nsnull != parentFrame) {
+    // See if we have an XBL insertion point.  If so, then see if the
+    // frame for it has been built yet.  If it hasn't been built yet,
+    // then we just bail.
+    nsCOMPtr<nsIFrameManager> frameManager;
+    shell->GetFrameManager(getter_AddRefs(frameManager));
+    nsIFrame* insertionPoint = nsnull;
+    frameManager->GetInsertionPoint(shell, parentFrame, nsnull, &insertionPoint);
+    if (!insertionPoint)
+      return NS_OK; // Don't build the frames.
+
     // If the frame we are manipulating is a ``special'' frame (that
     // is, one that's been created as a result of a block-in-inline
     // situation) then do something different instead of just
@@ -8003,9 +8013,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
       // Since we're appending, we'll walk to the last anonymous frame
       // that was created for the broken inline frame.
-      nsCOMPtr<nsIFrameManager> frameManager;
-      shell->GetFrameManager(getter_AddRefs(frameManager));
-
+      
       while (1) {
         nsIFrame* sibling;
         GetSpecialSibling(frameManager, parentFrame, &sibling);
