@@ -177,8 +177,6 @@ protected:
   nsCOMPtr<nsISupportsArray> mContentStack;
   nsVoidArray* mNameSpaceStack;
 
-  nsScrollPreference mOriginalScrollPreference;
-
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
