@@ -44,10 +44,10 @@ struct nsStyleStruct;
 
 struct PRLogModuleInfo;
 
-// IID for the nsIFrame interface {12B193D0-9F70-11d1-8500-00A02468FAB6}
-#define NS_IFRAME_IID         \
-{ 0x12b193d0, 0x9f70, 0x11d1, \
-  {0x85, 0x0, 0x0, 0xa0, 0x24, 0x68, 0xfa, 0xb6}}
+// IID for the nsIFrame interface 
+// a6cf9050-15b3-11d2-932e-00805f8add32
+#define NS_IFRAME_IID \
+ { 0xa6cf9050, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 /**
  * Reflow metrics used to return the frame's desired size and alignment
@@ -57,11 +57,34 @@ struct PRLogModuleInfo;
  * @see #GetReflowMetrics()
  */
 struct nsReflowMetrics {
-  nscoord width, height;   // desired width and height
+  nscoord width, height;        // desired width and height
   nscoord ascent, descent;
-  nsSize* maxElementSize;  // null if you don't need to compute the max element size
 
-  nsReflowMetrics(nsSize* aMaxElementSize) {maxElementSize = aMaxElementSize;}
+  // Set this to null if you don't need to compute the max element size
+  nsSize* maxElementSize;
+
+  // The caller of nsIFrame::Reflow will set these to the top margin
+  // value carried into the child frame. The child frame, if it has a
+  // top margin to apply will set it to the actual top margin to use.
+  nscoord posTopMargin;         // in/out 
+  nscoord negTopMargin;         // in/out
+
+  // These values are set by the child frame indicating its bottom
+  // margin value.
+  nscoord posBottomMargin;      // out
+  nscoord negBottomMargin;      // out
+
+  nsReflowMetrics(nsSize* aMaxElementSize) {
+    maxElementSize = aMaxElementSize;
+  }
+
+  void SetMargins(nscoord aPosTop, nscoord aNegTop,
+                  nscoord aPosBottom, nscoord aNegBottom) {
+    posTopMargin = aPosTop;
+    negTopMargin = aNegTop;
+    posBottomMargin = aPosBottom;
+    negBottomMargin = aNegBottom;
+  }
 };
 
 /**
