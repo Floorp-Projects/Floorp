@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.11 2002/08/12 05:43:05 bbaetz%student.usyd.edu.au Exp $
+# $Id: bug_email.pl,v 1.12 2002/08/17 14:19:57 bbaetz%student.usyd.edu.au Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1246,13 +1246,7 @@ END
 	SendSQL($long_desc_query);
 
 	# Cool, the mail was successful
-        # chdir back to the main directory which has the processmail script
-        # Oh, for a processmail module....
-        use Cwd;
-        my $old_cwd = getcwd();
-        chdir("..");
         system("./processmail", $id, $SenderShort);
-        chdir($old_cwd);
     } else {
 	$id = 0xFFFF;  # TEST !
 	print "\n-------------------------------------------------------------------------\n";
