@@ -126,6 +126,8 @@ protected:
     CComQIPtr<IOleInPlaceObject, &IID_IOleInPlaceObject> m_spIOleInPlaceObject;
     // Pointer to object's IOleInPlaceObjectWindowless interface
     CComQIPtr<IOleInPlaceObjectWindowless, &IID_IOleInPlaceObjectWindowless> m_spIOleInPlaceObjectWindowless;
+    // Pointer to an externally registered service provider
+    CComPtr<IServiceProvider> m_spServiceProvider;
     // Name of this control
     tstring m_szName;
     // CLSID of the control
@@ -212,6 +214,11 @@ END_OLECOMMAND_TABLE()
     virtual HRESULT Advise(IUnknown *pIUnkSink, const IID &iid, DWORD *pdwCookie);
     // Removes an advise sink
     virtual HRESULT Unadvise(const IID &iid, DWORD dwCookie);
+    // Register an external service provider object
+    virtual void SetServiceProvider(IServiceProvider *pSP)
+    {
+        m_spServiceProvider = pSP;
+    }
 
 // Methods to set ambient properties
     virtual void SetAmbientUserMode(BOOL bUser);

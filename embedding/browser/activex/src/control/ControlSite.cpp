@@ -420,6 +420,8 @@ void CControlSite::SetAmbientUserMode(BOOL bUserMode)
 
 HRESULT STDMETHODCALLTYPE CControlSite::QueryService(REFGUID guidService, REFIID riid, void** ppv)
 {
+    if (m_spServiceProvider)
+        return m_spServiceProvider->QueryService(guidService, riid, ppv);
     return E_NOINTERFACE;
 }
 
