@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -66,6 +66,9 @@ typedef enum JSOp {
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_QVAR          7       /* quickened get/set local variable ops */
 #define JOF_DEFLOCALVAR   8       /* define local var with initial value */
+#define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
+#define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
+#define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
 #define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
 #define JOF_NAME          0x0010  /* name operation */
 #define JOF_PROP          0x0020  /* obj.prop operation */
@@ -81,10 +84,16 @@ typedef enum JSOp {
 #define JOF_FOR           0x1000  /* for-in property op */
 #define JOF_ASSIGNING     0x2000  /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
+#define JOF_BACKPATCH     0x4000  /* backpatch placeholder during codegen */
+
+#define JOF_TYPE_IS_EXTENDED_JUMP(t) \
+    ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))
 
 /*
  * Immediate operand getters, setters, and bounds.
  */
+
+/* Short (2-byte signed offset) relative jump macros. */
 #define JUMP_OFFSET_LEN         2
 #define JUMP_OFFSET_HI(off)     ((jsbytecode)((off) >> 8))
 #define JUMP_OFFSET_LO(off)     ((jsbytecode)(off))
@@ -94,6 +103,39 @@ typedef enum JSOp {
 #define JUMP_OFFSET_MIN         ((int16)0x8000)
 #define JUMP_OFFSET_MAX         ((int16)0x7fff)
 
+/*
+ * When a short jump won't hold a relative offset, its 2-byte immediate offset
+ * operand is an unsigned index of a span-dependency record, maintained until
+ * code generation finishes -- after which some (but we hope not nearly all)
+ * span-dependent jumps must be extended (see OptimizeSpanDeps in jsemit.c).
+ *
+ * If the span-dependency record index overflows SPANDEP_INDEX_MAX, the jump
+ * offset will contain SPANDEP_INDEX_HUGE, indicating that the record must be
+ * found (via binary search) by its "before span-dependency optimization" pc
+ * offset (from script main entry point).
+ */
+#define GET_SPANDEP_INDEX(pc)   ((uint16)(((pc)[1] << 8) | (pc)[2]))
+#define SET_SPANDEP_INDEX(pc,i) ((pc)[1] = JUMP_OFFSET_HI(i),                 \
+				 (pc)[2] = JUMP_OFFSET_LO(i))
+#define SPANDEP_INDEX_MAX       ((uint16)0xfffe)
+#define SPANDEP_INDEX_HUGE      ((uint16)0xffff)
+
+/* Ultimately, if short jumps won't do, emit long (4-byte signed) offsets. */
+#define JUMPX_OFFSET_LEN        4
+#define JUMPX_OFFSET_B3(off)    ((jsbytecode)((off) >> 24))
+#define JUMPX_OFFSET_B2(off)    ((jsbytecode)((off) >> 16))
+#define JUMPX_OFFSET_B1(off)    ((jsbytecode)((off) >> 8))
+#define JUMPX_OFFSET_B0(off)    ((jsbytecode)(off))
+#define GET_JUMPX_OFFSET(pc)    ((int32)(((pc)[1] << 24) | ((pc)[2] << 16)    \
+                                         | ((pc)[3] << 8) | (pc)[4]))
+#define SET_JUMPX_OFFSET(pc,off)((pc)[1] = JUMPX_OFFSET_B3(off),              \
+                                 (pc)[2] = JUMPX_OFFSET_B2(off),              \
+                                 (pc)[3] = JUMPX_OFFSET_B1(off),              \
+                                 (pc)[4] = JUMPX_OFFSET_B0(off))
+#define JUMPX_OFFSET_MIN        ((int32)0x80000000)
+#define JUMPX_OFFSET_MAX        ((int32)0x7fffffff)
+
+/* A literal is indexed by a per-script atom map. */
 #define ATOM_INDEX_LEN          2
 #define ATOM_INDEX_HI(index)    ((jsbytecode)((index) >> 8))
 #define ATOM_INDEX_LO(index)    ((jsbytecode)(index))
@@ -105,6 +147,7 @@ typedef enum JSOp {
 #define ATOM_INDEX_LIMIT_LOG2   16
 #define ATOM_INDEX_LIMIT        ((uint32)1 << ATOM_INDEX_LIMIT_LOG2)
 
+/* Actual argument count operand format helpers. */
 #define ARGC_HI(argc)           ((jsbytecode)((argc) >> 8))
 #define ARGC_LO(argc)           ((jsbytecode)(argc))
 #define GET_ARGC(pc)            ((uintN)(((pc)[1] << 8) | (pc)[2]))

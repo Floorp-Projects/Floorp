@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -79,8 +79,8 @@ struct JSStmtInfo {
     JSStmtInfo      *down;          /* info for enclosing statement */
 };
 
-#define SET_STATEMENT_TOP(stmt, top)                                         \
-    ((stmt)->top = (stmt)->update = (top), (stmt)->breaks =                  \
+#define SET_STATEMENT_TOP(stmt, top)                                          \
+    ((stmt)->top = (stmt)->update = (top), (stmt)->breaks =                   \
      (stmt)->continues = (stmt)->catchJump = (stmt)->gosub = (-1))
 
 struct JSTreeContext {              /* tree context for semantic checks */
@@ -108,6 +108,62 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TREE_CONTEXT_FINISH(tc)                                               \
     ((void)0)
 
+/*
+ * Span-dependent instructions are jumps whose span (from the jump bytecode to
+ * the jump target) may require 2 or 4 bytes of immediate operand.
+ */
+typedef struct JSSpanDep    JSSpanDep;
+typedef struct JSJumpTarget JSJumpTarget;
+
+struct JSSpanDep {
+    ptrdiff_t       top;        /* offset of first bytecode in an opcode */
+    ptrdiff_t       offset;     /* offset - 1 within opcode of jump operand */
+    ptrdiff_t       before;     /* original offset - 1 of jump operand */
+    JSJumpTarget    *target;    /* tagged target pointer or backpatch delta */
+};
+
+/*
+ * Jump targets are stored in an AVL tree, for O(log(n)) lookup with targets
+ * sorted by offset from left to right, so that targets above a span-dependent
+ * instruction whose jump offset operand must be extended can be found quickly
+ * and adjusted upward (toward higher offsets).
+ */
+struct JSJumpTarget {
+    ptrdiff_t       offset;     /* offset of span-dependent jump target */
+    int             balance;    /* AVL tree balance number */
+    JSJumpTarget    *kids[2];   /* left and right AVL tree child pointers */
+};
+
+#define JT_LEFT                 0
+#define JT_RIGHT                1
+#define JT_OTHER_DIR(dir)       (1 - (dir))
+#define JT_IMBALANCE(dir)       (((dir) << 1) - 1)
+#define JT_DIR(imbalance)       (((imbalance) + 1) >> 1)
+
+/*
+ * Backpatch deltas are encoded in JSSpanDep.target if JT_TAG_BIT is clear,
+ * so we can maintain backpatch chains when using span dependency records to
+ * hold jump offsets that overflow 16 bits.
+ */
+#define JT_TAG_BIT              ((jsword) 1)
+#define JT_UNTAG_SHIFT          1
+#define JT_SET_TAG(jt)          ((JSJumpTarget *)((jsword)(jt) | JT_TAG_BIT))
+#define JT_CLR_TAG(jt)          ((JSJumpTarget *)((jsword)(jt) & ~JT_TAG_BIT))
+#define JT_HAS_TAG(jt)          ((jsword)(jt) & JT_TAG_BIT)
+
+#define BITS_PER_PTRDIFF        (sizeof(ptrdiff_t) * JS_BITS_PER_BYTE)
+#define BITS_PER_BPDELTA        (BITS_PER_PTRDIFF - 1 - JT_UNTAG_SHIFT)
+#define BPDELTA_MAX             ((ptrdiff_t)(JS_BIT(BITS_PER_BPDELTA) - 1))
+#define BPDELTA_TO_TN(bp)       ((JSJumpTarget *)((bp) << JT_UNTAG_SHIFT))
+#define JT_TO_BPDELTA(jt)       ((ptrdiff_t)((jsword)(jt) >> JT_UNTAG_SHIFT))
+
+#define SD_SET_TARGET(sd,jt)    ((sd)->target = JT_SET_TAG(jt))
+#define SD_SET_BPDELTA(sd,bp)   ((sd)->target = BPDELTA_TO_TN(bp))
+#define SD_GET_BPDELTA(sd)      (JS_ASSERT(!JT_HAS_TAG((sd)->target)),        \
+                                 JT_TO_BPDELTA((sd)->target))
+#define SD_TARGET_OFFSET(sd)    (JS_ASSERT(JT_HAS_TAG((sd)->target)),         \
+                                 JT_CLR_TAG((sd)->target)->offset)
+
 struct JSCodeGenerator {
     JSTreeContext   treeContext;    /* base state: statement info stack, etc. */
     void            *codeMark;      /* low watermark in cx->codePool */
@@ -132,6 +188,12 @@ struct JSCodeGenerator {
     JSTryNote       *tryBase;       /* first exception handling note */
     JSTryNote       *tryNext;       /* next available note */
     size_t          tryNoteSpace;   /* # of bytes allocated at tryBase */
+    JSSpanDep       *spanDeps;      /* span dependent instruction records */
+    JSJumpTarget    *jumpTargets;   /* AVL tree of jump target offsets */
+    JSJumpTarget    *jtFreeList;    /* JT_LEFT-linked list of free structs */
+    uintN           numSpanDeps;    /* number of span dependencies */
+    uintN           numJumpTargets; /* number of jump targets */
+    uintN           emitLevel;      /* js_EmitTree recursion level */
 };
 
 #define CG_BASE(cg)             ((cg)->current->base)
@@ -285,8 +347,8 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
  * At most one "gettable" note (i.e., a note of type other than SRC_NEWLINE,
  * SRC_SETLINE, and SRC_XDELTA) applies to a given bytecode.
  *
- * NB: the js_SrcNoteName and js_SrcNoteArity arrays in jsemit.c are indexed
- * by this enum, so their initializers need to match the order here.
+ * NB: the js_SrcNoteSpec array in jsemit.c is indexed by this enum, so its
+ * initializers need to match the order here.
  */
 typedef enum JSSrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
@@ -358,11 +420,18 @@ typedef enum JSSrcNoteType {
 #define SN_3BYTE_OFFSET_FLAG    0x80
 #define SN_3BYTE_OFFSET_MASK    0x7f
 
-extern JS_FRIEND_DATA(const char *) js_SrcNoteName[];
-extern JS_FRIEND_DATA(uint8)        js_SrcNoteArity[];
-extern JS_FRIEND_API(uintN)         js_SrcNoteLength(jssrcnote *sn);
+typedef struct JSSrcNoteSpec {
+    const char      *name;      /* name for disassembly/debugging output */
+    uint8           arity;      /* number of offset operands */
+    uint8           offsetBias; /* bias of offset(s) from annotated pc */
+    int8            isSpanDep;  /* 1 or -1 if offsets could span extended ops,
+                                   0 otherwise; sign tells span direction */
+} JSSrcNoteSpec;
 
-#define SN_LENGTH(sn)           ((js_SrcNoteArity[SN_TYPE(sn)] == 0) ? 1      \
+extern JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[];
+extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
+
+#define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
 				 : js_SrcNoteLength(sn))
 #define SN_NEXT(sn)             ((sn) + SN_LENGTH(sn))
 
@@ -385,6 +454,13 @@ js_NewSrcNote2(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
 extern intN
 js_NewSrcNote3(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
 	       ptrdiff_t offset1, ptrdiff_t offset2);
+
+/*
+ * NB: this function can add at most one extra extended delta note.
+ */
+extern jssrcnote *
+js_AddToSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, jssrcnote *sn,
+                     ptrdiff_t delta);
 
 /*
  * Get and set the offset operand identified by which (0 for the first, etc.).

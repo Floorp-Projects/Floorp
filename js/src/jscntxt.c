@@ -103,7 +103,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->jsop_ne = JSOP_NE;
     JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
     JS_InitArenaPool(&cx->codePool, "code", 1024, sizeof(jsbytecode));
-    JS_InitArenaPool(&cx->notePool, "note", 256, sizeof(jssrcnote));
+    JS_InitArenaPool(&cx->notePool, "note", 1024, sizeof(jssrcnote));
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
 #if JS_HAS_REGEXPS

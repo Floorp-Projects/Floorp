@@ -882,7 +882,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             offset += delta;
             fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
                     PTRDIFF(sn, notes, jssrcnote), offset, delta,
-                    js_SrcNoteName[SN_TYPE(sn)]);
+                    js_SrcNoteSpec[SN_TYPE(sn)].name);
             type = (JSSrcNoteType) SN_TYPE(sn);
             switch (type) {
               case SRC_SETLINE:
@@ -894,6 +894,9 @@ SrcNotes(JSContext *cx, JSScript *script)
                        (uintN) js_GetSrcNoteOffset(sn, 1),
                        (uintN) js_GetSrcNoteOffset(sn, 2));
                 break;
+              case SRC_COND:
+              case SRC_IF_ELSE:
+              case SRC_WHILE:
               case SRC_PCBASE:
               case SRC_PCDELTA:
                 fprintf(gOutFile, " offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));

@@ -257,6 +257,13 @@ JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr);
 extern JS_PUBLIC_API(void)
 JS_ArenaRelease(JSArenaPool *pool, char *mark);
 
+/*
+ * Function to be used directly when an allocation has likely grown to consume
+ * an entire JSArena, in which case the arena is returned to the malloc heap.
+ */
+extern JS_PUBLIC_API(void)
+JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, JSUint32 size);
+
 #ifdef JS_ARENAMETER
 
 #include <stdio.h>
