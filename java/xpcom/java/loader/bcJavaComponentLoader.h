@@ -30,8 +30,8 @@
 #include "nsIRegistry.h"
 #include "nsSupportsArray.h"
 
-#define BC_JAVACOMPONENTLOADER_PROGID \
-"component://netscape/blackwood/blackconnect/java-component-loader"
+#define BC_JAVACOMPONENTLOADER_ContractID \
+"@mozilla.org/blackwood/blackconnect/java-component-loader"
 
 /* 0d6b5198-1dd2-11b2-b2f0-ed49ba755db8 */
 #define BC_JAVACOMPONENTLOADER_CID \

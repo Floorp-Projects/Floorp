@@ -119,8 +119,8 @@ NS_IMETHODIMP bcJavaComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupp
  * to give the component loader an opportunity to do things like
  * annotate the registry and such.
  */
-/* void onRegister (in nsIIDRef aCID, in string aType, in string aClassName, in string aProgID, in string aLocation, in boolean aReplace, in boolean aPersist); */
-NS_IMETHODIMP bcJavaComponentLoader::OnRegister(const nsIID & aCID, const char *aType, const char *aClassName, const char *aProgID, const char *aLocation, PRBool aReplace, PRBool aPersist) { //nb
+/* void onRegister (in nsIIDRef aCID, in string aType, in string aClassName, in string aContractID, in string aLocation, in boolean aReplace, in boolean aPersist); */
+NS_IMETHODIMP bcJavaComponentLoader::OnRegister(const nsIID & aCID, const char *aType, const char *aClassName, const char *aContractID, const char *aLocation, PRBool aReplace, PRBool aPersist) { //nb
     printf("--bcJavaComponentLoader::OnRegister \n");
     return NS_OK;
 }
@@ -332,7 +332,7 @@ PRBool bcJavaComponentLoader::HasChanged(const char *registryLocation, nsIFile *
 }
 
 nsIModule * bcJavaComponentLoader::ModuleForLocation(const char *registryLocation, nsIFile *component) {
-    nsStringKey key(registryLocation);
+    nsStringKey key((const PRUnichar *)registryLocation); //nb can I do this?
     nsIModule *res = NULL;
     res = (nsIModule*)mModules.Get(&key);
     PRBool needRelease = PR_FALSE;
@@ -346,11 +346,11 @@ nsIModule * bcJavaComponentLoader::ModuleForLocation(const char *registryLocatio
     }
     res = new bcJavaModule(registryLocation, component);
     if (needRelease) {
-	NS_IF_RELEASE(component);
+        NS_IF_RELEASE(component);
     }
 
     if (res) {
-	mModules.Put(&key,res);
+        mModules.Put(&key,res);
     }
     return res;
 }
@@ -421,11 +421,11 @@ RegisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     printf("--JavaLoader got registered\n");
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
     return catman->AddCategoryEntry("component-loader", javaComponentTypeName,
-                                    BC_JAVACOMPONENTLOADER_PROGID,
+                                    BC_JAVACOMPONENTLOADER_ContractID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 
 }
@@ -436,7 +436,7 @@ UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString javaLoader;
     rv = catman->GetCategoryEntry("component-loader", javaComponentTypeName,
@@ -444,7 +444,7 @@ UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     if (NS_FAILED(rv)) return rv;
 
     // only unregister if we're the current JS component loader
-    if (!strcmp(javaLoader, BC_JAVACOMPONENTLOADER_PROGID)) {
+    if (!strcmp(javaLoader, BC_JAVACOMPONENTLOADER_ContractID)) {
         return catman->DeleteCategoryEntry("component-loader",
 					   javaComponentTypeName, PR_TRUE,
                                            getter_Copies(javaLoader));
@@ -455,7 +455,7 @@ UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaComponentLoader);
 static nsModuleComponentInfo components[] = {
     { "Java component loader", BC_JAVACOMPONENTLOADER_CID,
-      BC_JAVACOMPONENTLOADER_PROGID, 
+      BC_JAVACOMPONENTLOADER_ContractID, 
       bcJavaComponentLoaderConstructor,
       RegisterJavaLoader, UnregisterJavaLoader }
 };

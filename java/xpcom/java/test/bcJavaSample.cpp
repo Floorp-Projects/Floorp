@@ -29,10 +29,6 @@
 {0x072fa586, 0x1dd2, 0x11b2, \
 { 0xb2, 0x3a, 0x81, 0xe8, 0x16, 0x49, 0xe8, 0x8b }}
 
-#define BC_JAVA_SAMPLE_PROGID "javaSample.cpp"
-
-
-
 class bcJavaSample : public bcIJavaSample {
     NS_DECL_ISUPPORTS  
     NS_DECL_BCIJAVASAMPLE
