@@ -667,7 +667,7 @@ nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 nsFileSpec::nsFileSpec(const char* inNativePathString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
-	NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
+//  NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
     Clear();		// this sets mError to NS_ERROR_NOT_INITIALIZED
 
 	if (inNativePathString)
