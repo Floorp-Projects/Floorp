@@ -830,8 +830,8 @@ gtk_moz_embed_get_link_message(GtkMozEmbed *embed)
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
 
-  g_return_val_if_fail ((embed != NULL), NULL);
-  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), NULL);
+  g_return_val_if_fail ((embed != NULL), (char *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
@@ -847,8 +847,8 @@ gtk_moz_embed_get_js_status(GtkMozEmbed *embed)
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
 
-  g_return_val_if_fail ((embed != NULL), NULL);
-  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), NULL);
+  g_return_val_if_fail ((embed != NULL), (char *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
@@ -864,8 +864,8 @@ gtk_moz_embed_get_title(GtkMozEmbed *embed)
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
 
-  g_return_val_if_fail ((embed != NULL), NULL);
-  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), NULL);
+  g_return_val_if_fail ((embed != NULL), (char *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
@@ -881,8 +881,8 @@ gtk_moz_embed_get_location(GtkMozEmbed *embed)
   char *retval = nsnull;
   EmbedPrivate *embedPrivate;
 
-  g_return_val_if_fail ((embed != NULL), NULL);
-  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), NULL);
+  g_return_val_if_fail ((embed != NULL), (char *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (char *)NULL);
 
   embedPrivate = (EmbedPrivate *)embed->data;
   
@@ -999,8 +999,8 @@ gtk_moz_embed_get_title_unicode (GtkMozEmbed *embed)
   PRUnichar *retval = nsnull;
   EmbedPrivate *embedPrivate;
                    
-  g_return_val_if_fail ((embed != NULL), NULL);
-  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), NULL);
+  g_return_val_if_fail ((embed != NULL), (PRUnichar *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (PRUnichar *)NULL);
   
   embedPrivate = (EmbedPrivate *)embed->data;
                    
