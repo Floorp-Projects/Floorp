@@ -44,7 +44,7 @@
 #include "nsMsgCompCID.h"
 #include "nsMsgPrompts.h"
 #include "nsReadableUtils.h"
-
+#include "nsNetError.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgProcessReport, nsIMsgProcessReport)
 
@@ -283,6 +283,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
   {
       switch (currError)
       {
+        case NS_BINDING_ABORTED:
         case NS_ERROR_SEND_FAILED:
         case NS_ERROR_SEND_FAILED_BUT_NNTP_OK:
         case NS_MSG_FAILED_COPY_OPERATION:

@@ -43,6 +43,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsNetError.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgProgress)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgProgress)
@@ -120,7 +121,7 @@ NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent, ns
 NS_IMETHODIMP nsMsgProgress::CloseProgressDialog(PRBool forceClose)
 {
   m_closeProgress = PR_TRUE;
-  return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, forceClose);
+  return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, forceClose ? NS_ERROR_FAILURE : NS_OK);
 }
 
 /* nsIPrompt GetPrompter (); */
@@ -145,7 +146,7 @@ NS_IMETHODIMP nsMsgProgress::GetProcessCanceledByUser(PRBool *aProcessCanceledBy
 NS_IMETHODIMP nsMsgProgress::SetProcessCanceledByUser(PRBool aProcessCanceledByUser)
 {
   m_processCanceled = aProcessCanceledByUser;
-  OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, PR_FALSE);
+  OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_BINDING_ABORTED);
   return NS_OK;
 }
 
@@ -212,7 +213,7 @@ NS_IMETHODIMP nsMsgProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequ
     }
   }
   
-  if (aStateFlags == nsIWebProgressListener::STATE_STOP && m_msgWindow)
+  if (aStateFlags == nsIWebProgressListener::STATE_STOP && m_msgWindow && NS_FAILED(aStatus))
     m_msgWindow->StopUrls();
 
   return NS_OK;
