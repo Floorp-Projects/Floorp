@@ -404,13 +404,14 @@ function ValidateData()
       //  from windows, but I don't know how to do that!
       var tmpColor = customTextColor.toLowerCase();
       if (tmpColor != "windowtext")
-        globalElement.setAttribute(textStr,    customTextColor);
+        editor.setAttributeOrEquivalent(globalElement, textStr,
+                                        customTextColor, true);
       else
         editor.removeAttributeOrEquivalent(globalElement, textStr, true);
 
       tmpColor = customBackgroundColor.toLowerCase();
       if (tmpColor != "window")
-        globalElement.setAttribute(bgcolorStr, customBackgroundColor);
+        editor.setAttributeOrEquivalent(globalElement, bgcolorStr, customBackgroundColor, true);
       else
         editor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
 
