@@ -2125,6 +2125,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
 
               nsColLayoutData *colData = new nsColLayoutData();
               nsTableColFrame *colFrame=nsnull;
+              // XXX Why is this using ChildAt() instead of just walking the sibling list?
               colGroupFrame->ChildAt(j, (nsIFrame *&)colFrame);
               colData->SetColFrame(colFrame);
               mColumnLayoutData->AppendElement((void *)colData);
@@ -2150,6 +2151,8 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
     // for now, divide width equally between spanned columns
 
       PRInt32 firstColIndex = aCell->GetColIndex();
+      // XXX Add a GetRowIndex() member function to nsTableCell and we can save the
+      // reference counting overhead...
       nsTableRow *row = aCell->GetRow();            // row: ADDREF++
       PRInt32 rowIndex = row->GetRowIndex();
       NS_RELEASE(row);                              // row: ADDREF--
