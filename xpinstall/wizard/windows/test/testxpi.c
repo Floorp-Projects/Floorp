@@ -37,7 +37,6 @@ void ShowUsage(char *name)
     lstrcat(szBuf, "\n");
     lstrcat(szBuf, "    output sea name: name to use for the self-extracting executable\n");
     lstrcat(szBuf, "    files: one or more files to add to the self-extracing executable\n");
-//    MessageBox(NULL, szBuf, "Usage", MB_OK);
 }
 
 /* Function to print error message with/without error code */
