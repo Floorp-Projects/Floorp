@@ -118,14 +118,9 @@ enum {
 /*typedef wchar_t UniChar; */
 /*#endif */
 
-#ifdef NSPR20
 
 /** Unicode string offset */
-/*#if sizeof(int) >= 32 */
-/*typedef int       TextOffset; */
-/*#else */
 typedef PRInt32 TextOffset;
-/*#endif */
 
 /* Before compiling on a new platform, add a section for that platform, */
 /* defining the sized integral data types. */
@@ -137,25 +132,6 @@ typedef PRInt32		t_int32;
 typedef PRUint32	t_uint32;
 #define T_INT32_MAX (LONG_MAX)
 
-#else
-/** Unicode string offset */
-/*#if sizeof(int) >= 32 */
-/*typedef int       TextOffset; */
-/*#else */
-typedef int32 TextOffset;
-/*#endif */
-
-/* Before compiling on a new platform, add a section for that platform, */
-/* defining the sized integral data types. */
-typedef int8		t_int8;
-typedef uint8		t_uint8;
-typedef int16		t_int16;
-typedef uint16	        t_uint16;
-typedef int32		t_int32;
-typedef uint32	        t_uint32;
-#define T_INT32_MAX (LONG_MAX)
-#define PR_INT32(x)  x ## L
-#endif
 
 /*=====================================================================================*/
 /* Calendar/TimeZone data types */
