@@ -23,20 +23,17 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-
-#ifdef XP_PC
 #include "nsIObserverService.h"
 #include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsObserver.h"
-#endif
+
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-#ifdef XP_PC
 static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
-#endif
+
 
 PRInt32 gLockCount = 0;
 
@@ -58,7 +55,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kPropertiesCID, NULL, NULL,
                                   path, PR_TRUE, PR_TRUE);
-#ifdef XP_PC
+
   rv = compMgr->RegisterComponent(kObserverServiceCID,
                                    "ObserverService", 
                                    NS_OBSERVERSERVICE_PROGID,
@@ -67,7 +64,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                    "Observer", 
                                    NS_OBSERVER_PROGID,
                                    path,PR_TRUE, PR_TRUE);
-#endif
+
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -89,10 +86,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->UnregisterFactory(kPropertiesCID, path);
 
-#ifdef XP_PC
+
   rv = compMgr->UnregisterFactory(kObserverServiceCID, path);
   rv = compMgr->UnregisterFactory(kObserverCID, path);
-#endif
+
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -124,7 +121,6 @@ NSGetFactory(nsISupports* aServMgr,
 
     return res;
   }
-#ifdef XP_PC
   else if (aClass.Equals(kObserverServiceCID)) {
       nsObserverServiceFactory *observerServiceFactory = new nsObserverServiceFactory();
 
@@ -152,7 +148,7 @@ NSGetFactory(nsISupports* aServMgr,
 
     return res;
   }
-#endif
+
 
   return NS_NOINTERFACE;
 }
