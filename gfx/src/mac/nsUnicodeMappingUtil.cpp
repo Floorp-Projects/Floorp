@@ -67,7 +67,7 @@ void nsUnicodeMappingUtil::CleanUp()
 	for(int i= 0 ; i < smPseudoTotalScripts; i ++) {
 		for(int j=0; j < 5; j++) {
 			if(mGenericFontMapping[i][j])
-	  		 nsString::Recycle(mGenericFontMapping[i][j]);
+	  		 delete mGenericFontMapping[i][j];
 	  	}
 	}
 	if (mCache)
@@ -326,11 +326,11 @@ PrefEnumCallback(const char* aName, void* aClosure)
   if( (! nsDeviceContextMac::GetMacFontNumber(*fontname, fontID)) ||
   	  ((script < smUninterp) && (::FontToScript(fontID) != script)))
   {
-  	nsString::Recycle(fontname);
+  	delete fontname;
   	return;
   }
   if( Self->mGenericFontMapping[script][type] )
-  	nsString::Recycle(Self->mGenericFontMapping[script][type]);
+  	delete Self->mGenericFontMapping[script][type];
   Self->mGenericFontMapping[script][type] = fontname;
 #ifdef DEBUG_ftang_font
   char* utf8 = fontname->ToNewUTF8String();
@@ -393,7 +393,7 @@ void nsUnicodeMappingUtil::InitScriptFontMapping()
 						if (nsDeviceContextMac::GetMacFontNumber (*fontname,fontID))
 							mScriptFontMapping[script] = fontID;
 
-						nsString::Recycle (fontname);
+						delete fontname;
 					}
 				}
 			}

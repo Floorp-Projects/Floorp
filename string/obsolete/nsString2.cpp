@@ -582,7 +582,8 @@ nsString* nsString::ToNewString() const {
 
 /**
  * Creates an ascii clone of this string
- * Note that calls to this method should be matched with calls to Recycle().
+ * Note that calls to this method should be matched with calls to
+ * |nsMemory::Free|.
  * @update  gess 02/24/00
  * @WARNING! Potential i18n issue here, since we're stepping down from 2byte chars to 1byte chars!
  * @return  ptr to new ascii string
@@ -599,7 +600,8 @@ char* nsString::ToNewCString() const {
 
 /**
  * Creates an UTF8 clone of this string
- * Note that calls to this method should be matched with calls to Recycle().
+ * Note that calls to this method should be matched with calls to
+ * |nsMemory::Free|.
  * @update  ftang 09/10/99
  * @return  ptr to new UTF8 string
  * http://www.cis.ohio-state.edu/htbin/rfc/rfc2279.html
@@ -627,7 +629,8 @@ char* nsString::ToNewUTF8String() const {
 
 /**
  * Creates an ascii clone of this string
- * Note that calls to this method should be matched with calls to Recycle().
+ * Note that calls to this method should be matched with calls to
+ * |nsMemory::Free|.
  * @update  gess 02/24/00
  * @return  ptr to new ascii string
  */
@@ -1525,90 +1528,6 @@ PRBool nsString::IsASCII(const PRUnichar* aBuffer) {
 PRBool nsString::IsDigit(PRUnichar aChar) {
   // XXX i18n
   return PRBool((aChar >= '0') && (aChar <= '9'));
-}
-
-#ifndef RICKG_TESTBED
-/**************************************************************
-  Define the string deallocator class...
- **************************************************************/
-class nsStringDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    nsString* aString= (nsString*)anObject;
-    if(aString){
-      delete aString;
-    }
-    return 0;
-  }
-};
-
-/****************************************************************************
- * This class, appropriately enough, creates and recycles nsString objects..
- ****************************************************************************/
-
-class nsStringRecycler {
-public:
-  nsStringRecycler() : mDeque(0) {
-  }
-
-  ~nsStringRecycler() {
-    nsStringDeallocator theDeallocator;
-    mDeque.ForEach(theDeallocator); //now delete the strings
-  }
-
-  void Recycle(nsString* aString) {
-    mDeque.Push(aString);
-  }
-
-  nsString* CreateString(void){
-    nsString* result=(nsString*)mDeque.Pop();
-    if(!result)
-      result=new nsString();
-    return result;
-  }
-  nsDeque mDeque;
-};
-static nsStringRecycler& GetRecycler(void);
-
-/**
- * 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-nsStringRecycler& GetRecycler(void){
-  static nsStringRecycler gRecycler;
-  return gRecycler;
-}
-#endif
-
-
-/**
- * Call this mehod when you're done 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-nsString* nsString::CreateString(void){
-  nsString* result=0;
-#ifndef RICKG_TESTBED
-  GetRecycler().CreateString();
-#endif
-  return result;
-}
-
-/**
- * Call this mehod when you're done 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-void nsString::Recycle(nsString* aString){
-#ifndef RICKG_TESTBED
-  GetRecycler().Recycle(aString);
-#else
-  delete aString;
-#endif
 }
 
 #if 0

@@ -276,21 +276,24 @@ public:
 
   /**
    * Creates an ISOLatin1 clone of this string
-   * Note that calls to this method should be matched with calls to Recycle().
+   * Note that calls to this method should be matched with calls to
+   * |nsMemory::Free|.
    * @return  ptr to new isolatin1 string
    */
   char* ToNewCString() const;
 
   /**
    * Creates an UTF8 clone of this string
-   * Note that calls to this method should be matched with calls to Recycle().
+   * Note that calls to this method should be matched with calls to
+   * |nsMemory::Free|.
    * @return  ptr to new null-terminated UTF8 string
    */
   char* ToNewUTF8String() const;
 
   /**
    * Creates a unicode clone of this string
-   * Note that calls to this method should be matched with calls to Recycle().
+   * Note that calls to this method should be matched with calls to
+   * |nsMemory::Free|.
    * @return  ptr to new unicode string
    */
   PRUnichar* ToNewUnicode() const;
@@ -505,9 +508,6 @@ public:
    *  @return  TRUE if char is a valid digit
    */
   static  PRBool IsDigit(PRUnichar ch);
-
-  static  void        Recycle(nsString* aString);
-  static  nsString*  CreateString(void);
 
 private:
     // NOT TO BE IMPLEMENTED
