@@ -35,10 +35,10 @@
 
 package org.mozilla.javascript;
 
-import java.io.Externalizable;
+import java.io.Serializable;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /**
  * Map to associate objects to integers.
@@ -50,9 +50,8 @@ import java.io.ObjectOutput;
  *
  */
 
-public class ObjToIntMap implements Externalizable {
+public class ObjToIntMap implements Serializable {
 
-     static final long serialVersionUID = -6999544351027769835L;
 
 // Map implementation via hashtable,
 // follows "The Art of Computer Programming" by Donald E. Knuth
@@ -389,9 +388,10 @@ public class ObjToIntMap implements Externalizable {
         return index;
     }
 
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(power);
-        out.writeInt(keyCount);
+    private void writeObject(ObjectOutputStream out)
+        throws IOException
+    {
+        out.defaultWriteObject();
 
         int count = keyCount;
         for (int i = 0; count != 0; ++i) {
@@ -404,12 +404,14 @@ public class ObjToIntMap implements Externalizable {
         }
     }
 
-    public void readExternal(ObjectInput in)
+    private void readObject(ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
-        power = in.readInt();
-        int writtenKeyCount = in.readInt();
+        in.defaultReadObject();
+
+        int writtenKeyCount = keyCount;
         if (writtenKeyCount != 0) {
+            keyCount = 0;
             int N = 1 << power;
             keys = new Object[N];
             values = new int[2 * N];
@@ -422,7 +424,7 @@ public class ObjToIntMap implements Externalizable {
         }
     }
 
-
+    static final long serialVersionUID = 3396438333234169727L;
 
 // A == golden_ratio * (1 << 32) = ((sqrt(5) - 1) / 2) * (1 << 32)
 // See Knuth etc.
@@ -435,12 +437,12 @@ public class ObjToIntMap implements Externalizable {
 // values[0 <= i < N]: value of key at keys[i]
 // values[N <= i < 2*N]: hash code of key at keys[i-N]
 
-    private Object[] keys;
-    private int[] values;
+    private transient Object[] keys;
+    private transient int[] values;
 
     private int power;
     private int keyCount;
-    private int occupiedCount; // == keyCount + deleted_count
+    private transient int occupiedCount; // == keyCount + deleted_count
 
 // If true, enables consitency checks
     private static final boolean check = false;

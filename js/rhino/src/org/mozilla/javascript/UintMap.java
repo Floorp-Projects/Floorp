@@ -35,10 +35,10 @@
 
 package org.mozilla.javascript;
 
-import java.io.Externalizable;
+import java.io.Serializable;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /**
  * Map to associate non-negative integers to objects or integers.
@@ -50,9 +50,7 @@ import java.io.ObjectOutput;
  *
  */
 
-class UintMap implements Externalizable {
-
-    static final long serialVersionUID = -4108482308923954951L;
+class UintMap implements Serializable {
 
 // Map implementation via hashtable,
 // follows "The Art of Computer Programming" by Donald E. Knuth
@@ -378,38 +376,45 @@ class UintMap implements Externalizable {
         return values != null && values[index] != null;
     }
 
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(power);
-        out.writeInt(keyCount);
-        boolean hasIntValues = (ivaluesShift != 0);
-        boolean hasObjectValues = (values != null);
-        out.writeBoolean(hasIntValues);
-        out.writeBoolean(hasObjectValues);
+    private void writeObject(ObjectOutputStream out)
+        throws IOException
+    {
+        out.defaultWriteObject();
 
         int count = keyCount;
-        for (int i = 0; count != 0; ++i) {
-            int key = keys[i];
-            if (key != EMPTY && key != DELETED) {
-                --count;
-                out.writeInt(key);
-                if (hasIntValues) {
-                    out.writeInt(keys[ivaluesShift + i]);
-                }
-                if (hasObjectValues) {
-                    out.writeObject(values[i]);
+        if (count != 0) {
+            boolean hasIntValues = (ivaluesShift != 0);
+            boolean hasObjectValues = (values != null);
+            out.writeBoolean(hasIntValues);
+            out.writeBoolean(hasObjectValues);
+
+            for (int i = 0; count != 0; ++i) {
+                int key = keys[i];
+                if (key != EMPTY && key != DELETED) {
+                    --count;
+                    out.writeInt(key);
+                    if (hasIntValues) {
+                        out.writeInt(keys[ivaluesShift + i]);
+                    }
+                    if (hasObjectValues) {
+                        out.writeObject(values[i]);
+                    }
                 }
             }
         }
     }
 
-    public void readExternal(ObjectInput in)
+    private void readObject(ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
-        power = in.readInt();
-        int writtenKeyCount = in.readInt();
-        boolean hasIntValues = in.readBoolean();
-        boolean hasObjectValues = in.readBoolean();
+        in.defaultReadObject();
+
+        int writtenKeyCount = keyCount;
         if (writtenKeyCount != 0) {
+            keyCount = 0;
+            boolean hasIntValues = in.readBoolean();
+            boolean hasObjectValues = in.readBoolean();
+
             int N = 1 << power;
             if (hasIntValues) {
                 keys = new int[2 * N];
@@ -417,7 +422,6 @@ class UintMap implements Externalizable {
             }else {
                 keys = new int[N];
             }
-
             for (int i = 0; i != N; ++i) {
                 keys[i] = EMPTY;
             }
@@ -438,6 +442,8 @@ class UintMap implements Externalizable {
         }
     }
 
+    static final long serialVersionUID = -6916326879143724506L;
+
 
 // A == golden_ratio * (1 << 32) = ((sqrt(5) - 1) / 2) * (1 << 32)
 // See Knuth etc.
@@ -451,16 +457,16 @@ class UintMap implements Externalizable {
 // values[0 <= i < N]: value of key at keys[i]
 // keys[N <= i < 2N]: int values of keys at keys[i - N]
 
-    private int[] keys;
-    private Object[] values;
+    private transient int[] keys;
+    private transient Object[] values;
 
     private int power;
     private int keyCount;
-    private int occupiedCount; // == keyCount + deleted_count
+    private transient int occupiedCount; // == keyCount + deleted_count
 
     // If ivaluesShift != 0, keys[ivaluesShift + index] contains integer
     // values associated with keys
-    private int ivaluesShift;
+    private transient int ivaluesShift;
 
 // If true, enables consitency checks
     private static final boolean check = false;
