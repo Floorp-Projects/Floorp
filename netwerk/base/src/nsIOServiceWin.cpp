@@ -68,7 +68,7 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
     }
 
     nsCAutoString escPath;
-    NS_NAMED_LITERAL_CSTRING(prefix, "file://");
+    NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
   
     // Escape the path with the directory mask
     if (NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
