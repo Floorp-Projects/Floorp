@@ -202,9 +202,9 @@ sub disable_builds {
 
 sub set_message {
     $m = $form{'message'};
-    $m =~ s/\"/\\\"/g;
+    $m =~ s/\'/\\'/g;
     open(MOD, ">$tree/mod.pl");
-    print MOD "\$message_of_day = \"$m\"";
+    print MOD "\$message_of_day = \'$m\'\;\n1;";
     close(MOD);
     chmod( 0777, "$tree/mod.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>

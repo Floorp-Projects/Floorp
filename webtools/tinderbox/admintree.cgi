@@ -44,7 +44,7 @@ print "
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_message>
 <br><b>Message of the Day
-<br><TEXTAREA NAME=message ROWS=10 COLS=70>$message_of_day
+<br><TEXTAREA NAME=message ROWS=10 COLS=70 WRAP=SOFT>$message_of_day
 </TEXTAREA>
 <br><INPUT TYPE=SUBMIT VALUE='Set Message of the Day'>
 </FORM>
