@@ -27,6 +27,6 @@ DIRS    += tests
 
 DIRS	+= tools
 
-DIRS	+= xptinfo
+# DIRS	+= xptinfo
 
 include $(topsrcdir)/config/rules.mk
