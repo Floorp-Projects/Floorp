@@ -174,7 +174,6 @@
   <key id="key_cut" key="&cutCmd.key;" modifiers="accel"/>
   <key id="key_copy" key="&copyCmd.key;" modifiers="accel"/>
   <key id="key_paste" key="&pasteCmd.key;" modifiers="accel"/>
-  <key id="pastequotationkb"/>
   <key id="key_delete" keycode="VK_DELETE"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
   <key id="key_find" key="&findCmd.key;" command="cmd_find" modifiers="accel"/>
