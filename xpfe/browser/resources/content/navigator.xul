@@ -22,7 +22,6 @@ Contributor(s): ______________________________________. -->
 
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
