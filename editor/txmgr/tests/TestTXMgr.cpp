@@ -20,7 +20,6 @@
 #include "nsITransactionManager.h"
 #include "nsTransactionManagerCID.h"
 #include "nsRepository.h"
-#include "nsIServiceManager.h"
 
 static PRInt32 sConstructorCount     = 0;
 static PRInt32 sDestructorCount      = 0;
@@ -856,10 +855,9 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Get transaction manager nsISupports() interface ... ");
+  printf("Create transaction manager instance ... ");
 
   PRInt32 i, numitems = 0;
-  nsISupports  *isup          = 0;
   nsITransactionManager  *mgr = 0;
   nsITransaction *tx          = 0;
   TestTransaction *tximpl   = 0;
@@ -867,34 +865,12 @@ quick_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
-                                        kITransactionManagerIID, &isup);
+  result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+                                        kITransactionManagerIID, (void **)&mgr);
 
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get TransactionManager nsISupports interface.\n");
+  if (NS_FAILED(result) || !mgr) {
+    printf("ERROR: Failed to create Transaction Manager instance.\n");
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test QueryInterface():
-   *
-   *******************************************************************/
-
-  printf("Get the nsITransactionManager interface ... ");
-
-  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mgr);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
-    return result;
-  }
-
-  if (!mgr) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
   }
 
   printf("passed\n");
@@ -2652,21 +2628,6 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = nsServiceManager::ReleaseService(kCTransactionManagerFactoryCID,
-                                        isup);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ReleaseService() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = nsServiceManager::ShutdownService(kCTransactionManagerFactoryCID);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ShutdownService() failed. (%d)\n", result);
-    return result;
-  }
-
   printf("passed\n");
 
   /*******************************************************************
@@ -2763,10 +2724,9 @@ quick_batch_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Get transaction manager nsISupports() interface ... ");
+  printf("Create transaction manager instance ... ");
 
   PRInt32 i, numitems = 0;
-  nsISupports  *isup          = 0;
   nsITransactionManager  *mgr = 0;
   nsITransaction *tx          = 0;
   TestTransaction *tximpl   = 0;
@@ -2774,34 +2734,12 @@ quick_batch_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
-                                        kITransactionManagerIID, &isup);
+  result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+                                        kITransactionManagerIID, (void **)&mgr);
 
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get TransactionManager nsISupports interface.\n");
+  if (NS_FAILED(result) || !mgr) {
+    printf("ERROR: Failed to create Transaction Manager instance.\n");
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test QueryInterface():
-   *
-   *******************************************************************/
-
-  printf("Get the nsITransactionManager interface ... ");
-
-  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mgr);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
-    return result;
-  }
-
-  if (!mgr) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
   }
 
   printf("passed\n");
@@ -4305,21 +4243,6 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  result = nsServiceManager::ReleaseService(kCTransactionManagerFactoryCID,
-                                        isup);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ReleaseService() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = nsServiceManager::ShutdownService(kCTransactionManagerFactoryCID);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ShutdownService() failed. (%d)\n", result);
-    return result;
-  }
-
   printf("passed\n");
 
   /*******************************************************************
@@ -4421,29 +4344,16 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
   fflush(stdout);
 
   PRInt32 i, j;
-  nsISupports  *isup          = 0;
   nsITransactionManager  *mgr = 0;
   nsITransaction *tx          = 0;
   nsresult result;
 
-  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
-                                        kITransactionManagerIID, &isup);
+  result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+                                        kITransactionManagerIID, (void **)&mgr);
 
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get nsITransactionManager interface.\n");
+  if (NS_FAILED(result) || !mgr) {
+    printf("ERROR: Failed to create Transaction Manager instance.\n");
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mgr);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
-    return result;
-  }
-
-  if (!mgr) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
   }
 
   for (i = 1; i <= iterations; i++) {
@@ -4522,21 +4432,6 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
 
   if (NS_FAILED(result)) {
     printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = nsServiceManager::ReleaseService(kCTransactionManagerFactoryCID,
-                                        isup);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ReleaseService() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = nsServiceManager::ShutdownService(kCTransactionManagerFactoryCID);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ShutdownService() failed. (%d)\n", result);
     return result;
   }
 
@@ -4650,36 +4545,22 @@ main (int argc, char *argv[])
   nsRepository::RegisterFactory(kCTransactionManagerFactoryCID,
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
 
-#if 1
-
   result = simple_test();
 
   if (NS_FAILED(result))
     return result;
-
-#endif
-
-#if 1
 
   result = simple_batch_test();
 
   if (NS_FAILED(result))
     return result;
 
-#endif
-
-#if 1
-
-  result = aggregation_batch_test();
+  result = aggregation_test();
 
   if (NS_FAILED(result))
     return result;
 
-#endif
-
-#if 1
-
-  result = aggregation_test();
+  result = aggregation_batch_test();
 
   if (NS_FAILED(result))
     return result;
@@ -4698,8 +4579,6 @@ main (int argc, char *argv[])
 
   if (NS_FAILED(result))
     return result;
-
-#endif
 
   return NS_OK;
 }
