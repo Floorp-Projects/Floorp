@@ -134,6 +134,10 @@
   list-style-image: none;
 }
 
+#fullscreen-exit-button > .toolbarbutton-text {
+  display: -moz-box;
+}
+
 /* Hides text below the above buttons */
 .toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
   > .toolbarbutton-text,
