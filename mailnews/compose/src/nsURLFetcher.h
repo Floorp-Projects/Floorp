@@ -49,14 +49,12 @@ public:
   NS_IMETHOD FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut, 
                             nsAttachSaveCompletionCallback cb, void *tagData);
 
-  NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 
+  // Methods for nsIStreamListener
+  NS_DECL_NSISTREAMLISTENER
 
-  // Methods for nsIStreamObserver 
-  NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);  
-  NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg);
-
-
+  // Methods for nsIStreamObserver
+  NS_DECL_NSISTREAMOBSERVER
 
 private:
   nsOutputFileStream              *mOutStream;    // the output file stream

@@ -58,45 +58,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest methods:
-    NS_IMETHOD IsPending(PRBool *result);
-    NS_IMETHOD Cancel();
-    NS_IMETHOD Suspend();
-    NS_IMETHOD Resume();
+    NS_DECL_NSIREQUEST
 
     // nsIChannel methods:
-    NS_IMETHOD GetURI(nsIURI * *aURL);
-    NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval);
-    NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
-    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                         nsISupports *ctxt,
-                         nsIStreamListener *listener);
-    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream,
-                          PRUint32 startPosition,
-                          PRInt32 writeCount,
-                          nsISupports *ctxt,
-                          nsIStreamObserver *observer);
-    NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
-    NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
-    NS_IMETHOD GetContentType(char * *aContentType);
-    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
-    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
+    NS_DECL_NSICHANNEL
 
     // nsIHTTPChannel methods:
-    NS_IMETHOD GetRequestHeader(nsIAtom *headerName, char **_retval);
-    NS_IMETHOD SetRequestHeader(nsIAtom *headerName, const char *value);
-    NS_IMETHOD GetRequestHeaderEnumerator(nsISimpleEnumerator** aResult);
-    NS_IMETHOD SetRequestMethod(PRUint32 method);
-
-    NS_IMETHOD GetResponseHeader(nsIAtom *headerName, char **_retval);
-    NS_IMETHOD GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult);
-
-    NS_IMETHOD SetPostDataStream(nsIInputStream *i_postStream);
-    NS_IMETHOD GetPostDataStream(nsIInputStream **o_postStream);
-
-    NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus);
-    NS_IMETHOD GetResponseString(char * *aResponseString);
-    NS_IMETHOD GetEventSink(nsIHTTPEventSink* *eventSink);
-    NS_IMETHOD GetResponseDataListener(nsIStreamListener* *aListener);
+    NS_DECL_NSIHTTPCHANNEL
 
     // nsHTTPChannel methods:
     nsresult            Init();

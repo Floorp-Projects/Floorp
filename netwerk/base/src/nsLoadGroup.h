@@ -33,47 +33,11 @@ public:
     
     ////////////////////////////////////////////////////////////////////////////
     // nsIRequest methods:
-
-    /* boolean IsPending (); */
-    NS_IMETHOD IsPending(PRBool *result);
-    
-    /* void Cancel (); */
-    NS_IMETHOD Cancel();
-
-    /* void Suspend (); */
-    NS_IMETHOD Suspend();
-
-    /* void Resume (); */
-    NS_IMETHOD Resume();
+    NS_DECL_NSIREQUEST
 
     ////////////////////////////////////////////////////////////////////////////
     // nsILoadGroup methods:
-    
-    /* void Init (in nsIStreamObserver observer, in nsILoadGroup parent); */
-    NS_IMETHOD Init(nsIStreamObserver *observer, nsILoadGroup *parent);
-
-    /* attribute unsigned long DefaultLoadAttributes; */
-    NS_IMETHOD GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes);
-    NS_IMETHOD SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes);
-
-    /* void AddChannel (in nsIChannel channel, in nsISupports ctxt); */
-    NS_IMETHOD AddChannel(nsIChannel *channel, nsISupports* ctxt);
-
-    /* void RemoveChannel (in nsIChannel channel, in nsISupports ctxt); */
-    NS_IMETHOD RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
-                             nsresult status, const PRUnichar *errorMsg);
-
-    /* readonly attribute nsISimpleEnumerator Channels; */
-    NS_IMETHOD GetChannels(nsISimpleEnumerator * *aChannels);
-
-    /* void AddSubGroup (in nsILoadGroup group); */
-    NS_IMETHOD AddSubGroup(nsILoadGroup *group);
-
-    /* void RemoveSubGroup (in nsILoadGroup group); */
-    NS_IMETHOD RemoveSubGroup(nsILoadGroup *group);
-
-    /* readonly attribute nsISimpleEnumerator SubGroups; */
-    NS_IMETHOD GetSubGroups(nsISimpleEnumerator * *aSubGroups);
+    NS_DECL_NSILOADGROUP
 
     ////////////////////////////////////////////////////////////////////////////
     // nsLoadGroup methods:

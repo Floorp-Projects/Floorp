@@ -63,17 +63,10 @@ public:
     TestConsumer();
 
 	// stream listener methods
-	NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream,
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength);
+    NS_DECL_NSISTREAMLISTENER
 
 	// stream observer methods
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                             nsresult aStatus,
-                             nsIString* aMsg);
+    NS_DECL_NSISTREAMOBSERVER
 
 protected:
     ~TestConsumer();

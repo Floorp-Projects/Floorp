@@ -43,46 +43,19 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest methods:
-    NS_IMETHOD IsPending(PRBool *result);
-    NS_IMETHOD Cancel();
-    NS_IMETHOD Suspend();
-    NS_IMETHOD Resume();
+    NS_DECL_NSIREQUEST
 
     // nsIChannel methods:
-    NS_IMETHOD GetURI(nsIURI * *aURL);
-    NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval);
-    NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
-    NS_IMETHOD AsyncRead(PRUint32 startPosition,
-                         PRInt32 readCount, 
-                         nsISupports *ctxt,
-                         nsIStreamListener *listener);
-    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream,
-                          PRUint32 startPosition,
-                          PRInt32 writeCount,
-                          nsISupports *ctxt,
-                          nsIStreamObserver *observer);
-    NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
-    NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
-    NS_IMETHOD GetContentType(char * *aContentType);
-    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
-    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
+    NS_DECL_NSICHANNEL
 
     // nsIFTPChannel methods:
-    NS_IMETHOD Get(void);
-    NS_IMETHOD Put(void);
-    NS_IMETHOD SetStreamListener(nsIStreamListener* aListener);
+    NS_DECL_NSIFTPCHANNEL
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg);
+    NS_DECL_NSISTREAMOBSERVER
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
-                               nsIInputStream *aIStream, 
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength);
+    NS_DECL_NSISTREAMLISTENER
 
     // nsFTPChannel methods:
     nsFTPChannel();

@@ -68,16 +68,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver functions
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg);
+    NS_DECL_NSISTREAMOBSERVER
 
     // nsIRequest methods:
-    NS_IMETHOD IsPending(PRBool *result);
-    NS_IMETHOD Cancel();
-    NS_IMETHOD Suspend();
-    NS_IMETHOD Resume();
+    NS_DECL_NSIREQUEST
 
     // Finally our own methods...
     /*
