@@ -71,6 +71,10 @@ public:
 	 */
 	NS_IMETHOD
 	IsJavaEnabled(PRBool* outEnabled);
+
+    NS_METHOD
+    ShowJavaConsole(void);
+
     
     /* from nsIThreadManager: */
     

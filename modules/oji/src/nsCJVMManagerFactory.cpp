@@ -24,14 +24,72 @@
 #include "nsJVMManager.h"
 #include "nsCJVMManagerFactory.h"
 #include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIServiceManagerIID,    NS_ISERVICEMANAGER_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCJVMManagerCID,  NS_JVMMANAGER_CID);
+static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 nsIServiceManager  *theServiceManager = NULL;
+
+///////////////////////////////////////////////////////////////////////////////
+// Auto-registration functions START
+///////////////////////////////////////////////////////////////////////////////
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, 
+                                             const char *path)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    rv = compMgr->RegisterComponent(kJVMManagerCID,
+                                    "JVM Manager Service",
+                                    "component://netscape/oji/jvm-mgr",
+                                    path, 
+                                    PR_TRUE, PR_TRUE);
+
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
+}
+
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, 
+                                               const char *path)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    nsIComponentManager* compMgr;
+    rv = servMgr->GetService(kComponentManagerCID, 
+                             nsIComponentManager::GetIID(), 
+                             (nsISupports**)&compMgr);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    
+    rv = compMgr->UnregisterComponent(kJVMManagerCID, path);
+
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    return rv;
+}
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NSGetFactory:
@@ -45,10 +103,10 @@ NSGetFactory(nsISupports* serviceMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-    if (!aClass.Equals(kCJVMManagerCID)) {
+    if (!aClass.Equals(kJVMManagerCID)) {
         return NS_ERROR_FACTORY_NOT_LOADED;     // XXX right error?
     }
-
+    
 	// first off, cache a reference to the service manager for later use.
 	if (theServiceManager == NULL) {
 		if (serviceMgr->QueryInterface(kIServiceManagerIID, (void**)&theServiceManager) != NS_OK)
@@ -57,9 +115,10 @@ NSGetFactory(nsISupports* serviceMgr,
     
     // now, create the JVM manager factory.
     nsCJVMManagerFactory* factory = new nsCJVMManagerFactory();
-    if (factory == NULL)
+    if (factory == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;
-        
+    }
+    
     NS_ADDREF(factory);
     *aFactory = factory;
     
@@ -71,6 +130,10 @@ NSCanUnload(nsISupports* serviceMgr)
 {
     return PR_FALSE;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Auto-registration functions END
+///////////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////////

@@ -22,13 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+XPIDLSRCS = nsIJVMManager.idl
+
 MODULE	= oji
 
 EXPORTS	=			  \
 	nsjvm.h			  \
 	nsIJRIPlugin.h		  \
 	nsIJVMConsole.h		  \
-	nsIJVMManager.h		  \
 	nsIJVMPlugin.h		  \
 	nsIJVMPluginInstance.h	  \
 	nsIJVMPluginTagInfo.h	  \

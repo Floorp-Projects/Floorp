@@ -133,6 +133,7 @@ PUBLIC_HEADER_DIR=$(PUBLIC)\win16
 install::  $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(DLL_SUFFIX) $(DIST)\bin\components
 
 clobber::
     $(RM_R) _jri

@@ -29,6 +29,21 @@ function toHistory()
     }
 }
 
+function toJavaConsole()
+{
+	try{
+		var cid =
+			Components.classes['component://netscape/oji/jvm-mgr'];
+		var iid = Components.interfaces.nsIJVMManager;
+		var jvmMgr = cid.getService(iid);
+		jvmMgr.ShowJavaConsole();
+	} catch(e) {
+		
+	}
+
+
+}
+
 function toOpenWindowByType( inType, uri )
 {
 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
@@ -40,7 +55,7 @@ function toOpenWindowByType( inType, uri )
 	if ( topWindow )
 		topWindow.focus();
 	else
-		window.open(uri, "", "chrome,menubar,toolbar,resizable");
+		window.open(uri, "", "chrome,menubar");
 }
 
 function CycleWindow( inType, inChromeURL )
@@ -60,7 +75,7 @@ function CycleWindow( inType, inChromeURL )
 	if ( topWindowOfType == null )
 	{
 		dump( " no windows of this type so create a new one \n");
-		window.open( inChromeURL, "","chrome,menubar,toolbar,resizable" );
+		window.open( inChromeURL, "","chrome,menubar,toolbar" );
 		return;
 	}
 	
@@ -103,7 +118,7 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.open( inChromeURL, "","chrome,menubar,toolbar,resizable" );
+		window.open( inChromeURL, "","chrome,menubar" );
 	}
 }
 

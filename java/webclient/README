@@ -34,6 +34,7 @@ How To Build:
 
   C:\WINNT\System32
   %JDKHOME%\jre\bin
+  %JDKHOME%\bin
 
 How to Run:
 
