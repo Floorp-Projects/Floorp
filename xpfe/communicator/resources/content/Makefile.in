@@ -37,6 +37,9 @@ CHROME_MISC = \
 
 CHROME_CONTENT = \
 		communicatorOverlay.xul \
+		utilityOverlay.xul \
+		utilityOverlay.js \
+		utilityOverlay.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
