@@ -289,7 +289,7 @@ int main(int argc, char *argv[]) {
   if (!ptyFlag) options |= LTERM_NOPTY_FLAG;
 
   ltermNumber = lterm_new();
-  retValue = lterm_open(ltermNumber, commandArgs, NULL, uregexp,
+  retValue = lterm_open(ltermNumber, commandArgs, NULL, NULL, uregexp,
                         options, processType, NULL, NULL);
   if (retValue < 0) {
     fprintf(stderr, "lterm: Error %d in opening LTERM\n", retValue);

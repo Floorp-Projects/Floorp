@@ -37,9 +37,12 @@
 #include "nsCOMPtr.h"
 
 #include "mozIXMLTerminal.h"
+#include "mozIXMLTermSuspend.h"
 
 /* XMLTerm Key Listener */
-class mozXMLTermKeyListener : public nsIDOMKeyListener {
+class mozXMLTermKeyListener : public nsIDOMKeyListener,
+                              public mozIXMLTermSuspend
+{
 public:
   mozXMLTermKeyListener();
   virtual ~mozXMLTermKeyListener();
@@ -61,9 +64,16 @@ public:
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
+  // mozIXMLTermSuspend interface
+  NS_IMETHOD GetSuspend(PRBool* aSuspend);
+  NS_IMETHOD SetSuspend(const PRBool aSuspend);
+
 protected:
   /** non-owning reference to containing XMLTerminal object (for callback) */
   mozIXMLTerminal* mXMLTerminal;
+
+  /** suspend flag */
+  PRBool mSuspend;
 };
 
 

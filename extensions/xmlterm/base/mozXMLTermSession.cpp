@@ -84,7 +84,7 @@ const char* const mozXMLTermSession::sessionEventNames[] = {
 
 const char* const mozXMLTermSession::metaCommandNames[] = {
   "",
-  "",
+  "default",
   "http",
   "js",
   "tree",
@@ -135,11 +135,11 @@ mozXMLTermSession::mozXMLTermSession() :
 
   mXMLTermStream(nsnull),
 
-  mMetaCommandType(NO_META_COMMAND),
-
+  mOutputType(LINE_OUTPUT),
   mOutputDisplayType(NO_NODE),
   mOutputMarkupType(PLAIN_TEXT),
 
+  mMetaCommandType(NO_META_COMMAND),
   mAutoDetect(FIRST_LINE),
 
   mLineBreakNeeded(false),
@@ -156,6 +156,7 @@ mozXMLTermSession::mozXMLTermSession() :
   mBotScrollRow(0),
 
   mRestoreInputEcho(false),
+  mNeedsResizing(false),
 
   mShellPrompt(""),
   mPromptHTML(""),
@@ -288,6 +289,17 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
 }
 
 
+/** Sets XMLTerm flag to indicate XMLTerm needs to be resized
+ */
+NS_IMETHODIMP mozXMLTermSession::NeedsResizing(void)
+{
+  XMLT_LOG(mozXMLTermSession::NeedsResizing,0,("\n"));
+
+  mNeedsResizing = true;
+
+  return NS_OK;
+}
+
 /** Resizes XMLterm to match a resized window.
  * @param lineTermAux LineTermAux object to be resized (may be null)
  */
@@ -342,7 +354,7 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
 
   // Determine number of rows/columns
   mScreenRows = (int) ((frameHeight-44) / ydel);
-  mScreenCols = (int) (frameWidth / xdel);
+  mScreenCols = (int) ((frameWidth-20) / xdel);
 
   if (mScreenRows < 1) mScreenRows = 1;
   if (mScreenCols < 1) mScreenCols = 1;
@@ -354,7 +366,7 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
        ("Resizing XMLterm, xdel=%e, ydel=%e, rows=%d, cols=%d\n",
         xdel, ydel, mScreenRows, mScreenCols));
 
-  if (!lineTermAux) {
+  if (lineTermAux) {
     // Resize associated LineTerm
     result = lineTermAux->ResizeAux(mScreenRows, mScreenCols);
     if (NS_FAILED(result))
@@ -468,8 +480,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       break;
 
     XMLT_LOG(mozXMLTermSession::ReadAll,62,
-           ("opcodes=0x%x,mMetaCommandType=%d,mEntryHasOutput=%d\n",
-            opcodes, mMetaCommandType, mEntryHasOutput));
+           ("opcodes=0x%x,mOutputType=%d,mEntryHasOutput=%d\n",
+            opcodes, mOutputType, mEntryHasOutput));
 
     if (opcodes == 0) break;
 
@@ -491,29 +503,30 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     XMLT_LOG(mozXMLTermSession::ReadAll,68,("bufString=%s\n", temCString));
     nsCRT::free(temCString);
 
-    if (screenData && (mMetaCommandType != SCREEN_META_COMMAND)) {
+    if (screenData && (mOutputType != SCREEN_OUTPUT)) {
       // Initiate screen mode
+      XMLT_LOG(mozXMLTermSession::ReadAll,62,("Initiate SCREEN mode\n"));
 
       // Break stream output display
       result = BreakOutput();
       if (NS_FAILED(result))
-        return result;
+        break;
 
-      // Create screen element (resize)
-      result = NewScreen(true);
+      // Create screen element
+      result = NewScreen();
       if (NS_FAILED(result))
-        return result;
+        break;
 
-      mMetaCommandType = SCREEN_META_COMMAND;
+      mOutputType = SCREEN_OUTPUT;
 
       // Disable input echo
       lineTermAux->SetEchoFlag(false);
       mRestoreInputEcho = true;
     }
 
-    if (!screenData && (mMetaCommandType == SCREEN_META_COMMAND)) {
+    if (!screenData && (mOutputType == SCREEN_OUTPUT)) {
       // Terminate screen mode
-      mMetaCommandType = NO_META_COMMAND;
+      mOutputType = LINE_OUTPUT;
 
       XMLT_LOG(mozXMLTermSession::ReadAll,0,
                ("Terminating screen mode\n"));
@@ -531,8 +544,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
     if (streamData) {
       // Process stream data
-      if (mMetaCommandType == NO_META_COMMAND) {
-        mMetaCommandType = STREAM_META_COMMAND;
+      if (mOutputType != STREAM_OUTPUT) {
+        mOutputType = STREAM_OUTPUT;
 
         // Disable input echo
         lineTermAux->SetEchoFlag(false);
@@ -576,14 +589,14 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         // Initialize stream output
         result = InitStream(streamURL, streamMarkupType, streamIsSecure);
         if (NS_FAILED(result))
-          return result;
+          break;
       }
 
       // Process stream output
       bufStyle = "";
       result = ProcessOutput(bufString, bufStyle, false, true);
       if (NS_FAILED(result))
-        return result;
+        break;
 
       if (newline) {
         if (!mEntryHasOutput) {
@@ -594,9 +607,9 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         // Break stream output display
         result = BreakOutput();
         if (NS_FAILED(result))
-          return result;
+          break;
 
-        mMetaCommandType = NO_META_COMMAND;
+        mOutputType = LINE_OUTPUT;
         flushOutput = true;
       }
 
@@ -613,14 +626,14 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         result = mSessionNode->RemoveChild(mScreenNode,
                                            getter_AddRefs(resultNode));
         if (NS_FAILED(result))
-          return NS_ERROR_FAILURE;
+          break;
 
         mScreenNode = nsnull;
 
-        // Create new screen element (no resize)
-        result = NewScreen(false);
+        // Create new screen element
+        result = NewScreen();
         if (NS_FAILED(result))
-          return result;
+          break;
 
       } else if (opcodes & LTERM_INSERT_CODE) {
         // Insert rows
@@ -636,13 +649,15 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           for (row=0; row < opvals; row++) {
             result = GetRow(mBotScrollRow+opvals-1, getter_AddRefs(rowNode));
             if (NS_FAILED(result) || !rowNode)
-              return NS_ERROR_FAILURE;
+              break;
 
             result = mScreenNode->RemoveChild(rowNode,
                                               getter_AddRefs(resultNode));
             if (NS_FAILED(result))
-              return NS_ERROR_FAILURE;
+              break;
           }
+          if (NS_FAILED(result))
+            break;
 
           // Insert individual row elements above
           if (buf_row < opvals) {
@@ -650,7 +665,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           } else {
             result = GetRow(buf_row, getter_AddRefs(rowNode));
             if (NS_FAILED(result))
-              return NS_ERROR_FAILURE;
+              break;
           }
 
           for (row=0; row < opvals; row++)
@@ -671,13 +686,15 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           for (row=0; row < opvals; row++) {
             result = GetRow(buf_row, getter_AddRefs(rowNode));
             if (NS_FAILED(result) || !rowNode)
-              return NS_ERROR_FAILURE;
+              break;
 
             result = mScreenNode->RemoveChild(rowNode,
                                               getter_AddRefs(resultNode));
             if (NS_FAILED(result))
-              return NS_ERROR_FAILURE;
+              break;
           }
+          if (NS_FAILED(result))
+            break;
 
           // Insert individual row elements above
           if (mBotScrollRow == 0) {
@@ -685,7 +702,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           } else {
             result = GetRow(mBotScrollRow+opvals-1, getter_AddRefs(rowNode));
             if (NS_FAILED(result))
-              return NS_ERROR_FAILURE;
+              break;
           }
 
           for (row=0; row < opvals; row++)
@@ -709,7 +726,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
         result = DisplayRow(bufString, bufStyle, buf_row);
         if (NS_FAILED(result))
-          return result;
+          break;
       }
 
       // Determine cursor position
@@ -717,6 +734,9 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       PRInt32 cursorCol = 0;
       result = lineTermAux->GetCursorRow(&cursorRow);
       result = lineTermAux->GetCursorColumn(&cursorCol);
+
+      XMLT_LOG(mozXMLTermSession::ReadAll,62, ("cursorRow=%d, cursorCol=%d\n",
+                                               cursorRow, cursorCol));
 
       // Get selection
       nsCOMPtr<nsIDOMSelection> selection;
@@ -732,15 +752,12 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                getter_AddRefs(cursTextNode), &offset);
 
         if (NS_FAILED(result) || !cursTextNode)
-          return result;
+          break;
 
         result = selection->Collapse(cursTextNode, offset);
         if (NS_FAILED(result))
-          return result;
+          break;
       }
-
-      // Scroll to end of page
-      ScrollToBottomLeft();
 
     } else {
       // Process line data
@@ -825,8 +842,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                  ("delimOffset=%d\n", delimOffset));
 
         if (delimOffset == 0) {
-          // Default to HTTP protocol
-          mMetaCommandType = HTTP_META_COMMAND;
+          // Default protocol
+          mMetaCommandType = DEFAULT_META_COMMAND;
 
         } else {
           // Identify meta command type
@@ -863,7 +880,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           // Create new entry block
           result = NewEntry(promptStr);
           if (NS_FAILED(result))
-            return result;
+            break;
         }
 
         // Display input and position cursor
@@ -878,13 +895,34 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
         result = DisplayInput(bufString, bufStyle, cursorCol);
         if (NS_FAILED(result))
-          return NS_ERROR_FAILURE;
+          break;
 
         if (newline && mXMLTerminal) {
           // Complete meta command; XMLterm instantiated
           nsAutoString metaCommandOutput = "";
 
           switch (mMetaCommandType) {
+
+          case DEFAULT_META_COMMAND:
+            {
+              // Construct Javascript command to handle default meta comand
+              nsAutoString JSCommand = "MetaDefault(\"";
+              JSCommand.Append(commandArgs);
+              JSCommand.Append("\");");
+
+              // Execute JavaScript command
+              result = mozXMLTermUtils::ExecuteScript(mDOMDocument,
+                                                      JSCommand,
+                                                      metaCommandOutput);
+              if (NS_FAILED(result))
+                metaCommandOutput = "Error in displaying URL\n";
+
+              nsCAutoString cstrout = metaCommandOutput;
+              printf("mozXMLTermSession::ReadAll, DEFAULT_META output=%s\n",
+                     cstrout.GetBuffer());
+
+            }
+            break;
 
           case HTTP_META_COMMAND:
             {
@@ -896,7 +934,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               result = NewIFrame(mOutputBlockNode, mCurrentEntryNumber,
                                  2, url, width, height);
               if (NS_FAILED(result))
-                return result;
+                metaCommandOutput = "Error in displaying URL\n";
 
             }
             break;
@@ -947,21 +985,27 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
             break;
           }
 
-          if (mMetaCommandType == JS_META_COMMAND) {
+          if ((mMetaCommandType == DEFAULT_META_COMMAND) ||
+              (mMetaCommandType == JS_META_COMMAND)) {
             // Display metacommand output
             mEntryHasOutput = true;
 
             XMLT_LOG(mozXMLTermSession::ReadAll,62,("metaCommandOutput\n"));
+
+            // Ignore the string "false", if that's the only output
+            if (metaCommandOutput.Equals("false"))
+              metaCommandOutput = "";
+
             // Check metacommand output for markup (secure)
             result = AutoDetectMarkup(metaCommandOutput, true, true);
             if (NS_FAILED(result))
-              return result;
+              break;
 
             nsAutoString nullStyle ("");
             result = ProcessOutput(metaCommandOutput, nullStyle, true,
                                    mOutputMarkupType != PLAIN_TEXT);
             if (NS_FAILED(result))
-              return result;
+              break;
 
             // Break metacommand output display
             result = BreakOutput();
@@ -985,7 +1029,15 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           // Create new entry block
           result = NewEntry(promptStr);
           if (NS_FAILED(result))
-            return result;
+            break;
+        }
+
+        // Resize XMLTerm before command output, if request has been made
+        if (mNeedsResizing) {
+          mNeedsResizing = false;
+          result = Resize(lineTermAux);
+          if (NS_FAILED(result))
+            break;
         }
 
         // Display input and position cursor
@@ -1000,7 +1052,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
         result = DisplayInput(bufString, bufStyle, cursorCol);
         if (NS_FAILED(result))
-          return NS_ERROR_FAILURE;
+          break;
 
         if (newline) {
           // Start of command output
@@ -1022,7 +1074,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           // Complete line; check for markup (insecure)
           result = AutoDetectMarkup(bufString, mFirstOutputLine, false);
           if (NS_FAILED(result))
-            return result;
+            break;
 
           // Not first output line anymore
           mFirstOutputLine = false;
@@ -1032,14 +1084,14 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           // Display plain text output
           result = ProcessOutput(bufString, bufStyle, newline, false);
           if (NS_FAILED(result))
-            return result;
+            break;
 
         } else if (newline) {
           // Process autodetected stream output (complete lines only)
           bufStyle = "";
           result = ProcessOutput(bufString, bufStyle, true, true);
           if (NS_FAILED(result))
-            return result;
+            break;
         }
       }
     }
@@ -1051,7 +1103,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
              ("Closing LineTerm, result=%d\n", result));
 
     lineTermAux->CloseAux();
-    return NS_ERROR_FAILURE;
+    return result;
   }
 
   if (flushOutput) {
@@ -1062,9 +1114,10 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     result = mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL,
                                                  SELECTION_FOCUS_REGION);
 
-    // Scroll frame (ignore result)
-    // ScrollToBottomLeft();
   }
+
+  // Scroll frame (ignore result)
+  ScrollToBottomLeft();
 
   return NS_OK;
 }
@@ -1447,7 +1500,7 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
     return NS_OK;
 
   } else {
-    // Not meta command
+    // Not LS meta command
 
     switch (mOutputMarkupType) {
 
@@ -2543,7 +2596,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
  * containing an empty text node, and append it as a
  * child of the main BODY element. Also make it the current display element.
  */
-NS_IMETHODIMP mozXMLTermSession::NewScreen(PRBool resize)
+NS_IMETHODIMP mozXMLTermSession::NewScreen(void)
 {
   nsresult result;
 
@@ -2561,11 +2614,6 @@ NS_IMETHODIMP mozXMLTermSession::NewScreen(PRBool resize)
 
   mScreenNode = divNode;
 
-  if (resize) {
-    // Resize XMLTerm
-    mXMLTerminal->Resize();
-  }
-
   // Create individual row elements
   PRInt32 row;
   for (row=0; row < mScreenRows; row++) {
@@ -2582,7 +2630,7 @@ NS_IMETHODIMP mozXMLTermSession::GetRow(PRInt32 aRow, nsIDOMNode** aRowNode)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermSession::GetRow,60,("row=%d\n", aRow));
+  XMLT_LOG(mozXMLTermSession::GetRow,60,("aRow=%d\n", aRow));
 
   if (!aRowNode)
     return NS_ERROR_NULL_POINTER;
@@ -2594,6 +2642,9 @@ NS_IMETHODIMP mozXMLTermSession::GetRow(PRInt32 aRow, nsIDOMNode** aRowNode)
 
   PRUint32 nChildren = 0;
   childNodes->GetLength(&nChildren);
+
+  XMLT_LOG(mozXMLTermSession::GetRow,62,("nChildren=%d, mScreenRows=%d\n",
+                                         nChildren, mScreenRows));
 
   PRInt32 rowIndex = mScreenRows - aRow - 1;
   if ((rowIndex < 0) || (rowIndex >= (PRInt32)nChildren))

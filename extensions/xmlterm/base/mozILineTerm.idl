@@ -35,7 +35,9 @@ interface mozILineTerm : nsISupports
   /** Opens LineTerm, a line-oriented terminal interface (without graphics)
    * @param command name of command to be executed; usually a shell,
    *        e.g., "/bin/sh"; if set to null string, the command name is
-   *        determined from the environment variable SHELL
+   *        determined from the environment variable SHELL (ASCII only)
+   * @param initInput initial input string to be transmitted to terminal;
+   *        set to null string, if none. (ASCII only)
    * @param promptRegexp command prompt regular expression (for future use);
    *        at the moment, any string terminated by one of the characters
    *        "#$%>?", followed by a space, is assumed to be a prompt
@@ -45,7 +47,7 @@ interface mozILineTerm : nsISupports
    * @param domDoc DOM document object associated with the LineTerm
    *        (document.cookie will be defined for this document on return)
    */
-  void Open(in wstring command, in wstring promptRegexp,
+  void Open(in wstring command, in wstring initInput, in wstring promptRegexp,
             in PRInt32 options, in PRInt32 processType,
             in nsIDOMDocument domDoc);
 

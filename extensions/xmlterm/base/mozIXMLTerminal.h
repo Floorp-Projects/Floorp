@@ -91,6 +91,16 @@ public:
    */
   NS_IMETHOD SetPrompt(const PRUnichar* aPrompt) = 0;
 
+  /** Gets ignore key press flag
+   * @param aIgnore ignore key press flag
+   */
+  NS_IMETHOD GetKeyIgnore(PRBool* aIgnore) = 0;
+
+  /** Sets ignore key press flag
+   * @param aIgnore ignore key press flag
+   */
+  NS_IMETHOD SetKeyIgnore(const PRBool aIgnore) = 0;
+
   /** Writes string to terminal as if the user had typed it (without authenitcation)
    * @param aString string to be transmitted to terminal
    */

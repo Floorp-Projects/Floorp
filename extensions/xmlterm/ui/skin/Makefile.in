@@ -34,8 +34,8 @@
 # makefile for xmlterm/ui/skin directory
 
 ifdef STAND_ALONE
-DEPTH      = .
-topsrcdir  = .
+DEPTH      = ../..
+topsrcdir  = ../..
 VPATH      = .
 srcdir     = .
 include $(topsrcdir)/config/autoconf.mk
@@ -55,6 +55,7 @@ include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SKIN = \
         $(srcdir)/xmlterm.css \
+        $(srcdir)/xmltpage.css \
         $(NULL)
 
 EXPORT_RESOURCE_TOOLBAR = \

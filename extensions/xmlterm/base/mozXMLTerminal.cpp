@@ -52,6 +52,7 @@
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTerminal.h"
+#include "mozIXMLTermSuspend.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +95,7 @@ mozXMLTerminal::mozXMLTerminal() :
   mCommand(""),
   mPromptExpr(""),
 
-  mFirstInput(""),
+  mInitInput(""),
 
   mXMLTermShell(nsnull),
   mDocShell(nsnull),
@@ -111,7 +112,6 @@ mozXMLTerminal::mozXMLTerminal() :
   mDragListener(nsnull)
 {
   NS_INIT_REFCNT();
-  mFirstInputLock = PR_NewLock();
 }
 
 
@@ -120,8 +120,6 @@ mozXMLTerminal::~mozXMLTerminal()
   if (mInitialized) {
     Finalize();
   }
-
-  PR_DestroyLock(mFirstInputLock);
 }
 
 
@@ -146,50 +144,71 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP mozXMLTerminal::GetCurrentEntryNumber(PRInt32 *aNumber)
 {
-  if (mXMLTermSession) {
-    return mXMLTermSession->GetCurrentEntryNumber(aNumber);
-  } else {
+  if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
-  }
+
+  return mXMLTermSession->GetCurrentEntryNumber(aNumber);
 }
 
 
 NS_IMETHODIMP mozXMLTerminal::GetHistory(PRInt32 *aHistory)
 {
-  if (mXMLTermSession) {
-    return mXMLTermSession->GetHistory(aHistory);
-  } else {
+  if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
-  }
+
+  return mXMLTermSession->GetHistory(aHistory);
 }
 
 
 NS_IMETHODIMP mozXMLTerminal::SetHistory(PRInt32 aHistory)
 {
-  if (mXMLTermSession) {
-    return mXMLTermSession->SetHistory(aHistory);
-  } else {
+  if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
-  }
+
+  return mXMLTermSession->SetHistory(aHistory);
 }
 
 NS_IMETHODIMP mozXMLTerminal::GetPrompt(PRUnichar **aPrompt)
 {
-  if (mXMLTermSession) {
-    return mXMLTermSession->GetPrompt(aPrompt);
-  } else {
+  if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
-  }
+
+  return mXMLTermSession->GetPrompt(aPrompt);
 }
 
 
 NS_IMETHODIMP mozXMLTerminal::SetPrompt(const PRUnichar* aPrompt)
 {
-  if (mXMLTermSession) {
-    return mXMLTermSession->SetPrompt(aPrompt);
-  } else {
+  if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
-  }
+
+  return mXMLTermSession->SetPrompt(aPrompt);
+}
+
+
+NS_IMETHODIMP mozXMLTerminal::GetKeyIgnore(PRBool* aIgnore)
+{
+  if (!mKeyListener)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<mozIXMLTermSuspend> suspend= do_QueryInterface(mKeyListener);
+  if (!suspend)
+    return NS_ERROR_FAILURE;
+
+  return suspend->GetSuspend(aIgnore);
+}
+
+
+NS_IMETHODIMP mozXMLTerminal::SetKeyIgnore(const PRBool aIgnore)
+{
+  if (!mKeyListener)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<mozIXMLTermSuspend> suspend= do_QueryInterface(mKeyListener);
+  if (!suspend)
+    return NS_ERROR_FAILURE;
+
+  return suspend->SetSuspend(aIgnore);
 }
 
 
@@ -222,7 +241,7 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
   // NOTE: Need to parse args string!!!
   mCommand = "";
   mPromptExpr = "";
-  mFirstInput = args;
+  mInitInput = args;
 
   // Initialization completed
   mInitialized = PR_TRUE;
@@ -457,6 +476,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 #endif
   nsAutoString cookie;
   result = mLineTermAux->OpenAux(mCommand.GetUnicode(),
+                                 mInitInput.GetUnicode(),
                                  mPromptExpr.GetUnicode(),
                                  options, LTERM_DETERMINE_PROCESS,
                                  mDOMDocument, anObserver, cookie);
@@ -572,18 +592,6 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   result = mXMLTermSession->Preprocess(sendStr, consumed);
 
   if (!consumed) {
-
-    PR_Lock(mFirstInputLock);
-
-    if (mFirstInput.Length() > 0) {
-      result = mLineTermAux->Write(mFirstInput.GetUnicode(), aCookie);
-      if (NS_FAILED(result))
-        return result;
-      mFirstInput = "";
-    }
-
-    PR_Unlock(mFirstInputLock);
-
     result = mLineTermAux->Write(sendStr.GetUnicode(), aCookie);
     if (NS_FAILED(result)) {
       // Close LineTerm
@@ -671,21 +679,6 @@ NS_IMETHODIMP mozXMLTerminal::Poll(void)
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Poll: Warning - Error return 0x%x from ReadAll\n", result);
     return result;
-  }
-
-  if (processedData && (mFirstInput.Length() > 0)) {
-    // Send first input command line(s)
-
-    PR_Lock(mFirstInputLock);
-
-    result = mLineTermAux->Write(mFirstInput.GetUnicode(),
-                                 mCookie.GetUnicode());
-    mFirstInput = "";
-
-    PR_Unlock(mFirstInputLock);
-
-    if (NS_FAILED(result))
-      return result;
   }
 
   return NS_OK;
@@ -789,7 +782,7 @@ NS_IMETHODIMP mozXMLTerminal::Resize(void)
   if (!mXMLTermSession)
     return NS_ERROR_FAILURE;
 
-  result = mXMLTermSession->Resize(mLineTermAux);
+  result = mXMLTermSession->NeedsResizing();
   if (NS_FAILED(result))
     return result;
 

@@ -34,8 +34,8 @@
 # makefile for xmlterm/ui directory
 
 ifdef STAND_ALONE
-DEPTH      = .
-topsrcdir  = .
+DEPTH      = ..
+topsrcdir  = ..
 VPATH      = .
 srcdir     = .
 include $(topsrcdir)/config/autoconf.mk

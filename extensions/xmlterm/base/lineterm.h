@@ -100,6 +100,8 @@ int lterm_new();
  *  or a null string, all streams are considered insecure.
  *  (only MAXCOOKIESTR-1 characters of the cookie string are used for checking)
  *
+ * INIT_COMMAND contains an initialization command string, if any (not echoed)
+ *
  * PROMPT_REGEXP contains a REGEXP string describing the command prompt.
  * (**NOTE** For the moment, only a list of prompt delimiters is accepted;
  *           a typical list of prompt delimiters would be "#$%>?")
@@ -157,7 +159,8 @@ int lterm_new();
  * user had entered it.
  */
 
-int lterm_open(int lterm, char *const argv[], const char* cookie,
+int lterm_open(int lterm, char *const argv[],
+               const char* cookie, const char* init_command,
                const UNICHAR* prompt_regexp, int options, int process_type,
                lterm_callback_func_t callback_func, void *callback_data);
 
@@ -273,6 +276,7 @@ int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
  * OPCODES ::= STREAMDATA NEWLINE?
  *               COOKIESTR? DOCSTREAM? XMLSTREAM? JSSTREAM? WINSTREAM?
  * if StreamMode data is being returned.
+ * (NEWLINE, if set, denotes that the stream has terminated)
  *
  * OPCODES ::= SCREENDATA BELL? ( OUTPUT | CLEAR | INSERT | DELETE | SCROLL )?
  * if ScreenMode data is being returned.

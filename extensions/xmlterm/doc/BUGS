@@ -1,7 +1,7 @@
 Known bugs
 ----------
 
-21 Feb 2000
+29 Feb 2000
 
 
 1. XMLterm bug: Early use of "xls -i" does not scroll properly
@@ -16,5 +16,7 @@ Known bugs
    results in LTERM exiting abnormally when user exits emacs. An interrupt
    error seems to occur while polling for output in ltermRead.
 
-5. Full screen XMLTerm operation: forward cursor positioning (^F) behaves
-   erratically
+5. When cursor is at leftmost position on the line, clickin on the window
+   moves it up (very annoying)
+
+6. vi command does not scroll properly prior to first input (somewhat annoying)

@@ -1,12 +1,132 @@
-<!-- xmlterm.html: XMLterm startup page -->
+<!-- xmlterm.html: XMLterm page -->
 <HTML>
   <HEAD>
-    <TITLE>XMLterm Test Page</TITLE>
+    <TITLE>XMLterm Page</TITLE>
 
   <LINK TITLE="DefaultStyle" REL="stylesheet" TYPE="text/css"
-   HREF="chrome://xmlterm/skin/xmlterm.css">
+   HREF="chrome://xmlterm/skin/xmltpage.css">
 
     <SCRIPT language="JavaScript">
+
+      // Show all output
+      function ShowAll() {
+        return DisplayAllOutput(true);
+      }
+
+      // Hide all output
+      function HideAll() {
+        return DisplayAllOutput(false);
+      }
+
+      // Set history buffer size
+      function SetHistory(value) {
+        dump("SetHistory("+value+")\n");
+        window.xmlterm.SetHistory(value, document.cookie);
+        return (false);
+      }
+
+      // Set prompt
+      function SetPrompt(value) {
+        dump("SetPrompt("+value+")\n");
+        window.xmlterm.SetPrompt(value, document.cookie);
+        return (false);
+      }
+
+      // Create new XMLTerm window
+      function NewXMLTerm(firstcommand) {
+        newwin = window.openDialog( "chrome://xmlterm/content/xmlterm.xul",
+                                    "", "", firstcommand);
+        //newwin = window.xmlterm.NewXMLTermWindow(firstcommand);
+        dump("NewXMLTerm: "+newwin+"\n")
+        return (false);
+      }
+
+      // Handle resize events
+      function Resize(event) {
+        dump("Resize()\n");
+        window.xmlterm.Resize();
+        return (false);
+      }
+
+      // Scroll Home
+      function ScrollHome(isShift, isControl) {
+        dump("ScrollHome("+isShift+","+isControl+")\n");
+        if (isShift && window.xmltbrowser) {
+           window.xmltbrowser.scroll(0,0);
+        } else {
+           window.scroll(0,0);
+        }
+        return false;
+      }
+
+      // Scroll End
+      function ScrollEnd(isShift, isControl) {
+        dump("ScrollEnd("+isShift+","+isControl+")\n");
+        if (isShift && window.xmltbrowser) {
+           window.xmltbrowser.scroll(0,9999);
+        } else {
+           window.scroll(0,9999);
+        }
+        return false;
+      }
+
+      // Scroll PageUp
+      function ScrollPageUp(isShift, isControl) {
+        dump("ScrollPageUp("+isShift+","+isControl+")\n");
+
+        if (isShift && window.xmltbrowser) {
+           window.xmltbrowser.scrollBy(0,-300);
+        } else {
+           window.scrollBy(0,-300);
+        }
+        return false;
+      }
+
+      // Scroll PageDown
+      function ScrollPageDown(isShift, isControl) {
+        dump("ScrollPageDown("+isShift+","+isControl+")\n");
+        if (isShift && window.xmltbrowser) {
+          window.xmltbrowser.scrollBy(0,300);
+        } else {
+          window.scrollBy(0,300);
+        }
+        return false;
+      }
+
+      // Form Focus (workaround for form input being transmitted to xmlterm)
+      function FormFocus() {
+        dump("FormFocus()\n");
+        window.xmlterm.IgnoreKeyPress(true, document.cookie);
+        return false;
+      }
+
+      // Form Blur (workaround for form input being transmitted to xmlterm)
+      function FormBlur() {
+        dump("FormBlur()\n");
+        window.xmlterm.IgnoreKeyPress(false, document.cookie);
+        return false;
+      }
+
+      // Handle default meta command
+      function MetaDefault(arg1) {
+        return Load("http://"+arg1);
+      }
+
+      // Load URL in XMLTermBrowser window
+      function Load(url) {
+        var succeeded = false;
+        if (window.xmltbrowser) {
+           dump("Load:xmltbrowser.location.href="+window.xmltbrowser.location.href+"\n");
+           if (window.xmltbrowser.location.href.length) {
+              window.xmltbrowser.location = url;
+              succeeded = true;
+           }
+        }
+        if (!succeeded) {
+           window.xmltbrowser = window.open(url, "xmltbrowser");
+        }
+        return (false);
+      }
 
       // Control display of all output elements
       function DisplayAllOutput(flag) {
@@ -26,9 +146,8 @@
       }
 
       // Click handler
-      function clickXMLTerm(name, number, arg) {
-        dump("clickXMLTerm("+name+","+number+","+arg+")\n");
-        //dump("clickXMLTerm:document.cookie="+document.cookie+"\n");
+      function clickXMLTerm(name, number, arg1, arg2) {
+        dump("clickXMLTerm("+name+","+number+","+arg1+","+arg2+")\n");
 
         if (name === "prompt") {
           var outputElement = document.getElementById("output"+number);
@@ -47,38 +166,40 @@
           var commandElement = document.getElementById(name+number);
           var command = commandElement.firstChild.data;
           dump("command = "+command+"\n\n");
-          window.xmltermshell.SendText("\025"+command+"\n", document.cookie);
+          window.xmlterm.SendText("\025"+command+"\n", document.cookie);
 
         } else {
 
           if ((number >= 0) &&
-            (window.xmltermshell.currentEntryNumber != number)) {
+            (window.xmlterm.currentEntryNumber != number)) {
             dump("NOT CURRENT COMMAND\n");
             return (false);
           }
 
-
-          if (name == "directory") {
-            var command = "ls: "+arg;
-            dump("command = "+command+"\n\n");
-            window.xmltermshell.SendText("\025"+command+"\n", document.cookie);
+          if (name == "send") {
+            dump("send = "+arg1+"\n");
+            window.xmlterm.SendText(arg1, document.cookie);
   
-          } else if (name == "executable") {
-            var command = arg;
-            dump("command = "+command+"\n\n");
-            window.xmltermshell.SendText("\025"+command+"\n", document.cookie);
-  
-          } else if (name == "send") {
-            dump("send = "+arg+"\n");
-            window.xmltermshell.SendText(arg, document.cookie);
+          } else if (name == "textlink") {
+            dump("textlink = "+arg1+"\n");
+            Load(arg1);
   
           } else if (name == "sendln") {
-            dump("sendln = "+arg+"\n\n");
-            window.xmltermshell.SendText("\025"+arg+"\n", document.cookie);
+
+            if ((Math.abs(number)+1 == window.xmlterm.currentEntryNumber) &&
+                (arg2 != null)) {
+               // Current command
+               dump("sendln = "+arg2+"\n\n");
+               window.xmlterm.SendText("\025"+arg2+"\n", document.cookie);
+            } else {
+               // Not current command
+               dump("sendln = "+arg1+"\n\n");
+               window.xmlterm.SendText("\025"+arg1+"\n", document.cookie);
+            }
   
           } else if (name == "createln") {
-            dump("createln = "+arg+"\n\n");
-            xmltermshell.NewXMLTermWindow(arg+"\n");
+            dump("createln = "+arg1+"\n\n");
+            newwin = NewXMLTerm(arg1+"\n");
           }
         }
 
@@ -86,41 +207,33 @@
       }
 
       // Double Click handler
-      function dblclickXMLTerm(name, number, arg) {
-        dump("dblclickXMLTerm("+name+","+number+","+arg+")\n");
+      function dblclickXMLTerm(name, number, arg1) {
+        dump("dblclickXMLTerm("+name+","+number+","+arg1+")\n");
         return (false);
       }
 
-      // Set history buffer size
-      function SetHistory() {
-        var field = document.getElementById('HistoryValue');
-        dump("SetHistory "+field.value+"\n");
-        xmltermshell.SetHistory(field.value, document.cookie);
-        return (false);
+      // Set history buffer count using form entry
+      function SetHistoryValue() {
+        var field = document.getElementById('InputValue');
+        return SetHistory(field.value);
       }
 
-      // Set prompt
-      function SetPrompt() {
-        var field = document.getElementById('PromptValue');
-        dump("SetPrompt "+field.value+"\n");
-        xmltermshell.prompt = field.value;
-        return (false);
-      }
-
-      // Create new XMLTerm window
-      function CreateXMLTermWindow(firstcommand) {
-        xmltermshell.NewXMLTermWindow(firstcommand);
-        return (false);
+      // Set prompt using form entry
+      function SetPromptValue() {
+        var field = document.getElementById('InputValue');
+        return SetPrompt(field.value);
       }
 
       // onLoad event handler
       function LoadHandler() {
-        dump("xmlterm: LoadHandler ... "+window.xmltermshell+"\n");
+        dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
 
-        if (window.xmltermshell) {
+        if (window.xmlterm) {
            // XMLTerm already initialized
            return (false);
         }
+
+        dump("LoadHandler: WINDOW.ARGUMENTS="+window.arguments+"\n");
 
         dump("Trying to make an XMLTerm Shell through the component manager...\n");
 
@@ -138,13 +251,13 @@
         }
   
         // Store the XMLTerm shell in the window
-        window.xmltermshell = xmltshell;
+        window.xmlterm = xmltshell;
 
         // Content window same as current window
         var contentWindow = window;
 
         // Initialize XMLTerm shell in content window with argvals
-        window.xmltermshell.Init(contentWindow, "", "");
+        window.xmlterm.Init(contentWindow, "", "");
 
         //dump("LoadHandler:"+document.cookie+"\n");
 
@@ -152,15 +265,20 @@
         dump("document="+document+"\n");
         dump("documentElement="+document.documentElement+"\n");
 
+        // Handle resize events
+        //contentWindow.addEventListener("onresize", Resize);
+        contentWindow.onresize = Resize;
+
         // Set focus to appropriate frame
         contentWindow.focus();
 
-        //contentWindow.xmltermshell = xmltermshell;
+        //contentWindow.xmlterm = xmlterm;
 
-        //dump(contentWindow.xmltermshell);
+        //dump(contentWindow.xmlterm);
 
         return (false);
 
+        // The following code is for testing IFRAMEs only
         dump("[Main] "+window+"\n");
         dump(window.screenX+", "+window.screenY+"\n");
         dump(window.scrollX+", "+window.scrollY+"\n");
@@ -213,15 +331,16 @@
       <TR><TD ALIGN=center>
         <FORM NAME="XMLTERM form">
           <INPUT TYPE="button" VALUE="Show all output"
-               onClick="return DisplayAllOutput(true);">
+               onClick="return ShowAll();">
           <INPUT TYPE="button" VALUE="Hide all output"
-               onClick="return DisplayAllOutput(false);">
-          <INPUT TYPE="button" VALUE="New XMLterm"
-               onClick="return CreateXMLTermWindow('');">
+               onClick="return HideAll();">
+          <INPUT TYPE="button" VALUE="SetHistory"
+                 onClick="return SetHistoryValue();">
+          <INPUT TYPE="button" VALUE="SetPrompt"  onClick="return SetPromptValue();">
           <BR>
-          History Buffer Size:
-          <INPUT TYPE="text" ID="HistoryValue" VALUE="">
-          <INPUT TYPE="button" VALUE="Set"  onClick="return SetHistory();">
+          Input Value:
+          <INPUT SIZE=50 TYPE="text" ID="InputValue" VALUE=""
+                  onFocus="return FormFocus();" onBlur="return FormBlur();">
         </FORM>
     </TABLE>
 

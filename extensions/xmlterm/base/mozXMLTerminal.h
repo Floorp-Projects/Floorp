@@ -65,6 +65,8 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_IMETHOD SetHistory(PRInt32 aHistory);
   NS_IMETHOD GetPrompt(PRUnichar **aPrompt);
   NS_IMETHOD SetPrompt(const PRUnichar* aPrompt);
+  NS_IMETHOD GetKeyIgnore(PRBool* aIgnore);
+  NS_IMETHOD SetKeyIgnore(const PRBool aIgnore);
 
   NS_IMETHOD SendTextAux(const nsString& aString);
   NS_IMETHOD SendText(const nsString& aString, const PRUnichar* aCookie);
@@ -127,10 +129,7 @@ class mozXMLTerminal : public mozIXMLTerminal,
   nsString           mPromptExpr;
 
   /** initial input string to be sent to LineTerm */
-  nsString           mFirstInput;
-
-  /** first input lock */
-  PRLock* mFirstInputLock;
+  nsString           mInitInput;
 
   /** non-owning reference to containing XMLTermShell object */
   mozIXMLTermShell*  mXMLTermShell;

@@ -1,0 +1,41 @@
+<?xml version="1.0"?> 
+
+<!--
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "MPL"); you may not use this file
+  except in compliance with the MPL. You may obtain a copy of
+  the MPL at http://www.mozilla.org/MPL/
+  
+  Software distributed under the MPL is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the MPL for the specific language governing
+  rights and limitations under the MPL.
+  
+  The Original Code is lineterm.
+  
+  The Initial Developer of the Original Code is Ramalingam Saravanan.
+  Portions created by Ramalingam Saravanan <svn@xmlterm.org> are
+  Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
+  
+  Contributor(s):
+
+-->
+
+<?xml-stylesheet href="chrome://xmlterm/skin/xmlterm.css" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<!DOCTYPE window>
+<window id="xmlterm-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="StartupXMLTerm();"
+        title="xmlterm2" align="vertical" width="740" height="484">
+  
+  <html:script src="chrome://xmlterm/content/XMLTermCommands.js"></html:script>
+
+  <html:iframe id="content-frame2" type="content" html:name="content2"
+               html:src="about:blank" flex="100%"/>
+
+  <html:iframe id="content-frame" type="content" html:name="content"
+               html:src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
+
+</window>

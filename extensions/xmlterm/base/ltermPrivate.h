@@ -235,7 +235,7 @@ typedef FILE FILESTREAM;
 #define MAXPROMPT 256          /* Maximum length of prompt regexp+1 */
 #define MAXRAWINCOMPLETE 5     /* Maximum incomplete raw buffer size */
 #define MAXSTREAMTERM 11       /* Maximum stream terminator buffer size */
-#define MAXSHELLINITSTR 128    /* Maximum length of shell init string+1 */
+#define MAXSHELLINITSTR 256    /* Maximum length of shell init string+1 */
 #define MAXCOOKIESTR 64        /* Maximum length of cookie string+1 */
 #define MAXESCAPEPARAMS 16     /* Maximum no. of numeric ESCAPE parameters */
 #define MAXSTRINGPARAM  512    /* Maximum length of string ESCAPE parameters */
