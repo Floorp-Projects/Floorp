@@ -101,16 +101,7 @@ pref("mail.strictly_mime_headers",          true);
 pref("mail.file_attach_binary",             false);
 pref("mail.show_headers",                   1); // some
 pref("mail.pane_config",                    0);
-// the format for "mail.addr_book.mapit_url.format" is:
-// @A1 == address, part 1
-// @A2 == address, part 2
-// @CI == city
-// @ST == state
-// @ZI == zip code
-// @CO == country
-//
-// if the format is "", no mapit buttons will appear in the addressbook
-pref("mail.addr_book.mapit_url.format", "http://www.mapquest.com/maps/map.adp?country=@CO&address=@A1%20@A2&city=@CI&state=@ST&zipcode=@ZI");
+pref("mail.addr_book.mapit_url.format", "chrome://messenger-region/locale/region.properties");
 
 // the format for "mail.addr_book.quicksearchquery.format" is:
 // @V == the escaped value typed in the quick search bar in the addressbook

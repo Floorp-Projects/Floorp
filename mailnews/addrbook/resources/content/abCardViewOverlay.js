@@ -31,7 +31,8 @@ var gPrefs = Components.classes["@mozilla.org/preferences-service;1"];
 gPrefs = gPrefs.getService();
 gPrefs = gPrefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 	
-var gMapItURLFormat = gPrefs.getCharPref("mail.addr_book.mapit_url.format");
+var gMapItURLFormat = gPrefs.getComplexValue("mail.addr_book.mapit_url.format", 
+                                              Components.interfaces.nsIPrefLocalizedString).data;
 
 var gAddrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
 
