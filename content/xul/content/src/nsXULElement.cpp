@@ -167,8 +167,6 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
 
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
 //----------------------------------------------------------------------
 
 #if 0 /* || defined(DEBUG_shaver) || defined(DEBUG_waterson) */
