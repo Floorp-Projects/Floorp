@@ -70,7 +70,6 @@ public:
   NS_IMETHOD  GetClipSize(nscoord *aX, nscoord *aY);
 
   //private
-  void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
   virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
 

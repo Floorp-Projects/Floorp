@@ -1043,14 +1043,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
     mViewManager->GetDeviceContext(px);
     px->GetAppUnitsToDevUnits(scale);
 
-#if 0
-    ComputeScrollArea(scrolledView, area, 0, 0);
-
-    mSizeY = area.YMost();
-    mSizeX = area.XMost();
-#else
     scrolledView->GetDimensions(&mSizeX, &mSizeY);
-#endif
 
     if (nsnull != mHScrollBarView)
     {
@@ -1437,33 +1430,3 @@ NS_IMETHODIMP nsScrollingView :: GetScrollPosition(nscoord &aX, nscoord &aY)
   return NS_OK;
 }
 
-void nsScrollingView :: ComputeScrollArea(nsIView *aView, nsRect &aRect,
-                                          nscoord aOffX, nscoord aOffY)
-{
-  nsRect  trect, vrect;
-
-  aView->GetBounds(vrect);
-
-  aOffX += vrect.x;
-  aOffY += vrect.y;
-
-  trect.x = aOffX;
-  trect.y = aOffY;
-  trect.width = vrect.width;
-  trect.height = vrect.height;
-
-  if (aRect.IsEmpty() == PR_TRUE)
-    aRect = trect;
-  else
-    aRect.UnionRect(aRect, trect);
-
-  PRInt32 numkids;
-  aView->GetChildCount(numkids);
-  
-  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
-  {
-    nsIView *view;
-    aView->GetChild(cnt, view);
-    ComputeScrollArea(view, aRect, aOffX, aOffY);
-  }
-}
