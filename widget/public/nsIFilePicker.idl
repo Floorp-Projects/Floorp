@@ -26,6 +26,7 @@
 interface nsILocalFile;
 interface nsIFileURL;
 interface nsIDOMWindowInternal;
+interface nsISimpleEnumerator;
 
 [scriptable, uuid(c47de916-1dd1-11b2-8141-82507fa02b21)]
 interface nsIFilePicker : nsISupports
@@ -33,6 +34,7 @@ interface nsIFilePicker : nsISupports
   const short modeOpen        = 0;              // Load a file or directory
   const short modeSave        = 1;              // Save a file or directory
   const short modeGetFolder   = 2;              // Select a folder/directory
+  const short modeOpenMultiple= 3;              // Load multiple files
 
   const short returnOK        = 0;              // User hit Ok, process selection
   const short returnCancel    = 1;              // User hit cancel, ignore selection
@@ -117,6 +119,14 @@ interface nsIFilePicker : nsISupports
   * @return Returns the file currently selected
   */
   readonly attribute nsIFileURL fileURL;
+
+ /**
+  * Get the enumerator for the selected files
+  * only works in the modeOpenMultiple mode
+  *
+  * @return Returns the files currently selected
+  */
+  readonly attribute nsISimpleEnumerator files;
 
  /**
   * Show File Dialog. The dialog is displayed modally.

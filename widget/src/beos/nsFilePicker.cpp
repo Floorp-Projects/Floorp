@@ -80,7 +80,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     node_flavors = B_DIRECTORY_NODE;
     panel_mode = B_OPEN_PANEL;
   }
-  else if (mMode == modeOpen) {
+  else if (mMode == modeOpen || mMode == modeOpenMultiple) {
     node_flavors = B_FILE_NODE;
     panel_mode = B_OPEN_PANEL;
   }
@@ -136,7 +136,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     result = PR_FALSE;
   }
 
-  if (mMode == modeOpen && ppanel->IsOpenSelected()) {
+  if ((mMode == modeOpen || mMode == modeOpenMultiple) && ppanel->IsOpenSelected()) {
     BList *list = ppanel->OpenRefs();
     if ((list) && list->CountItems() >= 1) {
       entry_ref *ref = (entry_ref *)list->ItemAt(0);

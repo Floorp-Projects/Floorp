@@ -208,7 +208,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   
   // XXX Ignore the filter list for now....
   
-  if (mMode == modeOpen)
+  if (mMode == modeOpen || mMode == modeOpenMultiple)
     userClicksOK = GetLocalFile(title, &theFile);
   else if (mMode == modeSave)
     userClicksOK = PutLocalFile(title, defaultName, &theFile);
