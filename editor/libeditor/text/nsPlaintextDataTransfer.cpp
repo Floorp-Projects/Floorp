@@ -403,7 +403,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   // check our transferable hooks (if any)
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  if (!nsEditorHookUtils::DoDragHook(domdoc, trans))
+  if (!nsEditorHookUtils::DoDragHook(domdoc, aDragEvent, trans))
     return NS_OK;
 
   /* invoke drag */
