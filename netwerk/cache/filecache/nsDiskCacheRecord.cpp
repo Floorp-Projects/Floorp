@@ -423,6 +423,10 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   COPY_INT32(&mKeyLength, cur_ptr) ;
   cur_ptr += sizeof(PRUint32) ;
 
+  // poor man's attempt to detect corruption
+  if (mKeyLength > aInfoLength)
+    return NS_ERROR_FAILURE;
+
   // set mKey
   mKey = NS_STATIC_CAST(char*, nsMemory::Alloc(mKeyLength*sizeof(char))) ;
   if(!mKey) 
@@ -439,6 +443,10 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   COPY_INT32(&mMetaDataLength, cur_ptr) ;
   cur_ptr += sizeof(PRUint32) ;
 
+  // poor man's attempt to detect corruption
+  if (mMetaDataLength > aInfoLength)
+    return NS_ERROR_FAILURE;
+
   // set mMetaData
   mMetaData = NS_STATIC_CAST(char*, nsMemory::Alloc(mMetaDataLength*sizeof(char))) ;
   if(!mMetaData) 
@@ -450,6 +458,10 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   // get mFile name length
   COPY_INT32(&name_len, cur_ptr) ;
   cur_ptr += sizeof(PRUint32) ;
+
+  // poor man's attempt to detect corruption
+  if (name_len > aInfoLength)
+    return NS_ERROR_FAILURE;
 
   // get mFile native name
   file_url = NS_STATIC_CAST(char*, nsMemory::Alloc(name_len*sizeof(char))) ;
