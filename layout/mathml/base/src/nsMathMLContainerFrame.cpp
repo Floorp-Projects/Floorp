@@ -197,7 +197,7 @@ nsMathMLContainerFrame::ParseNumericValue(nsString&   aString,
       return PR_FALSE;  // two dots encountered
     else if (c == '.')
       gotDot = PR_TRUE;
-    else if (!nsString::IsDigit(c)) {
+    else if (!nsCRT::IsAsciiDigit(c)) {
       aString.Right(unit, stringLength - i);
       break;
     }
