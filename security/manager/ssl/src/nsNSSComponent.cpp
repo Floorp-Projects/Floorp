@@ -34,6 +34,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
+#include "nsObserverService.h"
 #include "nsCURILoader.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIProxyObjectManager.h"
@@ -845,12 +846,12 @@ nsNSSComponent::PrefChanged(const char* prefName)
   }
 }
 
-#define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_STRING("profile-before-change").get()
-#define PROFILE_AFTER_CHANGE_TOPIC NS_LITERAL_STRING("profile-after-change").get()
+#define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-before-change").get()
+#define PROFILE_AFTER_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-after-change").get()
 
 
 NS_IMETHODIMP
-nsNSSComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic, 
+nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
                         const PRUnichar *someData)
 {
   if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
@@ -871,8 +872,8 @@ nsNSSComponent::RegisterProfileChangeObserver()
   nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
   NS_ASSERTION(observerService, "could not get observer service");
   if (observerService) {
-    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
-    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
+    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_TRUE);
+    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_TRUE);
   }
   return NS_OK;
 }
