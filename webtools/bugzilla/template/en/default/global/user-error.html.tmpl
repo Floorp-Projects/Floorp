@@ -414,6 +414,10 @@
     [% title = "Login Name Required" %]
     You must enter a login name when requesting to change your password.
 
+  [% ELSIF error == "login_required_for_pronoun" %]
+    [% title = "Login Name Required" %]
+    You must enter a login name when using your login as a pronoun.
+
   [% ELSIF error == "milestone_required" %]
     [% title = "Milestone Required" %]
     You must determine a target milestone for [% terms.bug %] 

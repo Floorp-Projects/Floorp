@@ -322,6 +322,12 @@ sub init {
     my %funcsbykey;
     my @funcdefs =
         (
+         "^(?:assigned_to|reporter|qa_contact),(?:equals|anyexact),(%\\w+%)" => sub {
+             $term = "bugs.$f = " . pronoun($1, $user);
+          },
+         "^(?:assigned_to|reporter|qa_contact),(?:notequals),(%\\w+%)" => sub {
+             $term = "bugs.$f <> " . pronoun($1, $user);
+          },
          "^(assigned_to|reporter)," => sub {
              push(@supptables, "profiles AS map_$f");
              push(@wherepart, "bugs.$f = map_$f.userid");
@@ -333,11 +339,34 @@ sub init {
              $f = "map_$f.login_name";
          },
 
+         "^cc,(?:equals|anyexact),(%\\w+%)" => sub {
+             my $match = pronoun($1, $user);
+             my $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "CC$sequence";
+                 $sequence++;
+             }
+             push(@supptables, "LEFT JOIN cc cc_$chartseq 
+                                  ON bugs.bug_id = cc_$chartseq.bug_id 
+                                  AND cc_$chartseq.who = $match");
+             $term = "cc_$chartseq.who IS NOT NULL";
+         },
+         "^cc,(?:notequals),(%\\w+%)" => sub {
+             my $match = pronoun($1, $user);
+             my $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "CC$sequence";
+                 $sequence++;
+             }
+             push(@supptables, "LEFT JOIN cc cc_$chartseq 
+                                  ON bugs.bug_id = cc_$chartseq.bug_id 
+                                  AND cc_$chartseq.who = $match");
+             $term = "cc_$chartseq.who IS NULL";
+         },
          "^cc,(anyexact|substring)" => sub {
              my $list;
              $list = $self->ListIDsForEmail($t, $v);
-             my $chartseq;
-             $chartseq = $chartid;
+             my $chartseq = $chartid;
              if ($chartid eq "") {
                  $chartseq = "CC$sequence";
                  $sequence++;
@@ -355,8 +384,7 @@ sub init {
              }
          },
          "^cc," => sub {
-             my $chartseq;
-             $chartseq = $chartid;
+             my $chartseq = $chartid;
              if ($chartid eq "") {
                  $chartseq = "CC$sequence";
                  $sequence++;
@@ -442,11 +470,27 @@ sub init {
                  push(@fields, $select_term);
              }
          },
-         "^commenter," => sub {    
-             my $chartseq;
+         "^commenter,(?:equals|anyexact),(%\\w+%)" => sub {
+             my $match = pronoun($1, $user);
+             my $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "LD$sequence";
+                 $sequence++;
+             }
+             my $table = "longdescs_$chartseq";
+             my $extra = "";
+             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+                 $extra = "AND $table.isprivate < 1";
+             }
+             push(@supptables, "LEFT JOIN longdescs $table 
+                                  ON $table.bug_id = bugs.bug_id $extra 
+                                  AND $table.who IN ($match)");
+             $term = "$table.who IS NOT NULL";
+         },
+         "^commenter," => sub {
+             my $chartseq = $chartid;
              my $list;
              $list = $self->ListIDsForEmail($t, $v);
-             $chartseq = $chartid;
              if ($chartid eq "") {
                  $chartseq = "LD$sequence";
                  $sequence++;
@@ -1023,13 +1067,15 @@ sub init {
                 # a valid field name, which means that it's ok.
                 trick_taint($f);
                 $q = &::SqlQuote($v);
+                my $rhs = $v;
+                $rhs =~ tr/,//;
                 my $func;
                 $term = undef;
                 foreach my $key (@funcnames) {
-                    if ("$f,$t" =~ m/$key/) {
+                    if ("$f,$t,$rhs" =~ m/$key/) {
                         my $ref = $funcsbykey{$key};
                         if ($debug) {
-                            print "<p>$key ($f , $t ) => ";
+                            print "<p>$key ($f , $t , $rhs ) => ";
                         }
                         $ff = $f;
                         if ($f !~ /\./) {
@@ -1037,7 +1083,7 @@ sub init {
                         }
                         &$ref;
                         if ($debug) {
-                            print "$f , $t , $term</p>";
+                            print "$f , $t , $v , $term</p>";
                         }
                         if ($term) {
                             last;
@@ -1254,4 +1300,24 @@ sub getSQL {
     return $self->{'sql'};
 }
 
+sub pronoun {
+    my ($noun, $user) = (@_);
+    if ($noun eq "%user%") {
+        if ($user) {
+            return $user->id;
+        } else {
+            ThrowUserError('login_required_for_pronoun');
+        }
+    }
+    if ($noun eq "%reporter%") {
+        return "bugs.reporter";
+    }
+    if ($noun eq "%assignee%") {
+        return "bugs.assigned_to";
+    }
+    if ($noun eq "%qacontact%") {
+        return "bugs.qa_contact";
+    }
+    return 0;
+}
 1;
