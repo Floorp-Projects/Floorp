@@ -94,6 +94,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug23847.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug24627.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug24410.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2469.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug24880.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2509.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2516.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2585.html
