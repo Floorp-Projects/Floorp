@@ -31,10 +31,15 @@ CPPSRCS= \
 
 EXPORTS=nsBaseWidget.h 
 
-CPP_OBJS=.\$(OBJDIR)\nsBaseWidget.obj  
+CPP_OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
+	.\$(OBJDIR)\nsMenuButton.obj  \
+	.\$(OBJDIR)\nsToolbarItemHolder.obj  \
+	.\$(OBJDIR)\nsToolbarManager.obj  \
+	.\$(OBJDIR)\nsImageButton.obj  \
+	.\$(OBJDIR)\nsToolBar.obj  
     
 
-LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor 
+LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -Iwindows 
 
 LCFLAGS = \
 	$(LCFLAGS) \

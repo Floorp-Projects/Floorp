@@ -70,12 +70,7 @@ CPPSRCS= \
         nsXtManageWidget.cpp
 
 CPP_OBJS=				\
- ./$(OBJDIR)/nsMenuButton.o  \
  ./$(OBJDIR)/nsPopUpMenu.o  \
- ./$(OBJDIR)/nsToolbarItemHolder.o  \
- ./$(OBJDIR)/nsToolbarManager.o  \
- ./$(OBJDIR)/nsImageButton.o  \
- ./$(OBJDIR)/nsToolBar.obj  \
  ./$(OBJDIR)/nsWidgetSupport.o		\
  ./$(OBJDIR)/nsComboBox.o		\
  ./$(OBJDIR)/nsFileWidget.o		\
