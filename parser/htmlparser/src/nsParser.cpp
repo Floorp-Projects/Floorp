@@ -89,7 +89,7 @@ public:
 class CSharedParserObjects {
 public:
 
-  CSharedParserObjects() : mDTDDeque(new CDTDDeallocator()) {
+  CSharedParserObjects() : mDTDDeque(0) {
 
     nsIDTD* theDTD;
 
@@ -104,6 +104,8 @@ public:
   }
 
   ~CSharedParserObjects() {
+    CDTDDeallocator theDeallocator;
+    mDTDDeque.ForEach(theDeallocator);  //release all the DTD's
   }
 
   void RegisterDTD(nsIDTD* aDTD){
@@ -119,10 +121,6 @@ public:
     }
   }
   
-  nsIDTD*  FindDTD(nsIDTD* aDTD){
-    return 0;
-  }
-
   nsDeque mDTDDeque;
 };
 
@@ -173,6 +171,18 @@ CSharedParserObjects& GetSharedObjects() {
     gSharedParserObjects = new CSharedParserObjects();
   }
   return *gSharedParserObjects;
+}
+
+/** 
+ *  This gets called when the htmlparser module is shutdown.
+ *   
+ *  @update  gess 01/04/99
+ */
+void nsParser::FreeSharedObjects(void) {
+  if (gSharedParserObjects) {
+    delete gSharedParserObjects;
+    gSharedParserObjects=0;
+  }
 }
 
 /** 

@@ -187,6 +187,7 @@ nsParserModule::Shutdown()
     nsHTMLTokenizer::FreeTokenRecycler();
     nsXMLTokenizer::FreeTokenRecycler();
     nsExpatTokenizer::FreeTokenRecycler();
+    nsParser::FreeSharedObjects();
     mInitialized = PR_FALSE;
   }
 }

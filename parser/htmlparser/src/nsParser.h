@@ -83,9 +83,12 @@ class nsIProgressEventSink;
 
 
 CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
-            
+
+  
   public:
-friend class CTokenHandler;
+
+    friend class CTokenHandler;
+    static void FreeSharedObjects(void);
 
     NS_DECL_ISUPPORTS
 
@@ -399,7 +402,6 @@ public:
 #endif
 
 };
-
 
 #endif 
 
