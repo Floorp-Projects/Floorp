@@ -181,7 +181,8 @@ moz_run_program()
 	if [ "$crc_old" != "$crc_new" ]
 	then
 		printf "\n\nOh no!  %s just dumped a core file.\n\n" $prog
-		printf "Do you want to debug this ? [y/n] "
+		printf "Do you want to debug this ? "
+		printf "You need a lot of memory for this, so watch out ? [y/n] "
 		read ans
 		if [ "$ans" = "y" ]
 		then
