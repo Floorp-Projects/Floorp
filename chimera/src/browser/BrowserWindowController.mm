@@ -441,7 +441,7 @@ static NSArray* sToolbarDefaults = nil;
 }
 
 //
-// toolbarWillAddItem: (toolbar delegate method)
+// toolbarDidRemoveItem: (toolbar delegate method)
 //
 // Called when a button is about to be removed from a toolbar. This is where we should
 // uncache items so we don't access them after they're gone. For instance, we want to
@@ -452,6 +452,8 @@ static NSArray* sToolbarDefaults = nil;
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
   if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
     mSidebarToolbarItem = nil;
+  else if ( [[item itemIdentifier] isEqual:ThrobberToolbarItemIdentifier] )
+    [self stopThrobber];
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
