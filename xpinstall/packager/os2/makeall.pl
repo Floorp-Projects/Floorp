@@ -84,8 +84,8 @@ if($inRedirIniURL eq "")
   $inRedirIniURL = $inXpiURL;
 }
 
-$seiFileNameGeneric   = "nsinstall.exe";
-$seiFileNameGenericRes   = "nsinstall.res";
+$seiFileNameGeneric   = "stubinstall.exe";
+$seiFileNameGenericRes   = "stubinstall.res";
 $seiFileNameSpecific  = "mozilla-os2-installer.exe";
 $seiFileNameSpecificRes  = "mozilla-os2-installer.res";
 $seiFileNameSpecificRC  = "mozilla-os2-installer.rc";
@@ -230,15 +230,15 @@ if(system("cp $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt"))
   die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt\n";
 }
 
-# copy readme for the installer
-#if(system("cp $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\readme.txt"))
-#{
-#  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\readme.txt\n";
-#}
-#if(system("cp $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\setup\\readme.txt"))
-#{
-#  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\setup\\readme.txt\n";
-#}
+ copy readme for the installer
+if(system("cp $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\readme.txt"))
+{
+  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\readme.txt\n";
+}
+if(system("cp $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\setup\\readme.txt"))
+{
+  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\setup\\readme.txt\n";
+}
 
 # copy the icons
 #if(system("cp $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico"))

@@ -39,7 +39,6 @@ Program Name=$MainExeFile$
 ;   WARPCENTER
 Program Folder Name=$ProductName$
 Program Folder Path=[DESKTOP]
-Program Folder Object ID=<MOZ_FOLDER>
 
 Uninstall Filename=$UninstallFile$
 
@@ -716,12 +715,20 @@ Current Version0=$UserAgent$
 ; Open Folder indicates whether to open the program folder after the install
 ;
 ; Default value is TRUE if nothing is set.
+
 [Program Folder0]
 Timing=post smartupdate
-Open Folder=TRUE
-Program Folder=[Default Folder]
 
 [Program Folder0-Object0]
+ClassName=WPFolder
+Title=$ProductName$
+Location=[DESKTOP]
+Object ID=<MOZILLAFLDR>
+
+[Component Navigator-Program Folder0]
+Timing=post smartupdate
+
+[Component Navigator-Program Folder0-Object0]
 ClassName=WPProgram
 Title=$ProductName$
 File=[SETUP PATH]\$MainExeFile$
@@ -729,24 +736,40 @@ Working Dir=[SETUP PATH]
 Location=[Default Folder]
 Association Filters=*.HTM,*.HTML
 Association Types=HTML,text/html
-Object ID=<MOZILLA>
+Object ID=<MOZILLAEXE>
 
-[Program Folder0-Object1]
+[Component Navigator-Program Folder0-Object1]
 ClassName=WPProgram
 Title=$ProductName$ Profile Manager
 File=[SETUP PATH]\$MainExeFile$
 Parameters=-ProfileManager
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
-Object ID=<MOZILLA_PROFMGR>
+Object ID=<MOZILLAPROFMANAGER>
 
-[Program Folder0-Object20]
+[Component Uninstaller-Program Folder0]
+Timing=post smartupdate
+
+[Component Uninstaller-Program Folder0-Object0]
 ClassName=WPProgram
 Title=Uninstall $ProductName$
 File=[SETUP PATH]\Uninstall\$UninstallFile$
-Parameters=/ua "$UserAgent$"
+Parameters=/ua \"$UserAgent$\"
 Working Dir=[SETUP PATH]
+Location=[Default Folder]
 Object ID=<MOZILLA_UNINSTALL>
+
+[Component MailNews-Program Folder0]
+Timing=post smartupdate
+
+[Component MailNews-Program Folder0-Object0]
+ClassName=WPProgram
+Title=$ProductName$ Mail
+File=[SETUP PATH]\$MainExeFile$
+Parameters=-mail
+Working Dir=[SETUP PATH]
+Location=[Default Folder]
+Object ID=<CCINBOX>
 
 [Strings]
 ;*** LOCALIZE ME BABY ***
