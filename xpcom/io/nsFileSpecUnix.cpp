@@ -54,6 +54,10 @@
 #else
 #define STATFS	statfs
 #endif
+
+#ifndef MAXPATHLEN
+#define MAXPATHLEN	1024  /* Guessing this is okay.  Works for SCO. */
+#endif
  
 #if defined(SUNOS4)
 extern "C" int statfs(char *, struct statfs *);
