@@ -42,18 +42,14 @@
 #include "CNavDTD.h" 
 #include "nsIParserNode.h" 
 #include "nsParserNode.h" 
-
+#include "nsIChannel.h"
 #include "nsIServiceManager.h"
-
-nsIObserverService *CObserverService::gObserverService = NULL;
 
 MOZ_DECL_CTOR_COUNTER(nsEntryStack)
 MOZ_DECL_CTOR_COUNTER(nsDTDContext)
 MOZ_DECL_CTOR_COUNTER(nsTokenAllocator)
 MOZ_DECL_CTOR_COUNTER(CNodeRecycler)
-MOZ_DECL_CTOR_COUNTER(CObserverService)
  
-
 /**************************************************************************************
   A few notes about how residual style handling is performed:
    
@@ -1477,313 +1473,131 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
   return crc_accum; 
 }
 
-
-/**************************************************************
-  Define the nsIElementObserver release class...
- **************************************************************/
-class nsObserverReleaser: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    nsIElementObserver* theObserver= (nsIElementObserver*)anObject;
-    NS_RELEASE(theObserver);
-    return 0;
-  }
-};
-
 /**************************************************************
   This defines the topic object used by the observer service.
   The observerService uses a list of these, 1 per topic when
   registering tags.
  **************************************************************/
+NS_IMPL_ISUPPORTS1(nsObserverEntry, nsIObserverEntry)
 
-nsObserverTopic::nsObserverTopic(const nsString& aTopic) : mTopic(aTopic) {
-
-   nsCRT::zero(mObservers,sizeof(mObservers));
-   mCharsetKey.AssignWithConversion("charset");
-   mSourceKey.AssignWithConversion("charsetSource");
-   mDTDKey.AssignWithConversion("X_COMMAND");
+nsObserverEntry::nsObserverEntry(const nsAString& aTopic) : mTopic(aTopic) 
+{
+  NS_INIT_ISUPPORTS();
+  nsCRT::zero(mObservers,sizeof(mObservers));
 }
 
-nsObserverTopic::~nsObserverTopic() {
-  nsObserverReleaser theReleaser;
-
-  PRInt32 theIndex=0;
-  for(theIndex=0;theIndex<=NS_HTML_TAG_MAX;theIndex++){
-    if(mObservers[theIndex]){
-      mObservers[theIndex]->ForEach(theReleaser);
-      delete mObservers[theIndex];
-      mObservers[theIndex]=0;
+nsObserverEntry::~nsObserverEntry() {
+  for (PRInt32 i = 0; i <= NS_HTML_TAG_MAX; i++){
+    if (mObservers[i]) {
+      PRInt32 count = mObservers[i]->Count();
+      for (PRInt32 j = 0; j < count; j++) {
+        nsISupports* obs = (nsISupports*)mObservers[i]->ElementAt(j);
+        NS_IF_RELEASE(obs);
+      }
+      delete mObservers[i];
     }
   }
 }
 
-PRBool nsObserverTopic::Matches(const nsString& aString) {
-  PRBool result=aString.Equals(mTopic);
-  return result;
-}
+NS_IMETHODIMP
+nsObserverEntry::Notify(nsIParserNode* aNode,
+                        nsIParser* aParser,
+                        nsISupports* aWebShell) 
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+  NS_ENSURE_ARG_POINTER(aParser);
 
-nsDeque* nsObserverTopic::GetObserversForTag(eHTMLTags aTag) {
-  if(aTag <= NS_HTML_TAG_MAX) {
-    return mObservers[aTag];
-  }
-  return 0;
-}
+  nsresult result = NS_OK;
+  eHTMLTags theTag = (eHTMLTags)aNode->GetNodeType();
+ 
+  if (theTag <= NS_HTML_TAG_MAX) {
+    nsVoidArray*  theObservers = mObservers[theTag];
+    if (theObservers) {
+      nsAutoString      theCharsetValue;
+      nsCharsetSource   theCharsetSource;
+      aParser->GetDocumentCharset(theCharsetValue,theCharsetSource);
 
-void nsObserverTopic::RegisterObserverForTag(nsIElementObserver *anObserver,eHTMLTags aTag) {
-  if(anObserver) {
-    if(mObservers[aTag] == nsnull) {
-       mObservers[aTag] = new nsDeque(0);
-    }
-    NS_ADDREF(anObserver);
-    mObservers[aTag]->Push(anObserver);
-  }
-}
+      PRInt32 theAttrCount = aNode->GetAttributeCount(); 
+      PRInt32 theObserversCount = theObservers->Count(); 
+      if (0 < theObserversCount){
+        nsStringArray keys(theAttrCount+4), values(theAttrCount+4);
 
-/**
- * This method will notify observers registered for specific tags.
- * 
- * @update harishd 08/29/99
- * @param  aTag            -  The tag for which observers could be waiting for.
- * @param  aNode           -  
- * @param  aUniqueID       -  The document ID.
- * @param  aDTD            -  The current DTD.
- * @param  aCharsetValue   -
- * @param  aCharsetSource  -
- * @return if SUCCESS return NS_OK else return ERROR code.
- */
-nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniqueID,nsIParser* aParser) {
-  nsresult  result=NS_OK;
+        // XXX this and the following code may be a performance issue.
+        // Every key and value is copied and added to an voidarray (causing at
+        // least 2 allocations for mImpl, usually more, plus at least 1 per
+        // string (total = 2*(keys+3) + 2(or more) array allocations )).
+        PRInt32 index;
+        for (index = 0; index < theAttrCount; index++) {
+          keys.AppendString(aNode->GetKeyAt(index));
+          values.AppendString(aNode->GetValueAt(index));
+        } 
 
-  nsDeque*  theObservers=GetObserversForTag(aTag);
-  if(theObservers){ 
+        nsAutoString intValue;
 
-    nsAutoString      theCharsetValue;
-    nsCharsetSource   theCharsetSource;
-    aParser->GetDocumentCharset(theCharsetValue,theCharsetSource);
-
-    PRInt32 theAttrCount =aNode.GetAttributeCount(); 
-    PRInt32 theObserversCount=theObservers->GetSize(); 
-    if(0<theObserversCount){
-      nsStringArray keys(theAttrCount+4),values(theAttrCount+4);
-
-      // XXX this and the following code may be a performance issue.
-      // Every key and value is copied and added to an voidarray (causing at
-      // least 2 allocations for mImpl, usually more, plus at least 1 per
-      // string (total = 2*(keys+3) + 2(or more) array allocations )).
-      PRInt32 index;
-      for(index=0; index<theAttrCount; index++) {
-        keys.AppendString(aNode.GetKeyAt(index));
-        values.AppendString(aNode.GetValueAt(index));
-      } 
-
-      nsAutoString intValue;
-
-      keys.AppendString(mCharsetKey); 
-      values.AppendString(theCharsetValue);       
+        keys.AppendString(NS_LITERAL_STRING("charset")); 
+        values.AppendString(theCharsetValue);       
       
-      keys.AppendString(mSourceKey); 
-      intValue.AppendInt(PRInt32(theCharsetSource),10);
-      values.AppendString(intValue); 
+        keys.AppendString(NS_LITERAL_STRING("charsetSource")); 
+        intValue.AppendInt(PRInt32(theCharsetSource),10);
+        values.AppendString(intValue); 
 
-      keys.AppendString(mDTDKey);
-      values.AppendString(mTopic); 
+        keys.AppendString(NS_LITERAL_STRING("X_COMMAND"));
+        values.AppendString(NS_LITERAL_STRING("text/html")); 
 
-      nsAutoString theTagStr; theTagStr.AssignWithConversion(nsHTMLTags::GetStringValue(aTag));
-      
-      for(index=0;index<theObserversCount;index++) {
-        nsIElementObserver* observer=NS_STATIC_CAST(nsIElementObserver*,theObservers->ObjectAt(index));
-        if(observer) {
-          result=observer->Notify((nsISupports*)aUniqueID,theTagStr.get(),&keys,&values);
-          if(NS_FAILED(result)) {
-            break;
+        nsAutoString theTagStr; 
+        theTagStr.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
+
+        nsCOMPtr<nsIChannel> channel;
+        aParser->GetChannel(getter_AddRefs(channel));
+
+        for (index=0;index<theObserversCount;index++) {
+          nsIElementObserver* observer = NS_STATIC_CAST(nsIElementObserver*,theObservers->ElementAt(index));
+          if (observer) {
+            result = observer->Notify(aWebShell,channel,theTagStr.get(),&keys,&values);
+            if (NS_FAILED(result)) {
+              break;
+            }
           }
-        }
+        } 
       } 
-     }//if 
-  } 
+    }
+  }
   return result;
 }
 
+PRBool 
+nsObserverEntry::Matches(const nsAString& aString) {
+  PRBool result = aString.Equals(mTopic);
+  return result;
+}
 
-/******************************************************************************
-  This class is used to store ref's to tag observers during the parse phase.
-  Note that for simplicity, this is a singleton that is constructed in the
-  CNavDTD and shared for the duration of the application session. Later on it
-  might be nice to use a more dynamic approach that would permit observers to
-  come and go on a document basis.
-
-  I changed the observerservice to store topics so that we can distinguish 
-  observers by topic. Up till now, they've all just be thrown into the same
-  observer list, which was wrong. This fixes bug #28825.
- ******************************************************************************/
 nsresult
-CObserverService::InitGlobals() {
-  if (!gObserverService) {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIObserverService> obs(do_GetService(NS_OBSERVERSERVICE_CONTRACTID,&rv));
-    if (NS_SUCCEEDED(rv)) {
-      gObserverService = obs.get();
-      NS_IF_ADDREF(gObserverService);
+nsObserverEntry::AddObserver(nsIElementObserver *aObserver,
+                             eHTMLTags aTag) 
+{
+  if (aObserver) {
+    if (!mObservers[aTag]) {
+      mObservers[aTag] = new nsAutoVoidArray();
+      if (!mObservers[aTag]) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
+    NS_ADDREF(aObserver);
+    mObservers[aTag]->AppendElement(aObserver);
   }
   return NS_OK;
 }
 
-void
-CObserverService::ReleaseGlobals() {
-  NS_IF_RELEASE(gObserverService);
-}
-
-CObserverService::CObserverService() : mTopics(0) {
-
-  MOZ_COUNT_CTOR(CObserverService);
-
-  nsAutoString theHTMLTopic; theHTMLTopic.AssignWithConversion(kHTMLTextContentType);
-  RegisterObservers(theHTMLTopic);
-
-  nsAutoString theXMLTopic; theXMLTopic.AssignWithConversion(kXMLTextContentType);  //use the mimetype for the topic
-  RegisterObservers(theXMLTopic);
-
-  theXMLTopic.AssignWithConversion(kXMLApplicationContentType);
-  RegisterObservers(theXMLTopic);
-
-  theXMLTopic.AssignWithConversion(kXHTMLApplicationContentType);
-  RegisterObservers(theXMLTopic);
-}
-
-
-CObserverService::~CObserverService() {
-
-  MOZ_COUNT_DTOR(CObserverService);
-
-  nsObserverTopic *theTopic=(nsObserverTopic*)mTopics.Pop();
-  while(theTopic) {
-    delete theTopic;
-    theTopic=(nsObserverTopic*)mTopics.Pop();
-  }
-}
-
-// XXX This may be more efficient as a HashTable instead of linear search
-nsObserverTopic* CObserverService::GetTopic(const nsString& aTopic) {
-  PRInt32 theIndex=0;
-  nsObserverTopic *theTopic=(nsObserverTopic*)mTopics.ObjectAt(theIndex++);
-
-  while(theTopic) {
-    if(theTopic->Matches(aTopic))
-      return theTopic;
-    theTopic=(nsObserverTopic*)mTopics.ObjectAt(theIndex++);
-  }
-  return 0;
-}
-
-nsObserverTopic* CObserverService::CreateTopic(const nsString& aTopic) {
-  nsObserverTopic* theTopic=new nsObserverTopic(aTopic);
-  mTopics.Push(theTopic);
-  return theTopic;
-}
-
-/**
- * This method will maintain lists of observers registered for specific tags.
- * 
- * @update rickg 03.23.2000
- * @param  aTopic  -  The topic under which observers register for.
- * @return if SUCCESS return NS_OK else return ERROR code.
- */
-
-void CObserverService::RegisterObservers(const nsString& aTopic) {
-  nsresult result = NS_OK;
-  if (gObserverService) {
-    nsIEnumerator* theEnum = nsnull;
-    result = gObserverService->EnumerateObserverList(aTopic.get(), &theEnum);
-
-    if(result == NS_OK) {
-      nsCOMPtr<nsIElementObserver> theElementObserver;
-      nsISupports *inst = nsnull;
-
-      nsObserverTopic *theTopic=0;
-
-      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-        result = theEnum->CurrentItem(&inst);
-        if (NS_SUCCEEDED(result)) {
-          theElementObserver = do_QueryInterface(inst, &result);
-          NS_RELEASE(inst);
-        }
-        if (result == NS_OK) {
-          const char* theTagStr = nsnull;
-          PRUint32 theTagIndex = 0;
-          theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
-          while (theTagStr != nsnull) {
-            eHTMLTags theTag = nsHTMLTags::LookupTag(nsCAutoString(theTagStr));
-            if((eHTMLTag_userdefined!=theTag) && (theTag <= NS_HTML_TAG_MAX)){
-            
-              theTopic=GetTopic(aTopic);
-              if(!theTopic)
-                theTopic=CreateTopic(aTopic);
-              if(theTopic) {
-                theTopic->RegisterObserverForTag(theElementObserver,theTag);
-              }
-
-            }
-            theTagIndex++;
-            theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
-          }
-        }
+void 
+nsObserverEntry::RemoveObserver(nsIElementObserver *aObserver)
+{
+  for (PRInt32 i=0; i <= NS_HTML_TAG_MAX; i++){
+    if (mObservers[i]) {
+      nsISupports* obs = aObserver;
+      PRBool removed = mObservers[i]->RemoveElement(obs);
+      if (removed) {
+        NS_RELEASE(obs);
       }
     }
-    NS_IF_RELEASE(theEnum);
   }
-}
-
-/**
- * This method will maintain lists of observers registered for specific tags.
- * 
- * @update rickg 03.23.2000
- * @param  aTopic  -  The topic under which observers register for.
- * @return if SUCCESS return NS_OK else return ERROR code.
- */
-
-void CObserverService::UnregisterObservers(const nsString& aTopic) {
-}
-
-/**
- * This method will notify observers registered for specific tags.
- * 
- * @update rickg 03.23.2000
- * @param  aTag            -  The tag for which observers could be waiting for.
- * @param  aNode           -  
- * @param  aUniqueID       -  The document ID.
- * @param  aDTD            -  The current DTD.
- * @param  aCharsetValue   -
- * @param  aCharsetSource  -
- * @return if SUCCESS return NS_OK else return ERROR code.
- */
-nsresult CObserverService::Notify(  eHTMLTags aTag,
-                                    nsIParserNode& aNode,
-                                    void* aUniqueID, 
-                                    const nsString& aTopic,
-                                    nsIParser* aParser) {
-  nsresult  result=NS_OK;
-  nsObserverTopic *theTopic=GetTopic(aTopic);
-  if(theTopic) {
-    result=theTopic->Notify(aTag,aNode,aUniqueID,aParser);
-  }
-  return result;
-}
-
-/**
- * This method will look for the list of observers registered for 
- * a specific tag.
- * 
- * @update rickg 03.23.2000
- * @param aTag - The tag for which observers could be waiting for.
- * @return if FOUND return "observer list" else return nsnull;
- *
- */
-
-nsDeque* CObserverService::GetObserversForTagInTopic(eHTMLTags aTag,const nsString& aTopic) {
-  nsObserverTopic *theTopic=GetTopic(aTopic);
-  if(theTopic) {
-    return theTopic->GetObserversForTag(aTag);
-  }
-  return 0;
 }

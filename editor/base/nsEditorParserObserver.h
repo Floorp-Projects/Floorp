@@ -44,6 +44,7 @@
 #include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsHTMLTags.h"
 
 class nsEditorParserObserver : public nsSupportsWeakReference,
                                public nsIElementObserver,
@@ -57,26 +58,25 @@ public:
   NS_DECL_ISUPPORTS
 
   /* method for nsIElementObserver */
-  NS_IMETHOD_(const char*)  GetTagNameAt(PRUint32 aTagIndex);
   NS_IMETHOD                Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
                                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
   NS_IMETHOD                Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
                                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-  NS_IMETHOD                Notify(nsISupports* aDocumentID, const PRUnichar* aTag, 
-                                    const nsStringArray* aKeys, const nsStringArray* aValues);
+  NS_IMETHOD                Notify(nsISupports* aWebShell, 
+                                   nsISupports* aChannel,
+                                   const PRUnichar* aTag, 
+                                   const nsStringArray* aKeys, 
+                                   const nsStringArray* aValues);
 
   /* methods for nsIObserver */
   NS_DECL_NSIOBSERVER
 
   /* begin and end observing */
-  NS_IMETHOD                Start();
+  NS_IMETHOD                Start(eHTMLTags* aWatchTags);
   NS_IMETHOD                End();
 
   /* query, did we find a bad tag? */
   NS_IMETHOD                GetBadTagFound(PRBool *aFound);
-
-  /* register a tag to watch for */
-  NS_IMETHOD                RegisterTagToWatch(const char* tagName);
 
 protected:
 
@@ -85,9 +85,6 @@ protected:
 protected:
 
   PRBool                    mBadTagFound;
-  
-  nsCStringArray            mWatchTags;
-  
 };
 
 

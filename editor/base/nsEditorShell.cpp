@@ -174,6 +174,12 @@ enum {
   eComposerController
 };
 
+static eHTMLTags gWatchTags[] = 
+{ eHTMLTag_frameset,
+  eHTMLTag_iframe,
+  eHTMLTag_unknown
+};
+
 /////////////////////////////////////////////////////////////////////////
 // Utility to extract document from a webshell object.
 static nsresult
@@ -5054,9 +5060,7 @@ nsresult nsEditorShell::StartPageLoad(nsIChannel *aChannel)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(mParserObserver);
-    mParserObserver->RegisterTagToWatch("FRAMESET");
-    mParserObserver->RegisterTagToWatch("IFRAME");
-    mParserObserver->Start();
+    mParserObserver->Start(gWatchTags);
   }
 
   return NS_OK;

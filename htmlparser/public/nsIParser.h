@@ -59,10 +59,6 @@
   {0x355cbba0, 0xbf7d,  0x11d1,  \
   {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
-// {8B6A98A0-260E-11d4-8153-0010A4E0C706}
-#define NS_IPARSER_BUNDLE_IID \
-{ 0x8b6a98a0, 0x260e, 0x11d4, { 0x81, 0x53, 0x0, 0x10, 0xa4, 0xe0, 0xc7, 0x6 } };
-
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
 { 0x41421c60, 0x310a, 0x11d4, { 0x81, 0x6f, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
@@ -137,13 +133,6 @@ class nsIDebugDumpContent : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDEBUG_DUMP_CONTENT_IID; return iid; }
   NS_IMETHOD DumpContentModel()=0;
-};
-
-class nsISupportsParserBundle : public nsISupports {
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPARSER_BUNDLE_IID; return iid; }
-  NS_IMETHOD GetDataFromBundle(const nsString& aKey,nsISupports** anObject)=0;
-  NS_IMETHOD SetDataIntoBundle(const nsString& aKey,nsISupports* anObject)=0;
 };
 
 /**

@@ -41,10 +41,30 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsHTMLTags.h"
+#include "nsIParserNode.h"
+#include "nsIParser.h"
+#include "nsVoidArray.h"
+#include "nsIElementObserver.h"
 
 #define NS_IPARSERSERVICE_IID                           \
 { 0xa6cf9111, 0x15b3, 0x11d2,                           \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
+
+// {78081E70-AD53-11d5-8498-0010A4E0C706}
+#define NS_IOBSERVERENTRY_IID \
+{ 0x78081e70, 0xad53, 0x11d5, { 0x84, 0x98, 0x0, 0x10, 0xa4, 0xe0, 0xc7, 0x6 } };
+
+
+class nsIObserverEntry : public nsISupports {
+ public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOBSERVERENTRY_IID)
+
+  NS_IMETHOD Notify(nsIParserNode* aNode,
+                    nsIParser* aParser,
+                    nsISupports* aWebShell) = 0;
+
+};
 
 
 class nsIParserService : public nsISupports {
@@ -65,6 +85,17 @@ class nsIParserService : public nsISupports {
 
   NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const =0;
   NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const =0;
+
+  // Observer mechanism
+  NS_IMETHOD RegisterObserver(nsIElementObserver* aObserver,
+                              const nsAString& aTopic,
+                              const eHTMLTags* aTags = nsnull) = 0;
+
+  NS_IMETHOD UnregisterObserver(nsIElementObserver* aObserver,
+                                const nsAString& aTopic) = 0;
+  NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
+                               nsIObserverEntry** aEntry) = 0;
+
 };
 
 #endif // nsIParserService_h__

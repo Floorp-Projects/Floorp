@@ -93,7 +93,6 @@ class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
 class nsIProgressEventSink;
-class nsParserBundle;
 
 #ifdef XP_WIN
 #pragma warning( disable : 4275 )
@@ -101,7 +100,6 @@ class nsParserBundle;
 
 
 class nsParser : public nsIParser,
-                 public nsISupportsParserBundle,
                  public nsIStreamListener{
 
   
@@ -287,8 +285,6 @@ class nsParser : public nsIParser,
     CParserContext*   PopContext();
     CParserContext*   PeekContext() {return mParserContext;}
 
-    const nsParserBundle*  GetParserBundle() { return mBundle; }
-
     /**
      * 
      * @update	gess 1/22/99
@@ -320,20 +316,7 @@ class nsParser : public nsIParser,
      * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
      */
     NS_IMETHOD GetDTD(nsIDTD** aDTD);
-
-    /**
-     * Call this to access observer dictionary ( internal to parser )
-     * @update	harishd 06/27/99
-     * @param   
-     * @return  
-     */
-    CObserverService* GetObserverService(void);
-
-      
-    // nsISupportsParserBundle
-    NS_IMETHOD GetDataFromBundle(const nsString& aKey,nsISupports** anObject);
-    NS_IMETHOD SetDataIntoBundle(const nsString& aKey,nsISupports* anObject);
-
+  
     /**
      *  Call this method to determine a DTD for a DOCTYPE
      *  
@@ -490,11 +473,9 @@ protected:
     nsString            mCharset;
     nsCharsetSource     mCharsetSource;
     nsresult            mInternalState;
-    CObserverService    mObserverService;
     PRBool              mObserversEnabled;
     nsString            mCommandStr;
     PRBool              mParserEnabled;
-    nsParserBundle*     mBundle;
     nsTokenAllocator    mTokenAllocator;
 
     nsCOMPtr<nsIEventQueue> mEventQueue;
@@ -506,38 +487,6 @@ public:
     MOZ_TIMER_DECLARE(mParseTime)
     MOZ_TIMER_DECLARE(mDTDTime)
     MOZ_TIMER_DECLARE(mTokenizeTime)
-};
-
-// -----------------------------------------------------------------
-
-class nsParserBundle : public nsISupportsParserBundle {
-public:
-
-  NS_DECL_ISUPPORTS
-
-  nsParserBundle ();
-  virtual ~nsParserBundle ();
-
-  /** 
-   * Retrieve data from the bundle by IID.
-   *
-   * @update harishd 05/10/00
-   * @param aIID - The ID to identify the correct object in the bundle
-   * @return Return object if found in bundle else return NULL.
-   */
-   NS_IMETHOD GetDataFromBundle(const nsString& aKey,nsISupports** anObject);
-  
-  /** 
-   * Store data into the bundle.
-   *
-   * @update harishd 05/10/00
-   * @param aData - The data to be stored.
-   * @return NS_OK if all went well else ERROR.
-   */
-   NS_IMETHOD SetDataIntoBundle(const nsString& aKey,nsISupports* anObject);
-  
-protected:
-  nsHashtable*  mData;
 };
 
 #endif 

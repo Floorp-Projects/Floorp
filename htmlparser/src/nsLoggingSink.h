@@ -74,6 +74,7 @@ public:
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
   NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) { return NS_OK; }
+  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
   // nsIHTMLContentSink
   NS_IMETHOD SetTitle(const nsString& aValue);

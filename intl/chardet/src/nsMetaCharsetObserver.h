@@ -60,10 +60,6 @@ public:
   virtual ~nsMetaCharsetObserver();
 
   /* methode for nsIElementObserver */
-  /*
-   *   This method return the tag which the observer care about
-   */
-  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex);
 
   /*
    *   Subject call observer when the parser hit the tag
@@ -78,7 +74,11 @@ public:
   NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsStringArray* keys, const nsStringArray* values);
+  NS_IMETHOD Notify(nsISupports* aWebShell, 
+                    nsISupports* aChannel,
+                    const PRUnichar* aTag, 
+                    const nsStringArray* keys, 
+                    const nsStringArray* values);
 
   NS_DECL_ISUPPORTS
 
@@ -94,7 +94,10 @@ private:
   NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const nsStringArray* keys, const nsStringArray* values);
+  NS_IMETHOD Notify(nsISupports* aWebShell, 
+                    nsISupports* aChannel,
+                    const nsStringArray* keys, 
+                    const nsStringArray* values);
 
   NS_IMETHOD GetCharsetFromCompatibilityTag(const nsStringArray* keys, 
                                             const nsStringArray* values, 

@@ -53,6 +53,11 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
+static eHTMLTags gTags[] = 
+{ eHTMLTag_instruction,
+  eHTMLTag_unknown
+};
+
 //-------------------------------------------------------------------------
 nsXMLEncodingObserver::nsXMLEncodingObserver()
 {
@@ -78,16 +83,6 @@ NS_IMPL_QUERY_INTERFACE4(nsXMLEncodingObserver,
                          nsIObserver, 
                          nsIXMLEncodingService, 
                          nsISupportsWeakReference);
-
-//-------------------------------------------------------------------------
-NS_IMETHODIMP_(const char*) nsXMLEncodingObserver::GetTagNameAt(PRUint32 aTagIndex)
-{
-  if (aTagIndex == 0) {
-    return "?XML";
-  }else {
-    return nsnull;
-  }
-}
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsXMLEncodingObserver::Notify(
@@ -184,7 +179,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                           {
                               const char* charsetInCStr = preferred.ToNewCString();
                               if(nsnull != charsetInCStr) {
-                                 res = NotifyWebShell((nsISupports*)aDocumentID, charsetInCStr, kCharsetFromMetaTag );
+                                 res = NotifyWebShell(0,0, charsetInCStr, kCharsetFromMetaTag );
                                  delete [] (char*)charsetInCStr;
                                  return res;
                               }

@@ -80,9 +80,7 @@
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
 #include "plstr.h"
-
 #include "prmem.h"
-
 
 #ifdef RAPTOR_PERF_METRICS
 #include "stopwatch.h"
@@ -90,7 +88,8 @@ Stopwatch vsTimer;
 #endif
 
 
-static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
+static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID);
+
 static int gErrorThreshold = 10;
 
 // Define this to dump the viewsource stuff to a file
@@ -1099,12 +1098,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         else result=WriteTag(mStartTag,startValue,aToken->GetAttributeCount(),PR_TRUE);
 
         if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
-          CObserverService* theService=mParser->GetObserverService();
-          if(theService) {
-            eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID(); 
-            const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
-            result=theService->Notify(theTag,theContext.mTokenNode,(void*)bundle, mMimeType, mParser);
-          }
+          result = mSink->NotifyTagObservers(&theContext.mTokenNode);
         }
       }
       break;

@@ -38,9 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
-
+#include "nsIParserService.h"
+#include "nsParserCIID.h"
 #include "nsEditorParserObserver.h"
 
+static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 NS_IMPL_ADDREF(nsEditorParserObserver);
 NS_IMPL_RELEASE(nsEditorParserObserver);
@@ -60,15 +62,6 @@ nsEditorParserObserver::nsEditorParserObserver()
 
 nsEditorParserObserver::~nsEditorParserObserver()
 {
-}
-
-NS_IMETHODIMP_(const char*) nsEditorParserObserver::GetTagNameAt(PRUint32 aTagIndex)
-{
-  nsCString* theString = mWatchTags[aTagIndex];
-  if (theString)
-    return theString->get();
-  else
-    return nsnull;
 }
 
 NS_IMETHODIMP nsEditorParserObserver::Notify(
@@ -98,8 +91,11 @@ NS_IMETHODIMP nsEditorParserObserver::Notify(
   else
     return NS_ERROR_ILLEGAL_VALUE;
 }
-NS_IMETHODIMP nsEditorParserObserver::Notify(nsISupports* aDocumentID, const PRUnichar* aTag, 
-                                             const nsStringArray* aKeys, const nsStringArray* aValues)
+NS_IMETHODIMP nsEditorParserObserver::Notify(nsISupports* aWebShell, 
+                                             nsISupports* aChannel, 
+                                             const PRUnichar* aTag, 
+                                             const nsStringArray* aKeys, 
+                                             const nsStringArray* aValues)
 {
   Notify();
   return NS_OK;
@@ -115,26 +111,34 @@ void nsEditorParserObserver::Notify()
   mBadTagFound = PR_TRUE;
 }
 
-NS_IMETHODIMP nsEditorParserObserver::Start() 
+NS_IMETHODIMP nsEditorParserObserver::Start(eHTMLTags* aWatchTags) 
 {
   nsresult res = NS_OK;
-  nsAutoString parserService; parserService.AssignWithConversion("text/html");
+  
+  nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
+    
+  if (!parserService) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
-  if (NS_FAILED(res)) return res;
-   
-  return anObserverService->AddObserver(this, parserService.get());
+  res = parserService->RegisterObserver(this,
+                                        NS_LITERAL_STRING("text/html"),
+                                        aWatchTags);
+  return res;
 }
 
 NS_IMETHODIMP nsEditorParserObserver::End() 
 {
   nsresult res = NS_OK;
-  nsAutoString parserService; parserService.AssignWithConversion("text/html");
+  nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
 
-  nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
-  if (NS_FAILED(res)) return res;
+  if (!parserService) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
    
-  return anObserverService->RemoveObserver(this, parserService.get());
+  res = parserService->UnregisterObserver(this,
+                                          NS_LITERAL_STRING("text/html"));
+  return res;
 }
 
 NS_IMETHODIMP nsEditorParserObserver::GetBadTagFound(PRBool *aFound)
@@ -142,14 +146,6 @@ NS_IMETHODIMP nsEditorParserObserver::GetBadTagFound(PRBool *aFound)
   NS_ENSURE_ARG_POINTER(aFound);
   *aFound = mBadTagFound;
   return NS_OK; 
-}
-
-
-NS_IMETHODIMP nsEditorParserObserver::RegisterTagToWatch(const char* tagName)
-{
-  nsCString theTagString(tagName);
-  mWatchTags.AppendCString(theTagString);
-  return NS_OK;
 }
 
 

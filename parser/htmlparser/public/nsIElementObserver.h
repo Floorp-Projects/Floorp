@@ -62,11 +62,6 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IELEMENTOBSERVER_IID; return iid; }
 
   /*
-   *   This method return the tag which the observer care about
-   */
-  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex) = 0;
-
-  /*
    *   Subject call observer when the parser hit the tag
    *   @param aDocumentID- ID of the document
    *   @param aTag- the tag
@@ -82,8 +77,11 @@ public:
                     PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
                     const PRUnichar* valueArray[]) = 0;
   
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, 
-                    const nsStringArray* aKeys, const nsStringArray* aValues) = 0;
+  NS_IMETHOD Notify(nsISupports* aWebShell, 
+                    nsISupports* aChannel,
+                    const PRUnichar* aTag, 
+                    const nsStringArray* aKeys, 
+                    const nsStringArray* aValues) = 0;
 
 };
 
