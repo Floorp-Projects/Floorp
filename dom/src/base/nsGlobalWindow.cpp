@@ -780,6 +780,16 @@ GlobalWindowImpl::SetPageYOffset(PRInt32 aPageYOffset)
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::Equals(nsIDOMWindow* aWindow, PRBool* aReturn)
+{
+  // XXX This is a hack that we need until the DOM is implemented in
+  // XPIDL. It allows us to test if an XPIDL-wrapped nsIDOMWindow is
+  // equal to an idlc wrapped Window.
+  *aReturn = (aWindow == NS_STATIC_CAST(nsIDOMWindow*, this));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::Dump(const nsString& aStr)
 {
   char *cstr = aStr.ToNewCString();

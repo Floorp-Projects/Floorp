@@ -122,6 +122,8 @@ public:
   NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset);
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset);
 
+  NS_IMETHOD    Equals(nsIDOMWindow* aWindow, PRBool* aReturn);
+
   NS_IMETHOD    Dump(const nsString& aStr);
   NS_IMETHOD    Alert(const nsString& aStr);
   NS_IMETHOD    Focus();

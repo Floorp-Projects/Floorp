@@ -32,17 +32,57 @@
  * mozilla/rdf/public/xulstubs.idl
  */
 
-[scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMWindow : nsISupports {};
-
-[scriptable, uuid(a6cf907d-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMNodeList : nsISupports {};
-
 [scriptable, uuid(a6cf907c-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNode : nsISupports {};
 
 [scriptable, uuid(a6cf9078-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMElement : nsIDOMNode {};
+
+[scriptable, uuid(a6cf9075-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMDocument : nsIDOMNode {};
+
+[scriptable, uuid(a6cf907d-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNodeList : nsISupports {};
+
+[scriptable, uuid(a6cf906e-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNavigator : nsISupports {};
+
+[scriptable, uuid(77947960-b4af-11d2-bd93-00805f8ae3f4)]
+interface nsIDOMScreen : nsISupports {};
+
+[scriptable, uuid(896d1d20-b4c4-11d2-bd93-00805f8ae3f4)]
+interface nsIDOMHistory : nsISupports {};
+
+[scriptable, uuid(a6cf906f-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMWindowCollection : nsISupports {};
+
+[scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMWindow : nsISupports {
+    readonly attribute  nsIDOMWindow window;
+    readonly attribute  nsIDOMWindow self;
+    readonly attribute  nsIDOMDocument document;
+    readonly attribute  nsIDOMNavigator navigator;
+    readonly attribute  nsIDOMScreen screen;
+    readonly attribute  nsIDOMHistory history;
+    readonly attribute  nsIDOMWindow parent;
+    readonly attribute  nsIDOMWindow top;
+    readonly attribute  boolean closed;
+    readonly attribute  nsIDOMWindowCollection frames;
+             attribute  nsIDOMWindow opener;
+             attribute  wstring status;
+             attribute  wstring defaultStatus;
+             attribute  wstring name;
+             attribute  long innerWidth;
+             attribute  long innerHeight;
+             attribute  long outerWidth;
+             attribute  long outerHeight;
+             attribute  long screenX;
+             attribute  long screenY;
+             attribute  long pageXOffset;
+             attribute  long pageYOffset;
+
+    boolean Equals(in nsIDOMWindow aWindow);
+};
 
 
 %{C++
