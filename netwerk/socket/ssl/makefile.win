@@ -36,6 +36,7 @@ include <$(DEPTH)/config/config.mak>
 
 LINCS = \
 	-I$(PUBLIC) \
+        -I$(PUBLIC)\security \
     -I$(DEPTH)\..\mozilla\netwerk\base\src \
 	-I..\..\security\psm \
 	$(NULL)
