@@ -42,7 +42,7 @@
       policyButton = document.getElementById("popupPolicy");
       manageTree = document.getElementById("permissionsTree");
       toggleEnabling();
-
+      loadPermissions();
     }
     function ftpCheck() {
       var checked = document.getElementById("advancedMailFTP").checked;
