@@ -35,6 +35,7 @@
 #include "nsInterfaceRecord.h"
 #include "nsTypelibRecord.h"
 
+class nsFileSpec;
 
 class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 {
@@ -62,7 +63,7 @@ private:
     nsresult initInterfaceTables();
 
     // Should this be public?
-    nsresult indexify_file(const char *filename);
+    nsresult indexify_file(const nsFileSpec *fileSpec);
 
     // list of typelib records for enumeration.  (freeing?)
     nsTypelibRecord *typelibRecords;

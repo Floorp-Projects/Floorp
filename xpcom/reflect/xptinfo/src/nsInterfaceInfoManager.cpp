@@ -25,6 +25,7 @@
 #endif
 #include "nscore.h"
 
+#include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h" 
 
 #include "nsISupports.h"
@@ -111,21 +112,18 @@ nsInterfaceInfoManager::nsInterfaceInfoManager()
 }
 
 static
-XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
+XPTHeader *getHeader(const nsFileSpec *fileSpec, nsIAllocator *al)
+{
     XPTState *state = NULL;
     XPTCursor curs;
     XPTHeader *header = NULL;
-    PRFileInfo fileinfo;
     PRUint32 flen;
     char *whole = NULL;
-    PRFileDesc *in = NULL;
     XPTCursor *cursor = &curs;
 
-    if (PR_GetFileInfo(filename, &fileinfo) != PR_SUCCESS) {
-        NS_ERROR("PR_GetFileInfo failed");
+    flen = fileSpec->GetFileSize();
+    if (!fileSpec->Valid())
         return NULL;
-    }
-    flen = fileinfo.size;
 
     whole = (char *)al->Alloc(flen);
     if (!whole) {
@@ -133,30 +131,29 @@ XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
         return NULL;
     }
 
-    in = PR_Open(filename, PR_RDONLY, 0);
-    if (!in) {
-        NS_ERROR("FAILED: fopen");
-        goto out;
-    }
+    nsInputFileStream inputStream(*fileSpec); // defaults to read only
 
     if (flen > 0) {
-       	PRInt32 howmany = PR_Read(in, whole, flen);
-       	if (howmany < 0) {
+       	PRInt32 howMany = inputStream.read(whole, flen);
+       	if (howMany < 0) {
            	NS_ERROR("FAILED: reading typelib file");
            	goto out;
        	}
 
-#ifdef XP_MAC
-		// Mac can lie about the filesize, because it includes the resource fork
-		// (where our CVS information lives). So we'll just believe it if it read
-		// less than flen bytes.
-		flen = howmany;
-#else
-		if (PRUint32(howmany) < flen) {
-			NS_ERROR("typelib short read");
-			goto out;
-		}
-#endif
+//#ifdef XP_MAC
+        // Mac can lie about the filesize, because it includes the resource fork
+        // (where our CVS information lives). So we'll just believe it if it read
+        // less than flen bytes.
+        
+        // sfraser :I believe this comment is inaccurate; the file size we
+        // get will only ever be the data fork, so it should be accurate.
+//            flen = howMany;
+//#else
+        if (PRUint32(howMany) < flen) {
+            NS_ERROR("typelib short read");
+            goto out;
+        }
+//#endif
 
         state = XPT_NewXDRState(XPT_DECODE, whole, flen);
         if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
@@ -170,19 +167,18 @@ XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
     }
 
  out:
+    // ~nsInputFileStream closes the file
     if (state != NULL)
         XPT_DestroyXDRState(state);
     if (whole != NULL)
         al->Free(whole);
-    if (in != NULL)
-        PR_Close(in);
     return header;
 }
 
 nsresult
-nsInterfaceInfoManager::indexify_file(const char *filename)
+nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
 {
-    XPTHeader *header = getHeader(filename, this->allocator);
+    XPTHeader *header = getHeader(fileSpec, this->allocator);
     if (header == NULL) {
         // XXX glean something more meaningful from getHeader?
         return NS_ERROR_FAILURE;
@@ -202,11 +198,11 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
 
         // find or create an interface record, and set the appropriate
         // slot in the nsTypelibRecord array.
-        static const nsID zero =
+        static const nsID zeroIID =
         { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
         nsInterfaceRecord *record = NULL;
 
-        PRBool iidIsZero = current->iid.Equals(zero);
+        PRBool iidIsZero = current->iid.Equals(zeroIID);
 
         // XXX fix bogus repetitive logic.
         PRBool shouldAddToIDDTable = PR_TRUE;
@@ -255,11 +251,13 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
         // Is the entry we're looking at resolved?
         if (current->interface_descriptor != NULL) {
             if (record->interfaceDescriptor != NULL) {
+                char *fileName = fileSpec->GetLeafName();
                 char *warnstr = PR_smprintf
                     ("interface %s in typelib %s overrides previous definition",
-                     current->name, filename);
+                     current->name, fileName);
                 NS_WARNING(warnstr);
                 PR_smprintf_free(warnstr);
+                nsCRT::free(fileName);
             }
             record->interfaceDescriptor = current->interface_descriptor;
             record->typelibRecord = tlrecord;
@@ -282,7 +280,9 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
 #define XPT_HASHSIZE 64
 
 #ifdef DEBUG
-PRIntn check_nametable_enumerator(PLHashEntry *he, PRIntn index, void *arg) {
+static PRIntn
+check_nametable_enumerator(PLHashEntry *he, PRIntn index, void *arg)
+{
     char *key = (char *)he->key;
     nsInterfaceRecord *value = (nsInterfaceRecord *)he->value;
     nsHashtable *iidtable = (nsHashtable *)arg;
@@ -305,7 +305,9 @@ PRIntn check_nametable_enumerator(PLHashEntry *he, PRIntn index, void *arg) {
     return HT_ENUMERATE_NEXT;
 }
 
-PRBool check_iidtable_enumerator(nsHashKey *aKey, void *aData, void *closure) {
+static PRBool
+check_iidtable_enumerator(nsHashKey *aKey, void *aData, void *closure)
+{
 //      PLHashTable *nameTable = (PLHashTable *)closure;
     nsInterfaceRecord *record = (nsInterfaceRecord *)aData;
     // can I do anything with the key?
@@ -341,47 +343,49 @@ nsInterfaceInfoManager::initInterfaceTables()
         sysdir(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
     
 #ifdef XP_MAC
-	PRBool wasAlias;
-	sysdir.ResolveSymlink(wasAlias);
+    PRBool wasAlias;
+    sysdir.ResolveSymlink(wasAlias);
 #endif
-
+    
 #ifdef DEBUG
     int which = 0;
 #endif
-
-	for (nsDirectoryIterator i(sysdir, PR_FALSE); i.Exists(); i++) {
-		// XXX need to copy?
-		nsFileSpec spec = i.Spec();
-		
+    
+    for (nsDirectoryIterator i(sysdir, PR_FALSE); i.Exists(); i++) {
+        // XXX need to copy?
+        nsFileSpec spec = i.Spec();
+        
 #ifdef XP_MAC
-		spec.ResolveSymlink(wasAlias);
+        spec.ResolveSymlink(wasAlias);
 #endif
-		
-		if (! spec.IsFile())
-			continue;
-		
-		// XXX this assumes ASCII strings are returned from nsFileSpec. Is this valid?
-		nsNSPRPath path(spec);
-		const char* fullname = path; // path needs to stay in scope, beacuse fullname refers to an internal member
-		int flen = PL_strlen(fullname);
-        if (flen < 4 || PL_strcasecmp(&(fullname[flen - 4]), ".xpt"))
+        
+        if (! spec.IsFile())
             continue;
-
+        
+        // See if this is a .xpt file by looking at the filename                
+        char*   fileName = spec.GetLeafName();
+        int flen = PL_strlen(fileName);
+        if (flen < 4 || PL_strcasecmp(&(fileName[flen - 4]), ".xpt")) {
+            nsCRT::free(fileName);
+            continue;
+        }
+        
         // it's a valid file, read it in.
 #ifdef DEBUG
         which++;
-        TRACE((stderr, "%d %s\n", which, fullname));
+        TRACE((stderr, "%d %s\n", which, fileName));
 #endif
-
-        nsresult nsr = this->indexify_file(fullname);
+        
+        nsresult nsr = this->indexify_file(&spec);
         if (NS_FAILED(nsr)) {
             char *warnstr = PR_smprintf("failed to process typelib file %s",
-                                        fullname);
+                                        fileName);
             NS_WARNING(warnstr);
             PR_smprintf_free(warnstr);
         }
+        nsCRT::free(fileName);
     }
-
+    
 #ifdef DEBUG
     TRACE((stderr, "\nchecking name table for unresolved entries...\n"));
     // scan here to confirm that all interfaces are resolved.
