@@ -111,10 +111,10 @@ public abstract class XMLLib
      * Return wrap of the given Java object as appropritate XML object or
      * null if Java object has no XML representation.
      * The default implementation returns null to indicate no special
-	 * wrapping of XML objects.
-	 */
+     * wrapping of XML objects.
+     */
     public Scriptable wrapAsXMLOrNull(Context cx, Object javaObject)
-	{
-		return null;
-	}
+    {
+        return null;
+    }
 }
