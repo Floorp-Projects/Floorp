@@ -700,6 +700,12 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext
         //
         // Ignore the return code, since the request is being completed...
         //
+
+        mHeaderBuffer.CompressSet(" \t", ' ');
+        mHeaderBuffer.StripChars ("\r\n");
+
+        mResponse->ParseHeader (mHeaderBuffer);
+
         mHeadersDone = PR_TRUE;
         if (mResponse) {
             FinishedResponseHeaders() ;
