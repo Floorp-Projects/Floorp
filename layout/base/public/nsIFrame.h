@@ -171,6 +171,9 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, the frame has an associated view
 #define NS_FRAME_HAS_VIEW 0x00002000
 
+// If this bit is set, the frame was created from anonymous content.
+#define NS_FRAME_INDEPENDENT_SELECTION 0x00004000
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 

@@ -55,7 +55,7 @@ class nsCaret : public nsICaret,
 
  		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed);
+		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *aDOMSel);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 	
 	  //nsIDOMSelectionListener interface
@@ -102,5 +102,6 @@ class nsCaret : public nsICaret,
 		nsRect								mCaretRect;					// the last caret rect
 		nsIFrame*							mLastCaretFrame;		// store the frame the caret was last drawn in.
 		PRInt32								mLastContentOffset;
+    nsWeakPtr mDomSelectionWeak;
 };
 

@@ -57,6 +57,10 @@
 #include "nsFormControlHelper.h"
 #include "nsIDocumentEncoder.h"
 
+#include "nsICaret.h"
+#include "nsIDOMSelectionListener.h"
+
+
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
@@ -84,27 +88,28 @@ public:
 
   
   //NSISELECTIONCONTROLLER INTERFACES
-  NS_IMETHOD SetDisplaySelection(PRInt16 toggle){return NS_OK;}
-  NS_IMETHOD GetDisplaySelection(PRInt16 *_retval){return NS_OK;}
-  NS_IMETHOD GetSelection(PRInt16 type, nsIDOMSelection **_retval){return NS_OK;}
-  NS_IMETHOD ScrollSelectionIntoView(PRInt16 type, PRInt16 region){return NS_OK;}
-  NS_IMETHOD RepaintSelection(PRInt16 type){return NS_OK;}
-  NS_IMETHOD SetCaretEnabled(PRBool enabled){return NS_OK;}
-  NS_IMETHOD GetCaretEnabled(PRBool *_retval){return NS_OK;}
-  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend){return NS_OK;}
-  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend){return NS_OK;}
-  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend){return NS_OK;}
-  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend){return NS_OK;}
-  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend){return NS_OK;}
-  NS_IMETHOD CompleteScroll(PRBool aForward){return NS_OK;}
-  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend){return NS_OK;}
-  NS_IMETHOD ScrollPage(PRBool aForward){return NS_OK;}
-  NS_IMETHOD ScrollLine(PRBool aForward){return NS_OK;}
-  NS_IMETHOD ScrollHorizontal(PRBool aLeft){return NS_OK;}
-  NS_IMETHOD SelectAll(void){return NS_OK;}
+  NS_IMETHOD SetDisplaySelection(PRInt16 toggle);
+  NS_IMETHOD GetDisplaySelection(PRInt16 *_retval);
+  NS_IMETHOD GetSelection(PRInt16 type, nsIDOMSelection **_retval);
+  NS_IMETHOD ScrollSelectionIntoView(PRInt16 type, PRInt16 region);
+  NS_IMETHOD RepaintSelection(PRInt16 type);
+  NS_IMETHOD SetCaretEnabled(PRBool enabled);
+  NS_IMETHOD GetCaretEnabled(PRBool *_retval);
+  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend){return NS_OK;}//*
+  NS_IMETHOD CompleteScroll(PRBool aForward){return NS_OK;}//*
+  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend){return NS_OK;}//*
+  NS_IMETHOD ScrollPage(PRBool aForward){return NS_OK;}//*
+  NS_IMETHOD ScrollLine(PRBool aForward){return NS_OK;}//*
+  NS_IMETHOD ScrollHorizontal(PRBool aLeft){return NS_OK;}//*
+  NS_IMETHOD SelectAll(void);
 private:
   nsCOMPtr<nsIFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>        mLimiter;
+  nsWeakPtr mPresShellWeak;
 };
 
 // Implement our nsISupports methods
@@ -123,8 +128,131 @@ nsTextAreaSelectionImpl::nsTextAreaSelectionImpl(nsIFrameSelection *aSel, nsIPre
     nsCOMPtr<nsIFocusTracker> tracker = do_QueryInterface(aShell);
     mLimiter = aLimiter;
     mFrameSelection->Init(tracker, mLimiter);
+    mPresShellWeak = getter_AddRefs( NS_GetWeakReference(aShell) );
   }
 }
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SetDisplaySelection(PRInt16 aToggle)
+{
+  if (mFrameSelection)
+    return mFrameSelection->SetDisplaySelection(aToggle);
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetDisplaySelection(PRInt16 *aToggle)
+{
+  if (mFrameSelection)
+    return mFrameSelection->GetDisplaySelection(aToggle);
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetSelection(PRInt16 type, nsIDOMSelection **_retval)
+{
+  if (mFrameSelection)
+    return mFrameSelection->GetSelection(type, _retval);
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::ScrollSelectionIntoView(PRInt16 type, PRInt16 region)
+{
+  if (mFrameSelection)
+    return mFrameSelection->ScrollSelectionIntoView(type, region);
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::RepaintSelection(PRInt16 type)
+{
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+  if (presShell)
+  {
+    nsCOMPtr<nsIPresContext> context;
+    if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
+    {
+      return mFrameSelection->RepaintSelection(context, type);
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SetCaretEnabled(PRBool enabled)
+{
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (selCon)
+  {
+    return selCon->SetCaretEnabled(enabled);//we can use presshells because there is only 1 caret
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::GetCaretEnabled(PRBool *_retval)
+{
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (selCon)
+  {
+    return selCon->GetCaretEnabled(_retval);//we can use presshells because there is only 1 caret
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::CharacterMove(PRBool aForward, PRBool aExtend)
+{
+  if (mFrameSelection)
+    return mFrameSelection->CharacterMove(aForward, aExtend);
+  return NS_ERROR_NULL_POINTER;
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::WordMove(PRBool aForward, PRBool aExtend)
+{
+  if (mFrameSelection)
+    return mFrameSelection->WordMove(aForward, aExtend);
+  return NS_ERROR_NULL_POINTER;
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
+{
+  if (mFrameSelection)
+    return mFrameSelection->LineMove(aForward, aExtend);
+  return NS_ERROR_NULL_POINTER;
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
+{
+  if (mFrameSelection)
+    return mFrameSelection->IntraLineMove(aForward, aExtend);
+  return NS_ERROR_NULL_POINTER;
+}
+
+
+NS_IMETHODIMP
+nsTextAreaSelectionImpl::SelectAll()
+{
+  if (mFrameSelection)
+    return mFrameSelection->SelectAll();
+  return NS_ERROR_NULL_POINTER;
+}
+
+
 
 // END   nsTextAreaSelectionImpl
 
@@ -261,7 +389,20 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
 
 //initialize the editor
-    mEditor->Init(domdoc, shell, mSelCon, editorFlags);
+    mEditor->Init(domdoc, shell, content, mSelCon, editorFlags);
+//get the caret
+    nsCOMPtr<nsICaret> caret;
+    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
+    {
+      nsCOMPtr<nsIDOMSelectionListener> listener = do_QueryInterface(caret);
+      nsCOMPtr<nsIDOMSelection> domSelection;
+      if (listener)
+      {
+        if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
+          domSelection->AddSelectionListener(listener);
+      }
+    }
+
   }
   return NS_OK;
 }
@@ -448,3 +589,35 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
     }*/
   }
 }     
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList)
+{
+  nsIFrame *list = aChildList;
+  nsFrameState  frameState;
+  while (list)
+  {
+    list->GetFrameState(&frameState);
+    frameState |= NS_FRAME_INDEPENDENT_SELECTION;
+    list->SetFrameState(frameState);
+    list->GetNextSibling(&list);
+  }
+  nsresult result = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  mEditor->PostCreate();
+  return result;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon)
+{
+  if (!aSelCon)
+    return NS_ERROR_INVALID_ARG;
+  NS_IF_ADDREF(*aSelCon = mSelCon);
+  return NS_OK;
+}
+
+

@@ -105,6 +105,7 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
     if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))))
     {
 		  domSelection->AddSelectionListener(this);
+      mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(domSelection) );
 	  }
   }
   else
@@ -182,23 +183,13 @@ NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed)
+NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *aDOMSel)
 {
 	if (!mPresShell)
 		return NS_ERROR_NOT_INITIALIZED;
 		
-	nsCOMPtr<nsIDOMSelection> domSelection;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
+	nsCOMPtr<nsIDOMSelection> domSelection = aDOMSel;
   nsresult err;
-  if (selCon)
-  {
-    err = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(domSelection));
-	  if (NS_FAILED(err))
-		  return err;
-  }
-  else
-    return NS_ERROR_FAILURE;
-		
 	if (!domSelection)
 		return NS_ERROR_NOT_INITIALIZED;		// no selection
 	
@@ -326,9 +317,9 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 #endif
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
+NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *aDomSel, short)
 {
-
+  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDomSel) );   // weak reference to pres shell
 	if (mVisible)
 	{
 		StopBlinking();
@@ -403,17 +394,9 @@ nsresult nsCaret::StopBlinking()
 //
 PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
-	nsCOMPtr<nsIDOMSelection> domSelection;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
-  nsresult err;
-  if (selCon)
-  {
-	  err = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
-	  if (!NS_SUCCEEDED(err) || !domSelection)
-	  	return PR_FALSE;
-  }
-  else
-    return NS_ERROR_FAILURE;
+  if (!mDomSelectionWeak)
+    return PR_FALSE;
+	nsCOMPtr<nsIDOMSelection> domSelection =  do_QueryReferent(mDomSelectionWeak);
 	PRBool isCollapsed;
 
 	if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
@@ -454,7 +437,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 #endif // NOT_NEEDED
 				nsIFrame*	theFrame = nsnull;
 				PRInt32         theFrameOffset = 0;
-
+        nsresult err;
 				//get frame selection and find out what frame to use...
 				nsCOMPtr<nsIFrameSelection> frameSelection;
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
@@ -557,16 +540,7 @@ PRBool nsCaret::MustDrawCaret()
 	if (mDrawn)
 		return PR_TRUE;
 		
-	nsCOMPtr<nsIDOMSelection> domSelection;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
-  if (selCon)
-  {
-	  nsresult err = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
-	  if (NS_FAILED(err) || !domSelection)
-	  	return PR_FALSE;
-  }
-  else
-    return NS_ERROR_FAILURE;
+	nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
 	PRBool isCollapsed;
 
 	if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))

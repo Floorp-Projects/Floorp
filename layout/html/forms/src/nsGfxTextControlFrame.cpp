@@ -3012,7 +3012,7 @@ nsGfxTextControlFrame::InstallEditor()
     // initialize the editor
     nsCOMPtr<nsISelectionController> selCon;
     selCon = do_QueryInterface(presShell);
-    result = mEditor->Init(mDoc, presShell,selCon, editorFlags);
+    result = mEditor->Init(mDoc, presShell,nsnull, selCon, editorFlags);
     if (NS_FAILED(result)) { return result; }
 
     nsCOMPtr<nsIPresShell> framePresShell;
