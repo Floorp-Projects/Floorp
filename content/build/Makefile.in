@@ -111,8 +111,3 @@ $(BUILD_DATE): gbdate.pl
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
 
-# To prevent ILink from crashing
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_DLLFLAGS	:= ilink /FREE /NOE /NOL /DLL /O:ngcontent.dll /M /INC:_dllentry
-endif
-

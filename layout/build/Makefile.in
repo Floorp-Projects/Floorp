@@ -109,8 +109,3 @@ ifdef MOZ_SVG
 INCLUDES += -I$(srcdir)/../svg/content/src
 endif
 
-# To prevent ILink from crashing
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_DLLFLAGS	:= ilink /FREE /NOE /NOL /DLL /O:nglayout.dll /M /INC:_dllentry
-endif
-
