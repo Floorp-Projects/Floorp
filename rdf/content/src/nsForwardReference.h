@@ -34,35 +34,38 @@ public:
     /**
      * Priority codes returned from GetPriority()
      */
-    enum Priority {
+    enum State {
+        /** A dummy marker, used to indicate unstarted resolution */
+        eStart,
+
         /** The initial pass, after which the content model will be
             fully built */
-        ePriority_Construction,
+        eConstruction,
 
         /** A second pass, after which all 'magic attribute' hookup
             will have been performed */
-        ePriority_Hookup,
+        eHookup,
 
         /** A dummy marker, used in kPasses to indicate termination */
-        ePriority_Done
+        eDone
     };
 
     /**
      * Forward references are categorized by 'priority', and all
      * forward references in a higher priority are resolved before any
      * reference in a lower priority. This variable specifies this
-     * ordering. The last Priority is guaranteed to be ePriority_Done.
+     * ordering. The last Priority is guaranteed to be eDone.
      */
-    static const Priority kPasses[];
+    static const State kPasses[];
 
     /**
-     * Get the priority of the forward reference. 'ePriority_Construction'
-     * references are all resolved before 'ePriority_Hookup' references
+     * Get the state in which the forward reference should be resolved.
+     * 'eConstruction' references are all resolved before 'eHookup' references
      * are resolved.
      *
-     * @return the Priority of the reference
+     * @return the State in which the reference needs to be resolved
      */
-    virtual Priority GetPriority() = 0;
+    virtual State GetState() = 0;
 
     /**
      * Result codes returned from Resolve()
