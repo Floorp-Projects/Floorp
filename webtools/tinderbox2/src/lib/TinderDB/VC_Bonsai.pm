@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.24 $ 
-# $Date: 2002/05/03 00:09:56 $ 
+# $Revision: 1.25 $ 
+# $Date: 2002/05/03 00:27:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.24 $ )[1];
+$VERSION = ( qw $Revision: 1.25 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -316,7 +316,7 @@ sub status_table_legend {
 
 
 sub status_table_header {
-  return ("\t<th>$VC_NAME checkins</th>\n");
+  return ("\t<th>$VC_NAME</th>\n");
 }
 
 

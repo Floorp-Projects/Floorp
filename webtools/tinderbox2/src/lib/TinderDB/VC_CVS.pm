@@ -35,8 +35,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.27 $ 
-# $Date: 2002/05/03 00:19:39 $ 
+# $Revision: 1.28 $ 
+# $Date: 2002/05/03 00:27:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_CVS.pm,v $ 
 # $Name:  $ 
@@ -139,7 +139,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.27 $ )[1];
+$VERSION = ( qw $Revision: 1.28 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -148,8 +148,11 @@ $VERSION = ( qw $Revision: 1.27 $ )[1];
 $CURRENT_YEAR = 1900 + (gmtime(time()))[5];
 
 # name of the version control system
-$VC_NAME = $TinderDB::VC_NAME || "CVS";
+$VC_NAME = $TinderConfig::VC_NAME || "CVS";
 
+# how we recoginise bug number in the checkin comments.
+$VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
+    "(\d\d\d+)";
 
 
 
@@ -505,7 +508,7 @@ sub status_table_legend {
 
 
 sub status_table_header {
-  return ("\t<th>$VC_NAME checkins</th>\n");
+  return ("\t<th>$VC_NAME</th>\n");
 }
 
 
