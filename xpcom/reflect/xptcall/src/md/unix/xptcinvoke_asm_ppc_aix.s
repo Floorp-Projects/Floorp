@@ -114,7 +114,8 @@
 		addi	r5,r5,8			# step over junk at start of vTable !
 		lwzx	r11,r5,r4		# get function pointer
 
-		lwz	r5,12(r4) 		# Value at r4(vtable) + offset 12 is used to adjust r3 ('that' pointer)
+		addi	r5,r5,-4    	 	# We need to manually adjust the 'that' pointer, this is CFRONT based
+		lwzx	r5,r4,r5 		# offset = r4(vtable) + r5(methodIndex offset) - 4 
 		add	r3,r5,r3		# adjust 'that' r3 = r3 + r5
 		
 		lwz	r4,28(sp)
