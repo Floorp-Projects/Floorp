@@ -71,19 +71,19 @@ DoPrint (GtkWidget *widget, UnixPrOps *prOps)
 	strcpy( prOps->prData->path, 
 		gtk_entry_get_text( GTK_ENTRY( prOps->widgets.pathEntry ) ) );
 
-	if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( prOps->widgets.fpfToggle ) ) == PR_TRUE )
+	if ( GTK_TOGGLE_BUTTON( prOps->widgets.fpfToggle )->active == PR_TRUE )
 		prOps->prData->fpf = PR_TRUE;
 	else
 		prOps->prData->fpf = PR_FALSE;
-	if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( prOps->widgets.greyToggle ) ) )
+	if ( GTK_TOGGLE_BUTTON( prOps->widgets.greyToggle )->active == PR_TRUE )
 		prOps->prData->grayscale = PR_TRUE;
 	else
 		prOps->prData->grayscale = PR_FALSE;
-	if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( prOps->widgets.letterToggle ) ) )
+	if ( GTK_TOGGLE_BUTTON( prOps->widgets.letterToggle )->active == PR_TRUE )
 		prOps->prData->size = SizeLetter;
-	else if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( prOps->widgets.legalToggle ) ) )
+	else if ( GTK_TOGGLE_BUTTON( prOps->widgets.legalToggle )->active == PR_TRUE )
 		prOps->prData->size = SizeLegal;
-	else if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( prOps->widgets.execToggle ) ) )
+	else if ( GTK_TOGGLE_BUTTON( prOps->widgets.execToggle )->active == PR_TRUE )
 		prOps->prData->size = SizeExecutive;
 	else
 		prOps->prData->size = SizeA4;
