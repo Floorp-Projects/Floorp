@@ -155,9 +155,7 @@ nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgHdr* *re
     nsresult rv;
 
 	nsIRDFService *rdf;
-	rv = nsServiceManager::GetService(kRDFServiceCID, 
-                                      nsIRDFService::GetIID(), 
-                                      (nsISupports**)&rdf);
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
     if (NS_FAILED(rv)) return rv;
 
@@ -191,8 +189,6 @@ nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgHdr* *re
 		msgHdr->SetMessageKey(key);
 	}
     *result = msgHdr;
-  
-    //nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
 
     return NS_OK;
 }

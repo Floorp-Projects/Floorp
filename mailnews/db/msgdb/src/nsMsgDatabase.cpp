@@ -2530,16 +2530,12 @@ PRBool	nsMsgDatabase::ThreadBySubjectWithoutRe()
 nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 {
 	PRBool prefValue = PR_FALSE;
-	nsIPref* prefs = nsnull;
 	nsresult rv;
-	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
-    if (prefs && NS_SUCCEEDED(rv))
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs)
 	{
-//		prefs->Startup("prefs50.js");
-
 		rv = prefs->GetBoolPref(prefName, &prefValue);
 		*result = prefValue;
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 	return rv;
 }
