@@ -65,7 +65,7 @@ ShowSetupTypeWin(void)
 		if (!gControls->stw->instType || !gControls->stw->instDescBox || 
 			!gControls->stw->destLocBox || !gControls->stw->destLoc)
 		{
-			ErrorHandler();
+			ErrorHandler(eMem);
 			return;
 		}
 
@@ -484,7 +484,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	reserr = ResError();
 	if (reserr!=noErr || !instDescRectH)
 	{
-		ErrorHandler();
+		ErrorHandler(reserr);
 		return;
 	}
 	
@@ -504,7 +504,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	dsAvailH = TENew(&viewRect, &viewRect);
 	if (!dsAvailH)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 	
@@ -547,7 +547,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	dsNeededH = TENew( &viewRect, &viewRect );
 	if (!dsNeededH)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 	
@@ -645,7 +645,7 @@ ClearDiskSpaceMsgs(void)
 	reserr = ResError();
 	if (reserr!=noErr || !instDescRectH)
 	{
-		ErrorHandler();
+		ErrorHandler(reserr);
 		return;
 	}
 

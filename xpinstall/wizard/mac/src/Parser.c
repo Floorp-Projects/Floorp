@@ -67,10 +67,16 @@ ParseConfig(void)
 
 	gControls->cfg = (Config*) NewPtrClear(sizeof(Config));			
 
-	if(!gControls->cfg || !ReadConfigFile(&cfgText))
+	if(!gControls->cfg)
 	{
-			ErrorHandler();
-			return;
+	    ErrorHandler(eMem);
+		return;
+	}
+	
+	if (!ReadConfigFile(&cfgText))
+	{
+	    ErrorHandler(eCfgRead);
+	    return;
 	}
 	
 	ERR_CHECK(PopulateLicWinKeys(cfgText));
@@ -122,7 +128,7 @@ ReadConfigFile(char **text)
 		*text = (char*) NewPtrClear(dataSize);
 		if (!(*text))
 		{
-			ErrorHandler();
+			ErrorHandler(eMem);
 			return false;
 		}
 			
@@ -148,7 +154,7 @@ PopulateLicWinKeys(char *cfgText)
 	gControls->cfg->licFileName = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->licFileName)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return eParseFailed;
 	}
 	
@@ -167,20 +173,20 @@ PopulateWelcWinKeys(char *cfgText)
 	gControls->cfg->welcMsg[0] = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->welcMsg[0])
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return eParseFailed;
 	}
 		
 	if (!FillKeyValueUsingResID(sWelcDlg, sMsg0, gControls->cfg->welcMsg[0], cfgText))
 	{
-		ErrorHandler();
+		ErrorHandler(eParseFailed);
 		return eParseFailed;
 	}
 		
 	gControls->cfg->welcMsg[1] = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->welcMsg[1])
 	{
-		ErrorHandler();
+		ErrorHandler(eParseFailed);
 		return eParseFailed;
 	}	
 
@@ -189,7 +195,7 @@ PopulateWelcWinKeys(char *cfgText)
 	gControls->cfg->welcMsg[2] = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->welcMsg[2])
 	{
-		ErrorHandler();
+		ErrorHandler(eParseFailed);
 		return eParseFailed;
 	}
 
@@ -205,7 +211,7 @@ PopulateWelcWinKeys(char *cfgText)
 	gControls->cfg->readmeFile = NewHandleClear(kValueMaxLen);
 	if (!gControls->cfg->readmeFile)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return eParseFailed;
 	}
 	if (FillKeyValueUsingResID(sWelcDlg, sReadmeFilename, gControls->cfg->readmeFile, cfgText))
@@ -218,13 +224,13 @@ PopulateWelcWinKeys(char *cfgText)
 		gControls->cfg->readmeApp = NewHandleClear(kValueMaxLen);
 		if (!gControls->cfg->readmeApp)
 		{
-			ErrorHandler();
+			ErrorHandler(eMem);
 			return eParseFailed;
 		}
 		
 		if (!FillKeyValueUsingResID(sWelcDlg, sReadmeApp, gControls->cfg->readmeApp, cfgText))
 		{
-			ErrorHandler();
+			ErrorHandler(eMem);
 			return eParseFailed;
 		}
 	}
@@ -1030,7 +1036,7 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 	value = (char*) NewPtrClear(kValueMaxLen);
 	if (!value)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return false;
 	}
 			
@@ -1061,7 +1067,7 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 	key = 			(char *) NewPtrClear( kKeyMaxLen );
 	if (!sectionName || !section || !key)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return false;
 	}	
     

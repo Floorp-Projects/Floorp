@@ -68,14 +68,14 @@ ShowComponentsWin(void)
 	}
 	else
 	{
-		ErrorHandler();
+		ErrorHandler(reserr);
 		return;
 	}
 	gControls->cw->compDescBox = NULL;
 	gControls->cw->compDescBox = GetNewControl(rCompDescBox, gWPtr);
 	if (!gControls->cw->compDescBox)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 

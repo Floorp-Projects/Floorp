@@ -66,7 +66,7 @@ ShowTerminalWin(void)
 			viewRect = (Rect) **((Rect **)rectH);
 		else
 		{
-			ErrorHandler();
+			ErrorHandler(reserr);
 			return;
 		}
 		
@@ -75,7 +75,7 @@ ShowTerminalWin(void)
 		gControls->tw->startMsg = TENew(&viewRect, &viewRect);
 	    if (gControls->tw->startMsg == NULL)
 	    {
-	    	ErrorHandler();
+	    	ErrorHandler(eMem);
 	    	return;
 	    }
 	    
@@ -87,7 +87,7 @@ ShowTerminalWin(void)
 			gControls->tw->siteSelector = GetNewControl( rSiteSelector, gWPtr );
 			if (!gControls->tw->siteSelector)
 			{
-				ErrorHandler();
+				ErrorHandler(eMem);
 				return;
 			}
 			
@@ -124,7 +124,7 @@ ShowTerminalWin(void)
 				gControls->tw->saveBitsCheckbox = GetNewControl( rSaveCheckbox, gWPtr );
 				if (!gControls->tw->saveBitsCheckbox)
 				{
-					ErrorHandler();
+					ErrorHandler(eMem);
 					return;
 				}
 				ShowControl(gControls->tw->saveBitsCheckbox);
@@ -136,7 +136,7 @@ ShowTerminalWin(void)
 					 gControls->tw->saveBitsMsgBox  = (Rect) **((Rect **)rectH);
 				else
 				{
-					ErrorHandler();
+					ErrorHandler(reserr);
 					return;
 				}
 				
@@ -145,7 +145,7 @@ ShowTerminalWin(void)
 												   &gControls->tw->saveBitsMsgBox );
 			    if (gControls->tw->saveBitsMsg == NULL)
 			    {
-			    	ErrorHandler();
+			    	ErrorHandler(eMem);
 			    	return;
 			    }
 			    HLock(gControls->cfg->saveBitsMsg);
@@ -263,7 +263,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 			}
 			else
 			{
-				ErrorHandler();	
+				ErrorHandler(eParam);	
 				return;
 			}
 			

@@ -70,7 +70,7 @@ VerifyEnv(void)
 	if (err != noErr)
 	{
 		// errors already!  we are bailing
-		ErrorHandler();
+		ErrorHandler(err);
 		bEnvOK = false;
 	}
 	
@@ -101,7 +101,7 @@ void Init(void)
 #if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
 	if (!InitSDLib())
 	{
-		ErrorHandler();
+		ErrorHandler(eLoadLib);
 		return;
 	}
 #endif
@@ -109,7 +109,7 @@ void Init(void)
 #if CFG_IS_REMOTE == 1
 	if (!SpawnSDThread(PullDownConfig, &tid))
 	{
-		ErrorHandler();
+		ErrorHandler(eSpawn);
 		return;
 	}
 
@@ -175,7 +175,7 @@ InitOptObject(void)
 
 	if (!gControls->opt)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 	
@@ -184,7 +184,7 @@ InitOptObject(void)
 	gControls->opt->folder = (unsigned char *)NewPtrClear(64*sizeof(unsigned char));
 	if (!gControls->opt->folder)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 	
@@ -204,7 +204,7 @@ InitControlsObject(void)
 	gControls 		= (InstWiz *) 		NewPtrClear(sizeof(InstWiz));
 	if (!gControls)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 	
@@ -218,7 +218,7 @@ InitControlsObject(void)
 	if (!gControls->lw || !gControls->ww || !gControls->stw || 
 		!gControls->cw || !gControls->tw)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 	}
 	
 	return;
@@ -248,7 +248,7 @@ void MakeMenus(void)
 	
 	if ( !(mbarHdl = GetNewMBar( rMBar)) )
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 	
@@ -259,12 +259,12 @@ void MakeMenus(void)
 		AppendResMenu(menuHdl, 'DRVR');
 	}
 	else
-		ErrorHandler(); 
+		ErrorHandler(eMenuHdl); 
 
 	if ( (menuHdl = GetMenuHandle(mEdit)) != nil)
 		DisableItem(menuHdl, 0);
 	else
-		ErrorHandler();
+		ErrorHandler(eMenuHdl);
 	
 	ERR_CHECK(HMGetHelpMenuHandle(&menuHdl));
 	DisableItem(menuHdl, 1);
@@ -319,12 +319,36 @@ void MainEventLoop(void)
 	Shutdown();
 }
  
-void ErrorHandler(void)
+void ErrorHandler(short errCode)
 {
 // TO DO
-// 		* throw up an error dialog
 //		* handle a "fatality" parameter for recovery
 
+    Str255      pErrorStr = "\pUnexpected error!";
+    Str255      pMessage = "\pError: ";
+    char        *cErrNo = 0;
+    StringPtr   pErrNo = 0;
+    
+    if (errCode > 0)    // negative errors are definitely from the system so we don't interpret
+    {
+        GetIndString(pErrorStr, rErrorList, errCode);
+        pstrcat(pMessage, pErrorStr);
+    }
+    else
+    {
+        pstrcpy(pMessage, "\pSystem error: ");
+        cErrNo = ltoa(errCode);
+        pErrNo = CToPascal(cErrNo);
+        pstrcat(pMessage, pErrNo);
+        if (cErrNo)
+            free(cErrNo);
+        if (pErrNo)
+            DisposePtr((Ptr) pErrNo);
+    }
+       
+    ParamText(pMessage, "\p", "\p", "\p");
+    
+    StopAlert(rAlrtError, nil);
 	SysBeep(10);
 	gDone = true;
 }

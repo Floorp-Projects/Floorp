@@ -79,7 +79,7 @@ typedef Boolean (*EventProc)(const EventRecord*);
 err = _funcCall;				\
 if (err) 						\
 {								\
-	ErrorHandler();				\
+	ErrorHandler(err);			\
 	return;						\
 }
 										
@@ -87,7 +87,7 @@ if (err) 						\
 err = _funcCall;						\
 if (err) 								\
 {										\
-	ErrorHandler();						\
+	ErrorHandler(err);		    		\
 	return _rv;							\
 }
 	
@@ -197,6 +197,7 @@ if (err) 								\
 
 #define rAlrtDelOldInst	150
 #define rAlrtOS85Reqd	160
+#define rAlrtError      170
 
 	
 #define rMBar			128		/* menu rsrc ids */	
@@ -322,7 +323,16 @@ if (err) 								\
 #define	sLAUNCHAPP		30	
 #define sADDITIONAL		47	/* end parse keys */
 
-#define	eParseFailed	501	/* errors */
+#define rErrorList      144 /* errors */
+#define eParam          1
+#define eMem            2
+#define	eParseFailed	3
+#define eLoadLib        4
+#define eUnknownDlgID   5   
+#define eSpawn          6
+#define eMenuHdl        7
+#define eCfgRead        8
+                            /* end errors */
 
 
 /*-----------------------------------------------------------*
@@ -559,7 +569,7 @@ void		InitOptObject(void);
 void		InitManagers(void);
 void		MakeMenus(void);
 void 		MainEventLoop(void);
-void		ErrorHandler(void);
+void		ErrorHandler(short);
 void		Shutdown(void);
 
 /*-----------------------------------------------------------*
