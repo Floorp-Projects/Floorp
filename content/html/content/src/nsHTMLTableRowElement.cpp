@@ -730,8 +730,13 @@ nsHTMLTableRowElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                PRUint32 aFlags,
                                nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  // Null checks to workaround http://bugscape.netscape.com/show_bug?id=1205.
+  if(aDOMEvent && *aDOMEvent) {
+    return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                 aFlags, aEventStatus);
+  } else {
+    return NS_OK;
+  }
 }
 
 
