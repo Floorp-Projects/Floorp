@@ -1342,7 +1342,7 @@ HTMLContentSink::WillInterrupt()
 {
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillInterrupt: this=%p", this));
-  if (mDirty && !mInMonolithicContainer) {
+  if (mDirty) {
     if (nsnull != mBody) {
       mDocument->ContentAppended(mBody, mBodyChildCount);
       mBody->ChildCount(mBodyChildCount);
