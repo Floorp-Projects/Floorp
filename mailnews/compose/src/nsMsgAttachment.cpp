@@ -175,33 +175,23 @@ NS_IMETHODIMP nsMsgAttachment::EqualsUrl(nsIMsgAttachment *attachment, PRBool *_
 
 nsresult nsMsgAttachment::DeleteAttachment()
 {
-	nsresult rv;
+  nsresult rv;
   PRBool isAFile = PR_FALSE;
 
-  nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsCOMPtr<nsIFile> urlFile;
+  rv = NS_GetFileFromURLSpec(mUrl, getter_AddRefs(urlFile));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't nsIFile from URL string");
   if (NS_SUCCEEDED(rv))
-	{
-    NS_InitFileFromURLSpec(urlFile, mUrl);
-    if (NS_SUCCEEDED(rv))
-	  {
-      PRBool bExists = PR_FALSE;
-      rv = urlFile->Exists(&bExists);
-	    if (NS_FAILED(rv)) 
-        {NS_ASSERTION(0, "bExists() call failed!");}
-      else
-        if (bExists)
-        {
-          rv = urlFile->IsFile(&isAFile);
-          if (NS_FAILED(rv)) 
-            {NS_ASSERTION(0, "IsFile() call failed!");}
-        }
+  {
+    PRBool bExists = PR_FALSE;
+    rv = urlFile->Exists(&bExists);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Exists() call failed!");
+    if (NS_SUCCEEDED(rv) && bExists)
+    {
+      rv = urlFile->IsFile(&isAFile);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "IsFile() call failed!");
     }
-    else
-      {NS_ASSERTION(0, "Can't set url in nsILocalFile interface");}
   }
-  else
-    {NS_ASSERTION(0, "Can't creat nsIFileURL interface");}
-
 
   // remove it if it's a valid file
   if (isAFile)

@@ -3925,7 +3925,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   nsCOMPtr<nsIDOMHTMLFormElement> currentFormNode(do_QueryInterface(currentForm));
 
   /* get url name as ascii string */
-  nsCAutoString URLName;
   nsAutoString strippedURLNameUCS2;
   nsCOMPtr<nsIDocument> doc;
   currentForm->GetDocument(*getter_AddRefs(doc));
@@ -3937,7 +3936,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   if (!docURL || wallet_IsFromCartman(docURL)) {
     return;
   }
-  (void)docURL->GetSpec(URLName);
   wallet_GetHostFile(docURL, strippedURLNameUCS2);
   nsCAutoString strippedURLNameUTF8 = NS_ConvertUCS2toUTF8(strippedURLNameUCS2);
 
@@ -4140,7 +4138,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
               wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
 
             if (dialog) {
-              SINGSIGN_RememberSignonData(dialog, (char*)URLName.get(), signonData, window);
+              SINGSIGN_RememberSignonData(dialog, docURL, signonData, window);
             }
           }
           PRInt32 count2 = signonData->Count();

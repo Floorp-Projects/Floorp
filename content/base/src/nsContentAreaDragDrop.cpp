@@ -73,7 +73,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsPromiseFlatString.h"
-#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsIWebNavigation.h"
 #include "nsIDragDropOverride.h"
@@ -313,13 +313,12 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
     }  
   }
   else if ( inFlavor.Equals(kFileMime) ) {
-    // the data is a file. Use the IOService to get a file:// url
+    // the data is a file. Use the necko parsing utils to get a file:// url
     // from the OS data.
-    nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1"));
     nsCOMPtr<nsIFile> file(do_QueryInterface(inDataWrapper));
-    if ( ioService && file ) {
+    if ( file ) {
       nsCAutoString url;
-      ioService->GetURLSpecFromFile(file, url);
+      NS_GetURLSpecFromFile(file, url);
       outURL = NS_ConvertUTF8toUCS2(url);
     } 
   }

@@ -816,17 +816,16 @@ RDFXMLDataSourceImpl::Flush(void)
     // Is it a file? If so, we can write to it. Some day, it'd be nice
     // if we didn't care what kind of stream this was...
     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURL);
+    
     if (fileURL) {
         nsCOMPtr<nsIFile> file;
         fileURL->GetFile(getter_AddRefs(file));
-
         if (file) {
             // if file doesn't exist, create it
             (void)file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
 
             nsCOMPtr<nsIOutputStream> out;
-            NS_NewLocalFileOutputStream(getter_AddRefs(out), file);
-
+            rv = NS_NewLocalFileOutputStream(getter_AddRefs(out), file);
             nsCOMPtr<nsIOutputStream> bufferedOut;
             if (out)
                 NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut), out, 4096);

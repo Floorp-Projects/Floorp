@@ -74,4 +74,21 @@ inline PRBool IsValidScheme(const nsAFlatCString &scheme)
     return IsValidScheme(scheme.get(), scheme.Length());
 }
 
+/**
+ * Resolves a relative path string containing "." and ".."
+ * with respect to a base path (assumed to already be resolved). 
+ * For example, resolving "../../foo/./bar/../baz.html" w.r.t.
+ * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to 
+ * ascend above the base results in the NS_ERROR_MALFORMED_URI
+ * exception. If basePath is null, it treats it as "/".
+ *
+ * @param relativePath  a relative URI
+ * @param basePath      a base URI
+ *
+ * @return a new string, representing canonical uri
+ */
+nsresult ResolveRelativePath(const nsACString &relativePath,
+                             const nsACString &basePath,
+                             nsACString &result);
+
 #endif

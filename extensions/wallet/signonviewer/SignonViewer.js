@@ -218,7 +218,7 @@ function LoadSignons() {
                     .getService(Components.interfaces.nsIIOService);
       var username;
       try {
-        username = ioService.extractUrlPart(host, ioService.url_Username, unused, unused);
+        username = ioService.newURI(host, null, null).username;
       } catch(e) {
         username = "";
       }

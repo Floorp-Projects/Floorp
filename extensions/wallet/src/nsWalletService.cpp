@@ -449,10 +449,6 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
             return NS_OK;
           }
 
-          nsCAutoString spec;
-          rv = uri->GetSpec(spec);
-          if (NS_FAILED(rv)) return rv;
-
           nsCOMPtr<nsIDOMHTMLCollection> forms;
           rv = htmldoc->GetForms(getter_AddRefs(forms));
           if (NS_FAILED(rv) || (forms == nsnull)) return rv;
@@ -529,7 +525,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                                     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
                                 }
                                 if (prompter) {
-                                  SINGSIGN_RestoreSignonData(prompter, spec.get(), nameString, &valueString, elementNumber++);
+                                  SINGSIGN_RestoreSignonData(prompter, uri, nameString, &valueString, elementNumber++);
                                 }
                                 if (valueString) {
                                   value = valueString;
