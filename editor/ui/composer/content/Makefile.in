@@ -34,5 +34,5 @@ EXPORT_RESOURCE_CONTENT = \
 	$(NULL)
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/content
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/composer/content
 
