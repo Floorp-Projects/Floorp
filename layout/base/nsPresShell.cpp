@@ -1513,6 +1513,8 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       doc->CreateXIF(buffer,sel);
     NS_IF_RELEASE(sel);
 
+////////////////////////// Old Way
+#ifndef NEW_CLIPBOARD_SUPPORT 
     nsIParser* parser;
 
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -1522,19 +1524,15 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
                                                nsnull, 
                                                kCParserIID, 
                                                (void **)&parser);
-
     if (NS_OK != rv)
       return rv;
 
     nsIHTMLContentSink* sink = nsnull;
-	
 
 //  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 //  Changed to do plain text only for Dogfood -- gpk 3/14/99
     rv = NS_New_HTMLToTXT_SinkStream(&sink);
 
-#ifndef NEW_CLIPBOARD_SUPPORT
-    
     ostream* copyStream;
     rv = aSelectionMgr->GetCopyOStream(&copyStream);
     if (!NS_SUCCEEDED(rv))
@@ -1546,7 +1544,6 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
 //  Changed to do plain text only for Dogfood -- gpk 3/14/99
 //  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
     ((nsHTMLToTXTSinkStream*)sink)->SetOutputStream(*copyStream);
-#endif
 
     if (NS_OK == rv) {
       parser->SetContentSink(sink);
@@ -1556,50 +1553,31 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       if (NS_OK == rv) 
       {
         parser->RegisterDTD(dtd);
-        //dtd->SetContentSink(sink);
-        //dtd->SetParser(parser);
         parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
       }
       NS_IF_RELEASE(dtd);
-
-#ifdef NEW_CLIPBOARD_SUPPORT
-      nsAutoString strBuf;
-      ((nsHTMLToTXTSinkStream*)sink)->GetStringBuffer(strBuf);
-
-      nsIClipboard* clipboard = 0;
-      nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                                 kIClipboardIID,
-                                                 (nsISupports **)&clipboard);
-      nsITransferable * trans = 0;
-      rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
-      if (nsnull != trans) {
-        //trans->AddDataFlavor("text/xif", "XIF Format");
-        trans->AddDataFlavor(kTextMime, "Text Format");
-      } else {
-        printf("PresShell::DoCopy(), trans is null.\n");
-      }
-
-      if(trans) {
-        trans->SetTransferString(strBuf);
-      }
-
-      if(clipboard) {
-        clipboard->SetData(trans, nsnull);
-        clipboard->SetClipboard();
-      } else {
-        printf("PresShell::DoCopy(), clipboard instance is null.\n");
-      }
-
-      NS_IF_RELEASE(clipboard);
-      NS_IF_RELEASE(trans);
-
-#else
       aSelectionMgr->CopyToClipboard();
-#endif
-
     }
     NS_IF_RELEASE(sink);
     NS_RELEASE(parser);
+
+#else  /////////////////////////// New Way
+    // Put XIF into transferable
+    nsIClipboard* clipboard;
+    nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                               kIClipboardIID,
+                                               (nsISupports **)&clipboard);
+    nsITransferable * trans;
+    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+
+    trans->SetTransferString(buffer);
+    clipboard->SetData(trans, nsnull);
+
+    NS_IF_RELEASE(clipboard);
+    NS_IF_RELEASE(trans);
+
+
+#endif
   }
   return NS_OK;
 }
