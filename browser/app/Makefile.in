@@ -130,11 +130,7 @@ ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 ifdef BUILD_STATIC_LIBS
 EXE_DEF_FILE = browser.def
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_LIBS += libuls.lib libconv.lib
-else
-OS_LIBS += -llibuni -luconv
-endif
+RCFLAGS += -d MOZ_STATIC_BUILD -i $(DIST)/include/widget
 endif
 endif
 
@@ -185,7 +181,7 @@ $(EXE_DEF_FILE):
 	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
 	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
 
-LDFLAGS += /NOE
+LDFLAGS += -Zlinker /NOE
 endif
 endif
 
