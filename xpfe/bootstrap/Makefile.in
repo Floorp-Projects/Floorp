@@ -141,6 +141,10 @@ ifdef MOZ_ENABLE_XINERAMA
 XP_LIBS		+= $(MOZ_XINERAMA_LIBS)
 endif
 
+ifdef MOZ_CALENDAR
+XP_LIBS		+= -lical -licalss
+endif
+
 endif
 
 XP_LIBS		+= \
