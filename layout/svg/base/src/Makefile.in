@@ -106,16 +106,11 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../../content/svg/content/src \
 		$(NULL)
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/svg.dtd \
-		$(NULL)
 libs::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd
 	$(INSTALL) $(srcdir)/svg.css $(DIST)/bin/res
 	$(INSTALL) $(srcdir)/svg.properties $(DIST)/bin/res
 
 install::
-	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/dtd
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.css $(DESTDIR)$(mozappdir)/res
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.properties $(DESTDIR)$(mozappdir)/res
 
