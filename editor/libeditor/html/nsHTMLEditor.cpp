@@ -83,6 +83,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsIDragService.h"
 
 // Transactionas
 #include "PlaceholderTxn.h"
@@ -3943,7 +3944,6 @@ nsHTMLEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
   res = ps->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(res)) return res;
   
-  nsCOMPtr<nsIStyleContext> styleContext;
   return ps->GetStyleContextFor(frame, aStyleContext);
 }
 
@@ -4262,10 +4262,128 @@ NS_IMETHODIMP nsHTMLEditor::CanCopy(PRBool &aCanCopy)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLEditor::PrepareTransferable(nsITransferable **transferable)
+{
+  // Create generic Transferable for getting the data
+  nsresult rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          NS_GET_IID(nsITransferable), 
+                                          (void**)transferable);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Get the nsITransferable interface for getting the data from the clipboard
+  if (transferable)
+  {
+    // Create the desired DataFlavor for the type of data
+    // we want to get out of the transferable
+    if ((mFlags & eEditorPlaintextMask) == 0)  // This should only happen in html editors, not plaintext
+    {
+      (*transferable)->AddDataFlavor(kJPEGImageMime);
+      (*transferable)->AddDataFlavor(kHTMLMime);
+    }
+    (*transferable)->AddDataFlavor(kUnicodeMime);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable)
+{
+  nsresult rv = NS_OK;
+  char* bestFlavor = nsnull;
+  nsCOMPtr<nsISupports> genericDataObj;
+  PRUint32 len = 0;
+  if ( NS_SUCCEEDED(transferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
+  {
+    nsAutoString stuffToPaste;
+    nsAutoString flavor;
+    flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
+#ifdef DEBUG_akkana
+    printf("Got flavor [%s]\n", bestFlavor);
+#endif
+    if (flavor.EqualsWithConversion(kHTMLMime))
+    {
+      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      if (textDataObj && len > 0)
+      {
+        PRUnichar* text = nsnull;
+        textDataObj->ToString ( &text );
+        stuffToPaste.Assign ( text, len / 2 );
+        nsAutoEditBatch beginBatching(this);
+        rv = InsertHTML(stuffToPaste);
+      }
+    }
+    else if (flavor.EqualsWithConversion(kUnicodeMime))
+    {
+      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      if (textDataObj && len > 0)
+      {
+        PRUnichar* text = nsnull;
+        textDataObj->ToString ( &text );
+        stuffToPaste.Assign ( text, len / 2 );
+        nsAutoEditBatch beginBatching(this);
+        rv = InsertText(stuffToPaste);
+      }
+    }
+    else if (flavor.EqualsWithConversion(kJPEGImageMime))
+    {
+      // Insert Image code here
+      printf("Don't know how to insert an image yet!\n");
+      //nsIImage* image = (nsIImage *)data;
+      //NS_RELEASE(image);
+      rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
+    }
+  }
+  nsCRT::free(bestFlavor);
+      
+  // Try to scroll the selection into view if the paste/drop succeeded
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIPresShell> presShell;
+    if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
+      presShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP nsHTMLEditor::InsertFromDrop()
+{
+  ForceCompositionEnd();
+  
+  nsresult rv;
+  NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+  
+  if (dragSession)
+  {
+    // Get the nsITransferable interface for getting the data from the drop
+    nsCOMPtr<nsITransferable> trans;
+    rv = PrepareTransferable(getter_AddRefs(trans));
+    if (NS_SUCCEEDED(rv) && trans)
+    {
+      PRUint32 numItems = 0; 
+      if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems)))
+      {
+        PRUint32 i; 
+        for (i = 0; i < numItems; ++i)
+        {
+          if (NS_SUCCEEDED(dragSession->GetData(trans, i)))
+            rv = InsertFromTransferable(trans);
+        }
+      }
+    }
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 {
   ForceCompositionEnd();
-  nsAutoString stuffToPaste;
 
   // Get Clipboard Service
   nsresult rv;
@@ -4273,81 +4391,16 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   if ( NS_FAILED(rv) )
     return rv;
     
-  // Create generic Transferable for getting the data
+  // Get the nsITransferable interface for getting the data from the clipboard
   nsCOMPtr<nsITransferable> trans;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          NS_GET_IID(nsITransferable), 
-                                          (void**) getter_AddRefs(trans));
-  if (NS_SUCCEEDED(rv))
+  rv = PrepareTransferable(getter_AddRefs(trans));
+  if (NS_SUCCEEDED(rv) && trans)
   {
-    // Get the nsITransferable interface for getting the data from the clipboard
-    if (trans)
+    // Get the Data from the clipboard
+    if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)))
     {
-      // Create the desired DataFlavor for the type of data
-      // we want to get out of the transferable
-      if ((mFlags & eEditorPlaintextMask) == 0)  // This should only happen in html editors, not plaintext
-      {
-        trans->AddDataFlavor(kJPEGImageMime);
-        trans->AddDataFlavor(kHTMLMime);
-      }
-      trans->AddDataFlavor(kUnicodeMime);
-
-      // Get the Data from the clipboard
-      if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)))
-      {
-        char* bestFlavor = nsnull;
-        nsCOMPtr<nsISupports> genericDataObj;
-        PRUint32 len = 0;
-        if ( NS_SUCCEEDED(trans->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
-        {
-          nsAutoString flavor; flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
-#ifdef DEBUG_akkana
-          printf("Got flavor [%s]\n", bestFlavor);
-#endif
-          if (flavor.EqualsWithConversion(kHTMLMime))
-          {
-            nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
-            if (textDataObj && len > 0)
-            {
-              PRUnichar* text = nsnull;
-              textDataObj->ToString ( &text );
-              stuffToPaste.Assign ( text, len / 2 );
-              nsAutoEditBatch beginBatching(this);
-              rv = InsertHTML(stuffToPaste);
-            }
-          }
-          else if (flavor.EqualsWithConversion(kUnicodeMime))
-          {
-            nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
-            if (textDataObj && len > 0)
-            {
-              PRUnichar* text = nsnull;
-              textDataObj->ToString ( &text );
-              stuffToPaste.Assign ( text, len / 2 );
-              nsAutoEditBatch beginBatching(this);
-              rv = InsertText(stuffToPaste);
-            }
-          }
-          else if (flavor.EqualsWithConversion(kJPEGImageMime))
-          {
-            // Insert Image code here
-            printf("Don't know how to insert an image yet!\n");
-            //nsIImage* image = (nsIImage *)data;
-            //NS_RELEASE(image);
-            rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
-          }
-        }
-        nsCRT::free(bestFlavor);
-      }
+      rv = InsertFromTransferable(trans);
     }
-  }
-
-  // Try to scroll the selection into view if the paste succeeded:
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIPresShell> presShell;
-    if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
-      presShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
   }
 
   return rv;
