@@ -330,9 +330,6 @@ nsHTMLButtonControlFrame::IsSubmit(nsIPresContext* aPresContext, PRInt32 type)
 void
 nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  PRInt32 type;
-  GetType(&type);
-
   if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
@@ -343,6 +340,8 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     if (presShell) {
+      PRInt32 type;
+      GetType(&type);
       if (IsReset(type) == PR_TRUE) {
         event.message = NS_FORM_RESET;
         presShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
