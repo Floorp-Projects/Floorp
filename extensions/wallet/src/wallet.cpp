@@ -75,13 +75,6 @@
 
 #include <time.h>
 
-#ifdef DEBUG_morse
-#define morseAssert NS_ASSERTION
-#else
-#define morseAssert(x,y) 0
-#endif 
-
-
 #include "prlong.h"
 #include "prinrval.h"
 
