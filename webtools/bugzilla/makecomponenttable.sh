@@ -145,7 +145,7 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Networking Library", "NGLayout", "gagan@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Parser", "NGLayout", "rickg@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Plug-ins", "NGLayout", "amusil@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Rendering", "NGLayout", "michaelp@netscape.com", "");
+insert into components (value, program, initialowner, initialqacontact) values ("Compositor", "NGLayout", "michaelp@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Selection and Search", "NGLayout", "kostello@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Style System", "NGLayout", "peterl@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Threading", "NGLayout", "rpotts@netscape.com", "");
