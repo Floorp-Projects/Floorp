@@ -31,37 +31,23 @@
  * file under either the NPL or the GPL.
  */
 
-/* most of this file will get auto-generated from the icode metadata */
+#include <stdio.h>
+#include <string>
 
-#include "systemtypes.h"
+#include "icodeasm.h"
 
-enum OperandType {
-    otNone = 0,
-    otArgumentList,
-    otBinaryOp,
-    otBool,
-    otDouble,
-    otICodeModule,
-    otJSClass,
-    otJSString,
-    otJSFunction,
-    otJSType,
-    otLabel,
-    otUInt32,
-    otRegister,
-    otStringAtom
-};
-        
-static uint icodemap_size = 5;
-
-static struct {
-    char *name;
-    OperandType otype[4];
-} icodemap [] =
+int
+main (int argc, char **argv)
 {
-    {"LOAD_STRING", {otRegister, otStringAtom}},
-    {"CAST", {otRegister, otRegister, otJSType}},
-    {"SAVE_NAME", {otJSString, otRegister}},
-    {"CALL", {otRegister, otRegister, otRegister, otArgumentList}},
-    {"RETURN", {otRegister}}
-};
+    JavaScript::Debugger::ICodeParser icp;
+    string str = "true";
+    
+    bool b = false;
+    icp.ParseBool (str.begin(), str.end(), &b);
+    fprintf (stderr, "bool parsed as %c\n", b);
+    
+    return 0;
+}
+
+    
+

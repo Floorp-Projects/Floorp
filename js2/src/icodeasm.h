@@ -34,6 +34,8 @@
 #include <string>
 #include <iterator>
 
+#include "vmtypes.h"
+
 #define iter string::const_iterator
 
 namespace JavaScript {
@@ -64,10 +66,10 @@ namespace ICodeASM {
     };
 
     struct ICodeParseException {
-        ICodeParserException (string aMsg, iter aPos = 0)
-                : msg(aMsg), pos(aPos) {}
+        ICodeParseException (string aMsg, iter aPos = 0)
+            : msg(aMsg), pos(aPos) {}
         string msg;
-        iter aPos;
+        iter pos;
     };
         
     struct TokenLocation {
@@ -82,32 +84,34 @@ namespace ICodeASM {
         /* eww */
         double asDouble;
         uint32 asUInt32;
-        Register asRegister;
+        VM::Register asRegister;
         bool asBool;
-        ArgumentList *asArgumentList;
+        VM::ArgumentList *asArgumentList;
         string *asString;
     };
         
     struct StatementNode {
         uint icodeID;
         AnyOperand operand[3];
-    }       
+    };
     
     class ICodeParser 
     {
     private:
         uint mMaxRegister;
         std::vector<StatementNode *> mStatementNodes;
-        std::map<string *, uint32> mLabels;
+        std::map<string, StatementNode **> mLabels;
 
     public:
         void ParseSourceFromString (const string source);
         TokenLocation SeekTokenStart (iter begin, iter end);
-        iter ParseUInt32  (iter begin, iter end, uint32 *rval);
-        iter ParseDouble  (iter begin, iter end, double *rval);
         iter ParseAlpha (iter begin, iter end, string *rval);
+        iter ParseBool (iter begin, iter end, bool *rval);
+        iter ParseDouble  (iter begin, iter end, double *rval);
         iter ParseString  (iter begin, iter end, string *rval);
         iter ParseStatement (iter begin, iter end);
+        iter ParseUInt32  (iter begin, iter end, uint32 *rval);
+
         iter ParseInstruction (uint icodeID, iter start, iter end);
 
         iter ParseArgumentListOperand (iter begin, iter end, AnyOperand *o);

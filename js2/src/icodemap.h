@@ -33,11 +33,14 @@
 
 /* most of this file will get auto-generated from the icode metadata */
 
+#include "systemtypes.h"
+
 enum OperandType {
     otNone = 0,
     otArgumentList,
     otBinaryOp,
     otBool,
+    otDouble,
     otICodeModule,
     otJSClass,
     otJSString,
@@ -53,12 +56,12 @@ static uint icodemap_size = 5;
 
 static struct {
     char *name;
-    OperandType otype[3];
-} icode_map [icodemap_size] =
+    OperandType otype[4];
+} icodemap [] =
 {
-    {"LOAD_STRING", {otRegister, otString}},
-    {"CAST", {otRegister, otRegister, otType}},
-    {"SAVE_NAME", {otString, otRegister}},
-    {"CALL", {otRegister, otRegister, otRegister, otRegisterList}},
+    {"LOAD_STRING", {otRegister, otStringAtom}},
+    {"CAST", {otRegister, otRegister, otJSType}},
+    {"SAVE_NAME", {otJSString, otRegister}},
+    {"CALL", {otRegister, otRegister, otRegister, otArgumentList}},
     {"RETURN", {otRegister}}
 };
