@@ -45,7 +45,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppShellNameSet.obj     \
  .\$(OBJDIR)\nsFileLocations.obj        \
  .\$(OBJDIR)\nsGlobalHistory.obj        \
-
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
