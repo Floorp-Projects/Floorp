@@ -166,19 +166,23 @@
 	</toolbar>
 
 	<toolbar>
-		To:<html:input title="To:" id="msgTo" value="To:" style="vertical-align: center" type="text" style="width:200px;" />
+		<html:p>To:</html:p>
+		<html:input id="msgTo" style="vertical-align: center" type="text" style="width:200px;" /> 
 	</toolbar>
 
 	<toolbar>
-		Cc:<html:input id="msgCc" style="vertical-align: center" type="text" style="width:200px;" />   
+		<html:p>Cc:</html:p>
+		<html:input id="msgCc" style="vertical-align: center" type="text" style="width:200px;" />   
 	</toolbar>
 
 	<toolbar>
-		Bcc:<html:input id="msgBcc" style="vertical-align: center" type="text" style="width:200px;" />   
+		<html:p>Bcc:</html:p>
+		<html:input id="msgBcc" style="vertical-align: center" type="text" style="width:200px;" />   
 	</toolbar>
 	
 	<toolbar>
-		Subject:<html:input id="msgSubject" style="vertical-align: center" type="text" style="width:500px;" /> 
+		<html:p>Subject:</html:p>
+		<html:input id="msgSubject" style="vertical-align: center" type="text" style="width:500px;" /> 
 	</toolbar>
 </toolbox>
 
