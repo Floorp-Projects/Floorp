@@ -182,6 +182,26 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = @::default_column_list;
 }
 
+my $minvotes;
+my $votecolnum;
+if (defined $::FORM{'votes'}) {
+    my $c = trim($::FORM{'votes'});
+    if ($c ne "") {
+        if ($c !~ /^[0-9]*$/) {
+            print "\n\n<P>The 'At least ___ votes' field must be a simple ";
+            print "number. You entered \"$c\", which doesn't cut it.";
+            print "<P>Please click the <B>Back</B> button and try again.\n";
+            exit;
+        }
+        $minvotes = $c;
+        if (! (grep {/^votes$/} @collist)) {
+            push(@collist, 'votes');
+        }
+        $votecolnum = lsearch(\@collist, 'votes');
+    }
+}
+
+
 my $dotweak = defined $::FORM{'tweak'};
 
 if ($dotweak) {
@@ -345,6 +365,7 @@ if (defined $::FORM{'changedin'}) {
         $query .= "and to_days(now()) - to_days(bugs.delta_ts) <= $c ";
     }
 }
+
 
 my $ref = $::MFORM{'chfield'};
 
@@ -530,6 +551,11 @@ while (@row = FetchSQLData()) {
                                 # buggroupset if all the bugs have exactly
                                 # the same group.  If they don't, we leave
                                 # it alone.
+    }
+    if (defined $minvotes) {
+        if ($row[$votecolnum] < $minvotes) {
+            next;
+        }
     }
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;

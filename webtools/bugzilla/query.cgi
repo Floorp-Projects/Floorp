@@ -68,7 +68,7 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "emailassigned_to1", "emailcc1", "emailqa_contact1",
                   "email2", "emailtype2", "emailreporter2",
                   "emailassigned_to2", "emailcc2", "emailqa_contact2",
-                  "changedin", "short_desc", "short_desc_type",
+                  "changedin", "votes", "short_desc", "short_desc_type",
                   "long_desc", "long_desc_type", "bug_file_loc",
                   "bug_file_loc_type", "status_whiteboard",
                   "status_whiteboard_type") {
@@ -407,12 +407,22 @@ print "
 </table>
 
 <p>
+
+<table>
+<tr><td colspan=2>
 $emailinput1<p>
+</td></tr><tr><td colspan=2>
 $emailinput2<p>
-
-
-
+</td></tr>
+<tr>
+<td>
 Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=\"$default{'changedin'}\"> days.</NOBR>
+</td>
+<td align=right>
+At <NOBR>least <INPUT NAME=votes SIZE=3 VALUE=\"$default{'votes'}\"> votes.</NOBR>
+</tr>
+</table>
+
 
 <table>
 <tr>
