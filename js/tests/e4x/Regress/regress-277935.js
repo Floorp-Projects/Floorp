@@ -46,4 +46,10 @@ try {
 } catch (e) {
 }
 
+try {
+    eval('msg..s += 0');
+    SHOULD_THROW(2);
+} catch (e) {
+}
+
 END();
