@@ -160,7 +160,8 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
   if (!mBindingTable)
     return NS_OK;
 
-  nsCStringKey key(nsPromiseFlatCString(aRef).get());
+  nsPromiseFlatCString flat(aRef);
+  nsCStringKey key(flat.get());
   *aResult = NS_STATIC_CAST(nsIXBLPrototypeBinding*, mBindingTable->Get(&key)); // Addref happens here.
 
   return NS_OK;
@@ -172,7 +173,8 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
   if (!mBindingTable)
     mBindingTable = new nsSupportsHashtable();
 
-  nsCStringKey key(nsPromiseFlatCString(aRef).get());
+  nsPromiseFlatCString flat(aRef);
+  nsCStringKey key(flat.get());
   mBindingTable->Put(&key, aBinding);
 
   return NS_OK;
