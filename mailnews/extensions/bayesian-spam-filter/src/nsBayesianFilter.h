@@ -72,7 +72,8 @@ class Tokenizer {
 public:
     Tokenizer();
     ~Tokenizer();
-    
+
+    nsresult Clear(); // clears out the previous message tokens
     operator int() { return mTokenTable.entryStore != NULL; }
     
     Token* get(const char* word);

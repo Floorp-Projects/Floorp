@@ -150,9 +150,9 @@ static PLDHashTableOps gTokenTableOps = {
 
 Tokenizer::Tokenizer()
 {
+    PL_INIT_ARENA_POOL(&mWordPool, "Words Arena", 16384);
     PRBool ok = PL_DHashTableInit(&mTokenTable, &gTokenTableOps, nsnull, sizeof(Token), 256);
     NS_ASSERTION(ok, "mTokenTable failed to initialize");
-    PL_INIT_ARENA_POOL(&mWordPool, "Words Arena", 16384);
 }
 
 Tokenizer::~Tokenizer()
@@ -160,6 +160,21 @@ Tokenizer::~Tokenizer()
     if (mTokenTable.entryStore)
         PL_DHashTableFinish(&mTokenTable);
     PL_FinishArenaPool(&mWordPool);
+}
+
+nsresult Tokenizer::Clear()
+{
+    // we re-use the tokenizer when classifying multiple messages, 
+    // so this gets called after every message classification.
+    PRBool ok = PR_TRUE;
+    if (mTokenTable.entryStore)
+    {
+        PL_DHashTableFinish(&mTokenTable);
+        PL_FreeArenaPool(&mWordPool);
+        ok = PL_DHashTableInit(&mTokenTable, &gTokenTableOps, nsnull, sizeof(Token), 256);
+        NS_ASSERTION(ok, "mTokenTable failed to initialize");
+    }
+    return (ok) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 char* Tokenizer::copyWord(const char* word, PRUint32 len)
@@ -488,13 +503,10 @@ public:
          NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mNumMessagesToClassify, mMessageURIs);
        }
     }
-    void setMessagesToClassify(const char **aMessageURIs, PRInt32 aNumMessagesToClassify)
-    {
-    }
-
     virtual void analyzeTokens(Tokenizer& tokenizer)
     {
         mFilter->classifyMessage(tokenizer, mTokenSource.get(), mListener);
+        tokenizer.Clear();
         classifyNextMessage();
     }
 
