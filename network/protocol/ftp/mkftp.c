@@ -4513,7 +4513,9 @@ net_ProcessFTP(ActiveEntry * ce)
             	COMPLETE_STREAM;
 
             /* Make sure that any previous cache entry is not locked anymore */
+#ifndef NU_CACHE
             NET_ChangeCacheFileLock(ce->URL_s, FALSE);
+#endif /* NU_CACHE */
 
     	    /* don't close the control sock since we need 
 			 * it for connection caching
@@ -4586,8 +4588,10 @@ net_ProcessFTP(ActiveEntry * ce)
             TRACEMSG(("FTP aborting!  content_length = %ld, real_content_length = %ld\n", 
                       ce->URL_s->content_length, ce->URL_s->real_content_length));
             TRACEMSG(("  bytes_received = %ld\n", ce->bytes_received));
+#ifndef NU_CACHE
             if(ce->URL_s->server_can_do_restart)
                 NET_ChangeCacheFileLock(ce->URL_s, TRUE);
+#endif /* NU_CACHE */
 
             if(cd->dsock != NULL)
               {
