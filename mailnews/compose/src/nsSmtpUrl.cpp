@@ -28,18 +28,13 @@
 #include "nsINetService.h"  /* XXX: NS_FALSE */
 #include "xp.h"
 #include "nsString.h"
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
-#include "nsCRT.h"
-#include "nsEscape.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
+nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(""), m_userName(""), m_userPassword("")
 {
     NS_INIT_REFCNT();
 
@@ -63,9 +58,7 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_replyToPart = nsnull;
 	m_priorityPart = nsnull;
 
-	m_userName = nsnull;
-	m_userPassword = nsnull;
-	m_fileName = nsnull;
+	m_userNameString = nsnull;
  
 	// nsIURL specific state
     m_protocol = nsnull;
@@ -75,6 +68,7 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     m_port = -1;
     m_spec = nsnull;
     m_search = nsnull;
+	m_errorMessage = nsnull;
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
@@ -88,13 +82,15 @@ nsSmtpUrl::~nsSmtpUrl()
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
 
+	if (m_userNameString)
+		delete [] m_userNameString;
+
     PR_FREEIF(m_spec);
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-	PR_FREEIF(m_fileName); 
     if (nsnull != m_URL_s) 
 	{
 //        NET_DropURLStruct(m_URL_s);
@@ -545,14 +541,29 @@ nsresult nsSmtpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 		{
 			// host name came first....the recipients are really just after
 			// the host name....so cp points to "/recip1,recip2,..."
+
+			// grab the host name if it is there....
+			PRInt32 hlen = cp - cp0;
+			if (hlen > 0)
+			{
+				m_host = (char*) PR_Malloc(hlen + 1);
+				PL_strncpy(m_host, cp0, hlen);
+				m_host[hlen] = 0;
+			}
+			
+			// what about the port?
+			if (*cp == ':') // then port follows the ':"
+			{
+				// We have a port number
+                cp0 = cp+1;
+                cp = PL_strchr(cp, '/');
+                m_port = strtol(cp0, (char **)nsnull, 10);
+			}
+			
 			if (*cp == '/')
 				cp++;
 			if (cp)
-				m_toPart = PL_strdup(cp);
-//			PRInt32 hlen = cp - cp0;
-//			m_toPart = (char*) PR_Malloc(hlen + 1);
-//			PL_strncpy(m_toPart, cp0, hlen);
-//			m_toPart[hlen] = 0;
+				m_toPart = PL_strdup(cp);			
 		}
 	}
 
@@ -608,41 +619,42 @@ nsresult nsSmtpUrl::GetUserEmailAddress(const char ** aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
-		*aUserName = m_userName;
+		*aUserName = m_userNameString;
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv;
 }
 
-nsresult nsSmtpUrl::GetUserPassword(const char ** aUserPassword)
+nsresult nsSmtpUrl::GetUserPassword(const nsString ** aUserPassword)
 {
 	nsresult rv = NS_OK;
 	if (aUserPassword)
-		*aUserPassword = m_userPassword;
+		*aUserPassword = &m_userPassword;
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv;
 }
 
-nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
+nsresult nsSmtpUrl::SetUserEmailAddress(const nsString& aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
 	{
-		PR_FREEIF(m_userName);
-		m_userName = PL_strdup(aUserName);
+		m_userName = aUserName;
+		if (m_userNameString)
+			delete [] m_userNameString;
+		m_userNameString = m_userName.ToNewCString();
 	}
 
 	return rv;
 }
 	
-nsresult nsSmtpUrl::SetUserPassword(const char * aUserPassword)
+nsresult nsSmtpUrl::SetUserPassword(const nsString& aUserPassword)
 {
 	nsresult rv = NS_OK;
 	if (aUserPassword)
 	{
-		PR_FREEIF(m_userPassword);
-		m_userPassword = PL_strdup(aUserPassword);
+		m_userPassword = aUserPassword;
 	}
 
 	return rv;
@@ -714,23 +726,20 @@ nsresult nsSmtpUrl::SetPostMessage(PRBool aPostMessage)
 
 // the message can be stored in a file....allow accessors for getting and setting
 // the file name to post...
-nsresult nsSmtpUrl::SetPostMessageFile(const char * aFileName)
+nsresult nsSmtpUrl::SetPostMessageFile(const nsFilePath& aFileName)
 {
 	nsresult rv = NS_OK;
 	if (aFileName)
-	{
-		PR_FREEIF(m_fileName);
-		m_fileName = nsCRT::strdup(aFileName);
-	}
+		m_fileName = aFileName;
 
 	return rv;
 }
 
-nsresult nsSmtpUrl::GetPostMessageFile(const char ** aFileName)
+nsresult nsSmtpUrl::GetPostMessageFile(const nsFilePath ** aFileName)
 {
 	nsresult rv = NS_OK;
 	if (aFileName)
-		*aFileName = m_fileName;
+		*aFileName = &m_fileName;
 	
 	return rv;
 }
@@ -978,3 +987,4 @@ nsresult nsSmtpUrl::ToString(PRUnichar* *aString) const
 ////////////////////////////////////////////////////////////////////////////////////
 // End of functions which should be made obsolete after modifying nsIURL
 ////////////////////////////////////////////////////////////////////////////////////
+

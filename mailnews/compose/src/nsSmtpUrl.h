@@ -84,8 +84,8 @@ public:
 
 	// the message can be stored in a file....allow accessors for getting and setting
 	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(const char * aFileName);
-	NS_IMETHOD GetPostMessageFile(const char ** aFileName);
+	NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName);
+	NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName);
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// SMTP Url instance specific getters and setters --> info the protocol needs
@@ -97,9 +97,9 @@ public:
 	// interface here that would encapsulte things like username, domain, password,
 	// etc...
 	NS_IMETHOD GetUserEmailAddress(const char ** aUserName);
-	NS_IMETHOD SetUserEmailAddress(const char * aUserName);
-	NS_IMETHOD GetUserPassword(const char ** aUserPassword);
-	NS_IMETHOD SetUserPassword(const char * aUserPassword);
+	NS_IMETHOD SetUserEmailAddress(const nsString& aUserName);
+	NS_IMETHOD GetUserPassword(const nsString ** aUserPassword);
+	NS_IMETHOD SetUserPassword(const nsString& aUserPassword);
 	
 	// mscott: this interface really belongs in nsIURL and I will move it there after talking
 	// it over with core netlib. This error message replaces the err_msg which was in the 
@@ -156,10 +156,11 @@ protected:
     nsISupports*    m_container;
 
 	/* Smtp specific event sinks */
-	char		* m_userPassword;
-	char		* m_userName;
+	nsString	m_userPassword;
+	char	   *m_userNameString; // char * version of m_userName
+	nsString	m_userName;
 
-	char		* m_fileName; /* if the message to post is a file, we store the file name here...*/
+	nsFilePath  m_fileName;
 
 	void ReconstructSpec(void);
 	// it is possible to encode the message to parse in the form of a url.
