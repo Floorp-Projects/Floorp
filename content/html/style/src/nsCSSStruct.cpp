@@ -38,6 +38,7 @@
 #include "nscore.h"
 #include "nsICSSDeclaration.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsCSSProps.h"
 #include "nsUnitConversion.h"
