@@ -16,9 +16,12 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
+#include "nsIReflowCommand.h"
+#include "nsIContent.h"
 #include "nsLineLayout.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -139,7 +142,9 @@ nsFirstLetterFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                         nsIFrame*       aChildList)
 {
   mFrames.SetFrames(aChildList);
-  aPresContext.ReParentStyleContext(aChildList, mStyleContext); // XXX only first frame?
+  if (aChildList) {
+    aPresContext.ReParentStyleContext(aChildList, mStyleContext);
+  }
   return NS_OK;
 }
 
@@ -164,14 +169,19 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aReflowStatus)
 {
+  nsresult rv = NS_OK;
+
   // Grab overflow list
   DrainOverflowFrames(&aPresContext);
 
   nsIFrame* kid = mFrames.FirstChild();
-  nsIHTMLReflow* htmlReflow;
-  nsresult rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsIFrame* nextRCFrame = nsnull;
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    if (this != target) {
+      aReflowState.reflowCommand->GetNext(nextRCFrame);
+    }
   }
 
   // Setup reflow state for our child
@@ -183,36 +193,39 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
     availSize.width -= lr;
   }
   if (NS_UNCONSTRAINEDSIZE != availSize.height) {
-    availSize.width -= tb;
+    availSize.height -= tb;
   }
 
   // Reflow the child
-  nsHTMLReflowState rs(aPresContext, aReflowState, kid, availSize);
-  htmlReflow->WillReflow(aPresContext);
-  if (!rs.mLineLayout) {
+  if (!aReflowState.mLineLayout) {
     // When there is no lineLayout provided, we provide our own. The
     // only time that the first-letter-frame is not reflowing in a
     // line context is when its floating.
+    nsHTMLReflowState rs(aPresContext, aReflowState, kid, availSize);
     nsLineLayout ll(aPresContext, nsnull, &aReflowState,
                     nsnull != aMetrics.maxElementSize);
     ll.BeginLineReflow(0, 0, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE,
                        PR_FALSE, PR_TRUE);
     rs.mLineLayout = &ll;
     ll.SetFirstLetterStyleOK(PR_TRUE);
+
+    nsIHTMLReflow* htmlReflow;
+    rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    htmlReflow->WillReflow(aPresContext);
     htmlReflow->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
+
     ll.EndLineReflow();
   }
   else {
-// XXX currently the block code sets this up; see comment in
-// ReflowInlineFrames
-#if XXX
-    // Only the first-in-flow frame of a first-letter frame gets the
-    // special first-letter reflow treatment.
-    if (!mPrevInFlow) {
-      rs.mLineLayout->SetFirstLetterStyleOK(PR_TRUE);
-    }
-#endif
-    htmlReflow->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
+    // Pretend we are a span and reflow the child frame
+    nsLineLayout* ll = aReflowState.mLineLayout;
+    ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
+    ll->ReflowFrame(kid, &nextRCFrame, aReflowStatus, &aMetrics);
+    nsSize size;
+    ll->EndSpan(this, size, aMetrics.maxElementSize);
   }
 
   // Place and size the child and update the output metrics
@@ -220,6 +233,8 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
   kid->SizeTo(&aPresContext, aMetrics.width, aMetrics.height);
   aMetrics.width += lr;
   aMetrics.height += tb;
+  aMetrics.ascent += bp.top;
+  aMetrics.descent += bp.bottom;
   if (aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width += lr;
     aMetrics.maxElementSize->height += tb;
@@ -292,9 +307,20 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
     mFrames.AppendFrames(nsnull, overflowFrames);
   }
 
-  // Now repair our first frames style context XXX only first frame?
+  // Now repair our first frames style context (since we only reflow
+  // one frame there is no point in doing any other ones until they
+  // are reflowed)
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) {
-    aPresContext->ReParentStyleContext(kid, mStyleContext); 
+    nsCOMPtr<nsIStyleContext> sc;
+    nsCOMPtr<nsIContent> kidContent;
+    kid->GetContent(getter_AddRefs(kidContent));
+    if (kidContent) {
+      aPresContext->ResolveStyleContextFor(kidContent, mStyleContext,
+                                           PR_FALSE, getter_AddRefs(sc));
+      if (sc) {
+        kid->SetStyleContext(aPresContext, sc);
+      }
+    }
   }
 }
