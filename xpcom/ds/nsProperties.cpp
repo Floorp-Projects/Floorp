@@ -76,7 +76,7 @@ nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsProperties::DefineProperty(const char* prop, nsISupports* initialValue)
 {
-    nsCStringKey key(prop);
+    nsStringKey key(prop);
     if (Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -89,7 +89,7 @@ nsProperties::DefineProperty(const char* prop, nsISupports* initialValue)
 NS_IMETHODIMP
 nsProperties::UndefineProperty(const char* prop)
 {
-    nsCStringKey key(prop);
+    nsStringKey key(prop);
     if (!Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -101,7 +101,7 @@ nsProperties::UndefineProperty(const char* prop)
 NS_IMETHODIMP
 nsProperties::GetProperty(const char* prop, nsISupports* *result)
 {
-    nsCStringKey key(prop);
+    nsStringKey key(prop);
     if (!Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -114,7 +114,7 @@ nsProperties::GetProperty(const char* prop, nsISupports* *result)
 NS_IMETHODIMP
 nsProperties::SetProperty(const char* prop, nsISupports* value)
 {
-    nsCStringKey key(prop);
+    nsStringKey key(prop);
     if (!Exists(&key))
         return NS_ERROR_FAILURE;
 

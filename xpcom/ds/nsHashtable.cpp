@@ -222,38 +222,52 @@ void nsHashtable::Reset() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsCStringKey::nsCStringKey(const char* str)
-  : mStr(mBuf)
+nsStringKey::nsStringKey(const char* str)
 {
-  PRUint32 len = PL_strlen(str);
-  if (len >= sizeof(mBuf)) {
-    mStr = PL_strdup(str);
-    NS_ASSERTION(mStr, "out of memory");
-  }
-  else {
-    PL_strcpy(mStr, str);
-  }
+	mStr.Assign(str);
 }
 
-nsCStringKey::~nsCStringKey(void)
+nsStringKey::nsStringKey(const PRUnichar* str)
 {
-  if (mStr != mBuf)
-    PL_strfree(mStr);
+	mStr.Assign(str);
 }
 
-PRUint32 nsCStringKey::HashValue(void) const
+nsStringKey::nsStringKey(const nsStr& str)
 {
-  return (PRUint32) PL_HashString((const void*) mStr);
+	mStr.Assign(str);
 }
 
-PRBool nsCStringKey::Equals(const nsHashKey* aKey) const
+nsStringKey::~nsStringKey(void)
 {
-  return PL_strcmp( ((nsCStringKey*)aKey)->mStr, mStr ) == 0;
 }
 
-nsHashKey* nsCStringKey::Clone() const
+PRUint32 nsStringKey::HashValue(void) const
 {
-  return new nsCStringKey(mStr);
+	if(mStr.IsUnicode())
+		{
+		PRUint32 h;
+		const PRUnichar* c;
+
+		h = 0;
+		for(c = mStr.GetUnicode(); *c; c++)
+			h = (h >> 28) ^ (h << 4) ^ *c;
+		return h; 
+		}
+	else
+		return (PRUint32)PL_HashString((const void*) mStr.GetUnicode());
+}
+
+PRBool nsStringKey::Equals(const nsHashKey* aKey) const
+{
+	return ((nsStringKey*)aKey)->mStr == mStr;
+}
+
+nsHashKey* nsStringKey::Clone() const
+{
+	if(mStr.IsUnicode())
+		return new nsStringKey(mStr.GetUnicode());
+	else
+		return new nsStringKey(mStr.GetBuffer());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
