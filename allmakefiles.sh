@@ -47,7 +47,6 @@ add_makefiles "
 Makefile
 build/Makefile
 build/unix/Makefile
-build/unix/mozilla-config
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
