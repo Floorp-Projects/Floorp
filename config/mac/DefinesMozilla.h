@@ -50,6 +50,9 @@
 
 #define USE_NSREG 1
 
+//  used to change string class
+//#define USE_STRING2	1
+
 // ———————————————————————————————————————————————————————————————————————————
 //	•	You typically will not need to change things below here
 // ———————————————————————————————————————————————————————————————————————————
