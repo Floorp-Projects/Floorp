@@ -693,7 +693,14 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
 	  else
 	    { dayBoxItem.removeAttribute( "weekend" ); }
 	}
+  
+   if( dayIndex - 7 * this.PreviousWeeksInView < 7 & dayIndex - 7 * this.PreviousWeeksInView >=0 ) 
+     {
+       dayBoxItem.selectable=true;}
+   else
+     {dayBoxItem.selectable=false;}
    }
+
    //Modification for the first day of view
    thisDate = new Date( newYear, newMonth, newDay );
    var titleMonth = this.calendarWindow.dateFormater.getShortMonthName(thisDate.getMonth());
@@ -872,7 +879,7 @@ MultiweekView.prototype.clickDay = function multiweekView_clickDay( event )
   
    var dayBoxItem = event.currentTarget;
    
-   if( event.detail == 1 )
+   if(   dayBoxItem.selectable == true && event.detail == 1 )
    {
       // change the selected date and redraw it
       var newDate = dayBoxItem.date;
@@ -907,8 +914,15 @@ MultiweekView.prototype.doubleClickDay = function multiweekView_doubleClickDay( 
    if( event.button > 0 )
       return;
    
+   if ( event.currentTarget.selectable == true )
+   {
       // change the selected date and redraw it
       newEvent( this.getNewEventDate(), false );
+   }
+   else
+   {
+     newEvent( this.getNewEventDate(event.currentTarget.date), false );
+   }
 }
 
 
