@@ -1640,6 +1640,11 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             JS_UNLOCK_OBJ(cx, obj);
             return JS_TRUE;
         }
+
+        if (sprop) {
+            /* NB: call OBJ_DROP_PROPERTY, as pobj might not be native. */
+            OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+        }
     }
 #endif /* JS_HAS_GETTER_SETTER */
 
