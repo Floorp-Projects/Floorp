@@ -12912,7 +12912,7 @@ fi
 
 if test "$SKIP_IDL_CHECK" = "no"
 then
-    if test $MOZ_ENABLE_GTK2 = 1; then
+    if test "$MOZ_ENABLE_GTK2"; then
         # Check whether --with-libIDL-prefix or --without-libIDL-prefix was given.
 if test "${with_libIDL_prefix+set}" = set; then
   withval="$with_libIDL_prefix"
