@@ -104,7 +104,7 @@ bsConnection::bsConnection()
 bsConnection::~bsConnection()
 {
     if (mInitializedFlag)
-        destroy();
+        Destroy();
     
 }
 
