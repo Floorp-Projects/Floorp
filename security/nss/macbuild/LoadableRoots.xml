@@ -574,7 +574,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>265rj6cn65m5eci</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>25ps6an5jceai[&#213;&#224;&#177;&#176;(</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1138,6 +1138,13 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LoadableRoots.mcp.exp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1253,6 +1260,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSRuntime.shlb</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LoadableRoots.mcp.exp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1768,7 +1780,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>265rj6cn65m5eci</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>25ps6an5jceai[&#213;&#224;&#177;&#176;(</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -2332,6 +2344,13 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LoadableRoots.mcp.exp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2447,6 +2466,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSRuntimeDebug.shlb</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LoadableRoots.mcp.exp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2627,6 +2651,12 @@
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
             <PATH>macstubs.c</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
+        <FILEREF>
+            <TARGETNAME>NSSckbi.shlb</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>LoadableRoots.mcp.exp</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>
