@@ -85,6 +85,7 @@ nsresult nsMsgDBModule::Initialize()
 // Shutdown this module, releasing all of the module resources
 void nsMsgDBModule::Shutdown()
 {
+	nsMsgDatabase::CleanupCache();
     // Release the factory objects
     mMailDBFactory = null_nsCOMPtr();
     mNewsDBFactory = null_nsCOMPtr();
