@@ -320,7 +320,7 @@ nsNntpUrl::SetOriginalSpec(const char *aSpec)
     return NS_OK;
 }
 
-nsresult nsNntpUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
+NS_IMETHODIMP nsNntpUrl::GetFolder(nsIMsgFolder **msgFolder)
 {
    nsresult rv;
 
@@ -345,7 +345,7 @@ NS_IMETHODIMP
 nsNntpUrl::GetFolderCharset(PRUnichar **aCharacterSet)
 {
   nsCOMPtr<nsIMsgFolder> folder;
-  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  nsresult rv = GetFolder(getter_AddRefs(folder));
   // don't assert here.  this can happen if there is no message folder
   // like when we display a news://host/message-id url
   if (NS_FAILED(rv)) return rv;
@@ -359,7 +359,7 @@ nsNntpUrl::GetFolderCharset(PRUnichar **aCharacterSet)
 NS_IMETHODIMP nsNntpUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride)
 {
   nsCOMPtr<nsIMsgFolder> folder;
-  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  nsresult rv = GetFolder(getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv,rv);
   NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
   rv = folder->GetCharsetOverride(aCharacterSetOverride);

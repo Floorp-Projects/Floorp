@@ -71,6 +71,8 @@ public:
   NS_IMETHOD GetNumMoveCopyMsgs(PRUint32 *numMsgs);
 	NS_IMPL_CLASS_GETSET(CurMoveCopyMsgIndex, PRUint32, m_curMsgIndex);
 
+  NS_IMETHOD GetFolder(nsIMsgFolder **msgFolder);
+
   // nsMailboxUrl
   nsMailboxUrl();
   virtual ~nsMailboxUrl();
@@ -104,7 +106,6 @@ protected:
   // for multiple msg move/copy
   nsMsgKeyArray m_keys;
   PRInt32 m_curMsgIndex;
-  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
 
   // truncated message support
   nsXPIDLCString m_originalSpec;  

@@ -996,3 +996,13 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetSaveAsListener(PRBool addDummyEnvelope,
 }
 
 
+NS_IMETHODIMP nsMsgMailNewsUrl::SetFolder(nsIMsgFolder * /* aFolder */)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetFolder(nsIMsgFolder ** /* aFolder */)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

@@ -472,7 +472,7 @@ char * extractAttributeValue(const char * searchString, const char * attributeNa
 
 // nsIMsgI18NUrl support
 
-nsresult nsMailboxUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
+nsresult nsMailboxUrl::GetFolder(nsIMsgFolder **msgFolder)
 {
   // if we have a RDF URI, then try to get the folder for that URI and then ask the folder
   // for it's charset....
@@ -493,7 +493,7 @@ nsresult nsMailboxUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
 NS_IMETHODIMP nsMailboxUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
 {
   nsCOMPtr<nsIMsgFolder> folder;
-  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  nsresult rv = GetFolder(getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv,rv);
   NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
   folder->GetCharset(aCharacterSet);
@@ -503,7 +503,7 @@ NS_IMETHODIMP nsMailboxUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
 NS_IMETHODIMP nsMailboxUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride)
 {
   nsCOMPtr<nsIMsgFolder> folder;
-  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  nsresult rv = GetFolder(getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv,rv);
   NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
   folder->GetCharsetOverride(aCharacterSetOverride);

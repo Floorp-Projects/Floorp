@@ -56,6 +56,9 @@ public:
 
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 
+  // nsIMsgFolder override
+  NS_IMETHOD GetFolder(nsIMsgFolder **msgFolder);
+
   // nsNntpUrl
   nsNntpUrl();
   virtual ~nsNntpUrl();
@@ -64,7 +67,6 @@ public:
 
 private:
 	virtual const char * GetUserName() { return nsnull; }
-  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
   nsresult DetermineNewsAction();
 
   nsINNTPNewsgroupPost *m_newsgroupPost;
