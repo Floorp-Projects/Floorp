@@ -1031,7 +1031,7 @@ void CWinCX::AftWMSize(PaneMessage *pMessage)
 				/*	Call Win32 API call to validate entire windows so that the WM_PAINT message
 					that follows a resize does not force a repaint of the window.  The repaint
 					happens via the compositor in the CL_UpdateDocumentRect call above */
-				::ValidateRect( GetPane(), NULL );
+				/* ::ValidateRect( GetPane(), NULL ); */
 			}						
 		}
 
@@ -1090,7 +1090,7 @@ void CWinCX::AftWMSize(PaneMessage *pMessage)
 		/* Call Win32 API call to validate entire window so that the WM_PAINT message
 		   that follows a resize does not force a repaint of the window.  The repaint
 		   happens in the LO_RelayoutOnResize call above */
-		::ValidateRect( GetPane(), NULL );
+		/* ::ValidateRect( GetPane(), NULL ); */
 
 		/*
         NiceResizeReload();
