@@ -415,98 +415,148 @@ js_FreeStack(JSContext *cx, void *mark)
     JS_ARENA_RELEASE(&cx->stackPool, mark);
 }
 
+/*
+ * To economize on slots space in functions, the compiler records arguments and
+ * local variables as shared (JSPROP_SHARED) properties with well-known getters
+ * and setters: js_{Get,Set}Argument, js_{Get,Set}LocalVariable.  Now, we could
+ * record args and vars in lists or hash tables in function-private data, but
+ * that means more duplication in code, and more data at runtime in the hash
+ * table case due to round-up to powers of two, just to recapitulate the scope
+ * machinery in the function object.
+ *
+ * What's more, for a long time (to the dawn of "Mocha" in 1995), these getters
+ * and setters knew how to search active stack frames in a context to find the
+ * top activation of the function f, in order to satisfy a get or set of f.a,
+ * for argument a, or f.x, for local variable x.  You could use f.a instead of
+ * just a in function f(a) { return f.a }, for example, to return the actual
+ * parameter.
+ *
+ * ECMA requires that we give up on this ancient extension, because it is not
+ * compatible with the standard as used by real-world scripts.  While Chapter
+ * 16 does allow for additional properties to be defined on native objects by
+ * a conforming implementation, these magic getters and setters cause f.a's
+ * meaning to vary unexpectedly.  Real-world scripts set f.A = 42 to define
+ * "class static" (after Java) constants, for example, but if A also names an
+ * arg or var in f, the constant is not available while f is active, and any
+ * non-constant class-static can't be set while f is active.
+ *
+ * So, to label arg and var properties in functions without giving them magic
+ * abilities to affect active frame stack slots, while keeping the properties
+ * shared (slot-less) to save space in the common case (where no assignment
+ * sets a function property with the same name as an arg or var), the setters
+ * for args and vars must handle two special cases here.
+ *
+ * XXX functions tend to have few args and vars, so we risk O(n^2) growth here
+ * XXX ECMA *really* wants args and vars to be stored in function-private data,
+ *     not as function object properties.
+ */
+static JSBool
+SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
+                jsval v)
+{
+    uintN slot;
+    JSObject *origobj;
+    JSScope *scope;
+    JSScopeProperty *sprop;
+    JSString *str;
+    JSBool ok;
+
+    slot = (uintN) JSVAL_TO_INT(id);
+    if (!JS_InstanceOf(cx, obj, &js_FunctionClass, NULL)) {
+        /*
+         * Given a non-function object obj that has a function object in its
+         * prototype chain, where an argument or local variable property named
+         * by (setter, slot) is being set, override the shared property in the
+         * prototype with an unshared property in obj.  This situation arises
+         * in real-world JS due to .prototype setting and collisions among a
+         * function's "static property" names and arg or var names, believe it
+         * or not.
+         */
+        origobj = obj;
+        do {
+            obj = OBJ_GET_PROTO(cx, obj);
+            if (!obj)
+                return JS_TRUE;
+        } while (!JS_InstanceOf(cx, obj, &js_FunctionClass, NULL));
+
+        JS_LOCK_OBJ(cx, obj);
+        scope = OBJ_SCOPE(obj);
+        for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+            if (sprop->setter == setter) {
+                JS_ASSERT(!JSVAL_IS_INT(sprop->id) &&
+                          ATOM_IS_STRING((JSAtom *)sprop->id) &&
+                          (sprop->flags & SPROP_HAS_SHORTID));
+
+                if ((uintN) sprop->shortid == slot) {
+                    str = ATOM_TO_STRING((JSAtom *)sprop->id);
+                    JS_UNLOCK_SCOPE(cx, scope);
+
+                    return JS_DefineUCProperty(cx, origobj,
+                                               JSSTRING_CHARS(str),
+                                               JSSTRING_LENGTH(str),
+                                               v, NULL, NULL,
+                                               JSPROP_ENUMERATE);
+                }
+            }
+        }
+        JS_UNLOCK_SCOPE(cx, scope);
+        return JS_TRUE;
+    }
+
+    /*
+     * Argument and local variable properties of function objects are shared
+     * by default (JSPROP_SHARED), therefore slot-less.  But if for function
+     * f(a) {}, f.a = 42 is evaluated, f.a should be 42 after the assignment,
+     * whether or not f is active.  So js_SetArgument and js_SetLocalVariable
+     * must be prepared to change an arg or var from shared to unshared status,
+     * allocating a slot in obj to hold v.
+     */
+    ok = JS_TRUE;
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+        if (sprop->setter == setter && (uintN) sprop->shortid == slot) {
+            if (sprop->attrs & JSPROP_SHARED) {
+                sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop,
+                                                    0, ~JSPROP_SHARED,
+                                                    sprop->getter, setter);
+                if (!sprop) {
+                    ok = JS_FALSE;
+                } else {
+                    /* See js_SetProperty, near the bottom. */
+                    GC_POKE(cx, pval);
+                    LOCKED_OBJ_SET_SLOT(obj, sprop->slot, v);
+                }
+            }
+            break;
+        }
+    }
+    JS_UNLOCK_SCOPE(cx, scope);
+    return ok;
+}
+
 JSBool
 js_GetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFunction *fun;
-    JSStackFrame *fp;
-
-    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
-    if (!fun)
-        return JS_TRUE;
-    for (fp = cx->fp; fp; fp = fp->down) {
-        /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->native) {
-            if (fp->fun == fun) {
-                JS_ASSERT((uintN)JSVAL_TO_INT(id) < fp->fun->nargs);
-                *vp = fp->argv[JSVAL_TO_INT(id)];
-            }
-            return JS_TRUE;
-        }
-    }
     return JS_TRUE;
 }
 
 JSBool
 js_SetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFunction *fun;
-    JSStackFrame *fp;
-
-    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
-    if (!fun)
-        return JS_TRUE;
-    for (fp = cx->fp; fp; fp = fp->down) {
-        /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->native) {
-            if (fp->fun == fun) {
-                JS_ASSERT((uintN)JSVAL_TO_INT(id) < fp->fun->nargs);
-                fp->argv[JSVAL_TO_INT(id)] = *vp;
-            }
-            return JS_TRUE;
-        }
-    }
-    return JS_TRUE;
+    return SetFunctionSlot(cx, obj, js_SetArgument, id, *vp);
 }
 
 JSBool
 js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFunction *fun;
-    JSStackFrame *fp;
-    jsint slot;
-
-    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
-    if (!fun)
-        return JS_TRUE;
-    for (fp = cx->fp; fp; fp = fp->down) {
-        /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->native) {
-            if (fp->fun == fun) {
-                slot = JSVAL_TO_INT(id);
-                JS_ASSERT((uintN)slot < fp->fun->nvars);
-                if ((uintN)slot < fp->nvars)
-                    *vp = fp->vars[slot];
-            }
-            return JS_TRUE;
-        }
-    }
     return JS_TRUE;
 }
 
 JSBool
 js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFunction *fun;
-    JSStackFrame *fp;
-    jsint slot;
-
-    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
-    if (!fun)
-        return JS_TRUE;
-    for (fp = cx->fp; fp; fp = fp->down) {
-        /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->native) {
-            if (fp->fun == fun) {
-                slot = JSVAL_TO_INT(id);
-                JS_ASSERT((uintN)slot < fp->fun->nvars);
-                if ((uintN)slot < fp->nvars)
-                    fp->vars[slot] = *vp;
-            }
-            return JS_TRUE;
-        }
-    }
-    return JS_TRUE;
+    return SetFunctionSlot(cx, obj, js_SetLocalVariable, id, *vp);
 }
 
 /*
@@ -1344,10 +1394,8 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_SWAP:
             /*
-             * N.B. JSOP_SWAP doesn't swap the corresponding pc stack
-             * generating pcs, as they're not needed for the current use of
-             * preserving the top-of-stack return value when popping scopes
-             * while returning from catch blocks.
+             * N.B. JSOP_SWAP doesn't swap the corresponding generating pcs
+             * for the operands it swaps.
              */
             ltmp = sp[-1];
             sp[-1] = sp[-2];
