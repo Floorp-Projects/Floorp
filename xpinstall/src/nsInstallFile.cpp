@@ -289,9 +289,9 @@ void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath
         ++mFolderCreateCount;
 
         inFolderPath->GetPath(&szPath);
-        nsStrFolder = szPath;
+        nsStrFolder.AssignWithConversion(szPath);
         nsAllocator::Free(szPath);
-        ilc = new nsInstallLogComment(inInstall, "CreateFolder", nsStrFolder, error);
+        ilc = new nsInstallLogComment(inInstall, NS_ConvertASCIItoUCS2("CreateFolder"), nsStrFolder, error);
         if(ilc == nsnull)
             *error = nsInstall::OUT_OF_MEMORY;
 
