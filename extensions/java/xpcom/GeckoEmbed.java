@@ -39,36 +39,10 @@ package org.mozilla.xpcom;
 
 public final class GeckoEmbed {
 
-  // XPCOM Utility functions
   public static native void NS_InitEmbedding(nsILocalFile aMozBinDirectory, nsISupports aAppFileLocProvider);
   public static native void NS_TermEmbedding();
   public static native nsILocalFile NS_NewLocalFile(String aPath, boolean followLinks);
   public static native nsIComponentManager NS_GetComponentManager();
   public static native nsIServiceManager NS_GetServiceManager();
   public static native nsISimpleEnumerator NS_NewSingletonEnumerator(nsISupports aSingleton);
-
-  // Calling functions used by Java stub classes
-  public static native void CallXPCOMMethodVoid(Object thisObj, int fnNumber, Object[] params);
-  public static native boolean CallXPCOMMethodBool(Object thisObj, int fnNumber, Object[] params);
-  public static native boolean[] CallXPCOMMethodBoolA(Object thisObj, int fnNumber, Object[] params);
-  public static native byte CallXPCOMMethodByte(Object thisObj, int fnNumber, Object[] params);
-  public static native byte[] CallXPCOMMethodByteA(Object thisObj, int fnNumber, Object[] params);
-  public static native char CallXPCOMMethodChar(Object thisObj, int fnNumber, Object[] params);
-  public static native char[] CallXPCOMMethodCharA(Object thisObj, int fnNumber, Object[] params);
-  public static native short CallXPCOMMethodShort(Object thisObj, int fnNumber, Object[] params);
-  public static native short[] CallXPCOMMethodShortA(Object thisObj, int fnNumber, Object[] params);
-  public static native int CallXPCOMMethodInt(Object thisObj, int fnNumber, Object[] params);
-  public static native int[] CallXPCOMMethodIntA(Object thisObj, int fnNumber, Object[] params);
-  public static native long CallXPCOMMethodLong(Object thisObj, int fnNumber, Object[] params);
-  public static native long[] CallXPCOMMethodLongA(Object thisObj, int fnNumber, Object[] params);
-  public static native float CallXPCOMMethodFloat(Object thisObj, int fnNumber, Object[] params);
-  public static native float[] CallXPCOMMethodFloatA(Object thisObj, int fnNumber, Object[] params);
-  public static native double CallXPCOMMethodDouble(Object thisObj, int fnNumber, Object[] params);
-  public static native double[] CallXPCOMMethodDoubleA(Object thisObj, int fnNumber, Object[] params);
-  public static native Object CallXPCOMMethodObj(Object thisObj, int fnNumber, Object[] params);
-  public static native Object[] CallXPCOMMethodObjA(Object thisObj, int fnNumber, Object[] params);
-
-  public static native void FinalizeStub(Object thisObj);
-
-  public static native int nsWriteSegmentFun(int ptr, Object aInStream, int aClosure, byte[] aFromSegment, int aToOffset, int aCount);
 }

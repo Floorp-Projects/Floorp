@@ -43,8 +43,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-MODULE		= javaembed
-LIBRARY_NAME	= javaembed
+MODULE		= javaxpcom
+LIBRARY_NAME	= javaxpcom
 
 EMBED_JAR = mozembed.jar
 EMBED_JAR_SRC = $(patsubst %.jar,%-src.jar,$(EMBED_JAR))
@@ -62,11 +62,17 @@ CPPSRCS		= \
 		nsJavaXPCOMBindingUtils.cpp \
 		$(NULL)
 
-JAVA_LOC = /opt/IBMJava2-141
+# Can't use JAVA_SRCS for now, since that one is referenced in config.mk
+JAVA_SRCS_ = \
+		XPCOM.java \
+		GeckoEmbed.java \
+		$(NULL)
 
 LOCAL_INCLUDES	= \
-		-I$(JAVA_LOC)/include \
+		-I$(JAVA_HOME)/include \
 		$(NULL)
+
+LOCAL_INCLUDES	+= -I$(JAVA_HOME)/include/linux
 
 EXTRA_DSO_LIBS = \
 	embed_base_s \
@@ -130,12 +136,12 @@ $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done: $(XPIDL_COMPILE) $(XPIDL_GE
 
 #$(XPIDL_GEN_DIR)/org/mozilla/xpcom/%.java: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 #	$(ELOG) $(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/$* $(_VPATH_SRCS)
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done GeckoEmbed.java
+$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done $(JAVA_SRCS_)
 	@echo Making Java interface files
 	@for idl in $(IDL_FILES); do \
 		$(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/`basename $$idl` $$idl; \
 	done
-	@$(INSTALL) -m 644 $(srcdir)/GeckoEmbed.java $(XPIDL_GEN_DIR)/org/mozilla/xpcom
+	@$(INSTALL) -m 644 $(addprefix $(srcdir)/,$(JAVA_SRCS_)) $(XPIDL_GEN_DIR)/org/mozilla/xpcom
 	@touch $@
 
 #org/mozilla/xpcom/stubs/%.class: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done org/mozilla/xpcom/stubs/.done
