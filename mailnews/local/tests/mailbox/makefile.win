@@ -27,7 +27,15 @@ OBJS =										\
 #	.\$(OBJDIR)\nsMsgMailboxParserStub.obj	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\mailnews -I$(PUBLIC)\security -I$(PUBLIC)\pref -I$(PUBLIC)\rdf
+LINCS=  -I$(PUBLIC)\raptor					\
+		-I$(PUBLIC)\xpcom					\
+		-I$(PUBLIC)\netlib					\
+		-I$(PUBLIC)\mailnews				\
+		-I$(PUBLIC)\security				\
+		-I$(PUBLIC)\pref					\
+		-I$(PUBLIC)\rdfutil					\
+		-I$(PUBLIC)\rdf						\
+		-I$(PUBLIC)\js						\
 
 MYLIBS=							\
  $(DIST)\lib\xpcom32.lib		\
@@ -37,12 +45,10 @@ MYLIBS=							\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\netlib.lib			\
  $(DIST)\lib\libplc21.lib		\
+ $(DIST)\lib\rdfutil_s.lib		\
  $(DIST)\lib\msgcore.lib		\
- $(DIST)\lib\msglocal.lib		\
- $(DIST)\lib\msgdb.lib		\
- $(DIST)\lib\rdf.lib			\
+ $(DIST)\lib\msgdb.lib			\
  $(DIST)\lib\xplib.lib			\
- $(DIST)\lib\rdfbase_s.lib			\
  $(NULL)
 
 LLIBS= $(MYLIBS)				\
