@@ -21,6 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "nsIViewManager.h"
 class nsIView;
 
 // IID for the nsIView interface
@@ -64,6 +65,24 @@ public:
    * @result child view
    */
   virtual nsIView * GetScrolledView(void) = 0;
+
+  /**
+   * Select whether quality level should be displayed in view frame
+   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
+   */
+  virtual void ShowQuality(PRBool aShow) = 0;
+
+  /**
+   * Query whether quality level should be displayed in view frame
+   * @return if PR_TRUE, quality level will be displayed, else hidden
+   */
+  virtual PRBool GetShowQuality(void) = 0;
+
+  /**
+   * Select whether quality level should be displayed in view frame
+   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
+   */
+  virtual void SetQuality(nsContentQuality aQuality) = 0;
 };
 
 #endif

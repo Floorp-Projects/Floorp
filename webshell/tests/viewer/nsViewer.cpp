@@ -52,6 +52,7 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsISizeOfHandler.h"
+#include "nsIViewManager.h"
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -1009,6 +1010,20 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
     case VIEWER_SHOW_STYLE_SIZE:
       if (nsnull != wd) {
         wd->ShowStyleSize();
+      }
+      break;
+
+    case VIEWER_SHOW_CONTENT_QUALITY:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        nsIPresContext *px = wd->ww->GetPresContext();
+        nsIPresShell   *ps = px->GetShell();
+        nsIViewManager *vm = ps->GetViewManager();
+
+        vm->ShowQuality(!vm->GetShowQuality());
+
+        NS_RELEASE(vm);
+        NS_RELEASE(ps);
+        NS_RELEASE(px);
       }
       break;
 

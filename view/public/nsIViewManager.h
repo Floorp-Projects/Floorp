@@ -31,6 +31,13 @@ class nsIView;
 class nsIWidget;
 struct nsRect;
 
+typedef enum
+{
+  nsContentQuality_kGood = 0,
+  nsContentQuality_kFair,
+  nsContentQuality_kPoor
+} nsContentQuality;
+
 #define NS_IVIEWMANAGER_IID   \
 { 0x3a8863d0, 0xa7f3, 0x11d1, \
   { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
@@ -359,6 +366,24 @@ public:
    * to an empty state
    */
   virtual void ClearDirtyRegion() = 0;
+
+  /**
+   * Select whether quality level should be displayed in root view
+   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
+   */
+  virtual void ShowQuality(PRBool aShow) = 0;
+
+  /**
+   * Query whether quality level should be displayed in view frame
+   * @return if PR_TRUE, quality level will be displayed, else hidden
+   */
+  virtual PRBool GetShowQuality(void) = 0;
+
+  /**
+   * Select whether quality level should be displayed in root view
+   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
+   */
+  virtual void SetQuality(nsContentQuality aQuality) = 0;
 };
 
 //when the refresh happens, should it be double buffered?

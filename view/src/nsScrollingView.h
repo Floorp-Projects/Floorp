@@ -62,6 +62,10 @@ public:
   virtual void GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY);
   virtual nsIView * GetScrolledView(void);
 
+  virtual void ShowQuality(PRBool aShow);
+  virtual PRBool GetShowQuality(void);
+  virtual void SetQuality(nsContentQuality aQuality);
+
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
 
@@ -70,6 +74,7 @@ protected:
   nscoord mOffsetX, mOffsetY;
   nsIView *mVScrollBarView;
   nsIView *mHScrollBarView;
+  nsIView *mCornerView;
 };
 
 #endif

@@ -48,11 +48,12 @@
 #define VIEWER_SHOW_CONTENT_SIZE    40029
 #define VIEWER_SHOW_FRAME_SIZE      40030
 #define VIEWER_SHOW_STYLE_SIZE      40031
+#define VIEWER_SHOW_CONTENT_QUALITY 40032
 
 // Note: must be in ascending sequential order
-#define VIEWER_ONE_COLUMN       40032
-#define VIEWER_TWO_COLUMN       40033
-#define VIEWER_THREE_COLUMN     40034
+#define VIEWER_ONE_COLUMN       40033
+#define VIEWER_TWO_COLUMN       40034
+#define VIEWER_THREE_COLUMN     40035
 
 #define JS_CONSOLE              40100
 

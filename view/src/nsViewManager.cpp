@@ -767,6 +767,8 @@ void nsViewManager :: SetViewClip(nsIView *aView, nsRect *rect)
 
 void nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility visible)
 {
+  aView->SetVisibility(visible);
+  UpdateView(aView, nsnull, 0);
 }
 
 void nsViewManager :: SetViewZindex(nsIView *aView, PRInt32 zindex)
@@ -883,6 +885,48 @@ void nsViewManager :: ClearDirtyRegion()
     mDirtyRegion->SetTo(0, 0, 0, 0);
 
 #endif
+}
+
+void nsViewManager :: ShowQuality(PRBool aShow)
+{
+  nsIScrollableView *scroller;
+
+  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+  if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+  {
+    scroller->ShowQuality(aShow);
+    NS_RELEASE(scroller);
+  }
+}
+
+PRBool nsViewManager :: GetShowQuality(void)
+{
+  nsIScrollableView *scroller;
+  PRBool            retval = PR_FALSE;
+
+  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+  if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+  {
+    retval = scroller->GetShowQuality();
+    NS_RELEASE(scroller);
+  }
+
+  return retval;
+}
+
+void nsViewManager :: SetQuality(nsContentQuality aQuality)
+{
+  nsIScrollableView *scroller;
+
+  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+  if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+  {
+    scroller->SetQuality(aQuality);
+    NS_RELEASE(scroller);
+  }
 }
 
 nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)

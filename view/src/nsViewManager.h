@@ -113,6 +113,10 @@ public:
 
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
 
+  virtual void ShowQuality(PRBool aShow);
+  virtual PRBool GetShowQuality(void);
+  virtual void SetQuality(nsContentQuality aQuality);
+
 private:
   ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
