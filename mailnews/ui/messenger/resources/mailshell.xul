@@ -294,7 +294,7 @@
 	  </html:td>
 
 	  <html:td width="40px">	  
-	  <titledbutton src="resource:/res/throbber/messenger/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')">
+	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')">
 	  </html:td>
       </html:tr></html:table>
     </toolbar>
