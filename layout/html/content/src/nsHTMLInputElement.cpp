@@ -299,7 +299,12 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCo
   // content creation is done in XBL.
   if (!aDocument && aDeep) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+    // Note that we'll call GetPrimaryFrame() with aFlushNotifications
+    // set to false. Flushing now causes evil interactions with the
+    // content sink (see bug 45568). Furthermore, if the frame has
+    // never been created, then the nsIEditor won't have been created,
+    // so there'd be no work to do anyway.
+    nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
     if (NS_SUCCEEDED(rv) && formControlFrame) {
       nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
       if (textControlFrame) {
