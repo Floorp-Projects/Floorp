@@ -412,7 +412,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	HLock(instDescRectH);
 	instDescBox = (Rect) **((Rect**)instDescRectH);
 	SetRect( &viewRect, instDescBox.left, instDescBox.bottom + 2, 
-						instDescBox.right, instDescBox.bottom + 12 );
+						instDescBox.right, instDescBox.bottom + 14 );
 	HUnlock(instDescRectH);	
 	DetachResource(instDescRectH);
 	DisposeHandle(instDescRectH); 
@@ -463,7 +463,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 		DisposePtr((Ptr)ckb);
 	
 	SetRect( &viewRect, instDescBox.right - 150, instDescBox.bottom + 2,
-						instDescBox.right, instDescBox.bottom + 12 );
+						instDescBox.right, instDescBox.bottom + 14 );
 	dsNeededH = NULL;
 	dsNeededH = TENew( &viewRect, &viewRect );
 	if (!dsNeededH)
@@ -558,7 +558,7 @@ ClearDiskSpaceMsgs(void)
 	HLock(instDescRectH);
 	instDescBox = (Rect) **((Rect**)instDescRectH);
 	SetRect( &viewRect, instDescBox.left, instDescBox.bottom + 2, 
-						instDescBox.right, instDescBox.bottom + 12 );
+						instDescBox.right, instDescBox.bottom + 14 );
 	HUnlock(instDescRectH);	
 	DetachResource(instDescRectH);
 	DisposeHandle(instDescRectH);

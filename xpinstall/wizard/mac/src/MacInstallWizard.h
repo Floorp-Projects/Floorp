@@ -150,6 +150,8 @@ if (err) 								\
 #define rCompListBox	150		/* note: overriden use for list and rect */
 #define rCompDescBox	151
 
+#define rCheckboxLDEF	128
+
 #define rStartMsgBox	160
 #define rInstProgBar	161
 
