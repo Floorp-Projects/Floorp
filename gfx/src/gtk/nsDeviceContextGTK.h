@@ -55,8 +55,6 @@ public:
   nsDeviceContextGTK();
   virtual ~nsDeviceContextGTK();
 
-  NS_DECL_ISUPPORTS
-
   static void Shutdown(); // to be called from module destructor
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
