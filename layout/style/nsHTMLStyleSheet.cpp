@@ -3382,22 +3382,31 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
   
     case NS_STYLE_DISPLAY_TABLE:
     {
-      isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
-      nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
-                                                           aParentFrame;
+      nsIFrame* geometricParent = aParentFrame;
+      if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+        isAbsolutelyPositioned = PR_TRUE;
+        aParentFrame = aAbsoluteItems.containingBlock;
+      }
+      if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+        isFixedPositioned = PR_TRUE;
+        aParentFrame = aFixedItems.containingBlock;
+      }
       rv = ConstructTableFrame(aPresContext, aContent, geometricParent, aStyleContext,
                                aAbsoluteItems, newFrame, aFixedItems);
       // Note: table construction function takes care of initializing the frame,
       // processing children, and setting the initial child list
-      if (isAbsolutelyPositioned) {
+      if (isAbsolutelyPositioned || isFixedPositioned) {
         nsIFrame* placeholderFrame;
 
         CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
                                   aParentFrame, placeholderFrame);
 
-        // Add the absolutely positioned frame to its containing block's list
-        // of child frames
-        aAbsoluteItems.AddChild(newFrame);
+        // Add the positioned frame to its containing block's list of child frames
+        if (isAbsolutelyPositioned) {
+          aAbsoluteItems.AddChild(newFrame);
+        } else {
+          aFixedItems.AddChild(newFrame);
+        }
 
         // Add the placeholder frame to the flow
         aFrameItems.AddChild(placeholderFrame);
