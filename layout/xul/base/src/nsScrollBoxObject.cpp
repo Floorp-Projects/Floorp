@@ -150,7 +150,8 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
     if (dindexes > 0) {
       while(child) {
         child->GetNextBox(&child);
-        child->GetBounds(rect);
+        if (child)
+          child->GetBounds(rect);
         count++;
         if (count >= dindexes)
           break;
