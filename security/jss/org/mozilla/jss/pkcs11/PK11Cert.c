@@ -372,6 +372,12 @@ finish:
     return token;
 }
 
+/*
+ * workaround for bug 100791: misspelled function prototypes in pk11func.h
+ */
+SECItem*
+PK11_GetLowLevelKeyIDForCert(PK11SlotInfo*,CERTCertificate*,void*);
+
 /**********************************************************************
  * PK11Cert.getUniqueID
  */

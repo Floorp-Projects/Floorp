@@ -36,6 +36,7 @@
 #include <plarena.h>
 #include <secmodt.h>
 #include <pk11func.h>
+#include <pk11pqg.h>
 #include <secerr.h>
 #include <nspr.h>
 #include <key.h>

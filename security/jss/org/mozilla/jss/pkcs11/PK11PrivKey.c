@@ -310,6 +310,12 @@ finish:
     return token;
 }
 
+/*
+ * workaround for bug 100791: misspelled function prototypes in pk11func.h
+ */
+SECItem*
+PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey*);
+
 /**********************************************************************
  * PK11PrivKey.getUniqueID
  */
