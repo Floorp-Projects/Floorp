@@ -48,7 +48,7 @@
 #include <mapidefs.h>
 #include <mapi.h>
 #include <tchar.h>
-
+#include <direct.h>
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -569,10 +569,18 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
             // a value for lpszFileName, use it. Otherwise stick with leafName
             if (aFiles[i].lpszFileName)
             {
+                nsAutoString wholeFileName;
                 if (aIsUnicode)
-                    leafName.Assign(aFiles[i].lpszFileName);
+                    wholeFileName.Assign(aFiles[i].lpszFileName);
                 else
-                    ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, leafName);
+                    ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, wholeFileName);
+
+               // need to find the last '\' and find the leafname from that.
+               PRInt32 lastSlash = wholeFileName.RFindChar(PRUnichar('\\'));
+               if (lastSlash != kNotFound)
+                 wholeFileName.Right(leafName, wholeFileName.Length() - lastSlash - 1);
+               else
+                 leafName.Assign(wholeFileName);
             }
             else 
               pFile->GetLeafName (leafName);
@@ -795,6 +803,17 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
                 FilePathsLen -= offset + strDelimChars.Length();
             }
 
+            if (RemainingPaths[1] != ':' && RemainingPaths[1] != '\\')
+            {
+              char cwd[MAX_PATH];
+              if (_getdcwd(_getdrive(), cwd, MAX_PATH))
+              {
+                nsAutoString cwdStr;
+                CopyASCIItoUTF16(cwd, cwdStr);
+                cwdStr.Append('\\');
+                RemainingPaths.Insert(cwdStr, 0);
+              }
+            }
             pFile->InitWithPath (RemainingPaths) ;
             rv = pFile->Exists(&bExist) ;
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
