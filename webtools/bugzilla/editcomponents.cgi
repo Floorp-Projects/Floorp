@@ -358,7 +358,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new product");
+    PutHeader("Adding new component");
     CheckProduct($product);
 
     # Cleanups and valididy checks
