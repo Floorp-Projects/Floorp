@@ -177,8 +177,6 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 // On startup modules will want to set up their preferences with reasonable
 // defaults.  For example netlib might call with a buffer of:
 //
-// pref("network.tcpbufsize",4096);
-// pref("network.max_connections", 4);
 // pref("network.proxy.http_host", "");
 // pref("network.proxy.http_port". 0);
 // ...etc...

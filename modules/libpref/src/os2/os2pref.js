@@ -21,19 +21,6 @@
  */
 
 platform.windows = true;
-
-pref("browser.bookmark_window_showwindow",  1);		// SW_NORMAL
-pref("mailnews.folder_window_showwindow",   1);		// SW_NORMAL
-pref("mailnews.thread_window_showwindow",   1);		// SW_NORMAL
-pref("mailnews.message_window_showwindow",  1);		// SW_NORMAL
-
-pref("browser.bookmark_columns_win",        "");
-pref("mailnews.folder_columns_win",         "");
-pref("mail.thread_columns_win",             "");
-pref("news.thread_columns_win",             "");
-pref("category.thread_columns_win",         "");
-pref("news.category_columns_win",           "");
-
 pref("ui.key.menuAccessKeyFocuses", true);
 
 pref("font.name.serif.ar", "Tms Rm");
@@ -93,14 +80,6 @@ pref("font.name.sans-serif.zh-TW", "Helv");
 pref("font.name.monospace.zh-TW", "Courier");
 
 pref("font.size.nav4rounding", false);
-
-
-pref("taskbar.x",                           -1); 
-pref("taskbar.y",                           -1);
-pref("taskbar.floating",                    true);
-pref("taskbar.horizontal",                  false);
-pref("taskbar.ontop",                       true);
-pref("taskbar.button_style",                -1);
 
 pref("netinst.profile.show_profile_wizard", true); 
 

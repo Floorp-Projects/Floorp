@@ -37,47 +37,33 @@ pref("general.startup.editor",              false);
 pref("general.startup.compose",             false);
 pref("general.startup.addressbook",         false);
 
-pref("general.always_load_images",          true);
-pref("general.always_load_movies",          true);
-pref("general.always_load_sounds",          true);
-pref("general.title_tips",                  true);
-
-pref("general.help_source.site",            1); // 0 = Netscape, 1 = installed, 2 = custom
-pref("general.help_source.url",             "");
-
-pref("general.fullcircle_enable",           true);
-pref("general.fullcircle_collect_ns_data",  false);
-
 pref("general.open_location.last_url",      "");
 
-pref("browser.chrome.toolbar_tips",         true);
-pref("browser.enable_style_sheets",         true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);     
 pref("browser.startup.homepage",	   "chrome://navigator/locale/navigator.properties");
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
-pref("browser.startup.agreed_to_licence",   false);
-pref("browser.startup.license_version",     0);
-pref("browser.startup.default_window",      1); // start up browser
+
 pref("browser.cache.disk_cache_size",       7680);
 pref("browser.cache.enable",                true);
-pref("browser.cache.disk.enable",                true);
+pref("browser.cache.disk.enable",           true);
 pref("browser.cache.memory_cache_size",     1024);
 pref("browser.cache.disk_cache_ssl",        false);
+pref("browser.cache.check_doc_frequency",   0);
+
+pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
+pref("browser.display.use_document_colors", true);
+pref("browser.display.wfe.use_windows_colors",true);
 pref("browser.display.foreground_color",    "#000000");
 pref("browser.display.background_color",    "#C0C0C0");
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");
-pref("browser.chrome.show_directory_buttons",   true);
+pref("browser.underline_anchors",           true);
+
+pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
-pref("browser.chrome.advanced_toolbar",     false);
-pref("browser.chrome.show_toolbar",         true);
-pref("browser.chrome.show_status_bar",      true);
-pref("browser.chrome.show_url_bar",         true);
-pref("browser.chrome.show_security_bar",    true);
-pref("browser.chrome.button_style",         0);
 
 pref("browser.toolbars.showbutton.bookmarks", false);
 pref("browser.toolbars.showbutton.go",      false);
@@ -86,25 +72,6 @@ pref("browser.toolbars.showbutton.mynetscape", true);
 pref("browser.toolbars.showbutton.net2phone", true);
 pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
-
-pref("browser.background_option",           0); // DEFAULT_BACKGROUND
-pref("browser.link_expiration",             9);
-pref("browser.cache.check_doc_frequency",   0);
-
-pref("browser.delay_images",                false);
-pref("browser.underline_anchors",           true);
-pref("browser.never_expire",                false);
-pref("browser.display_while_loading",       true);
-pref("browser.custom_link_color",           false);
-pref("browser.custom_visited_color",        false);
-pref("browser.custom_text_color",           false);
-pref("browser.display.use_document_colors", true);
-pref("browser.ldapfile_location",       "");
-pref("browser.print_background",            false);
-pref("browser.prefs_window.modeless",       false);
-pref("browser.wfe.ignore_def_check",false);
-pref("browser.display.wfe.use_windows_colors",true);
-pref("browser.startup_mode",1);
 
 // Dialog modality issues
 pref("browser.prefWindowModal", true);
@@ -116,36 +83,12 @@ pref("browser.search.opensidebarsearchpanel", true);
 pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
 pref("browser.search.mode", 0);
 pref("browser.search.powermode", 0);
-pref("browser.search.use_double_clicks", false);
 pref("browser.urlbar.autocomplete.enabled", true);
 pref("browser.urlbar.clickSelectsAll",false);
-
-localDefPref("browser.bookmark_location",       "");
-localDefPref("browser.addressbook_location",    "");
-localDefPref("browser.socksfile_location",      "");
-localDefPref("browser.ldapfile_location",       "");
 
 pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
 pref("browser.sessionhistory.max_entries", 50);
-
-pref("browser.url_history.URL_1", "");
-pref("browser.url_history.URL_2", "");
-pref("browser.url_history.URL_3", "");
-pref("browser.url_history.URL_4", "");
-pref("browser.url_history.URL_5", "");
-pref("browser.url_history.URL_6", "");
-pref("browser.url_history.URL_7", "");
-pref("browser.url_history.URL_8", "");
-pref("browser.url_history.URL_9", "");
-pref("browser.url_history.URL_10", "");
-pref("browser.url_history.URL_11", "");
-pref("browser.url_history.URL_12", "");
-pref("browser.url_history.URL_13", "");
-pref("browser.url_history.URL_14", "");
-pref("browser.url_history.URL_15", "");
-
-pref("browser.uriloader", true); // turn new uri loading on by default
 
 pref("browser.PICS.ratings_enabled", false);
 pref("browser.PICS.pages_must_be_rated", false);
@@ -171,7 +114,6 @@ pref("nglayout.debug.enable_xbl_forms", false);
 pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
 pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
-pref("browser.related.detailsProvider", "http://cgi.netscape.com/cgi-bin/rlcgi.cgi?URL=");
 pref("browser.related.disabledForDomains", "");
 pref("browser.goBrowsing.enabled", true);
 
@@ -219,9 +161,7 @@ pref("capability.policy.default.windowinternal.opendialog", "noAccess");
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
-pref("javascript.allow.signing",            true);
-pref("javascript.reflect_preferences",      false);     // for PE
-//pref("javascript.options.strict",           true);
+pref("javascript.options.strict",           false);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);
@@ -235,16 +175,6 @@ pref("offline.send.unsent_messages",            0);
 pref("offline.prompt_synch_on_exit",            true);
 pref("offline.news.download.use_days",          0);
 
-pref("network.dnsAttempt",              0);
-pref("network.tcptimeout",                  0);         // use default
-pref("network.tcpbufsize",                  0);         //
-pref("network.use_async_dns",               true);
-pref("network.dnsCacheExpiration",          900); // in seconds
-pref("network.enableUrlMatch",              true);
-pref("network.max_connections",             4);
-pref("network.speed_over_ui",               true);
-pref("network.file_sort_method",            0);     // NAME 0, TYPE 1, SIZE 2, DATE 3
-pref("network.ftp.passive",		    true);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
@@ -314,7 +244,6 @@ pref("network.proxy.socks",                 "");
 pref("network.proxy.socks_port",            0);
 pref("network.proxy.no_proxies_on",         "");
 pref("network.online",                      true); //online/offline
-pref("network.prompt_at_startup",           false);//Ask me
 pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 = never
 pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
@@ -322,12 +251,10 @@ pref("network.cookie.warnAboutCookies",     false);
 pref("signon.rememberSignons",              true);
 pref("network.sendRefererHeader",           2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
-pref("network.padPacURL",                   ""); // The proxy autodiscovery url
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
-pref("wallet.fetchPatches",                 false);
 pref("wallet.TutorialFromMenu",             "chrome://navigator/locale/navigator.properties");
 pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
 pref("wallet.Samples",                      "chrome://navigator/locale/navigator.properties");
@@ -396,43 +323,24 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
-pref("browser.enable_webfonts",                 true);
-pref("browser.display.use_document_fonts",      1); // 0 = never, 1 = quick, 2 = always
-
 // -- folders (Mac: these are binary aliases.)
-localDefPref("browser.download_directory",      "");
 localDefPref("mail.signature_file",             "");
 localDefPref("mail.directory",                  "");
-localDefPref("mail.cc_file",                    "");
-localDefPref("news.cc_file",                    "");
 
-pref("browser.wfe.show_value", 1);
-pref("browser.blink_allowed", true);
 pref("images.dither", "auto");
-pref("images.incremental_display", true);
-pref("network.wfe.use_async_dns", true);
-pref("network.wfe.tcp_connect_timeout",0);
 localDefPref("news.directory",                  "");
 localDefPref("security.directory",              "");
 
 pref("autoupdate.enabled",              true);
-pref("autoupdate.confirm_install",				false);
-pref("autoupdate.unsigned_jar_support",  false);
 
 pref("silentdownload.enabled",    true);
 pref("silentdownload.directory",  "");
 pref("silentdownload.range",      3000);
 pref("silentdownload.interval",  10000);
 
-pref("imap.io.mac.logging", false);
-
 pref("browser.editor.disabled", false);
 
 pref("spellchecker.dictionary", "");
-
-pref("mime.table.allow_add", true);
-pref("mime.table.allow_edit", true);
-pref("mime.table.allow_remove", true);
 
 pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);

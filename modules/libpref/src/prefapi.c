@@ -1166,7 +1166,6 @@ PrefResult
 PREF_SetSpecialPrefsLocal(void)
 {
     static char *prefName[] = {
-    "browser.bookmark_columns_win",
     "editor.html_editor",
     "editor.template_history_0",
     "editor.template_last_loc",
@@ -1176,20 +1175,9 @@ PREF_SetSpecialPrefsLocal(void)
     "helpers.private_mime_types_file",
     "intl.font_charset",
     "intl.font_spec_list",
-    "mail.addr_book.sliderwidth",
-    "mail.addr_picker.sliderwidth",
     "mail.imap.root_dir",
-    "mail.threadpane.messagepane_height",
-    "mailnews.3Pane_folder_columns_win",
-    "mailnews.3pane_folder_width",
-    "mailnews.3pane_thread_height",
-    "mailnews.abook_columns_win",
-    "mailnews.folder_columns_win",
-    "mailnews.ldapsearch_columns_win",
     "profile.name",
     "profile.numprofiles",
-    "taskbar.x",
-    "taskbar.y",
     "profile.directory"
     };
     PrefNode* pref;

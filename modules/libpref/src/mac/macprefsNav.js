@@ -25,25 +25,6 @@
 
 platform.mac = true;
 
-pref("browser.mac.show_tool_tips",              true);
-pref("browser.mac.use_internet_config",         false);
-pref("browser.mac.active_scrolling",            true);
-pref("browser.mac.use_utility_pattern",         false);
-pref("browser.mac.use_grayscale_form_controls", true);
-
-//print header/footer
-pref("browser.mac.print_header_topleft",    3);
-pref("browser.mac.print_header_topmid",     5);
-pref("browser.mac.print_header_topright",   2);
-pref("browser.mac.print_header_botleft",    0);
-pref("browser.mac.print_header_botmid",     4);
-pref("browser.mac.print_header_botright",   0);
-pref("browser.mac.print_background",        false); // checkbox
-
-// This overrides the setting in config.js (which points to the Windows page)
-config("menu.help.item_0.label","Help Contents");
-config("menu.help.item_1.url","http://home.netscape.com/eng/mozilla/4.0/relnotes/mac-4.0-nav.html");
-
 mime_type("mime.image_gif", "image/gif", "gif", 2, "JPEGView", "JVWR", "GIFf");
 mime_type("mime.image_jpeg", "image/jpeg", "jpg,jpeg,jpe", 2, "JPEGView", "JVWR", "JPEG");
 mime_type("mime.image_pict", "image/pict", "pic,pict", 1, "SimpleText", "ttxt", "PICT");

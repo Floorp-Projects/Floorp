@@ -20,18 +20,12 @@
  * Contributor(s): 
  */
 
-// The other platforms roll this all into "toolbar mode".
-pref("browser.chrome.toolbar_tips", true);
-pref("browser.chrome.show_menubar", true);
-
 pref("mail.empty_trash", false);
 
 // Handled differently under Mac/Windows
 pref("network.hosts.smtp_server", "localhost");
 pref("network.hosts.pop_server", "pop");
 pref("mail.check_new_mail", true);
-pref("mail.sort_by", 0);
-pref("news.sort_by", 0);
 pref("browser.startup.license_accepted", "");
 pref("browser.cache.memory_cache_size", 3000);
 pref("browser.cache.disk_cache_size", 5000);
@@ -42,7 +36,6 @@ pref("mail.signature_file", "~/.signature");
 pref("mail.default_fcc", "~/nsmail/Sent");
 pref("news.default_fcc", "~/nsmail/Sent");
 pref("mailnews.reply_with_extra_lines", 0);
-pref("browser.startup.default_window", 0);
 pref("security.warn_accept_cookie", false);
 pref("editor.disable_spell_checker", false);
 pref("editor.dont_lock_spell_files", true);
@@ -56,9 +49,6 @@ pref("middlemouse.scrollbarPosition", true);
 
 // Clipboard behavior
 pref("clipboard.autocopy", true);
-
-// Instead of "delay_images"
-pref("browser.autoload_images", true);
 
 // Most Unix people think modal pref windows are stupid:
 pref("browser.prefWindowModal", false);
@@ -87,14 +77,6 @@ pref("print.print_reversed", false);
 pref("print.print_color", true);
 pref("print.print_landscape", false);
 pref("print.print_paper_size", 0);
-
-// Not sure what this one does...
-pref("browser.fancy_ftp", true);
-
-// Fortezza stuff
-pref("fortezza.toggle", 1);
-pref("fortezza.timeout", 30);
-
 
 // font names
 
@@ -172,14 +154,3 @@ pref("print.psnativecode.ja", "euc-jp");
 pref("print.psnativefont.ja", "Ryumin-Light-EUC-H");
 
 pref("mail.signature_date", 0);
-
-// Outliner column defaults
-pref("mail.threadpane.messagepane_height", 400);
-
-pref("taskbar.x", -1);
-pref("taskbar.y", -1);
-pref("taskbar.floating", false);
-pref("taskbar.horizontal", false);
-pref("taskbar.ontop", false);
-pref("taskbar.button_style", -1);
-
