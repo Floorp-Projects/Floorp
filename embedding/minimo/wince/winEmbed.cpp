@@ -44,6 +44,9 @@
 #include <commdlg.h>
 #include <aygshell.h>
 #include <sipapi.h>
+#include <winsock2.h>
+#include <initguid.h>
+#include <connmgr.h>
 
 // Mozilla header files
 #include "nsEmbedAPI.h"
@@ -97,6 +100,7 @@ static UINT      gDialogCount = 0;
 static HINSTANCE ghInstanceApp = NULL;
 static BOOL      gActive = TRUE;
 static BOOL      gBusy = TRUE;
+static HANDLE    gConnectionHandle = NULL;
 
 // minimo/wince/ list of URLs to populate the URL drop down list with
 static const TCHAR *gDefaultURLs[] = 
@@ -130,6 +134,42 @@ typedef struct MinimoWindowContext
 } MinimoWindowContext;
 
 
+PRBool LowOnMemory()
+{
+    MEMORYSTATUS memStats;
+    memStats.dwLength = sizeof( memStats);
+
+    GlobalMemoryStatus( (LPMEMORYSTATUS)&memStats );
+    
+    if (memStats.dwAvailPhys <= (262144) /*1024*256*/)
+        return PR_TRUE;
+    return PR_FALSE; 
+}
+
+
+void DoPPCConnection()
+{
+    if (gConnectionHandle)
+        ConnMgrReleaseConnection(gConnectionHandle,0);
+
+	DWORD status;
+	CONNMGR_CONNECTIONINFO conn_info;
+	memset(&conn_info, 0, sizeof(CONNMGR_CONNECTIONINFO));
+
+	conn_info.cbSize     = sizeof(CONNMGR_CONNECTIONINFO);
+	conn_info.dwParams   = CONNMGR_PARAM_GUIDDESTNET;
+	conn_info.dwPriority = CONNMGR_PRIORITY_USERINTERACTIVE;
+	conn_info.bExclusive = FALSE;
+	conn_info.bDisabled  = FALSE;
+	conn_info.guidDestNet= IID_DestNetInternet;
+
+	if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 30000, &status) != S_OK)
+		MessageBox(0, "Could not connect to network", "Error", 0);
+
+    if (status != CONNMGR_STATUS_CONNECTED)
+		MessageBox(0, "Could not connect to network", "Error", 0);
+}
+
 int main(int argc, char *argv[])
 {
     const HWND hWndExistingInstance = FindWindowW(NULL, L"Minimo");
@@ -159,7 +199,12 @@ int main(int argc, char *argv[])
     }
 
     InitializeWindowCreator();
-    
+
+	WSADATA wsaData;
+	WSAStartup( MAKEWORD( 1, 1 ), &wsaData );
+
+    DoPPCConnection();
+
     // Open the initial browser window
     OpenWebPage("resource://gre/res/start.html");
     
@@ -167,6 +212,12 @@ int main(int argc, char *argv[])
 
     // Close down Embedding APIs
     NS_TermEmbedding();
+
+
+    if (gConnectionHandle)
+        ConnMgrReleaseConnection(gConnectionHandle,0);
+
+	WSACleanup();
 
     return rv;
 }
@@ -194,6 +245,24 @@ nsresult InitializeWindowCreator()
     return NS_ERROR_FAILURE;
 }
 
+void LoadURL(nsIWebNavigation* webNavigation, char* url)
+{
+
+    if (!gConnectionHandle)
+        DoPPCConnection();
+
+    DWORD status;
+    ConnMgrConnectionStatus(gConnectionHandle, &status);
+    if (status != CONNMGR_STATUS_CONNECTED)
+        DoPPCConnection();
+
+    webNavigation->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
+                           nsIWebNavigation::LOAD_FLAGS_NONE,
+                           nsnull,
+                           nsnull,
+                           nsnull);
+}
+
 nsresult OpenWebPage(const char *url)
 {
     nsresult  rv;
@@ -211,11 +280,9 @@ nsresult OpenWebPage(const char *url)
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-        return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
-                               nsIWebNavigation::LOAD_FLAGS_NONE,
-                               nsnull,
-                               nsnull,
-                               nsnull);
+
+        LoadURL(webNav, (char*)url);
+        return NS_OK;
     }
 
     return rv;
@@ -311,15 +378,6 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
       EnableWindow(button, canGoForward);
 }
 
-void LoadURL(nsIWebNavigation* webNavigation, char* url)
-{
-    webNavigation->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
-                           nsIWebNavigation::LOAD_FLAGS_NONE,
-                           nsnull,
-                           nsnull,
-                           nsnull);
-}
-
 void LoadURLInURLBar(HWND hwndDlg, nsIWebNavigation* webNavigation)
 {
     TCHAR szURL[2048];
@@ -388,9 +446,6 @@ BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     // Set the text area so that we can see it
                     SetDlgItemText(hwndDlg, IDC_ADDRESS, buffer);
 
-                    // Load the url.
-                    LoadURL(webNavigation, buffer);
-
                     delete buffer;
                 }
                 break;
@@ -398,6 +453,7 @@ BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             case IDC_GO:
                 {
                 LoadURLInURLBar(hwndDlg,webNavigation);
+                ::ShowWindow(hwndDlg, SW_HIDE);
                 }
                 break;
                 
@@ -609,6 +665,24 @@ nsresult StartupProfile()
 
 }
 
+void
+KillCurrentLoad(nsIWebBrowserChrome* aChrome)
+{
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIWebNavigation> webNavigation;
+    
+    aChrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    webNavigation = do_QueryInterface(webBrowser);
+    if (webNavigation)
+        webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+
+    HWND win = GetBrowserDlgFromChrome(aChrome);
+    MessageBox(win, "Running Low on Memory. Cancelling page load.", "Note", 0);
+
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(win, GWL_USERDATA);
+    ::ShowWindow(mwcontext->mStatusWindow, SW_HIDE);
+}
+
 nativeWindow 
 WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
@@ -777,6 +851,9 @@ WebBrowserChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUn
         status.AssignWithConversion(aStatusText);
 
     SetDlgItemText(mwcontext->mStatusWindow, IDC_STATUS, status.get());
+
+    if (LowOnMemory())
+        KillCurrentLoad(aChrome);
 }
 
 void 
@@ -802,6 +879,9 @@ WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
 void 
 WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
 {
+    if (LowOnMemory())
+        KillCurrentLoad(aChrome);
+
     gBusy = aBusy;
 
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
@@ -818,6 +898,8 @@ WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
         ::GetWindowRect(mwcontext->mStatusWindow, &rect);
         ::InvalidateRect(mwcontext->mMainWindow, &rect, TRUE);
         ::SetForegroundWindow(mwcontext->mMainWindow);
+
+        nsMemory::HeapMinimize(PR_TRUE);
     }
         
 
@@ -856,6 +938,10 @@ WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurren
         SendMessage(hwndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, aMax));
         SendMessage(hwndProgress, PBM_SETPOS, aCurrent, 0);
     }
+
+
+    if (LowOnMemory())
+        KillCurrentLoad(aChrome);
 }
 
 void 

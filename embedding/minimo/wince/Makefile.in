@@ -87,7 +87,7 @@ LOCAL_INCLUDES	= -I$(srcdir)
 
 include $(topsrcdir)/config/config.mk
 
-OS_LIBS += $(call EXPAND_LIBNAME, aygshell)
+OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore)
 
 # Force applications to be built non-statically
 # when building the mozcomps meta component
