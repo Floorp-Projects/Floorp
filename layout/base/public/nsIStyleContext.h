@@ -328,7 +328,9 @@ inline nsBorderEdge::nsBorderEdge()
   mInsideNeighbor = nsnull;
 };
 
-/** an encapsulation of a border defined by its edges */
+/** an encapsulation of a border defined by its edges 
+  * owner of this struct is responsible for freeing any data stored in mEdges
+  */
 struct nsBorderEdges
 {
   nsVoidArray mEdges[4];
