@@ -255,7 +255,9 @@ ifeq ($(OS_ARCH), IRIX)
         CC = CC
     endif
     LDOPTS += -rpath $(ABSOLUTE_LIB_DIR)
-    ifndef NS_USE_GCC
+    ifdef NS_USE_GCC
+        LDOPTS += -Wl,-rdata_shared
+    else
         LDOPTS += -rdata_shared
     endif
 # For 6.x machines, include this flag
