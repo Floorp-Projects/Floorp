@@ -118,6 +118,10 @@
 #include "nsXULMenuListElement.h"
 #include "nsXULDocument.h"
 
+// Used for the temporary DOM Level2 hack
+#include "nsIPref.h"
+static PRBool kStrictDOMLevel2;
+
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
@@ -359,6 +363,16 @@ nsXULElement::Init()
 {
     if (gRefCnt++ == 0) {
         nsresult rv;
+
+// Temporary hack that tells if some new DOM Level 2 features are on or off
+        kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
+        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
+        }
+// End of temp hack.
+
+
         rv = nsServiceManager::GetService(kRDFServiceCID,
                                           kIRDFServiceIID,
                                           (nsISupports**) &gRDFService);
@@ -1473,6 +1487,16 @@ nsXULElement::GetAttribute(const nsString& aName, nsString& aReturn)
 NS_IMETHODIMP
 nsXULElement::SetAttribute(const nsString& aName, const nsString& aValue)
 {
+    if (kStrictDOMLevel2) {
+        PRInt32 pos = aName.FindChar(':');
+        if (pos >= 0) {
+          nsCAutoString tmp; tmp.AssignWithConversion(aName);
+          printf ("Possible DOM Error: SetAttribute(\"%s\") called, use SetAttributeNS() in stead!\n", (const char *)tmp);
+        }
+
+        nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(aName)));
+        return SetAttribute(kNameSpaceID_None, tag, aValue, PR_TRUE);
+    }
     nsresult rv;
 
     PRInt32 nameSpaceID;
@@ -1493,6 +1517,17 @@ nsXULElement::SetAttribute(const nsString& aName, const nsString& aValue)
 NS_IMETHODIMP
 nsXULElement::RemoveAttribute(const nsString& aName)
 {
+    if (kStrictDOMLevel2) {
+        PRInt32 pos = aName.FindChar(':');
+        if (pos >= 0) {
+          nsCAutoString tmp; tmp.AssignWithConversion(aName);
+          printf ("Possible DOM Error: RemoveAttribute(\"%s\") called, use RemoveAttributeNS() in stead!\n", (const char *)tmp);
+        }
+
+        nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(aName)));
+        return UnsetAttribute(kNameSpaceID_None, tag, PR_TRUE);
+    }
+
     nsresult rv;
 
     PRInt32 nameSpaceID;
@@ -1513,6 +1548,14 @@ nsXULElement::RemoveAttribute(const nsString& aName)
 NS_IMETHODIMP
 nsXULElement::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 {
+    if (kStrictDOMLevel2) {
+        PRInt32 pos = aName.FindChar(':');
+        if (pos >= 0) {
+          nsCAutoString tmp; tmp.AssignWithConversion(aName);
+          printf ("Possible DOM Error: GetAttributeNode(\"%s\") called, use GetAttributeNodeNS() in stead!\n", (const char *)tmp);
+        }
+    }
+
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
@@ -1572,6 +1615,14 @@ nsXULElement::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 NS_IMETHODIMP
 nsXULElement::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)
 {
+    if (kStrictDOMLevel2) { 
+        PRInt32 pos = aName.FindChar(':');
+        if (pos >= 0) {
+          nsCAutoString tmp; tmp.AssignWithConversion(aName);
+          printf ("Possible DOM Error: GetElementsByTagName(\"%s\") called, use GetElementsByTagNameNS() in stead!\n", (const char *)tmp);
+        }
+    }
+
     nsresult rv;
 
     nsRDFDOMNodeList* elements;
@@ -3526,7 +3577,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // Obviously, the target should be the content/frame where the mouse was depressed,
         // not one computed by the current mouse location.
         nsAutoString tagName;
-        GetTagName(tagName);
+        NodeInfo()->GetName(tagName); // Local name only
         if (aEvent->message == NS_MENU_ACTION || aEvent->message == NS_MENU_CREATE ||
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
             aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
@@ -4420,8 +4471,7 @@ nsXULElement::Click()
     nsCOMPtr<nsIPresShell> shell; // Strong
     nsCOMPtr<nsIPresContext> context;
     nsAutoString tagName;
-    GetTagName(tagName);
-    PRBool isButton = (tagName.EqualsWithConversion("titledbutton"));
+    PRBool isButton = NodeInfo()->Equals(NS_ConvertASCIItoUCS2("titledbutton"));
 
     for (PRInt32 i=0; i<numShells; i++) {
       shell = getter_AddRefs(doc->GetShellAt(i));

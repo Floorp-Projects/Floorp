@@ -69,6 +69,12 @@
 #include "nsHTMLAtoms.h"
 #include "nsLayoutUtils.h"
 
+
+#include "nsIServiceManager.h"
+#include "nsIPref.h" // Used by the temp pref, should be removed!
+static PRBool kStrictDOMLevel2 = PR_FALSE;
+
+
 NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
@@ -381,6 +387,20 @@ nsGenericElement::nsGenericElement() : mContent(nsnull), mDocument(nsnull),
                                        mParent(nsnull), mNodeInfo(nsnull),
                                        mDOMSlots(nsnull), mContentID(0)
 {
+  static PRInt32 been_here = 0;
+
+// Temporary hack that tells if some new DOM Level 2 features are on or off
+  if (!been_here) {
+    kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
+    }
+    been_here = 1;
+  }
+// End of temp hack.
+
 }
 
 nsGenericElement::~nsGenericElement()
@@ -708,6 +728,17 @@ nsresult
 nsGenericElement::SetAttribute(const nsString& aName,
                                const nsString& aValue)
 {
+  if (kStrictDOMLevel2) {
+    PRInt32 pos = aName.FindChar(':');
+    if (pos >= 0) {
+      nsCAutoString tmp; tmp.AssignWithConversion(aName);
+      printf ("Possible DOM Error: SetAttribute(\"%s\") called, use SetAttributeNS() in stead!\n", (const char *)tmp);
+    }
+
+    nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(aName)));
+    return mContent->SetAttribute(kNameSpaceID_None, tag, aValue, PR_TRUE);
+  }
+
   nsIAtom* nameAtom;
   PRInt32 nameSpaceID;
   nsresult result = NS_OK;
@@ -725,6 +756,17 @@ nsGenericElement::SetAttribute(const nsString& aName,
 nsresult
 nsGenericElement::RemoveAttribute(const nsString& aName)
 {
+  if (kStrictDOMLevel2) {
+    PRInt32 pos = aName.FindChar(':');
+    if (pos >= 0) {
+      nsCAutoString tmp; tmp.AssignWithConversion(aName);
+      printf ("Possible DOM Error: RemoveAttribute(\"%s\") called, use RemoveAttributeNS() in stead!\n", (const char *)tmp);
+    }
+
+    nsCOMPtr<nsIAtom> tag(dont_AddRef(NS_NewAtom(aName)));
+    return mContent->UnsetAttribute(kNameSpaceID_None, tag, PR_TRUE);
+  }
+
   nsIAtom* nameAtom;
   PRInt32 nameSpaceID;
   nsresult result = NS_OK;
@@ -827,11 +869,22 @@ nsGenericElement::GetElementsByTagName(const nsString& aTagname,
   nsIAtom* nameAtom;
   PRInt32 nameSpaceId;
   nsresult result = NS_OK;
-  
-  result = mContent->ParseAttributeString(aTagname, nameAtom,
-                                          nameSpaceId);
-  if (NS_OK != result) {
-    return result;
+
+  if (kStrictDOMLevel2) {
+    PRInt32 pos = aTagname.FindChar(':');
+    if (pos >= 0) {
+      nsCAutoString tmp; tmp.AssignWithConversion(aTagname);
+      printf ("Possible DOM Error: GetElementsByTagName(\"%s\") called, use GetElementsByTagNameNS() in stead!\n", (const char *)tmp);
+    }
+
+    nameAtom = NS_NewAtom(aTagname);
+    nameSpaceId = kNameSpaceID_Unknown;
+  } else {
+    result = mContent->ParseAttributeString(aTagname, nameAtom,
+                                            nameSpaceId);
+    if (NS_OK != result) {
+      return result;
+    }
   }
 
   nsContentList* list = new nsContentList(mDocument, 
@@ -950,6 +1003,27 @@ nsresult
 nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
                                      nsIDOMAttr** aReturn)
 {
+  if ((nsnull == aReturn) || (nsnull == aNewAttr))  {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsIDOMNamedNodeMap* map;
+  nsresult result = GetAttributes(&map);
+ 
+  *aReturn = nsnull;
+  if (NS_OK == result) {
+    nsIDOMNode *node, *returnNode;
+    result = aNewAttr->QueryInterface(kIDOMNodeIID, (void **)&node);
+    if (NS_OK == result) {
+      result = map->SetNamedItemNS(node, &returnNode);
+      if ((NS_OK == result) && (nsnull != returnNode)) {
+        result = returnNode->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+        NS_IF_RELEASE(returnNode);
+      }
+      NS_RELEASE(node);
+    }
+    NS_RELEASE(map);
+  }
+
   return NS_OK;
 }
 
