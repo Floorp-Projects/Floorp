@@ -51,8 +51,8 @@
 #include "nsIFileSpec.h"
 #include "nsIMsgProtocolInfo.h"
 
-#define ONE_DAY_IN_MILLISECONDS 86400000000
-#define MIN_DELAY_BETWEEN_PURGES 300000000  //minimum delay between two consecutive purges
+static const PRInt64 gOneDayInMilliseconds = LL_INIT(20, 500654080); /*86400000000 */
+static const PRInt64 gMinDelayBetweenPurges = LL_INIT(0, 300000000);  //minimum delay between two consecutive purges
 
 NS_IMPL_ISUPPORTS3(nsMsgPurgeService, nsIMsgPurgeService, nsIIncomingServerListener, nsIMsgSearchNotify)
 
@@ -202,7 +202,7 @@ nsresult nsMsgPurgeService::AddServer(nsIMsgIncomingServer *server)
   if (lastPurgeTime)
   {
     nextPurgeTime = lastPurgeTime;
-    //nextPurgeTime += ONE_DAY_IN_MILLISECONDS;
+    nextPurgeTime += nsInt64(gOneDayInMilliseconds);
     nsTime currentTime;
     if ( nextPurgeTime < currentTime)
       nextPurgeTime = currentTime;
@@ -283,7 +283,8 @@ nsresult nsMsgPurgeService::SetNextPurgeTime(nsPurgeEntry *purgeEntry, nsTime st
     return NS_ERROR_FAILURE;
   
   purgeEntry->nextPurgeTime = startTime;
-  //purgeEntry->nextPurgeTime += MIN_DELAY_BETWEEN_PURGES * (mPurgeArray->Count()+1);  //let us stagger them out by 5 mins if they happen to start at same time
+  for (PRInt32 i=0; i < mPurgeArray->Count()+1; i++)
+    purgeEntry->nextPurgeTime += nsInt64(gMinDelayBetweenPurges);  //let us stagger them out by 5 mins if they happen to start at same time
   return NS_OK;
 }
 
@@ -297,7 +298,7 @@ nsresult nsMsgPurgeService::SetupNextPurge()
     nsInt64 purgeDelay;
     nsInt64 ms(1000);
     if(currentTime > purgeEntry->nextPurgeTime)
-      purgeDelay = 0;//MIN_DELAY_BETWEEN_PURGES;
+      purgeDelay = nsInt64(gMinDelayBetweenPurges);
     else
       purgeDelay = purgeEntry->nextPurgeTime - currentTime;
     //Convert purgeDelay into milliseconds
@@ -341,7 +342,7 @@ nsresult nsMsgPurgeService::PerformPurge()
       {
         nsresult rv = PurgeJunkFolder(current);
         if (NS_SUCCEEDED(rv))
-          nextPurgeTime += 0;//ONE_DAY_IN_MILLISECONDS;
+          nextPurgeTime += nsInt64(gOneDayInMilliseconds);
         else
           current = nsnull;
       }
@@ -398,7 +399,7 @@ nsresult nsMsgPurgeService::PurgeJunkFolder(nsPurgeEntry *entry)
         PRInt64 theTime;
         PR_ParseTimeString(lastPurgeTimeString.get(), PR_FALSE, &theTime);
         nsTime lastPurgeTime(theTime);
-        //lastPurgeTime += ONE_DAY_IN_MILLISECONDS;
+        lastPurgeTime += nsInt64(gOneDayInMilliseconds);
         nsTime currentTime;
         if (lastPurgeTime > currentTime)
           return NS_OK;              //return NS_OK will purge after a day
