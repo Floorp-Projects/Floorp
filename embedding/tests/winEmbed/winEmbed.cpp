@@ -79,7 +79,7 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
 }
 
 
-nsresult OpenWebPage(char* url)
+nsresult OpenWebPage(const char* url)
 {
     WebBrowserChrome * chrome = new WebBrowserChrome();
     if (!chrome)
@@ -99,10 +99,14 @@ nsresult OpenWebPage(char* url)
     return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }   
 
-int main ()
+int main (int argc, char* argv[])
 {
  	
     printf("\nYou are embedded, man!\n\n");
+
+    const char* url = "http://www.mozilla.org/projects/embedding";
+    if (argc > 1)
+        url = argv[argc - 1];
     
     MSG msg;
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -117,7 +121,7 @@ int main ()
 
 // put up at lease on browser window ....
 /////////////////////////////////////////////////////////////
-    OpenWebPage("http://www.mozilla.org/projects/embedding");
+    OpenWebPage(url);
 /////////////////////////////////////////////////////////////
 
 
