@@ -1087,9 +1087,6 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     data->regexp = re;
 
-    if (reobj)
-        JS_LOCK_OBJ(cx, reobj);
-
     data->global = (re->flags & JSREG_GLOB) != 0;
     index = 0;
     if (data->mode == GLOB_SEARCH) {
@@ -1121,11 +1118,8 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                               rval);
     }
 
-    if (reobj) {
-        JS_UNLOCK_OBJ(cx, reobj);
-    } else {
+    if (!reobj)
         js_DestroyRegExp(cx, re);
-    }
     return ok;
 }
 
@@ -1754,7 +1748,7 @@ static JSBool
 str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str, *sub;
-    JSObject *arrayobj, *reobj;
+    JSObject *arrayobj;
     jsval v;
     JSBool ok, limited;
     JSRegExp *re;
@@ -1779,8 +1773,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
 #if JS_HAS_REGEXPS
         if (JSVAL_IS_REGEXP(cx, argv[0])) {
-            reobj = JSVAL_TO_OBJECT(argv[0]);
-            re = (JSRegExp *) JS_GetPrivate(cx, reobj);
+            re = (JSRegExp *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
             sep = &tmp;
 
             /* Set a magic value so we can detect a successful re match. */
@@ -1800,7 +1793,6 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             tmp.length = JSSTRING_LENGTH(str2);
             tmp.chars = JSSTRING_CHARS(str2);
             sep = &tmp;
-            reobj = NULL;
             re = NULL;
         }
 
@@ -1818,24 +1810,16 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 limit = 1 + JSSTRING_LENGTH(str);
         }
 
-        if (reobj) {
-            /* Lock to protect re just in case it's shared and global. */
-            JS_LOCK_OBJ(cx, reobj);
-        }
-
         len = i = 0;
         while ((j = find_split(cx, str, re, &i, sep)) >= 0) {
             if (limited && len >= limit)
                 break;
             sub = js_NewDependentString(cx, str, i, (size_t)(j - i), 0);
-            if (!sub) {
-                ok = JS_FALSE;
-                goto unlock_reobj;
-            }
+            if (!sub)
+                return JS_FALSE;
             v = STRING_TO_JSVAL(sub);
-            ok = JS_SetElement(cx, arrayobj, len, &v);
-            if (!ok)
-                goto unlock_reobj;
+            if (!JS_SetElement(cx, arrayobj, len, &v))
+                return JS_FALSE;
             len++;
 #if JS_HAS_REGEXPS
             /*
@@ -1853,14 +1837,11 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     parsub = REGEXP_PAREN_SUBSTRING(&cx->regExpStatics, num);
                     sub = js_NewStringCopyN(cx, parsub->chars, parsub->length,
                                             0);
-                    if (!sub) {
-                        ok = JS_FALSE;
-                        goto unlock_reobj;
-                    }
+                    if (!sub)
+                        return JS_FALSE;
                     v = STRING_TO_JSVAL(sub);
-                    ok = JS_SetElement(cx, arrayobj, len, &v);
-                    if (!ok)
-                        goto unlock_reobj;
+                    if (!JS_SetElement(cx, arrayobj, len, &v))
+                        return JS_FALSE;
                     len++;
                 }
                 sep->chars = NULL;
@@ -1877,9 +1858,6 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
         }
         ok = (j != -2);
-      unlock_reobj:
-        if (reobj)
-            JS_UNLOCK_OBJ(cx, reobj);
     }
     return ok;
 }
