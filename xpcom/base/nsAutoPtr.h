@@ -345,51 +345,59 @@ getter_AddRefs(nsRefPtr<T>& aSmartPtr)
         return lhs lhget_ op_ rhs rhget_;                                     \
     }
 
+#define NS_AUTO_PTR_EMPTY_
+
 #define SMART_SMART_EQ_OP(op_, type_, lhconst_, rhconst_)                     \
     EQ_OP(op_, const type_<lhconst_ T>&, const type_<rhconst_ U>&,            \
           .get(), .get())
 
 #define SMART_RAW_EQ_OP(op_, type_, lhconst_, rhconst_)                       \
-    EQ_OP(op_, const type_<lhconst_ T>&, rhconst_ U *, .get(), )
+    EQ_OP(op_, const type_<lhconst_ T>&, rhconst_ U *,                        \
+          .get(), NS_AUTO_PTR_EMPTY_)
 
 #define RAW_SMART_EQ_OP(op_, type_, lhconst_, rhconst_)                       \
-    EQ_OP(op_, lhconst_ T *, const type_<rhconst_ U>&, , .get())
+    EQ_OP(op_, lhconst_ T *, const type_<rhconst_ U>&,                        \
+          NS_AUTO_PTR_EMPTY_, .get())
 
-#define CONST_OPEQ_OPS(type_)                                                 \
-    SMART_SMART_EQ_OP(==, type_, , const)                                     \
-    SMART_SMART_EQ_OP(!=, type_, , const)                                     \
-    SMART_SMART_EQ_OP(==, type_, const, )                                     \
-    SMART_SMART_EQ_OP(!=, type_, const, )                                     \
+#define PORTABLE_EQ_OPS(type_)                                                \
     SMART_SMART_EQ_OP(==, type_, const, const)                                \
     SMART_SMART_EQ_OP(!=, type_, const, const)                                \
-    SMART_RAW_EQ_OP(==, type_, , const)                                       \
-    SMART_RAW_EQ_OP(!=, type_, , const)                                       \
-    SMART_RAW_EQ_OP(==, type_, const, )                                       \
-    SMART_RAW_EQ_OP(!=, type_, const, )                                       \
     SMART_RAW_EQ_OP(==, type_, const, const)                                  \
     SMART_RAW_EQ_OP(!=, type_, const, const)                                  \
-    RAW_SMART_EQ_OP(==, type_, , const)                                       \
-    RAW_SMART_EQ_OP(!=, type_, , const)                                       \
-    RAW_SMART_EQ_OP(==, type_, const, )                                       \
-    RAW_SMART_EQ_OP(!=, type_, const, )                                       \
     RAW_SMART_EQ_OP(==, type_, const, const)                                  \
     RAW_SMART_EQ_OP(!=, type_, const, const)
 
-#define NON_CONST_OPEQ_OPS(type_)                                             \
-    SMART_SMART_EQ_OP(==, type_, , )                                          \
-    SMART_SMART_EQ_OP(!=, type_, , )                                          \
-    SMART_RAW_EQ_OP(==, type_, , )                                            \
-    SMART_RAW_EQ_OP(!=, type_, , )                                            \
-    RAW_SMART_EQ_OP(==, type_, , )                                            \
-    RAW_SMART_EQ_OP(!=, type_, , )
+#define NON_CONST_EQ_OPS(type_)                                               \
+    SMART_SMART_EQ_OP(==, type_, NS_AUTO_PTR_EMPTY_, const)                   \
+    SMART_SMART_EQ_OP(!=, type_, NS_AUTO_PTR_EMPTY_, const)                   \
+    SMART_SMART_EQ_OP(==, type_, const, NS_AUTO_PTR_EMPTY_)                   \
+    SMART_SMART_EQ_OP(!=, type_, const, NS_AUTO_PTR_EMPTY_)                   \
+    SMART_SMART_EQ_OP(==, type_, NS_AUTO_PTR_EMPTY_, NS_AUTO_PTR_EMPTY_)      \
+    SMART_SMART_EQ_OP(!=, type_, NS_AUTO_PTR_EMPTY_, NS_AUTO_PTR_EMPTY_)      \
+    SMART_RAW_EQ_OP(==, type_, NS_AUTO_PTR_EMPTY_, const)                     \
+    SMART_RAW_EQ_OP(!=, type_, NS_AUTO_PTR_EMPTY_, const)                     \
+    SMART_RAW_EQ_OP(==, type_, const, NS_AUTO_PTR_EMPTY_)                     \
+    SMART_RAW_EQ_OP(!=, type_, const, NS_AUTO_PTR_EMPTY_)                     \
+    SMART_RAW_EQ_OP(==, type_, NS_AUTO_PTR_EMPTY_, NS_AUTO_PTR_EMPTY_)        \
+    SMART_RAW_EQ_OP(!=, type_, NS_AUTO_PTR_EMPTY_, NS_AUTO_PTR_EMPTY_)        \
+    RAW_SMART_EQ_OP(==, type_, NS_AUTO_PTR_EMPTY_, const)                     \
+    RAW_SMART_EQ_OP(!=, type_, NS_AUTO_PTR_EMPTY_, const)                     \
+    RAW_SMART_EQ_OP(==, type_, const, NS_AUTO_PTR_EMPTY_)                     \
+    RAW_SMART_EQ_OP(!=, type_, const, NS_AUTO_PTR_EMPTY_)                     \
+    RAW_SMART_EQ_OP(==, type_, NS_AUTO_PTR_EMPTY_, NS_AUTO_PTR_EMPTY_)        \
+    RAW_SMART_EQ_OP(!=, type_, NS_AUTO_PTR_EMPTY_, NS_AUTO_PTR_EMPTY_)
 
 #ifdef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
+
 #define ALL_EQ_OPS(type_)                                                     \
-    CONST_OPEQ_OPS(type_)
+    PORTABLE_EQ_OPS(type_)
+
 #else
+
 #define ALL_EQ_OPS(type_)                                                     \
-    NON_CONST_OPEQ_OPS(type_)                                                 \
-    CONST_OPEQ_OPS(type_)
+    NON_CONST_EQ_OPS(type_)                                                   \
+    PORTABLE_EQ_OPS(type_)
+
 #endif
 
 ALL_EQ_OPS(nsAutoPtr)
