@@ -17,6 +17,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *		   Brian Ryner <bryner@uiuc.edu>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -85,11 +86,11 @@ nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 			      nsIURI **result) {
     nsresult rv;
 
-    // no concept of a relative finger url
+    // no concept of a relative ldap url
     NS_ASSERTION(!aBaseURI, "base url passed into LDAP protocol handler");
 
     nsIURI* uri;
-    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
+    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
                                             NS_GET_IID(nsIURI),
                                             (void**)&uri);
     if (NS_FAILED(rv)) return rv;
