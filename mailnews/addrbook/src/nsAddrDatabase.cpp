@@ -1382,6 +1382,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	{
 		AddAttributeColumnsToRow(newCard, cardRow);
 		err = m_mdbPabTable->AddRow(GetEnv(), cardRow);
+		cardRow->CutStrongRef(GetEnv());
 	}
 	if (NS_FAILED(err)) return err;
 
@@ -1446,6 +1447,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				{
 					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
 				}
 			}
 			else if (code == AB_NotifyDeleted)
@@ -1457,7 +1459,10 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
 					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
+				}
 			}
 			else /* Edit */
 			{
@@ -1466,6 +1471,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				{
 					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
 					return NS_OK;
 				} 
 				err = NS_ERROR_FAILURE;
@@ -1499,6 +1505,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, value);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
 				}
 			}
 			else if (code == AB_NotifyDeleted)
@@ -1512,7 +1519,10 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
 					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
+				}
 			}
 			else
 			{
@@ -1521,6 +1531,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, value);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
 					return NS_OK;
 				} 
 				err = NS_ERROR_FAILURE;
@@ -1559,6 +1570,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
 				}
 			}
 			else if (code == AB_NotifyDeleted)
@@ -1572,7 +1584,10 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
 					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
+				}
 			}
 			else
 			{
@@ -1581,6 +1596,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					anonymousRow->CutStrongRef(GetEnv());
 					return NS_OK;
 				} 
 				err = NS_ERROR_FAILURE;
@@ -1686,6 +1702,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 			if (notify) 
 				NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
 		}
+		pCardRow->CutStrongRef(GetEnv());
 	}
 	return NS_OK;
 }
@@ -1709,6 +1726,8 @@ NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
 	if (notify) 
 		NotifyCardEntryChange(AB_NotifyPropertyChanged, card, NULL);
 
+	if (pCardRow)
+		pCardRow->CutStrongRef(GetEnv());
 	return NS_OK;
 }
 
@@ -2030,6 +2049,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
 					delete [] tempCString;
 					return NS_OK;
 				}
+				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
 	}
@@ -2062,6 +2082,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousIntAttribute(const char *attrname, PRU
 					*value = nValue;
 					return err;
 				}
+				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
 	}
@@ -2097,6 +2118,7 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousBoolAttribute(const char *attrname, PR
 						*value = PR_FALSE;
 					return err;
 				}
+				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
 	}
@@ -2501,13 +2523,15 @@ protected:
 };
 
 nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db, void* closure)
-    : mDB(db), mRowCursor(nsnull), mDone(PR_FALSE), mClosure(closure)
+    : mDB(db), mRowCursor(nsnull), mCurrentRow(nsnull), mDone(PR_FALSE), mClosure(closure)
 {
     NS_INIT_REFCNT();
 }
 
 nsAddrDBEnumerator::~nsAddrDBEnumerator()
 {
+	if (mRowCursor)
+		mRowCursor->CutStrongRef(mDB->GetEnv());
 }
 
 NS_IMPL_ISUPPORTS(nsAddrDBEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
@@ -2532,6 +2556,8 @@ NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
 		mDone = PR_TRUE;
 		return NS_ERROR_FAILURE;
 	}
+	if (mCurrentRow)
+		mCurrentRow->CutStrongRef(mDB->GetEnv());
 	nsresult rv = mRowCursor->NextRow(mDB->GetEnv(), &mCurrentRow, &mRowPos);
     if (mCurrentRow && NS_SUCCEEDED(rv))
 		return NS_OK;
