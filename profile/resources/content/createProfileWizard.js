@@ -23,8 +23,8 @@
 
 // The WIZARD of GORE
 
-var profile = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
-profile = profile.QueryInterface(Components.interfaces.nsIProfile); 
+var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
+profile = profile.QueryInterface(Components.interfaces.nsIProfileInternal); 
 
 // Navigation Set for pages contained in wizard 
 var wizardMap = {
