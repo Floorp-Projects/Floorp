@@ -340,7 +340,7 @@ nsXPInstallManager::OnStopBinding(nsIURI* aURL,
 NS_IMETHODIMP
 #ifdef NECKO
 nsXPInstallManager::OnDataAvailable(nsISupports *ctxt, 
-                                    nsIBufferInputStream *pIStream,
+                                    nsIInputStream *pIStream,
                                     PRUint32 sourceOffset, 
                                     PRUint32 length)
 #else

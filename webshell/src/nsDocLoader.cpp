@@ -145,7 +145,7 @@ public:
 		const PRUnichar *errorMsg) { return NS_OK; }
 	
 	// nsIStreamListener methods:
-	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, 
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, 
 		PRUint32 sourceOffset, PRUint32 count);
 
     // nsIProgressEventSink methods:
@@ -1927,7 +1927,7 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
 
 #ifdef NECKO
 NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsISupports *ctxt,
-                                              nsIBufferInputStream *aStream, 
+                                              nsIInputStream *aStream, 
                                               PRUint32 sourceOffset, 
                                               PRUint32 aLength)
 #else

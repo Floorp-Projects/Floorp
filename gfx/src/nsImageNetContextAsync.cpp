@@ -117,7 +117,7 @@ public:
   NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; } 
   NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; }
   // nsIStreamListener methods:
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
@@ -137,7 +137,7 @@ protected:
   PRBool mInterrupted;
   ImageNetContextImpl *mContext;
 #ifdef NECKO
-  nsIBufferInputStream *mStream;
+  nsIInputStream *mStream;
 #else
   nsIInputStream *mStream;
 #endif
@@ -220,7 +220,7 @@ ImageConsumer::OnStartBinding(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageConsumer::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *pIStream,
+ImageConsumer::OnDataAvailable(nsISupports* aContext, nsIInputStream *pIStream,
                                PRUint32 offset, PRUint32 length)
 #else
 ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length)

@@ -69,7 +69,7 @@ public:
   NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
   // nsIStreamListener methods:
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
   // nsIStreamListener
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
@@ -692,7 +692,7 @@ PluginListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 
 NS_IMETHODIMP
 #ifdef NECKO
-PluginListener::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+PluginListener::OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 #else
 PluginListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
                                 PRUint32 aCount)

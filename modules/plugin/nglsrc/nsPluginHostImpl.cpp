@@ -397,7 +397,7 @@ public:
     NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
     NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; }
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);  
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);  
 
 #else
   //nsIStreamObserver interface
@@ -488,7 +488,7 @@ public:
 		const PRUnichar *errorMsg) { return NS_OK; }
 	
 	// nsIStreamListener methods:
-	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, 
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, 
 		PRUint32 sourceOffset, PRUint32 count);
 
 #else
@@ -666,7 +666,7 @@ nsPluginCacheListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aPr
 NS_IMETHODIMP 
 #ifdef NECKO
 nsPluginCacheListener::OnDataAvailable(nsISupports* ctxt, 
-	nsIBufferInputStream* aIStream, 
+	nsIInputStream* aIStream, 
 	PRUint32 sourceOffset, 
 	PRUint32 aLength)
 #else
@@ -1053,7 +1053,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::GetBindInfo(nsIURI* aURL, nsStreamBind
 #ifdef NECKO
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
 	nsISupports* aContext, 
-	nsIBufferInputStream *aIStream, 
+	nsIInputStream *aIStream, 
 	PRUint32 sourceOffset, 
 	PRUint32 aLength)
 #else

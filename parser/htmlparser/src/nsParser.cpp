@@ -1097,7 +1097,7 @@ nsParser::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *err
  *  @return  error code (usually 0)
  */
 #ifdef NECKO
-nsresult nsParser::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
+nsresult nsParser::OnDataAvailable(nsISupports* aContext, nsIInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
 #else
 nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 aLength)
 #endif
