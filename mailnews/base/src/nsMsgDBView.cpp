@@ -5017,14 +5017,6 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
                     return NS_OK;
                 }
             }
-        case nsMsgNavigationType::laterMessage:
-            if (startIndex == nsMsgViewIndex_None) 
-            {
-                NS_ASSERTION(0, "unexpected");
-                break;
-            }
-            m_db->MarkLater(m_keys.GetAt(startIndex), LL_ZERO);
-            return NavigateFromPos(nsMsgNavigationType::nextUnreadMessage, startIndex, pResultKey, pResultIndex, pThreadIndex, PR_TRUE);
         default:
             NS_ASSERTION(0, "unsupported motion");
             break;
@@ -5077,9 +5069,6 @@ NS_IMETHODIMP nsMsgDBView::NavigateStatus(nsMsgNavigationTypeValue motion, PRBoo
         case nsMsgNavigationType::firstNew:
             rv = FindFirstNew(&resultIndex);
             enable = (NS_SUCCEEDED(rv) && resultIndex != nsMsgViewIndex_None);
-            break;
-        case nsMsgNavigationType::laterMessage:
-            enable = GetSize() > 0;
             break;
         case nsMsgNavigationType::readMore:
             enable = PR_TRUE;  // for now, always true.
@@ -5547,6 +5536,9 @@ nsMsgDBView::GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr)
   rv = GetKeyForFirstSelectedMessage(&key);
   // don't assert, it is legal for nothing to be selected
   if (NS_FAILED(rv)) return rv;
+
+  if (!m_db)
+    return NS_MSG_MESSAGE_NOT_FOUND;
 
   rv = m_db->GetMsgHdrForKey(key, hdr);
   NS_ENSURE_SUCCESS(rv,rv);
