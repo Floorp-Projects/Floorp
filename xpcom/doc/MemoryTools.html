@@ -390,19 +390,26 @@ connect xpcom's tracing to leakys tracing.</blockquote>
 Sample output</h3>
 Here is what you see when you enable some logging with XPCOM_MEM_LOG_CLASSES
 set to something:
-<pre>nsWebShell&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x81189f8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Release 5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nsWebShell::Release(void)+0x59&nbsp;
-nsCOMPtr&lt;nsIContentViewerContainer>::~nsCOMPtr(void)+0x34&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-nsChannelListener::OnStartRequest(nsIChannel *, nsISupports *)+0x550&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-nsFileChannel::OnStartRequest(nsIChannel *, nsISupports *)+0x7b nsOnStartRequestEvent::HandleEvent(void)+0x46&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-nsStreamListenerEvent::HandlePLEvent(PLEvent *)+0x62&nbsp;&nbsp;&nbsp;
-PL_HandleEvent+0x57&nbsp;&nbsp;&nbsp;&nbsp; PL_ProcessPendingEvents+0x90&nbsp;&nbsp;&nbsp;
-nsEventQueueImpl::ProcessPendingEvents(void)+0x1d&nbsp;&nbsp; nsAppShell::SetDispatchListener(nsDispatchListener
-*)+0x3e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gdk_get_show_events+0xbb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-g_io_add_watch+0xaa&nbsp;&nbsp;&nbsp;&nbsp; g_get_current_time+0x136&nbsp;&nbsp;&nbsp;
-g_get_current_time+0x6f1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_main_run+0x81
-gtk_main+0xb9&nbsp;&nbsp; nsAppShell::Run(void)+0x245&nbsp;&nbsp;&nbsp;&nbsp;
-nsAppShell::Run(void)+0xc7a92ede&nbsp;&nbsp; nsAppShell::Run(void)+0xc7a9317c
+<pre>nsWebShell      0x81189f8       Release 5
+nsWebShell::Release(void)+0x59
+nsCOMPtr&lt;nsIContentViewerContainer>::~nsCOMPtr(void)+0x34
+nsChannelListener::OnStartRequest(nsIChannel *, nsISupports *)+0x550
+nsFileChannel::OnStartRequest(nsIChannel *, nsISupports *)+0x7b
+nsOnStartRequestEvent::HandleEvent(void)+0x46
+nsStreamListenerEvent::HandlePLEvent(PLEvent *)+0x62
+PL_HandleEvent+0x57
+PL_ProcessPendingEvents+0x90
+nsEventQueueImpl::ProcessPendingEvents(void)+0x1d
+nsAppShell::SetDispatchListener(nsDispatchListener *)+0x3e
+gdk_get_show_events+0xbb
+g_io_add_watch+0xaa
+g_get_current_time+0x136
+g_get_current_time+0x6f1
+g_main_run+0x81
+gtk_main+0xb9
+nsAppShell::Run(void)+0x245
+nsAppShell::Run(void)+0xc7a92ede
+nsAppShell::Run(void)+0xc7a9317c
 __libc_start_main+0xeb</pre>
 <p>Here is what you see when you use the leaky tool to dump out addref/release
 leaks:
