@@ -433,6 +433,12 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetHeight(nscoord &aHeight)
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsGTK::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
+  return NS_OK;
+}
+
 NS_IMETHODIMP  nsFontMetricsGTK::GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
