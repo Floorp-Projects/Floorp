@@ -36,8 +36,14 @@ var vxPalette =
     
     var vfdDocument = focusedWindow.vxVFD.getContent(true).document;
     _dd(vfdDocument);
+    
+    // need to find a way to batch these
+    // create a button
     var buttontxn = new vxCreateElementTxn(vfdDocument, "button", insertionPoint.parent, insertionPoint.index);
-    var txShell = focusedWindow.vxVFD.mTxMgrShell.doTransaction(buttontxn);
+    var buttonvaluetxn = new vxChangeAttributeTxn(buttontxn.mElement, "value", "Button", false);
+
+    var aggregateTxn = new vxAggregateTxn([buttontxn, buttonvaluetxn]);
+    focusedWindow.vxVFD.mTxMgrShell.doTransaction(aggregateTxn);
   }
 };
 

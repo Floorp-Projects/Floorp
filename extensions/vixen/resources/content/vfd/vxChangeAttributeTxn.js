@@ -48,7 +48,7 @@ function vxChangeAttributeTxn(aElement, aAttribute, aValue, aRemoveFlag)
 vxChangeAttributeTxn.prototype = {
   doTransaction: function ()
   {
-    this.mUndoValue = this.mElement.getAttribute(aAttribute);
+    this.mUndoValue = this.mElement.getAttribute(this.mAttribute);
     if (!this.mRemoveFlag)
       this.mElement.setAttribute(this.mAttribute, this.mValue);
     else

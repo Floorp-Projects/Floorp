@@ -121,6 +121,22 @@ var vxShell =
     }
     return null;
   },
+
+  /** 
+   * Edit menu functions
+   */
+  undo: function ()
+  {
+    _dd("undoing transaction");
+    this.mFocusedWindow.vxVFD.mTxMgrShell.undoTransaction();
+  },
+   
+  redo: function ()
+  {
+    _dd("redoing transaction");
+    this.mFocusedWindow.vxVFD.mTxMgrShell.redoTransaction();
+  },
+
   
   appAbout: function ()
   {

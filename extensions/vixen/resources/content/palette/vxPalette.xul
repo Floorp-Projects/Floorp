@@ -14,6 +14,7 @@
   <script src="chrome://vixen/content/palette/vxPalette.js"></script>
 
   <!-- supported txns -->
+  <script src="chrome://vixen/content/vfd/vxAggregateTxn.js"></script>
   <script src="chrome://vixen/content/vfd/vxChangeAttributeTxn.js"></script>
   <script src="chrome://vixen/content/vfd/vxCreateElementTxn.js"></script>
   

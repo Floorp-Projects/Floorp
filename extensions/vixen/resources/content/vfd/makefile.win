@@ -33,6 +33,7 @@ CHROME_CONTENT = \
   .\scratch.xul \
   .\vxCreateElementTxn.js \
   .\vxChangeAttributeTxn.js \
+  .\vxAggregateTxn.js \
   $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

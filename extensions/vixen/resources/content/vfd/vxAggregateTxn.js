@@ -22,55 +22,44 @@
  */
 
 /** 
- * vxCreateElementTxn - Transaction for creating DOM elements
+ * vxAggregateTxn - Transaction that allows individual transactions to be
+ *                  coalesced and done/undone in one operation
  * 
- * e.g., create a new element in the VFD document using the palette.
+ * e.g., create a new element in the VFD document using the palette that
+ *       has several attributes set on it.
  */
 
-function vxCreateElementTxn(aDocument, aLocalName, aParentNode, aChildOffset)
+function vxAggregateTxn (aTransactionList)
 {
-  this.mDocument    = aDocument;
-  this.mLocalName   = aLocalName;
-  this.mParentNode  = aParentNode;
-  this.mChildOffset = aChildOffset;
-  this.mElement     = this.mDocument.createElement(this.mLocalName);
+  this.mTransactionList = aTransactionList;
 } 
  
-vxCreateElementTxn.prototype = {
+vxAggregateTxn.prototype = {
   doTransaction: function ()
   {
-    this.insertNode();
+    _dd("vxAggregateTxn::doTransaction");
+    for (var i = 0; i < this.mTransactionList.length; i++)
+      this.mTransactionList[i].doTransaction();
   },
 
   undoTransaction: function ()
   {
-    this.mParentNode.removeChild(this.mElement);
+    _dd("vxAggregateTxn::undoTransaction");
+    for (var i = 0; i < this.mTransactionList.length; i++) 
+      this.mTransactionList[i].undoTransaction();
   },
   
   redoTransaction: function ()
   {
-    this.insertNode();
+    _dd("vxAggregateTxn::redoTransaction");
+    for (var i = 0; i < this.mTransactionList.length; i++)
+      this.mTransactionList[i].redoTransaction();
   },
 
-  insertNode: function () 
-  {
-    if (this.mParentNode.hasChildNodes() &&
-        this.mParentNode.childNodes.length < this.mChildOffset+1) {
-      var nextSibling = this.mParentNode.childNodes[this.mChildOffset+1]
-      this.mParentNode.insertBefore(this.mElement, nextSibling);
-    }
-    else {
-      this.mParentNode.appendChild(this.mElement);
-    }
-  },
-  
   get commandString()
   {
-    var commandString = "create-element";
-    commandString = this.mRemoveFlag ? "remove," : "set,";
-    commandString += this.mElement.id + ",";
-    commandString += this.mAttribute + ",";
-    commandString += this.mValue;
+    var commandString = "aggregate-txn";
+    // XXX TODO: elaborate
     return commandString;    
   }
 };
