@@ -876,5 +876,10 @@ void DumpJSEval(PRUint32 frameno, const char* text)
     else    
         printf("failed to get XPConnect service!\n");
 }
+
+void DumpJSObject(JSObject* obj)
+{
+    xpc_DumpJSObject(obj);
+}        
 JS_END_EXTERN_C
 #endif
