@@ -157,7 +157,7 @@ nsresult nsHTMLScriptEventHandler::ParseEventString(const nsAString &aValue)
 NS_IMETHODIMP
 nsHTMLScriptEventHandler::IsSameEvent(const nsAString &aObjectName,
                                       const nsAString &aEventName,
-                                      const PRUint32 aArgCount,
+                                      PRUint32 aArgCount,
                                       PRBool *aResult)
 {
   *aResult = PR_FALSE;
