@@ -295,7 +295,13 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             *this = kTemporaryFolderType;
         
 #elif defined(XP_UNIX) || defined(XP_BEOS)
-            *this = "/tmp/";
+		{
+			char *tPath = PR_GetEnv("TMPDIR");
+			if (!tPath || PL_strlen(tPath) == 0)
+				*this = "/tmp/";
+			else
+				*this = tPath;
+       }
 #endif
         break;
 
