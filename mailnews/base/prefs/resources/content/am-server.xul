@@ -62,7 +62,7 @@
   <html:div><html:input name="pop3.deleteMailLeftOnServer" id="pop3.deleteMailLeftOnServer" type="checkbox"/>
             <html:label for="pop3.deleteMailLeftOnServer">&deleteOnServer.label;</html:label>
   </html:div>
-  <html:div style="left-margin: 10px">
+  <html:div style="margin-left: 2em">
     <html:input name="server.downloadOnBiff"
                 id="server.downloadOnBiff"
                 type="checkbox"/>
