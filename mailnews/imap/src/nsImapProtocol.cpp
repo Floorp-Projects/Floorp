@@ -220,7 +220,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_allocatedSize = OUTPUT_BUFFER_SIZE;
 
 	// used to buffer incoming data by ReadNextLineFromInput
-	m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
+	m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
 	m_currentBiffState = nsMsgBiffState_Unknown;
 
 	// where should we do this? Perhaps in the factory object?
@@ -449,8 +449,6 @@ nsImapProtocol::SetupSinkProxy()
 void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
-
-//	m_flags = 0;
 
 	// query the URL for a nsIImapUrl
 	m_runningUrl = nsnull; // initialize to NULL
@@ -3144,9 +3142,10 @@ char* nsImapProtocol::CreateNewLineFromSocket()
 {
 	PRBool needMoreData = PR_FALSE;
 	char * newLine = nsnull;
+	PRUint32 numBytesInLine = 0;
 	do
 	{
-		newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, needMoreData); 
+		newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, numBytesInLine, needMoreData); 
 		if (needMoreData)
 		{
 			// wait on the data available monitor!!
