@@ -45,34 +45,21 @@
 #include "nsIClipboard.h"
 #include "nsISelection.h"
 #include "nsWidgetsCID.h"
-#include "nsIEventStateManager.h"
-#include "nsIPresContext.h"
-#include "nsIDOMNSHTMLInputElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMRange.h"
-#include "nsIFrame.h"
 
 #include "nsIDocShell.h"
 #include "nsIClipboardDragDropHooks.h"
 #include "nsIClipboardDragDropHookList.h"
-#include "nsIInterfaceRequestorUtils.h"
 
-// for IBMBIDI
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIHTMLDocument.h"
 #include "nsHTMLAtoms.h"
-#ifdef IBMBIDI
-#include "nsBidiUtils.h"
-#endif
 
 // image copy stuff
-#include "nsIDOMHTMLImageElement.h"
-#include "nsLayoutAtoms.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
@@ -376,16 +363,12 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
 
 
 nsresult
-nsCopySupport::ImageCopy(nsIDOMHTMLImageElement* imageElement, PRInt16 aClipboardID)
+nsCopySupport::ImageCopy(nsIImageLoadingContent* imageElement, PRInt16 aClipboardID)
 {
   nsresult rv;
-  
-  nsCOMPtr<nsIDOMNode> imageNode = do_QueryInterface(imageElement, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!imageNode) return NS_ERROR_FAILURE;
-  
+
   nsCOMPtr<nsIImage> image;
-  rv = GetImageFromDOMNode(imageNode, getter_AddRefs(image));
+  rv = GetImageFromDOMNode(imageElement, getter_AddRefs(image));
   if (NS_FAILED(rv)) return rv;
   if (!image) return NS_ERROR_FAILURE;
 
@@ -417,15 +400,10 @@ nsCopySupport::ImageCopy(nsIDOMHTMLImageElement* imageElement, PRInt16 aClipboar
 //
 // XXX see also nsContentAreaDragDrop, and factor!
 nsresult
-nsCopySupport::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImage)
+nsCopySupport::GetImageFromDOMNode(nsIImageLoadingContent* content, nsIImage**outImage)
 {
   NS_ENSURE_ARG_POINTER(outImage);
   *outImage = nsnull;
-
-  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(inNode));
-  if (!content) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   nsCOMPtr<imgIRequest> imgRequest;
   content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
