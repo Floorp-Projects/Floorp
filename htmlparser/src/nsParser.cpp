@@ -509,11 +509,11 @@ public:
         case kQuote:
         case kMinus:
           target=*cp;
-          done=true;
+          done=PR_TRUE;
           break;
 
         default:
-          done=true;
+          done=PR_TRUE;
           break;
       }
     }
