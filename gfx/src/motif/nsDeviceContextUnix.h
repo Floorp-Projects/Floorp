@@ -93,6 +93,10 @@ public:
 
   virtual PRUint32 ConvertPixel(nscolor aColor);
 
+  NS_IMETHOD LoadIconImage(nsIRenderingContext& aContext,
+                           PRInt32              aId,
+                           nsIImage*&           aImage);
+
 protected:
   ~nsDeviceContextUnix();
   nsresult CreateFontCache();

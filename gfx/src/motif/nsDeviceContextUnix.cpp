@@ -512,7 +512,12 @@ nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
 }
 
 
-
-
-
+NS_IMETHODIMP nsDeviceContextUnix :: LoadIconImage(nsIRenderingContext& aContext,
+                                                   PRInt32              aId,
+                                                   nsIImage*&           aImage)
+{
+  // XXX Unix should be using DeviceContextImpl...
+  aImage = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
