@@ -32,11 +32,13 @@ DEPTH = ..\..\..\..\
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
-include <$(DEPTH)/config/rules.mak>
+
 
 #//
 #// Rule to build mtbf.exe
 #//
-mtbf.exe:: mtbf.cpp
-    $(CC) -O2 -MD makecopy.c
+mtbf.exe: main.cpp
+    $(CC) main.cpp /o mtbf.exe
 
+
+install:: mtbf.exe
