@@ -259,15 +259,16 @@ nsXFormsOutputElement::Refresh()
 
       if (hasRef) {      
         nsCOMPtr<nsIDOMNode> resultNode;
-        result->GetSingleNodeValue(getter_AddRefs(resultNode));
-        nsXFormsUtils::GetNodeValue(resultNode, text);
+        rv = result->GetSingleNodeValue(getter_AddRefs(resultNode));
+        if (resultNode)
+          nsXFormsUtils::GetNodeValue(resultNode, text);
       } else {
         rv = result->GetStringValue(text);
-        NS_ENSURE_SUCCESS(rv, rv);
       }
+      NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr<nsIDOM3Node> dom3Node = do_QueryInterface(mHTMLElement);
-      NS_ENSURE_TRUE(mHTMLElement, NS_ERROR_FAILURE);
+      NS_ENSURE_STATE(dom3Node);
       rv = dom3Node->SetTextContent(text);
       NS_ENSURE_SUCCESS(rv, rv);
     }
