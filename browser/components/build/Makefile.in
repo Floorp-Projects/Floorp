@@ -56,14 +56,8 @@ endif
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
-	$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY_LIBS += \
-  $(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
+	$(NULL)
 
 EXTRA_DSO_LDOPTS += \
 	$(EXTRA_DSO_LIBS) \
