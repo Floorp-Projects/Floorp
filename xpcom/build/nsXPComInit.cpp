@@ -195,7 +195,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 }
 
 
-static nsresult
+PR_STATIC_CALLBACK(nsresult)
 RegisterGenericFactory(nsIComponentManager* compMgr,
                        const nsModuleComponentInfo *info)
 {
@@ -779,7 +779,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
    and return them in NS_GetFrozenFunctions.
 */
 
-static nsresult 
+PR_STATIC_CALLBACK(nsresult)
 internal_InitXPCOM2(nsIServiceManager* *result,
                     nsIFile* binDirectory,
                     nsIDirectoryServiceProvider* appFileLocationProvider)
@@ -787,36 +787,36 @@ internal_InitXPCOM2(nsIServiceManager* *result,
     return NS_InitXPCOM2(result, binDirectory, appFileLocationProvider);
 }
 
-static nsresult 
+PR_STATIC_CALLBACK(nsresult) 
 internal_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     return NS_ShutdownXPCOM(servMgr);
 }
 
-static nsresult 
+PR_STATIC_CALLBACK(nsresult) 
 internal_GetServiceManager(nsIServiceManager* *result)
 {
     return NS_GetServiceManager(result);
 }
 
-static nsresult 
+PR_STATIC_CALLBACK(nsresult) 
 internal_GetComponentManager(nsIComponentManager* *result)
 {
     return NS_GetComponentManager(result);
 }
 
-static nsresult
+PR_STATIC_CALLBACK(nsresult)
 internal_GetComponentRegistrar(nsIComponentRegistrar* *result)
 {
     return NS_GetComponentRegistrar(result);
 }
 
-static nsresult 
+PR_STATIC_CALLBACK(nsresult) 
 internal_GetMemoryManager(nsIMemory* *result)
 {
     return NS_GetMemoryManager(result);
 }
-static nsresult 
+PR_STATIC_CALLBACK(nsresult) 
 internal_NewLocalFile(const nsAString &path, 
                       PRBool followLinks, 
                       nsILocalFile* *result)
@@ -824,7 +824,7 @@ internal_NewLocalFile(const nsAString &path,
     return NS_NewLocalFile(path, followLinks, result);
 } 
 
-static nsresult
+PR_STATIC_CALLBACK(nsresult)
 internal_NewNativeLocalFile(const nsACString &path, 
                             PRBool followLinks, 
                             nsILocalFile* *result)
@@ -833,20 +833,20 @@ internal_NewNativeLocalFile(const nsACString &path,
 }
 
 
-static nsresult
+PR_STATIC_CALLBACK(nsresult)
 internal_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, 
                                   PRUint32 priority)
 {
     return NS_RegisterXPCOMExitRoutine(exitRoutine, priority);
 }
 
-nsresult NS_COM
+nsresult NS_COM PR_CALLBACK
 internal_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
     return NS_UnregisterXPCOMExitRoutine(exitRoutine);
 }
 
-nsresult NS_COM
+nsresult NS_COM PR_CALLBACK
 NS_GetFrozenFunctions(XPCOMFunctions *functions)
 {
     if (!functions)
