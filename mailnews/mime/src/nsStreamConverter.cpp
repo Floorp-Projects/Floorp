@@ -38,8 +38,10 @@
 #include "nsIPipe.h"
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
+#include "nsIIOService.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////
 // Bridge routines for new stream converter XP-COM interface 
@@ -311,32 +313,7 @@ NS_NewStreamConverter(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-NS_IMPL_ADDREF(nsStreamConverter)
-NS_IMPL_RELEASE(nsStreamConverter)
-
-NS_IMETHODIMP nsStreamConverter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
-
-	if (aIID.Equals(nsCOMTypeInfo<nsIStreamConverter2>::GetIID()) || 
-		aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIStreamConverter2*, this);
-	}              
-	else if(aIID.Equals(nsCOMTypeInfo<nsIMimeStreamConverter>::GetIID()))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIMimeStreamConverter*, this);
-	}
-
-	if(*aInstancePtr)
-	{
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NO_INTERFACE;
-}
+NS_IMPL_ISUPPORTS3(nsStreamConverter, nsIStreamListener, nsIStreamConverter, nsIMimeStreamConverter)
 
 ///////////////////////////////////////////////////////////////
 // nsStreamConverter definitions....
@@ -408,6 +385,12 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 		default:
 			NS_ASSERTION(0, "this means I made a mistake in my assumptions");
 	  }
+
+
+	// the following output channel stream is used to fake the content type for people who later
+	// call into us..
+	NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+	rv = netService->NewInputStreamChannel(aURI, mOutputFormat, nsnull, getter_AddRefs(mOutgoingChannel));
 	
 	// We will first find an appropriate emitter in the repository that supports 
 	// the requested output format...note, the special exceptions are nsMimeMessageDraftOrTemplate
@@ -445,7 +428,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	// initialize our emitter
 	if (NS_SUCCEEDED(rv) && mEmitter)
 	{
-	  mEmitter->Initialize(aURI, aChannel);
+	  mEmitter->Initialize(aURI, mOutgoingChannel);
 	  mEmitter->SetPipe(mInputStream, mOutputStream);
 	  mEmitter->SetOutputListener(aOutListener);
 	}
@@ -592,7 +575,7 @@ nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 
 	// forward the start rquest to any listeners
   if (mOutListener)
-  	mOutListener->OnStartRequest(aChannel, ctxt);
+  	mOutListener->OnStartRequest(mOutgoingChannel, ctxt);
 	return NS_OK;
 }
 
@@ -633,9 +616,36 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
 
   // forward on top request to any listeners
   if (mOutListener)
-    mOutListener->OnStopRequest(aChannel, ctxt, status, errorMsg);
+    mOutListener->OnStopRequest(mOutgoingChannel, ctxt, status, errorMsg);
+
+  mAlreadyKnowOutputType = PR_FALSE;
 
   // Time to return...
   return NS_OK;
 }
 
+// nsIStreamConverter implementation
+
+// No syncronous conversion at this time.
+NS_IMETHODIMP nsStreamConverter::Convert(nsIInputStream *aFromStream,
+                          const PRUnichar *aFromType,
+                          const PRUnichar *aToType,
+                          nsISupports *aCtxt, nsIInputStream **_retval) 
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// Stream converter service calls this to initialize the actual stream converter (us).
+NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType,
+                                   nsIStreamListener *aListener, nsISupports *aCtxt) 
+{
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aCtxt, &rv);
+	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIURI> aUri;
+	aChannel->GetURI(getter_AddRefs(aUri));
+
+	return Init(aUri, aListener, aChannel);
+}
