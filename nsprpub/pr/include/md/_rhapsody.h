@@ -19,6 +19,8 @@
 #ifndef nspr_rhapsody_defs_h___
 #define nspr_rhapsody_defs_h___
 
+#include "prthread.h"
+
 #include <sys/syscall.h>
 
 #define PR_LINKER_ARCH	"rhapsody"
@@ -44,6 +46,8 @@
 
 #define USE_SETJMP
 
+#ifndef _PR_PTHREADS
+
 #include <setjmp.h>
 
 #define PR_CONTEXT_TYPE	jmp_buf
@@ -62,7 +66,7 @@
     if (setjmp(CONTEXT(_thread))) {  \
         _main();  \
     }  \
-    _MD_GET_SP(_thread) = (unsigned char*) ((_sp) - 128); \
+    _MD_GET_SP(_thread) = (int) ((_sp) - 64); \
 }
 
 #define _MD_SWITCH_CONTEXT(_thread)  \
@@ -122,12 +126,32 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
+extern PRStatus _MD_InitializeThread(PRThread *thread);
+
 #define _MD_INIT_RUNNING_CPU(cpu)       _MD_unix_init_running_cpu(cpu)
 #define _MD_INIT_THREAD                 _MD_InitializeThread
 #define _MD_EXIT_THREAD(thread)
 #define _MD_SUSPEND_THREAD(thread)      _MD_suspend_thread
 #define _MD_RESUME_THREAD(thread)       _MD_resume_thread
 #define _MD_CLEAN_THREAD(_thread)
+
+extern PRStatus _MD_CREATE_THREAD(
+    PRThread *thread,
+    void (*start) (void *),
+    PRThreadPriority priority,
+    PRThreadScope scope,
+    PRThreadState state,
+    PRUint32 stackSize);
+extern void _MD_SET_PRIORITY(struct _MDThread *thread, PRUintn newPri);
+extern PRStatus _MD_WAIT(PRThread *, PRIntervalTime timeout);
+extern PRStatus _MD_WAKEUP_WAITER(PRThread *);
+extern void _MD_YIELD(void);
+
+#endif /* ! _PR_PTHREADS */
+
+extern void _MD_EarlyInit(void);
+extern PRIntervalTime _PR_UNIX_GetInterval(void);
+extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
@@ -140,5 +164,7 @@ struct _MDCPU {
  */
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)
 
+/* For writev() */
+#include <sys/uio.h>
 
 #endif /* nspr_rhapsody_defs_h___ */
