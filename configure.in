@@ -519,7 +519,7 @@ case "$target" in
 	    DSO_CFLAGS='-qflag=w:w'
 	    DSO_PIC_CFLAGS='-DPIC'
     fi
-    case "$(target_os)" in
+    case "${target_os}" in
     aix4.1*)
         DLL_SUFFIX='_shr.a'
         ;;
@@ -895,6 +895,7 @@ dnl the qsort routine under solaris is faulty
     TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
     if test -z "$GNU_CC"; then
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+       AC_DEFINE(_TIME_H)
        LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
