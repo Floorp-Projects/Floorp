@@ -73,6 +73,11 @@ sub settings {
     return qw(type name host port username password);
 }
 
+sub lastError {
+    my $self = shift;
+    return $self->handle->err;
+}
+
 sub propertyGetUndefined {
     my $self = shift;
     my($name) = @_;

@@ -266,9 +266,16 @@ sub addRight {
     my($app, $name) = @_;
     $self->assert($name, 1, 'Tried to add a right without a right name');
     # only adds $name if it isn't there already, because name is a unique index
-    # XXX this currently causes an error instead of silently doing nothing.
-    # XXX this must be fixed; can we do it in one step, without a query?
-    my $rightID = $self->database($app)->execute('INSERT INTO rights SET name=?', $name)->MySQLID;
+    eval {
+        $self->database($app)->execute('INSERT INTO rights SET name=?', $name);
+    };
+    if ($@) {
+        # check for a mySQL specific error code for 'duplicate' and
+        # reraise the error if it wasn't the problem
+        if ($self->database($app)->lastError ne '1062') {
+            $self->error(1, $@); # reraise
+        }
+    }
 }
 
 

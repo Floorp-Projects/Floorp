@@ -47,3 +47,9 @@ sub type {
     my $self = shift;
     return $self->SUPER::type(@_);
 }
+
+# lastError returns a database-specific error code
+sub lastError {
+    my $self = shift;
+    $self->notImplemented();
+}
