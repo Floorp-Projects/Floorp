@@ -72,6 +72,12 @@ nsInputFrame::~nsInputFrame()
 {
 }
 
+NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
+{
+  return super::SetRect(aRect);
+}
+
+
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
 NS_METHOD
@@ -84,6 +90,9 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
   nsPoint offset;
   nsIView *parent;
   GetOffsetFromView(offset, parent);
+
+  //offset.x += padding + GetPadding(); // add back the padding if present
+
   if (nsnull == parent) {  // a problem
 	  NS_ASSERTION(0, "parent view was null\n");
   } else {
@@ -195,8 +204,8 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
     nsReflowMetrics layoutSize;
     nsSize widgetSize;
     GetDesiredSize(aPresContext, aMaxSize, layoutSize, widgetSize);
-    mCacheBounds.width  = widgetSize.width; // YYY what about caching widget size?
-    mCacheBounds.height = widgetSize.height;
+    mCacheBounds.width  = layoutSize.width; // YYY what about caching widget size?
+    mCacheBounds.height = layoutSize.height;
 
     nsRect boundBox(0, 0, widgetSize.width, widgetSize.height); 
 
@@ -258,6 +267,11 @@ nsInputWidgetData*
 nsInputFrame::GetWidgetInitData()
 {
   return nsnull;
+}
+
+PRInt32 nsInputFrame::GetPadding() const
+{
+  return 0;
 }
 
 void 
@@ -423,6 +437,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
                              PRBool& aHeightExplicit, PRInt32& aRowHeight) 
 {
   PRInt32 charWidth   = 0;
+  PRInt32 numRows     = 1;
   aWidthExplicit      = PR_FALSE;
   aHeightExplicit     = PR_FALSE;
 
@@ -487,6 +502,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
       charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
       aBounds.height = textSize.height * rowAttr;
       aRowHeight = textSize.height;
+      numRows = rowAttr;
     }
     else {
       aBounds.height = aBounds.height * rowAttr;
@@ -519,8 +535,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 
   NS_RELEASE(content);
 
-  // return number of rows that the calcuated size can support
-  return (int)(((float)aBounds.height) / ((float)aRowHeight));
+  return numRows;
 
 }
 

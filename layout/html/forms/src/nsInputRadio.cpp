@@ -46,6 +46,8 @@ public:
   virtual const nsIID& GetIID();
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual PRInt32 GetPadding() const;
+  NS_IMETHOD  SetRect(const nsRect& aRect);
 
 protected:
 
@@ -69,6 +71,19 @@ nsInputRadioFrame::~nsInputRadioFrame()
 }
 
 
+PRInt32 nsInputRadioFrame::GetPadding() const
+{
+  return GetDefaultPadding();
+}
+
+NS_METHOD nsInputRadioFrame::SetRect(const nsRect& aRect)
+{
+  PRInt32 padding = GetPadding();
+  MoveTo(aRect.x + padding, aRect.y);
+  SizeTo(aRect.width - (2 * padding), aRect.height);
+  return NS_OK;
+}
+
 const nsIID&
 nsInputRadioFrame::GetIID()
 {
@@ -90,10 +105,11 @@ nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   nsSize& aDesiredWidgetSize)
 {
   float p2t = aPresContext->GetPixelsToTwips();
-  aDesiredLayoutSize.width  = (int)(12 * p2t);
-  aDesiredLayoutSize.height = (int)(12 * p2t);
-  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
-  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+  aDesiredWidgetSize.width  = (int)(12 * p2t);
+  aDesiredWidgetSize.height = (int)(12 * p2t);
+  PRInt32 padding = GetPadding();
+  aDesiredLayoutSize.width  = aDesiredWidgetSize.width  + (2 * padding);
+  aDesiredLayoutSize.height = aDesiredWidgetSize.height;
 }
 
 void 

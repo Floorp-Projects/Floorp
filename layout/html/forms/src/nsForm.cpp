@@ -267,7 +267,7 @@ nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   GetAttribute("action", href);
 
   nsString data(href); // this could be more efficient, by allocating a larger buffer
-  data += '$';
+  data += '?';
   PRBool firstTime = PR_TRUE;
 
   PRInt32 numChildren = mChildren.Count();
@@ -302,12 +302,7 @@ nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 		}
 	}
 
-  char* out = data.ToNewCString();
-	printf("\nsubmit data =\n%s\n", out);
-	delete [] out;
-
-#ifdef FIX_THIS
-  // cause the url
+  // make the url string
   nsILinkHandler* handler;
   if (NS_OK == aPresContext->GetLinkHandler(&handler)) {
     // Resolve url to an absolute url
@@ -326,14 +321,13 @@ nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     nsAutoString absURLSpec;
     nsAutoString base;
-    nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+    nsresult rv = NS_MakeAbsoluteURL(docURL, base, data, absURLSpec);
     NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
     handler->OnLinkClick(aFrame, absURLSpec, target);
+printf("\nurl=%s\n", absURLSpec.ToNewCString());
   }
-#endif
-
 }
 
 void 

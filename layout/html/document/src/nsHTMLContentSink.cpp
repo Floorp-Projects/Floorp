@@ -1125,6 +1125,9 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
     else if (val.EqualsIgnoreCase("select2")) {  // TEMP hack
       rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 2);
     }
+    else if (val.EqualsIgnoreCase("select3")) {  // TEMP hack
+      rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 3);
+    }
     else {
       rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
     }

@@ -22,9 +22,9 @@
 class nsIAtom;
 class nsIFormManager;
 
-// fix these
-#define CSS_NOTSET    0    
-#define ATTR_NOTSET   0    
+// fix this
+#define CSS_NOTSET    -1    
+#define ATTR_NOTSET    -1    
 
 // Form and Form Controls
 

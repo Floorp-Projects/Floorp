@@ -73,6 +73,7 @@ struct nsInputDimensionSpec
   * @see nsLeafFrame and its base classes for more info
   */
 class nsInputFrame : public nsLeafFrame {
+  typedef nsLeafFrame super;
 public:
   /**
     * Main constructor
@@ -97,6 +98,8 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
+
+  NS_IMETHOD  SetRect(const nsRect& aRect);
 
   virtual PRBool IsHidden();
 
@@ -132,6 +135,8 @@ public:
     */
   virtual const nsIID& GetIID(); 
 
+  PRInt32 GetDefaultPadding() const { return 40; }
+  virtual PRInt32 GetPadding() const;
   /**
     * Get the widget associated with this frame
     * @param aView the view associated with the frame. It is a convience parm.

@@ -169,6 +169,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mIsShiftDown   = PR_FALSE;
     mIsControlDown = PR_FALSE;
     mIsAltDown     = PR_FALSE;
+    mIsDestroying = PR_FALSE;
 }
 
 
@@ -179,6 +180,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+    mIsDestroying = PR_TRUE;
     Destroy();
 }
 
@@ -1437,7 +1439,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
 
       if (rect.Contains(event.point.x, event.point.y)) {
         if (mCurrentWindow == NULL || mCurrentWindow != this) {
-          if (nsnull != mCurrentWindow) {
+          if ((nsnull != mCurrentWindow) && (!mCurrentWindow->mIsDestroying)) {
             mCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT);
           }
           mCurrentWindow = this;
