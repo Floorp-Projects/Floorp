@@ -11419,7 +11419,7 @@ fi
 
 
 
-MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras help transformiix"
+MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras help"
 MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin"
 
 # Check whether --with-extensions or --without-extensions was given.
