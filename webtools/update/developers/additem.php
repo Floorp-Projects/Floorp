@@ -166,7 +166,7 @@ if ($_POST["legacy"]=="TRUE") {
 
     $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-      if (mysql_num_rows($sql_result)=="1" or ($_SESSION["level"]="admin" or $_SESSION["level"]="editor")) {
+      if (mysql_num_rows($sql_result)=="1" or ($_SESSION["level"]=="admin" or $_SESSION["level"]=="editor")) {
 //        echo"This extension belongs to the author logged in<br>\n";
       } else {
         echo"ERROR!! This extension does NOT belong to the author logged in.<br>\n";
@@ -617,7 +617,7 @@ $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when 
 $notes = escape_string($_POST["notes"]);
 
 //If a record for this item's exact version, OS, and app already exists, find it and delete it, before inserting
-  $sql3 = "SELECT `vID` from `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE TV.ID = `$id` AND `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
+  $sql3 = "SELECT `vID` from `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE TV.ID = '$id' AND `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
     $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       while ($row = mysql_fetch_array($sql_result3)) {
         $sql = "DELETE FROM `version` WHERE `vID`='$row[vID]' LIMIT 1";
