@@ -1,5 +1,16 @@
 housecleaning
 ------------- 
+* move the ldap_unbind() call out of the nsLDAPConnection destructor, 
+  since nsLDAPConnection will soon go back to being callable from the UI 
+  thread, and ldap_unbind() is actually synchronous.  
+
+* deal with timeouts
+
+* add request cancel/abandon functionality
+
+* come up with a strategy for removing completed nsILDAPOperations from
+  the connection's pending request queue
+
 * sort out nsldap.h vs. nsLDAP.h.  can the former go away?
 
 * why do searches that return lots of entries to the nsLDAPChannel
@@ -21,16 +32,6 @@ housecleaning
   
 * remove nsILDAPService from (at least) the build and
   nsLDAPProtocolModule.cpp (if not CVS), since it's not currently in use.
-
-* get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
-  from nsLDAP{Connection,Operation,Message}.[ch]
-
-* move the ldap_unbind() call out of the nsLDAPConnection destructor, 
-  since nsLDAPConnection will soon go back to being callable from the UI 
-  thread, and ldap_unbind() is actually synchronous.  
-
-* come up with a strategy for removing completed nsILDAPOperations from
-  the connection's pending request queue
 
 * some (many?) destructors don't clean up completely or correctly.  
   audit for this and fix.
