@@ -1674,17 +1674,22 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
   if (aColumn->IsPrimary()) {
     // If we're the primary column, we need to indent and paint the twisty and any connecting lines
     // between siblings.
-    PRInt32 level;
-    mView->GetLevel(aRowIndex, &level);
 
-    currX += mIndentation*level;
-    remainingWidth -= mIndentation*level;
+    // Always leave space for the twisty.
+    nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
+    nsRect dirtyRect;
+    if (dirtyRect.IntersectRect(aDirtyRect, twistyRect))
+      PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
+                  remainingWidth, currX);
 
     // Resolve the style to use for the connecting lines.
     nsCOMPtr<nsIStyleContext> lineContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
     const nsStyleDisplay* displayStyle = (const nsStyleDisplay*)lineContext->GetStyleData(eStyleStruct_Display);
     
+    PRInt32 level;
+    mView->GetLevel(aRowIndex, &level);
+
     if (displayStyle->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Paint the connecting lines.
       aRenderingContext.PushState();
@@ -1702,36 +1707,63 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
       else
         aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
 
+      PRInt32 x;
       PRInt32 y = (aRowIndex - mTopRowIndex) * mRowHeight;
 
-      PRInt32 i;
+      // Compute the maximal level to paint.
+      PRInt32 maxLevel = level;
+      if (maxLevel > cellRect.width / mIndentation)
+        maxLevel = cellRect.width / mIndentation;
+
       PRInt32 currentParent = aRowIndex;
-      for (i = level; i > 0; i--) {
-        PRBool hasNextSibling;
-        mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
-        if (hasNextSibling)
-          aRenderingContext.DrawLine(aCellRect.x + (i - 1) * mIndentation, y, aCellRect.x + (i - 1) * mIndentation, y + mRowHeight);
-        else if (i == level)
-          aRenderingContext.DrawLine(aCellRect.x + (i - 1) * mIndentation, y, aCellRect.x + (i - 1) * mIndentation, y + mRowHeight / 2);
+      for (PRInt32 i = level; i > 0; i--) {
+        if (i <= maxLevel) {
+          // Get size of parent image to line up.
+          PrefillPropertyArray(currentParent, aColumn);
+          mView->GetCellProperties(currentParent, aColumn->GetID(), mScratchArray);
+
+          nsCOMPtr<nsIStyleContext> imageContext;
+          GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
+
+          nsRect imageSize = GetImageSize(currentParent, aColumn->GetID(), imageContext);
+
+          const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
+          nsMargin imageMargin;
+          imageMarginData->GetMargin(imageMargin);
+          imageSize.Inflate(imageMargin);
+
+          // Line up line with the parent image.
+          x = currX + imageSize.width / 2;
+
+          // Paint full vertical line only if we have next sibling.
+          PRBool hasNextSibling;
+          mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
+          if (hasNextSibling)
+            aRenderingContext.DrawLine(x + (i - 1) * mIndentation, y, x + (i - 1) * mIndentation, y + mRowHeight);
+          else if (i == level)
+            aRenderingContext.DrawLine(x + (i - 1) * mIndentation, y, x + (i - 1) * mIndentation, y + mRowHeight / 2);
+        }
+
         PRInt32 parent;
         mView->GetParentIndex(currentParent, &parent);
-	      if (parent == -1)
-	        break;
-	      currentParent = parent;
+        if (parent == -1)
+          break;
+        currentParent = parent;
       }
 
-      aRenderingContext.DrawLine(aCellRect.x + (level - 1) * mIndentation, y + mRowHeight / 2, aCellRect.x + level * mIndentation, aCellRect.y + mRowHeight /2);
+      // Don't paint off our cell.
+      if (level == maxLevel)
+        aRenderingContext.DrawLine(x + (level - 1) * mIndentation, y + mRowHeight / 2, x + level * mIndentation, y + mRowHeight /2);
 
       PRBool clipState;
       aRenderingContext.PopState(clipState);
+
+      PrefillPropertyArray(aRowIndex, aColumn);
+      mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
     }
 
-    // Always leave space for the twisty.
-    nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
-    nsRect dirtyRect;
-    if (dirtyRect.IntersectRect(aDirtyRect, twistyRect))
-      PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
-                  remainingWidth, currX);
+    currX += mIndentation*level;
+    remainingWidth -= mIndentation*level;
   }
   
   // Now paint the icon for our cell.
