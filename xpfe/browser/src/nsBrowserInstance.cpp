@@ -1037,14 +1037,22 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
 
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
   webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-  nsCOMPtr<nsISHistory> sessionHistory(do_CreateInstance(NS_SHISTORY_PROGID));
-
+  nsCOMPtr<nsISHistory> sessionHistory;
+  if (mSessionHistory) {
+	  /* There is already a Session History for this browser 
+	   * component. Maybe the theme changed and we got called
+	   * to reinitialize the window, docloader, docshell etc...
+	   * Use the existing session History
+	   */
+	  sessionHistory = mSessionHistory;
+  }
+  else {
+     sessionHistory = (do_CreateInstance(NS_SHISTORY_PROGID));
   mSessionHistory = sessionHistory;
   if (!mSessionHistory) {
 	  printf("#### Error initialising Session History ####\n");
-	  return NS_ERROR_FAILURE;
   }
-  mSessionHistory->SetRootDocShell(docShell);
+  }
 
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   if (webNav)
