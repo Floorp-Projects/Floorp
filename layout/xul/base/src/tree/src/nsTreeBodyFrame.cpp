@@ -2051,11 +2051,12 @@ nsLineStyle nsTreeBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
 }
 
 // Painting routines
-NS_IMETHODIMP nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
-                                         nsIRenderingContext& aRenderingContext,
-                                         const nsRect&        aDirtyRect,
-                                         nsFramePaintLayer    aWhichLayer,
-                                         PRUint32             aFlags)
+NS_IMETHODIMP
+nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer,
+                       PRUint32             aFlags)
 {
   // XXX This trap handles an odd bogus 1 pixel invalidation that we keep getting 
   // when scrolling.
@@ -2145,12 +2146,13 @@ NS_IMETHODIMP nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::PaintColumn(nsTreeColumn*            aColumn,
-                                               const nsRect&        aColumnRect,
-                                               nsIPresContext*      aPresContext,
-                                               nsIRenderingContext& aRenderingContext,
-                                               const nsRect&        aDirtyRect,
-                                               nsFramePaintLayer    aWhichLayer)
+nsresult
+nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
+                             const nsRect&        aColumnRect,
+                             nsIPresContext*      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer)
 {
   if (aColumnRect.width == 0)
     return NS_OK; // Don't paint hidden columns.
@@ -2188,12 +2190,14 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintColumn(nsTreeColumn*            aColumn,
 
   return NS_OK;
 }
-NS_IMETHODIMP nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
-                                        const nsRect&        aRowRect,
-                                        nsIPresContext*      aPresContext,
-                                        nsIRenderingContext& aRenderingContext,
-                                        const nsRect&        aDirtyRect,
-                                        nsFramePaintLayer    aWhichLayer)
+
+nsresult
+nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
+                          const nsRect&        aRowRect,
+                          nsIPresContext*      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer)
 {
   // We have been given a rect for our row.  We treat this row like a full-blown
   // frame, meaning that it can have borders, margins, padding, and a background.
@@ -2314,13 +2318,14 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex, 
-                                         nsTreeColumn*        aColumn,
-                                         const nsRect&        aCellRect,
-                                         nsIPresContext*      aPresContext,
-                                         nsIRenderingContext& aRenderingContext,
-                                         const nsRect&        aDirtyRect,
-                                         nsFramePaintLayer    aWhichLayer)
+nsresult
+nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
+                           nsTreeColumn*        aColumn,
+                           const nsRect&        aCellRect,
+                           nsIPresContext*      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect&        aDirtyRect,
+                           nsFramePaintLayer    aWhichLayer)
 {
   if (aCellRect.width == 0)
     return NS_OK; // Don't paint cells in hidden columns.
@@ -2499,7 +2504,7 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
                              nsTreeColumn*        aColumn,
                              const nsRect&        aTwistyRect,
@@ -2618,7 +2623,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
                             nsTreeColumn*        aColumn,
                             const nsRect&        aImageRect,
@@ -2701,13 +2706,14 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::PaintText(PRInt32              aRowIndex, 
-                                         nsTreeColumn*        aColumn,
-                                         const nsRect&        aTextRect,
-                                         nsIPresContext*      aPresContext,
-                                         nsIRenderingContext& aRenderingContext,
-                                         const nsRect&        aDirtyRect,
-                                         nsFramePaintLayer    aWhichLayer)
+nsresult
+nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
+                           nsTreeColumn*        aColumn,
+                           const nsRect&        aTextRect,
+                           nsIPresContext*      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect&        aDirtyRect,
+                           nsFramePaintLayer    aWhichLayer)
 {
   // Now obtain the text for our cell.
   nsAutoString text;
@@ -2918,24 +2924,26 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex, 
-                                                 nsTreeColumn*    aColumn, 
-                                                 const nsRect&        aCheckboxRect,
-                                                 nsIPresContext*      aPresContext,
-                                                 nsIRenderingContext& aRenderingContext,
-                                                 const nsRect&        aDirtyRect,
-                                                 nsFramePaintLayer    aWhichLayer)
+nsresult
+nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
+                               nsTreeColumn*        aColumn,
+                               const nsRect&        aCheckboxRect,
+                               nsIPresContext*      aPresContext,
+                               nsIRenderingContext& aRenderingContext,
+                               const nsRect&        aDirtyRect,
+                               nsFramePaintLayer    aWhichLayer)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex, 
-                                                      nsTreeColumn*    aColumn, 
-                                                      const nsRect&        aProgressMeterRect,
-                                                      nsIPresContext*      aPresContext,
-                                                      nsIRenderingContext& aRenderingContext,
-                                                      const nsRect&        aDirtyRect,
-                                                      nsFramePaintLayer    aWhichLayer)
+nsresult
+nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
+                                    nsTreeColumn*        aColumn,
+                                    const nsRect&        aProgressMeterRect,
+                                    nsIPresContext*      aPresContext,
+                                    nsIRenderingContext& aRenderingContext,
+                                    const nsRect&        aDirtyRect,
+                                    nsFramePaintLayer    aWhichLayer)
 {
 
   // Resolve style for the progress meter.  It contains all the info we need
@@ -3004,10 +3012,11 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex
 }
 
 
-NS_IMETHODIMP nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
-                                                     nsIRenderingContext& aRenderingContext,
-                                                     const nsRect&        aDirtyRect,
-                                                     nsFramePaintLayer    aWhichLayer)
+nsresult
+nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   const nsRect&        aDirtyRect,
+                                   nsFramePaintLayer    aWhichLayer)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     if (mDropOrient == nsITreeView::inDropBefore ||
@@ -3120,10 +3129,12 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresConte
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTreeBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, 
-                                          nsIRenderingContext& aRenderingContext, 
-                                          const nsRect& aRect, const nsRect& aDirtyRect)
+nsresult
+nsTreeBodyFrame::PaintBackgroundLayer(nsIStyleContext*     aStyleContext,
+                                      nsIPresContext*      aPresContext, 
+                                      nsIRenderingContext& aRenderingContext, 
+                                      const nsRect&        aRect,
+                                      const nsRect&        aDirtyRect)
 {
 
   const nsStyleBackground* myColor = (const nsStyleBackground*)
