@@ -47,6 +47,7 @@
 #include "nsColor.h"
 #include "nsWidgetSupport.h"
 
+
 // XXX For font setting below
 #include "nsFont.h"
 #include "nsUnitConversion.h"

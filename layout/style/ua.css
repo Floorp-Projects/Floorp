@@ -576,11 +576,18 @@ select {
 }
 option {
 }
+
 option.selected {
   border:   1px solid rgb(0,0,128);
   background-color: rgb(0,0,128);
   color: rgb(255,255,255);
 }
+
+option[-moz-option-selected] {
+  color:blue;
+  background-color:green;
+}
+
 option.selectedfocus {
   border:   1px dotted white;
   background-color: rgb(0,0,128);

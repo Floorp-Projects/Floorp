@@ -36,12 +36,6 @@ class nsFormFrame;
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
 
- // Defining this causes some of the form elements to be rendered
- // using GFX calls, rather than creating a widget. Undefining it 
- // causes widgets to be used for form elements. @see RequiresWidget method
- // to see which widgets will obey this directive.
-//#define NS_GFX_RENDER_FORM_ELEMENTS
-
 /** 
   * nsFormControlFrame is the base class for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.

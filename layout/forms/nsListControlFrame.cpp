@@ -74,6 +74,8 @@ const char * kNormal        = "";
 const char * kSelected      = "SELECTED";
 const char * kSelectedFocus = "SELECTEDFOCUS";
 
+const char * kMozSelected = "-moz-option-selected";
+
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -437,7 +439,8 @@ PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame,
       nsIContent* content;
       kid->GetContent(&content);
       aHitContent = content;
-      aHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (aIsSelected?kSelectedFocus:kNormal), PR_TRUE);
+      nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)) );
+      aHitContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
       return index;
     }
     kid->GetNextSibling(&kid);
@@ -569,12 +572,14 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
         }
       } else {
         if (nsnull != mSelectedContent) {
-          mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
+        nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)) );
+        mSelectedContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
+ //XXX: This needs to a set a psuedo attribute instead         mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
           NS_RELEASE(mSelectedContent);
         }
       }
       mIsFrameSelected[mSelectedIndex] = selected;
-      //mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
+      //XXX mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
       mSelectedContent = mHitContent;
       mSelectedFrame   = mHitFrame;
       aEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -694,6 +699,7 @@ NS_IMETHODIMP nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
   } else {
     printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
   }*/
+
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;
   }
@@ -1086,7 +1092,7 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
     if (result == NS_OK) {
       PRBool selected;
       option->GetDefaultSelected(&selected);
-      option->GetSelected(&selected);
+ //XXX: Remove, why is selected queried twice here?  option->GetSelected(&selected);
       mIsFrameSelected[i] = selected;
 
       if (mInDropDownMode) {
@@ -1103,7 +1109,10 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
         }
       } else {
         if (selected && aDoDisplay) {
-          content->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelected:kNormal), PR_TRUE);
+           // XXX: Here we introduce a new -moz-option-selected attribute so a attribute
+           // selecitor n the ua.css can change the style when the option is selected.
+          nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
+          content->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
         }
       }
       NS_RELEASE(option);

@@ -194,6 +194,10 @@ nsPresContext::GetUserPreferences()
     mCompatibilityMode = (enum nsCompatibility)prefInt;  // bad cast
   }
 
+  if (NS_OK == mPrefs->GetIntPref("nglayout.widget.mode", &prefInt)) {
+    mWidgetRenderingMode = (enum nsWidgetRendering)prefInt;  // bad cast
+  }
+
   PRBool usePrefColors = PR_TRUE;
 #ifdef _WIN32
   XP_Bool boolPref;
@@ -319,12 +323,34 @@ nsPresContext::GetCompatibilityMode(nsCompatibility* aResult)
   return NS_OK;
 }
 
+ 
 NS_IMETHODIMP
 nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 {
   mCompatibilityMode = aMode;
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsPresContext::GetWidgetRenderingMode(nsWidgetRendering* aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mWidgetRenderingMode;
+  return NS_OK;
+}
+
+ 
+NS_IMETHODIMP
+nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
+{
+  mWidgetRenderingMode = aMode;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsPresContext::GetBaseURL(nsIURL** aResult)

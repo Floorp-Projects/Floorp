@@ -198,7 +198,8 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetSelected(PRBool* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+  nsresult rv = GetPrimaryFrame(formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
     PRInt32 index;
     if (NS_OK == GetIndex(&index)) {
       nsString value;
@@ -211,7 +212,7 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
     }
     NS_RELEASE(formControlFrame);
   }
-  return NS_OK;      
+  return rv;      
 }
 
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
