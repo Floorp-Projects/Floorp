@@ -40,6 +40,7 @@
 #define __NS_ASVGGRAPHICSOURCE_H__
 
 #include "nscore.h"
+#include "nsDebug.h"
 
 class nsASVGPathBuilder;
 class nsIDOMSVGMatrix;

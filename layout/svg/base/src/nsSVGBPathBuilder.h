@@ -40,6 +40,7 @@
 #define __NS_SVGBPATHBUILDER_H__
 
 #include "nscore.h"
+#include "nsDebug.h"
 #include "libart-incs.h"
 #include "nsASVGPathBuilder.h"
 
