@@ -35,20 +35,9 @@ Rights Reserved.
 <!ENTITY oneMatch.label         "If there is one match in your personal address books:">
 <!ENTITY useAddress.label       "Use the address and do not search in the directory">
 <!ENTITY useAddress.accesskey   "u">
-<!ENTITY emailCollectionEnable.label	"Enable Email Address Collection">
-<!ENTITY emailCollectionIncomingEnable.label	"Incoming Mail Messages">
-<!ENTITY emailCollectionIncomingEnable.accesskey	"I">
-<!ENTITY emailCollectionOutgoingEnable.label	"Outgoing Mail Messages">
-<!ENTITY emailCollectionOutgoingEnable.accesskey	"O">
-<!ENTITY emailCollectionNewsgroupEnable.label	"Outgoing Newsgroup Messages">
-<!ENTITY emailCollectionNewsgroupEnable.accesskey	"u">
-<!ENTITY emailCollectionTypeText.label "Save email addresses from:">
 <!ENTITY emailCollectiontitle.label	"Email Address Collection">
-<!ENTITY emailCollectiontext.label	"Email addresses from messages can be added to a local address book, 'Collected Addresses'. Add email addresses from:">
-<!ENTITY useCABSizelimitPart1.label	"Limit the Collected Address book to">
-<!ENTITY useCABSizelimitPart1.accesskey	"L">
-<!ENTITY useCABSizelimitPart2.label	"cards">
-<!ENTITY useCABSizelimitPart2.accesskey	"c">
+<!ENTITY emailCollectionPicker.label    "Add email addresses to my:">
+<!ENTITY emailCollectiontext.label	"Email addresses from outgoing messages can be automatically added to a local address book.">
 
 <!-- Autocompletion -->
 <!ENTITY addressingTitle.label                 "Address Autocompletion">

@@ -675,42 +675,41 @@ function IsCardViewAndAbResultsPaneSplitterCollapsed()
 
 function LaunchUrl(url)
 {
-  openTopWin(url);
+  var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
+  messenger.SetWindow(window,null);
+  messenger.OpenURL(url);
 }
 
 function AbIMSelected()
 {
   var cards = GetSelectedAbCards();
   var count = cards.length;
-  var url;
 
-  if (count == 0) {
-    url = "aim:goim";
-    LaunchUrl(url);
-    return;
-  }
-  
+  var screennames;
+  var screennameCount = 0;
+
   for (var i=0;i<count;i++) {
-    url = "aim:goim?screenname=" + cards[i].aimScreenName;
-    LaunchUrl(url);
-  }
-}
+    var screenname = cards[i].aimScreenName;
+    if (screenname) {
+      if (screennameCount == 0)
+        screennames = screenname;
+      else
+        screennames += "," + screenname;
 
-function AbChatSelected()
-{
-  var cards = GetSelectedAbCards();
-  var count = cards.length;
-  var url = "aim:SendChatInvite";
-
-  if (count == 0) {
-    LaunchUrl(url);
-    return;
+      screennameCount++
+    }
   }
 
-  url += "?listofscreennames=" + cards[0].aimScreenName;
-  for (var i=1;i<count;i++) {
-    url += "," + cards[i].aimScreenName;
+  var url = "aim:";
+
+  if (screennameCount == 0)
+    url += "goim";
+  else if (screennameCount == 1)
+    url += "goim?screenname=" + screennames;
+  else {
+    url += "SendChatInvite?listofscreennames=" + screennames;
+    url += "&message=" + gAddressBookBundle.getString("joinMeInThisChat");
   }
-  url += "&message=Join+me+in+this+Chat.";  // move to properties
+
   LaunchUrl(url);
 }

@@ -51,29 +51,26 @@ class nsIPref;
 class nsAbAddressCollecter : public nsIAbAddressCollecter
 {
 public:
-	nsAbAddressCollecter();
-	virtual ~nsAbAddressCollecter();
+  nsAbAddressCollecter();
+  virtual ~nsAbAddressCollecter();
 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIABADDRESSCOLLECTER
 
-	nsresult OpenHistoryAB(nsIAddrDatabase **aDatabase);
-	nsresult IsDomainExcluded(const char *address, nsIPref *pPref, PRBool *bExclude);
-	nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName);
-	nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
+  nsresult SetAbURI(const char *aURI);
+  nsresult OpenDatabase();
+  nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName);
+  nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
   nsresult Init();
 
 private:
-	static int PR_CALLBACK collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data);
-	static int PR_CALLBACK collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data);
-	nsresult AddCardToCollectedAddressBook(nsIAbCard *card);
+  static int PR_CALLBACK collectAddressBookPrefChanged(const char *newpref, void *data);
+  nsresult AddCardToAddressBook(nsIAbCard *card);
 
 protected:
-	nsCOMPtr <nsIAddrDatabase> m_historyAB;
-	nsCOMPtr <nsIAbDirectory> m_historyDirectory;
-	PRInt32 m_maxCABsize;
-	PRBool m_sizeLimitEnabled;
-
+  nsCOMPtr <nsIAddrDatabase> m_database;
+  nsCOMPtr <nsIAbDirectory> m_directory;
+  nsCString m_abURI;
 };
 
 #endif  // _nsAbAddressCollecter_H_

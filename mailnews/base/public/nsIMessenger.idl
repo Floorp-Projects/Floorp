@@ -65,17 +65,18 @@ interface nsIMessenger : nsISupports {
     void DeleteMessages(in nsIRDFCompositeDataSource database,
                         in nsIRDFResource srcFolderResource,
                         in nsISupportsArray messages,
-						in boolean reallyDelete);
+                        in boolean reallyDelete);
+
     void DeleteFolders(in nsIRDFCompositeDataSource db,
                        in nsIRDFResource parentFolder,
                        in nsIRDFResource folder);
-	void CopyMessages(in nsIRDFCompositeDataSource database,
+    void CopyMessages(in nsIRDFCompositeDataSource database,
                    in nsIRDFResource srcResource,
                    in nsIRDFResource dstResource,
                    in nsISupportsArray messages,
                    in boolean isMove);
 
-	void CopyFolders(in nsIRDFCompositeDataSource database,
+    void CopyFolders(in nsIRDFCompositeDataSource database,
                    in nsIRDFResource dstResource,
                    in nsISupportsArray folders,
                    in boolean isMoveFolder);
@@ -95,8 +96,8 @@ interface nsIMessenger : nsISupports {
     unsigned long GetRedoTransactionType();
     void Undo(in nsIMsgWindow msgWindow);
     void Redo(in nsIMsgWindow msgWindow);
-	void sendUnsentMessages(in nsIMsgIdentity aIdentity, in nsIMsgWindow aMsgWindow);
-	void SetDocumentCharset(in wstring characterSet);
+    void sendUnsentMessages(in nsIMsgIdentity aIdentity, in nsIMsgWindow aMsgWindow);
+    void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow);
     void openAttachment(in string contentTpe, in string url, in string displayName, in string messageUri);
     void saveAttachment(in string contentTpe, in string url, in string displayName, in string messageUri);

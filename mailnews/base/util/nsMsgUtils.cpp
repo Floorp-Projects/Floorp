@@ -91,17 +91,17 @@ nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractI
 
 nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **aMessageService)
 {
-	nsresult rv;
+  nsresult rv;
 
   nsCAutoString contractID;
-	rv = GetMessageServiceContractIDForURI(uri, contractID);
+  rv = GetMessageServiceContractIDForURI(uri, contractID);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIMsgMessageService> msgService = do_GetService(contractID.get(), &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   NS_IF_ADDREF(*aMessageService = msgService);
-	return rv;
+  return rv;
 }
 
 nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr)

@@ -120,6 +120,22 @@
   -moz-image-region: rect(170px 199px 203px 150px) !important;
 } 
 
+#button-newim {
+  -moz-image-region: rect(170px 49px 203px 0);
+}
+
+#button-newim:hover {
+  -moz-image-region: rect(170px 99px 203px 50px);
+} 
+
+#button-newim:hover:active {
+  -moz-image-region: rect(170px 149px 203px 100px);
+} 
+
+#button-newim[disabled] {
+  -moz-image-region: rect(170px 199px 203px 150px) !important;
+} 
+
 #button-delete {
   -moz-image-region: rect(408px 49px 441px 0);
 }

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *  Seth Spitzer <sspitzer@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *  Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -52,40 +52,35 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"
-  
+#include "nsIAddressBook.h"
+
 NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 
-#define PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT "mail.collect_email_address_enable_size_limit"
-#define PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT "mail.collect_email_address_size_limit"
+#define PREF_MAIL_COLLECT_ADDRESSBOOK "mail.collect_addressbook"
 
 nsAbAddressCollecter::nsAbAddressCollecter()
 {
-	NS_INIT_ISUPPORTS();
-
-	m_maxCABsize = -1;
-	m_sizeLimitEnabled = PR_FALSE;
+  NS_INIT_ISUPPORTS();
 }
 
 nsAbAddressCollecter::~nsAbAddressCollecter()
 {
-	if (m_historyAB)
-	{
-		m_historyAB->Commit(nsAddrDBCommitType::kSessionCommit);
-		m_historyAB->Close(PR_FALSE);
-		m_historyAB = nsnull;
-	}
+  if (m_database) {
+    m_database->Commit(nsAddrDBCommitType::kSessionCommit);
+    m_database->Close(PR_FALSE);
+    m_database = nsnull;
+  }
 }
 
 NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAddress)
 {
-  NS_ENSURE_ARG(aAddress);
+  NS_ENSURE_ARG_POINTER(aAddress);
   nsresult rv = NS_OK;
 
   // convert the unicode string to UTF-8...
   nsAutoString unicodeString (aAddress);
   char * utf8Version = ToNewUTF8String(unicodeString);
-  if (utf8Version)
-  {
+  if (utf8Version) {
     rv = CollectAddress(utf8Version);
     Recycle(utf8Version);
   }
@@ -95,321 +90,217 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAdd
 
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
-	nsresult rv;
+  nsresult rv;
 
   nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
-	if (!m_historyAB)
-	{
-		rv = OpenHistoryAB(getter_AddRefs(m_historyAB));
-		if (NS_FAILED(rv) || !m_historyAB)
-			return rv;
-	}
-	// note that we're now setting the whole recipient list,
-	// not just the pretty name of the first recipient.
-	PRUint32 numAddresses;
-	char	*names;
-	char	*addresses;
+  rv = OpenDatabase();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult res = NS_OK;
-	nsCOMPtr<nsIMsgHeaderParser>  pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
+  // note that we're now setting the whole recipient list,
+  // not just the pretty name of the first recipient.
+  PRUint32 numAddresses;
+  char *names;
+  char *addresses;
 
-	if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	nsresult ret = pHeader->ParseHeaderAddresses (nsnull, address, &names, &addresses, &numAddresses);
-	if (ret == NS_OK)
-	{
-		char *curName = names;
-		char *curAddress = addresses;
-		char *excludeDomainList = nsnull;
+  rv = pHeader->ParseHeaderAddresses(nsnull, address, &names, &addresses, &numAddresses);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to parse, so can't collect");
+  if (NS_FAILED(rv))
+    return NS_OK;
 
-		for (PRUint32 i = 0; i < numAddresses; i++)
-		{
-			PRBool exclude;
+  char *curName = names;
+  char *curAddress = addresses;
+  char *excludeDomainList = nsnull;
 
-			rv = IsDomainExcluded(curAddress, pPref, &exclude);
-			if (NS_SUCCEEDED(rv) && !exclude)
-			{
-				nsCOMPtr <nsIAbCard> existingCard;
-				nsCOMPtr <nsIAbCard> cardInstance;
+  for (PRUint32 i = 0; i < numAddresses; i++)
+  {
+    nsCOMPtr <nsIAbCard> existingCard;
+    nsCOMPtr <nsIAbCard> cardInstance;
 
-        // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
-        // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
-				rv = m_historyAB->GetCardFromAttribute(m_historyDirectory, kPriEmailColumn, curAddress, PR_FALSE /* retain case */, getter_AddRefs(existingCard));
+    // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
+    // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
+    rv = m_database->GetCardFromAttribute(m_directory, kPriEmailColumn, curAddress, PR_FALSE /* retain case */, getter_AddRefs(existingCard));
 
-				if (!existingCard)
-				{
-					nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
-					if (NS_SUCCEEDED(rv) && senderCard)
-					{
-						if (curName && strlen(curName) > 0)
-						{
-							SetNamesForCard(senderCard, curName);
-						}
-						else
-						{
-							nsAutoString senderFromEmail; senderFromEmail.AssignWithConversion(curAddress);
-							PRInt32 atSignIndex = senderFromEmail.FindChar('@');
-							if (atSignIndex > 0)
-							{
-								senderFromEmail.Truncate(atSignIndex);
-								senderCard->SetDisplayName(senderFromEmail.get());
-							}
-						}
-						nsAutoString email; email.AssignWithConversion(curAddress);
-						senderCard->SetPrimaryEmail(email.get());
+    if (!existingCard)
+    {
+      nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv) && senderCard)
+      {
+        if (curName && strlen(curName) > 0)
+          SetNamesForCard(senderCard, curName);
+        else
+        {
+          nsAutoString senderFromEmail(NS_ConvertASCIItoUCS2(curAddress).get());
+          PRInt32 atSignIndex = senderFromEmail.FindChar('@');
+          if (atSignIndex > 0)
+          {
+            senderFromEmail.Truncate(atSignIndex);
+            senderCard->SetDisplayName(senderFromEmail.get());
+          }
+        }
 
-						rv = AddCardToCollectedAddressBook(senderCard);
-            NS_ENSURE_SUCCESS(rv,rv);
-					}
-				}
-				else //address is already in the CAB
-				{
-					if (m_sizeLimitEnabled) 
-					{
-            // XXX todo
-            // there has to be a better way to do this, without deleting
-            // and adding the card.  perhaps using modified time
-            // this doesn't seem like the best way to do LRU
-						m_historyAB->DeleteCard(existingCard, PR_TRUE /* notify */);
-						SetNamesForCard(existingCard, curName);
-						//append it to the bottom.
-            rv = AddCardToCollectedAddressBook(existingCard);
-            NS_ENSURE_SUCCESS(rv,rv);
-					}
-					else
-					{
-						SetNamesForCard(existingCard, curName);
-						existingCard->EditCardToDatabase(kCollectedAddressbookUri);
-					}
-				}
+        senderCard->SetPrimaryEmail(NS_ConvertASCIItoUCS2(curAddress).get());
 
-				if (m_sizeLimitEnabled) 
-				{
-					PRUint32 count = 0;
-					rv = m_historyAB->GetCardCount( &count );
+        rv = AddCardToAddressBook(senderCard);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+    }
+    else // address is already in the AB
+    {
+      SetNamesForCard(existingCard, curName);
+      existingCard->EditCardToDatabase(m_abURI.get());
+    }
 
-					if( count > (PRUint32)m_maxCABsize )
-						rv = m_historyAB->RemoveExtraCardsInCab(count, m_maxCABsize);
+    curName += strlen(curName) + 1;
+    curAddress += strlen(curAddress) + 1;
+  } 
 
-				} //if m_sizeLimitEnabled
-			}
-			curName += strlen(curName) + 1;
-			curAddress += strlen(curAddress) + 1;
-		} //for
-		PR_FREEIF(addresses);
-		PR_FREEIF(names);
-		PR_FREEIF(excludeDomainList);
-	}
-
-	return NS_OK;
+  PR_FREEIF(addresses);
+  PR_FREEIF(names);
+  PR_FREEIF(excludeDomainList);
+  return NS_OK;
 }
 
-
-nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
+nsresult nsAbAddressCollecter::OpenDatabase()
 {
-	if (!aDatabase)
-		return NS_ERROR_NULL_POINTER;
+  // check if already open
+  if (m_database)
+    return NS_OK;
 
-	nsresult rv = NS_OK;
-	nsFileSpec* dbPath = nsnull;
+  nsresult rv;
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+           do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		abSession->GetUserProfileDirectory(&dbPath);
-	
-	if (dbPath)
-	{
-		(*dbPath) += kCollectedAddressbook;
+  nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID
+, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = addressBook->GetAbDatabaseFromURI(m_abURI.get(), getter_AddRefs(m_database));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-                {
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
-                        if (NS_FAILED(rv))
-                        {
-                          // blow away corrupt db's
-                          dbPath->Delete(PR_FALSE);
-                        }
-                }
-		delete dbPath;
-	}
-	nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-	NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIRDFResource> resource;
+  rv = rdfService->GetResource(m_abURI.get(), getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	nsCOMPtr <nsIRDFResource> resource;
-	rv = rdfService->GetResource(kCollectedAddressbookUri, getter_AddRefs(resource));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	// query interface 
-	m_historyDirectory = do_QueryInterface(resource, &rv);
-	return rv;
+  m_directory = do_QueryInterface(resource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
 }
 
-nsresult nsAbAddressCollecter::IsDomainExcluded(const char *address, nsIPref *pPref, PRBool *bExclude)
+nsresult 
+nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName)
 {
-	if (!bExclude)
-		return NS_ERROR_NULL_POINTER;
+  char *firstName = nsnull;
+  char *lastName = nsnull;
 
-	*bExclude = PR_FALSE;
+  senderCard->SetDisplayName(NS_ConvertUTF8toUCS2(fullName).get());
 
-	nsXPIDLCString excludedDomainList;
-	nsresult rv = pPref->CopyCharPref("mail.address_collection_ignore_domain_list",
-                                   getter_Copies(excludedDomainList));
-
-	if (NS_FAILED(rv) || !excludedDomainList || !excludedDomainList[0]) 
-		return NS_OK;
-
-	nsCAutoString incomingDomain(address);
-	PRInt32 atSignIndex = incomingDomain.RFindChar('@');
-	if (atSignIndex > 0)
-	{
-		incomingDomain.Cut(0, atSignIndex + 1);
-
-		char *token = nsnull;
-		char *rest = NS_CONST_CAST(char*,(const char*)excludedDomainList);
-		nsCAutoString str;
-
-                // XXX todo, fix this leak
-		token = nsCRT::strtok(rest, ",", &rest);
-		while (token && *token) 
-		{
-			str = token;
-			str.StripWhitespace();
-
-			if (!str.IsEmpty()) 
-			{
-				if (str.Equals(incomingDomain))
-				{
-					*bExclude = PR_TRUE;
-					break;
-				}
-			}
-			str = "";
-			token = nsCRT::strtok(rest, ",", &rest);
-		}
-	}
-	return rv;
-}
-
-nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName)
-{
-	char *firstName = nsnull;
-	char *lastName = nsnull;
-
-	senderCard->SetDisplayName(NS_ConvertUTF8toUCS2(fullName).get());
-
-	nsresult rv = SplitFullName (fullName, &firstName, &lastName);
-	if (NS_SUCCEEDED(rv))
-	{
-		senderCard->SetFirstName(NS_ConvertUTF8toUCS2(firstName).get());
-	  
+  nsresult rv = SplitFullName(fullName, &firstName, &lastName);
+  if (NS_SUCCEEDED(rv))
+  {
+    senderCard->SetFirstName(NS_ConvertUTF8toUCS2(firstName).get());
+    
     if (lastName)
       senderCard->SetLastName(NS_ConvertUTF8toUCS2(lastName).get());
   }
-	PR_FREEIF(firstName);
-	PR_FREEIF(lastName);
-	return rv;
+  PR_FREEIF(firstName);
+  PR_FREEIF(lastName);
+  return rv;
 }
 
-nsresult nsAbAddressCollecter::SplitFullName (const char *fullName, char **firstName, char **lastName)
+nsresult nsAbAddressCollecter::SplitFullName(const char *fullName, char **firstName, char **lastName)
 {
-    if (fullName)
+  if (fullName)
+  {
+    *firstName = nsCRT::strdup(fullName);
+    if (!*firstName)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    char *plastSpace = *firstName;
+    char *walkName = *firstName;
+    char *plastName = nsnull;
+
+    while (walkName && *walkName)
     {
-        *firstName = nsCRT::strdup(fullName);
-        if (NULL == *firstName)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        char *plastSpace = *firstName;
-        char *walkName = *firstName;
-        char *plastName = nsnull;
-
-        while (walkName && *walkName)
-        {
-            if (*walkName == ' ')
-            {
-                plastSpace = walkName;
-                plastName = plastSpace + 1;
-            }
+      if (*walkName == ' ')
+      {
+        plastSpace = walkName;
+        plastName = plastSpace + 1;
+      }
             
-            walkName++;
-        }
-
-        if (plastName) 
-        {
-            *plastSpace = '\0';
-            *lastName = nsCRT::strdup (plastName);
-        }
+      walkName++;
     }
 
-    return NS_OK;
+    if (plastName) 
+    {
+      *plastSpace = '\0';
+      *lastName = nsCRT::strdup(plastName);
+    }
+  }
+
+  return NS_OK;
 }
 
 int PR_CALLBACK 
-nsAbAddressCollecter::collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data)
+nsAbAddressCollecter::collectAddressBookPrefChanged(const char *aNewpref, void *aData)
 {
-	nsresult rv;
-	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-	if(NS_FAILED(pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &adCol->m_sizeLimitEnabled))){
-		adCol->m_sizeLimitEnabled = PR_TRUE;
-	}
-	return 0;
-}
+  nsresult rv;
+  nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) aData;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs");
 
-int PR_CALLBACK 
-nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data)
-{
-	nsresult rv;
-	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-	if(NS_FAILED(pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &adCol->m_maxCABsize))){
-		adCol->m_maxCABsize = 0;
-	}
-	return 0;
+  nsXPIDLCString prefVal;
+  rv = pPref->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
+  rv = adCol->SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbook : prefVal.get());
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to change collected ab");
+  return 0;
 }
 
 nsresult nsAbAddressCollecter::Init(void)
 {
-	nsresult rv;
-	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-	NS_ENSURE_SUCCESS(rv,rv);
+  nsresult rv;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  NS_ENSURE_SUCCESS(rv,rv);
   
-	rv = pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, collectEmailAddressEnableSizeLimitPrefChanged, this);
-	NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, collectEmailAddressSizeLimitPrefChanged, this);
+  rv = pPref->RegisterCallback(PREF_MAIL_COLLECT_ADDRESSBOOK, collectAddressBookPrefChanged, this);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &m_sizeLimitEnabled);
-	NS_ENSURE_SUCCESS(rv,rv);
+  nsXPIDLCString prefVal;
+  rv = pPref->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
+  rv = SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbook : prefVal.get());
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
 
-  rv = pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &m_maxCABsize);
+nsresult nsAbAddressCollecter::AddCardToAddressBook(nsIAbCard *card)
+{
+  NS_ENSURE_ARG_POINTER(card);
+
+  nsCOMPtr <nsIAbCard> addedCard;
+  nsresult rv = m_directory->AddCard(card, getter_AddRefs(addedCard));
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 
-nsresult nsAbAddressCollecter::AddCardToCollectedAddressBook(nsIAbCard *card)
+nsresult nsAbAddressCollecter::SetAbURI(const char *aURI)
 {
-  NS_ENSURE_ARG_POINTER(card);
+  if (m_database) {
+    m_database->Commit(nsAddrDBCommitType::kSessionCommit);
+    m_database->Close(PR_FALSE);
+    m_database = nsnull;
+  }
+  
+  m_directory = nsnull;
+  m_abURI = aURI;
 
-  nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(kCollectedAddressbookUri, getter_AddRefs(res));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr <nsIAbCard> addedCard;
-	rv = directory->AddCard(card, getter_AddRefs(addedCard));
+  nsresult rv = OpenDatabase();
   NS_ENSURE_SUCCESS(rv,rv);
-	return rv;
+  return rv;
 }

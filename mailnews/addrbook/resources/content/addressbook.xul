@@ -123,11 +123,6 @@ Contributor(s):
   <key id="showHideSidebar"/>
   <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
 
-<!-- not ready yet
-  <key id="key_chat" key="&newChat.key;" oncommand="AbChatSelected()" modifiers="shift,accel"/>
-  <key id="key_im" key="&newIM.key;" oncommand="AbIMSelected()" modifiers="shift,accel"/>
--->
-
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control"/>
@@ -150,10 +145,6 @@ Contributor(s):
                       <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
                       <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
                       <menuseparator/>
-<!-- not ready yet
-                      <menuitem label="&newIM.label;" key="key_im" accesskey="&newIM.accesskey;" oncommand="AbIMSelected()"/>
-                      <menuitem label="&newChat.label;" key="key_chat" accesskey="&newChat.accesskey;" oncommand="AbChatSelected()"/>
--->
                       <menuitem id="menu_newNavigator"/>
                       <menuitem id="menu_newEditor"/>
                     </menupopup>
@@ -315,6 +306,7 @@ Contributor(s):
         <toolbarseparator class="toolbarseparator-primary"/>
         <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>
         <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
         <vbox flex="1">

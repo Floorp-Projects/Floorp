@@ -5,23 +5,28 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:nc="http://home.netscape.com/NC-rdf#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       onload="onLoad();"
       headertitle="&pane.title;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollectionIncoming", "emailCollectionOutgoing", 
-                       "emailCollectionNewsgroup", "addressingAutocomplete",
-                       "enableCABsizeLimit", "CABsizeLimit", "autocompleteLDAP", 
+    var _elementIDs = ["emailCollectionOutgoing", 
+                       "addressingAutocomplete",
+                       "autocompleteLDAP",
+                       "localDirectoriesList",
                        "directoriesList"];
 
-  function onLoad(){
+  function onLoad()
+  {
     createDirectoriesList(true);
     parent.initPanel('chrome://messenger/content/addressbook/pref-addressing.xul');   
   }
 
-  function Startup(){
+  function Startup() 
+  {
     enableAutocomplete();
   }
   ]]>
@@ -30,27 +35,26 @@
   <groupbox>
     <caption label="&emailCollectiontitle.label;"/>
   <description>&emailCollectiontext.label;</description>
-    <vbox align="start" class="indent">
-    <checkbox id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
-              prefstring="mail.collect_email_address_incoming"
-              accesskey="&emailCollectionIncomingEnable.accesskey;"/>
-    <checkbox id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
-              prefstring="mail.collect_email_address_outgoing"
-              accesskey="&emailCollectionOutgoingEnable.accesskey;"/>
-    <checkbox id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
-              prefstring="mail.collect_email_address_newsgroup"
-              accesskey="&emailCollectionNewsgroupEnable.accesskey;"/>
-    </vbox>
     <hbox align="center">
-      <checkbox id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
-                prefstring="mail.collect_email_address_enable_size_limit"
-                accesskey="&useCABSizelimitPart1.accesskey;"/>
-      <textbox id="CABsizeLimit" size="6" preftype="int"
-               prefstring="mail.collect_email_address_size_limit"/>
-      <label id="useCABSizelimitPart2" class="small-margin" value="&useCABSizelimitPart2.label;"
-               accesskey="&useCABSizelimitPart2.accesskey;"
-               control="CABsizeLimit"/>
-    </hbox> 
+      <checkbox id="emailCollectionOutgoing" 
+        label="&emailCollectionPicker.label;"
+        prefstring="mail.collect_email_address_outgoing"/>
+   <menulist id="localDirectoriesList" flex="1"
+                  preftype="string" 
+                  prefstring="mail.collect_addressbook">
+     <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
+        datasources="rdf:addressdirectory">
+        <template>
+        <rule nc:IsWriteable="false"/>
+        <rule nc:IsMailList="false">
+          <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+        </rule>
+        </template>
+      </menupopup>
+    </menulist>
+    </hbox>
   </groupbox>
 	
     <groupbox id="addressAutocompletion">
@@ -66,7 +70,7 @@
                   prefstring="ldap_2.autoComplete.useDirectory" 
                   oncommand="enableAutocomplete();"
                   accesskey="&directories.accesskey;"/>
-        <menulist id="directoriesList" flex="1"
+       <menulist id="directoriesList" flex="1"
                   preftype="string" 
                   prefstring="ldap_2.autoComplete.directoryServer">
           <menupopup id="directoriesListPopup" 
@@ -78,13 +82,13 @@
                oncommand="onEditDirectories();"
                accesskey="&editDirectories.accesskey;"/>
      </hbox>
-     <!--
+<!--
      <description>&matchText.label;</description>
      <hbox align="center">
        <checkbox id="autocompleteSkipDirectory"
                  label="&skipDirectory.label;" 
                  prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"/>    
      </hbox>
-     -->
+-->
    </groupbox>
 </page>

@@ -401,6 +401,11 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
     }
   }
 
+  // we don't always have a message pane, like in the addressbook
+  // so if we don't havea docshell, use the one for the xul window.
+  // we do this so OpenURL() will work.
+  if (!mDocShell)
+    mDocShell = docShell;
 
   return NS_OK;
 }
@@ -556,8 +561,8 @@ nsMessenger::OpenURL(const char * url)
     char* unescapedUrl = PL_strdup(url);
     if (unescapedUrl)
     {
-	  // I don't know why we're unescaping this url - I'll leave it unescaped
-	  // for the web shell, but the message service doesn't need it unescaped.
+      // I don't know why we're unescaping this url - I'll leave it unescaped
+      // for the web shell, but the message service doesn't need it unescaped.
       nsUnescape(unescapedUrl);
       
       nsCOMPtr <nsIMsgMessageService> messageService;
@@ -572,10 +577,9 @@ nsMessenger::OpenURL(const char * url)
       //If it's not something we know about, then just load the url.
       else
       {
-        nsAutoString urlStr; urlStr.AssignWithConversion(unescapedUrl);
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
         if(webNav)
-          webNav->LoadURI(urlStr.get(),                       // URI string
+          webNav->LoadURI(NS_ConvertASCIItoUCS2(unescapedUrl).get(), // URI string
                           nsIWebNavigation::LOAD_FLAGS_NONE,  // Load flags
                           nsnull,                             // Refering URI
                           nsnull,                             // Post stream
