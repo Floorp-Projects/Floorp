@@ -63,6 +63,8 @@ public:
 	void Init();
 	void CleanUp();
 	void Reset();
+	inline PRBool ScriptEnabled(ScriptCode script) 
+		{ return (0 != (mScriptEnabled & (1L << script))); };
 	inline ScriptCode BlockToScript(nsUnicodeBlock blockID) 
 		{ 
 			NS_PRECONDITION(blockID < kUnicodeBlockSize, "illegal value");
@@ -90,6 +92,7 @@ public:
 	nsString *mGenericFontMapping[smPseudoTotalScripts][kUknownGenericFontName];
 	
 protected:
+	void InitScriptEnabled();
     void InitGenericFontMapping();
     void InitBlockToScriptMapping();
     void InitScriptFontMapping();
@@ -99,6 +102,7 @@ protected:
   static void PR_CALLBACK_DECL PrefEnumCallback(const char* aName, void* aClosure);
     
 private:
+	PRUint32 mScriptEnabled;
 	short 	 mScriptFontMapping[smPseudoTotalScripts];
 	PRInt8   mBlockToScriptMapping[kUnicodeBlockSize];
 	nsCOMPtr<nsIPref> mPref;

@@ -80,10 +80,11 @@ void nsUnicodeMappingUtil::Reset()
 }
 void nsUnicodeMappingUtil::Init()
 {
+	InitScriptEnabled();
 	InitGenericFontMapping();
 	InitFromPref();
 	InitScriptFontMapping();
-	InitBlockToScriptMapping();
+	InitBlockToScriptMapping(); // this must be called after InitScriptEnabled()
 }
 void nsUnicodeMappingUtil::CleanUp()
 {
@@ -107,6 +108,22 @@ nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
 	MOZ_COUNT_DTOR(nsUnicodeMappingUtil);
 }
 
+//--------------------------------------------------------------------------
+
+void nsUnicodeMappingUtil::InitScriptEnabled()
+{
+	PRUint8 numOfScripts = ::GetScriptManagerVariable(smEnabled);
+	ScriptCode script, gotScripts;
+	mScriptEnabled = 0;
+	PRUint32 scriptMask = 1;
+	for(script = gotScripts = 0; 
+		((script < smUninterp) && ( gotScripts < numOfScripts)) ; 
+			script++, scriptMask <<= 1)
+	{
+		if(::GetScriptVariable(script, smScriptEnabled))
+			mScriptEnabled |= scriptMask;
+	}
+}
 //--------------------------------------------------------------------------
 
 void nsUnicodeMappingUtil::InitGenericFontMapping()
@@ -148,15 +165,31 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 	mGenericFontMapping[smKorean][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("AppleGothic") );
 	mGenericFontMapping[smKorean][kMonospace] = new nsAutoString( NS_LITERAL_STRING("AppleGothic") );
 
-	// smArabic  
-	mGenericFontMapping[smArabic][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Lucida Grande") );
-	mGenericFontMapping[smArabic][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Lucida Grande") );
-	mGenericFontMapping[smArabic][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Monaco") );
+	// smArabic
+	static PRUnichar afontname1[] = {
+	0x062B, 0x0644, 0x062B, 0x202E, 0x0020, 0x202C, 0x0623, 0x0628, 0x064A, 0x0636, 0x0000 //    ËäË ÃÈêÖ
+	};
+	static PRUnichar afontname2[] = {
+	0x0627, 0x0644, 0x0628, 0x064A, 0x0627, 0x0646, 0x0000 //    ÇäÈêÇæ
+	};
+	static PRUnichar afontname3[] = {
+	0x062C, 0x064A, 0x0632, 0x0629, 0x0000 //    ÌêÒÉ
+	};   
+	mGenericFontMapping[smArabic][kSerif]     = new nsAutoString(afontname1);
+	mGenericFontMapping[smArabic][kSansSerif] = new nsAutoString(afontname2);
+	mGenericFontMapping[smArabic][kMonospace] = new nsAutoString(afontname3);
 
 	// smHebrew
-	mGenericFontMapping[smHebrew][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Lucida Grande") );
-	mGenericFontMapping[smHebrew][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Lucida Grande") );
-	mGenericFontMapping[smHebrew][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Monaco") );
+	static PRUnichar hfontname1[] = {
+	0x05E4, 0x05E0, 0x05D9, 0x05E0, 0x05D9, 0x05DD, 0x202E, 0x0020, 0x202C, 0x05D7, 0x05D3, 0x05E9, 0x0000 //    ôðéðéí çãù
+	};
+	static PRUnichar hfontname2[] = {
+	0x05D0, 0x05E8, 0x05D9, 0x05D0, 0x05DC, 0x0000 //    àøéàì
+	};
+
+	mGenericFontMapping[smHebrew][kSerif]     = new nsAutoString(hfontname1);
+	mGenericFontMapping[smHebrew][kSansSerif] = new nsAutoString(hfontname2);
+	mGenericFontMapping[smHebrew][kMonospace] = new nsAutoString(hfontname2);
 
 	// smCyrillic
 	mGenericFontMapping[smCyrillic][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Latinski") );
@@ -313,6 +346,13 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   nsString *fontname = new nsAutoString(valueInUCS2);
   if(nsnull == fontname)
   	return;
+  short fontID=0;
+  if( (! nsDeviceContextMac::GetMacFontNumber(*fontname, fontID)) ||
+  	  ((script < smUninterp) && (::FontToScript(fontID) != script)))
+  {
+  	delete fontname;
+  	return;
+  }
   if( Self->mGenericFontMapping[script][type] )
   	delete Self->mGenericFontMapping[script][type];
   Self->mGenericFontMapping[script][type] = fontname;
@@ -384,11 +424,8 @@ void nsUnicodeMappingUtil::InitScriptFontMapping()
 				}
 			}
 		}
-		else {
+		else if(ScriptEnabled(script)) {
 			long fondsize = ::GetScriptVariable(script, smScriptPrefFondSize);
-			if (!fondsize)
-			  fondsize = ::GetScriptVariable(smUnicodeScript, smScriptPrefFondSize);
-
 			if((fondsize) && ((fondsize >> 16))) {
 				fontNum = (fondsize >> 16);
 				mScriptFontMapping[script] = fontNum;
@@ -416,8 +453,27 @@ void nsUnicodeMappingUtil::InitBlockToScriptMapping()
 	};
 	for(PRUint32 i= 0; i < kUnicodeBlockSize; i++) 
 	{
-    mBlockToScriptMapping[i] = prebuildMapping[i];
-  }
+		if( ScriptEnabled(prebuildMapping[i]) ) {
+			mBlockToScriptMapping[i] = prebuildMapping[i];
+		} else {
+			if (i == kUserDefinedEncoding)
+				mBlockToScriptMapping[i] = prebuildMapping[i];
+			else if(i < kUnicodeBlockFixedScriptMax) {
+				mBlockToScriptMapping[i] = (PRInt8) smRoman;
+			} else {
+				if( (kCJKMisc == i) || (kHiraganaKatakana == i) || (kCJKIdeographs == i) ) {
+					// fallback in the following sequence
+					// smTradChinese  smKorean smSimpChinese
+					mBlockToScriptMapping[i] = (PRInt8)
+						( ScriptEnabled(smTradChinese) ? smTradChinese :
+							( ScriptEnabled(smKorean) ? smKorean :
+								( ScriptEnabled(smSimpChinese) ? smSimpChinese : smRoman )												
+							)					
+						);
+				}				
+			}
+		}
+	}
 }
 
 //--------------------------------------------------------------------------
