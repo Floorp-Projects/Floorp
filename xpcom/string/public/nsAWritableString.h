@@ -179,6 +179,17 @@ class nsWritingIterator
 
           return *this;
         }
+
+      PRUint32
+      write( const value_type* s, PRUint32 n )
+        {
+          NS_ASSERTION(size_forward() > 0, "You can't |write| into an |nsWritingIterator| with no space!");
+
+          n = NS_MIN(n, PRUint32(size_forward()));
+          nsCharTraits<value_type>::copy(mPosition, s, n);
+          operator+=( difference_type(n) );
+          return n;
+        }
   };
 
 
