@@ -1003,7 +1003,16 @@ nsMessenger::SendUnsentMessages()
 
     NS_ADDREF(sendLaterListener);
     pMsgSendLater->AddListener(sendLaterListener);
-		pMsgSendLater->SendUnsentMessages(nsnull, nsnull, nsnull); 
+
+    // temporary hack to get the current identity
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIMsgIdentity> identity;
+    rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+    if (NS_FAILED(rv)) return rv;
+      
+    pMsgSendLater->SendUnsentMessages(identity, nsnull, nsnull); 
     NS_RELEASE(sendLaterListener);
 	} 
 	return NS_OK;
