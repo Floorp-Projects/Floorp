@@ -985,12 +985,14 @@ if(-e "data/params") {
     }
 
     # Check .htaccess allows access to generated images
-    open HTACCESS, "data/webdot/.htaccess";
-    if(! grep(/png/,<HTACCESS>)) {
-      print "Dependency graph images are not accessible.\n";
-      print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+    if(-e "data/webdot/.htaccess") {
+      open HTACCESS, "data/webdot/.htaccess";
+      if(! grep(/png/,<HTACCESS>)) {
+        print "Dependency graph images are not accessible.\n";
+        print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+      }
+      close HTACCESS;
     }
-    close HTACCESS;
   }
 }
 
