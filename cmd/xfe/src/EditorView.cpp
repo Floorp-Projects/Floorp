@@ -33,6 +33,7 @@
 #include "edt.h"
 #include "xeditor.h"
 #ifndef NO_SECURITY
+#include "secnav.h"
 #include "pk11func.h"
 #endif
 
