@@ -190,6 +190,12 @@ localDefPref("browser.navcenter.floating.rect", "20, 20, 400, 600"); // Window d
 // Editing these may create a security risk - be sure you know what you're doing
 pref("capability.policy.default.barprop.visible.write", "UniversalBrowserWrite");
 
+pref("capability.policy.default.domexception.code", "allAccess");
+pref("capability.policy.default.domexception.message", "allAccess");
+pref("capability.policy.default.domexception.name", "allAccess");
+pref("capability.policy.default.domexception.result", "allAccess");
+pref("capability.policy.default.domexception.tostring", "allAccess");
+
 pref("capability.policy.default.history.current.read", "UniversalBrowserRead");
 pref("capability.policy.default.history.next.read", "UniversalBrowserRead");
 pref("capability.policy.default.history.previous.read", "UniversalBrowserRead");
@@ -206,6 +212,8 @@ pref("capability.policy.default.location.search.write", "allAccess");
 
 pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
+
+pref("capability.policy.default.windowinternal.close", "allAccess");
 pref("capability.policy.default.windowinternal.location.write", "allAccess");
 
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
