@@ -251,8 +251,7 @@ public:
    *  @param aLRCurve -- lowerright curve
    *  @param aLLCurve -- lowerleft curve
    */
-  void 
-  RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve);
+  void GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve);
 
 };
 
