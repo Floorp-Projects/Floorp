@@ -1425,7 +1425,9 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
   return result;
 }
 
-NS_IMETHODIMP nsXMLContentSink::HandleCDataSection(const PRUnichar *aData, PRUint32 aLength)
+NS_IMETHODIMP 
+nsXMLContentSink::HandleCDataSection(const PRUnichar *aData, 
+                                     PRUint32 aLength)
 {
   FlushText();
 
@@ -1456,7 +1458,8 @@ NS_IMETHODIMP nsXMLContentSink::HandleCDataSection(const PRUnichar *aData, PRUin
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype)
+nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype,
+                                    PRUint32 aLength)
 {
   nsresult rv = NS_OK;
 
@@ -1464,12 +1467,8 @@ nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype)
   if (!doc)
     return NS_OK;
 
-  nsAutoString docTypeStr(aDoctype); 
-  nsAutoString str, name, publicId, systemId;
-
-  if (Substring(docTypeStr, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"))) {
-    docTypeStr.Right(str, docTypeStr.Length()-9);
-  }
+  nsAutoString str(aDoctype, aLength); 
+  nsAutoString name, publicId, systemId;
 
   GetDocTypeToken(str, name, PR_FALSE);
 
@@ -1484,8 +1483,7 @@ nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype)
     GetDocTypeToken(str, systemId, PR_TRUE);
   }
 
-  // The rest is the internal subset (minus whitespace and the trailing >)
-  str.Truncate(str.Length()-1); // Delete the trailing >
+  // The rest is the internal subset (minus whitespace)
   str.Trim(kWhitespace);
 
   nsCOMPtr<nsIDOMDocumentType> oldDocType;

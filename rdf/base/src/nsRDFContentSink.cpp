@@ -603,7 +603,7 @@ RDFContentSinkImpl::HandleCDataSection(const PRUnichar *aData,
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleDoctypeDecl(const PRUnichar *aDoctype)
+RDFContentSinkImpl::HandleDoctypeDecl(const PRUnichar *aDoctype, PRUint32 aLength)
 {
     return NS_OK;
 }

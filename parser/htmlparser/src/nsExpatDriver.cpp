@@ -51,6 +51,7 @@
 #include "prmem.h"
 #include "nsTextFormatter.h"
 
+static const PRUint32 kNotInDoctype = PRUint32(-1);
 static const char* kDTDDirectory = "dtd/";
 
 /***************************** EXPAT CALL BACKS *******************************/
@@ -235,11 +236,12 @@ NS_NewExpatDriver(nsIDTD** aResult) {
 nsExpatDriver::nsExpatDriver()
   :mExpatParser(0), 
    mSink(0), 
-   mInDoctype(0), 
+   mBuffer(0),
    mInCData(0), 
    mBytesParsed(0),
    mBytePosition(0),
-   mInternalState(NS_OK)
+   mInternalState(NS_OK),
+   mDoctypePos(-1)
 {
   NS_INIT_REFCNT();
 }
@@ -305,13 +307,7 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mInDoctype) {
-    // We do not want comments popping out of the doctype...
-    mDoctypeText.Append(NS_LITERAL_STRING("<!--"));
-    mDoctypeText.Append(aValue);
-    mDoctypeText.Append(NS_LITERAL_STRING("-->"));
-  } 
-  else if (mSink){
+  if (mSink && mDoctypePos == kNotInDoctype){
     mInternalState = mSink->HandleComment(aValue);
   }
   
@@ -341,10 +337,7 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mInDoctype) {
-    mDoctypeText.Append(aValue, aLength);
-  }
-  else if (mSink) {
+  if (mSink && mDoctypePos == kNotInDoctype) {
     static const PRUnichar newline[] = {'\n','\0'};
     for (PRUint32 i = 0; i < aLength && NS_SUCCEEDED(mInternalState); i++) {
       if (aValue[i] == '\n' || aValue[i] == '\r') {
@@ -380,8 +373,7 @@ nsExpatDriver::HandleEndCdataSection()
 nsresult 
 nsExpatDriver::HandleStartDoctypeDecl()
 {
-  mInDoctype = PR_TRUE;
-  mDoctypeText.Assign(NS_LITERAL_STRING("<!DOCTYPE "));
+  mDoctypePos = XML_GetCurrentByteIndex(mExpatParser);
   return NS_OK;
 }
 
@@ -390,14 +382,15 @@ nsExpatDriver::HandleEndDoctypeDecl()
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  mInDoctype = PR_FALSE;
-  mDoctypeText.Append(PRUnichar('>'));
-  
+  const PRUnichar* doctypeStart = mBuffer + ( mDoctypePos - mBytesParsed ) / 2;
+  const PRUnichar* doctypeEnd   = mBuffer + ( XML_GetCurrentByteIndex(mExpatParser) - mBytesParsed ) / 2;
+ 
   if(mSink) {
-    mInternalState = mSink->HandleDoctypeDecl(mDoctypeText.get());
+    mInternalState = mSink->HandleDoctypeDecl(doctypeStart, doctypeEnd - doctypeStart);
   }
   
-  mDoctypeText.Truncate();
+  mDoctypePos = kNotInDoctype;
+
   return NS_OK;
 }
 
@@ -730,9 +723,9 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
   
   while (start != end) {
     PRUint32 fragLength = PRUint32(start.size_forward());
-    const PRUnichar* expatBuffer = start.get();
+    mBuffer = start.get();
     
-    mInternalState = ParseBuffer((const char *)expatBuffer, 
+    mInternalState = ParseBuffer((const char *)mBuffer, 
                                  fragLength * sizeof(PRUnichar), 
                                  aFlushTokens);
     

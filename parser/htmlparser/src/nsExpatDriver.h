@@ -82,16 +82,19 @@ protected:
   nsresult HandleError(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
   void     GetLine(const char* aSourceBuffer, PRUint32 aLength, PRUint32 aOffset, nsString& aLine);
 
-  XML_Parser    mExpatParser;
-  nsIExpatSink* mSink;
-  nsString      mLastLine;
-  nsString      mDoctypeText;
-  nsString      mCDataText;
-  PRPackedBool  mInDoctype;
-  PRPackedBool  mInCData;
-  PRUint32      mBytesParsed;
-  PRInt32       mBytePosition;
-  nsresult      mInternalState;
+  XML_Parser       mExpatParser;  
+  nsIExpatSink*    mSink;
+  const PRUnichar* mBuffer; // weak
+
+  nsString         mLastLine;
+  nsString         mCDataText;
+  PRPackedBool     mInCData;
+  PRInt32          mBytePosition;
+  nsresult         mInternalState;
+  PRUint32         mBytesParsed;
+  PRUint32         mDoctypePos;
+
+
 };
 nsresult NS_NewExpatDriver(nsIDTD** aDriver);
 
