@@ -7,3 +7,6 @@ Mozilla.org changes:
 
 - 17 June 2004
   Add mozzconf.h
+
+- 17 June 2004
+  Turn off ZLIB_DLL to fix static build bustage
