@@ -40,7 +40,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
-  <!ENTITY % metadataDTD SYSTEM "chrome://navigator/locale/metadata.dtd" >
+  <!ENTITY % metadataDTD SYSTEM "chrome://browser/locale/metadata.dtd" >
   %metadataDTD;
 ]>
  
@@ -52,9 +52,9 @@
         persist="screenX screenY"
         screenX="24" screenY="24">
 
-  <script type="application/x-javascript" src="chrome://navigator/content/metadata.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/metadata.js"/>
 
-  <stringbundle src="chrome://navigator/locale/metadata.properties" id="bundle_metadata"/>
+  <stringbundle src="chrome://browser/locale/metadata.properties" id="bundle_metadata"/>
   <stringbundle src="chrome://global/locale/languageNames.properties" id="bundle_languages"/>
   <stringbundle src="chrome://global/locale/regionNames.properties" id="bundle_regions"/>
 

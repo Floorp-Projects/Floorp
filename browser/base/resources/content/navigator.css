@@ -7,19 +7,19 @@
 /* ::::: urlbar autocomplete ::::: */
 
 #urlbar {
-  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#urlbar");
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar");
 }
 
 .autocomplete-result-popup[for="urlbar"] {
-  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-result-popup") !important;
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#autocomplete-result-popup") !important;
 }
 
 .autocomplete-search-box {
-  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-box");
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#autocomplete-search-box");
 }
 
 .autocomplete-search-engine {
-  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-engine");
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#autocomplete-search-engine");
 }
 
 
