@@ -125,7 +125,7 @@ my $action  = trim($::FORM{action}  || '');
 
 if ($action eq "") {
     PutHeader("Select keyword");
-    print qq{
+    my $tableheader = qq{
 <TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>
 <TR BGCOLOR="#6666FF">
 <TH ALIGN="left">Edit keyword ...</TH>
@@ -134,6 +134,10 @@ if ($action eq "") {
 <TH ALIGN="left">Action</TH>
 </TR>
 };
+    print $tableheader;
+    my $line_count = 0;
+    my $max_table_size = 50;
+
     SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
                     COUNT(keywords.bug_id), keywords.bug_id
              FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
@@ -151,6 +155,12 @@ if ($action eq "") {
             # what it had responded.
             $bugs = 'none';
         }
+        if ($line_count == $max_table_size) {
+            print "</table>\n$tableheader";
+            $line_count = 0;
+        }
+        $line_count++;
+            
         print qq{
 <TR>
 <TH VALIGN="top"><A HREF="editkeywords.cgi?action=edit&id=$id">$name</TH>

@@ -31,7 +31,7 @@ print "Content-type: text/html\n\n";
 
 PutHeader("Bugzilla keyword description");
 
-print qq{
+my $tableheader = qq{
 <TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>
 <TR BGCOLOR="#6666FF">
 <TH ALIGN="left">Name</TH>
@@ -39,6 +39,10 @@ print qq{
 <TH ALIGN="left">Bugs</TH>
 </TR>
 };
+
+print $tableheader;
+my $line_count = 0;
+my $max_table_size = 50;
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
                 COUNT(keywords.bug_id), keywords.bug_id
@@ -59,6 +63,11 @@ while (MoreSQLData()) {
     } else {
         $bugs = "none";
     }
+    if ($line_count == $max_table_size) {
+        print "</table>\n$tableheader";
+        $line_count = 0;
+    }
+    $line_count++;
     print qq{
 <TR>
 <TH>$name</TH>
