@@ -25,14 +25,9 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
 
-#include "nsMsgComposeFact.h"
-#include "nsMsgCompFieldsFact.h"
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
-static NS_DEFINE_IID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
-static NS_DEFINE_IID(kCMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 
 
 ////////////////////////////////////////////////////////////
@@ -111,22 +106,6 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 	if (mClassID.Equals(kCMsgRFC822ParserCID))
 	{
 		res = NS_NewRFC822Parser((nsIMsgRFC822Parser **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
-		  return res;   
-	}
-
-	// do they want an Message Compose interface ?
-	if (mClassID.Equals(kCMsgComposeCID))
-	{
-		res = NS_NewMsgCompose((nsIMsgCompose **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
-		  return res;   
-	}
-
-	// do they want an Message Compose Fields interface ?
-	if (mClassID.Equals(kCMsgCompFieldsCID))
-	{
-		res = NS_NewMsgCompFields((nsIMsgCompFields **) &inst);
 		if (res != NS_OK)  // was there a problem creating the object ?
 		  return res;   
 	}
