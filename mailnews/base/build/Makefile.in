@@ -43,12 +43,34 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL)	\
 		-lmozjs			\
 		-ljsdom			\
+		-ljsurl			\
 		-lraptorbase	\
 		-lrdfutil_s		\
 		-lmsgbaseutil	\
+		-lxp			\
+		-lgmbasegtk		\
+		-lgtk			\
+		-lgdk			\
 		-lxpcom			\
 		-lreg			\
 		-lappcores		\
+		-lnetlib		\
+		-lnetwork		\
+		-lhttpurl		\
+		-lftpurl		\
+		-lgophurl		\
+		-labouturl		\
+		-lfileurl		\
+		-lremoturl		\
+		-lnetcnvts		\
+		-lmimetype		\
+		-lsockstuburl	\
+		-lnetutil		\
+		-lpwcac			\
+		-lnetcache		\
+		-lpref			\
+		-lsecfree		\
+		-lz				\
 		$(NSPR_LIBS)	\
 		-L$(DIST)/bin	\
 		-L$(DIST)/lib	\
@@ -56,5 +78,5 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile.in
 
