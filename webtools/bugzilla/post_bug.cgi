@@ -42,6 +42,7 @@ sub sillyness {
     $zz = @::legal_priority;
     $zz = @::legal_product;
     $zz = @::legal_severity;
+    $zz = %::target_milestone;
 }
 
 confirm_login();
