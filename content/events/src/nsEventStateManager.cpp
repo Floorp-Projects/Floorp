@@ -1392,22 +1392,38 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       }
     }
 
+    static PRInt32 pixelThresholdX = 0;
+    static PRInt32 pixelThresholdY = 0;
+    static PRBool gotDragDelta = PR_FALSE;
+
+    if (!gotDragDelta) {
+      gotDragDelta = PR_TRUE;
+      nsCOMPtr<nsILookAndFeel> lf;
+      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
+      lf->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, pixelThresholdX);
+      lf->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, pixelThresholdY);
+      if (!pixelThresholdX)
+        pixelThresholdX = 5;
+      if (!pixelThresholdY)
+        pixelThresholdY = 5;
+    }
+
     // figure out the delta in twips, since that is how it is in the event.
-    // Do we need to do this conversion every time? Will the pres context really change on
-    // us or can we cache it?
-    long twipDeltaToStartDrag = 0;
-    const long pixelDeltaToStartDrag = 5;
+    // Do we need to do this conversion every time?
+    // Will the pres context really change on us or can we cache it?
     nsCOMPtr<nsIDeviceContext> devContext;
-    aPresContext->GetDeviceContext ( getter_AddRefs(devContext) );
-    if ( devContext ) {
+    aPresContext->GetDeviceContext (getter_AddRefs(devContext));
+    nscoord thresholdX = 0, thresholdY = 0;
+    if (devContext) {
       float pixelsToTwips = 0.0;
       devContext->GetDevUnitsToTwips(pixelsToTwips);
-      twipDeltaToStartDrag =  (long)(pixelDeltaToStartDrag * pixelsToTwips);
+      thresholdX = NSIntPixelsToTwips(pixelThresholdX, pixelsToTwips);
+      thresholdY = NSIntPixelsToTwips(pixelThresholdY, pixelsToTwips);
     }
  
     // fire drag gesture if mouse has moved enough
-    if ( abs(aEvent->point.x - mGestureDownPoint.x) > twipDeltaToStartDrag ||
-          abs(aEvent->point.y - mGestureDownPoint.y) > twipDeltaToStartDrag ) {
+    if (abs(aEvent->point.x - mGestureDownPoint.x) > thresholdX ||
+        abs(aEvent->point.y - mGestureDownPoint.y) > thresholdY) {
 #ifdef CLICK_HOLD_CONTEXT_MENUS
       // stop the click-hold before we fire off the drag gesture, in case
       // it takes a long time

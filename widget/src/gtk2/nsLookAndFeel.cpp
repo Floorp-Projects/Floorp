@@ -349,10 +349,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_SelectTextfieldsOnKeyFocus:
-      // Select textfield content when focused by kbd
-      // used by nsEventStateManager::sTextfieldSelectModel
-      aMetric = 1;
-      break;
+        // Select textfield content when focused by kbd
+        // used by nsEventStateManager::sTextfieldSelectModel
+        aMetric = 1;
+        break;
     case eMetric_SubmenuDelay:
         aMetric = 200;
         break;
@@ -362,6 +362,18 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_DragFullWindow:
         aMetric = 1;
+        break;
+    case eMetric_DragThresholdX:
+    case eMetric_DragThresholdY:
+        {
+            GtkWidget* box = gtk_hbox_new(FALSE, 5);
+            gint threshold = 0;
+            g_object_get(gtk_widget_get_settings(box),
+                         "gtk-dnd-drag-threshold", &threshold,
+                         NULL);
+            gtk_widget_destroy(box);
+            aMetric = threshold;
+        }
         break;
     case eMetric_ScrollArrowStyle:
         aMetric = eMetric_ScrollArrowStyleSingle;

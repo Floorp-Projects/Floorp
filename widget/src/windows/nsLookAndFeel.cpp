@@ -354,6 +354,16 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         }
         break;
 
+    case eMetric_DragThresholdX:
+        // The system metric is the number of pixels at which a drag should
+        // start.  Our look and feel metric is the number of pixels you can
+        // move before starting a drag, so subtract 1.
+
+        aMetric = ::GetSystemMetrics(SM_CXDRAG) - 1;
+        break;
+    case eMetric_DragThresholdY:
+        aMetric = ::GetSystemMetrics(SM_CYDRAG) - 1;
+        break;
     case eMetric_ScrollArrowStyle:
         aMetric = eMetric_ScrollArrowStyleSingle;
         break;
