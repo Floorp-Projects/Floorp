@@ -249,6 +249,14 @@ sub create {
                 return $var;
             },
 
+            # Prevents line break on hyphens and whitespaces.
+            no_break => sub {
+                my ($var) = @_;
+                $var =~ s/ /\&nbsp;/g;
+                $var =~ s/-/\&#8209;/g;
+                return $var;
+            },
+
             xml => \&Bugzilla::Util::xml_quote ,
 
             # This filter escapes characters in a variable or value string for

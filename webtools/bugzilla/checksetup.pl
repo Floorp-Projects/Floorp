@@ -1249,6 +1249,7 @@ END
                 obsolete => sub { return $_; },
                 js => sub { return $_; },
                 html_linebreak => sub { return $_; },
+                no_break => sub { return $_; },
                 url_quote => sub { return $_; },
                 xml => sub { return $_; },
                 quoteUrls => sub { return $_; },

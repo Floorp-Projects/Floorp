@@ -59,7 +59,7 @@
                 [% IF flag.setter %]
                   [% flag.setter.nick FILTER html %]:
                 [% END %]
-                [%+ flag.type.name FILTER html %][% flag.status %]
+                [%+ flag.type.name FILTER html FILTER no_break %][% flag.status %]
                 [%+ IF flag.status == "?" && flag.requestee %]
                   ([% flag.requestee.nick FILTER html %])
                 [% END %]<br>
