@@ -87,16 +87,15 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     // If it's negative, we pretend it's not set.
     // If it's 0, it means force use of the operating system's logical resolution.
     // If it's positive, we use it as the logical resolution
-    nsIPref* prefs = nsnull;
     PRInt32 prefVal = -1;
-    nsresult res = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-      (nsISupports**) &prefs);
+    nsresult res;
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
     if (NS_SUCCEEDED(res) && prefs) {
       res = prefs->GetIntPref("browser.screen_resolution", &prefVal);
       if (! NS_SUCCEEDED(res)) {
         prefVal = -1;
       }
-      nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
 
     // Set OSVal to what the operating system thinks the logical resolution is.
