@@ -76,12 +76,12 @@ nsEntityConverter::LoadEntityProperties(nsIPersistentProperties* pEntities)
 	PRInt32	result;
 
 	key="entity.list.name";
-	nsresult rv = pEntities->GetProperty(key,mEntityListName);
+	nsresult rv = pEntities->GetStringProperty(key,mEntityListName);
 	NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
 	if (NS_FAILED(rv)) return;
 
 	key="entity.list.length";
-	rv = pEntities->GetProperty(key,value);
+	rv = pEntities->GetStringProperty(key,value);
 	NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
 	if (NS_FAILED(rv)) return;
 	mEntityListLength = value.ToInteger(&result);
@@ -96,7 +96,7 @@ nsEntityConverter::LoadEntityProperties(nsIPersistentProperties* pEntities)
 	{
 		key="entity.";
 		key.Append(i,10);
-		rv = pEntities->GetProperty(key,value);
+		rv = pEntities->GetStringProperty(key,value);
 		if (NS_FAILED(rv)) return;
 
 		PRInt32 offset = value.Find(":");

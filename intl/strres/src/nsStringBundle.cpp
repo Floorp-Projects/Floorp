@@ -120,7 +120,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
   nsAutoString name("");
   name.Append(aID, 10);
-  nsresult ret = mProps->GetProperty(name, aResult);
+  nsresult ret = mProps->GetStringProperty(name, aResult);
 
 #ifdef DEBUG_tao
   char *s = aResult.ToNewCString();
@@ -135,7 +135,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 nsresult
 nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
-  nsresult ret = mProps->GetProperty(aName, aResult);
+  nsresult ret = mProps->GetStringProperty(aName, aResult);
 #ifdef DEBUG_tao
   char *s = aResult.ToNewCString(),
        *ss = aName.ToNewCString();

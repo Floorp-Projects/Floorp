@@ -269,7 +269,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
       }
       value.Trim(trimThese, PR_TRUE, PR_TRUE);
       nsAutoString oldValue("");
-      mSubclass->SetProperty(key, value, oldValue);
+      mSubclass->SetStringProperty(key, value, oldValue);
     }
   }
   mIn->Close();
@@ -280,7 +280,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
+nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewValue,
   nsString& aOldValue)
 {
   // XXX The ToNewCString() calls allocate memory using "new" so this code
@@ -329,7 +329,7 @@ nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::GetProperty(const nsString& aKey, nsString& aValue)
+nsPersistentProperties::GetStringProperty(const nsString& aKey, nsString& aValue)
 {
   if (!mTable)
      return NS_ERROR_FAILURE;

@@ -96,7 +96,7 @@ nsURLProperties::~nsURLProperties()
 NS_IMETHODIMP nsURLProperties::Get(const nsString& aKey, nsString& oValue)
 {
   if(mDelegate)
-     return mDelegate->GetProperty(aKey, oValue);
+     return mDelegate->GetStringProperty(aKey, oValue);
   else 
      return NS_ERROR_FAILURE;
 }
