@@ -37,7 +37,7 @@
 #include "resgui.h"
 #include "uprefd.h"
 #include "mforms.h"
-#include "CConfigActiveScroller.h"
+#include <LScrollerView.h>
 #include "CHyperScroller.h"
 #include "macgui.h"
 #include "macutil.h"
@@ -135,7 +135,7 @@ static Boolean HasFormWidget(
  *	CWhiteScroller 
  * White background instead of gray 'wscr'
  ******************************************************************************/
-class CWhiteScroller: public CConfigActiveScroller
+class CWhiteScroller: public LScrollerView
 {
 public:
 	//friend class CHyperView;		// this class no longer exists
@@ -148,14 +148,14 @@ public:
 };
 
 CWhiteScroller::CWhiteScroller(LStream *inStream)
-	:	CConfigActiveScroller(inStream)
+	:	LScrollerView(inStream)
 {
 }
 
 // The only real routine. Sets background to white
 Boolean CWhiteScroller::FocusDraw(LPane* /*inSubPane*/)
 {
-	if (LScroller::FocusDraw())
+	if (LScrollerView::FocusDraw())
 	{
 		UGraphics::SetBack(CPrefs::White);
 		return TRUE;
@@ -176,7 +176,7 @@ void CWhiteScroller::DrawSelf()
 //	if ((mVerticalBar && mVerticalBar->IsVisible()) || (mHorizontalBar && mHorizontalBar->IsVisible()))
 //		::EraseRect(&frame);
 
-	LScroller::DrawSelf();	
+	LScrollerView::DrawSelf();	
 }
 
 /*********************************************************************
