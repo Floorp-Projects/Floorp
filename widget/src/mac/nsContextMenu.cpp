@@ -143,35 +143,10 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString &aLabel)
 NS_METHOD nsContextMenu::GetParent(nsISupports*& aParent)
 {
   aParent = nsnull;
-  if (nsnull != mMenuParent) {
-    return mMenuParent->QueryInterface(kISupportsIID,(void**)&aParent);
-  } else if (nsnull != mMenuBarParent) {
-    return mMenuBarParent->QueryInterface(kISupportsIID,(void**)&aParent);
+  if (mParent) {
+    return mParent->QueryInterface(kISupportsIID,(void**)&aParent);
   }
-
   return NS_ERROR_FAILURE;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsContextMenu::GetLabel(nsString &aText)
-{
-  aText = mLabel;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsContextMenu::SetLabel(const nsString &aText)
-{
-  mLabel = aText;
-
-  char* menuLabel = mLabel.ToNewCString();
-  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(menuLabel));
-  delete[] menuLabel;
-
-  mMacMenuID = mMacMenuIDCount;
-  mMacMenuIDCount++;
-
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -288,7 +263,7 @@ NS_METHOD nsContextMenu::RemoveItem(const PRUint32 aPos)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::RemoveAll()
+NS_METHOD nsContextMenu::RemoveAll()
 {
   return NS_OK;
 }
