@@ -2223,7 +2223,30 @@ CInstructionToken::CInstructionToken(const nsAString& aString) : CHTMLToken(eHTM
  */
 nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aFlag){
   mTextValue.AssignLiteral("<?");
-  nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
+  nsresult result=NS_OK;
+  PRBool done=PR_FALSE;
+  
+  while (NS_OK==result && !done) {
+    //Note, this call does *not* consume the >.
+    result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
+    if (NS_SUCCEEDED(result)) {
+      //In HTML, PIs end with a '>', in XML, they end with a '?>'. Cover both
+      //cases here.
+      if (!(aFlag & NS_IPARSER_FLAG_XML) || kQuestionMark==mTextValue.Last()) {
+        //This really is the end of the PI.
+        done=PR_TRUE;
+      }
+      //Need to append this character no matter what.
+      aScanner.GetChar(aChar);
+      mTextValue.Append(aChar);
+    }
+  }
+
+  if (kEOF==result && !aScanner.IsIncremental()) {
+    //Hide the EOF result because there is no more text coming.
+    result=NS_OK;
+  }
+
   return result;
 }
 
