@@ -148,24 +148,19 @@ function insertCell() {
   var row = document.getElementsByTagName("TR")[0];
   var refCell = document.getElementsByTagName("TD")[0];
   var cell = document.createElement("TD", null);
+  var text = document.createTextNode("inserted Cell");
+  cell.appendChild(text);
   row.insertBefore(cell, refCell);
-  dump("SCRIPT: inserted empty Cell as first cell in first row\n");
+  dump("SCRIPT: inserted  CELL as first cell in first row\n");
 }
 
 function appendCell() {
   var row = document.getElementsByTagName("TR")[0];
   var cell = document.createElement("TD", null);
-  row.appendChild(cell);
-  dump("SCRIPT: appended empty CELL in first ROW\n");
-}
-
-function appendCellWithContent() {
-  var row = document.getElementsByTagName("TR")[0];
-  var cell = document.createElement("TD", null);
-  var text = document.createTextNode("here is content in the cell from the script appendRowWithContent\n");
+  var text = document.createTextNode("appended Cell");
   cell.appendChild(text);
   row.appendChild(cell);
-  dump("SCRIPT: appended CELL with text content in first ROW\n");
+  dump("SCRIPT: appended CELL in first ROW\n");
 }
 
 function deleteCell() {
@@ -215,8 +210,6 @@ all delete buttons currently remove the first item of <type> found
 <INPUT TYPE="button" NAME="Ins Cell" VALUE="InsertCell" onClick="insertCell()" width=100>
 <INPUT TYPE="button" NAME="App Cell" VALUE="AppendCell" onClick="appendCell()" width=100>
 <INPUT TYPE="button" NAME="Del Cell" VALUE="DeleteCell" onClick="deleteCell()" width=100>
-<INPUT TYPE="button" NAME="App Cell with content" VALUE="AppendCell with content" onClick="appendCellWithContent()" width=100>
-<br>
 </form>
 
 </BODY></HTML>
