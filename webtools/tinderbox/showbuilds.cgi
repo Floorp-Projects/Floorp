@@ -231,7 +231,7 @@ sub display_build_table_row {
     my ($tt, $hour_color);
     $tt = &print_time($build_time_times->[$t]);
 
-    if( $tree2 ne "" || $form{nocrap}){
+    if( $tree2 ne ""){
         $qr = "";
         $er = "";
     }
