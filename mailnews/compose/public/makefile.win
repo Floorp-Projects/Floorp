@@ -30,6 +30,7 @@ XPIDLSRCS =										\
 				.\nsIMsgDraft.idl			\
 				.\nsISmtpServer.idl			\
 				.\nsISmtpUrl.idl			\
+				.\nsISmtpService.idl		\
 				$(NULL)
 
 ################################################################################
@@ -40,7 +41,6 @@ EXPORTS =										\
 				nsMsgCompFieldsFact.h			\
 				nsMsgSendFact.h					\
 				nsMsgSendLaterFact.h			\
-				nsISmtpService.h				\
 				$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
