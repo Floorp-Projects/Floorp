@@ -219,6 +219,8 @@ nsHTMLFragmentContentSink::WillBuildModel(void)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
+  FlushText();
+
   return NS_OK;
 }
 
@@ -568,8 +570,6 @@ nsHTMLFragmentContentSink::AddText(const nsString& aString)
     offset += amount;
     addLen -= amount;
   }
-
-  FlushText();
 
   return NS_OK;
 }
