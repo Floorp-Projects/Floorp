@@ -33,6 +33,7 @@ CPPSRCS =				\
 	nsEmptyCursor.cpp               \
 	nsInMemoryDataSource.cpp        \
 	nsRDFContentSink.cpp		\
+	nsRDFParserUtils.cpp		\
 	nsRDFService.cpp                \
 	nsRDFXMLDataSource.cpp		\
 	rdfutil.cpp			\
