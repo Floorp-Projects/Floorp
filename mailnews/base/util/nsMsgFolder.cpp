@@ -1598,6 +1598,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
 #ifdef DEBUG
   /* examples: */
   /* nsPath2URI(mailbox_message:/, /home/sspitzer/mozillamail/Drafts, ??)->mailbox_message://Drafts */
+  /* nsPath2URI(news_message:/, /tmp/mozillanews/nnn, ??)->news_message://nnn */
   printf("nsPath2URI(%s, %s, ??)", rootURI, (const char *)spec);
 #endif
 
