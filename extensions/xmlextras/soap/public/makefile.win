@@ -31,7 +31,7 @@ XPIDLSRCS = .\nsISOAPCall.idl  		\
 	    .\nsISOAPTransportListener.idl \
 	    $(NULL)
 
-MODULE=xmlextras 
+MODULE=xmlsoap
 
 include <$(DEPTH)\config\rules.mak>
 
