@@ -16,36 +16,27 @@
  * Reserved.
  */
 
-#ifndef nsIDnsService_h___
-#define nsIDnsService_h___
+#include "nsISupports.idl"
 
-#include "nsISupports.h"
-#include "nsIDnsListener.h"
+%{C++
 
-class nsIDnsListener;
-class nsICancelable;
-
-
-#define NS_IDNSSERVICE_IID                           \
-{ /* 718e7c80-f8b8-11d2-b951-c80918051d3c */         \
-    0x718e7c80,                                      \
-    0xf8b8,                                          \
-    0x11d2,                                          \
+#define NS_DNSSERVICE_CID                              \
+{ /* 718e7c81-f8b8-11d2-b951-c80918051d3c */           \
+    0x718e7c81,                                        \
+    0xf8b8,                                            \
+    0x11d2,                                            \
     { 0xb9, 0x51, 0xc8, 0x09, 0x18, 0x05, 0x1d, 0x3c } \
 }
 
+%}
 
+interface nsIRequest;
+interface nsIDNSListener;
 
-class nsIDnsService : public nsISupports
+[scriptable, uuid(598f2f80-206f-11d3-9348-00104ba0fd40)]
+interface nsIDNSService : nsISupports
 {
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDNSSERVICE_IID);
-
-    NS_IMETHOD Lookup(const char*      hostname,
-                      nsIDnsListener*  listener,
-                      nsICancelable*  *dnsRequest) = 0;
-		
-
+    nsIRequest Lookup(in nsISupports ctxt, in string hostname,
+                      in nsIDNSListener listener);
 };
 
-#endif /* nsIDnsService_h___ */

@@ -47,9 +47,6 @@ INCS = $(INCS)                  \
 
 include <$(DEPTH)\config\rules.mak>
 
-foo::
-        echo $(INCS)
-
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 

@@ -35,6 +35,11 @@ class nsFileTransport : public nsIChannel, public nsIRunnable
 public:
     NS_DECL_ISUPPORTS
 
+    // nsIRequest methods:
+    NS_IMETHOD Cancel(void);
+    NS_IMETHOD Suspend(void);
+    NS_IMETHOD Resume(void);
+
     // nsIChannel methods:
     NS_IMETHOD GetURI(nsIURI * *aURL);
     NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval);
@@ -48,9 +53,6 @@ public:
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
-    NS_IMETHOD Cancel(void);
-    NS_IMETHOD Suspend(void);
-    NS_IMETHOD Resume(void);
 
     // nsIRunnable methods:
     NS_IMETHOD Run(void);

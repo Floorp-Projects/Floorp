@@ -102,6 +102,27 @@ NS_IMPL_ADDREF(nsHTTPChannel);
 NS_IMPL_RELEASE(nsHTTPChannel);
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIRequest methods:
+
+NS_IMETHODIMP
+nsHTTPChannel::Cancel(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::Suspend(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::Resume(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
 
 NS_IMETHODIMP
@@ -161,24 +182,6 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::Cancel(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::Suspend(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::Resume(void)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

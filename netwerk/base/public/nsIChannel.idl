@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsISupports.idl"
+#include "nsIRequest.idl"
 
 interface nsIURI;
 interface nsIInputStream;
@@ -31,7 +31,7 @@ interface nsIStreamListener;
  * location/destination of the data being accessed. 
  */
 [scriptable, uuid(89f4afe0-1868-11d3-9337-00104ba0fd40)]
-interface nsIChannel : nsISupports
+interface nsIChannel : nsIRequest
 {
     /**
      * Returns the URL to which the channel refers.
@@ -87,25 +87,5 @@ interface nsIChannel : nsISupports
                     in nsIEventQueue eventQueue,
                     in nsIStreamObserver observer);
 
-    /**
-     * Cancels the current request. This will close any open input or
-     * output streams and terminate any async requests. 
-     */
-    void Cancel();
-
-    /**
-     * Suspends the current requests. This may have the effect of closing
-     * any underlying transport (in order to free up resources), although
-     * any open streams remain logically opened and will continue delivering
-     * data when the transport is resumed. 
-     */
-    void Suspend();
-
-    /**
-     * Resumes the current request. This may have the effect of re-opening
-     * any underlying transport and will resume the delivery of data to 
-     * any open streams. 
-     */
-    void Resume();
 };
 

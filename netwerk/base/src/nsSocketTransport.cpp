@@ -847,7 +847,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketTransport, nsIChannel::GetIID());
 
 //
 // --------------------------------------------------------------------------
-// nsIChannel implementation...
+// nsIRequest implementation...
 // --------------------------------------------------------------------------
 //
 NS_IMETHODIMP
@@ -922,6 +922,11 @@ nsSocketTransport::Resume(void)
   return rv;
 }
 
+//
+// --------------------------------------------------------------------------
+// nsIChannel implementation...
+// --------------------------------------------------------------------------
+//
 NS_IMETHODIMP
 nsSocketTransport::GetURI(nsIURI * *aURL)
 {

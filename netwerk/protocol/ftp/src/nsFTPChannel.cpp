@@ -122,6 +122,27 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIRequest methods:
+
+NS_IMETHODIMP
+nsFTPChannel::Cancel(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::Suspend(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::Resume(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
 
 NS_IMETHODIMP
@@ -161,24 +182,6 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
                          nsISupports *ctxt,
                          nsIEventQueue *eventQueue,
                          nsIStreamObserver *observer)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::Cancel(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::Suspend(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::Resume(void)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

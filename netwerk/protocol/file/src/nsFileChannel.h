@@ -31,6 +31,18 @@ public:
     NS_DECL_ISUPPORTS
 
     ////////////////////////////////////////////////////////////////////////////
+    // from nsIRequest:
+
+    /* void Cancel (); */
+    NS_IMETHOD Cancel();
+
+    /* void Suspend (); */
+    NS_IMETHOD Suspend();
+
+    /* void Resume (); */
+    NS_IMETHOD Resume();
+
+    ////////////////////////////////////////////////////////////////////////////
     // from nsIChannel:
 
     /* readonly attribute nsIURI URI; */
@@ -47,15 +59,6 @@ public:
 
     /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIEventQueue eventQueue, in nsIStreamObserver observer); */
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIEventQueue *eventQueue, nsIStreamObserver *observer);
-
-    /* void Cancel (); */
-    NS_IMETHOD Cancel();
-
-    /* void Suspend (); */
-    NS_IMETHOD Suspend();
-
-    /* void Resume (); */
-    NS_IMETHOD Resume();
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIFileChannel:

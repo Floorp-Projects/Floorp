@@ -17,35 +17,35 @@
  */
 
 #include "nsDnsService.h"
-#include "nsIDnsListener.h"
-#include "nsICancelable.h"
+#include "nsIDNSListener.h"
+#include "nsIRequest.h"
 #include "prnetdb.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsDnsRequest;
+class nsDNSRequest;
 
-class nsDnsLookup
+class nsDNSLookup
 {
 public:
-    nsresult AddDnsRequest(nsDnsRequest* request);
+    nsresult AddDNSRequest(nsDNSRequest* request);
 
     const char*     mHostName;
     PRHostEnt       mHostEntry;         // NSPR or platform specific hostent?
     PRIntn          mCount;
     PRBool          mComplete;
     PRIntn          mIndex;             // XXX - for round robin
-    void *          mListenerQueue;     // XXX - maintain a list of nsDnsRequests.
+    void *          mListenerQueue;     // XXX - maintain a list of nsDNSRequests.
 };
 
 
-class nsDnsRequest : public nsICancelable
+class nsDNSRequest : public nsIRequest
 {
-    nsIDnsListener* mListener;
-    nsDnsLookup*    mHostNameLookup;
+    nsIDNSListener* mListener;
+    nsDNSLookup*    mHostNameLookup;
 
-    // nsICancelable methods:
+    // nsIRequest methods:
     NS_IMETHOD Cancel(void);
     NS_IMETHOD Suspend(void);
     NS_IMETHOD Resume(void);
@@ -53,17 +53,17 @@ class nsDnsRequest : public nsICancelable
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDnsService methods:
+// nsDNSService methods:
 
-nsDnsService::nsDnsService()
+nsDNSService::nsDNSService()
 {
     NS_INIT_REFCNT();
 }
 
 nsresult
-nsDnsService::Init()
+nsDNSService::Init()
 {
-//    initialize dns cache (persistent?)
+//    initialize DNS cache (persistent?)
 #if defined(XP_MAC)
 //    create Open Transport Service Provider for DNS Lookups
 #elif defined(_WIN)
@@ -76,7 +76,7 @@ nsDnsService::Init()
 }
 
 
-nsDnsService::~nsDnsService()
+nsDNSService::~nsDNSService()
 {
 //    deallocate cache
 #if defined(XP_MAC)
@@ -89,58 +89,59 @@ nsDnsService::~nsDnsService()
 }
 
 
-NS_IMPL_ISUPPORTS(nsDnsService, nsIDnsService::GetIID());
+NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIDnsService methods:
+// nsIDNSService methods:
 
 
 NS_IMETHODIMP
-nsDnsService::Lookup(const char*     hostname,
-                     nsIDnsListener* listener,
-                     nsICancelable*  *dnsRequest)
+nsDNSService::Lookup(nsISupports*    ctxt,
+                     const char*     hostname,
+                     nsIDNSListener* listener,
+                     nsIRequest*     *DNSRequest)
 {
-	nsresult	rv;
-	PRStatus    status;
-	nsHostEnt*  hostentry;
+    nsresult	rv;
+    PRStatus    status;
+    nsHostEnt*  hostentry;
 /*
-    check cache for existing nsDnsLookup with matching hostname
+    check cache for existing nsDNSLookup with matching hostname
     call OnStartLookup
-    if (nsDnsLookup doesn't exist) {
-        create nsDnsLookup for this hostname
+    if (nsDNSLookup doesn't exist) {
+        create nsDNSLookup for this hostname
         kick off DNS Lookup
     }
 
-    if (nsDnsLookup already has at least one address) {
+    if (nsDNSLookup already has at least one address) {
         call OnFound
     }
 
-    if (nsDnsLookup is already complete) {
+    if (nsDNSLookup is already complete) {
         call OnStopLookup
         return null
     }
  
-    create nsDnsRequest
-    queue nsDnsRequest on nsDnsLookup  // XXXX - potential race condition here
-    return nsDnsRequest
+    create nsDNSRequest
+    queue nsDNSRequest on nsDNSLookup  // XXXX - potential race condition here
+    return nsDNSRequest
 */
 
-	// temporary SYNC version
+    // temporary SYNC version
     hostentry = new nsHostEnt;
     if (!hostentry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-	rv = listener->OnStartLookup(hostname);
+    rv = listener->OnStartLookup(ctxt, hostname);
 	
 	
     status = PR_GetHostByName(hostname, hostentry->buffer, PR_NETDB_BUF_SIZE, &hostentry->hostEnt);
     
     if (PR_SUCCESS == status)
-	    rv = listener->OnFound(hostname, hostentry);	// turn ownership of hostentry over to listener?
-	else
-		delete hostentry;
+        rv = listener->OnFound(ctxt, hostname, hostentry);	// turn ownership of hostentry over to listener?
+    else
+        delete hostentry;
 	
-	rv = listener->OnStopLookup(hostname);
+    rv = listener->OnStopLookup(ctxt, hostname);
 	
-	return NS_OK;
+    return NS_OK;
 }
