@@ -520,7 +520,7 @@ class MoreWindows extends JDialog implements ActionListener {
             }
         }
     }
-    
+
     class MouseHandler extends MouseAdapter {
         public void mouseClicked(MouseEvent e) {
             if (e.getClickCount() == 2) {
@@ -540,7 +540,7 @@ class MoreWindows extends JDialog implements ActionListener {
         cancelButton.addActionListener(this);
         setButton.addActionListener(this);
         getRootPane().setDefaultButton(setButton);
-        
+
         //main part of the dialog
         list = new JList(new DefaultListModel());
         DefaultListModel model = (DefaultListModel)list.getModel();
@@ -562,7 +562,7 @@ class MoreWindows extends JDialog implements ActionListener {
         //XXX: it's taller than it is:
         listScroller.setMinimumSize(new Dimension(250, 80));
         listScroller.setAlignmentX(LEFT_ALIGNMENT);
-        
+
         //Create a container so that we can add a title around
         //the scroll pane.  Can't add a title directly to the
         //scroll pane because its background would be white.
@@ -575,7 +575,7 @@ class MoreWindows extends JDialog implements ActionListener {
         listPane.add(Box.createRigidArea(new Dimension(0,5)));
         listPane.add(listScroller);
         listPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        
+
         //Lay out the buttons from left to right.
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.X_AXIS));
@@ -584,7 +584,7 @@ class MoreWindows extends JDialog implements ActionListener {
         buttonPane.add(cancelButton);
         buttonPane.add(Box.createRigidArea(new Dimension(10, 0)));
         buttonPane.add(setButton);
-        
+
         //Put everything together, using the content pane's BorderLayout.
         Container contentPane = getContentPane();
         contentPane.add(listPane, BorderLayout.CENTER);
@@ -611,14 +611,14 @@ class FindFunction extends JDialog implements ActionListener {
     JButton setButton;
     JButton refreshButton;
     JButton cancelButton;
-    
+
     public String showDialog(Component comp) {
         value = null;
         setLocationRelativeTo(comp);
         setVisible(true);
         return value;
     }
-    
+
     private void setValue(String newValue) {
         value = newValue;
         list.setSelectedValue(value, true);
@@ -643,16 +643,7 @@ class FindFunction extends JDialog implements ActionListener {
             DebuggableScript script = sourceEntry.fnOrScript;
             if (script != null) {
                 String sourceName = script.getSourceName();
-                int[] lns = script.getLineNumbers();
-                int lineNumber = -1;
-                for (int i = 0; i != lns.length; ++i) {
-                    if (lineNumber == -1) {
-                        lineNumber = lns[i];
-                    } else if (lns[i] < lineNumber) {
-                        lineNumber = lns[i];
-                    }
-                }
-
+                int lineNumber = FrameHelper.getFirstLine(script);
                 FileWindow w = db.getFileWindow(sourceName);
                 if (w == null) {
                     (new CreateFileWindow(db, sourceName, sourceEntry.source.toString(), lineNumber)).run();
@@ -1146,19 +1137,19 @@ class MyTreeTable extends JTreeTable {
     public MyTreeTable(TreeTableModel model) {
         super(model);
     }
-    
+
     public JTree resetTree(TreeTableModel treeTableModel) {
         tree = new TreeTableCellRenderer(treeTableModel);
-        
+
         // Install a tableModel representing the visible rows in the tree.
         super.setModel(new TreeTableModelAdapter(treeTableModel, tree));
-        
+
         // Force the JTable and JTree to share their row selection models.
         ListToTreeSelectionModelWrapper selectionWrapper = new
             ListToTreeSelectionModelWrapper();
         tree.setSelectionModel(selectionWrapper);
         setSelectionModel(selectionWrapper.getListSelectionModel());
-        
+
         // Make the tree and table row heights the same.
         if (tree.getRowHeight() < 1) {
             // Metal looks better like this.
@@ -1190,17 +1181,17 @@ class MyTreeTable extends JTreeTable {
             // button).
             if (me.getModifiers() == 0 ||
                 ((me.getModifiers() & (InputEvent.BUTTON1_MASK|1024)) != 0 &&
-                 (me.getModifiers() & 
-                  (InputEvent.SHIFT_MASK | 
-                   InputEvent.CTRL_MASK | 
-                   InputEvent.ALT_MASK | 
-                   InputEvent.BUTTON2_MASK | 
+                 (me.getModifiers() &
+                  (InputEvent.SHIFT_MASK |
+                   InputEvent.CTRL_MASK |
+                   InputEvent.ALT_MASK |
+                   InputEvent.BUTTON2_MASK |
                    InputEvent.BUTTON3_MASK |
-                   64   | //SHIFT_DOWN_MASK 
+                   64   | //SHIFT_DOWN_MASK
                    128  | //CTRL_DOWN_MASK
                    512  | // ALT_DOWN_MASK
-                   2048 | //BUTTON2_DOWN_MASK 
-                   4096   //BUTTON3_DOWN_MASK 
+                   2048 | //BUTTON2_DOWN_MASK
+                   4096   //BUTTON3_DOWN_MASK
                    )) == 0)) {
                 int row = rowAtPoint(me.getPoint());
                 for (int counter = getColumnCount() - 1; counter >= 0;
@@ -1516,14 +1507,15 @@ class ContextWindow extends JPanel implements ActionListener {
         if (e.getActionCommand().equals("ContextSwitch")) {
             ContextHelper helper = new ContextHelper();
             Context cx = db.getCurrentContext();
-            DebuggableEngine engine = cx.getDebuggableEngine();
+            ContextData contextData = ContextData.get(cx);
             helper.attach(cx);
             int frameIndex = context.getSelectedIndex();
             context.setToolTipText(toolTips.elementAt(frameIndex).toString());
             Scriptable obj;
-            int frameCount = engine.getFrameCount();
+            int frameCount = contextData.getFrameCount();
             if (frameIndex < frameCount) {
-                obj = engine.getFrame(frameIndex).getVariableObject();
+                FrameHelper frame = contextData.getFrame(frameIndex);
+                obj = frame.getVariableObject();
             } else {
                 helper.reset();
                 return;
@@ -1723,12 +1715,10 @@ class SetFileText implements Runnable {
 
 class UpdateContext implements Runnable {
     Main db;
-    Context cx;
-    DebuggableEngine engine;
+    ContextData contextData;
     UpdateContext(Main db, Context cx) {
         this.db = db;
-        this.cx = cx;
-        this.engine = cx.getDebuggableEngine();
+        this.contextData = ContextData.get(cx);
     }
 
     public void run() {
@@ -1736,11 +1726,11 @@ class UpdateContext implements Runnable {
         JComboBox ctx = db.context.context;
         Vector toolTips = db.context.toolTips;
         db.context.disableUpdate();
-        int frameCount = engine.getFrameCount();
+        int frameCount = contextData.getFrameCount();
         ctx.removeAllItems();
         toolTips.clear();
         for (int i = 0; i < frameCount; i++) {
-            DebugFrame frame = engine.getFrame(i);
+            FrameHelper frame = contextData.getFrame(i);
             String sourceName = frame.getSourceName();
             if (sourceName != null && sourceName.endsWith("(eval)")) {
                 sourceName = sourceName.substring(0, sourceName.length() - 6);
@@ -1854,6 +1844,19 @@ class Menubar extends JMenuBar implements ActionListener {
         breakOnExceptions.addActionListener(this);
         breakOnExceptions.setSelected(false);
         debugMenu.add(breakOnExceptions);
+
+        breakOnEnter = new JCheckBoxMenuItem("Break on Function Enter");
+        breakOnEnter.setMnemonic('X');
+        breakOnEnter.addActionListener(this);
+        breakOnEnter.setSelected(false);
+        debugMenu.add(breakOnEnter);
+
+        breakOnReturn = new JCheckBoxMenuItem("Break on Function Return");
+        breakOnReturn.setMnemonic('X');
+        breakOnReturn.addActionListener(this);
+        breakOnReturn.setSelected(false);
+        debugMenu.add(breakOnReturn);
+
         add(fileMenu);
         add(editMenu);
         //add(plafMenu);
@@ -1879,12 +1882,18 @@ class Menubar extends JMenuBar implements ActionListener {
             plaf_name = "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
         } else if (cmd.equals("Motif")) {
             plaf_name = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
-        } else if (cmd.equals("Break on Exceptions")) {
-            db.setBreakOnExceptions(breakOnExceptions.isSelected());
-            return;
         } else {
-            db.actionPerformed(e);
-            return;
+            Object source = e.getSource();
+            if (source == breakOnExceptions) {
+                db.setBreakOnExceptions(breakOnExceptions.isSelected());
+            }else if (source == breakOnEnter) {
+                db.breakOnEnter = breakOnEnter.isSelected();
+            }else if (source == breakOnReturn) {
+                db.breakOnReturn = breakOnReturn.isSelected();
+            }else {
+                db.actionPerformed(e);
+            }
+               return;
         }
         try {
             UIManager.setLookAndFeel(plaf_name);
@@ -1936,6 +1945,8 @@ class Menubar extends JMenuBar implements ActionListener {
     Main db;
     JMenu windowMenu;
     JCheckBoxMenuItem breakOnExceptions;
+    JCheckBoxMenuItem breakOnEnter;
+    JCheckBoxMenuItem breakOnReturn;
 };
 
 class EnterInterrupt implements Runnable {
@@ -2001,8 +2012,8 @@ class OpenFile implements Runnable {
     }
     public void run() {
         Context cx = Context.enter();
-        DebuggableEngine engine = cx.getDebuggableEngine();
-        engine.setBreakNextLine(true);
+        ContextData contextData = ContextData.get(cx);
+        contextData.breakNextLine = true;
         try {
             cx.compileReader(scope, new FileReader(fileName),
                              fileName, 1, null);
@@ -2033,8 +2044,8 @@ class LoadFile implements Runnable {
     }
     public void run() {
         Context cx = Context.enter();
-        DebuggableEngine engine = cx.getDebuggableEngine();
-        engine.setBreakNextLine(true);
+        ContextData contextData = ContextData.get(cx);
+        contextData.breakNextLine = true;
         try {
             cx.evaluateReader(scope, new FileReader(fileName),
                               fileName, 1, null);
@@ -2086,6 +2097,102 @@ class ContextHelper {
     }
 }
 
+class ContextData {
+    static ContextData get(Context cx) {
+        return (ContextData)cx.getDebuggerContextData();
+    }
+
+    int getFrameCount() {
+        return frameStack.size();
+    }
+
+    FrameHelper getFrame(int frameNumber) {
+        return (FrameHelper) frameStack.elementAt(frameStack.size() - frameNumber - 1);
+    }
+
+    void pushFrame(FrameHelper frame) {
+        frameStack.push(frame);
+    }
+
+    void popFrame() {
+        frameStack.pop();
+    }
+
+    Stack frameStack = new Stack();
+    boolean breakNextLine;
+}
+
+class FrameHelper implements DebugFrame {
+
+    FrameHelper(Context cx, Main master, Scriptable scope,
+                DebuggableScript fnOrScript)
+    {
+        this.master = master;
+        this.contextData = ContextData.get(cx);
+        this.scope = scope;
+        this.fnOrScript = fnOrScript;
+        this.lineNumber = getFirstLine(fnOrScript);
+
+        contextData.pushFrame(this);
+    }
+
+    static int getFirstLine(DebuggableScript fnOrScript) {
+        int[] lns = fnOrScript.getLineNumbers();
+        int lineNumber = -1;
+        for (int i = 0; i != lns.length; ++i) {
+            if (lineNumber == -1) {
+                lineNumber = lns[i];
+            } else if (lns[i] < lineNumber) {
+                lineNumber = lns[i];
+            }
+        }
+        return lineNumber;
+    }
+
+    public void setLineNumber(int lineNumber) {
+        this.lineNumber = lineNumber;
+    }
+
+    public void onLineChange(Context cx, int lineNumber, boolean breakpoint) {
+        this.lineNumber = lineNumber;
+        if (breakpoint || contextData.breakNextLine) {
+            master.handleBreakpointHit(cx);
+        }
+    }
+
+    public void onExceptionThrown(Context cx, Throwable exception) {
+        master.handleExceptionThrown(cx, exception, this);
+    }
+
+    public void onExit(Context cx, boolean byThrow, Object resultOrException) {
+        if (master.breakOnReturn && !byThrow) {
+            master.handleBreakpointHit(cx);
+        }
+        contextData.popFrame();
+    }
+
+    Scriptable getVariableObject() {
+        return scope;
+    }
+
+    String getSourceName() {
+        return fnOrScript.getSourceName();
+    }
+
+    int getLineNumber() {
+        return lineNumber;
+    }
+
+    DebuggableScript getScript() {
+        return fnOrScript;
+    }
+
+    private Main master;
+    private ContextData contextData;
+    private Scriptable scope;
+    private DebuggableScript fnOrScript;
+    private int lineNumber;
+}
 
 public class Main extends JFrame implements Debugger, ContextListener {
 
@@ -2096,9 +2203,10 @@ public class Main extends JFrame implements Debugger, ContextListener {
     static Thread mainThread; // thread used to run the shell
 
     public void contextCreated(Context cx) {
+
         synchronized (contexts) {
-            DebuggableEngine engine = cx.getDebuggableEngine();
-            engine.setDebugger(this);
+            ContextData contextData = new ContextData();
+            cx.setDebugger(this, contextData);
             cx.setGeneratingDebug(true);
             cx.setOptimizationLevel(-1);
             // if the user pressed "Break" or if this thread is the shell's
@@ -2106,7 +2214,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             // with a file argument on the command line it will
             // break at the start of the file
             if (breakFlag || Thread.currentThread() == mainThread) {
-                engine.setBreakNextLine(true);
+                contextData.breakNextLine = true;
             }
         }
     }
@@ -2118,7 +2226,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         // in interrupted)
         synchronized (contexts) {
             if (!contexts.contains(cx)) {
-                if (cx.getDebuggableEngine().getDebugger() == this) {
+                if (cx.getDebugger() == this) {
                     contexts.add(cx);
                 }
             }
@@ -2144,7 +2252,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             Iterator iter = contexts.iterator();
             while (iter.hasNext()) {
                 Context cx = (Context)iter.next();
-                cx.getDebuggableEngine().setBreakNextLine(true);
+                ContextData.get(cx).breakNextLine = true;
             }
         }
     }
@@ -2218,7 +2326,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             sourceName = "<stdin>";
         }
         if (sourceName.endsWith("(eval)")) {
-            String origSourceName = 
+            String origSourceName =
                 sourceName.substring(0, sourceName.length() - 6);
             Vector v = (Vector)sourceNames.get(origSourceName);
             if (v != null) {
@@ -2246,15 +2354,37 @@ public class Main extends JFrame implements Debugger, ContextListener {
         loadedFile(sourceName, source.toString());
     }
 
-    public void handleBreakpointHit(Context cx) {
+    void handleBreakpointHit(Context cx) {
         breakFlag = false;
         interrupted(cx);
     }
 
-    public void handleExceptionThrown(Context cx, Object e) {
+    private static Object unwrapException(Object ex) {
+        for (;;) {
+            if (ex instanceof JavaScriptException) {
+                ex = ScriptRuntime.unwrapJavaScriptException
+                            ((JavaScriptException)ex);
+            }else if (ex instanceof EcmaError) {
+                ex = ((EcmaError)ex).getErrorObject();
+            }else if (ex instanceof NativeJavaObject) {
+                ex = ((NativeJavaObject)ex).unwrap();
+                break;
+            }else if (ex instanceof WrappedException) {
+                Object w = ((WrappedException)ex).unwrap();
+                if (w instanceof Throwable) {
+                    ex = w;
+                    continue;
+                }
+                break;
+            }else {
+                break;
+            }
+        }
+        return ex;
+    }
+
+    void handleExceptionThrown(Context cx, Throwable ex, FrameHelper frame) {
         if (breakOnExceptions) {
-            DebuggableEngine engine = cx.getDebuggableEngine();
-            DebugFrame frame = engine.getFrame(0);
             String sourceName = frame.getSourceName();
             if (sourceName != null && sourceName.endsWith("(eval)")) {
                 sourceName = sourceName.substring(0, sourceName.length() - 6);
@@ -2270,9 +2400,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             } else {
                 w = getFileWindow(sourceName);
             }
-            if (e instanceof NativeJavaObject) {
-                e = ((NativeJavaObject)e).unwrap();
-            }
+            Object e = unwrapException(ex);
             String msg = e.toString();
             if (msg == null || msg.length() == 0) {
                 msg = e.getClass().toString();
@@ -2290,6 +2418,17 @@ public class Main extends JFrame implements Debugger, ContextListener {
             //}
             interrupted(cx);
         }
+    }
+
+    public DebugFrame enterFrame(Context cx, Scriptable scope,
+                          Scriptable thisObj, Object[] args,
+                          DebuggableScript fnOrScript)
+    {
+        FrameHelper frame = new FrameHelper(cx, this, scope, fnOrScript);
+        if (breakOnEnter) {
+            handleBreakpointHit(cx);
+        }
+        return frame;
     }
 
     /* end Debugger interface */
@@ -2490,17 +2629,17 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     void contextSwitch (int frameIndex) {
         Context cx = getCurrentContext();
-        DebuggableEngine engine = cx.getDebuggableEngine();
+        ContextData contextData = ContextData.get(cx);
         ContextHelper helper = new ContextHelper();
         helper.attach(cx);
         if (cx != null) {
-            int frameCount = engine.getFrameCount();
+            int frameCount = contextData.getFrameCount();
             if (frameIndex < 0 || frameIndex >= frameCount) {
                 helper.reset();
                 return;
             }
             this.frameIndex = frameIndex;
-            DebugFrame frame = engine.getFrame(frameIndex);
+            FrameHelper frame = contextData.getFrame(frameIndex);
             String sourceName = frame.getSourceName();
             if (sourceName == null || sourceName.equals("<stdin>")) {
                 console.show();
@@ -2597,7 +2736,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
         do {
             currentContext = cx;
-            DebuggableEngine engine = cx.getDebuggableEngine();
+            ContextData contextData = ContextData.get(cx);
             Thread thread = Thread.currentThread();
             statusBar.setText("Thread: " + thread.toString());
             ThreadState state = (ThreadState)threadState.get(thread);
@@ -2606,9 +2745,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 stopAtFrameDepth = state.stopAtFrameDepth;
             }
             if (runToCursorFile != null && thread == runToCursorThread) {
-                int frameCount = engine.getFrameCount();
+                int frameCount = contextData.getFrameCount();
                 if (frameCount > 0) {
-                    DebugFrame frame = engine.getFrame(0);
+                    FrameHelper frame = contextData.getFrame(0);
                     String sourceName = frame.getSourceName();
                     if (sourceName != null) {
                         if (sourceName.endsWith("(eval)")) {
@@ -2634,7 +2773,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 }
             }
             if (stopAtFrameDepth > 0) {
-                if (engine.getFrameCount() > stopAtFrameDepth) {
+                if (contextData.getFrameCount() > stopAtFrameDepth) {
                     break;
                 }
             }
@@ -2642,18 +2781,18 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 state.stopAtFrameDepth = -1;
             }
             threadState.remove(thread);
-            int frameCount = engine.getFrameCount();
+            int frameCount = contextData.getFrameCount();
             this.frameIndex = frameCount -1;
             int line = 0;
             if (frameCount == 0) {
                 break;
             }
-            DebugFrame frame = engine.getFrame(0);
+            FrameHelper frame = contextData.getFrame(0);
             String fileName = frame.getSourceName();
             if (fileName.endsWith("(eval)")) {
                 fileName = fileName.substring(0, fileName.length() - 6);
             }
-            engine.setBreakNextLine(false);
+            contextData.breakNextLine = false;
             line = frame.getLineNumber();
             int enterCount = 0;
             boolean isDispatchThread =
@@ -2754,8 +2893,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
             }
             switch (returnValue) {
             case STEP_OVER:
-                engine.setBreakNextLine(true);
-                stopAtFrameDepth = engine.getFrameCount();
+                contextData.breakNextLine = true;
+                stopAtFrameDepth = contextData.getFrameCount();
                 if (state == null) {
                     state = new ThreadState();
                 }
@@ -2763,15 +2902,15 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 threadState.put(thread, state);
                 break;
             case STEP_INTO:
-                engine.setBreakNextLine(true);
+                contextData.breakNextLine = true;
                 if (state != null) {
                     state.stopAtFrameDepth = -1;
                 }
                 break;
             case STEP_OUT:
-                stopAtFrameDepth = engine.getFrameCount() -1;
+                stopAtFrameDepth = contextData.getFrameCount() -1;
                 if (stopAtFrameDepth > 0) {
-                    engine.setBreakNextLine(true);
+                    contextData.breakNextLine = true;
                     if (state == null) {
                         state = new ThreadState();
                     }
@@ -2780,7 +2919,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 }
                 break;
             case RUN_TO_CURSOR:
-                engine.setBreakNextLine(true);
+                contextData.breakNextLine = true;
                 if (state != null) {
                     state.stopAtFrameDepth = -1;
                 }
@@ -3092,23 +3231,24 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     String eval(String expr) {
         Context cx = getCurrentContext();
-        DebuggableEngine engine = cx.getDebuggableEngine();
         if (cx == null) return "undefined";
+        ContextData contextData = ContextData.get(cx);
         ContextHelper helper = new ContextHelper();
         helper.attach(cx);
-        if (frameIndex >= engine.getFrameCount()) {
+        if (frameIndex >= contextData.getFrameCount()) {
             helper.reset();
             return "undefined";
         }
         String resultString;
-        engine.setDebugger(null);
+        cx.setDebugger(null, null);
         cx.setGeneratingDebug(false);
         cx.setOptimizationLevel(-1);
-        boolean breakNextLine = engine.getBreakNextLine();
-        engine.setBreakNextLine(false);
+        boolean savedBreakNextLine = contextData.breakNextLine;
+        contextData.breakNextLine = false;
         try {
             Scriptable scope;
-            scope = engine.getFrame(frameIndex).getVariableObject();
+            FrameHelper frame = contextData.getFrame(frameIndex);
+            scope = frame.getVariableObject();
             Object result;
             if (scope instanceof NativeCall) {
                 NativeCall call = (NativeCall)scope;
@@ -3133,10 +3273,10 @@ public class Main extends JFrame implements Debugger, ContextListener {
         if (resultString == null) {
             resultString = "null";
         }
-        engine.setDebugger(this);
+        cx.setDebugger(this, contextData);
         cx.setGeneratingDebug(true);
         cx.setOptimizationLevel(-1);
-        engine.setBreakNextLine(breakNextLine);
+        contextData.breakNextLine = savedBreakNextLine;
         helper.reset();
         return resultString;
     }
@@ -3156,6 +3296,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
     Object swingMonitor = new Object();
     int returnValue = -1;
     boolean breakOnExceptions;
+    boolean breakOnEnter;
+    boolean breakOnReturn;
 
     static void setResizeWeight(JSplitPane pane, double weight) {
         // call through reflection for portability
@@ -3290,5 +3432,5 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
     }
 
-};
+}
 
