@@ -101,6 +101,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIWindowMediator.h"
 
+//hack for M8 should go away after NECKO lands
+#include "nsIObserverService.h"
+#include "nsIMsgComposeService.h"
+#include "nsMsgCompCID.h"
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
@@ -122,6 +127,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
 
 
 /* Define Interface IDs */
@@ -155,7 +161,7 @@ static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 
 static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
-
+static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
@@ -279,7 +285,11 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  	
+  if ( aIID.Equals(kIUrlDispatcherIID) ) {
+     *aInstancePtr = (void*) (nsIUrlDispatcher*) this;
+     NS_ADDREF_THIS();
+     return NS_OK;
+  }	
   
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
@@ -1355,6 +1365,14 @@ nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameN
   frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
 
   AddWebShellInfo(value, isPrimary, aChildShell);
+
+  // For some reason nsCOMPtr and do_queryInterface fail here
+  if (aChildShell) {
+    nsIUrlDispatcher *  ud = nsnull;
+    QueryInterface(kIUrlDispatcherIID, (void **)&ud);
+    aChildShell->SetUrlDispatcher(ud);
+    NS_RELEASE(ud);
+  }
 
   NS_RELEASE(typeAtom);
   NS_RELEASE(idAtom);
@@ -2753,4 +2771,63 @@ NS_IMETHODIMP
 nsWebShellWindow::IsMenuBarVisible(PRBool *aVisible)
 {
   return mWindow->IsMenuBarVisible(aVisible);
+}
+
+
+//nsIUrlDispatcher methods
+
+NS_IMETHODIMP
+nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSpec, nsIPostData * aPostData)
+{
+  nsresult rv;
+  
+  /* Make the topic to observe. The topic will be of the format 
+   * linkclick:<prototocol>. Note thet this is a totally made up thing.
+   * Things are going to change later
+   */
+  nsString topic(aCommand);
+  topic += ":";
+  nsAutoString url(aURLSpec);
+
+  PRInt32 offset = url.Find(":");
+  if (offset <= 0)
+     return NS_ERROR_FAILURE;
+
+  PRInt32 offset2= url.Find("mailto:");
+
+  PRInt32  ret=0;
+  if (offset2 == 0) {
+    topic += "mailto";
+
+    //What a dirty hack. 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIMsgComposeService, msgcompose, kMsgComposeServiceCID, &rv);
+    if (!NS_SUCCEEDED(rv)) {
+        return rv;
+    }
+    rv = msgcompose->OpenComposeWindow(nsnull, nsnull, 0, 0, nsnull);
+  }
+  else {
+    topic += "browser";
+  }
+
+
+
+#if 0
+    printf("Topic to notify is %s %d\n", topic.ToNewCString(), ret);
+
+    NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+      return rv;
+
+
+    nsCOMPtr<nsISupports>  subject(do_QueryInterface(this));
+    nsISupports * subject = nsnull;
+    QueryInterface(kISupportsIID, (void **)&subject);
+    if (!subject)
+      NS_ERROR_FAILURE;
+    rv = observer->Notify((nsISupports*)nsnull, topic.GetUnicode(), aURLSpec);
+#endif  /* 0 */
+  return NS_OK;
+  
 }

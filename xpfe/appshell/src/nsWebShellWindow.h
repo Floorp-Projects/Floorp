@@ -29,6 +29,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
+#include "nsIUrlDispatcher.h"
 
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
@@ -57,7 +58,8 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
-                         public nsIDocumentObserver
+                         public nsIDocumentObserver,
+						 public nsIUrlDispatcher
 {
 public:
   nsWebShellWindow();
@@ -241,6 +243,8 @@ public:
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD ShowMenuBar(PRBool aShow);
   NS_IMETHOD IsMenuBarVisible(PRBool *aVisible);
+
+  NS_DECL_IURLDISPATCHER
 
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
