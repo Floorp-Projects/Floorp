@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.14 2004/04/25 15:03:18 gerv%gerv.net Exp $
+ * $Id: secasn1e.c,v 1.15 2004/07/13 05:44:47 nelsonb%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -82,12 +82,12 @@ typedef struct sec_asn1e_state_struct {
 
     int depth;
 
-    PRBool explicit,		/* we are handling an explicit header */
+    PRBool isExplicit,		/* we are handling an isExplicit header */
 	   indefinite,		/* need end-of-contents */
 	   is_string,		/* encoding a simple string or an ANY */
 	   may_stream,		/* when streaming, do indefinite encoding */
 	   optional,		/* omit field if it has no contents */
-	   ignore_stream;	/* ignore streaming value of sub-template */	
+	   disallowStreaming;	/* disallow streaming in all sub-templates */	
 } sec_asn1e_state;
 
 /*
@@ -188,7 +188,8 @@ sec_asn1e_notify_after (SEC_ASN1EncoderContext *cx, void *src, int depth)
 static sec_asn1e_state *
 sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 {
-    PRBool explicit, is_string, may_stream, optional, universal, ignore_stream;
+    PRBool isExplicit, is_string, may_stream, optional, universal; 
+    PRBool disallowStreaming;
     unsigned char tag_modifiers;
     unsigned long encode_kind, under_kind;
     unsigned long tag_number;
@@ -199,18 +200,18 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
     universal = ((encode_kind & SEC_ASN1_CLASS_MASK) == SEC_ASN1_UNIVERSAL)
 		? PR_TRUE : PR_FALSE;
 
-    explicit = (encode_kind & SEC_ASN1_EXPLICIT) ? PR_TRUE : PR_FALSE;
+    isExplicit = (encode_kind & SEC_ASN1_EXPLICIT) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_EXPLICIT;
 
     optional = (encode_kind & SEC_ASN1_OPTIONAL) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_OPTIONAL;
 
-    PORT_Assert (!(explicit && universal));	/* bad templates */
+    PORT_Assert (!(isExplicit && universal));	/* bad templates */
 
     may_stream = (encode_kind & SEC_ASN1_MAY_STREAM) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_MAY_STREAM;
 
-    ignore_stream = (encode_kind & SEC_ASN1_NO_STREAM) ? PR_TRUE : PR_FALSE;
+    disallowStreaming = (encode_kind & SEC_ASN1_NO_STREAM) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_NO_STREAM;
 
     /* Just clear this to get it out of the way; we do not need it here */
@@ -220,8 +221,8 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
       under_kind = SEC_ASN1_CHOICE;
     } else
 
-    if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || (!universal
-							      && !explicit)) {
+    if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || 
+        (!universal && !isExplicit)) {
 	const SEC_ASN1Template *subt;
 	void *src;
 
@@ -297,7 +298,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 
 	under_kind = state->theTemplate->kind;
 	if (under_kind & SEC_ASN1_MAY_STREAM) {
-	    if (!ignore_stream)
+	    if (!disallowStreaming)
 	      may_stream = PR_TRUE;
 	    under_kind &= ~SEC_ASN1_MAY_STREAM;
 	}
@@ -367,11 +368,11 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
     state->tag_modifiers = tag_modifiers;
     state->tag_number = (unsigned char)tag_number;
     state->underlying_kind = under_kind;
-    state->explicit = explicit;
+    state->isExplicit = isExplicit;
     state->may_stream = may_stream;
     state->is_string = is_string;
     state->optional = optional;
-    state->ignore_stream = ignore_stream;
+    state->disallowStreaming = disallowStreaming;
 
     sec_asn1e_scrub_state (state);
 
@@ -482,10 +483,10 @@ sec_asn1e_which_choice
 
 static unsigned long
 sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
-			   PRBool ignoresubstream, PRBool *noheaderp)
+			   PRBool disallowStreaming, PRBool *noheaderp)
 {
     unsigned long encode_kind, underlying_kind;
-    PRBool explicit, optional, universal, may_stream;
+    PRBool isExplicit, optional, universal, may_stream;
     unsigned long len;
 
     /*
@@ -496,7 +497,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
      * optional bit set.  The information that the parent is optional
      * and that we should return the length of 0 when that length is 
      * present since that means the optional field is no longer present.
-     * So we add the ignoresubstream flag which is passed in when
+     * So we add the disallowStreaming flag which is passed in when
      * writing the contents, but for all recursive calls to 
      * sec_asn1e_contents_length, we pass PR_FALSE, because this
      * function correctly calculates the length for children templates
@@ -508,13 +509,13 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
     universal = ((encode_kind & SEC_ASN1_CLASS_MASK) == SEC_ASN1_UNIVERSAL)
 		? PR_TRUE : PR_FALSE;
 
-    explicit = (encode_kind & SEC_ASN1_EXPLICIT) ? PR_TRUE : PR_FALSE;
+    isExplicit = (encode_kind & SEC_ASN1_EXPLICIT) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_EXPLICIT;
 
     optional = (encode_kind & SEC_ASN1_OPTIONAL) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_OPTIONAL;
 
-    PORT_Assert (!(explicit && universal));	/* bad templates */
+    PORT_Assert (!(isExplicit && universal));	/* bad templates */
 
     may_stream = (encode_kind & SEC_ASN1_MAY_STREAM) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_MAY_STREAM;
@@ -569,7 +570,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
 	src = (char *)src + theTemplate->offset;
 
-	if (explicit) {
+	if (isExplicit) {
 	    len = sec_asn1e_contents_length (theTemplate, src, PR_FALSE,
                                              noheaderp);
 	    if (len == 0 && optional) {
@@ -718,7 +719,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
       default:
 	len = ((SECItem *)src)->len;
-	if (may_stream && len == 0 && !ignoresubstream)
+	if (may_stream && len == 0 && !disallowStreaming)
 	    len = 1;	/* if we're streaming, we may have a secitem w/len 0 as placeholder */
 	break;
     }
@@ -779,7 +780,7 @@ sec_asn1e_write_header (sec_asn1e_state *state)
      */
     contents_length = sec_asn1e_contents_length (state->theTemplate,
 						 state->src, 
-                                                 state->ignore_stream,
+                                                 state->disallowStreaming,
                                                  &noheader);
     /*
      * We might be told explicitly not to put out a header.
@@ -832,7 +833,7 @@ sec_asn1e_write_header (sec_asn1e_state *state)
      * An EXPLICIT is nothing but an outer header, which we have already
      * written.  Now we need to do the inner header and contents.
      */
-    if (state->explicit) {
+    if (state->isExplicit) {
 	state->place = afterContents;
 	state = sec_asn1e_push_state (state->top,
 				      SEC_ASN1GetSubtemplate(state->theTemplate,
