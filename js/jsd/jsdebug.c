@@ -83,6 +83,20 @@ JSD_JSContextInUse(JSDContext* jsdc, JSContext* context)
     /* we no longer need this information - may need it again in the future */
 }
 
+JSD_PUBLIC_API(void *)
+JSD_SetContextPrivate(JSDContext *jsdc, void *data)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_SetContextPrivate (jsdc, data);
+}
+
+JSD_PUBLIC_API(void *)
+JSD_GetContextPrivate(JSDContext *jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetContextPrivate (jsdc);
+}
+    
 JSD_PUBLIC_API(JSDContext*)
 JSD_JSDContextForJSContext(JSContext* context)
 {
@@ -112,6 +126,21 @@ JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp)
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_IterateScripts(jsdc, iterp);
 }
+
+JSD_PUBLIC_API(void *)
+JSD_SetScriptPrivate(JSDScript *jsdscript, void *data)
+{
+    JSD_ASSERT_VALID_SCRIPT(jsdscript);
+    return jsd_SetScriptPrivate (jsdscript, data);
+}
+
+JSD_PUBLIC_API(void *)
+JSD_GetScriptPrivate(JSDScript *jsdscript)
+{
+    JSD_ASSERT_VALID_SCRIPT(jsdscript);
+    return jsd_GetScriptPrivate (jsdscript);
+}
+    
 
 JSD_PUBLIC_API(JSBool)
 JSD_IsActiveScript(JSDContext* jsdc, JSDScript *jsdscript)
@@ -526,6 +555,24 @@ JSD_GetThisForStackFrame(JSDContext* jsdc,
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetThisForStackFrame(jsdc, jsdthreadstate, jsdframe);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
+                                 JSDThreadState* jsdthreadstate,
+                                 JSDStackFrameInfo* jsdframe,
+                                 const jschar *bytes, uintN length,
+                                 const char *filename, uintN lineno, jsval *rval)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JS_ASSERT(bytes);
+    JS_ASSERT(length);
+    JS_ASSERT(filename);
+    JS_ASSERT(rval);
+
+    return jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
+                                            bytes, length, filename, lineno,
+                                            rval);
 }
 
 JSD_PUBLIC_API(JSBool)
