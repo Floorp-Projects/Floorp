@@ -279,6 +279,7 @@ public:
                      nsReflowStatus&          aStatus);
   NS_IMETHOD  DidReflow(nsIPresContext* aPresContext,
                         nsDidReflowStatus aStatus);
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                     nsIRenderingContext& aRC,

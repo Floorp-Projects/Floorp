@@ -915,6 +915,19 @@ public:
 
   // XXX Maybe these three should be a separate interface?
 
+  /**
+   * Helper method used by block reflow to identify runs of text so
+   * that proper word-breaking can be done.
+   *
+   * @param aContinueTextRun A frame should set aContinueTextRun to
+   *    PR_TRUE if we can continue a "text run" through the frame. A
+   *    text run is text that should be treated contiguously for line
+   *    and word breaking.
+   *
+   * @return The return value is irrelevant.
+   */
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const = 0;
+
   // Justification helper method used to distribute extra space in a
   // line to leaf frames. aUsedSpace is filled in with the amount of
   // space actually used.

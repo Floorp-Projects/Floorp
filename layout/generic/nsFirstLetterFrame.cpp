@@ -53,6 +53,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+
   NS_IMETHOD SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
 //override of nsFrame method
@@ -305,6 +307,14 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsFirstLetterFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  // We can continue a text run through a first-letter frame.
+  aContinueTextRun = PR_TRUE;
+  return NS_OK;
 }
 
 void
