@@ -1105,16 +1105,16 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
         if (!vp)
             goto out;
 
-        /* Mark slots if they are small enough to be GC-allocated. */
-        if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
-            GC_MARK(cx, vp - 1, "slots", arg);
-
         /* Switch to Deutsch-Schorr-Waite if we exhaust our stack quota. */
         if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
             METER(rt->gcStats.dswmark++);
             DeutschSchorrWaite(cx, thing, flagp);
             goto out;
         }
+
+        /* Mark slots if they are small enough to be GC-allocated. */
+        if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
+            GC_MARK(cx, vp - 1, "slots", arg);
 
         /* Set up local variables to loop over unmarked things. */
         end = vp + ((obj->map->ops->mark)
@@ -1335,6 +1335,10 @@ down:
             : NULL;
 
     vp = obj->slots;
+    /* Mark slots if they are small enough to be GC-allocated. */
+    if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
+        GC_MARK(cx, vp - 1, "slots", NULL);
+
     end = vp + ((obj->map->ops->mark)
                 ? obj->map->ops->mark(cx, obj, NULL)
                 : JS_MIN(obj->map->freeslot, obj->map->nslots));
