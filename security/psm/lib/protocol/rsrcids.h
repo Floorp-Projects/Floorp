@@ -158,6 +158,8 @@ typedef enum
     SSM_FID_KEYGEN_TOKEN_NAME,
 
     SSM_FID_SSLDATA_DISCARD_SOCKET_STATUS,
+    SSM_FID_CHOOSE_TOKEN_URL,
+    SSM_FID_INIT_DB_URL,
 
     SSM_FID_MAX /* placeholder */
 } SSMAttributeID;
