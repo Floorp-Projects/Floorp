@@ -28,7 +28,7 @@ DIRS =				\
   config			\
   $(NULL)
 
-ifdef MOZ_BUILD_NSPR
+ifndef MOZ_NATIVE_NSPR
 DIRS +=				\
   nsprpub			\
   $(NULL)

@@ -1,7 +1,7 @@
-%define ver		@MOZILLA_RPM_VERSION@
-%define rel		@MOZILLA_RPM_RELEASE@
-%define prefix	@MOZILLA_RPM_PREFIX@
-%define tmp		@MOZILLA_RPM_TMP@
+%define ver		@MOZ_RPM_VERSION@
+%define rel		@MOZ_RPM_RELEASE@
+%define prefix	@MOZ_RPM_PREFIX@
+%define tmp		@MOZ_RPM_TMP@
 
 Summary:	Mozilla / ButtMonkey / Gecko / Whatever
 Name:		mozilla
@@ -38,7 +38,7 @@ Mozilla development libs and headers
 			--with-pthreads \
 			--enable-toolkit=gtk \
 			--disable-build-nspr \
-			@MOZILLA_RPM_SEAMONKEY_OPTIMIZE@
+			@MOZ_RPM_SEAMONKEY_OPTIMIZE@
 
 make
 

@@ -48,6 +48,7 @@ base/src/rhapsody/Makefile
 base/src/gtk/Makefile
 base/src/xlib/Makefile
 base/tests/Makefile
+build/nsprenv.mk
 build/package/rpm/mozilla.spec
 build/package/rpm/nspr-pthreads.spec
 config/Makefile

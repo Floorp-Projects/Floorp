@@ -758,3 +758,35 @@ ifeq ($(USE_PTHREADS), 1)
 DEFINES += -D_PR_PTHREADS -UHAVE_CVAR_BUILT_ON_SEM
 endif
 endif #!USE_AUTOCONF
+
+##
+## If MOZ_NATIVE_NSPR is not set, then we are building with NSPR in
+## the source tree (mozilla/nsprpub).
+##
+## We need to export these two variables into the environment so that
+## make processes running on makefiles and code within nsprpub will
+## have options/behavior compatible with stuff automatically set 
+## by autoconf.
+##
+## NSPR_IGNORE_OBJDIR_FOR_DIST
+## 
+## Causes NSPR to ignore the OBJDIR variable when setting $(DIST), 
+## so that it installs its stuff in 
+##
+## mozilla/dist/{bin,lib,include}
+##
+## (as mozilla does) instead of 
+##
+## mozilla/dist/$(OBJDIR)/{bin,lib,include}.
+##
+## NSPR_EXTRA_ENVIRONMENT
+##
+## Causes the NSPR build system to include the file build/nsprenv.mk
+## into its build environment.  This file is autoconf genereated 
+## from mozilla/build/nsprenv.mk.in and will contain the environment
+## needed to build an NSPR that compatible with mozilla as detected
+## by autoconf.
+ifndef MOZ_NATIVE_NSPR
+export NSPR_IGNORE_OBJDIR_FOR_DIST = 1
+export NSPR_EXTRA_ENVIRONMENT=build/nsprenv.mk
+endif
