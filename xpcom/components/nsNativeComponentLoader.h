@@ -57,9 +57,10 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     nsresult CreateDll(nsIFileSpec *spec, const char *aLocation, nsDll **aDll);
     nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation);
     nsresult SelfUnregisterDll(nsDll *dll);
-    void GetRegistryDllInfo(const char *aLocation, PRUint32 *lastModifiedTime,
-                            PRUint32 *fileSize);
-                                
+    nsresult GetRegistryDllInfo(const char *aLocation, PRUint32 *lastModifiedTime,
+                                PRUint32 *fileSize);
+    nsresult SetRegistryDllInfo(const char *aLocation, PRUint32 lastModifiedTime,
+                                PRUint32 fileSize);
     nsresult GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
                                   nsIFactory **aFactory);
     /* obsolete! already! */
