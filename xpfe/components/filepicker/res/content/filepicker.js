@@ -83,6 +83,11 @@ function filepickerLoad() {
     newDirButton.removeAttribute("hidden");
   }
 
+  if (filePickerMode == nsIFilePicker.modeGetFolder) {
+    var textInputLabel = document.getElementById("textInputLabel");
+    textInputLabel.value = gFilePickerBundle.getString("dirTextInputLabel");
+  }
+  
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
       (filePickerMode == nsIFilePicker.modeOpenMultiple) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
@@ -237,14 +242,24 @@ function selectOnOK()
     //promptService.alert(window, "Problem", "normalize failed, continuing");
   }
 
-  if (!file.exists() && (filePickerMode != nsIFilePicker.modeSave)) {
+  var fileExists = file.exists();
+  
+  if (!fileExists && (filePickerMode == nsIFilePicker.modeOpen ||
+                      filePickerMode == nsIFilePicker.modeOpenMultiple)) {
     showErrorDialog("errorOpenFileDoesntExistTitle",
                     "errorOpenFileDoesntExistMessage",
                     file);
     return false;
   }
 
-  if (file.exists()) {
+  if (!fileExists && filePickerMode == nsIFilePicker.modeGetFolder) {
+    showErrorDialog("errorDirDoesntExistTitle",
+                    "errorDirDoesntExistMessage",
+                    file);
+    return false;
+  }
+
+  if (fileExists) {
     isDir = file.isDirectory();
     isFile = file.isFile();
   }
