@@ -65,31 +65,31 @@ arr5.__proto__ = Array.prototype;
 
 status = inSection(1);
 arr = arr1.sort();
-actual = arr instanceof Array && arr.length === 0;
+actual = arr === arr1;
 expect = true;
 addThis();
 
 status = inSection(2);
 arr = arr2.sort();
-actual = arr instanceof Array && arr.length === 0;
+actual = arr === arr2;
 expect = true;
 addThis();
 
 status = inSection(3);
 arr = arr3.sort();
-actual = arr instanceof Array && arr.length === 0;
+actual = arr === arr3;
 expect = true;
 addThis();
 
 status = inSection(4);
 arr = arr4.sort();
-actual = arr instanceof Array && arr.length === 0;
+actual = arr === arr4;
 expect = true;
 addThis();
 
 status = inSection(5);
 arr = arr5.sort();
-actual = arr instanceof Array && arr.length === 0;
+actual = arr === arr5;
 expect = true;
 addThis();
 
