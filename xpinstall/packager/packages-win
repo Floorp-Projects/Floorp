@@ -356,6 +356,10 @@ bin\chrome\messenger\*
 bin\components\msgsmime.dll
 bin\components\msgsmime.xpt
 bin\components\smime-service.js
+bin\MapiProxy.dll
+bin\mozMapi32.dll
+bin\components\msgMapi.dll
+bin\components\mapihook.xpt
 
 [chatzilla]
 bin\components\chatzilla-service.js

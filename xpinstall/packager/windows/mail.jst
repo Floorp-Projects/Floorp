@@ -215,6 +215,8 @@ function updateMapi()
   var sfpMainExePath;
   var winsysMapi32File;
   var mapiProxyFile;
+  var subkey;
+  var mailDefaultDescription = "$ProductName$ $UserAgentShort$ Mail";
 
   winreg = getWinRegistry();
   if(winreg != null) 
@@ -248,27 +250,27 @@ function updateMapi()
     sfpProgramMozMapi32File = File.windowsGetShortName(programMozMapi32File);
     sfpMainExePath = File.windowsGetShortName(mainExePath);
 
-    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$", "DLLPath");
-    if((szValue != null) && (szValue != ""))
-      winreg.setValueString("SOFTWARE\\Clients\\Mail", "DLLPath", sfpProgramMozMapi32File);
+    subkey  = "SOFTWARE\\Clients\\Mail\\$ProductName$";
+    winreg.createKey(subkey, "");
+    winreg.setValueString(subkey, "", mailDefaultDescription);
+    winreg.setValueString(subkey, "DLLPath", sfpProgramMozMapi32File);
 
-    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\DefaultIcon", "");
-    if((szValue != null) && (szValue != ""))
-      winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\DefaultIcon",
-                            "",
-                            + sfpMainExePath + ",0");
+    winreg.createKey(subkey      + "\\DefaultIcon", "");
+    winreg.setValueString(subkey + "\\DefaultIcon", "", sfpMainExePath + ",0");
 
-    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command", "");
-    if((szValue != null) && (szValue != ""))
-      winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command",
-                            "",
-                            sfpMainExePath + " \"%1\"");
+    winreg.createKey(subkey      + "\\protocols", "");
+    winreg.createKey(subkey      + "\\protocols\\mailto", "");
+    winreg.setValueString(subkey + "\\protocols\\mailto", "", "URL:MailTo Protocol");
 
-    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\shell\\open\\command", "");
-    if((szValue != null) && (szValue != ""))
-      winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\shell\\open\\command",
-                            "",
-                            sfpMainExePath + " -mail");
+    winreg.createKey(subkey      + "\\protocols\\mailto\\shell", "");
+    winreg.createKey(subkey      + "\\protocols\\mailto\\shell\\open", "");
+    winreg.createKey(subkey      + "\\protocols\\mailto\\shell\\open\\command", "");
+    winreg.setValueString(subkey + "\\protocols\\mailto\\shell\\open\\command", "", sfpMainExePath + " \"%1\"");
+
+    winreg.createKey(subkey      + "\\shell", "");
+    winreg.createKey(subkey      + "\\shell\\open", "");
+    winreg.createKey(subkey      + "\\shell\\open\\command", "");
+    winreg.setValueString(subkey + "\\shell\\open\\command", "", sfpMainExePath + " -mail");
 
     // Register MapiProxy.dll
     mapiProxyFile = getFolder("Program", "MapiProxy.dll");
