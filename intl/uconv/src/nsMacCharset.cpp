@@ -86,10 +86,10 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString&
     case verUS:
     case verFrance:
     case verGermany:
-      outCharset.Assign(NS_LITERAL_STRING("x-mac-roman"));
+      outCharset.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
       return NS_OK;
     case verJapan:
-      outCharset.Assign(NS_LITERAL_STRING("Shift_JIS"));
+      outCharset.Assign(NS_LITERAL_CSTRING("Shift_JIS"));
       return NS_OK;
   }
 
@@ -101,14 +101,19 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString&
   nsAutoString key(NS_LITERAL_STRING("region."));
   key.AppendInt(region, 10);
 
-  rv = gInfo->Get(key, outCharset);
-  if (NS_FAILED(rv)) {
+  nsAutoString uCharset;
+  rv = gInfo->Get(key, uCharset);
+  if (NS_SUCCEEDED(rv))
+    CopyUCS2toASCII(uCharset, outCharset);
+  else {
     key.Assign(NS_LITERAL_STRING("script."));
     key.AppendInt(script, 10);
-    rv = gInfo->Get(key, outCharset);
+    rv = gInfo->Get(key, uCharset);
     // not found in the .property file, assign x-mac-roman
-    if (NS_FAILED(rv)) { 
-      outCharset.Assign(NS_LITERAL_STRING("x-mac-roman"));
+    if (NS_SUCCEEDED(rv))
+      CopyUCS2toASCII(uCharset, outCharset);
+    else {
+      outCharset.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
     }
   }
   
@@ -130,7 +135,7 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
   switch (selector) {
 #ifdef XP_MACOSX  
     case kPlatformCharsetSel_FileName:
-      oResult.Assign(NS_LITERAL_STRING("UTF-8"));
+      oResult.Assign(NS_LITERAL_CSTRING("UTF-8"));
       break;
 #endif
     case  kPlatformCharsetSel_KeyboardInput:
@@ -151,7 +156,8 @@ NS_IMETHODIMP
 nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
   nsCOMPtr<nsIMacLocale>	pMacLocale;
-  nsAutoString localeAsString(localeName), charset(NS_LITERAL_STRING("x-mac-roman"));
+  nsAutoString localeAsString(localeName);
+  nsCAutoString charset(NS_LITERAL_CSTRING("x-mac-roman"));
   short script, language, region;
 	
   nsresult rv;
