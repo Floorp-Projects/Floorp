@@ -157,7 +157,9 @@ sub DoFactoidCheck {
                           (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
                           (?:(?:heya?|hello|hi)(?:\s+there)?(?:\s+peoples?|\s+kids?|\s+folks?)?[:,!.?\s]+)*
                           (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
+                          (?:tell\s+me[,\s]+)?
                           (?:(?:(?:stupid\s+)?q(?:uestion)?|basically)[:,.!\s]+)*
+                          (?:tell\s+me[,\s]+)?
                           (?:(?:does\s+)?(?:any|ne)\s*(?:1|one|body)\s+know[,\s]+|)?
                           (.*)
                       \s*$/osix) {
@@ -168,31 +170,31 @@ sub DoFactoidCheck {
         $self->GiveFactoid($event,
                                 undef, # database
                      $event->{'from'}, # what
-                              $direct or $self->{'ridiculouslyEagerToHelp'},
+                              $direct || $self->{'ridiculouslyEagerToHelp'},
                                   $1); # who
     } elsif ($message =~ /^\s*tell\s+(\S+)\s+about\s+(.+?)(?:[,\s]+please)?[\s!?.]*$/osi) {
         $self->GiveFactoid($event,
                                 undef, # database
                                    $2, # what
-                              $direct or $self->{'ridiculouslyEagerToHelp'},
+                              $direct || $self->{'ridiculouslyEagerToHelp'},
                                   $1); # who
     } elsif ($message =~ /^\s*tell\s+(\S+)\s+(?:what|who|where)\s+(?:am\s+I|I\s+am)(?:[,\s]+please)?[\s!?.]*$/osi) {
         $self->GiveFactoid($event,
                                  'is', # database
                      $event->{'from'}, # what
-                              $direct or $self->{'ridiculouslyEagerToHelp'},
+                              $direct || $self->{'ridiculouslyEagerToHelp'},
                                   $1); # who
     } elsif ($message =~ /^\s*tell\s+(\S+)\s+(?:what|who|where)\s+(is|are)\s+(.+?)(?:[,\s]+please)?[\s!?.]*$/osi) {
         $self->GiveFactoid($event,
                                lc($2), # database
                                    $3, # what
-                              $direct or $self->{'ridiculouslyEagerToHelp'},
+                              $direct || $self->{'ridiculouslyEagerToHelp'},
                                   $1); # who
     } elsif ($message =~ /^\s*tell\s+(\S+)\s+(?:what|who|where)\s+(.+?)\s+(is|are)(?:[,\s]+please)?[\s!?.]*$/osi) {
         $self->GiveFactoid($event,
                                lc($3), # database
                                    $2, # what
-                              $direct or $self->{'ridiculouslyEagerToHelp'},
+                              $direct || $self->{'ridiculouslyEagerToHelp'},
                                   $1); # who
     } elsif ($message =~ /^\s*(.+?)\s*=~\s*s?\/(.+?)\/(.*?)\/(i)?(g)?(i)?\s*$/osi) {
         $self->EditFactoid($event,
@@ -206,26 +208,38 @@ sub DoFactoidCheck {
         $self->ForgetFactoid($event, $event->{'from'}, $direct);
     } elsif ($message =~ /^\s*forget\s+(?:about\s+)?(.+?)\s*$/osi) {
         $self->ForgetFactoid($event, $1, $direct);
-    } elsif ($shortMessage =~ /^(?:what|where|who) \s+ (is|are) \s+ (.+?) [?\s]* $/osix) {
+    } elsif ($shortMessage =~ /^(?:what|where|who)
+                                (?:\s+the\s+hell|\s+on\s+earth|\s+the\s+fuck)?
+                               \s+ (is|are) \s+ (.+?) [?!\s]* $/osix) {
         $self->GiveFactoid($event,
                                lc($1), # is/are (optional)
                                    $2, # subject
-                          $direct or $self->{'ridiculouslyEagerToHelp'});
-    } elsif ($shortMessage =~ /^(?:(?:where|how)\s+can\s+(?:i|one|s?he|we)\s+(?:find|learn|read)(?:\s+about)? | how\s+about | what\'?s) \s+ (.+?) [?\s]* $/osix) {
+                          $direct || $self->{'ridiculouslyEagerToHelp'});
+    } elsif ($shortMessage =~ /^(?:(?:where|how)
+                                   (?:\s+the\s+hell|\s+on\s+earth|\s+the\s+fuck)?
+                                   \s+ can \s+ (?:i|one|s?he|we) \s+ (?:find|learn|read)
+                                   (?:\s+about)?
+                                 | how\s+about
+                                 | what\'?s)
+                                 \s+ (.+?) [?!\s]* $/osix) {
         $self->GiveFactoid($event,
                                 undef, # is/are (optional)
                                    $1, # subject
-                          $direct or $self->{'ridiculouslyEagerToHelp'});
-    } elsif ($shortMessage =~ /^(?:what|where|who)\s+ (.+?) (is|are) [?\s]* $/osix) {
+                          $direct || $self->{'ridiculouslyEagerToHelp'});
+    } elsif ($shortMessage =~ /^(?:what|where|who)
+                                (?:\s+the\s+hell|\s+on\s+earth|\s+the\s+fuck)?
+                                \s+ (.+?) \s+ (is|are) [?\s]* $/osix) {
         $self->GiveFactoid($event,
                                lc($2), # is/are (optional)
                                    $1, # subject
-                          $direct or $self->{'ridiculouslyEagerToHelp'});
-    } elsif ($shortMessage =~ /^(?:what|where|who) \s+ (?:am\s+I|I\s+am) [?\s]* $/osix) {
+                          $direct || $self->{'ridiculouslyEagerToHelp'});
+    } elsif ($shortMessage =~ /^(?:what|where|who)
+                                (?:\s+the\s+hell|\s+on\s+earth|\s+the\s+fuck)? \s+
+                                (?:am\s+I|I\s+am) [?\s]* $/osix) {
         $self->GiveFactoid($event,
                                  'is', # am => is
                      $event->{'from'}, # subject
-                          $direct or $self->{'ridiculouslyEagerToHelp'});
+                          $direct || $self->{'ridiculouslyEagerToHelp'});
     } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.+?) $/six) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
@@ -234,7 +248,7 @@ sub DoFactoidCheck {
                                lc($3), # is/are
                           defined($4), # add to existing answer?
                                    $5, # object
-           ($direct or $self->{'ridiculouslyEagerToHelp'} or defined($1)));
+            $direct || $self->{'ridiculouslyEagerToHelp'} || defined($1));
     } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? I \s+ am \s+ (also\s+)? (.+?) $/osix) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
@@ -243,19 +257,19 @@ sub DoFactoidCheck {
                                  'is', # I am = Foo is
                           defined($2), # add to existing answer?
                                    $3, # object
-                          $direct or $self->{'ridiculouslyEagerToHelp'});
+                          $direct || $self->{'ridiculouslyEagerToHelp'});
     } elsif ((not $direct or $direct == 2) and $shortMessage =~ /^(.+?)\s+(is|are)[?\s]*(\?)?[?\s]*$/osi) {
         $self->GiveFactoid($event,
                                lc($2), # is/are (optional)
                                    $1, # subject
-                          $direct or $self->{'ridiculouslyEagerToHelp'})
-          if $3 or ($direct == 2 and $self->{'eagerToHelp'});
+                          $direct || $self->{'ridiculouslyEagerToHelp'})
+          if ($3 or ($direct == 2 and $self->{'eagerToHelp'}));
     } elsif ((not $direct or $direct == 2) and $shortMessage =~ /^(.+?)[?\s]*(\?)?[?\s]*$/osi) {
         $self->GiveFactoid($event,
                                 undef, # is/are (optional)
                                    $1, # subject
-                          $direct or $self->{'ridiculouslyEagerToHelp'})
-          if $2 or ($direct == 2 and $self->{'eagerToHelp'});
+                          $direct || $self->{'ridiculouslyEagerToHelp'})
+          if ($2 or ($direct == 2 and $self->{'eagerToHelp'}));
     } else {
         return 0;
     }
@@ -719,7 +733,7 @@ sub targettedSay {
     my $self = shift;
     my($event, $message, $direct) = @_;
     if ($direct and length($message)) {
-        $self->say($event, $message);              
+        $self->say($event, "$event->{from}: $message");
     }
 }
 
