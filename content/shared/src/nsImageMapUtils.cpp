@@ -77,7 +77,7 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
     }
   }
 
-  const nsAString& usemap(Substring(start, end));
+  const nsAString& usemap = Substring(start, end);
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
   if (htmlDoc) {
