@@ -150,7 +150,7 @@ dist: $(DIST)/bin/mozilla-bin
 ifndef MOZ_PKG_DEST
 	@echo "Please define MOZ_PKG_DEST first. It must be an absolute path to a dir outside the source tree. It should be empty (files might get deleted without warning)."
 	@echo "Other options (not required):"
-	@echo "MOZ_PKG_NAME: Either TGZ for .tar.gz or BZ2 for .tar.bz2. Default TGZ."
+	@echo "MOZ_PKG_FORMAT: Either TGZ for .tar.gz or BZ2 for .tar.bz2. Default TGZ."
 	@echo "MOZ_PKG_APPNAME: Application name, used for tarball filename, top-level dir in tarball and application start script. Default mozilla."
 else
 	@if [ ! -d $(MOZ_PKG_DEST) ]; then mkdir $(MOZ_PKG_DEST); fi
