@@ -107,10 +107,8 @@ NS_IMETHODIMP nsNntpUrl::SetSpec(const nsACString &aSpec)
 
 nsresult nsNntpUrl::DetermineNewsAction()
 {
-  nsresult rv;
-
   nsCAutoString path;
-  rv = nsMsgMailNewsUrl::GetPath(path);
+  nsresult rv = nsMsgMailNewsUrl::GetPath(path);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (!strcmp(path.get(),"/*")) {
@@ -137,8 +135,9 @@ nsresult nsNntpUrl::DetermineNewsAction()
     return NS_OK;
   }
     
-  if (PL_strcasestr(path.get(), "?part=")) {
-    // news://news.mozilla.org:119/3B98D201.3020100@cs.com?part=1
+  if (PL_strcasestr(path.get(), "?part=") || PL_strcasestr(path.get(), "&part=")) {
+    // news://news.mozilla.org:119/3B98D201.3020100%40cs.com?part=1
+    // news://news.mozilla.org:119/b58dme%24aia2%40ripley.netscape.com?header=print&part=1.2&type=image/jpeg&filename=Pole.jpg
     m_newsAction = nsINntpUrl::ActionFetchPart;
     return NS_OK;
   }

@@ -1398,7 +1398,7 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
 	if (m_newsAction == nsINntpUrl::ActionSearch) { 
 		nsUnescape(group);
 	}
-	else if (PL_strchr(group, '@') || PL_strstr(group,"%40")) {
+	else if (strchr(group, '@') || strstr(group,"%40")) {
       message_id = nsUnescape(group);
 	  group = 0;
 	}
