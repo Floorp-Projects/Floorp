@@ -214,7 +214,7 @@ function LoadDomains(obj)
 function UpdateSavePrefString(obj)
 {
   var num_domains = 0;
-  pref_string = "";
+  var pref_string = "";
 
   for (var item = obj.treeroot_node.firstChild; item != null; item = item.nextSibling) {
 
