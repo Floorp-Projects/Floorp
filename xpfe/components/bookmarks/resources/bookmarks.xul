@@ -209,7 +209,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
                      command="cmd_bm_newfolder"/>
       <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
