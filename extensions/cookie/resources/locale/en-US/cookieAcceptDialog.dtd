@@ -1,14 +1,15 @@
 <!ENTITY     props.box.label                "About this cookie">
 <!ENTITY     props.name.label               "Name:">
-<!ENTITY     props.value.label              "Information:">
+<!ENTITY     props.value.label              "Content:">
 <!ENTITY     props.domain.label             "Host:">
 <!ENTITY     props.path.label               "Path:">
 <!ENTITY     props.secure.label             "Server Secure:">
 <!ENTITY     props.expires.label            "Expires:">
 <!ENTITY     props.policy.label             "Policy:"> 
 
-<!ENTITY     button.rememberdecision.label  "Remember this decision">
-<!ENTITY     button.yes.label               "Yes">
-<!ENTITY     button.no.label                "No">
+<!ENTITY     button.allow.label             "Allow">
+<!ENTITY     button.deny.label              "Deny">
 
 <!ENTITY     dialog.title                   "Confirm">
+<!ENTITY     dialog.remember.label          "Use my choice for all cookies from this site">
+<!ENTITY     dialog.remember.accesskey      "U">

@@ -40,84 +40,110 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://cookie/locale/cookieAcceptDialog.dtd">
 
+<!-- use a overlay te be able to put the accept/deny buttons not on the bottom -->
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!-- use buttons="disclosure" to hide ok/cancel buttons. Those are added manually later -->
 <dialog id="cookieAcceptDialog"
-    acceptLabel="&button.yes.label;"
-    cancelLabel="&button.no.label;"
+    acceptLabel="&button.allow.label;"
+    cancelLabel="&button.deny.label;"
     onload="onload();"
-    ondialogaccept="return cookieAccept();"
+    ondialogaccept="return doOKButton();"
     title="&dialog.title;"
+    buttons="disclosure"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <?xml-stylesheet src="chrome://global/skin/dialog.css" type="text/css"?>
   <script src="cookieAcceptDialog.js" type="application/x-javascript"/>
   <stringbundle id="cookieBundle"
                 src="chrome://cookie/locale/cookieAcceptDialog.properties"/>
  
-  <hbox>
-    <hbox align="start">
-      <image id="info.icon" class="spaced" src="chrome://global/skin/icons/alert-exclam.gif"/>
-    </hbox>
+  <vbox>
+    <hbox>
+      <hbox align="start">
+        <image id="infoicon" class="spaced alert-icon"/>
+      </hbox>
 
-    <vbox>
-      <vbox>
-
-        <vbox flex="1">
-          <!-- text -->
-          <vbox id="info.box"/>
-
-          <hbox id="checkboxContainer">
-            <checkbox id="persistDomainAcceptance" oncommand="onChangePersitence();" label="&button.rememberdecision.label;"/>
-          </hbox>
-
+      <vbox flex="1">
+        <!-- text -->
+        <vbox id="dialogtextbox">
+          <description id="dialog-header" class="header"/>
         </vbox>
 
-        <hbox pack="start">
-          <button id="disclosureButton" dlgtype="disclosure" class="dialog-button" 
-                  oncommand="showhideinfo();"/>
+        <hbox id="checkboxContainer">
+          <checkbox id="persistDomainAcceptance" oncommand="onChangePersitence();" 
+                    label="&dialog.remember.label;" accesskey="&dialog.remember.accesskey;"/>
         </hbox>
       </vbox>
 
-      <groupbox id="infobox" hidden="true" persist="hidden" flex="1">
-        <caption label="&props.box.label;"/>
-        <grid flex="1">
-          <columns>
-            <column align="end"/>
-            <column flex="1"/>
-          </columns>
-          <rows>
-            <row align="center">
+    </hbox>
+
+    <hbox>
+      <button id="disclosureButton" dlgtype="disclosure" class="exit-dialog" 
+              oncommand="showhideinfo();"/>
+      <spacer flex="1"/>
+      <hbox id="okCancelButtonsRight"/>
+    </hbox>
+
+    <vbox id="infobox" hidden="true" persist="hidden">
+      <separator class="groove"/>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+
+          <row align="center">
+            <hbox align="center" pack="end">
               <label value="&props.name.label;"/>
-              <textbox id="ifl_name" readonly="true"/>
-            </row>
-            <row align="center">
+            </hbox>
+            <textbox id="ifl_name" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
               <label value="&props.value.label;"/>
-              <textbox id="ifl_value" readonly="true"/>
-            </row>
-            <row align="center">
+            </hbox>
+            <textbox id="ifl_value" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
               <label id="ifl_isDomain" value="&props.domain.label;"/>
-              <textbox id="ifl_host" readonly="true"/>
-            </row>
-            <row align="center">
+            </hbox>
+            <textbox id="ifl_host" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
               <label value="&props.path.label;"/>
-              <textbox id="ifl_path" readonly="true"/>
-            </row>
-            <row align="center">
+            </hbox>
+            <textbox id="ifl_path" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
               <label value="&props.secure.label;"/>
-              <textbox id="ifl_isSecure" readonly="true"/>
-            </row>
-            <row align="center">
+            </hbox>
+            <textbox id="ifl_isSecure" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
               <label value="&props.expires.label;"/>
-              <textbox id="ifl_expires" readonly="true"/>
-            </row>
-            <row align="center" id="policyField" hidden="true">
+            </hbox>
+            <textbox id="ifl_expires" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center" id="policyField" hidden="true">
+            <hbox align="center" pack="end">
               <label value="&props.policy.label;"/>
-              <textbox id="ifl_policy" readonly="true"/>
-            </row>
-          </rows>
-        </grid>
+            </hbox>
+            <textbox id="ifl_policy" readonly="true" class="plain"/>
+          </row>
 
-      </groupbox>
-
+        </rows>
+      </grid>
     </vbox>
-  </hbox>
+  </vbox>
 </dialog>

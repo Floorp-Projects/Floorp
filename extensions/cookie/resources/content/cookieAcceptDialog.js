@@ -47,9 +47,12 @@ var hideDetails = "";
 
 function onload()
 {
+  doSetOKCancel(cookieAccept);
+
   var dialog = document.documentElement;
-  dialog.getButton("accept").label = dialog.getAttribute("acceptLabel");
-  dialog.getButton("cancel").label = dialog.getAttribute("cancelLabel");
+
+  document.getElementById("ok").label = dialog.getAttribute("acceptLabel");
+  document.getElementById("cancel").label = dialog.getAttribute("cancelLabel");
 
   if (!gDateService) {
     const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
@@ -63,15 +66,19 @@ function onload()
   //cache strings
   if (!showDetails) {
     showDetails = cookieBundle.getString('showDetails');
+    showDetailsAccessKey = cookieBundle.getString('showDetailsAccessKey');
   }
   if (!hideDetails) {
     hideDetails = cookieBundle.getString('hideDetails');
+    hideDetailsAccessKey = cookieBundle.getString('hideDetailsAccessKey');
   }
 
   if (document.getElementById('infobox').hidden) {
     document.getElementById('disclosureButton').setAttribute("label",showDetails);
+    document.getElementById('disclosureButton').setAttribute("accesskey",showDetailsAccessKey);
   } else {
     document.getElementById('disclosureButton').setAttribute("label",hideDetails);
+    document.getElementById('disclosureButton').setAttribute("accesskey",hideDetailsAccessKey);
   }
 
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
@@ -102,12 +109,17 @@ function onload()
         // to not make the mess worse.
         messageText = cookieBundle.getFormattedString(messageFormat,["",cookiesFromHost]);
 
-      var messageParent = document.getElementById("info.box");
+      var messageParent = document.getElementById("dialogtextbox");
       var messageParagraphs = messageText.split("\n");
 
-      for (var i = 0; i < messageParagraphs.length; i++) {
+      // use value for the header, so it doesn't wrap.
+      var headerNode = document.getElementById("dialog-header");
+      headerNode.setAttribute("value",messageParagraphs[0]);
+
+      // use childnodes here, the tekst can wrap
+      for (var i = 1; i < messageParagraphs.length; i++) {
         var descriptionNode = document.createElement("description");
-        var text = document.createTextNode(messageParagraphs[i]);
+        text = document.createTextNode(messageParagraphs[i]);
         descriptionNode.appendChild(text);
         messageParent.appendChild(descriptionNode);
       }
@@ -143,9 +155,11 @@ function showhideinfo()
   if (infobox.hidden) {
     infobox.setAttribute("hidden","false");
     document.getElementById('disclosureButton').setAttribute("label",hideDetails);
+    document.getElementById('disclosureButton').setAttribute("accesskey",hideDetailsAccessKey);
   } else {
     infobox.setAttribute("hidden","true");
     document.getElementById('disclosureButton').setAttribute("label",showDetails);
+    document.getElementById('disclosureButton').setAttribute("accesskey",showDetailsAccessKey);
   }
   sizeToContent();
 }
@@ -157,7 +171,9 @@ function onChangePersitence()
 
 function cookieAccept()
 {
-  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 1); // say that ok was pressed
+  // say that the cookie was accepted
+  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 1); 
+  window.close();
 }
 
 function GetExpiresString(secondsUntilExpires) {
