@@ -111,7 +111,6 @@ NS_IMETHODIMP nsPrintSettings::GetEndPageRange(PRInt32 *aEndPageRange)
 {
   //NS_ENSURE_ARG_POINTER(aEndPageRange);
   *aEndPageRange = mEndPageNum;
-  pc = (PpPrintContext_t *) *aEndPageRange;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetEndPageRange(PRInt32 aEndPageRange)

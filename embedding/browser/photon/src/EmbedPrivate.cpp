@@ -581,9 +581,12 @@ EmbedPrivate::Print(PpPrintContext_t *pc)
     browserAsPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
     if (printSettings) 
     {
-        printSettings->SetPrintSilent(PR_TRUE);
+    printSettings->SetPrintSilent(PR_TRUE);
 		printSettings->SetEndPageRange((PRInt32) pc);
     }
+
+		nsIPref *pref = GetPrefs();
+		pref->SetBoolPref( "print.show_print_progress", PR_FALSE );
 
     browserAsPrint->Print(printSettings, mPrint);
 }
