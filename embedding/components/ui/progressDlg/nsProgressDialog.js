@@ -52,6 +52,7 @@ function nsProgressDialog() {
     // Initialize data properties.
     this.mParent      = null;
     this.mOperation   = null;
+    this.mCancelOnClose = null;
     this.mStartTime   = ( new Date() ).getTime();
     this.observer     = null;
     this.mLastUpdate  = Number.MIN_VALUE; // To ensure first onProgress causes update.
@@ -90,6 +91,8 @@ nsProgressDialog.prototype = {
     set parent(newval)      { return this.mParent = newval; },
     get operation()         { return this.mOperation; },
     set operation(newval)   { return this.mOperation = newval; },
+    get cancelOnClose()     { return this.mCancelOnClose; },
+    set cancelOnClose(newval) { return this.mCancelOnClose = newval; },
     get observer()          { return this.mObserver; },
     set observer(newval)    { return this.mObserver = newval; },
     get startTime()         { return this.mStartTime; },
@@ -404,6 +407,10 @@ nsProgressDialog.prototype = {
                 this.dialogElement( "keep" ).checked = prefs.getBoolPref( "browser.download.progressDnldDialog.keepAlive" );
             }
         }
+        
+        if ( !this.cancelOnClose ) {
+            this.hide( "cancel" );
+        }
 
         // Initialize title.
         this.setTitle();
@@ -443,7 +450,9 @@ nsProgressDialog.prototype = {
             }
          }
          this.dialog = null; // The dialog is history.
-         this.onCancel();
+         if ( this.cancelOnClose ) {
+             this.onCancel();
+         }
     },
 
     // onpause event means the user pressed the pause/resume button
@@ -750,8 +759,11 @@ nsProgressDialog.prototype = {
     // Hide a given dialog field.
     hide: function( field ) {
         this.dialogElement( field ).setAttribute( "style", "display: none;" );
-        // Hide the associated separator, too.
-        this.dialogElement( field+"Separator" ).setAttribute( "style", "display: none;" );
+        // Hide the associated separator, too, if one exists.
+        var separator = this.dialogElement( field+"Separator" );
+        if ( separator ) {
+            separator.setAttribute( "style", "display: none;" );
+        }
     },
 
     // Return input in hex, prepended with "0x" and leading zeros (to 8 digits).
