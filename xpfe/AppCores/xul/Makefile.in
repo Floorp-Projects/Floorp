@@ -37,6 +37,65 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/Mail_NewMsg.gif \
 	$(srcdir)/resources/Mail_Reply.gif \
 	$(srcdir)/resources/Mail_SendMsg.gif \
+	$(srcdir)/resources/DialogAddrIcon.gif \
+	$(srcdir)/resources/DialogAddrIcon_mo.gif \
+	$(srcdir)/resources/DialogCompIcon.gif \
+	$(srcdir)/resources/DialogCompIcon_mo.gif \
+	$(srcdir)/resources/DialogMailIcon.gif \
+	$(srcdir)/resources/DialogMailIcon_mo.gif \
+	$(srcdir)/resources/DialogNavIcon.gif \
+	$(srcdir)/resources/DialogNavIcon_mo.gif \
+	$(srcdir)/resources/TB_Back.gif \
+	$(srcdir)/resources/TB_Back_dis.gif \
+	$(srcdir)/resources/TB_Back_mo.gif \
+	$(srcdir)/resources/TB_Bookmarks.gif \
+	$(srcdir)/resources/TB_Bookmarks_mo.gif \
+	$(srcdir)/resources/TB_Edit.gif \
+	$(srcdir)/resources/TB_Forward.gif \
+	$(srcdir)/resources/TB_Forward_dis.gif \
+	$(srcdir)/resources/TB_Forward_mo.gif \
+	$(srcdir)/resources/TB_Home.gif \
+	$(srcdir)/resources/TB_Home_mo.gif \
+	$(srcdir)/resources/TB_HTab.gif \
+	$(srcdir)/resources/TB_HTab_mo.gif \
+	$(srcdir)/resources/TB_LoadImages.gif \
+	$(srcdir)/resources/TB_LoadImages.mo.gif \
+	$(srcdir)/resources/TB_Location.gif \
+	$(srcdir)/resources/TB_Location_mo.gif \
+	$(srcdir)/resources/TB_MiniAddr.gif \
+	$(srcdir)/resources/TB_MiniComp.gif \
+	$(srcdir)/resources/TB_MiniMail.gif \
+	$(srcdir)/resources/TB_MiniNav.gif \
+	$(srcdir)/resources/TB_MiniTab.gif \
+	$(srcdir)/resources/TB_MixSecurity.gif \
+	$(srcdir)/resources/TB_MixSecurity.mo.gif \
+	$(srcdir)/resources/TB_Netscape.gif \
+	$(srcdir)/resources/TB_Netscape_mo.gif \
+	$(srcdir)/resources/TB_PersonalIcon.gif \
+	$(srcdir)/resources/TB_Places.gif \
+	$(srcdir)/resources/TB_Places_mo.gif \
+	$(srcdir)/resources/TB_Print.gif \
+	$(srcdir)/resources/TB_Print_mo.gif \
+	$(srcdir)/resources/TB_Reload.gif \
+	$(srcdir)/resources/TB_Reload_mo.gif \
+	$(srcdir)/resources/TB_Search.gif \
+	$(srcdir)/resources/TB_Search_mo.gif \
+	$(srcdir)/resources/TB_Secure.gif \
+	$(srcdir)/resources/TB_Secure_mo.gif \
+	$(srcdir)/resources/TB_Stop.gif \
+	$(srcdir)/resources/TB_Stop.mo.gif \
+	$(srcdir)/resources/TB_Stop_dis.gif \
+	$(srcdir)/resources/TB_Stop_mo.gif \
+	$(srcdir)/resources/TB_Tab.gif \
+	$(srcdir)/resources/TB_TabSmall.gif \
+	$(srcdir)/resources/TB_TabSmall_mo.gif \
+	$(srcdir)/resources/TB_Tab_mo.gif \
+	$(srcdir)/resources/TB_Unsecure.gif \
+	$(srcdir)/resources/TB_Unsecure.mo.gif \
+	$(srcdir)/resources/TB_WhatsRelated.gif \
+	$(srcdir)/resources/TB_WhatsRelated_mo.gif \
+	$(srcdir)/resources/StatusBar-insecure.gif \
+	$(srcdir)/resources/StatusBar-secure.gif \
 	$(NULL)
 
 install:: 
