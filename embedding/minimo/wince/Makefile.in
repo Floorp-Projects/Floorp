@@ -34,6 +34,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MOZILLA_INTERNAL_API = 1
+
 PROGRAM		= winEmbed$(BIN_SUFFIX)
 RESFILE		= winEmbed.res
 

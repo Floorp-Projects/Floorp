@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= testembed$(BIN_SUFFIX)
 RESFILE		= testembed.res
+MOZILLA_INTERNAL_API = 1
 
 MODULE = testEmbed
 

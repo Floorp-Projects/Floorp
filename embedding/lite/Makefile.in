@@ -40,11 +40,12 @@ topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 MODULE          = embed_lite
 LIBRARY_NAME    = embed_lite
 IS_COMPONENT	  = 1
-
-include $(DEPTH)/config/autoconf.mk
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = embedlite.pkg
 
