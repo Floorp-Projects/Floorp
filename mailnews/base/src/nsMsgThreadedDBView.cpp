@@ -844,7 +844,8 @@ nsMsgThreadedDBView::OnNewSearch()
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
-  
+  m_currentlyDisplayedMsgKey = nsMsgKey_None;   // need to clear this, so we won't restore it.
+
   // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
   if (mOutliner)
     mOutliner->RowCountChanged(0, -oldSize);
