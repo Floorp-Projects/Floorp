@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Bajusz <hyp-x@inf.bme.hu>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   
  */
@@ -2779,22 +2780,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
         break;
 
-        case WM_SYSCOMMAND:
-          if (wParam == SC_MINIMIZE || wParam == SC_MAXIMIZE || wParam == SC_RESTORE) {
-            nsSizeModeEvent event;
-            event.eventStructType = NS_SIZEMODE_EVENT;
-            event.mSizeMode = nsSizeMode_Normal;
-            if (wParam == SC_MINIMIZE)
-              event.mSizeMode = nsSizeMode_Minimized;
-            if (wParam == SC_MAXIMIZE)
-              event.mSizeMode = nsSizeMode_Maximized;
-            InitEvent(event, NS_SIZEMODE);
-
-            result = DispatchWindowEvent(&event);
-            NS_RELEASE(event.widget);
-          }
-          break;
-
         case WM_DISPLAYCHANGE:
           DispatchStandardEvent(NS_DISPLAYCHANGED);
         break;
@@ -3230,6 +3215,31 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 rect.height = PRInt32(r.bottom - r.top);
               }
               result = OnResize(rect);
+            }
+
+            /* handle size mode changes
+               (the framechanged message seems a handy place to hook in,
+               because it happens early enough (WM_SIZE is too late) and
+               because in testing it seems an accurate harbinger of
+               an impending min/max/restore change (WM_NCCALCSIZE would
+               also work, but it's also sent when merely resizing.)) */
+            if (wp->flags & SWP_FRAMECHANGED) {
+              WINDOWPLACEMENT pl;
+              pl.length = sizeof(pl);
+              ::GetWindowPlacement(mWnd, &pl);
+
+              nsSizeModeEvent event;
+              event.eventStructType = NS_SIZEMODE_EVENT;
+              if (pl.showCmd == SW_SHOWMAXIMIZED)
+                event.mSizeMode = nsSizeMode_Maximized;
+              else if (pl.showCmd == SW_SHOWMINIMIZED)
+                event.mSizeMode = nsSizeMode_Minimized;
+              else
+                event.mSizeMode = nsSizeMode_Normal;
+              InitEvent(event, NS_SIZEMODE);
+
+              result = DispatchWindowEvent(&event);
+              NS_RELEASE(event.widget);
             }
             break;
         }
