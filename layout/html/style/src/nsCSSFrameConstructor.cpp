@@ -1745,6 +1745,7 @@ nsCSSFrameConstructor:: GetDisplay(nsIFrame* aFrame)
   return display;
 }
 
+PRBool
 nsCSSFrameConstructor::IsTableRelated(PRUint8 aDisplay)
 {
   return (aDisplay == NS_STYLE_DISPLAY_TABLE)              ||
@@ -5056,8 +5057,20 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       // Delete the current frame and insert the new frame
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
-      parentFrame->RemoveFrame(*aPresContext, *presShell, nsnull, aFrame);
-      parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, newFrame);
+      parentFrame->RemoveFrame(*aPresContext, *presShell, listName, aFrame);
+      if (placeholderFrame) {
+        // Remove the association between the old frame and its placeholder
+        presShell->SetPlaceholderFrameFor(aFrame, nsnull);
+
+        // Reuse the existing placeholder frame, and add an association to the
+        // new frame
+        presShell->SetPlaceholderFrameFor(newFrame, placeholderFrame);
+
+        // Placeholder frames have a pointer back to the out-of-flow frame.
+        // Make sure that's correct
+        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
+      }
+      parentFrame->InsertFrames(*aPresContext, *presShell, listName, prevSibling, newFrame);
     
       // If there are new absolutely positioned child frames, then notify
       // the parent
