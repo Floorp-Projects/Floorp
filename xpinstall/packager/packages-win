@@ -9,28 +9,32 @@
 ;
 
 [core]
-bin\component.reg
+; files required to initialize xpinstall for Install Wizard
+bin\js3250.dll
+bin\mozreg.dll
+bin\nspr3.dll
+bin\plc3.dll
+bin\plds3.dll
+bin\xpcom.dll
+bin\xpistub.dll
+bin\zlib.dll
+bin\components\jar50.dll
+bin\components\xpinstal.dll
+
+[browser]
+; files listed in core (missing in this section) will be installed as part of the browser
 bin\gkgfxwin.dll
 bin\gkplugin.dll
 bin\gkweb.dll
 bin\gkwidget.dll
 bin\img3250.dll
 bin\jpeg3250.dll
-bin\js3250.dll
 bin\jsdom.dll
 bin\jsj3250.dll
 bin\mozilla.exe
-bin\mozreg.dll
 bin\netscape.cfg
-bin\nspr3.dll
-bin\nsreg.dll
 bin\oji.dll
-bin\plc3.dll
-bin\plds3.dll
 bin\prstrms3.dll
-bin\xpcom.dll
-bin\xpistub.dll
-bin\zlib.dll
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
@@ -60,7 +64,6 @@ bin\components\history.dll
 bin\components\history.xpt
 bin\components\intl.xpt
 bin\components\jar.xpt
-bin\components\jar50.dll
 bin\components\jsloader.dll
 bin\components\jsurl.dll
 bin\components\jsurl.xpt
@@ -82,7 +85,6 @@ bin\components\necko.xpt
 bin\components\necko_about.xpt
 bin\components\necko_data.xpt
 bin\components\necko_dns.xpt
-bin\components\necko_file.xpt
 bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
 bin\components\nkabout.dll
@@ -104,11 +106,8 @@ bin\components\nsprefm.dll
 bin\components\nsSidebar.js
 bin\components\oji.dll
 bin\components\oji.xpt
-bin\components\pics.dll
 bin\components\pref.xpt
 bin\components\prefmigr.xpt
-bin\components\prefwind.dll
-bin\components\prefwindow.xpt
 bin\components\profile.dll
 bin\components\profile.xpt
 bin\components\proxyObjInst.xpt
@@ -120,7 +119,6 @@ bin\components\related.dll
 bin\components\related.xpt
 bin\components\search.dll
 bin\components\search.xpt
-bin\components\sidebar.dll
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
 bin\components\streamconv.xpt
@@ -158,7 +156,6 @@ bin\components\xpcom_nativeapp.xpt
 bin\components\xpcom_thread.xpt
 bin\components\xpconnect.xpt
 bin\components\xpiflash.dll
-bin\components\xpinstal.dll
 bin\components\xpinstall.xpt
 bin\components\xppref32.dll
 bin\chrome\bookmarks\*
@@ -185,7 +182,6 @@ bin\chrome\related\*
 bin\chrome\sidebar\*
 bin\chrome\wallet\*
 bin\chrome\xpinstall\*
-bin\chrome\registry.rdf
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
 bin\chrome\htmlBindings.xml
