@@ -356,6 +356,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState, 
                               nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsGfxListControlFrame", aReflowState.reason);
+
   REFLOW_COUNTER_REQUEST();
 
   aStatus = NS_FRAME_COMPLETE;
