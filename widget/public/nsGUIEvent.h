@@ -229,6 +229,22 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
 //@}
 
+
+#define NS_IS_MOUSE_EVENT(evnt) \
+       (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
+        ((evnt)->message == NS_MOUSE_LEFT_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_MIDDLE_BUTTON_DOWN) || \
+        ((evnt)->message == NS_MOUSE_MIDDLE_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_RIGHT_BUTTON_DOWN) || \
+        ((evnt)->message == NS_MOUSE_RIGHT_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_ENTER) || \
+        ((evnt)->message == NS_MOUSE_EXIT) || \
+        ((evnt)->message == NS_MOUSE_MOVE))
+
+#define NS_IS_KEY_EVENT(evnt) \
+       (((evnt)->message == NS_KEY_DOWN) ||  \
+        ((evnt)->message == NS_KEY_UP))
+
 /*
  * Virtual key bindings for keyboard events
  * NOTE: These are repeated in nsIDOMEvent.h and must be kept in sync
