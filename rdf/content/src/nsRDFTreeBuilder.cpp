@@ -1276,12 +1276,12 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
                                              getter_AddRefs(treeItem))))
         return rv;
 
-    // Add the <xul:treeitem> to the <xul:treechildren> element.
-    treeChildren->AppendChildTo(treeItem, PR_TRUE);
-
     // Create the cell substructure
     if (NS_FAILED(rv = CreateTreeItemCells(treeItem)))
         return rv;
+
+    // Add the <xul:treeitem> to the <xul:treechildren> element.
+    treeChildren->AppendChildTo(treeItem, PR_TRUE);
 
     // Add miscellaneous attributes by iterating _all_ of the
     // properties out of the resource.
@@ -1506,17 +1506,8 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
                                                        getter_AddRefs(treeItemResource))))
         return rv;
 
-    // Now walk up to the primordial <xul:tree> tag so that we can
-    // iterate through all of the tree's columns.
-    nsCOMPtr<nsIContent> treeElement;
-    if (NS_FAILED(rv = FindTreeElement(aTreeItemElement,
-                                       getter_AddRefs(treeElement)))) {
-        NS_ERROR("unable to find xul:tree element");
-        return rv;
-    }
-
     PRInt32 count;
-    if (NS_FAILED(rv = treeElement->ChildCount(count))) {
+    if (NS_FAILED(rv = mRoot->ChildCount(count))) {
         NS_ERROR("unable to count xul:tree element's kids");
         return rv;
     }
@@ -1526,7 +1517,7 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
     PRInt32 cellIndex = 0;
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = treeElement->ChildAt(i, *getter_AddRefs(kid)))) {
+        if (NS_FAILED(rv = mRoot->ChildAt(i, *getter_AddRefs(kid)))) {
             NS_ERROR("unable to get xul:tree's child");
             return rv;
         }
@@ -1729,18 +1720,8 @@ RDFTreeBuilderImpl::SetCellValue(nsIContent* aTreeItemElement,
     // XXX We assume that aTreeItemElement is actually a
     // <xul:treeitem>, it'd be good to enforce this...
 
-    // First, walk up to the tree's root so we can enumerate the
-    // columns & figure out where to put this...
-
-    nsCOMPtr<nsIContent> treeElement;
-    if (NS_FAILED(rv = FindTreeElement(aTreeItemElement,
-                                       getter_AddRefs(treeElement)))) {
-        NS_ERROR("unable to find xul:tree element");
-        return rv;
-    }
-
     PRInt32 index;
-    if (NS_FAILED(rv = GetColumnForProperty(treeElement, aProperty, &index))) {
+    if (NS_FAILED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
         // If we can't find a column for the specified property, that
         // just means there isn't a column in the tree for that
         // property. No big deal. Bye!
