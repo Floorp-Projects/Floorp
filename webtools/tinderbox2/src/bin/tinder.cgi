@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/18 19:30:28 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/09/22 15:15:00 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -48,6 +48,7 @@ use lib '#tinder_libdir#';
 use TinderConfig;
 use Utils;
 use TreeData;
+use BTData;
 use FileStructure;
 use HTMLPopUp;
 use VCDisplay;
@@ -172,14 +173,14 @@ sub construct_times_vec {
 
   my (@out) =();
   
-  my ($table_spacing_sec) = $table_spacing_min*60;
+  my ($table_spacing_sec) = $table_spacing_min*$main::SECONDS_PER_MINUTE;
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
     localtime($start_time);
 
   # the first entry is rounded down to nearest 5 minutes 
 
   my $remainder = $min % 5;
-  my ($time) = $start_time - ($remainder*60);
+  my ($time) = $start_time - ($remainder*$main::SECONDS_PER_MINUTE);
 
   while ($time > $end_time) {
     push @out, $time;
@@ -248,7 +249,7 @@ sub parse_args {
     my ($display_hours) = ( $form{'display-hours'} || 
                             $DEFAULT_DISPLAY_HOURS );
     $display_hours = extract_digits($display_hours);
-    $end_time = $start_time - ($display_hours * 60 * 60);
+    $end_time = $start_time - ($display_hours*$main::SECONDS_PER_HOUR);
   }
   
   $end_time = extract_digits($end_time);
@@ -256,7 +257,7 @@ sub parse_args {
     die("Can not prepare web page with end_time: $end_time. \n");
     
   {
-    my ($display_hours) = int (($start_time - $end_time) / (60 * 60));
+    my ($display_hours) = int (($start_time - $end_time) / ($main::SECONDS_PER_HOUR));
 
     ($display_hours > 0) ||
       die("start_time must be greater then end_time.".
@@ -329,7 +330,7 @@ sub HTML_status_page {
 
   # round the division to the nearest integer.
 
-  my ($display_hours) =  sprintf '%d', ( $display_time / (60*60) );
+  my ($display_hours) =  sprintf '%d', ($display_time/$main::SECONDS_PER_HOUR);
   my ($next_date) = $times_vec->[0] - $display_time;
 
   my ($display_2hours) = min($display_hours*2, $MAX_DISPLAY_HOURS);
@@ -523,7 +524,7 @@ sub write_stats {
 
  my ($end_time) = time();
  my ($run_time) = sprintf ("%.2f",         # round
-                           ($end_time - $TIME)/60);
+                           ($end_time - $TIME)/$main::SECONDS_PER_MINUTE);
 
 # print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
 
