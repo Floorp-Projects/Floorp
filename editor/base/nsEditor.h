@@ -189,11 +189,12 @@ public:
   NS_DECL_ISUPPORTS
 
   /* ------------ nsIEditor methods -------------- */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   NS_IMETHOD PostCreate();
   NS_IMETHOD GetFlags(PRUint32 *aFlags) = 0;
   NS_IMETHOD SetFlags(PRUint32 aFlags) = 0;
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
+  NS_IMETHOD GetRootElement(nsIDOMElement **aElement);
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
   NS_IMETHOD GetSelectionController(nsISelectionController **aSel);
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
@@ -459,10 +460,6 @@ protected:
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 public:
-
-  /** return the body element */
-  /** It would make more sense for this to be in nsHTMLEditor, no? */
-  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */

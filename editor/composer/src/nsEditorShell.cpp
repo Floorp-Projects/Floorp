@@ -662,17 +662,17 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   {
     if (mEditorTypeString.EqualsWithConversion("text"))
     {
-      err = editor->Init(aDoc, aPresShell, selCon, nsIHTMLEditor::eEditorPlaintextMask);
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIHTMLEditor::eEditorPlaintextMask);
       mEditorType = ePlainTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
     {
-      err = editor->Init(aDoc, aPresShell, selCon, 0);
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, 0);
       mEditorType = eHTMLTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
     {
-      err = editor->Init(aDoc, aPresShell, selCon, nsIHTMLEditor::eEditorMailMask);
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIHTMLEditor::eEditorMailMask);
       mEditorType = eHTMLTextEditorType;
     }
     else

@@ -46,6 +46,8 @@ class nsIEditActionListener;
 class nsIDocumentStateListener;
 class nsFileSpec;
 class nsISelectionController;
+class nsIContent;
+
 class nsIEditor  : public nsISupports
 {
 public:
@@ -70,9 +72,11 @@ public:
    *                        once events can tell us from what pres shell they originated, 
    *                        this will no longer be necessary and the editor will no longer be
    *                        linked to a single pres shell.
+   * @param aRoot           This is the root of the editable section of this document. if it is null then we get root from document body.
+   * @param aSelCon         this should be used to get the selection location
    * @param aFlags          A bitmask of flags for specifying the behavior of the editor.
    */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags)=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)=0;
 
   /**
    * PostCreate should be called after Init, and is the time that the editor tells
@@ -92,6 +96,11 @@ public:
    * @param aDoc [OUT] the dom interface being observed, refcounted
    */
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc)=0;
+
+  /** return the body element 
+   *  @param aElement return value for the root of the editable document
+  */
+  NS_IMETHOD GetRootElement(nsIDOMElement **aElement)=0;
 
   /**
    * return the presentation shell this editor is associated with
@@ -114,6 +123,7 @@ public:
    * @param aSelection [OUT] the dom interface for the selection
    */
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection)=0;
+
 
   /* ------------ Selected content removal -------------- */
 
