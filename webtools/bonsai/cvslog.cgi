@@ -135,14 +135,12 @@ $opt_sort = $form{'sort'};
 #
 &print_top;
 
+open(BANNER, "<data/banner.html");
+print while <BANNER>;
 
 # Print link at top for directory browsing
 #
 print q(
-<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/"><IMG
- SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
- BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
 <TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0 WIDTH="100%">
  <TR>
   <TD ALIGN=LEFT VALIGN=CENTER>
@@ -175,19 +173,19 @@ print qq(
        <TR>
         <TD>
          <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">lxr</A>
-        </TD><TD>
+        </TD><TD NOWRAP>
          Browse the source code as hypertext.
         </TD>
        </TR><TR>
         <TD>
          <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail">diff</A>
-        </TD><TD>
+        </TD><TD NOWRAP>
          Compare any two version.
         </TD>
        </TR><TR>
         <TD>
          <A HREF="cvsblame.cgi?file=$filename">blame</A>&nbsp;
-        </TD><TD>
+        </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>
        </TR>
