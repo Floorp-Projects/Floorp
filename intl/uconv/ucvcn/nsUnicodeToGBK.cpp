@@ -131,8 +131,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(const PRUnichar * aSrc,
        else
          {
            // this is an ASCII
-           pSrcDBCode = (DByte *)pSrc;
-           *aDest = pSrcDBCode->leftbyte;
+           *aDest = (char)*pSrc;
            aDest++; // increment 1 byte
            iDestLength +=1;
          }
