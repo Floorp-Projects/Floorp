@@ -35,7 +35,9 @@
 
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
-#include "prinrval.h"			/* for PR_IntervalNow */
+#include "prinrval.h"		/* for PR_IntervalNow */
+#else
+#include "private/prpriv.h"     /* for NewNamedMonitor */
 #endif
 
 #ifdef PROFILE
@@ -4601,6 +4603,33 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
 }
 
 /*
+ * temporary UI until FE implements this function as a single dialog box
+ */
+XP_Bool FE_Select(
+	MWContext* pContext,
+	char* pMessage,
+	char** pList,
+	int* pCount) {
+    int i;
+    char *message = 0;
+    for (i = 0; i < *pCount; i++) {
+	StrAllocCopy(message, pMessage);
+        StrAllocCat(message, " = ");
+	StrAllocCat(message, pList[i]);
+	if (FE_Confirm(pContext, message)) {
+	    /* user selected this one */
+	    XP_FREE(message);
+	    *pCount = i;
+	    return TRUE;
+	}
+    }
+
+    /* user rejected all */
+    XP_FREE(message);
+    return FALSE;
+}
+
+/*
  * Get the user node for a given URL
  *
  * This routine is called only when holding the signon lock!!!
@@ -4621,8 +4650,9 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
     if (URL != NULL) {
 
 	/* node for this URL was found */
+	int user_count;
 	user_ptr = URL->signonUser_list;
-	if (XP_ListCount(user_ptr) == 1) {
+	if ((user_count = XP_ListCount(user_ptr)) == 1) {
 
 	    /* only one set of data exists for this URL so select it */
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
@@ -4633,46 +4663,52 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
 
 	} else if (URL->firsttime_chosing_user) {
-/*
- * The following UI is temporary.  The real version will display a list of users
- * from which the desired user will be selected.  The list is ordered by
- * most-recently-used so the first user is the most likely one and will be
- * preselected when the list first appears.
- */
-	    /* step through set of user nodes for this URL and display the
+	    /* multiple users for this URL so a choice needs to be made */
+	    char ** list;
+	    char ** list2;
+	    si_SignonUserStruct** users;
+	    si_SignonUserStruct** users2;
+	    char * caption = 0;
+
+	    list = XP_ALLOC(user_count*sizeof(char*));
+	    users = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
+	    list2 = list;
+	    users2 = users;
+
+	    /* step through set of user nodes for this URL and create list of
 	     * first data node of each (presumably that is the user name).
 	     * Note that the user nodes are already ordered by
-	     * most-recently-used so the first one displayed is the most
-	     * likely one to be chosen
+	     * most-recently-used so the first one in the list is the most
+	     * likely one to be chosen.
 	     */
 	    URL->firsttime_chosing_user = FALSE;
 	    old_user_ptr = user_ptr;
-	    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
-		char *message = 0;
-		data_ptr = user->signonData_list;
 
+	    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+		data_ptr = user->signonData_list;
 		/* consider first item in data list to be the identifying item */
 		data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-
-		/* display identifying item and see if user will select it */
-		StrAllocCopy(message, data->name);
-                StrAllocCat(message, " = ");
-		StrAllocCat(message, data->value);
-		if (FE_Confirm(context, message)) {
-
-		    /* user selected this one */
-		    URL->chosen_user = user;
-		    XP_FREE(message);
-
-		    /* user is most-recently used, put at head of list */
-		    XP_ListRemoveObject(URL->signonUser_list, user);
-		    XP_ListAddObject(URL->signonUser_list, user);
-
-		    break;
+		if (!caption) {
+		    caption = data->name;
 		}
-		XP_FREE(message);
+		*(list2++) = data->value;
+		*(users2++) = user;
 	    }
-/* End of temporary UI */
+
+	    /* have user select an item from the list */
+	    if (FE_Select(context, caption, list, &user_count)) {
+		/* user selected an item */
+		user = users[user_count]; /* this is the selected item */
+		URL->chosen_user = user;
+		/* item selected is now most-recently used, put at head of list */
+		XP_ListRemoveObject(URL->signonUser_list, user);
+		XP_ListAddObject(URL->signonUser_list, user);
+	    } else {
+		user = NULL;
+	    }
+	    XP_FREE(list);
+	    XP_FREE(users);
+
 	} else {
 	    user = URL->chosen_user;
 	}
@@ -5097,20 +5133,12 @@ SI_LoadSignonData(char * filename) {
 	    value_array[submit.value_cnt] = NULL;
             /* note that we need to skip over leading '=' of value */
 	    if (type_array[submit.value_cnt] == FORM_TYPE_PASSWORD) {
-	    	/* UnMungeString will return NULL in the free source because there is
-	    	 * no security. When saving out the string, we wrote 8 stars. If that is
-	    	 * what we get, create an empty password to be copied into the value array
-	    	 */
-	    	if ( strcmp(buffer+1, "********") == 0 ) {
-	    		/* don't use an empty string because si_PutData doesn't like it */
-	    		unmungedValue = XP_ALLOC(2);
-	    		unmungedValue[0] = '?'; unmungedValue[1] = '\0';
-	    	}
-	    	else {
-				unmungedValue = SECNAV_UnMungeString(buffer+1);
-			}
-			StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
-			XP_FREE(unmungedValue);
+		if ((unmungedValue=SECNAV_UnMungeString(buffer+1)) == NULL) {
+                    /* this is the free source and there is no obscuring of passwords */
+                    unmungedValue = buffer+1;
+                }
+                StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
+                XP_FREE(unmungedValue);
 	    } else {
 		StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
 	    }
@@ -5214,17 +5242,13 @@ si_SaveSignonDataLocked(char * filename) {
 		XP_FileWrite(LINEBREAK, -1, fp);
                 XP_FileWrite("=", -1, fp); /* precede values with '=' */
 		if (data->isPassword) {
-			/* in free source, MungeString will return NULL because there is
-			 * no security available. Instead, we write out 8 stars so we know
-			 * this isn't a valid password.
-			 */
-		    mungedValue = SECNAV_MungeString(data->value);
-		    if ( mungedValue ) {
-			    XP_FileWrite(mungedValue, -1, fp);
-			    XP_FREE(mungedValue);
-			}
-			else
-				XP_FileWrite("********", -1, fp);
+		    if (mungedValue = SECNAV_MungeString(data->value)) {
+                        XP_FileWrite(mungedValue, -1, fp);
+                        XP_FREE(mungedValue);
+                    } else {
+                        /* this is the free source and passwords are not obscured */
+			XP_FileWrite(data->value, -1, fp);
+                    }
 		} else {
 		    XP_FileWrite(data->value, -1, fp);
 		}
@@ -5865,6 +5889,7 @@ si_SignonInfoDialogDone
 		XP_ListNextObject(user_ptr))) {
 	    if (si_InSequence(gone, userNumber)) {
 		if (userToDelete) {
+
                     /* get to first data item -- that's the user name */
 		    data_ptr = userToDelete->signonData_list;
 		    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
@@ -5879,13 +5904,13 @@ si_SignonInfoDialogDone
     }
     if (userToDelete) {
         /* get to first data item -- that's the user name */
-		data_ptr = userToDelete->signonData_list;
-		data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-		/* do the deletion */
-		SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
+	data_ptr = userToDelete->signonData_list;
+	data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 
-		si_signon_list_changed = TRUE;
-		si_SaveSignonDataLocked(NULL);
+	/* do the deletion */
+	SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
+	si_signon_list_changed = TRUE;
+	si_SaveSignonDataLocked(NULL);
     }
 
     return PR_FALSE;
