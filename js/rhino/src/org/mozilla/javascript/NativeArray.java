@@ -64,7 +64,7 @@ public class NativeArray extends IdScriptableObject
 
     private static final Object ARRAY_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeArray obj = new NativeArray();
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);

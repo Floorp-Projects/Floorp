@@ -47,7 +47,7 @@ public final class NativeCall extends IdScriptableObject
 {
     private static final Object CALL_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeCall obj = new NativeCall();
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);

@@ -43,7 +43,7 @@ public final class Continuation extends IdScriptableObject implements Function
 
     private Object implementation;
 
-    public static void init(Context cx, Scriptable scope, boolean sealed)
+    public static void init(Scriptable scope, boolean sealed)
     {
         Continuation obj = new Continuation();
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);

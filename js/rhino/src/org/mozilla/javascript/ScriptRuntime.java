@@ -130,8 +130,8 @@ public class ScriptRuntime {
         scope.associateValue(LIBRARY_SCOPE_KEY, scope);
         (new ClassCache()).associate(scope);
 
-        BaseFunction.init(cx, scope, sealed);
-        NativeObject.init(cx, scope, sealed);
+        BaseFunction.init(scope, sealed);
+        NativeObject.init(scope, sealed);
 
         Scriptable objectProto = ScriptableObject.getObjectPrototype(scope);
 
@@ -144,19 +144,19 @@ public class ScriptRuntime {
             scope.setPrototype(objectProto);
 
         // must precede NativeGlobal since it's needed therein
-        NativeError.init(cx, scope, sealed);
+        NativeError.init(scope, sealed);
         NativeGlobal.init(cx, scope, sealed);
 
-        NativeArray.init(cx, scope, sealed);
-        NativeString.init(cx, scope, sealed);
-        NativeBoolean.init(cx, scope, sealed);
-        NativeNumber.init(cx, scope, sealed);
-        NativeDate.init(cx, scope, sealed);
-        NativeMath.init(cx, scope, sealed);
+        NativeArray.init(scope, sealed);
+        NativeString.init(scope, sealed);
+        NativeBoolean.init(scope, sealed);
+        NativeNumber.init(scope, sealed);
+        NativeDate.init(scope, sealed);
+        NativeMath.init(scope, sealed);
 
-        NativeWith.init(cx, scope, sealed);
-        NativeCall.init(cx, scope, sealed);
-        NativeScript.init(cx, scope, sealed);
+        NativeWith.init(scope, sealed);
+        NativeCall.init(scope, sealed);
+        NativeScript.init(scope, sealed);
 
         boolean withXml = cx.hasFeature(Context.FEATURE_E4X);
 
@@ -169,7 +169,7 @@ public class ScriptRuntime {
             new LazilyLoadedCtor(scope, topProperty, className, sealed);
         }
 
-        Continuation.init(cx, scope, sealed);
+        Continuation.init(scope, sealed);
 
         return scope;
     }
@@ -669,10 +669,11 @@ public class ScriptRuntime {
 
     static String defaultObjectToString(Scriptable obj)
     {
-        return "[object " + obj.getClassName() + "]";
+        return "[object " + obj.getClassName() + ']';
     }
 
-    public static String toString(Object[] args, int index) {
+    public static String toString(Object[] args, int index) 
+    {
         return (index < args.length) ? toString(args[index]) : "undefined";
     }
 
@@ -2418,8 +2419,9 @@ public class ScriptRuntime {
         }
     }
 
-    public static Object toPrimitive(Object val) {
-        if (val == null || !(val instanceof Scriptable)) {
+    private static Object toPrimitive(Object val) 
+    {
+        if (!(val instanceof Scriptable)) {
             return val;
         }
         Scriptable s = (Scriptable)val;
@@ -2707,13 +2709,7 @@ public class ScriptRuntime {
                 Constructor globalClassCtor = globalClass.getConstructor(parm);
                 Object[] arg = { cx };
                 return (ScriptableObject) globalClassCtor.newInstance(arg);
-            } catch (NoSuchMethodException e) {
-                // fall through...
-            } catch (InvocationTargetException e) {
-                // fall through...
-            } catch (IllegalAccessException e) {
-                // fall through...
-            } catch (InstantiationException e) {
+            } catch (Exception e) {
                 // fall through...
             }
         }

@@ -54,7 +54,7 @@ final class NativeDate extends IdScriptableObject
 
     private static final String js_NaN_date_str = "Invalid Date";
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeDate obj = new NativeDate();
         // Set the value of the prototype Date to NaN ('invalid date');

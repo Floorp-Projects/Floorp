@@ -50,7 +50,7 @@ final class NativeNumber extends IdScriptableObject
 
     private static final int MAX_PRECISION = 100;
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeNumber obj = new NativeNumber(0.0);
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);

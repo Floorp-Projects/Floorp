@@ -46,7 +46,7 @@ public class NativeObject extends IdScriptableObject
 {
     private static final Object OBJECT_TAG = new Object();
 
-    public static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeObject obj = new NativeObject();
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);

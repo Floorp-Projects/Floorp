@@ -47,7 +47,7 @@ final class NativeError extends IdScriptableObject
 {
     private static final Object ERROR_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeError obj = new NativeError();
         ScriptableObject.putProperty(obj, "name", "Error");

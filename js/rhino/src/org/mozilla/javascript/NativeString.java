@@ -54,7 +54,7 @@ final class NativeString extends IdScriptableObject
 
     private static final Object STRING_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeString obj = new NativeString("");
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);

@@ -46,7 +46,7 @@ final class NativeMath extends IdScriptableObject
 {
     private static final Object MATH_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         NativeMath obj = new NativeMath();
         obj.activatePrototypeMap(MAX_ID);

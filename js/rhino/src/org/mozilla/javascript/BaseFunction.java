@@ -48,7 +48,7 @@ public class BaseFunction extends IdScriptableObject implements Function
 
     private static final Object FUNCTION_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    static void init(Scriptable scope, boolean sealed)
     {
         BaseFunction obj = new BaseFunction();
         obj.isPrototypePropertyImmune = true;

@@ -44,7 +44,8 @@ package org.mozilla.javascript;
  */
 public class NativeWith implements Scriptable, IdFunctionCall {
 
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Scriptable scope, boolean sealed)
+    {
         NativeWith obj = new NativeWith();
 
         obj.setParentScope(scope);
