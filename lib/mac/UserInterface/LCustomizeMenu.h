@@ -25,6 +25,7 @@ public:
 	virtual void Draw	(MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item);
 	virtual void Size	(MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item);
 	virtual void Choose(MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item);
+	virtual void PopUp  (MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item);
 protected:
 	virtual void DrawItem			(MenuHandle menu, int item, Rect& itemrect);
 	virtual short MeasureItem		(MenuHandle menu, int item);
@@ -55,7 +56,7 @@ protected:
 
 	// Basic Testing function
 	virtual Boolean ItemEnable		(MenuHandle menu, int item) 
-			{ return (((1L << (item )) & (**menu).enableFlags) != 0); };
+			{ return  (item < 32 ) ?  (((1L << (item )) & (**menu).enableFlags) != 0) : true; };
 	virtual	Boolean	HaveMark		(short cmd, short mark)
 			{ return ((cmd != 0x1b) && (mark != 0)); };
 	virtual	Boolean	HaveIcon		(short cmd, short iconindex)

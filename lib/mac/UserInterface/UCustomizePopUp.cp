@@ -62,7 +62,11 @@ pascal void UCustomizePopUp::MDEF(short message, MenuHandle menu, Rect *rect, Po
 			UCustomizePopUp::fCustomize->PopUp	(menu, UCustomizePopUp::fOrigMenuDefUPP, rect, hitPt, item);
 			break;
 		default:
-			Assert_(FALSE);
+			// Assert_(FALSE);
+			// somehow we got message equal to 6 when we doing debug. So far I cannot find out any documentation
+			// describe what is message 6 mean. We just let the default routine handle it for now.
+			// We probably need to change it later- after we know what 6 mean...
+			CallMenuDefProc(*UCustomizePopUp::fOrigMenuDefUPP, message, menu, rect, hitPt, item);
 			break;
 	}
   ::SetA5 (savedA5) ;

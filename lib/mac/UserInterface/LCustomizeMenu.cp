@@ -49,6 +49,17 @@ void LCustomizeMenu::Size(MenuHandle menu, MenuDefUPP* /* root */, Rect * /* rec
 	(**menu).menuHeight = fItemHeight * fItemCount;	
  	(**menu).menuWidth = maxWidth;
 }
+//
+//	PopUp
+//
+void LCustomizeMenu::PopUp(MenuHandle menu, MenuDefUPP* /* root */, Rect *rect , Point  hitPt, short *  item )
+{
+	rect->left = hitPt.v;
+	rect->top = hitPt.h - fItemHeight * (*item - 1);
+	rect->right = rect->left + (**menu).menuWidth ;
+	rect->bottom = rect->top + (**menu).menuHeight ;
+	
+}
 
 //
 //	MeasureItem
@@ -109,6 +120,7 @@ void LCustomizeMenu::Draw(MenuHandle menu, MenuDefUPP* /* root */, Rect *rect, P
 {
 	Assert_(fItemCount != 0);
 	Assert_(fItemHeight != 0);	
+
 	for(int i = 1; i <= fItemCount; i++)
 	{
 		Rect itemrect;
