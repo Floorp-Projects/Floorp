@@ -54,20 +54,22 @@ the space  taken up by floaters (UpdateSpaceManager in nsBlockFrame) and
 provides information  about the space available for other elements (GetAvailableSpace
 in nsBlockReflowState).  &nbsp;<br>
  <br>
- Additionally, there is a need to manage impacts to lines caused by changes 
-to floated elements. &nbsp;This is referred to as Propagation of Floater Damage
-and is handled by the Block Frame, making use of teh Space Manager. When
-dirty lines are incrementally reflowed, the Space Manger is told about the
-larger of the new or old line combined width, which it records in an internal
-nsIntervalSet as potential floater damage (the method is IncludeInDamage). 
-During the incremental reflow of dirty lines the block frame may encounter 
-lines that are NOT dirty. In this case the Space Manager is also asked if 
-&nbsp;there is any floater damage, and if there is then the block further 
-checks to see if that damage intersects the area of the non-dirty line, marking 
-it dirty if there is intersection. &nbsp;Thus, changes to floaters on other 
-lines may cause impact to otherwise clean lines, and the Space Manager facilitates 
-the detection of this.  
-<h2>Data Model</h2>
+ Additionally, there is a need to manage impacts to lines caused by
+changes to floated elements. &nbsp;This is referred to as Propagation
+of Floater Damage and is handled by the Block Frame, making use of the
+Space Manager. When a float is incrementally reflowed, the Space
+Manger is notified if the floater's region has changed. If so, the
+vertical space that has been affected (including both the float's old
+region and the float's new region) is noted in the internal
+nsIntervalSet as potential floater damage (the method is
+IncludeInDamage).  During the incremental reflow of dirty lines the
+block frame may encounter lines that are NOT dirty. In this case the
+Space Manager is also asked if &nbsp;there is any floater damage, and
+if there is then the block further checks to see if that damage
+intersects the area of the non-dirty line, marking it dirty if there
+is intersection. &nbsp;Thus, changes to floaters on other lines may
+cause impact to otherwise clean lines, and the Space Manager
+facilitates the detection of this.  <h2>Data Model</h2>
  
 <h4>Class/Component Diagram</h4>
  
@@ -150,6 +152,7 @@ origin.&nbsp;       <br>
 
 The general algorightm in <i>nsBlockReflowState::FlowAndPlaceFloater</i> is:<br>
 <ul>
+  <li>The region that the float currently occupies is recorded.</li>
   <li>The band of available space is searched (with nsBlockReflowState::GetAvailableSpace);</li>
   <li>The floater frame that is get from the passed nsFloaterCache argument is reflowed
   and its rect is retriven with GetRect;</li>
@@ -160,6 +163,8 @@ The general algorightm in <i>nsBlockReflowState::FlowAndPlaceFloater</i> is:<br>
       <a href="http://www.w3.org/TR/REC-CSS2/visuren.html#float-position">CSS2/9.5.1/4</a>
       is not respected;</li>
   <li>Add the floater using <i>nsSpaceManager::AddRectRegion</i> </li>
+  <li>Compare the area that the float used to occupy with the area that it now occupies: if different,
+      record the vertically affected interval using <i>nsSpaceManager::IncludeInDamage</i></li>
 </ul>
   <h4>Use Case 3: Space Manager is used to find available space to reflow
  into</h4>
@@ -188,17 +193,7 @@ and determines the right-most edge of the available space.</li>
    
   </ul>
    
-  <h4>Use Case 4: Propagation of Floater Damage: remembering floater damage</h4>
- This process is driven by the Block Frame.<br>
-   
-  <ul>
-     <li>A dirty line is reflowed</li>
-     <li>If the line's combined area has changed then the Space Manager is 
-told to include the combined area as a floater damage interval.</li>
-   
-  </ul>
-   
-  <h4>Use Case 5: Propagation of Floater Damage: detecting and handling floater 
+  <h4>Use Case 4: Propagation of Floater Damage: detecting and handling floater 
 damage</h4>
   This process is driven by the Block Frame.<br>
    
