@@ -53,6 +53,8 @@ extern GtkType      gtk_moz_embed_get_type         (void);
 extern GtkWidget   *gtk_moz_embed_new              (void);
 extern void         gtk_moz_embed_load_url         (GtkWidget *widget, const char *url);
 extern const char  *gtk_moz_embed_get_link_message (GtkWidget *widget);
+extern const char  *gtk_moz_embed_get_js_status    (GtkWidget *widget);
+extern const char  *gtk_moz_embed_get_title        (GtkWidget *widget);
 
 #ifdef __cplusplus
 }

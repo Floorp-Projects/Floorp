@@ -34,7 +34,6 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 
-static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 class GtkMozEmbedPrivate
@@ -191,7 +190,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   // create our private struct
   embed_private = new GtkMozEmbedPrivate();
   // create an nsIWebBrowser object
-  embed_private->webBrowser = do_CreateInstance(kWebBrowserCID);
+  embed_private->webBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
   g_return_if_fail(embed_private->webBrowser);
   // create our glue widget
   GtkMozEmbedChrome *chrome = new GtkMozEmbedChrome();
@@ -261,6 +260,44 @@ gtk_moz_embed_get_link_message (GtkWidget *widget)
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
   embed_private->embed->GetLinkMessage(&retval);
+
+  return retval;
+}
+
+const char  *
+gtk_moz_embed_get_js_status (GtkWidget *widget)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+  const char *retval = NULL;
+  
+  g_return_val_if_fail ((widget != NULL), NULL);
+  g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
+  
+  embed = GTK_MOZ_EMBED(widget);
+  
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  embed_private->embed->GetJSStatus(&retval);
+
+  return retval;
+}
+
+const char *
+gtk_moz_embed_get_title (GtkWidget *widget)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+  const char *retval = NULL;
+  
+  g_return_val_if_fail ((widget != NULL), NULL);
+  g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
+  
+  embed = GTK_MOZ_EMBED(widget);
+  
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  embed_private->embed->GetTitleChar(&retval);
 
   return retval;
 }
@@ -373,6 +410,9 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 
   widget->allocation = *allocation;
 
+  g_print("gtk_moz_embed_size allocate for %p to %d %d %d %d\n", widget, 
+	  allocation->x, allocation->y, allocation->width, allocation->height);
+
   if (GTK_WIDGET_REALIZED(widget))
   {
     gdk_window_move_resize(widget->window,
@@ -384,7 +424,6 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     nsCOMPtr<nsIBaseWindow> embedBaseWindow = do_QueryInterface(embed_private->embed);
     embedBaseWindow->SetPositionAndSize(0, 0, allocation->width, allocation->height, PR_TRUE);
   }
-  
 }
 
 void
@@ -467,7 +506,8 @@ gtk_moz_embed_handle_new_browser(PRUint32 chromeMask, nsIWebBrowser **_retval, v
   newEmbedPrivate = (GtkMozEmbedPrivate *)newEmbed->data;
 
   // track visibility requests
-  newEmbedPrivate->embed->SetVisibilityCallback(gtk_moz_embed_handle_toplevel_visibility_change, newMozEmbed);
+  newEmbedPrivate->embed->SetVisibilityCallback(gtk_moz_embed_handle_toplevel_visibility_change,
+						newMozEmbed);
   
   *_retval = newEmbedPrivate->webBrowser;
   g_print("returning new toplevel web browser as %p\n", *_retval);
@@ -481,6 +521,7 @@ gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData)
 {
   GtkMozEmbed        *embed;
   GtkMozEmbedPrivate *embed_private;
+  GtkWidget          *topLevelWidget;
   
   g_print("gtk_moz_embed_handle_toplevel_visibility_change\n");
 
@@ -493,8 +534,10 @@ gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData)
   // the ->parent is always going to be the GtkWindow
   if (aVisibility) 
   {
-    gtk_widget_show(GTK_WIDGET(embed));
-    gtk_widget_show(GTK_WIDGET(embed)->parent);
+    topLevelWidget = gtk_widget_get_toplevel(GTK_WIDGET(embed));
+    gtk_widget_show_all(topLevelWidget);
+    //gtk_widget_show(GTK_WIDGET(embed));
+    //gtk_widget_show(GTK_WIDGET(embed)->parent);
   }
   else
   {
