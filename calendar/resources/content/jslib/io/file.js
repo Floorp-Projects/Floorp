@@ -609,7 +609,9 @@ File.prototype.copy = function (aDest)
                         JS_FILE_FILE+":copy");
       return false;
     }
-    dest.append(this.leaf);
+    
+    //dest.append(this.leaf);
+    
     if (dest.exists()) {
       jslibError(null, "(dest "+dest.path+" already exists)", 
                               "NS_ERROR_FAILURE", 
@@ -624,10 +626,10 @@ File.prototype.copy = function (aDest)
     }
     if (!dest.exists()) {
       copyName          = dest.leafName;
-      dir               = dest.parent.parent;
+      dir               = dest.parent;
 
       if (!dir.exists()) {
-        jslibError(null, "(dest directory "+dest.parent.parent.path+" doesn't exist and dir is "+dir+")", 
+        jslibError(null, "(dest directory "+dest.parent.path+" doesn't exist and dir is "+dir+")", 
                           "NS_ERROR_FAILURE", 
                           JS_FILE_FILE+":copy");
         return false;
