@@ -5410,14 +5410,19 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
         if (frameManager && frame && explicitItems.childList) {
           frameManager->AppendFrames(aPresContext, *aPresShell, frame,
                                      nsnull, explicitItems.childList);
-          nsCOMPtr<nsIStyleContext> styleContext;
-          frame->GetStyleContext(getter_AddRefs(styleContext));
-          nsIFrame* walkit = explicitItems.childList;
-          while (walkit) {
-            nsIFrame* realFrame = GetRealFrame(walkit);
-            realFrame->SetParent(frame);
-            aPresContext->ReParentStyleContext(realFrame, styleContext);
-            walkit->GetNextSibling(&walkit);
+
+          nsIFrame* insertionPoint = nsnull;
+          frameManager->GetInsertionPoint(aPresShell, frame, explicitItems.childList, &insertionPoint);
+          if (!insertionPoint) {
+            nsCOMPtr<nsIStyleContext> styleContext;
+            frame->GetStyleContext(getter_AddRefs(styleContext));
+            nsIFrame* walkit = explicitItems.childList;
+            while (walkit) {
+              nsIFrame* realFrame = GetRealFrame(walkit);
+              realFrame->SetParent(frame);
+              aPresContext->ReParentStyleContext(realFrame, styleContext);
+              walkit->GetNextSibling(&walkit);
+            }
           }
         }
       }
@@ -5467,11 +5472,15 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           if (frameManager && frame) {
             frameManager->AppendFrames(aPresContext, *aPresShell, frame,
                                        nsnull, currFrame);
-            frame->GetStyleContext(getter_AddRefs(styleContext));
 
-            nsIFrame* realFrame = GetRealFrame(currFrame);
-            realFrame->SetParent(frame);
-            aPresContext->ReParentStyleContext(realFrame, styleContext);
+            nsIFrame* insertionPoint = nsnull;
+            frameManager->GetInsertionPoint(aPresShell, frame, explicitItems.childList, &insertionPoint);
+            if (!insertionPoint) {
+              frame->GetStyleContext(getter_AddRefs(styleContext));
+              nsIFrame* realFrame = GetRealFrame(currFrame);
+              realFrame->SetParent(frame);
+              aPresContext->ReParentStyleContext(realFrame, styleContext);
+            }
           }
        
           currFrame = nextFrame;
