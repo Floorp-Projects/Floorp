@@ -15,7 +15,7 @@
 
 #//------------------------------------------------------------------------
 #//
-#// Makefile fo NS/CONFIG - various commands used by other makefiles
+#// Makefile for MOZILLA/CONFIG - various commands used by other makefiles
 #//
 #//------------------------------------------------------------------------
 
@@ -59,7 +59,10 @@ mantomak.exe:: mantomak.c
 bin2rc.exe:: bin2rc.c
     $(CC) -O2 -MD bin2rc.c
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe
+makedep.exe:: makedep.cpp
+    @cl -MT makedep.cpp 
+    
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe
 
 # update build number from within make script
 build_number:: FORCE
