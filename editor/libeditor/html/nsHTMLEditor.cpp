@@ -4012,27 +4012,37 @@ NS_IMETHODIMP nsHTMLEditor::DeleteText(nsIDOMCharacterData *aTextNode,
 #endif
 
 /* This routine examines aNode and it's ancestors looking for any node which has the
-   -moz-user-select: all style lit.  Return the ighest such ancestor.  */
+   -moz-user-select: all style lit.  Return the highest such ancestor.  */
 nsCOMPtr<nsIDOMNode> nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIDOMNode> resultNode;  // starts out empty
   nsCOMPtr<nsIDOMNode> node = aNode;
+  nsCOMPtr<nsIDOMElement>root;
+  GetRootElement(getter_AddRefs(root));
+  if (!nsEditorUtils::IsDescendantOf(aNode, root))
+    return nsnull;
 
   // retrieve the computed style of -moz-user-select for aNode
   nsAutoString mozUserSelectValue;
   while (node)
   {
     mHTMLCSSUtils->GetComputedProperty(node, nsIEditProperty::cssMozUserSelect, mozUserSelectValue);
-    if (!mozUserSelectValue.Equals(NS_LITERAL_STRING("all")))
+    if (mozUserSelectValue.Equals(NS_LITERAL_STRING("all")))
     {
-      return resultNode;
+      resultNode = node;
     }
-    resultNode = node;
-    nsCOMPtr<nsIDOMNode> tmp;
-    node->GetParentNode(getter_AddRefs(tmp));
-    node = tmp;
-  }
-  
+    if (node != root)
+    {
+      nsCOMPtr<nsIDOMNode> tmp;
+      node->GetParentNode(getter_AddRefs(tmp));
+      node = tmp;
+    }
+    else
+    {
+      node = nsnull;
+    }
+  } 
+
   return resultNode;
 }
 
