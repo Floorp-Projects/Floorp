@@ -33,20 +33,20 @@ var cert;
 
 function onLoad()
 {
-  pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
+  pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
-  var isupport = pkiParams.getISupportAtIndex(1); 
+  var isupport = pkiParams.getISupportAtIndex(1);
   cert = isupport.QueryInterface(nsIX509Cert);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
   var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
 
   var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var message1 = bundle.formatStringFromName("newServerMessage1", 
+  var message1 = bundle.formatStringFromName("newServerMessage1",
                                              [ cert.commonName, brandName ],
                                              2);
-  var message4 = bundle.formatStringFromName("newServerMessage4", 
+  var message4 = bundle.formatStringFromName("newServerMessage4",
                                              [ cert.commonName ],
                                               1);
   setText("message1", message1);
@@ -57,7 +57,7 @@ function doOK()
 {
   dialogParams.SetInt(1,1);
   var radioGroup = document.getElementById("trustSiteCert");
-  dialogParams.SetInt(2,parseInt(radioGroup.selectedItem.data));
+  dialogParams.SetInt(2,parseInt(radioGroup.selectedItem.value));
   window.close();
 }
 
@@ -70,5 +70,5 @@ function doCancel()
 function viewCert()
 {
   window.openDialog('chrome://pippki/content/viewCertDetails.xul', cert.dbKey,
-                    'chrome,width=500,height=400,resizable=1'); 
+                    'chrome,width=500,height=400,resizable=1');
 }

@@ -45,19 +45,19 @@
     </tree>
     <box>
       <button id="mine_viewButton" class="normal" 
-              value="&certmgr.view.label;" orient="horizontal" 
+              label="&certmgr.view.label;" orient="horizontal" 
               disabled="true" onclick="viewCerts();"/>
       <button id="mine_backupButton" class="normal" 
-              value="&certmgr.backup.label;" orient="horizontal" 
+              label="&certmgr.backup.label;" orient="horizontal" 
               disabled="true" onclick="backupCerts();"/>
       <button id="mine_backupAllButton" class="normal" 
-              value="&certmgr.backupall.label;" orient="horizontal" 
+              label="&certmgr.backupall.label;" orient="horizontal" 
               onclick="backupAllCerts();"/>
       <button id="mine_restoreButton" class="normal" 
-              value="&certmgr.restore.label;" orient="horizontal" 
+              label="&certmgr.restore.label;" orient="horizontal" 
               onclick="restoreCerts();"/>
       <button id="mine_deleteButton" class="normal" 
-              value="&certmgr.delete.label;" orient="horizontal" 
+              label="&certmgr.delete.label;" orient="horizontal" 
               disabled="true" onclick="deleteCerts();"/>
     </box>
   </box>

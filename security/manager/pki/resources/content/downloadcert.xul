@@ -55,11 +55,11 @@
     -->
   <box orient = "vertical">
     <html id="message2"/>
-    <checkbox value="&downloadCert.trustSSL;" checked="false" 
+    <checkbox label="&downloadCert.trustSSL;" checked="false" 
      id="trustSSL"/>
-    <checkbox value="&downloadCert.trustEmail;" checked="false" 
+    <checkbox label="&downloadCert.trustEmail;" checked="false" 
      id="trustEmail"/>
-    <checkbox value="&downloadCert.trustObjSign;" checked="false" 
+    <checkbox label="&downloadCert.trustObjSign;" checked="false" 
      id="trustObjSign"/>
   </box>
 
@@ -81,13 +81,13 @@
       <rows>
         <row>
           <button id="viewC-button" class="dialog" 
-                  value="&downloadCert.viewCert.label;"
+                  label="&downloadCert.viewCert.label;"
                   style="width: 8ex" oncommand="viewCert();"/> 
           <html>&downloadCert.viewCert.text;</html>
         </row>
         <row>
           <button id="viewP-button" class="dialog" 
-                  value="&downloadCert.viewPolicy.label;"
+                  label="&downloadCert.viewPolicy.label;"
                   style="width: 8ex" oncommand="viewPolicy();" /> 
           <html>&downloadCert.viewPolicy.text;</html>
         </row>
@@ -101,11 +101,11 @@
      -  <ok>  <cancel> <help>
     -->
   <box orient="horizontal" align="center">
-    <button id="ok-button" class="dialog" value="&ok.label;"
+    <button id="ok-button" class="dialog" label="&ok.label;"
          style="width: 8ex" oncommand="doOK();"/> 
-    <button id="cancel-button" class="dialog" value="&cancel.label;"
+    <button id="cancel-button" class="dialog" label="&cancel.label;"
          style="width: 8ex" oncommand="doCancel();" /> 
-    <button id="help-button" class="dialog" value="&help.label;"
+    <button id="help-button" class="dialog" label="&help.label;"
          style="width: 8ex" oncommand="alert('Help to add here');" /> 
   </box>
 
