@@ -122,11 +122,6 @@ MENU IDM_VIEWERBAR
       MENUITEM "Nav Quirks", VIEWER_NAV_QUIRKS_MODE
       MENUITEM "Standard", VIEWER_STANDARD_MODE
     }
-    SUBMENU "~Widget Rendering Mode Pref", 0
-    {
-      MENUITEM "Native", VIEWER_NATIVE_WIDGET_MODE
-      MENUITEM "Gfx",    VIEWER_GFX_WIDGET_MODE
-    }
   }
   SUBMENU "~Tools", 0
   {
