@@ -656,7 +656,7 @@ js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
     JSTokenType tt;
 
     JS_ASSERT(ts->lookahead == 0 ||
-              CURRENT_TOKEN(ts).pos.end.lineno == ts->lineno);
+              ON_CURRENT_LINE(ts, CURRENT_TOKEN(ts).pos));
     ts->flags |= TSF_NEWLINES;
     tt = js_PeekToken(cx, ts);
     ts->flags &= ~TSF_NEWLINES;
@@ -775,7 +775,7 @@ retry:
     tp = &CURRENT_TOKEN(ts);
     tp->ptr = ts->linebuf.ptr - 1;
     tp->pos.begin.index = ts->linepos + (tp->ptr - ts->linebuf.base);
-    tp->pos.begin.lineno = tp->pos.end.lineno = ts->lineno;
+    tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
 
     if (c == EOF)
         RETURN(TOK_EOF);
@@ -994,7 +994,7 @@ retry:
                                0);
         if (!atom)
             RETURN(TOK_ERROR);
-        tp->pos.end.lineno = ts->lineno;
+        tp->pos.end.lineno = (uint16)ts->lineno;
         tp->t_op = JSOP_STRING;
         tp->t_atom = atom;
         RETURN(TOK_STRING);
