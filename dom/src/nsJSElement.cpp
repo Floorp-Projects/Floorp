@@ -38,7 +38,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
+  // NS_ASSERTION(nsnull != element, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {

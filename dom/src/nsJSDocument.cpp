@@ -23,6 +23,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -45,7 +46,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocument *document = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != document, "null pointer");
+  // NS_ASSERTION(nsnull != document, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
@@ -165,7 +166,29 @@ CreateDocumentContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 CreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  //XXX TBI
+  nsIDOMDocument *document = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+
+  if (nsnull != document) {
+    if (argc > 0) {
+      JSString*       jsstring1 = JSVAL_TO_STRING(argv[0]);
+      nsString        tagName(JS_GetStringChars(jsstring1));
+      nsIDOMElement*  element;
+  
+      if (NS_OK == document->CreateElement(tagName, nsnull, &element)) {
+        // get the js object
+        nsIScriptObjectOwner *owner = nsnull;
+        if (NS_OK == element->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+          JSObject *object = nsnull;
+          if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
+            // set the return value
+            *rval = OBJECT_TO_JSVAL(object);
+          }
+          NS_RELEASE(owner);
+        }
+        NS_RELEASE(element);
+      }
+    }
+  }
   return JS_TRUE;
 }
 
