@@ -3753,7 +3753,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
         trans->AddDataFlavor(kHTMLMime);
       }
       trans->AddDataFlavor(kUnicodeMime);
-      trans->AddDataFlavor(kTextMime);
 
       // Get the Data from the clipboard
       if (NS_SUCCEEDED(clipboard->GetData(trans)))
@@ -3777,18 +3776,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
               stuffToPaste.SetString ( text, len / 2 );
               nsAutoEditBatch beginBatching(this);
               rv = InsertHTML(stuffToPaste);
-            }
-          }
-          else if (flavor.Equals(kTextMime))
-          {
-            nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
-            if (textDataObj && len > 0)
-            {
-              char* text = nsnull;
-              textDataObj->ToString ( &text );
-              stuffToPaste.SetString ( text, len );
-              nsAutoEditBatch beginBatching(this);
-              rv = InsertText(stuffToPaste);
             }
           }
           else if (flavor.Equals(kUnicodeMime))
@@ -3830,7 +3817,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
-  char* textEditorFlavors[] = { kTextMime, kUnicodeMime, nsnull };
+  char* textEditorFlavors[] = { kUnicodeMime, nsnull };
   char* htmlEditorFlavors[] = { kJPEGImageMime, kHTMLMime, nsnull };
 
   nsCOMPtr<nsISupportsArray> flavorsList;
@@ -3958,7 +3945,6 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
   {
     // We only handle plaintext pastes here
     trans->AddDataFlavor(kUnicodeMime);
-    trans->AddDataFlavor(kTextMime);
 
     // Get the Data from the clipboard
     clipboard->GetData(trans);
@@ -3983,19 +3969,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
 #endif
     nsAutoString flavor(flav);
     nsAutoString stuffToPaste;
-    if (flavor.Equals(kTextMime))
-    {
-      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
-      if (textDataObj && len > 0)
-      {
-        char* text = nsnull;
-        textDataObj->ToString ( &text );
-        stuffToPaste.SetString ( text, len );
-        nsAutoEditBatch beginBatching(this);
-        rv = InsertAsPlaintextQuotation(stuffToPaste, 0);
-      }
-    }
-    else if (flavor.Equals(kUnicodeMime))
+    if (flavor.Equals(kUnicodeMime))
     {
       nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)

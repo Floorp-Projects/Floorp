@@ -191,6 +191,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()
   // implicitly handles conversions.
+  PRBool dataFound = PR_FALSE;
   PRUint32 cnt;
   flavorList->Count(&cnt);
   for ( PRUint32 i = 0; i < cnt; ++i ) {
@@ -207,15 +208,38 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
       void* clipboardData = nsnull;
       PRInt32 dataSize = 0L;
       nsresult loadResult = GetDataOffClipboard ( macOSFlavor, &clipboardData, &dataSize );
-      if ( NS_SUCCEEDED(loadResult) && clipboardData ) {
-       
+      if ( NS_SUCCEEDED(loadResult) && clipboardData )
+        dataFound = PR_TRUE;
+      else {
+        // if we are looking for text/unicode and we fail to find it on the clipboard first,
+        // try again with text/plain. If that is present, convert it to unicode.
+        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+          loadResult = GetDataOffClipboard ( 'TEXT', &clipboardData, &dataSize );
+          if ( NS_SUCCEEDED(loadResult) && clipboardData ) {
+            const char* castedText = NS_REINTERPRET_CAST(char*, clipboardData);          
+            PRUnichar* convertedText = nsnull;
+            PRInt32 convertedTextLen = 0;
+            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataSize, 
+                                                                      &convertedText, &convertedTextLen );
+            if ( convertedText ) {
+              // out with the old, in with the new 
+              nsAllocator::Free(clipboardData);
+              clipboardData = convertedText;
+              dataSize = convertedTextLen * 2;
+              dataFound = PR_TRUE;
+            }
+          } // if plain text data on clipboard
+        } // if looking for text/unicode   
+      } // else we try one last ditch effort to find our data
+      
+      if ( dataFound ) {       
         // the DOM only wants LF, so convert from MacOS line endings to DOM line
         // endings.
         nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
         
         // put it into the transferable
         nsCOMPtr<nsISupports> genericDataWrapper;
-        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );
+        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );        
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
         #ifdef NS_DEBUG
           if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
@@ -282,6 +306,10 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
 //
 // Check the clipboard to see if we have any data that matches the given flavors. This
 // does NOT actually fetch the data. The items in the flavor list are nsISupportsString's.
+// 
+// Handle the case where we ask for unicode and it's not there, but plain text is. We 
+// say "yes" in that case, knowing that we will have to perform a conversion when we actually
+// pull the data off the clipboard.
 //
 NS_IMETHODIMP
 nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) 
@@ -305,17 +333,47 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * 
       nsXPIDLCString flavor;
       flavorWrapper->ToString ( getter_Copies(flavor) );
       
-      // now that we have the flavor (whew!), run it through the mime mapper. If we
-      // get something back, chances are good it's there on the clipboard (ignoring that
-      // there is zero length data, but i don't think we need to worry about that). If
+#ifdef NS_DEBUG
+      if ( strcmp(flavor, kTextMime) == 0 )
+        NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
+#endif
+
+      // now that we have the flavor (whew!), run it through the mime mapper. If
       // the mapper returns a null flavor, then it ain't there.
       ResType macFlavor = theMapper.MapMimeTypeToMacOSType ( flavor, PR_FALSE );
       if ( macFlavor ) {
-        *outResult = PR_TRUE;   // we found one!
+        if ( CheckIfFlavorPresent(macFlavor) )   
+          *outResult = PR_TRUE;   // we found one!
         break;
+      }
+      else {
+        // if the client asked for unicode and it wasn't present, check if we have TEXT.
+        // We'll handle the actual data substitution in GetNativeClipboardData().
+        if ( strcmp(flavor, kUnicodeMime) == 0 ) {
+          if ( CheckIfFlavorPresent('TEXT') )
+            *outResult = PR_TRUE;
+        }
       }
     }  
   } // foreach flavor
   
   return NS_OK;
 }
+
+
+//
+// CheckIfFlavorPresent
+//
+// A little utility routine for derminining if a given flavor is really there
+//
+PRBool
+nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
+{
+  PRBool retval = PR_FALSE;
+  PRInt32 offsetUnused = 0;
+  OSErr clipResult = ::GetScrap(NULL, inMacFlavor, NS_REINTERPRET_CAST(long*, &offsetUnused));    
+  if ( clipResult > 0 )   
+    retval = PR_TRUE;   // we found one!
+    
+  return retval;
+} // CheckIfFlavorPresent

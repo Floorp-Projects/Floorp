@@ -165,7 +165,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   // the conversion.
   encoder->GetMaxLength(inUnicode, inUnicodeLen, outPlainTextLen);
   if ( *outPlainTextLen ) {
-    *outPlainTextData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(*outPlainTextLen + 1));
+    *outPlainTextData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(*outPlainTextLen + sizeof(char)));
     if ( *outPlainTextData ) {
       rv = encoder->Convert(inUnicode, &inUnicodeLen, *outPlainTextData, outPlainTextLen);
       (*outPlainTextData)[*outPlainTextLen] = '\0';          // null terminate. Convert() doesn't do it for us
@@ -175,6 +175,61 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
   
 } // ConvertUnicodeToPlatformPlainText
+
+
+//
+// ConvertPlatformPlainTextToUnicode
+//
+// Given a char buffer (flavor text/plaikn), this converts it to unicode using
+// the appropriate platform charset encoding. |outUnicode| is null terminated, 
+// but its length parameter, |outUnicodeLen|, does not reflect that. |outUnicodeLen| is
+// the length of the string in characters, not bytes.
+//
+void
+nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PRInt32 inTextLen, 
+                                                            PRUnichar** outUnicode, PRInt32* outUnicodeLen )
+{
+  if ( !outUnicode || !outUnicodeLen )
+    return;
+
+  // Get the appropriate unicode decoder. We're guaranteed that this won't change
+  // through the life of the app so we can cache it.
+  nsresult rv;
+  static nsCOMPtr<nsIUnicodeDecoder> decoder;
+  static PRBool hasConverter = PR_FALSE;
+  if ( !hasConverter ) {
+    // get the charset
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService;
+    nsAutoString platformCharset;
+    nsresult res = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                                       NS_GET_IID(nsIPlatformCharset), 
+                                                       getter_AddRefs(platformCharsetService));
+    if (NS_SUCCEEDED(res))
+      res = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
+    if (NS_FAILED(res))
+      platformCharset.SetString("ISO-8859-1");
+      
+    // get the decoder
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+    rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+
+    hasConverter = PR_TRUE;
+  }
+  
+  // Estimate out length and allocate the buffer based on a worst-case estimate, then do
+  // the conversion. 
+  decoder->GetMaxLength(inText, inTextLen, outUnicodeLen);   // |outUnicodeLen| is number of chars
+  if ( *outUnicodeLen ) {
+    *outUnicode = NS_REINTERPRET_CAST(PRUnichar*, nsAllocator::Alloc((*outUnicodeLen + 1) * sizeof(PRUnichar)));
+    if ( *outUnicode ) {
+      rv = decoder->Convert(inText, &inTextLen, *outUnicode, outUnicodeLen);
+      (*outUnicode)[*outUnicodeLen] = '\0';                   // null terminate. Convert() doesn't do it for us
+    }
+  } // if valid length
+
+  NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting plain text to unicode" );
+
+} // ConvertPlatformPlainTextToUnicode
 
 
 #ifdef XP_MAC

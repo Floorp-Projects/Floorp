@@ -143,8 +143,9 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
   }
 
   // If it is the get the number of items in the collection
-  nsDataObjCollection * dataObjCol = (nsDataObjCollection *)mDataObject;
-  *aNumItems = (PRUint32)dataObjCol->GetNumDataObjects();
+  nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
+  if ( dataObjCol )
+    *aNumItems = dataObjCol->GetNumDataObjects();
   return NS_OK;
 }
 
@@ -173,14 +174,15 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
     }
   }
 
-  // If it is a collection of objects then get the data for the specified index
-  nsDataObjCollection * dataObjCol = (nsDataObjCollection *)mDataObject;
-  PRUint32 cnt = dataObjCol->GetNumDataObjects();
-  if (anItem >= 0 && anItem < cnt) {
-    IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
-    return nsClipboard::GetDataFromDataObject(dataObj, nsnull, aTransferable);
+  nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
+  if ( dataObjCol ) {
+    PRUint32 cnt = dataObjCol->GetNumDataObjects();   
+    if (anItem >= 0 && anItem < cnt) {
+      IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
+      return nsClipboard::GetDataFromDataObject(dataObj, nsnull, aTransferable);
+    }
   }
-
+  
   return NS_ERROR_FAILURE;
 }
 
@@ -202,35 +204,50 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
   if ( !aDataFlavor || !mDataObject || !_retval )
     return NS_ERROR_FAILURE;
 
-  // First check to see if the mDataObject is is Collection of IDataObjects
+#ifdef NS_DEBUG
+  if ( strcmp(aDataFlavor, kTextMime) == 0 )
+    NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
+#endif
+
   *_retval = PR_FALSE;
-  UINT format = nsClipboard::GetFormat(MULTI_MIME);
+
+  // Check to see if the mDataObject is a collection of IDataObjects or just a 
+  // single (which would be the case if something came from an external app).
   FORMATETC fe;
+  UINT format = nsClipboard::GetFormat(MULTI_MIME);
   SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
 
-  if (S_OK != mDataObject->QueryGetData(&fe)) {
-    // Ok, so we have a single object
-    // now check to see if has the correct data type
+  if ( mDataObject->QueryGetData(&fe) == S_OK ) {
+    // We know we have one of our special collection objects.
     format = nsClipboard::GetFormat(aDataFlavor);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
 
-    if (S_OK == mDataObject->QueryGetData(&fe))
-      *_retval = PR_TRUE;;
-  }
-
-  // Set it up for the data flavor
-  format = nsClipboard::GetFormat(aDataFlavor);
-  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-
-  // Ok, now see if any one of the IDataObjects in the collection
-  // supports this data type
-  nsDataObjCollection * dataObjCol = (nsDataObjCollection *)mDataObject;
-  PRUint32 i;
-  PRUint32 cnt = dataObjCol->GetNumDataObjects();
-  for (i=0;i<cnt;i++) {
-    IDataObject * dataObj = dataObjCol->GetDataObjectAt(i);
-    if (S_OK == dataObj->QueryGetData(&fe))
-      *_retval = PR_TRUE;
+    // See if any one of the IDataObjects in the collection supports this data type
+    nsDataObjCollection* dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
+    if ( dataObjCol ) {
+      PRUint32 cnt = dataObjCol->GetNumDataObjects();
+      for (PRUint32 i=0;i<cnt;++i) {
+        IDataObject * dataObj = dataObjCol->GetDataObjectAt(i);
+        if (S_OK == dataObj->QueryGetData(&fe))
+          *_retval = PR_TRUE;             // found it!
+      }
+    }
+  } // if special collection object
+  else {
+    // Ok, so we have a single object. Check to see if has the correct data type. Since
+    // this can come from an outside app, we also need to see if we need to perform
+    // text->unicode conversion if the client asked for unicode and it wasn't available.
+    format = nsClipboard::GetFormat(aDataFlavor);
+    SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+    if ( mDataObject->QueryGetData(&fe) == S_OK )
+      *_retval = PR_TRUE;                 // found it!
+    else {
+      // try again, this time looking for plain text.
+      format = nsClipboard::GetFormat(kTextMime);
+      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+      if ( mDataObject->QueryGetData(&fe) == S_OK )
+        *_retval = PR_TRUE;                 // found it!
+    } // else try again
   }
 
   return NS_OK;

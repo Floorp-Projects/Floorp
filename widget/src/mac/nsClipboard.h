@@ -56,7 +56,10 @@ protected:
   // helper to get the data off the clipboard. Caller responsible for deleting
   // |outData| with delete[].
   nsresult GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt32* outDataSize ) ;
-  
+
+  // helper to check if the data is really there
+  PRBool CheckIfFlavorPresent ( ResType inMacFlavor ) ;
+
 }; // nsClipboard
 
 #endif // nsClipboard_h__

@@ -70,6 +70,8 @@ private:
   void BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn ) ;
   OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
                              FlavorType inFlavor, void** outData, unsigned int * outSize ) ;
+  nsresult ExtractDataFromOS ( DragReference inDragRef, ItemReference inItemRef, ResType inFlavor, 
+                                 void** outBuffer, PRInt32* outBuffSize ) ;
 
     // callback for the MacOS DragManager when a drop site asks for data
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,

@@ -77,7 +77,7 @@ nsDataObjCollection::~nsDataObjCollection()
     delete df;
   }
   delete mDataFlavors;
-
+ 
   for (i=0;i<mDataObjects->Count();i++) {
     IDataObject * dataObj = (IDataObject *)mDataObjects->ElementAt(i);
     NS_RELEASE(dataObj);

@@ -743,7 +743,7 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
       PRBool flavorSupported = PR_FALSE;
-      dragSession->IsDataFlavorSupported(kTextMime, &flavorSupported);
+      dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
       if ( flavorSupported ) 
         dragSession->SetCanDrop(PR_TRUE);
     }
@@ -762,7 +762,7 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
       PRBool flavorSupported = PR_FALSE;
-      dragSession->IsDataFlavorSupported(kTextMime, &flavorSupported);
+      dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
       if ( flavorSupported )
         dragSession->SetCanDrop(PR_TRUE);
     } 
@@ -801,7 +801,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       // Add the text Flavor to the transferable, 
       // because that is the only type of data we are
       // looking for at the moment.
-      trans->AddDataFlavor(kTextMime);
+      trans->AddDataFlavor(kUnicodeMime);
       //trans->AddDataFlavor(mImageDataFlavor);
 
       // Fill the transferable with data for each drag item in succession
@@ -820,11 +820,11 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
             PRUint32 len;
             char* whichFlavor = nsnull;
             trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(genericDataObj), &len);
-            nsCOMPtr<nsISupportsString> textDataObj( do_QueryInterface(genericDataObj) );
+            nsCOMPtr<nsISupportsWString> textDataObj( do_QueryInterface(genericDataObj) );
             // If the string was not empty then paste it in
             if ( textDataObj )
             {
-              char* text = nsnull;
+              PRUnichar* text = nsnull;
               textDataObj->ToString(&text);
               nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
               if ( htmlEditor && text )
