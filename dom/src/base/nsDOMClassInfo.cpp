@@ -5184,7 +5184,11 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
 
   nsresult rv =
     sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+  if (NS_FAILED(rv)) {
+    ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
 
   nsCOMPtr<nsISupports> native;
   rv = wrapper->GetNative(getter_AddRefs(native));
@@ -5196,7 +5200,11 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   nsCOMPtr<nsIDOMDocument> retval;
 
   rv = doc->Open(getter_AddRefs(retval));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
 
   rv = WrapNative(cx, ::JS_GetGlobalObject(cx), retval,
                   NS_GET_IID(nsIDOMDocument), rval);
@@ -5285,7 +5293,11 @@ nsHTMLElementSH::ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
 
   nsresult rv =
     sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
 
   nsCOMPtr<nsISupports> native;
   rv = wrapper->GetNative(getter_AddRefs(native));
