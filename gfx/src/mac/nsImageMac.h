@@ -40,7 +40,6 @@
 
 #include "nsIImage.h"
 #include "nsIImageMac.h"
-#include <QDOffscreen.h>
 
 class nsImageMac : public nsIImage, public nsIImageMac
 {
@@ -60,15 +59,21 @@ public:
   virtual PRInt32     GetWidth()            { return mWidth;  }
   virtual PRInt32     GetHeight()           { return mHeight; }
 
-  virtual PRUint8*    GetBits();
+  virtual PRUint8*    GetBits()             { return mImageBits; }
   virtual PRInt32     GetLineStride()       { return mRowBytes; }
-  virtual PRBool      GetHasAlphaMask()     { return mMaskGWorld != nsnull; }
+  virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull; }
 
-  virtual PRUint8*    GetAlphaBits();
+  virtual PRUint8*    GetAlphaBits()        { return mAlphaBits; }
   virtual PRInt32     GetAlphaLineStride()  { return mAlphaRowBytes; }
 
-  virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
+  // Called when an image decoder updates the image bits (mImageBits &
+  // mAlphaBits).  'aFlags' is ignored.
+  virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags,
+                                   nsRect *aUpdateRect);
+
+  // Optimizes memory usage for object.
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
+
   virtual nsColorMap* GetColorMap()         { return nsnull; }
 
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
@@ -101,118 +106,69 @@ public:
   NS_IMETHOD          UnlockImagePixels(PRBool aMaskPixels);
 
 
-  NS_IMETHOD          GetGWorldPtr(GWorldPtr* aGWorld);
-
   // Convert to and from the os-native PICT format. Most likely
   // used for clipboard.
   NS_IMETHOD          ConvertToPICT(PicHandle* outPicture);
   NS_IMETHOD          ConvertFromPICT(PicHandle inPicture);
 
 
-  //Convert to os-native icon format(s)
-  //exact format depends on the bit depth
-  NS_IMETHOD          ConvertToIcon(  const nsRect& aSrcRegion, 
-                                      const PRInt16 aIconDepth, 
-                                      const PRInt16 aIconSize,
-                                      Handle* aOutIcon,
-                                      OSType* aOutIconType);
-
-  NS_IMETHOD          ConvertAlphaToIconMask(  const nsRect& aSrcRegion, 
-                                      const PRInt16 aMaskDepth, 
-                                      const PRInt16 aMaskSize,
-                                      Handle* aOutMask,
-                                      OSType* aOutIconType);
-
-
 protected:
-
 
   nsresult          SlowTile(nsIRenderingContext &aContext,
                                         nsIDrawingSurface* aSurface,
                                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                                         PRInt32 aPadX, PRInt32 aPadY,
                                         const nsRect &aTileRect);
-                    
+
   nsresult          DrawTileQuickly(nsIRenderingContext &aContext,
                                         nsIDrawingSurface* aSurface,
                                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                                         const nsRect &aTileRect);
 
-  nsresult          CopyPixMap(         const Rect& aSrcRegion,
-                                        const Rect& aDestRegion,
-                                        const PRInt32 aDestDepth,
-                                        const PRBool aCopyMaskBits,
-                                        Handle *aDestData,
-                                        PRBool aAllow2Bytes = PR_FALSE);
-
-  static GDHandle   GetCachedGDeviceForDepth(PRInt32 aDepth);
-  
-  static OSType     MakeIconType(PRInt32 aHeight, PRInt32 aDepth, PRBool aMask);
-
-  static OSErr      CreateGWorld(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
-                                        GWorldPtr* outGWorld, char** outBits, PRInt32* outRowBytes);
-
   static PRInt32    CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth);
 
-  static PRUint32   GetPixelFormatForDepth(PRInt32 inDepth, PRInt32& outBitsPerPixel, CTabHandle* outDefaultColorTable = nsnull);
-  
-  static void       ClearGWorld(GWorldPtr);
-  static OSErr      AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
+  inline static PRInt32 CalculateRowBytesInternal(PRUint32 aWidth,
+                                                  PRUint32 aDepth,
+                                                  PRBool aAllow2Bytes);
 
-  static nsresult   ConcatBitsHandles(  Handle srcData1, 
-                                        Handle srcData2,
-                                        Handle *dstData);
-                                                
-                                                
-  static nsresult   MakeOpaqueMask( const PRInt32 aWidth,
-                                        const PRInt32 aHeight,
-                                        const PRInt32 aDepth,
-                                        Handle *aMask);                                                
-  
-  static void       CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits, PRInt16 maskDepth, const BitMap* destBits,
-                            const Rect& srcRect, const Rect& maskRect, const Rect& destRect, PRBool inDrawingToPort);
-  
   static PRBool     RenderingToPrinter(nsIRenderingContext &aContext);
 
-  static OSErr      CreateGWorldInternal( PRInt32 aWidth, 
-                                          PRInt32 aHeight, 
-                                          PRInt32 aDepth, 
-                                          GWorldPtr* outGWorld, 
-                                          char** outBits,
-                                          PRInt32* outRowBytes, 
-                                          PRBool aAllow2Bytes);
+  // Recreate internal image structure from updated image bits.
+  void EnsureCachedImage();
 
-  static PRInt32    CalculateRowBytesInternal(PRUint32 aWidth, 
-                                              PRUint32 aDepth, 
-                                              PRBool aAllow2Bytes);
+  // Return alpha bit at position 'x' in the row pointed to by 'rowptr'.
+  inline PRUint8 GetBit(PRUint8* rowptr, PRUint32 x) {
+    return (rowptr[x >> 3] & (1 << (7 - x & 0x7)));
+  }
+
+  // Takes ownership of the given image and bitmap.  The CGImageRef is retained.
+  void AdoptImage(CGImageRef aNewImage, PRUint8* aNewBitamp);
 
 private:
 
-  GWorldPtr       mImageGWorld;
-  char*           mImageBits;     // malloc'd block
+  PRUint8*        mImageBits;     // malloc'd block
+  CGImageRef      mImage;
 
   PRInt32         mWidth;
   PRInt32         mHeight;
 
   PRInt32         mRowBytes;
   PRInt32         mBytesPerPixel;
-    
+
   // alpha layer members
-  GWorldPtr       mMaskGWorld;
-  char*           mMaskBits;      // malloc'd block
-  
-  PRInt16         mAlphaDepth;      // alpha layer depth
+  PRUint8*        mAlphaBits;      // malloc'd block
+
   PRInt32         mAlphaRowBytes;   // alpha row bytes
+  PRInt8          mAlphaDepth;      // alpha layer depth
+
+  PRPackedBool    mPendingUpdate;   // true when we need to recreate CGImageRef
+  PRBool          mOptimized;       // true when nsImage object has been
+                                    // optimized (see |Optimize()|)
 
   PRInt32         mDecodedX1;       // Keeps track of what part of image
   PRInt32         mDecodedY1;       // has been decoded.
-  PRInt32         mDecodedX2; 
-  PRInt32         mDecodedY2;    
-    
-  //nsPoint         mLocation;      // alpha mask location
-
-  //PRInt8          mImageCache;    // place to save off the old image for fast animation
-
+  PRInt32         mDecodedX2;
+  PRInt32         mDecodedY2;
 };
 
 #endif

@@ -408,4 +408,29 @@ protected:
 };
 
 
+/**
+ * Stack based utility class for releasing a Quartz color space.
+ * Use as follows:
+ *    CGColorSpaceRef rgbSpace = ::CGColorSpaceCreateDeviceRGB();
+ *    StColorSpaceReleaser csReleaser(rgbSpace);
+ */
+class StColorSpaceReleaser
+{
+public:
+  StColorSpaceReleaser(CGColorSpaceRef inColorSpace)
+  : mColorSpace(inColorSpace)
+  {
+  }
+
+  ~StColorSpaceReleaser()
+  {
+    // No need to check for NULL, since CGColorSpaceCreateDeviceRGB(NULL)
+    // is a noop.
+    ::CGColorSpaceRelease(mColorSpace);
+  }
+
+private:
+  CGColorSpaceRef mColorSpace;
+};
+
 #endif // nsGfxUtils_h_

@@ -66,7 +66,12 @@ typedef enum {
 
 #define  nsImageUpdateFlags_kColorMapChanged 0x1
 #define  nsImageUpdateFlags_kBitsChanged     0x2
- 
+
+// The following platforms store image data rows bottom-up.
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MACOSX)
+#define MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
+#endif
+
 // IID for the nsIImage interface
 #define NS_IIMAGE_IID          \
   { 0xce91c93f, 0x532d, 0x470d, \

@@ -48,12 +48,14 @@ class GraphicsState;
 // windows specific drawing surface method set
 
 #define NS_IDRAWING_SURFACE_MAC_IID   \
-{ 0x1ed958b0, 0xcab6, 0x11d2, \
-{ 0xa8, 0x49, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+{ 0xd49598bb, 0x04ff, 0x4aba, \
+ { 0xab, 0x90, 0x5b, 0xd0, 0xdd, 0x82, 0xba, 0xef } }
 
 class nsIDrawingSurfaceMac : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_MAC_IID)
+
   /**
    * Initialize a drawing surface using a Macintosh GrafPtr.
    * aPort is not owned by this drawing surface, just used by it.
@@ -94,6 +96,22 @@ public:
    * @return error status
    **/
   NS_IMETHOD GetGrafPtr(CGrafPtr *aPort) = 0;
+
+  /**
+   * Quartz helper function.  Constructs a Quartz context from the drawing
+   * surface's QuickDraw port.  Must be balanced with a call to
+   * EndQuartzDrawing().
+   * @return Quartz drawing context
+   **/
+  NS_IMETHOD_(CGContextRef) StartQuartzDrawing() = 0;
+
+  /**
+   * Quartz helper function.  Releases Quartz context and resets state of
+   * drawing surface for QuickDraw calls.  Must be called when you are done
+   * drawing to the Quartz context.
+   * @param Quartz drawing context returned by StartQuartzDrawing()
+   **/
+  NS_IMETHOD_(void) EndQuartzDrawing(CGContextRef aContext) = 0;
 
 };
 
