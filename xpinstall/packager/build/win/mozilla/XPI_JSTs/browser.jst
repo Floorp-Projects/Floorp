@@ -1,0 +1,567 @@
+function registerProgramFolderKey(winreg, fFolderPath)
+{
+  var subkey;
+  var err;
+
+  /* set the Program Folder Path in the Mozilla key in the Windows Registry */
+  winreg.createKey("SOFTWARE\\$CompanyName$","");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "Program Folder Path", fFolderPath);
+}
+
+function createShortcuts() 
+{
+  var subkey;
+  var valname;
+  var szStartMenuPrograms;
+  var szStartMenu;
+  var szFolderDesktop;
+  var szFolderQuickLaunch;
+  var szFolderSendTo;
+  var szFolderAppData;
+  var szStartupFolder;
+  var winreg;
+  var fWindows;
+  var fTemp;
+  var fProgram;
+  var fDefShortcuts;
+  var fileExe;
+  var fileReadme;
+  var fileLicense;
+  var scExeDesc;
+  var scReadmeDesc;
+  var scLicenseDesc;
+  var scProfileDesc;
+  var scProfileDescParam;
+  var scFolderName;
+  var fFolderDesktop;
+  var fFolderPath;
+  var fFolderPathStr;
+  var fFolderQuickLaunch;
+  var is_winnt;
+  var szCurrentVersion;
+  var folderQuickLaunchExists;
+
+  winreg               = getWinRegistry();
+  fWindows             = getFolder("Windows");
+  fProgram             = getFolder("Program");
+  fDefShortcuts        = getFolder("Program","defaults/shortcuts");
+  fTemp                = fProgram + "$MainExeFile$";
+  fileExe              = getFolder("file:///", fTemp);
+  fileReadme           = getFolder("file:///", fProgram + "readme.txt");
+  fileLicense          = getFolder("file:///", fProgram + "license.txt");
+  scExeDesc            = "$ProductName$";
+  scReadmeDesc         = "Readme";
+  scLicenseDesc        = "License";
+  scProfileDesc        = "Profile Manager";
+  scProfileDescParam   = "-ProfileManager";
+  scFolderName         = "$ProductName$";
+  if(winreg != null) 
+  {
+    /* determine if the script is running under NT or not */
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+    szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
+    logComment("szCurrentVersion: " + szCurrentVersion);
+    if((szCurrentVersion == "") || (szCurrentVersion == null))
+    {
+      is_winnt = false;
+    }
+    else
+    {
+      is_winnt = true;
+    }
+
+    logComment("is_winnt value: " + is_winnt);
+    if(!is_winnt || restrictedAccess)
+    {
+      winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      szStartMenuPrograms = winreg.getValueString(subkey, "Programs");
+      szStartMenu         = winreg.getValueString(subkey, "Start Menu");
+      szFolderDesktop     = winreg.getValueString(subkey, "Desktop");
+      szStartupFolder     = winreg.getValueString(subkey, "Startup");
+	}
+    else
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      szStartMenuPrograms = winreg.getValueString(subkey, "Common Programs");
+      szStartMenu         = winreg.getValueString(subkey, "Common Start Menu");
+      szFolderDesktop     = winreg.getValueString(subkey, "Common Desktop");
+      szStartupFolder     = winreg.getValueString(subkey, "Common Startup");
+   }
+
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+    szFolderSendTo      = winreg.getValueString(subkey, "SendTo");
+
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+    szFolderAppData     = winreg.getValueString(subkey, "AppData");
+
+    // locate the Quick Launch folder
+    szFolderQuickLaunch     = szFolderAppData + "\\Microsoft\\Internet Explorer\\Quick Launch";
+    fFolderQuickLaunch      = getFolder("file:///", szFolderQuickLaunch);
+    folderQuickLaunchExists = File.isDirectory(fFolderQuickLaunch);
+    if(!folderQuickLaunchExists)
+    {
+      subkey                  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
+      szFolderQuickLaunch     = winreg.getValueString(subkey, "Quick Launch");
+      folderQuickLaunchExists = File.isDirectory(fFolderPath);
+      if(folderQuickLaunchExists)
+        fFolderQuickLaunch = getFolder("file:///", szFolderQuickLaunch);
+    }
+    logComment("folderQuickLaunchExists: " + folderQuickLaunchExists);
+
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    fFolderPathStr      = winreg.getValueString(subkey, "Program Folder Path");
+    if((fFolderPathStr == "") || (fFolderPathStr == null))
+    {
+      fTemp       = szStartMenuPrograms + "\\" + scFolderName;
+      fFolderPath = getFolder("file:///", fTemp);
+    }
+    else
+    {
+      /* convert the path string to a path folder object */
+      fFolderPath = getFolder("file:///", fFolderPathStr);
+    }
+    /* convert the path string to a path folder object */
+    fFolderDesktop = getFolder("file:///", szFolderDesktop);
+
+    logComment("Folder StartMenuPrograms: " + szStartMenuPrograms);
+    logComment("Folder StartMenu        : " + szStartMenu);
+    logComment("Folder FolderDesktop    : " + szFolderDesktop);
+    logComment("Folder FolderSendTo     : " + szFolderSendTo);
+    logComment("Folder FolderQuickLaunch: " + szFolderQuickLaunch);
+    logComment("fileExe                 : " + fileExe);
+    logComment("fFolderPath             : " + fFolderPath);
+    logComment("scExeDesc               : " + scExeDesc);
+    logComment("fProgram                : " + fProgram);
+
+    /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
+     * This is so that the folder creation gets logged for uninstall to remove it. */
+    if(!File.exists(fFolderPath))
+      File.dirCreate(fFolderPath);
+    if(!File.exists(fDefShortcuts))
+      File.dirCreate(fDefShortcuts);
+
+    /* create the shortcuts */
+    File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fDefShortcuts,  scExeDesc,     fProgram,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
+    File.windowsShortcut(fileReadme,  fFolderPath, scReadmeDesc,  fProgram, "",                 fileReadme, 0);
+    File.windowsShortcut(fileLicense, fFolderPath, scLicenseDesc, fProgram, "",                 fileLicense, 0);
+
+    // create shortcut in the Quick Launch folder
+    if(folderQuickLaunchExists)
+      File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
+
+    if(!restrictedAccess)
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      registerProgramFolderKey(winreg, fFolderPath);
+    }
+
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    registerProgramFolderKey(winreg, fFolderPath);
+
+    /* remove turbo mode shortcut */
+
+    fFolderPath = getFolder("file:///", szStartupFolder);
+									
+    /* remove shortcut from the startup folder */
+
+    basename = "$MainExeFile$"
+    fTemp = fFolderPath + basename + ".lnk";
+    fFolderPath = getFolder("file:///", fTemp);
+    if (File.exists(fFolderPath)) 
+    { 
+        logComment("Removing Quick Launch shortcut from Windows startup folder\n");
+        fileDelete(fFolderPath);
+    }
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
+    regvalue = winreg.getValueString(subkey, "browserargs");
+
+    /* log this so if the user turns on turbo mode in the browser the uninstaller will undo it */
+
+    logComment( "store registry value string: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run [Mozilla Quick Launch]");
+    if (regvalue && regvalue != undefined && regvalue.length != 0) 
+    {
+        var value = new String(regvalue);
+        var index = value.indexOf("turbo");
+        if (index != -1) 
+        {
+            var index2 = value.indexOf("=", index);
+            if (index2 != -1) 
+            {
+                turboarg = value.slice(index2 + 1, index2 + 2);
+                winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+                subkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+                valname = "Mozilla Quick Launch";
+                if ( turboarg == "Y" || turboarg == "y") 
+                {
+                    fTemp = fileExe;
+                    fileExe = getFolder("file:///", fTemp);
+                    newKey = '"' + fileExe + '"' + ' -turbo';
+                    winreg.createKey(subkey,"");
+                    winreg.setValueString(subkey, valname, newKey);
+                } 
+                else 
+                {
+                    winreg.deleteValue(subkey, valname);
+                }
+            }
+        }
+    }
+  }
+  else
+  {
+    logComment("winreg is null");
+  }
+}
+function IsWinnt()
+{
+  /* Determines if the script is running under NT or not.
+   *
+   */
+  var winreg = getWinRegistry();
+  var subkey;
+  var szCurrentVersion;
+
+  winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+  subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+  szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
+  logComment("szCurrentVersion: " + szCurrentVersion);
+  if((szCurrentVersion == "") || (szCurrentVersion == null))
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+function registerMainKeys(winreg)
+{
+  var subkey;  //the name of the subkey you are poking around in
+  var data;
+  var err;
+
+  winreg.createKey("SOFTWARE\\$CompanyName$","");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  winreg.createKey(subkey,"");
+
+  err     = winreg.setValueString(subkey, "Install Directory", fProgram);
+
+  // The following keys are required to be created to supply information
+  // about the location of the Gecko Embedded Client to 3rd party apps.
+  // "SOFTWARE\\Mozilla" must not be localized!
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "GeckoVer", "1.0.1");
+
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\Extensions";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "Components", fProgram + "Components");
+  err     = winreg.setValueString(subkey, "Plugins", fProgram + "Plugins");
+
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\bin";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  err     = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
+
+  // Register as a windows XP internet browser
+  if( IsWinnt() )
+  {
+    subkey = "Software\\Clients\\StartMenuInternet\\$MainExeFile$";
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+
+    winreg.createKey(subkey, "");
+    winreg.createKey(subkey + "\\DefaultIcon", "");
+    winreg.createKey(subkey + "\\shell", "");
+    winreg.createKey(subkey + "\\shell\\open", "");
+    winreg.createKey(subkey + "\\shell\\open\\command", "");
+    winreg.createKey(subkey + "\\InstallInfo", "");
+    winreg.setValueString(subkey, "", "$ProductNameInternal$");
+
+    // path does not need to be quoted per MS doc
+    data = fProgram + "$MainExeFile$,0";
+    winreg.setValueString(subkey + "\\DefaultIcon", "", data);
+
+    data = "\"" + fProgram + "$MainExeFile$\"";
+    winreg.setValueString(subkey + "\\shell\\open\\command", "", data);
+
+    data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ms /ua \"$UserAgent$\" /hs browser";
+    winreg.setValueString(subkey + "\\InstallInfo", "HideIconsCommand", data);
+
+    winreg.setValueNumber(subkey + "\\InstallInfo", "IconsVisible", 1);
+
+    data = "\"" + fProgram + "$MainExeFile$\" -silent -nosplash -setDefaultBrowser ";
+    winreg.setValueString(subkey + "\\InstallInfo", "ReinstallCommand", data);
+
+    data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ms /ua \"$UserAgent$\" /ss browser";
+    winreg.setValueString(subkey + "\\InstallInfo", "ShowIconsCommand", data);
+  }
+}
+
+function updateWinReg()
+{
+  //Notes:
+  // can't use a double backslash before subkey - Windows already puts it in.
+  // subkeys have to exist before values can be put in.
+  var winreg = getWinRegistry();
+  var subkey;  //the name of the subkey you are poking around in
+  var err;
+  var ikwDefined;
+
+  if(winreg != null) 
+  {
+    /* This will check to see if the user has restricted access or not.
+     * It checks to see if HKEY_LOCALMACHINE\SOFTWARE is writable.  If
+     * it is, then access is not restricted.  This is only used to
+     * determine which Desktop, Programs, and Start Menu folders
+     * are to used: common or per user
+     */
+    restrictedAccess = false;
+    ikwDefined = typeof(winreg.isKeyWritable);
+    logComment("winreg.isKeyWritable(): " + ikwDefined);
+    if(ikwDefined == "function")
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      if(!winreg.isKeyWritable("SOFTWARE"))
+        restrictedAccess = true;
+    }
+
+    logComment("restrictedAccess value: " + restrictedAccess);
+    if(!restrictedAccess)
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      registerMainKeys(winreg);
+
+      // set the App Paths key here
+      subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
+      winreg.createKey(subkey,"");
+      err     = winreg.setValueString(subkey, "", fProgram + "$MainExeFile$");
+      err     = winreg.setValueString(subkey, "Path", fProgram);
+    }
+
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    registerMainKeys(winreg);
+  }
+}
+
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Program",    "oji.dll");
+  deleteThisFile("Program",    "jsdom.dll");
+  deleteThisFile("Program",    "img3250.dll");
+  deleteThisFile("Program",    "gkgfxwin.dll");
+  deleteThisFile("Program",    "gkwidget.dll");
+  deleteThisFile("Program",    "defaults/pref/config.js");
+  deleteThisFile("Program",    "defaults/pref/initpref.js");
+  deleteThisFile("Program",    "defaults/pref/psm-glue.js");
+  deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
+  deleteThisFile("Components", "gkhtml.dll");
+  deleteThisFile("Components", "mozucth.dll");
+  deleteThisFile("Components", "mozxfer.dll");
+  deleteThisFile("Components", "nsgif.dll");
+  deleteThisFile("Components", "nsjpg.dll");
+  deleteThisFile("Components", "nsmng.dll");
+  deleteThisFile("Components", "nspng.dll");
+  deleteThisFile("Components", "smime.dll");
+  deleteThisFile("Components", "AcctIdl.dll");
+  deleteThisFile("Components", "chardetc.dll");
+  deleteThisFile("Components", "evntloop.dll");
+  deleteThisFile("Components", "nativapp.dll");
+  deleteThisFile("Components", "universalchardet.dll");
+  deleteThisFile("Components", "ucvja.dll");
+  deleteThisFile("Components", "ucvko.dll");
+  deleteThisFile("Components", "ucvtw.dll");
+  deleteThisFile("Components", "ucvtw2.dll");
+  deleteThisFile("Components", "ucvlatin.dll");
+  deleteThisFile("Components", "ucvcn.dll");
+  deleteThisFile("Components", "ucvibm.dll");
+  deleteThisFile("Components", "txtsvc.dll");
+  deleteThisFile("Components", "gfx2.dll");
+  deleteThisFile("Components", "gfx2.xpt");
+  deleteThisFile("Components", "imggif.dll");
+  deleteThisFile("Components", "imgjpeg.dll");
+  deleteThisFile("Components", "imgpng.dll");
+  deleteThisFile("Components", "imgbmp.dll");
+  deleteThisFile("Components", "imgxbm.dll");
+  deleteThisFile("Components", "imgppm.dll");
+  deleteThisFile("Components", "ucharuti.dll");
+  deleteThisFile("Components", "chardet.dll");
+  deleteThisFile("Components", "lwbrk.dll");
+  deleteThisFile("Components", "nslocale.dll");
+  deleteThisFile("Components", "strres.dll");
+  deleteThisFile("Components", "mozbrwsr.dll");
+  deleteThisFile("Components", "nkcache.dll");
+  deleteThisFile("Components", "jsloader.dll");
+  deleteThisFile("Chrome",     "chrome.rdf");
+  deleteThisFolder("Chrome",   "overlayinfo");
+}
+
+// main
+var srDest;
+var err;
+var err2;
+var fProgram;
+var fWindowsSystem;
+var fileComponentRegStr;
+var fileComponentReg;
+var restrictedAccess;
+var fileToRegister;
+
+srDest = $SpaceRequired$:bin;
+err    = initInstall("$ProductName$", "Browser", "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram  = getFolder("Program");
+fWindowsSystem = getFolder("Win System");
+logComment("fProgram: " + fProgram);
+
+if(verifyDiskSpace(fProgram, srDest))
+{
+  setPackageFolder(fProgram);
+
+  upgradeCleanup();
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() of Program returned: " + err);
+
+  // check return value
+  if( err == SUCCESS )
+  {
+    fileToRegister = getFolder(fProgram, "ISimpleDOMNodeMarshal.dll");
+    err2           = File.windowsRegisterServer(fileToRegister);
+    logComment("windowsRegisterServer() returned: " + err2);
+    fileToRegister = getFolder(fProgram, "ISimpleDOMDocumentMarshal.dll");
+    err2           = File.windowsRegisterServer(fileToRegister);
+    logComment("windowsRegisterServer() returned: " + err2);
+    updateWinReg();  // Finish registering above marshalling dll's
+
+    createShortcuts();
+
+    // we don't want to fail on errors for the above two
+    resetError();
+
+    // register chrome
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-platform/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-platform/");
+
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/cookie/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","content-packs.jar"), "content/content-packs/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/editor/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/editor-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/necko/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/mozldap/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/navigator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","help.jar"),"content/help/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/xbl-marquee/");
+
+    /* Log files that are created after the installer is done, so they can be uninstalled */
+    logComment("Installing: "    + fProgram + ".autoreg");
+    logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
+    logComment("Installing: "    + fProgram + "xpcom.log");
+    logComment("Create Folder: " + fProgram + "components");
+    logComment("Installing: "    + fProgram + "components\\xpti.dat");
+    logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
+    logComment("Installing: "    + fProgram + "components\\compreg.dat");
+    logComment("Create Folder: " + fProgram + "chrome");
+    logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
+    logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\cookie\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\inspector\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\editor\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\messenger\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\skin");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\skin\\stylesheets.rdf");
+
+    err = getLastError();
+    if (err == SUCCESS)
+    {
+      err = performInstall();
+      logComment("performInstall() returned: " + err);
+      if (! ('buildID' in Install))
+      {
+        logComment("Running Pre-Mozilla 0.9.1");
+        initInstall("Post-install Cleanup Utility", "Browser/xpicleanup", "$Version$");
+        cleanupUtility = getFolder(fProgram, "xpicleanup.exe");
+        err = File.execute(cleanupUtility);
+        logComment("execute() returned: " + err);
+        err = performInstall();
+      }
+    }
+    else
+      cancelInstall(err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+
+// end main
