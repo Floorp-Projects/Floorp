@@ -30,6 +30,7 @@
 
 
 #define NS_URLBARHISTORY_PROGID "component://netscape/browser/urlbarhistory"
+#define NS_URLBARAUTOCOMPLETE_PROGID "component://netscape/autocompleteSession&type=urlbar"
 #define UBHISTORY_MAX_ENTRIES = 15;
 %}
 

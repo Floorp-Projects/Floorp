@@ -18,7 +18,7 @@
  * 
  * Contributor(s):
  *   Radha Kulkarni <radha@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ * 
  */
 
 // Local Includes 
@@ -30,8 +30,15 @@
 // Interfaces Needed
 #include "nsIGenericFactory.h"
 #include "nsString.h"
+#include "nsIAutoCompleteResults.h"
 
-
+static char * ignoreArray[] = {
+		"http://",
+	    "ftp://",
+		"www.",
+		"http://www.",
+        "keyword:"
+	};
 //*****************************************************************************
 //***    nsUrlbarHistory: Object Management
 //*****************************************************************************
@@ -39,6 +46,10 @@
 nsUrlbarHistory::nsUrlbarHistory():mLength(0)
 {
    NS_INIT_REFCNT();
+   PRInt32 cnt = sizeof(ignoreArray)/sizeof(char *);
+   for(PRInt32 i=0; i< cnt; i++) 
+     mIgnoreArray.AppendElement((void *) new nsString(NS_ConvertASCIItoUCS2(ignoreArray[i])));
+   
 }
 
 
@@ -51,7 +62,13 @@ nsUrlbarHistory::~nsUrlbarHistory()
 	  delete entry;
 	  mLength--;
 	}
+	PRInt32 cnt = sizeof(ignoreArray)/sizeof(char *);
+    for(PRInt32 j=0; j< cnt; j++)  {
+		nsString * ignoreEntry = (nsString *) mIgnoreArray.ElementAt(j);
+	    delete ignoreEntry;
+	}
 	mArray.Clear();
+	mIgnoreArray.Clear();
 }
 
 //*****************************************************************************
@@ -63,6 +80,7 @@ NS_IMPL_RELEASE(nsUrlbarHistory)
 
 NS_INTERFACE_MAP_BEGIN(nsUrlbarHistory)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIUrlbarHistory)
+   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSession)
    NS_INTERFACE_MAP_ENTRY(nsIUrlbarHistory)
 NS_INTERFACE_MAP_END
 
@@ -143,4 +161,188 @@ nsUrlbarHistory::PrintHistory()
 	}
 
   return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteListener *listener)
+{
+    nsresult rv = NS_OK;
+ 
+    if (!listener)
+        return NS_ERROR_NULL_POINTER;
+        
+    if (uSearchString[0] == 0)
+    {
+        listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+        return NS_OK;
+    }
+ 
+    // Check if it is one of the generic strings "http://, www., ftp:// etc..
+    PRInt32 cnt = mIgnoreArray.Count();
+	for(PRInt32 i=0; i<cnt; i++) {
+       nsString * match = (nsString *)mIgnoreArray.ElementAt(i);
+	   if (match) {
+          PRInt32 index = match->Find(uSearchString, PR_TRUE);
+		  if (index == 0) {
+			  listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+		      return NS_OK;
+		  }
+	   }  // match
+	}  //for
+    
+    nsCOMPtr<nsIAutoCompleteResults> results;
+    if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult)))
+    {
+        results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_PROGID);
+		NS_ENSURE_TRUE(results, NS_ERROR_FAILURE);
+        rv = SearchCache(uSearchString, results);       
+    }
+    else
+        results = previousSearchResult;
+                
+    AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
+    if (NS_SUCCEEDED(rv) && results)
+    {
+        PRBool addedDefaultItem = PR_FALSE;
+
+        results->SetSearchString(uSearchString);
+        results->SetDefaultItemIndex(-1);
+
+        nsCOMPtr<nsISupportsArray> array;
+        rv = results->GetItems(getter_AddRefs(array));
+        if (NS_SUCCEEDED(rv))
+        {
+            PRUint32 nbrOfItems;
+            rv = array->Count(&nbrOfItems);
+            if (NS_SUCCEEDED(rv)) {
+                if (nbrOfItems > 1)
+                {
+                    results->SetDefaultItemIndex(addedDefaultItem ? 1 : 0);
+                    status = nsIAutoCompleteStatus::matchFound;
+                }
+                else {
+                    if (nbrOfItems == 1)
+                    {
+                        results->SetDefaultItemIndex(0);
+                        status = nsIAutoCompleteStatus::matchFound;
+                    }
+                    else
+                        status = nsIAutoCompleteStatus::noMatch;
+				}
+			}  // NS_SUCCEEDED(rv)
+        }
+    listener->OnAutoComplete(results, status);
+	}
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoCompleteResults *previousSearchResult)
+{
+    if (!previousSearchResult)
+        return NS_ERROR_NULL_POINTER;
+        
+    nsXPIDLString prevSearchString;
+    PRUint32 searchStrLen = nsCRT::strlen(searchStr);
+    nsresult rv;
+
+    rv = previousSearchResult->GetSearchString(getter_Copies(prevSearchString));
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    
+    if (!(const PRUnichar*)prevSearchString)
+        return NS_ERROR_FAILURE;
+    
+    PRUint32 prevSearchStrLen = nsCRT::strlen(prevSearchString);
+    if (searchStrLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr, prevSearchString, prevSearchStrLen != 0))
+        return NS_ERROR_ABORT;
+
+    nsCOMPtr<nsISupportsArray> array;
+    rv = previousSearchResult->GetItems(getter_AddRefs(array));
+    if (NS_SUCCEEDED(rv))
+    {
+        PRUint32 nbrOfItems;
+        PRUint32 i;
+        
+        rv = array->Count(&nbrOfItems);
+        if (NS_FAILED(rv) || nbrOfItems <= 0)
+            return NS_ERROR_FAILURE;
+        
+	    nsCOMPtr<nsISupports> item;
+	    nsCOMPtr<nsIAutoCompleteItem> resultItem;
+        
+
+	    for (i = 0; i < nbrOfItems; i ++)
+	    {
+	        rv = array->QueryElementAt(i, nsIAutoCompleteItem::GetIID(), getter_AddRefs(resultItem));
+	        if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+
+	        PRUnichar *  itemValue=nsnull;
+            resultItem->GetValue(&itemValue);
+
+			if (!itemValue)
+				continue;
+		    if (nsCRT::strncasecmp(searchStr, itemValue, searchStrLen) == 0)
+			{
+			    Recycle(itemValue);
+			    continue;
+			}
+			
+	    }
+	    return NS_OK;
+    }
+
+    return NS_ERROR_ABORT;
+}
+
+
+NS_IMETHODIMP
+nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults* results)
+{
+    nsresult rv = NS_OK;
+
+	PRInt32 cnt = mArray.Count();
+	for(PRInt32 i=cnt-1; i>=0; i--)
+	{
+       nsString * item = nsnull;
+	   PRUnichar * match = nsnull;
+	   PRInt32 index = -1;
+	   item = (nsString*) mArray.ElementAt(i);
+	   if (item) {
+	     index = item->Find(searchStr, PR_TRUE);
+	     match = item->ToNewUnicode();
+	   }
+	   if (index == 0) {
+           // Item found. Create an AutoComplete Item 
+		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_PROGID));
+		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
+           
+           newItem->SetValue(match);
+           nsCOMPtr<nsISupportsArray> array;
+           rv = results->GetItems(getter_AddRefs(array));
+           if (NS_SUCCEEDED(rv))
+		   { 
+                array->AppendElement((nsISupports*)newItem);
+		   }		  
+	   }
+	   Recycle(match);
+	}  //for    
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsUrlbarHistory::OnStopLookup()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlbarHistory::OnAutoComplete(const PRUnichar *searchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteListener *listener)
+{
+	return NS_OK;
 }
