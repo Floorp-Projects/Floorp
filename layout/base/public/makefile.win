@@ -19,6 +19,7 @@ DEPTH=..\..\..
 
 EXPORTS =				\
 	nslayout.h			\
+	nsHTMLReflowState.h		\
 	nsICaret.h			\
 	nsIContent.h			\
 	nsIContentIterator.h		\
