@@ -1555,7 +1555,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
                                        &image->border_width, context))
                 return;
         } else {
-            XP_ASSERT(0 && "no style value for image " BORDERWIDTH_STYLE);
+            /* no style value for image border */
 #ifdef DEBUG_shaver
             fprintf(stderr, "no style value for IMG.border\n");
 #endif
@@ -1571,7 +1571,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
                 return;
             image->border_horiz_space = image->border_vert_space;
         } else {
-            XP_ASSERT(0 && "no style value for image " PADDING_STYLE);
+            /* no style value for image padding */
             image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
             image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
         }
