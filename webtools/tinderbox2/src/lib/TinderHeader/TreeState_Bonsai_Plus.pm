@@ -7,8 +7,8 @@
 # display these states and can also set the states which are not the
 # Bonsai States.
 
-# $Revision: 1.5 $ 
-# $Date: 2002/05/07 20:35:26 $ 
+# $Revision: 1.6 $ 
+# $Date: 2002/05/09 18:15:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai_Plus.pm,v $ 
 # $Name:  $ 
@@ -52,7 +52,7 @@ use BonsaiData;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
@@ -79,6 +79,17 @@ sub gettree_header {
   my ($bonsai_treestate) = BonsaiData::get_tree_state($tree);
   my ($text_treestate) = $self->SUPER::gettree_header($tree);
   my $treestate;
+
+  # This is a problem since this is the same code which is used by
+  # the tinderbox page so that it can display the current state
+  # AND it is also used by the admin page to show the current
+  # state.  
+
+  # This is bad.  On the admin page you never see the
+  # Current_Bonsai_State pressed since that is never a returned state,
+  # since the Tinderbox Status page does not want that returned. I
+  # need to create a separate function to return the state for the
+  # admin page.
 
   if (!($text_treestate)) {
 
