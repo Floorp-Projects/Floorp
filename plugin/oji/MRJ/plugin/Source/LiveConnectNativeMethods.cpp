@@ -259,13 +259,21 @@ MRJSecurityContext::GetCertificateID(char* buf, int len)
 
 static MRJSecurityContext* getSecurityContext(MRJPluginInstance* pluginInstance)
 {
-    MRJContext* context = pluginInstance->getContext();
-    MRJSecurityContext* securityContext = context->getSecurityContext();
-    if (securityContext == NULL) {
-        securityContext = new MRJSecurityContext(context->getDocumentBase());
-        context->setSecurityContext(securityContext);
+    if (pluginInstance != NULL) {
+        MRJContext* context = pluginInstance->getContext();
+        MRJSecurityContext* securityContext = context->getSecurityContext();
+        if (securityContext == NULL) {
+            securityContext = new MRJSecurityContext(context->getDocumentBase());
+            context->setSecurityContext(securityContext);
+        }
+        return securityContext;
     }
-    return securityContext;
+    return NULL;
+}
+
+inline nsILiveconnect* getLiveconnectInstance(MRJSecurityContext* securityContext)
+{
+    return (securityContext ? securityContext->getConnection() : theLiveConnectManager);
 }
 
 static jobject GetCurrentClassLoader(JNIEnv* env)
@@ -464,9 +472,9 @@ public:
     virtual void execute(JNIEnv* env)
     {
         MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-        nsILiveconnect* connection = securityContext->getConnection();
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
         jobject member;
-        nsresult result = connection->GetMember(env, mObject, mPropertyName, mLength, NULL, 0, NULL, &member);
+        nsresult result = connection->GetMember(env, mObject, mPropertyName, mLength, NULL, 0, securityContext, &member);
         if (result == NS_OK) {
             // convert reference to a global reference, in case we're switching threads.
             *mResultObject = ToGlobalRef(env, member);
@@ -485,10 +493,12 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv* env,
     }
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
+#endif
 
     /* Get the Unicode string for the JS property name */
     jboolean is_copy;
@@ -531,9 +541,9 @@ public:
     virtual void execute(JNIEnv* env)
     {
         MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-        nsILiveconnect* connection = securityContext->getConnection();
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
         jobject member;
-        nsresult result = connection->GetSlot(env, mObject, mSlot, NULL, 0, NULL, &member);
+        nsresult result = connection->GetSlot(env, mObject, mSlot, NULL, 0, securityContext, &member);
         if (result == NS_OK) {
             // convert reference to a global reference, in case we're switching threads.
             *mResultObject = ToGlobalRef(env, member);
@@ -547,10 +557,12 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv* env,
                                           jint slot)
 {
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
+#endif
 
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
     jobject member = NULL;
@@ -586,7 +598,7 @@ public:
     virtual void execute(JNIEnv* env)
     {
         MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-        nsILiveconnect* connection = securityContext->getConnection();
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
         nsresult result = connection->SetMember(env, mObject, mPropertyName, mLength, mJavaObject, 0, NULL, securityContext);
     }
 };
@@ -603,10 +615,12 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv* env,
     }
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return;
     }
+#endif
 
     /* Get the Unicode string for the JS property name */
     jboolean is_copy;
@@ -643,7 +657,7 @@ public:
     virtual void execute(JNIEnv* env)
     {
         MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-        nsILiveconnect* connection = securityContext->getConnection();
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
         nsresult result = connection->SetSlot(env, mObject, mSlot, mJavaObject, 0, NULL, securityContext);
     }
 };
@@ -655,10 +669,12 @@ Java_netscape_javascript_JSObject_setSlot(JNIEnv* env,
                                           jobject java_obj)
 {
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return;
     }
+#endif
 
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
     java_obj = ToGlobalRef(env, java_obj);
@@ -690,8 +706,8 @@ public:
     virtual void execute(JNIEnv* env)
     {
         MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-        nsILiveconnect* connection = securityContext->getConnection();
-        nsresult result = connection->RemoveMember(env, mObject, mPropertyName, mLength, NULL, 0, NULL);
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
+        nsresult result = connection->RemoveMember(env, mObject, mPropertyName, mLength, NULL, 0, securityContext);
     }
 };
 
@@ -706,10 +722,12 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv* env,
     }
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return;
     }
+#endif
 
     /* Get the Unicode string for the JS property name */
     jboolean is_copy;
@@ -729,6 +747,33 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv* env,
  * Method:    call
  * Signature: (Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;
  */
+class CallMessage : public JavaMessage {
+    MRJPluginInstance* mPluginInstance;
+    jsobject mObject;
+    const jchar* mFunctionName;
+    jsize mLength;
+    jobjectArray mJavaArgs;
+    jobject* mJavaResult;
+public:
+    CallMessage(MRJPluginInstance* pluginInstance, jsobject obj, const jchar* functionName,
+                jsize length, jobjectArray javaArgs, jobject* javaResult)
+        :   mPluginInstance(pluginInstance), mObject(obj), mFunctionName(functionName),
+            mLength(length), mJavaArgs(javaArgs), mJavaResult(javaResult)
+    {
+    }
+
+    virtual void execute(JNIEnv* env)
+    {
+        /* If we have an applet, try to create a codebase principle. */
+        MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
+        jobject jresult = NULL;
+        nsresult result = connection->Call(env, mObject, mFunctionName, mLength, mJavaArgs, NULL, 0, securityContext, &jresult);
+        if (result == NS_OK)
+            *mJavaResult = ToGlobalRef(env, jresult);
+    }
+};
+
 JNIEXPORT jobject JNICALL
 Java_netscape_javascript_JSObject_call(JNIEnv* env, jobject java_wrapper_obj,
                                        jstring function_name_jstr, jobjectArray java_args)
@@ -738,39 +783,14 @@ Java_netscape_javascript_JSObject_call(JNIEnv* env, jobject java_wrapper_obj,
         return NULL;
     }
 
-    class CallMessage : public JavaMessage {
-        MRJPluginInstance* mPluginInstance;
-        jsobject mObject;
-        const jchar* mFunctionName;
-        jsize mLength;
-        jobjectArray mJavaArgs;
-        jobject* mJavaResult;
-    public:
-        CallMessage(MRJPluginInstance* pluginInstance, jsobject obj, const jchar* functionName,
-                    jsize length, jobjectArray javaArgs, jobject* javaResult)
-            :   mPluginInstance(pluginInstance), mObject(obj), mFunctionName(functionName),
-                mLength(length), mJavaArgs(javaArgs), mJavaResult(javaResult)
-        {
-        }
-
-        virtual void execute(JNIEnv* env)
-        {
-            /* If we have an applet, try to create a codebase principle. */
-            MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-            nsILiveconnect* connection = securityContext->getConnection();
-            jobject jresult = NULL;
-            nsresult result = connection->Call(env, mObject, mFunctionName, mLength, mJavaArgs, NULL, 0, securityContext, &jresult);
-            if (result == NS_OK)
-                *mJavaResult = ToGlobalRef(env, jresult);
-        }
-    };
-
     /* Try to determine which plugin instance is responsible for this thread. This is done by checking class loaders. */
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
+#endif
 
     /* Get the Unicode string for the JS function name */
     jboolean is_copy;
@@ -796,6 +816,29 @@ Java_netscape_javascript_JSObject_call(JNIEnv* env, jobject java_wrapper_obj,
  * Method:    eval
  * Signature: (Ljava/lang/String;)Ljava/lang/Object;
  */
+class EvalMessage : public JavaMessage {
+    MRJPluginInstance* mPluginInstance;
+    jsobject mObject;
+    const jchar* mScript;
+    jsize mLength;
+    jobject* mJavaResult;
+public:
+    EvalMessage(MRJPluginInstance* pluginInstance, jsobject obj, const jchar* script, jsize length, jobject* javaResult)
+        :   mPluginInstance(pluginInstance), mObject(obj), mScript(script), mLength(length), mJavaResult(javaResult)
+    {
+    }
+
+    virtual void execute(JNIEnv* env)
+    {
+        jobject jresult = NULL;
+        MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
+        nsresult result = connection->Eval(env, mObject, mScript, mLength, NULL, 0, securityContext, &jresult);
+        if (result == NS_OK && jresult != NULL)
+            *mJavaResult = ToGlobalRef(env, jresult);
+    }
+};
+
 JNIEXPORT jobject JNICALL
 Java_netscape_javascript_JSObject_eval(JNIEnv* env,
                                        jobject java_wrapper_obj,
@@ -817,38 +860,17 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
 #ifdef MRJPLUGIN_4X
     nsresult status = theLiveConnectManager->Eval(env, js_obj, script_ucs2, script_len, NULL, 0, NULL, &jresult);
 #else
-    class EvalMessage : public JavaMessage {
-        MRJPluginInstance* mPluginInstance;
-        jsobject mObject;
-        const jchar* mScript;
-        jsize mLength;
-        jobject* mJavaResult;
-    public:
-        EvalMessage(MRJPluginInstance* pluginInstance, jsobject obj, const jchar* script, jsize length, jobject* javaResult)
-            :   mPluginInstance(pluginInstance), mObject(obj), mScript(script), mLength(length), mJavaResult(javaResult)
-        {
-        }
-
-        virtual void execute(JNIEnv* env)
-        {
-            jobject jresult = NULL;
-            MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-            nsILiveconnect* connection = securityContext->getConnection();
-            nsresult result = connection->Eval(env, mObject, mScript, mLength, NULL, 0, securityContext, &jresult);
-            if (result == NS_OK && jresult != NULL)
-                *mJavaResult = ToGlobalRef(env, jresult);
-        }
-    };
-
     /* determine the plugin instance so we can obtain its codebase. */
     // beard: should file a bug with Apple that JMJNIToAWTContext doesn't work.
     // MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(env);
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
-    
+#endif
+
     EvalMessage msg(pluginInstance, js_obj, script_ucs2, script_len, &jresult);
     sendMessage(env, &msg);
     
@@ -867,6 +889,27 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
  * Method:    toString
  * Signature: ()Ljava/lang/String;
  */
+class ToStringMessage : public JavaMessage {
+    MRJPluginInstance* mPluginInstance;
+    jsobject mObject;
+    jstring* mStringResult;
+public:
+    ToStringMessage(MRJPluginInstance* pluginInstance, jsobject js_obj, jstring* stringResult)
+        :   mPluginInstance(pluginInstance), mObject(js_obj), mStringResult(stringResult)
+    {
+    }
+
+    virtual void execute(JNIEnv* env)
+    {
+        MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
+        jstring jresult = NULL;
+        nsresult status = connection->ToString(env, mObject, &jresult);
+        if (status == NS_OK && jresult != NULL)
+            *mStringResult = (jstring) ToGlobalRef(env, jresult);
+    }
+};
+
 JNIEXPORT jstring JNICALL
 Java_netscape_javascript_JSObject_toString(JNIEnv* env, jobject java_wrapper_obj)
 {
@@ -874,32 +917,13 @@ Java_netscape_javascript_JSObject_toString(JNIEnv* env, jobject java_wrapper_obj
     jstring jresult = NULL;
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
 
-    class ToStringMessage : public JavaMessage {
-        MRJPluginInstance* mPluginInstance;
-        jsobject mObject;
-        jstring* mStringResult;
-    public:
-        ToStringMessage(MRJPluginInstance* pluginInstance, jsobject js_obj, jstring* stringResult)
-            :   mPluginInstance(pluginInstance), mObject(js_obj), mStringResult(stringResult)
-        {
-        }
-
-        virtual void execute(JNIEnv* env)
-        {
-            MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-            nsILiveconnect* connection = securityContext->getConnection();
-            jstring jresult = NULL;
-            nsresult status = connection->ToString(env, mObject, &jresult);
-            if (status == NS_OK && jresult != NULL)
-                *mStringResult = (jstring) ToGlobalRef(env, jresult);
-        }
-    };
-    
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
+#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
+#endif
 
     ToStringMessage msg(pluginInstance, js_obj, &jresult);
     sendMessage(env, &msg);
@@ -915,6 +939,22 @@ Java_netscape_javascript_JSObject_toString(JNIEnv* env, jobject java_wrapper_obj
  * Method:    getWindow
  * Signature: (Ljava/applet/Applet;)Lnetscape/javascript/JSObject;
  */
+class GetWindowMessage : public JavaMessage {
+    MRJPluginInstance* mPluginInstance;
+    jsobject* mWindowResult;
+public:
+    GetWindowMessage(MRJPluginInstance* pluginInstance, jsobject* windowResult)
+        :   mPluginInstance(pluginInstance), mWindowResult(windowResult)
+    {
+    }
+    
+    virtual void execute(JNIEnv* env)
+    {
+        MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
+        nsILiveconnect* connection = getLiveconnectInstance(securityContext);
+        nsresult status = connection->GetWindow(env, mPluginInstance, NULL, 0, securityContext, mWindowResult);
+    }
+};
 
 JNIEXPORT jobject JNICALL
 Java_netscape_javascript_JSObject_getWindow(JNIEnv* env,
@@ -928,29 +968,6 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv* env,
         jobject jwindow = Wrap_JSObject(env, jsobject(pluginInstance));
         return jwindow;
 #else
-        class GetWindowMessage : public JavaMessage {
-            MRJPluginInstance* mPluginInstance;
-            jsobject* mWindowResult;
-        public:
-            GetWindowMessage(MRJPluginInstance* pluginInstance, jsobject* windowResult)
-                :   mPluginInstance(pluginInstance), mWindowResult(windowResult)
-            {
-                NS_ADDREF(pluginInstance);
-            }
-            
-            ~GetWindowMessage()
-            {
-                NS_RELEASE(mPluginInstance);
-            }
-
-            virtual void execute(JNIEnv* env)
-            {
-                MRJSecurityContext* securityContext = getSecurityContext(mPluginInstance);
-                nsILiveconnect* connection = securityContext->getConnection();
-                nsresult status = connection->GetWindow(env, mPluginInstance, NULL, 0, securityContext, mWindowResult);
-            }
-        };
-
         jsobject jswindow = NULL;
         GetWindowMessage msg(pluginInstance, &jswindow);
         sendMessage(env, &msg);
@@ -967,6 +984,19 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv* env,
  * Method:    finalize
  * Signature: ()V
  */
+class FinalizeMessage : public JavaMessage {
+    jsobject m_jsobj;
+public:
+    FinalizeMessage(jsobject jsobj)
+        :   m_jsobj(jsobj)
+    {
+    }
+
+    virtual void execute(JNIEnv* env)
+    {
+        nsresult result = theLiveConnectManager->FinalizeJSObject(env, m_jsobj);
+    }
+};
 
 JNIEXPORT void JNICALL
 Java_netscape_javascript_JSObject_finalize(JNIEnv* env, jobject java_wrapper_obj)
@@ -976,21 +1006,7 @@ Java_netscape_javascript_JSObject_finalize(JNIEnv* env, jobject java_wrapper_obj
 #ifdef MRJPLUGIN_4X
     MRJPluginInstance* pluginInstance = (MRJPluginInstance*)jsobj;
     NS_IF_RELEASE(pluginInstance);
-#else
-    class FinalizeMessage : public JavaMessage {
-        jsobject m_jsobj;
-    public:
-        FinalizeMessage(jsobject jsobj)
-            :   m_jsobj(jsobj)
-        {
-        }
-
-        virtual void execute(JNIEnv* env)
-        {
-            nsresult result = theLiveConnectManager->FinalizeJSObject(env, m_jsobj);
-        }
-    };
-    
+#else    
     FinalizeMessage msg(jsobj);
     sendMessage(env, &msg);
 #endif
