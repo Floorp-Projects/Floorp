@@ -2482,6 +2482,7 @@ static PRStatus pt_GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
+            case PR_SockOpt_Broadcast:
             {
                 PRIntn value;
                 length = sizeof(PRIntn);
@@ -2600,6 +2601,7 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
+            case PR_SockOpt_Broadcast:
             {
                 PRIntn value = (data->value.reuse_addr) ? 1 : 0;
                 rv = setsockopt(
@@ -2639,7 +2641,6 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
                 rv = setsockopt(
                     fd->secret->md.osfd, level, name,
                     (char*)&ttl, sizeof(ttl));
-            case PR_SockOpt_Broadcast:
                 break;
             }
             case PR_SockOpt_AddMember:
@@ -2758,7 +2759,6 @@ static PRIOMethods _pr_udp_methods = {
     pt_Connect,
     (PRAcceptFN)_PR_InvalidDesc,
     pt_Bind,
-            case PR_SockOpt_Broadcast:
     pt_Listen,
     pt_Shutdown,
     pt_Recv,
