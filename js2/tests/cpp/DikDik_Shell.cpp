@@ -120,6 +120,11 @@ static JSValue print(Context *, const JSValue& /*thisValue*/, JSValue *argv, uin
     return kUndefinedValue;
 }
 
+static JSValue version(Context *, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    return JSValue(2.0);
+}
+
 static JSValue debug(Context *cx, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
 {
     cx->mDebugFlag = !cx->mDebugFlag;
@@ -223,6 +228,7 @@ static bool processArgs(Context *cx, int argc, char **argv, int *result)
                     } catch (Exception &e) {
                         stdOut << '\n' << e.fullMessage();
                         *result = EXITCODE_RUNTIME_ERROR;
+                        return false;
                     }
                     doInteractive = false;
                 }
@@ -256,6 +262,7 @@ int main(int argc, char **argv)
         globalObject->defineVariable(&cx, widenCString("debug"), (NamespaceList *)(NULL), NULL, JSValue(new JSFunction(debug, NULL)));
         globalObject->defineVariable(&cx, widenCString("trace"), (NamespaceList *)(NULL), NULL, JSValue(new JSFunction(trace, NULL)));
         globalObject->defineVariable(&cx, widenCString("dikdik"), (NamespaceList *)(NULL), NULL, JSValue(new JSFunction(dikdik, NULL)));
+        globalObject->defineVariable(&cx, widenCString("version"), (NamespaceList *)(NULL), NULL, JSValue(new JSFunction(version, NULL)));
 
         bool doInteractive = true;
         int result = 0;
