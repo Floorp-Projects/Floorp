@@ -54,6 +54,7 @@
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
 #include "nsIJVMPlugin.h"
+#include "nsIJVMManager.h"
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
 #include "nsIObserverService.h"
@@ -3627,6 +3628,50 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   else
     mimetype = aMimeType;
 
+  PRBool isJavaPlugin = PR_FALSE;
+  if (aMimeType && 
+      (PL_strcasecmp(aMimeType, "application/x-java-vm") == 0 ||
+         PL_strcasecmp(aMimeType, "application/x-java-applet") == 0))
+  {
+    isJavaPlugin = PR_TRUE;
+  }
+
+#if defined(XP_UNIX) || defined(XP_OS2)
+  // This is a work-around on Unix for a LiveConnect problem (bug 83698).
+  // The problem:
+  // The proxy JNI needs to be created by the browser. If it is created by
+  // someone else (e.g., a plugin) on a different thread, the proxy JNI will
+  // not work, and break LiveConnect.
+  // Currently, on Unix, when instantiating a Java plugin instance (by calling
+  // InstantiateEmbededPlugin() next), Java plugin will create the proxy JNI
+  // if it is not created yet. If that happens, LiveConnect will be broken.
+  // Before lazy start JVM was implemented, since at this point the browser
+  // already created the proxy JNI buring startup, the problem did not happen.
+  // But after the lazy start was implemented, at this point the proxy JNI was
+  // not created yet, so the Java plugin created the proxy JNI, and broke
+  // liveConnect.
+  // On Windows and Mac, Java plugin does not create the proxy JNI, but lets
+  // the browser to create it. Hence this is a Unix-only problem.
+  //
+  // The work-around:
+  // The root cause of the problem is in Java plugin's Unix implementation,
+  // which should not create the proxy JNI.
+  // As a work-around, here we make sure the proxy JNI has been created by the
+  // browser, before plugin gets a chance.
+  //
+
+  if (isJavaPlugin) {
+    // If Java is installed, get proxy JNI. 
+    nsCOMPtr<nsIJVMManager> jvmManager = do_GetService(nsIJVMManager::GetCID(),
+                                                     &result);
+    if (NS_SUCCEEDED(result)) {
+      JNIEnv* proxyEnv;
+      // Get proxy JNI, if not created yet, create it.
+      jvmManager->GetProxyJNI(&proxyEnv);
+    }
+  }
+#endif
+
   nsCAutoString contractID(
           NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
           nsDependentCString(mimetype));
@@ -3634,16 +3679,6 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   GetPluginFactory(mimetype, getter_AddRefs(plugin));
 
   result = CallCreateInstance(contractID.get(), &instance);
-
-#ifdef XP_WIN
-    PRBool isJavaPlugin = PR_FALSE;
-    if (aMimeType && 
-        (PL_strcasecmp(aMimeType, "application/x-java-vm") == 0 ||
-         PL_strcasecmp(aMimeType, "application/x-java-applet") == 0))
-    {
-      isJavaPlugin = PR_TRUE;
-    }
-#endif
 
     // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
     if (NS_FAILED(result)) 
