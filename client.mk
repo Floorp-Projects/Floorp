@@ -293,9 +293,9 @@ checkout::
 	else true; \
 	fi
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
-	@echo '$(CVSCO) mozilla/client.mk'; \
+	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
         cd $(ROOTDIR); \
-	$(CVSCO) mozilla/client.mk && \
+	$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk && \
 	$(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
