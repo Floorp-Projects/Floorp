@@ -18,13 +18,15 @@
 
 #include "nsClipboard.h"
 
-// XXXX #include "nsDataObj.h"
+#include "nsCOMPtr.h"
+
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
-#include "nsIDataFlavor.h"
+#include "nsDataFlavor.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 
 // interface definitions
@@ -43,6 +45,10 @@ GtkWidget* nsClipboard::sWidget = 0;
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
+static NS_DEFINE_IID(kIClipboardIID,       NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
+ 
+
 //-------------------------------------------------------------------------
 //
 // nsClipboard constructor
@@ -50,7 +56,7 @@ NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  printf("nsClipboard::nsClipboard()\n");
+  printf("  nsClipboard::nsClipboard()\n");
 
   //NS_INIT_REFCNT();
   mIgnoreEmptyNotification = PR_FALSE;
@@ -71,7 +77,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 //-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
-  printf("nsClipboard::~nsClipboard()\n");  
+  printf("  nsClipboard::~nsClipboard()\n");  
 
   NS_IF_RELEASE(mWindow);
 }
@@ -84,7 +90,7 @@ nsClipboard::~nsClipboard()
 */ 
 nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  printf("nsClipboard::QueryInterface()\n");
+  printf("  nsClipboard::QueryInterface()\n");
 
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -109,18 +115,35 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   */
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 {
-  printf("nsClipboard::SetNativeClipboardData()\n");
-  
   mIgnoreEmptyNotification = PR_TRUE;
+
+  printf("  nsClipboard::SetNativeClipboardData()\n");
 
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
     return NS_ERROR_FAILURE;
   }
 
-  
+  // If we're already the selection owner, don't need to do anything,
+  // we'll already get the events:
+  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
+    return NS_OK;
+
+  // Clear the native clipboard
+  if (sWidget &&
+      gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
+    gtk_selection_remove_all(sWidget);
 
 
+  // register as the selection owner:
+  gint have_selection =
+    gtk_selection_owner_set(sWidget,
+                            GDK_SELECTION_PRIMARY,
+                            GDK_CURRENT_TIME);
+  if (have_selection == 0)
+    return NS_ERROR_FAILURE;
+
+  mIgnoreEmptyNotification = PR_FALSE;
 
   return NS_OK;
 }
@@ -132,17 +155,16 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   */
 NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 {
-  printf("nsClipboard::GetNativeClipboardData()");
+  nsresult rv = NS_OK;
+
+  printf("  nsClipboard::GetNativeClipboardData()\n");
 
   // make sure we have a good transferable
   if (nsnull == aTransferable) {
     return NS_ERROR_FAILURE;
   }
   
-  // aTransferable->GetTransferData(flavor, data, length);
-  // copy data to nsString.
-
-  return NS_OK;
+  return rv;
 }
 
 
@@ -152,7 +174,7 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
   */
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 {
-  printf("nsClipboard::ForceDataToClipboard()\n");
+  printf("  nsClipboard::ForceDataToClipboard()\n");
 
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
@@ -166,6 +188,8 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 
 void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 {
+  printf("  nsClipboard::SetTopLevelWidget\n");
+  
   // Don't set up any more event handlers if we're being called twice
   // for the same toplevel widget
   if (sWidget == w)
@@ -173,64 +197,132 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 
   sWidget = w;
 
+  // Get the clipboard from the service manager.
+  nsIClipboard* clipboard;
+  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                             kIClipboardIID,
+                                             (nsISupports **)&clipboard);
+  if (!NS_SUCCEEDED(rv)) {
+    return;
+  }
+
   // Respond to requests for the selection:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_get",
-                     GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
-                     0);
+                     GTK_SIGNAL_FUNC(nsClipboard::SelectionGetCB),
+                     clipboard);
 
   // When someone else takes the selection away:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_clear_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionClearCB),
-                     0);
+                     clipboard);
 
   // Set up the paste handler:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_received",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionReceivedCB),
-                     0);
+                     clipboard);
 
-  // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
+  // Watch this, experimenting with Gtk :-)
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_request_event",
+                     GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
+                     clipboard);
+  
+  // Watch this, experimenting with Gtk :-)
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_notify_event",
+                     GTK_SIGNAL_FUNC(nsClipboard::SelectionNotifyCB),
+                     clipboard);
+
+
+
+  // Hmm, sometimes we need this, sometimes not.  I'm not clear why.
   // Register all the target types we handle:
-
   gtk_selection_add_targets(w, GDK_SELECTION_PRIMARY,
                            targets,
                            1);
 
-
-
-
+  // We're done with our reference to the clipboard.
+  NS_IF_RELEASE(clipboard);
 }
 
 
 // 
 // The event handler to handle selection requests: 
 // 
-void nsClipboard::SelectionRequestCB( GtkWidget        *widget,  
-                                         GtkSelectionData *selection_data, 
-                                         guint      /*info*/, 
-                                         guint      /*time*/, 
-                                         gpointer   data) 
+void nsClipboard::SelectionGetCB(GtkWidget        *widget,
+                                 GtkSelectionData *selection_data,
+                                 guint      /*info*/,
+                                 guint      /*time*/,
+                                 gpointer   data) 
 { 
-  printf("  nsClipboard::SelectionRequestCB\n"); 
+  printf("  nsClipboard::SelectionGetCB\n"); 
+
+  nsClipboard *clipboard = (nsClipboard *) data;
+  void     *clipboardData;
+  PRUint32 dataLength;
+
+  nsresult rv;
+
+  // XXX hack, string-only for now.
+  // Create string data-flavor.
+  nsDataFlavor *dataFlavor = new nsDataFlavor();
+  dataFlavor->Init("text/plain","text/plain");
+
+  // Get data out of transferable.
+  rv = clipboard->mTransferable->GetTransferData(dataFlavor, 
+                                      &clipboardData,
+                                      &dataLength);
+  
+
+  printf("  nsClipboard::SelectionRequestCB, clipboardData = %s%s\n", clipboardData);
+
+  // Currently we only offer the data in GDK_SELECTION_TYPE_STRING format.
+  if(NS_SUCCEEDED(rv)) {
+    gtk_selection_data_set(selection_data,
+                           GDK_SELECTION_TYPE_STRING,
+                           8, 
+                           clipboardData,
+                           dataLength);
+    // the format arg, "8", indicates string data with no endianness
+    
+  }
+
+  delete dataFlavor;
 } 
 
 
 
 // Called when another app requests the selection: 
-void nsClipboard::SelectionClearCB( GtkWidget *widget, 
-                                       GdkEventSelection *event, 
-                                       gpointer data) 
+void nsClipboard::SelectionClearCB(GtkWidget *widget, 
+                                   GdkEventSelection *event, 
+                                   gpointer data) 
 { 
-  printf("  nsClipboard::SelectionClearCB\n"); 
-} 
+  printf("  nsClipboard::SelectionClearCB\n");
+}
  
 
 void 
 nsClipboard::SelectionReceivedCB (GtkWidget *aWidget, 
-                                     GtkSelectionData *aSelectionData, 
-                                     gpointer aData) 
+                                  GtkSelectionData *aSelectionData, 
+                                  gpointer aData) 
 { 
   // ARGHH!  GTK doesn't pass the arg to the callback, so we can't 
   // get "this" back!  Until we solve this, use the global: 
  
    printf("  nsClipboard::SelectionReceivedCB\n");  
+} 
+
+
+void 
+nsClipboard::SelectionRequestCB (GtkWidget *aWidget, 
+                                  GtkSelectionData *aSelectionData, 
+                                  gpointer aData) 
+{ 
+   printf("  nsClipboard::SelectionRequestCB\n");  
+} 
+
+void 
+nsClipboard::SelectionNotifyCB (GtkWidget *aWidget, 
+                                  GtkSelectionData *aSelectionData, 
+                                  gpointer aData) 
+{ 
+   printf("  nsClipboard::SelectionNotifyCB\n");  
 } 
