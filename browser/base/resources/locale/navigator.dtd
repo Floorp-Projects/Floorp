@@ -1,5 +1,3 @@
-<!-- extracted from content/navigator.xul -->
-
 <!-- LOCALIZATION NOTE : FILE This file contains the browser main menu items --> 
 <!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
 
@@ -19,7 +17,7 @@
 <!ENTITY tabCmd.commandkey "t">
 <!ENTITY openCmd.commandkey "l">
 <!ENTITY openFileCmd.label "Open File...">
-<!ENTITY openFileCmd.accesskey "o">
+<!ENTITY openFileCmd.accesskey "O">
 <!ENTITY openFileCmd.commandkey "o">
 
 <!ENTITY printSetupCmd.label "Page Setup...">
@@ -27,18 +25,18 @@
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY printPreviewCmd.accesskey "v">
 <!ENTITY printCmd.label "Print...">
-<!ENTITY printCmd.accesskey "p">
+<!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.commandkey "p">
 
 <!ENTITY viewMenu.label "View">
-<!ENTITY viewMenu.accesskey "v">
+<!ENTITY viewMenu.accesskey "V">
 
 <!ENTITY toolbarsCmd.label "Show/Hide">
 <!ENTITY toolbarsCmd.accesskey "w">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY navbarCmd.accesskey "N">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
-<!ENTITY personalbarCmd.accesskey "p">
+<!ENTITY personalbarCmd.accesskey "P">
 <!ENTITY taskbarCmd.label "Status Bar">
 <!ENTITY taskbarCmd.accesskey "S">
 <!ENTITY locationbarCmd.label "Location Bar">
@@ -95,7 +93,6 @@
 
 <!ENTITY  homeButton.label            "Home">
 
-<!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
 
 <!ENTITY textZoomEnlargeCmd.label       "Larger">
@@ -113,7 +110,6 @@
 <!ENTITY textZoomMenu.accesskey         "z">
 <!ENTITY textZoomOtherCmd.accesskey     "o">
 
-<!-- extracted from charsetOverlay.xul -->
 <!ENTITY charsetMenu.label        "Encoding">
 <!ENTITY charsetMenu.accesskey        "E">
 <!ENTITY charsetMenuAutodet.label     "Auto-Detect">
@@ -140,51 +136,49 @@
 <!-- LOCALIZATION NOTE : FILE This file contains the global menu items --> 
 
 <!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "f">
+<!ENTITY fileMenu.accesskey       "F">
 <!ENTITY newMenu.label            "New">
 <!ENTITY newMenu.accesskey          "N">
 
 <!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "e"> 
+<!ENTITY editMenu.accesskey       "E"> 
 <!ENTITY undoCmd.label            "Undo">  
-<!ENTITY undoCmd.key            "Z">  
-<!ENTITY undoCmd.accesskey          "u"> 
+<!ENTITY undoCmd.key            "z">  
+<!ENTITY undoCmd.accesskey          "U"> 
 <!ENTITY redoCmd.label            "Redo">  
-<!ENTITY redoCmd.key            "Y">  
-<!ENTITY redoCmd.accesskey          "r"> 
+<!ENTITY redoCmd.key            "y">  
+<!ENTITY redoCmd.accesskey          "R"> 
 <!ENTITY cutCmd.label           "Cut">  
 <!ENTITY cutCmd.key             "X">  
 <!ENTITY cutCmd.accesskey         "t"> 
 <!ENTITY copyCmd.label            "Copy">  
-<!ENTITY copyCmd.key            "C">  
-<!ENTITY copyCmd.accesskey          "c"> 
+<!ENTITY copyCmd.key            "c">  
+<!ENTITY copyCmd.accesskey          "C"> 
 <!ENTITY pasteCmd.label           "Paste">  
-<!ENTITY pasteCmd.key           "V">  
-<!ENTITY pasteCmd.accesskey         "p"> 
+<!ENTITY pasteCmd.key           "v">  
+<!ENTITY pasteCmd.accesskey         "P"> 
 <!ENTITY deleteCmd.label          "Delete">  
-<!ENTITY deleteCmd.key            "D">  
-<!ENTITY deleteCmd.accesskey        "d"> 
+<!ENTITY deleteCmd.accesskey        "D"> 
 <!ENTITY selectAllCmd.label         "Select All">  
-<!ENTITY selectAllCmd.key         "A">  
-<!ENTITY selectAllCmd.accesskey       "a"> 
+<!ENTITY selectAllCmd.key         "a">  
+<!ENTITY selectAllCmd.accesskey       "A"> 
 <!ENTITY preferencesCmd.label       "Preferences...">
-<!ENTITY preferencesCmd.key         "E">  
 <!ENTITY preferencesCmd.accesskey     "e"> 
 
 <!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey       "h"> 
+<!ENTITY helpMenu.accesskey       "H"> 
 <!ENTITY helpContentCmd.label       "Help Contents">  
-<!ENTITY helpContentCmd.accesskey     "h">
+<!ENTITY helpContentCmd.accesskey     "H">
 
 <!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "r">
+<!ENTITY releaseCmd.accesskey       "R">
 <!ENTITY aboutCmd.label         "About &brandShortName;">
 <!ENTITY aboutCmd.accesskey       "A">
 <!ENTITY aboutCommPluginsCmd.label      "About Plug-ins">
-<!ENTITY aboutCommPluginsCmd.accesskey      "p">
+<!ENTITY aboutCommPluginsCmd.accesskey      "P">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
-<!ENTITY javaConsoleCmd.accesskey       "j">
+<!ENTITY javaConsoleCmd.accesskey       "J">
 
 <!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey       "S">
@@ -197,7 +191,7 @@
 
 <!ENTITY historyCmd.label "History">
 <!ENTITY historyCmd.accesskey "H">
-<!ENTITY historyCmd.commandkey "H">
+<!ENTITY historyCmd.commandkey "h">
 
 <!ENTITY location.label "Location:">
 <!ENTITY location.accesskey "L">

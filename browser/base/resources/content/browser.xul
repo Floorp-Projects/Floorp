@@ -494,7 +494,7 @@ Contributor(s): ______________________________________. -->
             <menuseparator/>
             <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
-            <menuseparator />
+            <menuseparator/>
             <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;" observes="isImage">
               <menupopup id="menu_textZoomPopup" onpopupshowing="updateTextZoomMenu();">
                 <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" command="cmd_textZoomReduce"/>
