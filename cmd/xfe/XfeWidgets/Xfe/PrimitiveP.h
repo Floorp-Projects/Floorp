@@ -494,6 +494,9 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 /*----------------------------------------------------------------------*/
 #define XfePRIMITIVE_DEFAULT_WIDTH	2
 #define XfePRIMITIVE_DEFAULT_HEIGHT	2
+
+#define XfeDEFAULT_PREFERRED_HEIGHT	0
+#define XfeDEFAULT_PREFERRED_WIDTH	0
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION

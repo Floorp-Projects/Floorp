@@ -104,7 +104,7 @@ static XtResource resources[] =
 		sizeof(int),
 		XtOffsetOf(XfeLogoRec , xfe_logo . animation_interval),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_ANIMATION_INTERVAL
+		(XtPointer) 100
     },
     { 
 		XmNanimationRunning,

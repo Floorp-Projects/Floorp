@@ -123,7 +123,7 @@ static XtResource resources[] =
 		sizeof(int),
 		XtOffsetOf(XfeProgressBarRec , xfe_progress_bar . cylon_interval),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_CYLON_INTERVAL
+		(XtPointer) 100
     },
     { 
 		XmNcylonOffset,

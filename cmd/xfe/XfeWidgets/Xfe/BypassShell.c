@@ -170,7 +170,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeBypassShellRec , xfe_bypass_shell . shadow_thickness),
 		XmRImmediate, 
-		(XtPointer)  XfeDEFAULT_SHADOW_THICKNESS 
+		(XtPointer)  1 
 	},
 	{ 
 		XmNshadowType,
@@ -179,7 +179,7 @@ static XtResource resources[] =
 		sizeof(unsigned char),
 		XtOffsetOf(XfeBypassShellRec , xfe_bypass_shell . shadow_type),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_SHADOW_TYPE
+		(XtPointer) XmSHADOW_OUT
 	},
 
 	/* Cursor resources */
@@ -379,7 +379,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeBypassShellPart *		bp = _XfeBypassShellPart(nw);
 
 	/* Make sure the shadow type is ok */
-	XfeRepTypeCheck(nw,XmRShadowType,&bp->shadow_type,XfeDEFAULT_SHADOW_TYPE);
+	XfeRepTypeCheck(nw,XmRShadowType,&bp->shadow_type,XmSHADOW_OUT);
 
 	/* Add mapping event handler */
 	XtAddEventHandler(nw,StructureNotifyMask,True,MappingEH,nw);
@@ -467,8 +467,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     if (np->shadow_type != op->shadow_type)
 	{
 		/* Make sure the new shadow type is ok */
-		XfeRepTypeCheck(nw,XmRShadowType,&np->shadow_type,
-						XfeDEFAULT_SHADOW_TYPE);
+		XfeRepTypeCheck(nw,XmRShadowType,&np->shadow_type,XmSHADOW_OUT);
 
 		redisplay = True;
 	}

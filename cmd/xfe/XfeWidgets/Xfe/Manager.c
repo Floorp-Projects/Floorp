@@ -211,7 +211,7 @@ static XtResource resources[] =
 		sizeof(unsigned char),
 		XtOffsetOf(XfeManagerRec , xfe_manager . shadow_type),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_SHADOW_TYPE
+		(XtPointer) XmSHADOW_OUT
     },
 
 	/* Layout resources */
@@ -289,7 +289,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeManagerRec , xfe_manager . margin_bottom),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_BOTTOM
+		(XtPointer) 2
     },
     { 
 		XmNmarginLeft,
@@ -298,7 +298,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeManagerRec , xfe_manager . margin_left),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_LEFT
+		(XtPointer) 2
     },
     { 
 		XmNmarginRight,
@@ -307,7 +307,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeManagerRec , xfe_manager . margin_right),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_RIGHT
+		(XtPointer) 2
     },
     { 
 		XmNmarginTop,
@@ -316,7 +316,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeManagerRec , xfe_manager . margin_top),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_TOP
+		(XtPointer) 2
     },
 
 	/* For c++ usage */
@@ -764,8 +764,7 @@ CoreInitialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     _XfemComponentFlag(nw)			= True;
   
     /* Make sure the shadow is ok */
-    XfeRepTypeCheck(nw,XmRShadowType,&_XfemShadowType(nw),
-					XfeDEFAULT_SHADOW_TYPE);
+    XfeRepTypeCheck(nw,XmRShadowType,&_XfemShadowType(nw),XmSHADOW_OUT);
 
     /* Finish of initialization */
     _XfeManagerChainInitialize(rw,nw,xfeManagerWidgetClass);
@@ -1114,7 +1113,7 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	if (_XfemShadowType(nw) != _XfemShadowType(ow))
 	{
 		/* Make sure the new shadow type is ok */
-		XfeRepTypeCheck(nw,XmRShadowType,&_XfemShadowType(nw),XfeDEFAULT_SHADOW_TYPE);
+		XfeRepTypeCheck(nw,XmRShadowType,&_XfemShadowType(nw),XmSHADOW_OUT);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}

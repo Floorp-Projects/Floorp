@@ -386,7 +386,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeFancyBoxRec , manager . shadow_thickness),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_SHADOW_THICKNESS
+		(XtPointer) 1
     },
 
 	/* Force XmNmarginLeft and XmNmarginRight to 4 */

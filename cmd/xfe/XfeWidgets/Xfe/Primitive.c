@@ -177,7 +177,7 @@ static XtResource resources[] =
 		sizeof(unsigned char),
 		XtOffsetOf(XfePrimitiveRec , xfe_primitive . shadow_type),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_SHADOW_TYPE
+		(XtPointer) XmSHADOW_OUT
 	},
 	{ 
 		XmNbufferType,
@@ -186,7 +186,7 @@ static XtResource resources[] =
 		sizeof(unsigned char),
 		XtOffsetOf(XfePrimitiveRec , xfe_primitive . buffer_type),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_BUFFER_TYPE
+		(XtPointer) XmBUFFER_NONE
 	},
     /*
      * I just realized this resource is misnamed.  It should be 
@@ -228,7 +228,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfePrimitiveRec , xfe_primitive . margin_bottom),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_BOTTOM 
+		(XtPointer) 2
 	},
 	{ 
 		XmNmarginLeft,
@@ -237,7 +237,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfePrimitiveRec , xfe_primitive . margin_left),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_LEFT 
+		(XtPointer) 2
 	},
 	{ 
 		XmNmarginRight,
@@ -246,7 +246,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfePrimitiveRec , xfe_primitive . margin_right),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_RIGHT 
+		(XtPointer) 2
 	},
 	{ 
 		XmNmarginTop,
@@ -255,7 +255,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfePrimitiveRec , xfe_primitive . margin_top),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_MARGIN_TOP 
+		(XtPointer) 2
 	},
 
 	/* For c++ usage */
@@ -340,7 +340,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfePrimitiveRec , primitive . shadow_thickness),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_SHADOW_THICKNESS 
+		(XtPointer) 1
 	},
 
 	/* Force the width and height to the preffered values */
@@ -583,10 +583,10 @@ static void
 Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
     /* Make sure the shadow is ok */
-    XfeRepTypeCheck(nw,XmRShadowType,&_XfeShadowType(nw),XfeDEFAULT_SHADOW_TYPE);
+    XfeRepTypeCheck(nw,XmRShadowType,&_XfeShadowType(nw),XmSHADOW_OUT);
     
     /* Make sure the buffer is ok */
-    XfeRepTypeCheck(nw,XmRBufferType,&_XfeBufferType(nw),XfeDEFAULT_BUFFER_TYPE);
+    XfeRepTypeCheck(nw,XmRBufferType,&_XfeBufferType(nw),XmBUFFER_NONE);
 
     /* Initialize private members */
     _XfeBufferPixmap(nw) = XmUNSPECIFIED_PIXMAP;
@@ -893,7 +893,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     if (_XfeShadowType(nw) != _XfeShadowType(ow))
     {
 		/* Make sure the new shadow type is ok */
-		XfeRepTypeCheck(nw,XmRShadowType,&_XfeShadowType(nw),XfeDEFAULT_SHADOW_TYPE);
+		XfeRepTypeCheck(nw,XmRShadowType,&_XfeShadowType(nw),XmSHADOW_OUT);
 	
 		_XfeConfigFlags(nw) |= XfeConfigExpose;
     }

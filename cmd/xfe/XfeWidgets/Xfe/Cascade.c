@@ -175,7 +175,7 @@ static XtResource resources[] =
 		sizeof(int),
 		XtOffsetOf(XfeCascadeRec , xfe_cascade . mapping_delay),
 		XmRImmediate, 
- 		(XtPointer) XfeDEFAULT_MAPPING_DELAY
+ 		(XtPointer) 250
     },
     { 
 		XmNsubMenuId,

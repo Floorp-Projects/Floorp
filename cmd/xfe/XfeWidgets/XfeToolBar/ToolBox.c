@@ -334,7 +334,7 @@ static XtResource resources[] =
 		sizeof(Widget),
 		XtOffsetOf(XfeToolBoxRec , xfe_tool_box . drag_cursor),
 		XmRString, 
-		XfeDEFAULT_TOOL_BOX_DRAG_CURSOR
+		"hand2"
     },
 	{ 
 		XmNdragButton,

@@ -362,7 +362,7 @@ static XtResource resources[] =
 		sizeof(Dimension),
 		XtOffsetOf(XfeButtonRec , xfe_button . arm_offset),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_ARM_OFFSET
+		(XtPointer) 0
     },
     { 
 		XmNarmed,
@@ -428,7 +428,7 @@ static XtResource resources[] =
 		sizeof(Boolean),
 		XtOffsetOf(XfeButtonRec , xfe_button . emulate_motif),
 		XmRImmediate, 
-		(XtPointer) XfeDEFAULT_EMULATE_MOTIF
+		(XtPointer) True
     },
     { 
 		XmNspacing,

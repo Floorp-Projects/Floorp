@@ -36,7 +36,6 @@
 /* so many headers.  The convenient organization is worth the penalty.	*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#include <Xfe/Defaults.h>						/* Xfe default res vals	*/
 #include <Xfe/ChildrenUtil.h>					/* Children utils		*/
 #include <Xfe/Converters.h>						/* Converters			*/
 #include <Xfe/DialogUtil.h>						/* Dialog utils			*/

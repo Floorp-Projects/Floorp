@@ -133,7 +133,6 @@ EXPORTS			= \
 				ClientData.h \
 				Converters.h \
 				Debug.h \
-				Defaults.h \
 				DialogUtil.h \
 				Divider.h \
 				DividerP.h \
