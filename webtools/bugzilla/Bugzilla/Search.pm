@@ -344,7 +344,7 @@ sub init {
          "^qa_contact," => sub {
              push(@supptables,
                   "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid");
-             $f = "map_$f.login_name";
+             $f = "COALESCE(map_$f.login_name,'')";
          },
 
          "^cc,(?:equals|anyexact),(%\\w+%)" => sub {
@@ -399,8 +399,15 @@ sub init {
              }
             push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id");
 
-            push(@supptables, "LEFT JOIN profiles map_cc_$chartseq ON cc_$chartseq.who = map_cc_$chartseq.userid");
-            $f = "map_cc_$chartseq.login_name";
+            $ff = $f = "map_cc_$chartseq.login_name";
+            my $ref = $funcsbykey{",$t"};
+            &$ref;
+            push(@supptables, 
+                "LEFT JOIN profiles map_cc_$chartseq " .
+                       "ON (cc_$chartseq.who = map_cc_$chartseq.userid " .
+                           "AND ($term))"
+                );
+            $term = "$f IS NOT NULL";
          },
 
          "^long_?desc,changedby" => sub {
@@ -757,6 +764,12 @@ sub init {
                 my $ref = $funcsbykey{",$t"};
                 &$ref;
                 push(@wherepart, "$table.dependson = bugs.bug_id");
+         },
+
+         "^alias," => sub {
+             $ff = "COALESCE(bugs.alias, '')";
+             my $ref = $funcsbykey{",$t"};
+             &$ref;
          },
 
          "^owner_idle_time,(greaterthan|lessthan)" => sub {
