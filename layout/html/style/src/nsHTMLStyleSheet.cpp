@@ -1765,7 +1765,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     isBlock = PR_TRUE;
   }
 
-  // If the frame is a block-level frame and is scrollable then wrap it
+  // If the frame is a block-level frame and is scrollable, then wrap it
   // in a scroll frame.
   // XXX Applies to replaced elements, too, but how to tell if the element
   // is replaced?
@@ -1805,6 +1805,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
     // Process children
     if (isAbsolutelyPositioned) {
+      // The area frame becomes a container for child frames that are
+      // absolutely positioned
       nsAbsoluteItems  absoluteItems(scrolledFrame);
       nsIFrame*        childList;
       ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
@@ -1845,7 +1847,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                              aStyleContext, PR_FALSE);
 
-    // Process the child content
+    // Process the child content. The area frame becomes a container for child
+    // frames that are absolutely positioned
     nsAbsoluteItems  absoluteItems(aNewFrame);
     nsIFrame*        childList = nsnull;
     ProcessChildren(aPresContext, aContent, aNewFrame, absoluteItems, childList);
@@ -2249,41 +2252,39 @@ nsIFrame*
 HTMLStyleSheetImpl::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                                                nsIFrame*       aFrame)
 {
-  // For the time being just return the initial containing block
   NS_PRECONDITION(nsnull != mInitialContainingBlock, "no initial containing block");
-  return mInitialContainingBlock;
   
-  // XXX TROY
-#if 0
-  // Look for a containing frame that is absolutely positioned. If we don't
-  // find one then use the initial containg block which is the BODY
-  nsIFrame* lastFrame = (nsIFrame*)this;
-  nsIFrame* result;
-
-  GetContentParent(result);
-  while (nsnull != result) {
+  // Starting with aFrame, look for a frame that is absolutely positioned
+  nsIFrame* containingBlock = aFrame;
+  while (nsnull != containingBlock) {
     const nsStylePosition* position;
 
-    // Get the style data
-    result->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-
+    // Is it absolutely positioned?
+    containingBlock->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
     if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
-      // XXX This needs cleaning up...
-      // Make sure the frame supports the nsIAbsoluteItems interface. If not,
-      // walk the geometric parent hierarchy and find the nearest one that does...
-      nsIAbsoluteItems* interface;
-      while ((nsnull != result) &&
-             NS_FAILED(result->QueryInterface(kIAbsoluteItemsIID, (void**)&interface))) {
-        result->GetGeometricParent(result);
+      const nsStyleDisplay* display;
+      
+      // If it's a table then ignore it, because for the time being tables
+      // are not containers for absolutely positioned child frames
+      containingBlock->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      if (display->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+        // XXX If the frame is scrolled, then don't return the scrolled frame
+        // XXX Verify that the frame type is an area-frame...
+        break;
       }
-      break;
     }
 
-    // Get the next contentual parent
-    lastFrame = result;
-    result->GetContentParent(result);
+    // Continue walking up the hierarchy
+    containingBlock->GetGeometricParent(containingBlock);
   }
-#endif
+
+  // If we didn't find an absolutely positioned containing block, then use the
+  // initial containing block
+  if (nsnull == containingBlock) {
+    containingBlock = mInitialContainingBlock;
+  }
+  
+  return containingBlock;
 }
 
 NS_IMETHODIMP
