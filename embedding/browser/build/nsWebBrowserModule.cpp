@@ -20,76 +20,32 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsIModule.h"
 #include "nsIGenericFactory.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 
-#include "nsIDocShell.h"
 #include "nsWebBrowser.h"
 #include "nsWebBrowserSetup.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
-static NS_DEFINE_CID(kWebBrowserSetupCID, NS_WEBBROWSER_SETUP_CID);
 
-//*****************************************************************************
-//*** Library Exports
-//*****************************************************************************
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+// Factory Constructors
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserSetup)
+
+
+// Component Table
+
+static nsModuleComponentInfo components[] =
 {
-	NS_ENSURE_ARG_POINTER(aFactory);
-   nsresult rv;
+  { "WebBrowser Component", NS_WEBBROWSER_CID, NS_WEBBROWSER_PROGID, nsWebBrowser::Create },
+  { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetup::Create }
+};
 
-   nsIGenericFactory* fact;
 
-	if(aClass.Equals(kWebBrowserCID))
-		rv = NS_NewGenericFactory(&fact, nsWebBrowser::Create);
-	else if(aClass.Equals(kWebBrowserSetupCID))
-		rv = NS_NewGenericFactory(&fact, nsWebBrowserSetup::Create);
-   else 
-		rv = NS_NOINTERFACE;
+// NSGetModule implementation.
 
-	if(NS_SUCCEEDED(rv))
-		*aFactory = fact;
-	return rv;
-}
+NS_IMPL_NSGETMODULE("nsWebBrowserModule", components)
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-	nsresult rv;
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
 
-	rv = compMgr->RegisterComponent(kWebBrowserCID,  
-											"nsWebBrowser",
-											NS_WEBBROWSER_PROGID,
-											aPath, PR_TRUE, PR_TRUE);
-	rv = compMgr->RegisterComponent(kWebBrowserSetupCID,  
-											"nsWebBrowserSetup",
-											NS_WEBBROWSER_SETUP_PROGID,
-											aPath, PR_TRUE, PR_TRUE);
-	NS_ENSURE_SUCCESS(rv, rv);
 
-	return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-	nsresult rv;
-
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-	rv = compMgr->UnregisterComponent(kWebBrowserCID, aPath);
-	rv = compMgr->UnregisterComponent(kWebBrowserSetupCID, aPath);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	return rv;
-}
