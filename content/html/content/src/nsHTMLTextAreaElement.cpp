@@ -479,7 +479,12 @@ NS_IMETHODIMP
 nsHTMLTextAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                                 PRInt32& aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::align) {
+  // XXX Bug 50280 - It is unclear why we need to do this here for 
+  // rows and cols and why the AttributeChanged method in nsGfxTextControlFrame2
+  // does take care of the entire problem, but it doesn't and this makes things better
+  if (aAttribute == nsHTMLAtoms::align ||
+      aAttribute == nsHTMLAtoms::rows ||
+      aAttribute == nsHTMLAtoms::cols) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
