@@ -422,10 +422,10 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid,SECItem *mech)
     }
 
     if (sec_pkcs5_is_algorithm_v2_pkcs12_algorithm(algorithm)) {
-        rv = SEC_QuickDERDecodeItem(arena, &p5_param,
+        rv = SEC_ASN1DecodeItem(arena, &p5_param,
 			 SEC_V2PKCS12PBEParameterTemplate, &algid->parameters);
     } else {
-        rv = SEC_QuickDERDecodeItem(arena,&p5_param,SEC_PKCS5PBEParameterTemplate, 
+        rv = SEC_ASN1DecodeItem(arena,&p5_param,SEC_PKCS5PBEParameterTemplate, 
 						&algid->parameters);
     }
 

@@ -250,18 +250,11 @@ PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, SECItem *derPKI,
     SECStatus rv = SECFailure;
 
     temparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!temparena) {
-        goto finish;
-    }
     pki = PORT_ArenaZNew(temparena, SECKEYPrivateKeyInfo);
-    if (!pki) {
-       goto finish;
-    }
     pki->arena = temparena;
 
-    rv = SEC_QuickDERDecodeItem(pki->arena, pki, SECKEY_PrivateKeyInfoTemplate,
+    rv = SEC_ASN1DecodeItem(pki->arena, pki, SECKEY_PrivateKeyInfoTemplate,
 		derPKI);
-
     if( rv != SECSuccess ) {
 	goto finish;
     }
@@ -270,13 +263,9 @@ PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, SECItem *derPKI,
 		publicValue, isPerm, isPrivate, keyUsage, privk, wincx);
 
 finish:
-    if( temparena != NULL ) {
-        if (pki) {
-	    /* this zeroes the key and frees the arena */
-	    SECKEY_DestroyPrivateKeyInfo(pki, PR_TRUE /*freeit*/);
-        } else {
-            PORT_FreeArena(temparena, PR_FALSE);
-        }
+    if( pki != NULL ) {
+	/* this zeroes the key and frees the arena */
+	SECKEY_DestroyPrivateKeyInfo(pki, PR_TRUE /*freeit*/);
     }
     return rv;
 }
@@ -533,12 +522,12 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
     }
 
     /* decode the private key and any algorithm parameters */
-    rv = SEC_QuickDERDecodeItem(arena, lpk, keyTemplate, &pki->privateKey);
+    rv = SEC_ASN1DecodeItem(arena, lpk, keyTemplate, &pki->privateKey);
     if(rv != SECSuccess) {
 	goto loser;
     }
     if(paramDest && paramTemplate) {
-	rv = SEC_QuickDERDecodeItem(arena, paramDest, paramTemplate, 
+	rv = SEC_ASN1DecodeItem(arena, paramDest, paramTemplate, 
 				 &(pki->algorithm.parameters));
 	if(rv != SECSuccess) {
 	    goto loser;
