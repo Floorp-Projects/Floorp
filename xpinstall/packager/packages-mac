@@ -32,6 +32,7 @@ viewer:defaults:profile:search.rdf
 viewer:Component Registry
 viewer:Components:libjar.shlb 
 viewer:Components:xpinstall.shlb 
+viewer:Components:unicharutil.shlb 
 viewer:Essential Files:dom.shlb 
 viewer:Essential Files:JavaScript.shlb 
 viewer:Essential Files:libreg.shlb 
@@ -147,7 +148,6 @@ viewer:Components:ucvko.shlb
 viewer:Components:ucvlatin.shlb 
 viewer:Components:ucvtw.shlb 
 viewer:Components:ucvtw2.shlb 
-viewer:Components:unicharutil.shlb 
 viewer:Components:unicharutil.xpt 
 viewer:Components:uriloader.shlb 
 viewer:Components:uriloader.xpt 
