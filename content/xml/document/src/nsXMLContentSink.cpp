@@ -1473,7 +1473,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 
   const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
     
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1,
+  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 2,
                           -1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
 
