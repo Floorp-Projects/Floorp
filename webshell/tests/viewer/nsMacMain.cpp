@@ -200,6 +200,7 @@ nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 nsEventStatus
 nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
+	nsEventStatus status = nsEventStatus_eIgnore;
 	PRInt32 xpID = 0;
 	long menuID = HiWord(aID);
 	long menuItem = LoWord(aID);
@@ -227,6 +228,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_Open:		xpID = VIEWER_FILE_OPEN;			break;
 				case cmd_Close:
 					CloseFrontWindow();
+					status = nsEventStatus_eConsumeNoDefault;
 					break;
 
 				case cmd_ViewSource:			xpID = VIEW_SOURCE;					break;
@@ -311,7 +313,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 	if (xpID != 0)
 		return nsBrowserWindow::DispatchMenuItem(xpID);
 	else
-		return nsEventStatus_eIgnore;
+		return status;
 }
 
 #pragma mark -
