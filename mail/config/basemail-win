@@ -59,6 +59,7 @@ chrome\US.jar
 chrome\pippki.jar
 chrome\pipnss.jar
 chrome\chrome.rdf
+chrome\overlayinfo\messenger\content\overlays.rdf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Default Profile Settings

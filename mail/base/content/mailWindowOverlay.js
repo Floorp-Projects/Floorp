@@ -1477,6 +1477,8 @@ function IsEmptyTrashEnabled()
 {
   var folderURI = GetSelectedFolderURI();
   var server = GetServer(folderURI);
+  if (!server)
+    return false;
   return (server.canEmptyTrashOnExit?IsMailFolderSelected():false);
 }
 
@@ -1484,7 +1486,7 @@ function IsCompactFolderEnabled()
 {
   var folderURI = GetSelectedFolderURI();
   var server = GetServer(folderURI);
-  if (!(server.canCompactFoldersOnServer))
+  if (!(server && server.canCompactFoldersOnServer))
     return false;
 
   var folderTree = GetFolderTree();

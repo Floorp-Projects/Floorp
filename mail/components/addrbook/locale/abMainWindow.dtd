@@ -71,7 +71,7 @@ Rights Reserved.
 <!ENTITY showAbToolbarCmd.accesskey                     "o">  
 
 <!ENTITY showCardPane.label                             "Card Summary Pane">
-<!ENTITY showCardPane.accesskey                         "C">
+<!ENTITY showCardPane.accesskey                         "a">
   
 <!ENTITY menu_ShowNameAs.label                          "Show Name As"> 
 <!ENTITY menu_ShowNameAs.accesskey                      "n"> 
