@@ -41,7 +41,7 @@ interface nsIBrowserInstance : nsISupports {
 
     // Infrastructure.
     void init();
-    void getContentDocShell(out nsIDocShell aDocShell);
+    readonly attribute nsIDocShell contentDocShell;
     void setWebShellWindow( in nsIDOMWindowInternal aWindow );
       attribute nsIUrlbarHistory urlbarHistory;
     

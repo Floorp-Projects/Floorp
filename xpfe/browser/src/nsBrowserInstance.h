@@ -28,9 +28,6 @@
 
 // Interfaces Needed
 #include "nsIBrowserInstance.h"
-#include "nsIURIContentListener.h"
-
-#include "nsIAppShellComponentImpl.h"
 
 #include "nscore.h"
 #include "nsString.h"
@@ -57,22 +54,19 @@ class nsIFindComponent;
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBrowserInstance : public nsIBrowserInstance,
-                          public nsIURIContentListener,
                           public nsSupportsWeakReference 
 {
   public:
 
     nsBrowserInstance();
     virtual ~nsBrowserInstance();
+    
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_BROWSERINSTANCE_CID )
                  
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIBROWSERINSTANCE
 
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_BROWSERINSTANCE_CID )
-
-    // URI Content listener
-    NS_DECL_NSIURICONTENTLISTENER
 
   protected:
 
@@ -94,7 +88,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsCOMPtr<nsIUrlbarHistory> mUrlbarHistory;                  //We own this
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
-    nsInstanceCounter   mInstanceCounter;
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
