@@ -24,24 +24,37 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+ifndef MOZ_MONOLITHIC_TOOLKIT
+
+LIBRARY_NAME	= timer_qt
+IS_COMPONENT	= 1
+REQUIRES		= xpcom
+INCLUDES		+= $(MOZ_QT_CFLAGS) -I$(srcdir)/..
+
+CPPSRCS			= \
+				moc_nsTimerEventHandler.cpp \
+				nsTimerEventHandler.cpp \
+				nsTimerQt.cpp \
+				nsTimerQtFactory.cpp \
+				$(NULL)
+
+EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
+
+else
+
 LIBRARY_NAME = $(TIMER_LIB_NAME)
-### XXX ### IS_COMPONENT=1
-
-REQUIRES=xpcom
-
-DEFINES += -D_IMPL_NS_TIMER
+REQUIRES = xpcom
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
-
-CPPSRCS = \
-	nsTimerQT.cpp \
-	moc_nsTimerQT.cpp \
-	$(NULL)
-
-### XXX ### EXTRA_DSO_LDOPTS += $(TK_LIBS)
-
+CPPSRCS =\
+		moc_nsTimerEventHandler.cpp \
+		nsTimerEventHandler.cpp \
+		nsTimerQt.cpp \
+		$(NULL)
 MKSHLIB =
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
+
+endif # !MOZ_MONOLITHIC_TOOLKIT
 
 include $(topsrcdir)/config/rules.mk
