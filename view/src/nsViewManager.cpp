@@ -375,7 +375,7 @@ nsInvalidateEvent::nsInvalidateEvent(nsViewManager* aViewManager)
 
 // Compare two Z-index values taking into account topmost and 
 // auto flags. the topmost flag is only used when both views are
-// zindex:auto.
+// zindex:auto.  (XXXldb Lying!)
 // 
 // returns 0 if equal
 //         > 0 if first z-index is greater than the second
@@ -427,9 +427,9 @@ nsViewManager::nsViewManager()
  
   if (gCleanupContext == nsnull) {
     /* XXX: This should use a device to create a matching |nsIRenderingContext| object */
-    nsComponentManager::CreateInstance(kRenderingContextCID, 
-                                       nsnull, NS_GET_IID(nsIRenderingContext), (void**)&gCleanupContext);
-    NS_ASSERTION(gCleanupContext != nsnull, "Wasn't able to create a graphics context for cleanup");
+    CallCreateInstance(kRenderingContextCID, &gCleanupContext);
+    NS_ASSERTION(gCleanupContext,
+                 "Wasn't able to create a graphics context for cleanup");
   }
 
   gViewManagers->AppendElement(this);
@@ -448,6 +448,12 @@ nsViewManager::nsViewManager()
 
 nsViewManager::~nsViewManager()
 {
+  if (mRootView) {
+    // Destroy any remaining views
+    mRootView->Destroy();
+    mRootView = nsnull;
+  }
+
   nsCOMPtr<nsIEventQueue> eventQueue;
   mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                                            getter_AddRefs(eventQueue));
@@ -499,33 +505,7 @@ nsViewManager::~nsViewManager()
   }
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsViewManager, nsIViewManager)
-
-  NS_IMPL_ADDREF(nsViewManager)
-
-nsrefcnt nsViewManager::Release(void)
-{
-  /* Note funny ordering of use of mRefCnt. We were seeing a problem
-     during the deletion of a view hierarchy where child views,
-     while being destroyed, referenced this view manager and caused
-     the Destroy part of this method to be re-entered. Waiting until
-     the destruction has finished to decrement the refcount
-     prevents that.
-  */
-  NS_LOG_RELEASE(this, mRefCnt - 1, "nsViewManager");
-  if (mRefCnt == 1)
-    {
-      if (nsnull != mRootView) {
-        // Destroy any remaining views
-        mRootView->Destroy();
-        mRootView = nsnull;
-      }
-      delete this;
-      return 0;
-    }
-  --mRefCnt;
-  return mRefCnt;
-}
+NS_IMPL_ISUPPORTS1(nsViewManager, nsIViewManager)
 
 nsresult
 nsViewManager::CreateRegion(nsIRegion* *result)
@@ -2030,7 +2010,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           aEvent->point.x += offset.x;
           aEvent->point.y += offset.y;
 
-          *aStatus = view->HandleEvent(this, aEvent, capturedEvent);
+          *aStatus = HandleEvent(view, aEvent, capturedEvent);
 
           // From here on out, "this" could have been deleted!!!
 
@@ -2182,7 +2162,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   } else {
     paintFloats = displayRoot->GetFloating();
   }
-  CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
+  CreateDisplayList(displayRoot, PR_FALSE, zTree, origin.x, origin.y,
                     aView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y,
                     paintFloats, aEventProcessing);
 
@@ -3198,12 +3178,9 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
     ProcessPendingUpdates(mRootView);
     mHasPendingInvalidates = PR_FALSE;
+    Composite();
   } else {
     PostInvalidateEvent();
-  }
-
-  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
-    Composite();
   }
 
   return NS_OK;
@@ -3371,7 +3348,7 @@ static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode) 
 }
 
 PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPresent,
-                                        DisplayZTreeNode* &aResult, PRBool aInsideRealView,
+                                        DisplayZTreeNode* &aResult,
                                         nscoord aOriginX, nscoord aOriginY, nsView *aRealView,
                                         const nsRect *aDamageRect, nsView *aTopView,
                                         nscoord aX, nscoord aY, PRBool aPaintFloats,
@@ -3398,8 +3375,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     aView->ConvertFromParentCoords(&bounds.x, &bounds.y);
     pos = nsPoint(0, 0);
   }
-
-  aInsideRealView = aInsideRealView || aRealView == aView,
 
   // -> to global coordinates (relative to aTopView)
   bounds.x += aX;
@@ -3507,7 +3482,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
          childView = childView->GetNextSibling()) {
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
-                                 aInsideRealView,
                                  aOriginX, aOriginY, aRealView, aDamageRect, aTopView, pos.x, pos.y, aPaintFloats,
                                  aEventProcessing);
       if (createdNode != nsnull) {

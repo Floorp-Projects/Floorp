@@ -292,11 +292,6 @@ NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsIRegion& region,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsEventStatus nsView::HandleEvent(nsViewManager* aVM, nsGUIEvent *aEvent, PRBool aCaptured)
-{
-  return aVM->HandleEvent(this, aEvent, aCaptured);
-}
-
 // XXX Start Temporary fix for Bug #19416
 NS_IMETHODIMP nsView::IgnoreSetPosition(PRBool aShouldIgnore)
 {
@@ -772,10 +767,19 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
+  if (IsZPlaceholderView()) {
+    fprintf(out, " z-placeholder(%p)",
+            (void*)NS_STATIC_CAST(const nsZPlaceholderView*, this)->GetReparentedView());
+  }
+  if (mZParent) {
+    fprintf(out, " zparent=%p", (void*)mZParent);
+  }
   PRBool  hasTransparency;
   HasTransparency(hasTransparency);
-  fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZIndex, mVis, mOpacity, hasTransparency, mClientData);
+  fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n",
+          mZIndex, mVis, mOpacity, hasTransparency, mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    NS_ASSERTION(kid->GetParent() == this, "incorrect parent");
     kid->List(out, aIndent + 1);
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);

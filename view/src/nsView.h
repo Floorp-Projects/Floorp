@@ -124,19 +124,6 @@ public:
    */
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
                     PRUint32 aPaintFlags, PRBool &aResult);
-  /**
-   * Called to indicate that the specified event should be handled
-   * by the view. This method should return nsEventStatus_eConsumeDoDefault
-   * or nsEventStatus_eConsumeNoDefault if the event has been handled.
-   *
-   * This is a hook giving the view a chance to handle the event specially.
-   * By default we just bounce the event back to the view manager for display
-   * list processing.
-   *
-   * @param event event to process
-   * @result processing status
-   */
-  virtual nsEventStatus HandleEvent(nsViewManager* aVM, nsGUIEvent *aEvent, PRBool aCaptured);
 
   /**
    * Called to indicate that the position of the view has been changed.
@@ -158,7 +145,7 @@ public:
    * This checks whether the view is a placeholder for some view that has
    * been reparented to a different geometric parent.
    */
-  virtual PRBool IsZPlaceholderView() { return PR_FALSE; }
+  virtual PRBool IsZPlaceholderView() const { return PR_FALSE; }
 
   /**
    * Called to set the clip of the children of this view.
