@@ -162,8 +162,6 @@ friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID a
 static	nsresult	GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
 	nsresult	GetInputs(nsString data, nsString text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
-	PRBool		isVisible(const nsNativeFileSpec& file);
-
 
 public:
 
@@ -1353,40 +1351,6 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 		}
 	}
 	return(rv);
-}
-
-
-
-PRBool
-InternetSearchDataSource::isVisible(const nsNativeFileSpec& file)
-{
-	PRBool		isVisible = PR_TRUE;
-
-#ifdef	XP_MAC
-	CInfoPBRec	cInfo;
-	OSErr		err;
-
-	nsFileSpec	fileSpec(file);
-	if (!(err = fileSpec.GetCatInfo(cInfo)))
-	{
-		if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
-		{
-			isVisible = PR_FALSE;
-		}
-	}
-#else
-	char		*baseFilename = file.GetLeafName();
-	if (nsnull != baseFilename)
-	{
-		if ((!strcmp(baseFilename, ".")) || (!strcmp(baseFilename, "..")))
-		{
-			isVisible = PR_FALSE;
-		}
-		nsCRT::free(baseFilename);
-	}
-#endif
-
-	return(isVisible);
 }
 
 
