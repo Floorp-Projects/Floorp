@@ -60,12 +60,12 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
-		$(NSPR_LIBS)	\
-		-lxpcom		\
+		$(NSPR_LIBS) \
+		-lxpcom \
 		-lraptorhtmlpars \
-		-lraptorgfx		\
+		-lraptorgfx \
 		-ljsdom \
-		-lmozjs	\
+		-lmozjs \
 		-L$(DIST)/lib \
 		$(MOZ_TIMER_LIBS) \
 		$(NULL)
@@ -74,8 +74,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-INCLUDES	+= -I$(srcdir)/../html/base/src \
-		   -I$(srcdir)/../xul/content/src
+INCLUDES	+= -I$(srcdir)/../html/base/src -I$(srcdir)/../xul/content/src
 
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
