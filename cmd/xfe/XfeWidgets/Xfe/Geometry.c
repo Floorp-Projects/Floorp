@@ -480,7 +480,11 @@ _XfeResizeWidget(Widget w,int width,int height)
 /* extern */ void
 _XfeMoveWidget(Widget w,int x,int y)
 {
-    assert( _XfeIsAlive(w) );
+	/* Make sure the widget is alive */
+	if (!_XfeIsAlive(w))
+	{
+		return;
+	}
 
 #if 0
 	printf("_XfeMoveWidget(%s,%d,%d)\n",XtName(w),width,height);
