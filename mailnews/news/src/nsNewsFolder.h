@@ -30,6 +30,12 @@
 #include "nsIDBChangeListener.h"
 #include "nsFileStream.h"
 
+/* some platforms (like Windows and Mac) use a map file, because of
+ * file name length limitations. */
+#ifndef XP_UNIX
+#define USE_NEWSRC_MAP_FILE
+#endif
+
 class nsMsgNewsFolder : public nsMsgFolder, public nsIMsgNewsFolder, public nsIDBChangeListener
 {
 public:
@@ -94,11 +100,11 @@ public:
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
 
 	//nsIDBChangeListener
-	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                          nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator);
 	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
 
@@ -118,6 +124,15 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
+  PRBool isNewsHost(void);
+  nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
+  PRInt32 ProcessLine(char *line, PRUint32 line_size);
+  PRInt32 RememberLine(char *line);
+  static PRInt32 ProcessLine_s(char *line, PRUint32 line_size, void *closure);
+  nsresult GetNewsrcFile(nsFileSpec &path, nsFileSpec &newsrcFile);
+#ifdef USE_NEWSRC_MAP_FILE
+  nsresult MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, nsFileSpec &newsrcFile);
+#endif
 
 protected:
   nsNativeFileSpec mPath;
@@ -127,6 +142,7 @@ protected:
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
 	nsIMsgDatabase* mNewsDatabase;
+  char      *m_optionLines;
 };
 
 #endif // nsMsgNewsFolder_h__

@@ -39,6 +39,8 @@
 #include "nsNewsMessage.h"
 #include "nsNewsUtils.h"
 
+//not using nsMsgLineBuffer yet, but I need to soon...
+//#include "nsMsgLineBuffer.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -56,10 +58,10 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 nsMsgNewsFolder::nsMsgNewsFolder(void)
   : nsMsgFolder(), mPath(""), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mNewsDatabase(nsnull)
+    mInitialized(PR_FALSE), mNewsDatabase(nsnull), m_optionLines(nsnull)
 {
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::nsMsgNewsFolder\n");
 #endif
 
@@ -71,6 +73,8 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
 	if(mNewsDatabase)
 		//Close releases db;
 		mNewsDatabase->Close(PR_TRUE);
+
+  PR_FREEIF(m_optionLines);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgNewsFolder, nsMsgFolder)
@@ -78,16 +82,13 @@ NS_IMPL_RELEASE_INHERITED(nsMsgNewsFolder, nsMsgFolder)
 
 NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::QueryInterface()\n");
 #endif
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
 	if (aIID.Equals(nsIMsgNewsFolder::GetIID()))
 	{
-#ifdef DEBUG_sspitzer
-    printf("aIID is for nsIMsgNewsFolder\n");
-#endif
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgNewsFolder*, this);
 	}              
 	else if (aIID.Equals(nsIDBChangeListener::GetIID()))
@@ -105,7 +106,7 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#if 0
 static PRBool
 nsShouldIgnoreFile(nsString& name)
 {
@@ -133,47 +134,213 @@ nsShouldIgnoreFile(nsString& name)
 	  return PR_TRUE;
   return PR_FALSE;
 }
+#endif
+
+PRBool
+nsMsgNewsFolder::isNewsHost() 
+{
+  // this will do for now.  Eventually, this will go away...
+
+  PRInt32 rootURIlen = PL_strlen(kNewsRootURI);
+  PRInt32 mURIlen = PL_strlen(mURI);
+
+  // if we are shorter than news://, we are too short to be a host
+  if (mURIlen <= rootURIlen) {
+    return PR_FALSE;
+  }
+  
+  if (PL_strncmp(mURI, kNewsRootURI, rootURIlen) == 0) {
+    // if we get here, mURI looks like this:  news://x
+    // where x is non-empty, and may contain "/"
+    char *rightAfterTheRoot = mURI+rootURIlen+1;
+    printf("search for a slash in %s\n",rightAfterTheRoot);
+    if (PL_strstr(rightAfterTheRoot,"/") == nsnull) {
+      // there is no slashes after news://,
+      // so mURI is of the form news://x
+      return PR_TRUE;
+    }
+    else {
+      // there is another slash, so mURI is of the form
+      // news://x/y, so it is not a host
+      return PR_FALSE;
+    }
+  }
+  else {
+    // mURI doesn't start with news:// so it can't be a host
+    return PR_FALSE;
+  }
+}
+#ifdef USE_NEWSRC_MAP_FILE
+
+#define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
+
+nsresult
+nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, nsFileSpec &newsrcFile)
+{
+  char lookingFor[512];
+	char buffer[512];
+	char psuedo_name[512];
+	char filename[512];
+	char is_newsgroup[512];
+  PRBool rv;
+
+#ifdef DEBUG_sspitzer
+  printf("MapHostToNewsrcFile(%s,%s,??)\n",(const char *)fatFile, newshostname);
+#endif
+  sprintf(lookingFor,"newsrc-%s",newshostname);
+  
+  nsInputFileStream inputStream(fatFile);
+ 
+  if (inputStream.eof()) {
+    newsrcFile = "";
+    inputStream.close();
+    return NS_ERROR_FAILURE;
+  }
+
+  /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
+	rv = inputStream.readline(buffer, sizeof(buffer));
+#ifdef DEBUG_sspitzer
+  printf("buffer = %s\n", buffer);
+#endif
+  if ((!rv) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
+    newsrcFile = "";
+    inputStream.close();
+    return NS_ERROR_FAILURE;
+  }   
+
+	while (!inputStream.eof()) {
+    char * p;
+    int i;
+
+    rv = inputStream.readline(buffer, sizeof(buffer));
+    if (!rv) {
+      newsrcFile = "";
+      inputStream.close();
+      return NS_ERROR_FAILURE;
+    }  
+
+#ifdef DEBUG_sspitzer
+    printf("buffer = %s\n", buffer);    
+#endif
+    
+    /*
+      This used to be scanf() call which would incorrectly
+      parse long filenames with spaces in them.  - JRE
+    */
+    
+    filename[0] = '\0';
+    is_newsgroup[0]='\0';
+    
+    for (i = 0, p = buffer; *p && *p != '\t' && i < 500; p++, i++)
+      psuedo_name[i] = *p;
+    psuedo_name[i] = '\0';
+    if (*p) 
+      {
+        for (i = 0, p++; *p && *p != '\t' && i < 500; p++, i++)
+          filename[i] = *p;
+        filename[i]='\0';
+        if (*p) 
+          {
+            for (i = 0, p++; *p && *p != '\r' && i < 500; p++, i++)
+              is_newsgroup[i] = *p;
+            is_newsgroup[i]='\0';
+          }
+      }
+
+		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
+#ifdef DEBUG_sspitzer
+      printf("is_newsgroups_file = TRUE\n");
+#endif
+    }
+    else {
+#ifdef DEBUG_sspitzer
+      printf("is_newsgroups_file = FALSE\n");
+#endif
+    }
+    
+    printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
+    if (!PL_strncmp(psuedo_name,lookingFor,PL_strlen(lookingFor))) {
+#ifdef DEBUG_sspitzer
+      printf("found a match for %s\n",lookingFor);
+#endif
+      newsrcFile = filename;
+      inputStream.close();
+      return NS_OK;
+    }
+  }
+
+  // failed to find a match in the map file
+  newsrcFile = "";
+  inputStream.close();
+  return NS_ERROR_FAILURE;
+}
+#endif /* USE_NEWSRC_MAP_FILE */
+
+nsresult 
+nsMsgNewsFolder::GetNewsrcFile(nsFileSpec &path, nsFileSpec &newsrcFile)
+{
+  nsresult rv = NS_OK;
+  char *newshostname = path.GetLeafName();
+
+#ifdef USE_NEWSRC_MAP_FILE
+  // the fat file lives in the same directory as
+  // the newsrc files
+  nsFileSpec fatFile(path);
+  fatFile.SetLeafName("fat");
+
+  rv = MapHostToNewsrcFile(fatFile, newshostname, newsrcFile);
+#else
+  char str[1024];
+
+  if ((newshostname == nsnull) || (PL_strlen(newshostname) == 0)) {
+    newsrcFile = "";
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  else {
+    sprintf(str, ".newsrc-%s", newshostname);
+    newsrcFile = path;
+    newsrcFile.SetLeafName(str);
+    rv = NS_OK;
+  }
+#endif /* USE_NEWSRC_MAP_FILE */
+  if (newshostname) {
+    delete [] newshostname;
+  }
+  return rv;
+}
 
 nsresult
 nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 {
+  nsresult rv = NS_OK;
+
+  if (isNewsHost()) {
 #ifdef DEBUG_sspitzer
-  printf("nsMsgNewsFolder::CreateSubFolder()\n");
+    printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
 
-  nsAutoString currentFolderNameStr("netscape.public.mozilla.unix");
-  nsIMsgFolder *child;
-  AddSubfolder(currentFolderNameStr,&child);
-  NS_IF_RELEASE(child);
-
-  return NS_OK;
-#if 0
-	nsresult rv = NS_OK;
-	nsAutoString currentFolderNameStr;
-	nsIMsgFolder *child;
-	char *folderName;
-	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
-		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
-
-		folderName = currentFolderPath.GetLeafName();
-		currentFolderNameStr = folderName;
-		if (nsShouldIgnoreFile(currentFolderNameStr))
-		{
-			PL_strfree(folderName);
-			continue;
-		}
-
-		AddSubfolder(currentFolderNameStr, &child);
-		NS_IF_RELEASE(child);
-		PL_strfree(folderName);
+    nsFileSpec newsrcFile("");
+    rv = GetNewsrcFile(path, newsrcFile);
+    if (rv == NS_OK) {
+#ifdef DEBUG_sspitzer
+      printf("newsrc file = %s\n", (const char *)newsrcFile);
+#endif
+      rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
     }
-	return rv;
+  }
+  else {
+#ifdef DEBUG_sspitzer
+    printf("%s is not a host, so it has no newsgroups.\n", mURI);
 #endif
+    rv = NS_OK;
+  }
+
+  return rv;
 }
 
 nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::AddSubfolder()\n");
 #endif
 	if(!child)
@@ -225,7 +392,7 @@ nsresult nsMsgNewsFolder::ParseFolder(nsFileSpec& path)
 NS_IMETHODIMP
 nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::Enumerate()\n");
 #endif
 #if 0
@@ -253,7 +420,7 @@ nsresult
 nsMsgNewsFolder::AddDirectorySeparator(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
-	if (nsCRT::strcmp(mURI, kNewsRootURI) == 0) {
+	if (PL_strcmp(mURI, kNewsRootURI) == 0) {
       // don't concat the full separator with .sbd
     }
     else {
@@ -280,7 +447,7 @@ nsMsgNewsFolder::AddDirectorySeparator(nsFileSpec &path)
 NS_IMETHODIMP
 nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetSubFolders()\n");
 #endif
   if (!mInitialized) {
@@ -314,7 +481,7 @@ nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgNewsFolder::GetDatabase()
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetDatabase()\n");
 #endif
 #if 0
@@ -372,7 +539,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetMessages()\n");
 #endif
 #if 0
@@ -396,7 +563,7 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetThreads(nsIEnumerator** threadEnumerator)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetThreads()\n");
 #endif
 #if 0
@@ -433,7 +600,7 @@ nsMsgNewsFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 
 NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::BuildFolderURL()\n");
 #endif
   const char *urlScheme = "news:";
@@ -463,9 +630,10 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
   */
 nsresult nsMsgNewsFolder::CreateDirectoryForFolder(nsFileSpec &path)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::CreateDirectoryForFolder()\n");
 #endif
+#if 0
 	nsresult rv = NS_OK;
 
 	rv = GetPath(path);
@@ -502,6 +670,9 @@ nsresult nsMsgNewsFolder::CreateDirectoryForFolder(nsFileSpec &path)
 	}
 
 	return rv;
+#else
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
@@ -571,7 +742,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	NS_IF_RELEASE(child);
 	return rv;
 #endif
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::RemoveSubFolder(nsIMsgFolder *which)
@@ -602,7 +773,7 @@ NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
 NS_IMETHODIMP 
 nsMsgNewsFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetChildNamed()\n");
 #endif
   NS_ASSERTION(aChild, "NULL child");
@@ -646,7 +817,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetName(char **name)
   {
     if (mDepth == 1) 
     {
-      SetName("News.Mozilla.Org");
+      SetName("News.Foo.Bar");
       mHaveReadNameFromDB = TRUE;
       *name = mName.ToNewCString();
       return NS_OK;
@@ -667,8 +838,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(nsString& prettyName)
 {
   if (mDepth == 1) {
     // Depth == 1 means we are on the news server level
-    // override the name here to say "News.Mozilla.Org"
-    prettyName = PL_strdup("News.Mozilla.Org");
+    // override the name here to say "News.Foo.Bar"
+    prettyName = PL_strdup("News.Foo.Bar");
   }
   else {
     nsresult rv = NS_ERROR_NULL_POINTER;
@@ -852,7 +1023,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRememberedPassword(char ** password)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetPath()\n");
 #endif
   nsFileSpec nopath("");
@@ -889,13 +1060,13 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+NS_IMETHODIMP nsMsgNewsFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                          nsIDBChangeListener * aInstigator)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+NS_IMETHODIMP nsMsgNewsFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
 	nsIMsgDBHdr *pMsgDBHdr;
@@ -927,7 +1098,7 @@ NS_IMETHODIMP nsMsgNewsFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+NS_IMETHODIMP nsMsgNewsFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
 	nsIMsgDBHdr *pMsgDBHdr;
@@ -957,5 +1128,381 @@ NS_IMETHODIMP nsMsgNewsFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags,
 NS_IMETHODIMP nsMsgNewsFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator)
 {
 	return NS_OK;
+}
+
+/* sspitzer:  from mozilla/network/protocol/pop3/mkpop3.c */
+
+static PRInt32
+msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
+				char **buffer, PRUint32 *size)
+{
+  if (*size <= desired_size)
+	{
+	  char *new_buf;
+	  PRUint32 increment = desired_size - *size;
+	  if (increment < quantum) /* always grow by a minimum of N bytes */
+		increment = quantum;
+
+#ifdef TESTFORWIN16
+	  if (((*size + increment) * (element_size / sizeof(char))) >= 64000)
+		{
+		  /* Make sure we don't choke on WIN16 */
+		  PR_ASSERT(0);
+		  return -1;
+		}
+#endif /* DEBUG */
+
+	  new_buf = (*buffer
+				 ? (char *) PR_Realloc (*buffer, (*size + increment)
+										* (element_size / sizeof(char)))
+				 : (char *) PR_Malloc ((*size + increment)
+									  * (element_size / sizeof(char))));
+	  if (! new_buf)
+      return -1; // NS_ERROR_OUT_OF_MEMORY;
+	  *buffer = new_buf;
+	  *size += increment;
+	}
+  return 0;
+}
+
+/* Take the given buffer, tweak the newlines at the end if necessary, and
+   send it off to the given routine.  We are guaranteed that the given
+   buffer has allocated space for at least one more character at the end. */
+static PRInt32
+msg_convert_and_send_buffer(char* buf, PRUint32 length, PRBool convert_newlines_p,
+							PRInt32 (*per_line_fn) (char *line,
+												  PRUint32 line_length,
+												  void *closure),
+							void *closure)
+{
+  /* Convert the line terminator to the native form.
+   */
+  char* newline;
+
+  PR_ASSERT(buf && length > 0);
+  if (!buf || length <= 0) return -1;
+  newline = buf + length;
+  PR_ASSERT(newline[-1] == CR || newline[-1] == LF);
+  if (newline[-1] != CR && newline[-1] != LF) return -1;
+
+  if (!convert_newlines_p)
+	{
+	}
+#if (LINEBREAK_LEN == 1)
+  else if ((newline - buf) >= 2 &&
+		   newline[-2] == CR &&
+		   newline[-1] == LF)
+	{
+	  /* CRLF -> CR or LF */
+	  buf [length - 2] = LINEBREAK[0];
+	  length--;
+	}
+  else if (newline > buf + 1 &&
+		   newline[-1] != LINEBREAK[0])
+	{
+	  /* CR -> LF or LF -> CR */
+	  buf [length - 1] = LINEBREAK[0];
+	}
+#else
+  else if (((newline - buf) >= 2 && newline[-2] != CR) ||
+		   ((newline - buf) >= 1 && newline[-1] != LF))
+	{
+	  /* LF -> CRLF or CR -> CRLF */
+	  length++;
+	  buf[length - 2] = LINEBREAK[0];
+	  buf[length - 1] = LINEBREAK[1];
+	}
+#endif
+
+  return (*per_line_fn)(buf, length, closure);
+}
+
+static int
+msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+				char **bufferP, PRUint32 *buffer_sizeP, PRUint32 *buffer_fpP,
+				PRBool convert_newlines_p,
+				PRInt32 (*per_line_fn) (char *line, PRUint32 line_length,
+									  void *closure),
+				void *closure)
+{
+  printf("msg_LineBuffer()\n");
+
+  int status = 0;
+  if (*buffer_fpP > 0 && *bufferP && (*bufferP)[*buffer_fpP - 1] == CR &&
+	  net_buffer_size > 0 && net_buffer[0] != LF) {
+	/* The last buffer ended with a CR.  The new buffer does not start
+	   with a LF.  This old buffer should be shipped out and discarded. */
+	PR_ASSERT(*buffer_sizeP > *buffer_fpP);
+	if (*buffer_sizeP <= *buffer_fpP) return -1;
+	status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+										 convert_newlines_p,
+										 per_line_fn, closure);
+	if (status < 0) return status;
+	*buffer_fpP = 0;
+  }
+  while (net_buffer_size > 0)
+	{
+	  const char *net_buffer_end = net_buffer + net_buffer_size;
+	  const char *newline = 0;
+	  const char *s;
+
+
+	  for (s = net_buffer; s < net_buffer_end; s++)
+		{
+		  /* Move forward in the buffer until the first newline.
+			 Stop when we see CRLF, CR, or LF, or the end of the buffer.
+			 *But*, if we see a lone CR at the *very end* of the buffer,
+			 treat this as if we had reached the end of the buffer without
+			 seeing a line terminator.  This is to catch the case of the
+			 buffers splitting a CRLF pair, as in "FOO\r\nBAR\r" "\nBAZ\r\n".
+		   */
+		  if (*s == CR || *s == LF)
+			{
+			  newline = s;
+			  if (newline[0] == CR)
+				{
+				  if (s == net_buffer_end - 1)
+					{
+					  /* CR at end - wait for the next character. */
+					  newline = 0;
+					  break;
+					}
+				  else if (newline[1] == LF)
+					/* CRLF seen; swallow both. */
+					newline++;
+				}
+			  newline++;
+			  break;
+			}
+		}
+
+	  /* Ensure room in the net_buffer and append some or all of the current
+		 chunk of data to it. */
+	  {
+		const char *end = (newline ? newline : net_buffer_end);
+		PRUint32 desired_size = (end - net_buffer) + (*buffer_fpP) + 1;
+
+		if (desired_size >= (*buffer_sizeP))
+		  {
+			status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
+									 bufferP, buffer_sizeP);
+			if (status < 0) return status;
+		  }
+		nsCRT::memcpy((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
+		(*buffer_fpP) += (end - net_buffer);
+	  }
+
+	  /* Now *bufferP contains either a complete line, or as complete
+		 a line as we have read so far.
+
+		 If we have a line, process it, and then remove it from `*bufferP'.
+		 Then go around the loop again, until we drain the incoming data.
+	   */
+	  if (!newline)
+		return 0;
+
+	  status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+										   convert_newlines_p,
+										   per_line_fn, closure);
+	  if (status < 0) return status;
+
+	  net_buffer_size -= (newline - net_buffer);
+	  net_buffer = newline;
+	  (*buffer_fpP) = 0;
+	}
+  return 0;
+}
+
+nsresult 
+nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
+{
+	char *ibuffer = 0;
+	PRUint32 ibuffer_size = 0;
+	PRUint32 ibuffer_fp = 0;
+  int size = 1024;
+  char *buffer;
+  buffer = new char[size];
+  int status = 0;
+  PRInt32 numread = 0;
+
+  PR_FREEIF(m_optionLines);
+
+  if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
+
+  nsInputFileStream inputStream(newsrcFile); 
+  while (1) {
+    numread = inputStream.read(buffer, size);
+    if (numread == 0) {
+      break;
+    }
+    else {
+#ifdef DEBUG_sspitzer
+      printf("%d: %s\n", numread, buffer);
+#endif
+      msg_LineBuffer(buffer, numread,
+                     &ibuffer, &ibuffer_size, &ibuffer_fp,
+                     FALSE,
+#ifdef XP_OS2
+                     (PRInt32 (_Optlink*) (char*,PRUint32,void*))
+#endif /* XP_OS2 */
+                     nsMsgNewsFolder::ProcessLine_s, this);
+      if (numread <= 0) {
+        break;
+      }
+    }
+  }
+
+  if (status == 0 && ibuffer_fp > 0) {
+    status = ProcessLine_s(ibuffer, ibuffer_fp, this);
+    ibuffer_fp = 0;
+  }
+
+  inputStream.close();
+  delete [] buffer;
+  
+  return NS_OK;
+}
+
+PRInt32
+nsMsgNewsFolder::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
+{
+  printf("nsMsgNewsFolder::ProcessLine_s()\n");
+	return ((nsMsgNewsFolder*) closure)->ProcessLine(line, line_size);
+}
+
+PRInt32
+nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
+{
+  printf("nsMsgNewsFolder::ProcessLine()\n");
+
+	/* guard against blank line lossage */
+	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
+
+	line[line_size] = 0;
+
+	if ((line[0] == 'o' || line[0] == 'O') &&
+		!PL_strncasecmp (line, "options", 7)) {
+		return RememberLine(line);
+	}
+
+	char *s;
+	char *end = line + line_size;
+#ifdef HAVE_PORT
+	static msg_NewsArtSet *set;
+#endif
+
+	for (s = line; s < end; s++)
+		if (*s == ':' || *s == '!')
+			break;
+	
+	if (*s == 0) {
+		/* What is this?? Well, don't just throw it away... */
+		return RememberLine(line);
+	}
+
+#ifdef HAVE_PORT
+	set = msg_NewsArtSet::Create(s + 1, this);
+	if (!set) return NS_OUT_OF_MEMORY;
+#endif
+
+	PRBool subscribed = (*s == ':');
+	*s = '\0';
+
+	if (strlen(line) == 0)
+	{
+#ifdef HAVE_PORT
+		delete set;
+#endif
+		return 0;
+	}
+  
+  if (subscribed) {
+    printf("subscribed: %s\n", line);
+
+    // were subscribed, so add it
+    nsIMsgFolder *child = nsnull;
+    nsAutoString currentFolderNameStr(line);
+    AddSubfolder(currentFolderNameStr,&child);
+    NS_IF_RELEASE(child);
+    child = nsnull;
+  }
+  else {
+    printf("NOT subscribed: %s\n", line);
+  }
+
+#ifdef HAVE_PORT
+	MSG_FolderInfoNews* info;
+
+	if (subscribed && IsCategoryContainer(line))
+	{
+		info = new MSG_FolderInfoCategoryContainer(line, set, subscribed,
+												   this,
+												   m_hostinfo->GetDepth() + 1);
+		msg_GroupRecord* group = FindOrCreateGroup(line);
+		// Go add all of our categories to the newsrc.
+		AssureAllDescendentsLoaded(group);
+		msg_GroupRecord* end = group->GetSiblingOrAncestorSibling();
+		msg_GroupRecord* child;
+		for (child = group->GetNextAlphabetic() ;
+			 child != end ;
+			 child = child->GetNextAlphabetic()) {
+			PR_ASSERT(child);
+			if (!child) break;
+			char* fullname = child->GetFullName();
+			if (!fullname) break;
+			MSG_FolderInfoNews* info = FindGroup(fullname);
+			if (!info) {	// autosubscribe, if we haven't seen this one.
+				char* groupLine = PR_smprintf("%s:", fullname);
+				if (groupLine) {
+					ProcessLine(groupLine, PL_strlen(groupLine));
+					XP_FREE(groupLine);
+				}
+			}
+			delete [] fullname;
+		}
+	}
+	else
+		info = new MSG_FolderInfoNews(line, set, subscribed, this,
+							   m_hostinfo->GetDepth() + 1);
+
+	if (!info) return -1; // NS_ERROR_OUT_OF_MEMORY;
+
+	// for now, you can't subscribe to category by itself.
+	if (! info->IsCategory())
+	{
+		XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
+		infolist->Add(info);
+	}
+
+	m_groups->Add(info);
+
+	// prime the folder info from the folder cache while it's still around.
+	// Except this might disable the update of new counts - check it out...
+	m_master->InitFolderFromCache (info);
+#endif /* HAVE_PORT */
+
+  return 0;
+}
+
+PRInt32
+nsMsgNewsFolder::RememberLine(char* line)
+{
+	char* new_data;
+	if (m_optionLines) {
+		new_data =
+			(char *) PR_Realloc(m_optionLines,
+								PL_strlen(m_optionLines)
+								+ PL_strlen(line) + 4);
+	} else {
+		new_data = (char *) PR_Malloc(PL_strlen(line) + 3);
+	}
+	if (!new_data) return -1; // NS_ERROR_OUT_OF_MEMORY;
+	PL_strcpy(new_data, line);
+	PL_strcat(new_data, LINEBREAK);
+
+	m_optionLines = new_data;
+
+	return 0;
+
 }
 
