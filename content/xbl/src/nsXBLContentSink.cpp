@@ -469,6 +469,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
         }
       }
       else if (aTagName == nsXBLAtoms::destructor) {
+        mSecondaryState = eXBL_InDestructor;
         nsXBLProtoImplAnonymousMethod* newMethod =
           new nsXBLProtoImplAnonymousMethod();
         if (newMethod) {
