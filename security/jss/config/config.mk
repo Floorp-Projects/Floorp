@@ -35,26 +35,21 @@
 # Configuration information unique to the "sectools" component
 #
 
-#######################################################################
-# [1.0] Local "sectools" component library names                      #
-#######################################################################
-
-include $(CORE_DEPTH)/$(MODULE)/config/libnames.mk
 
 #######################################################################
-# [2.0] Local "sectools" component library link options               #
+#  Local "sectools" component library link options                    #
 #######################################################################
 
 include $(CORE_DEPTH)/$(MODULE)/config/linkage.mk
 
 #######################################################################
-# [3.0] Local "sectools" component STATIC system library names        #
+#  Local "sectools" component STATIC system library names             #
 #######################################################################
 
 include $(CORE_DEPTH)/$(MODULE)/config/static.mk
 
 #######################################################################
-# [4.0] Local "sectools" component DYNAMIC system library names       #
+#  Local "sectools" component DYNAMIC system library names            #
 #######################################################################
 
 include $(CORE_DEPTH)/$(MODULE)/config/dynamic.mk

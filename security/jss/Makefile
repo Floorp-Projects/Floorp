@@ -71,21 +71,6 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-
-nss_release::
-ifdef BUILD_OPT
-	@echo "== nss_release.pl =="
-	@perl -I$(CORE_DEPTH)/coreconf $(CORE_DEPTH)/ninja/nss_release.pl \
-		"RELEASE_TREE=$(RELEASE_TREE)"   \
-		"RELEASE=$(RELEASE)" \
-		"RELEASE_VERSION=$(RELEASE_VERSION)" \
-		"PLATFORM=$(PLATFORM)" \
-		"OS_ARCH=$(OS_ARCH)"
-else
-	@echo "The \"nss_release.pl\" script may ONLY be used on OPTimized builds!!!" 
-endif
-
-
 #
 # The public NSS headers from an NSS binary release are now unpacked in
 # the mozilla/dist/public/nss directory; they were unpacked in the
@@ -98,4 +83,3 @@ endif
 import::
 	rm -rf $(SOURCE_XP_DIR)/public/security
 	mv $(SOURCE_XP_DIR)/public/nss $(SOURCE_XP_DIR)/public/security
-

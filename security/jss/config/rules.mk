@@ -37,16 +37,3 @@
 ###                                                                 ###
 #######################################################################
 
-
-package:: 
-	-$(NSINSTALL) -m 664 $(PACKAGE_FILES) $(PLATFORM)
-ifeq ($(OS_ARCH),WINNT)
-	cd $(PLATFORM) ; \
-	rm -f $(ARCHIVE_NAME).zip ; \
-	zip $(ARCHIVE_NAME).zip $(PACKAGE_FILES)
-else
-	cd $(PLATFORM) ; \
-	rm -f $(ARCHIVE_NAME).tar $(ARCHIVE_NAME).tar.gz ; \
-	tar cvf $(ARCHIVE_NAME).tar $(PACKAGE_FILES) ; \
-	gzip $(ARCHIVE_NAME).tar
-endif
