@@ -32,6 +32,7 @@ LIBRARY_NAME	= xpcomds_s
 
 
 CSRCS = \
+                pldhash.c \
 		plvector.c \
 		$(NULL)
 
@@ -109,6 +110,7 @@ EXPORTS		= \
 		nsVoidArray.h \
 		nsVoidBTree.h \
 		nsXPIDLString.h \
+                pldhash.h \
 		plvector.h \
 		nsTextFormatter.h \
 		$(NULL)			
