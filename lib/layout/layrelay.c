@@ -238,9 +238,11 @@ void LO_RelayoutOnResize(MWContext *context, int32 width, int32 height, int32 le
 	/* update the final document dimensions */
 	state->y += state->win_bottom;
 	LO_SetDocumentDimensions(context, state->max_width, state->y);
-	
+
+#if !defined(SMOOTH_PROGRESS)	
 	if(!state->top_state->is_binary)
 		FE_SetProgressBarPercent(context, 100);
+#endif /* !defined(SMOOTH_PRORGESS) */
 
         lo_FreeLayoutData(context, state);
 	FE_FinishedLayout(context);

@@ -3766,7 +3766,9 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 	 */
 	if (state == NULL)
 	{
+#if !defined(SMOOTH_PROGRESS)
 		FE_SetProgressBarPercent(context, 100);
+#endif /* !defined(SMOOTH_PROGRESS) */
 #ifdef OLD_MSGS
 		FE_Progress(context, "Layout Phase Complete");
 #endif /* OLD_MSGS */
@@ -3808,7 +3810,9 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 	 */
 	if (state == NULL)
 	{
+#if !defined(SMOOTH_PROGRESS)
 		FE_SetProgressBarPercent(context, 100);
+#endif /* !defined(SMOOTH_PROGRESS) */
 #ifdef OLD_MSGS
 		FE_Progress(context, "Layout Phase Complete");
 #endif /* OLD_MSGS */
@@ -3878,8 +3882,10 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 		STYLESTACK_Purge(top_state->style_stack);
 	}
 
+#if !defined(SMOOTH_PROGRESS)
 	if(!state->top_state->is_binary)
 		FE_SetProgressBarPercent(context, 100);
+#endif /* !defined(SMOOTH_PROGRESS) */
 
 #ifdef OLD_MSGS
 	FE_Progress(context, "Layout Phase Complete");

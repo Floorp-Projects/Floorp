@@ -4560,8 +4560,10 @@ void lo_UpdateFEProgressBar( MWContext *context, lo_DocState *state )
 		if ((percent == 100)||(percent < 0)||
 			(percent > (state->top_state->layout_percent + 1)))
 		{
+#if !defined(SMOOTH_PROGRESS)
 			if(!state->top_state->is_binary)
 				FE_SetProgressBarPercent(context, percent);
+#endif /* !defined(SMOOTH_PROGRESS) */
 			state->top_state->layout_percent = (intn)percent;
 		}
 	}
