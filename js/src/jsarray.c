@@ -628,6 +628,7 @@ typedef struct HSortArgs {
     void         *pivot;
     JSComparator cmp;
     void         *arg;
+    JSBool       fastcopy;
 } HSortArgs;
 
 static int
@@ -637,41 +638,47 @@ static int
 sort_compare_strings(const void *a, const void *b, void *arg);
 
 static void
-HeapSortHelper(HSortArgs *qa, int lo, int hi)
+HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
 {
     void *pivot, *vec, *vec2, *arg, *a, *b;
     size_t elsize;
     JSComparator cmp;
-    JSBool fastmove;
-    int j, hiDiv2;
+    JSBool fastcopy;
+    size_t j, hiDiv2;
 
-    pivot = qa->pivot;
-    vec = qa->vec;
-    elsize = qa->elsize;
+    pivot = hsa->pivot;
+    vec = hsa->vec;
+    elsize = hsa->elsize;
     vec2 =  (char *)vec - 2 * elsize;
-    cmp = qa->cmp;
-    arg = qa->arg;
+    cmp = hsa->cmp;
+    arg = hsa->arg;
 
-    fastmove = (cmp == sort_compare || cmp == sort_compare_strings);
-#define MEMMOVE(p,q,n) \
-    (fastmove ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memmove(p, q, n))
+    fastcopy = hsa->fastcopy;
+#define MEMCPY(p,q,n) \
+    (fastcopy ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memcpy(p, q, n))
 
     if (lo == 1) {
         j = 2;
         b = (char *)vec + elsize;
-        if (j < hi && cmp((char *)vec, b, arg) < 0)
+        if (j < hi && cmp(vec, b, arg) < 0)
             j++;
         a = (char *)vec + (hi - 1) * elsize;
         b = (char *)vec2 + j * elsize;
-        if (cmp(a, b, arg) >= 0)
+
+        /* 
+         * During sorting phase b points to a member of heap that cannot be
+         * bigger then biggest of vec[0] and vec[1], and cmp(a, b, arg) <= 0
+         * always holds.
+         */
+        if ((building || hi == 2) && cmp(a, b, arg) >= 0)
             return;
 
-        MEMMOVE(pivot, a, elsize);
-        MEMMOVE(a, b, elsize);
+        MEMCPY(pivot, a, elsize);
+        MEMCPY(a, b, elsize);
         lo = j;
     } else {
         a = (char *)vec2 + lo * elsize;
-        MEMMOVE(pivot, a, elsize);
+        MEMCPY(pivot, a, elsize);
     }
 
     hiDiv2 = hi/2;
@@ -686,35 +693,36 @@ HeapSortHelper(HSortArgs *qa, int lo, int hi)
             break;
 
         a = (char *)vec2 + lo * elsize;
-        MEMMOVE(a, b, elsize);
+        MEMCPY(a, b, elsize);
         lo = j;
     }
 
     a = (char *)vec2 + lo * elsize;
-    MEMMOVE(a, pivot, elsize);
-#undef MEMMOVE
+    MEMCPY(a, pivot, elsize);
+#undef MEMCPY
 }
 
 JSBool
 js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg) 
 {
     void *pivot;
-    HSortArgs qa;
-    int i;
+    HSortArgs hsa;
+    size_t i;
 
     pivot = malloc(elsize);
     if (!pivot)
 	return JS_FALSE;
-    qa.vec = vec;
-    qa.elsize = elsize;
-    qa.pivot = pivot;
-    qa.cmp = cmp;
-    qa.arg = arg;
+    hsa.vec = vec;
+    hsa.elsize = elsize;
+    hsa.pivot = pivot;
+    hsa.cmp = cmp;
+    hsa.arg = arg;
+    hsa.fastcopy = (cmp == sort_compare || cmp == sort_compare_strings);
 
-    for (i = nel/2; i > 0; i--)
-        HeapSortHelper(&qa, i, (int) nel);
+    for (i = nel/2; i != 0; i--)
+        HeapSortHelper(JS_TRUE, &hsa, i, nel);
     while (nel > 2)
-        HeapSortHelper(&qa, 1, (int) --nel);
+        HeapSortHelper(JS_FALSE, &hsa, 1, --nel);
 
     free(pivot);
     return JS_TRUE;
