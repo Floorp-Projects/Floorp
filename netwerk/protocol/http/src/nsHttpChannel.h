@@ -118,7 +118,7 @@ private:
     nsresult ProcessNotModified();
     nsresult ProcessRedirection(PRUint32 httpStatus);
     nsresult ProcessAuthentication(PRUint32 httpStatus);
-    nsresult GetCallback(const nsIID &aIID, void **aResult);
+    void     GetCallback(const nsIID &aIID, void **aResult);
     PRBool   ResponseWouldVary();
 
     // redirection specific methods
