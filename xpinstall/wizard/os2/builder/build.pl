@@ -63,8 +63,22 @@ $cwdBuilder    = "$DEPTH/xpinstall/wizard/os2/builder";
 $cwdDist       = GetCwd("dist",     $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
 $cwdInstall    = GetCwd("install",  $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
 $cwdPackager   = GetCwd("packager", $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
+$cwdConfig     = GetCwd("config", $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
+#need a better way to get version from build
 $verPartial    = "1.2b.0.";
-$ver           = $verPartial . GetVersion($DEPTH, $ENV{MOZ_OBJDIR});
+#get date from build_number file
+open(FILENEW, "<$cwdConfig/build_number");
+my $dateversion = <FILENEW>;
+close(FILENEW);
+$ver           = $verPartial . $dateversion;
+
+# Check for existence of mozilla.exe
+$fileMozilla = "$DEPTH/$ENV{MOZ_OBJDIR}/dist/bin/mozilla.exe";
+if(!(-e "$fileMozilla"))
+{
+  print "file not found: $fileMozilla\n";
+  exit(1);
+}
 
 if(-d "$DEPTH/stage")
 {
@@ -202,48 +216,18 @@ sub GetCwd
 
     $distPath = "$depthPath/xpinstall/packager";
   }
+  elsif($whichPath eq "config")
+  {
+    # verify the existance of path
+    if(!(-e "$depthPath/$objdirName/config"))
+    {
+      print "path not found: $depthPath/$objdirName/config\n";
+      exit(1);
+    }
+
+    $distPath = "$depthPath/$objdirName/config";
+  }
 
   return($distPath);
 }
 
-sub GetVersion
-{
-  my($depthPath, $objdirName) = @_;
-  my($fileMozilla);
-  my($fileMozillaVer);
-  my($monAdjusted);
-  my($yy);
-  my($mm);
-  my($dd);
-  my($hh);
-
-  $fileMozilla = "$depthPath/$objdirName/dist/bin/mozilla.exe";
-  # verify the existance of file
-  if(!(-e "$fileMozilla"))
-  {
-    print "file not found: $fileMozilla\n";
-    exit(1);
-  }
-
-  ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat $fileMozilla;
-  ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($mtime);
-
-  # calculate year
-  # localtime() returns year 2000 as 100, we mod 100 to get at the last 2 digits
-  $yy = $year % 100;
-  $yy = "20" . sprintf("%.2d", $yy);
-
-  # calculate month
-  $monAdjusted = $mon + 1;
-  $mm = sprintf("%.2d", $monAdjusted);
-
-  # calculate month day
-  $dd = sprintf("%.2d", $mday);
-
-  # calculate day hour
-  $hh = sprintf("%.2d", $hour);
-
-  $fileMozillaVer = "$yy$mm$dd$hh";
-  print "y2k compliant version string for $fileMozilla: $fileMozillaVer\n";
-  return($fileMozillaVer);
-}
