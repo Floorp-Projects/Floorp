@@ -862,6 +862,8 @@ static void InitTraceLog(void)
 
 PR_BEGIN_EXTERN_C
 
+SYMSETOPTIONSPROC _SymSetOptions;
+
 SYMINITIALIZEPROC _SymInitialize;
 
 SYMCLEANUPPROC _SymCleanup;
@@ -882,6 +884,8 @@ SYMGETMODULEINFO _SymGetModuleInfo;
 
 ENUMLOADEDMODULES _EnumerateLoadedModules;
 
+SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
+
 PR_END_EXTERN_C
 
 static PRBool
@@ -892,6 +896,9 @@ EnsureImageHlpInitialized()
   if (! gInitialized) {
     HMODULE module = ::LoadLibrary("IMAGEHLP.DLL");
     if (!module) return PR_FALSE;
+
+    _SymSetOptions = (SYMSETOPTIONSPROC) ::GetProcAddress(module, "SymSetOptions");
+    if (!_SymSetOptions) return PR_FALSE;
 
     _SymInitialize = (SYMINITIALIZEPROC) ::GetProcAddress(module, "SymInitialize");
     if (!_SymInitialize) return PR_FALSE;
@@ -922,6 +929,9 @@ EnsureImageHlpInitialized()
 
     _EnumerateLoadedModules = (ENUMLOADEDMODULES)GetProcAddress(module, "EnumerateLoadedModules");
     if (!_EnumerateLoadedModules) return PR_FALSE;
+
+    _SymGetLineFromAddr = (SYMGETLINEFROMADDRPROC)GetProcAddress(module, "SymGetLineFromAddr");
+    if (!_SymGetLineFromAddr) return PR_FALSE;
 
     gInitialized = PR_TRUE;
   }
@@ -971,9 +981,17 @@ static BOOL CALLBACK callbackEspecial(LPSTR aModuleName, ULONG aModuleBase, ULON
  *  and symbol information is not available.
  * This code rectifies that problem.
  */
-BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo)
+BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo, PIMAGEHLP_LINE aLineInfo)
 {
     BOOL retval = FALSE;
+
+    /*
+     * Init the vars if we have em.
+     */
+    aModuleInfo->SizeOfStruct = sizeof(IMAGEHLP_MODULE);
+    if (nsnull != aLineInfo) {
+      aLineInfo->SizeOfStruct = sizeof(IMAGEHLP_LINE);
+    }
 
     /*
      * Give it a go.
@@ -981,8 +999,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
      */
     retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
 
-    if(FALSE == retval)
-    {
+    if (FALSE == retval) {
         BOOL enumRes = FALSE;
 
         /*
@@ -1000,6 +1017,17 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
         }
     }
 
+    /*
+     * If we got module info, we may attempt line info as well.
+     * We will not report failure if this does not work.
+     */
+    if (FALSE != retval && nsnull != aLineInfo && nsnull != _SymGetLineFromAddr) {
+      DWORD displacement = 0;
+      BOOL lineRes = FALSE;
+
+      lineRes = _SymGetLineFromAddr(aProcess, aAddr, &displacement, aLineInfo);
+    }
+
     return retval;
 }
 
@@ -1011,6 +1039,7 @@ EnsureSymInitialized()
   if (! gInitialized) {
     if (! EnsureImageHlpInitialized())
       return PR_FALSE;
+    _SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
     gInitialized = _SymInitialize(GetCurrentProcess(), 0, TRUE);
   }
   return gInitialized;
@@ -1100,7 +1129,7 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
     IMAGEHLP_MODULE modInfo;
     modInfo.SizeOfStruct = sizeof(modInfo);
     BOOL modInfoRes = TRUE;
-    modInfoRes = SymGetModuleInfoEspecial(myProcess, frame.AddrPC.Offset, &modInfo);
+    modInfoRes = SymGetModuleInfoEspecial(myProcess, frame.AddrPC.Offset, &modInfo, nsnull);
 
     char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
     PIMAGEHLP_SYMBOL symbol = (PIMAGEHLP_SYMBOL) buf;

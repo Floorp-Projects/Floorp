@@ -45,7 +45,7 @@ PR_BEGIN_EXTERN_C
  * NS_TraceMallocStartup comment (below) for magic number differences in log
  * file structure.
  */
-#define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog07\r\n\032"
+#define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog08\r\n\032"
 #define NS_TRACE_MALLOC_MAGIC_SIZE      16
 
 /**
@@ -122,9 +122,19 @@ typedef struct nsTMStats {
  *         old address, old size
  *   'F' site serial, interval, address, free size
  *
+ * Event Operands (magic TMLog07)
+ *   no one documented their changes.
+ *   best of luck....
+ *
+ * Event Operands (magic TMLog08)
+ *   'G' filename serial, source filename string.
+ *   'N' method serial, library serial, source filename serial,
+ *         source file linenumber, demangled name string
+ *
  * See tools/trace-malloc/bloatblame.c for an example log-file reader.
  */
 #define TM_EVENT_LIBRARY        'L'
+#define TM_EVENT_FILENAME       'G'
 #define TM_EVENT_METHOD         'N'
 #define TM_EVENT_CALLSITE       'S'
 #define TM_EVENT_MALLOC         'M'

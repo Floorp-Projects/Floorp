@@ -49,14 +49,18 @@ typedef struct tmgraphlink  tmgraphlink;
 typedef struct tmgraphedge  tmgraphedge;
 typedef struct tmgraphnode  tmgraphnode;
 typedef struct tmcallsite   tmcallsite;
+typedef struct tmmethodnode tmmethodnode;
 
 struct tmevent {
     char            type;
     uint32          serial;
     union {
         char        *libname;
+        char        *srcname;
         struct {
             uint32  library;
+            uint32  filename;
+            uint32  linenumber;
             char    *name;
         } method;
         struct {
@@ -105,10 +109,18 @@ struct tmgraphnode {
     int             sort;       /* sorted index in node table, -1 if no table */
 };
 
+struct tmmethodnode {
+    tmgraphnode   graphnode;
+    char          *sourcefile;
+    uint32        linenumber;
+};
+
 #define tmgraphnode_name(node)  ((char*) (node)->entry.value)
+#define tmmethodnode_name(node)  ((char*) (node)->graphnode.entry.value)
 
 #define tmlibrary_serial(lib)   ((uint32) (lib)->entry.key)
 #define tmcomponent_name(comp)  ((const char*) (comp)->entry.key)
+#define filename_name(hashentry) ((char*)hashentry->value)
 
 /* Half a graphedge, not including per-edge allocation stats. */
 struct tmgraphlink {
@@ -139,7 +151,7 @@ struct tmcallsite {
     tmcallsite      *parent;    /* calling site */
     tmcallsite      *siblings;  /* other sites reached from parent */
     tmcallsite      *kids;      /* sites reached from here */
-    tmgraphnode     *method;    /* method node in tmr->methods graph */
+    tmmethodnode    *method;    /* method node in tmr->methods graph */
     uint32          offset;     /* pc offset from start of method */
     tmallcounts     allocs;
     tmallcounts     frees;
@@ -152,6 +164,7 @@ struct tmreader {
     const char      *program;
     void            *data;
     PLHashTable     *libraries;
+    PLHashTable     *filenames;
     PLHashTable     *components;
     PLHashTable     *methods;
     PLHashTable     *callsites;
@@ -174,8 +187,9 @@ extern int          tmreader_eventloop(tmreader *tmr, const char *filename,
 
 /* Map serial number or name to graphnode or callsite. */
 extern tmgraphnode  *tmreader_library(tmreader *tmr, uint32 serial);
+extern tmgraphnode  *tmreader_filename(tmreader *tmr, uint32 serial);
 extern tmgraphnode  *tmreader_component(tmreader *tmr, const char *name);
-extern tmgraphnode  *tmreader_method(tmreader *tmr, uint32 serial);
+extern tmmethodnode  *tmreader_method(tmreader *tmr, uint32 serial);
 extern tmcallsite   *tmreader_callsite(tmreader *tmr, uint32 serial);
 
 /*

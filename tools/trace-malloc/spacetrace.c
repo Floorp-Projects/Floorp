@@ -1360,7 +1360,7 @@ int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
 
         do
         {
-            methodName = tmgraphnode_name(aCallsite->method);
+            methodName = tmmethodnode_name(aCallsite->method);
             if(NULL != methodName && NULL != strstr(methodName, aMatch))
             {
                 /*
@@ -2350,6 +2350,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
             case TM_EVENT_METHOD:
             case TM_EVENT_STATS:
             case TM_EVENT_TIMESTAMP:
+            case TM_EVENT_FILENAME:
                 break;
 
             /*
@@ -2470,8 +2471,13 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
 **
 ** Output an HTML anchor, or just the text depending on the mode.
 */
-void htmlAnchor(const char* aHref, const char* aText)
+void htmlAnchor(const char* aHref, const char* aText, const char* aTarget)
 {
+    if(NULL == aTarget || '\0' == aTarget[0])
+    {
+        aTarget = "_st_content";
+    }
+
     if(NULL != aHref && '\0' != *aHref && NULL != aText && '\0' != *aText)
     {
         int anchorLive = 1;
@@ -2518,7 +2524,7 @@ void htmlAnchor(const char* aHref, const char* aText)
         */
         if(0 != anchorLive)
         {
-            PR_fprintf(globals.mRequest.mFD, "<a target=_content href=\"./%s\">%s</a>\n", aHref, aText);
+            PR_fprintf(globals.mRequest.mFD, "<a target=\"%s\" href=\"./%s\">%s</a>\n", aTarget, aHref, aText);
         }
         else
         {
@@ -2549,12 +2555,45 @@ void htmlAllocationAnchor(STAllocation* aAllocation, const char* aText)
         */
         PR_snprintf(buffer, sizeof(buffer), "allocation_%u.html", aAllocation->mRunIndex);
 
-        htmlAnchor(buffer, aText);
+        htmlAnchor(buffer, aText, NULL);
     }
     else
     {
         REPORT_ERROR(__LINE__, htmlAllocationAnchor);
     }
+}
+
+/*
+** resolveSourceFile
+**
+** Easy way to get a readable/short name.
+** NULL if not present, not resolvable.
+*/
+const char* resolveSourceFile(tmmethodnode* aMethod)
+{
+    const char* retval = NULL;
+
+    if(NULL != aMethod)
+    {
+        const char* methodSays = NULL;
+
+        methodSays = aMethod->sourcefile;
+
+        if(NULL != methodSays && '\0' != methodSays[0] && 0 != strcmp("noname", methodSays))
+        {
+            retval = strrchr(methodSays, '/');
+            if(NULL != retval)
+            {
+                retval++;
+            }
+            else
+            {
+                retval = methodSays;
+            }
+        }
+    }
+
+    return retval;
 }
 
 /*
@@ -2570,7 +2609,7 @@ void htmlCallsiteAnchor(tmcallsite* aCallsite, const char* aText, int aRealName)
 {
     if(NULL != aCallsite)
     {
-        char textBuf[256];
+        char textBuf[512];
         char hrefBuf[128];
         tmcallsite* namesite = aCallsite;
 
@@ -2611,23 +2650,44 @@ void htmlCallsiteAnchor(tmcallsite* aCallsite, const char* aText, int aRealName)
         if(NULL == aText || '\0' == *aText)
         {
             const char* methodName = NULL;
+            const char* sourceFile = NULL;
 
             if(NULL != namesite->method)
             {
-                methodName = tmgraphnode_name(namesite->method);
+                methodName = tmmethodnode_name(namesite->method);
             }
             else
             {
                 methodName = "==NONAME==";
             }
 
-            PR_snprintf(textBuf, sizeof(textBuf), "%s+%u(%u)", methodName, namesite->offset, (PRUint32)namesite->entry.key);
+            /*
+            ** Decide which format to use to identify the callsite.
+            ** If we can detect availability, hook up the filename with lxr information.
+            */
+            sourceFile = resolveSourceFile(namesite->method);
+            if(NULL != sourceFile && 0 == strncmp("mozilla/", namesite->method->sourcefile, 8))
+            {
+                char lxrHREFBuf[512];
+
+                PR_snprintf(lxrHREFBuf, sizeof(lxrHREFBuf), "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" target=\"_st_lxr\">(%s:%u)</a>", namesite->method->sourcefile + 8, namesite->method->linenumber, sourceFile, namesite->method->linenumber);
+                PR_snprintf(textBuf, sizeof(textBuf), "<b>%s</b>%s", methodName, lxrHREFBuf);
+            }
+            else if(NULL != sourceFile)
+            {
+                PR_snprintf(textBuf, sizeof(textBuf), "<b>%s</b>(%s:%u)", methodName, sourceFile, namesite->method->linenumber);
+            }
+            else
+            {
+                PR_snprintf(textBuf, sizeof(textBuf), "<b>%s</b>+%u(%u)", methodName, namesite->offset, (PRUint32)namesite->entry.key);
+            }
+
             aText = textBuf;
         }
 
         PR_snprintf(hrefBuf, sizeof(hrefBuf), "callsite_%u.html", (PRUint32)aCallsite->entry.key);
 
-        htmlAnchor(hrefBuf, aText);
+        htmlAnchor(hrefBuf, aText, NULL);
     }
     else
     {
@@ -2651,14 +2711,14 @@ void htmlHeader(const char* aTitle)
 "<div align=right>\n"
                , aTitle);
 
-    htmlAnchor("index.html", "[Index]");
-    htmlAnchor("options.html", "[Options]");
+    htmlAnchor("index.html", "[Index]", NULL);
+    htmlAnchor("options.html", "[Options]", NULL);
 
     /*
     ** This is a dubious feature at best.
     */
 #if WANT_QUIT
-    htmlAnchor("quit.html", "[Quit]");
+    htmlAnchor("quit.html", "[Quit]", NULL);
 #endif
 
     PR_fprintf(globals.mRequest.mFD, "</div>\n<hr>\n");
@@ -3867,8 +3927,19 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
     {
         STRun* sortedRun = NULL;
         STRun* thisRun = CALLSITE_RUN(aCallsite);
+        const char* sourceFile = NULL;
 
-        PR_fprintf(globals.mRequest.mFD, "%s+%u(%u) Callsite Details:<p>\n", tmgraphnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
+        sourceFile = resolveSourceFile(aCallsite->method);
+        if(NULL != sourceFile)
+        {
+            PR_fprintf(globals.mRequest.mFD, "<b>%s</b>", tmmethodnode_name(aCallsite->method));
+            PR_fprintf(globals.mRequest.mFD, "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" target=\"_st_lxr\">(%s:%u)</a>", aCallsite->method->sourcefile, aCallsite->method->linenumber, sourceFile, aCallsite->method->linenumber);
+            PR_fprintf(globals.mRequest.mFD, " Callsite Details:<p>\n");
+        }
+        else
+        {
+            PR_fprintf(globals.mRequest.mFD, "<b>%s</b>+%u(%u) Callsite Details:<p>\n", tmmethodnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
+        }
 
         PR_fprintf(globals.mRequest.mFD, "<table border=0>\n");
         PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mSize);
@@ -5022,16 +5093,16 @@ int displayIndex(void)
     PR_fprintf(globals.mRequest.mFD, "<ul>");
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("root_callsites.html", "Root Callsites");
+    htmlAnchor("root_callsites.html", "Root Callsites", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("top_callsites.html", "Top Callsites Report");
+    htmlAnchor("top_callsites.html", "Top Callsites Report", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("top_allocations.html", "Top Allocations Report");
+    htmlAnchor("top_allocations.html", "Top Allocations Report", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("memory_leaks.html", "Memory Leak Report");
+    htmlAnchor("memory_leaks.html", "Memory Leak Report", NULL);
 
 #if WANT_GRAPHS    
     PR_fprintf(globals.mRequest.mFD, "\n<li>Graphs");
@@ -5039,16 +5110,16 @@ int displayIndex(void)
     PR_fprintf(globals.mRequest.mFD, "<ul>");
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("footprint_graph.html", "Footprint");
+    htmlAnchor("footprint_graph.html", "Footprint", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("lifespan_graph.html", "Allocation Lifespans");
+    htmlAnchor("lifespan_graph.html", "Allocation Lifespans", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("times_graph.html", "Allocation Times");
+    htmlAnchor("times_graph.html", "Allocation Times", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("weight_graph.html", "Allocation Weights");
+    htmlAnchor("weight_graph.html", "Allocation Weights", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n</ul>\n");
 #endif /* WANT_GRAPHS */
