@@ -55,11 +55,12 @@ function fillDialog()
   var findService = Components.classes["@mozilla.org/find/find_service;1"]
                          .getService(Components.interfaces.nsIFindService);
   
-  // Set initial dialog field contents.
-  dialog.findKey.value           = findService.searchString;
-  dialog.caseSensitive.checked   = findService.matchCase;
-  dialog.wrap.checked            = findService.wrapFind;
-  dialog.searchBackwards.checked = findService.findBackwards;
+  // Set initial dialog field contents. Use the gFindInst attributes first,
+  // this is necessary for window.find()
+  dialog.findKey.value           = gFindInst.searchString ? gFindInst.searchString : findService.searchString;
+  dialog.caseSensitive.checked   = gFindInst.matchCase ? gFindInst.matchCase : findService.matchCase;
+  dialog.wrap.checked            = gFindInst.wrapFind ? gFindInst.wrapFind : findService.wrapFind;
+  dialog.searchBackwards.checked = gFindInst.findBackwards ? gFindInst.findBackwards : findService.findBackwards;
 }
 
 function saveFindData()
@@ -86,7 +87,10 @@ function onLoad()
   doSetOKCancel(onOK, onCancel);
 
   // get the find instance
-  gFindInst = window.arguments[0];
+  var finder = window.arguments[0];
+  // If the dialog was opened from window.find(), findInst will be an
+  // nsISupports interface, so QueryInterface anyway to nsIWebBrowserFind.
+  gFindInst = finder.QueryInterface(Components.interfaces.nsIWebBrowserFind);
 
   fillDialog();
   doEnabling();

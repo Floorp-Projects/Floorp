@@ -109,7 +109,9 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserFind.h"  // For window.find()
 #include "nsIWebShell.h"
+#include "nsIWindowMediator.h"  // For window.find()
 #include "nsIComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
@@ -144,6 +146,7 @@ static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID); // For window.find()
 static const char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 
@@ -2647,6 +2650,161 @@ NS_IMETHODIMP GlobalWindowImpl::GetSelection(nsISelection** aSelection)
 
   return selection->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                  aSelection);
+}
+
+// Non-scriptable version of window.find(), part of nsIDOMWindowInternal
+NS_IMETHODIMP
+GlobalWindowImpl::Find(const nsAReadableString& aStr,
+                       PRBool aCaseSensitive,
+                       PRBool aBackwards,
+                       PRBool aWrapAround,
+                       PRBool aWholeWord,
+                       PRBool aSearchInFrames,
+                       PRBool aShowDialog,
+                       PRBool *aDidFind)
+{
+  return FindInternal(aStr, aCaseSensitive, aBackwards, aWrapAround,
+                      aWholeWord, aSearchInFrames, aShowDialog, aDidFind);
+}
+
+// Scriptable version of window.find() which takes a variable number of
+// arguments, part of nsIDOMJSWindow.
+NS_IMETHODIMP
+GlobalWindowImpl::Find(PRBool *aDidFind)
+{
+  NS_ENSURE_STATE(sXPConnect);
+  nsresult rv = NS_OK;
+
+  // We get the arguments passed to the function using the XPConnect native
+  // call context.
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(ncc, "No Native Call Context."
+                    "Please don't call this method from C++.");
+  if (!ncc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  JSContext *cx = nsnull;
+
+  rv = ncc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 argc;
+  jsval *argv = nsnull;
+
+  ncc->GetArgc(&argc);
+  ncc->GetArgvPtr(&argv);
+
+  // Parse the arguments passed to the function
+  nsAutoString searchStr;
+  PRBool caseSensitive  = PR_FALSE;
+  PRBool backwards      = PR_FALSE;
+  PRBool wrapAround     = PR_FALSE;
+  PRBool showDialog     = PR_FALSE;
+  PRBool wholeWord      = PR_FALSE;
+  PRBool searchInFrames = PR_FALSE;
+
+  if (argc > 0) {
+    // First arg is the search pattern
+    nsJSUtils::ConvertJSValToString(searchStr, cx, argv[0]);
+  }
+
+  if (argc > 1 && !JS_ValueToBoolean(cx, argv[1], &caseSensitive)) {
+    // Second arg is the case sensitivity
+    caseSensitive = PR_FALSE;
+  }
+
+  if (argc > 2 && !JS_ValueToBoolean(cx, argv[2], &backwards)) {
+    // Third arg specifies whether to search backwards
+    backwards = PR_FALSE;
+  }
+
+  if (argc > 3 && !JS_ValueToBoolean(cx, argv[3], &wrapAround)) {
+    // Fourth arg specifies whether we should wrap the search
+    wrapAround = PR_FALSE;
+  }
+
+  if (argc > 4 && !JS_ValueToBoolean(cx, argv[4], &wholeWord)) {
+    // Fifth arg specifies whether we should show the Find dialog
+    wholeWord = PR_FALSE;
+  }
+
+  if (argc > 5 && !JS_ValueToBoolean(cx, argv[5], &searchInFrames)) {
+    // Sixth arg specifies whether we should search only for whole words
+    searchInFrames = PR_FALSE;
+  }
+
+  if (argc > 6 && !JS_ValueToBoolean(cx, argv[6], &showDialog)) {
+    // Seventh arg specifies whether we should search in all frames
+    showDialog = PR_FALSE;
+  }
+
+  return FindInternal(searchStr, caseSensitive, backwards, wrapAround,
+                      wholeWord, searchInFrames, showDialog, aDidFind);
+}
+
+nsresult
+GlobalWindowImpl::FindInternal(nsAReadableString& aStr,
+                               PRBool caseSensitive,
+                               PRBool backwards,
+                               PRBool wrapAround,
+                               PRBool wholeWord,
+                               PRBool searchInFrames,
+                               PRBool showDialog,
+                               PRBool *aDidFind)
+{
+  NS_ENSURE_ARG_POINTER(aDidFind);
+  nsresult rv = NS_OK;
+  *aDidFind = PR_FALSE;
+
+  // GetInterface(NS_GET_IID(nsIWebBrowserFind))
+  nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mDocShell));
+
+  // Set the options of the search
+  rv = finder->SetSearchString(PromiseFlatString(aStr).get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  finder->SetMatchCase(caseSensitive);
+  finder->SetFindBackwards(backwards);
+  finder->SetWrapFind(wrapAround);
+  finder->SetEntireWord(wholeWord);
+  finder->SetSearchFrames(searchInFrames);
+
+  // The Find API does not accept empty strings. Launch the Find Dialog.
+  if (aStr.IsEmpty() || showDialog) {
+    // See if the find dialog is already up using nsIWindowMediator
+    nsCOMPtr<nsIWindowMediator> windowMediator =
+      do_GetService(kWindowMediatorCID);
+
+    nsCOMPtr<nsIDOMWindowInternal> findDialog;
+
+    if (windowMediator) {
+      windowMediator->GetMostRecentWindow(NS_LITERAL_STRING("findInPage").get(),
+                                          getter_AddRefs(findDialog));
+    }
+
+    if (findDialog) {
+      // The Find dialog is already open, bring it to the top.
+      rv = findDialog->Focus();
+    } else { // Open a Find dialog
+      if (finder) {
+        nsCOMPtr<nsIDOMWindow> dialog;
+        rv = OpenDialog(NS_LITERAL_STRING("chrome://global/content/finddialog.xul"),
+                        NS_LITERAL_STRING("_blank"),
+                        NS_LITERAL_STRING("chrome, resizable=no, dependent=yes"),
+                        finder, getter_AddRefs(dialog));
+      }
+    }
+  } else {
+    // Launch the search with the passed in search string
+    rv = finder->FindNext(aDidFind);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return rv;
 }
 
 //*****************************************************************************
