@@ -285,20 +285,17 @@ sub print_table_row {
       
     # What Changed
     #
-# This gives bogus information because the CVS mirror is
-# out of sync with the build times
-#                 if( $br->{previousbuildtime} ){
-# 		  my ($previous_br) = $build_table->[$tt+$rowspan][$bn];
-# 		  my ($previous_rowspan) = $previous_br->{rowspan};
-# 		  if (&has_who_list($tt+$rowspan,
-# 				   $tt+$rowspan+$previous_rowspan-1)) {
-# 		    $qr = &query_ref($br->{td}, 
-# 				     $br->{previousbuildtime},
-# 				     $br->{buildtime});
-# 		    print "\n$qr";
-# 		    print "C</a>";
-# 		  }
-#                 }
+    if( $br->{previousbuildtime} ){
+      my $previous_br = $build_table->[$tt+$rowspan][$bn];
+      my $previous_rowspan = $previous_br->{rowspan};
+      if (&has_who_list($tt+$rowspan,
+                        $tt+$rowspan+$previous_rowspan-1)) {
+        print "\n", &query_ref($br->{td}, 
+                               $br->{previousbuildtime},
+                               $br->{buildtime});
+        print "C</a>";
+      }
+    }
 
     if ($br->{binaryname} ne '') {
       $binfile = "$buildtree/bin/$buildtime/$br->{buildname}/"
