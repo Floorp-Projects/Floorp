@@ -51,6 +51,7 @@
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
 #include "PropertyDlg.h"
+#include "PageSetupDlg.h"
 #include "PromptService.h"
 #include "HelperAppDlg.h"
 #include "WindowCreator.h"
@@ -564,9 +565,19 @@ HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     NG_TRACE_METHOD(CMozillaBrowser::OnPageSetup);
-    MessageBox(_T("No page setup yet!"), _T("Control Message"), MB_OK);
 
-    // TODO show the page setup dialog
+
+    nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+    nsCOMPtr<nsIPrintSettings> printSettings;
+    if(!print ||
+        NS_FAILED(print->GetGlobalPrintSettings(getter_AddRefs(printSettings))))
+    {
+        return 0;
+    }
+
+    // show the page setup dialog
+    CPageSetupDlg dlg(printSettings);
+    dlg.DoModal();
 
     return 0;
 }
