@@ -192,11 +192,28 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   if (title)
     nsMemory::Free( title );
 
-  if (result)
-      *retval = returnOK;
-  else
-      *retval = returnCancel;
+  if (result) {
+    PRInt16 returnOKorReplace = returnOK;
 
+    if (mMode == modeSave) {
+      // Windows does not return resultReplace,
+      //   we must check if file already exists
+      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+
+      NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+      file->InitWithPath(mFile);
+
+      PRBool exists = PR_FALSE;
+      file->Exists(&exists);
+      if (exists)
+        returnOKorReplace = returnReplace;
+    }
+    *retval = returnOKorReplace;
+  }
+  else {
+    *retval = returnCancel;
+  }
   return NS_OK;
 }
 
