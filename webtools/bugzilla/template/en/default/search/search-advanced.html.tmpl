@@ -62,7 +62,7 @@ var queryform = "queryform"
 [% IF NOT help %]
   [% IF cgi.user_agent("Mozilla/5") %]
     <script type="text/javascript"> <!--
-      document.write("<p><a href='query.cgi?help=1'>Give me some help</a> (reloads page.)</p>");
+      document.write("<p><a href='query.cgi?help=1&amp;format=advanced'>Give me some help</a> (reloads page.)</p>");
       // -->
     </script>
     <noscript>
