@@ -19,6 +19,7 @@
 <!ENTITY changePriority.label "Change the priority to">
 <!ENTITY delete.label "Delete the message">
 <!ENTITY markRead.label "Mark the message as read">
+<!ENTITY markFlagged.label "Flag the message">
 <!ENTITY ignoreThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY filterName.label "Filter name:">

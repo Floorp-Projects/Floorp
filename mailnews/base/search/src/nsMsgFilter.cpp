@@ -562,12 +562,13 @@ struct RuleActionsTableEntry
 //  we can't initialize this structure directly, so we have to do it in two phases.
 static struct RuleActionsTableEntry ruleActionsTable[] =
 {
-	{ nsMsgFilterAction::MoveToFolder,	nsMsgFilterType::Inbox,	0, /*XP_FILTER_MOVE_TO_FOLDER*/		"Move to folder" },
-	{ nsMsgFilterAction::ChangePriority,	nsMsgFilterType::Inbox,	0, /*XP_FILTER_CHANGE_PRIORITY*/	"Change priority"},
-	{ nsMsgFilterAction::Delete,			nsMsgFilterType::All,		0, /*XP_FILTER_DELETE */			"Delete"},
-	{ nsMsgFilterAction::MarkRead,		nsMsgFilterType::All,		0, /*XP_FILTER_MARK_READ */			"Mark read"},
-	{ nsMsgFilterAction::KillThread,		nsMsgFilterType::All,		0, /*XP_FILTER_KILL_THREAD */		"Ignore thread"},
-	{ nsMsgFilterAction::WatchThread,		nsMsgFilterType::All,		0, /*XP_FILTER_WATCH_THREAD */		"Watch thread"}
+  { nsMsgFilterAction::MoveToFolder,    nsMsgFilterType::Inbox, 0, /*XP_FILTER_MOVE_TO_FOLDER*/   "Move to folder"},
+  { nsMsgFilterAction::ChangePriority,  nsMsgFilterType::Inbox, 0, /*XP_FILTER_CHANGE_PRIORITY*/  "Change priority"},
+  { nsMsgFilterAction::Delete,          nsMsgFilterType::All,   0, /*XP_FILTER_DELETE */          "Delete"},
+  { nsMsgFilterAction::MarkRead,        nsMsgFilterType::All,   0, /*XP_FILTER_MARK_READ */       "Mark read"},
+  { nsMsgFilterAction::KillThread,      nsMsgFilterType::All,   0, /*XP_FILTER_KILL_THREAD */     "Ignore thread"},
+  { nsMsgFilterAction::WatchThread,     nsMsgFilterType::All,   0, /*XP_FILTER_WATCH_THREAD */    "Watch thread"},
+  { nsMsgFilterAction::MarkFlagged,     nsMsgFilterType::All,   0, /*XP_FILTER_MARK_FLAGGED */    "Mark flagged"}
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)

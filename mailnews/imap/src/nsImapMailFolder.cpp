@@ -2752,6 +2752,9 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
         }
 //        MarkFilteredMessageRead(msgHdr);
         break;
+      case nsMsgFilterAction::MarkFlagged:
+        msgHdr->MarkFlagged(PR_TRUE);
+        break;
       case nsMsgFilterAction::KillThread:
         // for ignore and watch, we will need the db
         // to check for the flags in msgHdr's that

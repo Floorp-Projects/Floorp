@@ -55,5 +55,6 @@ interface nsMsgFilterAction {
     const long MarkRead=4;
     const long KillThread=5;
     const long WatchThread=6;
+    const long MarkFlagged=7;
 };
 

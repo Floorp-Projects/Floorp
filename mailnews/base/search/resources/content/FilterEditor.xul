@@ -76,6 +76,7 @@ Contributor(s):
           <menuitem value="2" actionvalueindex="1" label="&changePriority.label;"/>
           <menuitem value="3" actionvalueindex="2" label="&delete.label;"/>
           <menuitem value="4" actionvalueindex="2" label="&markRead.label;"/>
+          <menuitem value="7" actionvalueindex="2" label="&markFlagged.label;"/>
         </menupopup>
       </menulist>
       <!-- JS stuff depends on this deck being present, don't remove! -->

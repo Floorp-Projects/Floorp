@@ -1694,6 +1694,9 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 		case nsMsgFilterAction::WatchThread:
 			msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
 			break;
+    case nsMsgFilterAction::MarkFlagged:
+      msgHdr->MarkFlagged(PR_TRUE);
+      break;
 		case nsMsgFilterAction::ChangePriority:
             {
                 nsMsgPriorityValue filterPriority;
