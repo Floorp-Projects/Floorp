@@ -19,8 +19,6 @@
 #ifndef nsRepeater_h___
 #define nsRepeater_h___
 
-#include "list.h"
-
 class EventRecord;
 
 class Repeater {
@@ -40,13 +38,21 @@ class Repeater {
     static void DoIdlers(const EventRecord &aMacEvent);
     
   protected:
-  
-    static list<Repeater*> sRepeaters;
-    static list<Repeater*> sIdlers;
+    
+    void AddToRepeatList();
+    void RemoveFromRepeatList();
+    void AddToIdleList();
+    void RemoveFromIdleList();
+    
+    static Repeater* sRepeaters;
+    static Repeater* sIdlers;
     
     bool mRepeating;
     bool mIdling;
-
+    Repeater* mPrevRptr;
+    Repeater* mNextRptr;
+    Repeater* mPrevIdlr;
+    Repeater* mNextIdlr;
 };
 
 #endif

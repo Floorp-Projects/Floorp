@@ -26,8 +26,9 @@
 #include "nsITimerCallback.h"
 #include "prlog.h"
 #include "nsRepeater.h"
-#include "set.h"
-#include "Events.h"
+
+#include <list.h>
+#include <Events.h>
 
 
 
@@ -193,6 +194,7 @@ void* TimerImpl::GetClosure()
 void TimerImpl::Fire()
 //----------------------------------------------------------------------------------------
 {
+  NS_PRECONDITION(mRefCnt > 0, "Firing a disposed Timer!");
   if (mCallbackFunc != NULL)
   {
     (*mCallbackFunc)(this, mClosure);
@@ -259,6 +261,7 @@ nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
 {
   list<TimerImpl*>::iterator iter = mTimers.begin();
+  list<TimerImpl*> fireList;
   
   while (iter != mTimers.end())
   {
@@ -266,7 +269,8 @@ void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
     if (timer->GetFireTime() <= inMacEvent.when)
     {
       mTimers.erase(iter++);
-      timer->Fire();
+      NS_ADDREF(timer);
+      fireList.push_back(timer);
     }
     else
       {
@@ -275,6 +279,12 @@ void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
   }
   if ( mTimers.size() == 0 )
      StopRepeating();
+     
+  for (iter=fireList.begin(); iter!=fireList.end(); iter++)
+  {
+    (*iter)->Fire();
+    NS_RELEASE(*iter);
+  }
 }
 
                 

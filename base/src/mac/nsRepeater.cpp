@@ -18,18 +18,60 @@
 
 #include "nsRepeater.h"
 
-list<Repeater*> Repeater::sRepeaters;
-list<Repeater*> Repeater::sIdlers;
+Repeater* Repeater::sRepeaters = 0;
+Repeater* Repeater::sIdlers = 0;
 
 Repeater::Repeater()
 {
   mRepeating = false;
+  mIdling = false;
+  mPrevRptr = 0;
+  mNextRptr = 0;
+  mPrevIdlr = 0;
+  mNextIdlr = 0;
 }
 
 Repeater::~Repeater()
 {
-  if (mRepeating) sRepeaters.remove(this);
-  if (mIdling) sIdlers.remove(this);
+  if (mRepeating) RemoveFromRepeatList();
+  if (mIdling) RemoveFromIdleList();
+}
+
+// protected helper functs
+
+void Repeater::AddToRepeatList()
+{
+  if (sRepeaters)
+  {
+    sRepeaters->mPrevRptr = this;
+    mNextRptr = sRepeaters;
+  }
+  sRepeaters = this;
+}
+void Repeater::RemoveFromRepeatList()
+{
+  if (sRepeaters == this) sRepeaters = mNextRptr;
+  if (mPrevRptr) mPrevRptr->mNextRptr = mNextRptr;
+  if (mNextRptr) mNextRptr->mPrevRptr = mPrevRptr;
+  mPrevRptr = 0;
+  mNextRptr = 0;
+}
+void Repeater::AddToIdleList()
+{
+  if (sRepeaters)
+  {
+    sRepeaters->mPrevIdlr = this;
+    mNextIdlr = sRepeaters;
+  }
+  sRepeaters = this;
+}
+void Repeater::RemoveFromIdleList()
+{
+  if (sRepeaters == this) sRepeaters = mNextIdlr;
+  if (mPrevIdlr) mPrevIdlr->mNextIdlr = mNextIdlr;
+  if (mNextIdlr) mNextIdlr->mPrevIdlr = mPrevIdlr;
+  mPrevIdlr = 0;
+  mNextIdlr = 0;
 }
 
 // repeater methods
@@ -38,7 +80,7 @@ void Repeater::StartRepeating()
 {
   if (!mRepeating) 
   {
-    sRepeaters.push_back(this);
+    AddToRepeatList();
     mRepeating = true;
   }
 }
@@ -47,17 +89,18 @@ void Repeater::StopRepeating()
 {
   if (mRepeating)
   {
-    sRepeaters.remove(this);
+    RemoveFromRepeatList();
     mRepeating = false;
   }
 }
 
 void Repeater::DoRepeaters(const EventRecord &aMacEvent)
 {
-  list<Repeater*>::iterator iter;
-  for (iter = sRepeaters.begin(); iter != sRepeaters.end(); ++iter)
+  Repeater* theRepeater = sRepeaters;
+  while (theRepeater)
   {
-    (*iter)->RepeatAction(aMacEvent);
+    theRepeater->RepeatAction(aMacEvent);
+    theRepeater = theRepeater->mNextRptr;
   }
 }
 
@@ -67,7 +110,7 @@ void Repeater::StartIdling()
 {
   if (!mIdling) 
   {
-    sIdlers.push_back(this);
+    AddToIdleList();
     mIdling = true;
   }
 }
@@ -76,17 +119,18 @@ void Repeater::StopIdling()
 {
   if (mIdling)
   {
-    sIdlers.remove(this);
+    RemoveFromIdleList();
     mIdling = false;
   }
 }
 
 void Repeater::DoIdlers(const EventRecord &aMacEvent)
 {
-  list<Repeater*>::iterator iter;
-  for (iter = sIdlers.begin(); iter != sIdlers.end(); ++iter)
+  Repeater* theIdler = sIdlers;
+  while (theIdler)
   {
-    (*iter)->RepeatAction(aMacEvent);
+    theIdler->RepeatAction(aMacEvent);
+    theIdler = theIdler->mNextIdlr;
   }
 }
 
