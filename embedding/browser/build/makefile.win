@@ -39,6 +39,7 @@ CPP_OBJS=				\
 LLIBS =                              \
  $(DIST)\lib\nsWebBrowser_s.lib      \
  $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\xpcomds_s.lib	\
  $(DIST)\lib\gkgfxwin.lib	\
  $(LIBNSPR)
 
