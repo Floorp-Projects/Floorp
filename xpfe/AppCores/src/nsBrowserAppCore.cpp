@@ -897,7 +897,7 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char *urlstr = "resource:/res/samples/WalletEditor.xul";
+    char *urlstr = "chrome://wallet/content/WalletEditor.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -950,7 +950,7 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char * urlstr = "resource:/res/samples/SignonViewer.xul";
+    char * urlstr = "chrome://wallet/content/SignonViewer.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -1002,7 +1002,7 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char *urlstr = "resource:/res/samples/CookieViewer.xul";
+    char *urlstr = "chrome://wallet/content/CookieViewer.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -1084,7 +1084,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char * urlstr = "resource:/res/samples/WalletPreview.xul";
+    char * urlstr = "chrome://wallet/content/WalletPreview.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
