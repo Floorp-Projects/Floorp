@@ -46,6 +46,7 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
+#include "nsLineBox.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsLayoutAtoms.h"
@@ -88,6 +89,10 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
   // Get aFrame's top margin
   aMargin.Include(aRS.mComputedMargin.top);
 
+  // The inclusion of the bottom margin when empty is done by the caller
+  // since it doesn't need to be done by the top-level (non-recursive)
+  // caller.
+
 #ifdef NOISY_VERTICAL_MARGINS
   nsFrame::ListTag(stdout, aRS.frame);
   printf(": %d => %d\n", aRS.mComputedMargin.top, aMargin.get());
@@ -98,23 +103,26 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
   // top-padding then this step is skipped because it will be a margin
   // root.  It is also skipped if the frame is a margin root for other
   // reasons.
-  if (0 == aRS.mComputedBorderPadding.top) {
-    nsFrameState state;
-    aRS.frame->GetFrameState(&state);
-    if (!(state & NS_BLOCK_MARGIN_ROOT)) {
-      nsBlockFrame* bf;
-      if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID,
-                                         NS_REINTERPRET_CAST(void**, &bf)))) {
-        // Ask the block frame for the top block child that we should
-        // try to collapse the top margin with.
+  nsFrameState state;
+  if (0 == aRS.mComputedBorderPadding.top &&
+      (aRS.frame->GetFrameState(&state), !(state & NS_BLOCK_MARGIN_ROOT))) {
+    nsBlockFrame* bf;
+    if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID,
+                                       NS_REINTERPRET_CAST(void**, &bf)))) {
+      nsCompatibility compat;
+      aPresContext->GetCompatibilityMode(&compat);
 
-        // XXX If the block is empty, we need to check its bottom margin
-        // and its sibling's top margin (etc.) too!  See XXXldb comment about
-        // emptyness below in PlaceBlock.
+      const nsStyleText* text;
+      ::GetStyleData(bf, &text);
+      PRBool isPre = NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace ||
+                     NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == text->mWhiteSpace;
 
-        nsIFrame* childFrame = bf->GetTopBlockChild();
-        if (nsnull != childFrame) {
-
+      for (nsBlockFrame::line_iterator line = bf->begin_lines(),
+                                   line_end = bf->end_lines();
+           line != line_end; ++line) {
+        PRBool isEmpty;
+        line->IsEmpty(compat, isPre, &isEmpty);
+        if (line->IsBlock()) {
           // Here is where we recur. Now that we have determined that a
           // generational collapse is required we need to compute the
           // child blocks margin and so in so that we can look into
@@ -123,10 +131,14 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
           // arbitrarily make it a `resize' to avoid the path-plucking
           // behavior if we're in an incremental reflow.
           nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
-          nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
+          nsHTMLReflowState reflowState(aPresContext, aRS, line->mFirstChild,
                                         availSpace, eReflowReason_Resize);
           ComputeCollapsedTopMargin(aPresContext, reflowState, aMargin);
+          if (isEmpty)
+            aMargin.Include(reflowState.mComputedMargin.bottom);
         }
+        if (!isEmpty)
+          break;
       }
     }
   }
@@ -408,8 +420,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     if (NS_UNCONSTRAINEDSIZE != aFrameRS.availableHeight) {
       aFrameRS.availableHeight -= aPrevBottomMargin.get();
     }
+    mTopMargin = aPrevBottomMargin;
   }
-  mTopMargin = aPrevBottomMargin;
 
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the

@@ -1764,6 +1764,23 @@ nsBlockFrame::RetargetInlineIncrementalReflow(nsReflowPath::iterator &aTarget,
   }
 }
 
+PRBool
+nsBlockFrame::IsLineEmpty(nsIPresContext* aPresContext,
+                          const nsLineBox* aLine) const
+{
+  const nsStyleText* styleText;
+  ::GetStyleData(mStyleContext, &styleText);
+  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
+                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
+
+  nsCompatibility compat;
+  aPresContext->GetCompatibilityMode(&compat);
+
+  PRBool empty = PR_FALSE;
+  aLine->IsEmpty(compat, isPre, &empty);
+  return empty;
+}
+
 nsresult
 nsBlockFrame::MarkLineDirty(line_iterator aLine)
 {
@@ -2992,10 +3009,41 @@ NS_IMETHODIMP
 nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
                       PRBool *aResult)
 {
-  // XXXldb In hindsight, I'm not sure why I made this check the margin,
-  // but it seems to work right and I'm a little hesitant to change it.
-  const nsStyleMargin* margin = NS_STATIC_CAST(const nsStyleMargin*,
-                             mStyleContext->GetStyleData(eStyleStruct_Margin));
+  // Start with a bunch of early returns for things that mean we're not
+  // empty.
+  *aResult = PR_FALSE;
+
+  const nsStylePosition* position;
+  ::GetStyleData(this, &position);
+
+  switch (position->mMinHeight.GetUnit()) {
+    case eStyleUnit_Coord:
+      if (position->mMinHeight.GetCoordValue() != 0)
+        return NS_OK;
+      break;
+    case eStyleUnit_Percent:
+      if (position->mMinHeight.GetPercentValue() != 0.0f)
+        return NS_OK;
+      break;
+    default:
+      return NS_OK;
+  }
+
+  switch (position->mHeight.GetUnit()) {
+    case eStyleUnit_Auto:
+      break;
+    case eStyleUnit_Coord:
+      if (position->mHeight.GetCoordValue() != 0)
+        return NS_OK;
+      break;
+    case eStyleUnit_Percent:
+      if (position->mHeight.GetPercentValue() != 0.0f)
+        return NS_OK;
+      break;
+    default:
+      return NS_OK;
+  }
+
   const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
                              mStyleContext->GetStyleData(eStyleStruct_Border));
   const nsStylePadding* padding = NS_STATIC_CAST(const nsStylePadding*,
@@ -3010,21 +3058,17 @@ nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
       !IsPaddingZero(padding->mPadding.GetTopUnit(),
                     padding->mPadding.GetTop(coord)) ||
       !IsPaddingZero(padding->mPadding.GetBottomUnit(),
-                    padding->mPadding.GetBottom(coord)) ||
-      !IsMarginZero(margin->mMargin.GetTopUnit(),
-                    margin->mMargin.GetTop(coord)) ||
-      !IsMarginZero(margin->mMargin.GetBottomUnit(),
-                    margin->mMargin.GetBottom(coord))) {
-    *aResult = PR_FALSE;
+                    padding->mPadding.GetBottom(coord))) {
     return NS_OK;
   }
 
-
-  const nsStyleText* styleText = NS_STATIC_CAST(const nsStyleText*,
-      mStyleContext->GetStyleData(eStyleStruct_Text));
-  PRBool isPre =
-      ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
-       (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace));
+  const nsStyleText* styleText;
+  ::GetStyleData(this, &styleText);
+  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
+                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
+  // Now the only thing that could make us non-empty is one of the lines
+  // being non-empty.  So now assume that we are empty until told
+  // otherwise.
   *aResult = PR_TRUE;
   for (line_iterator line = begin_lines(), line_end = end_lines();
        line != line_end;
@@ -3055,14 +3099,21 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   }
 
   // Determine if this line is "essentially" the first line
-  for (line_iterator line = begin_lines();
-       line != aLine;
-       ++line) {
-    if (line->IsBlock()) {
-      // A line which preceeds aLine contains a block; therefore the
+  //
+  const nsStyleText* styleText;
+  ::GetStyleData(this, &styleText);
+  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
+                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
+
+  nsCompatibility compat;
+  aState.mPresContext->GetCompatibilityMode(&compat);
+
+  for (line_iterator line = begin_lines(); line != aLine; ++line) {
+    PRBool empty;
+    line->IsEmpty(compat, isPre, &empty);
+    if (!empty) {
+      // A line which preceeds aLine is non-empty, so therefore the
       // top margin applies.
-      // XXXldb this is wrong if that block is empty and the margin
-      // is collapsed outside the parent
       aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
       return PR_TRUE;
     }
@@ -3077,77 +3128,24 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
 }
 
 nsIFrame*
-nsBlockFrame::GetTopBlockChild()
+nsBlockFrame::GetTopBlockChild(nsIPresContext* aPresContext)
 {
-  nsIFrame* firstChild = mLines.empty() ? nsnull : mLines.front()->mFirstChild;
-  if (firstChild) {
-    if (mLines.front()->IsBlock()) {
-      // Winner
-      return firstChild;
-    }
+  if (mLines.empty())
+    return nsnull;
 
-    // If the first line is not a block line then the second line must
-    // be a block line otherwise the top child can't be a block.
-    line_iterator next = begin_lines();
-    ++next;
-    if ((next == end_lines()) || !next->IsBlock()) {
-      // There is no line after the first line or its not a block so
-      // don't bother trying to skip over the first line.
-      return nsnull;
-    }
+  nsLineBox *firstLine = mLines.front();
+  if (firstLine->IsBlock())
+    return firstLine->mFirstChild;
 
-    // The only time we can skip over the first line and pretend its
-    // not there is if the line contains only compressed
-    // whitespace. If white-space is significant to this frame then we
-    // can't skip over the line.
-    const nsStyleText* styleText;
-    GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
-    if ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
-        (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)) {
-      // Whitespace is significant
-      return nsnull;
-    }
+  if (!IsLineEmpty(aPresContext, firstLine))
+    return nsnull;
 
-    // See if each frame is a text frame that contains nothing but
-    // whitespace.
-    PRInt32 n = mLines.front()->GetChildCount();
-    while (--n >= 0) {
-      nsCOMPtr<nsIContent> content;
-      firstChild->GetContent(getter_AddRefs(content));
-      if (!content) {
-        return nsnull;
-      }
+  line_iterator secondLine = begin_lines();
+  ++secondLine;
+  if (secondLine == end_lines() || !secondLine->IsBlock())
+    return nsnull;
 
-      if (!content->IsContentOfType(nsIContent::eTEXT)) {
-        return nsnull;
-      }
-
-      nsCOMPtr<nsITextContent> tc(do_QueryInterface(content));
-
-      NS_ASSERTION(tc, "Huh, eTEXT content not an nsITextContent!");
-
-      if (!tc) {
-        return nsnull;
-      }
-
-      PRBool isws = PR_FALSE;
-      tc->IsOnlyWhitespace(&isws);
-
-      if (!isws) {
-        return nsnull;
-      }
-
-      firstChild->GetNextSibling(&firstChild);
-    }
-
-    // If we make it to this point then every frame on the first line
-    // was compressible white-space. Since we already know that the
-    // second line contains a block, that block is the
-    // top-block-child.
-    return next->mFirstChild;
-  }
-
-  return nsnull;
+  return secondLine->mFirstChild;
 }
 
 // If placeholders/floaters split during reflowing a line, but that line will 
@@ -3481,7 +3479,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
       // If the block frame that we just reflowed happens to be our
       // first block, then its computed ascent is ours
-      if (frame == GetTopBlockChild()) {
+      if (frame == GetTopBlockChild(aState.mPresContext)) {
         const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
         mAscent = metrics.ascent;
       }
@@ -3671,7 +3669,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   // Setup initial coordinate system for reflowing the inline frames
   // into. Apply a previous block frame's bottom margin first.
-  aState.mY += aState.mPrevBottomMargin.get();
+  if (ShouldApplyTopMargin(aState, aLine)) {
+    aState.mY += aState.mPrevBottomMargin.get();
+  }
   aState.GetAvailableSpace();
   PRBool impactedByFloaters = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
   aLine->SetLineIsImpactedByFloater(impactedByFloaters);
@@ -4321,7 +4321,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // leave it be so that the previous blocks bottom margin can be
   // collapsed with a block that follows.
   nscoord newY;
-  if (aLine->mBounds.height > 0) {
+
+  if (!IsLineEmpty(aState.mPresContext, aLine)) {
     // This line has some height. Therefore the application of the
     // previous-bottom-margin should stick.
     aState.mPrevBottomMargin.Zero();
@@ -4331,10 +4332,14 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     // Don't let the previous-bottom-margin value affect the newY
     // coordinate (it was applied in ReflowInlineFrames speculatively)
     // since the line is empty.
-    nscoord dy = -aState.mPrevBottomMargin.get();
+    // We already called |ShouldApplyTopMargin|, and if we applied it
+    // then BRS_APPLYTOPMARGIN is set.
+    nscoord dy = aState.GetFlag(BRS_APPLYTOPMARGIN)
+                   ? -aState.mPrevBottomMargin.get() : 0;
     newY = aState.mY + dy;
-    aLine->SlideBy(dy);
+    aLine->SlideBy(dy); // XXXldb Do we really want to do this?
     // keep our ascent in sync
+    // XXXldb If it's empty, shouldn't the next line control the ascent?
     if (mLines.front() == aLine) {
       mAscent += dy;
     }
