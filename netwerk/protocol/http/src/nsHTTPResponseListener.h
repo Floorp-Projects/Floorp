@@ -80,6 +80,7 @@ protected:
 
     nsresult FinishedResponseHeaders();
 
+    nsresult ProcessHeader(nsIAtom* aHeader, nsString& aValue);
     nsresult ProcessStatusCode();
     nsresult ProcessRedirection(PRInt32 aStatusCode);
 

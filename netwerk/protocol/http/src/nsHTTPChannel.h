@@ -28,6 +28,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
@@ -81,12 +82,17 @@ public:
     NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
 
     // nsIHTTPChannel methods:
-    NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
-    NS_IMETHOD SetRequestHeader(const char *headerName, const char *value);
+    NS_IMETHOD GetRequestHeader(nsIAtom *headerName, char **_retval);
+    NS_IMETHOD SetRequestHeader(nsIAtom *headerName, const char *value);
+    NS_IMETHOD GetRequestHeaderEnumerator(nsISimpleEnumerator** aResult);
     NS_IMETHOD SetRequestMethod(PRUint32 method);
+
+    NS_IMETHOD GetResponseHeader(nsIAtom *headerName, char **_retval);
+    NS_IMETHOD GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult);
+
     NS_IMETHOD SetPostDataStream(nsIInputStream *i_postStream);
     NS_IMETHOD GetPostDataStream(nsIInputStream **o_postStream);
-    NS_IMETHOD GetResponseHeader(const char *headerName, char **_retval);
+
     NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus);
     NS_IMETHOD GetResponseString(char * *aResponseString);
     NS_IMETHOD GetEventSink(nsIHTTPEventSink* *eventSink);
@@ -98,7 +104,8 @@ public:
     nsresult            ResponseCompleted(nsIChannel* aTransport);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
-    
+    nsresult            SetContentType(const char* aContentType);
+
 protected:
     nsCOMPtr<nsIURI>            m_URI;
     PRBool                      m_bConnected; 
@@ -112,6 +119,8 @@ protected:
 
     nsCOMPtr<nsISupports>       mResponseContext;
     nsILoadGroup*               mLoadGroup;
+
+    nsCString                   mContentType;
     nsIInputStream*             mPostStream;
 };
 

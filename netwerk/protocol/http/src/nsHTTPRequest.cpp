@@ -19,9 +19,7 @@
 #include "nspr.h"
 #include "nsIURL.h"
 #include "nsHTTPRequest.h"
-#include "nsVoidArray.h"
-#include "nsHeaderPair.h"
-#include "kHTTPHeaders.h"
+#include "nsHTTPAtoms.h"
 #include "nsHTTPEnums.h"
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
@@ -40,7 +38,6 @@ extern PRLogModuleInfo* gHTTPLog;
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, 
 	nsIChannel* i_pTransport):
     m_Method(i_Method),
-    m_pArray(new nsVoidArray()),
     m_Version(HTTP_ONE_ZERO),
     m_Request(nsnull)
 {
@@ -60,7 +57,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
 		nsXPIDLCString host;
 		NS_ASSERTION(m_pURI, "No URI for the request!!");
 		m_pURI->GetHost(getter_Copies(host));
-		SetHost(host);
+        SetHeader(nsHTTPAtoms::Host, host);
 	}
 }
 
@@ -69,19 +66,6 @@ nsHTTPRequest::~nsHTTPRequest()
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
-    if (m_pArray) {
-        PRInt32 cnt = m_pArray->Count();
-        for (PRInt32 i = cnt-1; i >= 0; i--) {
-            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-            m_pArray->RemoveElementAt(i);
-
-            delete element;
-        }
-
-        delete m_pArray;
-        m_pArray = nsnull;
-    }
-    
     NS_IF_RELEASE(m_Request);
     NS_IF_RELEASE(m_pTransport);
 /*
@@ -90,8 +74,10 @@ nsHTTPRequest::~nsHTTPRequest()
 */
 }
 
-NS_IMPL_ADDREF(nsHTTPRequest);
+NS_IMPL_ISUPPORTS(nsHTTPRequest, nsCOMTypeInfo<nsIStreamObserver>::GetIID())
 
+
+// Finally our own methods...
 nsresult
 nsHTTPRequest::Build()
 {
@@ -119,6 +105,7 @@ nsHTTPRequest::Build()
     //
     // Write the request into the stream...
     //
+    nsXPIDLCString autoBuffer;
     nsString lineBuffer(eOneByte);
     PRUint32 bytesWritten = 0;
 
@@ -127,13 +114,10 @@ nsHTTPRequest::Build()
             this));
 
     // Write the request method and HTTP version.
-    char* name;
     lineBuffer.Append(MethodToString(m_Method));
 
-    rv = m_pURI->GetPath(&name);
-    lineBuffer.Append(name);
-    nsCRT::free(name);
-    name = nsnull;
+    rv = m_pURI->GetPath(getter_Copies(autoBuffer));
+    lineBuffer.Append(autoBuffer);
     
     //Trim off the # portion if any...
     int refLocation = lineBuffer.RFind("#");
@@ -143,8 +127,7 @@ nsHTTPRequest::Build()
     lineBuffer.Append(" HTTP/1.0"CRLF);
     
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-           ("\tnsHTTPRequest [this=%x].\tFirst line: %s",
-            this, lineBuffer.GetBuffer()));
+           ("\tnsHTTPRequest.\tFirst line: %s", lineBuffer.GetBuffer()));
 
     rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
                          &bytesWritten);
@@ -176,32 +159,42 @@ nsHTTPRequest::Build()
 */
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-           ("\tnsHTTPRequest [this=%x].\tRequest Headers:\n", this));
-    
+           ("\tnsHTTPRequest.\tRequest Headers:\n"));
+
     // Write the request headers, if any...
-    NS_ASSERTION(m_pArray, "header array is null");
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = mHeaders.GetEnumerator(getter_AddRefs(enumerator));
 
-    for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
-    {
-        nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
+    if (NS_SUCCEEDED(rv)) {
+        PRBool bMoreHeaders;
+        nsCOMPtr<nsISupports>   item;
+        nsCOMPtr<nsIHTTPHeader> header;
+        nsCOMPtr<nsIAtom>       headerAtom;
 
-        element->atom->ToString(lineBuffer);
-        lineBuffer.Append(": ");
-        lineBuffer.Append((const nsString&)*element->value);
-        lineBuffer.Append(CRLF);
+        enumerator->HasMoreElements(&bMoreHeaders);
+        while (bMoreHeaders) {
+            enumerator->GetNext(getter_AddRefs(item));
+            header = do_QueryInterface(item);
 
-        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-               ("\tnsHTTPRequest [this=%x].\t\t%s\n",
-                this, lineBuffer.GetBuffer()));
+            NS_ASSERTION(header, "Bad HTTP header.");
+            if (header) {
+                header->GetField(getter_AddRefs(headerAtom));
+                header->GetValue(getter_Copies(autoBuffer));
 
-        rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(),
-                             &bytesWritten);
-#ifdef DEBUG_gagan    
-    printf(lineBuffer.GetBuffer());
-#endif
-        if (NS_FAILED(rv)) return rv;
+                headerAtom->ToString(lineBuffer);
+                lineBuffer.Append(": ");
+                lineBuffer.Append(autoBuffer);
+                lineBuffer.Append(CRLF);
 
-        lineBuffer.Truncate();
+                PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+                       ("\tnsHTTPRequest [this=%x].\t\t%s\n",
+                        this, lineBuffer.GetBuffer()));
+
+                buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
+                           &bytesWritten);
+            }
+            enumerator->HasMoreElements(&bMoreHeaders);
+        }
     }
 
 	nsCOMPtr<nsIInputStream> stream;
@@ -261,602 +254,10 @@ nsHTTPRequest::Build()
     return rv;
 }
 
-nsresult
-nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    *aInstancePtr = NULL;
-    
-    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPRequest>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIHTTPRequest*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIStreamObserver*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPCommonHeaders>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIHTTPCommonHeaders*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIHeader>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIHeader*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
- 
-NS_IMPL_RELEASE(nsHTTPRequest);
-
-//TODO make these inlines...
-NS_METHOD 
-nsHTTPRequest::SetAllow(const char* i_Value)
-{
-    return SetHeader(kHH_ALLOW, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetAllow(char* *o_Value) 
-{
-    return GetHeader(kHH_ALLOW, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentBase(const char* i_Value)
-{
-    return SetHeader(kHH_CONTENT_BASE, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentBase(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_BASE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentEncoding(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_ENCODING, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentEncoding(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_ENCODING, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentLanguage(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_LANGUAGE, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentLanguage(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_LANGUAGE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentLength(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_LENGTH, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentLength(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_LENGTH, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentLocation(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_LOCATION, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentLocation(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_LOCATION, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentMD5(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_MD5, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentMD5(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_MD5, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentRange(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_RANGE, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentRange(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_RANGE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentTransferEncoding(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_TRANSFER_ENCODING, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentTransferEncoding(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_TRANSFER_ENCODING, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetContentType(const char* i_Value)
-{
-	return SetHeader(kHH_CONTENT_TYPE, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetContentType(char* *o_Value) 
-{
-	return GetHeader(kHH_CONTENT_TYPE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetDerivedFrom(const char* i_Value)
-{
-	return SetHeader(kHH_DERIVED_FROM, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetDerivedFrom(char* *o_Value) 
-{
-	return GetHeader(kHH_DERIVED_FROM, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetETag(const char* i_Value)
-{
-	return SetHeader(kHH_ETAG, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetETag(char* *o_Value) 
-{
-	return GetHeader(kHH_ETAG, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetExpires(const char* i_Value)
-{
-	return SetHeader(kHH_EXPIRES, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetExpires(char* *o_Value) 
-{
-	return GetHeader(kHH_EXPIRES, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetLastModified(const char* i_Value)
-{
-	return SetHeader(kHH_LAST_MODIFIED, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetLastModified(char* *o_Value) 
-{
-	return GetHeader(kHH_LAST_MODIFIED, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetLink(const char* i_Value)
-{
-	return SetHeader(kHH_LINK, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetLink(char* *o_Value) 
-{
-	return GetHeader(kHH_LINK, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetLinkMultiple(
-                            const char** *o_ValueArray, 
-                            int count) const
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD 
-nsHTTPRequest::SetTitle(const char* i_Value)
-{
-	return SetHeader(kHH_TITLE, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetTitle(char* *o_Value) 
-{
-	return GetHeader(kHH_TITLE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetURI(const char* i_Value)
-{
-	return SetHeader(kHH_URI, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetURI(char* *o_Value) 
-{
-	return GetHeader(kHH_URI, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetVersion(const char* i_Value)
-{
-	return SetHeader(kHH_VERSION, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetVersion(char* *o_Value) 
-{
-	return GetHeader(kHH_VERSION, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetConnection(const char* i_Value)
-{
-	return SetHeader(kHH_CONNECTION, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetConnection(char* *o_Value) 
-{
-	return GetHeader(kHH_CONNECTION, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetDate(const char* i_Value)
-{
-	return SetHeader(kHH_DATE, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetDate(char* *o_Value) 
-{
-	return GetHeader(kHH_DATE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetPragma(const char* i_Value)
-{
-	return SetHeader(kHH_PRAGMA,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetPragma(char* *o_Value) 
-{
-	return GetHeader(kHH_PRAGMA,o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetForwarded(const char* i_Value)
-{
-	return SetHeader(kHH_FORWARDED,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetForwarded(char* *o_Value) 
-{
-	return GetHeader(kHH_FORWARDED,o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetMessageID(const char* i_Value)
-{
-	return SetHeader(kHH_MESSAGE_ID,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetMessageID(char* *o_Value) 
-{
-	return GetHeader(kHH_MESSAGE_ID,o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetMIME(const char* i_Value)
-{
-	return SetHeader(kHH_MIME,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetMIME(char* *o_Value) 
-{
-	return GetHeader(kHH_MIME,o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetTrailer(const char* i_Value)
-{
-	return SetHeader(kHH_TRAILER,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetTrailer(char* *o_Value)
-{
-	return GetHeader(kHH_TRAILER,o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetTransfer(const char* i_Value)
-{
-	return SetHeader(kHH_TRANSFER,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetTransfer(char* *o_Value)
-{
-	return GetHeader(kHH_TRANSFER,o_Value);
-}
-
-    // Methods from nsIHTTPRequest
-NS_METHOD 
-nsHTTPRequest::SetAccept(const char* i_Value)
-{
-	return SetHeader(kHH_ACCEPT,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetAccept(char* *o_Value)
-{
-	return GetHeader(kHH_ACCEPT,o_Value);
-}
-                    
-NS_METHOD 
-nsHTTPRequest::SetAcceptChar(const char* i_Value)
-{
-	return SetHeader(kHH_ACCEPT_CHAR,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetAcceptChar(char* *o_Value)
-{
-	return GetHeader(kHH_ACCEPT_CHAR,o_Value);
-}
-                    
-NS_METHOD 
-nsHTTPRequest::SetAcceptEncoding(const char* i_Value)
-{
-	return SetHeader(kHH_ACCEPT_ENCODING,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetAcceptEncoding(char* *o_Value)
-{
-	return GetHeader(kHH_ACCEPT_ENCODING,o_Value);
-}
-                    
-NS_METHOD 
-nsHTTPRequest::SetAcceptLanguage(const char* i_Value)
-{
-	return SetHeader(kHH_ACCEPT_LANGUAGE,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetAcceptLanguage(char* *o_Value)
-{
-	return GetHeader(kHH_ACCEPT_LANGUAGE,o_Value);
-}
-                    
-NS_METHOD 
-nsHTTPRequest::SetAuthentication(const char* i_Value)
-{
-	return SetHeader(kHH_AUTHENTICATION,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetAuthentication(char* *o_Value)
-{
-	return GetHeader(kHH_AUTHENTICATION,o_Value);
-}
-                    
-NS_METHOD 
-nsHTTPRequest::SetExpect(const char* i_Value)
-{
-	return SetHeader(kHH_EXPECT,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetExpect(char** o_Value) 
-{
-	return GetHeader(kHH_EXPECT, o_Value);
-}
-                    
-NS_METHOD 
-nsHTTPRequest::SetFrom(const char* i_Value)
-{
-	return SetHeader(kHH_FROM,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetFrom(char** o_Value) 
-{
-	return GetHeader(kHH_FROM,o_Value);
-}
-
-    /*
-        This is the actual Host for connection. Not necessarily the
-        host in the url (as in the cases of proxy connection)
-    */
-NS_METHOD 
-nsHTTPRequest::SetHost(const char* i_Value)
-{
-	return SetHeader(kHH_HOST,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetHost(char** o_Value) 
-{
-	return GetHeader(kHH_HOST, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetIfModifiedSince(const char* i_Value)
-{
-	return SetHeader(kHH_IF_MODIFIED_SINCE,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfModifiedSince(char* *o_Value)
-{
-	return GetHeader(kHH_IF_MODIFIED_SINCE, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetIfMatch(const char* i_Value)
-{
-	return SetHeader(kHH_IF_MATCH,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfMatch(char* *o_Value)
-{
-	return GetHeader(kHH_IF_MATCH, o_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::SetIfMatchAny(const char* i_Value)
-{
-	return SetHeader(kHH_IF_MATCH_ANY,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfMatchAny(char* *o_Value)
-{
-	return GetHeader(kHH_IF_MATCH_ANY,o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetIfNoneMatch(const char* i_Value)
-{
-	return SetHeader(kHH_IF_NONE_MATCH,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfNoneMatch(char* *o_Value)
-{
-	return GetHeader(kHH_IF_NONE_MATCH,o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetIfNoneMatchAny(const char* i_Value)
-{
-	return SetHeader(kHH_IF_NONE_MATCH_ANY,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfNoneMatchAny(char* *o_Value)
-{
-	return GetHeader(kHH_IF_NONE_MATCH_ANY,o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetIfRange(const char* i_Value)
-{
-	return SetHeader(kHH_IF_RANGE,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfRange(char* *o_Value)
-{
-	return GetHeader(kHH_IF_RANGE,o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetIfUnmodifiedSince(const char* i_Value)
-{
-	return SetHeader(kHH_IF_UNMODIFIED_SINCE,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetIfUnmodifiedSince(char* *o_Value)
-{
-	return GetHeader(kHH_IF_UNMODIFIED_SINCE, o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetMaxForwards(const char* i_Value)
-{
-	return SetHeader(kHH_MAX_FORWARDS,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetMaxForwards(char* *o_Value)
-{
-	return GetHeader(kHH_MAX_FORWARDS,o_Value);
-}
-
-/* 
-    Range information for byte-range requests 
-    may have an overloaded one. TODO later
-*/
-NS_METHOD 
-nsHTTPRequest::SetRange(const char* i_Value)
-{
-	return SetHeader(kHH_RANGE,i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetRange(char* *o_Value)
-{
-	return GetHeader(kHH_RANGE, o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetReferer(const char* i_Value)
-{
-	return SetHeader(kHH_REFERER, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetReferer(char* *o_Value)
-{
-	return GetHeader(kHH_REFERER, o_Value);
-}
-                        
-NS_METHOD 
-nsHTTPRequest::SetUserAgent(const char* i_Value)
-{
-	return SetHeader(kHH_USER_AGENT, i_Value);
-}
-
-NS_METHOD 
-nsHTTPRequest::GetUserAgent(char* *o_Value)
-{
-	return GetHeader(kHH_USER_AGENT, o_Value);
-}
-
-    // Finally our own methods...
 NS_METHOD 
 nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
 {
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
                         
 NS_METHOD 
@@ -886,74 +287,15 @@ nsHTTPRequest::GetPriority()
 
 
 NS_METHOD
-nsHTTPRequest::SetHeader(const char* i_Header, const char* i_Value)
+nsHTTPRequest::SetHeader(nsIAtom* i_Header, const char* i_Value)
 {
-    NS_ASSERTION(m_pArray, "header array doesn't exist.");
-    if (i_Value)
-    {
-        //The tempValue gets copied so we can do away with it...
-        nsString tempValue(i_Value);
-        nsHeaderPair* pair = new nsHeaderPair(i_Header, &tempValue);
-        if (pair)
-        {
-            //TODO set uniqueness? how... 
-            return m_pArray->AppendElement(pair);
-        }
-        else
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-    else if (i_Header)
-    {
-        nsIAtom* header = NS_NewAtom(i_Header);
-        if (!header)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        PRInt32 cnt = m_pArray->Count();
-        for (PRInt32 i = 0; i < cnt; i++) {
-            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-            if (header == element->atom) {
-                m_pArray->RemoveElementAt(i);
-                cnt = m_pArray->Count();
-                i = -1; // reset the counter so we can start from the top again
-            }
-        }
-        return NS_OK;
-    }
-    return NS_ERROR_NULL_POINTER;
+    return mHeaders.SetHeader(i_Header, i_Value);
 }
 
 NS_METHOD
-nsHTTPRequest::GetHeader(const char* i_Header, char* *o_Value)
+nsHTTPRequest::GetHeader(nsIAtom* i_Header, char* *o_Value)
 {
-    NS_ASSERTION(m_pArray, "header array doesn't exist.");
-
-    if (!i_Header || !o_Value)
-        return NS_ERROR_NULL_POINTER;
-
-    nsIAtom* header = NS_NewAtom(i_Header);
-    if (!header)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
-    {
-        nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-        if ((header == element->atom))
-        {
-            *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
-            return NS_OK;
-        }
-    }
-
-    *o_Value = nsnull;
-    return NS_ERROR_NOT_FOUND;
-}
-
-NS_METHOD
-nsHTTPRequest::GetHeaderMultiple(const char* i_Header, 
-                                 char** *o_ValueArray,
-                                 int *o_Count)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mHeaders.GetHeader(i_Header, o_Value);
 }
 
 
@@ -1064,4 +406,10 @@ nsHTTPRequest::SetConnection(nsHTTPChannel* i_pConnection)
 {
     m_pConnection = i_pConnection;
     return NS_OK;
+}
+
+
+nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
+{
+    return mHeaders.GetEnumerator(aResult);
 }

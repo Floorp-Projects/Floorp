@@ -51,6 +51,8 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsHTTPRequest.obj          \
 	.\$(OBJDIR)\nsHTTPResponseListener.obj \
 	.\$(OBJDIR)\nsHTTPResponse.obj         \
+	.\$(OBJDIR)\nsHTTPHeaderArray.obj      \
+  .\$(OBJDIR)\nsHTTPAtoms.obj            \
 	.\$(OBJDIR)\nsHTTPEncodeStream.obj     \
 	$(NULL)
 
