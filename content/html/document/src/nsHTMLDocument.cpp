@@ -644,17 +644,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (muCV) {
   		rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
       if(NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_charset
-   		nsAutoString d(defaultCharsetFromWebShell);
- 			char* cCharset = d.ToNewCString();
- 			printf("From default charset, charset = %s\n", cCharset);
- 			Recycle(cCharset);
- #endif
         charset = defaultCharsetFromWebShell;
         Recycle(defaultCharsetFromWebShell);
         charsetSource = kCharsetFromUserDefault;
       }
     }
+  }
+
     // for html, we need to find out the Meta tag from the hint.
     if (muCV) {
       rv = muCV->GetHintCharacterSet(&requestCharset);
@@ -681,8 +677,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         Recycle(requestCharset);
       }
     }
-	  if(kCharsetFromPreviousLoading > charsetSource)
-    {
+    if(kCharsetFromUserForced > charsetSource) {
       PRUnichar* forceCharsetFromWebShell = NULL;
       if (muCV) {
 		    rv = muCV->GetForceCharacterSet(&forceCharsetFromWebShell);
@@ -698,13 +693,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 				charset = forceCharsetFromWebShell;
         Recycle(forceCharsetFromWebShell);
 				//TODO: we should define appropriate constant for force charset
-				charsetSource = kCharsetFromPreviousLoading;  
+				charsetSource = kCharsetFromUserForced;  
           } else if (dcInfo) {
             nsCOMPtr<nsIAtom> csAtom;
             dcInfo->GetForcedCharset(getter_AddRefs(csAtom));
             if (csAtom.get() != NULL) {
               csAtom->ToString(charset);
-              charsetSource = kCharsetFromPreviousLoading;  
+              charsetSource = kCharsetFromUserForced;  
               dcInfo->SetForcedCharset(NULL);
             }
           }
@@ -823,7 +818,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         // create one next time.
         gPlugDetector = PR_FALSE;
       }
-    }
   }
 #endif
 
