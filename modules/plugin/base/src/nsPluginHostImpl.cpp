@@ -89,6 +89,137 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
+nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url)
+{
+  mNext = nsnull;
+  mPeer = nsnull;
+
+  mURL = PL_strdup(url);
+  mInstance = aInstance;
+  if(aInstance != nsnull)
+  {
+    aInstance->GetPeer(&mPeer);
+    NS_ADDREF(aInstance);
+  }
+  mStopped = PR_FALSE;
+}
+
+nsActivePlugin::~nsActivePlugin()
+{
+  if(mInstance != nsnull)
+  {
+    mInstance->Destroy();
+    NS_RELEASE(mInstance);
+    NS_RELEASE(mPeer);
+  }
+  PL_strfree(mURL);
+}
+
+nsActivePluginList::nsActivePluginList()
+{
+  first = nsnull;
+  last = nsnull;
+  count = 0;
+}
+
+nsActivePluginList::~nsActivePluginList()
+{
+  if(first == nsnull)
+    return;
+  shut();
+}
+
+void nsActivePluginList::shut()
+{
+  if(first == nsnull)
+    return;
+
+  for(nsActivePlugin * plugin = first; plugin != nsnull;)
+  {
+    nsActivePlugin * next = plugin->mNext;
+    remove(plugin);
+    plugin = next;
+  }
+  first = nsnull;
+  last = nsnull;
+}
+
+PRInt32 nsActivePluginList::add(nsActivePlugin * plugin)
+{
+  if (first == nsnull)
+  {
+    first = plugin;
+    last = plugin;
+    first->mNext = nsnull;
+  }
+  else
+  {
+    last->mNext = plugin;
+    last = plugin;
+  }
+  last->mNext = nsnull;
+  count++;
+  return count;
+}
+
+PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
+{
+  if(first == nsnull)
+    return PR_FALSE;
+
+  nsActivePlugin * prev = nsnull;
+  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  {
+    if(p == plugin)
+    {
+      if(p == first)
+        first = p->mNext;
+      else
+        prev->mNext = p->mNext;
+
+      if((prev != nsnull) && (prev->mNext == nsnull))
+        last = prev;
+
+      delete p;
+      count--;
+      return PR_TRUE;
+    }
+    prev = p;
+  }
+  return PR_FALSE;
+}
+
+nsActivePlugin * nsActivePluginList::find(nsIPluginInstance* instance)
+{
+  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  {
+    if(p->mInstance == instance)
+      return p;
+  }
+  return nsnull;
+}
+
+nsActivePlugin * nsActivePluginList::findStopped(char * url)
+{
+  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  {
+    if(!PL_strcmp(url, p->mURL) && p->mStopped)
+      return p;
+  }
+  return nsnull;
+}
+
+PRUint32 nsActivePluginList::getStoppedCount()
+{
+  PRUint32 stoppedCount = 0;
+  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  {
+    if(p->mStopped)
+      stoppedCount++;
+  }
+  return stoppedCount;
+}
+
 nsPluginTag::nsPluginTag()
 {
 	mNext = nsnull;
@@ -104,7 +235,7 @@ nsPluginTag::nsPluginTag()
 	mLibrary = nsnull;
 	mEntryPoint = nsnull;
 	mFlags = NS_PLUGIN_FLAG_ENABLED;
-    mFileName = nsnull;
+  mFileName = nsnull;
 }
 
 inline char* new_str(char* str)
@@ -1090,8 +1221,6 @@ nsPluginHostImpl::nsPluginHostImpl(nsIServiceManager *serviceMgr)
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
   mServiceMgr = serviceMgr;
-  mNumActivePlugins = 0;
-  mOldestActivePlugin = 0;
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
@@ -1485,17 +1614,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 {
   nsPluginTag *plug = mPlugins;
 
-  PRUint32 i;
-  for(i=0; i<mNumActivePlugins; i++)
-  {
-    if(mActivePluginList[i].mInstance)
-    {
-      mActivePluginList[i].mInstance->Destroy();
-      NS_RELEASE(mActivePluginList[i].mInstance);
-      NS_RELEASE(mActivePluginList[i].mPeer);
-      PL_strfree(mActivePluginList[i].mURL);
-    }
-  }
+  mActivePluginList.shut();
 
   while (nsnull != plug)
   {
@@ -1709,7 +1828,6 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL, 
                                                    nsIPluginInstanceOwner *aOwner)
 {
-  PRUint32 i;
   char* url;
   if(!aURL)
   	return NS_ERROR_FAILURE;
@@ -1719,30 +1837,28 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 #endif
 
   (void)aURL->GetSpec(&url);
+  
+  nsActivePlugin * plugin = mActivePluginList.findStopped(url);
 
-  for(i=0; i<mNumActivePlugins; i++)
+  if((plugin != nsnull) && (plugin->mStopped))
   {
-    if(!PL_strcmp(url, mActivePluginList[i].mURL) && 
-       mActivePluginList[i].mStopped)
-    {
-      nsIPluginInstance* instance = mActivePluginList[i].mInstance;
-      nsPluginWindow    *window = nsnull;
-      aOwner->GetWindow(window);
+    nsIPluginInstance* instance = plugin->mInstance;
+    nsPluginWindow    *window = nsnull;
+    aOwner->GetWindow(window);
 
-      aOwner->SetInstance(instance);
+    aOwner->SetInstance(instance);
 
-      // we have to reset the owner and instance in the plugin instance peer
-      //instance->GetPeer(&peer);
-      ((nsPluginInstancePeerImpl*)mActivePluginList[i].mPeer)->SetOwner(aOwner);
+    // we have to reset the owner and instance in the plugin instance peer
+    //instance->GetPeer(&peer);
+    ((nsPluginInstancePeerImpl*)plugin->mPeer)->SetOwner(aOwner);
 
-      instance->Start();
-      aOwner->CreateWidget();
-      instance->SetWindow(window);
+    instance->Start();
+    aOwner->CreateWidget();
+    instance->SetWindow(window);
 
-      mActivePluginList[i].mStopped = PR_FALSE;
-      nsCRT::free(url);
-      return NS_OK;
-    }
+    plugin->mStopped = PR_FALSE;
+    nsCRT::free(url);
+    return NS_OK;
   }
   nsCRT::free(url);
   return NS_ERROR_FAILURE;
@@ -1758,44 +1874,12 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
   	
   (void)aURL->GetSpec(&url);
 
-  if(mNumActivePlugins < MAX_ACTIVE_PLUGINS)
-  {
-    mActivePluginList[mNumActivePlugins].mURL = PL_strdup(url);
-    mActivePluginList[mNumActivePlugins].mInstance = aInstance;
+  nsActivePlugin * plugin = new nsActivePlugin(aInstance, url);
 
-    aInstance->GetPeer(&(mActivePluginList[mNumActivePlugins].mPeer));
-    mActivePluginList[mNumActivePlugins].mStopped = PR_FALSE;
+  if(plugin == nsnull)
+    return;
 
-    ++mNumActivePlugins;
-  }
-  else
-  {
-    // Check if the plugin has been stopped
-    if (mActivePluginList[mOldestActivePlugin].mStopped == PR_FALSE)
-    {
-        mActivePluginList[mOldestActivePlugin].mInstance->SetWindow(nsnull);
-        mActivePluginList[mOldestActivePlugin].mInstance->Stop();
-        mActivePluginList[mOldestActivePlugin].mStopped = PR_TRUE;
-    }
-
-    // destroy the oldest plugin on the list
-    mActivePluginList[mOldestActivePlugin].mInstance->Destroy();
-    NS_RELEASE(mActivePluginList[mOldestActivePlugin].mInstance);
-    NS_RELEASE(mActivePluginList[mOldestActivePlugin].mPeer);
-    PL_strfree(mActivePluginList[mOldestActivePlugin].mURL);
-    
-    // replace it with the new one
-    mActivePluginList[mOldestActivePlugin].mURL = PL_strdup(url);
-    mActivePluginList[mOldestActivePlugin].mInstance = aInstance;
-    aInstance->GetPeer(&(mActivePluginList[mOldestActivePlugin].mPeer));
-    mActivePluginList[mOldestActivePlugin].mStopped = PR_FALSE;
-
-    ++mOldestActivePlugin;
-    if(mOldestActivePlugin == MAX_ACTIVE_PLUGINS)
-      mOldestActivePlugin = 0;
-  }
-
-  NS_ADDREF(aInstance);
+  mActivePluginList.add(plugin);
 
   nsCRT::free(url);
 }
@@ -2555,15 +2639,10 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 NS_IMETHODIMP
 nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 {
-  PRUint32 i;
-  for(i=0; i<mNumActivePlugins; i++)
-  {
-    if(mActivePluginList[i].mInstance == aInstance)
-    {
-      mActivePluginList[i].mStopped = PR_TRUE;
-      break;
-    }
-  }
+  nsActivePlugin * plugin = mActivePluginList.find(aInstance);
+
+  if(plugin != nsnull)
+    plugin->mStopped = PR_TRUE;
 
   return NS_OK;
 }
