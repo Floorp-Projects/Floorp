@@ -9,19 +9,21 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width:100%">
 
+    <html:script src="AccountManager.js"/>
 	<tree rdf:datasources="rdf:msgaccountmanager"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
-          onclick="parent.showPage(event)" id="accounttree"
+          onclick="showPage(event)" id="accounttree"
           style="height: 100%"
           ref="msgaccounts:/">
 
 	  <template>
 	  	<rule>
             <treechildren>
-			<treeitem uri="...">
+			<treeitem uri="..."
+                PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
 		  		<treerow >
                     <treecell treeallowevents="true">
-                      <titledbutton class="twisty" onclick="return parent.ToggleTwisty(event.target.parentNode.parentNode.parentNode)"/>
+                      <titledbutton class="twisty" onclick="ToggleTwisty(event.target.parentNode.parentNode.parentNode)"/>
                     </treecell>
 					<treecell>
                         <treeindentation/>
