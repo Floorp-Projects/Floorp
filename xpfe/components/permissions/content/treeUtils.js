@@ -20,87 +20,149 @@
  * Contributor(s):
  */
 
-var setID=0, setValue=0, getID=0, getValue=0;
-function Wallet_ColumnSort(columnPosition, childrenName)
-{
-  //var startTime = new Date();
+function DeleteAllFromOutliner
+    (outliner, view, table, deletedTable, removeButton, removeAllButton) {
 
-  // determine if sort is to be ascending or descending
-  //    it is ascending if it is the first sort for this tree
-  //    it is ascending if last sort was on a different column
-  //    else it is the opposite of whatever the last sort for this column was
-  var children = document.getElementById(childrenName);
-  var lastColumnPosition = children.getAttribute('lastColumnPosition');
-  var ascending = true;
-  if (columnPosition == lastColumnPosition) {
-    ascending = (children.getAttribute('lastAscending') != 'true');
-  } else {
-    children.setAttribute('lastColumnPosition', columnPosition);
+  // remove all items from table and place in deleted table
+  for (var i=0; i<table.length; i++) {
+    deletedTable[deletedTable.length] = table[i];
   }
-  children.setAttribute('lastAscending', ascending);
-  bubbleSort(columnPosition, ascending, children);
-  //dump("bubble sort time="+((new Date())-startTime)+"\n");
-  return true;
+  table.length = 0;
+
+  // clear out selections
+  outliner.outlinerBoxObject.view.selection.select(-1); 
+
+  // redisplay
+  view.rowCount = 0;
+  outliner.outlinerBoxObject.invalidate();
+
+
+  // disable buttons
+  document.getElementById(removeButton).setAttribute("disabled", "true")
+  document.getElementById(removeAllButton).setAttribute("disabled","true");
 }
 
-// XXX we would like to use Array.prototype.sort, but the DOM doesn't let it
-// XXX swap elements using property sets
-function bubbleSort(columnPosition, ascending, children)
-{
-  var a = children.childNodes;
-  var n = a.length, m = n - 1;
+function DeleteSelectedItemFromOutliner
+    (outliner, view, table, deletedTable, removeButton, removeAllButton) {
 
-  // for efficiencey, read all the value attributes only once and store in an array
-  var keys = [];
-  for (var x=0; x<n; x++){
-    var keyCell = a[x].firstChild.childNodes[columnPosition];
-    keys[x] = keyCell.getAttribute('label');
+  // remove selected items from list (by setting them to null) and place in deleted list
+  var selections = GetOutlinerSelections(outliner);
+  for (var s=selections.length-1; s>= 0; s--) {
+    var i = selections[s];
+    deletedTable[deletedTable.length] = table[i];
+    table[i] = null;
   }
 
-  for (var i = 0; i < m; i++) {
-    var key = keys[i];
+  // collapse list by removing all the null entries
+  for (var j=0; j<table.length; j++) {
+    if (table[j] == null) {
+      var k = j;
+      while ((k < table.length) && (table[k] == null)) {
+        k++;
+      }
+      table.splice(j, k-j);
+    }
+  }
+
+  // redisplay
+  var box = outliner.outlinerBoxObject;
+  var firstRow = box.getFirstVisibleRow();
+  view.rowCount = table.length;
+  box.rowCountChanged(0, table.length);
+  box.scrollToRow(firstRow)
+
+  // update selection and/or buttons
+  if (table.length) {
+
+    // update selection
+    // note: we need to deselect before reselecting in order to trigger ...Selected method
+    var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+    outliner.outlinerBoxObject.view.selection.select(-1); 
+    outliner.outlinerBoxObject.view.selection.select(nextSelection);
+
+  } else {
+
+    // disable buttons
+    document.getElementById(removeButton).setAttribute("disabled", "true")
+    document.getElementById(removeAllButton).setAttribute("disabled","true");
+
+    // clear out selections
+    outliner.outlinerBoxObject.view.selection.select(-1); 
+  }
+}
+
+function GetOutlinerSelections(outliner) {
+  var selections = [];
+  var select = outliner.outlinerBoxObject.selection;
+  if (select) {
+    var count = select.getRangeCount();
+    var min = new Object();
+    var max = new Object();
+    for (var i=0; i<count; i++) {
+      select.getRangeAt(i, min, max);
+      for (var k=min.value; k<=max.value; k++) {
+        if (k != -1) {
+          selections[selections.length] = k;
+        }
+      }
+    }
+  }
+  return selections;
+}
+
+function SortOutliner(outliner, view, table, column, lastSortColumn, lastSortAscending) {
+
+  // remember which item was selected so we can restore it after the sort
+  var selections = GetOutlinerSelections(outliner);
+  var selectedNumber = selections.length ? table[selections[0]].number : -1;
+
+  // determine if sort is to be ascending or descending
+  var ascending = (column == lastSortColumn) ? !lastSortAscending : true;
+
+  // do the sort
+  BubbleSort(column, ascending, table);
+
+  // restore the selection
+  var selectedRow = -1;
+  if (selectedNumber>=0) {
+    for (var s=0; s<table.length; s++) {
+      if (table[s].number == selectedNumber) {
+        // update selection
+        // note: we need to deselect before reselecting in order to trigger ...Selected()
+        outliner.outlinerBoxObject.view.selection.select(-1);
+        outliner.outlinerBoxObject.view.selection.select(s);
+        selectedRow = s;
+        break;
+      }
+    }
+  }
+
+  // display the results
+  outliner.outlinerBoxObject.invalidate();
+  if (selectedRow>0) {
+    outliner.outlinerBoxObject.ensureRowIsVisible(selectedRow)
+  }
+
+  return ascending;
+}
+
+function BubbleSort(columnName, ascending, table) {
+  var len = table.length, len_1 = len - 1;
+
+  for (var i = 0; i < len_1; i++) {
+    var key = table[i][columnName];
     var winner = -1;
-    for (var j = i + 1; j < n; j++) {
-      var nextKey = keys[j];
+    for (var j = i + 1; j < len; j++) {
+      var nextKey = table[j][columnName];
       if (ascending ? key > nextKey : key < nextKey) {
         key = nextKey;
         winner = j;
       }
     }
     if (winner != -1){
-
-      // get the corresponding menuitems
-      var item = a[i];
-      var row = item.firstChild;
-      var nextItem = a[winner];
-      var nextRow = nextItem.firstChild;
-
-      // swap the row values and the id's of the corresponding menuitems
-      var temp = item.getAttribute('id');
-      item.setAttribute('id', nextItem.getAttribute('id'));
-      nextItem.setAttribute('id', temp);
-
-      var cell = row.firstChild;
-      var nextCell = nextRow.firstChild;
-      var position = 0;
-      while (cell) {
-        var value_i;
-        var value_winner;
-        if (position == columnPosition) {
-          value_i = keys[i];
-          value_winner = keys[winner];
-          keys[i] = value_winner;
-          keys[winner] = value_i;
-        } else {
-          value_i = cell.getAttribute('label');
-          value_winner = nextCell.getAttribute('label');
-        }
-        cell.setAttribute('label', value_winner);
-        nextCell.setAttribute('label', value_i);
-        cell = cell.nextSibling;
-        nextCell = nextCell.nextSibling;
-        position++;
-      }
+      var temp = table[i];
+      table[i] = table[winner];
+      table[winner] = temp;
     }
   }
 }

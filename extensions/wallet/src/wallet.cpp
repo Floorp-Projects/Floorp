@@ -2913,7 +2913,6 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 {
   wallet_Initialize(PR_FALSE); /* to initialize helpMac */
   nsAutoString buffer;
-  int nopreviewNum = 0;
   wallet_MapElement *url;
 
   wallet_InitializeURLList();
@@ -2922,12 +2921,7 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_PREVIEW) == 'y') {
       buffer.AppendWithConversion(BREAK);
-      buffer.Append(NS_LITERAL_STRING("<OPTION value="));
-      buffer.AppendInt(nopreviewNum, 10);
-      buffer.Append(NS_LITERAL_STRING(">"));
       buffer += url->item1;
-      buffer.Append(NS_LITERAL_STRING("</OPTION>\n"));
-      nopreviewNum++;
     }
   }
   aNopreviewList = buffer;
@@ -2937,7 +2931,6 @@ PUBLIC void
 WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 {
   nsAutoString buffer;
-  int nocaptureNum = 0;
   wallet_MapElement *url;
 
   wallet_InitializeURLList();
@@ -2946,12 +2939,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_CAPTURE) == 'y') {
       buffer.AppendWithConversion(BREAK);
-      buffer.Append(NS_LITERAL_STRING("<OPTION value="));
-      buffer.AppendInt(nocaptureNum, 10);
-      buffer.Append(NS_LITERAL_STRING(">"));
       buffer += url->item1;
-      buffer.Append(NS_LITERAL_STRING("</OPTION>\n"));
-      nocaptureNum++;
     }
   }
   aNocaptureList = buffer;

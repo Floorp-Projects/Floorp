@@ -40,39 +40,27 @@
   <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
 
   <keyset id="dialogKeys"/>
+  <stringbundle id="cookieBundle"
+                src="chrome://communicator/locale/wallet/CookieViewer.properties"/>
            
   <tabbox id="tabbox" flex="1">
     <tabs>
       <tab id="cookiesTab" label="&tab.cookiesonsystem.label;"/>
-      <tab id="serversTab" label="&tab.bannedservers.label;"/>
-      <tab id="imagesTab" hidden="true" label="&tab.bannedimages.label;"/>
+      <tab id="permissionsTab" label="&tab.bannedservers.label;"/>
     </tabs>
     <tabpanels id="panel" flex="1">
       <vbox class="tabpanel" id="system" flex="1">
           <label value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
-          <tree id="cookietree" style="height: 10em;"
-            multiple="true" onselect="ViewCookieSelected(event);"
-            onclick="ViewCookieSelected(event)" flex="1"
-            onkeypress="HandleKeyPress(event)">
-            <treecolgroup>
-              <treecol flex="3" width="0"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="7" width="0"/>
-            </treecolgroup>
-            <treehead>
-              <treerow>
-                <treecell class="treecell-header sortDirectionIndicator"
-                          label="&treehead.cookiedomain.label;"
-                          onclick="return CookieColumnSort('0', 'cookieList');"/>
-                <treecell class="treecell-header
-                          sortDirectionIndicator"
-                          label="&treehead.cookiename.label;"
-                          onclick="return CookieColumnSort('1', 'cookieList');"/>
-              </treerow>          
-            </treehead>
-            <treechildren id="cookieList" flex="1"/>
-          </tree>
+          <outliner id="cookiesOutliner" flex="1" style="height: 10em;" multiple="true"
+                    onkeypress="HandleCookieKeyPress(event)">
+            <outlinercol id="domainCol" label="&treehead.cookiedomain.label;" flex="3"
+                         onclick="CookieColumnSort('rawHost');"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="nameCol" label="&treehead.cookiename.label;" flex="7"
+                         onclick="CookieColumnSort('name');"/>
+            <outlinerbody flex="1" onselect="CookieSelected();"/>
+          </outliner>
           <groupbox>
             <caption label="&treehead.infoselected.label;"/>
             <!-- labels -->
@@ -110,9 +98,9 @@
             </grid>
           </groupbox>
           <hbox>
-            <button id="removeCookies" disabled="true"
+            <button id="removeCookie" disabled="true"
                           label="&button.removecookie.label;"
-                          oncommand="DeleteCookieSelected();"/>
+                          oncommand="DeleteCookie();"/>
             <button id="removeAllCookies"
                           label="&button.removeallcookies.label;"
                           oncommand="DeleteAllCookies();"/>
@@ -125,68 +113,24 @@
       </vbox>
       
       <vbox id="servers" flex="1">
-          <label value="&div.bannedservers.label;"/>
+          <description id="permissionsText" value="&div.bannedservers.label;"/>
           <separator class="thin"/>
-          <tree id="cookiepermissionstree" flex="1"
-                onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('cookiepermissionstree', 'permtree_', 'cookiePermList');"
-                multiple="true" onclick="ViewCookiePermissionSelected();">
-            <treecolgroup>
-              <treecol flex="5" width="0"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="5" width="0"/>
-            </treecolgroup>
-            <treehead>
-              <treerow>
-                <treecell class="treecell-header sortDirectionIndicator"
-                          label="&treehead.sitename.label;"
-                          onclick="return Wallet_ColumnSort('0', 'cookiePermList');"/>
-                <treecell class="treecell-header sortDirectionIndicator"
-                          label="&treehead.status.label;"
-                          onclick="return Wallet_ColumnSort('1', 'cookiePermList');"/>
-              </treerow>          
-            </treehead>
-            <treechildren flex="1" id="cookiePermList"/>
-          </tree>
+          <outliner id="permissionsOutliner" flex="1" style="height: 10em;" multiple="true"
+                    onkeypress="HandlePermissionKeyPress(event)">
+            <outlinercol id="siteCol" label="&treehead.sitename.label;" flex="5"
+                         onclick="PermissionColumnSort('rawHost');"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="statusCol" label="&treehead.status.label;" flex="5"
+                         onclick="PermissionColumnSort('capability');"/>
+            <outlinerbody flex="1" onselect="PermissionCookieSelected();"/>
+          </outliner>
           <hbox>
-            <button id="removePermissions" disabled="true" 
+            <button id="removePermission" disabled="true" 
                           label="&removepermission.label;" 
-                          oncommand="DeleteCookiePermissionSelected();"/>
+                          oncommand="DeletePermission();"/>
             <button id="removeAllPermissions"
                           label="&removeallpermissions.label;" 
-                          oncommand="DeleteAllCookiePermissions();"/>
-          </hbox>
-      </vbox>
-
-      <vbox id="images" hidden="true" flex="1">
-          <label value="&div.bannedimages.label;"/>
-          <separator class="thin"/>
-          <tree id="imagepermissionstree" flex="1" style="height: 0px;"
-                onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagepermisionstree', 'imgtree_', 'imagePermList');"
-                multiple="true" onclick="ViewImagePermissionSelected();">
-            <treecolgroup>
-              <treecol flex="5" width="0"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="5" width="0"/>
-            </treecolgroup>
-            <treehead>
-              <treerow>
-                <treecell class="treecell-header sortDirectionIndicator"
-                          label="&treehead.sitename.label;"
-                          onclick="return Wallet_ColumnSort('0', 'imagePermList');"/>
-                <treecell class="treecell-header sortDirectionIndicator"
-                          label="&treehead.status.label;"
-                          onclick="return Wallet_ColumnSort('1', 'imagePermList');"/>
-              </treerow>          
-            </treehead>
-            <treechildren flex="1" id="imagePermList"/>
-          </tree>
-          <hbox>
-            <button id="removeImages" disabled="true"
-                          label="&removeimage.label;" 
-                          oncommand="DeleteImagePermissionSelected();"/>
-            <button id="removeAllImages"
-                          label="&removeallimages.label;" 
-                          oncommand="DeleteAllImagePermissions();"/>
+                          oncommand="DeleteAllPermissions();"/>
           </hbox>
       </vbox>
 
