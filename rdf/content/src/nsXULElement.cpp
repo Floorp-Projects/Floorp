@@ -4281,7 +4281,7 @@ nsXULElement::Click()
         nsMouseEvent evt;
         evt.eventStructType = NS_EVENT;
         evt.message = NS_MENU_ACTION;
-        HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        HandleDOMEvent(context, &evt, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
     }
   }
