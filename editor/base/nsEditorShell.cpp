@@ -1743,7 +1743,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
             nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
             if (dialog)
             { 
-              PRUnichar *titleUnicode;
+              PRUnichar *titleUnicode = ToNewUnicode(nsLiteralString(title.get()));
               nsAutoString captionStr, msgStr1, msgStr2;
               
               GetBundleString(NS_LITERAL_STRING("DocumentTitle"), captionStr);
@@ -1759,7 +1759,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
               if (!cwP) return NS_ERROR_NOT_INITIALIZED;
 
               res = dialog->Prompt(cwP, captionStr.GetUnicode(), msgStr1.GetUnicode(),
-                                   title.GetUnicode(), 0, 0, &titleUnicode, &retVal); 
+                                   &titleUnicode, 0, 0, &retVal); 
               
               if( retVal == PR_FALSE)
               {

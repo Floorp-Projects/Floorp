@@ -423,8 +423,7 @@ char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPa
 
     if (proxyPrompt) {
       rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
-                                       NS_LITERAL_STRING(" ").get(),      // hostname
-                                       nsIPrompt::SAVE_PASSWORD_NEVER, &password, &value);
+                                       &password, nsnull, nsnull, &value);
 
     }
     if (NS_SUCCEEDED(rv) && value) {

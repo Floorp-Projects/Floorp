@@ -1061,7 +1061,7 @@ nsFtpState::S_user() {
         usernameStr.Append("anonymous");
     } else {
         if (!mUsername.Length()) {
-            if (!mPrompter) return NS_ERROR_NOT_INITIALIZED;
+            if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
             nsXPIDLCString host;
@@ -1072,10 +1072,10 @@ nsFtpState::S_user() {
 
             nsAutoString realm; // XXX i18n
             CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, host)), realm);
-            rv = mPrompter->PromptUsernameAndPassword(nsnull,
-                                                      message.GetUnicode(),
-                                                      realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                                      &user, &passwd, &retval);
+            rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
+                                                          message.GetUnicode(),
+                                                          realm.GetUnicode(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                                          &user, &passwd, &retval);
 
             // if the user canceled or didn't supply a username we want to fail
             if (!retval || (user && !*user) )
@@ -1139,7 +1139,7 @@ nsFtpState::S_pass() {
         }
     } else {
         if (!mPassword.Length() || mRetryPass) {
-            if (!mPrompter) return NS_ERROR_NOT_INITIALIZED;
+            if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
 
             PRUnichar *passwd = nsnull;
             PRBool retval;
@@ -1156,11 +1156,11 @@ nsFtpState::S_pass() {
             nsXPIDLCString prePath;
             rv = mURL->GetPrePath(getter_Copies(prePath));
             if (NS_FAILED(rv)) return rv;
-            rv = mPrompter->PromptPassword(title.GetUnicode(),
-                                           message.GetUnicode(),
-                                           NS_ConvertASCIItoUCS2(prePath).GetUnicode(), 
-                                           nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                           &passwd, &retval);
+            rv = mAuthPrompter->PromptPassword(title.GetUnicode(),
+                                               message.GetUnicode(),
+                                               NS_ConvertASCIItoUCS2(prePath).GetUnicode(), 
+                                               nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                               &passwd, &retval);
 
             // we want to fail if the user canceled or didn't enter a password.
             if (!retval || (passwd && !*passwd) )
@@ -1929,11 +1929,13 @@ nsFtpState::SetLoadFlags(nsLoadFlags aLoadFlags)
 
 nsresult
 nsFtpState::Init(nsIFTPChannel* aChannel,
-                 nsIPrompt*  aPrompter) {
+                 nsIPrompt* aPrompter,
+                 nsIAuthPrompt* aAuthPrompter) {
     nsresult rv = NS_OK;
 
     mKeepRunning = PR_TRUE;
     mPrompter = aPrompter;
+    mAuthPrompter = aAuthPrompter;
 
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: needs a channel");
@@ -2177,6 +2179,7 @@ nsFtpState::StopProcessing() {
     mWriteStream = 0;
 
     mPrompter = 0;
+    mAuthPrompter = 0;
     mChannel = 0;
 
 #ifdef DOUGT_NEW_CACHE

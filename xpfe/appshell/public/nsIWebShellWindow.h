@@ -30,7 +30,6 @@ class nsIWebShell;
 class nsIWidget;
 class nsString;
 class nsIDOMWindowInternal; 
-class nsIPrompt;
 
 // Interface ID for nsIWebShellWindow
 #define NS_IWEBSHELL_WINDOW_IID \
@@ -62,8 +61,6 @@ public:
    * @return always NS_OK
    */
   NS_IMETHOD ShouldLoadDefaultPage(PRBool *aYes) = 0;
-
-  NS_IMETHOD GetPrompter(nsIPrompt* *result) = 0;
 };
 
 

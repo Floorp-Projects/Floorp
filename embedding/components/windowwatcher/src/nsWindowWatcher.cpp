@@ -711,6 +711,12 @@ nsWindowWatcher::GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval)
 }
 
 NS_IMETHODIMP
+nsWindowWatcher::GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval)
+{
+  return NS_NewAuthPrompter(_retval, aParent);
+}
+
+NS_IMETHODIMP
 nsWindowWatcher::SetWindowCreator(nsIWindowCreator *creator)
 {
   mWindowCreator = creator; // it's an nsCOMPtr, so this is an ownership ref

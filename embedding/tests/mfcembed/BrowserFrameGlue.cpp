@@ -407,20 +407,28 @@ void CBrowserFrame::BrowserFrameGlueObj::Confirm(const PRUnichar *dialogTitle, c
 }
 
 void CBrowserFrame::BrowserFrameGlueObj::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
-			  const PRUnichar *defaultEditText, PRUnichar **result, PRBool *retval)
+					                            PRUnichar **promptText,
+					                            const PRUnichar *checkboxMsg, PRBool *checkboxState, 
+					                            PRBool *retval)
 {
 	METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 
 	USES_CONVERSION;
 
-	CPromptDialog dlg(pThis, W2T(dialogTitle), W2T(text), W2T(defaultEditText));
+	CPromptDialog dlg(pThis, W2T(dialogTitle), W2T(text),
+	                  (promptText && *promptText) ? W2T(*promptText) : nsnull,
+	                  (checkboxState != nsnull), W2T(checkboxMsg), checkboxState ? *checkboxState : 0);
 	if(dlg.DoModal() == IDOK)
 	{
 		// Get the value entered in the editbox of the PromptDlg
+		if (promptText && *promptText) {
+		    nsMemory::Free(*promptText);
+		    *promptText = nsnull;
+		}
 		nsString csPromptEditValue;
 		csPromptEditValue.AssignWithConversion(dlg.m_csPromptAnswer.GetBuffer(0));
 
-		*result = csPromptEditValue.ToNewUnicode();
+		*promptText = csPromptEditValue.ToNewUnicode();
 
 		*retval = PR_TRUE;
 	}
@@ -430,24 +438,31 @@ void CBrowserFrame::BrowserFrameGlueObj::Prompt(const PRUnichar *dialogTitle, co
 	}
 }
 
-void CBrowserFrame::BrowserFrameGlueObj::PromptPassword(const PRUnichar *dialogTitle, 
-			const PRUnichar *text, const PRUnichar *checkboxMsg, 
-			PRBool *checkboxState, PRUnichar **result, PRBool *retval)
+void CBrowserFrame::BrowserFrameGlueObj::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+	                                                    PRUnichar **password,
+					                                    const PRUnichar *checkboxMsg, PRBool *checkboxState,
+					                                    PRBool *retval)
 {
 	METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 
 	USES_CONVERSION;
 
-	CPromptPasswordDialog dlg(pThis, W2T(dialogTitle), W2T(text), W2T(checkboxMsg));
+	CPromptPasswordDialog dlg(pThis, W2T(dialogTitle), W2T(text),
+	                          (password && *password) ? W2T(*password) : nsnull,
+	                          (checkboxState != nsnull), W2T(checkboxMsg), checkboxState ? *checkboxState : 0);
 	if(dlg.DoModal() == IDOK)
 	{
 		// Get the password entered
+		if (password && *password) {
+		    nsMemory::Free(*password);
+		    *password = nsnull;
+		}
 		nsString csPassword;
 		csPassword.AssignWithConversion(dlg.m_csPassword.GetBuffer(0));
-		*result = csPassword.ToNewUnicode();
+		*password = csPassword.ToNewUnicode();
 
-		if(checkboxState) //Checkbox will be hidden in non single sign-on case
-			*checkboxState = dlg.m_bSavePassword;
+		if(checkboxState)
+			*checkboxState = dlg.m_bCheckBoxValue;
 
 		*retval = PR_TRUE;
 	}
@@ -457,35 +472,42 @@ void CBrowserFrame::BrowserFrameGlueObj::PromptPassword(const PRUnichar *dialogT
 	}
 }
 
-void CBrowserFrame::BrowserFrameGlueObj::PromptUserNamePassword(const PRUnichar *dialogTitle, 
-			const PRUnichar *text, const PRUnichar *userNameLabel, 
-			const PRUnichar *passwordLabel, const PRUnichar *checkboxMsg, 
-			PRBool *checkboxState, PRUnichar **username, PRUnichar **password, 
-			PRBool *retval)
+void CBrowserFrame::BrowserFrameGlueObj::PromptUserNamePassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+	                                    PRUnichar **username, PRUnichar **password,
+								        const PRUnichar *checkboxMsg, PRBool *checkboxState,
+								        PRBool *retval)
 {
 	METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 
 	USES_CONVERSION;
 
-	CPromptUsernamePasswordDialog dlg(pThis, W2T(dialogTitle), W2T(text), 
-									W2T(userNameLabel), W2T(passwordLabel), 
-									W2T(checkboxMsg), W2T(*username), W2T(*password),
-									checkboxState ? (*checkboxState) : PR_FALSE);
+	CPromptUsernamePasswordDialog dlg(pThis, W2T(dialogTitle), W2T(text),
+	                                  (username && *username) ? W2T(*username) : nsnull,
+	                                  (password && *password) ? W2T(*password) : nsnull, 
+									  (checkboxState != nsnull), W2T(checkboxMsg), checkboxState ? *checkboxState : 0);
 
 	if(dlg.DoModal() == IDOK)
 	{
 		// Get the username entered
+		if (username && *username) {
+		    nsMemory::Free(*username);
+		    *username = nsnull;
+		}
 		nsString csUserName;
 		csUserName.AssignWithConversion(dlg.m_csUserName.GetBuffer(0));
 		*username = csUserName.ToNewUnicode();
 
 		// Get the password entered
+		if (password && *password) {
+		    nsMemory::Free(*password);
+		    *password = nsnull;
+		}
 		nsString csPassword;
 		csPassword.AssignWithConversion(dlg.m_csPassword.GetBuffer(0));
 		*password = csPassword.ToNewUnicode();
 
-		if(checkboxState) //Checkbox will be hidden in non single sign-on case		
-			*checkboxState = dlg.m_bSavePassword;
+		if(checkboxState)		
+			*checkboxState = dlg.m_bCheckBoxValue;
 
 		*retval = PR_TRUE;
 

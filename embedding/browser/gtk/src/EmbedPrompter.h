@@ -43,11 +43,12 @@ class EmbedPrompter {
 
   nsresult Create(PromptType aType);
   void     SetTitle(const PRUnichar *aTitle);
-  void     SetDefaultText (const PRUnichar *aDefaultText);
-  void     SetPassRealm(const PRUnichar *aRealm);
+  void     SetTextValue (const PRUnichar *aTextValue);
   void     SetCheckMessage(const PRUnichar *aCheckMessage);
   void     SetCheckValue(const PRBool aValue);
   void     SetMessageText(const PRUnichar *aMessageText);
+  void     SetUser(const PRUnichar *aUser);
+  void     SetPassword(const PRUnichar *aPass);
 
   void     GetCheckValue(PRBool *aValue);
   void     GetConfirmValue(PRBool *aConfirmValue);
@@ -74,9 +75,7 @@ class EmbedPrompter {
 
   nsCString  mTitle;
   nsCString  mMessageText;
-  nsCString  mText;
-  nsCString  mDefaultText;
-  nsCString  mRealm;
+  nsCString  mTextValue;
   nsCString  mCheckMessage;
   PRBool     mCheckValue;
 

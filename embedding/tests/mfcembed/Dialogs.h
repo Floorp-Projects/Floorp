@@ -29,7 +29,9 @@
 class CPromptDialog : public CDialog
 {
 public:
-    CPromptDialog(CWnd* pParent, const char* pTitle, const char* pText, const char* pDefEditText);
+    CPromptDialog(CWnd* pParent, const char* pTitle, const char* pText,
+                  const char* pInitPromptText,
+                  BOOL bHasCheck, const char* pCheckText, int initCheckVal);
 	
 	// Dialog Data
     //{{AFX_DATA(CPromptDialog)
@@ -39,6 +41,9 @@ public:
 
     CString m_csDialogTitle;
 	CString m_csPromptText;
+	BOOL m_bHasCheckBox;
+	CString m_csCheckBoxText;
+	int m_bCheckBoxValue;
     
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPromptDialog)
@@ -55,7 +60,9 @@ public:
 class CPromptPasswordDialog : public CDialog
 {
 public:
-    CPromptPasswordDialog(CWnd* pParent, const char* pTitle, const char* pText, const char* pCheckText);
+    CPromptPasswordDialog(CWnd* pParent, const char* pTitle, const char* pText,
+                          const char* pInitPasswordText,
+                          BOOL bHasCheck, const char* pCheckText, int initCheckVal);
 	
 	// Dialog Data
     //{{AFX_DATA(CPromptPasswordDialog)
@@ -65,8 +72,9 @@ public:
     CString m_csDialogTitle;
 	CString m_csPromptText;
 	CString m_csPassword;
+	BOOL m_bHasCheckBox;
 	CString m_csCheckBoxText;
-	int m_bSavePassword;
+	int m_bCheckBoxValue;
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPromptPasswordDialog)		
@@ -83,9 +91,9 @@ public:
 class CPromptUsernamePasswordDialog : public CDialog
 {
 public:
-    CPromptUsernamePasswordDialog(CWnd* pParent, const char* pTitle, const char* pText, 
-		const char* pUserNameLabel, const char* pPasswordLabel, 
-		const char* pCheckText, const char* pInitUserName, const char* pInitPassword, PRBool bCheck);
+    CPromptUsernamePasswordDialog(CWnd* pParent, const char* pTitle, const char* pText,
+                                  const char* pInitUsername, const char* pInitPassword, 
+		                          BOOL bHasCheck, const char* pCheckText, int initCheckVal);
 	
 	// Dialog Data
     //{{AFX_DATA(CPromptUsernamePasswordDialog)
@@ -98,8 +106,9 @@ public:
 	CString m_csPasswordLabel;
 	CString m_csPassword;
 	CString m_csUserName;
+	BOOL m_bHasCheckBox;
 	CString m_csCheckBoxText;
-	int m_bSavePassword;
+	int m_bCheckBoxValue;
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPromptUsernamePasswordDialog)	

@@ -68,7 +68,6 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsReadableUtils.h"
 #include "nsIPrompt.h"
-#include "nsIWalletService.h"
 #include "nsEmbedAPI.h"		 
 #include "nsISHistory.h"
 #include "nsISHEntry.h"

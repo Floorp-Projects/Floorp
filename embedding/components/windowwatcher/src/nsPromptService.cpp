@@ -286,14 +286,15 @@ nsPromptService::UniversalDialog(nsIDOMWindow *parent,
   return rv;
 }
 
-// XXX use passwordRealm and savePassword, here and in
-// PromptUsernameAndPassword and PromptPassword
 NS_IMETHODIMP
-nsPromptService::Prompt(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
-                   const PRUnichar *text, const PRUnichar *passwordRealm,
-                   PRUint32 savePassword, const PRUnichar *defaultText,
-                   PRUnichar **result, PRBool *_retval)
+nsPromptService::Prompt(nsIDOMWindow *parent,
+                        const PRUnichar *dialogTitle, const PRUnichar *text,
+                        PRUnichar **value,
+                        const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
+  NS_ENSURE_ARG(value);
+  NS_ENSURE_ARG(_retval);
+
   nsresult rv;
   ParamBlock block;
   rv = block.Init();
@@ -308,25 +309,46 @@ nsPromptService::Prompt(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
   nsString url; url.AssignWithConversion(kQuestionIconURL);
   block->SetString(eIconURL, url.GetUnicode());
   block->SetInt(eNumberEditfields, 1);
-  block->SetString(eEditfield1Value, defaultText);
+  if (*value)
+    block->SetString(eEditfield1Value, *value);
+  if (checkMsg && checkValue) {
+    block->SetString(eCheckboxMsg, checkMsg);
+    block->SetInt(eCheckboxState, *checkValue);
+  }
 
   rv = DoDialog(parent, block, kPromptURL);
 
-  block->GetString(eEditfield1Value, result);
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
 
+  if (*_retval) {
+    PRUnichar *tempStr;
+    
+    rv = block->GetString(eEditfield1Value, &tempStr);
+    if (NS_FAILED(rv))
+      return rv;
+    if (*value)
+      nsMemory::Free(*value);
+    *value = tempStr;
+
+    if (checkValue)
+      block->GetInt(eCheckboxState, checkValue);  
+  }
   return rv;
 }
 
 NS_IMETHODIMP
 nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
-                   const PRUnichar *dialogTitle, const PRUnichar *text,
-                   const PRUnichar *passwordRealm, PRUint32 savePassword,
-                   PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+                    const PRUnichar *dialogTitle, const PRUnichar *text,
+                    PRUnichar **username, PRUnichar **password,
+                    const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 
 {
+  NS_ENSURE_ARG(username);
+  NS_ENSURE_ARG(password);
+  NS_ENSURE_ARG(_retval);
+  
   nsresult rv;
   ParamBlock block;
   rv = block.Init();
@@ -342,25 +364,52 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   url.AssignWithConversion(kQuestionIconURL);
   block->SetString(eIconURL, url.GetUnicode());
   block->SetInt( eNumberEditfields, 2 );
-  block->SetString(eEditfield1Value, *user);
-  block->SetString(eEditfield2Value, *pwd);
-
+  if (*username)
+    block->SetString(eEditfield1Value, *username);
+  if (*password)
+    block->SetString(eEditfield2Value, *password);
+  if (checkMsg && checkValue) {
+    block->SetString(eCheckboxMsg, checkMsg);
+    block->SetInt(eCheckboxState, *checkValue);
+  }
+  
   rv = DoDialog(parent, block, kPromptURL);
 
-  block->GetString(eEditfield1Value, user);
-  block->GetString(eEditfield2Value, pwd);
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
+  
+  if (*_retval) {
+    PRUnichar *tempStr;
+    
+    rv = block->GetString(eEditfield1Value, &tempStr);
+    if (NS_FAILED(rv))
+      return rv;
+    if (*username)
+      nsMemory::Free(*username);
+    *username = tempStr;
 
+    rv = block->GetString(eEditfield2Value, &tempStr);
+    if (NS_FAILED(rv))
+      return rv;
+    if (*password)
+      nsMemory::Free(*password);
+    *password = tempStr;
+
+    if (checkValue)
+      block->GetInt(eCheckboxState, checkValue);
+  }
   return rv;
 }
 
 NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
-                const PRUnichar *dialogTitle, const PRUnichar *text,
-                const PRUnichar *passwordRealm, PRUint32 savePassword,
-                PRUnichar **pwd, PRBool *_retval)
-{	
+                                const PRUnichar *dialogTitle, const PRUnichar *text,
+                                PRUnichar **password,
+                                const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+{
+  NS_ENSURE_ARG(password);
+  NS_ENSURE_ARG(_retval);
+	
   nsresult rv;
   ParamBlock block;
   rv = block.Init();
@@ -377,14 +426,31 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   block->SetString(eIconURL, url.GetUnicode());
   block->SetInt(eNumberEditfields, 1);
   block->SetInt(eEditField1Password, 1);
+  if (*password)
+    block->SetString(eEditfield1Value, *password);
+  if (checkMsg && checkValue) {
+    block->SetString(eCheckboxMsg, checkMsg);
+    block->SetInt(eCheckboxState, *checkValue);
+  }
 
   rv = DoDialog(parent, block, kPromptURL);
 
-  block->GetString(eEditfield1Value, pwd);
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
+  if (*_retval) {
+    PRUnichar *tempStr;
+    
+    rv = block->GetString(eEditfield1Value, &tempStr);
+    if (NS_FAILED(rv))
+      return rv;
+    if (*password)
+      nsMemory::Free(*password);
+    *password = tempStr;
 
+    if (checkValue)
+      block->GetInt(eCheckboxState, checkValue);  
+  }
   return rv;
 }
 

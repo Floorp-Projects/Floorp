@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 MODULE		= webbrwsr
 XPIDL_MODULE	= webBrowser_core
 LIBRARY_NAME	= nsWebBrowser_s
-REQUIRES	= xpcom string docshell widget layout dom js locale necko uriloader shistory webshell mimetype exthandler timer windowwatcher txtsvc gfx2
+REQUIRES	= xpcom string docshell widget layout dom js locale necko uriloader shistory webshell mimetype exthandler timer windowwatcher txtsvc gfx2 wallet
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -52,6 +52,7 @@ CPPSRCS		= \
 		nsWebBrowserPersist.cpp		\
 		nsDOMWalker.cpp			\
 		nsWebBrowserFind.cpp    \
+		nsNonPersistAuthPrompt.cpp  \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

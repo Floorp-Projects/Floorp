@@ -457,58 +457,107 @@ EmbedWindow::ConfirmCheck(const PRUnichar *aDialogTitle,
 
 NS_IMETHODIMP
 EmbedWindow::Prompt(const PRUnichar *aDialogTitle, const PRUnichar *aText,
-		    const PRUnichar *aPasswordRealm, PRUint32 aSavePassword,
-		    const PRUnichar *aDefaultText, PRUnichar **result,
+		    PRUnichar **result,
+		    const PRUnichar *aCheckMsg, PRBool *aCheckValue,
 		    PRBool *_retval)
 {
   EmbedPrompter prompter;
   prompter.SetTitle(aDialogTitle);
   prompter.SetMessageText(aText);
-  prompter.SetDefaultText(aDefaultText);
+  if (result && *result)
+    prompter.SetTextValue(*result);
+  if (aCheckValue) {
+    prompter.SetCheckValue(*aCheckValue);
+    if (aCheckMsg)
+      prompter.SetCheckMessage(aCheckMsg);
+    else
+      prompter.SetCheckMessage(NS_LITERAL_STRING("Save This Value").get());
+  }  
   prompter.Create(EmbedPrompter::TYPE_PROMPT);
   prompter.Run();
   prompter.GetConfirmValue(_retval);
-  if (*_retval)
+  if (*_retval) {
+    if (result && *result) {
+      nsMemory::Free(*result);
+      *result = nsnull;
+    }
     prompter.GetTextValue(result);
+    if (aCheckValue)
+      prompter.GetCheckValue(aCheckValue);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::PromptUsernameAndPassword(const PRUnichar *aDialogTitle,
 				       const PRUnichar *aText,
-				       const PRUnichar *aPasswordRealm,
-				       PRUint32 aSavePassword,
 				       PRUnichar **aUser, PRUnichar **aPwd,
+				       const PRUnichar *aCheckMsg, PRBool *aCheckValue,
 				       PRBool *_retval)
 {
   EmbedPrompter prompter;
   prompter.SetTitle(aDialogTitle);
-  prompter.SetPassRealm(aText);
+  prompter.SetMessageText(aText);
+  if (aUser && *aUser)
+    prompter.SetUser(*aUser);
+  if (aPwd && *aPwd)
+    prompter.SetPassword(*aPwd);
+  if (aCheckValue) {
+    prompter.SetCheckValue(*aCheckValue);
+    if (aCheckMsg)
+      prompter.SetCheckMessage(aCheckMsg);
+    else
+      prompter.SetCheckMessage(NS_LITERAL_STRING("Save These Values").get());
+  }      
   prompter.Create(EmbedPrompter::TYPE_PROMPT_USER_PASS);
   prompter.Run();
   prompter.GetConfirmValue(_retval);
   if (*_retval) {
+    if (aUser && *aUser) {
+      nsMemory::Free(*aUser);
+      *aUser = nsnull;
+    }
     prompter.GetUser(aUser);
+    if (aPwd && *aPwd) {
+      nsMemory::Free(*aPwd);
+      *aPwd = nsnull;
+    }
     prompter.GetPassword(aPwd);
+    if (aCheckValue)
+      prompter.GetCheckValue(aCheckValue);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::PromptPassword(const PRUnichar *aDialogTitle, 
-			    const PRUnichar *aText,
-			    const PRUnichar *aPasswordRealm,
-			    PRUint32 aSavePassword, PRUnichar **aPwd,
+			    const PRUnichar *aText, PRUnichar **aPwd,
+			    const PRUnichar *aCheckMsg, PRBool *aCheckValue,
 			    PRBool *_retval)
 {
   EmbedPrompter prompter;
   prompter.SetTitle(aDialogTitle);
-  prompter.SetPassRealm(aText);
+  prompter.SetMessageText(aText);
+  if (aPwd && *aPwd)
+    prompter.SetPassword(*aPwd);
+  if (aCheckValue) {
+    prompter.SetCheckValue(*aCheckValue);
+    if (aCheckMsg)
+      prompter.SetCheckMessage(aCheckMsg);
+    else
+      prompter.SetCheckMessage(NS_LITERAL_STRING("Save Password").get());
+  }        
   prompter.Create(EmbedPrompter::TYPE_PROMPT_PASS);
   prompter.Run();
   prompter.GetConfirmValue(_retval);
   if (*_retval) {
+    if (aPwd && *aPwd) {
+      nsMemory::Free(*aPwd);
+      *aPwd = nsnull;
+    }
     prompter.GetPassword(aPwd);
+    if (aCheckValue)
+      prompter.GetCheckValue(aCheckValue);
   }
   return NS_OK;
 }

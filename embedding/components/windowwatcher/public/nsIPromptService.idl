@@ -67,27 +67,26 @@ interface nsIPromptService : nsISupports
                         out boolean checkValue);
 
   boolean prompt(in nsIDOMWindow parent,
-                  in wstring dialogTitle,
-                  in wstring text,
-                  in wstring passwordRealm,
-                  in PRUint32 savePassword,
-                  in wstring defaultText, 
-                  out wstring result);
+                 in wstring dialogTitle,
+                 in wstring text,
+                 inout wstring value, 
+                 in wstring checkMsg,
+                 inout boolean checkValue);
 
   boolean promptUsernameAndPassword(in nsIDOMWindow parent,
                                     in wstring dialogTitle,
                                     in wstring text,
-                                    in wstring passwordRealm,
-                                    in PRUint32 savePassword,
-                                    out wstring user, 
-                                    out wstring pwd);
+                                    inout wstring username,
+                                    inout wstring password,
+                                    in wstring checkMsg,
+                                    inout boolean checkValue);
 
   boolean promptPassword(in nsIDOMWindow parent,
-                          in wstring dialogTitle,
-                          in wstring text,
-                          in wstring passwordRealm,
-                          in PRUint32 savePassword,
-                          out wstring pwd);
+                         in wstring dialogTitle,
+                         in wstring text,
+                         inout wstring password,
+                         in wstring checkMsg,
+                         inout boolean checkValue);
   
   boolean select(in nsIDOMWindow parent,
                   in wstring dialogTitle,

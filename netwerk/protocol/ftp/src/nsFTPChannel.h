@@ -39,6 +39,7 @@
 #include "nsIStreamListener.h"
 #include "nsAutoLock.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIFTPChannel.h"
 #include "nsIProxy.h"
 
@@ -90,6 +91,7 @@ protected:
     nsCOMPtr<nsIURI>                mURL;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
     nsCOMPtr<nsIPrompt>             mPrompter;
+    nsCOMPtr<nsIAuthPrompt>         mAuthPrompter;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mConnected;

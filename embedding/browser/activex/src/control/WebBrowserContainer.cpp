@@ -135,27 +135,30 @@ NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar* dialogTitle, c
     return NS_OK;
 }
 
-/* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
-NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm,
-                                           PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+/* boolean prompt (in wstring dialogTitle, in wstring text, inout wstring answer, in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
+                                           PRUnichar **answer, const PRUnichar *checkMsg,
+                                           PRBool *checkValue, PRBool *_retval)
 {
     // TODO show dialog with entry field
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
-NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar* dialogTitle, const PRUnichar *text, 
-                                                              const PRUnichar* passwordRealm, PRUint32 savePassword,
-                                                              PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+/* boolean promptUsernameAndPassword (in wstring dialogTitle, in wstring text, inout wstring username, inout wstring password, in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+                                                              PRUnichar **username, PRUnichar **password,
+                                                              const PRUnichar *checkMsg, PRBool *checkValue,
+                                                              PRBool *_retval)
 {
     // TODO show dialog with entry field and password field
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
-NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar* dialogTitle, const PRUnichar *text, 
-                                                   const PRUnichar* passwordRealm, PRUint32 savePassword,
-                                                   PRUnichar **pwd, PRBool *_retval)
+/* boolean promptPassword (in wstring dialogTitle, in wstring text, inout wstring password, in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+                                                   PRUnichar **password,
+                                                   const PRUnichar *checkMsg, PRBool *checkValue,
+                                                   PRBool *_retval)
 {
     // TODO show dialog with password field
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -592,17 +592,17 @@ NS_IMETHODIMP WebBrowserChrome::ConfirmCheck(const PRUnichar* dialogTitle, const
     return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::Prompt(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm, PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP WebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **answer, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP WebBrowserChrome::PromptUsernameAndPassword(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm, PRUint32 savePassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+ 
+NS_IMETHODIMP WebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **username, PRUnichar **password, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP WebBrowserChrome::PromptPassword(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm, PRUint32 savePassword, PRUnichar **pwd, PRBool *_retval)
+ 
+NS_IMETHODIMP WebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **password, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -25,32 +25,7 @@
 //
 // The nsIPrompt interface is mainly used to convey/get information
 // from a user via Alerts, Prompts etc.
-// There are two distinct scenarious to be aware of when implementing this
-// interface:
-//   1. When we want to support the single sign-on feature i.e. we're
-//	    "wrap"ing our nsIPrompt interface with nsISingleSignOnPrompt
-//		(See BrowserImpl::GetInterface() on how we wrap it with
-//		 single sign-on)
-//   2. When we do not want single sign-on support or that support
-//      is missing, for ex, not installed or disabled
-//
-// Depending on which of the above two scenarios we're operating on
-// different methods in this interface are called
 // 
-// When operating *with* Single sign-on support:
-//	nsIPrompt::Alert()		- is called to show an alert
-//	nsIPromtp::Confirm()	- is called to show a confirmation msg
-//	nsIPrompt::UniversalDlg() - is called for getting a password, getting
-//								username/password and to Prompt the user
-//								for some information, other cases??
-//
-// When operating *without* Single sign-on support:
-//	nsIPrompt::Alert()		- is called to show an alert
-//	nsIPromtp::Confirm()	- is called to show a confirmation msg
-//	nsIPromtp::Prompt()		- is called to prompt the user for some info.
-//	nsIPromtp::PromptPassword() - is called to get the password
-//	nsIPromtp::PromptUsernameAndPassword() - is called to get username/password
-//
 
 #ifdef _WINDOWS
   #include "stdafx.h"
@@ -66,8 +41,6 @@
 // Needed for JavaScript and other cases where a msg needs to be 
 // shown to the user. For ex, when a page has some JS such as
 // "Alert("Hello")" this method will be invoked
-// (This method will get called whether or not we're wrapping
-// our nsIPrompt with nsISingleSignonPrompt)
 NS_IMETHODIMP
 CBrowserImpl::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 {
@@ -80,8 +53,6 @@ CBrowserImpl::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 }
 
 // Invoked in the case of a JS confirm() method invocation
-// (This method will get called whether or not we're wrapping
-// our nsIPrompt with nsISingleSignonPrompt)
 NS_IMETHODIMP
 CBrowserImpl::Confirm(const PRUnichar *dialogTitle, 
 			   const PRUnichar *text, PRBool *retval)
@@ -94,73 +65,53 @@ CBrowserImpl::Confirm(const PRUnichar *dialogTitle,
 	return NS_OK;
 }
 
-// (This method will get called when we're *NOT* wrapping
-// our nsIPrompt with nsISingleSignonPrompt
-// However, when we're wrapping our nsIPrompt with
-// single sign-on then the UniversalDialog is being
-// invoked to put up a prompt.
 NS_IMETHODIMP
-CBrowserImpl::Prompt(const PRUnichar *dialogTitle,
-			  const PRUnichar *text,
-			  const PRUnichar *passwordRealm,
-			  PRUint32 savePassword,
-			  const PRUnichar *defaultText, 
-			  PRUnichar **result, PRBool *retval)
+CBrowserImpl::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
+                     PRUnichar **promptText,
+                     const PRUnichar *checkMsg, PRBool *checkValue,
+                     PRBool *_retval)
 {
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->Prompt(dialogTitle, text, defaultText, result, retval);
+	m_pBrowserFrameGlue->Prompt(dialogTitle, text, promptText, checkMsg, checkValue, _retval);
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-CBrowserImpl::PromptPassword(const PRUnichar *dialogTitle,
-				  const PRUnichar *text, 
-				  const PRUnichar *passwordRealm,
-				  PRUint32 savePassword, PRUnichar **pwd,
-				  PRBool *retval)
+CBrowserImpl::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+                             PRUnichar **password,
+                             const PRUnichar *checkMsg, PRBool *checkValue,
+                             PRBool *_retval)
 {
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	// Note that we're using the same PromptPassword method in 
-	// IBrowserFrameGlue for both the single sign-on and non-
-	// single sign-on cases. 
-	// In the non-single sign-on case i.e. here, we do not
-	// have a checkboxmsg or chkboxstate to worry about - 
-	// hence NULLs are being passed for those params below
-
-	m_pBrowserFrameGlue->PromptPassword(dialogTitle, text, NULL/*no chkbox msg*/, 
-							NULL/*no chkboxState*/, pwd, retval);
+	m_pBrowserFrameGlue->PromptPassword(dialogTitle, text, password,
+	                                    checkMsg, checkValue, _retval);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-CBrowserImpl::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
-					     const PRUnichar *text,
-					     const PRUnichar *passwordRealm,
-					     PRUint32 savePassword, 
-					     PRUnichar **user,
-					     PRUnichar **pwd, 
-					     PRBool *retval)
+CBrowserImpl::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+                                        PRUnichar **username, PRUnichar **password,
+                                        const PRUnichar *checkMsg, PRBool *checkValue,
+                                        PRBool *_retval)
 {
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->PromptUserNamePassword(dialogTitle, text, 
-							NULL/*UserName Label*/, NULL/*Password Label*/, 
-							NULL/*checkboxMsg*/, NULL/*checkboxState*/,
-							user, pwd, 
-							retval);
+							                    username, password,
+							                    checkMsg, checkValue, 
+							                    _retval);
 
     return NS_OK;
 }
 
-// This method is evil/painful. This needs to go away and i think there's
-// already a bug w.r.t this
+// This method is evil/painful. It will be gone when bug 46859 is done
 //
 // So far these are the cases in which UniversalDialog seems to be
 // getting called when we wrap our nsIPrompt with nsISingleSignOnPrompt
@@ -216,12 +167,14 @@ CBrowserImpl::UniversalDialog(const PRUnichar *titleMessage,
 {
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
+		
+	PRBool confirmed;
 
 	if(numberEditfields == 1 && checkboxMsg == NULL && editField1Password == 0)
 	{
 		// This is a Prompt()
 
-		m_pBrowserFrameGlue->Prompt(dialogTitle, text, *editfield1Value, editfield1Value, buttonPressed);
+		m_pBrowserFrameGlue->Prompt(dialogTitle, text, editfield1Value, NULL, NULL, &confirmed);
 
 		// The Prompt() methods return PR_TRUE/PR_FALSE depending on whether 
 		// the OK/CANCEL was pressed. However, UniversalDialog checks
@@ -230,7 +183,7 @@ CBrowserImpl::UniversalDialog(const PRUnichar *titleMessage,
 
 		// So, now let's translate to what the UniversalDlg expects
 
-		if(*buttonPressed) //Will be TRUE i.e. 1 if the user chose OK
+		if(confirmed) //Will be TRUE i.e. 1 if the user chose OK
 			*buttonPressed = 0; //Set it to the OK button index i.e. to "0"
 		else
 			*buttonPressed = 1; //Set it to the Cancel button index i.e. to "1"
@@ -241,11 +194,11 @@ CBrowserImpl::UniversalDialog(const PRUnichar *titleMessage,
 	{
 		// This is a PromptPassword()
 
-		m_pBrowserFrameGlue->PromptPassword(dialogTitle, text, checkboxMsg, 
-								checkboxState, editfield1Value, buttonPressed);
+		m_pBrowserFrameGlue->PromptPassword(dialogTitle, text, editfield1Value,
+		                                    checkboxMsg, checkboxState, &confirmed);
 
 		//See comments above on why we're doing this...
-		if(*buttonPressed) 
+		if(confirmed) 
 			*buttonPressed = 0;
 		else
 			*buttonPressed = 1;
@@ -256,14 +209,13 @@ CBrowserImpl::UniversalDialog(const PRUnichar *titleMessage,
 	{
 		// This is a username/password dialog
 
-		m_pBrowserFrameGlue->PromptUserNamePassword(dialogTitle, text, 
-								editfield1Msg, editfield2Msg, 
-								checkboxMsg, checkboxState,
-								editfield1Value, editfield2Value, 
-								buttonPressed);
+		m_pBrowserFrameGlue->PromptUserNamePassword(dialogTitle, text,
+		                        editfield1Value, editfield2Value, 
+								checkboxMsg, checkboxState, 
+								&confirmed);
 
 		//See comments above on why we're doing this...
-		if(*buttonPressed)
+		if(confirmed)
 			*buttonPressed = 0;
 		else
 			*buttonPressed = 1;

@@ -54,6 +54,7 @@
 #include "nsIScrollable.h"
 #include "nsIPref.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsStyleConsts.h"
 
@@ -122,11 +123,14 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
    NS_ENSURE_ARG_POINTER(aSink);
 
    if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
-     // XXX until nsIWebShellWindow goes away:
-     nsCOMPtr<nsIWebShellWindow> webShellWin = 
-       do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this), &rv);
-     if (NS_FAILED(rv)) return rv;
-     return webShellWin->GetPrompter((nsIPrompt**)aSink);
+      rv = EnsurePrompter();
+      if (NS_FAILED(rv)) return rv;
+      return mPrompter->QueryInterface(aIID, aSink);
+   }   
+   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+      rv = EnsureAuthPrompter();
+      if (NS_FAILED(rv)) return rv;
+      return mAuthPrompter->QueryInterface(aIID, aSink);
    }
    if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
       NS_SUCCEEDED(EnsureContentTreeOwner()) &&
@@ -661,6 +665,36 @@ NS_IMETHODIMP nsXULWindow::EnsurePrimaryContentTreeOwner()
    return NS_OK;
 }
 
+NS_IMETHODIMP nsXULWindow::EnsurePrompter()
+{
+   if (mPrompter)
+      return NS_OK;
+   
+   nsCOMPtr<nsIDOMWindowInternal> ourWindow;
+   nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
+   if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch)
+         wwatch->GetNewPrompter(ourWindow, getter_AddRefs(mPrompter));
+   }
+   return mPrompter ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULWindow::EnsureAuthPrompter()
+{
+   if (mAuthPrompter)
+      return NS_OK;
+      
+   nsCOMPtr<nsIDOMWindowInternal> ourWindow;
+   nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
+   if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch)
+         wwatch->GetNewAuthPrompter(ourWindow, getter_AddRefs(mAuthPrompter));
+   }
+   return mAuthPrompter ? NS_OK : NS_ERROR_FAILURE;
+}
+ 
 void nsXULWindow::OnChromeLoaded()
 {
   mChromeLoaded = PR_TRUE;

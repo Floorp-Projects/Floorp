@@ -3,6 +3,7 @@
 #
 
 nsIAuthenticator.idl
+nsIAuthPrompt.idl
 nsIChannel.idl
 nsIFileChannel.idl
 nsIDownloader.idl

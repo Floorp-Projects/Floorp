@@ -55,7 +55,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIProxy.h"
 #include "nsMimeTypes.h"
-#include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProxyObjectManager.h"
@@ -185,7 +185,7 @@ nsHTTPChannel::~nsHTTPChannel()
 
     mHandler         = 0;
     mEventSink       = 0;
-    mPrompter        = 0;
+    mAuthPrompter    = 0;
     mResponseContext = 0;
     mLoadGroup       = 0;
 
@@ -541,7 +541,7 @@ nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
     // Verify that the event sink is http
     if (mCallbacks) {
         mRealEventSink = do_GetInterface(mCallbacks);
-        mRealPrompter = do_GetInterface(mCallbacks);
+        mRealAuthPrompter = do_GetInterface(mCallbacks);
         mRealProgressEventSink = do_GetInterface(mCallbacks);
         
         rv = BuildNotificationProxies();
@@ -573,13 +573,13 @@ nsHTTPChannel::BuildNotificationProxies()
                                              getter_AddRefs(mEventSink));
         if (NS_FAILED(rv)) return rv;
     }
-
-    if (mRealPrompter) {
+    
+    if (mRealAuthPrompter) {
         rv = proxyManager->GetProxyForObject(eventQ,
-                                             NS_GET_IID(nsIPrompt),
-                                             mRealPrompter,
+                                             NS_GET_IID(nsIAuthPrompt),
+                                             mRealAuthPrompter,
                                              PROXY_SYNC | PROXY_ALWAYS,
-                                             getter_AddRefs(mPrompter));
+                                             getter_AddRefs(mAuthPrompter));
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2699,8 +2699,8 @@ nsHTTPChannel::Authenticate(const char *aChallenge, PRBool aProxyAuth)
         // Skip prompting if we already have an authentication string.
         if (!authString || !*authString) {
             // Delay this check until we absolutely would need the prompter
-            if (!mPrompter) {
-                NS_WARNING("Failed to prompt for username/password: nsHTTPChannel::mPrompter == NULL");
+            if (!mAuthPrompter) {
+                NS_WARNING("Failed to prompt for username/password: nsHTTPChannel::mAuthPrompter == NULL");
                 return NS_ERROR_FAILURE;
             }
 
@@ -2719,11 +2719,11 @@ nsHTTPChannel::Authenticate(const char *aChallenge, PRBool aProxyAuth)
             nsAutoString prePath; // XXX i18n
             CopyASCIItoUCS2(nsLiteralCString(
                         NS_STATIC_CAST(const char*, urlCString)), prePath);
-            rv = mPrompter->PromptUsernameAndPassword(
+            rv = mAuthPrompter->PromptUsernameAndPassword(
                     nsnull,
                     message.GetUnicode(),
                     prePath.GetUnicode(),
-                    nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
+                    nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                     getter_Copies(userBuf),
                     getter_Copies(passwdBuf),
                     &retval);
@@ -2741,7 +2741,7 @@ nsHTTPChannel::Authenticate(const char *aChallenge, PRBool aProxyAuth)
 
         if (NS_FAILED(rv) ||
             NS_FAILED(rv = auth->Authenticate(mURI, "http", authLine.get(),
-                                              userBuf, passwdBuf, mPrompter,
+                                              userBuf, passwdBuf, mAuthPrompter,
                                               getter_Copies(authString))))
             return rv;
     }
@@ -3273,10 +3273,10 @@ nsHTTPChannel::GetUsingTransparentProxy(PRBool *aUsingProxy)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetPrompter(nsIPrompt **aPrompter)
+nsHTTPChannel::GetAuthPrompter(nsIAuthPrompt **aPrompter)
 {
     NS_ENSURE_ARG_POINTER(aPrompter);
-    *aPrompter = mPrompter;
+    *aPrompter = mAuthPrompter;
     NS_IF_ADDREF(*aPrompter);
     return NS_OK;
 }

@@ -32,6 +32,7 @@ EXPORTS =                           \
 
 XPIDLSRCS =                             \
 	.\nsIAuthenticator.idl          \
+	    .\nsIAuthPrompt.idl             \
         .\nsIChannel.idl                \
         .\nsIFileChannel.idl	        \
         .\nsIFileStreams.idl            \

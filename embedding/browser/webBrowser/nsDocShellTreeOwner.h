@@ -43,6 +43,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsITimer.h"
+#include "nsIAuthPrompt.h"
 
 #include "nsCommandHandler.h"
 
@@ -123,6 +124,8 @@ protected:
     // and the DOM. These are strong, owning refs.
    ChromeTooltipListener*         mChromeTooltipListener;
    ChromeContextMenuListener*     mChromeContextMenuListener;
+   
+   nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
 };
 
 

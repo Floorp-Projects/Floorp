@@ -44,7 +44,7 @@ nsBasicAuth::~nsBasicAuth()
 nsresult
 nsBasicAuth::Authenticate(nsIURI *aURI, const char *aProtocol,
                           const char *aChallenge, const PRUnichar *aUser,
-                          const PRUnichar *aPass, nsIPrompt *aPrompt,
+                          const PRUnichar *aPass, nsIAuthPrompt *aPrompt,
                           char **aResult)
 {
     // we only know how to deal with Basic auth for http.

@@ -40,6 +40,7 @@
 #include "nsAutoLock.h"
 #include "nsIEventQueueService.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsITransport.h"
 
 #include "nsFtpControlConnection.h"
@@ -105,7 +106,7 @@ public:
     nsFtpState();
     virtual ~nsFtpState();
 
-    nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter);
+    nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter, nsIAuthPrompt *aAuthPrompter);
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
@@ -210,6 +211,7 @@ private:
     PRBool                 mGenerateHTMLContent;
     PRPackedBool           mIPv6Checked;
     nsCOMPtr<nsIPrompt>    mPrompter;
+    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
     char                   *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
 
     // ***** control read gvars

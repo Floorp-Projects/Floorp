@@ -1735,34 +1735,3 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
    return nsXULWindow::Destroy();
 }
 
-NS_IMETHODIMP
-nsWebShellWindow::GetPrompter(nsIPrompt* *result)
-{
-  nsresult rv;
-  if (mPrompter == nsnull) {
-
-    // get our corresponding DOMWindow
-    nsCOMPtr<nsIWebShell> webshell;
-    GetWebShell(*getter_AddRefs(webshell));
-    nsCOMPtr<nsIDOMWindowInternal> domiwindow;
-    rv = ConvertWebShellToDOMWindow(webshell, getter_AddRefs(domiwindow));
-    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(domiwindow));
-    if (!domWindow) {
-      NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIPrompt> prompt;
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    NS_ASSERTION(wwatch, "failed to get window watcher service");
-    if (wwatch)
-      wwatch->GetNewPrompter(domWindow, getter_AddRefs(prompt));
-
-      mPrompter = prompt;
-  }
-  *result = mPrompter; 
-  NS_ADDREF(*result);
-  return NS_OK;
-}
-

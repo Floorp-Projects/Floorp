@@ -117,38 +117,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP CBrowserImpl::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-	// Note that we're wrapping our nsIPrompt impl. with the 
-	// nsISingleSignOnPrompt - if USE_SINGLE_SIGN_ON is defined
-	// (and if single sign-on support dll's are present and enabled) 
-	// This allows the embedding app to use the password save
-	// feature. When signing on to a host which needs authentication
-	// the Single sign-on service will check to see if the auth. info
-	// is already saved and if so uses it to pre-fill the sign-on form
-	// If not, our nsIPrompt impl will be called
-	// to present the auth UI and return the required auth info.
-	// If we do not compile with single sign-on support or if that
-	// service is missing we just fall back to the regular 
-	// implementation of nsIPrompt
-
-	if(aIID.Equals(NS_GET_IID(nsIPrompt)))
-	{
-		if (!mPrompter)
-		{
-#ifdef USE_SINGLE_SIGN_ON
-			nsresult rv;
-			nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(NS_SINGLESIGNONPROMPT_CONTRACTID, &rv);
-			if (NS_SUCCEEDED(rv))
-			{
-				siPrompt->SetPromptDialogs(NS_STATIC_CAST(nsIPrompt*, this));
-				mPrompter = siPrompt;
-			}
-			else
-#endif
-				mPrompter = NS_STATIC_CAST(nsIPrompt*, this);
-		}
-		NS_ENSURE_TRUE(mPrompter, NS_ERROR_FAILURE);
-		return mPrompter->QueryInterface(aIID, aInstancePtr);
-	}
 	if(aIID.Equals(NS_GET_IID(nsIDOMWindow)))
 	{
 		if (mWebBrowser)
