@@ -228,7 +228,9 @@ ifneq ($(BUILD_MODULES),all)
   MOZ_CO_MODULE := $(addprefix mozilla/, $(MOZ_CO_MODULE))
 
   NOSUBDIRS_MODULE := $(addprefix mozilla/, $(BUILD_MODULE_CVS_NS))
+ifneq ($(NOSUBDIRS_MODULE),)
   CVSCO_NOSUBDIRS := $(CVSCO) -l $(CVS_CO_DATE_FLAGS) $(NOSUBDIRS_MODULE)
+endif
 
 ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS)))
   CVSCO_NSPR :=
