@@ -42,7 +42,7 @@
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
 // Defined and used in wallet.cpp
-extern nsCOMPtr<nsIKeyedStreamGenerator> gKeyedStreamGenerator;
+extern nsIKeyedStreamGenerator *gKeyedStreamGenerator;
 
 nsWalletlibService::nsWalletlibService()
 {
@@ -54,8 +54,11 @@ nsWalletlibService::nsWalletlibService()
 
 nsWalletlibService::~nsWalletlibService()
 {
+#ifdef DEBUG_dp
+  printf("Wallet Service destroyed successfully.\n");
+#endif /* DEBUG_dp */
   // Release the keyed stream generator that we might have acquired
-  gKeyedStreamGenerator = NULL;
+  NS_IF_RELEASE(gKeyedStreamGenerator);
 }
 
 

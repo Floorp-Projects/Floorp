@@ -1305,7 +1305,9 @@ Wallet_SimpleGet(nsInputFileStream strm) {
 /* The following routines are for unlocking the stored data */
 /************************************************************/
 
-nsCOMPtr<nsIKeyedStreamGenerator> gKeyedStreamGenerator;
+// Dont use a COMPtr here. If you do, then if there is a leak of this object
+// there will be crash due to static destructors being called.
+nsIKeyedStreamGenerator* gKeyedStreamGenerator;
 PRBool gNeedsSetup = PR_TRUE;
 nsAutoString key;
 PRBool keyCancel = PR_FALSE;
@@ -1349,17 +1351,16 @@ PUBLIC PRUnichar
 Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   nsresult rv = NS_OK;
   PRUint8 keyByte = 0;
-#ifndef DEBUG_dp
-goto backup_noassert;
-#endif
   if (!gKeyedStreamGenerator)
   {
     // Get a keyed stream generator
     // XXX how do we get to the NS_BASIC_STREAM_GENERATOR progid/CID here
-    gKeyedStreamGenerator = do_CreateInstance("component://netscape/keyed-stream-generator/basic", &rv);
+    nsCOMPtr<nsIKeyedStreamGenerator> keyGenerator = do_CreateInstance("component://netscape/keyed-stream-generator/basic", &rv);
     if (NS_FAILED(rv)) {
       goto backup;
     }
+    gKeyedStreamGenerator = keyGenerator.get();
+    NS_ADDREF(gKeyedStreamGenerator);
     // XXX need to checkup signature
   }
   if (gNeedsSetup)
@@ -1385,9 +1386,8 @@ goto backup_noassert;
   return (PRUnichar)keyByte;
 
 backup:
-  // Fallback to doing old access
+  // Fallback to doing old access. This should never happen.
   NS_ASSERTION(0, "Bad! Using backup stream generator. Email dp@netscape.com");
-backup_noassert:
   NS_ASSERTION(key.Length()>0, "Master Password was never established");
   if (key.Length() > 0 ) {
     return key.CharAt((PRInt32)(writeCount % key.Length()));
