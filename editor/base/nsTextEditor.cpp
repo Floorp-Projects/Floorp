@@ -1249,7 +1249,7 @@ NS_IMETHODIMP nsTextEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   	}
   }
 
-  nsAutoString  charsetStr("ISO-8859-1");
+  nsAutoString  charsetStr("");
   rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML, charsetStr);
   
   if (NS_FAILED(rv))
