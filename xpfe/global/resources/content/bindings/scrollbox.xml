@@ -2,7 +2,8 @@
 
 <bindings id="arrowscrollboxBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="scrollbox-base">
     <resources>
@@ -12,7 +13,7 @@
 
   <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:box class="box-inherit scrollbox-innerbox" inherits="orient,align,pack,dir">
+      <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir">
         <children/>
       </xul:box>
     </content>
@@ -21,7 +22,7 @@
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up" scrolldir="up" collapsed="true"/>
-      <xul:scrollbox inherits="orient,align,pack,dir" flex="1">
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:scrollbox>
       <xul:autorepeatbutton class="autorepeatbutton-down" scrolldir="down" collapsed="true"/> 

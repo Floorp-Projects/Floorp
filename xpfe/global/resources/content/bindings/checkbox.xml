@@ -2,7 +2,8 @@
 
 <bindings id="checkboxBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="checkbox" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
     <resources>
@@ -12,10 +13,10 @@
 
   <binding id="checkbox-baseline" extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
-      <xul:image class="checkbox-check" inherits="checked,disabled"/>
+      <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
       <xul:hbox class="checkbox-label-box" flex="1">
-        <xul:image class="checkbox-icon" inherits="src"/>
-        <xul:label class="checkbox-label" inherits="xbl:text=label,accesskey,crop" flex="1"/>
+        <xul:image class="checkbox-icon" xbl:inherits="src"/>
+        <xul:label class="checkbox-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
       </xul:hbox>
     </content>
     

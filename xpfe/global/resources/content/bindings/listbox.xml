@@ -2,7 +2,8 @@
 
 <bindings id="listboxBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
   
   <binding id="listbox-base">
     <resources>
@@ -20,7 +21,7 @@
       </children>
       <xul:listrows>
         <children includes="listhead"/>
-        <xul:listboxbody inherits="rows,size,minheight">
+        <xul:listboxbody xbl:inherits="rows,size,minheight">
           <children includes="listitem"/>
         </xul:listboxbody> 
       </xul:listrows>
@@ -731,7 +732,7 @@
 
     <content>
       <children>
-        <xul:listcell inherits="label,crop,disabled,flexlabel"/>
+        <xul:listcell xbl:inherits="label,crop,disabled,flexlabel"/>
       </children>
     </content>
 
@@ -800,7 +801,7 @@
            extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
       <children>
-        <xul:listcell class="listcell-iconic" inherits="label,image,crop,disabled,flexlabel"/>
+        <xul:listcell class="listcell-iconic" xbl:inherits="label,image,crop,disabled,flexlabel"/>
       </children>
     </content>
   </binding>
@@ -809,7 +810,7 @@
            extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
       <children>
-        <xul:listcell type="checkbox" inherits="label,crop,checked,disabled,flexlabel"/>
+        <xul:listcell type="checkbox" xbl:inherits="label,crop,checked,disabled,flexlabel"/>
       </children>
     </content>
 
@@ -838,7 +839,7 @@
            extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
     <content>
       <children>
-        <xul:listcell type="checkbox" class="listcell-iconic" inherits="label,image,crop,checked,disabled,flexlabel"/>
+        <xul:listcell type="checkbox" class="listcell-iconic" xbl:inherits="label,image,crop,checked,disabled,flexlabel"/>
       </children>
     </content>
   </binding>
@@ -847,7 +848,7 @@
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
     <content>
       <children>
-        <xul:label class="listcell-label" inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -856,8 +857,8 @@
            extends="chrome://global/content/bindings/listbox.xml#listcell">
     <content>
       <children>
-        <xul:image class="listcell-icon" inherits="src=image"/>
-        <xul:label class="listcell-label" inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
+        <xul:image class="listcell-icon" xbl:inherits="src=image"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -866,8 +867,8 @@
            extends="chrome://global/content/bindings/listbox.xml#listcell">
     <content>
       <children>
-        <xul:image class="listcell-check" inherits="checked,disabled"/>
-        <xul:label class="listcell-label" inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
+        <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -876,9 +877,9 @@
            extends="chrome://global/content/bindings/listbox.xml#listcell-checkbox">
     <content>
       <children>
-        <xul:image class="listcell-check" inherits="checked,disabled"/>
-        <xul:image class="listcell-icon" inherits="src=image"/>
-        <xul:label class="listcell-label" inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
+        <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
+        <xul:image class="listcell-icon" xbl:inherits="src=image"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -896,8 +897,8 @@
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
     <content>
       <xul:image class="listheader-icon"/>
-      <xul:label class="listheader-label" inherits="value=label,crop" flex="1" crop="right"/>
-      <xul:image class="listheader-sortdirection" inherits="sortDirection"/>
+      <xul:label class="listheader-label" xbl:inherits="value=label,crop" flex="1" crop="right"/>
+      <xul:image class="listheader-sortdirection" xbl:inherits="sortDirection"/>
     </content>
   </binding>
 

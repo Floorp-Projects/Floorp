@@ -43,7 +43,8 @@
 
 <bindings id="buttonBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="button" display="xul:button"
            extends="chrome://global/content/bindings/button.xml#button-base">
@@ -60,7 +61,7 @@
            display="xul:button">
     <content>
       <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
-        <xul:description class="button-box-text" inherits="value" value="  "/>
+        <xul:description class="button-box-text" xbl:inherits="value" value="  "/>
       </xul:hbox>
     </content>
   </binding>
@@ -69,7 +70,7 @@
            display="xul:button">
     <content>
       <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
-        <xul:description class="button-box-text" inherits="value" value="&submitForm;"/>
+        <xul:description class="button-box-text" xbl:inherits="value" value="&submitForm;"/>
       </xul:hbox>
     </content>
   </binding>

@@ -2,7 +2,8 @@
 
 <bindings id="platformDialogBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
   
   <binding id="dialog" extends="chrome://global/content/bindings/dialog.xml#dialog">
     <content>
@@ -11,7 +12,7 @@
       </xul:vbox>
           
       <xul:hbox class="dialog-button-box"
-                inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>

@@ -33,7 +33,8 @@
 <bindings id="bookmarksBindings" 
           xmlns="http://www.mozilla.org/xbl" 
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="bookmarksBase">
     <implementation>
@@ -1977,7 +1978,7 @@
                          persist="width hidden sortActive sortDirection ordinal" />
           </treecols>
         </tree>
-        <statusbar class="chromeclass-status" inherits="hidden=hidestatusbar" hidden="false">
+        <statusbar class="chromeclass-status" xbl:inherits="hidden=hidestatusbar" hidden="false">
           <statusbarpanel anonid="statusbar-text" flex="1"/>
         </statusbar>
       </vbox>

@@ -3,7 +3,8 @@
 <bindings id="autocompleteBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="autocomplete"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
@@ -18,18 +19,18 @@
           <xul:image class="autocomplete-icon" allowevents="true"/>
         </children>
 
-        <xul:hbox class="textbox-input-box" flex="1" inherits="tooltiptext=inputtooltiptext">
+        <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       flex="1" allowevents="true"
-                      inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
         </xul:hbox>
       </xul:hbox>
                           
       <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
-                      inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
+                      xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" inherits="for=id,nomatch"/>
+        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
       <children includes="menupopup"/>
@@ -1442,7 +1443,7 @@
   <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <content>
       <children includes="treecols"/>
-      <xul:treerows class="autocomplete-treerows tree-rows" inherits="hidescrollbar" flex="1">
+      <xul:treerows class="autocomplete-treerows tree-rows" xbl:inherits="hidescrollbar" flex="1">
         <children/>
       </xul:treerows>
     </content>
@@ -1495,7 +1496,7 @@
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar inherits="hidescrollbar" orient="vertical" class="tree-scrollbar"/>
+      <xul:scrollbar xbl:inherits="hidescrollbar" orient="vertical" class="tree-scrollbar"/>
     </content>
   </binding>
 

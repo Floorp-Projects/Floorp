@@ -2,7 +2,8 @@
 
 <bindings id="radioBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="radiogroup">
     <resources>
@@ -292,10 +293,10 @@
     </resources>
 
     <content>
-      <xul:image class="radio-check" inherits="disabled,selected"/>
+      <xul:image class="radio-check" xbl:inherits="disabled,selected"/>
       <xul:hbox class="radio-label-box" flex="1">
-        <xul:image class="radio-icon" inherits="src"/>
-        <xul:label class="radio-label" inherits="xbl:text=label,accesskey,crop" flex="1"/>
+        <xul:image class="radio-icon" xbl:inherits="src"/>
+        <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
       </xul:hbox>
     </content>
 

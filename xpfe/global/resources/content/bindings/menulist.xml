@@ -3,7 +3,8 @@
 <bindings id="menulistBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:html="http://www.w3.org/1999/xhtml"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="menulist-base">
     <resources>
@@ -15,8 +16,8 @@
            extends="chrome://global/content/bindings/menulist.xml#menulist-base">
     <content>
       <xul:hbox class="menulist-label-box" flex="1">
-        <xul:image class="menulist-icon" inherits="src"/>
-        <xul:label class="menulist-label" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
+        <xul:image class="menulist-icon" xbl:inherits="src"/>
+        <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
       </xul:hbox>
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>
@@ -246,7 +247,7 @@
     <content>
       <xul:hbox class="menulist-editable-box" flex="1">
         <html:input flex="1" class="menulist-editable-input" allowevents="true"
-                    inherits="value=label,disabled"/>
+                    xbl:inherits="value=label,disabled"/>
       </xul:hbox>
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>
@@ -463,8 +464,8 @@
            extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
-      <xul:image class="menulist-icon" inherits="src"/>
-      <xul:label class="menulist-label" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
+      <xul:image class="menulist-icon" xbl:inherits="src"/>
+      <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
       <children includes="menupopup"/>
     </content>
   </binding>

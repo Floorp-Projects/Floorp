@@ -2,7 +2,8 @@
 
 <bindings id="selectBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="select-size" extends="resource:///res/builtin/selectBindings.xml#select-size">
     <content>
@@ -23,7 +24,7 @@
     <content includes="*">
       <xul:treecell style="-moz-binding: none;">
         <!--xul:treeindentation/-->
-        <xul:text inherits="value=xbl:text,value=label"/>
+        <xul:text xbl:inherits="value=xbl:text,value=label"/>
       </xul:treecell>
     </content>
   </binding>
@@ -34,7 +35,7 @@
       <xul:treerow>
         <xul:treecell style="-moz-binding: none;">
           <!--xul:treeindentation/-->
-          <xul:label inherits="value=label" flex="1" crop="right"/>
+          <xul:label xbl:inherits="value=label" flex="1" crop="right"/>
         </xul:treecell>
       </xul:treerow>
       <xul:treechildren>
@@ -48,11 +49,11 @@
       <xul:box class="select-menulist-internal-box" flex="1">
         <xul:box class="select-menulist-display-box" flex="1" valign="middle" align="center">
           <xul:label value="[[[[[MENULIST!]]]]]" class="select-menulist-text" 
-                    selectattr="text" inherits="accesskey" crop="right" flex="1"/>
+                    selectattr="text" xbl:inherits="accesskey" crop="right" flex="1"/>
         </xul:box>
-        <xul:box class="select-menulist-dropmarker-box-1" valign="middle" inherits="open">
-          <xul:box class="select-menulist-dropmarker-box-2" flex="1" align="center" valign="middle" inherits="open">
-            <xul:image class="select-menulist-dropmarker" inherits="disabled"/>
+        <xul:box class="select-menulist-dropmarker-box-1" valign="middle" xbl:inherits="open">
+          <xul:box class="select-menulist-dropmarker-box-2" flex="1" align="center" valign="middle" xbl:inherits="open">
+            <xul:image class="select-menulist-dropmarker" xbl:inherits="disabled"/>
           </xul:box>
         </xul:box>
       </xul:box>
@@ -66,14 +67,14 @@
  
   <binding id="option" extends="resource:///res/builtin/selectBindings.xml#option">
     <content includes="*">
-      <xul:label inherits="value=xbl:text,value=label" crop="right"/>
+      <xul:label xbl:inherits="value=xbl:text,value=label" crop="right"/>
     </content>
   </binding>
   
   <binding id="optgroup" extends="xul:menu">
     <!-- extends="resource:///res/builtin/selectBindings.xml#optgroup-size"> -->
     <content includes="*">
-      <xul:label inherits="value=label" crop="right"/>
+      <xul:label xbl:inherits="value=label" crop="right"/>
       <xul:menupopup style="overflow:auto; -moz-binding: none;" menugenerated="true">
         <children/>
       </xul:menupopup>

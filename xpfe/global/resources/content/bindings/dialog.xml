@@ -2,7 +2,8 @@
 
 <bindings id="dialogBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="dialog-base">
     <resources>
@@ -17,7 +18,7 @@
       </xul:vbox>
           
       <xul:hbox class="dialog-button-box" pack="end"
-                inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
         <xul:button dlgtype="accept" class="dialog-button"/>
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
@@ -312,9 +313,9 @@
 
   <binding id="dialogheader" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
     <content>
-      <xul:label class="dialogheader-title" inherits="value=title"/>
+      <xul:label class="dialogheader-title" xbl:inherits="value=title"/>
       <xul:spacer flex="1"/>
-      <xul:label class="dialogheader-description" inherits="value=description"/>
+      <xul:label class="dialogheader-description" xbl:inherits="value=description"/>
     </content>
   </binding>
 
