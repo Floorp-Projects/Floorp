@@ -685,22 +685,37 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
     if (FUNC_PARAMS_SPEC_BEGIN_TOKEN == token->id) {
 
       try {
+        int anyOptional = 0;
         while (FUNC_PARAMS_SPEC_END_TOKEN != token->id && 
+               ELLIPSIS_TOKEN != token->id &&
                 (FUNC_PARAMS_SPEC_BEGIN_TOKEN == token->id || 
                  SEPARATOR_TOKEN == token->id)
-              ) {
+               ) {
           mScanner->NextToken(); // eat the last peeked symbol
           TrimComments();
 
-          if (FUNC_PARAMS_SPEC_END_TOKEN == mScanner->PeekToken()->id) {
+          if ((FUNC_PARAMS_SPEC_END_TOKEN == mScanner->PeekToken()->id) ||
+              (ELLIPSIS_TOKEN == mScanner->PeekToken()->id)) {
             break;
           }
 
           // parse all arguments
-          funcObj->AddParameter(ParseFunctionParameter(aSpecification));
+          IdlParameter *param = ParseFunctionParameter(aSpecification);
+          if (param->GetIsOptional()) {
+            anyOptional = 1;
+          }
+          else if (anyOptional) {
+            throw ParameterParsingException("Non-optional parameter cannot follow optional parameters");
+          }
+          funcObj->AddParameter(param);
 
           TrimComments();
           token = mScanner->PeekToken();
+        }
+        if (mScanner->PeekToken()->id == ELLIPSIS_TOKEN) {
+          mScanner->NextToken();
+          funcObj->SetHasEllipsis(1);
+          TrimComments();
         }
         mScanner->NextToken(); // eat ')'
       }
@@ -790,7 +805,11 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
   IdlParameter *argObj = new IdlParameter();
 
   Token *token = mScanner->NextToken();
-
+  if (token->id == OPTIONAL_TOKEN) {
+    argObj->SetIsOptional(1);
+    mScanner->NextToken();
+  }
+  
   // the paramenter attribute (in, out, inout)
   switch(token->id) {
     // base type
@@ -885,4 +904,3 @@ void IdlParser::TrimComments()
     mScanner->NextToken();
   }
 }
-

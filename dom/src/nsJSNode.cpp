@@ -193,6 +193,7 @@ NodeGetNodeType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function getNodeType requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -241,6 +242,7 @@ NodeGetParentNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     }
   }
   else {
+    JS_ReportError(cx, "Function getParentNode requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -289,6 +291,7 @@ NodeGetChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     }
   }
   else {
+    JS_ReportError(cx, "Function getChildNodes requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -322,6 +325,7 @@ NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function hasChildNodes requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -370,6 +374,7 @@ NodeGetFirstChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     }
   }
   else {
+    JS_ReportError(cx, "Function getFirstChild requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -418,6 +423,7 @@ NodeGetPreviousSibling(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
   }
   else {
+    JS_ReportError(cx, "Function getPreviousSibling requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -466,6 +472,7 @@ NodeGetNextSibling(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     }
   }
   else {
+    JS_ReportError(cx, "Function getNextSibling requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -502,10 +509,12 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -518,10 +527,12 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
       if ((nsnull == supports1) ||
           (NS_OK != supports1->QueryInterface(kINodeIID, (void **)(b1.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -532,6 +543,7 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function insertBefore requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -568,10 +580,12 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -584,10 +598,12 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
       if ((nsnull == supports1) ||
           (NS_OK != supports1->QueryInterface(kINodeIID, (void **)(b1.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -598,6 +614,7 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function replaceChild requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -633,10 +650,12 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -647,6 +666,7 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function removeChild requires 1 parameters");
     return JS_FALSE;
   }
 

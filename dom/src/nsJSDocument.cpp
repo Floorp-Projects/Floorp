@@ -213,10 +213,12 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type Node");
             return JS_FALSE;
           }
         }
         else {
+          JS_ReportError(cx, "Parameter must be an object");
           return JS_FALSE;
         }
       
@@ -234,10 +236,12 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kIElementIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type Element");
             return JS_FALSE;
           }
         }
         else {
+          JS_ReportError(cx, "Parameter must be an object");
           return JS_FALSE;
         }
       
@@ -255,10 +259,12 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kIDocumentContextIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type DocumentContext");
             return JS_FALSE;
           }
         }
         else {
+          JS_ReportError(cx, "Parameter must be an object");
           return JS_FALSE;
         }
       
@@ -385,6 +391,7 @@ DocumentCreateDocumentContext(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
   }
   else {
+    JS_ReportError(cx, "Function createDocumentContext requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -430,10 +437,12 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
       if ((nsnull == supports1) ||
           (NS_OK != supports1->QueryInterface(kIAttributeListIID, (void **)(b1.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type AttributeList");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -459,6 +468,7 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
   }
   else {
+    JS_ReportError(cx, "Function createElement requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -516,6 +526,7 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
   }
   else {
+    JS_ReportError(cx, "Function createTextNode requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -573,6 +584,7 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
   }
   else {
+    JS_ReportError(cx, "Function createComment requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -639,6 +651,7 @@ DocumentCreatePI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
   }
   else {
+    JS_ReportError(cx, "Function createPI requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -684,10 +697,12 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
       if ((nsnull == supports1) ||
           (NS_OK != supports1->QueryInterface(kINodeIID, (void **)(b1.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -713,6 +728,7 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
   }
   else {
+    JS_ReportError(cx, "Function createAttribute requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -761,6 +777,7 @@ DocumentCreateAttributeList(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
   }
   else {
+    JS_ReportError(cx, "Function createAttributeList requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -797,10 +814,12 @@ DocumentCreateTreeIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -826,6 +845,7 @@ DocumentCreateTreeIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
   }
   else {
+    JS_ReportError(cx, "Function createTreeIterator requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -883,6 +903,7 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
   }
   else {
+    JS_ReportError(cx, "Function getElementsByTagName requires 1 parameters");
     return JS_FALSE;
   }
 

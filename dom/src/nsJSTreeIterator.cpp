@@ -193,6 +193,7 @@ TreeIteratorNumChildren(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function numChildren requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -226,6 +227,7 @@ TreeIteratorNumPreviousSiblings(JSContext *cx, JSObject *obj, uintN argc, jsval 
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function numPreviousSiblings requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -259,6 +261,7 @@ TreeIteratorNumNextSiblings(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function numNextSiblings requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -307,6 +310,7 @@ TreeIteratorToParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
   }
   else {
+    JS_ReportError(cx, "Function toParent requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -355,6 +359,7 @@ TreeIteratorToPreviousSibling(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
   }
   else {
+    JS_ReportError(cx, "Function toPreviousSibling requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -403,6 +408,7 @@ TreeIteratorToNextSibling(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
   else {
+    JS_ReportError(cx, "Function toNextSibling requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -451,6 +457,7 @@ TreeIteratorToFirstChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
   }
   else {
+    JS_ReportError(cx, "Function toFirstChild requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -499,6 +506,7 @@ TreeIteratorToLastChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
   }
   else {
+    JS_ReportError(cx, "Function toLastChild requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -527,6 +535,7 @@ TreeIteratorToNthChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if (argc >= 1) {
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -552,6 +561,7 @@ TreeIteratorToNthChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
   }
   else {
+    JS_ReportError(cx, "Function toNthChild requires 1 parameters");
     return JS_FALSE;
   }
 

@@ -40,6 +40,7 @@ ostream& operator<<(ostream &s, IdlParameter &aParameter)
 IdlParameter::IdlParameter()
 {
   mAttribute = 0;
+  mIsOptional = 0;
 }
 
 IdlParameter::~IdlParameter()
@@ -54,5 +55,17 @@ void IdlParameter::SetAttribute(CallAttribute aAttribute)
 int IdlParameter::GetAttribute()
 {
   return mAttribute;
+}
+
+void            
+IdlParameter::SetIsOptional(int aIsOptional)
+{
+  mIsOptional = aIsOptional;
+}
+
+int             
+IdlParameter::GetIsOptional()
+{
+  return mIsOptional;
 }
 

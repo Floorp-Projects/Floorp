@@ -41,6 +41,7 @@ static const char *kIncludeDefaultsStr =
 "#include \"nsString.h\"\n"
 "#include \"nsIScriptContext.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
+static const char *kIncludeJSStr = "#include \"jsapi.h\"\n";
 static const char *kForwardClassStr = "class nsIDOM%s;\n";
 static const char *kUuidStr = 
 "#define %s \\\n"
@@ -57,6 +58,7 @@ static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s a%s)=0;\n";
 static const char *kMethodDeclStr = "\n  NS_IMETHOD    %s(%s)=0;\n";
 static const char *kParamStr = "%s a%s";
 static const char *kDelimiterStr = ", ";
+static const char *kEllipsisParamStr = "JSContext *cx, jsval *argv, PRUint32 argc";
 static const char *kReturnStr = "%s%s aReturn";
 static const char *kClassEpilogStr = "};\n\n";
 static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);\n\n";
@@ -137,6 +139,16 @@ XPCOMGen::GenerateIncludes(IdlSpecification &aSpec)
       for (b = 0; b < bcount; b++) {
         sprintf(buf, kIncludeStr, iface->GetBaseClassAt(b));
         *file << buf;
+      }
+    }
+
+    int m, mcount = iface->FunctionCount();
+    for (m = 0; m < mcount; m++) {
+      IdlFunction *func = iface->GetFunctionAt(m);
+      
+      if (func->GetHasEllipsis()) {
+        *file << kIncludeJSStr;
+        break;
       }
     }
   }
@@ -275,9 +287,18 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
       cur_param += strlen(cur_param);
     }
 
+    if (func->GetHasEllipsis()) {
+      if (pcount > 0) {
+        strcpy(cur_param, kDelimiterStr);
+        cur_param += strlen(kDelimiterStr);
+      }
+      sprintf(cur_param, kEllipsisParamStr);
+      cur_param += strlen(cur_param);
+    }
+
     IdlVariable *rval = func->GetReturnValue();
     if (rval->GetType() != TYPE_VOID) {
-      if (pcount > 0) {
+      if ((pcount > 0) || func->GetHasEllipsis()) {
         strcpy(cur_param, kDelimiterStr);
         cur_param += strlen(kDelimiterStr);
       }

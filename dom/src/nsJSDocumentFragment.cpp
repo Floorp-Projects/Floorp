@@ -130,10 +130,12 @@ SetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kIDocumentIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type Document");
             return JS_FALSE;
           }
         }
         else {
+          JS_ReportError(cx, "Parameter must be an object");
           return JS_FALSE;
         }
       

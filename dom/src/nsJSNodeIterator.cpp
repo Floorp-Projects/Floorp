@@ -193,6 +193,7 @@ NodeIteratorGetLength(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function getLength requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -241,6 +242,7 @@ NodeIteratorGetCurrentNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
   }
   else {
+    JS_ReportError(cx, "Function getCurrentNode requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -289,6 +291,7 @@ NodeIteratorGetNextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
   }
   else {
+    JS_ReportError(cx, "Function getNextNode requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -337,6 +340,7 @@ NodeIteratorGetPreviousNode(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
   }
   else {
+    JS_ReportError(cx, "Function getPreviousNode requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -385,6 +389,7 @@ NodeIteratorToFirst(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     }
   }
   else {
+    JS_ReportError(cx, "Function toFirst requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -433,6 +438,7 @@ NodeIteratorToLast(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     }
   }
   else {
+    JS_ReportError(cx, "Function toLast requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -461,6 +467,7 @@ NodeIteratorMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   if (argc >= 1) {
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -486,6 +493,7 @@ NodeIteratorMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     }
   }
   else {
+    JS_ReportError(cx, "Function moveTo requires 1 parameters");
     return JS_FALSE;
   }
 
