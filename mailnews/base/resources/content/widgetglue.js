@@ -265,21 +265,40 @@ function NewFolder(name)
 }
 
 
-function MsgAccountManager()
-{
-    dump('Opening account manager..\n');
-    window.open("chrome://messenger/content/AccountManager.xul", "AccountManager", "chrome");
-}
-
 function MsgSubscribe()
 {
     dump('open subscribe window.\n');
     window.openDialog("chrome://messenger/content/subscribe.xul", "subscribe", "chrome");
 }
 
+function MsgAccountManager()
+{
+    var result = {refresh: false};
+    window.openDialog("chrome://messenger/content/AccountManager.xul",
+                      "AccountManager", "chrome,modal", result);
+    if (result.refresh)
+        refreshFolderPane();
+}
+
 function MsgAccountWizard()
 {
-    window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome, modal,height=300,width=400");
+    var result = {refresh: false};
+    window.openDialog("chrome://messenger/content/AccountWizard.xul",
+                      "AccountWizard", "chrome,modal", result);
+    if(result.refresh)
+        refreshFolderPane();
+}
+
+// refresh the folder tree by rerooting it
+// hack until the account manager can tell RDF that new accounts
+// have been created.
+function refreshFolderPane()
+{
+    var folderTree = GetFolderTree();
+    if (folderTree) {
+        var root = folderTree.getAttribute('ref');
+        folderTree.setAttribute('ref', root);
+    }
 }
 
 function MsgOpenAttachment() {}
