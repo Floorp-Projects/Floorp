@@ -180,6 +180,14 @@ ImageRequestImpl::ImageRequestImpl()
 
 ImageRequestImpl::~ImageRequestImpl()
 {
+  if (mXPObserver) {
+    // Make sure dangling reference to this object goes away
+    XP_RemoveObserver(mXPObserver, ns_observer_proc, (void*)this);
+  }
+  if (mImageReq) {
+    IL_DestroyImage(mImageReq);
+  }
+ 
   // Delete the list of observers, and release the reference to the image
   // request observer object
   if (nsnull != mObservers) {
@@ -258,24 +266,7 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
   return NS_OK;
 }
 
-NS_IMPL_ADDREF(ImageRequestImpl)
-NS_IMPL_QUERY_INTERFACE(ImageRequestImpl, kIImageRequestIID)
-
-nsrefcnt ImageRequestImpl::Release(void)                        
-{
-  if (--mRefCnt == 0) {
-    if (mXPObserver) {
-      // Make sure dangling reference to this object goes away
-      XP_RemoveObserver(mXPObserver, ns_observer_proc, (void*)this);
-    }
-    if (mImageReq) {
-      IL_DestroyImage(mImageReq);
-    }
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
+NS_IMPL_ISUPPORTS1(ImageRequestImpl, nsIImageRequest);
 
 nsIImage* 
 ImageRequestImpl::GetImage()
