@@ -414,7 +414,6 @@ private:
   
   PRBool       m_imapThreadIsRunning;
   void ImapThreadMainLoop(void);
-  PRBool ImapThreadIsRunning();
   PRInt32     m_connectionStatus;
   
   PRBool      m_nextUrlReadyToRun;

@@ -961,14 +961,6 @@ NS_IMETHODIMP nsImapProtocol::Run()
   return NS_OK;
 }
 
-PRBool
-nsImapProtocol::ImapThreadIsRunning()
-{
-    PRBool retValue = PR_FALSE;
-    retValue = m_imapThreadIsRunning;
-    return retValue;
-}
-
 NS_IMETHODIMP 
 nsImapProtocol::NotifyFEEventCompletion()
 {
@@ -1043,7 +1035,6 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
   PR_ExitMonitor(m_dataAvailableMonitor);
 
   PR_EnterMonitor(m_urlReadyToRunMonitor);
-  m_imapThreadIsRunning = PR_FALSE;
   PR_NotifyAll(m_urlReadyToRunMonitor);
   PR_ExitMonitor(m_urlReadyToRunMonitor);
   return rv;
@@ -1106,7 +1097,7 @@ nsImapProtocol::ImapThreadMainLoop()
 
   PRIntervalTime sleepTime = kImapSleepTime;
     // ****** please implement PR_LOG 'ing ******
-  while (ImapThreadIsRunning() && !DeathSignalReceived())
+  while (!DeathSignalReceived())
   {
     nsresult rv = NS_OK;
     PRBool readyToRun;
@@ -1115,7 +1106,7 @@ nsImapProtocol::ImapThreadMainLoop()
     {
       nsAutoMonitor mon(m_urlReadyToRunMonitor);
 
-      while (NS_SUCCEEDED(rv) && ImapThreadIsRunning() && !DeathSignalReceived() && !m_nextUrlReadyToRun)
+      while (NS_SUCCEEDED(rv) && !DeathSignalReceived() && !m_nextUrlReadyToRun)
         rv = mon.Wait(sleepTime);
 
       readyToRun = m_nextUrlReadyToRun;
