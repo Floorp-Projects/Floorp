@@ -35,6 +35,12 @@ typedef MPARAM WPARAM,LPARAM;
 #endif /* !XP_OS2 */
 #endif /* !Win32 */
 
+#if defined(XP_UNIX)
+/* for fcntl */
+#include <sys/types.h>
+#include <fcntl.h>
+#endif
+
 #if defined(XP_MAC)
 #include <AppleEvents.h>
 #include "pprthred.h"
@@ -581,11 +587,41 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-    PRInt32 err = 0;
 #if defined(XP_UNIX)
+    int err;
+    int flags;
+
     err = pipe(self->eventPipe);
+    if (err != 0) {
+        return PR_FAILURE;
+    }
+
+    /* make the pipe nonblocking */
+    flags = fcntl(self->eventPipe[0], F_GETFL, 0);
+    if (flags == -1) {
+        goto failed;
+    }
+    err = fcntl(self->eventPipe[0], F_SETFL, flags | O_NONBLOCK);
+    if (err == -1) {
+        goto failed;
+    }
+    flags = fcntl(self->eventPipe[1], F_GETFL, 0);
+    if (flags == -1) {
+        goto failed;
+    }
+    err = fcntl(self->eventPipe[1], F_SETFL, flags | O_NONBLOCK);
+    if (err == -1) {
+        goto failed;
+    }
+    return PR_SUCCESS;
+
+failed:
+    close(self->eventPipe[0]);
+    close(self->eventPipe[1]);
+    return PR_FAILURE;
+#else
+    return PR_SUCCESS;
 #endif
-    return err == 0 ? PR_SUCCESS : PR_FAILURE;
 }
 
 static void
@@ -642,7 +678,8 @@ _pl_NativeNotify(PLEventQueue* self)
 
     count = write(self->eventPipe[1], buf, 1);
 	self->notifyCount++;
-    return (count == 1) ? PR_SUCCESS : PR_FAILURE;
+    return (count == 1 || (count == -1 && (errno == EAGAIN
+    || errno == EWOULDBLOCK))) ? PR_SUCCESS : PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_UNIX */
 
@@ -675,7 +712,8 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
     /* consume the byte NativeNotify put in our pipe: */
     count = read(self->eventPipe[0], &c, 1);
 	self->notifyCount--;
-    return ((count == 1 && c == NOTIFY_TOKEN) || count == 0)
+    return ((count == 1 && c == NOTIFY_TOKEN) || (count == -1
+    && (errno == EAGAIN || errno == EWOULDBLOCK)))
     ? PR_SUCCESS : PR_FAILURE;
 
 #else
