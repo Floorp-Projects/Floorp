@@ -3000,7 +3000,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 }
 
 PK11SymKey *
-PK11_PubDeriveExtended(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
+PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
 	PRBool isSender, SECItem *randomA, SECItem *randomB, 
 	CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
 	CK_ATTRIBUTE_TYPE operation, int keySize,
