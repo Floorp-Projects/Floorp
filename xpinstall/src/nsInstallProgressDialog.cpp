@@ -38,8 +38,6 @@
 #include "nsIDOMElement.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsPIXPIManagerCallbacks.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

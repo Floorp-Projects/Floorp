@@ -32,8 +32,6 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsPIXPIManagerCallbacks.h"    
 
 #include "nsIDocument.h"
