@@ -24,6 +24,16 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
+/* taken from ../nsBlender.h */
+typedef enum
+{
+  nsLowQual = 0,
+  nsLowMedQual,
+  nsMedQual,
+  nsHighMedQual,
+  nsHighQual
+} nsBlendQuality;
+
 class nsImageMotif : public nsIImage
 {
 public:
@@ -35,10 +45,12 @@ public:
   /**
   @see nsIImage.h
   */
+  virtual PRInt32     GetBytesPix()       { return mNumBytesPixel; }
   virtual PRInt32     GetHeight()         { return mHeight; }
   virtual PRInt32     GetWidth()          { return mWidth; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual void*       GetBitInfo()        { return nsnull; }
+  virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -108,6 +120,7 @@ private:
   PRBool     mConverted;
   PRUint8    *mBitsForCreate;
   PRInt32    mSizeImage;
+  PRBool     mIsTopToBottom;
   XImage     *mImage ;
   nsColorMap *mColorMap;
   PRInt16     mNumPalleteColors;
