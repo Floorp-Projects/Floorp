@@ -139,6 +139,8 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
   return mFocusController->GetFocusedElement(aElement);
 }
 
@@ -146,6 +148,7 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindowInternal> window;
   nsresult rv = mFocusController->GetFocusedWindow(getter_AddRefs(window));
@@ -158,6 +161,8 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::SetFocusedElement(nsIDOMElement* aElement)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
   return mFocusController->SetFocusedElement(aElement);
 }
 
@@ -165,13 +170,11 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::SetFocusedWindow(nsIDOMWindow* aWindow)
 {
   EnsureFocusController();
-  if (mFocusController) {
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(aWindow));
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
 
-    return mFocusController->SetFocusedWindow(window);
-  }
+  nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(aWindow));
 
-  return NS_ERROR_FAILURE;
+  return mFocusController->SetFocusedWindow(window);
 }
 
 NS_IMETHODIMP
@@ -319,6 +322,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
   nsresult rv;
 
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
 
   nsAutoString id;
   nsCOMPtr<nsIDOMElement> element;
@@ -418,6 +422,8 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
   return mFocusController->GetControllers(aResult);
 }
 
@@ -425,6 +431,8 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIController** _retval)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
   return mFocusController->GetControllerForCommand(aCommand, _retval);
 }
 
@@ -432,6 +440,8 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::GetSuppressFocusScroll(PRBool* aSuppressFocusScroll)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
   return mFocusController->GetSuppressFocusScroll(aSuppressFocusScroll);
 }
 
@@ -439,6 +449,8 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::SetSuppressFocusScroll(PRBool aSuppressFocusScroll)
 {
   EnsureFocusController();
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
   return mFocusController->SetSuppressFocusScroll(aSuppressFocusScroll);
 }
 
