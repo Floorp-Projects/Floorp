@@ -404,13 +404,15 @@ NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result)
 
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
-    : mIsSynchronous(PR_FALSE),
+    : mInner(nsnull),
+      mIsSynchronous(PR_FALSE),
       mIsWritable(PR_TRUE),
       mIsDirty(PR_FALSE),
       mNamedDataSourceURIs(nsnull),
       mNumNamedDataSourceURIs(0),
       mCSSStyleSheetURLs(nsnull),
       mNumCSSStyleSheetURLs(0),
+      mRootResource(nsnull),
       mIsLoading(PR_FALSE),
       mNameSpaces(nsnull)
 {
@@ -465,6 +467,9 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
         NS_RELEASE(doomed->Prefix);
         delete doomed;
     }
+
+    NS_IF_RELEASE(mRootResource);
+    NS_RELEASE(mInner);
 }
 
 
@@ -789,8 +794,9 @@ RDFXMLDataSourceImpl::SetRootResource(nsIRDFResource* aResource)
     if (! aResource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ADDREF(aResource);
+    NS_IF_RELEASE(mRootResource);
     mRootResource = aResource;
+    NS_IF_ADDREF(mRootResource);
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
@@ -802,7 +808,7 @@ RDFXMLDataSourceImpl::SetRootResource(nsIRDFResource* aResource)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::GetRootResource(nsIRDFResource** aResource)
 {
-    NS_ADDREF(mRootResource);
+    NS_IF_ADDREF(mRootResource);
     *aResource = mRootResource;
     return NS_OK;
 }
