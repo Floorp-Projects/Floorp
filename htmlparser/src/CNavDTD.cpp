@@ -945,14 +945,10 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     return CanContainFormElement((eHTMLTags)aParent,(eHTMLTags)aChild);
   }
 
-  
   switch((eHTMLTags)aParent) {
-    case eHTMLTag_a:
-    case eHTMLTag_acronym:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_address:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet2,aChild));
+      break;
 
     case eHTMLTag_applet:
       {
@@ -970,18 +966,45 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
         result=PRBool(0!=strchr(okTags,aChild));
       }
 
-
     case eHTMLTag_area:
     case eHTMLTag_base:
     case eHTMLTag_basefont:
     case eHTMLTag_br:
-      break;  //singletons can't contain other tags
+    case eHTMLTag_hr:      
+    case eHTMLTag_img:
+    case eHTMLTag_input:
+    case eHTMLTag_isindex:
+    case eHTMLTag_meta:
+    case eHTMLTag_spacer:
+    case eHTMLTag_wbr:
+      break;    //singletons can't contain anything...
 
+    case eHTMLTag_a:
+    case eHTMLTag_acronym:
     case eHTMLTag_bdo:
     case eHTMLTag_big:
     case eHTMLTag_blink:
     case eHTMLTag_bold:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+    case eHTMLTag_cite:
+    case eHTMLTag_code:
+    case eHTMLTag_del:
+    case eHTMLTag_dfn:
+    case eHTMLTag_em:
+    case eHTMLTag_font:
+    case eHTMLTag_italic:
+    case eHTMLTag_ins:
+    case eHTMLTag_kbd:
+    case eHTMLTag_small:
+    case eHTMLTag_span:
+    case eHTMLTag_spell:
+    case eHTMLTag_strike:
+    case eHTMLTag_sub:
+    case eHTMLTag_sup:
+    case eHTMLTag_tt:
+    case eHTMLTag_u:
+    case eHTMLTag_var:
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_blockquote:
     case eHTMLTag_body:
@@ -999,18 +1022,13 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_center:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
-    case eHTMLTag_cite:   case eHTMLTag_code:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_col:
     case eHTMLTag_colgroup:
       break;    //singletons can't contain anything...
 
     case eHTMLTag_dd:
+    case eHTMLTag_dt:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
-    case eHTMLTag_del:  case eHTMLTag_dfn:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_div:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
@@ -1022,19 +1040,12 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       }
       break;
 
-    case eHTMLTag_dt:
-      break;    //singletons can't contain anything...
-
-    case eHTMLTag_em:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_fieldset:
       if(eHTMLTag_legend==aChild)
         result=PR_TRUE;
       else result=PRBool(0!=strchr(gTagSet1,aChild)); 
       break;
 
-    case eHTMLTag_font:
     case eHTMLTag_form:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
@@ -1066,9 +1077,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       }
       break;
 
-    case eHTMLTag_hr:      
-      break;    //singletons can't contain anything...
-
     case eHTMLTag_html:
       {
         static char  okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,0};
@@ -1076,21 +1084,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       }
       break;
 
-    case eHTMLTag_iframe:
+    case eHTMLTag_iframe:/* XXX wrong */
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
-    case eHTMLTag_img:
-    case eHTMLTag_input:
-    case eHTMLTag_isindex:
-    case eHTMLTag_spacer:
-    case eHTMLTag_wbr:
-      break;    //singletons can't contain anything...
-
-    case eHTMLTag_italic:
-    case eHTMLTag_ins:
-    case eHTMLTag_kbd:
     case eHTMLTag_label:
-    case eHTMLTag_legend:
+    case eHTMLTag_legend:/* XXX not sure */
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_layer:
@@ -1117,7 +1115,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_math:
       break; //nothing but plain text...
 
-    case eHTMLTag_meta:
       break;  //singletons can't contain other tags
 
     case eHTMLTag_menu:
@@ -1170,12 +1167,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_select:
       result=PR_TRUE; break; //for now, allow select to contain anything...
 
-    case eHTMLTag_small:
-    case eHTMLTag_span:
-    case eHTMLTag_spell:
-    case eHTMLTag_strike:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_style:
       break;  //singletons can't contain other tags
 
@@ -1194,9 +1185,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result=PRBool(eHTMLTag_tr==aChild); break;
 
     case eHTMLTag_th:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); 
-      break;
-
     case eHTMLTag_td:
       {
         static char  extraTags[]={eHTMLTag_newline,0};
@@ -1216,11 +1204,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
-
-    case eHTMLTag_tt:
-    case eHTMLTag_u:
-    case eHTMLTag_var:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_userdefined:
       result=PR_TRUE; break; //XXX for now...
