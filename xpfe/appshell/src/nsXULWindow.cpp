@@ -71,7 +71,6 @@
 #include <windows.h>   // for SetProcessWorkingSetSize()
 #include <malloc.h>    // for _heapmin()
 #endif
-
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
 #include "nsIWebShellWindow.h"
@@ -253,51 +252,54 @@ NS_IMETHODIMP nsXULWindow::RemoveChildWindow(nsIXULWindow *aChild)
 
 NS_IMETHODIMP nsXULWindow::ShowModal()
 {
-   nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
-   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
+  NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
-   appShell->Create(0, nsnull);
-   appShell->Spinup();
-   // Store locally so it doesn't die on us
-   nsCOMPtr<nsIWidget> window = mWindow;
-   nsCOMPtr<nsIXULWindow> tempRef = this;  
-                                          
+  appShell->Create(0, nsnull);
+  appShell->Spinup();
+  // Store locally so it doesn't die on us
+  nsCOMPtr<nsIWidget> window = mWindow;
+  nsCOMPtr<nsIXULWindow> tempRef = this;  
 
-   window->SetModal(PR_TRUE);
-   mContinueModalLoop = PR_TRUE;
-   EnableParent(PR_FALSE);
+  window->SetModal(PR_TRUE);
+  mContinueModalLoop = PR_TRUE;
+  EnableParent(PR_FALSE);
 
-   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-   nsresult rv = NS_OK;
-   if(stack  && NS_SUCCEEDED(stack->Push(nsnull)))
-      {
-      while(NS_SUCCEEDED(rv) && mContinueModalLoop)
-         {
-         void* data;
-         PRBool isRealEvent;
-         PRBool processEvent;
+  nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+  if (appShellService)
+      appShellService->TopLevelWindowIsModal(
+                         NS_STATIC_CAST(nsIXULWindow*, this), PR_TRUE);
 
-         rv = appShell->GetNativeEvent(isRealEvent, data);
-         if(NS_SUCCEEDED(rv))
-            {
-            window->ModalEventFilter(isRealEvent, data, &processEvent);
-            if(processEvent)
-               appShell->DispatchNativeEvent(isRealEvent, data);
-            }
-         }
-      JSContext* cx;
-      stack->Pop(&cx);
-      NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
+  nsresult rv = NS_OK;
+  if (stack && NS_SUCCEEDED(stack->Push(nsnull))) {
+    while(NS_SUCCEEDED(rv) && mContinueModalLoop) {
+      void* data;
+      PRBool isRealEvent;
+      PRBool processEvent;
+
+      rv = appShell->GetNativeEvent(isRealEvent, data);
+      if(NS_SUCCEEDED(rv)) {
+        window->ModalEventFilter(isRealEvent, data, &processEvent);
+        if(processEvent)
+          appShell->DispatchNativeEvent(isRealEvent, data);
       }
-   else
-      rv = NS_ERROR_FAILURE;
+    }
+    JSContext* cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+  } else
+    rv = NS_ERROR_FAILURE;
 
-   mContinueModalLoop = PR_FALSE;
+  mContinueModalLoop = PR_FALSE;
+  window->SetModal(PR_FALSE);
+  if (appShellService)
+      appShellService->TopLevelWindowIsModal(
+                         NS_STATIC_CAST(nsIXULWindow*, this), PR_FALSE);
+  EnableParent(PR_TRUE);
+  appShell->Spindown();
 
-   window->SetModal(PR_FALSE);
-   appShell->Spindown();
-
-   return mModalStatus;
+  return mModalStatus;
 }
 
 //*****************************************************************************
@@ -710,6 +712,25 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
    mDebuting = PR_FALSE;
    NS_TIMELINE_LEAVE("nsXULWindow::SetVisibility");
    return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetEnabled(PRBool *aEnabled)
+{
+  NS_ENSURE_ARG_POINTER(aEnabled);
+  if (mWindow)
+    mWindow->IsEnabled(aEnabled);
+  else
+    *aEnabled = PR_FALSE; // better guess than most
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetEnabled(PRBool aEnable)
+{
+  if (mWindow) {
+    mWindow->Enable(aEnable);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULWindow::GetMainWidget(nsIWidget** aMainWidget)
@@ -1448,11 +1469,9 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 
 NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
 {
-   if (mContinueModalLoop) // was a modal window
-     EnableParent(PR_TRUE);
-   mContinueModalLoop = PR_FALSE;
-   mModalStatus = aStatus;
-   return NS_OK;
+  mContinueModalLoop = PR_FALSE;
+  mModalStatus = aStatus;
+  return NS_OK;
 }
 
 // top-level function to create a new window
