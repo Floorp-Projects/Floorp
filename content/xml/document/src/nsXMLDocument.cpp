@@ -276,7 +276,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
      NS_RELEASE(contentTypeKey);
      if (NS_SUCCEEDED(rv)) {
 	nsAutoString contentType;
-	contentType = contenttypeheader;
+	contentType.Assign(contenttypeheader);
 	PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
 	if(kNotFound != start)
 	{

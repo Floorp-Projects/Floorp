@@ -1802,7 +1802,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         if (focusable) {
           nsAutoString value;
           child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
-          if (value != "true")
+          if (!value.Equals("true"))
             disabled = PR_FALSE;
         }
       }

@@ -173,7 +173,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
   {
     nsString buffer;
 
-    if (mMimeType == "text/xif")
+    if (mMimeType.Equals("text/xif"))
     {
       mDocument->CreateXIF(aOutputString, mSelection);
       return NS_OK;
@@ -192,7 +192,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
     {
       nsIHTMLContentSink* sink = nsnull;
 
-      if (mMimeType == "text/html")
+      if (mMimeType.Equals("text/html"))
         rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString, mFlags);
 
       else  // default to text/plain
@@ -249,7 +249,7 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
     if (NS_SUCCEEDED(rv)) {
       nsIHTMLContentSink* sink = nsnull;
 
-      if (mMimeType == "text/html")
+      if (mMimeType.Equals("text/html"))
         rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset, mFlags);
 
       else

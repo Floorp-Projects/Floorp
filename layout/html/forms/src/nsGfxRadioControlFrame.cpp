@@ -125,7 +125,7 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
-    PRBool state = (aValue == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
+    PRBool state = (aValue.Equals(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
 
 
     // if there is no form than the radiobtn is an orphan
@@ -365,7 +365,7 @@ nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState*
   mIsRestored = PR_TRUE;
   nsAutoString string;
   aState->GetStateProperty("checked", string);
-  PRBool state = (string == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
+  PRBool state = (string.Equals(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
 
   SetRadioState(aPresContext, state); // sets mChecked
   mRestoredChecked = mChecked;

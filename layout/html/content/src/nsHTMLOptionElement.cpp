@@ -260,7 +260,7 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
       nsString value;
       value.Append(indx, 10); // Save the index in base 10
       formControlFrame->GetProperty(nsHTMLAtoms::selected, value);
-      if (value == "1")
+      if (value.Equals("1"))
         *aValue = PR_TRUE;
       else
         *aValue = PR_FALSE;

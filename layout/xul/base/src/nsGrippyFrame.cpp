@@ -91,7 +91,7 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
 	nsString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::state, value))
     {
-     if (value=="collapsed")
+     if (value.Equals("collapsed"))
        a = "open";
     }
 

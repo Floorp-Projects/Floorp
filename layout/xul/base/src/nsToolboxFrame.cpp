@@ -458,7 +458,7 @@ nsToolboxFrame::CalculateGrippies(nsIPresContext* aPresContext)
     value = "";
     childContent->GetAttribute(kNameSpaceID_None, kCollapsedAtom, value);
 
-    if (value == "true") {  // The bar is collapsed!
+    if (value.Equals("true")) {  // The bar is collapsed!
       nscoord grippyWidth;
       nscoord grippyHeight;
 

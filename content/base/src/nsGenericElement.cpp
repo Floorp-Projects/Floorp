@@ -1296,7 +1296,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
     propName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     if (propName.Length() > 2) 
       prefix.Assign(propName.GetUnicode(), 2);
-    if (prefix == "on") {
+    if (prefix.Equals("on")) {
       nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(propName));
       nsIEventListenerManager *manager = nsnull;
 

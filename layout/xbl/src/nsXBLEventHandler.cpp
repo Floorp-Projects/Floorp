@@ -101,7 +101,7 @@ nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  if (mEventName != "keyup")
+  if (!mEventName.Equals("keyup"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
@@ -112,7 +112,7 @@ nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  if (mEventName != "keydown")
+  if (!mEventName.Equals("keydown"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
@@ -123,7 +123,7 @@ nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  if (mEventName != "keypress")
+  if (!mEventName.Equals("keypress"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
@@ -134,7 +134,7 @@ nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
    
 nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName != "mousedown")
+  if (!mEventName.Equals("mousedown"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
@@ -145,7 +145,7 @@ nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName != "mouseup")
+  if (!mEventName.Equals("mouseup"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
@@ -156,7 +156,7 @@ nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName != "click")
+  if (!mEventName.Equals("click"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
@@ -167,7 +167,7 @@ nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName != "dblclick")
+  if (!mEventName.Equals("dblclick"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
@@ -178,7 +178,7 @@ nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName != "mouseover")
+  if (!mEventName.Equals("mouseover"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
@@ -189,7 +189,7 @@ nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName != "mouseout")
+  if (!mEventName.Equals("mouseout"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
@@ -200,7 +200,7 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 
 nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
 {
-  if (mEventName != "command")
+  if (!mEventName.Equals("command"))
     return NS_OK;
 
   ExecuteHandler(nsAutoString("command"), aEvent);
@@ -209,7 +209,7 @@ nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::Create(nsIDOMEvent* aEvent)
 {
-  if (mEventName != "create")
+  if (!mEventName.Equals("create"))
     return NS_OK;
 
   ExecuteHandler(nsAutoString("create"), aEvent);
@@ -218,7 +218,7 @@ nsresult nsXBLEventHandler::Create(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::Close(nsIDOMEvent* aEvent)
 {
-  if (mEventName != "close")
+  if (!mEventName.Equals("close"))
     return NS_OK;
 
   ExecuteHandler(nsAutoString("close"), aEvent);
@@ -227,7 +227,7 @@ nsresult nsXBLEventHandler::Close(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::Broadcast(nsIDOMEvent* aEvent)
 {
-  if (mEventName != "broadcast")
+  if (!mEventName.Equals("broadcast"))
     return NS_OK;
 
   ExecuteHandler(nsAutoString("broadcast"), aEvent);
@@ -236,7 +236,7 @@ nsresult nsXBLEventHandler::Broadcast(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
 {
-  if (mEventName != "commandupdate")
+  if (!mEventName.Equals("commandupdate"))
     return NS_OK;
 
   ExecuteHandler(nsAutoString("commandupdate"), aEvent);
@@ -245,7 +245,7 @@ nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 {
-  if (mEventName != "destroy")
+  if (!mEventName.Equals("destroy"))
     return NS_OK;
 
   ExecuteHandler(nsAutoString("destroy"), aEvent);

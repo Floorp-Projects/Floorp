@@ -295,7 +295,7 @@ nsSliderFrame::IsHorizontal(nsIContent* scrollbar)
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == scrollbar->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value))
   {
-    if (value=="vertical")
+    if (value.Equals("vertical"))
       isHorizontal = PR_FALSE;
   }
 

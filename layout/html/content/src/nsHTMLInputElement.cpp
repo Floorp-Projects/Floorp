@@ -557,7 +557,7 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
     }
   }
   
-  if (value == "1")
+  if (value.Equals("1"))
     *aValue = PR_TRUE;
   else
     *aValue = PR_FALSE;

@@ -3557,7 +3557,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 				if (0 == mimeType.Length()) {
 					nsString extension;
 					aHref.Right(extension, 4);
-					if (extension == ".css") {
+					if (extension.Equals(".css")) {
 						isStyleSheet = PR_TRUE;			// strict mode + no mime type + '.css' extension
 					}
 				}

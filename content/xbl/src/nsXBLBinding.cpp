@@ -405,7 +405,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     // in the excludes list.
     nsAutoString excludes;
     content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-    if (excludes != "*") {
+    if (!excludes.Equals("*")) {
       if (!excludes.IsEmpty()) {
         // Walk the children and ensure that all of them
         // are in the excludes array.
@@ -450,7 +450,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
       nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
       nsAutoString name;
       attr->GetName(name);
-      if (name != "excludes") {
+      if (!name.Equals("excludes")) {
         nsAutoString value;
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
         element->GetAttribute(name, value);
@@ -504,7 +504,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
       nsAutoString type;
       child->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
     
-      if (type != "") {
+      if (!type.IsEmpty()) {
         nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
         PRBool found = PR_FALSE;
         nsIID iid;
@@ -526,7 +526,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
             PRBool useCapture = PR_FALSE;
             nsAutoString capturer;
             child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
-            if (capturer == "true")
+            if (capturer.Equals("true"))
               useCapture = PR_TRUE;
 
             // Add the event listener.
@@ -569,7 +569,7 @@ nsXBLBinding::GetBaseTag(nsIAtom** aResult)
   nsAutoString extends;
   mBinding->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
 
-  if (extends != "") {
+  if (!extends.IsEmpty()) {
     // Obtain the namespace prefix.
     nsAutoString prefix;
     PRInt32 offset = extends.FindChar(kNameSpaceSeparator);
@@ -657,7 +657,7 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
           // Construct a new text node and insert it.
           nsAutoString value;
           nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
-          if (value != "") {
+          if (!value.IsEmpty()) {
             nsCOMPtr<nsIDOMText> textNode;
             nsCOMPtr<nsIDocument> doc;
             mBoundElement->GetDocument(*getter_AddRefs(doc));
@@ -731,7 +731,7 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   nsAutoString element;
   aTag->ToString(element);
 
-  if (aList == "*")
+  if (aList.Equals("*"))
       return PR_TRUE; // match _everything_!
 
   PRInt32 indx = aList.Find(element);
@@ -762,7 +762,7 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
   // ability to map one attribute to another.
   nsAutoString inherits;
   aElement->GetAttribute(kNameSpaceID_None, kInheritsAtom, inherits);
-  if (inherits != "") {
+  if (!inherits.IsEmpty()) {
     if (!mAttributeTable) {
         mAttributeTable = new nsSupportsHashtable(8);
     }
@@ -825,7 +825,7 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
         aElement->SetAttribute(kNameSpaceID_None, attribute, value, PR_TRUE);
         nsCOMPtr<nsIAtom> tag;
         aElement->GetTag(*getter_AddRefs(tag));
-        if ((tag.get() == kHTMLAtom) && (attribute.get() == kValueAtom) && value != "") {
+        if ((tag.get() == kHTMLAtom) && (attribute.get() == kValueAtom) && !value.IsEmpty()) {
           nsCOMPtr<nsIDOMText> textNode;
           nsCOMPtr<nsIDocument> doc;
           mBoundElement->GetDocument(*getter_AddRefs(doc));
@@ -873,21 +873,21 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
 PRBool
 nsXBLBinding::IsMouseHandler(const nsString& aName)
 {
-  return ((aName == "click") || (aName == "dblclick") || (aName=="mousedown") ||
-          (aName == "mouseover") || (aName == "mouseout") || (aName == "mouseup"));
+  return ((aName.Equals("click")) || (aName.Equals("dblclick")) || (aName.Equals("mousedown")) ||
+          (aName.Equals("mouseover")) || (aName.Equals("mouseout")) || (aName.Equals("mouseup")));
 }
 
 PRBool
 nsXBLBinding::IsKeyHandler(const nsString& aName)
 {
-  return ((aName == "keypress") || (aName == "keydown") || (aName == "keyup"));
+  return ((aName.Equals("keypress")) || (aName.Equals("keydown")) || (aName.Equals("keyup")));
 }
 
 PRBool
 nsXBLBinding::IsXULHandler(const nsString& aName)
 {
-  return ((aName == "create") || (aName == "destroy") || (aName=="broadcast") ||
-          (aName == "command") || (aName == "commandupdate") || (aName == "close"));
+  return ((aName.Equals("create")) || (aName.Equals("destroy")) || (aName.Equals("broadcast")) ||
+          (aName.Equals("command")) || (aName.Equals("commandupdate")) || (aName.Equals("close")));
 }
 
 NS_IMETHODIMP

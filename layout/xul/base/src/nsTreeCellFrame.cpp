@@ -84,7 +84,7 @@ nsTreeCellFrame::Init(nsIPresContext*  aPresContext,
   nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, attrValue);
   attrValue.ToLowerCase();
   PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-					    (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+					    (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue.Equals("true")));
   SetAllowEvents(allowEvents);
 
   // Determine if we're a column header or not.
@@ -171,7 +171,7 @@ nsTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // This allows selective overriding for subcontent.
         nsAutoString value;
         content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-        if (value == "true")
+        if (value.Equals("true"))
           return result;
       }
     }
@@ -356,7 +356,7 @@ nsTreeCellFrame::ToggleOpenClose()
 	  nsAutoString attrValue;
     treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded = (attrValue=="true");
+    PRBool isExpanded = (attrValue.Equals("true"));
     if (isExpanded)
 	  {
 		  // We're collapsing and need to remove frames from the flow.
@@ -391,7 +391,7 @@ nsTreeCellFrame::Open()
 	  nsAutoString attrValue;
     treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded = (attrValue=="true");
+    PRBool isExpanded = (attrValue.Equals("true"));
     if (!isExpanded) {
 		  // We're expanding and need to add frames to the flow.
 		  treeItem->SetAttribute("open", "true");
@@ -420,7 +420,7 @@ nsTreeCellFrame::Close()
 	  nsAutoString attrValue;
     treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded = (attrValue=="true");
+    PRBool isExpanded = (attrValue.Equals("true"));
     if (isExpanded) {
 		  // We're expanding and need to add frames to the flow.
 		  treeItem->RemoveAttribute("open");

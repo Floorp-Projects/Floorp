@@ -233,7 +233,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     // This allows selective overriding for subcontent.
     nsAutoString value;
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-    if (value == "true")
+    if (value.Equals("true"))
       return result;
   }
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
@@ -407,7 +407,7 @@ PRBool nsMenuFrame::IsGenerated()
   if (child) {
     nsString genVal;
     child->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
-    if (genVal == "")
+    if (genVal.IsEmpty())
       return PR_FALSE;
   }
 
@@ -426,7 +426,7 @@ nsMenuFrame::MarkAsGenerated()
   if (child) {
     nsAutoString genVal;
     child->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
-    if (genVal == "")
+    if (genVal.IsEmpty())
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true", PR_TRUE);
   }
 
@@ -468,7 +468,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   if (aAttribute == nsXULAtoms::open) {
     aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
-    if (value == "true")
+    if (value.Equals("true"))
       OpenMenuInternal(PR_TRUE);
     else
       OpenMenuInternal(PR_FALSE);
@@ -572,15 +572,15 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       
       if (onMenuBar) {
-        if (popupAnchor == "")
+        if (popupAnchor.IsEmpty())
           popupAnchor = "bottomleft";
-        if (popupAlign == "")
+        if (popupAlign.IsEmpty())
           popupAlign = "topleft";
       }
       else {
-        if (popupAnchor == "")
+        if (popupAnchor.IsEmpty())
           popupAnchor = "topright";
-        if (popupAlign == "")
+        if (popupAlign.IsEmpty())
           popupAlign = "topleft";
       }
 
@@ -837,15 +837,15 @@ nsMenuFrame::DidReflow(nsIPresContext* aPresContext,
       mMenuParent->IsMenuBar(onMenuBar);
 
     if (onMenuBar) {
-      if (popupAnchor == "")
+      if (popupAnchor.IsEmpty())
           popupAnchor = "bottomleft";
-      if (popupAlign == "")
+      if (popupAlign.IsEmpty())
           popupAlign = "topleft";
     }
     else {
-      if (popupAnchor == "")
+      if (popupAnchor.IsEmpty())
         popupAnchor = "topright";
-      if (popupAlign == "")
+      if (popupAlign.IsEmpty())
         popupAlign = "topleft";
     }
 
@@ -945,7 +945,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
     if (!mMenuOpen && mMenuParent) {
       nsAutoString active = "";
       mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-      if (active == "true") {
+      if (active.Equals("true")) {
         // We're still the active menu.
         OpenMenu(PR_TRUE);
       }
@@ -962,7 +962,7 @@ nsMenuFrame::IsDisabled()
 {
   nsAutoString disabled;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled == "true")
+  if (disabled.Equals("true"))
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -972,9 +972,9 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value == "checkbox")
+  if (value.Equals("checkbox"))
     mType = eMenuType_Checkbox;
-  else if (value == "radio") {
+  else if (value.Equals("radio")) {
     mType = eMenuType_Radio;
 
     nsAutoString value;
@@ -999,7 +999,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                          value);
-  newChecked = (value == "true");
+  newChecked = (value.Equals("true"));
 
   if (newChecked == mChecked) {
     /* checked state didn't change */
@@ -1093,7 +1093,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 {
   nsString accelText;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
-  if (accelText != "") {
+  if (!accelText.IsEmpty()) {
     // Just use this.
     aAccelString = accelText;
     return;
@@ -1137,7 +1137,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 	  
   nsAutoString xulkey;
   keyElement->GetAttribute(nsAutoString("xulkey"), xulkey);
-  if (xulkey == "true") {
+  if (xulkey.Equals("true")) {
       // Set the default for the xul key modifier
 #ifdef XP_MAC
       commandValue = "true";
@@ -1150,24 +1150,24 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   
   PRBool prependPlus = PR_FALSE;
 
-  if(commandValue != "" && commandValue != "false") {
+  if(!commandValue.IsEmpty() && !commandValue.Equals("false")) {
     prependPlus = PR_TRUE;
 	  aAccelString += "Ctrl"; // Hmmm. Kinda defeats the point of having an abstraction.
   }
 
-  if(controlValue != "" && controlValue != "false") {
+  if(!controlValue.IsEmpty() && !controlValue.Equals("false")) {
     prependPlus = PR_TRUE;
 	  aAccelString += "Ctrl";
   }
 
-  if(shiftValue != "" && shiftValue != "false") {
+  if(!shiftValue.IsEmpty() && !shiftValue.Equals("false")) {
     if (prependPlus)
       aAccelString += "+";
     prependPlus = PR_TRUE;
     aAccelString += "Shift";
   }
 
-  if (altValue != "" && altValue != "false") {
+  if (!altValue.IsEmpty() && !altValue.Equals("false")) {
 	  if (prependPlus)
       aAccelString += "+";
     prependPlus = PR_TRUE;
@@ -1175,14 +1175,14 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   }
 
   keyChar.ToUpperCase();
-  if (keyChar != "") {
+  if (!keyChar.IsEmpty()) {
     if (prependPlus)
       aAccelString += "+";
     prependPlus = PR_TRUE;
     aAccelString += keyChar;
   }
 
-  if (aAccelString != "")
+  if (!aAccelString.IsEmpty())
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, aAccelString, PR_FALSE);
 }
 

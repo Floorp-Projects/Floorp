@@ -1960,7 +1960,7 @@ nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aR
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
   nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID += nameSpace;
+  progID.Append(nameSpace);
 
   // Retrieve the appropriate factory.
   NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);

@@ -88,11 +88,11 @@ nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
 
   nsAutoString tagName;
   element->GetTagName(tagName);
-  if (tagName == "titledbutton") {
+  if (tagName.Equals("titledbutton")) {
     // Find out if we're the twisty.
     nsAutoString classAttr;
     element->GetAttribute("class", classAttr);
-    if (classAttr == "twisty") {
+    if (classAttr.Equals("twisty")) {
       // Retrieve the parent treeitem.
       nsCOMPtr<nsIDOMElement> treeItem;
       GetTreeItem(element, getter_AddRefs(treeItem));
@@ -107,7 +107,7 @@ nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
 
       nsAutoString open;
       treeItem->GetAttribute("open", open);
-      if (open == "true")
+      if (open.Equals("true"))
         treeItem->RemoveAttribute("open");
       else treeItem->SetAttribute("open", "true");
     }

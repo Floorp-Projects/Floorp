@@ -294,7 +294,7 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString accesskey;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                          accesskey);
-  if (accesskey != "") {    
+  if (!accesskey.IsEmpty()) {    
 	  mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
 	  if (mAccesskeyIndex == -1) {
 		  nsString tmpstring = "(" ;
@@ -808,7 +808,7 @@ nsTitledButtonFrame::UpdateAccessUnderline()
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
-    if (accesskey == "")
+    if (accesskey.IsEmpty())
         return;                     // our work here is done
     
     mAccesskeyIndex = mCroppedTitle.Find(accesskey, PR_TRUE);
@@ -1280,9 +1280,9 @@ nsTitledButtonFrame::MouseClicked (nsIPresContext* aPresContext)
 nsTitledButtonFrame::CheckState
 nsTitledButtonFrame :: StringToCheckState ( const nsString & aStateAsString )
 {
-  if ( aStateAsString == NS_STRING_TRUE )
+  if ( aStateAsString.Equals(NS_STRING_TRUE) )
     return eOn;
-  else if ( aStateAsString == NS_STRING_FALSE )
+  else if ( aStateAsString.Equals(NS_STRING_FALSE) )
     return eOff;
   
   // not true and not false means mixed

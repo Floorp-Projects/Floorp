@@ -111,7 +111,7 @@ void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame 
 
 PRBool nsFormControlHelper::GetBool(const nsString& aValue)
 {
-  if (aValue == NS_STRING_TRUE)
+  if (aValue.Equals(NS_STRING_TRUE))
     return(PR_TRUE);
   else
     return (PR_FALSE);

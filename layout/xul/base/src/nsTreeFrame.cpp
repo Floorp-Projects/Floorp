@@ -491,7 +491,7 @@ nsTreeFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);
   element->GetAttribute("rows", value);
 
-  if (value != "") {
+  if (!value.IsEmpty()) {
     PRInt32 dummy;
     PRInt32 count = value.ToInteger(&dummy);
     mFixedRows = count;
@@ -512,7 +512,7 @@ nsTreeFrame::ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex,
     if (colContent) {
       nsAutoString fixedValue;
       colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
-      if (fixedValue != "true") {
+      if (!fixedValue.Equals("true")) {
         // We are a proportional column.
         if (aResult)
           *aResult = result;

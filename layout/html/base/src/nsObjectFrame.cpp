@@ -650,7 +650,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 	if (classid.Find("clsid:") != -1)
 	{
             classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
-	    bJavaPluginClsid = (classid == JAVA_CLASS_ID);
+	    bJavaPluginClsid = (classid.Equals(JAVA_CLASS_ID));
 	}
 
       // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
@@ -702,7 +702,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       {
         // These are some builtin types that we know about for now.
         // (Eventually this will move somewhere else.)
-        if (classid == "browser")
+        if (classid.Equals("browser"))
         {
           widgetCID = kCAppShellCID;
 	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
