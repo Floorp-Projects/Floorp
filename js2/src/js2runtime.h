@@ -774,7 +774,7 @@ XXX ...couldn't get this to work...
         // XXX these initializations are for ParameterBarrel & Activation which are 'types' only
         // because they take advantage of the slotted variable handling - maybe an interim class
         // for just that purpose would be better...
-        JSType() : JSInstance(NULL, NULL), mSuperType(NULL), mIsDynamic(false), mVariableCount(0) { }
+        JSType() : JSInstance(NULL, NULL), mSuperType(NULL), mVariableCount(0), mIsDynamic(false) { }
 
     public:        
         JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto);

@@ -3048,10 +3048,13 @@ void Context::initBuiltins()
     // (which we don't actually have, hmm).
     // For String, etc. this same issue needs to be finessed
 
+    JSValue protoVal;
+
     JSFunction *funProto = new JSFunction(this, Object_Type, NULL);
     funProto->mPrototype = Object_Type->mPrototypeObject;
     funProto->defineVariable(this, UnderbarPrototype_StringAtom, NULL, 0, Object_Type, funProto->mPrototype);
-    Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, JSValue(funProto), kNullValue);
+    protoVal            = JSValue(funProto);
+    Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, protoVal, kNullValue);
     Function_Type->mPrototype = Function_Type->mPrototypeObject;
     funProto->mType = Function_Type;
 
@@ -3061,28 +3064,33 @@ void Context::initBuiltins()
 
     
     JSNumberInstance *numProto  = new JSNumberInstance(this);
-    Number_Type         = new JSNumberType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, JSValue(numProto), Function_Type->mPrototypeObject);
+    protoVal            = JSValue(numProto);
+    Number_Type         = new JSNumberType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     numProto->mType     = Number_Type;
 
     Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type, kNullValue, kNullValue);
 
     JSStringInstance *strProto  = new JSStringInstance(this);
-    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type, JSValue(strProto), Function_Type->mPrototypeObject);
+    protoVal            = JSValue(strProto);
+    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     strProto->mValue    = &Empty_StringAtom;
     strProto->mPrototype = Function_Type->mPrototypeObject;
     strProto->mType     = String_Type;
     
     JSArrayInstance *arrayProto = new JSArrayInstance(this);
-    Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, JSValue(arrayProto), Function_Type->mPrototypeObject);
+    protoVal            = JSValue(arrayProto);
+    Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     arrayProto->mType   = Array_Type;
 
     JSBooleanInstance *boolProto = new JSBooleanInstance(this);
-    Boolean_Type        = new JSBooleanType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type, JSValue(boolProto), Function_Type->mPrototypeObject);
+    protoVal            = JSValue(boolProto);
+    Boolean_Type        = new JSBooleanType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     boolProto->mValue   = false;
     boolProto->mType    = Boolean_Type;
 
     JSDateInstance *dateProto = new JSDateInstance(this);
-    Date_Type           = new JSDateType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type, JSValue(dateProto), Function_Type->mPrototypeObject);
+    protoVal            = JSValue(dateProto);
+    Date_Type           = new JSDateType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     dateProto->mType    = Date_Type;
     
     Void_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type, kNullValue, kNullValue);
@@ -3101,7 +3109,8 @@ void Context::initBuiltins()
     // XXX RegExp.prototype is set to a RegExp instance, which isn't ECMA (it's supposed to be an Object instance) but
     // is SpiderMonkey compatible.
     JSRegExpInstance *regExpProto = new JSRegExpInstance(this);
-    RegExp_Type         = new JSRegExpType(this, &mWorld.identifiers[widenCString(builtInClasses[21].name)], Object_Type, JSValue(regExpProto), Function_Type->mPrototypeObject);
+    protoVal            = JSValue(regExpProto);
+    RegExp_Type         = new JSRegExpType(this, &mWorld.identifiers[widenCString(builtInClasses[21].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     regExpProto->mPrototype = Object_Type->mPrototypeObject;
     regExpProto->mType = RegExp_Type;
     
