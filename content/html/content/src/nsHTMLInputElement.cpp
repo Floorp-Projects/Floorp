@@ -451,14 +451,32 @@ nsHTMLInputElement::Blur()
 NS_IMETHODIMP
 nsHTMLInputElement::Focus()
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    return NS_OK;
-  }
-  return rv;
+  nsIDocument* doc; // Strong
+  nsresult rv = GetDocument(doc);
+  if (NS_FAILED(rv)) { return rv; }
+  if (!doc) { return NS_ERROR_NULL_POINTER; }
 
+  PRInt32 numShells = doc->GetNumberOfShells();
+  nsIPresShell* shell = nsnull; // Strong
+  nsCOMPtr<nsIPresContext> context;
+  for (PRInt32 i=0; i<numShells; i++) 
+  {
+    shell = doc->GetShellAt(i);
+    if (!shell) { return NS_ERROR_NULL_POINTER; }
+
+    rv = shell->GetPresContext(getter_AddRefs(context));
+    if (NS_FAILED(rv)) { return rv; }
+    if (!context) { return NS_ERROR_NULL_POINTER; }
+
+    rv = SetFocus(context);
+    if (NS_FAILED(rv)) { return rv; }
+
+    NS_RELEASE(shell);
+  }
+  NS_RELEASE(doc);
+
+  // any errors would have been returned above
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -475,12 +493,10 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     NS_RELEASE(esm);
   }
   
-  // XXX Should focus only this presContext
-  Focus();
-
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
   }
   return rv;
@@ -556,12 +572,24 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
           PRInt32 type;
           GetType(&type);
           switch(type) {
+          case NS_FOCUS_CONTENT:                                                    
+          {                                                                         
+            nsIFormControlFrame* formControlFrame = nsnull;                         
+            nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+            if (NS_SUCCEEDED(rv)) {                                                 
+              formControlFrame->SetFocus(PR_TRUE, PR_TRUE);                         
+              return NS_OK;                                                         
+            }                                                                       
+            //SetFocus(&aPresContext);                                              
+          }                                                                         
+          break; 
+          
           case NS_FORM_INPUT_CHECKBOX:
-	    {
+            {
               PRBool checked;
               GetChecked(&checked);
               SetChecked(!checked);
-	    }
+            }
             break;
           case NS_FORM_INPUT_RADIO:
             SetChecked(PR_TRUE);
