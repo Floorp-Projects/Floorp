@@ -2554,9 +2554,13 @@ cookie_Load() {
    */
   while (cookie_GetLine(strm,buffer) != -1){
     added_to_list = PR_FALSE;
-    if (buffer.CharAt(0) == '#' || buffer.CharAt(0) == CR ||
-        buffer.CharAt(0) == LF || buffer.CharAt(0) == 0) {
-      continue;
+
+    if ( !buffer.IsEmpty() ) {
+      PRUnichar firstChar = buffer.CharAt(0);
+      if (firstChar == '#' || firstChar == CR ||
+          firstChar == LF || firstChar == 0) {
+        continue;
+      }
     }
     int hostIndex, isDomainIndex, pathIndex, xxxIndex, expiresIndex, nameIndex, cookieIndex;
     hostIndex = 0;
