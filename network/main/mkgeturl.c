@@ -735,7 +735,9 @@ NET_FinishInitNetLib()
 	NET_SetupPrefs(NULL);  /* setup initial proxy, socks, dnsExpiration and cache preference info */
 
     PREF_RegisterCallback("network.proxy",NET_PrefChangedFunc,NULL);
-	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL); /* todo move to nu_cache */
+#ifndef NU_CACHE
+	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL); 
+#endif
 	PREF_RegisterCallback("network.hosts.socks_server",NET_PrefChangedFunc,NULL);
 	PREF_RegisterCallback("network.hosts.socks_serverport",NET_PrefChangedFunc,NULL);
 	PREF_RegisterCallback("network.dnsCacheExpiration",NET_DNSExpirationPrefChanged,NULL);
