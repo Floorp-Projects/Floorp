@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.290 $ ';
+$::UtilsVersion = '$Revision: 1.291 $ ';
 
 package TinderUtils;
 
@@ -1070,6 +1070,13 @@ sub create_profile {
 sub get_profile_dir {
     my $build_dir = shift;
     my $profile_dir;
+
+    # XXXldb Many of these codepaths look like they won't actually return
+    # an empty string when there's no profile directory, which callers
+    # depend on this function doing.  In particular, the use of
+    #   ($profile_dir) = <$profile_dir . "...">;
+    # doesn't overwrite $profile_dir when the <> gives a 0-length list.
+
     if ($Settings::OS =~ /^WIN/) {
         if ($Settings::OS =~ /^WIN9/) { # 98 [but what does uname say on Me?]
             $profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
@@ -1108,8 +1115,7 @@ sub get_profile_dir {
           ($profile_dir) = <$profile_dir . "*" . $Settings::MozProfileName . "*">;
         }
         else {
-          $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/";
-          ($profile_dir) = <$profile_dir . "*" . $Settings::MozProfileName . "*">;
+          ($profile_dir) = <"$build_dir/.".lc($Settings::ProductName)."/" . "*" . $Settings::MozProfileName . "*">;
         }
     }
 
