@@ -40,6 +40,7 @@
 #define DeleteElementTxn_h__
 
 #include "EditTxn.h"
+
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
@@ -47,6 +48,8 @@
 {/* 6fd77770-ac49-11d2-86d8-000064657374 */ \
 0x6fd77770, 0xac49, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
+
+class nsRangeUpdater;
 
 /**
  * A transaction that deletes a single element
@@ -60,7 +63,7 @@ public:
   /** initialize the transaction.
     * @param aElement the node to delete
     */
-  NS_IMETHOD Init(nsIDOMNode *aElement);
+  NS_IMETHOD Init(nsIDOMNode *aElement, nsRangeUpdater *aRangeUpdater);
 
 private:
   DeleteElementTxn();
@@ -84,15 +87,15 @@ protected:
   /** the element to delete */
   nsCOMPtr<nsIDOMNode> mElement;
 
-  /** the node into which the new node will be inserted */
+  /** parent of node to delete */
   nsCOMPtr<nsIDOMNode> mParent;
 
-  /** the index in mParent for the new node */
-  PRUint32 mOffsetInParent;
-
-  /** the node we will insert mNewNode before.  We compute this ourselves. */
+  /** next sibling to remember for undo/redo purposes */
   nsCOMPtr<nsIDOMNode> mRefNode;
 
+  /** range updater object */
+  nsRangeUpdater *mRangeUpdater;
+  
   friend class TransactionFactory;
 
 };
