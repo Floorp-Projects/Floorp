@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "jshash.h"
@@ -32,7 +34,6 @@
 
 #include "xpcbogusjs.h"
 #include "xpcbogusii.h"
-#include "xpcbogusmem.h"
 
 extern const char* XPC_VAL_STR; // 'val' property name for out params
 
@@ -78,7 +79,7 @@ public:
 
     XPCContext*              GetContext(JSContext* cx);
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
-    nsIMalloc*               GetAllocator()
+    nsIAllocator*            GetAllocator()
     {
         if(mAllocator)
             NS_ADDREF(mAllocator); 
@@ -93,7 +94,7 @@ private:
 private:
     static nsXPConnect* mSelf;
     JSContext2XPCContextMap* mContextMap;
-    nsIMalloc* mAllocator;
+    nsIAllocator* mAllocator;
 };
 
 /***************************************************************************/
