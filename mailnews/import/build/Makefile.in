@@ -44,7 +44,7 @@ REQUIRES	= xpcom \
 		  msgbase \
 		  msgbaseutil \
 		  intl \
-		  imptext \
+		  impText \
 		  impComm4xMail \
 		  necko \
 		  rdf \
