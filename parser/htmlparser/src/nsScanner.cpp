@@ -244,37 +244,38 @@ PRBool nsScanner::Append(nsString& aBuffer) {
 PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
  
   if(mUnicodeDecoder) {
-   PRInt32 unicharBufLen = 0;
+    PRInt32 unicharBufLen = 0;
     mUnicodeDecoder->Length(aBuffer, 0, aLen, &unicharBufLen);
     PRUnichar *unichars = new PRUnichar [ unicharBufLen ];
-	nsresult res;
-	do {
-	    PRInt32 srcLength = aLen;
-		PRInt32 unicharLength = unicharBufLen;
-		res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
-		mBuffer.Append(unichars, unicharLength);
-		mTotalRead += unicharLength;
-                // if we failed, we consume one byte by replace it with U+FFFD
-                // and try conversion again.
-		if(NS_FAILED(res)) {
-			mUnicodeDecoder->Reset();
-			mBuffer.Append( (PRUnichar)0xFFFD);
-			mTotalRead++;
-			if(((PRUint32) (srcLength + 1)) > aLen)
-				srcLength = aLen;
-			else 
-				srcLength++;
-			aBuffer += srcLength;
-			aLen -= srcLength;
-		}
-	} while (NS_FAILED(res) && (aLen > 0));
-        // we continue convert the bytes data into Unicode 
-        // if we have conversion error and we have more data.
+	  nsresult res;
+	  do {
+	      PRInt32 srcLength = aLen;
+		  PRInt32 unicharLength = unicharBufLen;
+		  res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
+      unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
 
-	delete[] unichars;
+		  mBuffer.Append(unichars, unicharLength);
+		  mTotalRead += unicharLength;
+                  // if we failed, we consume one byte by replace it with U+FFFD
+                  // and try conversion again.
+		  if(NS_FAILED(res)) {
+			  mUnicodeDecoder->Reset();
+			  mBuffer.Append( (PRUnichar)0xFFFD);
+			  mTotalRead++;
+			  if(((PRUint32) (srcLength + 1)) > aLen)
+				  srcLength = aLen;
+			  else 
+				  srcLength++;
+			  aBuffer += srcLength;
+			  aLen -= srcLength;
+      } //if
+	  } while (NS_FAILED(res) && (aLen > 0));
+          // we continue convert the bytes data into Unicode 
+          // if we have conversion error and we have more data.
+
+	  delete[] unichars;
   }
-  else {
-    
+  else {  
     mBuffer.Append(aBuffer,aLen);
     mTotalRead+=aLen;
   }
