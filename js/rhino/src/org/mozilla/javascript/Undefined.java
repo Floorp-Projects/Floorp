@@ -130,10 +130,6 @@ public class Undefined implements Scriptable, Serializable
         throw reportError();
     }
 
-    public boolean instanceOf(Scriptable prototype) {
-        return false;
-    }
-
     private RuntimeException reportError() {
         return Context.reportRuntimeError0("msg.undefined");
     }
