@@ -180,7 +180,6 @@ nsIFrameDebug::GetLogModuleInfo()
   }
   return gLogModule;
 }
-#endif
 
 NS_LAYOUT void
 nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
@@ -202,6 +201,8 @@ nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aI
     }
   }
 }
+
+#endif
 //----------------------------------------------------------------------
 
 nsresult
