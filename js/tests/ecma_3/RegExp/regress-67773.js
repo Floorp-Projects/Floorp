@@ -27,7 +27,7 @@
 //-------------------------------------------------------------------------------------------------
 var bug = 67773;
 var summary = 'Testing regular subexpressions followed by ? or +';
-var statprefix = 'regexp = '; var statmiddle =  ', string = '; var statsuffix = ', $';
+var statprefix = 'regexp = '; var statmiddle =  ',   string = '; var statsuffix = ', $';
 var cnSingleQuote = "'"; var cnEmptyString = ''; var cnSingleSpace = ' ';
 var cnNoMatch = 'regexp FAILED to match anything!!!\n';
 var cnUnexpectedMatch = 'regexp MATCHED when we expected it to fail!!!\n';
@@ -195,11 +195,11 @@ function getStatus(i, j)
 {
   if ( j )
   {
-    return (statprefix  +  quote(patterns[i])  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j ); 
+    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j ); 
   }
   else
   {
-    return (statprefix  +  quote(patterns[i])  +  statmiddle  +  quote(strings[i]));
+    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i]));
   }
 }
 
