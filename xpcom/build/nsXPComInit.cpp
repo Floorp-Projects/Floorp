@@ -172,7 +172,7 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsICaseConversion *gCaseConv = NULL;
-nsDirectoryService     *gDirectoryService = NULL;
+nsIProperties     *gDirectoryService = NULL;
 extern nsIServiceManager* gServiceManager;
 extern PRBool gShuttingDown;
 
