@@ -115,22 +115,14 @@ GARBAGE		+= $(GFX_LCPPSRCS) $(MAC_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
+RES_DEST = $(DIST)/bin/libwidget.rsrc
+RES_SRC = nsMacWidget.r
 
-export:: $(GFX_CPPSRCS) $(MAC_CPP_CSRCS) 
+export:: $(GFX_CPPSRCS) $(MAC_CPP_CSRCS) $(srcdir)/../mac/$(RES_SRC)
 	$(INSTALL) $^ .
 
-# nsMacWidget.rsrc is an AppleSingle encoded resource file.
-# For Mach-O, we want to decode it and copy it to a data-fork resource file 
-# that lives in the application directory.
-
-RES_DEST = $(DIST)/bin/libwidget.rsrc
-RES_SRC = $(srcdir)/../mac/nsMacWidget.rsrc
-
 $(RES_DEST): $(RES_SRC)
-	$(DIST)/bin/asdecode $(RES_SRC) $(RES_DEST).tmp
-	rm -f $(RES_DEST)
-	cp $(RES_DEST).tmp/rsrc $(RES_DEST)
-	rm -rf $(RES_DEST).tmp
+	/Developer/Tools/Rez -useDF $(RES_SRC) -o $(RES_DEST)
 
 libs:: $(RES_DEST)
 
