@@ -473,7 +473,8 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // that have changed to alt text on us yet.
   PRBool mayNeedReframe = mHaveHadObserver && !mCurrentRequest;
   
-  rv = nsContentUtils::LoadImage(imageURI, doc, this, nsIRequest::LOAD_NORMAL,
+  rv = nsContentUtils::LoadImage(imageURI, doc, doc->GetDocumentURI(),
+                                 this, nsIRequest::LOAD_NORMAL,
                                  getter_AddRefs(req));
   // If we now have a current request, we don't need to store the URI, since
   // we can get it off the request. Release it.

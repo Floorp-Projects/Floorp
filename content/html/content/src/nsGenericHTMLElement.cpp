@@ -3002,7 +3002,8 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
         nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
             getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
         if (NS_SUCCEEDED(rv)) {
-          nsCSSValue::Image *img = new nsCSSValue::Image(uri, spec.get(), doc);
+          nsCSSValue::Image *img =
+            new nsCSSValue::Image(uri, spec.get(), doc->GetDocumentURI(), doc);
           if (img) {
             if (img->mString) {
               aData->mColorData->mBackImage.SetImageValue(img);

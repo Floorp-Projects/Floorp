@@ -348,6 +348,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
   nsCSSValue::Image* image =
     new nsCSSValue::Image(mValue.mURL->mURI,
                           mValue.mURL->mString,
+                          mValue.mURL->mReferrer,
                           aDocument);
   if (image) {
     if (image->mString) {
@@ -360,8 +361,8 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 }
 
 nsCSSValue::Image::Image(nsIURI* aURI, const PRUnichar* aString,
-                         nsIDocument* aDocument)
-  : URL(aURI, aString)
+                         nsIURI* aReferrer, nsIDocument* aDocument)
+  : URL(aURI, aString, aReferrer)
 {
   MOZ_COUNT_CTOR(nsCSSValue::Image);
 
@@ -377,7 +378,7 @@ nsCSSValue::Image::Image(nsIURI* aURI, const PRUnichar* aString,
 
   if (mURI &&
       nsContentUtils::CanLoadImage(mURI, aDocument, aDocument)) {
-    nsContentUtils::LoadImage(mURI, aDocument, nsnull,
+    nsContentUtils::LoadImage(mURI, aDocument, aReferrer, nsnull,
                               loadFlag,
                               getter_AddRefs(mRequest));
   }

@@ -1671,7 +1671,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
-                          imgIDecoderObserver* aObserver,
+                          nsIURI* aReferrer, imgIDecoderObserver* aObserver,
                           PRInt32 aLoadFlags, imgIRequest** aRequest)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
@@ -1692,7 +1692,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   // right, but the best we can do here...
   return sImgLoader->LoadImage(aURI,                 /* uri to load */
                                documentURI,          /* initialDocumentURI */
-                               documentURI,          /* referrer */
+                               aReferrer,            /* referrer */
                                loadGroup,            /* loadgroup */
                                aObserver,            /* imgIDecoderObserver */
                                aLoadingDocument,     /* uniquification key */

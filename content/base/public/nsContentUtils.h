@@ -329,6 +329,7 @@ public:
    */
   static nsresult LoadImage(nsIURI* aURI,
                             nsIDocument* aLoadingDocument,
+                            nsIURI* aReferrer,
                             imgIDecoderObserver* aObserver,
                             PRInt32 aLoadFlags,
                             imgIRequest** aRequest);

@@ -275,9 +275,10 @@ public:
   struct URL {
     // Caller must delete this object immediately if the allocation of
     // |mString| fails.
-    URL(nsIURI* aURI, const PRUnichar* aString)
+    URL(nsIURI* aURI, const PRUnichar* aString, nsIURI* aReferrer)
       : mURI(aURI),
         mString(nsCRT::strdup(aString)),
+        mReferrer(aReferrer),
         mRefCnt(0)
     {
       MOZ_COUNT_CTOR(nsCSSValue::URL);
@@ -304,6 +305,7 @@ public:
 
     nsCOMPtr<nsIURI> mURI; // null == invalid URL
     PRUnichar* mString;
+    nsCOMPtr<nsIURI> mReferrer;
 
     void AddRef() { ++mRefCnt; }
     void Release() { if (--mRefCnt == 0) delete this; }
@@ -317,7 +319,7 @@ public:
     // Not making the constructor and destructor inline because that would
     // force us to include imgIRequest.h, which leads to REQUIRES hell, since
     // this header is included all over.
-    Image(nsIURI* aURI, const PRUnichar* aString,
+    Image(nsIURI* aURI, const PRUnichar* aString, nsIURI* aReferrer,
           nsIDocument* aDocument) NS_HIDDEN;
     ~Image() NS_HIDDEN;
 
