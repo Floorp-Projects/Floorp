@@ -154,18 +154,6 @@ Contributor(s):
             <menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
           </menupopup>
         </menu>
-            <menu label="&searchMenu.label;"
-                  accesskey="&searchMenu.accesskey;">
-                  <menupopup>
-                    <menuitem label="&searchAddressesCmd.label;" 
-                              accesskey="&searchAddressesCmd.accesskey;"
-                              id="menu_search_addresses" 
-                              oncommand="onAdvancedAbSearch();"/>
-                    <menuitem label="&searchInternetCmd.label;" 
-                              accesskey="&searchInternetCmd.accesskey;" 
-                              oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
-                  </menupopup>
-                </menu>
         <menu id="menu_View">
             <menupopup id="menu_View_Popup">
                 <menu id="menu_Toolbars">
@@ -264,6 +252,18 @@ Contributor(s):
             <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="AbSortDescending()"/>
                     </menupopup>
                 </menu>
+            </menupopup>
+        </menu>
+        <menu label="&searchMenu.label;"
+              accesskey="&searchMenu.accesskey;">
+            <menupopup>
+                <menuitem label="&searchAddressesCmd.label;" 
+                          accesskey="&searchAddressesCmd.accesskey;"
+                          id="menu_search_addresses" 
+                          oncommand="onAdvancedAbSearch();"/>
+                <menuitem label="&searchInternetCmd.label;" 
+                          accesskey="&searchInternetCmd.accesskey;" 
+                          oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
             </menupopup>
         </menu>
         
