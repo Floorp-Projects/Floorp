@@ -1,5 +1,6 @@
 <!-- extracted from content/pref-cache.xul -->
 
+<!--LOCALIZATION NOTE pref-cache.dtd Cache prefs dialog -->
 <!ENTITY  title.label "Cache">
 <!ENTITY  lHeader "Cache">
 <!ENTITY  rHeader "Designate the size of the cache">

@@ -1,5 +1,6 @@
 <!-- extracted from content/pref-debug.xul -->
 
+<!--LOCALIZATION NOTE pref-debug.dtd TRANSLATE NOTHING IN THIS FILE -->
 <!ENTITY window.title "Debug">
 
 <!ENTITY lHeader "Debug">

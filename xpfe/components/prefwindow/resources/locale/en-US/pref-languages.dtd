@@ -1,11 +1,13 @@
 <!-- extracted from content/pref-languages.xul -->
 
+<!--LOCALIZATION NOTE pref-languages.dtd 'Languages' preferences dialog -->
 <!ENTITY  window.title "Languages">
 <!ENTITY  LangHeader "Languages">
 <!ENTITY  prefLangDecript "Choose in order of preference the language(s) 
 			in which you prefer to view web pages. Web pages are sometimes 
 			available in several languages.  Naveigator presents pages in 
 			the available language you most prefer.">
+<!--LOCALIZATION NOTE engOption.label Do not translate this term.  It'll be replaced at runtime -->
 <!ENTITY engOption.label  "English">
 <!ENTITY addButton.label  "Add...">
 <!ENTITY deleteButton.label  "Delete...">

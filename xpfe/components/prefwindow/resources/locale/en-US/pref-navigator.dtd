@@ -1,5 +1,7 @@
 <!-- extracted from content/pref-navigator.xul -->
 
+<!--LOCALIZATION NOTE pref-navigator.dtd Navigator prefs screen -->
+<!--LOCALIZATION NOTE title.label Never translate the term "Navigator" -->
 <!ENTITY  title.label "Navigator">
 <!ENTITY  lHeader "Navigator">
 <!ENTITY  rHeader "Specify the home page location">
@@ -14,6 +16,7 @@
 <!ENTITY  browseFile "Select File...">
 <!ENTITY  header3.label "History">
 <!ENTITY  historyPages "List of the pages you have previously visited.">
+<!--LOCALIZATION NOTE histDay Do not change this numeric value. -->
 <!ENTITY  histDay "9">
 <!ENTITY  daysRadio "days">
 <!ENTITY  homepageRadio "Homepage">

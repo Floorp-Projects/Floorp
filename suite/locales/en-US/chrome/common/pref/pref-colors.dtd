@@ -1,10 +1,12 @@
 <!-- extracted from content/pref-colors.xul -->
 
+<!--LOCALIZATION NOTE pref-colors.dtd Color management prefs -->
 <!ENTITY  window.title "Colors">
 <!ENTITY  lHeader "Colors">
 <!ENTITY  rHeader "Change the colors in your display">
 <!ENTITY  color "Colors">
 <!ENTITY  text "Text:">
+<!--LOCALIZATION NOTE colorPick Don't translate this term -->
 <!ENTITY  colorPick "Color Picker">
 <!ENTITY  background "Background:">
 <!ENTITY  useWinColorsCheck.label "Use Windows colors">

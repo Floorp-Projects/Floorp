@@ -1,13 +1,18 @@
 <!-- extracted from content/pref-appearance.xul -->
 
+<!--LOCALIZATION NOTE pref-appearance.dtd The Appearance prefs dialog.  -->
 <!ENTITY window.title "Appearance">
 <!ENTITY lHeader "Appearance">
 <!ENTITY rHeader "Change the appearance of the display">
 <!ENTITY onStartLegend.label "On startup, launch">
 <!ENTITY appear "Appearance">
+<!--LOCALIZATION NOTE navCheck.label Product name. Never translate. -->
 <!ENTITY navCheck.label "Navigator">
+<!--LOCALIZATION NOTE mesCheck.label Product name. Never translate. -->
 <!ENTITY mesCheck.label "Messenger">
+<!--LOCALIZATION NOTE compCheck.label Product name. Never translate. -->
 <!ENTITY compCheck.label "Composer">
+<!--LOCALIZATION NOTE calCheck.label Product name. Never translate. -->
 <!ENTITY calCheck.label "Calendar">
 <!ENTITY showToolsLegend.label "Show toolbars as">
 <!ENTITY picsNtextRadio.label "Pictures and Text">
