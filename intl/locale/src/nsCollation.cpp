@@ -28,7 +28,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 
 NS_IMPL_ISUPPORTS(nsCollationFactory, kICollationFactoryIID);
@@ -40,7 +39,7 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
   nsICollation *inst;
   nsresult res;
   
-  res = nsComponentManager::CreateInstance(kCollationCID, NULL, kICollationIID, (void**) &inst);
+  res = nsComponentManager::CreateInstance(kCollationCID, NULL, nsICollation::GetIID(), (void**) &inst);
   if (NS_FAILED(res)) {
     return res;
   }
