@@ -32,8 +32,10 @@ function getDescription()
 
 function retryThis()
 {
-  var duffUrl = getDuffUrl();
-  document.location.href = duffUrl;
+  // Session history has the URL of the page that failed
+  // to load, not the one of the error page. So, just call
+  // reload(), which will also repost POST data correctly.
+  location.reload();
 }
 
 function fillIn()
