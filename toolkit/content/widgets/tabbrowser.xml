@@ -673,6 +673,7 @@
             b.setAttribute("type", "content");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+            b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             
             this.mPanelContainer.appendChild(b);
 
