@@ -88,63 +88,33 @@ pref("browser.fancy_ftp", true);
 pref("fortezza.toggle", 1);
 pref("fortezza.timeout", 30);
 
+pref("font.name.serif.he", "fixed");
+pref("font.name.sans-serif.he", "fixed");
+pref("font.name.monospace.he", "fixed");
 
-// fonts
+pref("font.name.serif.ja", "fixed");
+pref("font.name.sans-serif.ja", "fixed");
+pref("font.name.monospace.ja", "fixed");
 
-// ar
+pref("font.name.serif.ko", "mincho");
+pref("font.name.sans-serif.ko", "gothic");
+pref("font.name.monospace.ko", "gothic");
 
-pref("font.name.serif.el", "misc-fixed-iso8859-7");
-pref("font.name.sans-serif.el", "misc-fixed-iso8859-7");
-pref("font.name.monospace.el", "misc-fixed-iso8859-7");
+pref("font.name.serif.x-central-euro", "times");
+pref("font.name.sans-serif.x-central-euro", "helvetica");
+pref("font.name.monospace.x-central-euro", "courier");
 
-pref("font.name.serif.he", "misc-fixed-iso8859-8");
-pref("font.name.sans-serif.he", "misc-fixed-iso8859-8");
-pref("font.name.monospace.he", "misc-fixed-iso8859-8");
+pref("font.name.serif.x-unicode", "times");
+pref("font.name.sans-serif.x-unicode", "helvetica");
+pref("font.name.monospace.x-unicode", "courier");
 
-pref("font.name.serif.ja", "jis-fixed-jisx0208.1983-0");
-pref("font.name.sans-serif.ja", "jis-fixed-jisx0208.1983-0");
-pref("font.name.monospace.ja", "jis-fixed-jisx0208.1983-0");
+pref("font.name.serif.x-western", "times");
+pref("font.name.sans-serif.x-western", "helvetica");
+pref("font.name.monospace.x-western", "courier");
 
-pref("font.name.serif.ko", "daewoo-mincho-ksc5601.1987-0");
-pref("font.name.sans-serif.ko", "daewoo-mincho-ksc5601.1987-0");
-pref("font.name.monospace.ko", "daewoo-mincho-ksc5601.1987-0");
-
-// th
-
-pref("font.name.serif.tr", "adobe-times-iso8859-9");
-pref("font.name.sans-serif.tr", "adobe-helvetica-iso8859-9");
-pref("font.name.monospace.tr", "adobe-courier-iso8859-9");
-
-pref("font.name.serif.x-baltic", "b&h-lucidux serif-iso8859-4");
-pref("font.name.sans-serif.x-baltic", "b&h-lucidux sans-iso8859-4");
-pref("font.name.monospace.x-baltic", "b&h-lucidux mono-iso8859-4");
-
-pref("font.name.serif.x-central-euro", "adobe-times-iso8859-2");
-pref("font.name.sans-serif.x-central-euro", "adobe-helvetica-iso8859-2");
-pref("font.name.monospace.x-central-euro", "adobe-courier-iso8859-2");
-
-pref("font.name.serif.x-cyrillic", "cronyx-times-koi8-r");
-pref("font.name.sans-serif.x-cyrillic", "cronyx-helvetica-koi8-r");
-pref("font.name.monospace.x-cyrillic", "cronyx-courier-koi8-r");
-
-pref("font.name.serif.x-unicode", "adobe-times-iso8859-1");
-pref("font.name.sans-serif.x-unicode", "adobe-helvetica-iso8859-1");
-pref("font.name.monospace.x-unicode", "adobe-courier-iso8859-1");
-
-pref("font.name.serif.x-user-def", "adobe-times-iso8859-1");
-pref("font.name.sans-serif.x-user-def", "adobe-helvetica-iso8859-1");
-pref("font.name.monospace.x-user-def", "adobe-courier-iso8859-1");
-
-pref("font.name.serif.x-western", "adobe-times-iso8859-1");
-pref("font.name.sans-serif.x-western", "adobe-helvetica-iso8859-1");
-pref("font.name.monospace.x-western", "adobe-courier-iso8859-1");
-
-pref("font.name.serif.zh-CN", "isas-song ti-gb2312.1980-0");
-pref("font.name.sans-serif.zh-CN", "isas-song ti-gb2312.1980-0");
-pref("font.name.monospace.zh-CN", "isas-song ti-gb2312.1980-0");
-
-// zh-TW
-
+pref("font.name.serif.zh-CN", "song ti");
+pref("font.name.sans-serif.zh-CN", "song ti");
+pref("font.name.monospace.zh-CN", "song ti");
 
 pref("mail.signature_date", 0);
 
