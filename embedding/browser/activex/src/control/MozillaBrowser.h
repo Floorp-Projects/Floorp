@@ -310,8 +310,6 @@ protected:
 	nsIEditor			*	m_pEditor;
     nsIServiceManager   *   m_pIServiceManager;
 
-	nsIWebShell			*	m_pIWebShell;
-
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Flag that stops XPCOM from blowing up when called multiple times
 	static BOOL             m_bXPCOMInitialised;
@@ -360,7 +358,6 @@ public:
 
 // IOleObject overrides
 	virtual HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite);
-
 
 // IWebBrowser implementation
     virtual HRESULT STDMETHODCALLTYPE GoBack(void);

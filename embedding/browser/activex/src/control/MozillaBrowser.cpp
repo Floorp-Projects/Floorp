@@ -95,7 +95,6 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Initialize layout interfaces
 	m_pIDocShell = nsnull;
-    m_pIWebShell = nsnull;
 	m_pIWebShellWin = nsnull;
 	m_pIPref = nsnull;
     m_pIServiceManager = nsnull;
@@ -493,15 +492,18 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnViewSource);
 
-	// Get the url from the web shell
-	const PRUnichar *pszUrl = nsnull;
-	PRInt32 aHistoryIndex;
-	m_pIWebShell->GetHistoryIndex(aHistoryIndex);
-	m_pIWebShell->GetURL(aHistoryIndex, &pszUrl);
+	if (m_pWebShellContainer->m_pCurrentURI)
+	{
+		// No URI to view!
+		NG_ASSERT(0);
+		return 0;
+	}
 
-	nsString strUrl(pszUrl);
-	nsString strTemp(nsString("view-source:") + strUrl);
-	strUrl = strTemp;
+	// Get the current URI
+	nsXPIDLCString aURI;
+	m_pWebShellContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
+	
+	nsString strUrl = nsString("view-source:") + nsString(aURI);
 
 	CIPtr(IDispatch) spDispNew;
 	VARIANT_BOOL bCancel = VARIANT_FALSE;
@@ -688,11 +690,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
 	// Create web shell
 	m_pIWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
-/*  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                          NS_GET_IID(nsIDocShell),
-                                          (void**)&m_pIDocShell);
-*/
-	if (NS_OK != rv)
+	if (NS_FAILED(rv))
 	{
 		return rv;
 	}
@@ -709,23 +707,12 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	m_pWebShellContainer->AddRef();
 
 	// Set up the web shell
-	m_pIDocShell->QueryInterface(NS_GET_IID(nsIWebShell), (void **) &m_pIWebShell);
-	NG_ASSERT(m_pIWebShell);
-	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
-	m_pIWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-
-	if (docLoader)
-	{
-		docLoader->AddObserver(m_pWebShellContainer);
-	}
+	m_pIWebBrowser->SetParentURIContentListener(m_pWebShellContainer);
 
 	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(m_pIDocShell));
 	docShellAsItem->SetTreeOwner(m_pWebShellContainer);
 
-//	m_pIWebShell->SetPrefs(m_pIPref);
 	m_pIDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
-//	m_pIWebShell->SetWebShellType(nsWebShellContent);
-
 	m_pIWebShellWin->SetVisibility(PR_TRUE);
 
 	m_bValidBrowser = TRUE;
@@ -752,11 +739,6 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 	{
 		m_pIWebShellWin->Destroy();
 		NS_RELEASE(m_pIWebShellWin);
-	}
-
-    if (m_pIWebShell != nsnull)
-	{
-        NS_RELEASE(m_pIWebShell);
 	}
 
 	if (m_pIDocShell != nsnull)
@@ -1959,19 +1941,17 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 	}
 
 	// Get the url from the web shell
-	const PRUnichar *pszUrl = nsnull;
-	PRInt32 aHistoryIndex;
-	m_pIWebShell->GetHistoryIndex(aHistoryIndex);
-	m_pIWebShell->GetURL(aHistoryIndex, &pszUrl);
-	if (pszUrl == nsnull)
+	if (m_pWebShellContainer->m_pCurrentURI != nsnull)
 	{
-		return E_FAIL;
+		USES_CONVERSION;
+		nsXPIDLCString aURI;
+		m_pWebShellContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
+		*LocationURL = SysAllocString(A2OLE((const char *) aURI));
 	}
-
-	// Convert the string to a BSTR
-	USES_CONVERSION;
-	LPOLESTR pszConvertedUrl = W2OLE(const_cast<PRUnichar *>(pszUrl));
-	*LocationURL = SysAllocString(pszConvertedUrl);
+	else
+	{
+		*LocationURL = NULL;
+	}
 
 	return S_OK;
 }
