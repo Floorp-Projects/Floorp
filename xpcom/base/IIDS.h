@@ -107,7 +107,7 @@ nsBrowserWindow = { /* a6cf905d-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf905e-15b3-11d2-932e-00805f8add32 */
+nsITextContentChangeData = { /* a6cf905e-15b3-11d2-932e-00805f8add32 */
     0xa6cf905e,
     0x15b3,
     0x11d2,
