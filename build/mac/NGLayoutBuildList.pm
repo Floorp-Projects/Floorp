@@ -1094,6 +1094,8 @@ sub MakeResourceAliases()
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 
+	my($xpinstall_dir) = "$resource_dir" . "xpinstall:";
+	BuildFolderResourceAliases(":mozilla:xpinstall:res:",								"$xpinstall_dir");
 	
 	my($profile_dir) = "$resource_dir" . "profile:";
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
