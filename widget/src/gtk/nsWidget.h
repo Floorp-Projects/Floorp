@@ -120,6 +120,10 @@ public:
   NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
   NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
+  // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
+  NS_IMETHOD SetTitle(const nsString& aTitle);
+
+
   virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
   // the following are nsWindow specific, and just stubbed here
@@ -132,6 +136,7 @@ public:
 
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   NS_IMETHOD Update(void);
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 

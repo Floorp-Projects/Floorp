@@ -753,6 +753,41 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+{
+  nsRegionRectSet *regionRectSet = nsnull;
+
+  mUpdateArea->Union(*aRegion);
+
+  if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  mUpdateArea->Union(*aRegion);
+
+  PRUint32 len;
+  PRUint32 i;
+
+  len = regionRectSet->mRectsLen;
+
+  for (i=0;i<len;++i)
+  {
+    nsRegionRect *r = &(regionRectSet->mRects[i]);
+
+    gtk_widget_queue_draw_area(mWidget,
+                               r->x, r->y,
+                               r->width, r->height);
+  }
+
+  // drop the const.. whats the right thing to do here?
+  ((nsIRegion*)aRegion)->FreeRects(regionRectSet);
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsWidget::Update(void)
 {
   if (!mWidget)
@@ -843,6 +878,12 @@ NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
   mPreferredWidth  = aWidth;
   mPreferredHeight = aHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::SetTitle(const nsString &aTitle)
+{
+  gtk_widget_set_name(mWidget, "foo");
   return NS_OK;
 }
 

@@ -114,7 +114,9 @@ nsWindow::nsWindow() : nsBaseWidget()
    
     mHitMenu            = nsnull;
     mHitSubMenus        = new nsVoidArray();
+#ifdef LOSER
     mVScrollbar         = nsnull;
+#endif
     mIsInMouseCapture   = PR_FALSE;
 
 	mIMEProperty		= 0;
@@ -2590,7 +2592,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_SETTINGCHANGE:
           firstTime = TRUE;
           // Fall through
-        case WM_MOUSEWHEEL: {
+        case WM_MOUSEWHEEL:
+#ifdef LOSER
+        {
          if (firstTime) {
            firstTime = FALSE;
             //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WM_SETTINGCHANGE\n");
@@ -2611,6 +2615,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
          }
          HWND scrollbar = NULL;
+
          if (nsnull != mVScrollbar) {
            scrollbar = (HWND)mVScrollbar->GetNativeData(NS_NATIVE_WINDOW);
          }
@@ -2634,7 +2639,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
          }
             return 0 ;
       } break;
-
+#endif
 
         case WM_PALETTECHANGED:
             if ((HWND)wParam == mWnd) {

@@ -23,6 +23,7 @@
 #include "nsRect.h"
 
 class nsIRenderingContext;
+class nsIRegion;
 class nsIWidget;
 class nsIMenuItem;
 
@@ -89,6 +90,8 @@ struct nsSizeEvent : public nsGUIEvent {
 struct nsPaintEvent : public nsGUIEvent {
                 /// Context to paint in.
     nsIRenderingContext *renderingContext;
+                /// area to paint  (should be used instead of rect)
+    nsIRegion           *region;
                 /// x,y, width, height in pixels of area to paint
     nsRect              *rect;      
 };

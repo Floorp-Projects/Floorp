@@ -212,7 +212,7 @@ nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
 	
 	XSync(display, False);
 	
-	usleep(aInterval);
+  usleep(aInterval);
   }
   
   
