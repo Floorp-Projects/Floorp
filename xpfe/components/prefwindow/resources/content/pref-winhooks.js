@@ -67,8 +67,25 @@ function onOK() {
     }
 }
 
+var gPrefService = null;
+var gPrefBranch = null;
+
 // This function is called when our pref panel is loaded.
 function Startup() {
+
+    const prefbase = "system.windows.lock_ui.";
+
+    // initialise preference component.
+    // While the data is coming from the system registry, we use a set
+    // of parallel preferences to indicate if the ui should be locked.
+    if (!gPrefService) {
+        gPrefService = Components.classes["@mozilla.org/preferences-service;1"];
+        gPrefService = gPrefService.getService();
+        gPrefService = gPrefService.QueryInterface(Components.interfaces.nsIPrefService);
+        gPrefBranch = gPrefService.getBranch(prefbase);
+    }
+ 
+
     // Get globals.
     var settings = parent.winHooks.settings;
     var winhooks = parent.winHooks.winhooks;
@@ -97,6 +114,11 @@ function Startup() {
         var checkbox = document.getElementById( setting );
         if ( checkbox && prefs[ setting ] ) {
             checkbox.setAttribute( "checked", "true" );
+        }
+
+        // disable the xul element if the appropriate pref is locked.
+        if (gPrefBranch && gPrefBranch.prefIsLocked(setting)) {
+            checkbox.disabled = true;
         }
     }
 }
