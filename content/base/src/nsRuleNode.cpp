@@ -1229,7 +1229,9 @@ nsRuleNode::GetSVGData(nsStyleContext* aContext)
   nsRuleData ruleData(eStyleStruct_SVG, mPresContext, aContext);
   ruleData.mSVGData = &svgData;
 
-  return WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
+  const nsStyleStruct *res = WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
+  svgData.mStrokeDasharray = nsnull; // We are sharing with some style rule.  It really owns the data.
+  return res;
 }
 
 const nsStyleStruct*
