@@ -58,6 +58,7 @@ mailing address.
 
 #include "imgIDecoder.h"
 #include "prmem.h"
+#include "prlog.h"
 #include "GIF2.h"
 #include "nsCRT.h"
 
@@ -416,13 +417,27 @@ do_lzw(gif_struct *gs, const PRUint8 *q)
     return 0;
 }
 
+PRBool gif_create(gif_struct **gs)
+{
+  gif_struct *ret;
+
+  ret = PR_NEWZAP(gif_struct);
+
+  if (!ret)
+    return PR_FALSE;
+
+  *gs = ret;
+
+  return PR_TRUE;
+}
+
 /*******************************************************************************
  * setup for gif_struct decoding
  */
 PRBool GIFInit(
-  void* aClientData,
   gif_struct* gs,
-  
+  void* aClientData,
+
   int (*PR_CALLBACK GIFCallback_NewPixmap)(),
   
   int (*PR_CALLBACK GIFCallback_BeginGIF)(
@@ -472,25 +487,25 @@ PRBool GIFInit(
     void* aClientData)
   )
 {
-  if (gs) 
-  {
-    gs->clientptr = aClientData;
-    gs->GIFCallback_NewPixmap = GIFCallback_NewPixmap;
-    gs->GIFCallback_BeginGIF = GIFCallback_BeginGIF;
-    gs->GIFCallback_EndGIF = GIFCallback_EndGIF;
-    gs->GIFCallback_BeginImageFrame = GIFCallback_BeginImageFrame;
-    gs->GIFCallback_EndImageFrame = GIFCallback_EndImageFrame;
-    gs->GIFCallback_SetupColorspaceConverter = GIFCallback_SetupColorspaceConverter;
-    gs->GIFCallback_ResetPalette = GIFCallback_ResetPalette;
-    gs->GIFCallback_InitTransparentPixel = GIFCallback_InitTransparentPixel;
-    gs->GIFCallback_DestroyTransparentPixel = GIFCallback_DestroyTransparentPixel;
-    gs->GIFCallback_HaveDecodedRow = GIFCallback_HaveDecodedRow;
-    gs->GIFCallback_HaveImageAll = GIFCallback_HaveImageAll;
-    
-    gs->state = gif_init;
-    gs->post_gather_state = gif_error;
-    gs->gathered = 0;
-  }
+  PR_ASSERT(gs);
+
+  gs->clientptr = aClientData;
+  gs->GIFCallback_NewPixmap = GIFCallback_NewPixmap;
+  gs->GIFCallback_BeginGIF = GIFCallback_BeginGIF;
+  gs->GIFCallback_EndGIF = GIFCallback_EndGIF;
+  gs->GIFCallback_BeginImageFrame = GIFCallback_BeginImageFrame;
+  gs->GIFCallback_EndImageFrame = GIFCallback_EndImageFrame;
+  gs->GIFCallback_SetupColorspaceConverter = GIFCallback_SetupColorspaceConverter;
+  gs->GIFCallback_ResetPalette = GIFCallback_ResetPalette;
+  gs->GIFCallback_InitTransparentPixel = GIFCallback_InitTransparentPixel;
+  gs->GIFCallback_DestroyTransparentPixel = GIFCallback_DestroyTransparentPixel;
+  gs->GIFCallback_HaveDecodedRow = GIFCallback_HaveDecodedRow;
+  gs->GIFCallback_HaveImageAll = GIFCallback_HaveImageAll;
+  
+  gs->state = gif_init;
+  gs->post_gather_state = gif_error;
+  gs->gathered = 0;
+
   return (gs != 0);
 }
 
@@ -529,24 +544,16 @@ gif_init_transparency(gif_struct* gs, int index)
     return PR_TRUE;
 }
 
-#if 0
 //******************************************************************************
 static void
-il_gif_destroy_transparency(il_container *ic)
-{
-    NI_PixmapHeader *src_header = ic->src_header;
-    
-    if (src_header->transparent_pixel) {
+gif_destroy_transparency(gif_struct* gs)
+{    
+    if (gs->transparent_pixel) {
         /* Destroy the source image's transparent pixel. */
-        PR_FREEIF(src_header->transparent_pixel);
-        src_header->transparent_pixel = NULL;
-
-        /* Destroy the destination image's transparent pixel. */
-        if(ic->imgdcb)
-          ic->imgdcb->ImgDCBDestroyTransparentPixel();
+        PR_Free(gs->transparent_pixel);
+        gs->transparent_pixel = NULL;
     }
 }
-#endif
 
 //******************************************************************************
 #if 0
@@ -620,7 +627,8 @@ process_buffered_gif_input_data(gif_struct* gs)
     if (gs->destroy_pending &&
         ((state == gif_done) || (state == gif_error) || (state == gif_oom))) {
 
-        gif_abort(gs);
+      // don't call gif_destroy() here.  that is up to the person that created the decoder
+        //gif_abort(gs);
 
         //if(ic->imgdcb)
         //  ic->imgdcb->ImgDCBHaveImageAll();
@@ -748,7 +756,10 @@ gif_clear_screen(gif_struct *gs)
         /* Note: We deliberately lie about the interlace
            pass number so that calls to il_flush_image_data()
            are done using a timer. */
-        if (erase_width > 0)
+
+// XXX pav this code doesn't actually get called does it ?
+
+        if (erase_width > 0) {
           // XXX: make fake row callback to draw into the 
           //if(gs->ic->imgdcb)
           //  gs->ic->imgdcb->ImgDCBHaveRow(gs->rowbuf, gs->rgbrow,
@@ -756,9 +767,10 @@ gif_clear_screen(gif_struct *gs)
           //          erase_y_offset,erase_height, ilErase, 2);
            
         /* Reset the source image's transparent pixel to its former state. */
-        //gif_destroy_transparency(gs);
+            gif_destroy_transparency(gs);
         //src_header->transparent_pixel = saved_src_trans_pixel;
-        gs->transparent_pixel = saved_img_trans_pixel;
+            gs->transparent_pixel = saved_img_trans_pixel;
+        }
     }
     return 0;
 }
@@ -1627,44 +1639,44 @@ il_gif_complete(gif_struct* gs)
 //******************************************************************************
 /* Free up all the data structures associated with decoding a GIF */
 void
-gif_abort(gif_struct *gs)
+gif_destroy(gif_struct *gs)
 {
-  if (gs) 
-  {
-    /* Clear any pending timeouts */
-    if (gs->delay_time) {
-      //ic->imgdcb->ImgDCBClearTimeout(gs->delay_timeout);
-      gs->delay_time = NULL;
-    }
-    
-    PR_FREEIF(gs->rowbuf);
-    PR_FREEIF(gs->rgbrow);
-    PR_FREEIF(gs->prefix);
-    PR_FREEIF(gs->suffix);
-    PR_FREEIF(gs->stack);
+  if (!gs)
+    return;
 
-    PR_FREEIF(gs->hold);
+  /* Clear any pending timeouts */
+  if (gs->delay_time) {
+    //ic->imgdcb->ImgDCBClearTimeout(gs->delay_timeout);
+    gs->delay_time = NULL;
+  }
 
-    /* Free the colormap that is not in use.  The other one, if
-     * present, will be freed when the image container is
-     * destroyed.
-     */
+  gif_destroy_transparency(gs);
 
-    if (gs->is_local_colormap_defined) {
-      if (gs->local_colormap) {
-        PR_FREEIF(gs->local_colormap);
-        gs->local_colormap = NULL;
-        //ic->src_header->color_space->cmap.map = NULL;
-      }
-    }
-    
-    if (gs->global_colormap) {
-      PR_FREEIF(gs->global_colormap);
-      gs->global_colormap = NULL;
+  PR_FREEIF(gs->rowbuf);
+  PR_FREEIF(gs->rgbrow);
+  PR_FREEIF(gs->prefix);
+  PR_FREEIF(gs->suffix);
+  PR_FREEIF(gs->stack);
+  PR_FREEIF(gs->hold);
+
+  /* Free the colormap that is not in use.  The other one, if
+   * present, will be freed when the image container is
+   * destroyed.
+   */
+  if (gs->is_local_colormap_defined) {
+    if (gs->local_colormap) {
+      PR_FREEIF(gs->local_colormap);
+      gs->local_colormap = NULL;
       //ic->src_header->color_space->cmap.map = NULL;
     }
-
-    PR_FREEIF(gs);
   }
+
+  if (gs->global_colormap) {
+    PR_FREEIF(gs->global_colormap);
+    gs->global_colormap = NULL;
+    //ic->src_header->color_space->cmap.map = NULL;
+  }
+
+  PR_FREEIF(gs);
 }
 

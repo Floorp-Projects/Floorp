@@ -63,7 +63,7 @@ public:
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
   
-  gif_struct mGIFStruct;
+  gif_struct *mGIFStruct;
   
   PRUint8 *mAlphaLine;
 };
