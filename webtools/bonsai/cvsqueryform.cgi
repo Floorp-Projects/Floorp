@@ -181,9 +181,13 @@ regexpradio('whotype') . "
 # Log contains
 #
 #print "
-#<br>
-#<nobr><b>Log contains:</b>
-#<input type=text name=logexpr size=45></nobr>(you can use <a href=cvsregexp.html>regular expressions</a>)\n";
+#<tr>
+#<th align=right>Log contains:</th>
+#<td colspan=2> <input type=text name=logexpr value='$::FORM{logexpr}' size=45><br>
+#(you can use <a href=cvsregexp.html>regular expressions</a>)
+#</td>
+#</tr>
+#";
 
 
 #
