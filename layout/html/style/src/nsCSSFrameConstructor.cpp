@@ -10186,8 +10186,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   parentFrame->FirstChild(aPresContext, listName, &firstChild);
   nsFrameList   frameList(firstChild);
   
-  // See whether it's an IMG or an OBJECT element
-  if (nsHTMLAtoms::img == tag.get()) {
+  // See whether it's an IMG or an INPUT element (for image buttons)
+  if (nsHTMLAtoms::img == tag.get() || nsHTMLAtoms::input == tag.get()) {
     // It's an IMG element. Try and construct an alternate frame to use when the
     // image can't be rendered
     nsIFrame* newFrame;
