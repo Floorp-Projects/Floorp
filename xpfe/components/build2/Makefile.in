@@ -61,16 +61,15 @@ REQUIRES	= xpcom \
 		  mork \
 		  widget \
 		  dom \
-          alerts\
-          uriloader \
-          mimetype \
-          webbrowserpersist \
-          progressDlg \
+          	  uriloader \
+          	  mimetype \
+          	  webbrowserpersist \
+          	  progressDlg \
 		  pref \
 		  docshell \
 		  webshell \
 		  appshell \
-          downloadmanager \
+          	  downloadmanager \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
@@ -90,22 +89,20 @@ SHARED_LIBRARY_LIBS = \
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../windowds          \
 	-I$(srcdir)/../../browser/src      \
-    -I$(srcdir)/../download-manager/src \
-    -I$(srcdir)/../autocomplete/src  \
+    	-I$(srcdir)/../download-manager/src \
+    	-I$(srcdir)/../autocomplete/src  \
 	$(NULL)
 
 
 ifeq ($(OS_ARCH),WINNT)
 
 SHARED_LIBRARY_LIBS += \
-    $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
 
 LOCAL_INCLUDES	+= \
-    -I$(srcdir)/../alerts/src \
 	-I$(srcdir)/../winhooks \
 	$(NULL)
 endif

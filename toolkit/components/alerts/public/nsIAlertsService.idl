@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
-[scriptable, uuid(F6D34CCE-EAC6-42BF-8F3B-9A8865493F31)]
+[scriptable, uuid(647248FD-F925-4e30-93DD-CDE26D7E3A90)]
 interface nsIAlertsService : nsISupports
 {
    /* showAlertNotification: shows an animated alert icon 
@@ -55,9 +55,9 @@ interface nsIAlertsService : nsISupports
                          alert goes away, or "alertclickcallback" when the text is clicked. Data
                          is aAlertCookie.
    */
-   void showAlertNotification(in string aImageUrl, in wstring aAlertTitle, 
-                              in wstring aAlertText, in boolean alertTextClickable,
-                              in wstring aAlertCookie,
+   void showAlertNotification(in AString  aImageUrl, in AString  aAlertTitle, 
+                              in AString  aAlertText, in boolean alertTextClickable,
+                              in AString  aAlertCookie,
                               in nsIObserver aAlertListener );
 };
 

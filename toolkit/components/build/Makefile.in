@@ -109,6 +109,10 @@ SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+endif
+
 ifneq (,$(MOZ_PHOENIX)$(MOZ_SUNBIRD))
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
@@ -118,10 +122,6 @@ SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
 		$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
-endif
 
 EXTRA_DSO_LIBS = gkgfx
 endif # MOZ_PHOENIX
