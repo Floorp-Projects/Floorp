@@ -24,7 +24,7 @@
 #include "nsDebug.h"
 #include "prprf.h"
 #include "prdtoa.h"
-
+#include "nsISizeOfHandler.h"
 
 const PRInt32 kGrowthDelta = 8;
 const PRInt32 kNotFound = -1;
@@ -114,6 +114,13 @@ nsString::~nsString()
   delete [] mStr;
   mStr=0;
   mCapacity=mLength=0;
+}
+
+void
+nsString::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  aHandler->Add(mCapacity * sizeof(chartype));
 }
 
 /*-------------------------------------------------------
@@ -2026,6 +2033,15 @@ nsAutoString::~nsAutoString()
   if (mStr == mBuf) {
     // Force to null so that baseclass dtor doesn't do damage
     mStr = nsnull;
+  }
+}
+
+void
+nsAutoString::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  if (mStr != mBuf) {
+    aHandler->Add(mCapacity * sizeof(chartype));
   }
 }
 

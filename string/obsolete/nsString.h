@@ -35,7 +35,7 @@
 #include "nsIAtom.h"
 #include <iostream.h>
 #include <stdio.h>
-
+class nsISizeOfHandler;
 
 class NS_BASE nsString {
   public: 
@@ -55,6 +55,8 @@ class NS_BASE nsString {
             void          SetLength(PRInt32 aLength);
             void          Truncate(PRInt32 anIndex=0);
   virtual   void          EnsureCapacityFor(PRInt32 aNewLength);
+
+  virtual   void          SizeOf(nsISizeOfHandler* aHandler) const;
 
   ///accessor methods
   //@{
@@ -217,6 +219,8 @@ public:
                 nsAutoString(const char* isolatin1);
                 nsAutoString(const PRUnichar* us, PRInt32 uslen = -1);
   virtual       ~nsAutoString();
+
+  virtual void  SizeOf(nsISizeOfHandler* aHandler) const;
 
   static  void  SelfTest();
 
