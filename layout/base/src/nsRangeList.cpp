@@ -112,6 +112,7 @@ public:
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);
   NS_IMETHOD    DeleteFromDocument();
   NS_IMETHOD    AddRange(nsIDOMRange* aRange);
+  NS_IMETHOD    RemoveRange(nsIDOMRange* aRange);
 
   NS_IMETHOD    StartBatchChanges();
   NS_IMETHOD    EndBatchChanges();
@@ -1160,6 +1161,7 @@ nsRangeList::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
             weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
           }
           result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
+          mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
           return NS_OK;
          } break;
       case nsIDOMKeyEvent::DOM_VK_RIGHT : 
@@ -1173,6 +1175,7 @@ nsRangeList::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
             weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
           }
           result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
+          mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
           return NS_OK;
          } break;
       
@@ -2895,6 +2898,29 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
   selectFrames(presContext, aRange, PR_TRUE);        
   ScrollIntoView();
 
+  return mRangeList->NotifySelectionListeners();
+}
+
+NS_IMETHODIMP
+nsDOMSelection::RemoveRange(nsIDOMRange* aRange)
+{
+  if (!aRange)
+    return NS_ERROR_INVALID_ARG;
+  nsresult      result = RemoveItem(aRange);
+  
+  nsCOMPtr<nsIPresContext>  presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  selectFrames(presContext, aRange, PR_FALSE);        
+  if (aRange == mAnchorFocusRange.get())
+  {
+		PRUint32 cnt;
+    nsresult rv = mRangeArray->Count(&cnt);
+    if (NS_SUCCEEDED(rv) && cnt > 0 )
+    {
+      setAnchorFocusRange(cnt -1);//reset anchor to LAST range.
+      ScrollIntoView();
+    }
+  }
   return mRangeList->NotifySelectionListeners();
 }
 

@@ -27,7 +27,8 @@
 		void		deleteFromDocument();
 
 		void		addRange(in Range range);
-		
+		void		removeRange(in Range range);
+
 		void		startBatchChanges();
 		void		endBatchChanges();
 		
