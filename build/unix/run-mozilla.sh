@@ -59,8 +59,8 @@
 ##
 #
 cmdname=`basename $0`
-MOZ_APPRUNNER_NAME="mozilla-bin"
-MOZ_VIEWER_NAME="viewer"
+MOZ_APPRUNNER_NAME="./mozilla-bin"
+MOZ_VIEWER_NAME="./viewer"
 MOZ_DIST_BIN=""
 MOZ_PROGRAM=""
 #
