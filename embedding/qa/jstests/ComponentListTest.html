@@ -1,0 +1,303 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> Component List </title>
+<!-- Descrpt: Component List Test
+     Author: dsirnapalli@netscape.com
+     Revs: 10.12.01 - Created
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+<head>
+
+<!-- script below is ngdriverspecific  -->
+<script TYPE="text/javascript" SRC="http://bubblegum/ngdriver/suites/testlib.js">
+</script>
+
+<script TYPE="text/javascript">
+function getBrowserVersion()
+{
+  var res = "";
+  res = res + '<b><h3><font color="#CC6600"> Browser Info </font></h3></b>' + '\n';
+  res = res + '<table BORDER COLS=2 WIDTH="70%">' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td WIDTH="30%"><b> App Name: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.appName + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> User Agent: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.userAgent + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> Code Name:: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.appCodeName + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> App Version: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.appVersion + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> Language: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.language + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> Platform: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.platform + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + '</table>' + '\n';
+  return res;
+}
+</script>
+
+<script TYPE="text/javascript">
+function getShortPluginsList()
+{
+  var res="";
+
+  navigator.plugins.refresh(false);
+  var numPlugins = navigator.plugins.length;
+
+  res = res + '<b><h3><font color="#CC6600"> Plugins </font></h3></b>' + '\n';
+  res = res + 'For Complete description of Plugins ';
+  res = res + '<a href="plugins.html">Click here</a>';
+  res = res + '<br><br>';
+  res = res + '<table BORDER COLS=1 WIDTH="30%">' + '\n';
+  if(numPlugins > 0)
+    res = res + '<caption><b><h3> Installed plug-ins </h3></b></caption>' + '\n';
+  else
+  {
+    res = res + '<caption><b><h3> No plug-ins are installed. </h3></b></caption>' + '\n';
+    res = res + ' <tr>' + '\n';
+    res = res + '  <td> Empty </td>' + '\n';
+    res = res + ' </tr>' + '\n';
+  }
+  for (var i=0;i<numPlugins;i++)
+  {
+    var plugin = navigator.plugins[i];
+    res = res + ' <tr>' + '\n';
+    res = res + '  <td>' + plugin.name + '</td>' + '\n';
+    res = res + ' </tr>' + '\n';
+  }
+  res = res + '</table>' + '\n';
+  return res;
+}
+</script>
+
+<script TYPE="text/javascript">
+complist = new Array();
+noncomplist = new Array();
+i = 0;
+j = 0;
+
+function getComponentList()
+{
+  var servicecontractidlist = new Array("@mozilla.org/cookieService;1",
+                                        "@mozilla.org/file/directory_service;1",
+                                        "@mozilla.org/browser/global-history;1",
+                                        "@mozilla.org/preferences-service;1",
+                                        "@mozilla.org/embedcomp/window-watcher;1",
+                                        "@mozilla.org/embedcomp/prompt-service;1");
+
+  var serviceinterfacelist = new Array("nsICookieService",
+                                       "nsIDirectoryService",
+                                       "nsIGlobalHistory",
+                                       "nsIPrefService",
+                                       "nsIWindowWatcher",
+                                       "nsIPromptService");
+
+  var contractidlist = new Array("@mozilla.org/network/standard-url;1",
+                                 "@mozilla.org/network/standard-url;1",
+                                 "@mozilla.org/browser/shistory;1",
+                                 "@mozilla.org/helperapplauncherdialog;1",
+                                 "@mozilla.org/file/local;1",
+                                 "@mozilla.org/xpcom/observer;1",
+                                 "@mozilla.org/preferences;1",
+                                 "@mozilla.org/gfx/fontlist;1");
+
+  var interfacelist = new Array("nsIURI",
+                                "nsIURL",
+                                "nsISHistory",
+                                "nsIHelperAppLauncherDialog",
+                                "nsILocalFile",
+                                "nsIObserver",
+                                "nsIPref",
+                                "nsIFontList");
+
+  for (var m=0; m<serviceinterfacelist.length; m++)
+    checkservice(servicecontractidlist[m], serviceinterfacelist[m]);
+
+  for (var n=0; n<interfacelist.length; n++)
+    checkinterface(contractidlist[n], interfacelist[n]);
+}
+
+function getAdditionalComponentList()
+{
+  // additional interface objects which cannot be got directly.
+  try{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var domWindow = window.QueryInterface(Components.interfaces.nsIDOMWindow);
+    if (domWindow)
+     complist[i++] = "nsIDOMWindow";
+  }
+  catch(e){
+    noncomplist[j++] = "nsIDOMWindow";
+  }
+  try
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var charsetObj = domWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDocCharset);
+    if (charsetObj)
+      complist[i++] = "nsIDocCharset";
+  }
+  catch(e){
+    noncomplist[j++] = "nsIDocCharset";
+  }
+}
+
+function checkservice(contractid, interfacename)
+{
+  try{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var iID = Components.interfaces[interfacename];
+    var obj = Components.classes[contractid].getService(iID);
+    if (obj)
+      complist[i++] = interfacename;
+  }
+  catch(e){
+    noncomplist[j++] = interfacename;
+  }
+}
+
+function checkinterface(contractid, interfacename)
+{
+  try{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var iID = Components.interfaces[interfacename];
+    var obj = Components.classes[contractid].createInstance(iID);
+    if (obj)
+      complist[i++] = interfacename;
+  }
+  catch(e){
+    noncomplist[j++] = interfacename;
+  }
+}
+
+function getComponentResults()
+{
+  var res = "";
+
+  res = res + '<b><h3><font color="#CC6600"> Embedding Components </font></h3></b>' + '\n';
+  res = res + '<table BORDER COLS=1 WIDTH="30%">' + '\n';
+  res = res + '<caption><b><h3> Components Available </h3></b></caption>' + '\n';
+  for (var i=0; i<complist.length; i++)
+  {
+    res = res + ' <tr>' + '\n';
+    res = res + '  <td>' + complist[i] + '</td>' + '\n';
+    res = res + ' </tr>' + '\n';
+  }
+  if(complist.length == 0)
+  {
+    res = res + ' <tr>' + '\n';
+    res = res + '  <td> Empty </td>' + '\n';
+    res = res + ' </tr>' + '\n';
+  }
+  res = res + '</table>' + '\n';
+
+  res = res + '<br>' + '\n';
+  res = res + '<table BORDER COLS=1 WIDTH="30%">' + '\n';
+  res = res + '<caption><b><h3> Components Not Available </h3></b></caption>' + '\n';
+  for (var j=0; j<noncomplist.length; j++)
+  {
+    res = res + ' <tr>' + '\n';
+    res = res + '  <td>' + noncomplist[j] + '</td>' + '\n';
+    res = res + ' </tr>' + '\n';
+  }
+  if(noncomplist.length == 0)
+  {
+    res = res + ' <tr>' + '\n';
+    res = res + '  <td> Empty </td>' + '\n';
+    res = res + ' </tr>' + '\n';
+  }
+  res = res + '</table>' + '\n';
+  return res;
+}
+</script>
+
+<script TYPE="text/javascript">
+function displayResults(results)
+{
+  document.results.textarea.value = results;
+  if (top.name == "testWindow")
+  {
+ 	fixSubmit();
+  }
+  else
+  {
+  	document.write(document.results.textarea.value);
+  }
+}
+</script>
+
+</head>
+<body>
+
+<!-- form below is ngdriverspecific  -->
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+<script TYPE="text/javascript">
+document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
+</script>
+<input type="hidden" name="textarea">
+</form>
+
+<script TYPE="text/javascript">
+var result = "";
+
+result = result + "<font color='#CC6600'> NOTE: </font>" + "<br>";
+result = result + "For the Test Case to run correctly include the following line into your prefs.js file." + "<br>";
+result = result + 'user_pref("signed.applets.codebase_principal_support", true);' + "<br>";
+result = result + 'prefs.js can be found at' + '<br>';
+result = result + 'WINNT:C:\\WINNT\\Profiles\\profileyouareusing\\Application Data\\MfcEmbed\\Profiles\\default\\somefolder.slt\\prefs.js' + '<br>';
+result = result + 'WIN98:C:\\WINDOWS\\Application Data\\MfcEmbed\\Profiles\\default\\somefolder.slt\\prefs.js' + '<br>';
+result = result + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+
+browserres = getBrowserVersion();
+result = result + browserres;
+result = result + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+pluginres = getShortPluginsList();
+result = result + pluginres;
+result = result + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+getComponentList();
+getAdditionalComponentList();
+componentres = getComponentResults();
+result = result + componentres;
+result = result + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+displayResults(result);
+</script>
+
+</body>
+</html>
