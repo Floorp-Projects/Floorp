@@ -26,12 +26,12 @@ MODULE = xpcom
 EXPORTS =                          \
         nsEscape.h                 \
         nsFileSpec.h               \
+        nsFileSpecImpl.h           \
         nsFileSpecStreaming.h      \
         nsFileStream.h             \
         nsIBaseStream.h            \
         nsIByteBufferInputStream.h \
         nsIFileStream.h            \
-        nsIFileWidget.h            \
         nsIInputStream.h           \
         nsIOutputStream.h          \
         nsIStringStream.h          \

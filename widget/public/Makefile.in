@@ -24,6 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -D_IMPL_NS_UI
 
+XPIDLSRCS =			\
+	nsIFileSpecWithUI.idl		\
+	$(NULL)
+
 EXPORTS = \
 	nsIFontSizeIterator.h \
 	nsIFontNameIterator.h \
@@ -34,6 +38,7 @@ EXPORTS = \
 	nsIMenuItem.h	\
 	nsIImageButton.h	\
 	nsIPopUpMenu.h		\
+	nsIFileWidget.h            \
 	nsIMenuButton.h		\
 	nsIImageButtonListener.h \
 	nsStringUtil.h	\

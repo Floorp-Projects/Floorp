@@ -154,6 +154,12 @@ class NS_COM nsFileSpecImpl
 	NS_IMETHOD endline();
 
 	//----------------------
+	// COM Cruft
+	//----------------------
+
+      static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
+
+	//----------------------
 	// Implementation
 	//----------------------
 
@@ -161,7 +167,7 @@ class NS_COM nsFileSpecImpl
 			nsFileSpecImpl(const nsFileSpec& inSpec);
 			virtual ~nsFileSpecImpl();
 			static nsresult MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** outSpec);
-      static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
+
 	//----------------------
 	// Data
 	//----------------------
@@ -169,15 +175,6 @@ class NS_COM nsFileSpecImpl
 		nsFileSpec							mFileSpec;
 		nsIInputStream*						mInputStream;
 		nsIOutputStream*					mOutputStream;
-
-    // These will go away
-    NS_IMETHOD chooseOutputFile(const char *windowTitle, const char *suggestedLeafName);
- 
-    NS_IMETHOD chooseInputFile(const char *title,
-                               nsIFileSpec::StandardFilterMask standardFilterMask,
-                               const char *extraFilterTitle, const char *extraFilter);
- 
-    NS_IMETHOD chooseDirectory(const char *title);
 
 }; // class nsFileSpecImpl
 
