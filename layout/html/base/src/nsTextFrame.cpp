@@ -544,7 +544,7 @@ public:
       if (mSmallCaps) {
         nscoord originalSize = plainFont->size;
         plainFont->size = nscoord(0.8 * plainFont->size);
-        aPresContext->GetMetricsFor(*plainFont, &mSmallFont);
+        mSmallFont = aPresContext->GetMetricsFor(*plainFont).get();  // addrefs
         // Reset to the size value saved earlier.
         plainFont->size = originalSize;
       }
@@ -2267,8 +2267,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         // base direction 
         aRenderingContext.SetRightToLeftText(PR_TRUE);
       }
-      nsBidiPresUtils* bidiUtils;
-      aPresContext->GetBidiUtils(&bidiUtils);
+      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
       if (bidiUtils) {
 #ifdef DEBUG
         PRInt32 rememberTextLength = textLength;
@@ -2948,8 +2947,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
     nsCharType charType = eCharType_LeftToRight;
 
     if (aPresContext->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils;
-      aPresContext->GetBidiUtils(&bidiUtils);
+      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
 
       if (bidiUtils) {
         isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
@@ -5444,9 +5442,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     // For now we add 1 pixel to the width of the invalidated rect.
     // This fixes cases where the twips to pixel roundoff causes the invalidated
     // rect's width to be one pixel short. 
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
     maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width) + onePixel; 
     maxFrameHeight = PR_MAX(maxFrameHeight, mRect.height);

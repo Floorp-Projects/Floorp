@@ -1161,9 +1161,8 @@ GetSubmissionFromForm(nsIHTMLContent* aForm,
   //
 
   // Get BIDI options
-  PRUint32 bidiOptions = 0;
   PRUint8 ctrlsModAtSubmit = 0;
-  aPresContext->GetBidi(&bidiOptions);
+  PRUint32 bidiOptions = aPresContext->GetBidi();
   ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
 
   // Get encoding type (default: urlencoded)

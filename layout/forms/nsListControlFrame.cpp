@@ -550,8 +550,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
     if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
       const nsStyleDisplay* displayData = GetStyleDisplay();
       if (displayData->mAppearance) {
-        nsCOMPtr<nsITheme> theme;
-        aPresContext->GetTheme(getter_AddRefs(theme));
+        nsITheme *theme = aPresContext->GetTheme();
         nsRect  rect(0, 0, mRect.width, mRect.height);
         if (theme && theme->ThemeSupportsWidget(aPresContext, this, displayData->mAppearance))
           theme->DrawWidgetBackground(&aRenderingContext, this, 
@@ -687,9 +686,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
              nsILookAndFeel::eColor_WidgetSelectForeground :
              nsILookAndFeel::eColor_WidgetSelectBackground, color);
 
-  float p2t;
-  mPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixelInTwips = NSToCoordRound(p2t);
+  nscoord onePixelInTwips = mPresContext->IntScaledPixelsToTwips(1);
 
   nsRect dirty;
   nscolor colors[] = {color, color, color, color};

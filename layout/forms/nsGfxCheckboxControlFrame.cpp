@@ -181,16 +181,16 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
 {
   const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance) {
-    nsCOMPtr<nsITheme> theme;
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, this, disp->mAppearance))
       return; // No need to paint the checkbox. The theme will do it.
   }
 
-  aRenderingContext.PushState();
+  // Get current checked state through content model.
+  if (!GetCheckboxState())
+    return;   // we're not checked, nothing to paint.
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  aRenderingContext.PushState();
 
   nsMargin borderPadding(0,0,0,0);
   CalcBorderPadding(borderPadding);
@@ -201,11 +201,10 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
   const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
 
-  // Get current checked state through content model.
-  if ( GetCheckboxState() ) {
-    nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, checkRect);
-  }
-  
+  nsFormControlHelper::PaintCheckMark(aRenderingContext,
+                                      aPresContext->ScaledPixelsToTwips(),
+                                      checkRect);
+
   aRenderingContext.PopState();
 }
 

@@ -171,8 +171,7 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
 {
   const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance) {
-    nsCOMPtr<nsITheme> theme;
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, this, disp->mAppearance))
       return; // No need to paint the radio button. The theme will do it.
   }

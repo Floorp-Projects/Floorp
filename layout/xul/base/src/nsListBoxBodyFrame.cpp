@@ -234,9 +234,7 @@ nsListBoxBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  mOnePixel = NSIntPixelsToTwips(1, p2t);
+  mOnePixel = aPresContext->IntScaledPixelsToTwips(1);
   
   nsIFrame* box = aParent->GetParent();
   if (!box)

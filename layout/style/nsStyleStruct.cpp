@@ -1164,8 +1164,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 
 nsStyleVisibility::nsStyleVisibility(nsIPresContext* aPresContext)
 {
-  PRUint32 bidiOptions;
-  aPresContext->GetBidi(&bidiOptions);
+  PRUint32 bidiOptions = aPresContext->GetBidi();
   if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)
     mDirection = NS_STYLE_DIRECTION_RTL;
   else

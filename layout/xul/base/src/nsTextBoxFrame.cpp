@@ -407,9 +407,8 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (mState & NS_FRAME_IS_BIDI) {
-      nsBidiPresUtils* bidiUtils;
       aPresContext->SetBidiEnabled(PR_TRUE);
-      aPresContext->GetBidiUtils(&bidiUtils);
+      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
 
       if (bidiUtils) {
         PRUnichar* buffer = ToNewUnicode(mCroppedTitle);

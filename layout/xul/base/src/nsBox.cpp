@@ -648,8 +648,7 @@ nsBox::GetBorder(nsMargin& aMargin)
           nsMargin margin(0,0,0,0);
           gTheme->GetWidgetBorder(context->DeviceContext(), frame, 
                                   disp->mAppearance, &margin);
-          float p2t;
-          context->GetScaledPixelsToTwips(&p2t);
+          float p2t = context->ScaledPixelsToTwips();
           aMargin.top = NSIntPixelsToTwips(margin.top, p2t);
           aMargin.right = NSIntPixelsToTwips(margin.right, p2t);
           aMargin.bottom = NSIntPixelsToTwips(margin.bottom, p2t);
@@ -1162,23 +1161,18 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::width, value))
         {
-            float p2t;
-            presContext->GetScaledPixelsToTwips(&p2t);
-
             value.Trim("%");
 
-            aSize.width = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            aSize.width =
+              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
             widthSet = PR_TRUE;
         }
 
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::height, value))
         {
-            float p2t;
-            presContext->GetScaledPixelsToTwips(&p2t);
-
             value.Trim("%");
 
-            aSize.height = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            aSize.height = presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
             heightSet = PR_TRUE;
         }
     }
@@ -1201,16 +1195,14 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // See if a native theme wants to supply a minimum size.
     const nsStyleDisplay* display = frame->GetStyleDisplay();
     if (display->mAppearance) {
-      nsCOMPtr<nsITheme> theme;
-      aState.PresContext()->GetTheme(getter_AddRefs(theme));
+      nsITheme *theme = aState.PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aState.PresContext(), frame, display->mAppearance)) {
         nsSize size;
         const nsHTMLReflowState* reflowState = aState.GetReflowState();
         if (reflowState) {
           theme->GetMinimumWidgetSize(reflowState->rendContext, frame, 
                                       display->mAppearance, &size, &canOverride);
-          float p2t;
-          aState.PresContext()->GetScaledPixelsToTwips(&p2t);
+          float p2t = aState.PresContext()->ScaledPixelsToTwips();
           if (size.width) {
             aSize.width = NSIntPixelsToTwips(size.width, p2t);
             widthSet = PR_TRUE;
@@ -1253,12 +1245,10 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::minwidth, value))
         {
-            float p2t;
-            presContext->GetScaledPixelsToTwips(&p2t);
-
             value.Trim("%");
 
-            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            nscoord val =
+              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
             if (val > aSize.width)
               aSize.width = val;
             widthSet = PR_TRUE;
@@ -1266,12 +1256,10 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value))
         {
-            float p2t;
-            presContext->GetScaledPixelsToTwips(&p2t);
-
             value.Trim("%");
 
-            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            nscoord val =
+              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
             if (val > aSize.height)
               aSize.height = val;
 
@@ -1317,24 +1305,20 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxwidth, value))
         {
-            float p2t;
-            presContext->GetScaledPixelsToTwips(&p2t);
-
             value.Trim("%");
 
-            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            nscoord val =
+              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
             aSize.width = val;
             widthSet = PR_TRUE;
         }
 
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxheight, value))
         {
-            float p2t;
-            presContext->GetScaledPixelsToTwips(&p2t);
-
             value.Trim("%");
 
-            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            nscoord val =
+              presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
             aSize.height = val;
 
             heightSet = PR_TRUE;

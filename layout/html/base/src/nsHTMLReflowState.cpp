@@ -2500,8 +2500,7 @@ nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
     return PR_FALSE;
   }
 
-  PRUint32 options;
-  aPresContext->GetBidi(&options);
+  PRUint32 options = aPresContext->GetBidi();
   if (IBMBIDI_CONTROLSTEXTMODE_LOGICAL != GET_BIDI_OPTION_CONTROLSTEXTMODE(options)) {
     return PR_FALSE;
   }

@@ -695,8 +695,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 #ifdef IBMBIDI
     if (! mLines.empty()) {
       if (aPresContext->BidiEnabled()) {
-        nsBidiPresUtils* bidiUtils;
-        aPresContext->GetBidiUtils(&bidiUtils);
+        nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
         if (bidiUtils) {
           PRBool forceReflow;
           nsresult rc = bidiUtils->Resolve(aPresContext, this,
@@ -3946,8 +3945,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   else {
     if (aState.mPresContext->BidiEnabled()) {
       if (!aState.mPresContext->IsVisualMode()) {
-        nsBidiPresUtils* bidiUtils;
-        aState.mPresContext->GetBidiUtils(&bidiUtils);
+        nsBidiPresUtils* bidiUtils = aState.mPresContext->GetBidiUtils();
 
         if (bidiUtils && bidiUtils->IsSuccessful() ) {
           nsIFrame* nextInFlow = (aLine.next() != end_lines())
@@ -4959,10 +4957,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       // needed when prev. float has procentage width
       // (maybe is a table flaw that makes table chose to round up
       // but i don't want to change that, too risky)
-      nscoord twp;
-      float p2t;
-      aState.mPresContext->GetScaledPixelsToTwips(&p2t);
-      twp = NSIntPixelsToTwips(1,p2t);
+      nscoord twp = aState.mPresContext->IntScaledPixelsToTwips(1);
       availWidth -=  availWidth % twp;
     }
   }

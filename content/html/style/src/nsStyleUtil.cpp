@@ -218,9 +218,8 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
   }
 
   // Make special call specifically for fonts (needed PrintPreview)
-  float t2p;
-  aPresContext->GetTwipsToPixelsForFonts(&t2p);
-  PRInt32 fontSize = NSTwipsToIntPixels(aBasePointSize, t2p);
+  PRInt32 fontSize = NSTwipsToIntPixels(aBasePointSize,
+                                        aPresContext->TwipsToPixelsForFonts());
 
   if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
   {

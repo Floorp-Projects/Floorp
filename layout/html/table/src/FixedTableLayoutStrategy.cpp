@@ -74,8 +74,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aCom
 
   PRInt32 numCols = mTableFrame->GetColCount();
   PRInt32 colX;
-  float pixelToTwips;
-  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&pixelToTwips);
+  float pixelToTwips = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
   // availWidth is used as the basis for percentage width columns. It is aComputedWidth
   // minus table border, padding, & cellspacing
   nscoord spacingX = mTableFrame->GetCellSpacingX();

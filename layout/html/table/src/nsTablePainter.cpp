@@ -246,7 +246,7 @@ TableBackgroundPainter::TableBackgroundPainter(nsTableFrame*        aTableFrame,
 
   mZeroPadding.RecalcData();
 
-  mPresContext->GetScaledPixelsToTwips(&mP2t);
+  mP2t = mPresContext->ScaledPixelsToTwips();
   mIsBorderCollapse = aTableFrame->IsBorderCollapse();
 #ifdef DEBUG
   mCompatMode = mPresContext->CompatibilityMode();

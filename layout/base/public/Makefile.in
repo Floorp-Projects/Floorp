@@ -74,8 +74,6 @@ nsIPercentHeightObserver.h  \
 nsIPresContext.h \
 nsIPresShell.h \
 nsIPresState.h \
-nsIPrintContext.h \
-nsIPrintPreviewContext.h \
 nsIReflowCallback.h \
 nsIScrollableFrame.h \
 nsIScrollableViewProvider.h \

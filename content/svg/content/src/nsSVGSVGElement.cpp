@@ -436,9 +436,7 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
   presShell->GetPresContext(getter_AddRefs(context));
   if (!context) return NS_OK;
 
-  float TwipsPerPx;
-  context->GetScaledPixelsToTwips(&TwipsPerPx);
-  *aPixelUnitToMillimeterX = TwipsPerPx / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
+  *aPixelUnitToMillimeterX = context->ScaledPixelsToTwips() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
   return NS_OK;
 }
 

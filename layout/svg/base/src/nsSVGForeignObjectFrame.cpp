@@ -709,10 +709,7 @@ float nsSVGForeignObjectFrame::GetPxPerTwips()
 
 float nsSVGForeignObjectFrame::GetTwipsPerPx()
 {
-  float twipsPerPx=16.0f;
-
-  GetPresContext()->GetScaledPixelsToTwips(&twipsPerPx);
-  return twipsPerPx;
+  return GetPresContext()->ScaledPixelsToTwips();
 }
 
 void nsSVGForeignObjectFrame::TransformPoint(float& x, float& y)

@@ -75,8 +75,6 @@
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
-#include "nsIPrintContext.h"
-#include "nsIPrintPreviewContext.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsWeakReference.h"
@@ -261,25 +259,19 @@ nsSubDocumentFrame::Init(nsIPresContext* aPresContext,
   }
 
   // determine if we are a printcontext
-  PRBool shouldCreateDoc = PR_TRUE;
-  nsCOMPtr<nsIPrintContext> thePrinterContext(do_QueryInterface(aPresContext));
+  PRBool shouldCreateDoc;
 
-  if (thePrinterContext) {
-    // we are printing
+  if (aPresContext->Medium() == nsLayoutAtoms::print) {
+    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+      // for print preview we want to create the view and widget but
+      // we do not want to load the document, it is already loaded.
+      rv = CreateViewAndWidget(eContentTypeContent);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+
     shouldCreateDoc = PR_FALSE;
-  }
-
-  // for print preview we want to create the view and widget but
-  // we do not want to load the document, it is alerady loaded.
-  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext =
-    do_QueryInterface(aPresContext);
-
-  if (thePrintPreviewContext) {
-    rv = CreateViewAndWidget(eContentTypeContent);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    // we are in PrintPreview
-    shouldCreateDoc = PR_FALSE;
+  } else {
+    shouldCreateDoc = PR_TRUE;
   }
 
   if (shouldCreateDoc) {
@@ -306,7 +298,7 @@ nsSubDocumentFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (!mContent->IsContentOfType(nsIContent::eXUL))
     // If no width/height was specified, use 300/150.
     // This is for compatability with IE.
-    aPresContext->GetScaledPixelsToTwips(&p2t);
+    p2t = aPresContext->ScaledPixelsToTwips();
 
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aDesiredSize.width = aReflowState.mComputedWidth;

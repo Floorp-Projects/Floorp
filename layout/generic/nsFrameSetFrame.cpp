@@ -525,8 +525,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext*       aPresContext,
   PRInt32  numRelative = 0;
   PRInt32* relative= new PRInt32[aNumSpecs];
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = aPresContext->ScaledPixelsToTwips();
   PRInt32 i, j;
  
   // initialize the fixed, percent, relative indices, allocate the fixed sizes and zero the others
@@ -637,8 +636,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext,
       return 0;
     }
   }
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = aPresContext->ScaledPixelsToTwips();
   nsHTMLValue htmlVal;
   nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
 

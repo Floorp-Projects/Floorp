@@ -431,8 +431,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
       // cache the default values of lspace & rspace that we get from the dictionary.
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
-      nsCOMPtr<nsIFontMetrics> fm;
-      aPresContext->GetMetricsFor(GetStyleFont()->mFont, getter_AddRefs(fm));
+      nsCOMPtr<nsIFontMetrics> fm =
+	aPresContext->GetMetricsFor(GetStyleFont()->mFont);
       GetEmHeight(fm, em);
 
       mEmbellishData.leftSpace = NSToCoordRound(lspace * em);
@@ -493,9 +493,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
   // little extra tuning to round lspace & rspace to at least a pixel so that
   // operators don't look as if they are colliding with their operands
   if (leftSpace || rightSpace) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
     if (leftSpace && leftSpace < onePixel)
       leftSpace = onePixel;
     if (rightSpace && rightSpace < onePixel)

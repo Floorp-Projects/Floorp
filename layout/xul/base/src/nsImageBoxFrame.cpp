@@ -565,10 +565,9 @@ nsImageBoxFrame::GetImageSize()
 {
   nsHTMLReflowMetrics desiredSize(PR_TRUE);
   const PRInt32 kDefaultSize = 0;
-  float p2t;
-  GetPresContext()->GetScaledPixelsToTwips(&p2t);
   // XXX constant zero?
-  const PRInt32 kDefaultSizeInTwips = NSIntPixelsToTwips(kDefaultSize, p2t);
+  const PRInt32 kDefaultSizeInTwips =
+    GetPresContext()->IntScaledPixelsToTwips(kDefaultSize);
 
 // not calculated? Get the intrinsic size
 	if (mHasImage) {

@@ -336,7 +336,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-      aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+      fm = aPresContext->GetMetricsFor(myFont->mFont);
 #ifdef IBMBIDI
       // If we can't render our numeral using the chars in the numbering
       // system, we'll be using "decimal"...
@@ -355,13 +355,12 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     }
 #ifdef IBMBIDI
     if (charType != eCharType_LeftToRight) {
-      aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+      fm = aPresContext->GetMetricsFor(myFont->mFont);
       aRenderingContext.SetFont(fm);
       nscoord ascent;
       fm->GetMaxAscent(ascent);
 
-      nsBidiPresUtils* bidiUtils;
-      aPresContext->GetBidiUtils(&bidiUtils);
+      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
       if (bidiUtils) {
         const PRUnichar* buffer = text.get();
         PRInt32 textLength = text.Length();
@@ -1467,8 +1466,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   }
 
   const nsStyleFont* myFont = GetStyleFont();
-  nsCOMPtr<nsIFontMetrics> fm;
-  aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = aCX->GetMetricsFor(myFont->mFont);
   nscoord bulletSize;
   float p2t;
   float t2p;

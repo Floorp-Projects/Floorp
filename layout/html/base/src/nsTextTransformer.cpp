@@ -1503,8 +1503,7 @@ nsTextTransformer::DoNumericShaping(PRUnichar* aText,
   if (aTextLength <= 0)
     return;
 
-  PRUint32 bidiOptions;
-  mPresContext->GetBidi(&bidiOptions);
+  PRUint32 bidiOptions = mPresContext->GetBidi();
 
   switch (GET_BIDI_OPTION_NUMERAL(bidiOptions)) {
 

@@ -142,9 +142,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
   if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
 
   // force the scriptSpace to be at least 1 pixel 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
   aScriptSpace = PR_MAX(onePixel, aScriptSpace);
 
   ////////////////////////////////////
@@ -180,10 +178,9 @@ nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
   // get min supscript shift limit from x-height
   // = d(x) + 1/4 * sigma_5, Rule 18c, App. G, TeXbook
   nscoord xHeight = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsCOMPtr<nsIFontMetrics> fm =
+    aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
 
-  aPresContext->GetMetricsFor (baseFrame->GetStyleFont()->mFont,
-                               getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSupScript.descent + (1.0f/4.0f) * xHeight);

@@ -588,9 +588,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
       // Align the middle of the child frame with the middle of the content area, 
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      kidYTop = nsTableFrame::RoundToPixel(kidYTop, p2t, eAlwaysRoundDown);
+      kidYTop = nsTableFrame::RoundToPixel(kidYTop,
+                                           aPresContext->ScaledPixelsToTwips(),
+                                           eAlwaysRoundDown);
   }
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
@@ -726,8 +726,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = aPresContext->ScaledPixelsToTwips();
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aReflowState.availableHeight;

@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  unicharutil \
 		  pref \
+		  locale \
 		  $(NULL)
 
 CPPSRCS		= \

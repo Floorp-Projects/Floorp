@@ -77,7 +77,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDOMHTMLObjectElement.h"
 
 // Print Preview
-#include "nsIPrintPreviewContext.h"
 #include "imgIContainer.h" // image animation mode constants
 #include "nsIScrollableView.h"
 #include "nsIScrollable.h"
@@ -157,7 +156,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsLayoutAtoms.h"
 #include "nsFrameManager.h"
 #include "nsIParser.h"
-#include "nsIPrintContext.h"
 #include "nsGUIEvent.h"
 #include "nsHTMLReflowState.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -172,10 +170,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
-
-// New PrintPreview
-static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
-static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
 
 //-----------------------------------------------------
 // PR LOGGING
@@ -2567,23 +2561,11 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   // create the PresContext
   PRBool containerIsSet = PR_FALSE;
-  nsresult rv;
-  if (mIsCreatingPrintPreview) {
-    nsCOMPtr<nsIPrintPreviewContext> printPreviewCon(do_CreateInstance(kPrintPreviewContextCID, &rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    aPO->mPresContext = do_QueryInterface(printPreviewCon);
-    printPreviewCon->SetPrintSettings(mPrt->mPrintSettings);
-  } else {
-    nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID, &rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    aPO->mPresContext = do_QueryInterface(printcon);
-    printcon->SetPrintSettings(mPrt->mPrintSettings);
-  }
-
+  aPO->mPresContext = new nsIPresContext(mIsCreatingPrintPreview ?
+                                         nsIPresContext::eContext_PrintPreview:
+                                         nsIPresContext::eContext_Print);
+  NS_ENSURE_TRUE(aPO->mPresContext, NS_ERROR_OUT_OF_MEMORY);
+  aPO->mPresContext->SetPrintSettings(mPrt->mPrintSettings);
 
   // set the presentation context to the value in the print settings
   PRBool printBGColors;
@@ -2594,7 +2576,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
 
   // init it with the DC
-  rv = aPO->mPresContext->Init(mPrt->mPrintDocDC);
+  nsresult rv = aPO->mPresContext->Init(mPrt->mPrintDocDC);
   if (NS_FAILED(rv)) {
     aPO->mPresContext = nsnull;
     return rv;
@@ -2779,7 +2761,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     return NS_OK;
   }
 
-  aPO->mPresContext->SetPageDim(&adjRect);
+  aPO->mPresContext->SetPageDim(adjRect);
   rv = aPO->mPresShell->InitialReflow(width, height);
   if (NS_SUCCEEDED(rv)) {
     // Transfer Selection Ranges to the new Print PresShell
@@ -3322,9 +3304,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
           return NS_ERROR_FAILURE;
         }
 
-        nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(poPresContext);
-        if (!ppContext) {
-
+        if (poPresContext->Type() != nsIPresContext::eContext_PrintPreview) {
           nscoord sheight = seqFrame->GetSize().height;
 
           nsRect r = poRootView->GetBounds();
@@ -4491,9 +4471,8 @@ nsPrintEngine::FinishPrintPreview()
 
   // Turning off the scaling of twips so any of the UI scrollbars
   // will not get scaled
-  nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(mPresContext));
-  if (printPreviewContext) {
-    printPreviewContext->SetScalingOfTwips(PR_FALSE);
+  if (mPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+    mPresContext->SetScalingOfTwips(PR_FALSE);
     mDeviceContext->SetCanonicalPixelScale(mPrtPreview->mOrigDCScale);
   }
 
@@ -4798,8 +4777,7 @@ void DumpLayoutData(char*              aTitleStr,
   }
 
 #ifdef NS_PRINT_PREVIEW
-  nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-  if (ppContext) {
+  if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
     return;
   }
 #endif

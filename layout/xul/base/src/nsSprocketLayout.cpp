@@ -1116,9 +1116,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
                            nsComputedBoxSize*& aComputedBoxSizes)
 {  
 
- // float p2t;
- // aState.PresContext()->GetScaledPixelsToTwips(&p2t);
-  //nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  //nscoord onePixel = aState.PresContext()->IntScaledPixelsToTwips(1);
 
   PRInt32 sizeRemaining            = aGivenSize;
   PRInt32 spacerConstantsRemaining = 0;

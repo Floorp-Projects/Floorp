@@ -57,6 +57,7 @@ REQUIRES = \
 	util \
 	uconv \
 	windowwatcher \
+	locale \
 	$(NULL)
 
 CPPSRCS = \

@@ -198,9 +198,8 @@ nscoord CalcLength(const nsCSSValue& aValue,
   }
   nsCSSUnit unit = aValue.GetUnit();
   if (unit == eCSSUnit_Pixel) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    return NSFloatPixelsToTwips(aValue.GetFloatValue(), p2t);
+    return NSFloatPixelsToTwips(aValue.GetFloatValue(),
+                                aPresContext->ScaledPixelsToTwips());
   }
   // Common code for all units other than pixels:
   aInherited = PR_TRUE;
@@ -220,8 +219,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
       return NSToCoordRound((aValue.GetFloatValue() * (float)font->size) / 2.0f);
     }
     case eCSSUnit_XHeight: {
-      nsCOMPtr<nsIFontMetrics> fm;
-      aPresContext->GetMetricsFor(*font, getter_AddRefs(fm));
+      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(*font);
       nscoord xHeight;
       fm->GetXHeight(xHeight);
       return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
@@ -4340,8 +4338,7 @@ SetSVGLength(const nsCSSValue& aValue, float parentLength, float& length,
     }
     else {
       length = (float) coord.GetCoordValue();
-      float twipsPerPix;
-      aPresContext->GetScaledPixelsToTwips(&twipsPerPix);
+      float twipsPerPix = aPresContext->ScaledPixelsToTwips();
       if (twipsPerPix == 0.0f)
         twipsPerPix = 1e-20f;
       length /= twipsPerPix;
