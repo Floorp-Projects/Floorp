@@ -389,6 +389,12 @@ public:
                                  PRIntn   aHPercent) const = 0;
 
   /**
+   * Suppress notification of the frame manager that frames are
+   * being destroyed.
+   */
+  NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore) = 0;
+
+  /**
    * Notification sent by a frame informing the pres shell that it is about to
    * be destroyed.
    * This allows any outstanding references to the frame to be cleaned up

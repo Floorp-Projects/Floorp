@@ -453,6 +453,7 @@ FrameManager::Destroy()
   // Destroy the frame hierarchy. Don't destroy the property lists until after
   // we've destroyed the frame hierarchy because some frames may expect to be
   // able to retrieve their properties during destruction
+  mPresShell->SetIgnoreFrameDestruction(PR_TRUE);
   if (mRootFrame) {
     mRootFrame->Destroy(presContext);
     mRootFrame = nsnull;
