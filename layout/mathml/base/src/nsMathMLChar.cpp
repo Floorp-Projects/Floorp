@@ -1175,16 +1175,18 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     if (mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = 0; //aForFrame->GetSkipSides();
-      nsStyleSpacing spacing;
-      mStyleContext->GetStyle(eStyleStruct_Spacing, spacing);
+      nsStyleBorder border;
+      mStyleContext->GetStyle(eStyleStruct_Border, border);
+      nsStyleOutline outline;
+      mStyleContext->GetStyle(eStyleStruct_Outline, outline);
 
       nsRect  rect(mRect); //0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-                                      aDirtyRect, rect, color, spacing, 0, 0);
+                                      aDirtyRect, rect, color, border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                                  aDirtyRect, rect, spacing, mStyleContext, skipSides);
+                                  aDirtyRect, rect, border, mStyleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
-                                   aDirtyRect, rect, spacing, mStyleContext, 0);
+                                   aDirtyRect, rect, border, outline, mStyleContext, 0);
     }
   }
 
