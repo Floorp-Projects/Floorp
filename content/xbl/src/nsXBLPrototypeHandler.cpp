@@ -234,10 +234,6 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     if (preventDefault)
       return NS_OK;
 
-    // We are the default action for this command.
-    // Stop any other default action from executing.
-    aEvent->PreventDefault();
-
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
     if(privateEvent) {
       PRBool dispatchStopped;
@@ -302,6 +298,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
           return NS_OK;
       }
     }
+
+    // We are the default action for this command.
+    // Stop any other default action from executing.
+    aEvent->PreventDefault();
     
     if (controller)
       controller->DoCommand(command);
