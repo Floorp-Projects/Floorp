@@ -20,6 +20,55 @@
 
 #include "xpcprivate.h"
 
+/*
+* This is a table driven scheme to determine if the types of the params of the 
+* given method exclude that method from being reflected via XPConnect.
+*
+* The table can be appended and modified as requirements change. However...
+*
+* The table ASSUMES that all the type idenetifiers are contiguous starting 
+* at ZERO. And, it also ASSUMES that the additional criteria of whether or 
+* not a give type is reflectable are its use as a pointer and/or 'out' type.
+*
+* The table has a row for each type and columns for the combinations of
+* that type being used as a pointer type and/or as an 'out' param.
+*/
+
+#define XPC_MK_BIT(p,o) (1 << (((p)?1:0)+((o)?2:0)))
+#define XPC_IS_REFLECTABLE(f, p, o) ((f) & XPC_MK_BIT((p),(o)))
+#define XPC_MK_FLAG(np_no,p_no,np_o,p_o) \
+        ((uint8)((np_no) | ((p_no) << 1) | ((np_o) << 2) | ((p_o) << 3)))
+
+/***********************************************************/
+#define XPC_FLAG_COUNT nsXPTType::T_INTERFACE_IS+1
+
+/* '1' means 'reflectable'. '0' means 'not reflectable'.   */
+static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
+    /* 'p' stands for 'pointer' and 'o' stands for 'out'   */
+    /*          !p&!o, p&!o, !p&o, p&o                     */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I8           */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I16          */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I32          */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I64          */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U8           */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U16          */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U32          */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U64          */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_FLOAT        */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_DOUBLE       */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_BOOL         */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_CHAR         */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR        */ 
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID         */ 
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID          */ 
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_BSTR         */ 
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR     */ 
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR    */ 
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE    */ 
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_INTERFACE_IS */ 
+    };
+/***********************************************************/
+
 // static
 JSBool
 XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
@@ -31,142 +80,18 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
     {
         const nsXPTParamInfo& param = info.GetParam(i);
         const nsXPTType& type = param.GetType();
-        if(param.IsOut())
-        {
-            if(type.IsPointer())
-            {
-                switch(type.TagPart())
-                {
-                case nsXPTType::T_I8          :
-                case nsXPTType::T_I16         :
-                case nsXPTType::T_I32         :
-                case nsXPTType::T_I64         :
-                case nsXPTType::T_U8          :
-                case nsXPTType::T_U16         :
-                case nsXPTType::T_U32         :
-                case nsXPTType::T_U64         :
-                case nsXPTType::T_FLOAT       :
-                case nsXPTType::T_DOUBLE      :
-                case nsXPTType::T_BOOL        :
-                case nsXPTType::T_CHAR        :
-                case nsXPTType::T_WCHAR       :
-                case nsXPTType::T_VOID        :
-                    return JS_FALSE;
-                case nsXPTType::T_IID         :
-                    continue;
-                case nsXPTType::T_BSTR        :
-                    return JS_FALSE;
-                case nsXPTType::T_CHAR_STR    :
-                case nsXPTType::T_WCHAR_STR   :
-                case nsXPTType::T_INTERFACE   :
-                case nsXPTType::T_INTERFACE_IS:
-                    continue;
-                default:
-                    NS_ASSERTION(0, "bad type");
-                    return JS_FALSE;
-                }
-            }
-            else    // !(type.IsPointer())
-            {
-                switch(type.TagPart())
-                {
-                case nsXPTType::T_I8          :
-                case nsXPTType::T_I16         :
-                case nsXPTType::T_I32         :
-                case nsXPTType::T_I64         :
-                case nsXPTType::T_U8          :
-                case nsXPTType::T_U16         :
-                case nsXPTType::T_U32         :
-                case nsXPTType::T_U64         :
-                case nsXPTType::T_FLOAT       :
-                case nsXPTType::T_DOUBLE      :
-                case nsXPTType::T_BOOL        :
-                case nsXPTType::T_CHAR        :
-                case nsXPTType::T_WCHAR       :
-                    continue;
-                case nsXPTType::T_VOID        :
-                case nsXPTType::T_IID         :
-                case nsXPTType::T_BSTR        :
-                case nsXPTType::T_CHAR_STR    :
-                case nsXPTType::T_WCHAR_STR   :
-                case nsXPTType::T_INTERFACE   :
-                case nsXPTType::T_INTERFACE_IS:
-                default:
-                    NS_ASSERTION(0, "bad type");
-                    return JS_FALSE;
-                }
-            }
-        }
-        else    // !(param.IsOut())
-        {
-            if(type.IsPointer())
-            {
-                switch(type.TagPart())
-                {
-                case nsXPTType::T_I8          :
-                case nsXPTType::T_I16         :
-                case nsXPTType::T_I32         :
-                case nsXPTType::T_I64         :
-                case nsXPTType::T_U8          :
-                case nsXPTType::T_U16         :
-                case nsXPTType::T_U32         :
-                case nsXPTType::T_U64         :
-                case nsXPTType::T_FLOAT       :
-                case nsXPTType::T_DOUBLE      :
-                case nsXPTType::T_BOOL        :
-                case nsXPTType::T_CHAR        :
-                case nsXPTType::T_WCHAR       :
-                    continue;
-                case nsXPTType::T_VOID        :
-                    return JS_FALSE;
-                case nsXPTType::T_IID         :
-                    continue;
-                case nsXPTType::T_BSTR        :
-                    return JS_FALSE;
-                case nsXPTType::T_CHAR_STR    :
-                case nsXPTType::T_WCHAR_STR   :
-                case nsXPTType::T_INTERFACE   :
-                case nsXPTType::T_INTERFACE_IS:
-                    continue;
-                default:
-                    NS_ASSERTION(0, "bad type");
-                    return JS_FALSE;
-                }
-            }
-            else    // !(type.IsPointer())
-            {
-                switch(type.TagPart())
-                {
-                case nsXPTType::T_I8          :
-                case nsXPTType::T_I16         :
-                case nsXPTType::T_I32         :
-                case nsXPTType::T_I64         :
-                case nsXPTType::T_U8          :
-                case nsXPTType::T_U16         :
-                case nsXPTType::T_U32         :
-                case nsXPTType::T_U64         :
-                case nsXPTType::T_FLOAT       :
-                case nsXPTType::T_DOUBLE      :
-                case nsXPTType::T_BOOL        :
-                case nsXPTType::T_CHAR        :
-                case nsXPTType::T_WCHAR       :
-                    continue;
-                case nsXPTType::T_VOID        :
-                case nsXPTType::T_IID         :
-                case nsXPTType::T_BSTR        :
-                case nsXPTType::T_CHAR_STR    :
-                case nsXPTType::T_WCHAR_STR   :
-                case nsXPTType::T_INTERFACE   :
-                case nsXPTType::T_INTERFACE_IS:
-                default:
-                    NS_ASSERTION(0, "bad type");
-                    return JS_FALSE;
-                }
-            }
-        }
+
+        uint8 base_type = type.TagPart();
+        NS_ASSERTION(base_type < XPC_FLAG_COUNT, "BAD TYPE");
+
+        if(!XPC_IS_REFLECTABLE(xpc_reflectable_flags[base_type], 
+                               type.IsPointer(), param.IsOut()))
+            return JS_FALSE;
     }
     return JS_TRUE;
 }
+
+/***************************************************************************/
 
 #define JAM_DOUBLE(cx,v,d) (d=JS_NewDouble(cx,(jsdouble)v),DOUBLE_TO_JSVAL(d))
 #define FIT_32(cx,i,d) (INT_FITS_IN_JSVAL(i)?INT_TO_JSVAL(i):JAM_DOUBLE(cx,i,d))
@@ -285,7 +210,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 nsISupports* iface = *((nsISupports**)s);
                 if(!iface)
+                {
+                    *d = JSVAL_NULL;
                     break;
+                }
                 JSObject* aJSObj;
                 // is this a wrapped JS object?
                 if(nsXPCWrappedJSClass::IsWrappedJS(iface))
@@ -327,6 +255,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     return JS_TRUE;
 }
 
+/***************************************************************************/
 // static
 JSBool
 XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
@@ -339,7 +268,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     int32    ti;
     uint32   tu;
     jsdouble td;
-    JSBool   r;
 
     if(pErr)
         *pErr = XPCJSError::BAD_CONVERT_JS;
@@ -541,6 +469,12 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             NS_ASSERTION(iid,"can't do interface conversions without iid");
             JSObject* obj;
             nsISupports* iface = NULL;
+
+            if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+            {
+                *((nsISupports**)d) = NULL;
+                return JS_TRUE;
+            }
 
             // only wrap JSObjects
             if(!JSVAL_IS_OBJECT(s) ||

@@ -241,6 +241,8 @@ catch(e) {
 ////////////////////
 // check exceptions on can't convert
 
+// XXX this is bad test since null is now convertable.
+/*
 try {
     echo.SetReciever(null);
 //    print("Can't convert arg to Native ("+out+")- failed");
@@ -250,7 +252,7 @@ catch(e) {
 //    print("Can't convert arg to Native ("+e+") - passed");
     print("Can't convert arg to Native - passed");
 }    
-
+*/
 ////////////////////
 // FailInJSTest
 
@@ -333,5 +335,7 @@ var end_time = new Date().getTime()/1000;
 var interval = parseInt(100*(end_time - start_time),10)/100;
 print("XPConnect  did "+iterations+" iterations in "+interval+ " seconds.");
 
-
 print(".......................................");
+
+echoJS.SetReciever(null);
+echo.SetReciever(null);

@@ -1,7 +1,6 @@
 /* jband - 02/20/99 - TODO and issues list */
 
 **** TODO ****
-- convert some assertions to LOG warnings
 - Ports!
 - proto object per class?
 - Param gc rooting?
@@ -12,10 +11,6 @@
 - add xpcom JS object and util functions
 - reflect IID and CID trees. 
 - ProgIDs? (mixed in with CID tree or separate?)
-- errors
-    - throw exceptions into JS?
-- loosen restrictions re. current cx when calling wrappers across cx boundaries
-
 - Construct objects for 'Components' tree.
 
 **** ISSUES ****
@@ -36,3 +31,4 @@
 
 - Listener interface for class and instance create/destroy?
 
+- Issues with shutting down a context?

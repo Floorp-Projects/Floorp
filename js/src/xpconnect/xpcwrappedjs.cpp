@@ -74,7 +74,7 @@ nsXPCWrappedJS::Release(void)
         }
         else
         {
-            NS_RELEASE(mRoot);
+            mRoot->Release();
         }
         return 0;
     }
@@ -362,7 +362,7 @@ nsXPCWrappedJS::DebugDump(int depth)
         }
         char * iid = GetClass()->GetIID().ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
-        free(iid);
+        delete iid;
         XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass));
         if(mMethods)
             XPC_LOG_ALWAYS(("mMethods @ %x with mRefCnt = %d", \
