@@ -4765,81 +4765,58 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
   nsAutoString  params;
   nsParserUtils::SplitMimeType(aType, mimeType, params);
 
-  nsCompatibility mode;
-  mHTMLDocument->GetCompatibilityMode(mode);
-
   // see bug 18817
-  PRBool isStyleSheet = PR_FALSE;
-  if (mode != eCompatibility_NavQuirks) {
-    if (mimeType.EqualsIgnoreCase("text/css")) {
-      // strict mode + good mime type
-
-      isStyleSheet = PR_TRUE;
-    } else {
-      if (mimeType.IsEmpty()) {
-        nsAutoString extension;
-        aHref.Right(extension, 4);
-        if (extension.Equals(NS_LITERAL_STRING(".css"))) {
-          // strict mode + no mime type + '.css' extension
-
-          isStyleSheet = PR_TRUE;
-        }
-      }
-    }
-  } else if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) {
-    // quirks mode + good mime type or no mime type at all
-
-    isStyleSheet = PR_TRUE;
+  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
+    // Unknown stylesheet language
+    return NS_OK;
   }
 
-  if (isStyleSheet) {
-    nsCOMPtr<nsIURI> url;
-    result = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
+  nsCOMPtr<nsIURI> url;
+  result = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
 
-    if (NS_FAILED(result)) {
-      // The URL is bad, move along, don't propagate the error (for now)
+  if (NS_FAILED(result)) {
+    // The URL is bad, move along, don't propagate the error (for now)
 
-      return NS_OK;
-    }
+    return NS_OK;
+  }
 
-    if (!isAlternate) {
-      // possibly preferred sheet
+  if (!isAlternate) {
+    // possibly preferred sheet
 
-      if (!aTitle.IsEmpty()) {
-        nsAutoString preferredStyle;
-        mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
-                                 preferredStyle);
-        if (preferredStyle.IsEmpty()) {
-          mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
-        }
+    if (!aTitle.IsEmpty()) {
+      nsAutoString preferredStyle;
+      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                               preferredStyle);
+      if (preferredStyle.IsEmpty()) {
+        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
       }
     }
+  }
 
-    PRBool blockParser = kBlockByDefault;
-    if (isAlternate) {
-      blockParser = PR_FALSE;
-    }
+  PRBool blockParser = kBlockByDefault;
+  if (isAlternate) {
+    blockParser = PR_FALSE;
+  }
 
-    // NOTE: no longer honoring the important keyword to indicate
-    // blocking as it is proprietary and unnecessary since all
-    // non-alternate will block the parser now -mja
+  // NOTE: no longer honoring the important keyword to indicate
+  // blocking as it is proprietary and unnecessary since all
+  // non-alternate will block the parser now -mja
 #if 0
-    if (linkTypes.IndexOf("important") != -1) {
-      blockParser = PR_TRUE;
-    }
+  if (linkTypes.IndexOf("important") != -1) {
+    blockParser = PR_TRUE;
+  }
 #endif
 
-    PRBool doneLoading;
-    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                       kNameSpaceID_Unknown,
-                                       mStyleSheetCount++, 
-                                       ((blockParser) ? mParser : nsnull),
-                                       doneLoading, 
-                                       this);
+  PRBool doneLoading;
+  result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                     kNameSpaceID_Unknown,
+                                     mStyleSheetCount++, 
+                                     ((blockParser) ? mParser : nsnull),
+                                     doneLoading, 
+                                     this);
 
-    if (NS_SUCCEEDED(result) && blockParser && !doneLoading) {
-      result = NS_ERROR_HTMLPARSER_BLOCK;
-    }
+  if (NS_SUCCEEDED(result) && blockParser && !doneLoading) {
+    result = NS_ERROR_HTMLPARSER_BLOCK;
   }
 
   return result;
