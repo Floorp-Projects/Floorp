@@ -565,8 +565,14 @@ function updateGoMenu(goMenu)
   destroyGoMenuItems(goMenu);
 
   var history = document.getElementById("hiddenHistoryTree");
-  if (history.hidden)
+  
+  if (history.hidden) {
     history.hidden = false;
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIGlobalHistory);
+    var dataSource = globalHistory.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    history.database.AddDataSource(dataSource);
+  }
 
   if (!history.ref)
     history.ref = "NC:HistoryRoot";

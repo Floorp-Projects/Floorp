@@ -65,6 +65,7 @@
           var menu = buttons.nextSibling.childNodes[1];
           var width = window.innerWidth;
           menu.collapsed = true;
+          var overflowed = false;
 
           for (var i=4; i<buttons.childNodes.length; i++) {
             var button = buttons.childNodes[i];
