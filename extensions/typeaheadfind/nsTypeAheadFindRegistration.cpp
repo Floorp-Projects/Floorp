@@ -64,17 +64,14 @@ static NS_METHOD nsTypeAheadFindRegistrationProc(nsIComponentManager *aCompMgr,
   // an application component. This makes sure that we're
   // initialized on application startup.
 
-  return NS_OK;
-/*
-  // We used to be called on app startup via nsIObserver::Observe interface
-  // Now we use a pref callback to initialize ourselves
+  // Register nsTypeAheadFind to be instantiated on startup.
+  // XXX This is needed on linux, but for some reason not needed on win32.
   nsresult rv;
   nsCOMPtr<nsICategoryManager> categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) 
     rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "Type Ahead Find", 
       "service," NS_TYPEAHEADFIND_CONTRACTID, PR_TRUE, PR_TRUE, nsnull);
   return rv;
-  */
 }
 
 
