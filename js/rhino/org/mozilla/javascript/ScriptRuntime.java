@@ -1274,7 +1274,7 @@ public class ScriptRuntime {
                 return NativeClosure.newClosureSpecial(cx, scope, args, fo);
             if (name.equals("With") && cl == NativeWith.class)
                 return NativeWith.newWithSpecial(cx, args, fo, !isCall);
-            if (name.equals("js_exec") && cl == NativeScript.class)
+            if (name.equals("jsFunction_exec") && cl == NativeScript.class)
                 return ((NativeScript)jsThis).exec(cx, scope);
         }
                 
