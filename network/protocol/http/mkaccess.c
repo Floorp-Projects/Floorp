@@ -1496,7 +1496,7 @@ net_CheckForCookiePermission(char * hostname) {
  *   0 if cookie permission does not exist for host
  *  -1 if cookie permission exists for host and indicates host can't set cookies
  */
-PUBLIC Bool
+PUBLIC int
 NET_CookiePermission(MWContext * context) {
     net_CookiePermissionStruct * cookiePermission;
     char * host;
