@@ -355,6 +355,11 @@ pr_ZoneRealloc(void *oldptr, PRUint32 bytes)
 
         /* We don't know how big it is.  But we can fix that. */
         oldptr = realloc(oldptr, bytes);
+        /*
+         * If realloc returns NULL, this function loses the original
+         * value of oldptr.  This isn't a leak because the caller of
+         * this function still has the original value of oldptr.
+         */
         if (!oldptr) {
             if (bytes) {
                 PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
