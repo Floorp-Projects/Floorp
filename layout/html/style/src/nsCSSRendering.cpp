@@ -665,9 +665,9 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsIFrameImageLoader* loader = nsnull;
     PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
                            (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-    nsresult rv = aPresContext.LoadImage(aColor.mBackgroundImage, transparentBG ?
-                                         nsnull : &aColor.mBackgroundColor,
-                                         aForFrame, PR_FALSE, loader);
+    nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage, transparentBG ?
+                                              nsnull : &aColor.mBackgroundColor,
+                                              aForFrame, PR_FALSE, loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
       NS_IF_RELEASE(loader);
