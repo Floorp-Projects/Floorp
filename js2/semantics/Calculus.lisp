@@ -1396,9 +1396,13 @@
 
 ; Return the most specific common supertype of the types.  Note that a value of one of the given types may need to be
 ; coerced to be treated as a member of type U.
+; If any of the types is not a type structure, then return a nested list of two-element unions like '(union <type1> <type2>).
 (defun make-union-type (world &rest types)
   (if types
-    (reduce #'(lambda (type1 type2) (type-union world type1 type2))
+    (reduce #'(lambda (type1 type2)
+                (if (and (type? type1) (type? type2))
+                  (type-union world type1 type2)
+                  (list 'union type1 type2)))
             types)
     (world-bottom-type world)))
 
@@ -1639,6 +1643,7 @@
 
 
 ; Provide a new symbol for the type.  A type can have zero or more names.
+; If forward-referenced, type may be a symbol or a list of the form (union <type> <type>).
 ; Signal an error if the name is already used.
 ; user-defined is true if this is a user-defined type rather than a predefined type.
 (defun add-type-name (world type symbol user-defined)
@@ -1646,7 +1651,7 @@
   (when (symbol-type-definition symbol)
     (error "Attempt to redefine type ~A" symbol))
   ;If the old type was anonymous, give it this name.
-  (unless (type-name type)
+  (when (and (type? type) (not (type-name type)))
     (setf (type-name type) symbol))
   (setf (symbol-type-definition symbol) type)
   (when user-defined
@@ -1657,20 +1662,20 @@
 ; Return an existing type with the given symbol, which must be interned in a world's package.
 ; Signal an error if there isn't an existing type.  If allow-forward-references is true and
 ; symbol is an undefined type identifier, allow it, create a forward-referenced type, and return symbol.
-(defun get-type (symbol &optional allow-forward-references)
-  (or (symbol-type-definition symbol)
-      (if allow-forward-references
-        (progn
-          (setf (symbol-type-definition symbol) nil)
-          symbol)
-        (error "Undefined type ~A" symbol))))
+(defun get-type (symbol allow-forward-references)
+  (let ((type (symbol-type-definition symbol)))
+    (cond
+     ((type? type) type)
+     ((not allow-forward-references) (error "Undefined type ~A with value ~S" symbol type))
+     (t (unless type
+          (setf (symbol-type-definition symbol) nil))
+        symbol))))
 
 
 ; Scan a type-expr to produce a type.  Return that type.
 ; If allow-forward-references is true and type-expr is an undefined type identifier,
 ; allow it, create a forward-referenced type in the world, and return type-expr unchanged.
-; If allow-forward-references is true, also allow undefined type
-; identifiers deeper within type-expr (anywhere except at its top level).
+; If allow-forward-references is true, also allow undefined type identifiers deeper within type-expr.
 ; If type-expr is already a type, return it unchanged.
 (defun scan-type (world type-expr &optional allow-forward-references)
   (cond
@@ -1745,25 +1750,48 @@
 ; responsibility to make sure that these are the only types that exist.
 ; Return a list of all type structures encountered.
 (defun resolve-forward-types (world)
-  (setf (world-types-reverse world) nil)
   (let ((visited-types (make-hash-table :test #'eq)))
     (labels
-      ((resolve-in-type (type)
+      ((resolve-type-symbol (symbol type symbol-stack)
+         (cond
+          ((type? type) type)
+          ((null type) (error "Undefined type ~A" symbol))
+          ((member symbol symbol-stack)
+           (error "Recursive type forward reference ~S ~S" symbol symbol-stack))
+          (t (let ((type (resolve-type-expr type (cons symbol symbol-stack))))
+               (assert-true (type? type))
+               (setf (symbol-type-definition symbol) type)
+               type))))
+       
+       (resolve-type-expr (type symbol-stack)
+         (cond
+          ((type? type) type)
+          ((symbolp type)
+           (resolve-type-symbol type (symbol-type-definition type) symbol-stack))
+          ((structured-type? type '(tuple (eql union) t t))
+           (let ((type1 (resolve-type-expr (second type) symbol-stack))
+                 (type2 (resolve-type-expr (third type) symbol-stack)))
+             (type-union world type1 type2)))
+          (t (error "Bad forward-referenced type ~S" type))))
+       
+       (resolve-type-parameters (type)
          (unless (gethash type visited-types)
            (setf (gethash type visited-types) t)
            (do ((parameter-types (type-parameters type) (cdr parameter-types)))
                ((endp parameter-types))
              (let ((parameter-type (car parameter-types)))
-               (unless (typep parameter-type 'type)
-                 (setq parameter-type (get-type parameter-type))
+               (unless (type? parameter-type)
+                 (setq parameter-type (resolve-type-expr parameter-type nil))
                  (setf (car parameter-types) parameter-type))
-               (resolve-in-type parameter-type))))))
+               (resolve-type-parameters parameter-type))))))
+      
       (each-type-definition
        world
        #'(lambda (symbol type)
-           (unless type
-             (error "Undefined type ~A" symbol))
-           (resolve-in-type type))))
+           (unless (type? type)
+             (setq type (resolve-type-symbol symbol type nil)))
+           (resolve-type-parameters type))))
+    (setf (world-types-reverse world) nil)
     (hash-table-keys visited-types)))
 
 
@@ -4323,8 +4351,6 @@
   (declare (ignore grammar-info-var))
   (let* ((symbol (scan-name world name))
          (type (scan-type world type-expr t)))
-    (unless (typep type 'type)
-      (error "~:W undefined in type definition of ~A" type-expr symbol))
     (add-type-name world type symbol t)))
 
 
