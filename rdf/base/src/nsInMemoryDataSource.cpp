@@ -456,8 +456,7 @@ public:
     Destroy(InMemoryAssertionEnumeratorImpl* aEnumerator) {
         // Keep the datasource alive for the duration of the stack
         // frame so its allocator stays valid.
-        nsCOMPtr<nsIRDFDataSource> kungFuDeathGrip =
-            dont_QueryInterface(aEnumerator->mDataSource);
+        nsCOMPtr<nsIRDFDataSource> kungFuDeathGrip = aEnumerator->mDataSource;
 
         // Grab the pool from the datasource; since we keep the
         // datasource alive, this has to be safe.
@@ -662,8 +661,7 @@ public:
     Destroy(InMemoryArcsEnumeratorImpl* aEnumerator) {
         // Keep the datasource alive for the duration of the stack
         // frame so its allocator stays valid.
-        nsCOMPtr<nsIRDFDataSource> kungFuDeathGrip =
-            dont_QueryInterface(aEnumerator->mDataSource);
+        nsCOMPtr<nsIRDFDataSource> kungFuDeathGrip = aEnumerator->mDataSource;
 
         // Grab the pool from the datasource; since we keep the
         // datasource alive, this has to be safe.

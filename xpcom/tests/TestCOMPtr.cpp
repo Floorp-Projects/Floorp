@@ -507,7 +507,7 @@ main()
 
 #if 1
       cout << endl << "### Test 11.5: can you compare a |nsCOMPtr| with a raw interface pointer [==]?" << endl;
-      if ( nsCOMPtr<IFoo>( dont_QueryInterface(raw_foo2p) ) == foo2p )
+      if ( nsCOMPtr<IFoo>( raw_foo2p ) == foo2p )
         cout << "raw_foo2p == foo2p" << endl;
       else
         cout << "raw_foo2p != foo2p" << endl;
@@ -620,18 +620,6 @@ main()
 
 
 		{
-    	cout << endl << "### setup for Test 24" << endl;
-			nsCOMPtr<IFoo> fooP;
-			IFoo* rawFooP = new IFoo;
-
-			cout << "### Test 24: is |QueryInterface| _not_ called when explicitly barred?" << endl;
-			fooP = dont_QueryInterface(rawFooP);
-			cout << "### cleanup for Test 24" << endl;
-		}
-    cout << "### End Test 24" << endl;
-
-
-		{
 			nsCOMPtr<IFoo> fooP;
 
 			AnIFooPtrPtrContext( getter_AddRefs(fooP) );
@@ -648,7 +636,7 @@ main()
 		}
 
 
-    cout << endl << "### Test 25: will a static |nsCOMPtr| |Release| before program termination?" << endl;
+    cout << endl << "### Test 24: will a static |nsCOMPtr| |Release| before program termination?" << endl;
     gFoop = do_QueryInterface(new IFoo);
     
     cout << "<<main()" << endl;

@@ -1659,7 +1659,7 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   }
 
   // Get our own content node and hold on to it to keep it from going away.
-  nsCOMPtr<nsIContent> content = dont_QueryInterface(mContent);
+  nsCOMPtr<nsIContent> content = mContent;
 
   // Deselect ourselves.
   SelectMenu(PR_FALSE);

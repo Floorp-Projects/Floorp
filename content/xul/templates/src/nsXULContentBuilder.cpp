@@ -94,7 +94,7 @@ IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder)
     if (! xuldoc)
         return PR_FALSE;
 
-    nsCOMPtr<nsIContent> content = dont_QueryInterface(aContent);
+    nsCOMPtr<nsIContent> content = aContent;
     do {
         nsCOMPtr<nsIXULTemplateBuilder> builder;
         xuldoc->GetTemplateBuilderFor(content, getter_AddRefs(builder));

@@ -305,25 +305,6 @@ dont_AddRef( const already_AddRefed<T> aAlreadyAddRefedPtr )
 
 
 
-
-  /*
-    There used to be machinery to allow |dont_QueryInterface()| to work, but
-     since it is now equivalent to using a raw pointer ... all that machinery
-     has gone away.  For pointer arguments, the following definition should
-     optimize away.  This is better than using a |#define| because it is
-     scoped.
-  */
-
-template <class T>
-inline
-T*
-dont_QueryInterface( T* expr )
-  {
-    return expr;
-  }
-
-
-
 class nsCOMPtr_helper
     /*
       An |nsCOMPtr_helper| transforms commonly called getters into typesafe forms

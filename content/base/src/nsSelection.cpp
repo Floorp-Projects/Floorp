@@ -4929,7 +4929,7 @@ nsTypedSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOf
   
   nsresult  result = NS_OK;
   
-  nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMNode> node = aNode;
 
   if (!node)
     return NS_ERROR_NULL_POINTER;

@@ -1822,7 +1822,7 @@ nsXULDocument::GetTooltipNode(nsIDOMNode** aNode)
 NS_IMETHODIMP
 nsXULDocument::SetTooltipNode(nsIDOMNode* aNode)
 {
-    mTooltipNode = dont_QueryInterface(aNode);
+    mTooltipNode = aNode;
     return NS_OK;
 }
 
@@ -2695,7 +2695,7 @@ PRBool
 nsXULDocument::ContextStack::IsInsideXULTemplate()
 {
     if (mDepth) {
-        nsCOMPtr<nsIContent> element = dont_QueryInterface(mTop->mElement);
+        nsCOMPtr<nsIContent> element = mTop->mElement;
         while (element) {
             PRInt32 nameSpaceID;
             element->GetNameSpaceID(&nameSpaceID);

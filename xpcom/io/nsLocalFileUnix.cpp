@@ -1415,7 +1415,7 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
 
     nsresult rv;
     PRBool isSymlink;
-    nsCOMPtr<nsIFile> self(dont_QueryInterface(this));
+    nsCOMPtr<nsIFile> self(this);
     nsCOMPtr<nsIFile> parent;
     while (NS_SUCCEEDED(rv = self->GetParent(getter_AddRefs(parent)))) {
         NS_ASSERTION(parent != nsnull, "no parent?!");

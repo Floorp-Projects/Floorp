@@ -107,10 +107,10 @@ nsIRDFContainerUtils* ContainerEnumeratorImpl::gRDFC;
 
 ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
                                                  nsIRDFResource* aContainer)
-    : mNextIndex(1)
+    : mDataSource(aDataSource),
+      mContainer(aContainer),
+      mNextIndex(1)
 {
-    mDataSource = dont_QueryInterface(aDataSource);
-    mContainer  = dont_QueryInterface(aContainer);
 }
 
 nsresult

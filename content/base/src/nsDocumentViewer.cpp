@@ -803,7 +803,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
 
-  mDeviceContext = dont_QueryInterface(aDeviceContext);
+  mDeviceContext = aDeviceContext;
 
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   // Clear PrintPreview Alternate Device

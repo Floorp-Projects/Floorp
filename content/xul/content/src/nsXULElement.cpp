@@ -4209,7 +4209,7 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 PRBool
 nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
 {
-  nsCOMPtr<nsIDOMNode> parent = dont_QueryInterface(aChildNode);
+  nsCOMPtr<nsIDOMNode> parent = aChildNode;
   while (parent && (parent != aParentNode)) {
     nsCOMPtr<nsIDOMNode> newParent;
     parent->GetParentNode(getter_AddRefs(newParent));
