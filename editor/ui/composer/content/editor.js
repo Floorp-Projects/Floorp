@@ -256,14 +256,11 @@ function GetDefaultBrowserColors()
   colors.TextColor = "";
   colors.BackgroundColor = "";
 
-  var useWinColors = false;
-  if (gIsWindows)
-  {
-    // In Windows only, there's a pref to use system colors instead of pref colors
-    try { useWinColors = gPrefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
+  var useSysColors = false;
+  try { useSysColors = gPrefs.GetBoolPref("browser.display.use_system_colors"); } catch (e) {}
   }
 
-  if (!useWinColors)
+  if (!useSysColors)
   {
     try { colors.TextColor = gPrefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
 

@@ -959,16 +959,13 @@ function GetDefaultBrowserColors()
 {
   var prefs = GetPrefs();
   var colors = new Object();
-  var useWinColors = false;
+  var useSysColors = false;
   colors.TextColor = 0;
   colors.BackgroundColor = 0;
-  if (navigator.appVersion.indexOf("Win") != -1)
-  {
-    // In Windows only, there's a pref to use system colors instead of pref colors
-    try { useWinColors = prefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
+  try { useSysColors = prefs.GetBoolPref("browser.display.use_system_colors"); } catch (e) {}
   }
 
-  if (!useWinColors)
+  if (!useSysColors)
   {
     try { colors.TextColor = prefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
 
