@@ -104,6 +104,8 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
   if (PL_strcmp(MSG_LINEBREAK, CRLF)) {
     SetLookingForCRLF(PR_FALSE);
   }
+
+  mMessages = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 

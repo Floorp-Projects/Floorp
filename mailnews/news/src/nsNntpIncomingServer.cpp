@@ -778,3 +778,52 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 	rv = AddSubscribedNewsgroups();
 	return rv;
 }
+
+NS_IMETHODIMP
+nsNntpIncomingServer::ContainsNewsgroup(const char *name, PRBool *containsGroup)
+{
+	nsresult rv;
+
+	NS_ASSERTION(name && PL_strlen(name),"no name");
+	if (!name || !containsGroup) return NS_ERROR_NULL_POINTER;
+	if (!nsCRT::strlen(name)) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIFolder> folder;
+	rv = GetRootFolder(getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsIMsgFolder> msgfolder = do_QueryInterface(folder, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!msgfolder) return NS_ERROR_FAILURE;
+
+	rv = msgfolder->ContainsChildNamed(name, containsGroup);
+	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
+{
+	nsresult rv;
+
+	NS_ASSERTION(name && PL_strlen(name),"no name");
+	if (!name) return NS_ERROR_NULL_POINTER;
+	if (!nsCRT::strlen(name)) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIFolder> folder;
+	rv = GetRootFolder(getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsIMsgFolder> msgfolder = do_QueryInterface(folder, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!msgfolder) return NS_ERROR_FAILURE;
+
+	nsAutoString newsgroupName(name);
+	rv = msgfolder->CreateSubfolder(newsgroupName.GetUnicode());
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}

@@ -27,6 +27,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIMsgMessageService.h"
 #include "nsINntpIncomingServer.h"
+#include "nsIMsgIncomingServer.h"
 #include "nsIFileSpec.h"
 #include "MailNewsTypes.h"
 #include "nsIMsgProtocolInfo.h"
@@ -71,10 +72,12 @@ protected:
   
   // a convience routine used to put together news urls.
   nsresult ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsIUrlListener *aUrlListener,  nsIURI ** aUrl);
-  nsresult  GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol);
+  nsresult CreateNewsAccount(const char *username, const char *hostname, nsIMsgIncomingServer **server);
+  nsresult GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol);
   // a convience routine to run news urls
   nsresult RunNewsUrl (nsIURI * aUrl, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer);
   static PRBool findNewsServerWithGroup(nsISupports *aElement, void *data);
+ 
 
   PRBool            mPrintingOperation; // Flag for printing operations
 };

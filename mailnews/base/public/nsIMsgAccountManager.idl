@@ -39,7 +39,7 @@ interface nsIMsgAccountManager : nsISupports {
   void removeAccount(in nsIMsgAccount account);
   void removeIdentity(in nsIMsgIdentity identity);
   void duplicateAccount(in nsIMsgAccount account);
-
+  
   /*
    * creates a new identity and assigns it a new, unique "key"
    */

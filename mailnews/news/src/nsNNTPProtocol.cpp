@@ -706,6 +706,8 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   PR_FREEIF(m_messageID);
   m_messageID = nsnull;
   rv = ParseURL(aURL,&bVal, getter_Copies(group), &m_messageID, &commandSpecificData);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to parse news url");
+  //if (NS_FAILED(rv)) return rv;
 
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
@@ -847,8 +849,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		 news:/GROUP
 		 news://HOST/GROUP
 	   */
+	  m_currentGroup = group;
 
-	  if (PL_strchr (group, '*')) {
+	  if (PL_strchr ((const char *)m_currentGroup, '*')) {
 		m_typeWanted = LIST_WANTED;
 	  }
 	  else {
@@ -856,8 +859,20 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		rv = aURL->GetSpec(getter_Copies(newsgroupURI));
 		if (NS_FAILED(rv)) return(rv);
     
+		PRBool containsGroup = PR_TRUE;
+		NS_ASSERTION(m_nntpServer,"no nntp server");
+		if (m_nntpServer) {
+			rv = m_nntpServer->ContainsNewsgroup((const char *)m_currentGroup,&containsGroup);
+			if (NS_FAILED(rv)) return rv;
+
+			if (!containsGroup) {
+				rv = m_nntpServer->SubscribeToNewsgroup((const char *)m_currentGroup);
+				if (NS_FAILED(rv)) return rv;
+			}
+		}
+				
 		rv = InitializeNewsFolderFromUri((const char *)newsgroupURI);
-		if (NS_FAILED(rv)) return(rv);
+		if (NS_FAILED(rv)) return rv;
 
 		m_typeWanted = GROUP_WANTED;
 	  }

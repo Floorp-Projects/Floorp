@@ -68,4 +68,8 @@ interface nsINntpIncomingServer : nsISupports {
                                            out nsINNTPProtocol aNntpConnection);
 	void RemoveConnection(in nsINNTPProtocol aNntpConnection);
 
+	/* use for auto subscribing */
+	boolean containsNewsgroup(in string name);
+	void subscribeToNewsgroup(in string name);
+
 };

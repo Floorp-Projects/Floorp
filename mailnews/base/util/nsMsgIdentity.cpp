@@ -532,4 +532,76 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
     return rv;
 }
 
+#define COPY_IDENTITY_FILE_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+		nsresult macro_rv;	\
+		nsCOMPtr <nsIFileSpec>macro_spec;   \
+        	macro_rv = SRC_ID->MACRO_GETTER(getter_AddRefs(macro_spec)); \
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	this->MACRO_SETTER(macro_spec);     \
+	}
 
+#define COPY_IDENTITY_INT_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+		    nsresult macro_rv;	\
+        	PRInt32 macro_oldInt;	\
+        	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldInt);	\
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	this->MACRO_SETTER(macro_oldInt);     \
+	}
+
+#define COPY_IDENTITY_BOOL_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+		    nsresult macro_rv;	\
+        	PRBool macro_oldBool;	\
+        	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldBool);	\
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	this->MACRO_SETTER(macro_oldBool);     \
+	}
+
+#define COPY_IDENTITY_STR_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+        	nsXPIDLCString macro_oldStr;	\
+		    nsresult macro_rv;	\
+        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	if (!macro_oldStr) {	\
+                	this->MACRO_SETTER("");	\
+        	}	\
+        	else {	\
+                	this->MACRO_SETTER(macro_oldStr);	\
+        	}	\
+	}
+
+static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
+
+#define COPY_IDENTITY_WSTR_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+        	nsXPIDLString macro_oldStr;	\
+		    nsresult macro_rv;	\
+        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	if (!macro_oldStr) {	\
+                	this->MACRO_SETTER(unicharEmptyString);	\
+        	}	\
+        	else {	\
+                	this->MACRO_SETTER(macro_oldStr);	\
+        	}	\
+	}
+
+NS_IMETHODIMP
+nsMsgIdentity::Copy(nsIMsgIdentity *identity)
+{
+    COPY_IDENTITY_BOOL_VALUE(identity,GetComposeHtml,SetComposeHtml)
+    COPY_IDENTITY_STR_VALUE(identity,GetEmail,SetEmail)
+    COPY_IDENTITY_STR_VALUE(identity,GetReplyTo,SetReplyTo)
+    COPY_IDENTITY_WSTR_VALUE(identity,GetFullName,SetFullName)
+    COPY_IDENTITY_WSTR_VALUE(identity,GetOrganization,SetOrganization)
+    COPY_IDENTITY_STR_VALUE(identity,GetDraftFolder,SetDraftFolder)
+    COPY_IDENTITY_STR_VALUE(identity,GetStationeryFolder,SetStationeryFolder)
+    COPY_IDENTITY_BOOL_VALUE(identity,GetAttachSignature,SetAttachSignature)
+    COPY_IDENTITY_FILE_VALUE(identity,GetSignature,SetSignature)
+    COPY_IDENTITY_INT_VALUE(identity,GetSignatureDate,SetSignatureDate)
+
+    return NS_OK;
+}

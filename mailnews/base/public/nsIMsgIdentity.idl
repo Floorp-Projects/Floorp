@@ -109,5 +109,8 @@ interface nsIMsgIdentity : nsISupports {
    */
   attribute nsISmtpServer smtpServer;
   
+  /* copy the attributes of the identity we pass in */
+  void copy(in nsIMsgIdentity identity);
+
   wstring toString();
 };

@@ -88,7 +88,6 @@ private:
 
   nsresult MigrateIdentity(nsIMsgIdentity *identity);
   nsresult MigrateSmtpServer(nsISmtpServer *server);
-  nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   nsresult SetMailCopiesAndFolders(nsIMsgIdentity *identity, const char *username, const char *hostname);
   nsresult SetNewsCopiesAndFolders(nsIMsgIdentity *identity);
   nsresult SetUsernameIfNecessary();

@@ -193,62 +193,6 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
   }	\
 }
 
-#define COPY_IDENTITY_FILE_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
-	{	\
-		nsresult macro_rv;	\
-		nsCOMPtr <nsIFileSpec>macro_spec;   \
-        	macro_rv = SRC_ID->MACRO_GETTER(getter_AddRefs(macro_spec)); \
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	DEST_ID->MACRO_SETTER(macro_spec);     \
-	}
-
-#define COPY_IDENTITY_INT_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
-	{	\
-		    nsresult macro_rv;	\
-        	PRInt32 macro_oldInt;	\
-        	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldInt);	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	DEST_ID->MACRO_SETTER(macro_oldInt);     \
-	}
-
-#define COPY_IDENTITY_BOOL_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
-	{	\
-		    nsresult macro_rv;	\
-        	PRBool macro_oldBool;	\
-        	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldBool);	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	DEST_ID->MACRO_SETTER(macro_oldBool);     \
-	}
-
-#define COPY_IDENTITY_STR_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
-	{	\
-        	nsXPIDLCString macro_oldStr;	\
-		    nsresult macro_rv;	\
-        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	if (!macro_oldStr) {	\
-                	DEST_ID->MACRO_SETTER("");	\
-        	}	\
-        	else {	\
-                	DEST_ID->MACRO_SETTER(macro_oldStr);	\
-        	}	\
-	}
-
-static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
-
-#define COPY_IDENTITY_WSTR_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
-	{	\
-        	nsXPIDLString macro_oldStr;	\
-		    nsresult macro_rv;	\
-        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	if (!macro_oldStr) {	\
-                	DEST_ID->MACRO_SETTER(unicharEmptyString);	\
-        	}	\
-        	else {	\
-                	DEST_ID->MACRO_SETTER(macro_oldStr);	\
-        	}	\
-	}
 
 #define MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
   { \
@@ -739,7 +683,7 @@ nsMessengerMigrator::MigrateIdentity(nsIMsgIdentity *identity)
   /* SetUsernameIfNecessary() can fail. */
   //if (NS_FAILED(rv)) return rv;
 
-  /* NOTE:  if you add prefs here, make sure you update CopyIdentity() */
+  /* NOTE:  if you add prefs here, make sure you update nsMsgIdentity::Copy() */
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_USEREMAIL,identity,SetEmail)
   MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_USERNAME,identity,SetFullName)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
@@ -748,7 +692,7 @@ nsMessengerMigrator::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetSignature);
   MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetAttachSignature);
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_SIGNATURE_DATE,identity,SetSignatureDate);
-  /* NOTE:  if you add prefs here, make sure you update CopyIdentity() */
+  /* NOTE:  if you add prefs here, make sure you update nsMsgIdentity::Copy() */
   return NS_OK;
 }
 
@@ -1198,9 +1142,9 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
 
-  // make this new identity to copy of the identity
+  // make this new identity a copy of the identity
   // that we created out of the 4.x prefs
-  rv = CopyIdentity(identity,copied_identity);
+  rv = copied_identity->Copy(identity);
   if (NS_FAILED(rv)) return rv;
 
   // XXX: this probably won't work yet...
@@ -1325,9 +1269,9 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
 
-  // make this new identity to copy of the identity
+  // make this new identity a copy of the identity
   // that we created out of the 4.x prefs
-  rv = CopyIdentity(identity,copied_identity);
+  rv = copied_identity->Copy(identity);
   if (NS_FAILED(rv)) return rv;
 
   rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
@@ -1495,23 +1439,6 @@ nsMessengerMigrator::MigrateImapAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
-nsMessengerMigrator::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity)
-{
-	COPY_IDENTITY_BOOL_VALUE(srcIdentity,destIdentity,GetComposeHtml,SetComposeHtml)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetEmail,SetEmail)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetReplyTo,SetReplyTo)
-        COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetFullName,SetFullName)
-        COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetOrganization,SetOrganization)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetDraftFolder,SetDraftFolder)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetStationeryFolder,SetStationeryFolder)
-	COPY_IDENTITY_BOOL_VALUE(srcIdentity,destIdentity,GetAttachSignature,SetAttachSignature)
-	COPY_IDENTITY_FILE_VALUE(srcIdentity,destIdentity,GetSignature,SetSignature)
-	COPY_IDENTITY_INT_VALUE(srcIdentity,destIdentity,GetSignatureDate,SetSignatureDate)
-
-	return NS_OK;
-}
-
-nsresult
 nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort, PRBool isDefaultAccount)
 {
   nsresult rv;  
@@ -1578,10 +1505,9 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
 
-
-  // make this new identity to copy of the identity
+  // make this new identity a copy of the identity
   // that we created out of the 4.x prefs
-  rv = CopyIdentity(identity,copied_identity);
+  rv = copied_identity->Copy(identity);
   if (NS_FAILED(rv)) return rv;
   
   rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
@@ -2132,10 +2058,10 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	account->SetIncomingServer(server);
 	account->AddIdentity(copied_identity);
 
-    // make this new identity to copy of the identity
-    // that we created out of the 4.x prefs
-	rv = CopyIdentity(identity,copied_identity);
-	if (NS_FAILED(rv)) return rv;
+  // make this new identity a copy of the identity
+  // that we created out of the 4.x prefs
+  rv = copied_identity->Copy(identity);
+  if (NS_FAILED(rv)) return rv;
 
     rv = SetNewsCopiesAndFolders(copied_identity);
     if (NS_FAILED(rv)) return rv;

@@ -372,20 +372,11 @@ nsNntpService::findNewsServerWithGroup(nsISupports *aElement, void *data)
 	nsCOMPtr<nsINntpIncomingServer> newsserver = do_QueryInterface(aElement, &rv);
 	if (NS_FAILED(rv) || ! newsserver) return PR_TRUE;
 
-	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aElement, &rv);
-	if (NS_FAILED(rv) || ! server) return PR_TRUE;
-
 	findNewsServerEntry *entry = (findNewsServerEntry*) data;
 
-	nsCOMPtr<nsIFolder> folder;
-	rv  = server->GetRootFolder(getter_AddRefs(folder));
-	if (NS_FAILED(rv) || !folder ) return PR_TRUE;
-
-	nsCOMPtr<nsIMsgFolder> msgfolder = do_QueryInterface(folder, &rv);
-	if (NS_FAILED(rv) || !msgfolder) return PR_TRUE;
-
 	PRBool containsGroup = PR_FALSE;
-	rv = msgfolder->ContainsChildNamed((const char *)(entry->newsgroup), &containsGroup);
+
+	rv = newsserver->ContainsNewsgroup((const char *)(entry->newsgroup), &containsGroup);
 	if (NS_FAILED(rv)) return PR_TRUE;
 
 	if (containsGroup) {	
@@ -844,6 +835,52 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
 }
 
 nsresult
+nsNntpService::CreateNewsAccount(const char *username, const char *hostname, nsIMsgIncomingServer **server)
+{
+	nsresult rv;
+	// username can be null.
+	if (!hostname || !server) return NS_ERROR_NULL_POINTER;
+	
+	nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!accountManager) return NS_ERROR_FAILURE;
+
+	nsCOMPtr <nsIMsgAccount> account;
+	rv = accountManager->CreateAccount(getter_AddRefs(account));
+	if (NS_FAILED(rv)) return rv;
+
+	rv = accountManager->CreateIncomingServer(username, hostname, "nntp", server);
+	if (NS_FAILED(rv)) return rv;
+	
+	nsCOMPtr <nsIMsgIdentity> identity;
+	rv = accountManager->CreateIdentity(getter_AddRefs(identity));
+	if (NS_FAILED(rv)) return rv;
+	if (!identity) return NS_ERROR_FAILURE;
+
+	// todo:  eventually, copy the identity from the default news account
+	nsCOMPtr <nsIMsgAccount> defaultAccount;
+	rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
+	if (NS_FAILED(rv)) return rv;
+	if (!defaultAccount) return NS_ERROR_FAILURE;
+
+	nsCOMPtr <nsIMsgIdentity> defaultIdentity;
+	rv = defaultAccount->GetDefaultIdentity(getter_AddRefs(defaultIdentity));
+	if (NS_FAILED(rv)) return rv;
+	if (!defaultIdentity) return NS_ERROR_FAILURE;
+	
+	rv = identity->Copy(defaultIdentity);
+	if (NS_FAILED(rv)) return rv;
+
+	// hook them together
+	rv = account->SetIncomingServer(*server);
+	if (NS_FAILED(rv)) return rv;
+	rv = account->AddIdentity(identity);
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
+
+nsresult
 nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol)
 {
   nsXPIDLCString hostName;
@@ -852,20 +889,25 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   nsresult rv = aUri->GetHost(getter_Copies(hostName));
   rv = aUri->GetPreHost(getter_Copies(userName));
 
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
+  if (!accountManager) return NS_ERROR_FAILURE;
 
   // find the incoming server
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
-  rv = accountManager->FindServer(userName,
-                                hostName,
+  rv = accountManager->FindServer((const char *)userName,
+                                (const char *)hostName,
                                 "nntp",
                                 getter_AddRefs(server));
 
-  if (NS_FAILED(rv) || !server)
-    return rv;
-
+  if (NS_FAILED(rv) || !server) {
+	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,getter_AddRefs(server));
+  }
+   
+  if (NS_FAILED(rv)) return rv;
+  if (!server) return NS_ERROR_FAILURE;
+  
   nntpServer = do_QueryInterface(server, &rv);
 
   if (!nntpServer || NS_FAILED(rv))
