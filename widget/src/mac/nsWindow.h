@@ -201,6 +201,8 @@ protected:
 
 	NS_IMETHOD				CalcOffset(PRInt32 &aX,PRInt32 &aY);
 
+	virtual PRBool			OnPaint(nsPaintEvent & aEvent);
+
 	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good
 	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 

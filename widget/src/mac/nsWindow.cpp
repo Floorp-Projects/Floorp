@@ -985,6 +985,19 @@ nsWindow::Flash(nsPaintEvent	&aEvent)
 #endif
 }
 
+
+//
+// OnPaint
+//
+// Dummy impl, meant to be overridden
+//
+PRBool
+nsWindow::OnPaint(nsPaintEvent &event)
+{
+	return PR_TRUE;
+}
+
+
 //-------------------------------------------------------------------------
 //	Update
 //
@@ -1160,10 +1173,12 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// draw the widget
 	StartDraw(aContext);
-	nsEventStatus	eventStatus;
-	DispatchWindowEvent(paintEvent,eventStatus);
-	if(eventStatus != nsEventStatus_eIgnore)
-		Flash(paintEvent);
+	if ( OnPaint(paintEvent) ) {
+		nsEventStatus	eventStatus;
+		DispatchWindowEvent(paintEvent,eventStatus);
+		if(eventStatus != nsEventStatus_eIgnore)
+			Flash(paintEvent);
+	}
 	EndDraw();
 
 	// beard:  Since we clip so aggressively, drawing from front to back should work,
