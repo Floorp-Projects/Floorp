@@ -60,12 +60,3 @@ libs:: $(LIBRARY)
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 	rm -f $(DIST)\bin\res\ua.css
-	rm -f builtintags.h
-
-.\$(OBJDIR)\nsHTMLParts.obj: builtintags.h
-
-GENTAGS = $(DEPTH)\htmlparser\tools\gentags.pl
-
-builtintags.h: $(GENTAGS)
-	rm -f builtintags.h
-	$(PERL) $(GENTAGS) > builtintags.h
