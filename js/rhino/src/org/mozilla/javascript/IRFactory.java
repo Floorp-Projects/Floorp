@@ -561,16 +561,8 @@ final class IRFactory
         String name;
         int type = lhs.getType();
 
-        Node lvalue = lhs;
-        switch (type) {
-
-          case Token.NAME:
-          case Token.GETPROP:
-          case Token.GETELEM:
-          case Token.GET_REF:
-            break;
-
-          case Token.VAR:
+        Node lvalue;
+        if (type == Token.VAR) {
             /*
              * check that there was only one variable given.
              * we can't do this in the parser, because then the
@@ -582,11 +574,12 @@ final class IRFactory
                 parser.reportError("msg.mult.index");
             }
             lvalue = Node.newString(Token.NAME, lastChild.getString());
-            break;
-
-          default:
-            parser.reportError("msg.bad.for.in.lhs");
-            return obj;
+        } else {
+            lvalue = makeReference(lhs);
+            if (lvalue == null) {
+                parser.reportError("msg.bad.for.in.lhs");
+                return obj;
+            }
         }
 
         Node localBlock = new Node(Token.LOCAL_BLOCK);
@@ -601,7 +594,7 @@ final class IRFactory
         id.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
 
         Node newBody = new Node(Token.BLOCK);
-        Node assign = createAssignment(lvalue, id);
+        Node assign = simpleAssignment(lvalue, id);
         newBody.addChildToBack(new Node(Token.EXPR_VOID, assign));
         newBody.addChildToBack(body);
 
@@ -1225,14 +1218,8 @@ final class IRFactory
         return new Node(nodeType, left, right);
     }
 
-    Node createAssignment(Node left, Node right)
+    private Node simpleAssignment(Node left, Node right)
     {
-        left = makeReference(left);
-        if (left == null) {
-            parser.reportError("msg.bad.assign.left");
-            return null;
-        }
-
         int nodeType = left.getType();
         switch (nodeType) {
           case Token.NAME:
@@ -1260,12 +1247,30 @@ final class IRFactory
         throw Kit.codeBug();
     }
 
-    Node createAssignmentOp(int assignOp, Node left, Node right)
+    Node createAssignment(int assignType, Node left, Node right)
     {
         left = makeReference(left);
         if (left == null) {
             parser.reportError("msg.bad.assign.left");
-            return null;
+            return right;
+        }
+
+        int assignOp;
+        switch (assignType) {
+          case Token.ASSIGN:
+            return simpleAssignment(left, right);
+          case Token.ASSIGN_BITOR:  assignOp = Token.BITOR;  break;
+          case Token.ASSIGN_BITXOR: assignOp = Token.BITXOR; break;
+          case Token.ASSIGN_BITAND: assignOp = Token.BITAND; break;
+          case Token.ASSIGN_LSH:    assignOp = Token.LSH;    break;
+          case Token.ASSIGN_RSH:    assignOp = Token.RSH;    break;
+          case Token.ASSIGN_URSH:   assignOp = Token.URSH;   break;
+          case Token.ASSIGN_ADD:    assignOp = Token.ADD;    break;
+          case Token.ASSIGN_SUB:    assignOp = Token.SUB;    break;
+          case Token.ASSIGN_MUL:    assignOp = Token.MUL;    break;
+          case Token.ASSIGN_DIV:    assignOp = Token.DIV;    break;
+          case Token.ASSIGN_MOD:    assignOp = Token.MOD;    break;
+          default: throw Kit.codeBug();
         }
 
         int nodeType = left.getType();

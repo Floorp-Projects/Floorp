@@ -389,7 +389,7 @@ if (regexp.anchorCh >= 0) {
 
     private static boolean isLineTerm(char c)
     {
-        return TokenStream.isJSLineTerminator(c);
+        return ScriptRuntime.isJSLineTerminator(c);
     }
 
     private static boolean isREWhiteSpace(int c)

@@ -150,10 +150,11 @@ public class Token
         ESCXMLTEXT     = 73,
         TOATTRNAME     = 74,
         DESCENDANTS    = 75,
-        XML_REF        = 76,
+        XML_REF        = 76;
 
-        LAST_BYTECODE_TOKEN    = 76,
         // End of interpreter bytecodes
+    public final static int
+        LAST_BYTECODE_TOKEN    = XML_REF,
 
         TRY            = 77,
         SEMI           = 78,  // semicolon
@@ -164,64 +165,80 @@ public class Token
         LP             = 83,  // left and right parentheses
         RP             = 84,
         COMMA          = 85,  // comma operator
-        ASSIGN         = 86, // simple assignment  (=)
-        ASSIGNOP       = 87, // assignment with operation (+= -= etc.)
-        HOOK           = 88, // conditional (?:)
-        COLON          = 89,
-        OR             = 90, // logical or (||)
-        AND            = 91, // logical and (&&)
-        INC            = 92, // increment/decrement (++ --)
-        DEC            = 93,
-        DOT            = 94, // member operator (.)
-        FUNCTION       = 95, // function keyword
-        EXPORT         = 96, // export keyword
-        IMPORT         = 97, // import keyword
-        IF             = 98, // if keyword
-        ELSE           = 99, // else keyword
-        SWITCH         = 100, // switch keyword
-        CASE           = 101, // case keyword
-        DEFAULT        = 102, // default keyword
-        WHILE          = 103, // while keyword
-        DO             = 104, // do keyword
-        FOR            = 105, // for keyword
-        BREAK          = 106, // break keyword
-        CONTINUE       = 107, // continue keyword
-        VAR            = 108, // var keyword
-        WITH           = 109, // with keyword
-        CATCH          = 110, // catch keyword
-        FINALLY        = 111, // finally keyword
-        VOID           = 112, // void keyword
-        RESERVED       = 113, // reserved keywords
 
-        EMPTY          = 114,
+        ASSIGN         = 86,  // simple assignment  (=)
+        ASSIGN_BITOR   = 87,  // |=
+        ASSIGN_BITXOR  = 88,  // ^=
+        ASSIGN_BITAND  = 89,  // |=
+        ASSIGN_LSH     = 90,  // <<=
+        ASSIGN_RSH     = 94,  // >>=
+        ASSIGN_URSH    = 91,  // >>>=
+        ASSIGN_ADD     = 92,  // +=
+        ASSIGN_SUB     = 93,  // -=
+        ASSIGN_MUL     = 95,  // *=
+        ASSIGN_DIV     = 96,  // /=
+        ASSIGN_MOD     = 97;  // %=
+
+    public final static int
+        FIRST_ASSIGN   = ASSIGN,
+        LAST_ASSIGN    = ASSIGN_MOD,
+
+        HOOK           = 98, // conditional (?:)
+        COLON          = 99,
+        OR             = 100, // logical or (||)
+        AND            = 101, // logical and (&&)
+        INC            = 102, // increment/decrement (++ --)
+        DEC            = 103,
+        DOT            = 104, // member operator (.)
+        FUNCTION       = 105, // function keyword
+        EXPORT         = 106, // export keyword
+        IMPORT         = 107, // import keyword
+        IF             = 108, // if keyword
+        ELSE           = 109, // else keyword
+        SWITCH         = 110, // switch keyword
+        CASE           = 111, // case keyword
+        DEFAULT        = 112, // default keyword
+        WHILE          = 113, // while keyword
+        DO             = 114, // do keyword
+        FOR            = 115, // for keyword
+        BREAK          = 116, // break keyword
+        CONTINUE       = 117, // continue keyword
+        VAR            = 118, // var keyword
+        WITH           = 119, // with keyword
+        CATCH          = 120, // catch keyword
+        FINALLY        = 121, // finally keyword
+        VOID           = 122, // void keyword
+        RESERVED       = 123, // reserved keywords
+
+        EMPTY          = 124,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK          = 115, // statement block
-        LABEL          = 116, // label
-        TARGET         = 117,
-        LOOP           = 118,
-        EXPR_VOID      = 119, // expression statement in functions
-        EXPR_RESULT    = 120, // expression statement in scripts
-        JSR            = 121,
-        SCRIPT         = 122, // top-level node for entire script
-        TYPEOFNAME     = 123, // for typeof(simple-name)
-        USE_STACK      = 124,
-        SETPROP_OP     = 125, // x.y op= something
-        SETELEM_OP     = 126, // x[y] op= something
-        LOCAL_BLOCK    = 127,
-        SET_REF_OP     = 128, // *reference op= something
+        BLOCK          = 125, // statement block
+        LABEL          = 126, // label
+        TARGET         = 127,
+        LOOP           = 128,
+        EXPR_VOID      = 129, // expression statement in functions
+        EXPR_RESULT    = 130, // expression statement in scripts
+        JSR            = 131,
+        SCRIPT         = 132, // top-level node for entire script
+        TYPEOFNAME     = 133, // for typeof(simple-name)
+        USE_STACK      = 134,
+        SETPROP_OP     = 135, // x.y op= something
+        SETELEM_OP     = 136, // x[y] op= something
+        LOCAL_BLOCK    = 137,
+        SET_REF_OP     = 138, // *reference op= something
 
         // For XML support:
-        DOTDOT         = 129,  // member operator (..)
-        XML            = 130,  // XML type
-        DOTQUERY       = 131,  // .() -- e.g., x.emps.emp.(name == "terry")
-        XMLATTR        = 132,  // @
-        XMLEND         = 133,
+        DOTDOT         = 139,  // member operator (..)
+        XML            = 140,  // XML type
+        DOTQUERY       = 141,  // .() -- e.g., x.emps.emp.(name == "terry")
+        XMLATTR        = 142,  // @
+        XMLEND         = 143,
 
-        LAST_TOKEN     = 133;
+        LAST_TOKEN     = 143;
 
     public static String name(int token)
     {
@@ -322,7 +339,17 @@ public class Token
           case RP:              return "RP";
           case COMMA:           return "COMMA";
           case ASSIGN:          return "ASSIGN";
-          case ASSIGNOP:        return "ASSIGNOP";
+          case ASSIGN_BITOR:    return "ASSIGN_BITOR";
+          case ASSIGN_BITXOR:   return "ASSIGN_BITXOR";
+          case ASSIGN_BITAND:   return "ASSIGN_BITAND";
+          case ASSIGN_LSH:      return "ASSIGN_LSH";
+          case ASSIGN_RSH:      return "ASSIGN_RSH";
+          case ASSIGN_URSH:     return "ASSIGN_URSH";
+          case ASSIGN_ADD:      return "ASSIGN_ADD";
+          case ASSIGN_SUB:      return "ASSIGN_SUB";
+          case ASSIGN_MUL:      return "ASSIGN_MUL";
+          case ASSIGN_DIV:      return "ASSIGN_DIV";
+          case ASSIGN_MOD:      return "ASSIGN_MOD";
           case HOOK:            return "HOOK";
           case COLON:           return "COLON";
           case OR:              return "OR";

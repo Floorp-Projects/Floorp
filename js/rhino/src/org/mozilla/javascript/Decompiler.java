@@ -144,15 +144,6 @@ public class Decompiler
         append((char)Token.EOL);
     }
 
-    void addAssignOp(int op)
-    {
-        if (!(0 <= op && op <= Token.LAST_TOKEN))
-            throw new IllegalArgumentException();
-
-        append((char)Token.ASSIGNOP);
-        append((char)op);
-    }
-
     void addName(String str)
     {
         addToken(Token.NAME);
@@ -598,53 +589,48 @@ public class Decompiler
                 result.append(" = ");
                 break;
 
-            case Token.ASSIGNOP:
-                ++i;
-                switch (source.charAt(i)) {
-                case Token.ADD:
-                    result.append(" += ");
-                    break;
+            case Token.ASSIGN_ADD:
+                result.append(" += ");
+                break;
 
-                case Token.SUB:
-                    result.append(" -= ");
-                    break;
+            case Token.ASSIGN_SUB:
+                result.append(" -= ");
+                break;
 
-                case Token.MUL:
-                    result.append(" *= ");
-                    break;
+            case Token.ASSIGN_MUL:
+                result.append(" *= ");
+                break;
 
-                case Token.DIV:
-                    result.append(" /= ");
-                    break;
+            case Token.ASSIGN_DIV:
+                result.append(" /= ");
+                break;
 
-                case Token.MOD:
-                    result.append(" %= ");
-                    break;
+            case Token.ASSIGN_MOD:
+                result.append(" %= ");
+                break;
 
-                case Token.BITOR:
-                    result.append(" |= ");
-                    break;
+            case Token.ASSIGN_BITOR:
+                result.append(" |= ");
+                break;
 
-                case Token.BITXOR:
-                    result.append(" ^= ");
-                    break;
+            case Token.ASSIGN_BITXOR:
+                result.append(" ^= ");
+                break;
 
-                case Token.BITAND:
-                    result.append(" &= ");
-                    break;
+            case Token.ASSIGN_BITAND:
+                result.append(" &= ");
+                break;
 
-                case Token.LSH:
-                    result.append(" <<= ");
-                    break;
+            case Token.ASSIGN_LSH:
+                result.append(" <<= ");
+                break;
 
-                case Token.RSH:
-                    result.append(" >>= ");
-                    break;
+            case Token.ASSIGN_RSH:
+                result.append(" >>= ");
+                break;
 
-                case Token.URSH:
-                    result.append(" >>>= ");
-                    break;
-                }
+            case Token.ASSIGN_URSH:
+                result.append(" >>>= ");
                 break;
 
             case Token.HOOK:

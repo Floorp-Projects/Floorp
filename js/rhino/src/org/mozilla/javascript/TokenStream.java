@@ -54,8 +54,7 @@ import java.io.*;
  * @author Brendan Eich
  */
 
-// The class is public so NativeRegExp can access TokenStream.JSLineTerminator
-public class TokenStream
+class TokenStream
 {
     /*
      * For chars - because we need something out-of-range
@@ -65,11 +64,13 @@ public class TokenStream
     private final static int
         EOF_CHAR = -1;
 
+    final static int
+        TSF_REGEXP      = 1 << 0;  // looking for a regular expression
+
     TokenStream(Parser parser, Reader sourceReader, String sourceString,
                 int lineno)
     {
         this.parser = parser;
-        this.pushbackToken = Token.EOF;
         this.lineno = lineno;
         if (sourceReader != null) {
             if (sourceString != null) Kit.codeBug();
@@ -94,9 +95,6 @@ public class TokenStream
             String name = Token.name(token);
 
             switch (token) {
-            case Token.ASSIGNOP:
-                return name + " " + Token.name(this.op);
-
             case Token.STRING:
             case Token.REGEXP:
             case Token.NAME:
@@ -286,83 +284,17 @@ public class TokenStream
         return id & 0xff;
     }
 
-    final void reportCurrentLineError(String message)
-    {
-        parser.reportError(message, getLineno(), getLine(), getOffset());
-    }
-
-    final void reportCurrentLineWarning(String message)
-    {
-        parser.reportWarning(message, getLineno(), getLine(), getOffset());
-    }
-
     final int getLineno() { return lineno; }
-
-    final int getOp() { return op; }
 
     final String getString() { return string; }
 
     final double getNumber() { return number; }
 
-    final int getTokenno() { return tokenno; }
-
     final boolean eof() { return hitEOF; }
 
-    /* return and pop the token from the stream if it matches...
-     * otherwise return null
-     */
-    final boolean matchToken(int toMatch) throws IOException
-    {
-        int token = getToken();
-        if (token == toMatch)
-            return true;
-
-        // didn't match, push back token
-        tokenno--;
-        this.pushbackToken = token;
-        return false;
-    }
-
-    final void ungetToken(int tt)
-    {
-        // Can not unread more then one token
-        if (this.pushbackToken != Token.EOF && tt != Token.ERROR)
-            Kit.codeBug();
-        this.pushbackToken = tt;
-        tokenno--;
-    }
-
-    final int peekToken() throws IOException
-    {
-        int result = getToken();
-        this.pushbackToken = result;
-        tokenno--;
-        return result;
-    }
-
-    final int peekTokenSameLine() throws IOException
-    {
-        significantEol = true;          // SCAN_NEWLINES from jsscan.h
-        int result = getToken();
-        this.pushbackToken = result;
-        tokenno--;
-        significantEol = false;         // HIDE_NEWLINES from jsscan.h
-        return result;
-    }
-
-    final int getToken() throws IOException
+    final int getToken(int flags) throws IOException
     {
         int c;
-        tokenno++;
-
-        // Check for pushed-back token
-        if (this.pushbackToken != Token.EOF) {
-            int result = this.pushbackToken;
-            this.pushbackToken = Token.EOF;
-            if (result != Token.EOL || significantEol) {
-                return result;
-            }
-        }
 
     retry:
         for (;;) {
@@ -373,9 +305,7 @@ public class TokenStream
                     return Token.EOF;
                 } else if (c == '\n') {
                     dirtyLine = false;
-                    if (significantEol) {
-                        return Token.EOL;
-                    }
+                    return Token.EOL;
                 } else if (!isJSSpace(c)) {
                     if (c != '-') {
                         dirtyLine = true;
@@ -473,8 +403,7 @@ public class TokenStream
                             // If implementation permits to use future reserved
                             // keywords in violation with the EcmaScript,
                             // treat it as name but issue warning
-                            reportCurrentLineWarning(Context.getMessage1(
-                                "msg.reserved.keyword", str));
+                            parser.addWarning("msg.reserved.keyword", str);
                         }
                     }
                 }
@@ -514,8 +443,8 @@ public class TokenStream
                          * permissive, so we warn about it.
                          */
                         if (base == 8 && c >= '8') {
-                            reportCurrentLineWarning(Context.getMessage1(
-                                "msg.bad.octal.literal", c == '8' ? "8" : "9"));
+                            parser.addWarning("msg.bad.octal.literal",
+                                              c == '8' ? "8" : "9");
                             base = 10;
                         }
                         addToString(c);
@@ -557,11 +486,10 @@ public class TokenStream
                 if (base == 10 && !isInteger) {
                     try {
                         // Use Java conversion to number from string...
-                        dval = (Double.valueOf(numString)).doubleValue();
+                        dval = Double.valueOf(numString).doubleValue();
                     }
                     catch (NumberFormatException ex) {
-                        reportCurrentLineError(Context.getMessage1(
-                            "msg.caught.nfe", ex.getMessage()));
+                        parser.addError("msg.caught.nfe");
                         return Token.ERROR;
                     }
                 } else {
@@ -708,16 +636,14 @@ public class TokenStream
                 if (matchChar('|')) {
                     return Token.OR;
                 } else if (matchChar('=')) {
-                    this.op = Token.BITOR;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_BITOR;
                 } else {
                     return Token.BITOR;
                 }
 
             case '^':
                 if (matchChar('=')) {
-                    this.op = Token.BITXOR;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_BITXOR;
                 } else {
                     return Token.BITXOR;
                 }
@@ -726,8 +652,7 @@ public class TokenStream
                 if (matchChar('&')) {
                     return Token.AND;
                 } else if (matchChar('=')) {
-                    this.op = Token.BITAND;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_BITAND;
                 } else {
                     return Token.BITAND;
                 }
@@ -766,8 +691,7 @@ public class TokenStream
                 }
                 if (matchChar('<')) {
                     if (matchChar('=')) {
-                        this.op = Token.LSH;
-                        return Token.ASSIGNOP;
+                        return Token.ASSIGN_LSH;
                     } else {
                         return Token.LSH;
                     }
@@ -783,15 +707,13 @@ public class TokenStream
                 if (matchChar('>')) {
                     if (matchChar('>')) {
                         if (matchChar('=')) {
-                            this.op = Token.URSH;
-                            return Token.ASSIGNOP;
+                            return Token.ASSIGN_URSH;
                         } else {
                             return Token.URSH;
                         }
                     } else {
                         if (matchChar('=')) {
-                            this.op = Token.RSH;
-                            return Token.ASSIGNOP;
+                            return Token.ASSIGN_RSH;
                         } else {
                             return Token.RSH;
                         }
@@ -806,8 +728,7 @@ public class TokenStream
 
             case '*':
                 if (matchChar('=')) {
-                    this.op = Token.MUL;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_MUL;
                 } else {
                     return Token.MUL;
                 }
@@ -838,7 +759,7 @@ public class TokenStream
                 }
 
                 // is it a regexp?
-                if (allowRegExp) {
+                if ((flags & TSF_REGEXP) != 0) {
                     stringBufferTop = 0;
                     while ((c = getChar()) != '/') {
                         if (c == '\n' || c == EOF_CHAR) {
@@ -879,16 +800,14 @@ public class TokenStream
 
 
                 if (matchChar('=')) {
-                    this.op = Token.DIV;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_DIV;
                 } else {
                     return Token.DIV;
                 }
 
             case '%':
                 if (matchChar('=')) {
-                    this.op = Token.MOD;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_MOD;
                 } else {
                     return Token.MOD;
                 }
@@ -898,8 +817,7 @@ public class TokenStream
 
             case '+':
                 if (matchChar('=')) {
-                    this.op = Token.ADD;
-                    return Token.ASSIGNOP;
+                    return Token.ASSIGN_ADD;
                 } else if (matchChar('+')) {
                     return Token.INC;
                 } else {
@@ -908,8 +826,7 @@ public class TokenStream
 
             case '-':
                 if (matchChar('=')) {
-                    this.op = Token.SUB;
-                    c = Token.ASSIGNOP;
+                    c = Token.ASSIGN_SUB;
                 } else if (matchChar('-')) {
                     if (!dirtyLine) {
                         // treat HTML end-comment after possible whitespace
@@ -974,12 +891,6 @@ public class TokenStream
             return c == 0xA0
                 || Character.getType((char)c) == Character.SPACE_SEPARATOR;
         }
-    }
-
-    // It is public so NativeRegExp can access it .
-    public static boolean isJSLineTerminator(int c)
-    {
-        return c == '\n' || c == '\r' || c == 0x2028 || c == 0x2029;
     }
 
     private static boolean isJSFormatChar(int c)
@@ -1352,7 +1263,7 @@ public class TokenStream
                 if (isJSFormatChar(c)) {
                     continue;
                 }
-                if ((c & EOL_HINT_MASK) == 0 && isJSLineTerminator(c)) {
+                if (ScriptRuntime.isJSLineTerminator(c)) {
                     lineEndChar = c;
                     c = '\n';
                 }
@@ -1386,7 +1297,7 @@ public class TokenStream
             } else {
                 for (; lineEnd != sourceEnd; ++lineEnd) {
                     int c = sourceString.charAt(lineEnd);
-                    if ((c & EOL_HINT_MASK) == 0 && isJSLineTerminator(c)) {
+                    if (ScriptRuntime.isJSLineTerminator(c)) {
                         break;
                     }
                 }
@@ -1413,7 +1324,7 @@ public class TokenStream
                         i = lineStart + lineLength;
                     }
                     int c = sourceBuffer[i];
-                    if ((c & EOL_HINT_MASK) == 0 && isJSLineTerminator(c)) {
+                    if (ScriptRuntime.isJSLineTerminator(c)) {
                         break;
                     }
                 }
@@ -1447,21 +1358,13 @@ public class TokenStream
         return true;
     }
 
-    // tokenize newlines
-    private boolean significantEol;
-
     // stuff other than whitespace since start of line
     private boolean dirtyLine;
 
-    boolean allowRegExp;
     String regExpFlags;
 
     private String line;
     private boolean fromEval;
-    private int pushbackToken;
-    private int tokenno;
-
-    private int op;
 
     // Set this to an inital non-null value so that the Parser has
     // something to retrieve even if an error has occured and no
@@ -1479,10 +1382,6 @@ public class TokenStream
     private int ungetCursor;
 
     private boolean hitEOF = false;
-
-    // Optimization for faster check for eol character: isJSLineTerminator(c)
-    // returns true only when (c & EOL_HINT_MASK) == 0
-    private static final int EOL_HINT_MASK = 0xdfd0;
 
     private int lineStart = 0;
     private int lineno;
