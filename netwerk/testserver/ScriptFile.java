@@ -123,6 +123,28 @@ class ScriptFile {
                         }
                     }
                 }
+                else if (s.startsWith("ECHO")) {
+                    outDirty = true;
+                    boolean parameter = false;
+                    try {
+                        String header = new String(s.substring(5));
+                        String req= new String(con.request);
+                        int t = req.indexOf(header);
+                        if (t != -1) {
+                            out.println(req.substring(
+                                t, req.indexOf("\n", t)));
+                            parameter = true;
+                        }
+                        else {
+                            out.println("Error: " + header + 
+                                    " not specified in request!");
+                        }
+                        
+                    }
+                    catch (StringIndexOutOfBoundsException e) {}
+                    if (!parameter)
+                        out.println(con.request);
+                }
                 else if (s.startsWith("INCLUDE")) {
                     outDirty = true;
                     WriteOutFile("docs/" + s.substring(8));

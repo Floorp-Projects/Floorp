@@ -120,7 +120,7 @@ CRLF
 END
 
 #
-#
+# Post example...
 #
 START /post
 INCLUDE generic.res
@@ -129,3 +129,23 @@ CRLF
 INCLUDE post.html
 END
 
+#
+# Do other stuff with echoing the request as well... 
+#
+START /echo
+INCLUDE generic.res
+Content-Type: text/html
+CRLF
+<HTML>
+<H2>Echo request example</H2>
+<HR>
+This should echo all the request headers-<BR>
+<PRE>
+ECHO
+</PRE>
+<HR>
+This should echo only the user-agent header- (this is case sensitive!)<BR>
+<PRE>
+ECHO User-Agent
+</PRE>
+END
