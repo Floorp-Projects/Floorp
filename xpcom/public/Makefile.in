@@ -30,7 +30,7 @@ EXPORTS		= \
 		  nsDebug.h \
 		  nsError.h \
 		  nsHashtable.h \
-              nsICollection.h \
+		  nsICollection.h \
 		  nsID.h \
 		  nsIFactory.h \
 		  nsISupports.h \
@@ -42,9 +42,9 @@ EXPORTS		= \
 		  nsTraceRefcnt.h \
 		  nsVector.h \
 		  plvector.h \
-        nsXPComFactory.h        \
-        nsXPComCIID.h           \
-        nsIEventQueueService.h  \
+		  nsXPComFactory.h	\
+		  nsXPComCIID.h		\
+		  nsIEventQueueService.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
