@@ -17,7 +17,7 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
@@ -273,17 +273,17 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::Create(nsIDOMWindow *aParent,
-                                   const PRUnichar *aTitle,
-                                   PRInt16 aMode)
+NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *aParent,
+                                 const PRUnichar *aTitle,
+                                 PRInt16 aMode)
 {
-  return nsBaseFilePicker::Create(aParent, aTitle, aMode);
+  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
-                                         const PRUnichar *aTitle,
-                                         PRInt16 aMode)
+NS_IMETHODIMP nsFilePicker::Init(nsIWidget *aParent,
+                                 const PRUnichar *aTitle,
+                                 PRInt16 aMode)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
   mTitle.SetLength(0);

@@ -69,7 +69,7 @@ nsFilePicker.prototype = {
   get defaultString()  { return this.mSelectedFilter; },
 
   /* methods */
-  create: function(parent, title, mode) {
+  init: function(parent, title, mode) {
     this.mParentWindow = parent;
     this.mTitle = title;
     this.mMode = mode;

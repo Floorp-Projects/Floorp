@@ -33,14 +33,14 @@ public:
   nsBaseFilePicker(); 
   virtual ~nsBaseFilePicker();
 
-  NS_IMETHOD Create(nsIDOMWindow *aParent,
-                    const PRUnichar *aTitle,
-                    PRInt16 aMode);
+  NS_IMETHOD Init(nsIDOMWindow *aParent,
+                  const PRUnichar *aTitle,
+                  PRInt16 aMode);
 
 protected:
-  NS_IMETHOD CreateNative(nsIWidget *aParent,
-                          const PRUnichar *aTitle,
-                          PRInt16 aMode) = 0;
+  NS_IMETHOD InitNative(nsIWidget *aParent,
+                        const PRUnichar *aTitle,
+                        PRInt16 aMode) = 0;
 
 private:
   NS_IMETHOD DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **aResult);
