@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.14 2002/09/16 09:32:09 jpierre%netscape.com Exp $
+ * $Id: rijndael.c,v 1.15 2002/09/17 04:24:11 wtc%netscape.com Exp $
  */
 
 #include "prinit.h"
@@ -839,7 +839,7 @@ static SECStatus
 rijndael_encryptECB(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    int blocksize)
+                    unsigned int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *encryptor;
@@ -861,9 +861,9 @@ static SECStatus
 rijndael_encryptCBC(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    int blocksize)
+                    unsigned int blocksize)
 {
-    int j;
+    unsigned int j;
     SECStatus rv;
     AESBlockFunc *encryptor;
     unsigned char *lastblock;
@@ -897,7 +897,7 @@ static SECStatus
 rijndael_decryptECB(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    int blocksize)
+                    unsigned int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *decryptor;
@@ -919,13 +919,13 @@ static SECStatus
 rijndael_decryptCBC(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    int blocksize)
+                    unsigned int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *decryptor;
     const unsigned char *in;
     unsigned char *out;
-    int j;
+    unsigned int j;
     unsigned char newIV[RIJNDAEL_MAX_BLOCKSIZE];
 
     if (!inputLen) 
@@ -942,7 +942,7 @@ rijndael_decryptCBC(AESContext *cx, unsigned char *output,
 	if (rv != SECSuccess)
 	    return rv;
 	for (j=0; j<blocksize; ++j)
-	    out[j] ^= in[j - blocksize];
+	    out[j] ^= in[(int)(j - blocksize)];
 	out -= blocksize;
 	in -= blocksize;
 	inputLen -= blocksize;
