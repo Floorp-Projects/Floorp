@@ -39,6 +39,7 @@ CPPSRCS=				\
 	nsCSSAtoms.cpp 		\
 	nsCSSKeywords.cpp 		\
 	nsCSSDeclaration.cpp 		\
+  nsCSSFrameConstructor.cpp   \
 	nsCSSParser.cpp 		\
 	nsCSSProps.cpp			\
 	nsCSSProps2.cpp 		\
@@ -59,6 +60,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsCSSAtoms.obj 		\
 	.\$(OBJDIR)\nsCSSKeywords.obj 		\
 	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
+  .\$(OBJDIR)\nsCSSFrameConstructor.obj  \
 	.\$(OBJDIR)\nsCSSParser.obj 		\
 	.\$(OBJDIR)\nsCSSProps.obj 		\
 	.\$(OBJDIR)\nsCSSProps2.obj 		\
