@@ -37,7 +37,7 @@ function Startup()
   if ("arguments" in window && window.arguments[0]) {
     var uri = window.arguments[0];
     dump(uri);
-    bookmarksView.outlinerBody.setAttribute("ref", uri);
+    bookmarksView.outliner.setAttribute("ref", uri);
 
     var title = "";
     if (uri.substring(0,5) == "find:") {
