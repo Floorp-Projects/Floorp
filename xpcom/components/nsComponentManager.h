@@ -117,7 +117,8 @@ protected:
     nsRegistryKey       mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
     nsCOMPtr<nsIFile>   mComponentsDir;
-    
+    PRInt32             mComponentsOffset;
+
     // Shutdown
     #define NS_SHUTDOWN_NEVERHAPPENED 0
     #define NS_SHUTDOWN_INPROGRESS 1
