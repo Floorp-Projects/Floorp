@@ -101,6 +101,24 @@ struct nsINetService : public nsISupports
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie)=0;
+
+   /**
+     * Get the http proxy used for http transactions.
+     *
+     * @param aProxyHTTP The url used as a proxy. The url is of the form 
+     *  "host.server:port".
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetProxyHTTP(nsString& aProxyHTTP)=0;
+
+   /**
+     * Set the http proxy to be used for http transactions.
+     *
+     * @param aProxyHTTP The url to use as a proxy. The url is of the form 
+     *  "host.server:port".
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP)=0;
 };
 
 

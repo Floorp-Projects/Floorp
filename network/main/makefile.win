@@ -113,6 +113,7 @@ REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype 
 !endif
 EXPORTS= mkstream.h \
 	 net_xp_file.h \
+     mkprefs.h \
 	 mkparse.h \
 	 mkfsort.h \
 	 mksort.h \

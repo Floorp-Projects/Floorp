@@ -34,6 +34,7 @@
 #include "mkpadpac.h"
 #include "prerror.h"
 #include "net_xp_file.h"
+#include "mkprefs.h"
 
 #include "merrors.h"
 
@@ -366,7 +367,7 @@ net_check_for_company_hostname(ActiveEntry *ce)
     Bool add_com = FALSE;
     Bool goBrowsing = FALSE;
    
-    if (PREF_GetBoolPref("browser.goBrowsing.enabled", &goBrowsing) != PREF_OK) goBrowsing = 0;
+    if (PREF_GetBoolPref(pref_goBrowsingEnabled, &goBrowsing) != PREF_OK) goBrowsing = 0;
 
     if(!cd->orig_host) {
         char *dot=NULL;
@@ -398,7 +399,7 @@ net_check_for_company_hostname(ActiveEntry *ce)
             /* no dots in hostname */
             if (goBrowsing && !PL_strchr(ce->URL_s->address, '/')) {     
                 char *pUrl;
-                if ( (PREF_OK == PREF_CopyCharPref("network.search.url",&pUrl))
+                if ( (PREF_OK == PREF_CopyCharPref(pref_searchUrl,&pUrl))
                     && pUrl) {
                     char *tmp = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
                     char* new_address = PR_smprintf("%sgo+%s", pUrl, tmp);
@@ -3677,13 +3678,11 @@ net_CleanupHTTP(void)
     return;
 }
 
-#define REFERER_HEADER_PREF "network.sendRefererHeader"
-
 PRIVATE void
 HTTP_ReadPrefs(void)
 {
     XP_Bool b;
-     if ( (PREF_OK != PREF_GetBoolPref("network.sendRefererHeader", &b)) ) {
+     if ( (PREF_OK != PREF_GetBoolPref(pref_sendRefererHeader, &b)) ) {
         b = TRUE;
     }
     NET_SetSendRefererHeader(b);
@@ -3699,7 +3698,7 @@ PRIVATE void
 HTTP_InitPrefs(void)
 {
     HTTP_ReadPrefs();
-    PREF_RegisterCallback(REFERER_HEADER_PREF ,HTTP_PrefChangedFunc,NULL);
+    PREF_RegisterCallback(pref_sendRefererHeader ,HTTP_PrefChangedFunc,NULL);
 }
 
 #define HTTP_SCHEME "http:"

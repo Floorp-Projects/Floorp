@@ -32,6 +32,7 @@
 #include "mkstream.h"
 #include "mkpadpac.h"
 #include "netcache.h"
+#include "mkprefs.h"
 #ifdef NU_CACHE
 #include "CacheStubs.h"
 #endif
@@ -409,11 +410,11 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	if (!prefChanged)
 		bSetupAll = TRUE;
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.ftp") || 
-		!PL_strcmp(prefChanged, "network.proxy.ftp_port")) {
-		if( (PREF_OK == PREF_CopyCharPref("network.proxy.ftp",&proxy))
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyFtpServer) || 
+		!PL_strcmp(prefChanged, pref_proxyFtpPort)) {
+		if( (PREF_OK == PREF_CopyCharPref(pref_proxyFtpServer,&proxy))
             && proxy && *proxy) {
-            if ( (PREF_OK == PREF_GetIntPref("network.proxy.ftp_port",&iPort)) ) {
+            if ( (PREF_OK == PREF_GetIntPref(pref_proxyFtpPort,&iPort)) ) {
 			    sprintf(text,"%s:%d", proxy, iPort);
 		        StrAllocCopy(MKftp_proxy, text);
 			    iPort=0;
@@ -426,11 +427,11 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.gopher") || 
-		!PL_strcmp(prefChanged, "network.proxy.gopher_port")) {
-		if( (PREF_OK == PREF_CopyCharPref("network.proxy.ftp",&proxy)) 
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyGopherServer) || 
+		!PL_strcmp(prefChanged, pref_proxyGopherPort)) {
+		if( (PREF_OK == PREF_CopyCharPref(pref_proxyGopherServer,&proxy)) 
             && proxy && *proxy) {
-            if ( (PREF_OK == PREF_GetIntPref("network.proxy.gopher_port",&iPort)) ) {
+            if ( (PREF_OK == PREF_GetIntPref(pref_proxyGopherPort,&iPort)) ) {
 			    sprintf(text,"%s:%d", proxy, iPort);  
 		        StrAllocCopy(MKgopher_proxy, text);
 			    iPort=0;
@@ -443,13 +444,15 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.http") || 
-		!PL_strcmp(prefChanged, "network.proxy.http_port")) {
-		if( (PREF_OK == PREF_CopyCharPref("network.proxy.http",&proxy)) 
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyHttpServer) || 
+		!PL_strcmp(prefChanged, pref_proxyHttpPort)) {
+		if( (PREF_OK == PREF_CopyCharPref(pref_proxyHttpServer,&proxy)) 
             && proxy && *proxy) {
-            if ( (PREF_OK == PREF_GetIntPref("network.proxy.http_port",&iPort)) ) {
-			    sprintf(text,"%s:%d", proxy, iPort);  
-		        StrAllocCopy(MKhttp_proxy, text);
+            if ( (PREF_OK == PREF_GetIntPref(pref_proxyHttpPort,&iPort)) ) {
+			    sprintf(text,"%s:%d", proxy, iPort);
+                /* Don't change the proxy info unless necessary. */
+                if (PL_strcmp(MKhttp_proxy, text))
+                    StrAllocCopy(MKhttp_proxy, text);
 			    iPort=0;
             } else {
                 FREE_AND_CLEAR(MKhttp_proxy);
@@ -463,11 +466,11 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	HG24324
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.news") || 
-		!PL_strcmp(prefChanged, "network.proxy.news_port")) {
-		if( (PREF_OK == PREF_CopyCharPref("network.proxy.news",&proxy))
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyNewsServer) || 
+		!PL_strcmp(prefChanged, pref_proxyNewsPort)) {
+		if( (PREF_OK == PREF_CopyCharPref(pref_proxyNewsServer,&proxy))
             && proxy && *proxy) {
-            if ( (PREF_OK == PREF_GetIntPref("network.proxy.news_port",&iPort)) ) {
+            if ( (PREF_OK == PREF_GetIntPref(pref_proxyNewsPort,&iPort)) ) {
 			    sprintf(text,"%s:%d", proxy, iPort);  
 		        StrAllocCopy(MKnews_proxy, text);
 			    iPort=0;
@@ -480,11 +483,11 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.wais") || 
-		!PL_strcmp(prefChanged, "network.proxy.wais_port")) {
-		if( (PREF_OK == PREF_CopyCharPref("network.proxy.wais",&proxy))
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyWaisServer) || 
+		!PL_strcmp(prefChanged, pref_proxyWaisPort)) {
+		if( (PREF_OK == PREF_CopyCharPref(pref_proxyWaisServer,&proxy))
             && proxy && *proxy) {
-            if ( (PREF_OK == PREF_GetIntPref("network.proxy.wais_port",&iPort)) ) {
+            if ( (PREF_OK == PREF_GetIntPref(pref_proxyWaisPort,&iPort)) ) {
 			    sprintf(text,"%s:%d", proxy, iPort);  
 		        StrAllocCopy(MKwais_proxy, text);
 			    iPort=0;
@@ -497,11 +500,11 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.hosts.socks_server") || 
-		!PL_strcmp(prefChanged, "network.hosts.socks_serverport")) {
-		if ( (PREF_OK == PREF_CopyCharPref("network.hosts.socks_server",&proxy)) 
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_socksServer) || 
+		!PL_strcmp(prefChanged, pref_socksPort)) {
+		if ( (PREF_OK == PREF_CopyCharPref(pref_socksServer,&proxy)) 
             && proxy && *proxy) {
-            if ( (PREF_OK == PREF_GetIntPref("network.hosts.socks_serverport",&iPort)) ) {
+            if ( (PREF_OK == PREF_GetIntPref(pref_socksPort,&iPort)) ) {
 			    PR_snprintf(text, sizeof(text), "%s:%d", proxy, iPort);  
 			    NET_SetSocksHost(text);
             } else {
@@ -515,8 +518,8 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 	}
 	if (proxy) FREE_AND_CLEAR(proxy);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.no_proxies_on")) {
-		if( (PREF_OK == PREF_CopyCharPref("network.proxy.no_proxies_on",&proxy))
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyNoProxiesOn)) {
+		if( (PREF_OK == PREF_CopyCharPref(pref_proxyNoProxiesOn,&proxy))
             && proxy && *proxy) {
 		    StrAllocCopy(MKno_proxy, proxy);
         } else {
@@ -570,7 +573,7 @@ NET_SelectProxyStyle(NET_ProxyStyle style)
 	
 	if (MKproxy_style == PROXY_STYLE_AUTOMATIC) {
 		/* Get the autoconfig url */
-		if ( (PREF_OK == PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy))
+		if ( (PREF_OK == PREF_CopyCharPref(pref_proxyACUrl,&proxy))
             && proxy && *proxy) {
 			StrAllocCopy(MKproxy_ac_url, proxy);
 			NET_ProxyAcLoaded = FALSE;
@@ -617,41 +620,41 @@ NET_SetupPrefs(const char * prefChanged)
 	if (!prefChanged)
 		bSetupAll = TRUE;
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.dnsCacheExpiration")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_dnsExpiration)) {
 		int32 n;
-        if ( (PREF_OK != PREF_GetIntPref("network.dnsCacheExpiration",&n)) ) {
+        if ( (PREF_OK != PREF_GetIntPref(pref_dnsExpiration,&n)) ) {
             n = DEF_DNS_EXPIRATION;
         }
 		NET_SetDNSExpirationPref(n);
 	}
 	
-	if (bSetupAll || !PL_strcmp(prefChanged,"browser.prefetch")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_browserPrefetch)) {
 		int32 n;
-        if ( (PREF_OK != PREF_GetIntPref("browser.prefetch",&n)) ) {
+        if ( (PREF_OK != PREF_GetIntPref(pref_browserPrefetch,&n)) ) {
             n = 0;
         }
     	PRE_Enable((PRUint8)n);
 	}
 		
-	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.memory_cache_size")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,pref_browserCacheMemSize)) {
 		int32 nMemCache;
-        if ( (PREF_OK != PREF_GetIntPref("browser.cache.memory_cache_size",&nMemCache)) ) {
+        if ( (PREF_OK != PREF_GetIntPref(pref_browserCacheMemSize,&nMemCache)) ) {
             nMemCache = DEF_MEM_CACHE_SIZE;
         }
 		NET_SetMemoryCacheSize(nMemCache * 1024);
 	}
 
-	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.disk_cache_size")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,pref_browserCacheDiskSize)) {
 		int32 nDiskCache;
-        if ( (PREF_OK != PREF_GetIntPref("browser.cache.disk_cache_size",&nDiskCache)) ) {
+        if ( (PREF_OK != PREF_GetIntPref(pref_browserCacheDiskSize,&nDiskCache)) ) {
             nDiskCache = DEF_DISK_CACHE_SIZE;
         }
 	    NET_SetDiskCacheSize(nDiskCache * 1024);
 	}
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "browser.cache.check_doc_frequency")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_browserCacheDocFreq)) {
 		int32 nDocReqFreq;
-        if ( (PREF_OK != PREF_GetIntPref("browser.cache.check_doc_frequency" ,&nDocReqFreq)) ) {
+        if ( (PREF_OK != PREF_GetIntPref(pref_browserCacheDocFreq,&nDocReqFreq)) ) {
             nDocReqFreq = DEF_CHECK_DOC_FREQ;
         }
 		NET_SetCacheUseMethod((CacheUseEnum)nDocReqFreq);
@@ -659,17 +662,17 @@ NET_SetupPrefs(const char * prefChanged)
 	
 	HG42422
 #ifdef MOZ_MAIL_NEWS
-	if (bSetupAll || !PL_strcmp(prefChanged,"mail.allow_at_sign_in_user_name")) {
+	if (bSetupAll || !PL_strcmp(prefChanged,pref_mailAllowSignInUName)) {
 		XP_Bool prefBool;
-        if ( (PREF_OK != PREF_GetBoolPref("mail.allow_at_sign_in_user_name",&prefBool)) ) {
+        if ( (PREF_OK != PREF_GetBoolPref(pref_mailAllowSignInUName,&prefBool)) ) {
             prefBool = DEF_ALLOW_AT_SIGN_UNAME;
         }
 		NET_SetAllowAtSignInMailUserName (prefBool);
 	}
 #endif /* MOZ_MAIL_NEWS */
 	
-	if (bSetupAll || !PL_strcmp(prefChanged,"network.proxy.autoconfig_url")) {
-		if ( (PREF_OK == PREF_CopyCharPref("network.proxy.autoconfig_url",&proxy))
+	if (bSetupAll || !PL_strcmp(prefChanged,pref_proxyACUrl)) {
+		if ( (PREF_OK == PREF_CopyCharPref(pref_proxyACUrl,&proxy))
             && proxy && *proxy) {
 			StrAllocCopy(MKproxy_ac_url, proxy);
 			NET_ProxyAcLoaded = FALSE;
@@ -681,9 +684,9 @@ NET_SetupPrefs(const char * prefChanged)
 	
 	NET_UpdateManualProxyInfo(prefChanged);
 
-	if (bSetupAll || !PL_strcmp(prefChanged, "network.proxy.type")) {
+	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyType)) {
 		int32 iType;
-        if ( (PREF_OK != PREF_GetIntPref("network.proxy.type",&iType)) ) {
+        if ( (PREF_OK != PREF_GetIntPref(pref_proxyType,&iType)) ) {
             iType = DEF_PROXY_TYPE;
         }
 	    NET_SelectProxyStyle((NET_ProxyStyle)iType);
@@ -2405,7 +2408,7 @@ NET_GetURL (URL_Struct *URL_s,
 			  {
 				char *pUrl;
 				FREE(munged);
-				if ( (PREF_OK == PREF_CopyCharPref("network.search.url",&pUrl))
+				if ( (PREF_OK == PREF_CopyCharPref(pref_searchUrl,&pUrl))
                     && pUrl) {
 					munged = PR_smprintf("%s%s", pUrl, escaped);
 					FREE(escaped);

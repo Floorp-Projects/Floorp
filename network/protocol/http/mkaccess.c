@@ -32,6 +32,7 @@
 #define alphabetize 1
 #include "rosetta.h"
 #include "xp.h"
+#include "mkprefs.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -152,11 +153,6 @@ PRIVATE Bool cookie_remember_checked = FALSE;
 PRIVATE NET_CookieBehaviorEnum net_CookieBehavior = NET_Accept;
 PRIVATE Bool net_WarnAboutCookies = FALSE;
 PRIVATE char *net_scriptName = (char *)0;
-
-static const char *pref_cookieBehavior = "network.cookie.cookieBehavior";
-static const char *pref_warnAboutCookies = "network.cookie.warnAboutCookies";
-static const char *pref_scriptName = "network.cookie.filterName";
-
 
 /*
  * Different schemes supported by the client.
