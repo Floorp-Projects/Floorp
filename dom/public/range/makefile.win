@@ -20,8 +20,9 @@ IGNORE_MANIFEST=1
 
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS = \
-	nsIDOMRange.h 							\
-	nsIDOMSelection.h 					\
+	nsIDOMRange.h 		\
+	nsIDOMNSRange.h		\
+	nsIDOMSelection.h	\
 	nsIDOMSelectionListener.h 	\
 	$(NULL)
 
