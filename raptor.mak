@@ -321,23 +321,22 @@ GZIP = gzip
 
 TARBALL = $(MOZ_SRC)\raptor-win-src-04-15-98.tar
 TARBALL_ZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.zip
-TARBALL_GZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.gz
 
-tarball:
+tarball: prepare_for_tarballing
     @echo Making $(TARBALL)
     cd $(MOZ_SRC)\.
     rm -f $(TARBALL)
     $(TAR) cf $(TARBALL) ns
 
-tarball_zip:
+tarball_zip: prepare_for_tarballing
     @echo Making $(TARBALL_ZIP)
     cd $(MOZ_SRC)\.
     $(ZIP) -9 -r -q $(TARBALL_ZIP) ns
 
-tarball_gz:
-    @echo Making $(TARBALL_GZIP)
+tarball_gz: $(TARBALL)
+    @echo Making gzip of $(TARBALL)
     cd $(MOZ_SRC)\.
-    $(GZIP) -9 -q $(TARBALL_GZIP) ns
+    $(GZIP) -9 -q $(TARBALL)
 
 prepare_for_tarballing:
     $(NMAKE) -f $(THIS_MAKEFILE) clobber clobber_all
