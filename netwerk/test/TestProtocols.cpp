@@ -217,13 +217,15 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
 {
   char buf[1025];
   PRUint32 amt;
-  while (PR_TRUE) {
-    nsresult rv = aIStream->Read(buf, 1024, &amt);
+  nsresult rv;
+
+  do {
+    rv = aIStream->Read(buf, 1024, &amt);
     if (rv == NS_BASE_STREAM_EOF) break;
     if (NS_FAILED(rv)) return rv;
     buf[amt] = '\0';
     puts(buf);
-  };
+  } while (amt);
 
   return NS_OK;
 }
