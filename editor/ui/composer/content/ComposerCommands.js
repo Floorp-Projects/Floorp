@@ -720,9 +720,15 @@ var nsEditHTMLCommand =
   doCommand: function(aCommand)
   {
     if (gEditorDisplayMode === DisplayModeSource)
+    {
+dump(" *** Switch back to HTML Source mode\n");
       SetEditMode(DisplayModeNormal);
+    }
     else
+    {
+dump(" *** Switch back to NORMAL\n");
       SetEditMode(DisplayModeSource);
+    }
   }
 };
 
@@ -820,16 +826,34 @@ function goUpdateTableMenuItems(commandset)
 
 function IsInTable()
 {
-dump("IsInTable?\n");
   return (window.editorShell && window.editorShell.documentEditable &&
           null != window.editorShell.GetElementOrParentByTagName("table", null));
 }
 
 function IsInTableCell()
 {
-dump("IsInTableCell?\n");
   return (window.editorShell && window.editorShell.documentEditable &&
           null != window.editorShell.GetElementOrParentByTagName("td", null));
+}
+
+function IsSelectionInOneCell()
+{
+  var selection = window.editorShell.selection;
+  if (selection && selection.rangeCount == 1)
+  {
+    // We have a "normal" single-range selection
+    if (!selection.isCollapsed &&
+       selection.anchorNode != selection.focusNode)
+    {
+      // Check if both nodes are within the same cell
+      var anchorCell = window.editorShell.GetElementOrParentByTagName("td", selection.anchorNode);
+      var focusCell = window.editorShell.GetElementOrParentByTagName("td", selection.focusNode);
+      return (focusCell && anchorCell && focusCell == anchorCell);
+    }
+    // Collapsed selection or anchor == focus (thus must be in 1 cell)
+    return true;
+  }
+  return false;
 }
 
 // Call this with insertAllowed = true to allow inserting if not in existing table,
@@ -1198,11 +1222,11 @@ var nsJoinTableCellsCommand =
       // We need a cell and either > 1 selected cell or a sibling cell to the right
       // (Note that editorShell returns "td" for "th" also)
       // (This is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
-      if (cell && tagNameObj.value == "td")
-        return ( (countObj.value > 1) ||
-                 (cell.nextSibling && 
-                  (cell.nextSibling.tagName == "TD" ||
-                   cell.nextSibling.tagName == "TH")) );
+      return ( cell && (tagNameObj.value == "td") &&
+               ( (countObj.value > 1) ||
+                  (cell.nextSibling && 
+                   (cell.nextSibling.tagName == "TD" ||
+                    cell.nextSibling.tagName == "TH")) ) );
     }
     return false;
   },
@@ -1211,6 +1235,7 @@ var nsJoinTableCellsCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.JoinTableCells();
+dump(editorShell+" **** CAN WE ACCESS GLOBAL editorShell:???\n");
       window.content.focus();
     }
   }
@@ -1223,8 +1248,15 @@ var nsSplitTableCellCommand =
   {
     if (window.editorShell && window.editorShell.documentEditable)
     {
-      var cell = window.editorShell.GetElementOrParentByTagName("td", null);
-      return (cell != null && (cell.colSpan > 1 || cell.rowSpan > 1));
+      var tagNameObj = new Object;
+      var countObj = new Object;
+      var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+
+      // We need a cell parent and there's just 1 selected cell 
+      // or selection is entirely inside 1 cell
+      return ( cell && (tagNameObj.value == "td") && 
+               (countObj.value <= 1) &&
+               IsSelectionInOneCell() );
     }
     return false;
   },

@@ -4843,11 +4843,21 @@ nsEditorShell::DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsEditorShell::EditElementProperties(nsIDOMElement *aElement, int x, int y)
+nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClickCount,
+                                         PRInt32 x, PRInt32 y, PRBool *_retval)
 {
+  // Guess it's ok if we don't have an element
   if (!aElement) return NS_OK;
-  nsresult rv = NS_ERROR_FAILURE;
+  if (!_retval)  return NS_ERROR_NULL_POINTER;
+
+  *_retval = PR_FALSE;
+
+  // We'll only look at single and double-click
+  if (aClickCount > 2) return NS_OK;
+  
+  nsresult rv = NS_OK;
 
 #if DEBUG_cmanske
   nsAutoString TagName;
@@ -4855,25 +4865,55 @@ nsEditorShell::EditElementProperties(nsIDOMElement *aElement, int x, int y)
   TagName.ToLowerCase();
   char szTagName[64];
   TagName.ToCString(szTagName, 64);
-  printf("***** DBLClick: TagName of element clicked on: %s\n", szTagName);
+  printf("***** Element clicked on: %s, x=%d, y=%d\n", szTagName, x, y);
 #endif
-  // Get the ComposerController:
-  nsCOMPtr<nsIControllers> controllers;      
-  if(!mContentWindow)
-    return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
-  if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-  rv = cwP->GetControllers(getter_AddRefs(controllers));      
-  if (NS_FAILED(rv)) return rv;
-  if (!controllers) return NS_ERROR_NULL_POINTER;
+  if (mDisplayMode == eDisplayModeAllTags) 
+  {
+    // Always select the element in AllTags mode
+    //  in other modes, clicking on images, hline, etc 
+    //  already selects them correctly
+    // Selection here is used to make clicking on the 
+    //  background image in ShowAllTags mode select
+    //  contents of a element
+    // TODO: It would be great if we could use x, y to restrict
+    //  where you click for easier caret placement near border with content,
+    //  but:
+    //  1. We can get x,y, relative to either screen or "widget" (contentWindow)
+    //      origin, but not the element clicked on!
+    //  2.  we need to get the size of the element!
 
-  nsCOMPtr<nsIController> controller;   
-  rv = controllers->GetControllerAt(eComposerController, getter_AddRefs(controller));
-  if (NS_FAILED(rv)) return rv;
-  if (!controller) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
+    rv = SelectElement(aElement);
+    if (NS_FAILED(rv)) return rv;
+  }
 
-  // Execute the command
-  nsAutoString commandName(NS_ConvertASCIItoUCS2("cmd_advancedProperties"));
-  return composerController->DoCommand(commandName.GetUnicode());
+  // For double-click, edit element properties
+  if (aClickCount == 2)
+  {
+    // Get the ComposerController:
+    nsCOMPtr<nsIControllers> controllers;      
+    if(!mContentWindow)
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    rv = cwP->GetControllers(getter_AddRefs(controllers));      
+    if (NS_FAILED(rv)) return rv;
+    if (!controllers) return NS_ERROR_NULL_POINTER;
+
+    // TODO: Don't use eComposerController index! must search 
+    //  through controllers to find the one we want - UGH!
+    nsCOMPtr<nsIController> controller;   
+    rv = controllers->GetControllerAt(eComposerController, getter_AddRefs(controller));
+    if (NS_FAILED(rv)) return rv;
+    if (!controller) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
+
+    // Execute the command
+    nsAutoString commandName(NS_ConvertASCIItoUCS2("cmd_advancedProperties"));
+    rv = composerController->DoCommand(commandName.GetUnicode());
+
+    if (NS_SUCCEEDED(rv))
+      *_retval = PR_FALSE;
+  }
+
+  return rv;
 }
