@@ -1107,6 +1107,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     else {
       statusWidget->Show(PR_FALSE);
     }
+    NS_RELEASE(statusWidget);
   }
 
   // inset the web widget
