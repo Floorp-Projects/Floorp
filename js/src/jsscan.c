@@ -176,10 +176,7 @@ js_InitScanner(JSContext *cx)
 	atom = js_Atomize(cx, kw->name, strlen(kw->name), ATOM_PINNED);
 	if (!atom)
 	    return JS_FALSE;
-	atom->kwindex = (JSVERSION_IS_ECMA(cx->version) ||
-                         kw->version <= cx->version)
-                        ? kw - keywords
-                        : -1;
+	ATOM_SET_KEYWORD(atom, kw);
     }
     return JS_TRUE;
 }
@@ -216,12 +213,6 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
 {
     size_t nb;
     JSTokenStream *ts;
-
-    if (cx->scannerVersion != cx->version) {
-        if (!js_InitScanner(cx))
-            return NULL;
-        cx->scannerVersion = cx->version;
-    }
 
     nb = sizeof(JSTokenStream) + JS_LINE_LIMIT * sizeof(jschar);
     JS_ARENA_ALLOCATE_CAST(ts, JSTokenStream *, &cx->tempPool, nb);
@@ -782,12 +773,13 @@ retry:
 			       0);
 	if (!atom)
 	    RETURN(TOK_ERROR);
-        if (!hadUnicodeEscape && atom->kwindex >= 0) {
-            struct keyword *kw;
+        if (!hadUnicodeEscape && ATOM_KEYWORD(atom)) {
+            struct keyword *kw = ATOM_KEYWORD(atom);
 
-            kw = &keywords[atom->kwindex];
-            tp->t_op = (JSOp) kw->op;
-            RETURN(kw->tokentype);
+            if (JSVERSION_IS_ECMA(cx->version) || kw->version <= cx->version) {
+                tp->t_op = (JSOp) kw->op;
+                RETURN(kw->tokentype);
+            }
         }
 	tp->t_op = JSOP_NAME;
 	tp->t_atom = atom;
