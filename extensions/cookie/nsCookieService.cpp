@@ -82,11 +82,9 @@ nsresult nsCookieService::Init()
 
   // cache mDir
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mDir));
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (NS_SUCCEEDED(rv)) {
+    COOKIE_Read();
   }
-
-  COOKIE_Read();
 
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
