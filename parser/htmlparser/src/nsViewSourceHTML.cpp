@@ -545,6 +545,15 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
 }
 
 /**
+ * Give rest of world access to our tag enums, so that CanContain(), etc,
+ * become useful.
+ */
+NS_IMETHODIMP CViewSourceHTML::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/**
  *  This method gets called to determine whether a given 
  *  tag is itself a container
  *  

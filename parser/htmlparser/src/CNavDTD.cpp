@@ -1779,6 +1779,16 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 } 
 
 /**
+ * Give rest of world access to our tag enums, so that CanContain(), etc,
+ * become useful.
+ */
+NS_IMETHODIMP CNavDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+{
+  *aIntTag = nsHTMLTags::LookupTag(aTag);
+  return NS_OK;
+}
+
+/**
  *  This method is called to determine whether or not 
  *  the necessary intermediate tags should be propagated
  *  between the given parent and given child.

@@ -369,6 +369,12 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
+    /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+
 
     /** 
      * The following methods are use to create and manage

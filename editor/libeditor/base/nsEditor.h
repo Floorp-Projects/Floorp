@@ -37,6 +37,7 @@
 #include "nsIFileSpec.h"
 #include "nsIDOMCharacterData.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIDTD.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
@@ -100,6 +101,7 @@ private:
   nsCOMPtr<nsIStringBundle> mStringBundle;
 protected:
   nsIDOMDocument * mDoc;
+  nsCOMPtr<nsIDTD> mDTD;
   // Services are not nsCOMPtr friendly
   nsIPref* mPrefs;
 
@@ -559,6 +561,9 @@ public:
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
 
+  /** returns PR_TRUE if aParent can contain a child of type aTag */
+  PRBool     CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
+  
   /** returns PR_TRUE if aNode is an editable node */
   PRBool IsEditable(nsIDOMNode *aNode);
 

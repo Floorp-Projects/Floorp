@@ -307,6 +307,15 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
 
 /**
+ * Give rest of world access to our tag enums, so that CanContain(), etc,
+ * become useful.
+ */
+NS_IMETHODIMP COtherDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+{
+  return CNavDTD::StringTagToIntTag(aTag, aIntTag);
+}
+
+/**
  *  This method gets called to determine whether a given 
  *  tag can contain newlines. Most do not.
  *  

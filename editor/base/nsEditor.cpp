@@ -499,6 +499,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   mPresShell->GetPresContext(getter_AddRefs(context));
   context->SetLinkHandler(0);  
 
+  // Set up the DTD
+  // XXX - in the long run we want to get this from the document, but there
+  // is no way to do that right now.  So we leave it null here and set
+  // up a nav html dtd in nsHTMLEditor::Init
+
   // Init mEditProperty
   nsresult result = NS_NewEditProperty(getter_AddRefs(mEditProperty));
   if (NS_FAILED(result)) { return result; }
@@ -3301,6 +3306,29 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   }
   return PR_FALSE;
 }
+
+PRBool 
+nsEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
+{
+  // if we don't have a dtd then assume we can insert whatever want
+  if (!mDTD) return PR_TRUE;
+  
+  PRInt32 childTagEnum, parentTagEnum;
+  nsString parentStringTag;
+  nsString non_const_aTag(aTag);
+  nsresult res = mDTD->StringTagToIntTag(non_const_aTag,&childTagEnum);
+  if (NS_FAILED(res)) return PR_FALSE;
+
+  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(aParent);
+  if (!parentElement) return PR_FALSE;
+  
+  parentElement->GetTagName(parentStringTag);
+  res = mDTD->StringTagToIntTag(parentStringTag,&parentTagEnum);
+  if (NS_FAILED(res)) return PR_FALSE;
+
+  return mDTD->CanContain(parentTagEnum, childTagEnum);
+}
+
 
 PRBool 
 nsEditor::IsEditable(nsIDOMNode *aNode)

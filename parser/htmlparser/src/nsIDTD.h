@@ -199,6 +199,14 @@ class nsIDTD : public nsISupports {
      * @return
      */
     virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser)=0;
+
+/* XXX Temporary measure, pending further work by RickG  */
+    
+    /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const =0;
 };
 
 
