@@ -96,8 +96,9 @@ Verify Existance=
 [Legacy Check0]
 Filename=[SETUP PATH]\$MainExeFile$
 Version=5.0.0.0
-Message0=Setup has detected an old version of Mozilla in the chosen destination directory that may pose compatibility issues.  It is recommended that Setup delete the destination directory (including its files), or a different destination directory be used.
-Message1=If you choose to allow Setup to delete the destination directory, you will need to save and then restore any files that you have placed in the destination directory.  Click Delete to delete the destination directory, or Back to go back and choose a different destination directory.
+Message0=The destination directory already contains an earlier version of $ProductName$. To avoid problems, the installer will delete the destination directory and all its files, and then re-create the directory and install $ProductName$.
+Message1=If you wish to keep any files currently in the destination directory, either save them to a temporary directory and restore them after the install OR install to an alternate directory.
+Message2=Click Delete to delete the directory when installation begins. If you prefer not to delete the directory, click Back to go back and choose a different destination directory.
 
 [Dialog Welcome]
 Show Dialog=TRUE

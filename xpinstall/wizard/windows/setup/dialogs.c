@@ -275,6 +275,7 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetDlgItemText(hDlg, IDC_DELETE_PATH, szStrList[0]);
       SetDlgItemText(hDlg, IDC_MESSAGE0,    szStrList[1]);
       SetDlgItemText(hDlg, IDC_MESSAGE1,    szStrList[2]);
+      SetDlgItemText(hDlg, IDC_MESSAGE2,    szStrList[3]);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
