@@ -29,6 +29,7 @@
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
 #include "nsIEventQueueService.h"
+#include "nsIStreamListener.h"
 
 //
 // This is the size of the global buffer used by all nsSocketTransport 
