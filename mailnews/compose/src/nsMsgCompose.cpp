@@ -136,36 +136,95 @@ NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
 //
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
+nsresult
+TranslateLineEndings(nsString &aString)
 {
+  PRUnichar   *transBuf = nsnull;
+
+  // First, do sanity checking...if aString doesn't have
+  // any CR's, then there is no reason to call this rest
+  // of this 
+  if (aString.FindChar(CR) < 0)
+    return NS_OK;
+  
+  transBuf = aString.ToNewUnicode();
+  if (transBuf)
+  {
+    DoLineEndingConJobUnicode(transBuf, aString.Length());
+    aString.SetString(transBuf);
+    PR_FREEIF(transBuf);
+  }
+
+  return NS_OK;
+}
+
+nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
+                                                   nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
+{
+  // First, get the nsIEditor interface for future use
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+
+  TranslateLineEndings(aPrefix);
+  TranslateLineEndings(aBuf);
+  TranslateLineEndings(aSignature);
+
+  if (editor)
+    editor->EnableUndo(PR_FALSE);
+
   // Now, insert it into the editor...
   if ( (aQuoted) )
+  {
+    if (aPrefix != "")
+    {
+      if (aHTMLEditor)
+        aEditorShell->InsertSource(aPrefix.GetUnicode());
+      else
+        aEditorShell->InsertText(aPrefix.GetUnicode());
+    }
+
     aEditorShell->InsertAsQuotation(aBuf.GetUnicode());
+
+    if (aSignature != "")
+    {
+      aEditorShell->InsertSource(aSignature.GetUnicode());
+    }
+  }
   else
   {
     if (aHTMLEditor)
+    {
       aEditorShell->InsertSource(aBuf.GetUnicode());
+      if (aSignature != "")
+        aEditorShell->InsertSource(aSignature.GetUnicode());
+    }
     else
+    {
       aEditorShell->InsertText(aBuf.GetUnicode());
+      if (aSignature != "")
+        aEditorShell->InsertText(aSignature.GetUnicode());
+    }
   }
   
-  nsCOMPtr<nsIEditor> editor;
-  aEditorShell->GetEditor(getter_AddRefs(editor));
   if (editor)
   {
-	switch (GetReplyOnTop())
-	{
-		/* TODO: in case of the user want the insertion point at the end of the body,
-		         we need to be smarter than just doing editor->EndOfDocument() because
-		         if we have a signature, we need to put the cursor just before it.
-		*/
-		case 0	: editor->EndOfDocument();					break;
-		case 2	: editor->SelectAll();						break;
-		default	: editor->BeginningOfDocument();			break;
-	}
+	  switch (GetReplyOnTop())
+	  {
+      // RICHIE SHERRY - have to save where the cursor was!
+      // This should set the cursor after the body but before the sig
+		  case 0	: editor->EndOfDocument();					break;
+
+		  case 2	: editor->SelectAll();						  break;
+
+      // This should set the cursor to the top!
+      default	: editor->BeginningOfDocument();		break;
+	  }
   }
 
   NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
+  if (editor)
+    editor->EnableUndo(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -180,21 +239,6 @@ PRBool
 nsMsgCompose::QuotingToFollow(void)
 {
   return mQuotingToFollow;
-}
-
-nsresult
-nsMsgCompose::LoadAsQuote(nsString  aTextToLoad)
-{
-  // Now Load the body...
-  if (m_editor)
-  {
-    if (aTextToLoad.Length())
-    {
-      ConvertAndLoadComposeWindow(m_editor, aTextToLoad, PR_TRUE, m_composeHTML);
-    }
-  }
-
-  return NS_OK;
 }
 
 nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
@@ -818,7 +862,12 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   mComposeObj = nsnull;
   mQuoteHeaders = quoteHeaders;
   mIdentity = identity;
-  
+
+  // For the built message body...
+  mMsgBody = "";
+  mCitePrefix = "";
+  mSignature = "";
+
   nsCOMPtr<nsIMessage> originalMsg = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
   if (originalMsg && !quoteHeaders)
   {
@@ -835,28 +884,29 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         getter_AddRefs(parser));
       if (parser)
       {
-		nsString aCharset(msgCompHeaderInternalCharset());
+        nsString aCharset(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
-		rv = ConvertFromUnicode(aCharset, author, &utf8Author);
-		if (NS_SUCCEEDED(rv) && utf8Author)
-		{
-			rv = parser->ExtractHeaderAddressName(nsAutoCString(aCharset), utf8Author, &authorName);
-			if (NS_SUCCEEDED(rv))
-				rv = ConvertToUnicode(aCharset, authorName, author);
-		}
-		
-		if (!utf8Author || NS_FAILED(rv))
-		{
-			rv = parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName);
-        	if (NS_SUCCEEDED(rv))
-        		author = authorName;
-		}
+        rv = ConvertFromUnicode(aCharset, author, &utf8Author);
+        if (NS_SUCCEEDED(rv) && utf8Author)
+        {
+          rv = parser->ExtractHeaderAddressName(nsAutoCString(aCharset), utf8Author, &authorName);
+          if (NS_SUCCEEDED(rv))
+            rv = ConvertToUnicode(aCharset, authorName, author);
+        }
+        
+        if (!utf8Author || NS_FAILED(rv))
+        {
+          rv = parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName);
+          if (NS_SUCCEEDED(rv))
+            author = authorName;
+        }
         if (NS_SUCCEEDED(rv))
         {
           if (GetReplyOnTop() == 1)
-          	mMsgBody = "<br><br>";
-          mMsgBody += author;
-          mMsgBody += " wrote:<br><BLOCKQUOTE TYPE=CITE><html>";
+            mCitePrefix.Append("<br><br>");
+
+          mCitePrefix.Append(author);
+          mCitePrefix.Append(" wrote:<br><html>");
         }
         if (authorName)
           PL_strfree(authorName);
@@ -865,8 +915,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
     }
   }
   
-  if (mMsgBody.IsEmpty())
-    mMsgBody = "<br><br>--- Original Message ---<br><BLOCKQUOTE TYPE=CITE><html>";
+  if (mCitePrefix.IsEmpty())
+    mCitePrefix.Append("<br><br>--- Original Message ---<br><html>");
   
   NS_INIT_REFCNT(); 
 }
@@ -874,7 +924,12 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
 nsresult
 QuotingOutputStreamListener::ConvertToPlainText()
 {
-  return ConvertBufToPlainText(mMsgBody, "UTF-8");
+nsresult  rv = NS_OK;
+
+  rv += ConvertBufToPlainText(mCitePrefix, "UTF-8");
+  rv += ConvertBufToPlainText(mMsgBody, "UTF-8");
+  rv += ConvertBufToPlainText(mSignature, "UTF-8");
+  return rv;
 }
 
 NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */)
@@ -968,7 +1023,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
       }
     }
     
-    mMsgBody += "</html></BLOCKQUOTE>";
+    mMsgBody += "</html>";
     
     // Now we have an HTML representation of the quoted message.
     // If we are in plain text mode, we need to convert this to plain
@@ -987,12 +1042,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     PRBool    compHTML = PR_FALSE;
     mComposeObj->GetComposeHTML(&compHTML);
     
-    mComposeObj->ProcessSignature(mIdentity, &mMsgBody);
+    mComposeObj->ProcessSignature(mIdentity, &mSignature);
     
     nsIEditorShell *editor = nsnull;
     if (NS_SUCCEEDED(mComposeObj->GetEditor(&editor)) && editor)
     {
-      mComposeObj->ConvertAndLoadComposeWindow(editor, mMsgBody, PR_TRUE, compHTML);
+      mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, compHTML);
     }
   }
     
@@ -1016,17 +1071,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
 	rv = inStr->Read(newBuf, count, &numWritten);
 	if (rv == NS_BASE_STREAM_WOULD_BLOCK)
 		rv = NS_OK;
-	newBuf[count] = '\0';
+	newBuf[numWritten] = '\0';
 	if (NS_SUCCEEDED(rv) && numWritten > 0)
 	{
-    // RICHIE SHERRY
-    // Going to try to change this from a simple append to converting the
-    // data to UCS-2 before appending to the mMsgBody
-    //
-		// USED TO BE THIS mMsgBody += newBuf;
-
     PRUnichar       *u = nsnull; 
-    nsAutoString    fmt("%s"); 
+    nsAutoString    fmt("%s");
+
     u = nsTextFormater::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
     if (u)
     {
@@ -1413,12 +1463,12 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
   else
   {
     nsresult    rv;
-    nsString    tBody = "";
+    nsString    tSignature = "";
 
-    rv = mComposeObj->ProcessSignature(identity, &tBody);
+    rv = mComposeObj->ProcessSignature(identity, &tSignature);
     if ((NS_SUCCEEDED(rv)) && editor)
     {
-      mComposeObj->ConvertAndLoadComposeWindow(editor, tBody, PR_FALSE, compHTML);
+      mComposeObj->ConvertAndLoadComposeWindow(editor, "", "", tSignature, PR_FALSE, compHTML);
     }
 
     return rv;
@@ -1617,7 +1667,7 @@ nsMsgCompose::BuildBodyMessage()
   m_compFields->GetBody(&bod);
   if (bod)
   {
-    ConvertAndLoadComposeWindow(m_editor, bod, PR_FALSE, m_composeHTML);
+    ConvertAndLoadComposeWindow(m_editor, "", bod, "", PR_FALSE, m_composeHTML);
   }
 
   return NS_OK;

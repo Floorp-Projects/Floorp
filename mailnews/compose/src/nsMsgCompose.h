@@ -54,15 +54,14 @@ class nsMsgCompose : public nsIMsgCompose
 	/*** nsIMsgCompose pure virtual functions */
 	NS_DECL_NSIMSGCOMPOSE
 
-   MSG_ComposeType				GetMessageType();
+  MSG_ComposeType				        GetMessageType();
+  nsresult                      ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
+                                                            nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor);
 
-	nsresult 					ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf,
-															PRBool aQuoted, PRBool aHTMLEditor);
  // Deal with quoting issues...
 	nsresult                      QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
   PRBool                        QuotingToFollow(void);
   nsresult                      SetQuotingToFollow(PRBool aVal);
-  nsresult                      LoadAsQuote(nsString  aTextToLoad);
   nsresult                      ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      BuildBodyMessage();
@@ -145,11 +144,13 @@ public:
 	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
 
 private:
-    nsMsgCompose *				mComposeObj;
-    nsString       				mMsgBody;
-    PRBool						mQuoteHeaders;
+    nsMsgCompose              *mComposeObj;
+    nsString       				    mMsgBody;
+    nsString       				    mCitePrefix;
+    nsString       				    mSignature;
+    PRBool						        mQuoteHeaders;
     nsCOMPtr<nsIMimeHeaders>	mHeaders;
-    nsCOMPtr<nsIMsgIdentity> mIdentity;
+    nsCOMPtr<nsIMsgIdentity>  mIdentity;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

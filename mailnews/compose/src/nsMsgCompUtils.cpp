@@ -36,6 +36,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIDocumentEncoder.h"    // for editor output flags
 
 /* for GET_xxx_PART */
 #include "net.h"
@@ -350,6 +351,9 @@ mime_generate_headers (nsMsgCompFields *fields,
 		PUSH_STRING ("From: ");
 		convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pFrom, charset,
 										nsMsgMIMEGetConformToStandard());
+
+    // RICHIE SHERRY mason!!!! WE NEED TO MAKE SURE NO ILLEGAL CHARS GO OUT WITH THIS FIELD!!!
+
 		if (convbuf) {    /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
 			PR_Free(convbuf);
@@ -2149,6 +2153,9 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
   nsString    convertedText;
   nsIParser   *parser;
 
+  if (aConBuf == "")
+    return NS_OK;
+
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
@@ -2157,8 +2164,22 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
   if (NS_SUCCEEDED(rv) && parser)
   {
     nsHTMLToTXTSinkStream     *sink = nsnull;
+    PRUint32 converterFlags = 0;
+    PRUint32 wrapWidth = 72;
+    
+    converterFlags |= nsIDocumentEncoder::OutputFormatted;
 
-    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, 0, 0);
+    nsresult rv2;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv2);
+    if (NS_SUCCEEDED(rv2))
+    {
+      PRBool sendflowed = PR_TRUE;
+      rv2=prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendflowed);
+      if(NS_FAILED(rv2) || sendflowed) // Unless explicitly forbidden...
+        converterFlags |= nsIDocumentEncoder::OutputFormatFlowed;
+    }    
+    
+    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
     if (sink && NS_SUCCEEDED(rv)) 
     {  
         sink->DoFragment(PR_TRUE);
@@ -2188,4 +2209,71 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
   }
 
   return rv;
+}
+
+// Need to take this input data and do the following conversions
+// in place:
+//
+//  First pass:  Turn CRLF into LF 
+//  Second pass: Turn CR   into LF
+//
+void
+DoLineEndingConJob(char *aBuf, PRUint32 aLen)
+{
+  PRUint32    i;
+
+  if (aLen <= 0)
+    return;
+
+  //  First pass:  Turn CRLF into LF 
+  PRUint32    len = aLen;
+  for (i=0; i < (len-1); i++)
+  {
+    if ( (aBuf[i] == CR) && (aBuf[i+1] == LF) )
+    {
+      nsCRT::memmove((void *)&(aBuf[i]), (void *)&(aBuf[i+1]), (len-i-1));
+      len -= 1;
+      aBuf[len] = '\0';
+    }
+  }
+
+  //  Second pass: Turn CR into LF
+  len = PL_strlen(aBuf);
+  for (i=0; i<len; i++)
+    if (aBuf[i] == CR) 
+      aBuf[i] = LF;
+}
+
+// Need to take this input data and do the following conversions
+// in place:
+//
+//  First pass:  Turn CRLF into LF 
+//  Second pass: Turn CR   into LF
+//
+void
+DoLineEndingConJobUnicode(PRUnichar *aBuf, PRUint32 aLen)
+{
+  PRUint32    i;
+
+  if (aLen <= 0)
+    return;
+
+  //  First pass:  Turn CRLF into LF 
+  PRUint32    len = aLen;
+  for (i=0; i < (len-1); i++)
+  {
+    if ( (aBuf[i] == CR) && (aBuf[i+1] == LF) )
+    {
+      nsCRT::memmove((void *)&(aBuf[i]), (void *)&(aBuf[i+1]), 
+                     (sizeof(PRUnichar) * (len-i-1)));
+      len -= 1;
+      aBuf[len] = '\0';
+    }
+  }
+
+  //  Second pass: Turn CR into LF
+  len = nsCRT::strlen(aBuf);
+  for (i=0; i<len; i++)
+    if (aBuf[i] == CR) 
+      aBuf[i] = LF;
 }
