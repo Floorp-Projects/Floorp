@@ -102,13 +102,7 @@ public class ToolErrorReporter implements ErrorReporter {
                                            int line, String lineSource,
                                            int lineOffset)
     {
-        hasReportedErrorFlag = true;
-        message = formatMessage(message, sourceName, line);
-        System.err.println(messagePrefix + message);
-        if (null != lineSource) {
-            System.err.println(messagePrefix + lineSource);
-            System.err.println(messagePrefix + buildIndicator(lineOffset));
-        }
+        error(message, sourceName, line, lineSource, lineOffset);
         return new EvaluatorException(message);
     }
 
