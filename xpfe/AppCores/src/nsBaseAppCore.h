@@ -27,7 +27,12 @@
 #include "nsIDOMBaseAppCore.h"
 #include "nsCOMPtr.h"
 
-class nsIDOMNode;
+// Cannot forward declare a class used with an nsCOMPtr.
+// see: http://www.mozilla.org/projects/xpcom/nsCOMPtr.html
+// class nsIDOMNode;
+
+#include "nsIDOMNode.h"
+
 class nsIDOMDocument;
 class nsIScriptContext;
 class nsIDOMWindow;
