@@ -598,11 +598,18 @@ typedef struct _PRPerThreadExit {
 ** 0 has a special meaning.
 ** Adjust stackSize. Round up to a page boundary.
 */
+
+#ifndef _MD_MINIMUM_STACK_SIZE
+#define _MD_MINIMUM_STACK_SIZE	0
+#endif
+
 #if (!defined(HAVE_CUSTOM_USER_THREADS))
 #define        _PR_ADJUST_STACKSIZE(stackSize) \
         PR_BEGIN_MACRO \
     if (stackSize == 0) \
                 stackSize = _MD_DEFAULT_STACK_SIZE; \
+    if (stackSize < _MD_MINIMUM_STACK_SIZE) \
+                stackSize = _MD_MINIMUM_STACK_SIZE; \
     stackSize = (stackSize + (1 << _pr_pageShift) - 1) >> _pr_pageShift; \
     stackSize <<= _pr_pageShift; \
         PR_END_MACRO
