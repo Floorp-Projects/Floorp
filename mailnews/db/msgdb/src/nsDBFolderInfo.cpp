@@ -673,6 +673,7 @@ nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
 
     if (NS_SUCCEEDED(rv) && (*result == nsnull || **result == '\0'))
     {
+      PR_FREEIF(*result);
         *result = ToNewCString(gDefaultCharacterSet);
     }
 
