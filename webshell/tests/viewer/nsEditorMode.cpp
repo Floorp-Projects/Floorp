@@ -70,8 +70,8 @@ nsresult RegisterEventListeners()
 
 nsresult nsDeleteLast()
 {
-  nsIDOMNode *mNode;
-  nsIDOMText *mText;
+  nsIDOMNode *mNode=nsnull;
+  nsIDOMText *mText=nsnull;
   nsString mStr;
   PRInt32 mLength;
 
