@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -24,11 +24,6 @@
 #include "nsQtMenu.h"
 #include <stdlib.h>
 #include "plevent.h"
-
-#include "nsIUnixToolkitService.h"
-#include "nsIComponentManager.h"
-
-static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
 
 static nsNativeViewerApp* gTheApp;
 
@@ -92,47 +87,18 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
-    // Hack to get il_ss set so it doesn't fail in xpcompat.c
-    nsIImageManager *manager;
-    NS_NewImageManager(&manager);
-
-    gTheApp = new nsNativeViewerApp();
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Toolkit Service setup
-  // 
-  // Note: This must happend before NS_SetupRegistry() is called so
-  //       that the toolkit specific xpcom components can be registered
-  //       as needed.
-  //
-  //////////////////////////////////////////////////////////////////////
-  nsIUnixToolkitService * unixToolkitService = nsnull;
-    
-  nsresult rv = 
-    nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
-                                       nsnull,
-                                       nsIUnixToolkitService::GetIID(),
-                                       (void **) &unixToolkitService);
+  // Hack to get il_ss set so it doesn't fail in xpcompat.c
+  nsIImageManager *manager;
+  NS_NewImageManager(&manager);
   
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");
-
-  if (NS_SUCCEEDED(rv) && (nsnull != unixToolkitService))
-  {
-    // Force the toolkit into "qt" mode regardless of MOZ_TOOLKIT
-    unixToolkitService->SetToolkitName("qt");
-    
-    NS_RELEASE(unixToolkitService);
-  }
-
-  //////////////////////////////////////////////////////////////////////
-  // End toolkit service setup
-  //////////////////////////////////////////////////////////////////////
-
-    gTheApp->Initialize(argc, argv);
-    gTheApp->Run();
-
-    return 0;
+  gTheApp = new nsNativeViewerApp();
+  
+  putenv("MOZ_TOOLKIT=qt");
+  
+  gTheApp->Initialize(argc, argv);
+  gTheApp->Run();
+  
+  return 0;
 }
 
 
