@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.7 1999/05/27 22:35:50 pnunn%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.8 1999/06/01 21:50:37 pnunn%netscape.com Exp $
  */
 
 
@@ -78,6 +78,8 @@ struct il_cache_struct {
 struct il_cache_struct il_cache;
 /*---------------------------------------------*/
 /*-------------------------------*/
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 NS_IMPL_ISUPPORTS(ImgDCallbk, kImgDCallbkIID)
 
@@ -641,6 +643,9 @@ il_delete_container(il_container *ic)
         if (ic->mask)
             il_destroy_pixmap(ic->img_cb, ic->mask);
         NS_RELEASE(ic->img_cb);
+
+        NS_IF_RELEASE(ic->imgdcb);
+        NS_IF_RELEASE(ic->imgdec);
 
         FREE_IF_NOT_NULL(ic->comment);
         FREE_IF_NOT_NULL(ic->url_address);
