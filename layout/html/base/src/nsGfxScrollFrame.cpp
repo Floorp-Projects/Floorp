@@ -445,40 +445,6 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxScrollFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
-                                                 PRBool aDeep,
-                                                 PRBool aCompileEventHandlers)
-{
-  // XXX Propogate return values?? (but don't stop part way through)
-
-  if (mInner->mHScrollbarBox) {
-    nsIFrame* hframe = nsnull;
-    mInner->mHScrollbarBox->GetFrame(&hframe);
-    if (hframe) {
-      nsCOMPtr<nsIContent> hcontent;
-      hframe->GetContent(getter_AddRefs(hcontent));
-      if (hcontent) {
-        hcontent->SetDocument(aDocument, aDeep, aCompileEventHandlers);
-      }
-    }
-  }
-
-  if (mInner->mHScrollbarBox) {
-    nsIFrame* vframe = nsnull;
-    mInner->mVScrollbarBox->GetFrame(&vframe);
-    if (vframe) {
-      nsCOMPtr<nsIContent> vcontent;
-      vframe->GetContent(getter_AddRefs(vcontent));
-      if (vcontent) {
-        vcontent->SetDocument(aDocument, aDeep, aCompileEventHandlers);
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGfxScrollFrame::Destroy(nsIPresContext* aPresContext)
 
 {

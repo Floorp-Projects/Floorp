@@ -53,6 +53,7 @@
 #include "prmem.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
+#include "nsHashtable.h"
 #include "nsIPref.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
@@ -839,6 +840,10 @@ public:
                                          GeneratedContentType aType,
                                          nsIContentIterator** aIterator) const;
  
+  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements);
+  NS_IMETHOD GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements);
+  NS_IMETHOD ReleaseAnonymousContent();
+
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
 
@@ -1005,6 +1010,7 @@ protected:
   nsIContent* mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
   nsVoidArray mCurrentEventContentStack;
+  nsSupportsHashtable* mAnonymousContentTable;
 
 #ifdef NS_DEBUG
   nsRect mCurrentTargetRect;
@@ -1164,7 +1170,8 @@ PresShell::PresShell():mStackArena(nsnull),
                        mFirstAttributeRequest(nsnull),
                        mLastAttributeRequest(nsnull),
                        mFirstCallbackEventRequest(nsnull),
-                       mLastCallbackEventRequest(nsnull)
+                       mLastCallbackEventRequest(nsnull),
+                       mAnonymousContentTable(nsnull)
 {
   NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;
@@ -1243,6 +1250,9 @@ PresShell::~PresShell()
 
   // if we allocated any stack memory free it.
   FreeDynamicStack();
+
+  // free our table of anonymous content
+  ReleaseAnonymousContent();
 
   mIsDestroying = PR_TRUE;
 
@@ -3408,6 +3418,103 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
 
   return rv;
 }
+
+
+NS_IMETHODIMP
+PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements)
+{
+  NS_PRECONDITION(aContent != nsnull, "null ptr");
+  if (! aContent)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aAnonymousElements != nsnull, "null ptr");
+  if (! aAnonymousElements)
+    return NS_ERROR_NULL_POINTER;
+
+  if (! mAnonymousContentTable) {
+    mAnonymousContentTable = new nsSupportsHashtable;
+    if (! mAnonymousContentTable)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsISupportsKey key(aContent);
+
+  nsCOMPtr<nsISupportsArray> oldAnonymousElements =
+    getter_AddRefs(NS_STATIC_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
+
+  if (oldAnonymousElements) {
+    // If we're trying to set anonymous content for an element that
+    // already had anonymous content, then we need to be sure to clean
+    // up after the old content. (This can happen, for example, when a
+    // reframe occurs.)
+    PRUint32 count;
+    oldAnonymousElements->Count(&count);
+
+    while (PRInt32(--count) >= 0) {
+      nsCOMPtr<nsISupports> isupports( getter_AddRefs(oldAnonymousElements->ElementAt(count)) );
+      nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+      NS_ASSERTION(content != nsnull, "not an nsIContent");
+      if (! content)
+        continue;
+
+      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    }
+  }
+
+  mAnonymousContentTable->Put(&key, aAnonymousElements);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+PresShell::GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements)
+{
+  if (! mAnonymousContentTable) {
+    *aAnonymousElements = nsnull;
+    return NS_OK;
+  }
+
+  nsISupportsKey key(aContent);
+  *aAnonymousElements =
+    NS_REINTERPRET_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)); // addrefs
+
+  return NS_OK;
+}
+
+
+static PRBool PR_CALLBACK
+ClearDocumentEnumerator(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsISupportsArray* anonymousElements =
+    NS_STATIC_CAST(nsISupportsArray*, aData);
+
+  PRUint32 count;
+  anonymousElements->Count(&count);
+  while (PRInt32(--count) >= 0) {
+    nsCOMPtr<nsISupports> isupports( getter_AddRefs(anonymousElements->ElementAt(count)) );
+    nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+    NS_ASSERTION(content != nsnull, "not an nsIContent");
+    if (! content)
+      continue;
+
+    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  }
+
+  return PR_TRUE;
+}
+
+
+NS_IMETHODIMP
+PresShell::ReleaseAnonymousContent()
+{
+  if (mAnonymousContentTable) {
+    mAnonymousContentTable->Enumerate(ClearDocumentEnumerator);
+    delete mAnonymousContentTable;
+    mAnonymousContentTable = nsnull;
+  }
+  return NS_OK;
+}
+
 
 // Post a request to handle an arbitrary callback after reflow has finished.
 NS_IMETHODIMP

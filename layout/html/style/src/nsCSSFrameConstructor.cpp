@@ -5479,13 +5479,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   anonymousItems->Count(&count);
 
   if (count) {
-    // Inform the binding manager about the anonymous content
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    aDocument->GetBindingManager(getter_AddRefs(bindingManager));
-    NS_ASSERTION(bindingManager, "no binding manager");
-    if (bindingManager) {
-      bindingManager->SetAnonymousContentFor(aParent, anonymousItems);
-    }
+    // Inform the pres shell about the anonymous content
+    aPresShell->SetAnonymousContentFor(aParent, anonymousItems);
 
     for (PRUint32 i=0; i < count; i++) {
       // get our child's content and set its parent to our content

@@ -68,8 +68,6 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
 
-#include "nsIAnonymousContentCreator.h"
-
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutUtils.h"
