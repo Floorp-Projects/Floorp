@@ -528,17 +528,15 @@ if (defined $::FORM{'qa_contact'}) {
 }
 
 
-
-
-# If the user is submitting changes from show_bug.cgi for a single bug
-# and they have access to an active bug group, process the flags that
-# indicate whether or not the reporter, assignee, QA contact, and users
-# on the CC list can see the bug regardless of its group restrictions.
+# If the user is submitting changes from show_bug.cgi for a single bug,
+# and that bug is restricted to a group, process the checkboxes that
+# allowed the user to set whether or not the reporter, assignee, QA contact, 
+# and cc list can see the bug even if they are not members of all groups 
+# to which the bug is restricted.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT bit FROM groups WHERE bit & $::usergroupset != 0 
-             AND isbuggroup != 0 AND isactive = 1");
-    my ($groupbits) = FetchSQLData();
-    if ( $groupbits ) {
+    SendSQL("SELECT groupset FROM bugs WHERE bug_id = $::FORM{'id'}");
+    my ($groupset) = FetchSQLData();
+    if ( $groupset ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
         $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
@@ -1111,13 +1109,6 @@ The changes made were:
         && $::FORM{'product'} ne $::dontchange 
           && $::FORM{'product'} ne $oldhash{'product'} 
     ) {
-        # DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
-        print qq|<p>\n|;
-        print qq|<em>usebuggroups</em> is enabled and this bug has changed from the 
-          <em>$oldhash{'product'}</em> to the <em>$::FORM{'product'}</em> product,
-          so it is time to check if we have to remove the bug from its old product
-          group or add it to its new product group.<br>\n|;
-        # END DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
         if (
           # the user wants to add the bug to the new product's group;
           ($::FORM{'addtonewgroup'} eq 'yes' 
@@ -1148,15 +1139,6 @@ The changes made were:
         ) { 
             # Add the bug to the group associated with its new product.
             my $groupbit = GroupNameToBit($::FORM{'product'});
-            # DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
-            print qq|
-              The user specified <em>addtonewgroup</em>, there is a group
-              associated with the new product, the user is a member of that
-              group (or <em>usebuggroupsentry</em> is off), and the group 
-              is active, so we have to add the product to the group:<br>
-              <code>UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id</code><br>
-              |;
-            # END DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
             SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
         }
 
@@ -1168,14 +1150,7 @@ The changes made were:
           && BugInGroup($id, $oldhash{'product'}) 
         ) { 
             # Remove the bug from the group associated with its old product.
-            # DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
             my $groupbit = GroupNameToBit($oldhash{'product'});
-            print qq|
-              There is a group associated with the old product, the bug is a 
-              member of that group, so remove the bug from the group:<br>
-              UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id<br>
-              |;
-            # END DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
             SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
         }
 

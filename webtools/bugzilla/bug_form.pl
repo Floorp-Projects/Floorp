@@ -380,13 +380,11 @@ if ($::usergroupset ne '0') {
       }
     }
 
-    # If the user is a member of an active bug group, then they also have the 
-    # ability to determine whether or not the reporter, assignee, QA contact, 
-    # or users on the cc: list should be able to see the bug even when they 
-    # are not members of the groups to which the bug is restricted, so display 
-    # checkboxes that allow the user to make these determinations.
-    SendSQL("SELECT bit FROM groups WHERE bit & $::usergroupset != 0 AND isbuggroup != 0 AND isactive = 1");
-    if ( FetchSQLData() ) {
+    # If the bug is restricted to a group, display checkboxes that allow
+    # the user to set whether or not the reporter, assignee, QA contact, 
+    # and cc list can see the bug even if they are not members of all 
+    # groups to which the bug is restricted.
+    if ( $bug{'groupset'} != 0 ) {
         # Determine whether or not the bug is always accessible by the reporter,
         # QA contact, and/or users on the cc: list.
         SendSQL("SELECT  reporter_accessible , assignee_accessible , 
