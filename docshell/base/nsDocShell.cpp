@@ -5349,6 +5349,13 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
     NS_ASSERTION(mDocShell, "DocShell is somehow null");
 
     if (mDocShell && aTimer) {
+        /* Check if Meta refresh/redirects are permitted. Some
+         * embedded applications may not want to do this.
+         */
+        PRBool allowRedirects = PR_TRUE;
+        mDocShell->GetAllowMetaRedirects(&allowRedirects);
+        if (!allowRedirects)
+          return;
         // Get the delay count
         PRUint32 delay;
         delay = aTimer->GetDelay();
@@ -5361,16 +5368,12 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
         nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
         mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
         /* Check if this META refresh causes a redirection
-         * to another site. If so, check if this is permitted. Some
-         * embedded applications may not want to do this.
+         * to another site. 
          */
         PRBool equalUri = PR_FALSE;
         nsresult rv = mURI->Equals(currURI, &equalUri);
         if (NS_SUCCEEDED(rv) && (!equalUri) && mMetaRefresh) {
-            PRBool allowRedirects = PR_TRUE;
-            mDocShell->GetAllowMetaRedirects(&allowRedirects);
-            if (!allowRedirects)
-                return;
+
             /* It is a META refresh based redirection. Now check if it happened within 
              * the threshold time we have in mind(15000 ms as defined by REFRESH_REDIRECT_TIMER).
              * If so, pass a REPLACE flag to LoadURI().
