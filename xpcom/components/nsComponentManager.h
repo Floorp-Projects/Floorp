@@ -48,7 +48,7 @@
 #include "nsRegistry.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsHashtable.h"
+#include "pldhash.h"
 #include "prtime.h"
 #include "prmon.h"
 #include "nsCOMPtr.h"
@@ -193,8 +193,8 @@ private:
     nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec);
 
 protected:
-    nsObjectHashtable*  mFactories;
-    nsObjectHashtable*  mContractIDs;
+    PLDHashTable        mFactories;
+    PLDHashTable        mContractIDs;
     PRMonitor*          mMon;
     nsRegistry*         mRegistry;
     nsRegistryKey       mXPCOMKey;
@@ -336,13 +336,22 @@ public:
     }
 
     nsCID cid;
-    nsCString location;
+    char *location;
     nsCOMPtr<nsIFactory> factory;
     nsServiceEntry *mServiceEntry;
-    // This is an index into the mLoaderData array that holds the type string and the loader
+    // This is an index into the mLoaderData array that holds the type string and the loader 
     int typeIndex;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+struct nsFactoryTableEntry : public PLDHashEntryHdr {
+    nsFactoryEntry *mFactoryEntry;    
+};
+
+struct nsContractIDTableEntry : public PLDHashEntryHdr {
+    char           *mContractID;
+    nsFactoryEntry *mFactoryEntry;    
+};
 
 #endif // nsComponentManager_h__

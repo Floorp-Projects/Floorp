@@ -45,7 +45,6 @@
 
 #include "nsIEnumerator.h"
 #include "nsIModule.h"
-#include "nsHashtableEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
@@ -293,6 +292,100 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
 PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
+PR_STATIC_CALLBACK(const void *)
+factory_GetKey(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
+{
+    nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
+
+    return &entry->mFactoryEntry->cid;
+}
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+factory_HashKey(PLDHashTable *aTable, const void *aKey)
+{
+    const nsCID *cidp = NS_REINTERPRET_CAST(const nsCID*, aKey);
+
+    return cidp->m0;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+factory_MatchEntry(PLDHashTable *aTable, const PLDHashEntryHdr *aHdr,
+                   const void *aKey)
+{
+    const nsFactoryTableEntry* entry =
+        NS_STATIC_CAST(const nsFactoryTableEntry*, aHdr);
+    const nsCID *cidp = NS_REINTERPRET_CAST(const nsCID*, aKey);
+
+    return (entry->mFactoryEntry->cid).Equals(*cidp);
+}
+
+PR_STATIC_CALLBACK(void)
+factory_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
+{
+    nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
+
+    delete entry->mFactoryEntry;
+    PL_DHashClearEntryStub(aTable, aHdr);
+}
+  
+static PLDHashTableOps factory_DHashTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    factory_GetKey,
+    factory_HashKey,
+    factory_MatchEntry,
+    PL_DHashMoveEntryStub,
+    factory_ClearEntry,
+    PL_DHashFinalizeStub,
+};
+ 
+PR_STATIC_CALLBACK(const void *)
+contractID_GetKey(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
+{
+    nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
+
+    return entry->mContractID;
+}
+ 
+PR_STATIC_CALLBACK(PRBool)
+contractID_MatchEntry(PLDHashTable *aTable, const PLDHashEntryHdr *aHdr,
+                      const void *aKey)
+{
+    const nsContractIDTableEntry* entry =
+        NS_STATIC_CAST(const nsContractIDTableEntry*, aHdr);
+
+    const char* contractID = NS_REINTERPRET_CAST(const char*, aKey);
+
+    return strcmp(entry->mContractID, contractID) == 0;
+}
+
+PR_STATIC_CALLBACK(void)
+contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
+{
+    nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
+    
+    if (entry->mFactoryEntry != kNonExistentContractID && 
+        entry->mFactoryEntry->typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY && 
+        entry->mFactoryEntry->cid.Equals(kEmptyCID)) {
+        // this object is owned by the hash.  Time to delete it.
+        delete entry->mFactoryEntry;
+    }
+
+    nsCRT::free(entry->mContractID);
+   
+    PL_DHashClearEntryStub(aTable, aHdr);
+}
+
+static PLDHashTableOps contractID_DHashTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    contractID_GetKey,
+    PL_DHashStringKey,
+    contractID_MatchEntry,
+    PL_DHashMoveEntryStub,
+    contractID_ClearEntry,
+    PL_DHashFinalizeStub,
+};
 
 
 nsServiceEntry::nsServiceEntry(nsISupports* service, nsFactoryEntry* factEntry)
@@ -367,9 +460,10 @@ MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, 
                                const char *aLocation,
                                int aType)
-    : cid(aClass), location(aLocation), mServiceEntry(nsnull), typeIndex(aType)
+    : cid(aClass), mServiceEntry(nsnull), typeIndex(aType)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
+    location = nsCRT::strdup(aLocation);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
@@ -377,11 +471,15 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
     factory = aFactory;
+    location = nsnull;
+
 }
 
 nsFactoryEntry::~nsFactoryEntry(void)
 {
     MOZ_COUNT_DTOR(nsFactoryEntry);
+    if (location)
+        nsCRT::free(location);
     factory = 0;
 }
 
@@ -393,7 +491,7 @@ nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
     // SERVICE_ONLY entries can be promoted to an entry of another type
     NS_ENSURE_TRUE((typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY || cid.Equals(aClass)),
                    NS_ERROR_INVALID_ARG);
-    location = aLocation;
+    location = nsCRT::strdup(aLocation);
     typeIndex = aType;
     return NS_OK;
 }
@@ -416,36 +514,16 @@ nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mFactories(NULL), mContractIDs(NULL), mMon(NULL), 
+    : mMon(NULL), 
       mRegistry(NULL), mPrePopulationDone(PR_FALSE),
       mNativeComponentLoader(0),
       mStaticComponentLoader(0),
       mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED), mLoaderData(nsnull)
 {
     NS_INIT_REFCNT();
+    mFactories.ops = nsnull;
+    mContractIDs.ops = nsnull;
 }
-
-PR_STATIC_CALLBACK(PRBool)
-nsFactoryEntry_mFactoryDestroy(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
-    delete entry;
-    return PR_TRUE;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-nsFactoryEntry_mContractIDsDestory(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
-    if (entry != kNonExistentContractID && 
-        entry->typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY && 
-        entry->cid.Equals(kEmptyCID)) {
-        // this object is owned by the hash.  Time to delete it.
-        delete entry;
-    }
-    return PR_TRUE;
-}
-
 
 nsresult nsComponentManagerImpl::Init(void) 
 {
@@ -462,22 +540,34 @@ nsresult nsComponentManagerImpl::Init(void)
                ("xpcom-log-version : " NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
     }
 
-    if (mFactories == NULL) {
-        mFactories = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
-                                           nsFactoryEntry_mFactoryDestroy, nsnull, 
-                                           256, /* Thread Safe */ PR_TRUE);
-        if (mFactories == NULL)
+    if (!mFactories.ops) {
+        if (!PL_DHashTableInit(&mFactories, &factory_DHashTableOps,
+                               0, sizeof(nsFactoryTableEntry),
+                               1024)) {
+            mFactories.ops = nsnull;
             return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        // Minimum alpha uses k=3 because nsFactoryTableEntry saves three
+        // words compared to what a chained hash table requires.
+        PL_DHashTableSetAlphaBounds(&mFactories,
+                                    0.875,
+                                    PL_DHASH_MIN_ALPHA(&mFactories, 3));
     }
-    if (mContractIDs == NULL) {
-        // This hashtable holds references to the factory entry. All entries are non-owning 
-        // unless the typeIndex is NS_COMPONENT_TYPE_SERVICE_ONLY. 
-        // The owning ref is from the mFactories hash table.
-        mContractIDs = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
-                                             nsFactoryEntry_mContractIDsDestory, nsnull,
-                                             256, /* Thread Safe */ PR_TRUE);
-        if (mContractIDs == NULL)
+
+    if (!mContractIDs.ops) {
+        if (!PL_DHashTableInit(&mContractIDs, &contractID_DHashTableOps,
+                               0, sizeof(nsContractIDTableEntry),
+                               1024)) {
+            mContractIDs.ops = nsnull;
             return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+         // Minimum alpha uses k=2 because nsContractIDTableEntry saves two
+         // words compared to what a chained hash table requires.
+         PL_DHashTableSetAlphaBounds(&mContractIDs,
+                                     0.875,
+                                     PL_DHASH_MIN_ALPHA(&mContractIDs, 2));
     }
 
     if (mMon == NULL) {
@@ -549,8 +639,14 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning Shutdown."));
 
     // Release all cached factories
-    delete mContractIDs;
-    delete mFactories;
+    if (mContractIDs.ops) {
+        PL_DHashTableFinish(&mContractIDs);
+        mContractIDs.ops = nsnull;
+    }
+    if (mFactories.ops) {
+        PL_DHashTableFinish(&mFactories);
+        mFactories.ops = nsnull;
+    }
     // Unload libraries
     UnloadLibraries(NULL, NS_Shutdown);
 
@@ -1077,8 +1173,17 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (!entry)
             continue;
 
-        nsIDKey key(aClass);
-        mFactories->Put(&key, entry);
+        nsAutoMonitor mon(mMon);
+        
+        nsFactoryTableEntry* factoryTableEntry =
+            NS_STATIC_CAST(nsFactoryTableEntry*,
+                           PL_DHashTableOperate(&mFactories, &aClass,
+                                                PL_DHASH_ADD));
+        
+        if (!factoryTableEntry)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        factoryTableEntry->mFactoryEntry = entry;
     }
 
     // Finally read in CONTRACTID -> CID mappings
@@ -1171,8 +1276,19 @@ nsComponentManagerImpl::HashContractID(const char *aContractID, nsFactoryEntry *
     if(!aContractID)
         return NS_ERROR_NULL_POINTER;
     
-    nsCStringKey key(aContractID);
-    mContractIDs->Put(&key, fe);
+    nsAutoMonitor mon(mMon);
+    nsContractIDTableEntry* contractIDTableEntry =
+        NS_STATIC_CAST(nsContractIDTableEntry*,
+                       PL_DHashTableOperate(&mContractIDs, aContractID,
+                                            PL_DHASH_ADD));
+    if (!contractIDTableEntry)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!contractIDTableEntry->mContractID)
+        contractIDTableEntry->mContractID = nsCRT::strdup(aContractID);
+
+    contractIDTableEntry->mFactoryEntry = fe;
+ 
     return NS_OK;
 }
 
@@ -1213,8 +1329,20 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
 nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const char *aContractID, int checkRegistry)
 {
-    nsCStringKey key(aContractID);
-    nsFactoryEntry *fe = (nsFactoryEntry *) mContractIDs->Get(&key);
+    nsFactoryEntry *fe = nsnull;
+    {
+        nsAutoMonitor mon(mMon);
+
+        nsContractIDTableEntry* contractIDTableEntry =
+            NS_STATIC_CAST(nsContractIDTableEntry*,
+                           PL_DHashTableOperate(&mContractIDs, aContractID,
+                                                PL_DHASH_LOOKUP));
+  
+    
+        if (PL_DHASH_ENTRY_IS_BUSY(contractIDTableEntry)) {
+            fe = contractIDTableEntry->mFactoryEntry;
+        }
+    }   //exit monitor
 
 #ifdef USE_REGISTRY
     if (!fe)
@@ -1258,7 +1386,20 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, int checkRegistry)
 nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey, int checkRegistry)
 {
-    nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&cidKey);
+    nsFactoryEntry *entry = nsnull;
+    {
+        nsAutoMonitor mon(mMon);
+        
+        nsFactoryTableEntry* factoryTableEntry =
+            NS_STATIC_CAST(nsFactoryTableEntry*,
+                           PL_DHashTableOperate(&mFactories, &aClass,
+                                                PL_DHASH_LOOKUP));
+         
+        if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
+            entry = factoryTableEntry->mFactoryEntry;
+        }
+    }   // exit monitor
+   
 
 #ifdef USE_REGISTRY
     if (!entry)
@@ -1274,10 +1415,22 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey, in
             // If we got one, cache it in our hashtable
             if (NS_SUCCEEDED(rv))
             {
-                mFactories->Put(&cidKey, entry);
-            }
-        }
-    }
+                nsAutoMonitor mon(mMon);
+
+                nsFactoryTableEntry* factoryTableEntry =
+                    NS_STATIC_CAST(nsFactoryTableEntry*,
+                                   PL_DHashTableOperate(&mFactories, &cidKey,
+                                                        PL_DHASH_ADD));
+                
+                if (!factoryTableEntry) {
+                    return nsnull;
+                }
+                           
+                factoryTableEntry->mFactoryEntry = entry;
+              
+             }
+         }
+     }
 #endif /* USE_REGISTRY */
 
     return (entry);
@@ -1535,28 +1688,60 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 
 // Service Manager Impl
 
-PR_STATIC_CALLBACK(PRBool) FreeServiceEntry(nsHashKey *aKey, void *aData, void* aClosure)
+PLDHashOperator PR_CALLBACK
+FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
+                                 PLDHashEntryHdr *aHdr,
+                                 PRUint32 aNumber,
+                                 void *aData)
 {
-    nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
+    nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
+
+    if (!entry->mFactoryEntry || entry->mFactoryEntry == kNonExistentContractID) 
+        return PL_DHASH_NEXT;
     
-    if (!entry || entry == kNonExistentContractID) 
-        return PR_TRUE;
-    
-    if (entry->mServiceEntry) {
-        delete entry->mServiceEntry;
-        entry->mServiceEntry = nsnull;
+    nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
+    if (factoryEntry->mServiceEntry) {
+        delete factoryEntry->mServiceEntry;
+        factoryEntry->mServiceEntry = nsnull;
     }
-    return PR_TRUE;
+
+    return PL_DHASH_NEXT;
+}
+
+PLDHashOperator PR_CALLBACK
+FreeServiceContractIDEntryEnumerate(PLDHashTable *aTable,
+                                    PLDHashEntryHdr *aHdr,
+                                    PRUint32 aNumber,
+                                    void *aData)
+{
+    nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
+
+    if (!entry->mFactoryEntry || entry->mFactoryEntry == kNonExistentContractID) 
+        return PL_DHASH_NEXT;
+
+    nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
+    if (factoryEntry->mServiceEntry) {
+        delete factoryEntry->mServiceEntry;
+        factoryEntry->mServiceEntry = nsnull;
+    }
+
+    return PL_DHASH_NEXT;
 }
 
 nsresult 
 nsComponentManagerImpl::FreeServices()
 {
-    if (mFactories)
-        mFactories->Enumerate(FreeServiceEntry);
+    if (mFactories.ops) {
+        PR_EnterMonitor(mMon);
+        PL_DHashTableEnumerate(&mFactories, FreeServiceFactoryEntryEnumerate, nsnull);
+        PR_ExitMonitor(mMon);
+    }
 
-    if (mContractIDs)
-        mContractIDs->Enumerate(FreeServiceEntry);
+    if (mContractIDs.ops) {
+        PR_EnterMonitor(mMon);
+        PL_DHashTableEnumerate(&mContractIDs, FreeServiceContractIDEntryEnumerate, nsnull);
+        PR_ExitMonitor(mMon);
+    }
 
     return NS_OK;
 }
@@ -1578,7 +1763,15 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 
     nsresult rv = NS_OK;
     nsIDKey key(aClass);
-    nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
+    nsFactoryEntry* entry = nsnull;
+    nsFactoryTableEntry* factoryTableEntry =
+        NS_STATIC_CAST(nsFactoryTableEntry*,
+                       PL_DHashTableOperate(&mFactories, &aClass,
+                                            PL_DHASH_LOOKUP));
+  
+    if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
+        entry = factoryTableEntry->mFactoryEntry;
+    }
     nsServiceEntry* serviceEntry;
     if (entry && entry->mServiceEntry) {
         serviceEntry = entry->mServiceEntry;
@@ -1616,13 +1809,18 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         return rv;
   
     if (!entry) { // second hash lookup for GetService
-        entry = (nsFactoryEntry*)mFactories->Get(&key);
-        NS_ASSERTION(entry, "we should have a factory entry since CI succeeded - we should not get here");
-        if (!entry) return NS_ERROR_FAILURE; 
+        nsFactoryTableEntry* factoryTableEntry =
+            NS_STATIC_CAST(nsFactoryTableEntry*,
+                           PL_DHashTableOperate(&mFactories, &aClass,
+                                                PL_DHASH_LOOKUP));
+        if (PL_DHASH_ENTRY_IS_FREE(factoryTableEntry)) {
+            NS_ASSERTION(factoryTableEntry, "we should have a factory entry since CI succeeded - we should not get here");
+            return NS_ERROR_FAILURE;
+        }
     }
   
     serviceEntry = new nsServiceEntry(service, entry);
-    if (serviceEntry == NULL) {
+    if (serviceEntry == nsnull) {
         NS_RELEASE(service);
         return NS_ERROR_OUT_OF_MEMORY;       
     }
@@ -1643,10 +1841,17 @@ nsComponentManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aServi
 
     if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
         entry = new nsFactoryEntry(aClass, nsnull);
-        if (entry == NULL)
+        if (entry == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         entry->typeIndex = NS_COMPONENT_TYPE_SERVICE_ONLY;
-        mFactories->Put(&key, entry);
+        nsFactoryTableEntry* factoryTableEntry =
+            NS_STATIC_CAST(nsFactoryTableEntry*,
+                           PL_DHashTableOperate(&mFactories, &aClass,
+                                                PL_DHASH_ADD));
+        if (!factoryTableEntry)
+            return NS_ERROR_OUT_OF_MEMORY;
+       
+        factoryTableEntry->mFactoryEntry = entry;
     }
     else {
         if (entry->mServiceEntry)
@@ -1665,10 +1870,18 @@ NS_IMETHODIMP
 nsComponentManagerImpl::UnregisterService(const nsCID& aClass)
 {
     nsresult rv = NS_OK;
-    nsAutoMonitor mon(mMon);
+    
+    nsFactoryEntry* entry = nsnull;
 
-    nsIDKey key(aClass);
-    nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
+    nsAutoMonitor mon(mMon);
+    nsFactoryTableEntry* factoryTableEntry =
+        NS_STATIC_CAST(nsFactoryTableEntry*,
+                       PL_DHashTableOperate(&mFactories, &aClass,
+                                            PL_DHASH_LOOKUP));
+
+    if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
+        entry = factoryTableEntry->mFactoryEntry;
+    }
 
     if (entry == NULL || entry->mServiceEntry == NULL)
         return NS_ERROR_SERVICE_NOT_FOUND;
@@ -1684,7 +1897,6 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
     nsAutoMonitor mon(mMon);
 
     // check to see if we have a factory entry for the service
-    nsCStringKey key(aContractID);
     nsFactoryEntry *entry = GetFactoryEntry(aContractID, 0);
 
     if (entry == kNonExistentContractID)
@@ -1692,10 +1904,23 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
 
     if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
         entry = new nsFactoryEntry(kEmptyCID, nsnull);
-        if (entry == NULL)
+        if (entry == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         entry->typeIndex = NS_COMPONENT_TYPE_SERVICE_ONLY;
-        mContractIDs->Put(&key, entry);
+   
+        nsContractIDTableEntry* contractIDTableEntry =
+            NS_STATIC_CAST(nsContractIDTableEntry*,
+                           PL_DHashTableOperate(&mContractIDs, aContractID,
+                                                PL_DHASH_ADD));
+        if (!contractIDTableEntry) {
+            delete entry;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!contractIDTableEntry->mContractID)
+            contractIDTableEntry->mContractID = nsCRT::strdup(aContractID);
+
+        contractIDTableEntry->mFactoryEntry = entry;
     }
     else {
         if (entry->mServiceEntry)
@@ -1703,7 +1928,7 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
     }
 
     nsServiceEntry *serviceEntry = new nsServiceEntry(aService, entry); //owns a ref to aService
-    if (serviceEntry == NULL) 
+    if (serviceEntry == nsnull) 
         return NS_ERROR_OUT_OF_MEMORY;
 
     entry->mServiceEntry = serviceEntry;
@@ -1729,8 +1954,15 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     }
 
     nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
-    nsIDKey key(aClass);
-    nsFactoryEntry *entry = (nsFactoryEntry *) mFactories->Get(&key);
+    nsFactoryEntry* entry = nsnull;
+    nsFactoryTableEntry* factoryTableEntry =
+        NS_STATIC_CAST(nsFactoryTableEntry*,
+                       PL_DHashTableOperate(&mFactories, &aClass,
+                                            PL_DHASH_LOOKUP));
+  
+    if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
+        entry = factoryTableEntry->mFactoryEntry;
+    }
     nsServiceEntry* serviceEntry;
     if (entry && entry->mServiceEntry) {
         serviceEntry = entry->mServiceEntry;
@@ -1769,8 +2001,20 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
     }
 
     nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
-    nsCStringKey key(aContractID);
-    nsFactoryEntry *entry = (nsFactoryEntry *) mContractIDs->Get(&key);
+    nsFactoryEntry *entry = nsnull;
+    {
+        nsAutoMonitor mon(mMon);
+        
+        nsContractIDTableEntry* contractIDTableEntry =
+            NS_STATIC_CAST(nsContractIDTableEntry*,
+                           PL_DHashTableOperate(&mContractIDs, aContractID,
+                                                PL_DHASH_LOOKUP));
+    
+        if (PL_DHASH_ENTRY_IS_BUSY(contractIDTableEntry)) {
+            entry = contractIDTableEntry->mFactoryEntry;
+        }
+    }   // exit monitor
+
     nsServiceEntry* serviceEntry;
     if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
         serviceEntry = entry->mServiceEntry;
@@ -1798,10 +2042,17 @@ nsComponentManagerImpl::UnregisterService(const char* aContractID)
     nsresult rv = NS_OK;
     nsAutoMonitor mon(mMon);
 
-    nsCStringKey key(aContractID);
-    nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
-
-    if (entry == NULL || entry == kNonExistentContractID || entry->mServiceEntry == NULL)
+    nsFactoryEntry *entry = nsnull;
+    nsContractIDTableEntry* contractIDTableEntry =
+       NS_STATIC_CAST(nsContractIDTableEntry*,
+                      PL_DHashTableOperate(&mContractIDs, aContractID,
+                                           PL_DHASH_LOOKUP));
+ 
+   if (PL_DHASH_ENTRY_IS_BUSY(contractIDTableEntry)) {
+       entry = contractIDTableEntry->mFactoryEntry;
+   }
+   
+   if (entry == nsnull || entry == kNonExistentContractID || entry->mServiceEntry == nsnull)
         return NS_ERROR_SERVICE_NOT_FOUND;
 
     delete entry->mServiceEntry;
@@ -1826,8 +2077,15 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     }
 
     nsresult rv = NS_OK;
-    nsCStringKey key(aContractID);
-    nsFactoryEntry *entry = (nsFactoryEntry *) mContractIDs->Get(&key);
+    nsFactoryEntry *entry = nsnull;
+    nsContractIDTableEntry* contractIDTableEntry =
+        NS_STATIC_CAST(nsContractIDTableEntry*,
+                       PL_DHashTableOperate(&mContractIDs, aContractID,
+                                            PL_DHASH_LOOKUP));
+  
+    if (PL_DHASH_ENTRY_IS_BUSY(contractIDTableEntry)) {
+        entry = contractIDTableEntry->mFactoryEntry;
+    }
     nsServiceEntry* serviceEntry;
     if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
         serviceEntry = entry->mServiceEntry;
@@ -1865,13 +2123,20 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         return rv;
   
     if (!entry) { // second hash lookup for GetService
-        entry = (nsFactoryEntry*)mContractIDs->Get(&key);
+        nsContractIDTableEntry* contractIDTableEntry =
+            NS_STATIC_CAST(nsContractIDTableEntry*,
+                           PL_DHashTableOperate(&mContractIDs, aContractID,
+                                                PL_DHASH_LOOKUP));
+  
+        if (PL_DHASH_ENTRY_IS_BUSY(contractIDTableEntry)) {
+            entry = contractIDTableEntry->mFactoryEntry;
+        }
         NS_ASSERTION(entry, "we should have a factory entry since CI succeeded - we should not get here");
         if (!entry) return NS_ERROR_FAILURE; 
     }
   
     serviceEntry = new nsServiceEntry(service, entry);
-    if (serviceEntry == NULL) {
+    if (serviceEntry == nsnull) {
         NS_RELEASE(service);
         return NS_ERROR_OUT_OF_MEMORY;       
     }
@@ -2063,9 +2328,10 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
                                         nsIFactory *aFactory, 
                                         PRBool aReplace)
 {
-    nsFactoryEntry *entry = NULL;
+    nsFactoryEntry *entry = nsnull;
 
     nsIDKey key(aClass);
+    nsAutoMonitor mon(mMon);
     entry = GetFactoryEntry(aClass, key,
                             0 /* dont check registry */);
 
@@ -2092,9 +2358,19 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     }
     else {
         entry = new nsFactoryEntry(aClass, aFactory);
-        if (entry == NULL)
+        if (entry == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        mFactories->Put(&key, entry);
+
+        
+        nsFactoryTableEntry* factoryTableEntry =
+            NS_STATIC_CAST(nsFactoryTableEntry*,
+                           PL_DHashTableOperate(&mFactories, &aClass,
+                                                PL_DHASH_ADD));
+        
+        if (!factoryTableEntry)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        factoryTableEntry->mFactoryEntry = entry;
     }
 
     // Update the ContractID->CLSID Map
@@ -2210,6 +2486,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     nsresult rv = NS_OK;
 
     nsIDKey key(aClass);
+    nsAutoMonitor mon(mMon);
     nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
 
     // Normalize proid and classname
@@ -2264,7 +2541,15 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        mFactories->Put(&key, entry);
+        nsFactoryTableEntry* factoryTableEntry =
+            NS_STATIC_CAST(nsFactoryTableEntry*,
+                           PL_DHashTableOperate(&mFactories, &aClass,
+                                                PL_DHASH_ADD));
+        
+        if (!factoryTableEntry)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        factoryTableEntry->mFactoryEntry = entry;
     }
 
    // Update the ContractID->CLSID Map
@@ -2426,10 +2711,9 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
     {
         if (old->factory.get() == aFactory)
         {
-            PR_EnterMonitor(mMon);
-            old = (nsFactoryEntry *) mFactories->RemoveAndDelete(&key);
+            nsAutoMonitor mon(mMon);
+            PL_DHashTableOperate(&mFactories, &aClass, PL_DHASH_REMOVE);
             old = NULL;
-            PR_ExitMonitor(mMon);
             res = NS_OK;
         }
 
@@ -2457,8 +2741,8 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             0 /* dont check registry */);
     if (entry && entry->location && !PL_strcasecmp(entry->location, registryName))
     {
-        mFactories->RemoveAndDelete(&key);
-        entry = NULL;
+        PL_DHashTableOperate(&mFactories, &aClass, PL_DHASH_REMOVE);
+        entry = nsnull;
     }
 
 #ifdef USE_REGISTRY
@@ -2467,9 +2751,9 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     rv = PlatformUnregister(cidString, registryName);
     delete [] cidString;
 #endif
-        
+
     PR_ExitMonitor(mMon);
-        
+
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("nsComponentManager: Factory unregister(%s) %s.", registryName,
             NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
@@ -2728,65 +3012,251 @@ nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
     return NS_OK;
 }
 
-static NS_IMETHODIMP
-ConvertFactoryEntryToCID(nsHashKey *key, void *data, void *convert_data,
-                         nsISupports **retval)
+
+typedef NS_CALLBACK(EnumeratorConverter)(PLDHashTable *table,
+                                         const PLDHashEntryHdr *hdr,
+                                         void *data,
+                                         nsISupports **retval);
+
+class PLDHashTableEnumeratorImpl : public nsIBidirectionalEnumerator
 {
-    nsComponentManagerImpl *compMgr = (nsComponentManagerImpl*) convert_data;
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
+    
+    virtual ~PLDHashTableEnumeratorImpl();
+    PLDHashTableEnumeratorImpl(PLDHashTable *table,
+                               EnumeratorConverter converter,
+                               void *converterData);
+    PRInt32 Count() { return mCount; }
+private:
+    PLDHashTableEnumeratorImpl(); /* no implementation */
+    NS_IMETHODIMP ReleaseElements();
+    
+    nsVoidArray   mElements;
+    PRInt32       mCount, mCurrent;
+    PRMonitor*    mMonitor;
+
+    struct Closure {
+        PRBool                        succeeded;
+        EnumeratorConverter           converter;
+        void                          *data;
+        PLDHashTableEnumeratorImpl    *impl;
+    };
+
+    static PLDHashOperator Enumerator(PLDHashTable *table,
+                                      PLDHashEntryHdr *hdr, PRUint32 number,
+                                      void *data);
+};
+
+// static
+PLDHashOperator
+PLDHashTableEnumeratorImpl::Enumerator(PLDHashTable *table,
+                                       PLDHashEntryHdr *hdr, PRUint32 number,
+                                       void *data)
+{
+    Closure *c = NS_REINTERPRET_CAST(Closure *, data);
+    nsISupports *converted;
+    if (NS_FAILED(c->converter(table, hdr, c->data, &converted)) ||
+        !c->impl->mElements.AppendElement(converted)) {
+        c->succeeded = PR_FALSE;
+        return PL_DHASH_STOP;
+    }
+
+    c->succeeded = PR_TRUE;
+    return PL_DHASH_NEXT;
+}
+
+PLDHashTableEnumeratorImpl::PLDHashTableEnumeratorImpl
+(PLDHashTable *table, EnumeratorConverter converter,
+ void *converterData) :
+    mCurrent(0)
+{
+    mMonitor = nsAutoMonitor::NewMonitor("PLDHashTableEnumeratorImpl");
+    
+    nsAutoMonitor mon(mMonitor);
+
+    NS_INIT_REFCNT();
+    Closure c = { PR_FALSE, converter, converterData, this };
+    mCount = PL_DHashTableEnumerate(table, Enumerator, &c);
+    if (!c.succeeded) {
+        ReleaseElements();
+        mCount = 0;
+    }
+}
+
+NS_IMPL_ISUPPORTS2(PLDHashTableEnumeratorImpl, nsIBidirectionalEnumerator,
+                   nsIEnumerator);
+
+PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
+{
+    (void) ReleaseElements();
+
+    // Destroy the Lock
+    if (mMonitor)
+        PR_DestroyMonitor(mMonitor);
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::ReleaseElements()
+{
+    for (PRInt32 i = 0; i < mCount; i++) {
+        nsISupports *supports = NS_REINTERPRET_CAST(nsISupports *,
+                                                    mElements[i]);
+        NS_IF_RELEASE(supports);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PL_NewDHashTableEnumerator(PLDHashTable *table,
+                           EnumeratorConverter converter,
+                           void *converterData, nsIEnumerator **retval)
+{
+    PLDHashTableEnumeratorImpl *impl =
+        new PLDHashTableEnumeratorImpl(table, converter, converterData);
+    
+    if (!impl)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (impl->Count() == -1) {
+        // conversion failed
+        delete impl;
+        return NS_ERROR_FAILURE;
+    }
+
+    return impl->QueryInterface(NS_GET_IID(nsIEnumerator), (void **)retval);
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::First()
+{
+    if (!mCount)
+        return NS_ERROR_FAILURE;
+    
+    mCurrent = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::Last()
+{
+    if (!mCount)
+        return NS_ERROR_FAILURE;
+    mCurrent = mCount - 1;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::Prev()
+{
+    if (!mCurrent)
+        return NS_ERROR_FAILURE;
+
+    mCurrent--;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::Next()
+{
+    if (!mCount || (mCurrent == mCount - 1))
+        return NS_ERROR_FAILURE;
+    
+    mCurrent++;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::CurrentItem(nsISupports **retval)
+{
+    if (!mCount)
+        return NS_ERROR_FAILURE;
+
+    NS_ASSERTION(mCurrent < mCount, "mCurrent too high");
+    
+    *retval = NS_REINTERPRET_CAST(nsISupports *, mElements[mCurrent]);
+    if (*retval)
+        NS_ADDREF(*retval);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::IsDone()
+{
+    if (!mCount || (mCurrent == mCount)) {
+        return NS_OK;
+    }
+
+    return NS_COMFALSE;
+}
+
+
+
+static NS_IMETHODIMP
+ConvertFactoryEntryToCID(PLDHashTable *table,
+                         const PLDHashEntryHdr *hdr,
+                         void *data, nsISupports **retval)
+{
     nsresult rv;
 
-    nsISupportsID* cidHolder;
+    nsCOMPtr<nsISupportsID> wrapper =
+        do_CreateInstance(NS_SUPPORTS_ID_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if(NS_SUCCEEDED(rv = 
-                    compMgr->CreateInstanceByContractID(NS_SUPPORTS_ID_CONTRACTID,
-                                                    nsnull, 
-                                                    NS_GET_IID(nsISupportsID),
-                                                    (void **)&cidHolder)))
-    {
-        nsFactoryEntry *fe = (nsFactoryEntry *) data;
-        cidHolder->SetData(&fe->cid);
-        *retval = cidHolder;
+    const nsFactoryTableEntry *entry = 
+        NS_REINTERPRET_CAST(const nsFactoryTableEntry *, hdr);
+    if(entry) {
+        nsFactoryEntry *fe = entry->mFactoryEntry;
+   
+        wrapper->SetData(&fe->cid);
+        *retval = wrapper;
+        NS_ADDREF(*retval);
+        return NS_OK;
     }
     else
         *retval = nsnull;
 
     return rv;
+
 }
 
 static NS_IMETHODIMP
-ConvertContractIDKeyToString(nsHashKey *key, void *data, void *convert_data,
-                         nsISupports **retval)
+ConvertContractIDKeyToString(PLDHashTable *table,
+                             const PLDHashEntryHdr *hdr,
+                             void *data, nsISupports **retval)
 {
-    nsComponentManagerImpl *compMgr = (nsComponentManagerImpl*) convert_data;
     nsresult rv;
 
-    nsISupportsString* strHolder;
+    nsCOMPtr<nsISupportsString> wrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    const nsContractIDTableEntry *entry = 
+        NS_REINTERPRET_CAST(const nsContractIDTableEntry *, hdr);
+    const char *contractID = entry->mContractID;
+    nsCAutoString converted;
 
-    rv = compMgr->CreateInstanceByContractID(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-                                         NS_GET_IID(nsISupportsString),
-                                         (void **)&strHolder);
-    if(NS_SUCCEEDED(rv))
-    {
-        nsCStringKey *strKey = (nsCStringKey *) key;
-        strHolder->SetData(strKey->GetString());
-        *retval = strHolder;
-    }
-    else
-        *retval = nsnull;
+    converted.Append(contractID);
 
-    return rv;
+    wrapper->SetData(converted.get());
+    *retval = wrapper;
+    NS_ADDREF(*retval);
+    return NS_OK;
+    
 }
 
 nsresult
-nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
+nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
 {
-    if(!aEmumerator)
+    NS_ASSERTION(aEnumerator != nsnull, "null ptr");
+    if(!aEnumerator)
     {
-        NS_ASSERTION(0, "null ptr");
         return NS_ERROR_NULL_POINTER;
     }
-    *aEmumerator = nsnull;
+    *aEnumerator = nsnull;
 
     nsresult rv;
     if(!mPrePopulationDone)
@@ -2796,20 +3266,21 @@ nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
             return rv;
     }
 
-    return NS_NewHashtableEnumerator(mFactories, ConvertFactoryEntryToCID,
-                                     this, aEmumerator);
+    return PL_NewDHashTableEnumerator(&mFactories,
+                                      ConvertFactoryEntryToCID,
+                                      nsnull, aEnumerator);
 }
 
 nsresult
-nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEmumerator)
+nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEnumerator)
 {
-    if(!aEmumerator)
+    NS_ASSERTION(aEnumerator != nsnull, "null ptr");
+    if(!aEnumerator)
     {
-        NS_ASSERTION(0, "null ptr");
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aEmumerator = nsnull;
+    *aEnumerator = nsnull;
 
     nsresult rv;
     if(!mPrePopulationDone)
@@ -2819,8 +3290,9 @@ nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEmumerator)
             return rv;
     }
 
-    return NS_NewHashtableEnumerator(mContractIDs, ConvertContractIDKeyToString,
-                                     this, aEmumerator);
+    return PL_NewDHashTableEnumerator(&mContractIDs,
+                                      ConvertContractIDKeyToString,
+                                      nsnull, aEnumerator);
 }
 
 
@@ -3149,20 +3621,20 @@ nsComponentManager::IsRegistered(const nsCID &aClass,
 }
 
 nsresult 
-nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
+nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->EnumerateCLSIDs(aEmumerator);
+    return cm->EnumerateCLSIDs(aEnumerator);
 }
 
 nsresult 
-nsComponentManager::EnumerateContractIDs(nsIEnumerator** aEmumerator)
+nsComponentManager::EnumerateContractIDs(nsIEnumerator** aEnumerator)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->EnumerateContractIDs(aEmumerator);
+    return cm->EnumerateContractIDs(aEnumerator);
 }
 
