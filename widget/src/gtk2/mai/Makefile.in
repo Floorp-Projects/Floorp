@@ -78,7 +78,7 @@ CPPSRCS		= \
                 nsMaiHyperlink.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) $(XPCOM_LIBS) $(NSPR_LIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
