@@ -1533,7 +1533,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
     else {
       NS_ASSERTION(localContent, "non pseudo-element frame without content node");
-      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_FALSE, &newContext);
+      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_TRUE, &newContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1614,7 +1614,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         undisplayed->mStyle->GetPseudoType(pseudoTag);
         if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
           aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
-                                              PR_FALSE, &undisplayedContext);
+                                              PR_TRUE, &undisplayedContext);
         }
         else {  // pseudo element
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
@@ -1745,7 +1745,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
     else {
       NS_ASSERTION(localContent, "non pseudo-element frame without content node");
-      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_FALSE, &newContext);
+      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_TRUE, &newContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1826,7 +1826,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         undisplayed->mStyle->GetPseudoType(pseudoTag);
         if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
           aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
-                                              PR_FALSE, &undisplayedContext);
+                                              PR_TRUE, &undisplayedContext);
         }
         else {  // pseudo element
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
