@@ -80,7 +80,6 @@ protected:
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus);
   NS_IMETHOD GetDefaultLabel(nsString& aLabel);
-  NS_IMETHOD ButtonLocalize(char* aKey, nsString& oVal);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,

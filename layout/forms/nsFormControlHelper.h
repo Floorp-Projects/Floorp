@@ -177,6 +177,8 @@ public:
 
   static nsresult GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp);
 
+  // Localization Helper
+  static nsresult GetLocalizedString(char* aKey, nsString& oVal);
 //
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons
