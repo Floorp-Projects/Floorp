@@ -342,12 +342,29 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       if (nsEventStatus_eConsumeNoDefault != aStatus) {
         nsIContent* newFocus;
         mCurrentTarget->GetContent(&newFocus);
+        nsCOMPtr<nsIFocusableContent> focusable;
+  
         if (newFocus) {
-          if (!ChangeFocus(newFocus, PR_TRUE)) {
-            if (nsnull != aEvent->widget) {
-              aEvent->widget->SetFocus();
+          // Look for the nearest enclosing focusable content.
+          nsCOMPtr<nsIContent> current = dont_QueryInterface(newFocus);
+          while (current) {
+            focusable = do_QueryInterface(current);
+            if (focusable)
+              break;
+
+            nsCOMPtr<nsIContent> parent;
+            current->GetParent(*getter_AddRefs(parent));
+            current = parent;
+          }
+          
+          if (focusable) {
+            nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
+            if (!ChangeFocus(content, PR_TRUE)) {
+              if (nsnull != aEvent->widget) {
+                aEvent->widget->SetFocus();
+              }
+              SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
             }
-            SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
           }
         }
 
@@ -880,16 +897,15 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext,
 PRBool
 nsEventStateManager::ChangeFocus(nsIContent* aFocus, PRBool aSetFocus)
 {
-  nsIFocusableContent *focusChange;
-
-  if (NS_OK == aFocus->QueryInterface(kIFocusableContentIID,(void **)&focusChange)) {
+  nsCOMPtr<nsIFocusableContent> focusChange = do_QueryInterface(aFocus);
+  
+  if (focusChange) {
     if (aSetFocus) {
       focusChange->SetFocus(mPresContext);
     }
     else {
       focusChange->RemoveFocus(mPresContext);
     }
-    NS_RELEASE(focusChange);
     return PR_TRUE;
   }
   //XXX Need to deal with Object tag
