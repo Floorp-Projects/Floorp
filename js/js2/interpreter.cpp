@@ -48,26 +48,26 @@ using std::pair;
  * of JSObject & JSArray, which must each define its own
  * gc_allocator. This is all in flux.
  */
-class JSMap {
+class JSMap : public gc_base {
     map<String, JSValue, less<String>, gc_map_allocator> properties;
 public:
-     JSValue& operator[](const String& name)
+    JSValue& operator[](const String& name)
     {
         return properties[name];
     }
 };
- 
+
 /**
  * Private representation of a JavaScript object.
  * This will change over time, so it is treated as an opaque
  * type everywhere else but here.
  */
-class JSObject : public JSMap, public gc_object<JSObject> {};
+class JSObject : public JSMap {};
 
 /**
  * Private representation of a JavaScript array.
  */
-class JSArray : public JSMap, public gc_object<JSArray> {
+class JSArray : public JSMap {
     JSValues elements;
 public:
     JSArray() : elements(1) {}
@@ -112,7 +112,7 @@ private:
     }
 };
 
-class JSFunction : public JSMap, public gc_object<JSFunction> {
+class JSFunction : public JSMap {
 	ICodeModule* mICode;
 public:
 	JSFunction(ICodeModule* iCode) : mICode(iCode) {}
@@ -122,7 +122,7 @@ public:
 /**
  * Represents the current function's invocation state.
  */
-struct JSActivation : public gc_object<JSActivation> {
+struct JSActivation : public gc_base {
 	JSValues mRegisters;
 	JSValues mLocals;
 
@@ -151,7 +151,7 @@ struct JSActivation : public gc_object<JSActivation> {
  * Stores saved state from the *previous* activation, the current activation is alive
  * and well in locals of the interpreter loop.
  */
-struct JSFrame : public gc_object<JSFrame> {
+struct JSFrame : public gc_base {
     JSFrame(InstructionIterator returnPC, InstructionIterator basePC,
 			JSActivation* activation, Register result) 
         :   itsReturnPC(returnPC), itsBasePC(basePC),
