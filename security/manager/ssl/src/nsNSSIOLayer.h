@@ -31,6 +31,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
 #include "nsISSLStatus.h"
+#include "nsXPIDLString.h"
 
 class nsIChannel;
 
@@ -57,7 +58,28 @@ public:
 
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
-  
+
+  nsresult GetFirstWrite(PRBool *aFirstWrite);
+  nsresult SetFirstWrite(PRBool aFirstWrite);
+
+  nsresult GetHostName(char **aHostName);
+  nsresult SetHostName(const char *aHostName);
+
+  nsresult GetPort(PRInt32 *aPort);
+  nsresult SetPort(PRInt32 aPort);
+
+  nsresult GetProxyHost(char **aProxyHost);
+  nsresult SetProxyHost(const char *aProxyHost);
+
+  nsresult GetProxyPort(PRInt32 *aProxyPort);
+  nsresult SetProxyPort(PRInt32 aProxyPort);
+
+  nsresult GetNetAddr(PRNetAddr *aNetAddr);
+  nsresult SetNetAddr(const PRNetAddr *aNetAddr);
+
+  nsresult GetOldBlockVal(PRBool *aOldBlockVal);
+  nsresult SetOldBlockVal(PRBool aOldBlockVal);
+
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
 
@@ -68,6 +90,12 @@ protected:
   nsString mShortDesc;
   PRBool mForceHandshake;
   PRBool mForTLSStepUp;
+  PRBool mFirstWrite;
+  nsXPIDLCString mHostName;
+  nsXPIDLCString mProxyHostName;
+  PRInt32 mPort, mProxyPort;
+  PRNetAddr mNetAddr;
+  PRBool mOldBlockVal;
 
   /* SSL Status */
   nsCOMPtr<nsISSLStatus> mSSLStatus;
