@@ -86,11 +86,11 @@ endif
 
 LIBS		+= \
 		-limg \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		$(NETLIB_LIBS) \
 		-lpref \
 		-lsecfree \
-		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lmozjs \
 		-lxp \
 		-lxpcom \
 		$(TIMER_LIBS) \

@@ -45,9 +45,9 @@ LIBS		= \
 		-lnetcache \
 		-lpref \
 		-lsecfree \
-		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lmozjs \
 		-limg \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		-lxp \
 		-lxpcom \
 		$(TIMER_LIBS) \

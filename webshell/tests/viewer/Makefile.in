@@ -92,10 +92,10 @@ BASE_LIBS		= \
 			-lpref \
 			$(ZLIB_LIBS) \
 			-lmozreg \
-			-l$(MOZ_LIB_JS_PREFIX)js \
+			-lmozjs \
 			-lxpcom \
 			-lsecfree \
-			-l$(MOZ_LIB_UTIL_PREFIX)util \
+			-lmozutil \
 			$(NULL)
 
 GECKO_LIBS		= \
@@ -131,7 +131,7 @@ NETLIB_LIBS		= \
 			-lnetwork \
 			-lxp \
 			-ljsurl \
-			-l$(MOZ_LIB_DBM_PREFIX)dbm \
+			-lmozdbm \
 			-lpwcac \
 			$(NULL)
 else
@@ -139,7 +139,7 @@ NETLIB_LIBS		= \
 			-lneckoutil_s \
 			-lxp \
 			-ljsurl \
-			-l$(MOZ_LIB_DBM_PREFIX)dbm \
+			-lmozdbm \
 			$(NULL)
 endif
 

@@ -71,11 +71,11 @@ LIBS		+= \
 		-lcaps \
 		-ljsurl \
 		-lsecfree \
-		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lmozjs \
 		$(JSJ_LIB) \
 		-lpref \
 		-limg \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lmozutil \
 		-lxp \
 		-lxpcom \
 		$(ZLIB_LIBS) \

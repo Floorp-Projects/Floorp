@@ -25,34 +25,11 @@ JSMATH_PRELINK	= jsmathtemp.o
 JS_SAFE_ARENA	= 1
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME	= $(MOZ_LIB_JS_PREFIX)js
+LIBRARY_NAME	= mozjs
 MODULE		= js
 
 SIMPLE_PROGRAMS	= jscpucfg
-
-ifdef MOZ_OJI
-DIRS		= liveconnect
-endif
-
-DIRS		+= fdlibm xpconnect
-
-DEFINES     += -DEXPORT_JS_API
-
-GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h $(OBJDIR)/jsautocfg.tmp
-
-ifeq ($(OS_ARCH),OS2)
-ifndef XCFLAGS
-OS2_IMPLIB	= 1
-LIBRARY		= js$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
-DEF_FILE	= jsos2$(VERSION_NUMBER).def
-EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA)
-else
-EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
-endif
-OS_CFLAGS	+= -tm-
-endif
 
 CSRCS		= jsapi.c \
 		  jsarena.c \
@@ -132,6 +109,26 @@ EXPORTS		= js.msg \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
+ifdef MOZ_OJI
+DIRS		= liveconnect
+endif
+
+DIRS		+= fdlibm xpconnect
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH),OS2)
+ifndef XCFLAGS
+OS2_IMPLIB	= 1
+LIBRARY		= js$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
+DEF_FILE	= jsos2$(VERSION_NUMBER).def
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA)
+else
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
+endif
+OS_CFLAGS	+= -tm-
+endif
+
 # When using gcc the assembly is inlined in the C-file (see jslock.c)
 ifdef NS_USE_NATIVE
 ASFILES		= $(notdir $(wildcard $(srcdir)/*_$(OS_ARCH).s))
@@ -143,7 +140,11 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES		+= -DEXPORT_JS_API
+
 INCLUDES	+= -I$(srcdir)
+
+GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h $(OBJDIR)/jsautocfg.tmp
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH	= $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
@@ -156,7 +157,6 @@ LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
 else
 LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS)) -lm
 endif
-
 
 ifdef JS_SAFE_ARENA
 DEFINES		+= -DJS_USE_SAFE_ARENA

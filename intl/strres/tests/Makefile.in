@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -23,65 +24,60 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= StringBundleTest.cpp
 
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+
+EXPORT_RESOURCE	= \
+		$(srcdir)/strres.properties \
+		$(srcdir)/strres-test.html \
+		$(srcdir)/strres-test.xul \
+		$(srcdir)/strres-test.dtd \
+		$(srcdir)/strres-test.js \
+		$(NULL)
+
+EXPORT_GLOBAL_RESOURCE = $(srcdir)/strres.js
+
 ifndef NECKO
-NETLIB_LIBS = 	\
-	-lnetlib \
-	-labouturl \
-	-lfileurl \
-	-lremoturl \
-	-lgophurl \
-	-lnetcnvts \
-	-lsockstuburl \
-	-lftpurl \
-	-lmimetype \
-	-lpwcac \
-	-lhttpurl \
-	-lnetwork \
-	-lnetcache \
-	$(NULL)
+NETLIB_LIBS	= \
+		-lnetlib \
+		-labouturl \
+		-lfileurl \
+		-lremoturl \
+		-lgophurl \
+		-lnetcnvts \
+		-lsockstuburl \
+		-lftpurl \
+		-lmimetype \
+		-lpwcac \
+		-lhttpurl \
+		-lnetwork \
+		-lnetcache \
+		$(NULL)
 else
-NETLIB_LIBS = 	\
-	-lneckoutil_s \
-	$(NULL)
+NETLIB_LIBS	= -lneckoutil_s
 endif
 
-LIBS		=\
-	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-	$(TK_LIBS) \
-	-lpref \
-	-lsecfree \
-	-l$(MOZ_LIB_JS_PREFIX)js \
-	-limg \
-	-l$(MOZ_LIB_UTIL_PREFIX)util \
-	-lxp \
-	-lxpcom		\
-	$(NETLIB_LIBS) \
-	$(TIMER_LIBS) \
-	$(ZLIB_LIBS)	\
-	$(NSPR_LIBS)	\
-	$(NULL)		
-
-SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
+LIBS		= \
+		-lraptorgfx \
+		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+		$(TK_LIBS) \
+		-lpref \
+		-lsecfree \
+		-lmozjs \
+		-limg \
+		-lmozutil \
+		-lxp \
+		-lxpcom \
+		$(NETLIB_LIBS) \
+		$(TIMER_LIBS) \
+		$(ZLIB_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../src
 
-EXPORT_RESOURCE = \
-	$(srcdir)/strres.properties \
-	$(srcdir)/strres-test.html \
-	$(srcdir)/strres-test.xul \
-	$(srcdir)/strres-test.dtd\
-	$(srcdir)/strres-test.js \
-	$(NULL)
-
-EXPORT_GLOBAL_RESOURCE = \
-	$(srcdir)/strres.js \
-	$(NULL)
-
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
 	$(INSTALL) $(EXPORT_GLOBAL_RESOURCE) $(DIST)/bin/chrome/global/content/default
-
 

@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dbm
-LIBRARY_NAME	= $(MOZ_LIB_DBM_PREFIX)dbm
+LIBRARY_NAME	= mozdbm
 
 LIB_IS_C_ONLY	= 1
 

@@ -91,36 +91,31 @@ MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
 NULL = 
 NSPR_LIBS = -lplds3 -lplc3 -lnspr3 -lpthread
 
-MOZ_LIB_JS_PREFIX = moz
-MOZ_LIB_UTIL_PREFIX = moz
-
 ZLIB_LIBS = -lz
 
-BASE_LIBS =          -lpref               $(ZLIB_LIBS)         -lmozreg                -l$(MOZ_LIB_JS_PREFIX)js             		-ltimer_s         -lxpcom              -lsecfree            -l$(MOZ_LIB_UTIL_PREFIX)util            $(NULL)
+BASE_LIBS = -lpref $(ZLIB_LIBS) -lmozreg -lmozjs -ltimer_s -lxpcom -lsecfree -lmozutil
 
 
 MOZ_WIDGET_TOOLKIT_LDFLAGS = -lwidget_gtk
 
-GECKO_LIBS =          -lraptorwebwidget     		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) 		-lraptorgfx 	        -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
+GECKO_LIBS = -lraptorwebwidget $(MOZ_WIDGET_TOOLKIT_LDFLAGS) -lraptorgfx -lraptorhtmlpars -lexpat -lxmltok -ljsdom
 
 
 JPEG_LIBS = -ljpeg
 PNG_LIBS = -lpng
 
-IMGLIB_LIBS =          -limg                $(JPEG_LIBS)         $(PNG_LIBS)          $(NULL)
+IMGLIB_LIBS = -limg $(JPEG_LIBS) $(PNG_LIBS)
 
-MOZ_LIB_DBM_PREFIX = moz
-
-NETLIB_LIBS =          -labouturl            -lfileurl             -lftpurl              -lgophurl             -lhttpurl             -lremoturl            -lsockstuburl         -lmimetype            -lnetcache            -lnetcnvts            -lnetlib              -lnetwork             -lxp                  -ljsurl               -l$(MOZ_LIB_DBM_PREFIX)dbm              -lpwcac               $(NULL)
+NETLIB_LIBS = -labouturl -lfileurl -lftpurl -lgophurl -lhttpurl -lremoturl -lsockstuburl -lmimetype -lnetcache -lnetcnvts -lnetlib -lnetwork -lxp -ljsurl -lmozdbm -lpwcac
 
 
 JSJ_LIB = 
 TK_LIBS = 
 
-ALL_MOZ_LIBS =          $(GECKO_LIBS)          $(NETLIB_LIBS)         $(IMGLIB_LIBS)         $(BASE_LIBS)           $(JSJ_LIB)             $(NSPR_LIBS)           $(TK_LIBS)             $(NULL)
+ALL_MOZ_LIBS = $(GECKO_LIBS) $(NETLIB_LIBS) $(IMGLIB_LIBS) $(BASE_LIBS) $(JSJ_LIB) $(NSPR_LIBS) $(TK_LIBS)
 
 
-MOZILLA_LIBS = -L$(MOZILLA_DIR)/dist/lib          $(ALL_MOZ_LIBS)
+MOZILLA_LIBS = -L$(MOZILLA_DIR)/dist/lib $(ALL_MOZ_LIBS)
 
 
 INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
