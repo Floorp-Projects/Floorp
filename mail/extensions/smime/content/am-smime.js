@@ -409,3 +409,18 @@ function openCertManager()
     window.open('chrome://pippki/content/certManager.xul',  "",
                 'chrome,height=400,centerscreen,resizable=yes,dialog=no');
 }
+
+function openDeviceManager()
+{
+  //check for an existing deviceManger window and focus it; it's not application modal
+  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+  var lastCertManager = kWindowMediator.getMostRecentWindow("mozilla:devicemanager");
+  if (lastCertManager)
+    lastCertManager.focus();
+  else {
+    window.open('chrome://pippki/content/device_manager.xul',  "devmgr",
+                'chrome,height=400,centerscreen,resizable=yes,dialog=no');
+  }
+}
