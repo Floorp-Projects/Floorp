@@ -577,8 +577,19 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
    textRangeList->AddRef();
    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor, &result);
    if (imeEditor) {
-    result = imeEditor->SetCompositionString(composedText,textRangeList,textEventReply);
-    ScrollSelectionIntoView(mEditor);
+     PRUint32 flags;
+     // if we are readonly or disabled, then do nothing.
+     if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
+       if (flags & nsIPlaintextEditor::eEditorReadonlyMask || 
+           flags & nsIPlaintextEditor::eEditorDisabledMask) {
+#if DEBUG_IME
+         printf("nsTextEditorTextListener::HandleText,  Readonly or Disabled\n");
+#endif
+         return NS_OK;
+       }
+     }
+     result = imeEditor->SetCompositionString(composedText,textRangeList,textEventReply);
+     ScrollSelectionIntoView(mEditor);
    }
    return result;
 }
