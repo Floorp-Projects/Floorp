@@ -38,3 +38,7 @@ Gopherportno=0
 HTTPportno=0
 SSLportno=0
 SOCKSportno=0
+Version=6.5
+lPlatform=Windows
+Language=enus
+

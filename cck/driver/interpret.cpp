@@ -145,7 +145,7 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 		if (tmpWidget && (CEdit*)tmpWidget->control)
 		{
 			tmpWidget->value = fullFileName;
-			if (tmpWidget->name == "LinuxPath")
+			if (tmpWidget->name == "BlobinstallerPath")
 				tmpWidget->display = fullFileName;
 			else
 				tmpWidget->display = GetTrimFile(fullFileName);
@@ -1105,6 +1105,12 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CString p2path = replaceVars(p2,NULL);
 					GenerateList(pcmd, w, p2path);
 				}
+			}
+			else if (strcmp(pcmd, "CreateDirs") == 0)
+			{
+				WIDGET *wid           = findWidget("BlobinstallerPath");
+				CString instblobPath  = CWizardUI::GetScreenValue(wid);
+				CreateDirectories(instblobPath);
 			}
 			else if (strcmp(pcmd, "SelectItem") ==0)
 			{
