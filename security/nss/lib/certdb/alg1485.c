@@ -675,7 +675,7 @@ AppendAVA(char **bufp, unsigned *buflenp, CERTAVA *ava)
     }
 
     /* Check value length */
-    if ((avaValue->len < 2) || (avaValue->len > maxLen)) {
+    if (avaValue->len > maxLen) {
 	PORT_SetError(SEC_ERROR_INVALID_AVA);
 	return SECFailure;
     }
