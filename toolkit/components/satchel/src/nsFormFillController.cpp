@@ -63,6 +63,7 @@
 #include "nsIWidget.h"
 #include "nsRect.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIDOMHTMLFormElement.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -499,10 +500,17 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 
     nsAutoString autocomplete; 
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+    if (type.Equals(NS_LITERAL_STRING("text")) &&
+        !autocomplete.EqualsIgnoreCase("off")) {
 
-    if (type.Equals(NS_LITERAL_STRING("text")) && 
-        !autocomplete.Equals(NS_LITERAL_STRING("off")))
-      StartControllingInput(input);
+      nsCOMPtr<nsIDOMHTMLFormElement> form;
+      input->GetForm(getter_AddRefs(form));
+      if (form)
+        form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+
+      if (!form || !autocomplete.EqualsIgnoreCase("off"))
+        StartControllingInput(input);
+    }
   }
     
   return NS_OK;
