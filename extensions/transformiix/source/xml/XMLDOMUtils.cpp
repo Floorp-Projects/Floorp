@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.6 2000/09/04 16:25:25 axel%pike.org Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.7 2000/10/26 16:45:26 axel%pike.org Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/04 16:25:25 $
+ * @version $Revision: 1.7 $ $Date: 2000/10/26 16:45:26 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -98,7 +98,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
                 for ( i = 0; i < attList->getLength(); i++ ) {
                     Attr* attr = (Attr*) attList->item(i);
 #ifdef MOZ_XSL
-		    resolver->getNameSpaceURI(attr->getName(), nameSpaceURI);
+                    resolver->getNameSpaceURI(attr->getName(), nameSpaceURI);
                     newElement->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
 #else
                     newElement->setAttribute(attr->getName(), attr->getValue());
@@ -155,7 +155,12 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
         {
             nl = node->getChildNodes();
             for ( int i = 0; i < nl->getLength(); i++) {
-                getNodeValue(nl->item(i),target);
+                nodeType = nl->item(i)->getNodeType();
+                if ((nodeType == Node::TEXT_NODE) ||
+                    (nodeType == Node::ELEMENT_NODE))
+                    {
+                        getNodeValue(nl->item(i),target);
+                    }
             }
             break;
         }
