@@ -359,8 +359,6 @@ public:
 protected:
     // Helper methods
 
-    nsresult AlertSpecialFolderExists(nsIMsgWindow *msgWindow); 
-
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
                        &keysToFetch, nsIImapFlagAndUidState *flagState);
 	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray

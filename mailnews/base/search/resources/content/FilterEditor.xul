@@ -39,6 +39,7 @@ Contributor(s):
   width="510" height="360"
   persist="width height screenX screenY"
   onload="filterEditorOnLoad();"
+  onunload="filterEditorOnUnload();"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();">
 

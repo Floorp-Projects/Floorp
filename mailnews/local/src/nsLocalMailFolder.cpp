@@ -763,30 +763,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlLi
   return status;
 }
 
-nsresult
-nsMsgLocalMailFolder::AlertFolderExists(nsIMsgWindow *msgWindow) 
-{
-    nsresult rv = NS_OK;
-	nsCOMPtr<nsIDocShell> docShell;
-	msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-	if (!mMsgStringService)
-		mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
-	if (!mMsgStringService) return NS_ERROR_FAILURE;
-		PRUnichar *alertString = nsnull;
-	mMsgStringService->GetStringByID(POP3_FOLDER_ALREADY_EXISTS, &alertString);
-	if (!alertString) return rv;
-		if (docShell)
-		{
-			nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
-			if (dialog)
-			{
-				rv = dialog->Alert(nsnull, alertString);
-				return rv;
-			}
-		}
-	return rv;
-}
-
 nsresult 
 nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpec &path, nsIMsgWindow *msgWindow)
 {
@@ -805,7 +781,7 @@ nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpe
                           nsCaseInsensitiveStringComparator()))
       {
            if (msgWindow)
-              AlertFolderExists(msgWindow);
+              ThrowAlertMsg("folderExists", msgWindow);
            return NS_MSG_FOLDER_EXISTS;
       }
    }
@@ -1265,7 +1241,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 
     if (PL_strcasecmp(oldLeafName, convertedNewName) == 0) {
        if(msgWindow)
-           rv=AlertFolderExists(msgWindow);
+           rv=ThrowAlertMsg("folderExists", msgWindow);
        return NS_MSG_FOLDER_EXISTS;
     }
 	else

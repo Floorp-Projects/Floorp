@@ -52,6 +52,7 @@ var gPreFillName;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var gPref;
 var gPrefBranch;
+var gMailSession = null;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -129,6 +130,12 @@ function filterEditorOnLoad()
     moveToAlertPosition();
 }
 
+function filterEditorOnUnload()
+{
+  if (gMailSession)
+    gMailSession.RemoveFolderListener(gFolderListener);
+}
+
 function onEnterInSearchTerm()
 {
   // do nothing.  onOk() will get called since this is a dialog
@@ -167,6 +174,36 @@ function onCancel()
   if (top.okCallback)
     top.okCallback();
   return true;
+}
+
+
+// the folderListener object
+var gFolderListener = {
+    OnItemAdded: function(parentItem, item, view) {},
+
+    OnItemRemoved: function(parentItem, item, view){},
+
+    OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemIntPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
+    OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+
+    OnItemEvent: function(folder, event) {
+        var eventType = event.GetUnicode();
+
+        if (eventType == "FolderCreateCompleted") {
+            SetFolderPicker(folder.URI, gActionTargetElement.id);
+            SetBusyCursor(window, false);
+        }     
+        else if (eventType == "FolderCreateFailed") {
+            SetBusyCursor(window, false);
+        }
+
+    }
 }
 
 function duplicateFilterNameExists(filterName)
@@ -433,18 +470,49 @@ function GetFirstSelectedMsgFolder()
 
 function SearchNewFolderOkCallback(name,uri)
 {
-    var msgFolder = GetMsgFolderFromUri(uri, true);
-    var msgWindow = GetFilterEditorMsgWindow();
-    msgFolder.createSubfolder(name, msgWindow);
+  var msgFolder = GetMsgFolderFromUri(uri, true);
+  var imapFolder = null;
+  try
+  {
+    imapFolder = msgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+  }
+  catch(ex) {}
+  var mailSessionContractID = "@mozilla.org/messenger/services/session;1";
+  if (imapFolder) //imapFolder creation is asynchronous.
+  {
+    if (!gMailSession)
+      gMailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
+    try 
+    {
+      var nsIFolderListener = Components.interfaces.nsIFolderListener;
+      var notifyFlags = nsIFolderListener.event;
+      gMailSession.AddFolderListener(gFolderListener, notifyFlags);
+    } 
+    catch (ex) 
+    {
+      dump("Error adding to session: " +ex + "\n");
+    }
+  }
 
+  var msgWindow = GetFilterEditorMsgWindow();
+
+  if (imapFolder)
+    SetBusyCursor(window, true);
+
+  msgFolder.createSubfolder(name, msgWindow);
+  
+  if (!imapFolder)
+  {
     var curFolder = uri+"/"+name;
     SetFolderPicker(curFolder, gActionTargetElement.id);
+  }
 }
 
 function UpdateAfterCustomHeaderChange()
 {
   updateSearchAttributes();
 }
+
 //if you use msgWindow, please make sure that destructor gets called when you close the "window"
 function GetFilterEditorMsgWindow()
 {
@@ -456,4 +524,18 @@ function GetFilterEditorMsgWindow()
     gFilterEditorMsgWindow.SetDOMWindow(window); 
   }
   return gFilterEditorMsgWindow;
+}
+
+function SetBusyCursor(window, enable)
+{
+    // setCursor() is only available for chrome windows.
+    // However one of our frames is the start page which 
+    // is a non-chrome window, so check if this window has a
+    // setCursor method
+    if ("setCursor" in window) {
+        if (enable)
+            window.setCursor("wait");
+        else
+            window.setCursor("auto");
+    }
 }

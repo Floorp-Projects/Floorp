@@ -708,44 +708,26 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleE
 NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsIMsgWindow *msgWindow )
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!folderName) return rv;
+    if (!folderName) 
+      return rv;
 
     if ( nsDependentString(folderName).Equals(NS_LITERAL_STRING("Trash"),nsCaseInsensitiveStringComparator()) )   // Trash , a special folder
     {
-        AlertSpecialFolderExists(msgWindow);
+        ThrowAlertMsg("folderExists", msgWindow);
         return NS_MSG_FOLDER_EXISTS;
     }
     else if ( nsDependentString(folderName).Equals(NS_LITERAL_STRING("Inbox"),nsCaseInsensitiveStringComparator()) )  // Inbox, a special folder
     {
-        AlertSpecialFolderExists(msgWindow);
+        ThrowAlertMsg("folderExists", msgWindow);
         return NS_MSG_FOLDER_EXISTS;
     }
 
     nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
+    {
         rv = imapService->CreateFolder(m_eventQueue, this, 
                                        folderName, this, nsnull);
-    return rv;
-}
-
-nsresult
-nsImapMailFolder::AlertSpecialFolderExists(nsIMsgWindow *msgWindow) 
-{
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIDocShell> docShell;
-    msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-    nsXPIDLString alertString;
-    IMAPGetStringByID(IMAP_MAILBOX_ALREADY_EXISTS, getter_Copies(alertString));
-    if (!alertString) return rv;
-        if (docShell)
-        {
-            nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
-            if (dialog)
-            {
-                rv = dialog->Alert(nsnull, alertString);
-                return rv;
-            }
-        }
+    }
     return rv;
 }
 
@@ -869,6 +851,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
             unusedDB->Close(PR_TRUE);
         }
   }
+  nsCOMPtr <nsIAtom> folderCreateAtom;
   if(NS_SUCCEEDED(rv) && child)
   {
     nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
@@ -876,9 +859,15 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
     if(childSupports && NS_SUCCEEDED(rv))
     {
-
       NotifyItemAdded(folderSupports, childSupports, "folderView");
+      folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateCompleted"));
+      child->NotifyFolderEvent(folderCreateAtom);
     }
+  }
+  else
+  {
+    folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
+    NotifyFolderEvent(folderCreateAtom);
   }
   return rv;
 }
@@ -4298,11 +4287,19 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 
             }
             break;
-          case nsIImapUrl::nsImapRefreshFolderUrls:
-            // we finished getting an admin url for the folder.
+        case nsIImapUrl::nsImapRefreshFolderUrls:
+          // we finished getting an admin url for the folder.
             if (!m_adminUrl.IsEmpty())
               FolderPrivileges(aWindow);
             break;
+        case nsIImapUrl::nsImapCreateFolder:
+          if (NS_FAILED(aExitCode))  //if success notification already done
+          {
+            nsCOMPtr <nsIAtom> folderCreateAtom;
+            folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
+            NotifyFolderEvent(folderCreateAtom);
+          }
+          break;
         default:
             break;
         }
@@ -6703,6 +6700,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
         nsCOMPtr<nsISupports> parentSupports;
         rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(parentSupports));
+
         if(childSupports && NS_SUCCEEDED(rv))
         {
           NotifyItemAdded(parentSupports, childSupports, "folderView");

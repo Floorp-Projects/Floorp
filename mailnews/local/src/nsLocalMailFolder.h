@@ -178,7 +178,6 @@ protected:
     nsresult WriteStartOfNewMessage();
   nsresult IsChildOfTrash(PRBool *result);
   nsresult RecursiveSetDeleteIsMoveTrash(PRBool bVal);
-  nsresult AlertFolderExists(nsIMsgWindow *msgWindow);
 
   nsresult CheckIfFolderExists(const PRUnichar *folderName, nsFileSpec &path, nsIMsgWindow *msgWindow);
 
