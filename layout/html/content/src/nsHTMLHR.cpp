@@ -136,7 +136,7 @@ nsHTMLHR::GetAlign(nsString& aAlign) {
 
 NS_IMETHODIMP
 nsHTMLHR::SetAlign(const nsString& aAlign) {
-  return mInner.SetAttribute(nsHTMLAtoms::align, aAlign, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::align, aAlign, eSetAttrNotify_Reflow);
 }
 
 NS_IMETHODIMP
@@ -152,7 +152,7 @@ NS_IMETHODIMP
 nsHTMLHR::SetNoShade(PRBool aNoShade)
 {
   nsAutoString empty;
-  return mInner.SetAttribute(nsHTMLAtoms::noshade, empty, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
 }
 
 NS_IMETHODIMP
@@ -165,7 +165,7 @@ nsHTMLHR::GetSize(nsString& aSize)
 NS_IMETHODIMP
 nsHTMLHR::SetSize(const nsString& aSize)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::size, aSize, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::size, aSize, eSetAttrNotify_Reflow);
 }
 
 NS_IMETHODIMP
@@ -178,7 +178,7 @@ nsHTMLHR::GetWidth(nsString& aWidth)
 NS_IMETHODIMP
 nsHTMLHR::SetWidth(const nsString& aWidth)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::width, aWidth, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::width, aWidth, eSetAttrNotify_Reflow);
 }
 
 static nsHTMLGenericContent::EnumTable kAlignTable[] = {
