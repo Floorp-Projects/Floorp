@@ -44,7 +44,7 @@
 /*
  * IDL_tree_warning bombs on libIDL version 6.5, and I don't want to not write
  * warnings... so I define a versioned one here.  Thanks to Mike Shaver for the
- * ## idiom, which allows us to pass through varargs calls.
+ * ## idiom, that allows us to pass through varargs calls.
  */
 #if !(LIBIDL_MAJOR_VERSION == 0 && LIBIDL_MINOR_VERSION == 6 && \
       LIBIDL_MICRO_VERSION == 5) && !defined(DEBUG_shaver)
@@ -196,6 +196,9 @@ xpidl_parse_iid(nsID *id, const char *str);
                             IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
                             (IDL_NODE_TYPE(node) == IDLN_IDENT &&             \
                              UP_IS_AGGREGATE(node)))
+
+#define DIPPER_TYPE(node)                                                     \
+    (NULL != IDL_tree_property_get(node, "domstring"))
 
 /*
  * Find the underlying type of an identifier typedef.  Returns NULL

@@ -66,7 +66,10 @@
         ((uint8)((np_no) | ((p_no) << 1) | ((np_o) << 2) | ((p_o) << 3)))
 
 /***********************************************************/
-#define XPC_FLAG_COUNT nsXPTType::T_PWSTRING_SIZE_IS+1
+// xpt uses 5 bits for this info. We deal with the possibility that 
+// some new types might exist that we don't know about.
+
+#define XPC_FLAG_COUNT (1 << 5)
 
 /* '1' means 'reflectable'. '0' means 'not reflectable'.        */
 static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
@@ -87,15 +90,25 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR             */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID              */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID               */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_BSTR              */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_DOMSTRING         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR          */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE_IS      */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_ARRAY             */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PSTRING_SIZE_IS   */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_PWSTRING_SIZE_IS  */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_PWSTRING_SIZE_IS  */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 23 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 24 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 25 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 26 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 27 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 28 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 29 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* 30 - reserved       */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 )  /* 31 - reserved       */
     };
+
 /***********************************************************/
 
 // static
@@ -333,9 +346,9 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 break;
             }
 
-        case nsXPTType::T_BSTR:
-            // XXX implement BSTR ?
-            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : BSTR params not supported"));
+        case nsXPTType::T_DOMSTRING:
+            // XXX implement DOMSTRING
+            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : DOMSTRING params not supported"));
             return JS_FALSE;
 
         case nsXPTType::T_CHAR_STR:
@@ -572,9 +585,9 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             return JS_TRUE;
         }
 
-        case nsXPTType::T_BSTR:
-            // XXX implement BSTR
-            XPC_LOG_ERROR(("XPCConvert::JSData2Native : BSTR params not supported"));
+        case nsXPTType::T_DOMSTRING:
+            // XXX implement DOMSTRING
+            XPC_LOG_ERROR(("XPCConvert::JSData2Native : DOMSTRING params not supported"));
             return JS_FALSE;
 
         case nsXPTType::T_CHAR_STR:
@@ -1263,7 +1276,7 @@ XPCConvert::NativeArray2JS(JSContext* cx,
     case nsXPTType::T_WCHAR         : POPULATE(jschar);         break;
     case nsXPTType::T_VOID          : NS_ASSERTION(0,"bad type"); goto failure;
     case nsXPTType::T_IID           : POPULATE(nsID*);          break;
-    case nsXPTType::T_BSTR          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_DOMSTRING     : NS_ASSERTION(0,"bad type"); goto failure;
     case nsXPTType::T_CHAR_STR      : POPULATE(char*);          break;
     case nsXPTType::T_WCHAR_STR     : POPULATE(jschar*);        break;
     case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
@@ -1389,7 +1402,7 @@ fill_array:
     case nsXPTType::T_WCHAR         : POPULATE(na, jschar);         break;
     case nsXPTType::T_VOID          : NS_ASSERTION(0,"bad type"); goto failure;
     case nsXPTType::T_IID           : POPULATE(fr, nsID*);          break;
-    case nsXPTType::T_BSTR          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_DOMSTRING     : NS_ASSERTION(0,"bad type"); goto failure;
     case nsXPTType::T_CHAR_STR      : POPULATE(fr, char*);          break;
     case nsXPTType::T_WCHAR_STR     : POPULATE(fr, jschar*);        break;
     case nsXPTType::T_INTERFACE     : POPULATE(re, nsISupports*);   break;

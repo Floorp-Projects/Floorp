@@ -138,7 +138,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
               case nsXPTType::T_WCHAR:             val.wc  = mv.val.wc;  break;
               case nsXPTType::T_VOID:              /* fall through */
               case nsXPTType::T_IID:               /* fall through */
-              case nsXPTType::T_BSTR:              /* fall through */
+              case nsXPTType::T_DOMSTRING:         /* fall through */
               case nsXPTType::T_CHAR_STR:          /* fall through */
               case nsXPTType::T_WCHAR_STR:         /* fall through */
               case nsXPTType::T_INTERFACE:         /* fall through */

@@ -154,7 +154,7 @@ public:
         T_WCHAR             = TD_WCHAR            ,
         T_VOID              = TD_VOID             ,
         T_IID               = TD_PNSIID           ,
-        T_BSTR              = TD_PBSTR            ,
+        T_DOMSTRING         = TD_DOMSTRING        ,
         T_CHAR_STR          = TD_PSTRING          ,
         T_WCHAR_STR         = TD_PWSTRING         ,
         T_INTERFACE         = TD_INTERFACE_TYPE   ,
@@ -178,6 +178,7 @@ public:
     PRBool IsOut() const    {return (PRBool) (XPT_PD_IS_OUT(flags));}
     PRBool IsRetval() const {return (PRBool) (XPT_PD_IS_RETVAL(flags));}
     PRBool IsShared() const {return (PRBool) (XPT_PD_IS_SHARED(flags));}
+    PRBool IsDipper() const {return (PRBool) (XPT_PD_IS_DIPPER(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo

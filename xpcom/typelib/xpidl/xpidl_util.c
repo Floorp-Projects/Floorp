@@ -227,16 +227,17 @@ verify_attribute_declaration(IDL_tree attr_tree)
         return TRUE;
 
     /*
-     * If it should be scriptable, check that the type is non-native.  nsid
-     * is exempted.
+     * If it should be scriptable, check that the type is non-native. nsid and
+     * domstring are exempted.
      */
     attr_type = IDL_ATTR_DCL(attr_tree).param_type_spec;
 
     if (attr_type != NULL && UP_IS_NATIVE(attr_type) &&
-        IDL_tree_property_get(attr_type, "nsid") == NULL)
+        IDL_tree_property_get(attr_type, "nsid") == NULL &&
+        IDL_tree_property_get(attr_type, "domstring") == NULL)
     {
         IDL_tree_error(attr_tree,
-                       "attributes in [scriptable] interfaces which are "
+                       "attributes in [scriptable] interfaces that are "
                        "non-scriptable because they refer to native "
                        "types must be marked [noscript]\n");
         return FALSE;
@@ -437,15 +438,16 @@ verify_method_declaration(IDL_tree method_tree)
         
         /*
          * Reject this method if it should be scriptable and some parameter is
-         * native that isn't marked with either nsid or iid_is.
+         * native that isn't marked with either nsid, domstring, or iid_is.
          */
         if (scriptable_method &&
             UP_IS_NATIVE(param_type) &&
             IDL_tree_property_get(param_type, "nsid") == NULL &&
-            IDL_tree_property_get(simple_decl, "iid_is") == NULL)
+            IDL_tree_property_get(simple_decl, "iid_is") == NULL &&
+            IDL_tree_property_get(param_type, "domstring") == NULL)
         {
             IDL_tree_error(method_tree,
-                           "methods in [scriptable] interfaces which are "
+                           "methods in [scriptable] interfaces that are "
                            "non-scriptable because they refer to native "
                            "types (parameter \"%s\") must be marked "
                            "[noscript]", param_name);
@@ -477,7 +479,8 @@ verify_method_declaration(IDL_tree method_tree)
 
         /*
          * Confirm that [shared] attributes are only used with string, wstring,
-         * or native (but not nsid) and can't be used with [array].
+         * or native (but not nsid or domstring) 
+         * and can't be used with [array].
          */
         if (IDL_tree_property_get(simple_decl, "shared") != NULL) {
             IDL_tree real_type;
@@ -494,7 +497,8 @@ verify_method_declaration(IDL_tree method_tree)
             if (!(IDL_NODE_TYPE(real_type) == IDLN_TYPE_STRING ||
                   IDL_NODE_TYPE(real_type) == IDLN_TYPE_WIDE_STRING ||
                   (UP_IS_NATIVE(real_type) &&
-                   !IDL_tree_property_get(real_type, "nsid"))))
+                   !IDL_tree_property_get(real_type, "nsid") &&
+                   !IDL_tree_property_get(real_type, "domstring"))))
             {
                 IDL_tree_error(method_tree,
                                "[shared] parameter \"%s\" must be of type "
@@ -513,10 +517,11 @@ verify_method_declaration(IDL_tree method_tree)
     /* Native return type? */
     if (scriptable_method &&
         op->op_type_spec != NULL && UP_IS_NATIVE(op->op_type_spec) &&
-        IDL_tree_property_get(op->op_type_spec, "nsid") == NULL)
+        IDL_tree_property_get(op->op_type_spec, "nsid") == NULL &&
+        IDL_tree_property_get(op->op_type_spec, "domstring") == NULL)
     {
         IDL_tree_error(method_tree,
-                       "methods in [scriptable] interfaces which are "
+                       "methods in [scriptable] interfaces that are "
                        "non-scriptable because they return native "
                        "types must be marked [noscript]");
         return FALSE;

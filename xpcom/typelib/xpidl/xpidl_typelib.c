@@ -67,24 +67,24 @@ CreateNewInterfaceHolder(char *name, char *name_space, char *iid,
                          gboolean is_forward_dcl)
 {
     NewInterfaceHolder *holder = calloc(1, sizeof(NewInterfaceHolder));
-    if(holder) {
+    if (holder) {
         holder->is_forward_dcl = is_forward_dcl;
-        if(name)
+        if (name)
             holder->name = xpidl_strdup(name);
-        if(name_space)
+        if (name_space)
             holder->name_space = xpidl_strdup(name_space);
-        if(holder->name && holder->name_space) {
+        if (holder->name && holder->name_space) {
             holder->full_name = calloc(1, strlen(holder->name) +
                                           strlen(holder->name_space) + 2);
         }
-        if(holder->full_name) {
+        if (holder->full_name) {
             strcpy(holder->full_name, holder->name_space);
             strcat(holder->full_name, ".");
             strcat(holder->full_name, holder->name);
         }
         else
             holder->full_name = holder->name;
-        if(iid)
+        if (iid)
             holder->iid = xpidl_strdup(iid);
     }
     return holder;
@@ -93,14 +93,14 @@ CreateNewInterfaceHolder(char *name, char *name_space, char *iid,
 static void
 DeleteNewInterfaceHolder(NewInterfaceHolder *holder)
 {
-    if(holder) {
-        if(holder->full_name && holder->full_name != holder->name)
+    if (holder) {
+        if (holder->full_name && holder->full_name != holder->name)
             free(holder->full_name);
-        if(holder->name)
+        if (holder->name)
             free(holder->name);
-        if(holder->name_space)
+        if (holder->name_space)
             free(holder->name_space);
-        if(holder->iid)
+        if (holder->iid)
             free(holder->iid);
         free(holder);
     }
@@ -142,7 +142,7 @@ add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
                 NewInterfaceHolder *holder =
                         CreateNewInterfaceHolder(iface, name_space, iid,
                                      (gboolean) node_type == IDLN_FORWARD_DCL);
-                if(!holder)
+                if (!holder)
                     return FALSE;
                 g_hash_table_insert(IFACE_MAP(state),
                                     holder->full_name, holder);
@@ -485,7 +485,7 @@ typelib_interface(TreeState *state)
     uint16 parent_id = 0;
     PRUint8 interface_flags = 0;
 
-    if(IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable"))
+    if (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable"))
         interface_flags |= XPT_ID_SCRIPTABLE;
 
     ide = FindInterfaceByName(HEADER(state)->interface_directory,
@@ -622,7 +622,7 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
 
         if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
             IDL_tree sd = IDL_PARAM_DCL(state->tree).simple_declarator;
-            if(IDL_tree_property_get(sd, "array")) {
+            if (IDL_tree_property_get(sd, "array")) {
 
                 is_array = TRUE;
 
@@ -820,9 +820,13 @@ handle_iid_is:
                       goto handle_iid_is;
 
                   ident = IDL_IDENT(type).str;
-                  if(IDL_tree_property_get(type, "nsid")) {
+                  if (IDL_tree_property_get(type, "nsid")) {
                       td->prefix.flags = TD_PNSIID | XPT_TDP_POINTER;
-                      if(IDL_tree_property_get(type, "ref"))
+                      if (IDL_tree_property_get(type, "ref"))
+                          td->prefix.flags |= XPT_TDP_REFERENCE;
+                  } else if (IDL_tree_property_get(type, "domstring")) {
+                      td->prefix.flags = TD_DOMSTRING | XPT_TDP_POINTER;
+                      if (IDL_tree_property_get(type, "ref"))
                           td->prefix.flags |= XPT_TDP_REFERENCE;
                   } else {
                       td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
@@ -897,6 +901,7 @@ static gboolean
 fill_pd_from_param(TreeState *state, XPTParamDescriptor *pd, IDL_tree tree)
 {
     uint8 flags = 0;
+    gboolean is_dipper_type = DIPPER_TYPE(IDL_PARAM_DCL(tree).param_type_spec);
 
     switch (IDL_PARAM_DCL(tree).attr) {
       case IDL_PARAM_IN:
@@ -919,6 +924,11 @@ fill_pd_from_param(TreeState *state, XPTParamDescriptor *pd, IDL_tree tree)
             return FALSE;
         }
         flags |= XPT_PD_RETVAL;
+    }
+
+    if (is_dipper_type && (flags & XPT_PD_OUT)) {
+        flags &= ~XPT_PD_OUT; 
+        flags |= XPT_PD_IN | XPT_PD_DIPPER;
     }
 
     if (IDL_tree_property_get(IDL_PARAM_DCL(tree).simple_declarator,
@@ -963,7 +973,16 @@ typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
                                   ATTR_IDENT(state->tree).str, 1))
         return FALSE;
 
-    pdflags |= getter ? (XPT_PD_RETVAL | XPT_PD_OUT) : XPT_PD_IN;
+    if (getter) {
+        if (DIPPER_TYPE(ATTR_TYPE_DECL(state->tree))) {
+            pdflags |= (XPT_PD_RETVAL | XPT_PD_IN | XPT_PD_DIPPER);
+        } else {
+            pdflags |= (XPT_PD_RETVAL | XPT_PD_OUT);
+        }
+    } else {
+        pdflags |= XPT_PD_IN;
+    }
+
     if (!fill_pd_from_type(state, meth->params, pdflags,
                            ATTR_TYPE_DECL(state->tree)))
         return FALSE;
@@ -1056,9 +1075,12 @@ typelib_op_dcl(TreeState *state)
     /* XXX unless [notxpcom] */
     if (!op_notxpcom) {
         if (op->op_type_spec) {
+            uint8 pdflags = DIPPER_TYPE(op->op_type_spec) ?
+                                (XPT_PD_RETVAL | XPT_PD_IN | XPT_PD_DIPPER) :
+                                (XPT_PD_RETVAL | XPT_PD_OUT);
+    
             if (!fill_pd_from_type(state, &meth->params[num_args],
-                                   XPT_PD_RETVAL | XPT_PD_OUT,
-                                   op->op_type_spec))
+                                   pdflags, op->op_type_spec))
                 return FALSE;
         }
 
@@ -1111,12 +1133,12 @@ typelib_const_dcl(TreeState *state)
     value = IDL_INTEGER(dcl->const_exp).value;
     sign = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
     if (is_long) {
-        if(sign)
+        if (sign)
             cd->value.i32 = value;
         else
             cd->value.ui32 = value;
     } else {
-        if(sign)
+        if (sign)
             cd->value.i16 = value;
         else
             cd->value.ui16 = value;

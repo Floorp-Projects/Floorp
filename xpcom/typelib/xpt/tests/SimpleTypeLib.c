@@ -122,12 +122,13 @@ main(int argc, char **argv)
     TRY("FillMethodDescriptor", ok);
 
     meth->result->flags = 0;
-    meth->result->type.prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
+    meth->result->type.prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
     meth->params[0].type.prefix.flags = TD_UINT32;
     meth->params[0].flags = XPT_PD_IN;
     meth->params[1].type.prefix.flags = TD_BOOL;
     meth->params[1].flags = XPT_PD_IN;
 
+#if 0
     /* const one = 1; */
     id->const_descriptors[0].name = "one";
     id->const_descriptors[0].type.prefix.flags = TD_UINT16;
@@ -137,6 +138,7 @@ main(int argc, char **argv)
     id->const_descriptors[1].name = "squeamish";
     id->const_descriptors[1].type.prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
     id->const_descriptors[1].value.string = XPT_NewStringZ(arena, "ossifrage");
+#endif
 
     /* serialize it */
     state = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
