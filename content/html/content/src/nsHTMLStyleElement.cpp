@@ -314,7 +314,7 @@ nsHTMLStyleElement::GetStyleSheetInfo(nsAWritableString& aUrl,
   ToLowerCase(aMedia); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
 
   GetAttribute(NS_LITERAL_STRING("type"), type);
-  aType.Assign(aType);
+  aType.Assign(type);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
