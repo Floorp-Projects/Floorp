@@ -41,5 +41,5 @@
 }
 
 #main-box > box {
-  overflow: auto; 
+  overflow: hidden; 
 }
