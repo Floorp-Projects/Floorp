@@ -19,7 +19,6 @@
 #ifndef nsFileWidget_h__
 #define nsFileWidget_h__
 
-#include "nsObject.h"
 #include "nsToolkit.h"
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"

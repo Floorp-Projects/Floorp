@@ -19,7 +19,6 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsObject.h"
 #include "nsIAppShell.h"
 
 /**

@@ -18,7 +18,6 @@
 
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
-#include "nsObject.h"
 #include "nsILookAndFeel.h"
 
 class nsLookAndFeel: public nsILookAndFeel {
