@@ -154,9 +154,8 @@ nsRenderingContextXp::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurf
 NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage()\n"));
-  nsRect dr;
 
-  dr = *aDestRect;
+  nsRect dr = aDestRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
   nsCOMPtr<gfxIImageFrame> iframe;
@@ -171,9 +170,7 @@ NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRec
   // doesn't it seem like we should use more of the params here?
   // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 
-  nsRect sr;
-
-  sr = *aSrcRect;
+  nsRect sr = aSrcRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
   sr.x = aSrcRect->x;
   sr.y = aSrcRect->y;
