@@ -28,6 +28,7 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIOutputStream.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 class nsExternalAppHandler;
@@ -44,7 +45,8 @@ public:
 
   // create an external app handler and bind it with a cookie that came from the OS specific
   // helper app service subclass.
-  virtual nsExternalAppHandler * CreateNewExternalHandler(nsISupports * aAppCookie);
+  // aFileExtension --> the extension we need to append to our temp file INCLUDING the ".". i.e. .mp3
+  virtual nsExternalAppHandler * CreateNewExternalHandler(nsISupports * aAppCookie, const char * aFileExtension);
 
 protected:
 
@@ -72,10 +74,11 @@ public:
 
   // initialize the handler with a cookie that represents the external
   // application associated with this handler.
-  virtual nsresult Init(nsISupports * aExternalApplicationCookie);
+  virtual nsresult Init(nsISupports * aExternalApplicationCookie, const char * aFileExtension);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
+  nsCString mTempFileExtension;
   nsCOMPtr<nsISupports> mExternalApplication;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
 

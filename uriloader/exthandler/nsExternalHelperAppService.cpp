@@ -66,14 +66,15 @@ NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIFile * aTempF
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsISupports * aAppCookie)
+nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsISupports * aAppCookie, 
+                                                                            const char * aTempFileExtension)
 {
   nsExternalAppHandler* handler = nsnull;
   NS_NEWXPCOM(handler, nsExternalAppHandler);
   // add any XP intialization code for an external handler that we may need here...
   // right now we don't have any but i bet we will before we are done.
 
-  handler->Init(aAppCookie);
+  handler->Init(aAppCookie, aTempFileExtension);
   return handler;
 }
 
@@ -114,6 +115,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   aChannel->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
 
+  nsCAutoString tempLeafName ("test");  // WARNING THIS IS TEMPORARY CODE!!!
+  tempLeafName.Append(mTempFileExtension);
+
+#if 0
   if (url)
   {
     // try to extract the file name from the url and use that as a first pass as the
@@ -122,13 +127,17 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
     url->GetFileName(getter_Copies(leafName));
     if (leafName)
     {
+      nsCAutoString
       mTempFile->Append(leafName); // WARNING --> neeed a make Unique routine on nsIFile!!
     }
     else
-      mTempFile->Append("test.tmp"); // WARNING THIS IS TEMPORARY CODE!!!
+      mTempFile->Append("test"); // WARNING THIS IS TEMPORARY CODE!!!
   }
   else
-    mTempFile->Append("test.tmp"); // WARNING THIS IS TEMPORARY CODE!!!
+    mTempFile->Append("test"); // WARNING THIS IS TEMPORARY CODE!!!
+#endif
+
+  mTempFile->Append(tempLeafName); // make this file unique!!!
 
   nsCOMPtr<nsIFileChannel> mFileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
   if (mFileChannel)
@@ -185,8 +194,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
   return rv;
 }
 
-nsresult nsExternalAppHandler::Init(nsISupports * aAppCookie)
+nsresult nsExternalAppHandler::Init(nsISupports * aAppCookie, const char * aTempFileExtension)
 {
   mExternalApplication = aAppCookie;
+  mTempFileExtension = aTempFileExtension;
   return NS_OK;
 }
