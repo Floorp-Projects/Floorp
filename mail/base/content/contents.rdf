@@ -19,41 +19,12 @@
 
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
-    <RDF:li resource="chrome://communicator/content/pref/pref-scripts.xul"/>
-    <RDF:li resource="chrome://cookie/content/pref-cookies.xul"/>
-    <RDF:li resource="chrome://cookie/content/pref-images.xul"/>
     <RDF:li resource="chrome://messenger/content/messenger.xul"/>
-    <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
     <RDF:li resource="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul"/>
-  </RDF:Seq>
-
-
-  <!-- messenger startup pref -->
-  <RDF:Seq about="chrome://communicator/content/pref/pref-appearance.xul">
-    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
-  </RDF:Seq>
-
-  <!-- messenger js toggle pref -->
-  <RDF:Seq about="chrome://communicator/content/pref/pref-scripts.xul">
-    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
-  </RDF:Seq>
-
-  <!-- messenger cookie toggle pref -->
-  <RDF:Seq about="chrome://cookie/content/pref-cookies.xul">
-    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
-  </RDF:Seq>
-
-  <!-- messenger image toggle pref -->
-  <RDF:Seq about="chrome://cookie/content/pref-images.xul">
-    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <!-- messenger items for Messenger -->
   <RDF:Seq about="chrome://messenger/content/messenger.xul">
-    <RDF:li>chrome://messenger/content/mailMessengerOverlay.xul</RDF:li>
-  </RDF:Seq>
-  <RDF:Seq about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
     <RDF:li>chrome://messenger/content/mailMessengerOverlay.xul</RDF:li>
   </RDF:Seq>
   
