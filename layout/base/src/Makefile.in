@@ -35,6 +35,7 @@ CPPSRCS =				\
 	nsFrameImageLoader.cpp		\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
+	nsPrintContext.cpp	\
 	nsPrintPreviewContext.cpp	\
 	nsSelection.cpp			\
 	nsSelectionPoint.cpp		\
