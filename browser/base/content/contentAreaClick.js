@@ -201,9 +201,17 @@
       result = true;
     }
 
-    if (result && linkNode && !linkNode.style.color)
-      linkNode.style.color = "-moz-visitedhyperlinktext";
-
+    if (result && linkNode) {
+      var computedOldColor = linkNode.ownerDocument.defaultView.getComputedStyle(linkNode,"").getPropertyValue("color");
+      var oldStyleColor = linkNode.style.color;
+      linkNode.style.color = "-moz-hyperlinktext";
+      var computedNewColor = linkNode.ownerDocument.defaultView.getComputedStyle(linkNode,"").getPropertyValue("color");
+      if (computedNewColor == computedOldColor)
+        linkNode.style.color = "-moz-visitedhyperlinktext";
+      else
+        linkNode.style.color = oldStyleColor;
+    }
+        
     // let someone else deal with it
     return result;
   }
