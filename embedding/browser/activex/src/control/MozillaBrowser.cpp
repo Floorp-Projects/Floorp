@@ -61,6 +61,7 @@
 #include "nsIPrintOptions.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
+#include "nsIWebBrowserFocus.h"
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -369,6 +370,32 @@ HRESULT CMozillaBrowser::SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr)
 }
 
 
+//
+// Tells the container to change focus to the next control in the dialog.
+//
+void CMozillaBrowser::NextDlgControl()
+{
+    HWND hwndParent = GetParent();
+    if (::IsWindow(hwndParent))
+    {
+        ::PostMessage(hwndParent, WM_NEXTDLGCTL, 0, 0);
+    }
+}
+
+
+//
+// Tells the container to change focus to the previous control in the dialog.
+//
+void CMozillaBrowser::PrevDlgControl()
+{
+    HWND hwndParent = GetParent();
+    if (::IsWindow(hwndParent))
+    {
+        ::PostMessage(hwndParent, WM_NEXTDLGCTL, 1, 0);
+    }
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Message handlers
 
@@ -377,12 +404,6 @@ HRESULT CMozillaBrowser::SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr)
 LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     NG_TRACE_METHOD(CMozillaBrowser::OnCreate);
-
-    // Clip the child windows out of paint operations
-    SetWindowLong(GWL_STYLE, GetWindowLong(GWL_STYLE) | WS_CLIPCHILDREN);
-
-    // Turn on the 3d border
-//    SetWindowLong(GWL_EXSTYLE, GetWindowLong(GWL_EXSTYLE) | WS_EX_CLIENTEDGE);
 
     // Create the NGLayout WebShell
     CreateBrowser();
@@ -406,6 +427,9 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
             Navigate(A2OLE(c_szDefaultPage), NULL, NULL, NULL, NULL);
         }
     }
+
+    // Clip the child windows out of paint operations
+    SetWindowLong(GWL_STYLE, GetWindowLong(GWL_STYLE) | WS_CLIPCHILDREN | WS_TABSTOP);
 
     return 0;
 }
@@ -453,6 +477,51 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return 0;
 }
 
+// Handle WM_SETFOCUS
+LRESULT CMozillaBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    ATLTRACE(_T("CMozillaBrowser::OnSetFocus()\n"));
+    nsCOMPtr<nsIWebBrowserFocus> browserAsFocus = do_QueryInterface(mWebBrowser);
+    if (browserAsFocus)
+    {
+        browserAsFocus->Activate();
+    }
+    CComQIPtr<IOleControlSite> controlSite = m_spClientSite;
+    if (controlSite)
+    {
+        controlSite->OnFocus(TRUE);
+    }
+    return 0;
+}
+
+// Handle WM_KILLFOCUS
+LRESULT CMozillaBrowser::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    ATLTRACE(_T("CMozillaBrowser::OnKillFocus()\n"));
+    nsCOMPtr<nsIWebBrowserFocus> browserAsFocus = do_QueryInterface(mWebBrowser);
+    if (browserAsFocus)
+    {
+        browserAsFocus->Deactivate();
+    }
+    CComQIPtr<IOleControlSite> controlSite = m_spClientSite;
+    if (controlSite)
+    {
+        controlSite->OnFocus(FALSE);
+    }
+    return 0;
+}
+
+// Handle WM_MOUSEACTIVATE messages
+LRESULT CMozillaBrowser::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return MA_ACTIVATE;
+}
+
+// Handle WM_GETDLGCODE to receive keyboard presses
+LRESULT CMozillaBrowser::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return DLGC_WANTALLKEYS; 
+}
 
 // Handle WM_PAINT windows message (and IViewObject::Draw) 
 HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
@@ -1057,6 +1126,10 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
     // Visible
     mWebBrowserAsWin->SetVisibility(PR_TRUE);
+
+    // Activated
+    nsCOMPtr<nsIWebBrowserFocus> browserAsFocus = do_QueryInterface(mWebBrowser);
+    browserAsFocus->Activate();
 
     // Append browser to browser list
     sBrowserList.AppendElement(this);

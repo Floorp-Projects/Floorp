@@ -76,6 +76,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
 //    NS_INTERFACE_MAP_ENTRY(nsICommandHandler)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -525,6 +526,26 @@ NS_IMETHODIMP
 CWebBrowserContainer::SetVisibility(PRBool aVisibility)
 {
     return NS_ERROR_FAILURE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIWebBrowserChromeFocus implementation
+
+NS_IMETHODIMP
+CWebBrowserContainer::FocusNextElement()
+{
+    ATLTRACE(_T("CWebBrowserContainer::FocusNextElement()\n"));
+    m_pOwner->NextDlgControl();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+CWebBrowserContainer::FocusPrevElement()
+{
+    ATLTRACE(_T("CWebBrowserContainer::FocusPrevElement()\n"));
+    m_pOwner->PrevDlgControl();
+    return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
