@@ -507,9 +507,9 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 
 nsGlobalHistory::nsGlobalHistory()
   : mExpireDays(9), // make default be nine days
-    mNowValid(PR_FALSE),
-    mBatchesInProgress(0),
     mAutocompleteOnlyTyped(PR_FALSE),
+    mBatchesInProgress(0),
+    mNowValid(PR_FALSE),
     mDirty(PR_FALSE),
     mEnv(nsnull),
     mStore(nsnull),
@@ -1850,7 +1850,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
       // convert uri to a query
       searchQuery query;
       rv = FindUrlToSearchQuery(targetUrl, query);
-      if (NS_FAILED(rv)) NS_RDF_ASSERTION_REJECTED;
+      if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
  
       matchQuery_t matchQuery;
       matchQuery.history = this;

@@ -419,9 +419,9 @@ protected:
       mHiddenColumn(aHiddenColumn),
       mTypedColumn(aTypedColumn),
       mCommentColumn(aCommentColumn),
-      mMatchOnlyTyped(aMatchOnlyTyped),
       mExclude(aExclude),
-      mSelectValue(aSelectValue) {}
+      mSelectValue(aSelectValue), 
+      mMatchOnlyTyped(aMatchOnlyTyped) {}
 
   protected:
     virtual PRBool   IsResult(nsIMdbRow* aRow);
