@@ -119,9 +119,6 @@ else
 ifeq ($(OS_ARCH),HP-UX)
 SHARED_LIBRARY		:= $(LIBRARY:.a=.sl)
 else
-ifneq (,$(filter FreeBSD NetBSD OpenBSD,$(OS_ARCH)))
-SHARED_LIBRARY		:= $(LIBRARY:.a=.so.1.0)
-else
 ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS4.1)
 SHARED_LIBRARY		:= $(LIBRARY:.a=.so.1.0)
 else
@@ -129,7 +126,6 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
 SHARED_LIBRARY		:= $(LIBRARY:.a=)_shr.a
 else
 SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
-endif
 endif
 endif
 endif

@@ -342,7 +342,7 @@ PRMJ_DSTOffset(JSInt64 time)
     JSInt64  maxtimet;
     struct tm tm;
     PRMJTime prtm;
-#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY )
+#if ( defined( USE_AUTOCONF ) && !defined( HAVE_LOCALTIME_R) ) || ( !defined ( USE_AUTOCONF ) && ( defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY ) ) )
     struct tm *ptm;
 #endif
 
@@ -361,7 +361,7 @@ PRMJ_DSTOffset(JSInt64 time)
     }
     JSLL_L2UI(local,time);
     PRMJ_basetime(time,&prtm);
-#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY )
+#if ( defined( USE_AUTOCONF ) && !defined( HAVE_LOCALTIME_R) ) || ( !defined ( USE_AUTOCONF ) && ( defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY ) ) )
     ptm = localtime(&local);
     if(!ptm){
       return JSLL_ZERO;
