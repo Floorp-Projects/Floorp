@@ -122,7 +122,7 @@ NETLIB_LIBS = \
 endif
 
 ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
-UNIX_VIEWER_TK_LIBS = -lviewer_$(MOZ_WIDGET_TOOLKIT)_s
+UNIX_VIEWER_TK_LIBS = $(DIST)/lib/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
 endif
 
 XP_DIST_LIBS = \
@@ -135,6 +135,8 @@ XP_DIST_LIBS = \
 
 # cls/shaver are responsible for this amazingness
 EXTRA_DEPS = $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
+
+EXTRA_DEPS += $(UNIX_VIEWER_TK_LIBS)
 
 XP_LIBS = \
 			$(XP_DIST_LIBS) \
