@@ -265,6 +265,11 @@ DOM_SetElementAttributes(JSContext *cx, DOM_Element *element,
         return JS_FALSE;
     element->nattrs = count;
 
+#ifdef DEBUG_shaver_attributes
+    fprintf(stderr, "ELEMENT %p has %d attrs\n", element,
+            element->nattrs);
+#endif
+
     for (i = 0; i < count; i++) {
         entry = element->attrs + i;
         entry->name = names[i];
@@ -328,7 +333,12 @@ AddAttribute(JSContext *cx, DOM_Element *element, const char *name,
     entry = element->attrs + element->nattrs - 1;
     entry->name = name;
     entry->value = value;
-
+#ifdef DEBUG_shaver_attributes
+    fprintf(stderr,
+            "ELEMENT %p has %d attrs after adding #%d %p/%s=%p/%s @ %p\n",
+            element, element->nattrs, entry - element->attrs, entry->name,
+            entry->name, entry->value, entry->value, entry);
+#endif
     return entry;
 }
 

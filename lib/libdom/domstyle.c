@@ -24,9 +24,9 @@
 #include "dom_priv.h"
 
 #ifdef DEBUG_shaver
-#define DEBUG_shaver_style_primitives 1
-#define DEBUG_shaver_verbose 1
-#define DEBUG_shaver_SME 1
+/* #define DEBUG_shaver_style_primitives 1 */
+/* #define DEBUG_shaver_verbose 1 */
+/* #define DEBUG_shaver_SME 1 */
 #endif
 
 #define STYLE_DB_FROM_CX(db, cx)                                              \
@@ -163,10 +163,6 @@ GetBaseSelector(JSContext *cx, DOM_StyleDatabase *db, uint8 type,
 {
     DOM_StyleSelector *sel;
 
-#ifdef DEBUG_shaver
-    fprintf(stderr, "getting base selector %d from db %p\n", type, db);
-#endif
-
     if (!cx)
         return NULL;
 
@@ -260,8 +256,8 @@ DOM_SetElementPseudo(JSContext *cx, DOM_Element *element,
                      DOM_StyleToken pseudo)
 {
     /* don't run the callbacks for attribute setting */
-    return dom_SetElementAttribute(cx, element, "dom:pseudoclass", pseudo,
-                                   JS_FALSE);
+    return dom_SetElementAttribute(cx, element, XP_STRDUP("dom:pseudoclass"),
+                                   XP_STRDUP(pseudo), JS_FALSE);
 }
 
 #ifdef DEBUG_shaver_SME
@@ -431,7 +427,7 @@ CheckSelector(JSContext *cx, DOM_Element *element, DOM_StyleSelector *sel,
             if (score > *best) {        /* are we the best so far? */
                 entry = RuleValueFor(cx, sel->rules, property);
                 if (entry) {    /* do we have a value for this property? */
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_style_primitives
                     fprintf(stderr, "[+SCORE %d, VALUE %s]", score,
                             entry->value);
 #endif
@@ -439,7 +435,7 @@ CheckSelector(JSContext *cx, DOM_Element *element, DOM_StyleSelector *sel,
                     *entryp = entry;
                 }
             } else {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_style_primitives
                 entry = RuleValueFor(cx, sel->rules, property);
                 if (entry) {    /* do we have a value for this property? */
                     fprintf(stderr, "[-score %d, value %s]", score,
@@ -486,12 +482,14 @@ DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db,
     *entryp = NULL;
 
     if (node->type != NODE_TYPE_ELEMENT) {
-#ifdef DEBUG_shaver_style_primitives
-        fprintf(stderr, "(node is type %d, using parent) ", node->type);
-#endif
         element = (DOM_Element *)node->parent;
         if (!element || element->node.type != NODE_TYPE_ELEMENT)
             return JS_TRUE;
+#ifdef DEBUG_shaver_style_primitives
+        fprintf(stderr, "(node is type %d, using parent %d/%s:%s@%p) ",
+                node->type, node->parent->type, element->tagName,
+                DOM_GetElementPseudo(cx, element), node->parent);
+#endif
     } else {
         element = (DOM_Element *)node;
     }
