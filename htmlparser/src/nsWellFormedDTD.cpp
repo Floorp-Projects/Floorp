@@ -453,7 +453,7 @@ void GetProcessingInstruction(const nsString& aPIString, char* a_PI)
     nsString temp;
     PRInt32 theOffset = aPIString.FindCharInSet(theWS2,1);
     aPIString.Mid(temp,1,theOffset);
-    temp.ToCString(a_PI,temp.Length());
+    temp.ToCString(a_PI,30);
   }
   return;
 }
