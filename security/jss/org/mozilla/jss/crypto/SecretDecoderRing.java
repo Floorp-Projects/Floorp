@@ -57,6 +57,9 @@ import java.io.UnsupportedEncodingException;
  *      alg         AlgorithmIdentifier,
  *      ciphertext  OCTET STRING }
  * </pre>
+ *
+ * <p>You must set the password on the Internal Key Storage Token
+ *   (aka software token, key3.db) before you use the SecretDecoderRing.
  */
 public class SecretDecoderRing {
 
