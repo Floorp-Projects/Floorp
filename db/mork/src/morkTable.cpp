@@ -145,7 +145,7 @@ morkTable::CloseTable(morkEnv* ev) /*i*/ // called by CloseMorkNode();
       mTable_RowMap.CloseMorkNode(ev);
       mTable_RowArray.CloseMorkNode(ev);
       morkStore::SlotWeakStore((morkStore*) 0, ev, &mTable_Store);
-      morkRowSpace::SlotStrongRowSpace((morkRowSpace*) 0,
+      morkRowSpace::SlotWeakRowSpace((morkRowSpace*) 0,
          ev, &mTable_RowSpace);
       this->MarkShut();
     }

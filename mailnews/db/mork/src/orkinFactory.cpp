@@ -555,6 +555,7 @@ orkinFactory::OpenFileStore( // open an existing database
           if ( thumb )
           {
             outThumb = orkinThumb::MakeThumb(ev, thumb);
+			thumb->CutStrongRef(ev);
           }
         }
         store->CutStrongRef(ev); // always cut ref (handle has its own ref)

@@ -346,7 +346,9 @@ NS_IMETHODIMP_(nsrefcnt) nsMsgDatabase::Release(void)
 		}
 #endif
 		if (m_mdbStore)
+		{
 			m_mdbStore->CloseMdbObject(m_mdbEnv);
+		}
 		NS_DELETEXPCOM(this);                              
 		return 0;                                          
 	}
@@ -508,7 +510,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 		ret = myMDBFactory->MakeEnv(NULL, &m_mdbEnv);
 		if (NS_SUCCEEDED(ret))
 		{
-			nsIMdbThumb *thumb;
+			nsIMdbThumb *thumb = nsnull;
 			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
@@ -596,6 +598,11 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, &inOpenPolicy, &m_mdbStore);
 				if (ret == NS_OK)
 					ret = InitNewDB();
+			}
+			PR_FREEIF(nativeFileName);
+			if(thumb)
+			{
+				thumb->CutStrongRef(m_mdbEnv);
 			}
 			nsCRT::free(nativeFileName);
 		}
