@@ -449,7 +449,8 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         // with a drive letter not a slash. This problem show's itself when 
         // nested documents such as iframes within iframes are parsed.
 
-        if (PL_strcmp(m_protocol, "file") == 0) {
+        if ((PL_strcmp(m_protocol, "mailbox") == 0) ||
+            (PL_strcmp(m_protocol, "mailboxMessage") ==0)) {
             if (*cp != '/') {
                 cp--;
             }
