@@ -50,6 +50,14 @@ class nsAnonymousBlockFrame;
 
 #define NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD 0x00100000
 
+// NS_INLINE_FRAME_HARD_TEXT_OFFSETS is used for access keys, where what
+// would normally be 1 text frame is split into 3 sets of an inline parent 
+// and text child (the pre access key text, the underlined key text, and
+// the post access key text). The offsets of the 3 text frame children
+// are set in nsCSSFrameConstructor
+
+#define NS_INLINE_FRAME_HARD_TEXT_OFFSETS            0x00200000
+
 /**
  * Inline frame class.
  *
@@ -84,6 +92,10 @@ public:
                           nsIFrame* aOldFrame,
                           nsIFrame* aNewFrame);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+
+#ifdef ACCESSIBILITY
+  NS_IMETHODIMP GetAccessible(nsIAccessible** aAccessible);
+#endif
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

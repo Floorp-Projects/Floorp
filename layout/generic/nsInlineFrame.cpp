@@ -46,6 +46,10 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLayoutAtoms.h"
 #include "nsReflowPath.h"
+#ifdef ACCESSIBILITY
+#include "nsIServiceManager.h"
+#include "nsIAccessibilityService.h"
+#endif
 
 #ifdef DEBUG
 #undef NOISY_PUSHING
@@ -877,6 +881,29 @@ nsInlineFrame::GetSkipSides() const
   }
   return skip;
 }
+
+#ifdef ACCESSIBILITY
+NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  // Broken image accessibles are created here, because layout
+  // replaces the image or image control frame with an inline frame
+  *aAccessible = nsnull;
+  nsCOMPtr<nsIAtom> tagAtom;
+  mContent->GetTag(*getter_AddRefs(tagAtom));
+  if (tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input) {
+    // Only get accessibility service if we're going to use it
+    nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+    if (!accService)
+      return NS_ERROR_FAILURE;
+    if (tagAtom == nsHTMLAtoms::input)  // Broken <input type=image ... />
+      return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    // Create accessible for broken <img>
+    return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 
