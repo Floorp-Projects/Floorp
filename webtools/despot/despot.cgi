@@ -999,7 +999,7 @@ sub FileMatches {
     my ($pattern, $name) = (@_);
     my $regexp = $pattern;
     if ($pattern =~ /\%$/) {
-        $regexp =~ s:\%$:[^/]*:;
+        $regexp =~ s:\%$:[^/]*\$:;
     } elsif ($pattern =~ /\*$/) {
         $regexp =~ s:\*$:.*:;
     }
