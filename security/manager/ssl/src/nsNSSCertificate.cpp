@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.5 2001/03/08 23:15:16 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.6 2001/03/13 00:22:13 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -534,7 +534,7 @@ nsNSSCertificateDB::GetCertByName(nsIPK11Token *aToken,
 {
   CERTCertificate *cert = NULL;
   nsCOMPtr<nsIX509Cert> pCert = nsnull;
-  char *foo = strdup(nickname);
+  char *foo = PL_strdup(nickname);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", foo));
   cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), foo);
   if (cert) {
