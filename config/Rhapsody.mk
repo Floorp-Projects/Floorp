@@ -25,12 +25,11 @@
 
 ARCH			:= rhapsody
 ifeq (86,$(findstring 86,$(OS_TEST)))
-OS_REL_CFLAGS           = -mno-486 -Di386
-CPU_ARCH                = i386
+CPU_ARCH		:= i386
 else
-OS_REL_CFLAGS           = -Dppc
-CPU_ARCH                = ppc
+CPU_ARCH		:= ppc
 endif
+GFX_ARCH		:=
 
 OS_INCLUDES		= 
 G++INCLUDES		= -I/usr/include/g++
@@ -39,9 +38,9 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			= -lstdc++ 
 
-PLATFORM_FLAGS		= -DRHAPSODY -Wall -pipe
+PLATFORM_FLAGS		= -Wall -pipe -DRHAPSODY -D$(CPU_ARCH)
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
-PORT_FLAGS		= -DSW_THREADS -DHAVE_STDDEF_H -DHAVE_STDLIB_H -DHAVE_FILIO_H -DNTOHL_ENDIAN_H -DMACHINE_ENDIAN_H -DNO_REGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_TZNAME -DNEEDS_GETCWD -DHAVE_SYSERRLIST 
+PORT_FLAGS		= -DSW_THREADS -DHAVE_STDDEF_H -DHAVE_STDLIB_H -DHAVE_FILIO_H -DNTOHL_ENDIAN_H -DMACHINE_ENDIAN_H -DNO_REGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_TZNAME -DNEEDS_GETCWD -DHAVE_SYSERRLIST
 PDJAVA_FLAGS		=
 
 # "Commons" are tentative definitions in a global scope, like this:
@@ -65,7 +64,6 @@ PORT_FLAGS		+= -DNO_X11
 NO_X11			= 1
 endif
 
-
 ifdef USE_AUTOCONF
 OS_CFLAGS		= $(DSO_FLAGS)
 else
@@ -75,6 +73,10 @@ endif
 ######################################################################
 # Version-specific stuff
 ######################################################################
+
+ifeq ($(CPU_ARCH),i386)
+PLATFORM_FLAGS		+= -mno-486
+endif
 
 ######################################################################
 # Overrides for defaults in config.mk (or wherever)
@@ -94,14 +96,14 @@ EMACS			= /usr/bin/emacs
 PERL			= /usr/bin/perl
 RANLIB			= ranlib
 
-LDFLAGS                 = 
+LDFLAGS			= 
 
 # -nostdlib gets around the missing -lm problem.
-DSO_LDFLAGS             = -arch $(CPU_ARCH) -dynamiclib -nostdlib -lstdc++ -lcc_dynamic -compatibility_version 1 -current_version 1 -all_load -undefined suppress
+DSO_LDFLAGS		= -arch $(CPU_ARCH) -dynamiclib -nostdlib -lstdc++ -lcc_dynamic -compatibility_version 1 -current_version 1 -all_load -undefined suppress
 
 # Comment out MKSHLIB to build only static libraries.
-MKSHLIB                 = $(CC) $(DSO_LDFLAGS)
-DLL_SUFFIX              = dylib
+MKSHLIB			= $(CC) $(DSO_LDFLAGS)
+DLL_SUFFIX		= dylib
 
 ######################################################################
 # Other
