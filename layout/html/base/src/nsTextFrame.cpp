@@ -2089,6 +2089,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     case eSelectNoAmount:
     {
       aPos->mContentOffset = aPos->mStartOffset;
+      result = NS_OK;
     }
     break;
 
@@ -2181,19 +2182,24 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
             aPos->mContentOffset = aPos->mStartOffset - contentLen;
             //check for whitespace next.
-            if (aPos->mContentOffset > mContentOffset)
+            if (isWhitespace && aPos->mContentOffset <= mContentOffset)
+            {
               keepSearching = PR_FALSE;//reached the beginning of a word
-            aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
-            while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
-              aPos->mContentOffset -= contentLen;
-              aPos->mEatingWS = PR_FALSE;
+              aPos->mEatingWS = PR_FALSE;//if no real word then
             }
-            keepSearching = aPos->mContentOffset <= mContentOffset;
-            if (!isWhitespace){
-              if (!keepSearching)
-                found = PR_TRUE;
+            else{
+              aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
+              while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
+                aPos->mContentOffset -= contentLen;
+                aPos->mEatingWS = PR_TRUE;
+              }
+              keepSearching = aPos->mContentOffset <= mContentOffset;
+              if (!isWhitespace){
+                if (!keepSearching)
+                  found = PR_TRUE;
               else
                 aPos->mEatingWS = PR_TRUE;
+              }
             }
           }
           else {
