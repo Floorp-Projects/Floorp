@@ -274,10 +274,16 @@ nsPop3Sink::EndMailDelivery()
       (void) msgWindow->GetOpenFolder(getter_AddRefs(openFolder));
       if (openFolder && openFolder != m_folder)
       {
-        PRBool hasNew;
-        (void) openFolder->GetHasNewMessages(&hasNew);
-        if (hasNew)
-          openFolder->CallFilterPlugins(nsnull);
+        // only call filter plugins if folder is a local folder, because only
+        // local folders get messages filtered into them synchronously by pop3.
+        nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(openFolder);
+        if (localFolder)
+        {
+          PRBool hasNew;
+          (void) openFolder->GetHasNewMessages(&hasNew);
+          if (hasNew)
+            openFolder->CallFilterPlugins(nsnull);
+        }
       }
     }
   }
