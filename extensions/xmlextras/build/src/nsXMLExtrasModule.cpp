@@ -67,6 +67,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPointerResult)
 
 NS_DECL_DOM_CLASSINFO(XMLSerializer)
 NS_DECL_DOM_CLASSINFO(XMLHttpRequest)
+NS_DECL_DOM_CLASSINFO(XMLHttpProgressEvent)
 NS_DECL_DOM_CLASSINFO(DOMParser)
 NS_DECL_DOM_CLASSINFO(XPointerResult)
 
@@ -89,6 +90,11 @@ NS_DOMCI_EXTENSION(XMLExtras)
         NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIJSXMLHttpRequest)
         NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMEventTarget)
     NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XMLHttpRequest, PR_TRUE, &kXMLHttpRequestCID)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XMLHttpProgressEvent)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMEvent)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMLSProgressEvent)
+    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XMLHttpProgressEvent, PR_TRUE, nsnull)
 
     static NS_DEFINE_CID(kDOMParserCID, NS_DOMPARSER_CID);
     NS_DOMCI_EXTENSION_ENTRY_BEGIN(DOMParser)
@@ -161,6 +167,13 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS, 
+                                "XMLHttpProgressEvent",
+                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID, 
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   char* iidString = NS_GET_IID(nsIXMLHttpRequest).ToString();
   if (!iidString)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -215,6 +228,7 @@ XMLExtrasModuleDestructor(nsIModule* self)
 {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLSerializer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLHttpRequest));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLHttpProgressEvent));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(DOMParser));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(XPointerResult));
 }
