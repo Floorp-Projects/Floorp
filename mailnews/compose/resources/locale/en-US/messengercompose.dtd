@@ -115,7 +115,7 @@
 <!ENTITY highestPriorityCmd.label "Highest">
 
 <!ENTITY outputFormatMenu.label "Format">
-<!ENTITY askmeFormatCmd.label "Auto Detect">
+<!ENTITY autoFormatCmd.label "Auto-Detect">
 <!ENTITY plainTextFormatCmd.label "Plain Text Only">
 <!ENTITY htmlFormatCmd.label "Rich Text (HTML) Only">
 <!ENTITY bothFormatCmd.label "Plain and Rich (HTML) Text">

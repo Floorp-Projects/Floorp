@@ -324,7 +324,7 @@
           <menuseparator/>
           <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
             <menupopup>
-              <menuitem type="radio" name="output_format" value="&askmeFormatCmd.label;" id="1" checked="true"/>
+              <menuitem type="radio" name="output_format" value="&autoFormatCmd.label;" id="1" checked="true"/>
               <menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" id="2"/>
               <menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" id="3"/>
               <menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" id="4"/>
