@@ -75,6 +75,9 @@ public:
 
     static nsresult
     MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID);
+
+    static PRBool
+    IsContainedBy(nsIContent* aElement, nsIContent* aContainer);
 };
 
 

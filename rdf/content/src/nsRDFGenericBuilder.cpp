@@ -705,7 +705,7 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
 
             // Okay, it's a "live" element, so go ahead and remove the
             // child from this node.
-            rv = RemoveWidgetItem(element, aProperty, resource);
+            rv = RemoveWidgetItem(element, aProperty, resource, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
             if (NS_FAILED(rv)) return rv;
 
@@ -818,7 +818,7 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
 
             // Okay, it's a "live" element, so go ahead and remove the
             // child from this node.
-            rv = RemoveWidgetItem(element, aProperty, oldresource);
+            rv = RemoveWidgetItem(element, aProperty, oldresource, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
             if (NS_FAILED(rv)) return rv;
 
@@ -1926,8 +1926,55 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 
 
 nsresult
-RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement, nsIRDFResource* aProperty, nsIRDFResource* aValue)
+RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
+                                        nsIRDFResource* aProperty,
+                                        nsIRDFResource* aValue,
+                                        PRBool aNotify)
 {
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(mDocument);
+    if (! xuldoc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsXPIDLCString uri;
+    rv = aValue->GetValue(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mDocument->GetElementsForResource(aValue, elements);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 cnt;
+    rv = elements->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
+        nsISupports* isupports = elements->ElementAt(i);
+        nsCOMPtr<nsIContent> child( do_QueryInterface(isupports) );
+        NS_IF_RELEASE(isupports);
+
+        if (! nsRDFContentUtils::IsContainedBy(child, aElement))
+            continue;
+
+        nsCOMPtr<nsIContent> parent;
+        rv = child->GetParent(*getter_AddRefs(parent));
+        if (NS_FAILED(rv)) return rv;
+
+        PRInt32 pos;
+        rv = parent->IndexOf(child, pos);
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
+        if (pos < 0) continue;
+
+        rv = parent->RemoveChildAt(pos, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     return NS_OK;
 }
 
