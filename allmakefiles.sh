@@ -885,7 +885,6 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/irc/Makefile
-	    extensions/irc/xul/Makefile
             " ;;
 	transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    $MAKEFILES_transformiix"
