@@ -1906,16 +1906,22 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef)
   var url = gURLBar.value;
 
   // Prevent suffix when already exists www , http , /
-  if (!/^(www|http)|\/\s*$/i.test(url)) {
+  if (!/^(www|http)|\/\s*$/i.test(url) && aTriggeringEvent) {
     var suffix = null;
+#ifdef XP_MACOSX
+    var accelPressed = 'metaKey' in aTriggeringEvent &&
+                       aTriggeringEvent.metaKey;
+#else
+    var accelPressed = 'ctrlKey' in aTriggeringEvent &&
+                       aTriggeringEvent.ctrlKey;
+#endif
+    var shiftPressed = 'shiftKey' in aTriggeringEvent &&
+                       aTriggeringEvent.shiftKey;
 
-    if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-        aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
-        aTriggeringEvent.shiftKey)
+    if (accelPressed && shiftPressed)
       suffix = ".org/";
 
-    else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-        aTriggeringEvent.ctrlKey)
+    else if (accelPressed)
     {
       try {
         suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
@@ -1927,8 +1933,7 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef)
       }
     }
 
-    else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
-        aTriggeringEvent.shiftKey)
+    else if (shiftPressed)
       suffix = ".net/";
 
     if (suffix != null) {
