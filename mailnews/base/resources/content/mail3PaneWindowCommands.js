@@ -688,7 +688,7 @@ function MailAreaHasFocus()
 	var focusedElement = top.document.commandDispatcher.focusedElement;
 	if(focusedElement)
 	{
-		var name = focusedElement.localName;
+		var name = focusedElement.localName.toLowerCase();
 		return ((name != "input") && (name != "textarea"));
 	}
 	return true;
