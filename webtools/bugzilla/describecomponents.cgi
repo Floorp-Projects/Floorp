@@ -19,8 +19,12 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 
-use vars %::FORM;
+use vars qw(
+  %FORM
+  $userid
+);
 
 use diagnostics;
 use strict;
@@ -32,120 +36,93 @@ require "CGI.pl";
 ConnectToDatabase();
 GetVersionTable();
 
-quietly_check_login();
+if (!defined $::FORM{'product'}) {
+    # Reference to a subset of %::proddesc, which the user is allowed to see
+    my %products;
 
-######################################################################
-# Begin Data/Security Validation
-######################################################################
+    if (Param("usebuggroups")) {
+        # OK, now only add products the user can see
+        confirm_login();
+        foreach my $p (@::legal_product) {
+            if (!GroupExists($p) || UserInGroup($p)) {
+                $products{$p} = $::proddesc{$p};
+            }
+        }
+    }
+    else {
+          %products = %::proddesc;
+    }
 
-# If this installation uses bug groups to restrict access to products,
-# only show the user products that don't have their own bug group or
-# those whose bug group the user is a member of.  Otherwise, if this 
-# installation doesn't use bug groups, show the user all legal products.
-my @products;
-if ( Param("usebuggroups") ) {
-  @products = grep( !GroupExists($_) || UserInGroup($_) , @::legal_product );
-} else {
-  @products = @::legal_product;
+    my $prodsize = scalar(keys %products);
+    if ($prodsize == 0) {
+        DisplayError("Either no products have been defined ".
+                     "or you have not been given access to any.\n");
+        exit;
+    }
+    elsif ($prodsize > 1) {
+        $::vars->{'proddesc'} = \%products;
+        $::vars->{'target'} = "describecomponents.cgi";
+        $::vars->{'title'} = "Bugzilla component description";
+        $::vars->{'h2'} = 
+          "Please specify the product whose components you want described.";
+
+        print "Content-type: text/html\n\n";
+        $::template->process("global/choose_product.tmpl", $::vars)
+          || DisplayError("Template process failed: " . $::template->error());
+        exit;
+    }
+
+    $::FORM{'product'} = (keys %::proddesc)[0];
 }
 
-if ( defined $::FORM{'product'} ) {
-  # Make sure the user specified a valid product name.  Note that
-  # if the user specifies a valid product name but is not authorized
-  # to access that product, they will receive a different error message
-  # which could enable people guessing product names to determine
-  # whether or not certain products exist in Bugzilla, even if they
-  # cannot get any other information about that product.
-  grep( $::FORM{'product'} eq $_ , @::legal_product )
-    || DisplayError("The product name is invalid.")
-    && exit;
+my $product = $::FORM{'product'};
 
-  # Make sure the user is authorized to access this product.
-  if ( Param("usebuggroups") && GroupExists($::FORM{'product'}) ) {
-    UserInGroup($::FORM{'product'})
+# Make sure the user specified a valid product name.  Note that
+# if the user specifies a valid product name but is not authorized
+# to access that product, they will receive a different error message
+# which could enable people guessing product names to determine
+# whether or not certain products exist in Bugzilla, even if they
+# cannot get any other information about that product.
+grep($product eq $_ , @::legal_product)
+  || DisplayError("The product name is invalid.")
+  && exit;
+
+# Make sure the user is authorized to access this product.
+if (Param("usebuggroups") && GroupExists($product) && !$::userid) {
+    confirm_login();
+    UserInGroup($product)
       || DisplayError("You are not authorized to access that product.")
-      && exit;
-  }
+        && exit;
 }
 
 ######################################################################
 # End Data/Security Validation
 ######################################################################
 
-print "Content-type: text/html\n\n";
-
-my $product = $::FORM{'product'};
-if (!defined $product || lsearch(\@products, $product) < 0) {
-
-    PutHeader("Bugzilla component description");
-    print "
-<FORM>
-Please specify the product whose components you want described.
-<P>
-Product: <SELECT NAME=product>
-";
-    print make_options(\@products);
-    print "
-</SELECT>
-<P>
-<INPUT TYPE=\"submit\" VALUE=\"Submit\">
-</FORM>
-";
-    PutFooter();
-    exit;
-}
-
-
-PutHeader("Bugzilla component description", "Bugzilla component description",
-          $product);
-
-print "
-<TABLE>
-<tr>
-<th align=left>Component</th>
-<th align=left>Default owner</th>
-";
-
-my $emailsuffix = Param("emailsuffix");
-my $useqacontact = Param("useqacontact");
-
-my $cols = 2;
-if ($useqacontact) {
-    print "<th align=left>Default qa contact</th>";
-    $cols++;
-}
-
-my $colbut1 = $cols - 1;
-
-print "</tr>";
-
-SendSQL("select value, initialowner, initialqacontact, description from components where program = " . SqlQuote($product) . " order by value");
-
-my @data;
+my @components;
+SendSQL("SELECT value, initialowner, initialqacontact, description FROM " .
+        "components WHERE program = " . SqlQuote($product) . " ORDER BY " .
+        "value");
 while (MoreSQLData()) {
-    push @data, [FetchSQLData()];
-}
-foreach (@data) {
-    my ($component, $initialownerid, $initialqacontactid, $description) = @$_;
+    my ($name, $initialowner, $initialqacontact, $description) =
+      FetchSQLData();
 
-    my ($initialowner, $initialqacontact) = ($initialownerid ? DBID_to_name ($initialownerid) : '',
-                                             $initialqacontactid ? DBID_to_name ($initialqacontactid) : '');
+    my %component;
 
-    print qq|
-<tr><td colspan=$cols><hr></td></tr>
-<tr><td rowspan=2><a name="|
-.value_quote($component).
-qq|">$component</a></td>
-<td><a href="mailto:$initialowner$emailsuffix">$initialowner</a></td>
-|;
-    if ($useqacontact) {
-        print qq|
-<td><a href="mailto:$initialqacontact$emailsuffix">$initialqacontact</a></td>
-|;
-    }
-    print "</tr><tr><td colspan=$colbut1>$description</td></tr>\n";
+    $component{'name'} = $name;
+    $component{'initialowner'} = $initialowner ?
+      DBID_to_name($initialowner) : '';
+    $component{'initialqacontact'} = $initialqacontact ?
+      DBID_to_name($initialqacontact) : '';
+    $component{'description'} = $description;
+
+    push @components, \%component;
 }
 
-print "<tr><td colspan=$cols><hr></td></tr></table>\n";
+$::vars->{'product'} = $product;
+$::vars->{'components'} = \@components;
 
-PutFooter();
+print "Content-type: text/html\n\n";
+$::template->process("info/describe-components.tmpl", $::vars)
+  || DisplayError("Template process failed: " . $::template->error());
+

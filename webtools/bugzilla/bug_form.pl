@@ -38,6 +38,7 @@ sub bug_form_pl_sillyness {
     $zz = %::proddesc;
     $zz = %::prodmaxvotes;
     $zz = %::versions;
+    $zz = @::enterable_products;
     $zz = @::legal_keywords;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
@@ -156,18 +157,15 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
 #
 
 my (@prodlist, $product_popup);
-foreach my $p (sort(keys %::versions)) {
+my $seen_currProd = 0;
+
+foreach my $p (@::enterable_products) {
     if ($p eq $bug{'product'}) {
         # if it's the product the bug is already in, it's ALWAYS in
         # the popup, period, whether the user can see it or not, and
         # regardless of the disallownew setting.
+        $seen_currProd = 1;
         push(@prodlist, $p);
-        next;
-    }
-    if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
-        # Special hack.  If we stuffed a "0" into proddesc, that means
-        # that disallownew was set for this bug, and so we don't want
-        # to allow people to specify that product here.
         next;
     }
     if(Param("usebuggroupsentry")
@@ -180,6 +178,13 @@ foreach my $p (sort(keys %::versions)) {
         next;
     }
     push(@prodlist, $p);
+}
+
+# The current product is part of the popup, even if new bugs are no longer
+# allowed for that product
+if (!$seen_currProd) {
+    push (@prodlist, $bug{'product'});
+    @prodlist = sort @prodlist;
 }
 
 # If the user has access to multiple products, display a popup, otherwise 

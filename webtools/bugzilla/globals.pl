@@ -38,6 +38,7 @@ sub globals_pl_sillyness {
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::dontchange;
+    $zz = @main::enterable_products;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
     $zz = @main::legal_components;
@@ -50,6 +51,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
+    $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
     $zz = $main::userid;
@@ -492,16 +494,13 @@ sub GenerateVersionTable {
                                 # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description, votesperuser, disallownew$mpart from products");
+    SendSQL("select product, description, votesperuser, disallownew$mpart from products ORDER BY product");
     $::anyvotesallowed = 0;
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
-        if ($dis) {
-            # Special hack.  Stomp on the description and make it "0" if we're
-            # not supposed to allow new bugs against this product.  This is
-            # checked for in enter_bug.cgi.
-            $::proddesc{$p} = "0";
+        if (!$dis) {
+            push @::enterable_products, $p;
         }
         if ($dotargetmilestone) {
             $::milestoneurl{$p} = $u;
@@ -579,6 +578,7 @@ sub GenerateVersionTable {
     }
     print FID GenerateCode('@::settable_resolution');
     print FID GenerateCode('%::proddesc');
+    print FID GenerateCode('@::enterable_products');
     print FID GenerateCode('%::prodmaxvotes');
     print FID GenerateCode('$::anyvotesallowed');
 
@@ -1294,8 +1294,10 @@ sub UserInGroup {
         return 0;
     }
     ConnectToDatabase();
+    PushGlobalSQLState();
     SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
     my $bit = FetchOneColumn();
+    PopGlobalSQLState();
     if ($bit) {
         return 1;
     }

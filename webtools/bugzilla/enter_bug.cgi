@@ -44,11 +44,13 @@ use vars qw(
   $template
   $vars
   %COOKIE
+  @enterable_products
   @legal_opsys
   @legal_platform
   @legal_priority
   @legal_severity
   %MFORM
+  %versions
 );
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
@@ -58,28 +60,25 @@ confirm_login() if (Param("usebuggroupsentry"));
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
 
-    foreach my $p (sort(keys(%::versions))) {
-        # Special hack: "0" in proddesc means disallownew was set.
-        # Also, if we're using bug groups to restrict entry on products,
-        # and this product has a bug group, and the user is not in that
-        # group, we don't want to include that product in this list.
-        if ((defined $::proddesc{$p} && $::proddesc{$p} eq '0') 
-            || (Param("usebuggroupsentry") 
-                && GroupExists($p) 
-                && !UserInGroup($p)))
+    my %products;
+
+    foreach my $p (@enterable_products) {
+        if (!(Param("usebuggroupsentry") 
+              && GroupExists($p) 
+              && !UserInGroup($p)))
         {
-            delete $::proddesc{$p};
+            $products{$p} = $::proddesc{$p};
         }
     }
  
-    my $prodsize = scalar(keys %::proddesc);
+    my $prodsize = scalar(keys %products);
     if ($prodsize == 0) {
         DisplayError("Either no products have been defined to enter bugs ".
                      "against or you have not been given access to any.\n");
         exit;
     } 
     elsif ($prodsize > 1) {
-        $vars->{'proddesc'} = \%::proddesc;
+        $vars->{'proddesc'} = \%products;
 
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'title'} = "Enter Bug";
@@ -92,7 +91,7 @@ if (!defined $::FORM{'product'}) {
         exit;        
     }
 
-    $::FORM{'product'} = (keys %::proddesc)[0];
+    $::FORM{'product'} = (keys %products)[0];
     $::MFORM{'product'} = [$::FORM{'product'}];
 
 }
@@ -229,7 +228,7 @@ if(Param("usebuggroupsentry")
 
 GetVersionTable();
 
-if (!defined($::proddesc{$product}) || $::proddesc{$product} eq "0") {
+if (lsearch(\@::enterable_products, $product) == -1) {
     DisplayError("'" . html_quote($product) . "' is not a valid product.");
     exit;
 }
@@ -320,7 +319,7 @@ if ($::usergroupset ne '0') {
         my ($bit, $prodname, $description) = FetchSQLData();
         # Don't want to include product groups other than this product.
         next unless($prodname eq $product || 
-                    !defined($::proddesc{$prodname})); 
+                    !defined($::proddesc{$prodname}));
 
         my $check;
 
