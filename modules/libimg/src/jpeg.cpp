@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 3.1 1998/07/27 16:09:43 hardts%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 3.2 1998/08/11 20:45:59 pnunn%netscape.com Exp $
  */
 
 
@@ -40,7 +40,6 @@
 #endif
 
 PR_BEGIN_EXTERN_C
-#include "jinclude.h"
 #include "jpeglib.h"
 #include "jerror.h"
 
