@@ -16,26 +16,19 @@
  * Reserved.
  */
 #include "nsAreaFrame.h"
-#include "nsIContent.h"
-#include "nsIHTMLContent.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIViewManager.h"
-#include "nsIDeviceContext.h"
 #include "nsSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
-#include "nsViewsCID.h"
 #include "nsHTMLIIDs.h"
-#include "nsIWebShell.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 nsresult
