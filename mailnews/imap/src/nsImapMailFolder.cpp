@@ -269,15 +269,15 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
-	if(name == "Inbox" || name == "INBOX")
+	if(name.Compare("Inbox", PR_TRUE) == 0)
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
-	else if(name == "Trash")
+	else if(name.Compare("Trash", PR_TRUE) == 0)
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-    else if(name == "Sent")
+    else if(name.Compare("Sent", PR_TRUE) == 0)
         folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name == "Drafts")
+    else if(name.Compare("Drafts", PR_TRUE) == 0)
         folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name == "Templates")
+    else if (name.Compare("Templates", PR_TRUE) == 0)
         folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 
 	nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
