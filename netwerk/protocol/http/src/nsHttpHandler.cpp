@@ -333,7 +333,7 @@ nsHttpHandler::IsAcceptableEncoding(const char *enc)
     if (!PL_strncasecmp(enc, "x-", 2))
         enc += 2;
     
-    return PL_strcasestr(mAcceptEncodings, enc) != nsnull;
+    return PL_strcasestr(mAcceptEncodings.get(), enc) != nsnull;
 }
 
 nsresult

@@ -232,6 +232,6 @@ NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentTyp
 // Windows, unix and mac when no type match occured.
 
       
-		return GetTypeFromExtension( fileExt, aContentType );
+		return GetTypeFromExtension( fileExt.get(), aContentType );
 }
 

@@ -143,7 +143,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         char time[128];
         PR_FormatTimeUSEnglish(time, 128, "%Y-%m-%d-%H%M%S.txt", &expTime);
         dumpFileName += time;
-        rv = file->Append((const char*)dumpFileName);
+        rv = file->Append(dumpFileName.get());
         if (NS_FAILED(rv)) return rv;
 
         char* nativePath;

@@ -341,9 +341,7 @@ nsFileTransport::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsFileTransport::GetName(PRUnichar* *result)
 {
-    nsAutoString name;
-    name.AppendWithConversion(mStreamName);
-    *result = ToNewUnicode(name);
+    *result = ToNewUnicode(mStreamName);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -847,11 +845,9 @@ nsFileTransport::Process(void)
             saveListener = 0;
         }
         if (mProgressSink) {
-            nsAutoString fileName;
-            fileName.AssignWithConversion(mStreamName);
             mProgressSink->OnStatus(this, saveContext, 
                                     NS_NET_STATUS_READ_FROM, 
-                                    fileName.get());
+                                    NS_ConvertASCIItoUCS2(mStreamName).get());
         }
 
         break;
@@ -1015,10 +1011,9 @@ nsFileTransport::Process(void)
             mProvider = 0;
         }
         if (mProgressSink) {
-            nsAutoString fileName; fileName.AssignWithConversion(mStreamName);
             nsresult rv = mProgressSink->OnStatus(this, mContext,
                                                   NS_NET_STATUS_WROTE_TO, 
-                                              fileName.get());
+                                                  NS_ConvertASCIItoUCS2(mStreamName).get());
             NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStatus failure");
         }
         mContext = 0;

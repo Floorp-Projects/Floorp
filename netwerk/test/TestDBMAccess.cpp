@@ -188,7 +188,7 @@ writeFile(int cycles)
         for (x=0; x<32; x++) {
             nsCAutoString filename; filename.Assign(TMPDIR "foo" DIRSEP);
             filename.AppendInt(x);
-            PR_MakeDir(filename, 0755);
+            PR_MakeDir(filename.get(), 0755);
         }
         
         // create "cache" files
@@ -201,7 +201,7 @@ writeFile(int cycles)
             PRIntervalTime i1, i2, i3;
             i1 = PR_IntervalNow();
 
-            fd = PR_OpenFile(filename, PR_WRONLY|PR_TRUNCATE, 0644);
+            fd = PR_OpenFile(filename.get(), PR_WRONLY|PR_TRUNCATE, 0644);
             if (!fd)
                 printf("bad filename?  %s\n", filename.get());
 
@@ -218,7 +218,7 @@ writeFile(int cycles)
 
 /*
             printf(" - writing %s [topen=%d twrite=%d]\n", 
-                (const char *) filename,
+                   filename.get(),
                 PR_IntervalToMilliseconds(i2 - i1), 
                 PR_IntervalToMilliseconds(i3 - i2));
 */
@@ -244,7 +244,7 @@ readFile(int cycles)
             filename.Append(DIRSEP);
             filename.AppendInt( x );
             
-            fd = PR_OpenFile(filename, PR_RDONLY, 0);
+            fd = PR_OpenFile(filename.get(), PR_RDONLY, 0);
             
             PRInt32 size = PR_Available(fd);
             

@@ -104,7 +104,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
                   "<style type=\"text/css\">\npre {\n  margin: 0;\n}\n"
                   "td:first-child {\n  text-align: right;\n  vertical-align: top;\n"
                   "  line-height: 0.8em;\n}\n</style>\n</head>\n<body>\n");
-    outputStream->Write(buffer, buffer.Length(), &n);
+    outputStream->Write(buffer.get(), buffer.Length(), &n);
 
     if (NS_SUCCEEDED(status))
         rv = WriteCacheEntryDescription(outputStream, descriptor);
@@ -113,7 +113,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
     if (NS_FAILED(rv)) return rv;
 
     buffer.Assign("</body>\n</html>\n");
-    outputStream->Write(buffer, buffer.Length(), &n);
+    outputStream->Write(buffer.get(), buffer.Length(), &n);
         
     nsCOMPtr<nsIInputStream> inStr;
     PRUint32 size;
@@ -327,7 +327,7 @@ nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = serv->CreateSession(clientID,
+    rv = serv->CreateSession(clientID.get(),
                              nsICache::STORE_ANYWHERE,
                              streamBased,
                              getter_AddRefs(mCacheSession));
@@ -339,7 +339,7 @@ nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
-    return mCacheSession->AsyncOpenCacheEntry(key, nsICache::ACCESS_READ, this);
+    return mCacheSession->AsyncOpenCacheEntry(key.get(), nsICache::ACCESS_READ, this);
 }
 
 
@@ -486,7 +486,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 
     buffer.Append("</table>\n");
 
-    outputStream->Write(buffer, buffer.Length(), &n);
+    outputStream->Write(buffer.get(), buffer.Length(), &n);
     return NS_OK;
 }
 
@@ -497,7 +497,7 @@ nsAboutCacheEntry::WriteCacheEntryUnavailable(nsIOutputStream *outputStream,
     PRUint32 n;
     nsCAutoString buffer;
     buffer.Assign("The cache entry you selected is no longer available.");
-    outputStream->Write(buffer, buffer.Length(), &n);
+    outputStream->Write(buffer.get(), buffer.Length(), &n);
     return NS_OK;
 }
 

@@ -183,7 +183,7 @@ nsHttpChannel::Init(nsIURI *uri,
         hostLine.Append(':');
         hostLine.AppendInt(port);
     }
-    rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
+    rv = mRequestHead.SetHeader(nsHttp::Host, hostLine.get());
     if (NS_FAILED(rv)) return rv;
 
     rv = nsHttpHandler::get()->
@@ -695,11 +695,11 @@ nsHttpChannel::OpenCacheEntry(PRBool *delayed)
     // we'll try to synchronously open the cache entry... however, it may be
     // in use and not yet validated, in which case we'll try asynchronously
     // opening the cache entry.
-    rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
+    rv = session->OpenCacheEntry(cacheKey.get(), accessRequested, PR_FALSE,
                                  getter_AddRefs(mCacheEntry));
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // access to the cache entry has been denied
-        rv = session->AsyncOpenCacheEntry(cacheKey, accessRequested, this);
+        rv = session->AsyncOpenCacheEntry(cacheKey.get(), accessRequested, this);
         if (NS_FAILED(rv)) return rv;
         // we'll have to wait for the cache entry
         *delayed = PR_TRUE;
@@ -1270,9 +1270,9 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
 
     // set the authentication credentials
     if (proxyAuth)
-        mRequestHead.SetHeader(nsHttp::Proxy_Authorization, creds);
+        mRequestHead.SetHeader(nsHttp::Proxy_Authorization, creds.get());
     else
-        mRequestHead.SetHeader(nsHttp::Authorization, creds);
+        mRequestHead.SetHeader(nsHttp::Authorization, creds.get());
 
     // kill off the current transaction
     mTransaction->Cancel(NS_BINDING_REDIRECTED);
@@ -1458,7 +1458,7 @@ nsHttpChannel::GetAuthenticator(const char *scheme, nsIHttpAuthenticator **auth)
     contractid.Append(scheme);
 
     nsresult rv;
-    nsCOMPtr<nsIHttpAuthenticator> serv = do_GetService(contractid, &rv);
+    nsCOMPtr<nsIHttpAuthenticator> serv = do_GetService(contractid.get(), &rv);
     if (NS_FAILED(rv)) return rv;
 
     *auth = serv;
@@ -2074,7 +2074,7 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
                 PRUint32 prehostLoc = PRUint32(ref.Find(prehost, PR_TRUE));
                 ref.Cut(prehostLoc, nsCharTraits<char>::length(prehost) + 1); // + 1 for @
             }
-            mRequestHead.SetHeader(nsHttp::Referer, ref);
+            mRequestHead.SetHeader(nsHttp::Referer, ref.get());
         }
     }
     return NS_OK;

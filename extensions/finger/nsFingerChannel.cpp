@@ -198,7 +198,7 @@ nsFingerChannel::Open(nsIInputStream **_retval)
              do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = socketService->CreateTransport(mHost, mPort, mProxyInfo, BUFFER_SEG_SIZE,
+    rv = socketService->CreateTransport(mHost.get(), mPort, mProxyInfo, BUFFER_SEG_SIZE,
             BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
@@ -221,7 +221,7 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
              do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = socketService->CreateTransport(mHost, mPort, mProxyInfo, BUFFER_SEG_SIZE,
+    rv = socketService->CreateTransport(mHost.get(), mPort, mProxyInfo, BUFFER_SEG_SIZE,
       BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
