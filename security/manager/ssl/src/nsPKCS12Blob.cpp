@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.41 2004/06/17 00:13:16 roc+%cs.cmu.edu Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.42 2004/11/05 15:23:35 timeless%mozdev.org Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -172,8 +172,6 @@ nsPKCS12Blob::ImportFromFileHelper(nsILocalFile *file, PRBool &aWantRetry)
 
   PK11SlotInfo *slot=nsnull;
   nsXPIDLString tokenName;
-  nsXPIDLCString tokenNameCString;
-  const char *tokNameRef;
   
   aWantRetry = PR_FALSE;
 
@@ -187,12 +185,10 @@ nsPKCS12Blob::ImportFromFileHelper(nsILocalFile *file, PRBool &aWantRetry)
   }
 
   mToken->GetTokenName(getter_Copies(tokenName));
-  tokenNameCString.Adopt(ToNewUTF8String(tokenName));
-  tokNameRef = tokenNameCString; //I do this here so that the
-                                 //NS_CONST_CAST below doesn't
-                                 //break the build on Win32
-
-  slot = PK11_FindSlotByName(NS_CONST_CAST(char*,tokNameRef));
+  {
+    NS_ConvertUTF16toUTF8 tokenNameCString(tokenName);
+    slot = PK11_FindSlotByName(tokenNameCString.get());
+  }
   if (!slot) {
     srv = SECFailure;
     goto finish;
@@ -606,6 +602,7 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
     nsCAutoString pathBuf;
     tmpFile->GetNativePath(pathBuf);
     cx->mTmpFilePath = ToNewCString(pathBuf);
+    if (!cx->mTmpFilePath) return SECFailure;
 #ifdef XP_MAC
     char *unixPath = nsnull;
     ConvertMacPathToUnixPath(cx->mTmpFilePath, &unixPath);
@@ -672,8 +669,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
   nsCString nickname;
   nsAutoString nickFromProp;
   nssComponent->GetPIPNSSBundleString("P12DefaultNickname", nickFromProp);
-  nsXPIDLCString nickFromPropC;
-  nickFromPropC.Adopt(ToNewUTF8String(nickFromProp));
+  NS_ConvertUTF16toUTF8 nickFromPropC(nickFromProp);
   // The user is trying to import a PKCS#12 file that doesn't have the
   // attribute we use to set the nickname.  So in order to reduce the
   // number of interactions we require with the user, we'll build a nickname
