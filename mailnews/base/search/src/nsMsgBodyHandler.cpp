@@ -161,6 +161,9 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
 			return (PRInt32) numBytesCopied;
 		}
 	}
+	else if (m_headersSize == 0) {
+		buf[0] = '\0';
+	}
 	return -1;
 }
 
@@ -169,7 +172,6 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
 PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 // returns number of bytes copied
 {
-	char * line = NULL;
 	if (m_numLocalLines)
 	{
 		if (m_passedHeaders)
