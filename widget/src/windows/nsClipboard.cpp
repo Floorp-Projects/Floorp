@@ -475,16 +475,16 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
             default: {
               // Check to see if there is HTML on the clipboard
               // if not, then just get the data and return it
-              UINT format = GetFormat(nsAutoString(kHTMLMime));
+              /*UINT format = GetFormat(nsAutoString(kHTMLMime));
               if (fe.cfFormat == format) {
                 result = GetGlobalData(stm.hGlobal, aData, aLen);
-                char * str = (char *)*aData;
-                while (str[*aLen-1] == 0) {
-                  (*aLen)--;
-                }
-              } else {
+                //char * str = (char *)*aData;
+                //while (str[*aLen-1] == 0) {
+                //  (*aLen)--;
+                //}
+              } else {*/
                 result = GetGlobalData(stm.hGlobal, aData, aLen);
-              }
+              //}
               } break;
           } // switch
         } break;
