@@ -123,10 +123,7 @@ static void printRange(nsIDOMRange *aDomRange);
 //#define DEBUG_NAVIGATION
 
 
-#if DEBUG_cmanske
 //#define DEBUG_TABLE_SELECTION 1
-#endif
-
 
 class nsSelectionIterator;
 class nsSelection;
@@ -2265,6 +2262,9 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
   if (mSelectingTableCells)
   {
     // We are drag-selecting
+#ifdef DEBUG_TABLE_SELECTION
+printf("HandleTableSelection: mSelectingTableCellMode = %x\n", mSelectingTableCellMode);
+#endif
 
     if (aTarget != nsISelectionPrivate::TABLESELECTION_TABLE)
     {
@@ -2272,6 +2272,9 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       if (mEndSelectedCell == childContent)
         return NS_OK;
 
+#ifdef DEBUG_TABLE_SELECTION
+printf(" mStartSelectedCell = %x, mEndSelectedCell = %x, childContent = %x \n", mStartSelectedCell, mEndSelectedCell, childContent);
+#endif
       // aTarget can be any "cell mode",
       //  so we can easily drag-select rows and columns 
       // Once we are in row or column mode,
@@ -2289,12 +2292,15 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
           result = GetCellIndexes(childContent, curRowIndex, curColIndex);
           if (NS_FAILED(result)) return result;
         
+#ifdef DEBUG_TABLE_SELECTION
+printf(" curRowIndex = %d, startRowIndex = %d, curColIndex = %d, startColIndex = %d\n", curRowIndex, startRowIndex, curColIndex, startColIndex);
+#endif
           if ((mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_ROW && startRowIndex == curRowIndex) ||
               (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_COLUMN && startColIndex == curColIndex)) 
             return NS_OK;
         }
 #ifdef DEBUG_TABLE_SELECTION
-printf("HandleTableSelection: Dragged into a new column or row\n");
+printf(" Dragged into a new column or row\n");
 #endif
         // Continue dragging row or column selection
         return SelectRowOrColumn(childContent, mSelectingTableCellMode);
@@ -2425,6 +2431,10 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
       }
       else if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW || aTarget == nsISelectionPrivate::TABLESELECTION_COLUMN)
       {
+#ifdef DEBUG_TABLE_SELECTION
+printf("aTarget == %d\n", aTarget);
+#endif
+
         // Start drag-selecting mode so multiple rows/cols can be selected
         // Note: Currently, nsFrame::GetDataForTableSelection
         //       will never call us for row or column selection on mouse down
@@ -2741,7 +2751,12 @@ nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
       mStartSelectedCell = do_QueryInterface(firstCell);
     }
     nsCOMPtr<nsIContent> lastCellContent = do_QueryInterface(lastCell);
-    return SelectBlockOfCells(lastCellContent);
+    result = SelectBlockOfCells(lastCellContent);
+
+    // This gets set to the cell at end of row/col, 
+    //   but we need it to be the cell under cursor
+    mEndSelectedCell = aCellContent;
+    return result;
   }
 
 #if 0
@@ -3052,14 +3067,23 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
   nsCOMPtr<nsISupports> isupp = do_QueryInterface(aRange, &result);
   if (NS_FAILED(result)) return result;
 
-  // Get row, col of cell we will add
-  //   and set the FrameSelection's selection mode value
-  PRInt32 newRow, newCol;
-  result = getTableCellLocationFromRange(aRange, &mFrameSelection->mSelectingTableCellMode, &newRow, &newCol);
+  // Get if we are adding a cell selection and the row, col of cell if we are
+  PRInt32 newRow, newCol, tableMode;
+  result = getTableCellLocationFromRange(aRange, &tableMode, &newRow, &newCol);
   if (NS_FAILED(result)) return result;
-  // Don't fail if range isn't a selected cell, aDidAddRange tells caller if we didn't proceed
-  if (mFrameSelection->mSelectingTableCellMode != nsISelectionPrivate::TABLESELECTION_CELL)
+  
+  // If not adding a cell range, we are done here
+  if (tableMode != nsISelectionPrivate::TABLESELECTION_CELL)
+  {
+    mFrameSelection->mSelectingTableCellMode = tableMode;
+    // Don't fail if range isn't a selected cell, aDidAddRange tells caller if we didn't proceed
     return NS_OK;
+  }
+  
+  // Set frame selection mode only if not already set to a table mode
+  //  so we don't loose the select row and column flags (not detected by getTableCellLocation)
+  if (mFrameSelection->mSelectingTableCellMode == TABLESELECTION_NONE)
+    mFrameSelection->mSelectingTableCellMode = tableMode;
 
   PRUint32 count;
   result = mRangeArray->Count(&count);
