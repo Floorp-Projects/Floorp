@@ -105,6 +105,7 @@ DEFAULT_MOTIF_SEARCH_PATH="\
 /usr/local \
 /usr/dt \
 /usr/X11R6 \
+/usr/X \
 /usr \
 "
 
