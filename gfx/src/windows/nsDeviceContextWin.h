@@ -27,10 +27,10 @@ class nsDeviceContextWin : public DeviceContextImpl
 public:
   nsDeviceContextWin();
 
-  virtual nsresult Init(nsNativeWidget aWidget);
+  NS_IMETHOD    Init(nsNativeWidget aWidget);
 
-  virtual float GetScrollBarWidth() const;
-  virtual float GetScrollBarHeight() const;
+  NS_IMETHOD    GetScrollBarWidth(float &aWidth) const;
+  NS_IMETHOD    GetScrollBarHeight(float &aHeight) const;
 
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't

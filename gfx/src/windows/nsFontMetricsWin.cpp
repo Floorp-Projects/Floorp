@@ -175,7 +175,9 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
     ? TRUE : FALSE;
   float app2dev = aContext->GetAppUnitsToDevUnits();
-  float app2twip = app2dev * aContext->GetDevUnitsToTwips();
+  float app2twip;
+  aContext->GetDevUnitsToTwips(app2twip);
+  app2twip *= app2dev;
 
   float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
     // round font size off to floor point size to be windows compatible
@@ -280,11 +282,13 @@ nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString&
 
 
   float app2dev = aContext->GetAppUnitsToDevUnits();
-  float app2twip = app2dev * aContext->GetDevUnitsToTwips();
+  float dev2twip;
+  aContext->GetDevUnitsToTwips(dev2twip);
+  float app2twip = dev2twip * app2dev;
   //printf("[%s] %d  %d = %d\n", str, size.cx, nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips()), GetWidth(str));
 
   delete[] str;
-  return nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips());
+  return nscoord(float(size.cx) * dev2twip);
 }
 
 nscoord nsFontMetricsWin :: GetWidth(const PRUnichar *aString, PRUint32 aLength)

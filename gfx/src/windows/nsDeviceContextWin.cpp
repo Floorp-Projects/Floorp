@@ -52,7 +52,7 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
   }
 }
 
-nsresult nsDeviceContextWin::Init(nsNativeWidget aWidget)
+NS_IMETHODIMP nsDeviceContextWin::Init(nsNativeWidget aWidget)
 {
   HWND  hwnd = (HWND)aWidget;
   HDC   hdc = ::GetDC(hwnd);
@@ -67,14 +67,16 @@ nsresult nsDeviceContextWin::Init(nsNativeWidget aWidget)
   return DeviceContextImpl::Init(aWidget);
 }
 
-float nsDeviceContextWin :: GetScrollBarWidth() const
+NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarWidth(float &aWidth) const
 {
-  return ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
+  aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
+  return NS_OK;
 }
 
-float nsDeviceContextWin :: GetScrollBarHeight() const
+NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarHeight(float &aHeight) const
 {
-  return ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
+  aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
+  return NS_OK;
 }
 
 nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext)

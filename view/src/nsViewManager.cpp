@@ -1115,7 +1115,7 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   if (nsnull != win)
   {
     dx = mContext->GetDeviceContext();
-    cx = dx->CreateRenderingContext(&aView);
+    dx->CreateRenderingContext(&aView, cx);
 
     if (nsnull != cx)
       cx->Translate(ax, ay);

@@ -66,15 +66,15 @@ typedef NI_ColorSpace IL_ColorSpace;
 class nsIDeviceContext : public nsISupports
 {
 public:
-  virtual nsresult Init(nsNativeWidget aWidget) = 0;
+  NS_IMETHOD  Init(nsNativeWidget aWidget) = 0;
 
-  virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView) = 0;
-  virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
+  NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
 
   //these are queries to figure out how large an output unit
   //(i.e. pixel) is in terms of twips (1/20 of a point)
-  virtual float GetDevUnitsToTwips() const = 0;
-  virtual float GetTwipsToDevUnits() const = 0;
+  NS_IMETHOD  GetDevUnitsToTwips(float &aDevUnitsToTwips) const = 0;
+  NS_IMETHOD  GetTwipsToDevUnits(float &aTwipsToDevUnits) const = 0;
 
   //these are set by the object that created this
   //device context to define what the scale is
@@ -88,8 +88,8 @@ public:
   virtual float GetAppUnitsToDevUnits() const = 0;
   virtual float GetDevUnitsToAppUnits() const = 0;
 
-  virtual float GetScrollBarWidth() const = 0;
-  virtual float GetScrollBarHeight() const = 0;
+  NS_IMETHOD  GetScrollBarWidth(float &aWidth) const = 0;
+  NS_IMETHOD  GetScrollBarHeight(float &aHeight) const = 0;
 
   //be sure to Relase() after you are done with the Get()
   virtual nsIFontCache * GetFontCache() = 0;
