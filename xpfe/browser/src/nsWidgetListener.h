@@ -42,7 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMMouseListener interface
-  virtual nsresult ProcessEvent (nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent (nsIDOMEvent* aEvent);
   virtual nsresult MouseDown    (nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseUp      (nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseClick   (nsIDOMEvent* aMouseEvent);

@@ -113,18 +113,18 @@ nsTextEditor::~nsTextEditor()
     if (NS_SUCCEEDED(result) && erP) 
     {
       if (mKeyListenerP) {
-        erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
+        erP->RemoveEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
       }
       if (mMouseListenerP) {
-        erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+        erP->RemoveEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
       }
 
 	  if (mTextListenerP) {
-		  erP->RemoveEventListener(mTextListenerP, kIDOMTextListenerIID);
+		  erP->RemoveEventListenerByIID(mTextListenerP, kIDOMTextListenerIID);
 	  }
 
       if (mDragListenerP) {
-        erP->RemoveEventListener(mDragListenerP, kIDOMDragListenerIID);
+        erP->RemoveEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
       }
 
     }
@@ -216,11 +216,11 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
       return result;
     }
     //cmanske: Shouldn't we check result from this?
-    erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
-    //erP->AddEventListener(mDragListenerP, kIDOMDragListenerIID);
-    //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+    erP->AddEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
+    //erP->AddEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
+    //erP->AddEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
 	
-	erP->AddEventListener(mTextListenerP,kIDOMTextListenerIID);
+	  erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
 
     // instantiate the rules for this text editor
     // XXX: we should be told which set of rules to instantiate

@@ -234,10 +234,16 @@ public:
     NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
 
     // nsIDOMEventReceiver
-    NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
-    NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+    NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+    NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
     NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
+
+    // nsIDOMEventTarget interface
+    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                PRBool aPostProcess, PRBool aUseCapture);
+    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                   PRBool aPostProcess, PRBool aUseCapture);
 
 
     // nsIJSScriptObject
@@ -1022,12 +1028,12 @@ RDFElementImpl::SetNameSpaceID(PRInt32 aNameSpaceID)
 // nsIDOMEventReceiver interface
 
 NS_IMETHODIMP
-RDFElementImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+RDFElementImpl::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
     nsIEventListenerManager *manager;
 
     if (NS_OK == GetListenerManager(&manager)) {
-        manager->AddEventListener(aListener, aIID);
+        manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
         NS_RELEASE(manager);
         return NS_OK;
     }
@@ -1035,13 +1041,44 @@ RDFElementImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aI
 }
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+RDFElementImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
     if (nsnull != mListenerManager) {
-        mListenerManager->RemoveEventListener(aListener, aIID);
+        mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                 PRBool aPostProcess, PRBool aUseCapture)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                    PRBool aPostProcess, PRBool aUseCapture)
+{
+  if (nsnull != mListenerManager) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -2111,7 +2148,7 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     nsresult ret = NS_OK;
   
     nsIDOMEvent* domEvent = nsnull;
-    if (DOM_EVENT_INIT == aFlags) {
+    if (NS_EVENT_FLAG_INIT == aFlags) {
         aDOMEvent = &domEvent;
         // In order for the event to have a proper target for menus (which have no corresponding
         // frame target in the visual model), we have to explicitly set the target of the
@@ -2134,19 +2171,20 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     }
   
     //Capturing stage
+    //XXX Nees impl.  Talk to joki@netscape.com for help.
   
     //Local handling stage
     if (nsnull != mListenerManager) {
-        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
     }
 
     //Bubbling stage
-    if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull)) {
+    if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mParent != nsnull)) {
         ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                      DOM_EVENT_BUBBLE, aEventStatus);
+                                      NS_EVENT_FLAG_BUBBLE, aEventStatus);
     }
 
-    if (DOM_EVENT_INIT == aFlags) {
+    if (NS_EVENT_FLAG_INIT == aFlags) {
         // We're leaving the DOM event loop so if we created a DOM event,
         // release here.
         if (nsnull != *aDOMEvent) {
@@ -2412,7 +2450,7 @@ RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement)
         nsEvent event;
         event.eventStructType = NS_EVENT;
         event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
-        content->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
     }
 
     return NS_OK;

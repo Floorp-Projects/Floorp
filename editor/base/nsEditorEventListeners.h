@@ -51,7 +51,7 @@ public:
 /*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
   see the nsIDOMKeyListener interface implementation for details
   */
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
@@ -87,7 +87,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of textevent handler interface*/
-    virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 public:
     virtual nsresult HandleText(nsIDOMEvent* aTextEvent);
 /*END implementations of textevent handler interface*/
@@ -120,7 +120,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of mouseevent handler interface*/
-    virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 public:
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
@@ -157,7 +157,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of mouseevent handler interface*/
-    virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 public:
   virtual nsresult DragStart(nsIDOMEvent* aDragEvent);
   virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
