@@ -19,6 +19,6 @@
 # 
 
 elf-gc-dynstr: elf-gc-dynstr.c
-	gcc `glib-config --cflags` -g elf-gc-dynstr.c -o elf-gc-dynstr `glib-config --libs` -lelf
+	gcc `glib-config --cflags` -g elf-gc-dynstr.c -o elf-gc-dynstr `glib-config --libs`
 clean:
 	rm -f elf-gc-dynstr core *~

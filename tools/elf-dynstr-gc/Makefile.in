@@ -28,12 +28,12 @@ include $(DEPTH)/config/autoconf.mk
 SIMPLE_PROGRAMS = elf-gc-dynstr
 
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(GLIB_LIBS) -lelf
+EXTRA_LIBS	= $(GLIB_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
 #elf-gc-dynstr: elf-gc-dynstr.c
-#	gcc `glib-config --cflags` -g elf-gc-dynstr.c -o elf-gc-dynstr `glib-config --libs` -lelf
+#	gcc `glib-config --cflags` -g elf-gc-dynstr.c -o elf-gc-dynstr `glib-config --libs`
 
 #clean:
 	#rm -f elf-gc-dynstr core *~
