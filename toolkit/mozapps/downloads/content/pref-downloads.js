@@ -437,7 +437,7 @@ function editFileHandler()
 # XXXben we should handle this a little better. 
 function showPlugins()
 {
-  openDialog("chrome://browser/content/pref/plugins.xul", "", "modal=yes");
+  openDialog("chrome://browser/content/pref/plugins.xul", "", "modal,resizable");
 }
 
 function toggleDMPrefUI(aCheckbox)
