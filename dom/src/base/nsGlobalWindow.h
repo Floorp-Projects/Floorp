@@ -521,8 +521,6 @@ public:
 
 private:
   nsresult GetEventStateManager(nsIEventStateManager **esm);
-  static int PR_CALLBACK BrowseWithCaretPrefCallback(const char* aPrefName,
-                                                     void* instance_data);
   nsresult GetPresShell(nsIPresShell **aPresShell);
   nsresult GetEditInterface(nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
