@@ -15,8 +15,8 @@
  */
 #include "PlugletStreamListener.h"
 #include "PlugletEngine.h"
-
-
+#include "PlugletStreamInfo.h"
+#include "PlugletInputStream.h"
 
 jmethodID PlugletStreamListener::onStartBindingMID = NULL;
 jmethodID PlugletStreamListener::onDataAvailableMID = NULL;
@@ -48,32 +48,53 @@ PlugletStreamListener::~PlugletStreamListener(void) {
 
 NS_METHOD  PlugletStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    //nb env->CallVoidMethod(jthis,onStartBindingMID,NewPluginStreamInfo(Plugin::env,pluginInfo));
+    env->CallVoidMethod(jthis,onStartBindingMID,PlugletStreamInfo::GetJObject(pluginInfo));
+    if (env->ExceptionOccurred()) {
+	env->ExceptionDescribe();
+	return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
     
 NS_METHOD PlugletStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();   
-    //nb env->CallVoidMethod(jthis,onDataAvailableMID,NewPluginStreamInfo(Plugin::env,pluginInfo),
-    //				NewInputStream(Plugin::env,input),(jint)length);
+    env->CallVoidMethod(jthis,onDataAvailableMID,PlugletStreamInfo::GetJObject(pluginInfo), 
+			PlugletInputStream::GetJObject(input),(jint)length);
+    if (env->ExceptionOccurred()) {
+	env->ExceptionDescribe();
+	return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
 
 NS_METHOD PlugletStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    //nb Plugin::env->CallVoidMethod(jthis,onFileAvailableMID,NewPluginStreamInfo(Plugin::env,pluginInfo),
-    //		       Plugin::env->NewStringUTF(fileName));
+    env->CallVoidMethod(jthis,onFileAvailableMID,PlugletStreamInfo::GetJObject(pluginInfo),
+	env->NewStringUTF(fileName));
+    if (env->ExceptionOccurred()) {
+	env->ExceptionDescribe();
+	return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
 
 NS_METHOD PlugletStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    //nb env->CallVoidMethod(jthis,onStopBindingMID,NewPluginStreamInfo(Plugin::env,pluginInfo),status);
+    env->CallVoidMethod(jthis,onStopBindingMID,PlugletStreamInfo::GetJObject(pluginInfo),status);
+    if (env->ExceptionOccurred()) {
+	env->ExceptionDescribe();
+	return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
+
 NS_METHOD PlugletStreamListener::GetStreamType(nsPluginStreamType *result) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     *result = (nsPluginStreamType)env->CallIntMethod(jthis,getStreamTypeMID);
+    if (env->ExceptionOccurred()) {
+	env->ExceptionDescribe();
+	return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
 

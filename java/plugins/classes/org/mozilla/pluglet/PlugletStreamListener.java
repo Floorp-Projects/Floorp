@@ -38,12 +38,12 @@ public interface PlugletStreamListener {
      * be either a blocking or non-blocking stream.
      * @param length    The amount of data that was just pushed into the stream.
      */
-    void onDataAvailable(PlugletStreamInfo plugletInfo, InputStream input,int  length);
-    void onFileAvailable(PlugletStreamInfo plugletInfo, String fileName);
+    void onDataAvailable(PlugletStreamInfo stremInfo, InputStream input,int  length);
+    void onFileAvailable(PlugletStreamInfo streamInfo, String fileName);
     /**
      * Notify the observer that the URL has finished loading. 
      */
-    void onStopBinding(PlugletStreamInfo plugletInfo,int status);
+    void onStopBinding(PlugletStreamInfo streamInfo,int status);
     int  getStreamType();
 }
 

@@ -52,6 +52,7 @@ class TestInstance implements PlugletInstance{
      * 
      * @param peer the corresponding pluglet instance peer
      */
+
     public void initialize(PlugletInstancePeer peer) {
 	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
     }
@@ -70,7 +71,7 @@ class TestInstance implements PlugletInstance{
      * another page and the page containing the pluglet goes into the window's history
      * list.
      */
-   public void stop() {
+    public void stop() {
        org.mozilla.util.Debug.print("--TestInstance.stop\n");
     }
     /**
@@ -112,8 +113,10 @@ class TestStreamListener implements PlugletStreamListener {
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
      */
-    public void onStartBinding(PlugletStreamInfo plugletInfo) {
-	org.mozilla.util.Debug.print("--TestStreamListener.onStartBinding\n");
+    public void onStartBinding(PlugletStreamInfo streamInfo) {
+	org.mozilla.util.Debug.print("--TestStreamListener.onStartBinding ");
+	org.mozilla.util.Debug.print("length "+streamInfo.getLength());
+	org.mozilla.util.Debug.print(" contenet type "+ streamInfo.getContentType());
     }
     /**
      * Notify the client that data is available in the input stream.  This
@@ -125,7 +128,12 @@ class TestStreamListener implements PlugletStreamListener {
      * @param length    The amount of data that was just pushed into the stream.
      */
     public void onDataAvailable(PlugletStreamInfo plugletInfo, InputStream input,int  length) {
-	org.mozilla.util.Debug.print("--TestStreamListener.onDataAvailable\n");
+	try{
+	    org.mozilla.util.Debug.print("--TestStreamListener.onDataAvailable ");
+	    org.mozilla.util.Debug.print("--length "+input.available()+"\n");
+	} catch(Exception e) {
+	    ;
+	}
     }
     public void onFileAvailable(PlugletStreamInfo plugletInfo, String fileName) {
 	org.mozilla.util.Debug.print("--TestStreamListener.onFileAvailable\n");
@@ -141,6 +149,7 @@ class TestStreamListener implements PlugletStreamListener {
 	return 1; //:)
     }
 }
+
 
 
 
