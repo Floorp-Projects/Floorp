@@ -30,6 +30,7 @@ EXPORTS = \
 		nsMailHeaders.h			\
 		nsIMsgHeaderParser.h \
 		nsIMimeContentTypeHandler.h \
+		nsIMimeURLUtils.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

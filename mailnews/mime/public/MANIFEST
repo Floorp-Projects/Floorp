@@ -23,3 +23,4 @@ nsIMimeEmitter.h
 nsMailHeaders.h
 nsIMsgHeaderParser.h
 nsIMimeContentTypeHandler.h
+nsIMimeURLUtils.h
