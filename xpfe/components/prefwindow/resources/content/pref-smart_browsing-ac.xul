@@ -32,6 +32,7 @@
 
 <window id="pref-smart_browsing-ac" title="&autoCompleteAdvanced.title;"
         orient="vertical"
+        class="dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"><![CDATA[
