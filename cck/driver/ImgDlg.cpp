@@ -19,6 +19,7 @@ static char THIS_FILE[] = __FILE__;
 extern char iniFilePath[MAX_SIZE];
 extern char imagesPath[MAX_SIZE];
 extern CString iniTracker;
+CString imageTitle;
 
 CImgDlg::CImgDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImgDlg::IDD, pParent)
@@ -124,6 +125,9 @@ void CImgDlg::ReadImageFromIniFile()
 	GetPrivateProfileString(imageSectionName, "Name", "", buffer, 250, iniFileName);
 	image.name = CString(imagesPath) + CString(buffer);
 
+	GetPrivateProfileString(imageSectionName, "Title", "", buffer, 250, iniFileName);
+	imageTitle = CString(buffer);
+
 	GetPrivateProfileString(imageSectionName, "start_X", "", buffer, 250, iniFileName);
 	image.location.x = atoi(buffer);
 
@@ -153,7 +157,7 @@ BOOL CImgDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 int CImgDlg::DoModal() 
 {
 	// TODO: Add your specialized code here and/or call the base class
-	
+
 	return CDialog::DoModal();
 }
 
@@ -184,7 +188,8 @@ BOOL CImgDlg::OnHelpInfo(HELPINFO* pHelpInfo)
 BOOL CImgDlg::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-	
+
+	SetWindowText(imageTitle);
 	// TODO: Add extra initialization here
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
