@@ -39,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -2278,108 +2279,7 @@ PRInt16       borderRadii[4],i;
       }
     }
 
-#define DOTILE
-#ifdef DOTILE
-    nsIDrawingSurface  *theSurface,*ts=nsnull;
-    nsRect              srcRect,destRect,vrect,tvrect;
-    nscoord             x,y;
-    PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
-    PRUint32            dsFlag = 0;
-    float               t2p,app2dev;
-    PRBool              clip,hasMask;
-    nsTransform2D       *theTransform;
-    nsIDeviceContext    *theDevContext;
-
-
-    aRenderingContext.GetDrawingSurface((void**)&theSurface);
-    aPresContext->GetVisibleArea(srcRect);
-    tvrect.SetRect(0,0,x1-x0,y1-y0);
-    aPresContext->GetTwipsToPixels(&t2p);
-
-    // check to see if the background image has a mask
-    hasMask = image->GetHasAlphaMask();
-
-    if(!hasMask &&  ((tileWidth<(tvrect.width/16)) || (tileHeight<(tvrect.height/16)))) {
-      //tvrect.width /=4;
-      //tvrect.height /=4;
-
-      tvrect.width = ((tvrect.width)/tileWidth);  //total x number of tiles
-      tvrect.width *=tileWidth;
-
-      tvrect.height = ((tvrect.height)/tileHeight); //total y number of tiles
-      tvrect.height *=tileHeight;
-
-      // create a new drawing surface... using pixels as the size
-      vrect.height = (nscoord)(tvrect.height * t2p);
-      vrect.width = (nscoord)(tvrect.width * t2p);
-      aRenderingContext.CreateDrawingSurface(&vrect,dsFlag,(nsDrawingSurface&)ts);
-    }
-
-    // did we need to create an offscreen drawing surface because the image was so small
-    if(!hasMask && (nsnull != ts) ) {
-      aRenderingContext.SelectOffScreenDrawingSurface(ts);
-
-      // create a bigger tile in our new drawingsurface                    
-      // XXX pushing state to fix clipping problem, need to look into why the clip is set here
-      aRenderingContext.PushState();
-      aRenderingContext.GetCurrentTransform(theTransform);
-      aRenderingContext.GetDeviceContext(theDevContext);
-      theDevContext->GetAppUnitsToDevUnits(app2dev);
-      NS_RELEASE(theDevContext);
-      theTransform->SetToIdentity();  
-      theTransform->AddScale(app2dev, app2dev);
-
-      // XXX this #ifdef needs to go away when we are sure that this works on windows and mac
-#ifdef XP_UNIX
-      srcRect.SetRect(0,0,tvrect.width,tvrect.height);
-      aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
-#endif
-
-      // copy the initial image to our buffer, this takes twips and converts to pixels.. 
-      // which is what the image is in
-      aRenderingContext.DrawImage(image,0,0,tileWidth,tileHeight);
-
-      // duplicate the image in the upperleft corner to fill up the nsDrawingSurface
-      srcRect.SetRect(0,0,tileWidth,tileHeight);
-      TileImage(aRenderingContext,ts,srcRect,tvrect.width,tvrect.height);
-
-      // setting back the clip from the background clip push
-      aRenderingContext.PopState(clip);
-    
-      // set back to the old drawingsurface
-      aRenderingContext.SelectOffScreenDrawingSurface((void**)theSurface);
-
-     // now duplicate our tile into the background
-      destRect = srcRect;
-      for(y=y0;y<y1;y+=tvrect.height){
-        for(x=x0;x<x1;x+=tvrect.width){
-          destRect.x = x;
-          destRect.y = y;
-          aRenderingContext.CopyOffScreenBits(ts,0,0,destRect,flag);
-        }
-      } 
-
-      aRenderingContext.DestroyDrawingSurface(ts);
-    } else {
-      // slow blitting, one tile at a time....
-      for(y=y0;y<y1;y+=tileHeight){
-        for(x=x0;x<x1;x+=tileWidth){
-          aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
-        }
-      }
-    }
-
-#endif
-
-//#define NOTNOW
-#ifdef NOTNOW
-    nscoord x,y;
-    for(y=y0;y<y1;y+=tileHeight){
-      for(x=x0;x<x1;x+=tileWidth){
-        aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
-      }
-    }
-#endif
+    aRenderingContext.DrawTile(image,x0,y0,x1,y1,tileWidth,tileHeight);
 
     // Restore clipping
     aRenderingContext.PopState(clipState);
@@ -2388,31 +2288,28 @@ PRInt16       borderRadii[4],i;
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
     if (!transparentBG) {
+      // get the radius for our border
+      aSpacing.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
+      aSpacing.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
+      aSpacing.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
+      aSpacing.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
 
-
-    // get the radius for our border
-    aSpacing.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
-    aSpacing.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
-    aSpacing.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
-    aSpacing.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
-
-    for(i=0;i<4;i++) {
-      borderRadii[i] = 0;
-      switch ( bordStyleRadius[i].GetUnit()) {
-        case eStyleUnit_Inherit:
-          break;
-        case eStyleUnit_Percent:
-          percent = bordStyleRadius[i].GetPercentValue();
-          borderRadii[i] = (nscoord)(percent * aBorderArea.width);
-          break;
-        case eStyleUnit_Coord:
-          borderRadii[i] = bordStyleRadius[i].GetCoordValue();
-          break;
-        default:
-          break;
+      for(i=0;i<4;i++) {
+        borderRadii[i] = 0;
+        switch ( bordStyleRadius[i].GetUnit()) {
+          case eStyleUnit_Inherit:
+            break;
+          case eStyleUnit_Percent:
+            percent = bordStyleRadius[i].GetPercentValue();
+            borderRadii[i] = (nscoord)(percent * aBorderArea.width);
+            break;
+          case eStyleUnit_Coord:
+            borderRadii[i] = bordStyleRadius[i].GetCoordValue();
+            break;
+          default:
+            break;
+        }
       }
-    }
-
 
       // rounded version of the border
       for(i=0;i<4;i++){
