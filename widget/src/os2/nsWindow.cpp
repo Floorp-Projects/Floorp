@@ -43,6 +43,7 @@
 #include "nsHashtable.h"
 //#include "nsMenu.h"
 #include "nsDragService.h"
+#include "nsILocalFile.h"
 
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
