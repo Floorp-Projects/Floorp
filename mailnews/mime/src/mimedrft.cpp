@@ -1314,7 +1314,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
                                                 mdd->mailcharset);
         }
         // setting the charset while we are creating the composition fields
-        fields->SetCharacterSet(NS_LITERAL_STRING(mdd->mailcharset));
+ //       fields->SetCharacterSet(NS_LITERAL_STRING(mdd->mailcharset));
 
       // convert from UTF-8 to UCS2
       nsAutoString ucs2;
