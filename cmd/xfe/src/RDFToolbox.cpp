@@ -53,8 +53,8 @@ XFE_RDFToolbox::notify(HT_Resource n, HT_Event whatHappened)
       {
           HT_View view = HT_GetView(n);
 
-          XFE_RDFToolbar * toolbar
-              = new XFE_RDFToolbar(_frame, _toolbox, view);
+          // The destroy handler (see XFE_Component) handles deletion.
+          new XFE_RDFToolbar(_frame, _toolbox, view);
       }
     break;
   case HT_EVENT_VIEW_DELETED:
