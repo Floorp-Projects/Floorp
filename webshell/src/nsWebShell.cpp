@@ -325,7 +325,6 @@ nsresult nsWebShell::CreatePluginHost(PRBool aAllowPlugins)
                                                     (void **)&mPluginHost))
         {
           mPluginHost->Init();
-          mPluginHost->LoadPlugins();
         }
       }
     }
@@ -382,10 +381,7 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mInnerWindow);
 
   NS_IF_RELEASE(mContentViewer);
-  if (nsnull != mDeviceContext) {
-    mDeviceContext->FlushFontCache();
-    NS_RELEASE(mDeviceContext);
-  }
+  NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
