@@ -29,6 +29,7 @@ class nsIFactory;
 class nsIURL;
 class nsIWidget;
 class nsString;
+class nsIStreamObserver;
 
 // e5e5af70-8a38-11d2-9938-0080c7cb1080
 #define NS_IAPPSHELL_SERVICE_IID \
@@ -39,14 +40,21 @@ class nsString;
 class nsIAppShellService : public nsISupports
 {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IAPPSHELL_SERVICE_IID; return iid; }
 
   NS_IMETHOD Initialize(void) = 0;
   NS_IMETHOD Run(void) = 0;
+  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent) = 0;
+  NS_IMETHOD DispatchNativeEvent(void * aEvent) = 0;
   NS_IMETHOD Shutdown(void) = 0;
 
   NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult) = 0;
+                                  nsIWidget*& aResult, nsIStreamObserver* anObserver) = 0;
+  NS_IMETHOD CreateDialogWindow(nsIWidget * aParent,
+                                nsIURL* aUrl, 
+                                nsString& aControllerIID,
+                                nsIWidget*& aResult, nsIStreamObserver* anObserver) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow) = 0;
 };
 

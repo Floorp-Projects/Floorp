@@ -32,6 +32,7 @@
 #include "nsWebShellWindow.h"
 
 #include "nsWidgetsCID.h"
+#include "nsIStreamObserver.h"
 
 #ifdef MOZ_FULLCIRCLE
 #include "fullsoft.h"
@@ -59,9 +60,15 @@ public:
 
   NS_IMETHOD Initialize(void);
   NS_IMETHOD Run(void);
+  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
+  NS_IMETHOD DispatchNativeEvent(void * aEvent);
   NS_IMETHOD Shutdown(void);
   NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
-                                  nsIWidget*& aResult);
+                                  nsIWidget*& aResult, nsIStreamObserver* anObserver);
+  NS_IMETHOD CreateDialogWindow(nsIWidget * aParent,
+                                nsIURL* aUrl, 
+                                nsString& aControllerIID,
+                                nsIWidget*& aResult, nsIStreamObserver* anObserver);
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow);
 
 
@@ -139,6 +146,18 @@ nsAppShellService::Run(void)
 }
 
 NS_IMETHODIMP
+nsAppShellService::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
+{
+  return mAppShell->GetNativeEvent(aEvent, aWidget, aIsInWindow, aIsMouseEvent);
+}
+
+NS_IMETHODIMP
+nsAppShellService::DispatchNativeEvent(void * aEvent)
+{
+  return mAppShell->DispatchNativeEvent(aEvent);
+}
+
+NS_IMETHODIMP
 nsAppShellService::Shutdown(void)
 {
   return NS_OK;
@@ -154,7 +173,7 @@ nsAppShellService::Shutdown(void)
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
-                                        nsIWidget*& aResult)
+                                        nsIWidget*& aResult, nsIStreamObserver* anObserver)
 {
   nsresult rv;
   nsWebShellWindow* window;
@@ -163,7 +182,7 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(mAppShell, aUrl, aControllerIID);
+    rv = window->Initialize(mAppShell, aUrl, aControllerIID, anObserver);
     if (NS_SUCCEEDED(rv)) {
       mWindowList->AppendElement((nsIWebShellContainer*)window);
       aResult = window->GetWidget();
@@ -173,6 +192,35 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
   return rv;
 }
 
+/*
+ * Create a new top level window and display the given URL within it...
+ *
+ * XXX:
+ * Currently, the IID of the Controller object for the URL is provided as an
+ * argument.  In the future, this argument will be specified by the XUL document
+ * itself.
+ */
+NS_IMETHODIMP
+nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
+                                      nsIURL* aUrl, nsString& aControllerIID,
+                                      nsIWidget*& aResult, nsIStreamObserver* anObserver)
+{
+  nsresult rv;
+  nsWebShellWindow* window;
+
+  window = new nsWebShellWindow();
+  if (nsnull == window) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    rv = window->Initialize(nsnull, mAppShell, aUrl, aControllerIID, anObserver);
+    if (NS_SUCCEEDED(rv)) {
+      mWindowList->AppendElement((nsIWebShellContainer*)window);
+      aResult = window->GetWidget();
+    }
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
