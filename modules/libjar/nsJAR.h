@@ -40,7 +40,7 @@
 #include "nsRepository.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIFile.h"
 #include "nsIEnumerator.h"
 #include "nsVoidArray.h"
