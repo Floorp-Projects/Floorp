@@ -9,6 +9,10 @@ interface BrowserAppCore : BaseAppCore
 	void forward();
 	void loadUrl(in wstring url);
 
+	void walletEditor();
+	void walletSafeFillin();
+	void walletQuickFillin();
+
 	void setToolbarWindow(in Window win);
 	void setContentWindow(in Window win);
 	void setWebShellWindow(in Window win);

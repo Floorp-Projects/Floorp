@@ -196,6 +196,107 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 
 
+#ifdef ClientWallet
+//
+// Native method WalletEditor
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreWalletEditor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->WalletEditor()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function walletEditor requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method WalletSafeFillin
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreWalletSafeFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->WalletSafeFillin()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function walletSafeFillin requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method WalletQuickFillin
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->WalletQuickFillin()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function walletQuickFillin requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+#endif
+
+
 //
 // Native method LoadUrl
 //
@@ -596,6 +697,11 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
 {
   {"back",          BrowserAppCoreBack,     0},
   {"forward",          BrowserAppCoreForward,     0},
+#ifdef ClientWallet
+  {"walletEditor",          BrowserAppCoreWalletEditor,     0},
+  {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     0},
+  {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     0},
+#endif
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},

@@ -53,6 +53,12 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLImageElement.h"
 
+#ifdef ClientWallet
+#include "nsIWalletService.h"
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+#endif
+
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
@@ -212,6 +218,167 @@ nsBrowserAppCore::Forward()
   ExecuteScript(mToolbarScriptContext, mEnableScript);
 	return NS_OK;
 }
+
+#ifdef ClientWallet
+//#define WALLET_EDITOR_URL "resource:/res/samples/walleted.html"
+#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
+
+PRInt32
+newWindow(char* urlName) {
+  nsresult rv;
+  nsString controllerCID;
+
+  char *  urlstr=nsnull;
+  char *   progname = nsnull;
+  char *   width=nsnull, *height=nsnull;
+  char *  iconic_state=nsnull;
+
+  nsIAppShellService* appShell = nsnull;
+  urlstr = urlName;
+
+  /*
+   * Create the Application Shell instance...
+   */
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&appShell);
+  if (!NS_SUCCEEDED(rv)) {
+    goto done;
+  }
+
+  /*
+   * Post an event to the shell instance to load the AppShell 
+   * initialization routines...  
+   * 
+   * This allows the application to enter its event loop before having to 
+   * deal with GUI initialization...
+   */
+  ///write me...
+  nsIURL* url;
+  nsIWidget* newWindow;
+  
+  rv = NS_NewURL(&url, urlstr);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  /*
+   * XXX: Currently, the CID for the "controller" is passed in as an argument 
+   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
+   *      components this will be specified in the XUL description...
+   */
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+  appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
+              nsnull, nsnull, 615, 650);
+  NS_RELEASE(url);
+  
+done:
+  /* Release the shell... */
+  if (nsnull != appShell) {
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  }
+
+  return NS_OK;
+}
+
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+#include "nsIPresContext.h"
+static
+nsIPresShell*
+GetPresShellFor(nsIWebShell* aWebShell)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* cv = nsnull;
+    aWebShell->GetContentViewer(&cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+	      if (nsnull != cx) {
+	        cx->GetShell(&shell);
+	        NS_RELEASE(cx);
+	      }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletEditor()
+{
+  /* set a cookie for the wallet editor */
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    nsIURL * url;
+    if (!NS_FAILED(NS_NewURL(&url, WALLET_EDITOR_URL))) {
+      res = walletservice->WALLET_PreEdit(url);
+      NS_RELEASE(walletservice);
+    }
+  }
+
+  /* bring up the wallet editor in a new window */
+  return newWindow(WALLET_EDITOR_URL);
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletSafeFillin()
+{
+  nsIPresShell* shell;
+  shell = nsnull;
+  nsCOMPtr<nsIWebShell> webcontent; 
+  mWebShell->FindChildWithName(nsAutoString("content"), *getter_AddRefs(webcontent));
+  shell = GetPresShellFor(webcontent);
+
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_Prefill(shell, PR_FALSE);
+    NS_RELEASE(walletservice);
+  }
+
+#ifndef HTMLDialogs 
+  return newWindow("file:///y|/htmldlgs.htm");
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletQuickFillin()
+{
+  nsIPresShell* shell;
+  shell = nsnull;
+  nsCOMPtr<nsIWebShell> webcontent; 
+  mWebShell->FindChildWithName(nsAutoString("content"), *getter_AddRefs(webcontent));
+  shell = GetPresShellFor(webcontent);
+
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_Prefill(shell, PR_TRUE);
+    NS_RELEASE(walletservice);
+  }
+
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP    
 nsBrowserAppCore::SetDisableCallback(const nsString& aScript)

@@ -61,6 +61,13 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
+
+#ifdef ClientWallet
+    NS_IMETHOD    WalletEditor();
+    NS_IMETHOD    WalletSafeFillin();
+    NS_IMETHOD    WalletQuickFillin();
+#endif
+
     NS_IMETHOD    LoadUrl(const nsString& aUrl);
     NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);
