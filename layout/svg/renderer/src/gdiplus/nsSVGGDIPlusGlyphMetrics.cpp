@@ -44,6 +44,7 @@
 #include <Gdiplus.h>
 using namespace Gdiplus;
 
+#include "nsUnicharUtils.h"
 #include "nsCOMPtr.h"
 #include "nsISVGGlyphMetricsSource.h"
 #include "nsPromiseFlatString.h"
