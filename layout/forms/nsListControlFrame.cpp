@@ -314,7 +314,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // If all the content and frames are here 
   // then initialize it before reflow
-    if (mIsAllContentHere && !mHasBeenInitialized) {
+    if ((mIsAllContentHere && !mHasBeenInitialized) && aReflowState.reason != eReflowReason_Initial) {
       if (PR_FALSE == mIsAllFramesHere) {
         CheckIfAllFramesHere();
       }
