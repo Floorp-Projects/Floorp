@@ -32,8 +32,12 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.3 $ $Date: 2001/10/11 18:40:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.4 $ $Date: 2001/10/15 17:18:06 $ $Name:  $";
 #endif /* DEBUG */
+
+#ifndef PKIM_H
+#include "pkim.h"
+#endif /* PKIM_H */
 
 #ifndef PKIT_H
 #include "pkit.h"
@@ -85,6 +89,21 @@ static PRBool cert_compare(void *v1, void *v2)
     return 
        (nssItem_Equal((NSSItem *)&c1->issuer, (NSSItem *)&c2->issuer, &rv) &&
         nssItem_Equal((NSSItem *)&c1->serial, (NSSItem *)&c2->serial, &rv));
+}
+
+/* sort the subject list from newest to oldest */
+static PRIntn subject_list_sort(void *v1, void *v2)
+{
+    PRStatus rv;
+    NSSCertificate *c1 = (NSSCertificate *)v1;
+    NSSCertificate *c2 = (NSSCertificate *)v2;
+    nssDecodedCert *dc1 = nssCertificate_GetDecoding(c1);
+    nssDecodedCert *dc2 = nssCertificate_GetDecoding(c2);
+    if (dc1->isNewerThan(dc1, dc2)) {
+	return -1;
+    } else {
+	return 1;
+    }
 }
 
 /* this should not be exposed in a header, but is here to keep the above
@@ -188,6 +207,7 @@ add_cert_to_cache(NSSTrustDomain *td, NSSCertificate *cert)
     } else {
 	/* Create a new subject list for the subject */
 	subjectList = nssList_Create(td->arena, PR_TRUE);
+	nssList_SetSortFunction(subjectList, subject_list_sort);
 	if (!subjectList) goto loser;
 	/* To allow for different cert pointers, do list comparison by
 	 * actual cert values.
@@ -360,6 +380,7 @@ nssTrustDomain_RemoveTokenCertsFromCache
 {
     struct token_cert_destructor tcd;
     tcd.cache = td->cache;
+    tcd.token = token;
     PZ_Lock(td->cache->lock);
     nssHash_Iterate(td->cache->issuerAndSN, remove_token_certs, (void *)&tcd);
     PZ_Unlock(td->cache->lock);
@@ -552,7 +573,7 @@ nssTrustDomain_GetCertByDERFromCache
   NSSDER *der
 )
 {
-    NSSItem *identifier;
+    NSSItem *identifier = NULL;
     NSSCertificate *rvCert = NULL;
 #ifdef NSS_3_4_CODE
     identifier = STAN_GetCertIdentifierFromDER(NULL, der);
