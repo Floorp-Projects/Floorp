@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.21 $ $Date: 2003/08/01 02:02:47 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.22 $ $Date: 2003/12/16 04:24:57 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -217,12 +217,11 @@ nssPKIObject_RemoveInstanceForToken (
 	}
     }
     if (--object->numInstances > 0) {
-	object->instances = nss_ZREALLOCARRAY(object->instances,
+	nssCryptokiObject **instances = nss_ZREALLOCARRAY(object->instances,
 	                                      nssCryptokiObject *,
 	                                      object->numInstances);
-	if (!object->instances) {
-	    PZ_Unlock(object->lock);
-	    return PR_FAILURE;
+	if (instances) {
+	    object->instances = instances;
 	}
     } else {
 	nss_ZFreeIf(object->instances);
@@ -244,10 +243,12 @@ nssPKIObject_DeleteStoredObject (
 {
     PRUint32 i, numNotDestroyed;
     PRStatus status = PR_SUCCESS;
+#ifndef NSS_3_4_CODE
     NSSTrustDomain *td = object->trustDomain;
     NSSCallback *pwcb = uhh ?  /* is this optional? */
                         uhh : 
                         nssTrustDomain_GetDefaultCallback(td, NULL);
+#endif
     numNotDestroyed = 0;
     PZ_Lock(object->lock);
     for (i=0; i<object->numInstances; i++) {
