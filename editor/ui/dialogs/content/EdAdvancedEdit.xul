@@ -76,7 +76,7 @@
       <!-- ============================================================== -->
         <box class="tabpanel" flex="100%" align="vertical">
           <tree id="HTMLATree" 
-            class="AttributesTree" 
+            class="AttributesTree inset" 
             flex="100%" 
             context="attlistPopup">
             <treecol width="35%"/>
@@ -113,7 +113,7 @@
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
         <box class="tabpanel" flex="100%" align="vertical">
-          <tree id="CSSATree" class="AttributesTree" flex="100%" context="attlistPopup">
+          <tree id="CSSATree" class="AttributesTree inset" flex="100%" context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
             <treehead>
@@ -148,7 +148,7 @@
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
         <box class="tabpanel" flex="100%" align="vertical">
-          <tree id="JSEATree" class="AttributesTree" flex="100%" context="attlistPopup">
+          <tree id="JSEATree" class="AttributesTree inset" flex="100%" context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
             <treehead>
