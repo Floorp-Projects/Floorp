@@ -9,39 +9,27 @@
   <tcc foregroundcolor="#0000FF" backgroundcolor="#C0C0C0" name="NextDay" orientation="east" control="MultiCalendarEventWeekView" usectxrule="day+1" weightminor="0" weightmajor="0"/> 
 </panel> 
 
-<!-- This is the HTML Pane -->
-<panel name="FolderViewRule" layout="ybox"> 
-  <object class="timebaruserheading" backgroundcolor="#C0C0C0" title="Folders" weightmajor="0"/>
-  <foldercanvas>
-	<xpitem label="Trex"			halign="left" valign="bottom" fullimage="resource://res/ui/images/trex_full.gif" />
-	<xpitem label="Inbox"			halign="left" valign="bottom" fullimage="resource://res/ui/images/inbox_full.gif" />
-	<xpitem label="Outbox"			halign="left" valign="bottom" fullimage="resource://res/ui/images/outbox_full.gif" />
-	<xpitem label="Sent"			halign="left" valign="bottom" fullimage="resource://res/ui/images/sent_full.gif" />
-	<xpitem label="Trash"			halign="left" valign="bottom" fullimage="resource://res/ui/images/trash_full.gif" />
-	<xpitem label="Portal"			halign="left" valign="bottom" fullimage="resource://res/ui/images/portal_full.gif" />
-	<xpitem label="Mail"			halign="left" valign="bottom" fullimage="resource://res/ui/images/mail_full.gif" />
-	<xpitem label="Browser"			halign="left" valign="bottom" fullimage="resource://res/ui/images/browser_full.gif" />
-	<xpitem label="Address Book"	halign="left" valign="bottom" fullimage="resource://res/ui/images/addrbook_full.gif" />
-  </foldercanvas>
-</panel> 
-
 <!-- This is the Timebar Scale Rule -->
 <panel name="ScaleViewRule" layout="ybox"> 
   <tcc foregroundcolor="#0000FF" name="PrevHour" orientation="north" control="MultiCalendarEventWeekView" usectxrule="hour-1" weightminor="0" weightmajor="0"/> 
-  <timebarscale name="TimebarScale" weightminor="0" weightmajor="1"/>
+  <timebarscale name="TimebarScale" weightminor="0" weightmajor="1" layout="ybox" />
   <tcc foregroundcolor="#0000FF" name="NextHour" orientation="south" control="MultiCalendarEventWeekView" usectxrule="hour+1" weightminor="0" weightmajor="0"/> 
 </panel> 
 
 <!-- This is the MonthController and Todo List -->
 <panel name="ToDoCalViewRule"> 
   <mcc name="MiniCalendar" control="MultiCalendarEventWeekView" usectxrule="DayList"/> 
+  <!--
   <todocanvas name="ToDoCanvas"/>
+  -->
 </panel> 
 
 <!-- This is the MultiDayView and Command Bar -->
 <panel name="MultiDayViewRule"> 
   <multidayviewcanvas name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext" minrepeat="1" maxrepeat="17" > 
+  <!--
   <commandcanvas name="CommandCanvas" weightmajor="0" weightminor="0">
+  -->
 </panel> 
 
 

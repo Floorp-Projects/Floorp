@@ -12,7 +12,7 @@
 <!-- This is the Timebar Scale Rule -->
 <panel name="ScaleViewRule"> 
   <tcc foregroundcolor="#0000FF" name="PrevHour" orientation="north" control="MultiCalendarEventWeekView" usectxrule="hour-1" weightminor="0" weightmajor="0"/> 
-  <timebarscale name="TimebarScale" weightminor="0" weightmajor="1"/>
+  <timebarscale name="TimebarScale" weightminor="0" weightmajor="1" layout="ybox" />
   <tcc foregroundcolor="#0000FF" name="NextHour" orientation="south" control="MultiCalendarEventWeekView" usectxrule="hour+1" weightminor="0" weightmajor="0"/> 
 </panel> 
 
