@@ -1084,14 +1084,15 @@ nsComboboxControlFrame::SelectionChanged()
 // nsISelectControlFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::DoneAddingContent()
+nsComboboxControlFrame::DoneAddingContent(PRBool aIsDone)
 {
+
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
   nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
                                               (void**)&listFrame);
   if (NS_SUCCEEDED(rv) && listFrame) {
-    rv = listFrame->DoneAddingContent();
+    rv = listFrame->DoneAddingContent(aIsDone);
     NS_RELEASE(listFrame);
   }
   return rv;
