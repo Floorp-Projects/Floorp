@@ -806,7 +806,7 @@ mime_insert_html_convert_charset (const PRBool input_autodetect, const char *inp
                                   char **output_ret, PRInt32 *output_size_ret,
                                   void *stream_closure)
 {
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
+  //struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   
   return mime_convert_charset (input_autodetect, input_line, input_length,
                                input_charset, output_charset,

@@ -311,8 +311,6 @@ MimeMultipart_create_child(MimeObject *obj)
 			  : 0);
   const char *dct = (((MimeMultipartClass *) obj->clazz)->default_part_type);
   MimeObject *body = NULL;
-  MimeObject *parent = NULL;
-  PRBool showIcon = PR_TRUE;
 
   mult->state = MimeMultipartPartFirstLine;
   /* Don't pass in NULL as the content-type (this means that the

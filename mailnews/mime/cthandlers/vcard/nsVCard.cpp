@@ -810,6 +810,7 @@ static char* lexGet1Value() {
 #endif
 
 
+#ifndef _SUPPORT_LINE_FOLDING
 static char* lexGetStrUntil(char *termset) {
     int c = lexLookahead();
     lexClearToken();
@@ -821,6 +822,7 @@ static char* lexGetStrUntil(char *termset) {
     lexAppendc(0);
     return c==EOF?0:lexStr();
     }
+#endif /* ! _SUPPORT_LINE_FOLDING */
 
 static int match_begin_name(int end) {
     char *n = lexLookaheadWord();
