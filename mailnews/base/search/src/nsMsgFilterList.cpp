@@ -64,8 +64,7 @@ NS_IMPL_QUERY_INTERFACE1(nsMsgFilterList, nsIMsgFilterList)
 
 NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFilter **aFilter)
 {
-	if (!aFilter)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(aFilter);
 
 	nsMsgFilter *filter = new nsMsgFilter;
     NS_ENSURE_TRUE(filter, NS_ERROR_OUT_OF_MEMORY);
@@ -98,7 +97,6 @@ NS_IMETHODIMP nsMsgFilterList::SetFolder(nsIMsgFolder *aFolder)
   m_folder = aFolder;
 	return NS_OK;
 }
-
 
 NS_IMETHODIMP nsMsgFilterList::GetLoggingEnabled(PRBool *aResult)
 {
@@ -335,18 +333,13 @@ char nsMsgFilterList::ReadChar(nsIOFileStream *aStream)
 	return (aStream->eof() ? -1 : newChar);
 }
 
-PRBool nsMsgFilterList::IsWhitespace(char ch)
-{
-	return (ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t');
-}
-
 char nsMsgFilterList::SkipWhitespace(nsIOFileStream *aStream)
 {
 	char ch;
 	do
 	{
 		ch = ReadChar(aStream);
-	} while (IsWhitespace(ch));
+	} while (nsCRT::IsAsciiSpace((PRUnichar)ch));
 	return ch;
 }
 
@@ -364,7 +357,7 @@ char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttribValue &attrib, nsIOFileStr
 	int i;
 	for (i = 0; i + 1 < (int)(sizeof(attribStr)); )
 	{
-		if (curChar == (char) -1 || IsWhitespace(curChar) || curChar == '=')
+		if (curChar == (char) -1 || nsCRT::IsAsciiSpace((PRUnichar)curChar) || curChar == '=')
 			break;
 		attribStr[i++] = curChar;
 		curChar = ReadChar(aStream);

@@ -70,7 +70,6 @@ protected:
 	nsresult SaveTextFilters(nsIOFileStream *aStream);
 	// file streaming methods
 	char			ReadChar(nsIOFileStream *aStream);
-	PRBool			IsWhitespace(char ch);
 	char			SkipWhitespace(nsIOFileStream *aStream);
 	PRBool			StrToBool(nsCString &str);
 	char			LoadAttrib(nsMsgFilterFileAttribValue &attrib, nsIOFileStream *aStream);
