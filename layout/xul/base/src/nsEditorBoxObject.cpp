@@ -103,9 +103,6 @@ NS_IMETHODIMP nsEditorBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresS
   mEditorShell = do_CreateInstance("@mozilla.org/editor/editorshell;1");
   if (!mEditorShell) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mEditorShell->Init();
-  if (NS_FAILED(rv)) return rv;
-  
   return NS_OK;
 }
 
