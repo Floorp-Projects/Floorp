@@ -90,18 +90,6 @@ public:
    */
   NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;};
 
-  /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContext.h
-   *	@update 05/01/00 dwc
-   */
-  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) { return NS_OK;}
-
-  /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContext.h
-   *	@update 05/01/00 dwc
-   */
-  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) { return NS_OK; }
-
   NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer); 
   NS_IMETHOD ReleaseBackbuffer(void);
   NS_IMETHOD DestroyCachedBackbuffer(void);

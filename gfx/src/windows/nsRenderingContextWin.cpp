@@ -1074,39 +1074,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
   return NS_OK;
 }
 
-  /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContextImpl.h
-   *	@update 5/01/00 dwc
-   */
-NS_IMETHODIMP nsRenderingContextWin :: DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
-{
-
-  if (nsLineStyle_kNone == mCurrLineStyle)
-    return NS_OK;
-
-  SetupPen();
-
-  if (nsLineStyle_kDotted == mCurrLineStyle)
-  {
-    lineddastruct dda_struct;
-
-    dda_struct.nDottedPixel = 1;
-    dda_struct.dc = mDC;
-    dda_struct.crColor = mColor;
-
-    LineDDA((int)(aX0),(int)(aY0),(int)(aX1),(int)(aY1),(LINEDDAPROC) LineDDAFunc,(long)&dda_struct);
-  }
-  else
-  {
-    ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
-    ::LineTo(mDC, (int)(aX1), (int)(aY1));
-  }
-
-  return NS_OK;
-
-}
-
-
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
@@ -1303,40 +1270,6 @@ NS_IMETHODIMP nsRenderingContextWin :: FillPolygon(const nsPoint aPoints[], PRIn
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsRenderingContextWin :: FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
-{
-  // First transform nsPoint's into POINT's;
-  POINT pts[20];
-  POINT* pp0 = pts;
-
-  if (aNumPoints > 20)
-    pp0 = new POINT[aNumPoints];
-
-  POINT* pp = pp0;
-  const nsPoint* np = &aPoints[0];
-
-	for (PRInt32 i = 0; i < aNumPoints; i++, pp++, np++){
-		pp->x = np->x;
-		pp->y = np->y;
-	}
-
-  // Fill the polygon
-  SetupSolidBrush();
-
-  if (NULL == mNullPen)
-    mNullPen = ::CreatePen(PS_NULL, 0, 0);
-
-  HPEN oldPen = (HPEN)::SelectObject(mDC, mNullPen);
-  ::Polygon(mDC, pp0, int(aNumPoints));
-  ::SelectObject(mDC, oldPen);
-
-  // Release temporary storage if necessary
-  if (pp0 != pts)
-    delete [] pp0;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawEllipse(const nsRect& aRect)
 {
