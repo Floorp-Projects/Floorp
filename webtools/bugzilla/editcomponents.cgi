@@ -56,7 +56,7 @@ my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
 unlink "data/versioncache";
 GetVersionTable();
 
-my $prodcode = "P0";
+my $prodcode = "P000";
 
 foreach my $product (@::legal_product) {
     SendSQL("select description, milestoneurl, disallownew from products where product='$product'");
