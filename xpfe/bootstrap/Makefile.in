@@ -176,6 +176,10 @@ CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 endif
 
+ifneq (,$(filter cookie,$(MOZ_EXTENSIONS)))
+DEFINES += -DUSE_POPUP_MANAGER
+endif
+
 ifneq (,$(filter windows os2 gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 ifneq (,$(filter windows os2,$(MOZ_WIDGET_TOOLKIT)))
 ICON_SUFFIX=.ico

@@ -80,12 +80,14 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIJSContextStack.h"
-#include "nsIPopupWindowManager.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
+#ifdef USE_POPUP_MANAGER
+#include "nsIPopupWindowManager.h"
+#endif
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -117,21 +119,25 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
 
+#ifdef USE_POPUP_MANAGER
   PRUint32         allow = nsIPopupWindowManager::eAllow;
   nsCOMPtr<nsIURI> parentURI;
 
   GetParentURI(aParent, getter_AddRefs(parentURI));
   if (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT)
     allow = AllowWindowCreation(parentURI);
+#endif
 
   nsCOMPtr<nsIXULWindow> newWindow;
 
   if (aParent) {
+#ifdef USE_POPUP_MANAGER
     if (allow == nsIPopupWindowManager::eDisallow)
       return NS_OK; // ruse to not give scripts a catchable error
     if (allow == nsIPopupWindowManager::eAllow &&
         (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT))
       aContextFlags &= ~PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
+#endif
 
     nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
     NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
@@ -170,6 +176,7 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
 PRUint32
 nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
 {
+#ifdef USE_POPUP_MANAGER
   nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
   if (!pm)
     return nsIPopupWindowManager::eAllow;
@@ -178,6 +185,9 @@ nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
   if (NS_SUCCEEDED(pm->TestPermission(aURI, &permission)))
     return permission;
   return nsIPopupWindowManager::eAllow;
+#else
+  return 1;
+#endif
 }
 
 void
