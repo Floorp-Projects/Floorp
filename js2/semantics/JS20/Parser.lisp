@@ -253,19 +253,17 @@
        
        (grammar-argument :omega
                          abbrev              ;optional semicolon when followed by a '}', 'else', or 'while' in a do-while
-                         abbrev-non-empty    ;optional semicolon as long as statement isn't empty
                          abbrev-no-short-if  ;optional semicolon, but statement must not end with an if without an else
                          full)               ;semicolon required at the end
-       (grammar-argument :omega_3 abbrev abbrev-non-empty full)
        (grammar-argument :omega_2 abbrev full)
        
-       (production (:top-statement :omega_3) ((:statement :omega_3)) top-statement-statement)
-       (production (:top-statement :omega_3) (:attribute-definition (:noninsertable-semicolon :omega_3)) top-statement-attribute-definition)
-       (production (:top-statement :omega_3) (:language-declaration (:noninsertable-semicolon :omega_3)) top-statement-language-declaration)
-       (production (:top-statement :omega_3) (:package-definition) top-statement-package-definition)
+       (production (:top-statement :omega_2) ((:statement :omega_2)) top-statement-statement)
+       (production (:top-statement :omega_2) (:attribute-definition (:noninsertable-semicolon :omega_2)) top-statement-attribute-definition)
+       (production (:top-statement :omega_2) (:language-declaration (:noninsertable-semicolon :omega_2)) top-statement-language-declaration)
+       (production (:top-statement :omega_2) (:package-definition) top-statement-package-definition)
        
        (production (:statement :omega) ((:annotated-definition :omega)) statement-annotated-definition)
-       (production (:statement :omega) ((:empty-statement :omega)) statement-empty-statement)
+       (production (:statement :omega) (:empty-statement) statement-empty-statement)
        (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement)
        (production (:statement :omega) (:annotated-block) statement-annotated-block)
        (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement)
@@ -286,17 +284,14 @@
        (production (:semicolon :omega) (\;) semicolon-semicolon)
        (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon)
        (production (:semicolon abbrev) () semicolon-abbrev)
-       (production (:semicolon abbrev-non-empty) () semicolon-abbrev-non-empty)
        (production (:semicolon abbrev-no-short-if) () semicolon-abbrev-no-short-if)
        
-       (production (:noninsertable-semicolon :omega_3) (\;) noninsertable-semicolon-semicolon)
+       (production (:noninsertable-semicolon :omega_2) (\;) noninsertable-semicolon-semicolon)
        (production (:noninsertable-semicolon abbrev) () noninsertable-semicolon-abbrev)
-       (production (:noninsertable-semicolon abbrev-non-empty) () noninsertable-semicolon-abbrev-non-empty)
        
        
        (%subsection "Empty Statement")
-       (production (:empty-statement :omega) (\;) empty-statement-semicolon)
-       (production (:empty-statement abbrev) () empty-statement-abbrev)
+       (production :empty-statement (\;) empty-statement-semicolon)
        
        
        (%subsection "Expression Statement")
@@ -310,10 +305,10 @@
        
        (production :block ({ :top-statements }) block-top-statements)
        
-       (production :top-statements ((:top-statement abbrev)) top-statements-one)
-       (production :top-statements (:top-statements-prefix (:top-statement abbrev-non-empty)) top-statements-more)
+       (production :top-statements () top-statements-none)
+       (production :top-statements (:top-statements-prefix (:top-statement abbrev)) top-statements-more)
        
-       (production :top-statements-prefix ((:top-statement full)) top-statements-prefix-one)
+       (production :top-statements-prefix () top-statements-prefix-none)
        (production :top-statements-prefix (:top-statements-prefix (:top-statement full)) top-statements-prefix-more)
        
        
@@ -323,38 +318,30 @@
        
        (%subsection "If Statement")
        (production (:if-statement abbrev) (if :parenthesized-expression (:statement abbrev)) if-statement-if-then-abbrev)
-       (production (:if-statement abbrev-non-empty) (if :parenthesized-expression (:statement abbrev-non-empty)) if-statement-if-then-abbrev-non-empty)
        (production (:if-statement full) (if :parenthesized-expression (:statement full)) if-statement-if-then-full)
        (production (:if-statement :omega) (if :parenthesized-expression (:statement abbrev-no-short-if)
                                               else (:statement :omega)) if-statement-if-then-else)
        
        
        (%subsection "Switch Statement")
-       (production :switch-statement (switch :parenthesized-expression { }) switch-statement-empty)
-       (production :switch-statement (switch :parenthesized-expression { :case-groups :last-case-group }) switch-statement-cases)
+       (production :switch-statement (switch :parenthesized-expression { :case-statements }) switch-statement-cases)
        
-       (production :case-groups () case-groups-empty)
-       (production :case-groups (:case-groups :case-group) case-groups-more)
+       (production (:case-statement :omega_2) ((:statement :omega_2)) case-statement-statement)
+       (production (:case-statement :omega_2) (:case-label) case-statement-case-label)
        
-       (production :case-group (:case-guards :case-statements-prefix) case-group-case-statements-prefix)
+       (production :case-label (case (:expression allow-in) \:) case-label-case)
+       (production :case-label (default \:) case-label-default)
        
-       (production :last-case-group (:case-guards :case-statements) last-case-group-case-statements)
+       (production :case-statements () case-statements-none)
+       (production :case-statements (:case-label) case-statements-one)
+       (production :case-statements (:case-label :case-statements-prefix (:case-statement abbrev)) case-statements-more)
        
-       (production :case-guards (:case-guard) case-guards-one)
-       (production :case-guards (:case-guards :case-guard) case-guards-more)
-       
-       (production :case-guard (case (:expression allow-in) \:) case-guard-case)
-       (production :case-guard (default \:) case-guard-default)
-       
-       (production :case-statements ((:statement abbrev)) case-statements-one)
-       (production :case-statements (:case-statements-prefix (:statement abbrev-non-empty)) case-statements-more)
-       
-       (production :case-statements-prefix ((:statement full)) case-statements-prefix-one)
-       (production :case-statements-prefix (:case-statements-prefix (:statement full)) case-statements-prefix-more)
+       (production :case-statements-prefix () case-statements-prefix-none)
+       (production :case-statements-prefix (:case-statements-prefix (:case-statement full)) case-statements-prefix-more)
        
        
        (%subsection "Do-While Statement")
-       (production :do-statement (do (:statement abbrev-non-empty) while :parenthesized-expression) do-statement-do-while)
+       (production :do-statement (do (:statement abbrev) while :parenthesized-expression) do-statement-do-while)
        
        
        (%subsection "While Statement")
