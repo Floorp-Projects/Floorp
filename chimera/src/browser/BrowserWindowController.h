@@ -181,8 +181,9 @@ class nsIDOMNode;
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
             url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
-- (void)printDocument;
+- (IBAction)printDocument:(id)aSender;
 - (void)printPreview;
+- (IBAction)performSearch:(id)aSender;
 
 - (void)startThrobber;
 - (void)stopThrobber;

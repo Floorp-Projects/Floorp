@@ -16,6 +16,7 @@
                 closeTab = id; 
                 displayPreferencesWindow = id; 
                 doReload = id; 
+                doSearch = id; 
                 doStop = id; 
                 feedbackLink = id; 
                 findAgain = id; 

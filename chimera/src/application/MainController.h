@@ -98,6 +98,7 @@ class BookmarksService;
 -(IBAction) goBack:(id)aSender;
 -(IBAction) goForward:(id)aSender;
 -(IBAction) goHome:(id)aSender;
+-(IBAction) doSearch:(id)aSender;
 -(IBAction) previousTab:(id)aSender;
 -(IBAction) nextTab:(id)aSender;
 

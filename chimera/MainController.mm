@@ -258,7 +258,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController printDocument];
+    [browserController printDocument:aSender];
 }
 
 -(IBAction) printPreview:(id)aSender
@@ -360,6 +360,22 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
   else {
       [self newWindow:self];  
+  }
+}
+
+-(IBAction) doSearch:(id)aSender
+{
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (browserWindow) {
+    if (![browserWindow isMainWindow])
+      [browserWindow makeKeyAndOrderFront:self];
+    
+    [[browserWindow windowController] performSearch: aSender];
+  }
+  else {
+      [self newWindow:self];
+      browserWindow = [self getFrontmostBrowserWindow];
+      [[browserWindow windowController] performSearch: aSender];
   }
 }
 
@@ -599,7 +615,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController viewSource: self];
+    [browserController viewSource: aSender];
 }
 
 -(BOOL)isMainWindowABrowserWindow
@@ -658,13 +674,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   if (action == @selector(newTab:) ||
         /* ... many more items go here ... */
+        /* action == @selector(goHome:) || */			// always enabled
+        /* action == @selector(doSearch:) || */		// always enabled
         action == @selector(printPage:) ||
         action == @selector(findInPage:) ||
         action == @selector(doReload:) ||
         action == @selector(biggerTextSize:) ||
         action == @selector(smallerTextSize:) ||
         action == @selector(viewSource:) ||
-        action == @selector(goHome:) ||
         action == @selector(savePage:)) {
     if (browserController)
       return YES;

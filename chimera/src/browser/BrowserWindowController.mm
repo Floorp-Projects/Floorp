@@ -553,7 +553,7 @@ static NSArray* sToolbarDefaults = nil;
         [toolbarItem setToolTip:@"Search the Internet"];
         [toolbarItem setImage:[NSImage imageNamed:@"saveShowFile.tif"]];
         [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(performSearch)];
+        [toolbarItem setAction:@selector(performSearch:)];
     } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
         [toolbarItem setLabel:@""];
         [toolbarItem setPaletteLabel:@"Progress"];
@@ -587,7 +587,7 @@ static NSArray* sToolbarDefaults = nil;
         [toolbarItem setToolTip:@"Print this page"];
         [toolbarItem setImage:[NSImage imageNamed:@"print"]];
         [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(printDocument)];
+        [toolbarItem setAction:@selector(printDocument:)];
     } else {
         toolbarItem = nil;
     }
@@ -744,7 +744,7 @@ static NSArray* sToolbarDefaults = nil;
   [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
 }
 
-- (void)printDocument
+- (IBAction)printDocument:(id)aSender
 {
   [[mBrowserView getBrowserView] printDocument];
 }
@@ -756,7 +756,7 @@ static NSArray* sToolbarDefaults = nil;
   //[[mBrowserView getBrowserView] printPreview];
 }
 
-- (void)performSearch
+- (IBAction)performSearch:(id)aSender
 {
   NSString *searchEngine = NSLocalizedStringFromTable(@"SearchPageDefault", @"WebsiteDefaults", nil);
 
