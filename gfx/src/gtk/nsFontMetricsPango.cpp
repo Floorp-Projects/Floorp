@@ -48,14 +48,18 @@
 #include "nsFontMetricsPango.h"
 #include "nsRenderingContextGTK.h"
 #include "nsDeviceContextGTK.h"
+#include "nsFontConfigUtils.h"
 
 #include "nsUnicharUtils.h"
+#include "nsQuickSort.h"
 
 #include <pango/pangoxft.h>
 #include <fontconfig/fontconfig.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <freetype/tttables.h>
+
+#include "mozilla-decoder.h"
 
 #define FORCE_PR_LOG
 #include "prlog.h"
@@ -121,6 +125,11 @@ static void   FreeGlobals    (void);
 
 static PangoStyle  CalculateStyle  (PRUint8 aStyle);
 static PangoWeight CalculateWeight (PRUint16 aWeight);
+
+static nsresult    EnumFontsPango   (nsIAtom* aLangGroup, const char* aGeneric,
+                                     PRUint32* aCount, PRUnichar*** aResult);
+static int         CompareFontNames (const void* aArg1, const void* aArg2,
+                                     void* aClosure);
 
 nsFontMetricsPango::nsFontMetricsPango()
 {
@@ -1421,4 +1430,224 @@ CalculateWeight (PRUint16 aWeight)
     return (PangoWeight)fcWeights[fcWeight];
 }
 
+/* static */
+nsresult
+EnumFontsPango(nsIAtom* aLangGroup, const char* aGeneric,
+               PRUint32* aCount, PRUnichar*** aResult)
+{
+    FcPattern   *pat = NULL;
+    FcObjectSet *os  = NULL;
+    FcFontSet   *fs  = NULL;
+    nsresult     rv  = NS_ERROR_FAILURE;
 
+    PRUnichar **array = NULL;
+    PRUint32    narray = 0;
+    PRInt32     serif = 0, sansSerif = 0, monospace = 0, nGenerics;
+
+    *aCount = 0;
+    *aResult = nsnull;
+
+    pat = FcPatternCreate();
+    if (!pat)
+        goto end;
+
+    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, 0);
+    if (!os)
+        goto end;
+
+    // take the pattern and add the lang group to it
+    if (aLangGroup)
+        NS_AddLangGroup(pat, aLangGroup);
+
+    // get the font list
+    fs = FcFontList(0, pat, os);
+
+    if (!fs)
+        goto end;
+
+    if (!fs->nfont) {
+        rv = NS_OK;
+        goto end;
+    }
+
+    // Fontconfig supports 3 generic fonts, "serif", "sans-serif", and
+    // "monospace", slightly different from CSS's 5.
+    if (!aGeneric)
+        serif = sansSerif = monospace = 1;
+    else if (!strcmp(aGeneric, "serif"))
+        serif = 1;
+    else if (!strcmp(aGeneric, "sans-serif"))
+        sansSerif = 1;
+    else if (!strcmp(aGeneric, "monospace"))
+        monospace = 1;
+    else if (!strcmp(aGeneric, "cursive") || !strcmp(aGeneric, "fantasy"))
+        serif = sansSerif =  1;
+    else
+        NS_NOTREACHED("unexpected generic family");
+    nGenerics = serif + sansSerif + monospace;
+
+    array = NS_STATIC_CAST(PRUnichar **,
+               nsMemory::Alloc((fs->nfont + nGenerics) * sizeof(PRUnichar *)));
+    if (!array)
+        goto end;
+
+    if (serif) {
+        PRUnichar *name = ToNewUnicode(NS_LITERAL_STRING("serif"));
+        if (!name)
+            goto end;
+        array[narray++] = name;
+    }
+
+    if (sansSerif) {
+        PRUnichar *name = ToNewUnicode(NS_LITERAL_STRING("sans-serif"));
+        if (!name)
+            goto end;
+        array[narray++] = name;
+    }
+
+    if (monospace) {
+        PRUnichar *name = ToNewUnicode(NS_LITERAL_STRING("monospace"));
+        if (!name)
+            goto end;
+        array[narray++] = name;
+    }
+
+    for (int i=0; i < fs->nfont; ++i) {
+        char *family;
+        PRUnichar *name;
+
+        // if there's no family, just move to the next iteration
+        if (FcPatternGetString (fs->fonts[i], FC_FAMILY, 0,
+                                (FcChar8 **) &family) != FcResultMatch) {
+            continue;
+        }
+
+        name = NS_STATIC_CAST(PRUnichar *,
+                              nsMemory::Alloc ((strlen (family) + 1)
+                                               * sizeof (PRUnichar)));
+
+        if (!name)
+            goto end;
+
+        PRUnichar *r = name;
+        for (char *f = family; *f; ++f)
+            *r++ = *f;
+        *r = '\0';
+
+        array[narray++] = name;
+    }
+
+    NS_QuickSort(array + nGenerics, narray - nGenerics, sizeof (PRUnichar*),
+                 CompareFontNames, nsnull);
+
+    *aCount = narray;
+    if (narray)
+        *aResult = array;
+    else
+        nsMemory::Free(array);
+
+    rv = NS_OK;
+
+ end:
+    if (NS_FAILED(rv) && array) {
+        while (narray)
+            nsMemory::Free (array[--narray]);
+        nsMemory::Free (array);
+    }
+    if (pat)
+        FcPatternDestroy(pat);
+    if (os)
+        FcObjectSetDestroy(os);
+    if (fs)
+        FcFontSetDestroy(fs);
+
+    return rv;
+}
+
+/* static */
+int
+CompareFontNames (const void* aArg1, const void* aArg2, void* aClosure)
+{
+    const PRUnichar* str1 = *((const PRUnichar**) aArg1);
+    const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+    return nsCRT::strcmp(str1, str2);
+}
+
+
+// nsFontEnumeratorPango class
+
+nsFontEnumeratorPango::nsFontEnumeratorPango()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorPango, nsIFontEnumerator)
+
+NS_IMETHODIMP
+nsFontEnumeratorPango::EnumerateAllFonts(PRUint32 *aCount,
+                                         PRUnichar ***aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = nsnull;
+    NS_ENSURE_ARG_POINTER(aCount);
+    *aCount = 0;
+
+    return EnumFontsPango(nsnull, nsnull, aCount, aResult);
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPango::EnumerateFonts(const char *aLangGroup,
+                                      const char *aGeneric,
+                                      PRUint32 *aCount,
+                                      PRUnichar ***aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = nsnull;
+    NS_ENSURE_ARG_POINTER(aCount);
+    *aCount = 0;
+
+    // aLangGroup=null or ""  means any (i.e., don't care)
+    // aGeneric=null or ""  means any (i.e, don't care)
+    nsCOMPtr<nsIAtom> langGroup;
+    if (aLangGroup && *aLangGroup)
+        langGroup = do_GetAtom(aLangGroup);
+    const char* generic = nsnull;
+    if (aGeneric && *aGeneric)
+        generic = aGeneric;
+
+    return EnumFontsPango(langGroup, generic, aCount, aResult);
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPango::HaveFontFor(const char *aLangGroup,
+                                   PRBool *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = PR_FALSE;
+    NS_ENSURE_ARG_POINTER(aLangGroup);
+
+    *aResult = PR_TRUE; // always return true for now.
+    // Finish me - ftang
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPango::GetDefaultFont(const char *aLangGroup,
+                                      const char *aGeneric,
+                                      PRUnichar **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = nsnull;
+
+    // Have a look at nsFontEnumeratorXft::GetDefaultFont for some
+    // possible code for this function.
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPango::UpdateFontList(PRBool *_retval)
+{
+    *_retval = PR_FALSE; // always return false for now
+    return NS_OK;
+}
