@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.28 2002/10/30 23:31:38 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.29 2002/11/02 00:07:48 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1052,7 +1052,9 @@ SECStatus ShutdownCRLCache(void)
     /* empty the cache */
     PL_HashTableEnumerateEntries(crlcache.issuers, &FreeIssuer, NULL);
     PL_HashTableDestroy(crlcache.issuers);
+    crlcache.issuers = NULL;
     PR_DestroyLock(crlcache.lock);
+    crlcache.lock = NULL;
     return SECSuccess;
 }
 
