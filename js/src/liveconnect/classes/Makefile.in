@@ -40,7 +40,7 @@ JMODS		= netscape/javascript netscape/javascript/adapters
 JDIRS		= $(JMODS)
 
 JAR_JSJ		= jsj10.jar
-JAR_JSJ_CLASSES	= $(JMODS)  
+JAR_JSJ_CLASSES	= $(JMODS)
 
 #
 # jars to build at install time
