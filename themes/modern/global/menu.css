@@ -47,8 +47,9 @@ menupopup > menuitem, popup > menuitem
 
 menuseparator 
   {
-    border-bottom         : 1px solid #336699; 
-    margin                : 2px 0px 2px 0px;
+  	border-top			  : 1px solid #172254;
+    border-bottom         : 1px solid #5A518A; 
+    margin                : 2px 0px;
   }
 
 menubar > menu 
@@ -194,11 +195,11 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : #FFFFCC;
-    border                : 1px outset #FFFFCC;
+    background-color      : #E0FFFF;
+    border                : 0px;
     color                 : #000000;
-    font                  : smaller;
-    padding               : 3px;
+    font-size             : 9px;
+    padding               : 2px;
   }
 
 /*
