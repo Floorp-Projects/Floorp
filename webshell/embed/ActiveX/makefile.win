@@ -77,8 +77,10 @@ LINCS=  \
   -I$(PUBLIC)\lwbrk \
   -I$(PUBLIC)\unicharutil \
   -I$(PUBLIC)\pref \
-  -I$(PUBLIC)\walletlib \
-  -I$(PUBLIC)\rdf
+  -I$(PUBLIC)\wallet \
+  -I$(PUBLIC)\rdf \
+  -I$(PUBLIC)\profile \
+  $(NULL) 
 
 MYLIBS=                         \
  $(DIST)\lib\raptorbase.lib     \
