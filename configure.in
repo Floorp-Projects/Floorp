@@ -78,6 +78,7 @@ NSPR_VERSION=4
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
+GLIB_VERSION=1.2.0
 GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
@@ -1678,6 +1679,10 @@ if test -n "$CROSS_COMPILE"; then
       LIBIDL_CFLAGS=`${LIBIDL_CONFIG}-VMS --cflags`
       LIBIDL_LIBS=`${LIBIDL_CONFIG}-VMS --libs`
     fi
+fi
+
+if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
+    AM_PATH_GLIB(${GLIB_VERSION})
 fi
 
 AC_SUBST(GLIB_CFLAGS)
