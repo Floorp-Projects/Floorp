@@ -514,7 +514,7 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
 
   while(++index<aDest.mLength) {
     PRUnichar theChar=GetCharAt(aDest,index);
-    thePos=gFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,anOffset,theChar,aIgnoreCase);
+    thePos=gFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
     if(kNotFound!=thePos)
       return index;
   } //while
@@ -585,7 +585,7 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
 
   while(--offset>=0) {
     PRUnichar theChar=GetCharAt(aDest,offset);
-    thePos=gRFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,anOffset,theChar,aIgnoreCase);
+    thePos=gRFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
     if(kNotFound!=thePos)
       return offset;
   } //while
