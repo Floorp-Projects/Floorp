@@ -263,11 +263,6 @@ public class BaseFunction extends IdScriptable implements Function {
     public String getFunctionName() {
         if (functionName == null)
             return "";
-        if (functionName.equals("anonymous")) {
-            Context cx = Context.getCurrentContext();
-            if (cx != null && cx.getLanguageVersion() == Context.VERSION_1_2)
-                return "";
-        }
         return functionName;
     }
 
@@ -370,6 +365,7 @@ public class BaseFunction extends IdScriptable implements Function {
         finally { cx.setOptimizationLevel(oldOptLevel); }
 
         fn.functionName = "anonymous";
+        fn.fromFunctionConstructor = true;
         fn.setPrototype(getFunctionPrototype(global));
         fn.setParentScope(global);
 

@@ -1977,9 +1977,7 @@ public class ScriptRuntime {
         result.setParentScope(scope);
 
         String fnName = result.getFunctionName();
-        if (setName && fnName != null && fnName.length() != 0 &&
-            !fnName.equals("anonymous"))
-        {
+        if (setName && fnName != null && fnName.length() != 0) {
             ScriptableObject.putProperty(scope, fnName, result);
         }
 

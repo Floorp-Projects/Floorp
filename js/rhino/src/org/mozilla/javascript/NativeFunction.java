@@ -76,6 +76,15 @@ public class NativeFunction extends BaseFunction {
         return argCount;
     }
 
+    public String getFunctionName() {
+        if (fromFunctionConstructor) {
+            if (version == Context.VERSION_1_2) {
+                return "";
+            }
+        }
+        return super.getFunctionName();
+    }
+
     /**
      * @deprecated Use {@link #getFunctionName()} instead.
      * For backwards compatibility keep an old method name used by
@@ -94,6 +103,12 @@ public class NativeFunction extends BaseFunction {
     protected String[] argNames;
     protected short argCount;
     protected short version;
+    
+    /** 
+     * True if this represents function constructed via Function() 
+     * constructor
+     */
+    boolean fromFunctionConstructor;
 
     /**
      * An encoded representation of the function source, for

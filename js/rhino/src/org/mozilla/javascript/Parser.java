@@ -1601,8 +1601,8 @@ class Parser {
         String source = f.source;
         int length = source.length();
 
-        String functionName = f.functionName;
         NativeFunction[] nestedFunctions = f.nestedFunctions;
+        boolean fromFunctionConstructor = f.fromFunctionConstructor;
 
         // Spew tokens in source, for debugging.
         // as TYPE number char
@@ -1648,10 +1648,7 @@ class Parser {
                 if (!justbody) {
                     result.append("function ");
 
-                    /* version != 1.2 Function constructor behavior - if
-                     * there's no function name in the source info, and
-                     * the names[0] entry is the empty string, then it must
-                     * have been created by the Function constructor;
+                    /* version != 1.2 Function constructor behavior - 
                      * print 'anonymous' as the function name if the
                      * version (under which the function was compiled) is
                      * less than 1.2... or if it's greater than 1.2, because
@@ -1659,8 +1656,7 @@ class Parser {
                      */
                     if (source.charAt(i) == TokenStream.LP
                         && version != Context.VERSION_1_2
-                        && functionName != null
-                        && functionName.equals("anonymous"))
+                        && fromFunctionConstructor)
                     {
                         result.append("anonymous");
                     }
@@ -1765,17 +1761,9 @@ class Parser {
                 if (nestedFunctions == null
                     || functionNumber > nestedFunctions.length)
                 {
-                    String message;
-                    if (functionName != null && functionName.length() > 0) {
-                        message = Context.getMessage2
-                            ("msg.no.function.ref.found.in",
-                             new Integer(functionNumber), functionName);
-                    } else {
-                        message = Context.getMessage1
-                            ("msg.no.function.ref.found",
-                             new Integer(functionNumber));
-                    }
-                    throw Context.reportRuntimeError(message);
+                    throw Context.reportRuntimeError(Context.getMessage1
+                        ("msg.no.function.ref.found",
+                         new Integer(functionNumber)));
                 }
                 decompile_r(nestedFunctions[functionNumber], version,
                             indent, false, false, srcData, result);
