@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: ExprParser.cpp,v 1.8 2001/01/22 09:36:16 kvisco%ziplink.net Exp $
+ * $Id: ExprParser.cpp,v 1.9 2001/01/22 21:54:22 axel%pike.org Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.8 $ $Date: 2001/01/22 09:36:16 $
+ * @version $Revision: 1.9 $ $Date: 2001/01/22 21:54:22 $
 **/
 
 #include "ExprParser.h"
@@ -588,7 +588,7 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
     }
     // NodeType
     else {
-       NodeExpr* nodeExpr = createNodeExpr(lexer);
+       nodeExpr = createNodeExpr(lexer);
     }
 
     lstep->setNodeExpr(nodeExpr);

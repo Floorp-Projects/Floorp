@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.12 2001/01/19 21:24:39 axel%pike.org Exp $
+ * $Id: XMLParser.cpp,v 1.13 2001/01/22 21:54:20 axel%pike.org Exp $
  */
 
 #include "XMLParser.h"
@@ -143,6 +143,7 @@ Document* XMLParser::parse(istream& inputStream)
   XML_SetElementHandler(parser, startElement, endElement);
   XML_SetCharacterDataHandler(parser, charData);
   XML_SetProcessingInstructionHandler(parser, piHandler);
+  XML_SetCommentHandler(parser,commentHandler);
   do
     {
       inputStream.read(buf, bufferSize);
@@ -218,6 +219,14 @@ void charData(void* userData, const XML_Char* s, int len)
       ps->currentNode->appendChild(ps->document->createTextNode(data));
     };
 } //-- charData
+
+void commentHandler(void* userData, const XML_Char* s)
+{
+    ParserState* ps = (ParserState*)userData;
+    String data((UNICODE_CHAR*)s);
+    Node* prevSib = ps->currentNode->getLastChild();
+    ps->currentNode->appendChild(ps->document->createComment(data));
+} //-- commentHandler
 
 /**
  * Handles ProcessingInstructions
