@@ -35,6 +35,10 @@
 #include <CFBundle.h>
 #include <CFString.h>
 #include <MacErrors.h>
+#include <Gestalt.h>
+#include <CodeFragments.h>
+#include <Fonts.h>
+#include <SIOUX.h>
 
 static CFBundleRef getBundle(CFStringRef frameworkPath)
 {
@@ -72,6 +76,16 @@ static read_write_proc_ptr _write = (read_write_proc_ptr) getSystemFunction(CFST
  *	only provide the four functions below in a library.
  */
 
+static CFragConnectionID gConsoleLibrary;
+
+static void* find_symbol(CFragConnectionID connection, StringPtr symName)
+{
+    Ptr symAddr;
+    if (FindSymbol(gConsoleLibrary, symName, &symAddr, NULL) == noErr)
+        return symAddr;
+    return NULL;
+}
+
 /*
  *	extern short InstallConsole(short fd);
  *
@@ -82,8 +96,25 @@ static read_write_proc_ptr _write = (read_write_proc_ptr) getSystemFunction(CFST
  *	returns short:	0 no error occurred, anything else error.
  */
 
-short InstallConsole(short /*fd*/)
+short InstallConsole(short fd)
 {
+    long version;
+    OSErr err = Gestalt(gestaltSystemVersion, &version);
+    if (err == noErr && version < 0x00000A00) {
+        // load the "NSConsole" library.
+        err = GetSharedLibrary("\pNSConsole", kCompiledCFragArch, kReferenceCFrag,
+                               &gConsoleLibrary, NULL, NULL);
+        if (err == noErr) {
+            // transfer the SIOUX settings.
+            tSIOUXSettings *sioux_settings = (tSIOUXSettings*) find_symbol(gConsoleLibrary, "\pSIOUXSettings");
+            if (sioux_settings) {
+                *sioux_settings = SIOUXSettings;
+                short (*install_console) (short) = (short (*) (short)) find_symbol(gConsoleLibrary, "\pInstallConsole");
+                if (install_console)
+                    return install_console(fd);
+            }
+        }
+    }
 	return 0;
 }
 
@@ -98,6 +129,13 @@ short InstallConsole(short /*fd*/)
 
 void RemoveConsole()
 {
+    if (gConsoleLibrary) {
+        void (*remove_console) (void) = (void (*) (void)) find_symbol(gConsoleLibrary, "\pInstallConsole");
+        if (remove_console)
+            remove_console();
+        CloseConnection(&gConsoleLibrary);
+        gConsoleLibrary = NULL;
+    }
 }
 
 /*
@@ -114,9 +152,15 @@ void RemoveConsole()
 
 long WriteCharsToConsole(char *buffer, long n)
 {
-    for (char* cr = strchr(buffer, '\r'); cr; cr = strchr(cr + 1, '\r'))
-        *cr = '\n';
-    if (_write) return _write(1, buffer, n);
+    if (gConsoleLibrary) {
+        static long (*write_chars) (char*, long) = (long (*) (char*, long)) find_symbol(gConsoleLibrary, "\pWriteCharsToConsole");
+        if (write_chars)
+            return write_chars(buffer, n);
+    } else {
+        for (char* cr = strchr(buffer, '\r'); cr; cr = strchr(cr + 1, '\r'))
+            *cr = '\n';
+        if (_write) return _write(1, buffer, n);
+    }
 	return 0;
 }
 
@@ -135,7 +179,13 @@ long WriteCharsToConsole(char *buffer, long n)
 
 long ReadCharsFromConsole(char *buffer, long n)
 {
-    if (_read) return _read(0, buffer, n);
+    if (gConsoleLibrary) {
+        static long (*read_chars) (char*, long) = (long (*) (char*, long)) find_symbol(gConsoleLibrary, "\pReadCharsFromConsole");
+        if (read_chars)
+            return read_chars(buffer, n);
+    } else {
+        if (_read) return _read(0, buffer, n);
+    }
 	return -1;
 }
 
@@ -161,17 +211,18 @@ void clrscr()
 	/* Could send the appropriate VT100 sequence here... */
 }
 
-/*
- * Stuff needed to make NSStdLibCarbon link.
- */
-
-#include <SIOUX.h>
-
-tSIOUXSettings	SIOUXSettings;
+tSIOUXSettings	SIOUXSettings = {
+    true, true, true, false, true, false, NULL,
+    4, 80, 24, 0, 0, kFontIDMonaco,
+    9, normal, true, true,	false
+};
 
 short SIOUXHandleOneEvent(EventRecord *userevent)
 {
+    if (gConsoleLibrary) {
+        static short (*handle_event) (EventRecord*) = (short (*) (EventRecord*)) find_symbol(gConsoleLibrary, "\pSIOUXHandleOneEvent");
+        if (handle_event)
+            return handle_event(userevent);
+    }
     return false;
 }
-
-
