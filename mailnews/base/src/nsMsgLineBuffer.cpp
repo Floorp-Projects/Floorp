@@ -182,7 +182,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
     return 0;
 }
 
-PRInt32 nsMsgLineBuffer::EmbeddedLineHandler(char *line, PRUint32 line_length)
+PRInt32 nsMsgLineBuffer::HandleLine(char *line, PRUint32 line_length)
 {
 	NS_ASSERTION(FALSE, "must override this method if you don't provide a handler");
 	return 0;
@@ -236,7 +236,7 @@ PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
 	}
 #endif
     
-    return (m_handler) ? m_handler->HandleLine(buf, length) : EmbeddedLineHandler(buf, length);
+    return (m_handler) ? m_handler->HandleLine(buf, length) : HandleLine(buf, length);
 }
 
 // If there's still some data (non CRLF terminated) flush it out
@@ -245,7 +245,7 @@ PRInt32 nsMsgLineBuffer::FlushLastLine()
 	char *buf = m_buffer + m_bufferPos;
 	PRInt32 length = m_bufferPos - 1;
 	if (length > 0)
-		return (m_handler) ? m_handler->HandleLine(buf, length) : EmbeddedLineHandler(buf, length);
+		return (m_handler) ? m_handler->HandleLine(buf, length) : HandleLine(buf, length);
 	else
 		return 0;
 }

@@ -57,7 +57,7 @@ public:
 	// Not sure why anyone cares, by NNTPHost seems to want to know the buf pos.
 	PRUint32	GetBufferPos() {return m_bufferPos;}
 
-	virtual PRInt32 EmbeddedLineHandler(char *line, PRUint32 line_length);
+	virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 	// flush last line, though it won't be CRLF terminated.
 	virtual PRInt32 FlushLastLine();
 protected:
