@@ -2047,9 +2047,6 @@ nsDocument::ContentAppended(nsIContent* aContainer,
 {
   NS_ABORT_IF_FALSE(aContainer, "Null container!");
 
-#ifdef XP_OS2_VACPP
-  volatile
-#endif
   PRInt32 i;
 
   // XXXdwh There is a hacky ordering dependency between the binding

@@ -37,13 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef XP_OS2_VACPP
-// XXX every other file that pulls in _os2.h has no problem with HTMX there;
-// this one does; the problem may lie with the order of the headers below,
-// which is why this fix is here instead of in _os2.h
-typedef unsigned long HMTX;
-#endif
-
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
 #include "nsWebShell.h"
