@@ -38,11 +38,13 @@
 */
 
 .listBox {
-  margin: 2px 4px;  border-top: 1px solid #A1A1A1 !important;
+  margin: 2px 4px;
+  border-top: 1px solid #A1A1A1 !important;
   border-right: 1px solid #C3C3C3 !important;
   border-bottom: 1px solid #DDDDDD !important;
   border-left: 1px solid #C3C3C3 !important;
-  background-color: #FFFFFF;  color: -moz-FieldText;
+  background-color: #FFFFFF;
+  color: -moz-FieldText;
 }
 
 .indent {
@@ -98,4 +100,5 @@
 
 #defaultAppName {
   margin-left: 6px !important; 
-}
+}
+
