@@ -168,14 +168,37 @@ Insert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 Delete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  //XXX TBI
+  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  NS_ASSERTION(nsnull != text, "null pointer");
+  NS_ASSERTION(2 == argc, "wrong number of arguments");
+  if (2 == argc) {
+    // get the arguments
+    if (JSVAL_IS_INT(argv[0]) && JSVAL_IS_INT(argv[1])) {
+      // call the function
+      text->Delete(JSVAL_TO_INT(argv[0]), JSVAL_TO_INT(argv[1]));
+    }
+  }
   return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
 Replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  //XXX TBI
+  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  NS_ASSERTION(nsnull != text, "null pointer");
+  NS_ASSERTION(3 == argc, "wrong number of arguments");
+  if (3 == argc) {
+    // get the arguments
+    if (JSVAL_IS_INT(argv[0]) &&
+        JSVAL_IS_INT(argv[1]) &&
+        JSVAL_IS_STRING(argv[2])) {
+      JSString *jsstring3 = JSVAL_TO_STRING(argv[2]);
+      nsAutoString string3 = JS_GetStringChars(jsstring3);
+
+      // call the function
+      text->Replace(JSVAL_TO_INT(argv[0]), JSVAL_TO_INT(argv[1]), string3);
+    }
+  }
   return JS_TRUE;
 }
 
