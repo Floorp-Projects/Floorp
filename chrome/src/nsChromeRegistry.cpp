@@ -608,11 +608,16 @@ nsChromeRegistry::InitRegistry()
 
         rv = remote->Init(innerURI);
         if (NS_FAILED(rv)) return rv;
-
-        // We need to read this synchronously.
-        rv = remote->Refresh(PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
     }
+
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    // We need to read this synchronously.
+    nsresult rv = remote->Refresh(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    
     return NS_OK;
 }
 
