@@ -11114,7 +11114,7 @@ MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help trans
 MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman ctl" 
 
 if test -n "$SUNCTL"; then
-  MOZ_EXTENSIONS_DEFAULT = "$MOZ_EXTENSIONS_DEFAULT ctl"
+  MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
 fi
 
 # Check whether --with-extensions or --without-extensions was given.
