@@ -59,7 +59,7 @@ nsNativeBrowserWindow::InitNativeWindow()
 static void MenuProc(PRUint32 aID) 
 {
   //  return nsBrowserWindow::DispatchMenuItem(aID);
-  return 0;
+  return;
 }
 
 nsresult
@@ -77,7 +77,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   // Dispatch xp menu items
   //  return nsBrowserWindow::DispatchMenuItem(aID);
-  return NS_OK;
+  return nsEventStatus_eIgnore;
 }
 
 
