@@ -150,7 +150,7 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsSe
 	  min-width             : 10px;
   }
 
-#folderTree, #folderTree > .tree-container-treerows
+#folderTree > .tree-container-treerows
   {
     border                : none !important;
   }
@@ -161,4 +161,17 @@ treeitem[empty="true"] > treerow > .tree-cell-folderpane-icon > .tree-cell-twist
   {               
     visibility            : hidden;
   }      
+
+/** 
+ *Focus rings on 3 pane view
+ */
+
+#folderTree{
+	border: 2px solid transparent !important;
+} 
+ 
+#folderTree:focus{
+	border: 2px solid black !important;
+} 
   
+

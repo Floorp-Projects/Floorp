@@ -414,15 +414,6 @@ searchterm
 /** 
  *Focus rings on 3 pane view
  */
-
-#folderTree{
-	border: 2px solid transparent !important;
-} 
- 
-#folderTree:focus{
-	border: 2px solid black !important;
-} 
-  
   
 .window-focusborder[focusring="true"]{
  border:2px solid black;
