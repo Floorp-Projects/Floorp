@@ -201,7 +201,7 @@ public class Main {
                 processSource(cx, args[i]);
                 continue;
             }
-            if (arg.startsWith("-debug")) {
+            if (false && arg.startsWith("-debug")) {
 
                 int level = 9;
                 if (i+1 < args.length) {

@@ -379,7 +379,6 @@ public class Codegen extends Interpreter {
             itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         version = cx.getLanguageVersion();
         optLevel = cx.getOptimizationLevel();
-        debugLevel = cx.getDebugLevel();
         inFunction = tree.getType() == TokenStream.FUNCTION;
         if (debugLevel >= 3) {
             superClassName = inFunction
@@ -1276,6 +1275,8 @@ public class Codegen extends Interpreter {
 
     // this is only called if (debugLevel >= 1)
     private void generateDebugInit(Context cx, Node tree) {
+        if (debugLevel == 0)
+            return;
         startNewMethod("debugInit", "()V", 0, false, true);
 
         // save source name
@@ -1667,6 +1668,8 @@ public class Codegen extends Interpreter {
     }
 
     private void generateDebugStopSubroutine() {
+        if (debugLevel == 0)
+            return;
         // local to store our subroutine return address
 //        int stackTop = classFile.getStackTop();
         debugStopSubRetLocal = getNewWordLocal();
@@ -1842,6 +1845,8 @@ public class Codegen extends Interpreter {
     }
 
     private short addDebugPCEntry(short lineno) {
+        if (debugLevel == 0)
+            return -1;
         if (0 == debugLineEntryCount) {
             debugLineMap = new short[DEBUG_LINE_MAP_INITIAL_SIZE];
         }
@@ -1856,6 +1861,8 @@ public class Codegen extends Interpreter {
         return debugLineEntryCount;
     }
     private void writeDebugPCEntries() {
+        if (debugLevel == 0)
+            return;
         String s = null;
         if (null != debugLineMap && 0 != debugLineEntryCount) {
             // I have a short[]. I want a char[]. Java won't let me cast.
@@ -1875,6 +1882,8 @@ public class Codegen extends Interpreter {
                 "debug_linenoMap", "Ljava/lang/String;");
     }
     private void buildDebugTrapMap() {
+        if (debugLevel == 0)
+            return;
         if (null != debugLineMap && 0 != debugLineEntryCount) {
             short count = (short)((debugLineEntryCount+1)/32);
             if (0 != (debugLineEntryCount+1)%32)
@@ -4136,7 +4145,11 @@ if (true) {
     private OptVariableTable debugVars;
     private int epilogueLabel;
     private int optLevel;
-    private int debugLevel;
+    
+    // Debugging is currently *not* supported. We'll leave in the 
+    // support code, just make it unreachable, in case we get the
+    // time to get it working again.
+    private static final int debugLevel = 0;
     private int debugStopSubLabel;
 
     private short[] debugLineMap;
