@@ -1717,10 +1717,19 @@ overflow can be set to scroll instead of auto
 because fewer errors in the event position are
 then observed (ERic 20/06/03)
 */
+#week-view-hscroll-box
+{
+   overflow-x           : visible;
+   overflow-y           : auto;
+} 
+
 #week-view-content-box
 {
+   /* overflow: for 1.7, overflow-x for newer */
    overflow             : auto;
-   background-color     :#ffffff;
+   overflow-x           : hidden;
+   overflow-y           : auto;
+   background-color     : #ffffff;
    -moz-user-focus      : normal;
    /*padding            : 2px;*/
 }
