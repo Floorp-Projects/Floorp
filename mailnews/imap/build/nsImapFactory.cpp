@@ -41,6 +41,7 @@ static NS_DEFINE_CID(kCImapIncomingServer, NS_IMAPINCOMINGSERVER_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
 static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
+static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -145,6 +146,10 @@ nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	{
 		inst = NS_STATIC_CAST(nsIMsgImapMailFolder *, new nsImapMailFolder());
 	}
+    else if (mClassID.Equals(kCImapMockChannel))
+    {
+        return nsImapMockChannel::Create(aIID, aResult);
+    }
 	else if (mClassID.Equals(kCImapMessageResource)) 
 	{
 		nsImapMessage * imapMessage = new nsImapMessage();
@@ -215,6 +220,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+    rv = compMgr->RegisterComponent(kCImapMockChannel, nsnull, nsnull, 
+                                    path, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) finalResult = rv;
+
 	rv = compMgr->RegisterComponent(kCImapHostSessionList, nsnull, nsnull,
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
@@ -275,6 +284,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->UnregisterComponent(kCImapProtocol, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+    rv = compMgr->UnregisterComponent(kCImapMockChannel, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+    
 	rv = compMgr->UnregisterComponent(kCImapHostSessionList, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
