@@ -46,8 +46,6 @@
         onload="Startup()" onunload="Shutdown()"
         contenttitlesetting="true"
         title="&mainWindow.title;"
-        titlemodifier="&mainWindow.titlemodifier;"
-        titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         width="610" height="450"
         screenX="4" screenY="4"
@@ -162,6 +160,10 @@
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
     
     <command id="Tools:Search" oncommand="focusSearchBar();"/>
+    
+#ifdef XP_MACOSX
+    <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
+#endif
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
@@ -266,6 +268,11 @@
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomResetCmd.commandkey;"    oncommand="ZoomManager.prototype.getInstance().reset();"   modifiers="accel"/>
     <key id="key_openDownloadsSidebar" key="&openDownloadsSidebar.commandkey;" command="viewDownloadsSidebar" modifiers="accel"/>
+    
+#ifdef XP_MACOSX
+    <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
+#endif
+
   </keyset>
   
   <popupset id="mainPopupSet">
@@ -833,6 +840,28 @@
             </menupopup>
           </menu>
     
+#ifdef XP_MACOSX
+        <menu id="windowMenu" label="Window"
+            datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
+            onpopupshown="checkFocusedWindow();">
+            <template>
+            <rule>
+                <menupopup>
+                <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
+                            oncommand="ShowWindowFromResource(event.target)"/>
+                </menupopup>
+            </rule>
+            </template>
+            <menupopup id="windowPopup">
+              <menuitem label="&zoomWindow.label;" disabled="true"/>
+              <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
+              <menuseparator/>
+              <menuitem label="&bringAllToFront.label;" disabled="true"/>
+              <menuseparator/>
+            </menupopup>
+        </menu>
+#endif
+
           <menu label="&helpMenu.label;"
                 accesskey="&helpMenu.accesskey;">
             <menupopup id="menu_HelpPopup">
