@@ -35,6 +35,7 @@
 #include "prlog.h"
 
 #include "nsHTMLParts.h"
+#include "nsIHTMLElementFactory.h"
 #include "nsITextContent.h"
 
 #include "nsIDOMText.h"
@@ -809,6 +810,57 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
   nsresult rv = MakeContentObject(id, atom, nsnull, nsnull, aResult);
   NS_RELEASE(atom);
 
+  return rv;
+}
+
+//----------------------------------------------------------------------
+
+
+static NS_DEFINE_IID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
+
+class nsHTMLElementFactory : public nsIHTMLElementFactory {
+public:
+  nsHTMLElementFactory();
+  virtual ~nsHTMLElementFactory();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CreateInstanceByTag(const nsString& aTag,
+                                 nsIHTMLContent** aResult);
+};
+
+nsresult
+NS_NewHTMLElementFactory(nsIHTMLElementFactory** aInstancePtrResult)
+{
+  NS_PRECONDITION(aInstancePtrResult, "null OUT ptr");
+  if (!aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsHTMLElementFactory* it = new nsHTMLElementFactory();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLElementFactoryIID,
+                            (void**)aInstancePtrResult);
+}
+
+nsHTMLElementFactory::nsHTMLElementFactory()
+{
+  NS_INIT_REFCNT();
+}
+
+nsHTMLElementFactory::~nsHTMLElementFactory()
+{
+}
+
+NS_IMPL_ISUPPORTS(nsHTMLElementFactory, kIHTMLElementFactoryIID);
+
+NS_IMETHODIMP
+nsHTMLElementFactory::CreateInstanceByTag(const nsString& aTag,
+                                          nsIHTMLContent** aResult)
+{
+  nsresult rv;
+  rv = NS_CreateHTMLElement(aResult, aTag);
   return rv;
 }
 
