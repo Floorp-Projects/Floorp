@@ -113,6 +113,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_LEFT_BUTTON_DOWN:
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    if (nsnull != aEvent->widget) {
+      aEvent->widget->SetFocus();
+    }
+    //Break left out on purpose
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
@@ -125,6 +129,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
         case NS_VK_TAB:
           ShiftFocus();
           aStatus = nsEventStatus_eConsumeNoDefault;
+          break;
+        case NS_VK_PAGE_DOWN: 
+        case NS_VK_PAGE_UP:
+          break;
+        case NS_VK_DOWN: 
+        case NS_VK_UP:
           break;
       }
     }

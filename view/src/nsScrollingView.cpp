@@ -662,17 +662,6 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
 
   switch (aEvent->message)
   {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN: 
-      GetWidget(win);
-      if (nsnull != win) 
-      {
-        win->SetFocus();
-        NS_RELEASE(win);
-      }
-      break;
-
     case NS_KEY_DOWN:
     {
       nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
