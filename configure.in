@@ -3073,7 +3073,7 @@ MOZ_ARG_WITH_STRING(extensions,
   [ MOZ_EXTENSIONS=""
     for option in `echo $withval | sed 's/,/ /g'`; do
       if test "$option" = "yes" || test "$option" = "all"; then
-        MOZ_EXTENSIONS="$MOZ_EXTENSIONS cookie irc wallet xmlterm psm-glue xml-rpc"
+        MOZ_EXTENSIONS="$MOZ_EXTENSIONS cookie irc wallet xmlextras xmlterm psm-glue xml-rpc"
       elif test "$option" = "no" || test "$option" = "none"; then
         MOZ_EXTENSIONS=""
       elif test "$option" = "default"; then
