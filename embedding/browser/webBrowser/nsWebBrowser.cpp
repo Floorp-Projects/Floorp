@@ -755,7 +755,8 @@ NS_IMETHODIMP nsWebBrowser::Create()
    // registration can go away, and nsDocShellTreeOwner can stop implementing
    // nsIWebProgressListener.
    nsCOMPtr<nsISupports> supports = nsnull;
-   (void)mDocShellTreeOwner->QueryInterface(NS_GET_IID(nsIWebProgressListener), (void**)&supports);
+   (void)mDocShellTreeOwner->QueryInterface(NS_GET_IID(nsIWebProgressListener),
+                             NS_STATIC_CAST(void**, getter_AddRefs(supports)));
    (void)BindListener(supports, NS_GET_IID(nsIWebProgressListener));
 
    NS_ENSURE_SUCCESS(mDocShellAsWin->InitWindow(nsnull,
