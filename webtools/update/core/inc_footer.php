@@ -44,7 +44,7 @@
     <li><a href="/about/contact/">Contact Us</a></li>
     <li><a href="http://www.mozilla.org/foundation/donate.html">Donate</a></li>
    </ul>
-    <p><strong>Update-Beta is a technology Preivew. For internal use only.</strong><br>
+    <p><strong>Update-Beta is a technology Preview. For internal use only.</strong><br>
     Copyright &copy; 2004 The Mozilla Organization</p>
   </div>
   <!-- closes #footer-->

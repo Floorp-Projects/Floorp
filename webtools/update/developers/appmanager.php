@@ -57,7 +57,7 @@ if (!$function) {
 
 <?php
 
-  $sql = "SELECT * FROM `t_applications` ORDER BY `AppName` ASC, `Release` ASC, `SubVer` ASC";
+  $sql = "SELECT * FROM `t_applications` ORDER BY `AppName` ASC, `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
 
   $lastname = "";
@@ -87,10 +87,7 @@ if (!$function) {
     }
 
     echo"<a href=\"?function=editcategory&appid=".$row["AppID"]."\">";
-    echo"".$row["Release"]."";
-
-    if ($row["SubVer"] != "final") {echo"".$row["SubVer"]."";}
-
+    echo $row["Version"];
     echo"</a>";
 
     $lastname = $row["AppName"];
@@ -150,7 +147,7 @@ GUID: <input name="otherguid" type="text" size="25" MAXSIZE="50" value="">
     if ($_POST[AppName] != "Mozilla" && $_POST[SubVer] == "final") {
       $_POST[SubVer] = "";
     }
-    $sql = "UPDATE `t_applications` SET `AppName`='$_POST[AppName]', `Release`='$_POST[Release]', `SubVer`='$_POST[SubVer]',`GUID`='$_POST[GUID]' WHERE `appid`='$_POST[appid]'";
+    $sql = "UPDATE `t_applications` SET `AppName`='$_POST[AppName]', `major`='$_POST[Major]', `minor`='$_POST[Minor]', `release`='$_POST[Release]', `SubVer`='$_POST[SubVer]',`GUID`='$_POST[GUID]' WHERE `appid`='$_POST[appid]'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
 
     echo"<div class=\"success\">Your update to $_POST[AppName], has been successful.</div>";
@@ -175,10 +172,12 @@ if (!$appid) { $appid = $_POST["appid"]; }
 <form name="editcategory" method="post" action="?function=editcategory">
 <?php
   echo"Name:  <input name=\"AppName\" type=\"text\" size=\"30\" maxlength=\"30\" value=\"".$row["AppName"]."\" /><br />\n";
-  echo"Release:  <input name=\"Release\" type=\"text\" size=\"5\" maxlength=\"5\" value=\"".$row["Release"]."\" />";
+  echo"Major:  <input name=\"Major\" type=\"text\" size=\"5\" maxlength=\"5\" value=\"".$row["major"]."\" />";
+  echo"Minor:  <input name=\"Minor\" type=\"text\" size=\"5\" maxlength=\"5\" value=\"".$row["minor"]."\" />";
+  echo"Release:  <input name=\"Release\" type=\"text\" size=\"5\" maxlength=\"5\" value=\"".$row["release"]."\" />";
   echo"  <select name=\"SubVer\"/><br />\n";
 
-  $subvers = array("+"=>"+", "a"=>"alpha", "b"=>"beta", "final"=>"final");
+  $subvers = array(""=>"", "+"=>"+", "a"=>"alpha", "b"=>"beta", "final"=>"final");
 
   foreach($subvers as $key => $subver) {
     $subver = ucwords($subver);
