@@ -193,13 +193,14 @@ static bool isDecimalNumber(const char* word)
     return true;
 }
 
-static char* tolowercase(char* str)
+inline isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
+
+static char* toLowerCase(char* str)
 {
-    char* p = str;
-    char c;
+    char c, *p = str;
     while ((c = *p++)) {
-        if (isalpha(c))
-            p[-1] = tolower(c);
+        if (isUpperCase(c))
+            p[-1] = c + ('a' - 'A');
     }
     return str;
 }
@@ -210,7 +211,7 @@ void Tokenizer::tokenize(char* text)
     char* next = text;
     while ((word = nsCRT::strtok(next, kBayesianFilterTokenDelimiters, &next)) != NULL) {
         if (isDecimalNumber(word)) continue;
-        add(tolowercase(word));
+        add(toLowerCase(word));
     }
 }
 
