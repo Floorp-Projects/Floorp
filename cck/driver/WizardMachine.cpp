@@ -146,16 +146,13 @@ BOOL CWizardMachineApp::InitInstance()
 	int argc;
 
 	// 10 argument limit
-	argv = (char **) GlobalAlloc(0, sizeof(char *) * 10);
+	argv = (char **) GlobalAlloc(0, sizeof(char **) * 10);
 
 	int i=0;
 	// Each argument limited to 100 chars
 	argv[i] = strtok(m_lpCmdLine," ");
-	while(argv[i])
-	{
-		//argv[++i] = (char *) GlobalAlloc(0, sizeof(char) * MIN_SIZE);
+	while(i<10 && argv[i])
 		argv[++i] = strtok(NULL," ");
-	}
 	
 	argc = --i;
 
@@ -169,7 +166,7 @@ BOOL CWizardMachineApp::InitInstance()
 		if (!strcmp(argv[i], "-p"))
 			action = argv[i+1];
 	}
-	GlobalFree(argv);
+	//GlobalFree(argv);
 
 	if ((iniFile.IsEmpty()) || (iniFile.GetLength() < 5) || (iniFile.Right(4) != ".ini"))
 	{
@@ -507,7 +504,10 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	char iniSection[MID_SIZE];
 
 	int idCounter=0;
-	for (i=0; i < GetBufferCount(sectionBuffer); i++)
+	for (i=0; NewNode->numImages < 20 && 
+			  NewNode->numWidgets < MIN_SIZE && 
+			  i < GetBufferCount(sectionBuffer); 
+		 i++)
 	{
 		strcpy(iniSection,GetBufferElement(sectionBuffer, i));
 

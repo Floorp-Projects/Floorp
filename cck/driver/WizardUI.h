@@ -37,14 +37,10 @@ public:
 
 	// WizardMachine needs this
 	static CString GetScreenValue(WIDGET *curWidget);
-	static BOOL NewConfig(WIDGET *curWidget, CString globalsName);
-	static BOOL BrowseFile(WIDGET *curWidget);
-	static BOOL BrowseDir(WIDGET *curWidget);
 
 	// Not actually being used anywhere anymore
 	static BOOL ActCommand(WIDGET *curWidget);
 	static BOOL SortList(WIDGET *curWidget);
-	static BOOL Progress();
 
 // Dialog Data
 	//{{AFX_DATA(CWizardUI)

@@ -33,6 +33,10 @@ class CInterpret
 public:
 	CInterpret();
 	~CInterpret();
+	BOOL NewConfig(WIDGET *curWidget, CString globalsName);
+	BOOL BrowseFile(WIDGET *curWidget);
+	BOOL BrowseDir(WIDGET *curWidget);
+	BOOL Progress();  // Not actually used right now
 	void CopyDir(CString from, CString to);
 	void ExecuteCommand(char *command, int showflag);
 	BOOL IterateListBox(char *parms);

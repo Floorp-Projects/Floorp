@@ -29,7 +29,6 @@
 #include "SumDlg.h"
 #include "NavText.h"
 #include "NewDialog.h"
-#include "NewConfigDialog.h"
 #include "ProgDlgThread.h"
 #include "PropSheet.h"
 #include "WizardUI.h"
@@ -38,9 +37,6 @@
 #include <direct.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-// The following is included to make 
-// the browse for a dir code compile
-#include <shlobj.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -305,163 +301,6 @@ BOOL CWizardUI::SortList(WIDGET *curWidget)
 		((CListBox*)(listWidget->control))->AddString(CString(items[k]));
 	}
 #endif
-	return TRUE;
-}
-
-BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName) 
-{
-	// This doesn't really belong here...
-	WIN32_FIND_DATA data;
-	HANDLE d;
-
-	CNewConfigDialog newDlg;
-	newDlg.DoModal();
-	CString configField = newDlg.GetConfigName();
-	CString newDir = CString(customizationPath); 
-	newDir += configField;
-
-	d = FindFirstFile((const char *) newDir, &data);
-	if (d == INVALID_HANDLE_VALUE)
-		_mkdir(newDir);
-	else
-	{
-		CWnd myWnd;
-		myWnd.MessageBox("That configuration already exists.", "Error", MB_OK);
-		return FALSE;
-	}
-
-					
-	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-	if (!tmpWidget)
-		return FALSE;
-
-	/*
-	CString tmpFunction = tmpWidget->action.function;
-	CString params = theInterpreter->replaceVars(tmpWidget->action.parameters,NULL);
-	theApp.GenerateList(tmpFunction, tmpWidget, params);	
-	*/
-	if (!tmpWidget->action.onInit.IsEmpty())
-		theInterpreter->interpret(tmpWidget->action.onInit, tmpWidget);
-					
-	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
-
-	theApp.SetGlobal(globalsName, configField);
-
-	return TRUE;
-}
-
-BOOL CWizardUI::BrowseFile(WIDGET *curWidget) 
-{
-	// This is to browse to a file
-	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_OVERWRITEPROMPT, NULL, NULL);
-	int retVal = fileDlg.DoModal();
-	CString fullFileName="";
-
-
-	//Checking to see if the open file dialog did get a value or was merely cancelled.
-	//If it was cancelled then the value of the edit box is not changed.
-	if (fileDlg.GetPathName() != "")
-	{	
-		fullFileName = fileDlg.GetPathName();
-		WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-		if (tmpWidget && (CEdit*)tmpWidget->control)
-			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
-	}
-	return TRUE;
-}
-
-BOOL CWizardUI::BrowseDir(WIDGET *curWidget) 
-{
-	// The following code is used to browse to a dir
-	// CFileDialog does not allow this
-	
-	BROWSEINFO bi;
-	char szPath[MAX_PATH];
-	char szTitle[] = "Select Directory";
-	bi.hwndOwner = AfxGetMainWnd()->m_hWnd;
-	bi.pidlRoot = NULL;
-	bi.pszDisplayName = (char*)malloc(MAX_PATH);
-	bi.lpszTitle = szTitle;
-
-	// Enable this line to browse for a directory
-	bi.ulFlags = BIF_RETURNONLYFSDIRS;
-				
-	// Enable this line to browse for a computer
-	bi.lpfn = NULL;
-	bi.lParam = NULL;
-	LPITEMIDLIST pidl= SHBrowseForFolder(&bi);
-
-
-	if(pidl != NULL)
-	{
-		SHGetPathFromIDList(pidl,szPath);
-		if( bi.ulFlags & BIF_BROWSEFORCOMPUTER )
-		{
-			// bi.pszDisplayName variable contains the computer name
-		}
-		else if( bi.ulFlags & BIF_RETURNONLYFSDIRS )
-		{
-			// szPath variable contains the path
-			WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-			if (tmpWidget)
-				((CEdit*)tmpWidget->control)->SetWindowText(szPath);
-		}
-	 }
-	
-	free( bi.pszDisplayName );
-	return TRUE;
-}
-
-BOOL CWizardUI::Progress() 
-{
-#ifdef SUPPORTINGIBPROGRESS
-	CProgressDialog progressDlg(this);
-	progressDlg.Create(IDD_PROGRESS_DLG);
-	CProgressDialog *pProgressDlg = &progressDlg;
-				
-	//CRuntimeClass *pProgDlgThread = RUNTIME_CLASS(CProgDlgThread);	//This is the multi-threading stuff for the progress dialog
-	//AfxBeginThread(pProgDlgThread);
-
-	pProgressDlg->m_ProgressText.SetWindowText("Creating a CD Layout...");
-	pProgressDlg->m_ProgressBar.SetPos(0);
-	pProgressDlg->m_ProgressBar.SetRange(0,4);
-	pProgressDlg->m_ProgressBar.SetStep(1);
-				
-	if (curWidget->action.dll == "IBEngine.dll") {
-		VERIFY(hModule = ::LoadLibrary("IBEngine.dll"));
-
-		VERIFY(
-			pMyDllPath =
-			(MYDLLPATH*)::GetProcAddress(
-			(HMODULE) hModule, "SetPath")
-		);
-
-		(*pMyDllPath)((char*)(LPCTSTR)Path);
-
-		pProgressDlg->m_ProgressText.SetWindowText("Loading Globals...");
-		LoadGlobals();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		pProgressDlg->m_ProgressText.SetWindowText("Reading files...");
-		ReadIniFile();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		pProgressDlg->m_ProgressText.SetWindowText("Merging files...");
-		MergeFiles();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		pProgressDlg->m_ProgressText.SetWindowText("Creating CD Layout...");
-		CreateMedia();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		MessageBox("CD Directory created", "OK", MB_OK);
-	}
-#endif
-
 	return TRUE;
 }
 
@@ -765,7 +604,7 @@ void CWizardUI::CreateControls()
 			}
 		
 			char* selectedItems;
-			selectedItems = (char *) GlobalAlloc(0, 20 * sizeof(char));
+			selectedItems = (char *) GlobalAlloc(0, curWidget->value.GetLength()+1);
 			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
 
 			char *s = strtok(selectedItems, ",");
@@ -774,7 +613,7 @@ void CWizardUI::CreateControls()
 				((CListBox*)curWidget->control)->SelectString(0, s);
 				s = strtok( NULL, "," );
 			}
-			GlobalFree(selectedItems);
+			//GlobalFree(selectedItems);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "CheckListBox") 
@@ -808,7 +647,7 @@ void CWizardUI::CreateControls()
 			}
 		
 			char* selectedItems;
-			selectedItems = (char *) GlobalAlloc(0, 20 * sizeof(char));
+			selectedItems = (char *) GlobalAlloc(0, curWidget->value.GetLength()+1);
 			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
 
 			int i;
@@ -820,7 +659,7 @@ void CWizardUI::CreateControls()
 					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
 				s = strtok( NULL, "," );
 			}
-			GlobalFree(selectedItems);
+			//GlobalFree(selectedItems);
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ComboBox") {
@@ -1039,7 +878,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			if ( i+1 < count)
 				rv += ",";
 		}
-		GlobalFree(choices);
+		//GlobalFree(choices);
 	}
 	else if (widgetType == "CheckListBox")
 	{
