@@ -827,7 +827,8 @@ void nsPersistentFileDescriptor::SetData(const void* inData, PRInt32 inSize)
 nsresult nsPersistentFileDescriptor::Read(nsIInputStream* aStream)
 //----------------------------------------------------------------------------------------
 {
-    nsInputStream(aStream) >> *this;
+    nsInputStream inputStream(aStream);
+    inputStream >> *this;
     return NS_OK;
 }
 
@@ -835,7 +836,8 @@ nsresult nsPersistentFileDescriptor::Read(nsIInputStream* aStream)
 nsresult nsPersistentFileDescriptor::Write(nsIOutputStream* aStream)
 //----------------------------------------------------------------------------------------
 {
-    nsOutputStream(aStream) << *this;
+    nsOutputStream outputStream(aStream);
+    outputStream << *this;
     return NS_OK;
 }
 
