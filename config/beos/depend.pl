@@ -25,18 +25,16 @@ $| = 1;
 # load defined symbols
 foreach $so (@SOLIST) {
 	next if $so eq $name;
-	if(open(SO, "nm -g $so |")) {
+	if(open(SO, "objdump --dynamic-syms $so | grep \" g    \" | cut -f 2 | cut -c 10- |")) {
 		$so =~ s/\/*[^\/]*\///g;
 		$so =~ s/^lib//;
 		$so =~ s/\.so$//;
 		while($def = <SO>) {
 			chop $def;
-			$def =~ / [ACDT] (.*)$/;
-			next unless $1;
-			#if($defsyms{$1}) {
-			#	print "$1 already defined in $defsyms{$1}\n";
+			#if($defsyms{$def}) {
+			#	print "$def already defined in $defsyms{$1}\n";
 			#}
-			$defsyms{$1} = $so;
+			$defsyms{$def} = $so;
 		}
 		close(SO);
 	}
@@ -49,7 +47,8 @@ foreach $name (@ARGV) {
 	$libname =~ s/^lib//;
 	$libname =~ s/\.so$//;
 	print "Processing $libname...\n";
-	if(open(IN, "nm -gu $name |")) {
+
+	if(open(IN, "objdump --dynamic-syms $name | grep *UND* | cut -c 33- |")) {
 		@syms = <IN>;
 		close IN;
 		chop @syms;
