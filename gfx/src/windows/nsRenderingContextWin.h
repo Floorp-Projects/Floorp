@@ -125,7 +125,9 @@ public:
   virtual nsresult CopyOffScreenBits(nsRect &aBounds);
 
 private:
+  nsresult CommonInit(void);
   HBRUSH SetupSolidBrush(void);
+  void SetupFont(void);
 
 protected:
   nscolor					  mCurrentColor;
@@ -143,6 +145,8 @@ protected:
   nsIDeviceContext  *mContext;
   HBRUSH            mOrigSolidBrush;
   HBRUSH            mBlackBrush;
+  HFONT             mOrigFont;
+  HFONT             mDefFont;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;
