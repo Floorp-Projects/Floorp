@@ -18,7 +18,7 @@
 DEPTH = ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		= .:@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -97,10 +97,6 @@ INCLUDES += -I.
 export:: generate
 	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
 
-# Why are generated files being checked in?
-removecheckedinkludge:
-	rm -f $(srcdir)/nsHTMLTags.h $(srcdir)/nsHTMLEntities.cpp
- 
 generate: $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
 
 $(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
@@ -108,10 +104,10 @@ $(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
 GENTAGS = $(topsrcdir)/htmlparser/tools/gentags.pl
 GENENTITIES = $(topsrcdir)/htmlparser/tools/genentities.pl
 
-$(OBJDIR)/nsHTMLTags.h: removecheckedinkludge $(GENTAGS)
+$(OBJDIR)/nsHTMLTags.h: $(GENTAGS)
 	rm -f $@
 	$(PERL) $(GENTAGS) nsHTMLTags
 
-$(OBJDIR)/nsHTMLEntities.cpp: removecheckedinkludge $(GENENTITIES)
+$(OBJDIR)/nsHTMLEntities.cpp: $(GENENTITIES)
 	rm -f $@
 	$(PERL) $(GENENTITIES) nsHTMLEntities
