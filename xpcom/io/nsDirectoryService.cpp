@@ -196,7 +196,25 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     //	- if MOZILLA_FIVE_HOME is defined, that is it
     //	- else give the current directory
     char buf[MAXPATHLEN];
+
+    // The MOZ_DEFAULT_MOZILLA_FIVE_HOME variable can be set at configure time with
+    // a --with-default-mozilla-five-home=foo autoconf flag.
+    // 
+    // The idea here is to allow for builds that have a default MOZILLA_FIVE_HOME
+    // regardless of the environment.  This makes it easier to write apps that
+    // embed mozilla without having to worry about setting up the environment 
+    //
+    // We do this py putenv()ing the default value into the environment.  Note that
+    // we only do this if it is not already set.
+#ifdef MOZ_DEFAULT_MOZILLA_FIVE_HOME
+    if (PR_GetEnv("MOZILLA_FIVE_HOME") == nsnull)
+    {
+        putenv("MOZILLA_FIVE_HOME=" MOZ_DEFAULT_MOZILLA_FIVE_HOME);
+    }
+#endif
+
     char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
+
     if (moz5)
     {
         localFile->InitWithPath(moz5);
