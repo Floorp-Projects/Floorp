@@ -935,8 +935,10 @@ nsresult
 nsNativeComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
                                                     PRBool *aRegistered)
 {
+#ifdef DEBUG 
     fprintf(stderr, "nNCL: registering deferred (%d)\n",
             mDeferredComponents.Count());
+#endif
     *aRegistered = PR_FALSE;
     if (!mDeferredComponents.Count())
         return NS_OK;
