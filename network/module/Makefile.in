@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE			= netlib
-LIBRARY_NAME		= netlib
+LIBRARY_NAME	= netlib
 
 CPPSRCS			= \
 			  nsNetService.cpp    \
@@ -40,10 +40,6 @@ CPPSRCS			= \
 			  nsHttpURLFactory.cpp    \
 			  nsSocketTransport.cpp   \
 			  $(NULL)
-
-REQUIRES		= raptor js dbm nspr security pref xpcom util img \
-			  layer network netcache fileurl ftpurl abouturl \
-			  httpurl gophurl remoturl netcnvts netlib sockstuburl
 
 EXPORTS = nsINetService.h       \
           nsINetSupport.h		\
@@ -69,9 +65,6 @@ include $(topsrcdir)/config/config.mk
 NO_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk
-
-$(LIBRARY): \
-	$(OBJS)
 
 install::
 	$(INSTALL) $(srcdir)/res/gopher-audio.gif   $(DIST)/bin/res/network
