@@ -1,5 +1,5 @@
 #! gmake
-#
+# 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -52,7 +52,15 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include $(CORE_DEPTH)/security/cmd/platlibs.mk
+include ../platlibs.mk
+
+ifeq (,$(filter-out WINNT WIN95 WIN16,$(OS_TARGET)))  # omits WINCE
+ifndef BUILD_OPT
+LDFLAGS   +=  /subsystem:console /profile /debug /machine:I386 /incremental:no
+OS_CFLAGS += -D_CONSOLE
+endif
+endif
+
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -64,9 +72,11 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (6) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
 
+#include ../platlibs.mk
+
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-
+include ../platrules.mk
 

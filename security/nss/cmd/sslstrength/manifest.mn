@@ -43,7 +43,7 @@ PROGRAM =  sslstrength
 
 REQUIRES = security dbm seccmd
 
-DEFINES = -DNSPR20
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 PACKAGE_FILES = sslstrength
 
