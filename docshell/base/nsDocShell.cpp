@@ -1306,6 +1306,14 @@ nsDocShell::SetParentURIContentListener(nsIURIContentListener * aParent)
 NS_IMETHODIMP
 nsDocShell::SetCurrentURI(nsIURI *aURI)
 {
+    SetCurrentURI(aURI, nsnull);
+
+    return NS_OK;
+}
+
+void
+nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest)
+{
     mCurrentURI = aURI;         //This assignment addrefs
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
     PRBool isSubFrame = PR_FALSE;  // Is this a subframe navigation?
@@ -1333,12 +1341,10 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
        * a subframe is being loaded for the first time, while
        * visiting a frameset page
        */
-      return NS_OK; 
+      return; 
     }
     
-    FireOnLocationChange(this, nsnull, aURI);
-
-    return NS_OK; 
+    FireOnLocationChange(this, aRequest, aURI);
 }
 
 NS_IMETHODIMP
@@ -4369,7 +4375,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 // This is a document.write(). Get the made-up url
                 // from the channel and store it in session history.
                 rv = AddToSessionHistory(uri, wcwgChannel, getter_AddRefs(mLSHE));
-                SetCurrentURI(uri);
+                SetCurrentURI(uri, aRequest);
                 // Save history state of the previous page
                 rv = PersistLayoutHistoryState();
                 if (mOSHE)
@@ -4608,7 +4614,7 @@ nsDocShell::CreateAboutBlankContentViewer()
         Embed(viewer, "", 0);
         viewer->SetDOMDocument(domdoc);
 
-        SetCurrentURI(blankDoc->GetDocumentURI());
+        SetCurrentURI(blankDoc->GetDocumentURI(), nsnull);
         rv = NS_OK;
       }
     }
@@ -6217,7 +6223,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         if (shInternal)
             shInternal->UpdateIndex();
     }
-    SetCurrentURI(aURI);
+    SetCurrentURI(aURI, aChannel);
     // if there's a refresh header in the channel, this method
     // will set it up for us. 
     SetupRefreshURI(aChannel);
