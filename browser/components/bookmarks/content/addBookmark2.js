@@ -193,16 +193,16 @@ function selectTreeFolder()
 function expandTree()
 {
   setFolderTreeHeight();
-  var isCollapsed = !gBookmarksTree.collapsed;
-  gBookmarksTree.collapsed = isCollapsed;
-  sizeToContent();
-  document.documentElement.getButton("extra2").collapsed = isCollapsed;
-  if (isCollapsed)
+  var willCollapse = !gBookmarksTree.collapsed;
+  document.getElementById("expander").setAttribute("class",willCollapse?"down":"up");
+  if (willCollapse)
     document.documentElement.buttons = "accept,cancel";
   else {
     document.documentElement.buttons = "accept,cancel,extra2";
     gBookmarksTree.focus();
   }
+  gBookmarksTree.collapsed = willCollapse;
+  sizeToContent();
 }
 
 function setFolderTreeHeight()
