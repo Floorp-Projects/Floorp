@@ -2,3 +2,4 @@
 <!ENTITY  vendorURL             "http://www.mozilla.org/">
 <!ENTITY  releaseURL            "http://www.mozilla.org/releases/">
 <!ENTITY  getNewThemesURL       "http://xulplanet.com/downloads/view.cgi?category=skins&amp;view=all">
+<!ENTITY  content.version       "0.9.8">
