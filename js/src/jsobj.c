@@ -3911,7 +3911,7 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
          */
         return (uint32) obj->slots[-1];
     }
-    return JS_MIN(obj->map->freeslot, obj->map->nslots);
+    return JS_MIN(scope->map.freeslot, scope->map.nslots);
 }
 
 void
@@ -3964,7 +3964,7 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
     return v;
 }
 
-void
+JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     uint32 nslots, rlimit, i;
@@ -3986,7 +3986,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             JS_realloc(cx, obj->slots - 1, (nslots + 1) * sizeof(jsval));
         if (!newslots) {
             JS_UNLOCK_OBJ(cx, obj);
-            return;
+            return JS_FALSE;
         }
         for (i = 1 + newslots[0]; i <= rlimit; i++)
             newslots[i] = JSVAL_VOID;
@@ -3998,6 +3998,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 
     obj->slots[slot] = v;
     JS_UNLOCK_OBJ(cx, obj);
+    return JS_TRUE;
 }
 
 #ifdef DEBUG

@@ -2880,8 +2880,7 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
     if (index >= limit && !ReservedSlotIndexOK(cx, obj, clasp, index, limit))
         return JS_FALSE;
     slot = JSSLOT_START(clasp) + index;
-    OBJ_SET_REQUIRED_SLOT(cx, obj, slot, v);
-    return JS_TRUE;
+    return OBJ_SET_REQUIRED_SLOT(cx, obj, slot, v);
 }
 
 #ifdef JS_THREADSAFE
