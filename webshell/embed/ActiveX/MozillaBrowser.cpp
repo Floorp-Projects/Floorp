@@ -1858,16 +1858,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 	}
 
 	// Get the url from the web shell
-	const PRUnichar *pszLocationName = nsnull;
-	m_pIWebShell->GetTitle(&pszLocationName);
-	if (pszLocationName == nsnull)
+   nsXPIDLString  locationName;
+	m_pIWebShell->GetTitle(getter_Copies(locationName));
+	if (locationName == nsnull)
 	{
 		RETURN_E_UNEXPECTED();
 	}
 
 	// Convert the string to a BSTR
 	USES_CONVERSION;
-	LPOLESTR pszConvertedLocationName = W2OLE(const_cast<PRUnichar *>(pszLocationName));
+	LPOLESTR pszConvertedLocationName = W2OLE(const_cast<PRUnichar *>(locationName));
 	*LocationName = SysAllocString(pszConvertedLocationName);
 
 	return S_OK;
