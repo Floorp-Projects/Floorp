@@ -1,16 +1,15 @@
-var bundle = window.opener.bundle;
-
 function Startup()
 {
+  var bundle = document.getElementById("bundle_profileManager");
   doSetOKCancel( onDontDeleteFiles, onCancel, onDeleteFiles, null );
   var okButton = document.getElementById("ok");
   var Button2 = document.getElementById("Button2");
   var cancelButton = document.getElementById("cancel");
   
   try {
-    okButton.setAttribute( "value", bundle.GetStringFromName("dontDeleteFiles") );
-    Button2.setAttribute( "value", bundle.GetStringFromName("deleteFiles") );
-    cancelButton.setAttribute( "value", bundle.GetStringFromName("cancel") );
+    okButton.setAttribute("value", bundle.getString("dontDeleteFiles"));
+    Button2.setAttribute("value", bundle.getString("deleteFiles"));
+    cancelButton.setAttribute("value", bundle.getString("cancel"));
   } catch(e) {
     okButton.setAttribute( "value", "Don't Delete Files Yah" );
     Button2.setAttribute( "value", "Delete Files Yah" );

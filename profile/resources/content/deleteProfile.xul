@@ -20,7 +20,10 @@
   title="&title;"
   onload="Startup();">
 
-  <script language="javascript" src="chrome://communicator/content/profile/deleteProfile.js"></script>
+  <stringbundle id="bundle_profileManager"
+                src="chrome://communicator/locale/profile/profileManager.properties"/>
+  <script type="application/x-javascript"
+          src="chrome://communicator/content/profile/deleteProfile.js"/>
 
   <keyset id="keyset"/>
   
