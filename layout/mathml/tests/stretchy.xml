@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="mathml.css" type="text/css"?>
+<!DOCTYPE math SYSTEM "mathml.dtd">
 <!--
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
@@ -24,22 +25,43 @@
 
 <math xmlns="http://www.w3.org/Math/MathML">
 
-<mn>Testing stretchy parentheses - NOT YET IMPLEMENTED</mn>
+<mn>Testing stretchy symbols -- view the source...</mn>
+
+<mrow>
+  <mi>A</mi>
+  <mo>=</mo>
+  <mrow>
+    <mo>[</mo>
+      <mtable>
+        <mtr>
+          <mtd><mi>x</mi></mtd>
+          <mtd><mi>y</mi></mtd>
+        </mtr>
+        <mtr>
+          <mtd><mi>z</mi></mtd>
+          <mtd><mi>w</mi></mtd>
+        </mtr>
+      </mtable>
+    <mo>]</mo>
+  </mrow>
+</mrow>
+<mo>;</mo>
 
 <mrow>
     <mi>x</mi>
     <mo>+</mo>
     <mrow>
         <mo>(</mo>
-        <mfrac linethickness="20">
+        <mfrac linethickness="30">
             <mi>a</mi>
             <mi>b</mi>
         </mfrac>
         <mo stretchy="false">)</mo>
     </mrow>
 </mrow>
+<mo>;</mo>
 
-<mn>in binomial formulas</mn>
+in binomial formulas
 
 <mrow>
     <mo>(</mo>
@@ -147,4 +169,168 @@
   </msup>
 </mrow>
 
+
+
+and elsewhere,
+
+<mrow>
+<mo>{</mo>
+
+<mrow>
+  <msub>
+     <mi>a</mi>
+     <mn>0</mn>
+  </msub>
+  <mo>+</mo>
+  <mfrac>
+     <mstyle scriptlevel="0">
+        <mn>1</mn>
+     </mstyle>
+     <mstyle scriptlevel="0">
+        <mrow>
+          <msub>
+             <mi>a</mi>
+             <mn>1</mn>
+          </msub>
+          <mo>+</mo>
+          <mfrac>
+            <mstyle scriptlevel="0">
+               <mn>1</mn>
+            </mstyle>
+            <mstyle scriptlevel="0">
+               <mrow>
+                 <msub>
+                    <mi>a</mi>
+                    <mn>2</mn>
+                 </msub>
+                 <mo>+</mo>
+                 <mfrac>
+                      <mstyle scriptlevel="0">               
+                      <mn>1</mn>
+                      </mstyle>
+                      <mstyle scriptlevel="0">                              
+                      <msub>
+                         <mi>a</mi>
+                         <mn>3</mn>
+                      </msub>
+                    </mstyle>
+                 </mfrac>      
+               </mrow>
+            </mstyle>
+          </mfrac>      
+        </mrow> 
+     </mstyle> 
+  </mfrac>  
+</mrow>
+</mrow>
+
+<mo>;</mo>
+
+<mover>
+   <mrow> <mi>a</mi> <mo>+</mo> <mi>b</mi> </mrow>
+   <mo>&#x2190;</mo>
+</mover>
+
+<mo>;</mo>
+
+<munder>
+   <mrow> <mi>b</mi> <mo>+</mo> <mi>c</mi> <mo>+</mo> <mi>d</mi></mrow>
+   <mo form="infix">&RightArrow;</mo>
+</munder>
+
+<mo>;</mo>
+
+<munderover>
+   <mrow> <mi>a</mi> <mo>+</mo> <mi>b</mi> <mo>+</mo> 
+          <mi>c</mi> <mo>+</mo> <mi>d</mi></mrow>
+   <mo form="infix">&RightArrow;</mo>
+   <mo form="infix">&LeftArrow;</mo>
+</munderover>
+
+<mo>;</mo>
+
+     <mrow>
+         <mo>(</mo><mfrac>
+                     <mrow>
+                        <mn>1</mn>
+                        <mo>+</mo>
+                        <msqrt><mn>5</mn></msqrt>
+                     </mrow>
+                     <mn>2</mn>
+         </mfrac><mo>)</mo>  
+     </mrow>
+
+<mo>;</mo>
+     
+<mrow>
+  <mi>x</mi>
+  <mo>=</mo>
+  <mfrac>
+    <mrow>
+      <mrow>
+        <mo>-</mo>
+        <mi>b</mi>
+      </mrow>
+      <mo>&PlusMinus;</mo>
+      <msqrt>
+        <mrow>
+          <msup>
+            <mi>b</mi>
+            <mn>2</mn>
+          </msup>
+          <mo>-</mo>
+          <mrow>
+            <mn>4</mn>
+            <mo>&InvisibleTimes;</mo>
+            <mi>a</mi>
+            <mo>&InvisibleTimes;</mo>
+            <mi>c</mi>
+          </mrow>
+        </mrow>
+      </msqrt>
+    </mrow>
+    <mrow>
+      <mn>2</mn>
+      <mo>&InvisibleTimes;</mo>
+      <mi>a</mi>
+    </mrow>
+  </mfrac>
+</mrow>
+
+  <mrow>
+     <mo form="prefix">(</mo>
+     <mo form="prefix">{</mo>
+     <mo form="infix">&UpArrow;</mo>
+     <mrow>
+        <mo>&#x222B;</mo>
+        <mfrac linethickness="26">
+           <mfrac>     
+              <mrow><mi>n</mi>
+                    <mrow>
+                       <mo>{</mo>
+                       <mi>n</mi>
+                       <mo>+</mo>
+                       <mn>1</mn>
+                       <mo>)</mo>
+                    </mrow>
+              </mrow>
+              <mn>2</mn>
+           </mfrac>
+           <mi>y</mi>
+        </mfrac>
+        <mo>&DownArrow;</mo>
+        <mo form="postfix">}</mo>
+        <mo form="postfix">)</mo>
+     </mrow>
+  </mrow>
+
+<mrow>
+        <mi>x</mi>
+        <mover>
+           <mo form="infix">&RightArrow;</mo>
+           <mtext> maps to </mtext>
+        </mover>
+        <mi>y</mi>
+</mrow>
+     
 </math>

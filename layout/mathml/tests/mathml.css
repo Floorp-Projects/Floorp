@@ -19,14 +19,13 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  */
 
-p :
-{
+p {
 display: block;
 }
 
 math, math[mode="inline"] {
   display: inline;
-/*  font-family: Times; */
+  font-family: Symbol, Times;
    font-style: normal;
 /*   font-weight: bold; */
    font-size: 14pt;
@@ -35,7 +34,7 @@ math, math[mode="inline"] {
 math[mode="display"] {
   display: block;
   text-align: center;
-/*  font-family: Arial; */
+  font-family: Symbol, Times;
    font-style: normal;
 /*   font-weight: bold; */
    font-size: 14pt;
@@ -51,6 +50,13 @@ mtext {
    color: purple;
    border: 1px solid purple;
 }
+
+/*
+mstyle {
+   background-color: yellow;
+   border: 1px solid black;
+}
+*/
 
 ms {
    color: blue;
@@ -70,11 +76,15 @@ mspace {
 */
 
 /*
-mrow {
-  border: 1px solid black; 
-  font-style: italic;
+msqrt {
+  border: 1px solid red;
 }
 */
+
+mrow {
+/*  border: 1px solid black; */
+/*  font-style: italic; */
+}
 
 /*
 mphantom {
@@ -95,6 +105,7 @@ msub, msup {
 
 /*
 mn {
+  border: 1px solid black;
 }
 */
 
