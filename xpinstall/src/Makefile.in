@@ -29,6 +29,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Make this a true dynamic component even in static builds because
+# this component is shared by installer
+MOZ_STATIC_COMPONENT_LIBS=
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+
 MODULE		= xpinstall
 LIBRARY_NAME	= xpinstall
 EXPORT_LIBRARY = 1
