@@ -257,7 +257,7 @@ InternetSearchContext::Truncate()
 
 
 
-NS_IMPL_ISUPPORTS(InternetSearchContext, NS_GET_IID(nsIInternetSearchContext));
+NS_IMPL_THREADSAFE_ISUPPORTS(InternetSearchContext, NS_GET_IID(nsIInternetSearchContext));
 
 
 
