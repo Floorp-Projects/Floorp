@@ -277,7 +277,7 @@ NS_IMETHODIMP
 nsSplashScreenOS2::Hide() {
     if ( mDlg ) {
         // Dismiss the dialog.
-        WinDismissDlg (mDlg, TRUE);
+        WinPostMsg(mDlg, WM_CLOSE, 0, 0);
         // Release custom bitmap (if there is one).
         if ( mBitmap ) {
             BOOL ok = GpiDeleteBitmap( mBitmap );
@@ -485,6 +485,11 @@ nsresult
 NS_CreateSplashScreen( nsISplashScreen **aResult ) {
     if ( aResult ) {
         *aResult = 0;
+        CHAR pBuffer[3];
+        PrfQueryProfileString( HINI_USERPROFILE, "PM_ControlPanel", "LogoDisplayTime", "1", pBuffer, 3);
+        if (pBuffer[0] == '0') {
+          return NS_OK;
+        } /* endif */
 #ifndef XP_OS2
         for ( int i = 1; i < __argc; i++ ) {
             if ( strcmp( "-quiet", __argv[i] ) == 0
