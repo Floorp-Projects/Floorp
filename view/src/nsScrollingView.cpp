@@ -838,12 +838,7 @@ void nsScrollingView :: Notify(nsITimer * aTimer)
 NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags,
                                              nsEventStatus &aStatus)
 {
-PRInt32						offX,offY;
 nsIWidget 				*win;
-nsIDeviceContext  *dx;
-float							p2t;
-
-
 
   switch (aEvent->message)
   {
@@ -928,18 +923,8 @@ float							p2t;
 		
       GetBounds(brect);
       
-      // get the offset for this view, since we are not 0,0 based on the mac
-      
-      mViewManager->GetDeviceContext(dx);
-      dx->GetDevUnitsToAppUnits(p2t);
-      offX = offY = 0;
-      win->ConvertToDeviceCoordinates(offX,offY);
-      offX = NSIntPixelsToTwips(offX, p2t);
-      offY = NSIntPixelsToTwips(offY, p2t);
-			
-			
-      lx = aEvent->point.x - (brect.x+offX);
-      ly = aEvent->point.y - (brect.y+offY);
+      lx = aEvent->point.x - (brect.x);
+      ly = aEvent->point.y - (brect.y);
 
       //nscoord         xoff, yoff;
       //GetScrolledView()->GetScrollOffset(&xoff, &yoff);
@@ -985,16 +970,16 @@ float							p2t;
 
       GetBounds(trect);
 
-      GetWidget(win);
-      mViewManager->GetDeviceContext(dx);
-      dx->GetDevUnitsToAppUnits(p2t);
-      offX = offY = 0;
-      win->ConvertToDeviceCoordinates(offX,offY);
-      offX = NSIntPixelsToTwips(offX, p2t);
-      offY = NSIntPixelsToTwips(offY, p2t);
+      //GetWidget(win);
+      //mViewManager->GetDeviceContext(dx);
+      //dx->GetDevUnitsToAppUnits(p2t);
+      //offX = offY = 0;
+      //win->ConvertToDeviceCoordinates(offX,offY);
+      //offX = NSIntPixelsToTwips(offX, p2t);
+      //offY = NSIntPixelsToTwips(offY, p2t);
 
-      lx = aEvent->point.x - (trect.x+offX);
-      ly = aEvent->point.y - (trect.y+offY);
+      lx = aEvent->point.x - (trect.x);
+      ly = aEvent->point.y - (trect.y);
 
       if (!trect.Contains(lx, ly))
       {
