@@ -233,11 +233,13 @@ struct JSJavaVM {
 /* TODO -  all LiveConnect global variables should be migrated into this
            structure in order to allow more than one LiveConnect-enabled
            Java VM to exist within the same process. */
+    void *              init_args;              /* args to initialize VM with */
     SystemJavaVM *      java_vm;
-    JNIEnv *            main_thread_env;       /* Main-thread Java environment */
-    JSBool              jsj_created_java_vm;
+    JNIEnv *            main_thread_env;        /* Main-thread Java environment */
+    JSPackedBool        jsj_created_java_vm;
+    JSPackedBool        jsj_inited_java_vm;
     int                 num_attached_threads;
-    JSJavaVM *          next;           /* next VM among all created VMs */
+    JSJavaVM *          next;                   /* next VM among all created VMs */
 };
 
 /* Per-thread state that encapsulates the connection to the Java VM */
