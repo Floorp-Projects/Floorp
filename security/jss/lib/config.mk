@@ -92,7 +92,7 @@ EXTRA_SHARED_LIBS += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-LDOPTS += -PDB:NONE
+OS_DLLFLAGS += /NODEFAULTLIB:MSVCRTD
 endif
 
 # Include "funky" link path to pick up ALL native libraries for OSF/1.
