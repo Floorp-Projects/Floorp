@@ -30,4 +30,6 @@ nsIMsgCopyService.idl
 nsIMsgCopyServiceListener.idl
 nsIMsgStatusFeedback.idl
 nsIMsgMailNewsUrl.idl
+nsIUrlListenerManager.idl
+
 
