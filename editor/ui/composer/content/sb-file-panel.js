@@ -223,7 +223,7 @@ function OpenEditNode()
     dump("gEditNode removed.\n");
 
     // create the html:input node
-    htmlInput = document.createElement("html:input");
+    htmlInput = document.createElementNS("http://www.w3.org/TR/REC-html40", "html:input");
     htmlInput.setAttribute("value", name);
     htmlInput.setAttribute("onkeypress", "return EditNodeKeyPress(event)");
 
@@ -394,14 +394,14 @@ function fillContextMenu(name,node)
     popupNode.removeChild(menuNode);
 
     // create a new menu node
-    menuNode = document.createElement("menu");
+    menuNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menu");
     popupNode.appendChild(menuNode);
 
     dump("mwa");
     if(ext == "gif")
     {
         // note: deleted all the doContextCmd stuff from bookmarks.
-        menuItem = document.createElement("menuitem");
+        menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
         menuItem.setAttribute("value","Insert Image");
         // menuItem.setAttribute("onaction","AutoInsertImage(\'" + url + "\')");
         parent.appendChild(menuItem);

@@ -195,7 +195,7 @@ function OpenEditNode()
     dump("gEditNode removed.\n");
 
     // create the html:input node
-    htmlInput = document.createElement("html:input");
+    htmlInput = document.createElementNS("http://www.w3.org/TR/REC-html40", "html:input");
     htmlInput.setAttribute("value", name);
     htmlInput.setAttribute("onkeypress", "return EditNodeKeyPress(event)");
 
@@ -363,7 +363,7 @@ function fillContextMenu(name)
     popupNode.removeChild(menuNode);
 
     // create a new menu node
-    menuNode = document.createElement("menu");
+    menuNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menu");
     popupNode.appendChild(menuNode);
 
     var treeNode = document.getElementById("bookmarksTree");
@@ -456,7 +456,7 @@ function fillContextMenu(name)
 
         dump("Command #" + cmdIndex + ": id='" + cmdResource.Value + "'  name='" + cmdName + "'\n\n");
 
-        var menuItem = document.createElement("menuitem");
+        var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
         menuItem.setAttribute("value", cmdName);
         menuItem.setAttribute("onaction", "return doContextCmd('" + cmdResource.Value + "');");
         
