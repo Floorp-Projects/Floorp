@@ -182,7 +182,7 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 	return JS_TRUE;
     }
     if (JSVAL_IS_OBJECT(v)) {
-	if (cx->version == JSVERSION_1_2) {
+	if (!JSVERSION_IS_ECMA(cx->version)) {
 	    if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_BOOLEAN, &v))
 		return JS_FALSE;
 	    if (!JSVAL_IS_BOOLEAN(v))
