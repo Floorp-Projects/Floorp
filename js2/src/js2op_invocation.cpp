@@ -49,11 +49,21 @@
             else {
                 if (obj->kind == FixedInstanceKind) {
                     // XXX 
+                    js2val protoVal;
+                    JS2Object *protoObj = meta->objectClass->prototype;
+                    Multiname mn(prototype_StringAtom);
+                    LookupKind lookup(false, NULL);
+                    if (meta->readProperty(a, &mn, &lookup, RunPhase, &protoVal)) {
+                        if (!JS2VAL_IS_OBJECT(protoVal))
+                            meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
+                        protoObj = JS2VAL_TO_OBJECT(protoVal);
+                    }
+
                     FixedInstance *fInst = checked_cast<FixedInstance *>(obj);
                     FunctionWrapper *fWrap = fInst->fWrap;
                     ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                     runtimeFrame->instantiate(&meta->env);
-                    PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
+                    PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
                     baseVal = OBJECT_TO_JS2VAL(pInst);
                     runtimeFrame->thisObject = baseVal;
 //                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);

@@ -443,7 +443,8 @@ namespace MetaData {
                   INIT_STRINGATOM(function),
                   INIT_STRINGATOM(object),
                   Empty_StringAtom(&world.identifiers[""]),
-                  Dollar_StringAtom(&world.identifiers["$"])
+                  Dollar_StringAtom(&world.identifiers["$"]),
+                  prototype_StringAtom(&world.identifiers["prototype"])
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -688,9 +689,14 @@ namespace MetaData {
     //
     bool ForIteratorObject::first()
     {
-        if (JS2VAL_IS_NULL(objValue))
+        if (obj == NULL)
             return false;
-        JS2Object *obj = JS2VAL_TO_OBJECT(objValue);
+        originalObj = obj;
+        return buildNameList();
+    }
+
+    bool ForIteratorObject::buildNameList()
+    {
         DynamicPropertyMap *dMap = NULL;
         if (obj->kind == DynamicInstanceKind)
             dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
@@ -701,7 +707,6 @@ namespace MetaData {
             dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
 
         if (dMap) {
-            originalObj = obj;
             nameList = new const String *[dMap->size()];
             length = 0;
             for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
@@ -723,13 +728,21 @@ namespace MetaData {
     bool ForIteratorObject::next(JS2Engine *engine)
     {
         if (nameList) {
-            JS2Object *obj = JS2VAL_TO_OBJECT(objValue);
             it++;
             if (originalObj != obj) {
                 while (it != length)
                     if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj) it++;
             }
-            return (it != length);
+            if (it == length) {
+                if (obj->kind == PrototypeInstanceKind) {
+                    obj = (checked_cast<PrototypeInstance *>(obj))->parent;
+                    return buildNameList();
+                }
+                else
+                    return false;
+            }
+            else
+                return true;
         }
         else
             return false;

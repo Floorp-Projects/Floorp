@@ -1956,7 +1956,7 @@ doUnary:
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eCall, p->pos, -(argCount + 1) + 1);    // pop argCount args, the type/function, and push a result
+                bCon->emitOp(eNew, p->pos, -(argCount + 1) + 1);    // pop argCount args, the type/function, and push a result
                 bCon->addShort(argCount);
             }
             break;

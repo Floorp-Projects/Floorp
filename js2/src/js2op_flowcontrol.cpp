@@ -83,7 +83,7 @@
         {
             a = pop();
             b = toObject(a);
-            ForIteratorObject *fi = new ForIteratorObject(b);
+            ForIteratorObject *fi = new ForIteratorObject(JS2VAL_TO_OBJECT(b));
             push(OBJECT_TO_JS2VAL(fi));
             push(BOOLEAN_TO_JS2VAL(fi->first()));
         }

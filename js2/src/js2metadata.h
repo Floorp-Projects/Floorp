@@ -573,19 +573,22 @@ public:
 // A helper class for 'for..in' statements
 class ForIteratorObject : public JS2Object {
 public:
-    ForIteratorObject(js2val obj) : JS2Object(ForIteratorKind), objValue(obj), nameList(NULL) { }
+    ForIteratorObject(JS2Object *obj) : JS2Object(ForIteratorKind), obj(obj), nameList(NULL) { }
 
     bool first();
     bool next(JS2Engine *engine);
 
     js2val value(JS2Engine *engine);
 
-    js2val objValue;
+    JS2Object *obj;
     JS2Object *originalObj;
 
-    virtual void markChildren()     { GCMARKVALUE(objValue); }
+    virtual void markChildren()     { GCMARKOBJECT(obj); GCMARKOBJECT(originalObj); }
 
 private:
+
+    bool buildNameList();
+
     const String **nameList;
     int32 it;
     int32 length;

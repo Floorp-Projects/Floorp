@@ -233,6 +233,7 @@ public:
     const String *object_StringAtom;
     const String *Empty_StringAtom;
     const String *Dollar_StringAtom;
+    const String *prototype_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits
