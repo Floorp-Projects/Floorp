@@ -230,8 +230,10 @@ nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength,
     }
     else {
       // No CJK support, just copy the row string.
-      strcpy((char *) key, str);
-      while (*key) {
+      // Collation key is not a string, use memcpy instead of strcpy.
+      nsCRT::memcpy(key, str, str_len);
+      PRUint8 *end = key + str_len;
+      while (key < end) {
         if ((unsigned char) *key < 128) {
           key++;
         }
