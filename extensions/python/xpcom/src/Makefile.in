@@ -40,31 +40,23 @@ DEPTH=../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+PYTHON_INCLUDES = @MOZ_PYTHON_INCLUDES@
+PYTHON_LIBS = @MOZ_PYTHON_LIBS@
+PYTHON_DEBUG_SUFFIX = @MOZ_PYTHON_DEBUG_SUFFIX@
+PYTHON_DLL_SUFFIX = @MOZ_PYTHON_DLL_SUFFIX@
 
 DIRS = loader $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
-
-PYTHON_DEBUG_SUFFIX=
-ifdef MOZ_DEBUG
-ifeq ($(OS_ARCH),WINNT)
-PYTHON_DEBUG_SUFFIX=_d
-endif
-endif
 
 MODULE		= pyxpcom
 LIBRARY_NAME	= _xpcom$(PYTHON_DEBUG_SUFFIX)
 #MODULE_NAME	= 
 REQUIRES	= xpcom string $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-DLL_SUFFIX=.pyd
-LOCAL_INCLUDES = -I$(PYTHON_SRC)/Include -I$(PYTHON_SRC)/PC
-EXTRA_LIBS += /libpath:$(PYTHON_SRC)/PCBuild
-else
-LOCAL_INCLUDES = -I$(PYTHON_SRC)/include/python2.1
-EXTRA_LIBS += -L$(PYTHON_SRC)/lib -lpython2.1
-endif
+DLL_SUFFIX=$(PYTHON_DLL_SUFFIX)
+LOCAL_INCLUDES = $(PYTHON_INCLUDES)
+EXTRA_LIBS += $(PYTHON_LIBS)
 
 CPPSRCS= \
 	ErrorUtils.cpp \
@@ -82,6 +74,7 @@ CPPSRCS= \
 	PyIInterfaceInfoManager.cpp \
 	PyISimpleEnumerator.cpp \
 	PyISupports.cpp \
+	PyIVariant.cpp \
 	Pyxpt_info.cpp \
 	TypeObject.cpp \
 	VariantUtils.cpp \
@@ -108,4 +101,4 @@ endif
 	rm -f $(DIST)/lib/$(IMPORT_LIBRARY)
 
 clobber::
-	rm -f *.ilk
+	rm -f *.ilk *.pdb
