@@ -65,7 +65,7 @@
         <menuitem id="offlineGoOfflineCmd"/>
         <menuseparator/>
         <menuitem label="&synchronizeOfflineCmd.label;"  accesskey="&synchronizeOfflineCmd.accesskey;" observes="cmd_synchronizeOffline"/>
-        <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;"    observes="cmd_settingsOffline"/>
+        <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;" oncommand="window.openDialog('chrome://messenger-offline/content/pref-offline.xul', '', 'chrome,dialog,modal,resizable');"/>
         <menuseparator/>
         <menuitem label="&downloadFlaggedCmd.label;"     accesskey="&downloadFlaggedCmd.accesskey;"    observes="cmd_downloadFlagged"/>
         <menuitem label="&downloadSelectedCmd.label;"    accesskey="&downloadSelectedCmd.accesskey;"   observes="cmd_downloadSelected"/>
