@@ -34,7 +34,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.4 2002/10/12 01:00:33 jpierre%netscape.com Exp $
+ * $Id: addbuiltin.c,v 1.5 2002/10/30 17:22:06 relyea%netscape.com Exp $
  */
 
 #include "nss.h"
@@ -73,6 +73,11 @@ char *getTrustString(unsigned int trust)
     return "CKT_NETSCAPE_VALID"; /* not reached */
 }
 
+static const SEC_ASN1Template serialTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(CERTCertificate,serialNumber) },
+    { 0 }
+};
+
 static SECStatus
 ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
 {
@@ -80,9 +85,14 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     CERTCertificate *cert;
     unsigned char sha1_hash[SHA1_LENGTH];
     unsigned char md5_hash[MD5_LENGTH];
+    SECItem *serial = NULL;
 
     cert = CERT_DecodeDERCertificate(sdder, PR_FALSE, nickname);
     if (!cert) {
+	return SECFailure;
+    }
+    serial = SEC_ASN1EncodeItem(NULL,NULL,cert,serialTemplate);
+    if (!serial) {
 	return SECFailure;
     }
 
@@ -101,7 +111,7 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     dumpbytes(cert->derIssuer.data,cert->derIssuer.len);
     printf("END\n");
     printf("CKA_SERIAL_NUMBER MULTILINE_OCTAL\n");
-    dumpbytes(cert->serialNumber.data,cert->serialNumber.len);
+    dumpbytes(serial->data,serial->len);
     printf("END\n");
     printf("CKA_VALUE MULTILINE_OCTAL\n");
     dumpbytes(sdder->data,sdder->len);
@@ -126,7 +136,7 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     dumpbytes(cert->derIssuer.data,cert->derIssuer.len);
     printf("END\n");
     printf("CKA_SERIAL_NUMBER MULTILINE_OCTAL\n");
-    dumpbytes(cert->serialNumber.data,cert->serialNumber.len);
+    dumpbytes(serial->data,serial->len);
     printf("END\n");
     
     printf("CKA_TRUST_SERVER_AUTH CK_TRUST %s\n",
@@ -184,7 +194,7 @@ printheader() {
      "# may use your version of this file under either the MPL or the\n"
      "# GPL.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.4 $ $Date: 2002/10/12 01:00:33 $ $Name:  $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.5 $ $Date: 2002/10/30 17:22:06 $ $Name:  $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
