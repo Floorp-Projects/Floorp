@@ -28,97 +28,34 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="addlang-box"
   title="&languages.customize.add.title.label;"
-  class="color-dialog"
+  class="dialog"
   onload="Init();"
   orient="vertical"
-  width="340" height="379">
+  style="width: 25em;height: 25em;">
 
-  <html:script language="javascript" src="pref-languages.js"/>
-  <html:script language="javascript" src="chrome://global/content/strres.js" />
+  <script language="javascript" src="pref-languages.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
 
-  <!-- The main pane -->
-  <!-- horz 1 -->
-  <box align="horizontal" flex="100%">
+  <keyset id="keyset"/>
+  
+  <html>&languages.customize.prefAddLangDescript;</html>
+  <separator class="thin"/>
+  <html>&languages.customize.available.label;</html>
 
+  <tree class="inset" id="available_languages" flex="1"
+        datasources="rdf:null" multiple="true">
+    <treechildren id="available_languages_root"/>
+  </tree>
 
-    <!-- Spacing between the left window border and list box -->
-    <spring style="width:1em"/>
-    
-    <!-- Active client languages: 
-         list box, reorder, add and remove widgets -->
-
-    <!-- vert 1 -->
-	<box align="vertical" flex="1">
-
-      <separator/>
-
-      <html>
-		    &languages.customize.prefAddLangDescript;
-      </html>
-
-      <spring style="height:8px"/>
-
-      <html>
-    		&languages.customize.available.label;
-      </html>
-
-      <!-- horz 2 -->
-      <box align="horizontal" class="box-group" flex="1">
-
-            <!-- Languages list box -->
-            <!-- Active Charsets Tree -->
-            <tree id="available_languages" flex="1"
-              datasources="rdf:null"
-              indent="false"
-              multiple="true"
-              style="height:0px">
-             <!-- We explicitly create a 'treechildren' so we can refer
-                  to it from the script -->
-             <treechildren id="available_languages_root">
-             </treechildren>
-            </tree>
-      </box>
-	  <!-- horiz 2 -->
-
-      <spring style="height:16px"/>
-
-    <box autostretch="never">
-      <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
-      <textfield id="languages.other" size="7" maxlength="5"/>
-      <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>
-    </box>
-
-      <spring style="height:8px"/>
-
-    </box> 
-	<!-- vert 1 -->
-
-    <!-- Spacing between the right window border and list box -->
-    <spring style="width:1em"/>
- 
-   </box>
-   <!-- horiz 1 -->	
+  <box autostretch="never">
+    <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
+    <textfield id="languages.other" size="7" maxlength="5"/>
+    <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>
+  </box>
 
   <separator class="groove"/>
 
-  <spring style="width:1em"/>
+  <box id="okCancelButtonsRight"/>
 
-  <!-- The 'Save' and 'Cancel' buttons -->
-  <!-- horz 2 -->
-  <box align="horizontal">
-    <spring flex="48%"/>
-    <button id="save_button" onclick="AddAvailableLanguage()"
-       class="dialog push"
-       value="&languages.customize.ok.label;"/>
-    <spring flex="4%"/>
-    <button onclick="window.close()"
-       class="dialog push"
-       value="&languages.customize.cancel.label;" />
-    <spring flex="48%"/>
-  </box>
-  <!-- horz 2 -->
-
-  <spring style="width:1em"/>
-  
 </window>
 
