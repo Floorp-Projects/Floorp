@@ -582,45 +582,22 @@ GetVolumeList(nsVoidArray **array)
 	nsIRDFResource		*vol;
 
 #ifdef	XP_MAC
-	FSSpec			fss;
-	OSErr			err;
-	ParamBlockRec		pb;
-	int16			volNum = 1;
-
-	do
+	StrFileName     fname;
+	ParamBlockRec	pb;
+	for (int16 volNum = 1; ; volNum++)
 	{
 		pb.volumeParam.ioCompletion = NULL;
-		pb.volumeParam.ioVolIndex = volNum++;
-		pb.volumeParam.ioNamePtr = (StringPtr)fss.name;
-		if (!(err = PBGetVInfo(&pb,FALSE)))
+		pb.volumeParam.ioVolIndex = volNum;
+		pb.volumeParam.ioNamePtr = (StringPtr)fname;
+		if (PBGetVInfo(&pb,FALSE) != noErr)
+			break;
+		nsFileSpec fss(pb.volumeParam.ioVRefNum, fsRtParID, fname);
+		if (NS_SUCCEEDED(gRDFService->GetResource(nsFileURL(fss).GetAsString(), (nsIRDFResource**)&vol)))
 		{
-			fss.vRefNum = pb.volumeParam.ioVRefNum;
-			fss.parID = 2L;
-			fss.name[0] = '\0';
-
-			// even though we have the volume name, create a
-			// nativeFileSpec and then get name out of it so
-			// that if will be fully encoded
-
-			nsNativeFileSpec	nativeSpec(fss);
-			nsFilePath		filePath(nativeSpec);
-			char			*volURL = filePath;
-			if (volURL != nsnull)
-			{
-				nsAutoString	pathname("file://");
-				pathname += volURL;
-				if (nativeSpec.IsDirectory())
-				{
-					pathname += "/";
-				}
-				char		*filename = pathname.ToNewCString();
-				gRDFService->GetResource(filename, (nsIRDFResource **)&vol);
-				NS_ADDREF(vol);
-				volumes->AppendElement(vol);
-				delete filename;
-			}
+			NS_ADDREF(vol);
+			volumes->AppendElement(vol);
 		}
-	} while (!err);
+	}
 #endif
 
 #ifdef	XP_WIN
