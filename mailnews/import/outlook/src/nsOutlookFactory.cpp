@@ -81,7 +81,8 @@ NS_METHOD OutlookRegister(nsIComponentManager *aCompMgr,
     	return rv;
     }
     
-    rv = reg->OpenDefault();
+    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+
     if (NS_FAILED(rv)) {
 	    IMPORT_LOG0( "*** Import Outlook, ERROR OPENING THE REGISTRY\n");
     	return( rv);

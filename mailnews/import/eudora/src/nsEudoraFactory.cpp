@@ -77,7 +77,7 @@ NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
     	return rv;
     }
     
-    rv = reg->OpenDefault();
+    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
     if (NS_FAILED(rv)) {
 	    IMPORT_LOG0( "*** Import Eudora, ERROR OPENING THE REGISTRY\n");
     	return( rv);

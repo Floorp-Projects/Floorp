@@ -514,7 +514,7 @@ nsresult nsImportService::DoDiscover( void)
    	NS_WITH_SERVICE( nsIRegistry, reg, kRegistryCID, &rv);
    	if (NS_FAILED(rv)) return rv;
    	
-   	rv = reg->OpenDefault();
+    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
    	if (NS_FAILED(rv)) return( rv);
    		    	
 	nsRegistryKey	modulesKey;
