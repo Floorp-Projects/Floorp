@@ -5447,7 +5447,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
         // FINALLY: we can set the header!
         // 
 
-        rv = aChannel->SetRequestHeader(headerName, headerValue);
+        rv = aChannel->SetRequestHeader(headerName, headerValue, PR_TRUE);
         if (NS_FAILED(rv)) {
             return NS_ERROR_NULL_POINTER;
         }

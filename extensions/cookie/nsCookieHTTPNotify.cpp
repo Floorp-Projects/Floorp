@@ -191,13 +191,14 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
     rv = mCookieService->GetCookieStringFromHttp(pURL, pFirstURL, &cookie);
     if (NS_FAILED(rv)) return rv;
 
-    // Clear any existing Cookie request header
-    rv = aHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"), NS_LITERAL_CSTRING(""));
-    if (NS_FAILED(rv)) return rv;
-
-    // Set the cookie into the request headers
+    const char *headerVal = "";
     if (cookie && *cookie)
-        rv = aHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"), nsDependentCString(cookie));
+      headerVal = cookie;
+
+    // Set the cookie into the request headers overwriting any existing header.
+    rv = aHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"),
+                                        nsDependentCString(headerVal),
+                                        PR_FALSE);
     nsMemory::Free((void *)cookie);
 
     return rv;

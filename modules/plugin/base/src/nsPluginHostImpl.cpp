@@ -1567,7 +1567,7 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
   if(!httpChannel)
     return NS_ERROR_FAILURE;
   
-  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString);
+  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
   
   mPluginStreamListenerPeer->mAbort = PR_TRUE; // instruct old stream listener to cancel
                                                // the request on the next ODA.
@@ -5822,7 +5822,7 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
     // FINALLY: we can set the header!
     // 
     
-    rv = aChannel->SetRequestHeader(headerName, headerValue);
+    rv = aChannel->SetRequestHeader(headerName, headerValue, PR_TRUE);
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_NULL_POINTER;
       return rv;

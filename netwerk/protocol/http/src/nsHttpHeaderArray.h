@@ -39,8 +39,9 @@ public:
 
     const char *PeekHeader(nsHttpAtom header);
 
-    nsresult SetHeader(nsHttpAtom header, const nsACString &value);
+    nsresult SetHeader(nsHttpAtom header, const nsACString &value, PRBool merge = PR_FALSE);
     nsresult GetHeader(nsHttpAtom header, nsACString &value);
+    void     ClearHeader(nsHttpAtom h);
 
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
 

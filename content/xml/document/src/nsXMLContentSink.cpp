@@ -689,9 +689,8 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  NS_LITERAL_CSTRING(""));
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"));
+                                  NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
+                                  PR_FALSE);
 
     httpChannel->SetReferrer(mDocumentURL);
   }
@@ -1094,7 +1093,8 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
         (void)aHeader->GetUnicode(&header);
         (void)httpChannel->SetResponseHeader(
                        NS_ConvertUCS2toUTF8(header),
-                       NS_ConvertUCS2toUTF8(aValue));
+                       NS_ConvertUCS2toUTF8(aValue),
+                       PR_TRUE);
       }
     }
   }

@@ -3895,7 +3895,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			if (httpMultiChannel)
 			{
                 httpMultiChannel->SetRequestHeader(NS_LITERAL_CSTRING("MultiSearch"),
-                                                   NS_LITERAL_CSTRING("true"));
+                                                   NS_LITERAL_CSTRING("true"),
+                                                   PR_FALSE);
 			}
 
 			// get it just from the cache if we can (do not validate)

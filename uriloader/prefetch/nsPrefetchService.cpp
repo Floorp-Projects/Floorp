@@ -293,7 +293,8 @@ nsPrefetchService::ProcessNextURI()
         if (httpChannel) {
             httpChannel->SetReferrer(referrer);
             httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                          NS_LITERAL_CSTRING("prefetch"));
+                                          NS_LITERAL_CSTRING("prefetch"),
+                                          PR_FALSE);
         }
 
         rv = mCurrentChannel->AsyncOpen(listener, nsnull);

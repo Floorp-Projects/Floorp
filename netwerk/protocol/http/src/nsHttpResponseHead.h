@@ -58,8 +58,9 @@ public:
     PRBool                NoCache()        { return (mCacheControlNoCache || mPragmaNoCache); }
 
     const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
-    nsresult SetHeader(nsHttpAtom h, const nsACString &v);
+    nsresult SetHeader(nsHttpAtom h, const nsACString &v, PRBool m=PR_FALSE);
     nsresult GetHeader(nsHttpAtom h, nsACString &v) { return mHeaders.GetHeader(h, v); }
+    void     ClearHeader(nsHttpAtom h)              { mHeaders.ClearHeader(h); }
     void     ClearHeaders()                         { mHeaders.Clear(); }
 
     void     SetContentType(const nsACString &s)    { mContentType = s; }

@@ -932,7 +932,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 // it's header observers.
                 nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
                 if (httpChannel) {
-                    rv = httpChannel->SetResponseHeader(headerStr, headerVal);
+                    rv = httpChannel->SetResponseHeader(headerStr, headerVal, PR_TRUE);
                     if (NS_FAILED(rv)) return rv;
                 }
             } else if (headerStr.EqualsIgnoreCase("content-range") || 

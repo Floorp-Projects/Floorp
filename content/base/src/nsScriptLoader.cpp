@@ -398,9 +398,8 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
         if (httpChannel) {
           // HTTP content negotation has little value in this context.
           httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                        NS_LITERAL_CSTRING(""));
-          httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                        NS_LITERAL_CSTRING("*/*"));
+                                        NS_LITERAL_CSTRING("*/*"),
+                                        PR_FALSE);
           httpChannel->SetReferrer(documentURI);
         }
         rv = NS_NewStreamLoader(getter_AddRefs(loader), channel, this, reqsup);

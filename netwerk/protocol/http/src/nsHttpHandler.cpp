@@ -295,19 +295,22 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     // with HTTP/1.0 servers/proxies. We use "Proxy-Connection:" when 
     // we're talking to an http proxy, and "Connection:" otherwise
     
-    const char* connectionType = "close";
+    NS_NAMED_LITERAL_CSTRING(close, "close");
+    NS_NAMED_LITERAL_CSTRING(keepAlive, "keep-alive");
+
+    const nsACString *connectionType = &close;
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
         rv = request->SetHeader(nsHttp::Keep_Alive, nsPrintfCString("%u", mIdleTimeout));
         if (NS_FAILED(rv)) return rv;
-        connectionType = "keep-alive";
+        connectionType = &keepAlive;
     } else if (useProxy) {
         // Bug 92006
-        request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("close"));
+        request->SetHeader(nsHttp::Connection, close);
     }
 
-    const nsHttpAtom &header =
-        useProxy ? nsHttp::Proxy_Connection : nsHttp::Connection;
-    return request->SetHeader(header, nsDependentCString(connectionType));
+    const nsHttpAtom &header = useProxy ? nsHttp::Proxy_Connection
+                                        : nsHttp::Connection;
+    return request->SetHeader(header, *connectionType);
 }
 
 PRBool

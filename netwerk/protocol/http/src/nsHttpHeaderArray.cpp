@@ -29,22 +29,26 @@
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpHeaderArray::SetHeader(nsHttpAtom header, const nsACString &value)
+nsHttpHeaderArray::SetHeader(nsHttpAtom header,
+                             const nsACString &value,
+                             PRBool merge)
 {
     nsEntry *entry = nsnull;
     PRInt32 index;
 
-    // If an empty value is passed in, then delete the header entry...
     index = LookupEntry(header, &entry);
+
+    // If an empty value is passed in, then delete the header entry...
+    // unless we are merging, in which case this function becomes a NOP.
     if (value.IsEmpty()) {
-        if (entry) {
+        if (!merge && entry) {
             mHeaders.RemoveElementAt(index);
             delete entry;
         }
         return NS_OK;
     }
 
-    // Create a new entry or...
+    // Create a new entry, or...
     if (!entry) {
         entry = new nsEntry(header, value);
         if (!entry)
@@ -55,7 +59,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header, const nsACString &value)
         }
     }
     // Append the new value to the existing value iff...
-    else if (CanAppendToHeader(header)) {
+    else if (merge && CanAppendToHeader(header)) {
         if (header == nsHttp::Set_Cookie ||
             header == nsHttp::WWW_Authenticate ||
             header == nsHttp::Proxy_Authenticate)
@@ -72,6 +76,19 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header, const nsACString &value)
     else
         entry->value = value;
     return NS_OK;
+}
+
+void
+nsHttpHeaderArray::ClearHeader(nsHttpAtom header)
+{
+    nsEntry *entry = nsnull;
+    PRInt32 index;
+
+    index = LookupEntry(header, &entry);
+    if (entry) {
+        mHeaders.RemoveElementAt(index);
+        delete entry;
+    }
 }
 
 const char *
@@ -219,18 +236,16 @@ nsHttpHeaderArray::LookupEntry(nsHttpAtom header, nsEntry **entry)
 PRBool
 nsHttpHeaderArray::CanAppendToHeader(nsHttpAtom header)
 {
-    return header == nsHttp::Accept_Charset ||
-           header == nsHttp::Content_Type ||
-           header == nsHttp::User_Agent ||
-           header == nsHttp::Referer ||
-           header == nsHttp::Host ||
-           header == nsHttp::Authorization ||
-           header == nsHttp::Proxy_Authorization ||
-           header == nsHttp::If_Modified_Since ||
-           header == nsHttp::If_Unmodified_Since ||
-           header == nsHttp::From ||
-           header == nsHttp::Location ||
-           header == nsHttp::Max_Forwards
-           ?
-           PR_FALSE : PR_TRUE;
+    return header != nsHttp::Content_Type        &&
+           header != nsHttp::Content_Length      &&
+           header != nsHttp::User_Agent          &&
+           header != nsHttp::Referer             &&
+           header != nsHttp::Host                &&
+           header != nsHttp::Authorization       &&
+           header != nsHttp::Proxy_Authorization &&
+           header != nsHttp::If_Modified_Since   &&
+           header != nsHttp::If_Unmodified_Since &&
+           header != nsHttp::From                &&
+           header != nsHttp::Location            &&
+           header != nsHttp::Max_Forwards;
 }
