@@ -758,7 +758,7 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       if ( mGestureDownFrame ) {
         // the mouseDown captures the mouse, make sure we release it so that dragging
         // to other views works correctly.
-        mGestureDownFrame->CaptureMouse ( aPresContext, PR_FALSE );
+        //mGestureDownFrame->CaptureMouse ( aPresContext, PR_FALSE );
         mGestureDownFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
         if ( lastContent )
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
