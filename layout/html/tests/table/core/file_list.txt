@@ -31,6 +31,7 @@ file:///s|/mozilla/layout/html/tests/table/core/col_widths_auto_per.html
 file:///s|/mozilla/layout/html/tests/table/core/cols1.html
 delay:=2
 file:///s|/mozilla/layout/html/tests/table/core/conflicts.html
+file:///s|/mozilla/layout/html/tests/table/core/margins.html
 file:///s|/mozilla/layout/html/tests/table/core/misc.html
 delay:=1
 file:///s|/mozilla/layout/html/tests/table/core/nested1.html
