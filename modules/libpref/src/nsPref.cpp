@@ -296,6 +296,16 @@ NS_IMETHODIMP nsPref::PrefIsLocked(const char *aPrefName, PRBool *_retval)
   return rv;
 }
 
+NS_IMETHODIMP nsPref::PrefHasUserValue(const char *aPrefName, PRBool *_retval)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = prefBranch->PrefHasUserValue(aPrefName, _retval);
+  return rv;
+}
+
 NS_IMETHODIMP nsPref::UnlockPref(const char *aPrefName)
 {
   nsresult rv;
