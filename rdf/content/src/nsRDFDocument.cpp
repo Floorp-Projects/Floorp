@@ -125,7 +125,7 @@ rdf_HashPointer(const void* key)
 
 enum nsContentType {
 	TEXT_RDF, 
-	TEXT_XUL,
+	TEXT_XUL
 };
 
 ////////////////////////////////////////////////////////////////////////
