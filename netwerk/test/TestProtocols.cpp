@@ -18,16 +18,16 @@
 
 /* 
 	The TestProtocols tests the basic protocols architecture and can 
-   	be used to test individual protocols as well. If this grows too
+ 	be used to test individual protocols as well. If this grows too
 	big then we should split it to individual protocols. 
 	
 	-Gagan Saksena 04/29/99
 */
 
 #include <stdio.h>
-//#ifdef XP_WIN //TODO check
+#ifdef WIN32 
 #include <windows.h>
-
+#endif
 #include "nspr.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -43,12 +43,12 @@
 #include "nsIUrl.h"
 
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
+#define NETLIB_DLL "netwerk.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define XPCOM_DLL  "libxpcom.so"
+#define NETLIB_DLL "libnetwerk.so"
 #endif
 #endif
 
@@ -138,21 +138,22 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv= -1;
-
     if (argc < 2) {
         printf("usage: %s <url> \n", argv[0]);
         return -1;
     }
 
     /* 
-        The following code only deals with XPCOM registration stuff. and setting
-        up the event queues. Copied from TestSocketIO.cpp
+      The following code only deals with XPCOM registration stuff. and setting
+      up the event queues. Copied from TestSocketIO.cpp
     */
     // XXX why do I have to do this?!
-    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                        "components");
+                                          "components");
     if (NS_FAILED(rv)) return rv;
+
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // Create the Event Queue for this thread...
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
@@ -170,18 +171,20 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     // The story of how to retrieve a document. 
-	// Now available in 2 different flavours.
+  	// Now available in 2 different flavours.
 
     if (pService)
     {
+
         nsCOMPtr<nsIUrl> pURL;
 
-        if (NS_OK == pService->NewUrl("http://gagan.mcom.com/", getter_AddRefs(pURL)))
+        if (NS_OK == pService->NewUrl(argv[1], getter_AddRefs(pURL)))
         {
             if (pURL)
             {
                 nsCOMPtr<nsIProtocolConnection> pConnection;
-                if (NS_OK == pService->NewConnection(pURL, nsnull, nsnull, getter_AddRefs(pConnection)))
+                if (NS_OK == pService->NewConnection(pURL, nsnull, nsnull, 
+                                              getter_AddRefs(pConnection)))
                 {
                     /* Flavour One! */
                     // Plain vanilla getting a file... in blocking mode
@@ -207,7 +210,8 @@ main(int argc, char* argv[])
 #if 0
                 /* Flavour Two */
                 // Async reading thru the calls of the event sink interface
-                if (NS_OK == pService->NewConnection(pURL, pMyConsumer, nsnull, getter_AddRefs(pConnection)))
+                if (NS_OK == pService->NewConnection(pURL, pMyConsumer, 
+                                       nsnull, getter_AddRefs(pConnection)))
                 {
                     if (pConnection)
                     {
@@ -238,7 +242,7 @@ main(int argc, char* argv[])
 
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
-#ifdef XP_PC
+#ifdef WIN32
     MSG msg;
 
     if (GetMessage(&msg, NULL, 0, 0)) {
@@ -252,4 +256,3 @@ main(int argc, char* argv[])
 
     return rv;
 }
-
