@@ -210,8 +210,8 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     PRThread *t;
     PRCList *q;
 
-#if !defined(XP_MAC)
     PR_ASSERT(me != suspendAllThread); 
+#if !defined(XP_MAC)
     PR_ASSERT(!(me->flags & _PR_IDLE_THREAD));
 #endif
 #ifdef _PR_GLOBAL_THREADS_ONLY 
