@@ -19,6 +19,10 @@
 #
 
 DEPTH=..\..\..\..\..
+
+REQUIRES=xpcom string \
+	$(NULL)
+
 include <$(DEPTH)/config/config.mak>
 
 MODULE=pyloader

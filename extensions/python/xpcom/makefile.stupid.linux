@@ -48,7 +48,7 @@ PYTHON_SRC=/usr/local/ActivePython-2.0
 MOZ_SRC=../../../..
 
 MOZCOMPONENTSDIR=$(MOZ_SRC)/mozilla/dist/bin/components
-MOZINCLUDES=-I$(MOZ_SRC)/mozilla/dist/include -I$(MOZ_SRC)/mozilla/dist/include/nspr
+MOZINCLUDES=-I$(MOZ_SRC)/mozilla/dist/include -I$(MOZ_SRC)/mozilla/dist/include/nspr -I$(MOZ_SRC)/mozilla/dist/include/string -I$(MOZ_SRC)/mozilla/dist/include/xpcom
 MOZLIBDIR=$(MOZ_SRC)/mozilla/dist/lib
 
 # this is setup to use the *installed* Python directory structure
@@ -124,7 +124,6 @@ XPCOM_SRC_OBJECTS = \
 	src/PyIID.o \
 	src/PyIInterfaceInfo.o \
 	src/PyIInterfaceInfoManager.o \
-	src/PyIServiceManager.o \
 	src/PyISimpleEnumerator.o \
 	src/PyISupports.o \
 	src/Pyxpt_info.o \

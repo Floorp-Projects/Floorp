@@ -61,7 +61,6 @@ PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, Py
 PyXPCOM_INTERFACE_DEFINE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
 PyXPCOM_INTERFACE_DEFINE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInterfaceInfo)
-PyXPCOM_INTERFACE_DEFINE(Py_nsIServiceManager, nsIServiceManager, PyMethods_IServiceManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
 
@@ -179,21 +178,16 @@ PyXPCOMMethod_GetGlobalServiceManager(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	nsIServiceManagerObsolete* sm;
+	nsIServiceManager* sm;
 	nsresult rv;
 	Py_BEGIN_ALLOW_THREADS;
-	rv = nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&sm);
+	rv = NS_GetServiceManager(&sm);
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(rv) )
 		return PyXPCOM_BuildPyException(rv);
-	// NOTE - GetGlobalServiceManager DOES NOT ADD A REFCOUNT
-	// (naughty, naughty) - we we explicitly ask our converter to
-	// add one, even tho this is not the common pattern.
 
-	// Return a type based on the IID
-	// Can not auto-wrap the interface info manager as it is critical to
-	// building the support we need for autowrap.
-	return Py_nsISupports::PyObjectFromInterface(sm, NS_GET_IID(nsIServiceManager), PR_TRUE, PR_FALSE);
+	// Return a type based on the IID.
+	return Py_nsISupports::PyObjectFromInterface(sm, NS_GET_IID(nsIServiceManager), PR_FALSE);
 }
 
 
@@ -589,6 +583,7 @@ init_xpcom() {
 	REGISTER_IID(nsIWeakReference);
 	REGISTER_IID(nsISupportsWeakReference);
 	REGISTER_IID(nsIClassInfo);
+	REGISTER_IID(nsIServiceManager);
 	// Register our custom interfaces.
 
 	Py_nsISupports::InitType();
@@ -597,7 +592,6 @@ init_xpcom() {
 	Py_nsIEnumerator::InitType(dict);
 	Py_nsISimpleEnumerator::InitType(dict);
 	Py_nsIInterfaceInfo::InitType(dict);
-	Py_nsIServiceManager::InitType(dict);
 	Py_nsIInputStream::InitType(dict);
 	Py_nsIClassInfo::InitType(dict);
     
