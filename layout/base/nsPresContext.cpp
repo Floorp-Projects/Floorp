@@ -61,7 +61,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
-#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsCSSRendering.h"
@@ -171,12 +170,6 @@ nsPresContext::nsPresContext()
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
-  nsILookAndFeel* look = nsnull;
-  if (NS_SUCCEEDED(GetLookAndFeel(&look)) && look) {
-    look->GetColor(nsILookAndFeel::eColor_WindowForeground, mDefaultColor);
-    look->GetColor(nsILookAndFeel::eColor_WindowBackground, mDefaultBackgroundColor);
-    NS_RELEASE(look);
-  }
   
   mUseDocumentColors = PR_TRUE;
   mUseDocumentFonts = PR_TRUE;
@@ -238,6 +231,7 @@ nsPresContext::~nsPresContext()
 #endif // IBMBIDI
 
   NS_IF_RELEASE(mDeviceContext);
+  NS_IF_RELEASE(mLookAndFeel);
 }
 
 NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
@@ -435,15 +429,12 @@ nsPresContext::GetDocumentColorPreferences()
     }
   }
   else {
-    // Without this here, checking the "use system colors" checkbox
-    // has no affect until the constructor is called again
     mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
     mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
-    nsCOMPtr<nsILookAndFeel> look;
-    if (NS_SUCCEEDED(GetLookAndFeel(getter_AddRefs(look))) && look) {
-      look->GetColor(nsILookAndFeel::eColor_WindowForeground, mDefaultColor);
-      look->GetColor(nsILookAndFeel::eColor_WindowBackground, mDefaultBackgroundColor);
-    }
+    mLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowForeground,
+                           mDefaultColor);
+    mLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
+                           mDefaultBackgroundColor);
   }
 
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref))) {
@@ -631,6 +622,14 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 
   mDeviceContext = aDeviceContext;
   NS_IF_ADDREF(mDeviceContext);
+
+  // Get the look and feel service here; default colors will be initialized
+  // from calling GetUserPreferences() below.
+  nsresult rv = CallGetService(kLookAndFeelCID, &mLookAndFeel);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("LookAndFeel service must be implemented for this toolkit");
+    return rv;
+  }
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
   mPrefs = do_GetService(NS_PREF_CONTRACTID);
@@ -838,43 +837,6 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
   }
 
   mImageAnimationMode = aMode;
-}
-
-/*
- * It is no longer necesary to hold on to presContext just to get a
- * nsILookAndFeel, which can now be obtained through the service
- * manager.  However, this cached copy can be used when a pres context
- * is available, for faster performance.
- */
-NS_IMETHODIMP
-nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
-{
-  NS_PRECONDITION(aLookAndFeel, "null out param");
-  if (! mLookAndFeel) {
-    nsresult rv;
-    mLookAndFeel = do_GetService(kLookAndFeelCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  *aLookAndFeel = mLookAndFeel;
-  NS_ADDREF(*aLookAndFeel);
-  return NS_OK;
-}
-
-/*
- * Get the cached IO service, faster than the service manager could.
- */
-NS_IMETHODIMP
-nsPresContext::GetIOService(nsIIOService** aIOService)
-{
-  NS_PRECONDITION(aIOService, "null out param");
-  if (! mIOService) {
-    nsresult rv;
-    mIOService = do_GetIOService(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  *aIOService = mIOService;
-  NS_ADDREF(*aIOService);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1293,25 +1255,6 @@ nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
   NS_PRECONDITION(aResult, "null out param");
   *aResult = mDeviceContext;
   NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
-{
-  aLoadFlags = nsIRequest::LOAD_NORMAL;
-
-  nsCOMPtr<nsIDocument> doc;
-  (void) mShell->GetDocument(getter_AddRefs(doc));
-
-  if (doc) {
-    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-
-    if (loadGroup) {
-      loadGroup->GetLoadFlags(&aLoadFlags);
-    }
-  }
-
   return NS_OK;
 }
 

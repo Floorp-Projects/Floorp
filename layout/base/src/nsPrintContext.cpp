@@ -59,7 +59,6 @@ public:
   PrintContext();
   ~PrintContext();
 
-  NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
   NS_IMETHOD SetPaginatedScrolling(PRBool aResult)  { return NS_ERROR_FAILURE; }
@@ -106,13 +105,6 @@ PrintContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return nsPresContext::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP 
-PrintContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
-{
-  aLoadFlags = nsIRequest::LOAD_FROM_CACHE | nsIRequest::VALIDATE_NEVER | nsIRequest::LOAD_NORMAL;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -123,6 +123,9 @@
 // - created if null, deleted if refcount goes to 0
 nsImageFrame::IconLoad* nsImageFrame::mIconLoad = nsnull;
 
+// cached IO service for loading icons
+nsIIOService* nsImageFrame::sIOService;
+
 // test if the width and height are fixed, looking at the style data
 static PRBool HaveFixedSize(const nsStylePosition* aStylePosition)
 {
@@ -1819,10 +1822,14 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
   nsresult rv = NS_OK;
   NS_PRECONDITION(!aSpec.IsEmpty(), "What happened??");
 
+  if (!sIOService) {
+    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+    rv = CallGetService(kIOServiceCID, &sIOService);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCOMPtr<nsIURI> realURI;
-  nsCOMPtr<nsIIOService> ioService;
-  aPresContext->GetIOService(getter_AddRefs(ioService));
-  SpecToURI(aSpec, ioService, getter_AddRefs(realURI));
+  SpecToURI(aSpec, sIOService, getter_AddRefs(realURI));
  
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
   if (NS_FAILED(rv)) return rv;

@@ -131,6 +131,7 @@
 #include "nsLayoutCID.h"
 #include "nsImageLoadingContent.h"
 #include "nsStyleSet.h"
+#include "nsImageFrame.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -348,6 +349,7 @@ Shutdown(nsIModule* aSelf)
   nsTextTransformer::Shutdown();
   nsSpaceManager::Shutdown();
   nsTextControlFrame::ReleaseGlobals();
+  nsImageFrame::ReleaseGlobals();
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
   NS_IF_RELEASE(nsRuleNode::gLangService);

@@ -330,13 +330,10 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
   else if (eCSSUnit_Integer == unit) {
     PRInt32 intValue = aValue.GetIntValue();
     if (0 <= intValue) {
-      nsILookAndFeel* look = nsnull;
-      if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-        nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID) intValue;
-        if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
-          result = PR_TRUE;
-        }
-        NS_RELEASE(look);
+      nsILookAndFeel* look = aPresContext->LookAndFeel();
+      nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID) intValue;
+      if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
+        result = PR_TRUE;
       }
     }
     else {

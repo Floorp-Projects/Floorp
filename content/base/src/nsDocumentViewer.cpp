@@ -812,7 +812,11 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       if (NS_FAILED(rv))
         return rv;
 
-      mPresContext->Init(aDeviceContext); 
+      rv = mPresContext->Init(aDeviceContext); 
+      if (NS_FAILED(rv)) {
+        mPresContext = nsnull;
+        return rv;
+      }
 
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
       makeCX = !GetIsPrintPreview(); // needs to be true except when we are already in PP
@@ -1393,7 +1397,11 @@ DocumentViewerImpl::Show(void)
     mPresContext = do_CreateInstance(kGalleyContextCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mPresContext->Init(mDeviceContext);
+    rv = mPresContext->Init(mDeviceContext);
+    if (NS_FAILED(rv)) {
+      mPresContext = nsnull;
+      return rv;
+    }
 
     nsRect tbounds;
     mParentWidget->GetBounds(tbounds);

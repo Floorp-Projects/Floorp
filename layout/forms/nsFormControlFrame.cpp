@@ -871,10 +871,9 @@ nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeig
     nsRect screen;
 
     PRBool dropdownCanOverlapOSBar = PR_FALSE;
-    nsCOMPtr<nsILookAndFeel> lookAndFeel;
-    aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
-    if ( lookAndFeel )
-      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, dropdownCanOverlapOSBar);
+    nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar,
+                           dropdownCanOverlapOSBar);
     if ( dropdownCanOverlapOSBar )
       context->GetRect ( screen );
     else

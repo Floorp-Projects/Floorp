@@ -60,7 +60,6 @@
 #include "nsIViewManager.h"
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
-#include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
 #include "nsBlockFrame.h"
 #include "nsISelectionController.h"
 
@@ -115,12 +114,12 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
   // get nsILookAndFeel from the pres context, which has one cached.
-  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  nsILookAndFeel *lookAndFeel = nsnull;
   
   nsCOMPtr<nsIPresContext> presContext;
   inPresShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
-    presContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
+    lookAndFeel = presContext->LookAndFeel();
   if (lookAndFeel)
   {
     PRInt32 tempInt;

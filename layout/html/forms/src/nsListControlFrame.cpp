@@ -84,7 +84,6 @@
 #include "nsISelectElement.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsCSSRendering.h"
-#include "nsILookAndFeel.h"
 #include "nsReflowPath.h"
 #include "nsITheme.h"
 #include "nsIDOMMouseListener.h"
@@ -689,14 +688,10 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
 
   // set up back stop colors and then ask L&F service for the real colors
   nscolor color;
-  nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
-  if (lookAndFeel){
-    lookAndFeel->GetColor(lastItemIsSelected?nsILookAndFeel::eColor_WidgetSelectForeground:nsILookAndFeel::eColor_WidgetSelectBackground, color);
-  } else {
-    // Use some backstop colors if for some reason we don't have a L&F object
-    color = lastItemIsSelected? NS_RGB(245,219,149) : NS_RGB(0,0,0);
-  }
+  mPresContext->LookAndFeel()->
+    GetColor(lastItemIsSelected ?
+             nsILookAndFeel::eColor_WidgetSelectForeground :
+             nsILookAndFeel::eColor_WidgetSelectBackground, color);
 
   float p2t;
   mPresContext->GetScaledPixelsToTwips(&p2t);

@@ -1953,14 +1953,11 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     // paint the selection background -- beware MathML frames overlap a lot
     if (aSelectedRect && !aSelectedRect->IsEmpty()) {
       // get color to use for selection from the look&feel object
-      nsCOMPtr<nsILookAndFeel> lf;
-      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
-      if (lf) {
-        nscolor bgColor = NS_RGB(0, 0, 0);
-        lf->GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
-        aRenderingContext.SetColor(bgColor);
-        aRenderingContext.FillRect(*aSelectedRect);
-      }
+      nscolor bgColor = NS_RGB(0, 0, 0);
+      aPresContext->LookAndFeel()->
+	GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
+      aRenderingContext.SetColor(bgColor);
+      aRenderingContext.FillRect(*aSelectedRect);
     }
     else if (mRect.width && mRect.height) {
       const nsStyleBorder* border = styleContext->GetStyleBorder();
@@ -1993,11 +1990,8 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     nscolor fgColor = styleContext->GetStyleColor()->mColor;
     if (aSelectedRect && !aSelectedRect->IsEmpty()) {
       // get color to use for selection from the look&feel object
-      nsCOMPtr<nsILookAndFeel> lf;
-      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
-      if (lf) {
-        lf->GetColor(nsILookAndFeel::eColor_TextSelectForeground, fgColor);
-      }
+      aPresContext->LookAndFeel()->
+	GetColor(nsILookAndFeel::eColor_TextSelectForeground, fgColor);
     }
     aRenderingContext.SetColor(fgColor);
 
