@@ -592,13 +592,6 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetChildNamed(const char * name, nsISupports **
-                                              aChild)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
 NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
 {
 	nsresult result = NS_OK;
@@ -1105,39 +1098,21 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     if (NS_FAILED(rv)) 
 		return rv;
             
-    nsCOMPtr<nsIFolder> a_nsIFolder(do_QueryInterface(hostFolder, &rv));
+    nsCOMPtr<nsIMsgFolder> a_nsIFolder(do_QueryInterface(hostFolder, &rv));
     
     if (NS_FAILED(rv))
 		return rv;
 
-    rv = a_nsIFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+	nsCOMPtr <nsIMsgFolder> child;
 
-    if (NS_FAILED(rv)) 
-        return rv;
-    
-    rv = aEnumerator->First();
-    while (NS_SUCCEEDED(rv))
-    {
-        rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
-        if (NS_FAILED(rv)) break;
-		aFolder = do_QueryInterface(aItem, &rv);
-        if (rv == NS_OK && aFolder)
-        {
-            PRUnichar* aName = nsnull;
-            aFolder->GetName(&aName);
-            PRBool isInbox = 
-                PL_strcasecmp("inbox", aSpec->allocatedPathName) == 0;
-            if (nsCRT::strcmp(aName, aSpec->allocatedPathName) == 0 || 
-                (isInbox && nsCRT::strcasecmp(aName, aSpec->allocatedPathName) == 0))
-            {
-				delete [] aName;
-                found = PR_TRUE;
-                break;
-            }
-			delete [] aName;
-        }
-        rv = aEnumerator->Next();
-    }
+//	nsString2 possibleName(aSpec->allocatedPathName, eOneByte);
+
+	uri.Append('/');
+	uri.Append(aSpec->allocatedPathName);
+	a_nsIFolder->GetChildWithURI(uri.GetBuffer(), PR_TRUE, getter_AddRefs(child));
+
+	if (child)
+		found = PR_TRUE;
     if (!found)
     {
         hostFolder->CreateSubfolder(aSpec->allocatedPathName);
@@ -3273,4 +3248,13 @@ nsImapMailFolder::ClearCopyState(nsresult rv)
       
         m_copyState = null_nsCOMPtr();
     }
+}
+
+NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
+{
+	if (!matches)
+		return NS_ERROR_NULL_POINTER;
+    PRBool isInbox = mName.EqualsIgnoreCase("inbox");
+	*matches = mName.Equals(*name, isInbox);
+	return NS_OK;
 }

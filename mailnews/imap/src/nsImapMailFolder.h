@@ -120,8 +120,6 @@ public:
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
     
-    NS_IMETHOD GetChildNamed(const char * name, nsISupports ** aChild);
-    
     // this override pulls the value from the db
 	NS_IMETHOD GetName(PRUnichar ** name);   // Name of this folder (as presented to user).
 	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level mail folder
@@ -306,6 +304,7 @@ public:
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                      nsISupports* copyState);
 
+	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 #ifdef DOING_FILTERS
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
