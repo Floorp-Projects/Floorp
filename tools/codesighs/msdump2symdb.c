@@ -10,8 +10,8 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is maptsvdifftool.c code, released
- * Oct 3, 2002.
+ * The Original Code is msdump2symdb.c code, released
+ * Jan 16, 2003.
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *    Garrett Arch Blythe, 03-October-2002
+ *    Garrett Arch Blythe, 16-January-2003
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -38,6 +38,7 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
 
 #define ERROR_REPORT(num, val, msg)   fprintf(stderr, "error(%d):\t\"%s\"\t%s\n", (num), (val), (msg));
 #define CLEANUP(ptr)    do { if(NULL != ptr) { free(ptr); ptr = NULL; } } while(0)
