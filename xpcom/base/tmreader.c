@@ -248,8 +248,10 @@ static PLHashEntry *graphnode_allocentry(void *pool, const void *key)
     node->in = node->out = NULL;
     node->up = node->down = node->next = NULL;
     node->low = 0;
-    node->bytes.direct = node->bytes.total = 0;
-    node->allocs.direct = node->allocs.total = 0;
+    node->allocs.bytes.direct = node->allocs.bytes.total = 0;
+    node->allocs.calls.direct = node->allocs.calls.total = 0;
+    node->frees.bytes.direct = node->frees.bytes.total = 0;
+    node->frees.calls.direct = node->frees.calls.total = 0;
     node->sqsum = 0;
     node->sort = -1;
     return &node->entry;
@@ -508,8 +510,10 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
                    *PL_HashTableRawLookup(tmr->methods, mhash, mkey);
             site->method = meth;
             site->offset = event.u.site.offset;
-            site->bytes.direct = site->bytes.total = 0;
-            site->allocs.direct = site->allocs.total = 0;
+            site->allocs.bytes.direct = site->allocs.bytes.total = 0;
+            site->allocs.calls.direct = site->allocs.calls.total = 0;
+            site->frees.bytes.direct = site->frees.bytes.total = 0;
+            site->frees.calls.direct = site->frees.calls.total = 0;
             break;
           }
 
@@ -517,9 +521,9 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
           case TM_EVENT_CALLOC:
           case TM_EVENT_REALLOC: {
             tmcallsite *site;
-            int32 size, oldsize, delta;
+            uint32 size, oldsize;
+            double delta, sqdelta, sqszdelta;
             tmgraphnode *meth, *comp, *lib;
-            double sqdelta, sqszdelta;
 
             site = tmreader_callsite(tmr, event.serial);
             if (!site) {
@@ -528,15 +532,15 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
                 continue;
             }
 
-            size = (int32)event.u.alloc.size;
-            oldsize = (int32)event.u.alloc.oldsize;
-            delta = size - oldsize;
-            site->bytes.direct += delta;
+            size = event.u.alloc.size;
+            oldsize = event.u.alloc.oldsize;
+            delta = (double)size - (double)oldsize;
+            site->allocs.bytes.direct += delta;
             if (event.type != TM_EVENT_REALLOC)
-                site->allocs.direct++;
+                site->allocs.calls.direct++;
             meth = site->method;
             if (meth) {
-                meth->bytes.direct += delta;
+                meth->allocs.bytes.direct += delta;
                 sqdelta = delta * delta;
                 if (event.type == TM_EVENT_REALLOC) {
                     sqszdelta = ((double)size * size)
@@ -544,25 +548,25 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
                     meth->sqsum += sqszdelta;
                 } else {
                     meth->sqsum += sqdelta;
-                    meth->allocs.direct++;
+                    meth->allocs.calls.direct++;
                 }
                 comp = meth->up;
                 if (comp) {
-                    comp->bytes.direct += delta;
+                    comp->allocs.bytes.direct += delta;
                     if (event.type == TM_EVENT_REALLOC) {
                         comp->sqsum += sqszdelta;
                     } else {
                         comp->sqsum += sqdelta;
-                        comp->allocs.direct++;
+                        comp->allocs.calls.direct++;
                     }
                     lib = comp->up;
                     if (lib) {
-                        lib->bytes.direct += delta;
+                        lib->allocs.bytes.direct += delta;
                         if (event.type == TM_EVENT_REALLOC) {
                             lib->sqsum += sqszdelta;
                         } else {
                             lib->sqsum += sqdelta;
-                            lib->allocs.direct++;
+                            lib->allocs.calls.direct++;
                         }
                     }
                 }
@@ -570,8 +574,37 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             break;
           }
 
-          case TM_EVENT_FREE:
+          case TM_EVENT_FREE: {
+            tmcallsite *site;
+            uint32 size;
+            tmgraphnode *meth, *comp, *lib;
+
+            site = tmreader_callsite(tmr, event.serial);
+            if (!site) {
+                fprintf(stderr, "%s: no callsite for '%c' (%lu)!\n",
+                        tmr->program, event.type, (unsigned long) event.serial);
+                continue;
+            }
+            size = event.u.alloc.size;
+            site->frees.bytes.direct += size;
+            site->frees.calls.direct++;
+            meth = site->method;
+            if (meth) {
+                meth->frees.bytes.direct += size;
+                meth->frees.calls.direct++;
+                comp = meth->up;
+                if (comp) {
+                    comp->frees.bytes.direct += size;
+                    comp->frees.calls.direct++;
+                    lib = comp->up;
+                    if (lib) {
+                        lib->frees.bytes.direct += size;
+                        lib->frees.calls.direct++;
+                    }
+                }
+            }
             break;
+          }
 
           case TM_EVENT_STATS:
             break;

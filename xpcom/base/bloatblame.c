@@ -46,7 +46,6 @@ extern int  optind;
 #endif
 #include <math.h>
 #include <time.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include "prtypes.h"
 #include "prlog.h"
@@ -61,54 +60,57 @@ static int    js_mode = 0;
 static int    do_tree_dump = 0;
 static int    unified_output = 0;
 static char   *function_dump = NULL;
-static int32  min_subtotal = 0;
+static uint32 min_subtotal = 0;
 
 static void connect_nodes(tmgraphnode *from, tmgraphnode *to, tmcallsite *site)
 {
+    tmgraphlink *link;
     tmgraphedge *edge;
 
-    for (edge = from->out; edge; edge = edge->next) {
-        if (edge->node == to) {
+    for (link = from->out; link; link = link->next) {
+        if (link->node == to) {
             /*
              * Say the stack looks like this: ... => JS => js => JS => js.
              * We must avoid overcounting JS=>js because the first edge total
              * includes the second JS=>js edge's total (which is because the
              * lower site's total includes all its kids' totals).
              */
+            edge = TM_LINK_TO_EDGE(link, TM_EDGE_OUT_LINK);
             if (!to->low || to->low < from->low) {
-                edge[0].bytes.direct += site->bytes.direct;
-                edge[1].bytes.direct += site->bytes.direct;
-                edge[0].bytes.total += site->bytes.total;
-                edge[1].bytes.total += site->bytes.total;
+                /* Add the direct and total counts to edge->allocs. */
+                edge->allocs.bytes.direct += site->allocs.bytes.direct;
+                edge->allocs.bytes.total += site->allocs.bytes.total;
+                edge->allocs.calls.direct += site->allocs.calls.direct;
+                edge->allocs.calls.total += site->allocs.calls.total;
             }
             return;
         }
     }
-    edge = (tmgraphedge*) malloc(2 * sizeof(tmgraphedge));
+
+    edge = (tmgraphedge*) malloc(sizeof(tmgraphedge));
     if (!edge) {
         perror(program);
         exit(1);
     }
-    edge[0].node = to;
-    edge[0].next = from->out;
-    from->out = &edge[0];
-    edge[1].node = from;
-    edge[1].next = to->in;
-    to->in = &edge[1];
-    edge[0].bytes.direct = edge[1].bytes.direct = site->bytes.direct;
-    edge[0].bytes.total = edge[1].bytes.total = site->bytes.total;
+    edge->links[TM_EDGE_OUT_LINK].node = to;
+    edge->links[TM_EDGE_OUT_LINK].next = from->out;
+    from->out = &edge->links[TM_EDGE_OUT_LINK];
+    edge->links[TM_EDGE_IN_LINK].node = from;
+    edge->links[TM_EDGE_IN_LINK].next = to->in;
+    to->in = &edge->links[TM_EDGE_IN_LINK];
+    edge->allocs = site->allocs;
 }
 
 static void compute_callsite_totals(tmcallsite *site)
 {
     tmcallsite *kid;
 
-    site->bytes.total += site->bytes.direct;
-    site->allocs.total += site->allocs.direct;
+    site->allocs.bytes.total += site->allocs.bytes.direct;
+    site->allocs.calls.total += site->allocs.calls.direct;
     for (kid = site->kids; kid; kid = kid->siblings) {
         compute_callsite_totals(kid);
-        site->bytes.total += kid->bytes.total;
-        site->allocs.total += kid->allocs.total;
+        site->allocs.bytes.total += kid->allocs.bytes.total;
+        site->allocs.calls.total += kid->allocs.calls.total;
     }
 }
 
@@ -127,8 +129,8 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
             pmeth = parent->method;
             if (pmeth && pmeth != meth) {
                 if (!meth->low) {
-                    meth->bytes.total += site->bytes.total;
-                    meth->allocs.total += site->allocs.total;
+                    meth->allocs.bytes.total += site->allocs.bytes.total;
+                    meth->allocs.calls.total += site->allocs.calls.total;
                 }
                 connect_nodes(pmeth, meth, site);
 
@@ -137,8 +139,10 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
                     pcomp = pmeth->up;
                     if (pcomp && pcomp != comp) {
                         if (!comp->low) {
-                            comp->bytes.total += site->bytes.total;
-                            comp->allocs.total += site->allocs.total;
+                            comp->allocs.bytes.total
+                                += site->allocs.bytes.total;
+                            comp->allocs.calls.total
+                                += site->allocs.calls.total;
                         }
                         connect_nodes(pcomp, comp, site);
 
@@ -147,8 +151,10 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
                             plib = pcomp->up;
                             if (plib && plib != lib) {
                                 if (!lib->low) {
-                                    lib->bytes.total += site->bytes.total;
-                                    lib->allocs.total += site->allocs.total;
+                                    lib->allocs.bytes.total
+                                        += site->allocs.bytes.total;
+                                    lib->allocs.calls.total
+                                        += site->allocs.calls.total;
                                 }
                                 connect_nodes(plib, lib, site);
                             }
@@ -172,7 +178,8 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
         fprintf(fp, "%c%*s%3d %3d %s %lu %ld\n",
                 site->kids ? '+' : '-', level, "", level, kidnum,
                 meth ? tmgraphnode_name(meth) : "???",
-                (unsigned long)site->bytes.direct, (long)site->bytes.total);
+                (unsigned long)site->allocs.bytes.direct,
+                (long)site->allocs.bytes.total);
     }
     nkids = 0;
     level++;
@@ -195,8 +202,16 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
     }
 }
 
-/* Linked list bubble-sort (waterson and brendan went bald hacking this). */
-#define BUBBLE_SORT_LINKED_LIST(listp, nodetype)                              \
+/*
+ * Linked list bubble-sort (waterson and brendan went bald hacking this).
+ *
+ * Sort the list in non-increasing order, using the expression passed as the
+ * 'lessthan' formal macro parameter.  This expression should use 'curr' as
+ * the pointer to the current node (of type nodetype) and 'next' as the next
+ * node pointer.  It should return true if curr is less than next, and false
+ * otherwise.
+ */
+#define BUBBLE_SORT_LINKED_LIST(listp, nodetype, lessthan)                    \
     PR_BEGIN_MACRO                                                            \
         nodetype *curr, **currp, *next, **nextp, *tmp;                        \
                                                                               \
@@ -204,7 +219,7 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
         while ((curr = *currp) != NULL && curr->next) {                       \
             nextp = &curr->next;                                              \
             while ((next = *nextp) != NULL) {                                 \
-                if (curr->bytes.total < next->bytes.total) {                  \
+                if (lessthan) {                                               \
                     tmp = curr->next;                                         \
                     *currp = tmp;                                             \
                     if (tmp == next) {                                        \
@@ -234,7 +249,8 @@ static PRIntn tabulate_node(PLHashEntry *he, PRIntn i, void *arg)
     tmgraphnode **table = (tmgraphnode**) arg;
 
     table[i] = node;
-    BUBBLE_SORT_LINKED_LIST(&node->down, tmgraphnode);
+    BUBBLE_SORT_LINKED_LIST(&node->down, tmgraphnode,
+        (curr->allocs.bytes.total < next->allocs.bytes.total));
     return HT_ENUMERATE_NEXT;
 }
 
@@ -242,18 +258,18 @@ static PRIntn tabulate_node(PLHashEntry *he, PRIntn i, void *arg)
 static int node_table_compare(const void *p1, const void *p2)
 {
     const tmgraphnode *node1, *node2;
-    int32 key1, key2;
+    uint32 key1, key2;
 
     node1 = *(const tmgraphnode**) p1;
     node2 = *(const tmgraphnode**) p2;
     if (sort_by_direct) {
-        key1 = node1->bytes.direct;
-        key2 = node2->bytes.direct;
+        key1 = node1->allocs.bytes.direct;
+        key2 = node2->allocs.bytes.direct;
     } else {
-        key1 = node1->bytes.total;
-        key2 = node2->bytes.total;
+        key1 = node1->allocs.bytes.total;
+        key2 = node2->allocs.bytes.total;
     }
-    return key2 - key1;
+    return (key2 < key1) ? -1 : (key2 > key1) ? 1 : 0;
 }
 
 static int mean_size_compare(const void *p1, const void *p2)
@@ -263,12 +279,12 @@ static int mean_size_compare(const void *p1, const void *p2)
 
     node1 = *(const tmgraphnode**) p1;
     node2 = *(const tmgraphnode**) p2;
-    div1 = (double)node1->allocs.direct;
-    div2 = (double)node2->allocs.direct;
+    div1 = (double)node1->allocs.calls.direct;
+    div2 = (double)node2->allocs.calls.direct;
     if (div1 == 0 || div2 == 0)
         return div2 - div1;
-    key1 = (double)node1->bytes.direct / div1;
-    key2 = (double)node2->bytes.direct / div2;
+    key1 = (double)node1->allocs.bytes.direct / div1;
+    key2 = (double)node2->allocs.bytes.direct / div2;
     if (key1 < key2)
         return 1;
     if (key1 > key2)
@@ -289,50 +305,57 @@ static const char *prettybig(uint32 num, char *buf, size_t limit)
     return buf;
 }
 
-static double percent(int32 num, int32 total)
+static double percent(uint32 num, uint32 total)
 {
     if (num == 0)
         return 0.0;
     return ((double) num * 100) / (double) total;
 }
 
-static void sort_graphedge_list(tmgraphedge **listp)
+static void sort_graphlink_list(tmgraphlink **listp, int which)
 {
-    BUBBLE_SORT_LINKED_LIST(listp, tmgraphedge);
+    BUBBLE_SORT_LINKED_LIST(listp, tmgraphlink,
+        (TM_LINK_TO_EDGE(curr, which)->allocs.bytes.total
+         < TM_LINK_TO_EDGE(next, which)->allocs.bytes.total));
 }
 
-static void dump_graphedge_list(tmgraphedge *list, const char *name, FILE *fp)
+static void dump_graphlink_list(tmgraphlink *list, int which, const char *name,
+                                FILE *fp)
 {
     tmcounts bytes;
+    tmgraphlink *link;
     tmgraphedge *edge;
     char buf[16];
 
     bytes.direct = bytes.total = 0;
-    for (edge = list; edge; edge = edge->next) {
-        bytes.direct += edge->bytes.direct;
-        bytes.total += edge->bytes.total;
+    for (link = list; link; link = link->next) {
+        edge = TM_LINK_TO_EDGE(link, which);
+        bytes.direct += edge->allocs.bytes.direct;
+        bytes.total += edge->allocs.bytes.total;
     }
 
     if (js_mode) {
         fprintf(fp,
                 "   %s:{dbytes:%ld, tbytes:%ld, edges:[\n",
                 name, (long) bytes.direct, (long) bytes.total);
-        for (edge = list; edge; edge = edge->next) {
+        for (link = list; link; link = link->next) {
+            edge = TM_LINK_TO_EDGE(link, which);
             fprintf(fp,
                     "    {node:%d, dbytes:%ld, tbytes:%ld},\n",
-                    edge->node->sort,
-                    (long) edge->bytes.direct,
-                    (long) edge->bytes.total);
+                    link->node->sort,
+                    (long) edge->allocs.bytes.direct,
+                    (long) edge->allocs.bytes.total);
         }
         fputs("   ]},\n", fp);
     } else {
         fputs("<td valign=top>", fp);
-        for (edge = list; edge; edge = edge->next) {
+        for (link = list; link; link = link->next) {
+            edge = TM_LINK_TO_EDGE(link, which);
             fprintf(fp,
                     "<a href='#%s'>%s&nbsp;(%1.2f%%)</a>\n",
-                    tmgraphnode_name(edge->node),
-                    prettybig(edge->bytes.total, buf, sizeof buf),
-                    percent(edge->bytes.total, bytes.total));
+                    tmgraphnode_name(link->node),
+                    prettybig(edge->allocs.bytes.total, buf, sizeof buf),
+                    percent(edge->allocs.bytes.total, bytes.total));
         }
         fputs("</td>", fp);
     }
@@ -381,7 +404,7 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
     for (i = 0; i < count; i++) {
         /* Don't bother with truly puny nodes. */
         node = table[i];
-        if (node->bytes.total < min_subtotal)
+        if (node->allocs.bytes.total < min_subtotal)
             break;
 
         name = tmgraphnode_name(node);
@@ -390,16 +413,18 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
                     "  {name:'%s', dbytes:%ld, tbytes:%ld,"
                                  " dallocs:%ld, tallocs:%ld,\n",
                     name,
-                    (long) node->bytes.direct, (long) node->bytes.total,
-                    (long) node->allocs.direct, (long) node->allocs.total);
+                    (long) node->allocs.bytes.direct,
+                    (long) node->allocs.bytes.total,
+                    (long) node->allocs.calls.direct,
+                    (long) node->allocs.calls.total);
         } else {
             namelen = strlen(name);
             fprintf(fp,
                     "<tr>"
                       "<td valign=top><a name='%s'>%.*s%s</a></td>",
                     name,
-                    (namelen > 45) ? 45 : (int)namelen, name,
-                    (namelen > 45) ? "<i>...</i>" : "");
+                    (namelen > 40) ? 40 : (int)namelen, name,
+                    (namelen > 40) ? "<i>...</i>" : "");
             if (node->down) {
                 fprintf(fp,
                       "<td valign=top><a href='#%s'><i>down</i></a></td>",
@@ -417,20 +442,25 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
             fprintf(fp,
                       "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>"
                       "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>",
-                    prettybig(node->bytes.total, buf1, sizeof buf1),
-                    prettybig(node->bytes.direct, buf2, sizeof buf2),
-                    percent(node->bytes.total, tmr->calltree_root.bytes.total),
-                    percent(node->bytes.direct, tmr->calltree_root.bytes.total),
-                    prettybig(node->allocs.total, buf3, sizeof buf3),
-                    prettybig(node->allocs.direct, buf4, sizeof buf4),
-                    percent(node->allocs.total, tmr->calltree_root.allocs.total),
-                    percent(node->allocs.direct, tmr->calltree_root.allocs.total));
+                    prettybig(node->allocs.bytes.total, buf1, sizeof buf1),
+                    prettybig(node->allocs.bytes.direct, buf2, sizeof buf2),
+                    percent(node->allocs.bytes.total,
+                            tmr->calltree_root.allocs.bytes.total),
+                    percent(node->allocs.bytes.direct,
+                            tmr->calltree_root.allocs.bytes.total),
+                    prettybig(node->allocs.calls.total, buf3, sizeof buf3),
+                    prettybig(node->allocs.calls.direct, buf4, sizeof buf4),
+                    percent(node->allocs.calls.total,
+                            tmr->calltree_root.allocs.calls.total),
+                    percent(node->allocs.calls.direct,
+                            tmr->calltree_root.allocs.calls.total));
         }
 
-        sort_graphedge_list(&node->in);
-        dump_graphedge_list(node->in, "fin", fp);   /* 'in' is a JS keyword! */
-        sort_graphedge_list(&node->out);
-        dump_graphedge_list(node->out, "out", fp);
+        /* NB: we must use 'fin' because 'in' is a JS keyword! */
+        sort_graphlink_list(&node->in, TM_EDGE_IN_LINK);
+        dump_graphlink_list(node->in, TM_EDGE_IN_LINK, "fin", fp);
+        sort_graphlink_list(&node->out, TM_EDGE_OUT_LINK);
+        dump_graphlink_list(node->out, TM_EDGE_OUT_LINK, "out", fp);
 
         if (js_mode)
             fputs("  },\n", fp);
@@ -460,12 +490,12 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
             double allocs, bytes, mean, variance, sigma;
 
             node = table[i];
-            allocs = (double)node->allocs.direct;
+            allocs = (double)node->allocs.calls.direct;
             if (!allocs)
                 continue;
 
             /* Compute direct-size mean and standard deviation. */
-            bytes = (double)node->bytes.direct;
+            bytes = (double)node->allocs.bytes.direct;
             mean = bytes / allocs;
             variance = allocs * node->sqsum - bytes * bytes;
             if (variance < 0 || allocs == 1)
@@ -487,7 +517,7 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
                     (namelen > 65) ? "<i>...</i>" : "",
                     prettybig((uint32)mean, buf1, sizeof buf1),
                     prettybig((uint32)sigma, buf2, sizeof buf2),
-                    prettybig(node->allocs.direct, buf3, sizeof buf3));
+                    prettybig(node->allocs.calls.direct, buf3, sizeof buf3));
         }
         fputs("</table>\n", fp);
     }
@@ -504,26 +534,26 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
         fprintf(stdout,
                 "<p><table border=1>"
                   "<tr><th>Counter</th><th>Value</th></tr>\n"
-                  "<tr><td>maximum actual stack depth</td><td>%lu</td></tr>\n"
-                  "<tr><td>maximum callsite tree depth</td><td>%lu</td></tr>\n"
-                  "<tr><td>number of parent callsites</td><td>%lu</td></tr>\n"
-                  "<tr><td>maximum kids per parent</td><td>%lu</td></tr>\n"
-                  "<tr><td>hits looking for a kid</td><td>%lu</td></tr>\n"
-                  "<tr><td>misses looking for a kid</td><td>%lu</td></tr>\n"
-                  "<tr><td>steps over other kids</td><td>%lu</td></tr>\n"
-                  "<tr><td>callsite recurrences</td><td>%lu</td></tr>\n"
-                  "<tr><td>number of stack backtraces</td><td>%lu</td></tr>\n"
-                  "<tr><td>backtrace failures</td><td>%lu</td></tr>\n"
-                  "<tr><td>backtrace malloc failures</td><td>%lu</td></tr>\n"
-                  "<tr><td>backtrace dladdr failures</td><td>%lu</td></tr>\n"
-                  "<tr><td>malloc calls</td><td>%lu</td></tr>\n"
-                  "<tr><td>malloc failures</td><td>%lu</td></tr>\n"
-                  "<tr><td>calloc calls</td><td>%lu</td></tr>\n"
-                  "<tr><td>calloc failures</td><td>%lu</td></tr>\n"
-                  "<tr><td>realloc calls</td><td>%lu</td></tr>\n"
-                  "<tr><td>realloc failures</td><td>%lu</td></tr>\n"
-                  "<tr><td>free calls</td><td>%lu</td></tr>\n"
-                "<tr><td>free(null) calls</td><td>%lu</td></tr>\n"
+                  "<tr><td>maximum actual stack depth</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>maximum callsite tree depth</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>number of parent callsites</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>maximum kids per parent</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>hits looking for a kid</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>misses looking for a kid</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>steps over other kids</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>callsite recurrences</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>number of stack backtraces</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>backtrace failures</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>backtrace malloc failures</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>backtrace dladdr failures</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>malloc calls</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>malloc failures</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>calloc calls</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>calloc failures</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>realloc calls</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>realloc failures</td><td align=right>%lu</td></tr>\n"
+                  "<tr><td>free calls</td><td align=right>%lu</td></tr>\n"
+                "<tr><td>free(null) calls</td><td align=right>%lu</td></tr>\n"
                 "</table>",
                 (unsigned long) event->u.stats.tmstats.calltree_maxstack,
                 (unsigned long) event->u.stats.tmstats.calltree_maxdepth,
@@ -664,10 +694,10 @@ int main(int argc, char **argv)
                 "// direct and total byte and allocator-call counts\n"
                 "var dbytes = %ld, tbytes = %ld,"
                    " dallocs = %ld, tallocs = %ld;\n",
-                (long) tmr->calltree_root.bytes.direct,
-                (long) tmr->calltree_root.bytes.total,
-                (long) tmr->calltree_root.allocs.direct,
-                (long) tmr->calltree_root.allocs.total);
+                (long) tmr->calltree_root.allocs.bytes.direct,
+                (long) tmr->calltree_root.allocs.bytes.total,
+                (long) tmr->calltree_root.allocs.calls.direct,
+                (long) tmr->calltree_root.allocs.calls.total);
     }
 
     dump_graph(tmr, tmr->libraries, "libraries", "Library", stdout);
