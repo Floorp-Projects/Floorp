@@ -25,12 +25,6 @@ libmozjs.dylib
 
 
 ; 
-; DOM:
-; 
-components/libjsdom.dylib 
-
-
-; 
 ; XPCOM:
 ; 
 libxpcom.dylib 

@@ -138,6 +138,17 @@
 #include "nsScrollPortView.h"
 #include "nsViewManager.h"
 
+// DOM includes
+#include "nsDOMException.h"
+#include "nsGlobalWindowCommands.h"
+#include "nsIControllerCommandTable.h"
+#include "nsJSProtocolHandler.h"
+#include "nsGlobalWindow.h"
+#include "nsDOMClassInfo.h"
+#include "nsScriptNameSpaceManager.h"
+#include "nsIControllerContext.h"
+#include "nsDOMScriptObjectFactory.h"
+
 class nsIDocumentLoaderFactory;
 
 #define PRODUCT_NAME "Gecko"
@@ -152,6 +163,11 @@ class nsIDocumentLoaderFactory;
 #define NS_PLUGINDOCLOADERFACTORY_CID \
 { 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
 
+#define NS_WINDOWCOMMANDTABLE_CID \
+ { /* 0DE2FBFA-6B7F-11D7-BBBA-0003938A9D96 */        \
+  0x0DE2FBFA, 0x6B7F, 0x11D7, {0xBB, 0xBA, 0x00, 0x03, 0x93, 0x8A, 0x9D, 0x96} }
+
+static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -394,6 +410,9 @@ Shutdown(nsIModule* aSelf)
   NS_NameSpaceManagerShutdown();
   nsImageLoadingContent::Shutdown();
   nsStyleSet::FreeGlobals();
+
+  GlobalWindowImpl::ShutDown();
+  nsDOMClassInfo::ShutDown();
 }
 
 #ifdef NS_DEBUG
@@ -719,6 +738,49 @@ UnregisterHTMLOptionElement(nsIComponentManager* aCompMgr,
   // XXX remove category entry
   return NS_OK;
 }
+
+static NS_METHOD
+CreateWindowCommandTableConstructor(nsISupports *aOuter,
+                                    REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIControllerCommandTable> commandTable =
+      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsWindowCommandRegistration::RegisterWindowCommands(commandTable);
+  if (NS_FAILED(rv)) return rv;
+
+  return commandTable->QueryInterface(aIID, aResult);
+}
+
+static NS_METHOD
+CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
+                                      REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIController> controller =
+       do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
+
+ if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIControllerCommandTable> windowCommandTable = do_GetService(kWindowCommandTableCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // this is a singleton; make it immutable
+  windowCommandTable->MakeImmutable();
+
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  controllerContext->Init(windowCommandTable);
+  if (NS_FAILED(rv)) return rv;
+
+  return controller->QueryInterface(aIID, aResult);
+}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException)
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
@@ -1253,6 +1315,32 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_SYNCLOADDOMSERVICE_CID,
     NS_SYNCLOADDOMSERVICE_CONTRACTID,
     CreateSyncLoadDOMService },
+
+  // DOM objects
+  { "Script Object Factory",
+    NS_DOM_SCRIPT_OBJECT_FACTORY_CID,
+    nsnull,
+    nsDOMScriptObjectFactoryConstructor
+  },
+  { "Base DOM Exception",
+    NS_BASE_DOM_EXCEPTION_CID,
+    nsnull,
+    nsBaseDOMExceptionConstructor
+  },
+  { "JavaScript Protocol Handler",
+    NS_JSPROTOCOLHANDLER_CID,
+    NS_JSPROTOCOLHANDLER_CONTRACTID,
+    nsJSProtocolHandler::Create },
+  { "Window Command Table",
+    NS_WINDOWCOMMANDTABLE_CID,
+    "",
+    CreateWindowCommandTableConstructor
+  },
+  { "Window Command Controller",
+    NS_WINDOWCONTROLLER_CID,
+    NS_WINDOWCONTROLLER_CONTRACTID,
+    CreateWindowControllerWithSingletonCommandTable
+  },
 
   // view stuff
   { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",

@@ -90,7 +90,6 @@ bin/components/caps.xpt
 bin/components/cookie.xpt
 bin/components/libjsd.so
 bin/components/jsdservice.xpt
-bin/components/libjsdom.so
 bin/components/dom.xpt
 bin/components/dom_base.xpt
 bin/components/dom_core.xpt

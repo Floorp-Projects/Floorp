@@ -75,6 +75,10 @@ protected:
   nsReturnResult mReturnResult;
 };
 
+/* factory function */
+nsresult NS_NewJSEventListener(nsIDOMEventListener **aInstancePtrResult,
+                               nsIScriptContext *aContext,
+                               nsISupports *aObject);
 
 #endif //nsJSEventListener_h__
 

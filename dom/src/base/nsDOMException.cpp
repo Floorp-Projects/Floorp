@@ -49,6 +49,53 @@
 
 #define DOM_MSG_DEF(val, message) {(val), #val, message},
 
+#define IMPL_INTERNAL_DOM_EXCEPTION_HEAD(classname, ifname)                  \
+class classname : public nsBaseDOMException,                                 \
+                  public ifname                                              \
+{                                                                            \
+public:                                                                      \
+  classname();                                                               \
+  virtual ~classname();                                                      \
+                                                                             \
+  NS_DECL_ISUPPORTS_INHERITED
+
+#define IMPL_INTERNAL_DOM_EXCEPTION_TAIL(classname, ifname, domname, module, \
+                                         mapping_function)                   \
+};                                                                           \
+                                                                             \
+classname::classname() {}                                                    \
+classname::~classname() {}                                                   \
+                                                                             \
+NS_IMPL_ADDREF_INHERITED(classname, nsBaseDOMException)                      \
+NS_IMPL_RELEASE_INHERITED(classname, nsBaseDOMException)                     \
+NS_CLASSINFO_MAP_BEGIN(domname)                                              \
+  NS_CLASSINFO_MAP_ENTRY(nsIException)                                       \
+  NS_CLASSINFO_MAP_ENTRY(ifname)                                             \
+NS_CLASSINFO_MAP_END                                                         \
+NS_INTERFACE_MAP_BEGIN(classname)                                            \
+  NS_INTERFACE_MAP_ENTRY(ifname)                                             \
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(domname)                              \
+NS_INTERFACE_MAP_END_INHERITING(nsBaseDOMException)                          \
+                                                                             \
+nsresult                                                                     \
+NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
+                nsIException** aException)                                   \
+{                                                                            \
+  if (!(NS_ERROR_GET_MODULE(aNSResult) == module)) {                         \
+    NS_WARNING("Trying to create an exception for the wrong error module."); \
+    return NS_ERROR_FAILURE;                                                 \
+  }                                                                          \
+  const char* name;                                                          \
+  const char* message;                                                       \
+  mapping_function(aNSResult, &name, &message);                              \
+  classname* inst = new classname();                                         \
+  NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);                              \
+  inst->Init(aNSResult, name, message, aDefaultException);                   \
+  *aException = inst;                                                        \
+  NS_ADDREF(*aException);                                                    \
+  return NS_OK;                                                              \
+}
+
 static struct ResultStruct
 {
   nsresult mNSResult;

@@ -95,7 +95,6 @@ dom/public/idl/xpath/Makefile
 dom/public/idl/xul/Makefile
 dom/src/Makefile
 dom/src/base/Makefile
-dom/src/build/Makefile
 dom/src/events/Makefile
 dom/src/jsurl/Makefile
 "

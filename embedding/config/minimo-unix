@@ -110,7 +110,6 @@ components/unicharutil.xpt
 ; 
 ; DOM:
 ; 
-components/libjsdom.so 
 components/dom.xpt                      
 components/dom_base.xpt
 components/dom_core.xpt

@@ -95,7 +95,6 @@ char *compdir[] = {
  "I18N.DLL",
  "IMGLIB2.DLL",
  "JAR50.DLL",
- "JSDOM.DLL",
  "MOZUCONV.DLL",
  "NECKO.DLL",
  "OJI.DLL",

@@ -110,7 +110,6 @@ bin/components/composer.xpt
 bin/components/docshell.dll
 ;bin/components/docshell_base.xpt
 bin/components/docshell.xpt
-bin/components/jsdom.dll
 ;bin/components/jsd3250.dll
 bin/components/jsd.dll
 bin/components/jsdservice.xpt
