@@ -420,9 +420,9 @@ public:
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;
-    NS_IMETHOD SetLazyState(PRInt32 aFlags);
-    NS_IMETHOD ClearLazyState(PRInt32 aFlags);
-    NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
+    NS_IMETHOD SetLazyState(LazyState aFlags);
+    NS_IMETHOD ClearLazyState(LazyState aFlags);
+    NS_IMETHOD GetLazyState(LazyState aFlag, PRBool& aValue);
     NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue);
     
     // nsIDOMNode (from nsIDOMElement)
@@ -522,15 +522,41 @@ protected:
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
 
         /**
-         * Attribute values that override the values from the prototype.
+         * Contains the mLazyState in the low two bits, and a pointer
+         * to the nsXULAttributes structure in the high bits.
          */
-        nsXULAttributes*                    mAttributes;
+        PRWord                              mBits;
 
-        /**
-         * The state of our sloth for lazy content model construction via
-         * RDF; see nsIXULContent and nsRDFGenericBuilder.
-         */
-        PRInt32                             mLazyState;
+#define LAZYSTATE_MASK  ((1 << LAZYSTATE_BITS) - 1)
+#define ATTRIBUTES_MASK (~LAZYSTATE_MASK)
+
+        nsXULAttributes *
+        GetAttributes() const {
+            return NS_REINTERPRET_CAST(nsXULAttributes *, mBits & ATTRIBUTES_MASK);
+        }
+
+        void
+        SetAttributes(nsXULAttributes *aAttributes) {
+            NS_ASSERTION((NS_REINTERPRET_CAST(PRWord, aAttributes) & ~ATTRIBUTES_MASK) == 0,
+                         "nsXULAttributes pointer is unaligned");
+
+            mBits &= ~ATTRIBUTES_MASK;
+            mBits |= NS_REINTERPRET_CAST(PRWord, aAttributes);
+        }
+
+        LazyState
+        GetLazyState() const {
+            return LazyState(mBits & LAZYSTATE_MASK);
+        }
+
+        void
+        SetLazyState(LazyState aLazyState) {
+            NS_ASSERTION((aLazyState & ~LAZYSTATE_MASK) == 0,
+                         "lazy state includes high bits");
+
+            mBits &= ~LAZYSTATE_MASK;
+            mBits |= PRWord(aLazyState);
+        }
     };
 
     friend struct Slots;
@@ -585,9 +611,9 @@ protected:
     // Internal accessors. These shadow the 'Slots', and return
     // appropriate default values if there are no slots defined in the
     // delegate.
-    nsINodeInfo*               NodeInfo() const        { return mSlots ? mSlots->mNodeInfo              : mPrototype->mNodeInfo; }
-    nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
-    nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
+    nsINodeInfo     *NodeInfo() const    { return mSlots ? mSlots->mNodeInfo          : mPrototype->mNodeInfo; }
+    nsIControllers  *Controllers() const { return mSlots ? mSlots->mControllers.get() : nsnull; }
+    nsXULAttributes *Attributes() const  { return mSlots ? mSlots->GetAttributes()    : nsnull; }
 
     static nsIXBLService *gXBLService;
 };

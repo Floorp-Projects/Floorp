@@ -915,8 +915,11 @@ nsXULElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
         if (NS_FAILED(rv)) return rv;
 
         if (! Attributes()) {
-            rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &(mSlots->mAttributes));
+            nsXULAttributes *attrs;
+            rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &attrs);
             if (NS_FAILED(rv)) return rv;
+
+            mSlots->SetAttributes(attrs);
         }
     }
 
@@ -1188,11 +1191,12 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     if (NS_FAILED(rv)) return rv;
 
     if (mSlots) {
-        if (mSlots->mAttributes) {
+        nsXULAttributes *attrs = mSlots->GetAttributes();
+        if (attrs) {
             // Copy attributes
-            PRInt32 count = mSlots->mAttributes->Count();
+            PRInt32 count = attrs->Count();
             for (PRInt32 i = 0; i < count; ++i) {
-                nsXULAttribute* attr = mSlots->mAttributes->ElementAt(i);
+                nsXULAttribute* attr = attrs->ElementAt(i);
                 NS_ASSERTION(attr != nsnull, "null ptr");
                 if (! attr)
                     return NS_ERROR_UNEXPECTED;
@@ -1675,30 +1679,36 @@ nsXULElement::PeekChildCount(PRInt32& aCount) const
 }
 
 NS_IMETHODIMP
-nsXULElement::SetLazyState(PRInt32 aFlags)
+nsXULElement::SetLazyState(LazyState aFlags)
 {
     nsresult rv = EnsureSlots();
     if (NS_FAILED(rv)) return rv;
 
-    mSlots->mLazyState |= aFlags;
+    LazyState flags = mSlots->GetLazyState();
+    mSlots->SetLazyState(LazyState(flags | aFlags));
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULElement::ClearLazyState(PRInt32 aFlags)
+nsXULElement::ClearLazyState(LazyState aFlags)
 {
     // No need to clear a flag we've never set.
-    if (mSlots)
-        mSlots->mLazyState &= ~aFlags;
+    if (mSlots) {
+        LazyState flags = mSlots->GetLazyState();
+        mSlots->SetLazyState(LazyState(flags & ~aFlags));
+    }
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULElement::GetLazyState(PRInt32 aFlag, PRBool& aResult)
+nsXULElement::GetLazyState(LazyState aFlag, PRBool& aResult)
 {
-    if (mSlots && (mSlots->mLazyState & aFlag))
-        aResult = PR_TRUE;
+    if (mSlots) {
+        LazyState flags = mSlots->GetLazyState();
+        aResult = flags & aFlag;
+    }
     else
         aResult = PR_FALSE;
 
@@ -2611,7 +2621,8 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         if (NS_FAILED(rv)) return rv;
 
         // transfer ownership here...
-        mSlots->mAttributes->AppendElement(attr);
+        nsXULAttributes *attrs = mSlots->GetAttributes();
+        attrs->AppendElement(attr);
     }
 
     // Add popup and event listeners
@@ -2704,17 +2715,20 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
         return NS_ERROR_NULL_POINTER;
     }
 
-    if (mSlots && mSlots->mAttributes) {
-        PRInt32 count = mSlots->mAttributes->Count();
-        for (PRInt32 i = 0; i < count; i++) {
-            nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*,
-                                                       mSlots->mAttributes->ElementAt(i));
+    if (mSlots) {
+        nsXULAttributes *attrs = mSlots->GetAttributes();
+        if (attrs) {
+            PRInt32 count = attrs->Count();
+            for (PRInt32 i = 0; i < count; i++) {
+                nsXULAttribute* attr = NS_STATIC_CAST(nsXULAttribute*,
+                                                      attrs->ElementAt(i));
 
-            nsINodeInfo *ni = attr->GetNodeInfo();
-            if (ni->Equals(aName, aNameSpaceID)) {
-                ni->GetPrefixAtom(aPrefix);
-                attr->GetValue(aResult);
-                return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
+                nsINodeInfo *ni = attr->GetNodeInfo();
+                if (ni->Equals(aName, aNameSpaceID)) {
+                    ni->GetPrefixAtom(aPrefix);
+                    attr->GetValue(aResult);
+                    return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
+                }
             }
         }
     }
@@ -2741,34 +2755,37 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
 NS_IMETHODIMP_(PRBool)
 nsXULElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
-  NS_ASSERTION(nsnull != aName, "must have attribute name");
-  if (!aName)
+    NS_ASSERTION(nsnull != aName, "must have attribute name");
+    if (!aName)
+        return PR_FALSE;
+
+    if (mSlots) {
+        nsXULAttributes *attrs = mSlots->GetAttributes();
+        if (attrs) {
+            PRInt32 count = attrs->Count();
+            for (PRInt32 i = 0; i < count; i++) {
+                nsXULAttribute* attr = NS_STATIC_CAST(nsXULAttribute*,
+                                                      attrs->ElementAt(i));
+
+                nsINodeInfo *ni = attr->GetNodeInfo();
+                if (ni->Equals(aName, aNameSpaceID))
+                    return PR_TRUE;
+            }
+        }
+    }
+
+    if (mPrototype) {
+        PRInt32 count = mPrototype->mNumAttributes;
+        for (PRInt32 i = 0; i < count; i++) {
+            nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+
+            nsINodeInfo *ni = attr->mNodeInfo;
+            if (ni->Equals(aName, aNameSpaceID))
+                return PR_TRUE;
+        }
+    }
+
     return PR_FALSE;
-
-  if (mSlots && mSlots->mAttributes) {
-    PRInt32 count = mSlots->mAttributes->Count();
-    for (PRInt32 i = 0; i < count; i++) {
-      nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*,
-                                                 mSlots->mAttributes->ElementAt(i));
-
-      nsINodeInfo *ni = attr->GetNodeInfo();
-      if (ni->Equals(aName, aNameSpaceID))
-        return PR_TRUE;
-    }
-  }
-
-  if (mPrototype) {
-    PRInt32 count = mPrototype->mNumAttributes;
-    for (PRInt32 i = 0; i < count; i++) {
-      nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
-
-      nsINodeInfo *ni = attr->mNodeInfo;
-      if (ni->Equals(aName, aNameSpaceID))
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -3517,7 +3534,7 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 nsresult
 nsXULElement::EnsureContentsGenerated(void) const
 {
-    if (mSlots && (mSlots->mLazyState & nsIXULContent::eChildrenMustBeRebuilt)) {
+    if (mSlots && (mSlots->GetLazyState() & nsIXULContent::eChildrenMustBeRebuilt)) {
         // Ensure that the element is actually _in_ the document tree;
         // otherwise, somebody is trying to generate children for a node
         // that's not currently in the content model.
@@ -3530,7 +3547,7 @@ nsXULElement::EnsureContentsGenerated(void) const
 
         // Clear this value *first*, so we can re-enter the nsIContent
         // getters if needed.
-        unconstThis->mSlots->mLazyState &= ~nsIXULContent::eChildrenMustBeRebuilt;
+        unconstThis->ClearLazyState(eChildrenMustBeRebuilt);
 
         // Walk up our ancestor chain, looking for an element with a
         // XUL content model builder attached to it.
@@ -3688,17 +3705,20 @@ nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
 NS_IMETHODIMP
 nsXULElement::GetID(nsIAtom*& aResult) const
 {
-    if (mSlots && mSlots->mAttributes) {
-        // Take advantage of the fact that the 'id' attribute will
-        // already be atomized.
-        PRInt32 count = mSlots->mAttributes->Count();
-        for (PRInt32 i = 0; i < count; ++i) {
-            nsXULAttribute* attr =
-                NS_REINTERPRET_CAST(nsXULAttribute*, mSlots->mAttributes->ElementAt(i));
+    if (mSlots) {
+        nsXULAttributes *attrs = mSlots->GetAttributes();
+        if (attrs) {
+            // Take advantage of the fact that the 'id' attribute will
+            // already be atomized.
+            PRInt32 count = attrs->Count();
+            for (PRInt32 i = 0; i < count; ++i) {
+                nsXULAttribute* attr =
+                    NS_STATIC_CAST(nsXULAttribute*, attrs->ElementAt(i));
 
-            if (attr->GetNodeInfo()->Equals(nsXULAtoms::id, kNameSpaceID_None)) {
-                attr->GetValueAsAtom(&aResult);
-                return NS_OK;
+                if (attr->GetNodeInfo()->Equals(nsXULAtoms::id, kNameSpaceID_None)) {
+                    attr->GetValueAsAtom(&aResult);
+                    return NS_OK;
+                }
             }
         }
     }
@@ -4588,10 +4608,11 @@ nsresult nsXULElement::EnsureAttributes()
     nsresult rv = EnsureSlots();
     if (NS_FAILED(rv)) return rv;
 
-    if (mSlots->mAttributes)
+    if (mSlots->GetAttributes())
         return NS_OK;
 
-    rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &(mSlots->mAttributes));
+    nsXULAttributes *attrs;
+    rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &attrs);
     if (NS_FAILED(rv)) return rv;
 
     if (mPrototype) {
@@ -4599,10 +4620,11 @@ nsresult nsXULElement::EnsureAttributes()
         // prototype.
         // XXXwaterson N.B. that we might not need to do this until the
         // class or style attribute changes.
-        mSlots->mAttributes->SetClassList(mPrototype->mClassList);
-        mSlots->mAttributes->SetInlineStyleRule(mPrototype->mInlineStyleRule);
+        attrs->SetClassList(mPrototype->mClassList);
+        attrs->SetInlineStyleRule(mPrototype->mInlineStyleRule);
     }
 
+    mSlots->SetAttributes(attrs);
     return NS_OK;
 }
 
@@ -4629,6 +4651,7 @@ nsXULElement::FindLocalAttribute(PRInt32 aNameSpaceID,
     nsXULAttributes *attrs = Attributes();
     if (!attrs)
         return nsnull;
+
     PRInt32 count = attrs->Count();
     for (PRInt32 i = 0; i < count; i++) {
         nsXULAttribute *attr = attrs->ElementAt(i);
@@ -4675,7 +4698,7 @@ nsresult nsXULElement::MakeHeavyweight()
     if (!mPrototype)
         return NS_OK;           // already heavyweight
 
-    PRBool hadAttributes = mSlots && mSlots->mAttributes;
+    PRBool hadAttributes = mSlots && mSlots->GetAttributes();
 
     // XXXwaterson EnsureAttributes() will have copy the class list
     // and inline style cruft. If we decide to set that junk lazily,
@@ -4687,7 +4710,7 @@ nsresult nsXULElement::MakeHeavyweight()
     mPrototype = nsnull;
 
     if (proto->mNumAttributes > 0) {
-      nsXULAttributes *attrs = mSlots->mAttributes;
+      nsXULAttributes *attrs = mSlots->GetAttributes();
       for (PRInt32 i = 0; i < proto->mNumAttributes; ++i) {
           nsXULPrototypeAttribute* protoattr = &(proto->mAttributes[i]);
 
@@ -4724,8 +4747,7 @@ nsresult nsXULElement::MakeHeavyweight()
 //
 
 nsXULElement::Slots::Slots(nsXULElement* aElement)
-    : mAttributes(nsnull),
-      mLazyState(0)
+    : mBits(0)
 {
     MOZ_COUNT_CTOR(nsXULElement::Slots);
 }
@@ -4735,7 +4757,8 @@ nsXULElement::Slots::~Slots()
 {
     MOZ_COUNT_DTOR(nsXULElement::Slots);
 
-    NS_IF_RELEASE(mAttributes);
+    nsXULAttributes *attrs = GetAttributes();
+    NS_IF_RELEASE(attrs);
 }
 
 
