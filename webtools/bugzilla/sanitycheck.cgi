@@ -28,7 +28,7 @@ use lib qw(.);
 require "CGI.pl";
 use Bugzilla::Constants;
 
-use vars qw(%FORM $unconfirmedstate);
+use vars qw($unconfirmedstate);
 
 ###########################################################################
 # General subs
@@ -74,6 +74,8 @@ ConnectToDatabase();
 
 confirm_login();
 
+my $cgi = Bugzilla->cgi;
+
 # Make sure the user is authorized to access sanitycheck.cgi.  Access
 # is restricted to logged-in users who have "editbugs" privileges,
 # which is a reasonable compromise between allowing all users to access
@@ -95,7 +97,7 @@ PutHeader("Bugzilla Sanity Check");
 # Fix vote cache
 ###########################################################################
 
-if (exists $::FORM{'rebuildvotecache'}) {
+if (defined $cgi->param('rebuildvotecache')) {
     Status("OK, now rebuilding vote cache.");
     SendSQL("lock tables bugs write, votes read");
     SendSQL("update bugs set votes = 0, delta_ts=delta_ts");
@@ -116,7 +118,7 @@ if (exists $::FORM{'rebuildvotecache'}) {
 # Fix group derivations
 ###########################################################################
 
-if (exists $::FORM{'rederivegroups'}) {
+if (defined $cgi->param('rederivegroups')) {
     Status("OK, All users' inherited permissions will be rechecked when " .
            "they next access Bugzilla.");
     SendSQL("UPDATE groups SET last_changed = NOW() LIMIT 1");
@@ -125,7 +127,7 @@ if (exists $::FORM{'rederivegroups'}) {
 # rederivegroupsnow is REALLY only for testing.
 # If it wasn't, then we'd do this the faster way as a per-group
 # thing rather than per-user for group inheritance
-if (exists $::FORM{'rederivegroupsnow'}) {
+if (defined $cgi->param('rederivegroupsnow')) {
     require Bugzilla::User;
     Status("OK, now rederiving groups.");
     SendSQL("SELECT userid FROM profiles");
@@ -136,7 +138,7 @@ if (exists $::FORM{'rederivegroupsnow'}) {
     }
 }
 
-if (exists $::FORM{'cleangroupsnow'}) {
+if (defined $cgi->param('cleangroupsnow')) {
     Status("OK, now cleaning stale groups.");
     # Only users that were out of date already long ago should be cleaned
     # and the cleaning is done with tables locked.  This is require in order
@@ -171,7 +173,7 @@ if (exists $::FORM{'cleangroupsnow'}) {
            "- reduced from $before records to $after records");
 }
 
-if (exists $::FORM{'rescanallBugMail'}) {
+if (defined $cgi->param('rescanallBugMail')) {
     require Bugzilla::BugMail;
 
     Status("OK, now attempting to send unsent mail");
@@ -512,7 +514,7 @@ Status("Checking cached keywords");
 
 my %realk;
 
-if (exists $::FORM{'rebuildkeywordcache'}) {
+if (defined $cgi->param('rebuildkeywordcache')) {
     SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
 }
 
@@ -555,7 +557,7 @@ if (@badbugs) {
     @badbugs = sort {$a <=> $b} @badbugs;
     Alert(scalar(@badbugs) . " bug(s) found with incorrect keyword cache: " .
           BugListLinks(@badbugs));
-    if (exists $::FORM{'rebuildkeywordcache'}) {
+    if (defined $cgi->param('rebuildkeywordcache')) {
         Status("OK, now fixing keyword cache.");
         foreach my $b (@badbugs) {
             my $k = '';
@@ -572,7 +574,7 @@ if (@badbugs) {
     }
 }
 
-if (exists $::FORM{'rebuildkeywordcache'}) {
+if (defined $cgi->param('rebuildkeywordcache')) {
     SendSQL("UNLOCK TABLES");
 }
 
