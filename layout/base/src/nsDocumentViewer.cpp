@@ -148,10 +148,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentViewer interface...
-  NS_IMETHOD Init(nsNativeWidget aParent,
+  NS_IMETHOD Init(nsIWidget* aParentWidget,
                   nsIDeviceContext* aDeviceContext,
-                  const nsRect& aBounds,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+                  const nsRect& aBounds);
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
@@ -191,9 +190,8 @@ protected:
 private:
   void ForceRefresh(void);
   nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
-  nsresult MakeWindow(nsNativeWidget aNativeParent,
-                      const nsRect& aBounds,
-                      nsScrollPreference aScrolling);
+  nsresult MakeWindow(nsIWidget* aParentWidget,
+                      const nsRect& aBounds);
 
   nsresult GetDocumentSelection(nsIDOMSelection **aSelection);
 
@@ -418,10 +416,9 @@ DocumentViewerImpl::GetContainer(nsISupports** aResult)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
+DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          nsIDeviceContext* aDeviceContext,
-                         const nsRect& aBounds,
-                         nsScrollPreference aScrolling)
+                         const nsRect& aBounds)
 {
   nsresult rv;
 
@@ -467,7 +464,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
   }
 
   // Create the ViewManager and Root View...
-  rv = MakeWindow(aNativeParent, aBounds, aScrolling);
+  rv = MakeWindow(aParentWidget, aBounds);
   if (NS_FAILED(rv)) return rv;
 
   // Create the style set...
@@ -870,9 +867,8 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 }
 
 nsresult
-DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
-                               const nsRect& aBounds,
-                               nsScrollPreference aScrolling)
+DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
+                               const nsRect& aBounds)
 {
   nsresult rv;
 
@@ -905,7 +901,7 @@ DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     return rv;
   }
 
-  rv = mView->CreateWidget(kWidgetCID, nsnull, aNativeParent);
+  rv = mView->CreateWidget(kWidgetCID, nsnull, aParentWidget->GetNativeData(NS_NATIVE_WIDGET));
 
   if (rv != NS_OK)
     return rv;
