@@ -25,20 +25,16 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= widget
 LIBRARY_NAME	= widget_mac
 IS_COMPONENT	= 1
-
+XPIDL_MODULE	= widget
 
 CPPSRCS         = nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
 		nsButton.cpp \
 		nsChildWindow.cpp \
 		nsClipboard.cpp \
-		nsComboBox.cpp \
-		nsContextMenu.cpp \
 		nsDeleteObserver.cpp \
 		nsDragService.cpp \
-		nsFileWidget.cpp \
-		nsLabel.cpp \
-		nsListBox.cpp \
+		nsFilePicker.cpp \
 		nsLookAndFeel.cpp \
 		nsMacControl.cpp \
 		nsMacEventHandler.cpp \
@@ -47,9 +43,9 @@ CPPSRCS         = nsAppShell.cpp \
 		nsMacResources.cpp \
 		nsMacTSMMessagePump.cpp \
 		nsMacWindow.cpp \
-		nsMenu.cpp \
-		nsMenuBar.cpp \
-		nsMenuItem.cpp \
+		nsMenuX.cpp \
+		nsMenuBarX.cpp \
+		nsMenuItemX.cpp \
 		nsMimeMapper.cpp \
 		$(topsrcdir)/gfx/src/mac/nsRegionMac.cpp \
 		nsScrollbar.cpp \
@@ -58,7 +54,12 @@ CPPSRCS         = nsAppShell.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
 		nsWidgetSupport.cpp \
-		nsWindow.cpp
+		nsWindow.cpp \
+		$(NULL)
+
+XPIDLSRCS	+= \
+		nsIChangeManager.idl \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
