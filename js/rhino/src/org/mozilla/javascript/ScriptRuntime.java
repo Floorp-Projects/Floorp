@@ -1822,7 +1822,7 @@ public class ScriptRuntime {
     {
         Context cx = Context.enter();
 
-        Scriptable global = cx.initStandardObjects(null);
+        Scriptable global = cx.initStandardObjects(new ImporterTopLevel());
 
         // Set up "arguments" in the global scope to contain the command
         // line arguments after the name of the script to execute
