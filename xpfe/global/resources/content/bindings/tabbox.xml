@@ -235,8 +235,15 @@
               if (parent.localName == 'tabbox') {
                 var tabpanels = parent._tabpanels;
                 // This will cause an onselect event to fire for the tabpanel element.
-                if (tabpanels)
-                  tabpanels.selectedIndex = val;
+                if (tabpanels) {
+                  // find an id 
+                  var linkedPanelId = tabs[val].linkedPanel;
+                  var linkedPanel = linkedPanelId ? document.getElementById(linkedPanelId) : null;
+                  if (linkedPanel)
+                    tabpanels.selectedPanel = linkedPanel;
+                  else
+                    tabpanels.selectedIndex = val;
+                }
                 break;
               }
             }
@@ -482,6 +489,9 @@
           return val;
         </setter>
       </property>
+
+      <property name="linkedPanel" onget="return this.getAttribute('linkedpanel')"
+                                   onset="this.setAttribute('linkedpanel', val); return val;"/>
     </implementation>
     
     <handlers>
