@@ -855,7 +855,7 @@ IL_StreamWriteReady(il_container *ic)
 }
 
 /* Given the first few bytes of a stream, identify the image format */
-bool
+PRBool
 sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 {
 	int i;
@@ -863,7 +863,7 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
     if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4)) 
 	{
         PR_snprintf(aContentType, 10,"%s", "image/gif");
-		return TRUE;
+		return PR_TRUE;
 	}
 
   	/* for PNG */
@@ -873,7 +873,7 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 					 (unsigned char)buf[3]==0x47))
 	{ 
         PR_snprintf(aContentType, 10,"%s","image/png");
-		return TRUE;
+		return PR_TRUE;
 	}
 
 
@@ -889,7 +889,7 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 	   ((unsigned char)buf[2])==0xFF)
 	{
                 PR_snprintf(aContentType, 11,"%s", "image/jpeg");
-		return TRUE;
+		return PR_TRUE;
     }
 
   /* ART begins with JG (4A 47). Major version offset 2.
@@ -901,7 +901,7 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
      ((unsigned char) buf[4])==0x00 )
   {
         PR_snprintf(aContentType, 10,"%s", "image/art");
-		return TRUE;
+		return PR_TRUE;
   }
 
 
@@ -910,14 +910,14 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 	{
         /* Don't contradict the given type, since this ID isn't definitive */
         PR_snprintf(aContentType, 8,"%s", "unknown");
-		return TRUE;
+		return PR_TRUE;
 	}
 
 	if (len < 12) 
 	{
 		ILTRACE(1,("il: too few bytes to determine type"));
         PR_snprintf(aContentType, 8,"%s", "unknown");
-		return FALSE;
+		return PR_FALSE;
 	}
 
 	/* all the servers return different formats so root around */
@@ -925,13 +925,13 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 	{
         if (!strncmp(&buf[i], "Not Fou", 7)){
              PR_snprintf(aContentType, 8,"%s", "unknown");
-			return FALSE;
+			return PR_FALSE;
         }
 	}
 
     //just in case
     PR_snprintf(aContentType, 8,"%s", "unknown");
-	return FALSE;
+	return PR_FALSE;
 }
 
 /*
