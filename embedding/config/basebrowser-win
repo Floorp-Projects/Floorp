@@ -196,6 +196,10 @@ components\pippki.dll
 components\pippki.xpt
 chrome\pippki.jar
 defaults\pref\security-prefs.js
+nss3.dll
+smime3.dll
+softokn3.dll
+ssl3.dll
 
 ; rdf
 components\rdf.dll

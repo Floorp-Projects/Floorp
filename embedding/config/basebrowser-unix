@@ -179,6 +179,10 @@ components/libpippki.so
 components/pippki.xpt
 chrome/pippki.jar
 defaults/pref/security-prefs.js
+libnss3.so
+libsmime3.so
+libsoftokn3.so
+libssl3.so
 
 ; rdf
 components/librdf.so
