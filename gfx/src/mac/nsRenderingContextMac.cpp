@@ -341,7 +341,7 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
     
     mOffy = state->mOffy;
     mOffx = state->mOffx;
-    //¥¥¥::SetOrigin(mOffy,mOffx);
+    ::SetOrigin(mOffy,mOffx);	//¥TODO: I'm not sure the origin can be restored that way
     
     // Delete this graphics state object
     delete state;
@@ -1176,6 +1176,9 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   PRInt32             y = aSrcY;
   nsRect              drect = aDestBounds;
   nsDrawingSurfaceMac destport;
+  GrafPtr							savePort;
+  RGBColor						saveForeColor;
+  RGBColor						saveBackColor;
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
@@ -1194,7 +1197,8 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   ::SetRect(&srcrect,x,y,drect.width,drect.height);
   ::SetRect(&dstrect,drect.x,drect.y,drect.width,drect.height);
 
-  ::SetPort(destport);
+	::GetPort(&savePort);
+	::SetPort(destport);
 
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
   {
@@ -1204,19 +1208,24 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 	destpix = *((CGrafPtr)destport)->portPixMap;
 
-  PixMapHandle offscreenPM = ::GetGWorldPixMap((GWorldPtr)aSrcSurf);
-  if ( offscreenPM ) {
+	PixMapHandle offscreenPM = ::GetGWorldPixMap((GWorldPtr)aSrcSurf);
+	if (offscreenPM)
+	{
 		LockPixels(offscreenPM);
 		srcpix = (PixMapPtr)*offscreenPM;
-		
-		// We are setting fore/back color of destport without restoring them.
-		// do we care?
-		::RGBForeColor(&rgbblack);
+
+		::GetForeColor(&saveForeColor);
+		::GetBackColor(&saveBackColor);
+		::RGBForeColor(&rgbblack);				//¥TODO: we should use MySetColor() from Dogbert: it's much faster
 		::RGBBackColor(&rgbwhite);
 		
 		::CopyBits((BitMap*)srcpix,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
 		UnlockPixels(offscreenPM);
-  }
+
+		::RGBForeColor(&saveForeColor);		//¥TODO: we should use MySetColor() from Dogbert: it's much faster
+		::RGBBackColor(&saveBackColor);
+		}
+	::SetPort(savePort);
 		
   return NS_OK;
 }
