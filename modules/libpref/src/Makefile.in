@@ -42,9 +42,11 @@ EXTRA_LIBS	= $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
 		  $(NULL)
 endif
 
+ifdef BUILD_XPIDL
 #temporary hack - eventually nsIPref should live in public
-# but put it here for now so we don't auto-generate the header and loose it
+#but put it here for now so we don't auto-generate the header and loose it
 IDLSRCS		= nsIPref.idl
+endif
 
 CSRCS		+= prefapi.c
 
