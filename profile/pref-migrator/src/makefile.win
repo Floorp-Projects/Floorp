@@ -16,7 +16,7 @@
 # Reserved.
 
 
-DEPTH=..\..
+DEPTH=..\..\..
 IGNORE_MANIFEST=1
 MODULE=nsprefm
 DLL=.\$(OBJDIR)\$(MODULE).dll
@@ -31,7 +31,7 @@ LCFLAGS = \
         $(NULL)
 
 LINCS= \
-	  -I..\base                      \
+	  -I..\..\base                      \
     -I$(XPDIST)\public\prefm       \
     -I$(XPDIST)\public\js          \
     -I$(XPDIST)\public\netlib      \
