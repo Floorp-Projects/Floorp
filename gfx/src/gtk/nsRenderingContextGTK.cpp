@@ -69,10 +69,10 @@ nsRenderingContextGTK::nsRenderingContextGTK()
 {
   NS_INIT_REFCNT();
 
-  mFontMetrics = nsnull ;
-  mContext = nsnull ;
-  mRenderingSurface = nsnull ;
-  mOffscreenSurface = nsnull ;
+  mFontMetrics = nsnull;
+  mContext = nsnull;
+  mRenderingSurface = nsnull;
+  mOffscreenSurface = nsnull;
   mCurrentColor = 0;
   mCurrentLineStyle = nsLineStyle_kSolid;
   mCurrentFont = nsnull;
@@ -219,13 +219,9 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   state->mClipRegion = mRegion;
 
   if (nsnull != state->mClipRegion) {
-
     mRegion = new nsRegionGTK();
     mRegion->Init();
-    mRegion->SetTo(state->mLocalClip.x,
-		   state->mLocalClip.y,
-		   state->mLocalClip.width,
-		   state->mLocalClip.height);
+    mRegion->SetTo(state->mClipRegion);
   }
 
   state->mColor = mCurrentColor;
