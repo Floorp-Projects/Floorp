@@ -34,9 +34,9 @@
         alttitle="&windowalttitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em!important;"
-        buttons="accept,cancel,help"
+        buttons="accept,help"
         onload="Startup()"
-        ondialogaccept="return onAccept();"
+        onunload="Shutdown()"
         ondialoghelp="return doHelpButton();">
 
   <script src="chrome://communicator/content/wallet/SignonViewer.js"/>

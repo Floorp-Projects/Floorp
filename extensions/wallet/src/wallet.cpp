@@ -73,6 +73,7 @@
 #include "prprf.h"  
 #include "nsIContent.h"
 #include "nsISecurityManagerComponent.h"
+#include "nsIObserverService.h"
 
 #include "nsIWalletService.h"
 
@@ -2871,6 +2872,12 @@ wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
     }
     if (wallet_WriteToList(url.get(), urlPermissions.get(), dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
       wallet_WriteToFile(URLFileName, wallet_URL_list);
+
+      /* Notify signon manager dialog to update its display */
+      nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+      if (os) {
+        os->NotifyObservers(nsnull, "signonChanged", NS_LITERAL_STRING("nocaptures").get());
+      }
     }
   }
   WALLET_FREE(message);
@@ -3297,6 +3304,12 @@ WLLT_PrefillReturn(const nsString& results)
     }
     if (wallet_WriteToList(url.get(), urlPermissions.get(), dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
       wallet_WriteToFile(URLFileName, wallet_URL_list);
+
+      /* Notify signon manager dialog to update its display */
+      nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+      if (os) {
+        os->NotifyObservers(nsnull, "signonChanged", NS_LITERAL_STRING("nopreviews").get());
+      }
     }
   }
 

@@ -65,6 +65,7 @@
 #include "prprf.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsIObserverService.h"
 
 // Currently the default is on, so we don't need the code to prompt the
 // user if the default is off.
@@ -254,7 +255,7 @@ PRIVATE PRBool si_Notified = PR_FALSE;
 #endif
 
 PRIVATE int
-si_SaveSignonDataLocked();
+si_SaveSignonDataLocked(char * state, PRBool notify);
 
 PUBLIC int
 SI_LoadSignonData();
@@ -770,7 +771,7 @@ si_GetURL(const char * passwordRealm) {
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, PRBool first = PR_FALSE) {
+si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, PRBool notify, PRBool first = PR_FALSE) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -825,7 +826,7 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
   /* write out the change to disk */
   if (save) {
     si_signon_list_changed = PR_TRUE;
-    si_SaveSignonDataLocked();
+    si_SaveSignonDataLocked("signons", notify);
   }
 
   si_unlock_signon_list();
@@ -833,8 +834,8 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
 }
 
 PUBLIC nsresult
-SINGSIGN_RemoveUser(const char *host, const PRUnichar *user) {
-  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE);
+SINGSIGN_RemoveUser(const char *host, const PRUnichar *user, PRBool notify) {
+  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE, notify);
   return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -858,7 +859,7 @@ SINGSIGN_RemoveReject(const char *host) {
       rv = NS_OK;
     }
   }
-  si_SaveSignonDataLocked();
+  si_SaveSignonDataLocked("rejects", PR_FALSE);
   si_unlock_signon_list();
   return rv;
 }
@@ -1185,7 +1186,7 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
     url->signonUser_list.RemoveElement(user);
     url->signonUser_list.InsertElementAt(user, 0);
     si_signon_list_changed = PR_TRUE;
-    si_SaveSignonDataLocked();
+    si_SaveSignonDataLocked("signons", PR_TRUE);
   } else {
     user = NULL;
   }
@@ -1209,7 +1210,7 @@ PUBLIC void
 SI_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_FALSE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1234,12 +1235,12 @@ PUBLIC void
 SI_DeleteAll() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
   si_signon_list_changed = PR_TRUE;
-  si_SaveSignonDataLocked();
+  si_SaveSignonDataLocked("signons", PR_TRUE);
 }
 
 PUBLIC void
@@ -1362,7 +1363,7 @@ si_PutReject(const char * passwordRealm, const nsString& userName, PRBool save) 
     if (save) {
       si_signon_list_changed = PR_TRUE;
       si_lock_signon_list();
-      si_SaveSignonDataLocked();
+      si_SaveSignonDataLocked("rejects", PR_TRUE);
       si_unlock_signon_list();
     }
   }
@@ -1543,7 +1544,7 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
       /* return */
       if (save) {
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked();
+        si_SaveSignonDataLocked("signons", PR_TRUE);
         si_unlock_signon_list();
       }
       return; /* nothing more to do since data already exists */
@@ -1594,7 +1595,7 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
   if (save) {
     url->signonUser_list.InsertElementAt(user, 0);
     si_signon_list_changed = PR_TRUE;
-    si_SaveSignonDataLocked();
+    si_SaveSignonDataLocked("signons", PR_TRUE);
     si_unlock_signon_list();
   } else {
     url->signonUser_list.AppendElement(user);
@@ -1811,7 +1812,7 @@ si_WriteLine(nsOutputFileStream& strm, const nsAFlatString& lineBuffer) {
 }
 
 PRIVATE int
-si_SaveSignonDataLocked() {
+si_SaveSignonDataLocked(char * state, PRBool notify) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -1898,6 +1899,15 @@ si_SaveSignonDataLocked() {
   si_signon_list_changed = PR_FALSE;
   strm.flush();
   strm.close();
+
+  /* Notify signon manager dialog to update its display */
+  if (notify) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+      os->NotifyObservers(nsnull, "signonChanged", NS_ConvertASCIItoUCS2(state).get());
+    }
+  }
+
   return 0;
 }
 
@@ -2059,7 +2069,7 @@ si_RememberSignonData
 
     if (NS_SUCCEEDED(si_Encrypt(data1->value, data->value))) {
       si_signon_list_changed = PR_TRUE;
-      si_SaveSignonDataLocked();
+      si_SaveSignonDataLocked("signons", PR_TRUE);
       si_unlock_signon_list();
     }
   }
@@ -2431,7 +2441,7 @@ SINGSIGN_PromptUsernameAndPassword
     si_RememberSignonDataFromBrowser (passwordRealm, nsAutoString(*user), nsAutoString(*pwd));
   } else if (remembered) {
     /* a login was remembered but user unchecked the box; we forget the remembered login */
-    si_RemoveUser(passwordRealm, username, PR_TRUE);  
+    si_RemoveUser(passwordRealm, username, PR_TRUE, PR_TRUE);  
   }
 
   /* cleanup and return */
@@ -2589,7 +2599,6 @@ SI_FindValueInArgs(const nsAString& results, const nsAString& name, nsAString& v
   results.EndReading(end);
 
   FindInReadable(name, start, end);
-  PR_ASSERT(start != end);
   if (start == end) {
     return;
   }
@@ -2640,7 +2649,7 @@ SINGSIGN_ReencryptAll()
     }
   }
   si_signon_list_changed = PR_TRUE;
-  si_SaveSignonDataLocked();
+  si_SaveSignonDataLocked("signons", PR_TRUE);
   si_unlock_signon_list();
   return PR_TRUE;
 }

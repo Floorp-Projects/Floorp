@@ -24,6 +24,9 @@
 
 /*** =================== INITIALISATION CODE =================== ***/
 
+var kObserverService;
+var kSignonBundle;
+
 // interface variables
 var signonviewer        = null;
 var passwordmanager     = null;
@@ -51,7 +54,6 @@ var isPasswordManager = (window.arguments[0] == "S");
 var encrypted = "";
 
 function Startup() {
-dump("entering startup\n");
 
   // xpconnect to password manager interfaces
   signonviewer = Components.classes["@mozilla.org/signonviewer/signonviewer-world;1"].createInstance();
@@ -76,6 +78,7 @@ dump("entering startup\n");
 
   // determine whether to run in password-manager mode or form-manager mode
   var tabBox = document.getElementById("tabbox");
+  kSignonBundle = document.getElementById("signonBundle");
   var element;
   if (isPasswordManager) {
 
@@ -121,6 +124,38 @@ dump("entering startup\n");
     LoadNopreview();
     LoadNocapture();
   }
+
+  // label the close button
+  document.documentElement.getButton("accept").label = kSignonBundle.getString("close");
+
+  // be prepared to reload the display if anything changes
+  kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  kObserverService.addObserver(signonReloadDisplay, "signonChanged", false);
+
+}
+
+function Shutdown() {
+  kObserverService.removeObserver(signonReloadDisplay, "signonChanged");
+}
+
+var signonReloadDisplay = {
+  observe: function(subject, topic, state) {
+    if (topic == "signonChanged") {
+      if (state == "signons") {
+        signons.length = 0;
+        LoadSignons();
+      } else if (state == "rejects") {
+        rejects.length = 0;
+        LoadRejects();
+      } else if (state == "nocaptures") {
+        nocaptures.length = 0;
+        LoadNocapture();
+      } else if (state == "nopreviews") {
+        nopreviews.length = 0;
+        LoadNopreview();
+      }
+    }
+  }
 }
 
 /*** =================== SAVED SIGNONS CODE =================== ***/
@@ -161,7 +196,6 @@ function LoadSignons() {
   // loads signons into table
   var enumerator = passwordmanager.enumerator;
   var count = 0;
-  var signonBundle = document.getElementById("signonBundle");
 
   while (enumerator.hasMoreElements()) {
     var nextPassword;
@@ -196,7 +230,7 @@ function LoadSignons() {
     }
 
     if (encrypted) {
-      user = signonBundle.getFormattedString("encrypted", [user], 1);
+      user = kSignonBundle.getFormattedString("encrypted", [user], 1);
     }
 
     signons[count] = new Signon(count++, host, user, rawuser);
@@ -208,9 +242,13 @@ function LoadSignons() {
   SignonColumnSort('host');
 
   // disable "remove all signons" button if there are no signons
+  var element = document.getElementById("removeAllSignons");
   if (signons.length == 0) {
-    document.getElementById("removeAllSignons").setAttribute("disabled","true");
+    element.setAttribute("disabled","true");
+  } else {
+    element.removeAttribute("disabled");
   }
+ 
   return true;
 }
 
@@ -225,12 +263,21 @@ function DeleteSignon() {
   DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
                                  signons, deletedSignons,
                                  "removeSignon", "removeAllSignons");
+  FinalizeSignonDeletions();
 }
 
 function DeleteAllSignons() {
   DeleteAllFromTree(signonsTree, signonsTreeView,
                         signons, deletedSignons,
                         "removeSignon", "removeAllSignons");
+  FinalizeSignonDeletions();
+}
+
+function FinalizeSignonDeletions() {
+  for (var s=0; s<deletedSignons.length; s++) {
+    passwordmanager.removeUser(deletedSignons[s].host, deletedSignons[s].rawuser);
+  }
+  deletedSignons.length = 0;
 }
 
 function HandleSignonKeyPress(e) {
@@ -294,8 +341,11 @@ function LoadRejects() {
   rejectsTree.treeBoxObject.view = rejectsTreeView;
   RejectColumnSort('host');
 
+  var element = document.getElementById("removeAllRejects");
   if (rejects.length == 0) {
-    document.getElementById("removeAllRejects").setAttribute("disabled","true");
+    element.setAttribute("disabled","true");
+  } else {
+    element.removeAttribute("disabled");
   }
 }
 
@@ -310,12 +360,21 @@ function DeleteReject() {
   DeleteSelectedItemFromTree(rejectsTree, rejectsTreeView,
                                  rejects, deletedRejects,
                                  "removeReject", "removeAllRejects");
+  FinalizeRejectDeletions();
 }
 
 function DeleteAllRejects() {
   DeleteAllFromTree(rejectsTree, rejectsTreeView,
                         rejects, deletedRejects,
                         "removeReject", "removeAllRejects");
+  FinalizeRejectDeletions();
+}
+
+function FinalizeRejectDeletions() {
+  for (var r=0; r<deletedRejects.length; r++) {
+    passwordmanager.removeReject(deletedRejects[r].host);
+  }
+  deletedRejects.length = 0;
 }
 
 function HandleRejectKeyPress(e) {
@@ -381,8 +440,11 @@ function LoadNopreview() {
   nopreviewsTree.treeBoxObject.view = nopreviewsTreeView;
   NopreviewColumnSort('host');
 
+  var element = document.getElementById("removeAllNopreviews");
   if (nopreviews.length == 0) {
-    document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
+    element.setAttribute("disabled","true");
+  } else {
+    element.removeAttribute("disabled");
   }
 }
 
@@ -397,12 +459,26 @@ function DeleteNopreview() {
   DeleteSelectedItemFromTree(nopreviewsTree, nopreviewsTreeView,
                                  nopreviews, deletedNopreviews,
                                  "removeNopreview", "removeAllNopreviews");
+  FinalizeNopreviewDeletions();
 }
 
 function DeleteAllNopreviews() {
   DeleteAllFromTree(nopreviewsTree, nopreviewsTreeView,
                         nopreviews, deletedNopreviews,
                         "removeNopreview", "removeAllNopreviews");
+  FinalizeNopreviewDeletions();
+}
+
+function FinalizeNopreviewDeletions() {
+  var i;
+  var result = "|goneP|";
+  for (i=0; i<deletedNopreviews.length; i++) {
+    result += deletedNopreviews[i].number;
+    result += ",";
+  }
+  result += "|";
+  signonviewer.setValue(result, window);
+  deletedNoPreviews.length = 0;
 }
 
 function HandleNopreviewKeyPress(e) {
@@ -469,8 +545,11 @@ function LoadNocapture() {
   nocapturesTree.treeBoxObject.view = nocapturesTreeView;
   NocaptureColumnSort('host');
 
+  var element = document.getElementById("removeAllNocaptures");
   if (nocaptures.length == 0) {
-    document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
+    element.setAttribute("disabled","true");
+  } else {
+    element.removeAttribute("disabled");
   }
 }
 
@@ -485,12 +564,26 @@ function DeleteNocapture() {
   DeleteSelectedItemFromTree(nocapturesTree, nocapturesTreeView,
                                  nocaptures, deletedNocaptures,
                                  "removeNocapture", "removeAllNocaptures");
+  FinalizeNocaptureDeletions();
 }
 
 function DeleteAllNocaptures() {
   DeleteAllFromTree(nocapturesTree, nocapturesTreeView,
                         nocaptures, deletedNocaptures,
                         "removeNocapture", "removeAllNocaptures");
+  FinalizeNocaptureDeletions();
+}
+
+function FinalizeNocaptureDeletions() {
+  var i;
+  var result = "|goneC|";
+  for (i=0; i<deletedNocaptures.length; i++) {
+    result += deletedNocaptures[i].number;
+    result += ",";
+  }
+  result += "|";
+  signonviewer.setValue(result, window);
+  deletedNoCaptures.length = 0;
 }
 
 function HandleNocaptureKeyPress(e) {
@@ -510,33 +603,6 @@ function NocaptureColumnSort(column) {
 }
 
 /*** =================== GENERAL CODE =================== ***/
-
-function onAccept() {
-
-  // 
-  for (var s=0; s<deletedSignons.length; s++) {
-    passwordmanager.removeUser(deletedSignons[s].host, deletedSignons[s].rawuser);
-  }
-
-  for (var r=0; r<deletedRejects.length; r++) {
-    passwordmanager.removeReject(deletedRejects[r].host);
-  }
-
-  var i;
-  var result = "|goneC|";
-  for (i=0; i<deletedNocaptures.length; i++) {
-    result += deletedNocaptures[i].number;
-    result += ",";
-  }
-  result += "|goneP|";
-  for (i=0; i<deletedNopreviews.length; i++) {
-    result += deletedNopreviews[i].number;
-    result += ",";
-  }
-  result += "|";
-  signonviewer.setValue(result, window);
-  return true;
-}
 
 // Remove whitespace from both ends of a string
 function TrimString(string)

@@ -233,7 +233,7 @@ NS_IMETHODIMP nsWalletlibService::WALLET_InitReencryptCallback(nsIDOMWindowInter
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *key, const PRUnichar *userName) {
-  ::SINGSIGN_RemoveUser(key, userName);
+  ::SINGSIGN_RemoveUser(key, userName, PR_TRUE);
   return NS_OK;
 }
 

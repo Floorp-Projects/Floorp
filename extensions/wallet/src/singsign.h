@@ -100,7 +100,7 @@ SINGSIGN_Prompt
 
 extern nsresult
 SINGSIGN_RemoveUser
-    (const char* passwordRealm, const PRUnichar *userName);
+    (const char* passwordRealm, const PRUnichar *userName, PRBool notify);
 
 extern nsresult
 SINGSIGN_RemoveReject

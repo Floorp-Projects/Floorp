@@ -185,7 +185,7 @@ NS_IMETHODIMP nsPasswordManager::AddUser(const nsACString& aHost, const nsAStrin
 NS_IMETHODIMP nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
 {
   return ::SINGSIGN_RemoveUser(PromiseFlatCString(aHost).get(),
-                               PromiseFlatString(aUser).get());
+                               PromiseFlatString(aUser).get(), PR_TRUE);
 }
 
 NS_IMETHODIMP nsPasswordManager::GetRejectEnumerator(nsISimpleEnumerator * *entries)
