@@ -58,8 +58,8 @@
 // XXX change to NS_CHARSETCONVERTERMANAGER_PID
 #define NS_CHARSETCONVERTERMANAGER_CONTRACTID "@mozilla.org/charset-converter-manager;1"
 
-#define NS_DATA_BUNDLE_REGISTRY_KEY     "software/netscape/intl/xuconv/data/"
-#define NS_TITLE_BUNDLE_REGISTRY_KEY    "software/netscape/intl/xuconv/titles/"
+#define NS_DATA_BUNDLE_CATEGORY     "uconv-charset-data"
+#define NS_TITLE_BUNDLE_CATEGORY    "uconv-charset-titles"
 
 #define NS_ERROR_UCONV_NOCONV \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)

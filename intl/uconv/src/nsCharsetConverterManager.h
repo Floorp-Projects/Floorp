@@ -69,11 +69,9 @@ private:
   nsresult LoadExtensibleBundle(const char * aRegistryKey, 
       nsIStringBundle ** aResult);
 
-  static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
-      const char * aRegistryPath);
-
-  static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
-      const char * aRegistryPath);
+  static nsresult RegisterConverterCategory(nsICategoryManager*,
+                                            const char* aCategory,
+                                            const char* aURL);
 
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
     const nsAFlatString& aProp, PRUnichar ** aResult);
@@ -81,13 +79,8 @@ private:
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
     const nsAFlatString& aProp, nsIAtom ** aResult);      
 
-  nsresult GetRegistryEnumeration(const char * aRegistryKey, const char * aAddPrefix,
-    nsISupportsArray ** aArray);
-
-  nsresult GetRegistryEnumeration2(const char * aRegistryKey, PRBool aDecoder,
-    nsISupportsArray ** aArray);
-
-  nsresult GetList(PRBool encoder, nsISupportsArray** aResult);
+  nsresult GetList(const nsACString& aCategory,
+                   const nsACString& aPrefix, nsISupportsArray** aResult);
 public:
   static nsresult RegisterConverterManagerData();
 

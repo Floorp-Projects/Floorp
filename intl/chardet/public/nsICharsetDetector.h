@@ -48,7 +48,7 @@ class nsICharsetDetectionObserver;
 { 0x12bb8f14, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
 #define NS_CHARSET_DETECTOR_CONTRACTID_BASE "@mozilla.org/intl/charsetdetect;1?type="
-#define NS_CHARSET_DETECTOR_REG_BASE "software/netscape/intl/charsetdetector/"
+#define NS_CHARSET_DETECTOR_CATEGORY "charset-detectors"
  
 class nsICharsetDetector : public nsISupports {
 public:  
