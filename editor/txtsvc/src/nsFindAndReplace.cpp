@@ -425,7 +425,7 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
           if (inWhitespace && !nsCRT::IsAsciiSpace(*p))
           {
             // leaving p whitespace. Eat up addition whitespace in s
-            while (t < searchEnd - 1 && nsCRT::IsAsciiSpace(*(t + 1)))
+            while (t < searchEnd - 1 && nsCRT::IsAsciiSpace(*t))
               t ++;
 
             inWhitespace = PR_FALSE;
