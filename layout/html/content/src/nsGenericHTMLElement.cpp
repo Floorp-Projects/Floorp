@@ -1348,6 +1348,7 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
     while (nsnull != aTable->tag) {
       if (aTable->value == v) {
         aResult.Append(aTable->tag);
+        aResult.SetCharAt(nsCRT::ToUpper(aResult[0]), 0);
         return PR_TRUE;
       }
       aTable++;
