@@ -92,6 +92,7 @@ public:
   NS_IMETHOD GetContentBounds(nsRect& aBounds);
   NS_IMETHOD GetWindowBounds(nsRect& aBounds);
   NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
+  NS_IMETHOD ShowAfterCreation() { return Show(); }
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Close();

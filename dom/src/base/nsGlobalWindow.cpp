@@ -2196,7 +2196,9 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
       openedWindow->MoveTo(defaultBounds.x + contentOffsets.x,
                       defaultBounds.y + contentOffsets.y);
 
-      if (!sizeLater)
+      if (sizeLater)
+        openedWindow->ShowAfterCreation();
+      else
         openedWindow->Show();
     }
 
