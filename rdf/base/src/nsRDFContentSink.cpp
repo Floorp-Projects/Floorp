@@ -599,7 +599,7 @@ NS_IMETHODIMP
 RDFContentSinkImpl::HandleCDataSection(const PRUnichar *aData, 
                                        PRUint32 aLength)
 {
-    return NS_OK;
+  return aData ?  AddText(aData, aLength) : NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -612,11 +612,7 @@ NS_IMETHODIMP
 RDFContentSinkImpl::HandleCharacterData(const PRUnichar *aData, 
                                         PRUint32 aLength)
 {
-  nsresult result = NS_OK;
-  if (aData) {
-    result = result = AddText(aData,aLength);
-  }
-  return result;
+  return aData ?  AddText(aData, aLength) : NS_OK;
 }
 
 NS_IMETHODIMP 
