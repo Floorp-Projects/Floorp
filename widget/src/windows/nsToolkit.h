@@ -114,6 +114,7 @@ public:
 
 #ifdef MOZ_UNICODE
     // Ansi API support
+    static HMODULE              mShell32Module;
     static NS_DefWindowProc     mDefWindowProc;
     static NS_CallWindowProc    mCallWindowProc;
     static NS_SetWindowLong     mSetWindowLong;
@@ -127,6 +128,7 @@ public:
     static NS_GetClassName      mGetClassName;
     static NS_CreateWindowEx    mCreateWindowEx;
     static NS_RegisterClass     mRegisterClass;
+    static NS_UnregisterClass   mUnregisterClass;
     static NS_SHGetPathFromIDList mSHGetPathFromIDList;
     static NS_SHBrowseForFolder   mSHBrowseForFolder;
 #endif

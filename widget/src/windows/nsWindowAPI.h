@@ -56,6 +56,7 @@ typedef int (WINAPI *NS_GetClassName) (HWND, LPWSTR, int);
 typedef HWND (WINAPI *NS_CreateWindowEx) 
           (DWORD, LPCWSTR, LPCWSTR, DWORD, int, int, int, int, HWND, HMENU, HINSTANCE, LPVOID);
 typedef ATOM (WINAPI *NS_RegisterClass) (CONST WNDCLASSW *); 
+typedef BOOL (WINAPI *NS_UnregisterClass) (LPCWSTR, HINSTANCE); 
 typedef BOOL (WINAPI *NS_SHGetPathFromIDList) (LPCITEMIDLIST, LPWSTR);
 typedef LPITEMIDLIST (WINAPI *NS_SHBrowseForFolder) (LPBROWSEINFOW);
 
