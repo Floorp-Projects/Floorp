@@ -30,6 +30,7 @@
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
+#ifdef USE_CONTEXT_HASH
 class ContextKey : public nsHashKey {
 public:
   ContextKey(nsIStyleContext* aContext);
@@ -162,7 +163,7 @@ nsHashKey* ContextKey::Clone(void) const
 {
   return new ContextKey(*this);
 }
-
+#endif
 
 class StyleSetImpl : public nsIStyleSet {
 public:
@@ -255,7 +256,7 @@ protected:
   PRBool EnsureArray(nsISupportsArray** aArray);
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
                               nsIStyleContext* aParentContext, nsISupportsArray* aRules,
-                              PRBool aForceUnique);
+                              PRBool aForceUnique, PRBool& aUsedCached);
   PRInt32 RulesMatching(nsISupportsArray* aSheets,
                         nsIPresContext* aPresContext,
                         nsIContent* aContent,
@@ -272,7 +273,10 @@ protected:
   nsISupportsArray* mOverrideSheets;
   nsISupportsArray* mDocSheets;
   nsISupportsArray* mBackstopSheets;
+  nsISupportsArray* mRecycler;
+#ifdef USE_CONTEXT_HASH
   nsHashtable mStyleContexts;
+#endif
   nsIStyleFrameConstruction* mFrameConstructor;
 };
 
@@ -281,16 +285,19 @@ StyleSetImpl::StyleSetImpl()
   : mOverrideSheets(nsnull),
     mDocSheets(nsnull),
     mBackstopSheets(nsnull),
-    mFrameConstructor(nsnull)
+    mFrameConstructor(nsnull),
+    mRecycler(nsnull)
 {
   NS_INIT_REFCNT();
 }
 
+#ifdef USE_CONTEXT_HASH
 PRBool ReleaseContext(nsHashKey *aKey, void *aData, void* closure)
 {
   ((nsIStyleContext*)aData)->Release();
   return PR_TRUE;
 }
+#endif
 
 StyleSetImpl::~StyleSetImpl()
 {
@@ -298,7 +305,10 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mDocSheets);
   NS_IF_RELEASE(mBackstopSheets);
   NS_IF_RELEASE(mFrameConstructor);
+  NS_IF_RELEASE(mRecycler);
+#ifdef USE_CONTEXT_HASH
   mStyleContexts.Enumerate(ReleaseContext);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(StyleSetImpl, kIStyleSetIID)
@@ -512,7 +522,7 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
                                           nsIStyleContext* aParentContext, nsISupportsArray* aRules,
-                                          PRBool aForceUnique)
+                                          PRBool aForceUnique, PRBool& aUsedCached)
 {
   nsIStyleContext* result;
 
@@ -521,6 +531,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
       (0 == aParentContext->GetStyleRuleCount())) {
     // this and parent are empty
     result = aParentContext;
+    aUsedCached = PR_TRUE;
     NS_ADDREF(result);  // add ref for the caller
 //fprintf(stdout, ".");
   }
@@ -540,10 +551,12 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
         }
         tempKey.SetContext(result);
         mStyleContexts.Put(&tempKey, result);  // hashtable clones key, so this is OK (table gets first ref)
+        aUsedCached = PR_FALSE;
 //fprintf(stdout, "+");
       }
     }
     else {
+      aUsedCached = PR_TRUE;
 //fprintf(stdout, "-");
     }
     NS_ADDREF(result);  // add ref for the caller
@@ -559,10 +572,12 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
         if (PR_TRUE == aForceUnique) {
           result->ForceUnique();
         }
+        aUsedCached = PR_FALSE;
       }
 //fprintf(stdout, "+");
     }
     else {
+      aUsedCached = PR_TRUE;
 //fprintf(stdout, "-");
     }
 #endif
@@ -619,8 +634,13 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   if (nsnull == result) {
     // then do a brute force rule search
 
-    nsISupportsArray*  rules = nsnull;
-    if (NS_OK == NS_NewISupportsArray(&rules)) {
+    nsISupportsArray*  rules = mRecycler;
+    mRecycler = nsnull;
+    if (nsnull == rules) {
+      NS_NewISupportsArray(&rules);
+    }
+
+    if (nsnull != rules) {
       PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
       PRInt32 backstopRules = ruleCount;
       ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
@@ -628,12 +648,33 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
       SortRulesByStrength(rules, backstopRules);
 
-      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
+      PRBool usedCachedContext = PR_FALSE;
+      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique, usedCachedContext);
       if (nsnull != result) {
         result->SetBackstopStyleRuleCount(backstopRules);
       }
 
-      NS_RELEASE(rules);
+      if (usedCachedContext) {
+#ifdef NS_DEBUG
+        {
+          nsrefcnt  count = rules->AddRef();  // would be nice of we culd just query refcnt
+          rules->Release();
+          NS_ASSERTION(count == 2, "rules array was used elsewhere");
+        }
+#endif
+        rules->Clear();
+        mRecycler = rules;
+      }
+      else {
+#ifdef NS_DEBUG
+        {
+          nsrefcnt  count = rules->AddRef();  // would be nice of we culd just query refcnt
+          rules->Release();
+          NS_ASSERTION(count == 3, "rules array was used elsewhere");
+        }
+#endif
+        NS_RELEASE(rules);
+      }
     }
   }
 
@@ -680,8 +721,13 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
   // then do a brute force rule search
 
-  nsISupportsArray*  rules = nsnull;
-  if (NS_OK == NS_NewISupportsArray(&rules)) {
+  nsISupportsArray*  rules = mRecycler;
+  mRecycler = nsnull;
+  if (nsnull == rules) {
+    NS_NewISupportsArray(&rules);
+  }
+
+  if (nsnull != rules) {
     PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
     PRInt32 backstopRules = ruleCount;
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
@@ -689,12 +735,19 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
     SortRulesByStrength(rules, backstopRules);
 
-    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
+    PRBool  usedCachedContext = PR_FALSE;
+    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique, usedCachedContext);
     if (nsnull != result) {
       result->SetBackstopStyleRuleCount(backstopRules);
     }
 
-    NS_RELEASE(rules);
+    if (usedCachedContext) {
+      rules->Clear();
+      mRecycler = rules;
+    }
+    else {
+      NS_RELEASE(rules);
+    }
   }
 
   NS_IF_RELEASE(parentContext);
@@ -719,23 +772,35 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
 
   // then do a brute force rule search
 
-  nsISupportsArray*  rules = nsnull;
-  if (NS_OK == NS_NewISupportsArray(&rules)) {
+  nsISupportsArray*  rules = mRecycler;
+  mRecycler = nsnull;
+  if (nsnull == rules) {
+    NS_NewISupportsArray(&rules);
+  }
+
+  if (nsnull != rules) {
     PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
     PRInt32 backstopRules = ruleCount;
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
     ruleCount += RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
+    PRBool  usedCachedContext = PR_TRUE;
     if (0 < ruleCount) {
       SortRulesByStrength(rules, backstopRules);
 
-      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
+      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique, usedCachedContext);
       if (nsnull != result) {
         result->SetBackstopStyleRuleCount(backstopRules);
       }
     }
 
-    NS_RELEASE(rules);
+    if (usedCachedContext) {
+      rules->Clear();
+      mRecycler = rules;
+    }
+    else {
+      NS_RELEASE(rules);
+    }
   }
 
   NS_IF_RELEASE(parentContext);
