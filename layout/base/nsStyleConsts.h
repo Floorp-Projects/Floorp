@@ -42,6 +42,56 @@
 #define NS_SIDE_LEFT    3
 
 
+// auto-select
+#define NS_STYLE_AUTO_SELECT_NONE     0
+#define NS_STYLE_AUTO_SELECT_SELECT   1
+
+// auto-tab
+#define NS_STYLE_AUTO_TAB_NONE            0
+#define NS_STYLE_AUTO_TAB_ACTIVATE_NEXT   1
+#define NS_STYLE_AUTO_TAB_SELECT_NEXT     2
+#define NS_STYLE_AUTO_TAB_AUTO            3
+
+// box-sizing
+#define NS_STYLE_BOX_SIZING_CONTENT       0
+#define NS_STYLE_BOX_SIZING_PADDING       1
+#define NS_STYLE_BOX_SIZING_BORDER        2
+
+// float-edge
+#define NS_STYLE_FLOAT_EDGE_CONTENT       0
+#define NS_STYLE_FLOAT_EDGE_PADDING       1
+#define NS_STYLE_FLOAT_EDGE_BORDER        2
+#define NS_STYLE_FLOAT_EDGE_MARGIN        3
+
+// key-equivalent
+#define NS_STYLE_KEY_EQUIVALENT_NONE      0
+
+// modify-content
+#define NS_STYLE_MODIFY_CONTENT_READ_ONLY   0
+#define NS_STYLE_MODIFY_CONTENT_READ_WRITE  1
+#define NS_STYLE_MODIFY_CONTENT_WRITE_ONLY  2
+#define NS_STYLE_MODIFY_CONTENT_TOGGLE      3
+
+// resizer
+#define NS_STYLE_RESIZER_NONE         0x00
+#define NS_STYLE_RESIZER_HORIZONTAL   0x01  // bits
+#define NS_STYLE_RESIZER_VERTICAL     0x02  // bits
+#define NS_STYLE_RESIZER_BOTH         0x03  // bits
+#define NS_STYLE_RESIZER_AUTO         0x04  // bits
+
+// selection-style
+#define NS_STYLE_SELECTION_STYLE_NONE   0
+#define NS_STYLE_SELECTION_STYLE_ANY    1
+#define NS_STYLE_SELECTION_STYLE_LINE   2
+#define NS_STYLE_SELECTION_STYLE_ALL    3
+
+// user-input
+#define NS_STYLE_USER_INPUT_NONE      0
+#define NS_STYLE_USER_INPUT_ENABLED   1
+#define NS_STYLE_USER_INPUT_DISABLED  2
+#define NS_STYLE_USER_INPUT_AUTO      3
+
+
 // Azimuth - See nsStyleAural
 #define NS_STYLE_AZIMUTH_LEFT_SIDE        0x00
 #define NS_STYLE_AZIMUTH_FAR_LEFT         0x01
@@ -199,20 +249,21 @@
 #define NS_STYLE_DISPLAY_NONE                   0
 #define NS_STYLE_DISPLAY_BLOCK                  1
 #define NS_STYLE_DISPLAY_INLINE                 2
-#define NS_STYLE_DISPLAY_LIST_ITEM              3
-#define NS_STYLE_DISPLAY_MARKER                 4
-#define NS_STYLE_DISPLAY_RUN_IN                 5
-#define NS_STYLE_DISPLAY_COMPACT                6
-#define NS_STYLE_DISPLAY_TABLE                  7
-#define NS_STYLE_DISPLAY_INLINE_TABLE           8
-#define NS_STYLE_DISPLAY_TABLE_ROW_GROUP        9
-#define NS_STYLE_DISPLAY_TABLE_COLUMN           10
-#define NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP     11
-#define NS_STYLE_DISPLAY_TABLE_HEADER_GROUP     12
-#define NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP     13
-#define NS_STYLE_DISPLAY_TABLE_ROW              14
-#define NS_STYLE_DISPLAY_TABLE_CELL             15
-#define NS_STYLE_DISPLAY_TABLE_CAPTION          16
+#define NS_STYLE_DISPLAY_INLINE_BLOCK           3
+#define NS_STYLE_DISPLAY_LIST_ITEM              4
+#define NS_STYLE_DISPLAY_MARKER                 5
+#define NS_STYLE_DISPLAY_RUN_IN                 6
+#define NS_STYLE_DISPLAY_COMPACT                7
+#define NS_STYLE_DISPLAY_TABLE                  8
+#define NS_STYLE_DISPLAY_INLINE_TABLE           9
+#define NS_STYLE_DISPLAY_TABLE_ROW_GROUP        10
+#define NS_STYLE_DISPLAY_TABLE_COLUMN           11
+#define NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP     12
+#define NS_STYLE_DISPLAY_TABLE_HEADER_GROUP     13
+#define NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP     14
+#define NS_STYLE_DISPLAY_TABLE_ROW              15
+#define NS_STYLE_DISPLAY_TABLE_CELL             16
+#define NS_STYLE_DISPLAY_TABLE_CAPTION          17
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0
