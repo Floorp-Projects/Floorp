@@ -31,6 +31,7 @@
 class nsIDOMSelection;
 typedef short SelectionType;
 typedef short SelectionRegion;
+class nsIDOMNode;
 %}
 
 
@@ -206,6 +207,15 @@ interface nsISelectionController : nsISupports
   /** SelectAll will select the whole page
    */
     void selectAll();
+
+  /** CheckVisibility will return true if textnode and offsets are actually rendered 
+   *  in the current precontext.
+   *  @param aNode textNode to test
+   *  @param aStartOffset  offset in dom to first char of textnode to test
+   *  @param aEndOffset    offset in dom to last char of textnode to test
+   *  @param aReturnBool   boolean returned TRUE if visible FALSE if not
+   */
+    boolean checkVisibility(in nsIDOMNode node, in short startOffset, in short endOffset);
 
 };
 %{ C++

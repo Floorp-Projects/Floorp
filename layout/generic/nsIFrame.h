@@ -1018,6 +1018,19 @@ public:
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
 
   /**
+   *  called to see if the children of the frame are visible from indexstart to index end.
+   *  this does not change any state. returns PR_TRUE only if the indexes are valid and any of
+   *  the children are visible.  for textframes this index is the character index.
+   *  if aStart = aEnd result will be PR_FALSE
+   *  @param aStart start index of first child from 0-N (number of children)
+   *  @param aEnd   end index of last child from 0-N
+   *  @param aRecurse should this frame talk to siblings to get to the contents other children?
+   *  @param aFinished did this frame have the aEndIndex? or is there more work to do
+   *  @param _retval  return value true or false. false = range is not rendered.
+   */
+  NS_IMETHOD CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)=0;
+
+  /**
    *  Called by a child frame on a parent frame to tell the parent frame that the child needs
    *  to be reflowed.  The parent should either propagate the request to its parent frame or 
    *  handle the request by generating a nsIReflowCommand::ReflowDirtyChildren reflow command.

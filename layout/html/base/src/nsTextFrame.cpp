@@ -412,6 +412,7 @@ public:
                          nsSpread aSpread);
 
   NS_IMETHOD PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);
+  NS_IMETHOD CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 
   NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
@@ -3448,6 +3449,84 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
   return PeekBackwardAndForward(eSelectWord, eSelectWord, startPos,
                                 aPresContext, PR_FALSE);
 }
+
+
+NS_IMETHODIMP
+nsTextFrame::CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)
+{
+  if (!aFinished || !_retval)
+    return NS_ERROR_NULL_POINTER;
+  if (*aFinished)
+    return NS_ERROR_FAILURE; //dont call with finished != false
+  if (mContentOffset > aEndIndex)
+    return NS_OK; //reached the end
+  if (mContentOffset > aStartIndex)
+    aStartIndex = mContentOffset;
+  if (aStartIndex >= aEndIndex) //how can it be greater?? check anyway
+    return NS_OK; //reached the end.
+
+  nsresult rv ;
+  if (aStartIndex < (mContentOffset + mContentLength))
+  {
+  //get the presshell
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv) || !shell)
+      return rv?rv:NS_ERROR_FAILURE;
+  //get the document
+    nsCOMPtr<nsIDocument> doc;
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (!doc)
+      return rv?rv:NS_ERROR_FAILURE;
+  //get the linebreaker
+    nsCOMPtr<nsILineBreaker> lb;
+    doc->GetLineBreaker(getter_AddRefs(lb));
+  //create texttransformer
+    nsTextTransformer tx(lb, nsnull);
+  //create the buffers
+    nsAutoTextBuffer paintBuffer;
+    nsAutoIndexBuffer indexBuffer;
+    if (NS_FAILED(indexBuffer.GrowTo(mContentLength + 1)))
+      return NS_ERROR_FAILURE;//bail out
+
+    PRInt32 textLength;
+    PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+    if (textLength)//we have something to measure?
+    {
+      PRInt32 start = PR_MAX(aStartIndex,mContentOffset);
+      PRInt32 end = PR_MIN(mContentOffset + mContentLength-1, aEndIndex); //base 0 index of array
+      while (start != end)
+      { 
+        if (indexBuffer.mBuffer[start] < indexBuffer.mBuffer[start+1]) //we have a rendered char!
+        {
+          *aFinished = PR_TRUE;//we are done bubble out.
+          *_retval = PR_TRUE;//hit a drawn char
+          return NS_OK;
+        }
+        start++;
+      }
+      if (start == aEndIndex)
+      {
+        *aFinished = PR_TRUE;
+      }
+    }
+  }
+  if (aRecurse) //recurse through the siblings.
+  {
+    nsIFrame *nextInFlow = this; 
+    rv = NS_OK;
+    while (!aFinished && nextInFlow && NS_SUCCEEDED(rv) && !*_retval) //while we havent found anything visible
+    {
+      rv = nextInFlow->GetNextInFlow(&nextInFlow);
+      if (nextInFlow)
+      {
+        rv = nextInFlow->CheckVisibility(aContext,aStartIndex,aEndIndex,PR_FALSE,aFinished,_retval);
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 
 NS_IMETHODIMP

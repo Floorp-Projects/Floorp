@@ -264,6 +264,8 @@ public:
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
+  NS_IMETHOD  CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
+
   NS_IMETHOD  PeekOffsetParagraph(nsIPresContext* aPresContext,
                                   nsPeekOffsetStruct *aPos);
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;

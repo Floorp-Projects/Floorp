@@ -3084,6 +3084,14 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   return result;
 }
 
+
+NS_IMETHODIMP
+nsFrame::CheckVisibility(nsIPresContext* , PRInt32 , PRInt32 , PRBool , PRBool *, PRBool *)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 PRInt32
 nsFrame::GetLineNumber(nsIFrame *aFrame)
 {

@@ -741,6 +741,7 @@ public:
   NS_IMETHOD CompleteScroll(PRBool aForward);
   NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD SelectAll();
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
@@ -2184,6 +2185,26 @@ NS_IMETHODIMP
 PresShell::SelectAll()
 {
   return mSelection->SelectAll();
+}
+
+NS_IMETHODIMP
+PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval)
+{
+  if (!node || startOffset>EndOffset || !_retval || startOffset<0 || EndOffset<0)
+    return NS_ERROR_INVALID_ARG;
+  *_retval = PR_FALSE; //initialize return parameter
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  if (!content)
+    return NS_ERROR_FAILURE;
+  nsIFrame *frame;
+  nsresult result = GetPrimaryFrameFor(content,&frame);
+  if (NS_FAILED(result) || !frame) //failure is taken as a no.
+    return result?result:NS_ERROR_FAILURE;
+  //start process now to go through all frames to find startOffset. then check chars after that to see 
+  //if anything until EndOffset is visible.
+  PRBool finished = PR_FALSE;
+  frame->CheckVisibility(mPresContext,startOffset,EndOffset,PR_TRUE,&finished, _retval);
+  return NS_OK;//dont worry about other return val
 }
 
 //end implementations nsISelectionController
