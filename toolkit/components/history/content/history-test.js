@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,14 +16,13 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt <hewitt@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -35,5 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/////////////////////////////////////////////////////////////////////////////
+function ShowLastPageVisited() {
+    dump("start of ShowLastPageVisited()\n");
 
+    var lastpagevisited = "failure...not set";
+    
+    var history = Components.classes['@mozilla.org/browser/global-history;1'];
+    if (history) {
+      history = history.getService();
+    }
+    if (history) {
+      history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+    }
+    if (history) {
+      try {
+        lastpagevisited = history.lastPageVisited;
+	document.getElementById('result').value =  lastpagevisited;
+      } 
+      catch (ex) {
+	dump(ex + "\n");
+	document.getElementById('result').value = "Error check console";
+      }    
+    }
+}

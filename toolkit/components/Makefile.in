@@ -5,6 +5,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = autocomplete satchel build
+DIRS = autocomplete history satchel build
 
 include $(topsrcdir)/config/rules.mk
