@@ -941,6 +941,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     
   //printf("Pressed mDragStartPx=%d\n",mDragStartPx);
 
+  mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
+
   return NS_OK;
 }
 
@@ -958,7 +960,6 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("dragging"), PR_TRUE);
 
   RemoveListener();
-  mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
   mDragging = PR_TRUE;
 
   return NS_OK;
