@@ -114,6 +114,12 @@ nsSVGElement::GetIDAttributeName() const
   return nsSVGAtoms::id;
 }
 
+nsIAtom *
+nsSVGElement::GetClassAttributeName() const
+{
+  return nsSVGAtoms::_class;
+}
+
 nsresult
 nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
                       const nsAString& aValue,
