@@ -52,11 +52,17 @@ MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
 # Specify where the PluginSDK, Java compiler, header file
 # generator and classes live.
 #
-# Note 1: you must use the javah from Netscape PluginSDK.
-# Note 2: you must use JDK1.3 or earlier which has the old JNI support (& oldjavac)
+# You need the Netscape PluginSDK:
+#
+#   http://home.netscape.com/comprod/development_partners/plugin_api/index.html
+#
+# You also need a JDK with an oldstyle java compiler. Anything from 1.3 downwards
+# should do. See here for various JDK releases:
+#
+#   http://java.sun.com/products/archive/index.html
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-MOZ_PLUGINSDK = C:\m\PluginSDK
+MOZ_PLUGINSDK = C:\m\PluginSDK3
 JAVADIR = C:\j2sdk1.3.1
 JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
 JAVAC = $(JAVADIR)\bin\oldjavac
@@ -78,33 +84,6 @@ MOZCTLSRC=../control
 
 ###############################################################################
 
-# Specify the path to the Communicator plugin SDK or get an error message!
-
-
-!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-!ifndef MOZ_PLUGINSDK
-!message The build cannot proceed because LiveConnect requires a path to
-!message the PluginSDK.
-!message
-!message Please specify the path to the SDK either by setting the MOZ_PLUGINSDK
-!message environment variable or as a parameter to nmake. e.g.
-!message
-!message set MOZ_PLUGINSDK=c:\pluginsdk
-!message nmake /f makefile.win
-!message
-!message Or:
-!message
-!message nmake /f makefile.win MOZ_PLUGINSDK=c:\pluginsdk
-!message
-!message The Plugin SDK can be found at:
-!message
-!message ftp://ftp.netscape.com/pub/sdk/plugin/windows/winsdk40.zip
-!message
-!error
-!endif
-!endif
-
-
 !ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 XPIDLSRCS = \
     .\nsIMozAxPlugin.idl          \
@@ -121,6 +100,9 @@ OBJS = \
     .\$(OBJDIR)\LegacyPlugin.obj       \
     .\$(OBJDIR)\MozActiveX.obj         \
     .\$(OBJDIR)\npwin.obj              \
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+    .\$(OBJDIR)\javastubs.obj          \
+!endif
     $(NULL)
 
 # most of these have to be here for nsSetupRegistry.cpp...
@@ -190,21 +172,26 @@ $(DEFFILE) : mkctldef.bat
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 .\MozAxPlugin.class: .\MozAxPlugin.java
     $(JAVAC) -classpath $(CLASSPATH) MozAxPlugin.java
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen MozAxPlugin
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs MozAxPlugin
 
 .\_gen\java_lang_Object.h : $(JAVACLASSES)
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
+
+.\_stubs\java_lang_Object.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Object
+
+.\_gen\java_lang_String.h : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.String
+
+.\_stubs\java_lang_String.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.String
 
 .\_gen\netscape_plugin_Plugin.h : $(JAVACLASSES)
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen netscape.plugin.Plugin
 
 .\_stubs\netscape_plugin_Plugin.c : $(JAVACLASSES)
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs netscape.plugin.Plugin
-
-.\_gen\MozAxPlugin.h : .\MozAxPlugin.class
-    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen MozAxPlugin
-
-.\_stubs\MozAxPlugin.c : .\MozAxPlugin.class
-    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs MozAxPlugin
 
 !endif
 
@@ -215,16 +202,29 @@ MozActiveX.res: MozActiveX.rc resource.h
 
 MozActiveX.cpp: StdAfx.h
 
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+
+.\$(OBJDIR)\javastubs.obj : javastubs.c
+
+javastubs.c : \
+    .\MozAxPlugin.class             \
+    .\_gen\netscape_plugin_Plugin.h \
+    .\_gen\java_lang_Object.h       \
+    .\_stubs\netscape_plugin_Plugin.c \
+    .\_stubs\java_lang_Object.c     \
+    .\_stubs\java_lang_String.c     \
+    $(NULL)
+!endif
+
 LegacyPlugin.cpp: StdAfx.h \
 !ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
     .\_xpidlgen\nsIMozAxPlugin.h    \
 !endif
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-    .\_gen\MozAxPlugin.h            \
+    .\MozAxPlugin.class             \
     .\_gen\netscape_plugin_Plugin.h \
     .\_gen\java_lang_Object.h       \
-    .\_stubs\MozAxPlugin.c          \
-    .\_stubs\netscape_plugin_Plugin.c \
+    .\_gen\java_lang_String.h       \
 !endif
     $(NULL)
 
