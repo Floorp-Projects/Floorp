@@ -1059,7 +1059,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
       // processed whenever the doc does finish loading.
       nsCOMPtr<nsIStreamListener> listener;
       if (bindingManager)
-      bindingManager->GetLoadingDocListener(aURLStr, getter_AddRefs(listener));
+        bindingManager->GetLoadingDocListener(aURLStr, getter_AddRefs(listener));
       if (listener) {
         nsIStreamListener* ilist = listener.get();
         nsXBLStreamListener* xblListener = NS_STATIC_CAST(nsXBLStreamListener*, ilist);
