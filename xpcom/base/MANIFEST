@@ -13,9 +13,10 @@ nsISupportsBase.h
 nsISupportsImpl.h
 nsISupportsUtils.h
 nsISupportsObsolete.h
-nsStackWalker.h
 nsTraceRefcnt.h
 nsWeakReference.h
 nsWeakPtr.h
 nscore.h
+nslog.h
+nslog.h
 nsIInterfaceRequestorUtils.h
