@@ -2,8 +2,6 @@
 mozilla/modules/plugin/nglsrc/nsPluginFactory.cpp
 mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp
 mozilla/modules/plugin/nglsrc/nsPluginInstancePeer.cpp
-mozilla/modules/plugin/nglsrc/nsPluginStreamPeer.cpp
 mozilla/modules/plugin/nglsrc/ns4xPlugin.cpp
 mozilla/modules/plugin/nglsrc/ns4xPluginInstance.cpp
-mozilla/modules/plugin/nglsrc/ns4xPluginStream.cpp
 mozilla/modules/plugin/nglsrc/nsMalloc.cpp
