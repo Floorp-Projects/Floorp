@@ -272,7 +272,8 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI
 
 //  nsIWebProgressListener
 NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnProgressChange(nsIChannel* aChannel, 
+nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
+                                        nsIRequest* aRequest, 
                                         PRInt32 aCurSelfProgress, 
                                         PRInt32 aMaxSelfProgress, 
                                         PRInt32 aCurTotalProgress, 
@@ -282,32 +283,35 @@ nsSecureBrowserUIImpl::OnProgressChange(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnChildProgressChange(nsIChannel* aChannel, 
-                                             PRInt32 aCurSelfProgress, 
-                                             PRInt32 aMaxSelfProgress)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel, 
-                                      PRInt32 aProgressStatusFlags)
+nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
+                                     nsIRequest* aRequest, 
+                                     PRInt32 aProgressStateFlags,
+                                     nsresult aStatus)
 {
     nsresult res = NS_OK;
 
-    if (aChannel == nsnull || !mSecurityButton || !mPref)
+    if (aRequest == nsnull || !mSecurityButton || !mPref)
         return NS_ERROR_NULL_POINTER;
-    
+
+    // Get the channel from the request...
+    // If the request is not network based, then ignore it.    
+    nsCOMPtr<nsIChannel> channel;
+    channel = do_QueryInterface(aRequest, &res);
+    if (NS_FAILED(res))
+      return NS_OK;
+
     nsCOMPtr<nsIURI> loadingURI;
-    aChannel->GetURI(getter_AddRefs(loadingURI));
+    channel->GetURI(getter_AddRefs(loadingURI));
     
 #if defined(DEBUG)
         nsXPIDLCString temp;
         loadingURI->GetSpec(getter_Copies(temp));
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStatusChange: %x :%s\n", this, aProgressStatusFlags,(const char*)temp));
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange: %x :%s\n", this, aProgressStateFlags,(const char*)temp));
 #endif
 
-    if (aProgressStatusFlags & nsIWebProgress::flag_net_start)
+    // A Document is starting to load...
+    if ((aProgressStateFlags & flag_start) && 
+        (aProgressStateFlags & flag_is_network))
     {
         // starting to load a webpage
         PR_FREEIF(mLastPSMStatus); mLastPSMStatus = nsnull;
@@ -317,14 +321,17 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
         res = CheckProtocolContextSwitch( loadingURI, mCurrentURI);    
         return res;
     } 
-    
-    if ((aProgressStatusFlags & nsIWebProgress::flag_net_stop)  && mIsSecureDocument)
+
+    // A document has finished loading    
+    if ((aProgressStateFlags & flag_stop) &&
+        (aProgressStateFlags & flag_is_network) &&
+         mIsSecureDocument)
     {
         if (!mIsDocumentBroken) // and status is okay  FIX
         {
             // qi for the psm information about this channel load.
             nsCOMPtr<nsISupports> info;
-	        aChannel->GetSecurityInfo(getter_AddRefs(info));
+	        channel->GetSecurityInfo(getter_AddRefs(info));
 	        nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info);
             if ( psmInfo )
             {
@@ -347,48 +354,32 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
         return res;
     }
     
-    if (aProgressStatusFlags == nsIWebProgress::flag_net_redirecting)
-    {
-        // need to implmentent.
-    }
+///    if (aProgressStateFlags == nsIWebProgress::flag_net_redirecting)
+///    {
+///        // need to implmentent.
+///    }
 
-    return res;
-}
-
-NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnChildStatusChange(nsIChannel* aChannel, PRInt32 aProgressStatusFlags)
-{
-    nsresult rv;
-    if (aChannel == nsnull || !mSecurityButton || !mPref)
-        return NS_ERROR_NULL_POINTER;
-    
-    nsCOMPtr<nsIURI> uri;
-    rv = aChannel->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
-    
-#if defined(DEBUG)
-        nsXPIDLCString temp;
-        uri->GetSpec(getter_Copies(temp));
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnChildStatusChange: %x :%s\n", this, aProgressStatusFlags,(const char*)temp));
-#endif
-    
     // don't need to do anything more if the page is broken or not secure...
 
     if (!mIsSecureDocument || mIsDocumentBroken)
         return NS_OK;
 
-    if (aProgressStatusFlags & nsIWebProgress::flag_net_start)
+    // A URL is starting to load...
+    if ((aProgressStateFlags & flag_start) &&
+        (aProgressStateFlags & flag_is_request))
     {   // check to see if we are going to mix content.
-        return CheckMixedContext(uri);
+        return CheckMixedContext(loadingURI);
     }
-    
-    if (aProgressStatusFlags & nsIWebProgress::flag_net_stop)
+
+    // A URL has finished loading...    
+    if ((aProgressStateFlags & flag_stop) &&
+        (aProgressStateFlags & flag_is_request))
     {
         if (1)  // FIX status from the flag...
         {
             nsCOMPtr<nsISupports> info;
-	        aChannel->GetSecurityInfo(getter_AddRefs(info));
-	        nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &rv);
+	        channel->GetSecurityInfo(getter_AddRefs(info));
+	        nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &res);
         
             // qi for the psm information about this channel load.
             if ( psmInfo )
@@ -397,14 +388,14 @@ nsSecureBrowserUIImpl::OnChildStatusChange(nsIChannel* aChannel, PRInt32 aProgre
 	        }
         }
 
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnChildStatusChange - Icon set to broken\n", this));
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange - Icon set to broken\n", this));
         mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
 	    mIsDocumentBroken = PR_TRUE;
     }    
     
-    
-    return NS_OK;
+    return res;
 }
+
 
 NS_IMETHODIMP 
 nsSecureBrowserUIImpl::OnLocationChange(nsIURI* aLocation)
