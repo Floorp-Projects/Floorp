@@ -698,6 +698,19 @@ void InvalidateLBCheckbox(HWND hwndListBox)
   // checked/unchecked checkbox.
   InvalidateRect(hwndListBox, &rcCheckArea, TRUE);
 }
+  
+void SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected)
+{
+  DWORD dwPatchIndex;
+  siC   *siCTemp = NULL;
+
+  siCTemp = SiCNodeGetObject(dwIndex, FALSE);
+  if(lstrcmpi("Sun Java 2", siCTemp->szDescriptionShort) == 0)
+  {
+    if((dwPatchIndex = SiCNodeGetIndexDS("Sun Java 2 Patch")) != -1)
+      SiCNodeSetAttributes(dwPatchIndex, SIC_SELECTED, bSelected, TRUE);
+  }
+}
 
 void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
 {
@@ -708,6 +721,7 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
     if(SiCNodeGetAttributes(dwIndex, FALSE) & SIC_SELECTED)
     {
       SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE);
+      SunJavaDependencyHack(dwIndex, FALSE);
     }
     else
     {
@@ -716,6 +730,8 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
 
       while(bMoreToResolve)
         bMoreToResolve = ResolveDependencies(-1);
+
+      SunJavaDependencyHack(dwIndex, TRUE);
     }
 
   InvalidateLBCheckbox(hwndListBox);
