@@ -203,7 +203,7 @@ function CreateMailWindowGlobals()
   gBrandBundle = document.getElementById("bundle_brand");
 
   //Create datasources
-  accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
+  accountManagerDataSource = Components.classes[accountManagerDSContractID].getService();
   folderDataSource         = Components.classes[folderDSContractID].getService();
 
   messagesBox       = document.getElementById("messagesBox");
