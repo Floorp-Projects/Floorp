@@ -2269,7 +2269,8 @@ nsIFrame::GetView() const
 
   // Check for a property on the frame
   nsresult rv;
-  void *value = GetProperty(nsLayoutAtoms::viewProperty, &rv);
+  void* value = GetPresContext()->FrameManager()->
+    GetFrameProperty(this, nsLayoutAtoms::viewProperty, 0, &rv);
 
   NS_ENSURE_SUCCESS(rv, nsnull);
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
@@ -2289,7 +2290,8 @@ nsIFrame::SetView(nsIView* aView)
     aView->SetClientData(this);
 
     // Set a property on the frame
-    nsresult rv = SetProperty(nsLayoutAtoms::viewProperty, aView, nsnull);
+    nsresult rv = GetPresContext()->FrameManager()->
+      SetFrameProperty(this, nsLayoutAtoms::viewProperty, aView, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the frame state bit that says the frame has a view
@@ -4207,10 +4209,10 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 
 // Destructor function for the overflow area property
 static void
-DestroyRectFunc(void*           aFrame,
+DestroyRectFunc(nsPresContext* aPresContext,
+                nsIFrame*       aFrame,
                 nsIAtom*        aPropertyName,
-                void*           aPropertyValue,
-                void*           aDtorData)
+                void*           aPropertyValue)
 {
   delete (nsRect*)aPropertyValue;
 }
@@ -4222,7 +4224,11 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
     return nsnull;
   }
 
-  void *value = GetProperty(nsLayoutAtoms::overflowAreaProperty);
+  nsFrameManager *frameManager = GetPresContext()->FrameManager();
+
+  void *value =
+    frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowAreaProperty,
+                                   0);
 
   if (value) {
     return (nsRect*)value;  // the property already exists
@@ -4230,8 +4236,9 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
     // The property isn't set yet, so allocate a new rect, set the property,
     // and return the newly allocated rect
     nsRect*  overflow = new nsRect(0, 0, 0, 0);
-    SetProperty(nsLayoutAtoms::overflowAreaProperty,
-                overflow, DestroyRectFunc);
+
+    frameManager->SetFrameProperty(this, nsLayoutAtoms::overflowAreaProperty,
+                                   overflow, DestroyRectFunc);
     return overflow;
   }
 
@@ -4264,7 +4271,8 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       // remove the previously stored overflow area 
-      DeleteProperty(nsLayoutAtoms::overflowAreaProperty);
+      GetPresContext()->FrameManager()->
+        RemoveFrameProperty(this, nsLayoutAtoms::overflowAreaProperty);
     }
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   }   
@@ -4330,7 +4338,8 @@ GetIBSpecialSibling(nsPresContext* aPresContext,
    */
   nsresult rv;
   nsIFrame *specialSibling = NS_STATIC_CAST(nsIFrame*,
-           aFrame->GetProperty(nsLayoutAtoms::IBSplitSpecialPrevSibling, &rv));
+    aPresContext->FrameManager()->GetFrameProperty(aFrame,
+                            nsLayoutAtoms::IBSplitSpecialPrevSibling, 0, &rv));
 
   if (NS_OK == rv) {
     NS_ASSERTION(specialSibling, "null special sibling");
@@ -4536,20 +4545,19 @@ nsFrame::IsMouseCaptured(nsPresContext* aPresContext)
 }
 
 nsresult
-nsIFrame::SetProperty(nsIAtom*           aPropName,
-                      void*              aPropValue,
-                      NSPropertyDtorFunc aPropDtorFunc,
-                      void*              aDtorData)
+nsIFrame::SetProperty(nsIAtom*                aPropName,
+                     void*                   aPropValue,
+                     NSFramePropertyDtorFunc aPropDtorFunc)
 {
-  return GetPresContext()->PropertyTable()->
-    SetProperty(this, aPropName, aPropValue, aPropDtorFunc, aDtorData);
+  return GetPresContext()->FrameManager()->
+    SetFrameProperty(this, aPropName, aPropValue, aPropDtorFunc);
 }
 
 void* 
 nsIFrame::GetProperty(nsIAtom* aPropName, nsresult* aStatus) const
 {
-  return GetPresContext()->PropertyTable()->GetProperty(this, aPropName,
-                                                        aStatus);
+  return GetPresContext()->FrameManager()->
+    GetFrameProperty(this, aPropName, 0, aStatus);
 }
 
 /* virtual */ void* 
@@ -4558,17 +4566,11 @@ nsIFrame::GetPropertyExternal(nsIAtom* aPropName, nsresult* aStatus) const
   return GetProperty(aPropName, aStatus);
 }
 
-nsresult
-nsIFrame::DeleteProperty(nsIAtom* aPropName) const
-{
-  return GetPresContext()->PropertyTable()->DeleteProperty(this, aPropName);
-}
-
 void*
-nsIFrame::UnsetProperty(nsIAtom* aPropName, nsresult* aStatus) const
+nsIFrame::RemoveProperty(nsIAtom* aPropName, nsresult* aStatus) const
 {
-  return GetPresContext()->PropertyTable()->UnsetProperty(this, aPropName,
-                                                          aStatus);
+  return GetPresContext()->FrameManager()->
+    GetFrameProperty(this, aPropName, NS_IFRAME_MGR_REMOVE_PROP, aStatus);
 }
 
 /* virtual */ const nsStyleStruct*

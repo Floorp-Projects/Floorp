@@ -67,6 +67,9 @@ struct CantRenderReplacedElementEvent;
 
 class nsFrameManagerBase
 {
+public:
+  struct PropertyList;
+
 protected:
   class UndisplayedMap;
 
@@ -79,6 +82,7 @@ protected:
   PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
+  PropertyList*                   mPropertyList;
   PRBool                          mIsDestroyingFrames;
 };
 

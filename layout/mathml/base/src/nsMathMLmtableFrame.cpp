@@ -116,10 +116,10 @@ struct nsValueList
 // The code doesn't include hooks for AttributeChanged() notifications.
 
 static void
-DestroyValueListFunc(void*           aFrame,
+DestroyValueListFunc(nsPresContext* aPresContext,
+                     nsIFrame*       aFrame,
                      nsIAtom*        aPropertyName,
-                     void*           aPropertyValue,
-                     void*           aDtorData)
+                     void*           aPropertyValue)
 {
   delete NS_STATIC_CAST(nsValueList*, aPropertyValue);
 }
@@ -133,8 +133,9 @@ GetValueAt(nsPresContext* aPresContext,
   PRUnichar* result = nsnull;
   nsValueList* valueList;
 
+  nsFrameManager *frameManager = aPresContext->FrameManager();
   valueList = NS_STATIC_CAST(nsValueList*,
-                             aTableOrRowFrame->GetProperty(aAttributeAtom));
+          frameManager->GetFrameProperty(aTableOrRowFrame, aAttributeAtom, 0));
 
   if (!valueList) {
     // The property isn't there yet, so set it
@@ -143,8 +144,8 @@ GetValueAt(nsPresContext* aPresContext,
         aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttributeAtom, values)) {
       valueList = new nsValueList(values);
       if (valueList) {
-        aTableOrRowFrame->SetProperty(aAttributeAtom,
-                                      valueList, DestroyValueListFunc);
+        frameManager->SetFrameProperty(aTableOrRowFrame, aAttributeAtom,
+                                       valueList, DestroyValueListFunc);
       }
     }
   }

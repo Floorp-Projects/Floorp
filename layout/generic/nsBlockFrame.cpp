@@ -927,9 +927,10 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {
       nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-      rv = SetProperty(nsLayoutAtoms::spaceManagerProperty,
-                       reflowState.mSpaceManager,
-                       nsnull /* should be nsSpaceManagerDestroyer*/);
+      rv = shell->FrameManager()->SetFrameProperty(
+                             this, nsLayoutAtoms::spaceManagerProperty,
+                             reflowState.mSpaceManager,
+                             nsnull /* should be nsSpaceManagerDestroyer*/);
 
       autoSpaceManager.DebugOrphanSpaceManager();
     }
@@ -4305,22 +4306,21 @@ nsBlockFrame::RemoveOverflowLines() const
 {
   nsLineList* lines =
     NS_STATIC_CAST(nsLineList*,
-                   UnsetProperty(nsLayoutAtoms::overflowLinesProperty));
+                   RemoveProperty(nsLayoutAtoms::overflowLinesProperty));
   NS_ASSERTION(!lines || !lines->empty(), "value should never be stored as empty");
   return lines;
 }
 
 // Destructor function for the overflowLines frame property
 static void
-DestroyOverflowLines(void*           aFrame,
+DestroyOverflowLines(nsPresContext* aPresContext,
+                     nsIFrame*       aFrame,
                      nsIAtom*        aPropertyName,
-                     void*           aPropertyValue,
-                     void*           aDtorData)
+                     void*           aPropertyValue)
 {
   if (aPropertyValue) {
     nsLineList* lines = NS_STATIC_CAST(nsLineList*, aPropertyValue);
-    nsPresContext *context = NS_STATIC_CAST(nsPresContext*, aDtorData);
-    nsLineBox::DeleteLineList(context, *lines);
+    nsLineBox::DeleteLineList(aPresContext, *lines);
     delete lines;
   }
 }
@@ -4334,10 +4334,9 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
   NS_ASSERTION(!aOverflowLines->empty(), "empty lines");
 
   nsresult rv = SetProperty(nsLayoutAtoms::overflowLinesProperty,
-                            aOverflowLines, DestroyOverflowLines,
-                            GetPresContext());
+                            aOverflowLines, DestroyOverflowLines);
   // Verify that we didn't overwrite an existing overflow list
-  NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow list");
+  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
   return rv;
 }
 
@@ -4352,15 +4351,15 @@ nsFrameList*
 nsBlockFrame::RemoveOverflowOutOfFlows() const
 {
   return NS_STATIC_CAST(nsFrameList*,
-    UnsetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty));
+    RemoveProperty(nsLayoutAtoms::overflowOutOfFlowsProperty));
 }
 
 // Destructor function for the overflowPlaceholders frame property
 static void
-DestroyOverflowOOFs(void*           aFrame,
+DestroyOverflowOOFs(nsPresContext* aPresContext,
+                    nsIFrame*       aFrame,
                     nsIAtom*        aPropertyName,
-                    void*           aPropertyValue,
-                    void*           aDtorData)
+                    void*           aPropertyValue)
 {
   NS_NOTREACHED("This helper method should never be called!");
   delete NS_STATIC_CAST(nsFrameList*, aPropertyValue);
@@ -4373,7 +4372,7 @@ nsBlockFrame::SetOverflowOutOfFlows(nsFrameList* aOOFs)
   nsresult rv = SetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty,
                             aOOFs, DestroyOverflowOOFs);
   // Verify that we didn't overwrite an existing overflow list
-  NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow float list");
+  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow float list");
   return rv;
 }
 
@@ -4390,15 +4389,15 @@ nsBlockFrame::RemoveOverflowPlaceholders() const
 {
   return
     NS_STATIC_CAST(nsFrameList*, 
-                   UnsetProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
+                   RemoveProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
 }
 
 // Destructor function for the overflowPlaceholders frame property
 static void
-DestroyOverflowPlaceholders(void*           aFrame,
+DestroyOverflowPlaceholders(nsPresContext* aPresContext,
+                            nsIFrame*       aFrame,
                             nsIAtom*        aPropertyName,
-                            void*           aPropertyValue,
-                            void*           aDtorData)
+                            void*           aPropertyValue)
 {
   nsFrameList* overflowPlace = NS_STATIC_CAST(nsFrameList*, aPropertyValue);
   delete overflowPlace;
@@ -4412,7 +4411,7 @@ nsBlockFrame::SetOverflowPlaceholders(nsFrameList* aOverflowPlaceholders)
   nsresult rv = SetProperty(nsLayoutAtoms::overflowPlaceholdersProperty,
                             aOverflowPlaceholders, DestroyOverflowPlaceholders);
   // Verify that we didn't overwrite an existing overflow list
-  NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow placeholder list");
+  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow placeholder list");
   return rv;
 }
 
@@ -5727,7 +5726,7 @@ void nsBlockFrame::ClearLineCursor() {
     return;
   }
 
-  UnsetProperty(nsLayoutAtoms::lineCursorProperty);
+  RemoveProperty(nsLayoutAtoms::lineCursorProperty);
   RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
 }
 
