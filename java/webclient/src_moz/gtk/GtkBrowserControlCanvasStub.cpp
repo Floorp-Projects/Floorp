@@ -351,6 +351,25 @@ int locateStubFunctions(void *dll)
         PR_LOG(webclientStubLog, PR_LOG_ERROR, ("got dlsym error %s\n", dlerror()));
         return -1;
   }
+
+    nativeGetSelection = (void (*) (JNIEnv *env, jobject obj, jint webShellPtr, jobject selection)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSelection");
+    if (!nativeGetSelection) {
+        PR_LOG(webclientStubLog, PR_LOG_ERROR, ("got dlsym error %s\n", dlerror()));
+        return -1;
+    }
+
+    nativeHighlightSelection = (void (*) (JNIEnv *env, jobject obj, jint webShellPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeHighlightSelection");
+    if (!nativeHighlightSelection) {
+        PR_LOG(webclientStubLog, PR_LOG_ERROR, ("got dlsym error %s\n", dlerror()));
+        return -1;
+    }
+
+    nativeClearAllSelections = (void (*) (JNIEnv *env, jobject obj, jint webShellPtr)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeClearAllSelections");
+    if (!nativeClearAllSelections) {
+        PR_LOG(webclientStubLog, PR_LOG_ERROR, ("got dlsym error %s\n", dlerror()));
+        return -1;
+    }
+
     nativeFindInPage = (void (*) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindInPage");
     if (!nativeFindInPage) {
         PR_LOG(webclientStubLog, PR_LOG_ERROR, ("got dlsym error %s\n", dlerror()));
@@ -647,6 +666,35 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv * env, jobject obj, jint webShellPtr) {
   (* nativeCopyCurrentSelectionToSystemClipboard) (env, obj, webShellPtr);
 }
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Method:    nativeGetSelection
+ * Signature: (ILorg/mozilla/webclient/Selection;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSelection
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject selection) {
+    (* nativeGetSelection) (env, obj, webShellPtr, selection);
+}
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Method:    nativeHighlightSelection
+ * Signature: (ILorg/w3c/dom/Node;Lorg/w3c/dom/Node;II)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeHighlightSelection
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset) {
+    (* nativeHighlightSelection) (env, obj, webShellPtr, startContainer, endContainer, startOffset, endOffset);
+}
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Method:    nativeClearAllSelections
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
+(JNIEnv *env, jobject obj, jint webShellPtr) {
+    (* nativeClearAllSelections) (env, obj, webShellPtr);
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl

@@ -27,7 +27,8 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.BrowserControl;
-import org.mozilla.webclient.CurrentPage;
+import org.mozilla.webclient.CurrentPage2;
+import org.mozilla.webclient.Selection;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 
@@ -36,12 +37,13 @@ import java.io.*;
 import java.net.*;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import org.mozilla.webclient.UnimplementedException; 
 
 import org.mozilla.dom.DOMAccessor;
 
-public class CurrentPageImpl extends ImplObjectNative implements CurrentPage
+public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2
 {
 //
 // Protected Constants
@@ -95,6 +97,41 @@ public void copyCurrentSelectionToSystemClipboard()
 
     synchronized(myBrowserControl) {
         nativeCopyCurrentSelectionToSystemClipboard(nativeWebShell);
+    }
+}
+
+public Selection getSelection() {
+    Selection selection = new SelectionImpl();
+
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert_it(-1 != nativeWebShell);
+    synchronized(myBrowserControl) {
+        nativeGetSelection(nativeWebShell, selection);
+    }
+
+    return selection;
+}
+
+public void highlightSelection(Selection selection) {
+    if (selection != null && selection.isValid()) {
+        Node startContainer = selection.getStartContainer();
+        Node endContainer = selection.getEndContainer();
+        int startOffset = selection.getStartOffset();
+        int endOffset = selection.getEndOffset();
+
+        myFactory.throwExceptionIfNotInitialized();
+        Assert.assert_it(-1 != nativeWebShell);
+        synchronized(myBrowserControl) {
+            nativeHighlightSelection(nativeWebShell, startContainer, endContainer, startOffset, endOffset);
+        }
+    }
+}
+
+public void clearAllSelections() {
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert_it(-1 != nativeWebShell);
+    synchronized(myBrowserControl) {
+        nativeClearAllSelections(nativeWebShell);
     }
 }
             
@@ -235,6 +272,12 @@ public void selectAll()
 //
 
 native public void nativeCopyCurrentSelectionToSystemClipboard(int webShellPtr);
+native public void nativeGetSelection(int webShellPtr, 
+                                      Selection selection);
+
+native public void nativeHighlightSelection(int webShellPtr, Node startContainer, Node endContainer, int startOffset, int endOffset);
+
+native public void nativeClearAllSelections(int webShellPtr);
             
 native public void nativeFindInPage(int webShellPtr, String stringToFind, boolean forward, boolean matchCase);
             
@@ -268,7 +311,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.18 2001/05/29 18:36:06 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.19 2003/04/09 17:42:34 edburns%acm.org Exp $");
     
 }
 

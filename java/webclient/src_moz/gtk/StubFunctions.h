@@ -81,6 +81,9 @@ jobject (* nativeGetPrefs) (JNIEnv *env, jobject obj, jint webShellPtr, jobject 
 void (* nativeRegisterPrefChangedCallback) (JNIEnv *env, jobject obj, jint webShellPtr, jobject callback, jstring prefName, jobject closure);
 // from CurrentPageImpl.h
 void (* nativeCopyCurrentSelectionToSystemClipboard) (JNIEnv *, jobject, jint);
+void (* nativeGetSelection) (JNIEnv *, jobject, jint, jobject);
+void (* nativeHighlightSelection) (JNIEnv *, jobject, jint, jobject, jobject, jint, jint);
+void (* nativeClearAllSelections) (JNIEnv *, jobject, jint);
 void (* nativeFindInPage) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean);
 void (* nativeFindNextInPage) (JNIEnv *, jobject, jint);
 jstring (* nativeGetCurrentURL) (JNIEnv *, jobject, jint);

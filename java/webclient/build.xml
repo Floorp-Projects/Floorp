@@ -202,8 +202,7 @@ depends="create.win32.webclient.scripts,create.unix.webclient.scripts"/>
   <target name="create.win32.webclient.scripts"
 if="build.win32.classes">
 
-    <condition property="debug.options" value="-Xdebug
--Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n">
+    <condition property="debug.options" value="-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n">
       <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
     </condition>
     <condition property="debug.options" value="">
@@ -221,8 +220,7 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
   <target name="create.unix.webclient.scripts"
 if="build.unix.classes">
 
-    <condition property="debug.options" value="-Xdebug
--Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n">
+    <condition property="debug.options" value="-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n">
       <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
     </condition>
     <condition property="debug.options" value="">

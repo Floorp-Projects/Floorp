@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.37 2002/08/31 02:09:12 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.38 2003/04/09 17:42:32 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -76,7 +76,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     private BrowserControlCanvas browserCanvas;
 
     private Navigation2 navigation = null;
-	private CurrentPage	    currentPage;
+	private CurrentPage2    currentPage;
 	private History	        history;
     private static Preferences     prefs;
 	private Bookmarks	    bookmarks;
@@ -109,7 +109,7 @@ private UniversalDialog           uniDialog = null;
     private Component refreshButton;
 
     private PopupMenu popup;
-    private MenuItem popup_ViewSource, popup_SelectAll;
+    private MenuItem popup_ViewSource, popup_SelectAll, popup_ViewSelection;
     private PopupActionListener contextListener;
 
     private String myBinDir;
@@ -294,11 +294,13 @@ private UniversalDialog           uniDialog = null;
 
         popup.add(popup_ViewSource = new MenuItem("View Source as ByteArray"));
         popup.add(popup_SelectAll = new MenuItem("Select All"));
+        popup.add(popup_ViewSelection = new MenuItem("View Selection"));
         
         contextListener = new PopupActionListener();
        
         popup_ViewSource.addActionListener (contextListener);
         popup_SelectAll.addActionListener (contextListener);
+        popup_ViewSelection.addActionListener (contextListener);
 
 		show();
 		toFront();
@@ -307,7 +309,7 @@ private UniversalDialog           uniDialog = null;
             navigation = (Navigation2)
                 browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
             navigation.setPrompt(this);
-            currentPage = (CurrentPage)
+            currentPage = (CurrentPage2)
                 browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
             history = (History)
                 browserControl.queryInterface(BrowserControl.HISTORY_NAME);
@@ -589,7 +591,7 @@ public void dialogDismissed(Dialog d) {
     else if(searchString.equals("")) {
       System.out.println("Clear button selected");
       try {
-          CurrentPage currentPage = (CurrentPage)
+          CurrentPage2 currentPage = (CurrentPage2)
               browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
           currentPage.resetFind();
       }
@@ -601,7 +603,7 @@ public void dialogDismissed(Dialog d) {
       System.out.println("Tring to Find String   -  " + searchString);
       System.out.println("Parameters are    - Backwrads = " + findDialog.backwards + " and Matchcase = " + findDialog.matchcase);
       try {
-	CurrentPage currentPage = (CurrentPage)
+	CurrentPage2 currentPage = (CurrentPage2)
 	  browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
 	currentPage.findInPage(searchString, !findDialog.backwards, findDialog.matchcase);
       }
@@ -967,6 +969,13 @@ public void actionPerformed(ActionEvent event) {
             System.out.println("I will now Select All");
             EMWindow.this.currentPage.selectAll();
         }
+    else if (command.equals("View Selection")) {
+        Selection selection = EMWindow.this.currentPage.getSelection();
+        if (selection != null) {
+            System.err.println("you've selected: " + selection.toString());
+        }
+    }
+    
 }
 }
 

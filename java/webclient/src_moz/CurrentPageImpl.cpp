@@ -51,6 +51,66 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  
 }
 
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSelection
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject selection)
+{
+    WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
+    
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed nativeGetSelection");
+		return;
+	}
+
+    PR_ASSERT(initContext->initComplete);
+
+    if (selection == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null Selection object passed to raptorWebShellGetSelection");
+		return;
+    }
+
+    wsGetSelectionEvent *actionEvent = new wsGetSelectionEvent(env, initContext, selection);
+    
+    PLEvent *event = (PLEvent *) *actionEvent;
+    ::util_PostSynchronousEvent(initContext, event);
+}
+
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeHighlightSelection
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)
+{
+    WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
+    
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeHighlightSelection");
+        return;
+	}
+    
+    PR_ASSERT(initContext->initComplete);
+    
+    wsHighlightSelectionEvent *actionEvent = new wsHighlightSelectionEvent(env, initContext, startContainer, endContainer, (PRInt32) startOffset, (PRInt32) endOffset);
+    PLEvent *event = (PLEvent *) *actionEvent;
+    ::util_PostSynchronousEvent(initContext, event);
+}
+
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
+(JNIEnv *env, jobject obj, jint webShellPtr)
+{
+    WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
+    
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeClearAllSelections");
+		return;
+	}
+
+    PR_ASSERT(initContext->initComplete);
+
+    wsClearAllSelectionEvent *actionEvent = new wsClearAllSelectionEvent(initContext);
+    
+    PLEvent *event = (PLEvent *) *actionEvent;
+    ::util_PostSynchronousEvent(initContext, event);
+}
+
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeFindInPage

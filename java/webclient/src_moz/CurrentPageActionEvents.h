@@ -102,6 +102,42 @@ protected:
     jlong mDoc;
 };
 
+class wsGetSelectionEvent: public nsActionEvent {
+public:
+    wsGetSelectionEvent (JNIEnv *yourEnv, WebShellInitContext *yourInitContext, jobject yourSelection);
+    void * handleEvent (void);
+
+protected:
+    JNIEnv * mEnv;
+    WebShellInitContext *mInitContext;
+    jobject mSelection;
+};
+
+
+class wsHighlightSelectionEvent: public nsActionEvent {
+public:
+    wsHighlightSelectionEvent (JNIEnv *yourEnv, WebShellInitContext *yourInitContext, jobject startContainer, jobject endContainer, PRInt32 startOffset, PRInt32 endOffset);
+    void * handleEvent (void);
+
+protected:
+    JNIEnv *mEnv;
+    WebShellInitContext *mInitContext;
+    jobject mStartContainer;
+    jobject mEndContainer;
+    PRInt32 mStartOffset;
+    PRInt32 mEndOffset;
+};
+
+
+class wsClearAllSelectionEvent: public nsActionEvent {
+public:
+    wsClearAllSelectionEvent (WebShellInitContext *yourInitContext);
+    void * handleEvent (void);
+
+protected:
+    WebShellInitContext *mInitContext;
+};
+
 #endif /* CurrentPageActionEvents_h___ */
 
       
