@@ -1780,12 +1780,11 @@ nsImageFrame::AttributeChanged(nsPresContext* aPresContext,
   nsresult rv = nsSplittableFrame::AttributeChanged(aPresContext, aChild,
                                                     aNameSpaceID, aAttribute,
                                                     aModType);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
-  // XXXldb Shouldn't width and height be handled by attribute mapping?
-  if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute  || nsHTMLAtoms::alt == aAttribute)
-  { // XXX: could check for new width == old width, and make that a no-op
+  if (nsHTMLAtoms::alt == aAttribute)
+  {
     mState |= NS_FRAME_IS_DIRTY;
     mParent->ReflowDirtyChild(aPresContext->PresShell(), (nsIFrame*) this);
   }
