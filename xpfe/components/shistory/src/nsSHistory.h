@@ -33,6 +33,8 @@
 #include "nsIWebNavigation.h"
 #include "nsIWeakReference.h"
 #include "nsISimpleEnumerator.h"
+#include "nsISHistoryListener.h"
+#include "nsIHistoryEntry.h"
 
 class nsIDocShell;
 class nsSHEnumerator;
