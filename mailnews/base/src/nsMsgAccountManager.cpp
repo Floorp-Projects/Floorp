@@ -522,9 +522,10 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
   // reconstruct the new account list, re-adding all accounts except
   // the one with 'key'
   nsCAutoString newAccountList;
+  char *newStr;
   char *rest = NS_CONST_CAST(char *,(const char*)accountList);
-
-  char *token = nsCRT::strtok(rest, ",", &rest);
+  
+  char *token = nsCRT::strtok(rest, ",", &newStr);
   while (token) {
     nsCAutoString testKey(token);
     testKey.StripWhitespace();
@@ -536,7 +537,7 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
       newAccountList += testKey;
     }
 
-    token = nsCRT::strtok(rest, ",", &rest);
+    token = nsCRT::strtok(newStr, ",", &newStr);
   }
 
   // now write the new account list back to the prefs
@@ -871,11 +872,11 @@ nsMsgAccountManager::LoadAccounts()
 #endif
    
     nsCOMPtr<nsIMsgAccount> account;
-    char *token = nsnull;
+    char *newStr;
     char *rest = NS_CONST_CAST(char*,(const char*)accountList);
     nsCAutoString str;
 
-    token = nsCRT::strtok(rest, ",", &rest);
+    char *token = nsCRT::strtok(rest, ",", &newStr);
     while (token) {
       str = token;
       str.StripWhitespace();
@@ -891,7 +892,7 @@ nsMsgAccountManager::LoadAccounts()
       nsCOMPtr<nsISupportsArray> identities;
       account->GetIdentities(getter_AddRefs(identities));
       
-      token = nsCRT::strtok(rest, ",", &rest);
+      token = nsCRT::strtok(newStr, ",", &newStr);
     }
 
     
@@ -969,17 +970,17 @@ nsMsgAccountManager::createKeyedAccount(const char* key,
   m_accounts->AppendElement(NS_STATIC_CAST(nsISupports*, account));
 
   // add to string list
-  if (accountKeyList.IsEmpty())
-    accountKeyList = key;
+  if (mAccountKeyList.IsEmpty())
+    mAccountKeyList = key;
   else {
-    accountKeyList += ",";
-    accountKeyList += key;
+    mAccountKeyList += ",";
+    mAccountKeyList += key;
   }
 
   rv = getPrefService();
   if (NS_SUCCEEDED(rv))
     m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
-                         accountKeyList.GetBuffer());
+                         mAccountKeyList.GetBuffer());
 
   *aAccount = account;
   NS_ADDREF(*aAccount);

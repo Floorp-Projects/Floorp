@@ -61,7 +61,7 @@ private:
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
   nsCOMPtr<nsISupportsArray> m_incomingServerListeners;
 
-  nsCAutoString accountKeyList;
+  nsCAutoString mAccountKeyList;
   
   PRBool m_haveShutdown;
 
