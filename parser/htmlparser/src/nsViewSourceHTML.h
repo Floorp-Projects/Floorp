@@ -123,7 +123,6 @@ protected:
     PRPackedBool        mShowErrors;
     PRPackedBool        mHasOpenRoot;
     PRPackedBool        mHasOpenBody;
-    PRPackedBool        mInCDATAContainer;
 
     PRUint32            mTokenCount;
 };
