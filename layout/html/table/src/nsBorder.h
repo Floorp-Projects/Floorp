@@ -18,17 +18,36 @@
 #ifndef nsBorder_h__
 #define nsBorder_h__
 
-#include "nsMargin.h"
 #include "nsColor.h"
+#include "nsCoord.h"
+#include "nsStyleConsts.h"
 
-/** an encapsulation of border info 
+
+#define BORDER_PRECEDENT_EQUAL 0
+#define BORDER_PRECEDENT_LOWER 1
+#define BORDER_PRECEDENT_HIGHER 2
+
+
+/** an encapsulation of border edge info 
   * 
   */
-struct nsBorder
+struct nsBorderEdge
 {
-  nsMargin mWidths;
-  PRUint8  mStyle[4];  
-  nscolor  mColor[4];
+  nscoord mWidth;
+  PRUint8 mStyle;  
+  nscolor mColor;
+  PRUint8 mSide;
+
+  nsBorderEdge();
 };
+
+inline nsBorderEdge::nsBorderEdge()
+{
+  mWidth=0;
+  mStyle=NS_STYLE_BORDER_STYLE_NONE;
+  mColor=0;
+  mSide=NS_SIDE_LEFT;
+};
+
 
 #endif

@@ -34,7 +34,6 @@
 
 #include "nsIPresContext.h"
 #include "nsCSSRendering.h"
-#include "nsBorder.h"
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
 #include "nsIPtr.h"
@@ -659,7 +658,6 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
 {
   if (PR_TRUE==gsDebug) printf("TIF EnsureColumns\n");
-  nsresult rv;
   NS_PRECONDITION(nsnull!=mCellMap, "bad state:  null cellmap");
   // XXX sec should only be called on firstInFlow
   SetMinColSpanForTable();
@@ -1228,12 +1226,12 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInd
   PRInt32 numSegments = mBorderEdges[NS_SIDE_LEFT].Count();
   while (numSegments<=aRowIndex)
   {
-    nsBorder *borderToAdd = new nsBorder();
+    nsBorderEdge *borderToAdd = new nsBorderEdge();
     mBorderEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorder *border = (nsBorder *)(mBorderEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
 
   // collect all the incident frames and compute the dominant border 
   nsVoidArray styles;
@@ -1264,10 +1262,11 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInd
     //    5. row
     rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
-    //    5. cell (need to do something smart for rowspanner with row frame)
+    //    6. cell (need to do something smart for rowspanner with row frame)
     cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
   }
+  ComputeCollapsedBorderSegment(NS_SIDE_LEFT, &styles, *border);
 
 
 }
@@ -1300,6 +1299,204 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColI
       else
       {
       }
+
+}
+
+nscoord nsTableFrame::GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide)
+{
+  if (NS_SIDE_LEFT == aSide) return aBorder.left;
+  else if (NS_SIDE_RIGHT == aSide) return aBorder.right;
+  else if (NS_SIDE_TOP == aSide) return aBorder.top;
+  else return aBorder.bottom;
+}
+
+/* returns BORDER_PRECEDENT_LOWER if aStyle1 is lower precedent that aStyle2
+ *         BORDER_PRECEDENT_HIGHER if aStyle1 is higher precedent that aStyle2
+ *         BORDER_PRECEDENT_EQUAL if aStyle1 and aStyle2 have the same precedence
+ *         (note, this is not necessarily the same as saying aStyle1==aStyle2)
+ * this is a method on nsTableFrame because other objects might define their
+ * own border precedence rules.
+ */
+PRUint8 nsTableFrame::CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2)
+{
+  PRUint8 result=BORDER_PRECEDENT_HIGHER; // if we get illegal types for table borders, HIGHER is the default
+  if (aStyle1==aStyle2)
+    result = BORDER_PRECEDENT_EQUAL;
+  else if (NS_STYLE_BORDER_STYLE_HIDDEN==aStyle1)
+    result = BORDER_PRECEDENT_HIGHER;
+  else if (NS_STYLE_BORDER_STYLE_NONE==aStyle1)
+    result = BORDER_PRECEDENT_LOWER;
+  else if (NS_STYLE_BORDER_STYLE_NONE==aStyle2)
+    result = BORDER_PRECEDENT_HIGHER;
+  else if (NS_STYLE_BORDER_STYLE_HIDDEN==aStyle2)
+    result = BORDER_PRECEDENT_LOWER;
+  else
+  {
+    switch (aStyle1)
+    {
+    case NS_STYLE_BORDER_STYLE_INSET:
+      result = BORDER_PRECEDENT_LOWER;
+      break;
+
+    case NS_STYLE_BORDER_STYLE_GROOVE:
+      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2)
+        result = BORDER_PRECEDENT_HIGHER;
+      else
+        result = BORDER_PRECEDENT_LOWER;
+      break;      
+
+    case NS_STYLE_BORDER_STYLE_OUTSET:
+      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2 || 
+          NS_STYLE_BORDER_STYLE_GROOVE==aStyle2)
+        result = BORDER_PRECEDENT_HIGHER;
+      else
+        result = BORDER_PRECEDENT_LOWER;
+      break;      
+
+    case NS_STYLE_BORDER_STYLE_RIDGE:
+      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+          NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2)
+        result = BORDER_PRECEDENT_HIGHER;
+      else
+        result = BORDER_PRECEDENT_LOWER;
+      break;
+
+    case NS_STYLE_BORDER_STYLE_DOTTED:
+      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+          NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_RIDGE==aStyle2)
+        result = BORDER_PRECEDENT_HIGHER;
+      else
+        result = BORDER_PRECEDENT_LOWER;
+      break;
+
+    case NS_STYLE_BORDER_STYLE_DASHED:
+      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+          NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_RIDGE==aStyle2  ||
+          NS_STYLE_BORDER_STYLE_DOTTED==aStyle2)
+        result = BORDER_PRECEDENT_HIGHER;
+      else
+        result = BORDER_PRECEDENT_LOWER;
+      break;
+
+    case NS_STYLE_BORDER_STYLE_SOLID:
+      if (NS_STYLE_BORDER_STYLE_INSET==aStyle2  || 
+          NS_STYLE_BORDER_STYLE_GROOVE==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_OUTSET==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_RIDGE==aStyle2  ||
+          NS_STYLE_BORDER_STYLE_DOTTED==aStyle2 ||
+          NS_STYLE_BORDER_STYLE_DASHED==aStyle2)
+        result = BORDER_PRECEDENT_HIGHER;
+      else
+        result = BORDER_PRECEDENT_LOWER;
+      break;
+
+    case NS_STYLE_BORDER_STYLE_DOUBLE:
+        result = BORDER_PRECEDENT_LOWER;
+      break;
+    }
+  }
+  return result;
+}
+
+/*
+  This method is the CSS2 border conflict resolution algorithm
+  The spec says to resolve conflicts in this order:
+  1. any border with the style HIDDEN wins
+  2. the widest border with a style that is not NONE wins
+  3. the border styles are ranked in this order, highest to lowest precedence: 
+        double, solid, dashed, dotted, ridge, outset, groove, inset
+  4. borders that are of equal width and style (differ only in color) have this precedence:
+        cell, row, rowgroup, col, colgroup, table
+  5. if all border styles are NONE, then that's the computed border style.
+  This method assumes that the styles were added to aStyles in the reverse precedence order
+  of their frame type, so that styles that come later in the list win over style 
+  earlier in the list if the tie-breaker gets down to #4.
+  This method sets the out-param aBorder with the resolved border attributes
+*/
+void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8      aSide, 
+                                                 nsVoidArray *aStyles, 
+                                                 nsBorderEdge &aBorder)
+{
+  if (nsnull!=aStyles)
+  {
+    PRInt32 styleCount=aStyles->Count();
+    if (0!=styleCount)
+    {
+      nsVoidArray sameWidthBorders;
+      nsStyleSpacing * spacing;
+      nsMargin border;
+      PRInt32 maxWidth=0;
+      PRInt32 i;
+      for (i=0; i<styleCount; i++)
+      {
+        spacing = (nsStyleSpacing *)(aStyles->ElementAt(i));
+        if (spacing->GetBorderStyle(aSide)==NS_STYLE_BORDER_STYLE_HIDDEN)
+        {
+          aBorder.mStyle=NS_STYLE_BORDER_STYLE_HIDDEN;
+          aBorder.mWidth=0;
+          return;
+        }
+        else if (spacing->GetBorderStyle(aSide)!=NS_STYLE_BORDER_STYLE_NONE)
+        {
+          spacing->GetBorder(border);
+          nscoord borderWidth = GetWidthForSide(border, aSide);
+          if (borderWidth==maxWidth)
+            sameWidthBorders.AppendElement(spacing);
+          else if (borderWidth>maxWidth)
+          {
+            maxWidth=borderWidth;
+            sameWidthBorders.Clear();
+            sameWidthBorders.AppendElement(spacing);
+          }
+        }
+      }
+      aBorder.mWidth=maxWidth;
+      // now we've gone through each overlapping border once, and we have a list
+      // of all styles with the same width.  If there's more than one, resolve the
+      // conflict based on border style
+      styleCount = sameWidthBorders.Count();
+      if (0==styleCount)
+      {  // all borders were of style NONE
+        aBorder.mWidth=0;
+        aBorder.mStyle=NS_STYLE_BORDER_STYLE_NONE;
+        return;
+      }
+      else if (1==styleCount)
+      { // there was just one border of the largest width
+        spacing = (nsStyleSpacing *)(sameWidthBorders.ElementAt(0));
+        aBorder.mColor=spacing->GetBorderColor(aSide);
+        aBorder.mStyle=spacing->GetBorderStyle(aSide);
+        return;
+      }
+      else
+      {
+        nsStyleSpacing *winningStyleBorder;
+        PRUint8 winningStyle=NS_STYLE_BORDER_STYLE_NONE;
+        for (i=0; i<styleCount; i++)
+        {
+          spacing = (nsStyleSpacing *)(aStyles->ElementAt(i));
+          PRUint8 thisStyle = spacing->GetBorderStyle(aSide);
+          PRUint8 borderCompare = CompareBorderStyles(thisStyle, winningStyle);
+          if (BORDER_PRECEDENT_HIGHER==borderCompare)
+          {
+            winningStyle=thisStyle;
+            winningStyleBorder = spacing;
+          }
+          else if (BORDER_PRECEDENT_EQUAL==borderCompare)
+          { // we're in lowest-to-highest precedence order, so later border styles win
+            winningStyleBorder=spacing;
+          }          
+        }
+        aBorder.mStyle = winningStyle;
+        aBorder.mColor = winningStyleBorder->GetBorderColor(aSide);
+      }
+    }
+  }
 
 }
 
