@@ -2424,8 +2424,11 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsIDOMXULTreeElement> treeElement;
     nsCOMPtr<nsITreeBoxObject> treeBox;
-    PRInt32 newSelectIndex = -1;
     PRBool fireSelectionHandler = PR_FALSE;
+
+    // -1 = do nothing, -2 = null out current item
+    // anything else = index to re-set as current
+    PRInt32 newCurrentIndex = -1;
 
     oldKid->GetTag(*getter_AddRefs(tag));
     if (tag && (tag.get() == nsXULAtoms::treechildren || tag.get() == nsXULAtoms::treeitem ||
@@ -2460,22 +2463,25 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
               fireSelectionHandler = PR_TRUE;
             }
           }
-		}
+        }
 
         nsCOMPtr<nsIDOMXULElement> curItem;
         treeElement->GetCurrentItem(getter_AddRefs(curItem));
         nsCOMPtr<nsIDOMNode> curNode = do_QueryInterface(curItem);
         if (IsAncestor(parentKid, curNode)) {
-	        // Current item going away
+            // Current item going away
             nsCOMPtr<nsIBoxObject> box;
             treeElement->GetBoxObject(getter_AddRefs(box));
             treeBox = do_QueryInterface(box);
             if (treeBox) {
                 nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parentKid);
-                if (domElem) {
-                    treeBox->GetIndexOfItem(domElem, &newSelectIndex);
-                }
+                if (domElem)
+                    treeBox->GetIndexOfItem(domElem, &newCurrentIndex);
             }
+
+            // If any of this fails, we'll just set the current item to null
+            if (newCurrentIndex == -1)
+              newCurrentIndex = -2;
         }
       }
     }
@@ -2488,18 +2494,20 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
             doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
         }
 
-        if (newSelectIndex != -1) {
+        if (newCurrentIndex == -2)
+            treeElement->SetCurrentItem(nsnull);
+        else if (newCurrentIndex > -1) {
             // Make sure the index is still valid
             PRInt32 treeRows;
             treeBox->GetRowCount(&treeRows);
             if (treeRows > 0) {
-                newSelectIndex = PR_MIN((treeRows - 1), newSelectIndex);
-                nsCOMPtr<nsIDOMElement> newSelectItem;
-                treeBox->GetItemAtIndex(newSelectIndex, getter_AddRefs(newSelectItem));
-                if (newSelectItem) {
-                    nsCOMPtr<nsIDOMXULElement> xulSelItem = do_QueryInterface(newSelectItem);
-                    if (xulSelItem)
-                        treeElement->SetCurrentItem(xulSelItem);
+                newCurrentIndex = PR_MIN((treeRows - 1), newCurrentIndex);
+                nsCOMPtr<nsIDOMElement> newCurrentItem;
+                treeBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
+                if (newCurrentItem) {
+                    nsCOMPtr<nsIDOMXULElement> xulCurItem = do_QueryInterface(newCurrentItem);
+                    if (xulCurItem)
+                        treeElement->SetCurrentItem(xulCurItem);
                 }
             } else {
                 treeElement->SetCurrentItem(nsnull);
