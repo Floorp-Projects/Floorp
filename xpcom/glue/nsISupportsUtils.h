@@ -41,8 +41,11 @@ struct JSContext;
   #define HAVE_CPP_SPECIALIZATION
 #endif
 
-	// until we fix the rest of the code, this needs to be turned off
-#undef HAVE_CPP_SPECIALIZATION
+  // under VC++ (Windows), we don't have autoconf yet
+#if defined(_MSC_VER) && (_MSC_VER>=1100)
+		// VC++ 5.0 and greater implement template specialization, 4.2 is unknown
+  #define HAVE_CPP_SPECIALIZATION
+#endif
 
 #ifdef HAVE_CPP_SPECIALIZATION
 	#define NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
