@@ -960,8 +960,7 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
     if (!newVal.IsEmpty())
       mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsCOMPtr<nsIDOMEvent> domEvent;
-    HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+    HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);
   }
 
@@ -1001,8 +1000,7 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent, const char* aBuffer,
     if (!newVal.IsEmpty())
       mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsCOMPtr<nsIDOMEvent> domEvent;
-    HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+    HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);
   }
 
@@ -1023,6 +1021,22 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
     mDocument->BeginUpdate();
   }
   mText = aStr;
+
+  if (mDocument && nsGenericElement::HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+    nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aOuterContent));
+    nsMutationEvent mutation;
+    mutation.eventStructType = NS_MUTATION_EVENT;
+    mutation.message = NS_MUTATION_CHARACTERDATAMODIFIED;
+    mutation.mTarget = node;
+
+    // XXX Handle the setting of prevValue!
+    nsAutoString newVal(aStr);
+    if (!newVal.IsEmpty())
+      mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
+    nsEventStatus status = nsEventStatus_eIgnore;
+    HandleDOMEvent(nsnull, &mutation, nsnull,
+                   NS_EVENT_FLAG_INIT, &status);
+  }
 
   // Trigger a reflow
   if (aNotify && (nsnull != mDocument)) {
