@@ -76,6 +76,7 @@
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
+#include "nsIHistoryEntry.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -4549,15 +4550,14 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
              * set up the cache key on the channel, to retrieve the
              * data only from the cache. When there is a postdata
              * on a history load, we do not want to go out to the net
-             * in our first attempt. We will go out to the net for a
-             * post data result, *only* if it has expired from cache *and*
-             * the user has given us permission to do so.
+             * in our first attempt. 
              */
-            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL
-                || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
-                if (cacheChannel && cacheKey)
-                    cacheChannel->SetCacheKey(cacheKey, PR_TRUE);
-            }
+            PRBool cacheFlag = PR_FALSE;
+            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) 
+                cacheFlag = PR_TRUE;
+            if (cacheChannel && cacheKey)
+                cacheChannel->SetCacheKey(cacheKey, cacheFlag);
+            
         }
         else {
             /* If there is no postdata, set the cache key on the channel
@@ -5563,11 +5563,10 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       NS_ERROR_FAILURE);
 
     /* If there is a valid postdata *and* the user pressed
-     * shift-reload, take user's permission before we repost the 
-     * data to the server.
+     * reload or shift-reload, take user's permission before we  
+     * repost the data to the server.
      */
-    if ((aLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE ||
-        aLoadType == LOAD_RELOAD_BYPASS_CACHE) && postData) {
+    if ((aLoadType & LOAD_CMD_RELOAD) && postData) {
 
       nsCOMPtr<nsIPrompt> prompter;
       PRBool repost;
