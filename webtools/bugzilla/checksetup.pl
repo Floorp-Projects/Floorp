@@ -387,7 +387,7 @@ LocalVar('webservergroup', '
 #
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
-# If you do not wish for checksetup to adjust the permissions of anything,
+# If you do not have access to the group your web server runs under,
 # set this to "". If you do set this to "", then your Bugzilla installation
 # will be _VERY_ insecure, because some files will be world readable/writable,
 # and so anyone who can get local access to your machine can do whatever they
