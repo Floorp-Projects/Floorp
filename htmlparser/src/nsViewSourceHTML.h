@@ -280,6 +280,7 @@ protected:
     nsAutoString        mText;
     nsAutoString        mKey;
     nsAutoString        mValue;
+    nsAutoString        mPopupTag;
     PRBool              mIsText;
 };
 
