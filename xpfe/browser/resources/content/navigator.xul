@@ -46,7 +46,7 @@ Contributor(s): ______________________________________. -->
   ondraggesture="return GeneralDrag(event);"> 
 
 <html:script language="javascript" src="chrome://global/content/strres.js" />
-<html:script language="javascript" src="navigator.js" />
+<html:script language="javascript" src="chrome://navigator/content/navigator.js" />
 <html:script language="javascript" src="nsContextMenu.js" />
 <html:script language="javascript" src="tooltip.js" />
 <html:script language="javascript" src="navigatorDD.js" />
