@@ -1499,6 +1499,8 @@ extern nsresult NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                               nsIFrame*& aNewFrame);
 extern nsresult NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                               nsIFrame*& aNewFrame);
+extern nsresult NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                                  nsIFrame*& aNewFrame);
 
 nsresult
 nsHTMLGenericContent::CreateFrame(nsIPresContext*  aPresContext,
@@ -1510,15 +1512,21 @@ nsHTMLGenericContent::CreateFrame(nsIPresContext*  aPresContext,
   nsresult rv = NS_OK;
 
   // Handle specific frame types
-  if (mTag == nsHTMLAtoms::hr) {
-    rv = NS_NewHRFrame(mContent, aParentFrame, frame);
+  if (mTag == nsHTMLAtoms::applet) {
+    rv = NS_NewObjectFrame(mContent, aParentFrame, frame);
   }
   else if (mTag == nsHTMLAtoms::br) {
     rv = NS_NewBRFrame(mContent, aParentFrame, frame);
   }
+  else if (mTag == nsHTMLAtoms::hr) {
+    rv = NS_NewHRFrame(mContent, aParentFrame, frame);
+  }
   if (NS_OK != rv) {
     return rv;
   }
+
+  // XXX add code in here to force the odd ones into the empty frame?
+  // AREA, HEAD, META, MAP, etc...
 
   if (nsnull == frame) {
     // When there is no explicit frame to create, assume it's a
@@ -1859,6 +1867,270 @@ nsHTMLGenericContent::ParseValue(const nsString& aString, PRInt32 aMin,
   // Illegal values are mapped to empty
   aResult.SetEmptyValue();
   return PR_FALSE;
+}
+
+PRBool
+nsHTMLGenericContent::ParseColor(const nsString& aString,
+                                 nsHTMLValue& aResult)
+{
+  if (aString.Length() > 0) {
+    nsAutoString  colorStr (aString);
+    colorStr.CompressWhitespace();
+    char cbuf[40];
+    colorStr.ToCString(cbuf, sizeof(cbuf));
+    nscolor color;
+    if (NS_ColorNameToRGB(cbuf, &color)) {
+      aResult.SetStringValue(colorStr);
+      return PR_TRUE;
+    }
+    if (NS_HexToRGB(cbuf, &color)) {
+      aResult.SetColorValue(color);
+      return PR_TRUE;
+    }
+  }
+
+  // Illegal values are mapped to empty
+  aResult.SetEmptyValue();
+  return PR_FALSE;
+}
+
+PRBool
+nsHTMLGenericContent::ColorToString(const nsHTMLValue& aValue,
+                                    nsString& aResult)
+{
+  if (aValue.GetUnit() == eHTMLUnit_Color) {
+    nscolor v = aValue.GetColorValue();
+    char buf[10];
+    PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+                NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
+    aResult.Truncate(0);
+    aResult.Append(buf);
+    return PR_TRUE;
+  }
+  if (aValue.GetUnit() == eHTMLUnit_String) {
+    aValue.GetStringValue(aResult);
+    return PR_TRUE;
+  }
+  if (aValue.GetUnit() == eHTMLUnit_Empty) {  // was illegal
+    aResult.Truncate();
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+// XXX check all mappings against ebina's usage
+static nsHTMLGenericContent::EnumTable kAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },
+  { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
+  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { 0 }
+};
+
+PRBool
+nsHTMLGenericContent::ParseAlignValue(const nsString& aString,
+                                      nsHTMLValue& aResult)
+{
+  return ParseEnumValue(aString, kAlignTable, aResult);
+}
+
+PRBool
+nsHTMLGenericContent::AlignValueToString(const nsHTMLValue& aValue,
+                                         nsString& aResult)
+{
+  return EnumValueToString(aValue, kAlignTable, aResult);
+}
+
+PRBool
+nsHTMLGenericContent::ParseImageAttribute(nsIAtom* aAttribute,
+                                          const nsString& aString,
+                                          nsHTMLValue& aResult)
+{
+  if ((aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::height)) {
+    ParseValueOrPercent(aString, aResult, eHTMLUnit_Pixel);
+    return PR_TRUE;
+  }
+  else if ((aAttribute == nsHTMLAtoms::hspace) ||
+           (aAttribute == nsHTMLAtoms::vspace) ||
+           (aAttribute == nsHTMLAtoms::border)) {
+    ParseValue(aString, 0, aResult, eHTMLUnit_Pixel);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsHTMLGenericContent::ImageAttributeToString(nsIAtom* aAttribute,
+                                             const nsHTMLValue& aValue,
+                                             nsString& aResult)
+{
+  if ((aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::height) ||
+      (aAttribute == nsHTMLAtoms::border) ||
+      (aAttribute == nsHTMLAtoms::hspace) ||
+      (aAttribute == nsHTMLAtoms::vspace)) {
+    return ValueOrPercentToString(aValue, aResult);
+  }
+  return PR_FALSE;
+}
+
+void
+nsHTMLGenericContent::MapImageAttributesInto(nsIStyleContext* aContext, 
+                                             nsIPresContext* aPresContext)
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStylePosition* pos = (nsStylePosition*)
+      aContext->GetMutableStyleData(eStyleStruct_Position);
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+
+    // width: value
+    GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mWidth.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mWidth.SetPercentValue(value.GetPercentValue());
+    }
+
+    // height: value
+    GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mHeight.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mHeight.SetPercentValue(value.GetPercentValue());
+    }
+
+    // hspace: value
+    GetAttribute(nsHTMLAtoms::hspace, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      spacing->mMargin.SetRight(nsStyleCoord(twips));
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      spacing->mMargin.SetRight(nsStyleCoord(value.GetPercentValue(),
+                                             eStyleUnit_Coord));
+    }
+
+    // vspace: value
+    GetAttribute(nsHTMLAtoms::vspace, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      spacing->mMargin.SetBottom(nsStyleCoord(twips));
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      spacing->mMargin.SetBottom(nsStyleCoord(value.GetPercentValue(),
+                                              eStyleUnit_Coord));
+    }
+  }
+}
+
+void
+nsHTMLGenericContent::MapImageAlignAttributeInto(nsIStyleContext* aContext,
+                                                 nsIPresContext* aPresContext)
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRUint8 align = value.GetIntValue();
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        aContext->GetMutableStyleData(eStyleStruct_Display);
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsStyleSpacing* spacing = (nsStyleSpacing*)
+        aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      float p2t = aPresContext->GetPixelsToTwips();
+      nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
+      switch (align) {
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        display->mFloats = NS_STYLE_FLOAT_LEFT;
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
+        break;
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        display->mFloats = NS_STYLE_FLOAT_RIGHT;
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
+        break;
+      default:
+        text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
+        break;
+      }
+    }
+  }
+}
+
+void
+nsHTMLGenericContent::MapImageBorderAttributesInto(nsIStyleContext* aContext, 
+                                                   nsIPresContext* aPresContext,
+                                                   nscolor aBorderColors[4])
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+
+    // border: pixels
+    GetAttribute(nsHTMLAtoms::border, value);
+    if (value.GetUnit() != eHTMLUnit_Pixel) {
+      if (nsnull == aBorderColors) {
+        return;
+      }
+      // If no border is defined and we are forcing a border, force
+      // the size to 2 pixels.
+      value.SetPixelValue(2);
+    }
+
+    float p2t = aPresContext->GetPixelsToTwips();
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+
+    // Fixup border-padding sums: subtract out the old size and then
+    // add in the new size.
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+    nsStyleCoord coord;
+    coord.SetCoordValue(twips);
+    spacing->mBorder.SetTop(coord);
+    spacing->mBorder.SetRight(coord);
+    spacing->mBorder.SetBottom(coord);
+    spacing->mBorder.SetLeft(coord);
+    spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
+    spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+    spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+    spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+
+    // Use supplied colors if provided, otherwise use color for border
+    // color
+    if (nsnull != aBorderColors) {
+      spacing->mBorderColor[0] = aBorderColors[0];
+      spacing->mBorderColor[1] = aBorderColors[1];
+      spacing->mBorderColor[2] = aBorderColors[2];
+      spacing->mBorderColor[3] = aBorderColors[3];
+    }
+    else {
+      // Color is inherited from "color"
+      const nsStyleColor* styleColor = (const nsStyleColor*)
+        aContext->GetStyleData(eStyleStruct_Color);
+      nscolor color = styleColor->mColor;
+      spacing->mBorderColor[0] = color;
+      spacing->mBorderColor[1] = color;
+      spacing->mBorderColor[2] = color;
+      spacing->mBorderColor[3] = color;
+    }
+  }
 }
 
 void

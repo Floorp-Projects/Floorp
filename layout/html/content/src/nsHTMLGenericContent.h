@@ -210,6 +210,29 @@ struct nsHTMLGenericContent {
   static PRBool ColorToString(const nsHTMLValue& aValue,
                               nsString& aResult);
 
+  static PRBool ParseAlignValue(const nsString& aString, nsHTMLValue& aResult);
+
+  static PRBool AlignValueToString(const nsHTMLValue& aValue,
+                                   nsString& aResult);
+
+  static PRBool ParseImageAttribute(nsIAtom* aAttribute,
+                                    const nsString& aString,
+                                    nsHTMLValue& aResult);
+
+  static PRBool ImageAttributeToString(nsIAtom* aAttribute,
+                                       const nsHTMLValue& aValue,
+                                       nsString& aResult);
+
+  void MapImageAttributesInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext);
+
+  void MapImageAlignAttributeInto(nsIStyleContext* aContext,
+                                  nsIPresContext* aPresContext);
+
+  void MapImageBorderAttributesInto(nsIStyleContext* aContext,
+                                    nsIPresContext* aPresContext,
+                                    nscolor aBorderColors[4]);
+
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
