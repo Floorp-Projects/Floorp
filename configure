@@ -2513,7 +2513,7 @@ case "$target" in
 *-*-aix*)
 	if test ! "$GNU_CC"; then
 		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
-		DSO_CFLAGS='-DPIC -brtl -O -qnortti -qflag=w:w'
+		DSO_CFLAGS='-DPIC -brtl -qnortti -qflag=w:w'
 	fi
 	MKSHLIB='/usr/ibmcxx/bin/makeC++SharedLib_r -p1 -brtl -berok --'
 	;;
