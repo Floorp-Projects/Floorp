@@ -1033,11 +1033,13 @@ GetOSDPI(void)
   if (dpi > 0)
     return NSToCoordRound(dpi / 1024.0);
 
+#ifdef MOZ_ENABLE_XFT
   // try to get it from xft
   PRInt32 xftdpi = GetXftDPI();
 
   if (xftdpi)
     return xftdpi;
+#endif /* MOZ_ENABLE_XFT */
   
   // fall back to the physical resolution
   float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
