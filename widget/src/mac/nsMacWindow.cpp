@@ -224,6 +224,7 @@ NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 {
 	if (mWindowMadeHere)
 	{
+		// make sure the window stays visible
 		Rect screenRect = (**::GetGrayRgn()).rgnBBox;
 
 		short windowWidth = mWindowPtr->portRect.right - mWindowPtr->portRect.left;
@@ -237,21 +238,39 @@ NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 		else if (((PRInt32)aY) > screenRect.bottom)
 			aY = screenRect.bottom;
 
+		// move the window if it has not been moved yet
+		// (ie. if this function isn't called in response to a DragWindow event)
+		Point macPoint;
+		macPoint = topLeft(mWindowPtr->portRect);
+		::LocalToGlobal(&macPoint);
+		if ((macPoint.h != aX) || (macPoint.v != aY))
+		{
+			// in that case, the window borders should be visible too
+			PRUint32 minX, minY;
+			if (mIsDialog)
+			{
+				minX = kDialogMarginWidth;
+				minY = kDialogTitleBarHeight + ::LMGetMBarHeight();
+			}
+			else
+			{
+				minX = kWindowMarginWidth;
+				minY = kWindowTitleBarHeight + ::LMGetMBarHeight();
+			}
+			if (aX < minX)
+				aX = minX;
+			if (aY < minY)
+				aY = minY;
+
+			::MoveWindow(mWindowPtr, aX, aY, false);
+		}
+
 		// propagate the event in global coordinates
 		nsWindow::Move(aX, aY);
 
 		// reset the coordinates to (0,0) because it's the top level widget
 		mBounds.x = 0;
 		mBounds.y = 0;
-
-		// move the window if it has not been moved yet
-		// (ie. if this function isn't called in response to a DragWindow event)
-		Point macPoint;
-		macPoint = topLeft(mWindowPtr->portRect);
-		::LocalToGlobal(&macPoint);
-		if ((macPoint.h != aX) || (macPoint.v != aY)) {
-			::MoveWindow(mWindowPtr, aX, aY, false);
-		}
 	}
 	return NS_OK;
 }
