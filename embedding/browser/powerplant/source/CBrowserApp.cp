@@ -28,9 +28,11 @@
 #include <UDrawingState.h>
 #include <UMemoryMgr.h>
 #include <URegistrar.h>
-#include <LWindow.h>
-#include <LCaption.h>
+#include <LPushButton.h>
+#include <LStaticText.h>
 #include <LIconControl.h>
+#include <LWindow.h>
+#include <LTextTableView.h>
 #include <UControlRegistry.h>
 #include <UGraphicUtils.h>
 #include <UEnvironment.h>
@@ -54,6 +56,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIObserverService.h"
 #include "nsIPref.h"
 #include "nsRepeater.h"
 #include "nsILocalFile.h"
@@ -69,10 +72,13 @@
 
 #include <TextServices.h>
 
-extern "C" void NS_SetupRegistry();
+#if USE_PROFILES
+#include "CProfileManager.h"
+#include "nsIProfileChangeStatus.h"
+#endif
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static const char* kProgramName = "PP Browser";
+static const char* kProgramName = "PPEmbed";
 
 // ===========================================================================
 //		¥ Main Program
@@ -118,6 +124,11 @@ int main()
 
 CBrowserApp::CBrowserApp()
 {
+
+#if USE_PROFILES
+    mRefCnt = 1;
+#endif
+
 	if ( PP_PowerPlant::UEnvironment::HasFeature( PP_PowerPlant::env_HasAppearance ) ) {
 		::RegisterAppearanceClient();
 	}
@@ -136,6 +147,12 @@ CBrowserApp::CBrowserApp()
 	RegisterClass_(CBrowserWindow);
 	RegisterClass_(CUrlField);
 	RegisterClass_(CThrobber);
+
+#if USE_PROFILES	
+	RegisterClass_(LScroller);
+	RegisterClass_(LTextTableView);
+	RegisterClass_(LColorEraseAttachment);
+#endif
 
    // Contexual Menu Support
    UCMMUtils::Initialize();
@@ -205,6 +222,20 @@ void
 CBrowserApp::StartUp()
 {
     nsresult rv;
+
+#if USE_PROFILES
+    CProfileManager *profileMgr = new CProfileManager;
+    profileMgr->StartUp();
+    AddAttachment(profileMgr);
+
+    // Register for profile changes    
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    ThrowIfNil_(observerService);
+    observerService->AddObserver(this, PROFILE_APPROVE_CHANGE_TOPIC);
+    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
+    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
+
+#else
     
     // If we don't want different user profiles, all that's needed is
     // to make an nsMPFileLocProvider. This will provide the same file
@@ -223,6 +254,8 @@ CBrowserApp::StartUp()
     // Needed because things read default prefs during startup
     prefs->ResetPrefs();
     prefs->ReadUserPrefs();
+
+#endif
 
     InitializePrefs();
 
@@ -576,3 +609,62 @@ Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
 	}
     return result;
 }
+#if USE_PROFILES
+
+// ---------------------------------------------------------------------------
+//  CBrowserApp : nsISupports
+// ---------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS2(CBrowserApp, nsIObserver, nsISupportsWeakReference);
+
+// ---------------------------------------------------------------------------
+//  CBrowserApp : nsIObserver
+// ---------------------------------------------------------------------------
+
+NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    #define CLOSE_WINDOWS_ON_SWITCH 1
+
+    nsresult rv = NS_OK;
+    
+    if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0)
+    {
+        // Ask the user if they want to
+        DialogItemIndex item = UModalAlerts::StopAlert(alrt_ConfirmProfileSwitch);
+        if (item != kStdOkItemIndex)
+        {
+            nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+            NS_ENSURE_TRUE(status, NS_ERROR_FAILURE);
+            status->VetoChange();
+        }
+    }
+    else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0)
+    {
+        // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
+        // on each. Either way, we have to stop all network activity on this phase.
+        
+        TArrayIterator<LCommander*> iterator(mSubCommanders, LArrayIterator::from_End);
+        LCommander*		theSub;
+        while (iterator.Previous(theSub)) {
+            CBrowserWindow *browserWindow = dynamic_cast<CBrowserWindow*>(theSub);
+            if (browserWindow) {
+                browserWindow->Stop();
+        	    mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
+        	    delete browserWindow;
+        	}
+        }
+        NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv))
+          cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
+    }
+    else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0)
+    {
+        InitializePrefs(); // In case we have just switched to a newly created profile.
+        
+        // Make a new default window
+        ObeyCommand(PP_PowerPlant::cmd_New, nil);
+    }
+    return rv;
+}
+
+#endif // USE_PROFILES
