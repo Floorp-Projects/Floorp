@@ -62,6 +62,7 @@
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
+#include "nsIDOMDocumentEvent.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -419,6 +420,25 @@ nsFormFillController::OnSearchComplete()
 NS_IMETHODIMP
 nsFormFillController::OnTextEntered(PRBool *_retval)
 {
+  // Fire off a DOMAutoComplete event
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mFocusedInput->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  if (!event) {
+    NS_ERROR("Could not create DOM Event");
+    return NS_ERROR_FAILURE;
+  }
+
+  event->InitEvent(NS_LITERAL_STRING("DOMAutoComplete"), PR_TRUE, PR_TRUE);
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mFocusedInput);
+
+  PRBool noDefault;
+  targ->DispatchEvent(event, &noDefault);
+
   return NS_OK;
 }
 
