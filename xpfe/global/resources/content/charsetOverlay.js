@@ -44,19 +44,8 @@ function SelectDetector(event)
 
 function UpdateCurrentCharset()
 {
-    menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
-
-    if (menu) {
-        menu = menu.getService();
-        menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
-    }
-
-    charset = document.commandDispatcher.focusedWindow.content.document.characterSet;
+    charset = document.commandDispatcher.focusedWindow.document.characterSet;
     charset = charset.toLowerCase();
-
-    if (menu) {
-        menu.SetCurrentCharset(charset);
-    }
 
     menuitem = document.getElementById('charset.' + charset);
 
@@ -91,3 +80,27 @@ function UpdateMenus(event)
     UpdateCurrentCharset();
     UpdateCharsetDetector();
 }
+
+function charsetLoadListener (event)
+{
+    menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
+
+    if (menu) {
+        menu = menu.getService();
+        menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
+    }
+
+    charset = window.content.document.characterSet;
+    charset = charset.toLowerCase();
+
+    if (menu) {
+        menu.SetCurrentCharset(charset);
+    }
+
+    // XXX you know, here I could also set the checkmark, for the case when a 
+    // doc finishes loading after the menu is already diplayed. But I get a
+    // weird assertion!
+}
+
+contentArea = window.document.getElementById("appcontent")
+contentArea.addEventListener("load", charsetLoadListener, true);
