@@ -73,8 +73,6 @@ typedef enum REOp {
     REOP_ASSERTTEST,    /* continuation point for above */
 
     REOP_FLAT,          /* literal characters (data.length count) */
-    REOP_FLATi,         /* ditto, with ignorecase */
-
 
     REOP_DEC,           /* decimal digit '\d' */
     REOP_UNDEC,         /* not a decimal digit '\D' */
@@ -121,20 +119,14 @@ typedef enum REOp {
 
 typedef struct REContinuationData {
     REOp op;              /* not necessarily the same as node->kind */
-    RENode *node;
     REuint8 *pc;
 } REContinuationData;
 
 typedef struct RENode {
-
     REOp kind;
-
     RENode *next;       /* links consecutive terms */
-
     void *child;
-    
     REuint32 parenIndex;
-    
     union {
         void *child2;
         struct {
@@ -153,30 +145,18 @@ typedef struct RENode {
             REuint32 length;
         } chclass;
     } data;
-
 } RENode;
-
-typedef struct RENodeState {
-    RENode *node;
-    REint32 count;
-    REuint32 index;
-    REContinuationData continuation;
-} RENodeState;
 
 typedef struct REProgState {
     REint32 min;
     REint32 max;
     REint32 parenCount;
     REint32 parenIndex;
-    REuint32 index;
+    REint32 index;
     REContinuationData continuation;
 } REProgState;
 
 #define INITIAL_STATESTACK (2000)
-RENodeState *nodeStateStack;
-REuint32 nodeStateStackTop;
-REuint32 maxNodeStateStack;
-
 REProgState *stateStack;
 REuint32 stateStackTop;
 REuint32 maxStateStack;
@@ -189,20 +169,12 @@ typedef struct REGlobalData {
     REint32 lastParen;          /* highest paren set so far */
 } REGlobalData;
 
-
 typedef struct REBackTrackData {
     REContinuationData continuation;    /* where to backtrack to */
     REState *state;                     /* the state of the match */
-
     REint32 lastParen;
-
-
-    RENodeState *precedingNodeState;    /* the state of all parent nodes */    
-    REint32 precedingNodeStateTop;
-
     REProgState *precedingState;
     REint32 precedingStateTop;
-
 } REBackTrackData;
 
 #define INITIAL_BACKTRACK (20)
@@ -235,63 +207,6 @@ static void recoverState(REState *into, REState *from)
 static void reportRegExpError(REError *errP, REError err) 
 {
     *errP = err;
-}
-
-/*
-    Push the back track data, growing the stack as necessary.
-*/
-static REBackTrackData *pushBackTrack(REGlobalData *gData, REOp op, 
-                                      RENode *node, REState *x)
-{
-    REBackTrackData *result;
-    if (backTrackStackTop == maxBackTrack) {
-        maxBackTrack <<= 1;
-        backTrackStack = (REBackTrackData *)realloc(backTrackStack, 
-                                sizeof(REBackTrackData) * maxBackTrack);
-        if (!backTrackStack) {
-            reportRegExpError(&gData->error, OUT_OF_MEMORY);
-            return NULL;
-        }
-    }
-    result = &backTrackStack[backTrackStackTop++];
-    result->continuation.op = op;
-    result->continuation.node = node;
-    result->state = copyState(x);
-
-    result->precedingNodeStateTop = nodeStateStackTop;
-    if (nodeStateStackTop) {
-        result->precedingNodeState = (RENodeState *)malloc(sizeof(RENodeState) 
-                                                        * nodeStateStackTop);
-        if (!result->precedingNodeState) {
-            reportRegExpError(&gData->error, OUT_OF_MEMORY);
-            return NULL;
-        }
-        memcpy(result->precedingNodeState, nodeStateStack, sizeof(RENodeState) 
-                                                         * nodeStateStackTop);
-    }
-    else
-        result->precedingNodeState = NULL;
-
-    return result;
-}
-
-static REbool pushNodeState(REGlobalData *gData, RENode *node, REint32 count,
-                     REuint32 index)
-{
-    if (nodeStateStackTop == maxNodeStateStack) {
-        maxNodeStateStack <<= 1;
-        nodeStateStack = (RENodeState *)realloc(nodeStateStack, 
-                                sizeof(RENodeState) * maxNodeStateStack);
-        if (!nodeStateStack) {
-            reportRegExpError(&gData->error, OUT_OF_MEMORY);
-            return false;
-        }
-    }
-    nodeStateStack[nodeStateStackTop].node = node;
-    nodeStateStack[nodeStateStackTop].count = count;
-    nodeStateStack[nodeStateStackTop].index = index;
-    nodeStateStackTop++;
-    return true;
 }
 
 /* forward declarations for parser routines */
@@ -330,11 +245,7 @@ static RENode *newRENode(REParseState *pState, REOp kind)
         return NULL;
     }
     result->kind = kind;
-    if (kind == REOP_FLAT) {
-        if (pState->flags & IGNORECASE)
-            result->kind = REOP_FLATi;
-        result->data.flat.length = 1;
-    }
+    result->data.flat.length = 1;
     result->next = NULL;
     result->child = NULL;
     return result;
@@ -386,8 +297,7 @@ REbool parseAlternative(REParseState *parseState)
             headTerm = parseState->result;
         else {
             if (tailTerm == NULL) {
-                if (((headTerm->kind == REOP_FLAT) 
-                                || (headTerm->kind == REOP_FLATi))
+                if ((headTerm->kind == REOP_FLAT) 
                         && (parseState->result->kind == headTerm->kind)
                         && (parseState->result->child 
                             == (REchar *)(headTerm->child) 
@@ -402,8 +312,7 @@ REbool parseAlternative(REParseState *parseState)
                 }
             }
             else {
-                if (((tailTerm->kind == REOP_FLAT) 
-                                || (tailTerm->kind == REOP_FLATi))
+                if ((tailTerm->kind == REOP_FLAT) 
                         && (parseState->result->kind == tailTerm->kind)
                         && (parseState->result->child 
                             == (REchar *)(tailTerm->child) 
@@ -450,7 +359,7 @@ static REbool calculateBitmapSize(REParseState *pState, RENode *target)
     REuint32 nDigits;
     REuint32 i;
     REuint32 max = 0;
-    bool inRange = false;
+    REbool inRange = false;
 
     target->data.chclass.length = 0;
 
@@ -785,18 +694,21 @@ lexHex:
                 case '=':
                     result = newRENode(parseState, REOP_ASSERT);
                     if (!result) return false;
-                    parseState->codeLength += 4;    /* ASSERT, <next>, ... ASSERTTEST */
+                    /* ASSERT, <next>, ... ASSERTTEST */
+                    parseState->codeLength += 4;    
                     break;
                 case '!':
                     result = newRENode(parseState, REOP_ASSERTNOT);
                     if (!result) return false;
-                    parseState->codeLength += 4;    /* ASSERTNOT, <next>, ... ASSERTNOTTEST */
+                        /* ASSERTNOT, <next>, ... ASSERTNOTTEST */
+                    parseState->codeLength += 4;
                     break;
                 }
             }
             else {
                 result = newRENode(parseState, REOP_PAREN);
-                parseState->codeLength += 6;    /* PAREN, <index>, ... CLOSEPAREN, <index> */
+                /* PAREN, <index>, ... CLOSEPAREN, <index> */
+                parseState->codeLength += 6;
                 if (!result) return false;
                 result->parenIndex = parseState->parenCount++;
             }
@@ -869,7 +781,8 @@ lexHex:
             if (!parseState->result) return false;
             parseState->result->data.quantifier.min = 1;
             parseState->result->data.quantifier.max = -1;
-            parseState->codeLength += 8;        /* <PLUS>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+            /* <PLUS>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+            parseState->codeLength += 8;
             goto quantifier;
         case '*':
             parseState->result = newRENode(parseState, REOP_QUANT);
@@ -877,7 +790,8 @@ lexHex:
             parseState->result->data.quantifier.min = 0;
             parseState->result->data.quantifier.max = -1;
             parseState->codeLength++;
-            parseState->codeLength += 8;        /* <STAR>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+            /* <STAR>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+            parseState->codeLength += 8;
             goto quantifier;
         case '?':
             parseState->result = newRENode(parseState, REOP_QUANT);
@@ -885,7 +799,8 @@ lexHex:
             parseState->result->data.quantifier.min = 0;
             parseState->result->data.quantifier.max = 1;
             parseState->codeLength++;
-            parseState->codeLength += 8;        /* <OPT>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+            /* <OPT>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+            parseState->codeLength += 8;
             goto quantifier;
         case '{':
             {
@@ -915,7 +830,9 @@ lexHex:
                     max = min;
                 parseState->result->data.quantifier.min = min;
                 parseState->result->data.quantifier.max = max;
-                parseState->codeLength += 12; /* QUANT, <min>, <max>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
+                /* QUANT, <min>, <max>, <parencount>, 
+                                        <parenindex>, <next> ... <ENDCHILD> */
+                parseState->codeLength += 12; 
                 if (c == '}')
                     goto quantifier;
                 else {
@@ -955,12 +872,12 @@ quantifier:
    <CR>, <LS>, or <PS>, return true.
 5. Return false.
 */
-static REState *bolMatcher(REGlobalData *globalData, REState *x)
+static REState *bolMatcher(REGlobalData *gData, REState *x)
 {
     REuint32 e = x->endIndex;
     if (e != 0) {
-        if (globalData->regexp->flags & MULTILINE) {
-            if (!RE_ISLINETERM(globalData->input[e - 1]))
+        if (gData->regexp->flags & MULTILINE) {
+            if (!RE_ISLINETERM(gData->input[e - 1]))
                 return NULL;
         }
         else
@@ -977,12 +894,12 @@ static REState *bolMatcher(REGlobalData *globalData, REState *x)
    <CR>, <LS>, or <PS>, return true.
 5. Return false.
 */
-static REState *eolMatcher(REGlobalData *globalData, REState *x)
+static REState *eolMatcher(REGlobalData *gData, REState *x)
 {
     REint32 e = x->endIndex;
-    if (e != globalData->length) {
-        if (globalData->regexp->flags & MULTILINE) {
-            if (!RE_ISLINETERM(globalData->input[e]))
+    if (e != gData->length) {
+        if (gData->regexp->flags & MULTILINE) {
+            if (!RE_ISLINETERM(gData->input[e]))
                 return NULL;
         }
         else
@@ -1001,12 +918,12 @@ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 0 1 2 3 4 5 6 7 8 9 _
 4. Return false.
 */
-static REbool isWordChar(REint32 e, REGlobalData *globalData)
+static REbool isWordChar(REint32 e, REGlobalData *gData)
 {
     REchar c;
-    if ((e == -1) || (e == (REint32)(globalData->length)))
+    if ((e == -1) || (e == (REint32)(gData->length)))
         return false;
-    c = globalData->input[e];
+    c = gData->input[e];
     if (RE_ISLETDIG(c) || (c == '_'))
         return true;
     return false;
@@ -1026,12 +943,12 @@ for '\B'
 5. If a is false and b is true, return false.
 6. Return true.
 */
-static REState *wbndMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *wbndMatcher(REGlobalData *gData, REState *x, REbool sense)
 {
     REint32 e = (REint32)(x->endIndex);
 
-    REbool a = isWordChar(e - 1, globalData);
-    REbool b = isWordChar(e, globalData);
+    REbool a = isWordChar(e - 1, gData);
+    REbool b = isWordChar(e, gData);
     
     if (sense) {
         if ((a && !b) || (!a && b))
@@ -1052,13 +969,13 @@ static REState *wbndMatcher(REGlobalData *globalData, REState *x, REbool sense)
    characters <LF>, <CR>, <LS>, or <PS>.
 2. Call CharacterSetMatcher(A, false) and return its Matcher result.
 */
-static REState *dotMatcher(REGlobalData *globalData, REState *x)
+static REState *dotMatcher(REGlobalData *gData, REState *x)
 {
     REchar ch;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
-    ch = globalData->input[e];
+    ch = gData->input[e];
     if (RE_ISLINETERM(ch))
         return NULL;
     x->endIndex++;
@@ -1071,13 +988,13 @@ static REState *dotMatcher(REGlobalData *globalData, REState *x)
     \D evaluates by returning the set of all characters not included in the set
     returned by \d.
 */
-static REState *decMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *decMatcher(REGlobalData *gData, REState *x, REbool sense)
 {
     REchar ch;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
-    ch = globalData->input[e];
+    ch = gData->input[e];
     if (RE_ISDEC(ch) != sense)
         return NULL;
     x->endIndex++;
@@ -1091,13 +1008,13 @@ static REState *decMatcher(REGlobalData *globalData, REState *x, REbool sense)
     \S evaluates by returning the set of all characters not 
     included in the set returned by \s.
 */
-static REState *wsMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *wsMatcher(REGlobalData *gData, REState *x, REbool sense)
 {
     REchar ch;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
-    ch = globalData->input[e];
+    ch = gData->input[e];
     if (RE_ISWS(ch) != sense)
         return NULL;
     x->endIndex++;
@@ -1113,13 +1030,13 @@ static REState *wsMatcher(REGlobalData *globalData, REState *x, REbool sense)
     \W evaluates by returning the set of all characters not included in the set
     returned by \w.
 */
-static REState *letdigMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *letdigMatcher(REGlobalData *gData, REState *x, REbool sense)
 {
     REchar ch;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
-    ch = globalData->input[e];
+    ch = gData->input[e];
     if (RE_ISLETDIG(ch) != sense)
         return NULL;
     x->endIndex++;
@@ -1143,13 +1060,13 @@ and a Continuation c, and performs the following:
     10. Let y be the State (e+1, cap).
     11. Call c(y) and return its result.
 */
-static REState *flatMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
+static REState *flatMatcher(REGlobalData *gData, REState *x, REchar matchCh)
 {
     REchar ch;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
-    ch = globalData->input[e];
+    ch = gData->input[e];
 
     if (ch != matchCh)
         return NULL;
@@ -1157,13 +1074,13 @@ static REState *flatMatcher(REGlobalData *globalData, REState *x, REchar matchCh
     return x;
 }
 
-static REState *flatIMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
+static REState *flatIMatcher(REGlobalData *gData, REState *x, REchar matchCh)
 {
     REchar ch;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
-    ch = globalData->input[e];
+    ch = gData->input[e];
 
     if (canonicalize(ch) != canonicalize(matchCh))
         return NULL;
@@ -1174,31 +1091,31 @@ static REState *flatIMatcher(REGlobalData *globalData, REState *x, REchar matchC
 /*
     Consecutive literal characters.
 */
-static REState *flatNMatcher(REGlobalData *globalData, REState *x, 
+static REState *flatNMatcher(REGlobalData *gData, REState *x, 
                              REchar *matchChars, REint32 length)
 {
     REint32 e = x->endIndex;
     REint32 i;
-    if ((e + length) > globalData->length)
+    if ((e + length) > gData->length)
         return NULL;
     for (i = 0; i < length; i++) {
-        if (matchChars[i] != globalData->input[e + i])
+        if (matchChars[i] != gData->input[e + i])
             return NULL;
     }
     x->endIndex += length;
     return x;
 }
 
-static REState *flatNIMatcher(REGlobalData *globalData, REState *x,
+static REState *flatNIMatcher(REGlobalData *gData, REState *x,
                               REchar *matchChars, REint32 length)
 {
     REint32 e = x->endIndex;
     REint32 i;
-    if ((e + length) > globalData->length)
+    if ((e + length) > gData->length)
         return NULL;
     for (i = 0; i < length; i++) {
         if (canonicalize(matchChars[i]) 
-                != canonicalize(globalData->input[e + i]))
+                != canonicalize(gData->input[e + i]))
             return NULL;
     }
     x->endIndex += length;
@@ -1255,7 +1172,7 @@ static REbool processCharSet(REParseState *pState, RENode *target)
     REchar c;
     REint32 nDigits;
     REint32 i;
-    bool inRange = false;
+    REbool inRange = false;
 
     CharSet *charSet = &pState->classList[target->data.chclass.classIndex];
     charSet->length = target->data.chclass.length;
@@ -1419,14 +1336,13 @@ lexHex:
     Initialize the character set if it this is the first call.
     Test the bit - if the ^ flag was specified, non-inclusion is a success
 */
-static REState *classMatcher(REGlobalData *globalData, 
-                             REState *x, REint32 index)
+static REState *classMatcher(REGlobalData *gData, REState *x, REint32 index)
 {
     REchar ch;
     CharSet *charSet;
     REint32 byteIndex;
     REint32 e = x->endIndex;
-    if (e == globalData->length)
+    if (e == gData->length)
         return NULL;
 
 /*
@@ -1436,9 +1352,9 @@ static REState *classMatcher(REGlobalData *globalData,
     }
     charSet = target->data.chclass.charSet;
 */
-    charSet = &globalData->regexp->classList[index];
+    charSet = &gData->regexp->classList[index];
 
-    ch = globalData->input[e];
+    ch = gData->input[e];
     byteIndex = ch / 8;
     if (charSet->sense) {
         if ((charSet->length == 0) || 
@@ -1484,7 +1400,7 @@ static REState *classMatcher(REGlobalData *globalData,
     10. Call c(y) and return its result.
 */
 
-static REState *backrefMatcher(REGlobalData *globalData, 
+static REState *backrefMatcher(REGlobalData *gData,
                                REState *x, REuint32 parenIndex)
 {
     REuint32 e;
@@ -1499,20 +1415,20 @@ static REState *backrefMatcher(REGlobalData *globalData,
     e = x->endIndex;
     len = s->length;
     f = e + len;
-    if (f > globalData->length)
+    if (f > gData->length)
         return NULL;
     
-    parenContent = &globalData->input[s->index];
-    if (globalData->regexp->flags & IGNORECASE) {
+    parenContent = &gData->input[s->index];
+    if (gData->regexp->flags & IGNORECASE) {
         for (i = 0; i < len; i++) {
             if (canonicalize(parenContent[i]) 
-                            != canonicalize(globalData->input[e + i]))
+                                    != canonicalize(gData->input[e + i]))
                 return NULL;
         }
     }
     else {
         for (i = 0; i < len; i++) {
-            if (parenContent[i] != globalData->input[e + i])
+            if (parenContent[i] != gData->input[e + i])
                 return NULL;
         }
     }
@@ -1521,8 +1437,8 @@ static REState *backrefMatcher(REGlobalData *globalData,
 }
 
 /*
-    free memory the RENode t and it's children, plus any attached memory
-*/
+ *   free memory the RENode t and it's children
+ */
 static void freeRENode(RENode *t)
 {
     RENode *n;
@@ -1551,10 +1467,9 @@ static void freeRENode(RENode *t)
     }
 }
 
-#if 1
 #define ARG_LEN                     (2)
 #define CHECK_RANGE(branch, target) (ASSERT((((target) - (branch)) >= -32768) && (((target) - (branch)) <= 32767))) 
-#define EMIT_ARG(pc, a)             ((pc)[0] = ((a) >> 8), (pc)[1] = (a), (pc) += ARG_LEN)
+#define EMIT_ARG(pc, a)             ((pc)[0] = ((a) >> 8), (pc)[1] = (REuint8)(a), (pc) += ARG_LEN)
 #define EMIT_BRANCH(pc)             ((pc) += ARG_LEN)
 #define EMIT_FIXUP(branch, target)  (EMIT_ARG((branch), (target) - (branch)))
 #define GET_ARG(pc)                 ((REuint32)(((pc)[0] << 8) | (pc)[1]))
@@ -1593,7 +1508,6 @@ REuint8 *emitREBytecode(REParseState *pState, REuint8 *pc, RENode *t)
             EMIT_FIXUP(nextAltFixup, pc);
             break;
         case REOP_FLAT:
-        case REOP_FLATi:
             if (t->child && (t->data.flat.length > 1)) {
                 if (pState->flags & IGNORECASE)
                     pc[-1] = REOP_FLATNi;
@@ -1637,13 +1551,16 @@ REuint8 *emitREBytecode(REParseState *pState, REuint8 *pc, RENode *t)
             break;
         case REOP_QUANT:
             if ((t->data.quantifier.min == 0) && (t->data.quantifier.max == -1))
-                pc[-1] = (t->data.quantifier.greedy) ? REOP_STAR : REOP_MINIMALSTAR;
+                pc[-1] = (t->data.quantifier.greedy) 
+                                        ? REOP_STAR : REOP_MINIMALSTAR;
             else
             if ((t->data.quantifier.min == 0) && (t->data.quantifier.max == 1))
-                pc[-1] = (t->data.quantifier.greedy) ? REOP_OPT : REOP_MINIMALOPT;
+                pc[-1] = (t->data.quantifier.greedy) 
+                                        ? REOP_OPT : REOP_MINIMALOPT;
             else
             if ((t->data.quantifier.min == 1) && (t->data.quantifier.max == -1))
-                pc[-1] = (t->data.quantifier.greedy) ? REOP_PLUS : REOP_MINIMALPLUS;
+                pc[-1] = (t->data.quantifier.greedy) 
+                                        ? REOP_PLUS : REOP_MINIMALPLUS;
             else {
                 if (!t->data.quantifier.greedy) pc[-1] = REOP_MINIMALQUANT;
                 EMIT_ARG(pc, t->data.quantifier.min);
@@ -1668,7 +1585,8 @@ REuint8 *emitREBytecode(REParseState *pState, REuint8 *pc, RENode *t)
     return pc;
 }
 
-REBackTrackData *pushBackTrackState(REGlobalData *gData, REOp op, REuint8 *target, REState *x)
+REBackTrackData *pushBackTrackState(REGlobalData *gData, REOp op, 
+                                    REuint8 *target, REState *x)
 {
     REBackTrackData *result;
     if (backTrackStackTop == maxBackTrack) {
@@ -1703,7 +1621,7 @@ REBackTrackData *pushBackTrackState(REGlobalData *gData, REOp op, REuint8 *targe
     return result;
 }
 
-static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState *x)
+static REState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REState *x)
 {
     REOp op = (REOp)(*pc++);
     REContinuationData currentContinuation;
@@ -1733,16 +1651,16 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
     case REOP_FLATN:        
     case REOP_FLATNi:
         k = GET_ARG(pc);
-        anchorCh = globalData->regexp->srcStart[k];
+        anchorCh = gData->regexp->srcStart[k];
         anchor = true;
         break;
     }
     if (anchor) {
         anchor = false;
-        for (k = x->endIndex; k < globalData->length; k++) {
-            matchCh = globalData->input[k];
+        for (k = x->endIndex; k < gData->length; k++) {
+            matchCh = gData->input[k];
             if ((matchCh == anchorCh) ||                
-                    ((globalData->regexp->flags & IGNORECASE)
+                    ((gData->regexp->flags & IGNORECASE)
                     && (canonicalize(matchCh) == canonicalize(anchorCh)))) {
                 x->endIndex = k;
                 x->startIndex = k;  /* inform caller that we bumped along */
@@ -1760,61 +1678,63 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
             result = x;
             break;
         case REOP_BOL:
-            result = bolMatcher(globalData, x);
+            result = bolMatcher(gData, x);
             break;
         case REOP_EOL:
-            result = eolMatcher(globalData, x);
+            result = eolMatcher(gData, x);
             break;
         case REOP_WBND:
-            result = wbndMatcher(globalData, x, true);
+            result = wbndMatcher(gData, x, true);
             break;
         case REOP_UNWBND:
-            result = wbndMatcher(globalData, x, false);
+            result = wbndMatcher(gData, x, false);
             break;
         case REOP_DOT:
-            result = dotMatcher(globalData, x);
+            result = dotMatcher(gData, x);
             break;
         case REOP_DEC:
-            result = decMatcher(globalData, x, true);
+            result = decMatcher(gData, x, true);
             break;
         case REOP_UNDEC:
-            result = decMatcher(globalData, x, false);
+            result = decMatcher(gData, x, false);
             break;
         case REOP_WS:
-            result = wsMatcher(globalData, x, true);
+            result = wsMatcher(gData, x, true);
             break;
         case REOP_UNWS:
-            result = wsMatcher(globalData, x, false);
+            result = wsMatcher(gData, x, false);
             break;
         case REOP_LETDIG:
-            result = letdigMatcher(globalData, x, true);
+            result = letdigMatcher(gData, x, true);
             break;
         case REOP_UNLETDIG:
-            result = letdigMatcher(globalData, x, false);
+            result = letdigMatcher(gData, x, false);
             break;
         case REOP_FLATN:
             offset = GET_ARG(pc);
             pc += ARG_LEN;
             length = GET_ARG(pc);
             pc += ARG_LEN;
-            result = flatNMatcher(globalData, x, globalData->regexp->srcStart + offset, length);
+            result = flatNMatcher(gData, x, gData->regexp->srcStart + offset, 
+                                                                        length);
             break;
         case REOP_FLATNi:
             offset = GET_ARG(pc);
             pc += ARG_LEN;
             length = GET_ARG(pc);
             pc += ARG_LEN;
-            result = flatNIMatcher(globalData, x, globalData->regexp->srcStart + offset, length);
+            result = flatNIMatcher(gData, x, gData->regexp->srcStart + offset,
+                                                                        length);
             break;
         case REOP_FLAT1:
             matchCh = GET_ARG(pc);
             pc += ARG_LEN;
-            result = flatMatcher(globalData, x, matchCh);
+            result = flatMatcher(gData, x, matchCh);
             break;
         case REOP_FLAT1i:
             matchCh = GET_ARG(pc);
             pc += ARG_LEN;
-            result = flatIMatcher(globalData, x, matchCh);
+            result = flatIMatcher(gData, x, matchCh);
             break;
 
         case REOP_ALT:
@@ -1822,7 +1742,7 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
             nextop = (REOp)(*nextpc++);
             stateStack[stateStackTop].continuation = currentContinuation;
             ++stateStackTop;
-            pushBackTrackState(globalData, nextop, nextpc, x);
+            pushBackTrackState(gData, nextop, nextpc, x);
             pc += ARG_LEN;
             op = (REOp)(*pc++);
             continue;
@@ -1847,15 +1767,15 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
             parenIndex = GET_ARG(pc);
             pc += ARG_LEN;
             x->parens[parenIndex].length = x->endIndex 
-                                            - x->parens[parenIndex].index;
-            if (parenIndex > globalData->lastParen)
-                globalData->lastParen = parenIndex;
+                                                - x->parens[parenIndex].index;
+            if (parenIndex > gData->lastParen)
+                gData->lastParen = parenIndex;
             op = (REOp)(*pc++);
             continue;
         case REOP_BACKREF:
             parenIndex = GET_ARG(pc);
             pc += ARG_LEN;
-            result = backrefMatcher(globalData, x, parenIndex);
+            result = backrefMatcher(gData, x, parenIndex);
             break;
 
         case REOP_ASSERT:
@@ -1863,7 +1783,8 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
             stateStack[stateStackTop].parenCount = backTrackStackTop;
             stateStack[stateStackTop].index = x->endIndex;
             ++stateStackTop;
-            if (!pushBackTrackState(globalData, REOP_ASSERTTEST, pc + GET_ARG(pc), x))
+            if (!pushBackTrackState(gData, REOP_ASSERTTEST, 
+                                                        pc + GET_ARG(pc), x))
                 return NULL;
             pc += ARG_LEN;
             op = (REOp)(*pc++);
@@ -1873,7 +1794,8 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
             stateStack[stateStackTop].parenCount = backTrackStackTop;
             stateStack[stateStackTop].index = x->endIndex;
             ++stateStackTop;
-            if (!pushBackTrackState(globalData, REOP_ASSERTNOTTEST, pc + GET_ARG(pc), x))
+            if (!pushBackTrackState(gData, REOP_ASSERTNOTTEST, 
+                                                        pc + GET_ARG(pc), x))
                 return NULL;
             pc += ARG_LEN;
             op = (REOp)(*pc++);
@@ -1900,8 +1822,8 @@ static REState *executeREBytecode(REuint8 *pc, REGlobalData *globalData, REState
         case REOP_CLASS:
             index = GET_ARG(pc);
             pc += ARG_LEN;
-            result = classMatcher(globalData, x, index);
-            if (globalData->error != NO_ERROR) return NULL;
+            result = classMatcher(gData, x, index);
+            if (gData->error != NO_ERROR) return NULL;
             break;
 
         case REOP_END:
@@ -1936,7 +1858,7 @@ quantcommon:
             ++stateStackTop;
             currentContinuation.op = REOP_REPEAT;
             currentContinuation.pc = pc;
-            if (!pushBackTrackState(globalData, REOP_REPEAT, pc, x)) return NULL;
+            if (!pushBackTrackState(gData, REOP_REPEAT, pc, x)) return NULL;
             pc += ARG_LEN;
             op = (REOp)(*pc++);
             continue;
@@ -1967,8 +1889,10 @@ quantcommon:
                     pc = pc + GET_ARG(pc);
                     break;
                 }
-                if (stateStack[stateStackTop].min > 0) stateStack[stateStackTop].min--;
-                if (stateStack[stateStackTop].max != -1) stateStack[stateStackTop].max--;
+                if (stateStack[stateStackTop].min > 0) 
+                                            stateStack[stateStackTop].min--;
+                if (stateStack[stateStackTop].max != -1) 
+                                            stateStack[stateStackTop].max--;
                 if (stateStack[stateStackTop].max == 0) {
                     result = x;
                     currentContinuation = stateStack[stateStackTop].continuation;
@@ -1979,11 +1903,12 @@ quantcommon:
                 ++stateStackTop;
                 currentContinuation.op = REOP_REPEAT;
                 currentContinuation.pc = pc;
-                if (!pushBackTrackState(globalData, REOP_REPEAT, pc, x)) return NULL;
+                if (!pushBackTrackState(gData, REOP_REPEAT, pc, x)) return NULL;
                 pc += ARG_LEN;
                 op = (REOp)(*pc++);
+                parenIndex = stateStack[stateStackTop - 1].parenIndex;
                 for (k = 0; k <= stateStack[stateStackTop - 1].parenCount; k++)
-                    x->parens[stateStack[stateStackTop - 1].parenIndex + k].index = -1;
+                    x->parens[parenIndex + k].index = -1;
             }
             continue;                       
 
@@ -2019,7 +1944,8 @@ minimalquantcommon:
                 op = (REOp)(*pc++);
             }
             else {
-                if (!pushBackTrackState(globalData, REOP_MINIMALREPEAT, pc, x)) return NULL;
+                if (!pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x))
+                    return NULL;
                 --stateStackTop;
                 pc = pc + GET_ARG(pc);
                 op = (REOp)(*pc++);
@@ -2036,8 +1962,9 @@ minimalquantcommon:
                  */
                 if ((stateStack[stateStackTop].max == -1)
                         || (stateStack[stateStackTop].max > 0)) {
+                    parenIndex = stateStack[stateStackTop].parenIndex;
                     for (k = 0; k <= stateStack[stateStackTop].parenCount; k++)
-                        x->parens[stateStack[stateStackTop].parenIndex + k].index = -1;
+                        x->parens[parenIndex + k].index = -1;
                     stateStack[stateStackTop].index = x->endIndex;
                     stateStack[stateStackTop].continuation = currentContinuation;
                     ++stateStackTop;
@@ -2060,11 +1987,14 @@ minimalquantcommon:
                     currentContinuation = stateStack[stateStackTop].continuation;
                     break;
                 }
-                if (stateStack[stateStackTop].min > 0) stateStack[stateStackTop].min--;
-                if (stateStack[stateStackTop].max != -1) stateStack[stateStackTop].max--;
+                if (stateStack[stateStackTop].min > 0) 
+                                                stateStack[stateStackTop].min--;
+                if (stateStack[stateStackTop].max != -1) 
+                                                stateStack[stateStackTop].max--;
                 if (stateStack[stateStackTop].min > 0) {
+                    parenIndex = stateStack[stateStackTop].parenIndex;
                     for (k = 0; k <= stateStack[stateStackTop].parenCount; k++)
-                        x->parens[stateStack[stateStackTop].parenIndex + k].index = -1;
+                        x->parens[parenIndex + k].index = -1;
                     stateStack[stateStackTop].index = x->endIndex;
                     ++stateStackTop;
                     currentContinuation.op = REOP_MINIMALREPEAT;
@@ -2076,7 +2006,8 @@ minimalquantcommon:
                 else {
                     stateStack[stateStackTop].index = x->endIndex;
                     ++stateStackTop;
-                    if (!pushBackTrackState(globalData, REOP_MINIMALREPEAT, pc, x)) return NULL;
+                    if (!pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x)) 
+                        return NULL;
                     --stateStackTop;
                     pc = pc + GET_ARG(pc);
                     op = (REOp)(*pc++);
@@ -2096,7 +2027,7 @@ minimalquantcommon:
                 backTrackStackTop--;
                 backTrackData = &backTrackStack[backTrackStackTop];
 
-                globalData->lastParen = backTrackData->lastParen;
+                gData->lastParen = backTrackData->lastParen;
 
                 recoverState(x, backTrackData->state);
                 free(backTrackData->state);
@@ -2133,435 +2064,22 @@ minimalquantcommon:
     }
     return NULL;
 }
-#endif
 
 /*
  *  Throw away the RegExp and all data associated with it.
  */
 void freeRegExp(REParseState *pState)
 {
-    freeRENode(pState->result);
+    REuint32 i;
+    if (pState->result) freeRENode(pState->result);
+    if (pState->srcStart) free(pState->srcStart);
+    if (pState->pc) free(pState->pc);
+    for (i = 0; i < pState->classCount; i++) {
+        free(pState->classList[i].bits);
+    }
     free(pState);
 }
 
-/*
- *  Iterate over the linked RENodes, attempting a match at each. When the
- *  end of list is reached, the 'currentContinuation' specifies the next
- *  node and op (which may be different from that in the node).
- *  The backTrackStack maintains a stack of so-far succesful states. When
- *  a match fails the state on the top of the stack is re-instated.
- *
- */
-static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
-{
-    REOp op = t->kind;
-    REContinuationData currentContinuation;
-    REState *result;
-    REBackTrackData *backTrackData;
-    REint32 k;
-
-    currentContinuation.node = NULL;
-
-    /*
-     *   Simple anchoring optimization -
-     */
-    if (op == REOP_FLAT) {
-        REchar matchCh = t->data.flat.ch;
-        REbool foundAnchor = false;
-        if (t->child)
-            matchCh = *((REchar *)t->child);
-        for (k = x->endIndex; k < globalData->length; k++) {
-            if (globalData->input[k] == matchCh) {
-                x->endIndex = k;
-                x->startIndex = k;  /* inform caller that we bumped along */
-                foundAnchor = true;
-                break;
-            }
-        }
-        if (!foundAnchor)
-            return NULL;
-    }
-
-    while (true) {      /* loop over next links & current continuation */
-        switch (op) {
-        case REOP_EMPTY:
-            result = x;
-            break;
-        case REOP_BOL:
-            result = bolMatcher(globalData, x);
-            break;
-        case REOP_EOL:
-            result = eolMatcher(globalData, x);
-            break;
-        case REOP_WBND:
-            result = wbndMatcher(globalData, x, true);
-            break;
-        case REOP_UNWBND:
-            result = wbndMatcher(globalData, x, false);
-            break;
-        case REOP_DOT:
-            result = dotMatcher(globalData, x);
-            break;
-        case REOP_DEC:
-            result = decMatcher(globalData, x, true);
-            break;
-        case REOP_UNDEC:
-            result = decMatcher(globalData, x, false);
-            break;
-        case REOP_WS:
-            result = wsMatcher(globalData, x, true);
-            break;
-        case REOP_UNWS:
-            result = wsMatcher(globalData, x, false);
-            break;
-        case REOP_LETDIG:
-            result = letdigMatcher(globalData, x, true);
-            break;
-        case REOP_UNLETDIG:
-            result = letdigMatcher(globalData, x, false);
-            break;
-        case REOP_FLAT:
-            if (t->child)
-                result = flatNMatcher(globalData, x, (REchar *)(t->child),
-                                                         t->data.flat.length);
-            else
-                result = flatMatcher(globalData, x, t->data.flat.ch);
-            break;
-        case REOP_FLATi:
-            if (t->child)
-                result = flatNIMatcher(globalData, x, (REchar *)(t->child),
-                                                         t->data.flat.length);
-            else
-                result = flatIMatcher(globalData, x, t->data.flat.ch);
-            break;
-
-/* keep the current continuation and provide the alternate path 
- * as a back track opportunity 
- */
-        case REOP_ALT:  
-            nodeStateStack[nodeStateStackTop].node = t;
-            nodeStateStack[nodeStateStackTop].index = x->endIndex;
-            nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-            ++nodeStateStackTop;
-
-//            t->continuation = currentContinuation;
-            currentContinuation.node = t;
-            currentContinuation.op = REOP_NEXTALT;
-            if (!pushBackTrack(globalData, REOP_NEXTALT, t, x)) return NULL;
-            t = (RENode *)(t->child);
-            ASSERT(t);
-            op = t->kind;
-            continue;
-        case REOP_NEXTALT:
-            if (result == NULL) {
-                currentContinuation.node = t;
-                currentContinuation.op = REOP_NEXTALT;
-                t = (RENode *)(t->data.child2);
-                ASSERT(t);
-                op = t->kind;
-                continue;
-            }
-            else {
-                --nodeStateStackTop;
-                result = x;
-                currentContinuation = nodeStateStack[nodeStateStackTop].continuation;//t->continuation;
-                break;
-            }                
-            
-/* the child will evntually terminate, so provide a capturing state 
- * as the continuation 
- */
-        case REOP_PAREN:
-            nodeStateStack[nodeStateStackTop].node = t;
-            nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-            ++nodeStateStackTop;
-            currentContinuation.op = REOP_CLOSEPAREN;
-            currentContinuation.node = t;
-            x->parens[t->parenIndex].index = (REint32)(x->endIndex);
-            x->parens[t->parenIndex].length = 0;
-            t = (RENode *)(t->child);
-            ASSERT(t);
-            op = t->kind;
-            continue;
-        case REOP_CLOSEPAREN:
-            --nodeStateStackTop;
-            ASSERT(nodeStateStack[nodeStateStackTop].node == t);
-
-            x->parens[t->parenIndex].length = x->endIndex 
-                                            - x->parens[t->parenIndex].index;
-            currentContinuation = nodeStateStack[nodeStateStackTop].continuation; //t->continuation;
-            break;
-
-        case REOP_QUANT:
-            if (t->data.quantifier.greedy) {
-                /*
-                 * Save the current zero-count state, then jump to the child.
-                 */
-                nodeStateStack[nodeStateStackTop].node = t;
-                nodeStateStack[nodeStateStackTop].count = 0;//t->count;
-                nodeStateStack[nodeStateStackTop].index = x->endIndex;
-                nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-                ++nodeStateStackTop;
-                backTrackData = pushBackTrack(globalData, REOP_REPEAT, t, x);
-                if (!backTrackData) return NULL;
-                currentContinuation.node = t;
-                currentContinuation.op = REOP_REPEAT;                
-                t = (RENode *)(t->child);
-                op = t->kind;
-                continue;
-            }
-            else {
-                /*
-                 * Non-greedy, only run the child if the minimum 
-                 * requirement hasn't been met
-                 */
-                if (t->data.quantifier.min > 0) {
-                    nodeStateStack[nodeStateStackTop].node = t;
-                    nodeStateStack[nodeStateStackTop].count = 0;//t->count;
-                    nodeStateStack[nodeStateStackTop].index = x->endIndex;
-                    nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-                    ++nodeStateStackTop;
-                    currentContinuation.node = t;
-                    currentContinuation.op = REOP_MINIMALREPEAT;
-                    t = (RENode *)(t->child);
-                    op = t->kind;
-                    continue;
-                }
-                else {
-                    nodeStateStack[nodeStateStackTop].node = t;
-                    nodeStateStack[nodeStateStackTop].count = 0;//t->count;
-                    nodeStateStack[nodeStateStackTop].index = x->endIndex;
-                    nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-                    ++nodeStateStackTop;
-                    backTrackData = pushBackTrack(globalData, 
-                                                    REOP_MINIMALREPEAT, t, x);
-                    --nodeStateStackTop;
-                    if (!backTrackData) return NULL;
-                    result = x;
-                    break;
-                }
-            }
-
-        case REOP_REPEAT:
-            /*
-             * Pop us off the stack
-             */
-            --nodeStateStackTop;
-            ASSERT(nodeStateStack[nodeStateStackTop].node == t);
-
-            if (result == NULL) {
-                /*
-                 *  There's been a failure, see if we have enough children
-                 */
-                currentContinuation = nodeStateStack[nodeStateStackTop].continuation;
-                if (nodeStateStack[nodeStateStackTop].count >= t->data.quantifier.min)
-                    result = x;
-                break;
-            }
-            else {
-
-                if ((nodeStateStack[nodeStateStackTop].count >= t->data.quantifier.min)
-                        && (x->endIndex == nodeStateStack[nodeStateStackTop].index)) {
-                    /* matched an empty string, that'll get us nowhere */
-                    result = NULL;
-                    currentContinuation = nodeStateStack[nodeStateStackTop].continuation;
-                    break;
-                }
-                ++nodeStateStack[nodeStateStackTop].count;
-                ++nodeStateStackTop;
-                backTrackData = pushBackTrack(globalData, REOP_REPEAT, t, x);
-                if (!backTrackData) return NULL;
-                if (nodeStateStack[nodeStateStackTop - 1].count == t->data.quantifier.max) {
-                    currentContinuation = nodeStateStack[nodeStateStackTop - 1].continuation;
-                    result = NULL;
-                    break;
-                }
-                else {
-                    for (k = 0; k <= t->data.quantifier.parenCount; k++)
-                        x->parens[t->parenIndex + k].index = -1;
-                    nodeStateStack[nodeStateStackTop - 1].index = x->endIndex;
-                    currentContinuation.node = t;
-                    currentContinuation.op = REOP_REPEAT;
-                    t = (RENode *)(t->child);
-                    op = t->kind;
-                }
-            }
-            continue;                       
-        case REOP_MINIMALREPEAT:
-            --nodeStateStackTop;
-            ASSERT(nodeStateStack[nodeStateStackTop].node == t);
-
-            currentContinuation = nodeStateStack[nodeStateStackTop].continuation;
-
-            if (result == NULL) {
-                /* 
-                 * Non-greedy failure - try to consume another child
-                 */
-                if ((t->data.quantifier.max == -1)
-                        || (nodeStateStack[nodeStateStackTop].count < t->data.quantifier.max)) {
-                    for (k = 0; k <= t->data.quantifier.parenCount; k++)
-                        x->parens[t->parenIndex + k].index = -1;
-                    nodeStateStack[nodeStateStackTop].node = t;
-                    nodeStateStack[nodeStateStackTop].index = x->endIndex;
-                    nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-                    ++nodeStateStackTop;
-                    currentContinuation.node = t;
-                    currentContinuation.op = REOP_MINIMALREPEAT;
-                    t = (RENode *)(t->child);
-                    op = t->kind;
-                    continue;
-                }
-                else {
-                    currentContinuation = nodeStateStack[nodeStateStackTop].continuation;
-                    break;
-                }
-            }
-            else {
-
-                if ((nodeStateStack[nodeStateStackTop].count >= t->data.quantifier.min)
-                        && (x->endIndex == nodeStateStack[nodeStateStackTop].index)) {
-                    /* matched an empty string, that'll get us nowhere */
-                    result = NULL;
-                    currentContinuation = nodeStateStack[nodeStateStackTop].continuation;
-                    break;
-                }
-                ++nodeStateStack[nodeStateStackTop].count;
-                if (nodeStateStack[nodeStateStackTop].count < t->data.quantifier.min) {
-                    for (k = 0; k <= t->data.quantifier.parenCount; k++)
-                        x->parens[t->parenIndex + k].index = -1;
-                    nodeStateStack[nodeStateStackTop].node = t;
-                    nodeStateStack[nodeStateStackTop].index = x->endIndex;
-                    nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-                    ++nodeStateStackTop;
-                    currentContinuation.node = t;
-                    currentContinuation.op = REOP_MINIMALREPEAT;
-                    t = (RENode *)(t->child);
-                    op = t->kind;
-                    continue;                       
-                }
-                else {
-                    nodeStateStack[nodeStateStackTop].node = t;
-                    nodeStateStack[nodeStateStackTop].index = x->endIndex;
-                    nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-                    ++nodeStateStackTop;
-                    backTrackData = pushBackTrack(globalData, 
-                                                    REOP_MINIMALREPEAT, t, x);
-                    --nodeStateStackTop;
-                    if (!backTrackData) return NULL;
-                    break;
-                }
-            }
-
-
-        case REOP_BACKREF:
-            result = backrefMatcher(globalData, x, t->parenIndex);
-            break;
-
-/* supersede the continuation with an assertion tester */
-        case REOP_ASSERT:               
-            nodeStateStack[nodeStateStackTop].node = t;
-            nodeStateStack[nodeStateStackTop].index = x->endIndex;
-            nodeStateStack[nodeStateStackTop].count = backTrackStackTop;
-            nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-            ++nodeStateStackTop;
-
-            currentContinuation.node = t;
-            currentContinuation.op = REOP_ASSERTTEST;
-            t = (RENode *)(t->child);
-            ASSERT(t);
-            op = t->kind;
-            continue;
-/* also provide the assertion tester as the backtrack state */
-        case REOP_ASSERTNOT:
-            currentContinuation.node = t;
-            currentContinuation.op = REOP_ASSERTTEST;
-            nodeStateStack[nodeStateStackTop].node = t;
-            nodeStateStack[nodeStateStackTop].index = x->endIndex;
-            nodeStateStack[nodeStateStackTop].count = backTrackStackTop;
-            nodeStateStack[nodeStateStackTop].continuation = currentContinuation;
-            ++nodeStateStackTop;
-
-            backTrackData = pushBackTrack(globalData, REOP_ASSERTTEST, t, x);
-            if (!backTrackData) return NULL;
-
-            t = (RENode *)(t->child);
-            ASSERT(t);
-            op = t->kind;
-            continue;
-        case REOP_ASSERTTEST:
-            if (t->kind == REOP_ASSERT) {
-                --nodeStateStackTop;
-                ASSERT(nodeStateStack[nodeStateStackTop].node == t);
-                x->endIndex = nodeStateStack[nodeStateStackTop].index;
-                backTrackStackTop = nodeStateStack[nodeStateStackTop].count;
-                currentContinuation = nodeStateStack[nodeStateStackTop].continuation;                
-                if (result != NULL) {
-                    result = x;
-                }
-            }
-            else {
-                --nodeStateStackTop;
-                ASSERT(nodeStateStack[nodeStateStackTop].node == t);
-                x->endIndex = nodeStateStack[nodeStateStackTop].index;
-                backTrackStackTop = nodeStateStack[nodeStateStackTop].count;
-                currentContinuation = nodeStateStack[nodeStateStackTop].continuation;
-                if (result == NULL)
-                    result = x;
-                else {
-                    result = NULL;
-                }
-            }
-            break;
-
-        case REOP_CLASS:
-            result = classMatcher(globalData, x, t->data.chclass.classIndex);
-            if (globalData->error != NO_ERROR) return NULL;
-            break;
-        case REOP_END:
-            if (x != NULL)
-                return x;
-            break;
-        }
-        /*
-         *  If the match failed and there's a backtrack option, take it.
-         *  Otherwise this is a match failure.
-         */
-        if (result == NULL) {
-            if (backTrackStackTop > 0) {
-                backTrackStackTop--;
-                backTrackData = &backTrackStack[backTrackStackTop];
-                recoverState(x, backTrackData->state);
-                free(backTrackData->state);
-                for (k = 0; k < backTrackData->precedingNodeStateTop; k++) {
-                    nodeStateStack[k] = backTrackData->precedingNodeState[k];
-                }
-                nodeStateStackTop = backTrackData->precedingNodeStateTop;
-                if (backTrackData->precedingNodeState)
-                    free(backTrackData->precedingNodeState);
-                t = backTrackData->continuation.node;
-                op = backTrackData->continuation.op;
-                continue;
-            }
-            else
-                return NULL;
-        }
-        else
-            x = result;
-        /*
-         *  Continue with the expression. If there is no next link, use
-         *  the current continuation.
-         */
-        t = t->next;
-        if (t)
-            op = t->kind;
-        else {
-            t = currentContinuation.node;
-            ASSERT(t);
-            op = currentContinuation.op;
-        }
-    }
-    return NULL;
-}
 
 /* 
 * Parse the regexp - errors are reported via the registered error function 
@@ -2614,12 +2132,15 @@ REParseState *REParse(const REchar *source, REint32 sourceLength,
         else
             pState->result = newRENode(pState, REOP_END);
         if (pState->classCount) {
-            pState->classList = (CharSet *)malloc(sizeof(CharSet) * pState->classCount);
+            pState->classList = (CharSet *)malloc(sizeof(CharSet)
+                                                        * pState->classCount);
             if (!pState->classList) goto fail;
         }
-        pState->pc = (REuint8 *)malloc(sizeof(REuint8) * pState->codeLength + 1); // XXX
+        pState->pc = (REuint8 *)malloc(sizeof(REuint8) * pState->codeLength + 1);
         if (!pState->pc) goto fail;
         endPC = emitREBytecode(pState, pState->pc, pState->result);
+        freeRENode(pState->result);
+        pState->result = NULL;
         ASSERT(endPC <= (pState->pc + (pState->codeLength + 1)));
         return pState;
     }
@@ -2641,15 +2162,6 @@ static REState *initMatch(REGlobalData *gData, REParseState *parseState,
         backTrackStack = (REBackTrackData *)malloc(sizeof(REBackTrackData) 
                                                             * maxBackTrack);
         if (!backTrackStack) {
-            reportRegExpError(&gData->error, OUT_OF_MEMORY);
-            return NULL;
-        }
-    }
-    if (!nodeStateStack) {
-        maxNodeStateStack = INITIAL_STATESTACK;
-        nodeStateStack = (RENodeState *)malloc(sizeof(RENodeState) 
-                                                         * maxNodeStateStack);
-        if (!nodeStateStack) {
             reportRegExpError(&gData->error, OUT_OF_MEMORY);
             return NULL;
         }
@@ -2684,7 +2196,6 @@ static REState *initMatch(REGlobalData *gData, REParseState *parseState,
     gData->lastParen = 0;
     
     backTrackStackTop = 0;
-    nodeStateStackTop = 0;
     stateStackTop = 0;
     return result;
 }
@@ -2703,7 +2214,7 @@ REState *REMatch(REParseState *parseState, const REchar *text,
     if (!x)
         return NULL;
 
-    result = executeRENode(parseState->result, &gData, x);
+    result = executeREBytecode(parseState->pc, &gData, x);
     for (j = 0; j < backTrackStackTop; j++)
         free(backTrackStack[j].state);
     if (gData.error != NO_ERROR) return NULL;
@@ -2737,12 +2248,10 @@ REState *REExecute(REParseState *parseState, const REchar *text,
     }
 
     while (true) {
-//        result = executeRENode(parseState->result, &gData, x);
         result = executeREBytecode(parseState->pc, &gData, x);
         for (i = 0; i < backTrackStackTop; i++)
             free(backTrackStack[i].state);
         backTrackStackTop = 0;
-        nodeStateStackTop = 0;
         stateStackTop = 0;
         if (gData.error != NO_ERROR) return NULL;
         if (result == NULL) {
@@ -2774,6 +2283,14 @@ REchar *widen(char *str, int length)
     return result;
 }
 
+REchar canonicalize(REchar ch)
+{
+    if ((ch >= 'a') && (ch <= 'z'))
+        return (ch - 'a') + 'A';
+    else
+        return ch;
+}
+
 int main(int argc, char* argv[])
 {
     char regexpInput[128];
@@ -2783,7 +2300,7 @@ int main(int argc, char* argv[])
     int regexpLength;
     char *flagSrc;
     int flagSrcLength;
-    REuint32 i, j;
+    REint32 i, j;
 
     printf("Delimit regexp by /  / (with flags following) and strings by \"  \"\n");
     while (true) {
@@ -2826,8 +2343,8 @@ int main(int argc, char* argv[])
                     result = REExecute(pState, widestr, strLength);
                     if (result) {
                         printf("\"");
-                        for (i = 0; i < result->length; i++) 
-                            printf("%c", str[i + 1 + result->endIndex]);
+                        for (i = result->startIndex; i < result->endIndex; i++) 
+                            printf("%c", str[i + 1]);
                         printf("\"");
                         for (i = 0; i < result->n; i++) {
                             printf(",");

@@ -136,7 +136,6 @@ REState *REExecute(REParseState *parseState, const REchar *text, REint32 length)
  */
 void freeRegExp(REParseState *parseState);
 
-
 /*
  *  Needs to be provided by the host, following these specs:
  *
@@ -151,4 +150,4 @@ void freeRegExp(REParseState *parseState);
  *    code point value is less than decimal 128, then return ch.
  * 6. Return cu.
  */
-extern "C" REchar canonicalize(REchar ch);
+extern REchar canonicalize(REchar ch);
