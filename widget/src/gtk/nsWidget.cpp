@@ -413,6 +413,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
     if (nsnull != newCursor) {
       mCursor = aCursor;
       ::gdk_window_set_cursor(mWidget->window, newCursor);
+      ::gdk_cursor_destroy(newCursor);
     }
   }
   return NS_OK;
@@ -431,12 +432,15 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
     return NS_ERROR_FAILURE;
   }
-  
+
   if (aIsSynchronous)
     ::gtk_widget_draw(mWidget, NULL);
   else
     ::gtk_widget_queue_draw(mWidget);
-    
+
+#ifdef DEBUG_pavlov
+  g_print("nsWidget::Invalidate(%i)\n", aIsSynchronous);
+#endif
   return NS_OK;
 }
 
@@ -467,6 +471,10 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.x, aRect.y,
                                    aRect.width, aRect.height);
+
+#ifdef DEBUG_pavlov
+  g_print("nsWidget::Invalidate({x=%i,y=%i,w=%i,h=%i}, %i)\n", aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
+#endif
 
   return NS_OK;
 }
@@ -569,7 +577,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   GtkWidget *parentWidget = nsnull;
-  nsWidget  *blah = NULL;
 
 #if 0
   if (aParent)
