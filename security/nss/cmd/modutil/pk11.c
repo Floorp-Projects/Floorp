@@ -566,7 +566,7 @@ ChangePW(char *tokenName, char *pwFile, char *newpwFile)
 	/* Get old password */
 	if(! PK11_NeedUserInit(slot)) {
 		if(pwFile) {
-			oldpw = SECU_GetPasswordString(pwFile, "");
+			oldpw = SECU_FilePasswd(NULL, PR_FALSE, pwFile);
 			if(PK11_CheckUserPassword(slot, oldpw) != SECSuccess) {
 				PR_fprintf(PR_STDERR, errStrings[BAD_PW_ERR]);
 				ret=BAD_PW_ERR;
@@ -586,7 +586,7 @@ ChangePW(char *tokenName, char *pwFile, char *newpwFile)
 
 	/* Get new password */
 	if(newpwFile) {
-		newpw = SECU_GetPasswordString(newpwFile, "");
+		newpw = SECU_FilePasswd(NULL, PR_FALSE, newpwFile);
 	} else {
 		for(matching=PR_FALSE; !matching; ) {
 			newpw = SECU_GetPasswordString(NULL, "Enter new password: ");
