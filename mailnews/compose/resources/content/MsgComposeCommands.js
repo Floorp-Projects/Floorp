@@ -93,7 +93,8 @@ function InitializeGlobalVariables()
   
   //This migrates the LDAPServer Preferences from 4.x to mozilla format.
   try {
-    gLDAPPrefsService = Components.classes["@mozilla.org/ldapprefs-service;1"].getService(Components.interfaces.nsILDAPPrefsService);
+      gLDAPPrefsService = Components.classes["@mozilla.org/ldapprefs-service;1"].getService();       
+      gLDAPPrefsService = gLDAPPrefsService.QueryInterface( Components.interfaces.nsILDAPPrefsService);                  
   } catch (ex) {dump ("ERROR: Cannot get the LDAP service\n" + ex + "\n");}
 
   gMsgCompose = null;
