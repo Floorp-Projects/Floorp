@@ -2578,11 +2578,12 @@ pk11_update_all_states(PK11Slot *slot)
     PK11Session *session;
 
     for (i=0; i < slot->sessHashSize; i++) {
-	PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,i));)
+	PK11_USE_THREADS(PZLock *lock = PK11_SESSION_LOCK(slot,i);)
+	PK11_USE_THREADS(PZ_Lock(lock);)
 	for (session = slot->head[i]; session; session = session->next) {
 	    pk11_update_state(slot,session);
 	}
-	PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,i));)
+	PK11_USE_THREADS(PZ_Unlock(lock);)
     }
 }
 
@@ -2692,11 +2693,12 @@ pk11_SessionFromHandle(CK_SESSION_HANDLE handle)
 {
     PK11Slot	*slot = pk11_SlotFromSessionHandle(handle);
     PK11Session *session;
+    PK11_USE_THREADS(PZLock	*lock = PK11_SESSION_LOCK(slot,handle);)
 
-    PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,handle));)
+    PK11_USE_THREADS(PZ_Lock(lock);)
     pk11queue_find(session,handle,slot->head,slot->sessHashSize);
     if (session) session->refCount++;
-    PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,handle));)
+    PK11_USE_THREADS(PZ_Unlock(lock);)
 
     return (session);
 }
@@ -2709,11 +2711,12 @@ pk11_FreeSession(PK11Session *session)
 {
     PRBool destroy = PR_FALSE;
     PK11_USE_THREADS(PK11Slot *slot = pk11_SlotFromSession(session);)
+    PK11_USE_THREADS(PZLock *lock = PK11_SESSION_LOCK(slot,session->handle);)
 
-    PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,session->handle));)
+    PK11_USE_THREADS(PZ_Lock(lock);)
     if (session->refCount == 1) destroy = PR_TRUE;
     session->refCount--;
-    PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,session->handle));)
+    PK11_USE_THREADS(PZ_Unlock(lock);)
 
     if (destroy) pk11_DestroySession(session);
 }
