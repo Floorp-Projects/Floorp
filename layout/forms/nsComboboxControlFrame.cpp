@@ -511,6 +511,7 @@ void
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (aOn) {
+    nsListControlFrame::ComboboxFocusSet();
     mFocused = this;
 
     // Store up the selected index so when we lose focus we can see if it's

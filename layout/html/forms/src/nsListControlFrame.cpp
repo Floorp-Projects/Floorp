@@ -108,7 +108,7 @@ nsListControlFrame * nsListControlFrame::mFocused = nsnull;
 //  need to find a good place to put them together.
 //  if someone changes one, please also change the other.
 
-static DOMTimeStamp gLastKeyTime = 0;
+DOMTimeStamp nsListControlFrame::gLastKeyTime = 0;
 
 //---------------------------------------------------------
 nsresult
@@ -449,20 +449,20 @@ nsListControlFrame::~nsListControlFrame()
 NS_IMETHODIMP
 nsListControlFrame::Destroy(nsIPresContext *aPresContext)
 {
-  // get the reciever interface from the browser button's content node
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
+  // get the receiver interface from the browser button's content node
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
 
   nsCOMPtr<nsIDOMMouseListener> mouseListener = do_QueryInterface(mEventListener);
   if (!mouseListener) { return NS_ERROR_NO_INTERFACE; }
-  reciever->RemoveEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
+  receiver->RemoveEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
 
   nsCOMPtr<nsIDOMMouseMotionListener> mouseMotionListener = do_QueryInterface(mEventListener);
   if (!mouseMotionListener) { return NS_ERROR_NO_INTERFACE; }
-  reciever->RemoveEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
+  receiver->RemoveEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
 
   nsCOMPtr<nsIDOMKeyListener> keyListener = do_QueryInterface(mEventListener);
   if (!keyListener) { return NS_ERROR_NO_INTERFACE; }
-  reciever->RemoveEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
+  receiver->RemoveEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
 
   if (IsInDropDownMode() == PR_FALSE) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
@@ -1689,8 +1689,8 @@ nsListControlFrame::Init(nsIPresContext*  aPresContext,
   nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext,
                                         aPrevInFlow);
 
-  // get the reciever interface from the browser button's content node
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
+  // get the receiver interface from the browser button's content node
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
 
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well
@@ -1704,15 +1704,15 @@ nsListControlFrame::Init(nsIPresContext*  aPresContext,
 
   nsCOMPtr<nsIDOMMouseListener> mouseListener = do_QueryInterface(mEventListener);
   if (!mouseListener) { return NS_ERROR_NO_INTERFACE; }
-  reciever->AddEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
+  receiver->AddEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
 
   nsCOMPtr<nsIDOMMouseMotionListener> mouseMotionListener = do_QueryInterface(mEventListener);
   if (!mouseMotionListener) { return NS_ERROR_NO_INTERFACE; }
-  reciever->AddEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
+  receiver->AddEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
 
   nsCOMPtr<nsIDOMKeyListener> keyListener = do_QueryInterface(mEventListener);
   if (!keyListener) { return NS_ERROR_NO_INTERFACE; }
-  reciever->AddEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
+  receiver->AddEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
@@ -1992,6 +1992,7 @@ void
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (aOn) {
+    ComboboxFocusSet();
     PRInt32 selectedIndex;
     GetSelectedIndex(&selectedIndex);
     mFocused = this;
@@ -2001,7 +2002,11 @@ nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 
   // Make sure the SelectArea frame gets painted
   Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+}
 
+void nsListControlFrame::ComboboxFocusSet()
+{
+  gLastKeyTime = 0;
 }
 
 //---------------------------------------------------------
