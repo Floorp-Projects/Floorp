@@ -211,7 +211,7 @@ PRBool imgCache::Get(nsIURI *aKey, PRBool aDoomIfExpired, imgRequest **aRequest,
   if (aDoomIfExpired) {
     PRUint32 expirationTime;
     entry->GetExpirationTime(&expirationTime);
-    if (expirationTime && (expirationTime <= SecondsFromPRTime(PR_Now()))) {
+    if (expirationTime <= SecondsFromPRTime(PR_Now())) {
       entry->Doom();
       return PR_FALSE;
     }

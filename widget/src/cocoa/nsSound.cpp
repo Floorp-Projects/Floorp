@@ -408,7 +408,7 @@ nsSound::PutSoundInCache(nsIChannel* inChannel, PRUint32 inDataSize, nsISupports
     }
   }
   
-  if (expirationTime == 0)
+  if (expirationTime == PRUint32(-1))   // no expiration time (never expires)
   {
     // set it to some reasonable default, like now + 24 hours
     expirationTime = SecondsFromPRTime(PR_Now()) + 60 * 60 * 24;
