@@ -84,6 +84,9 @@ endif
 
 $(SHARED_LIBRARY): $(CILIB) $(DIRS)
 
+cilib_name:
+	@echo $(CILIB)
+
 $(CILIB):
 	@$(MAKE_OBJDIR)
 	@if test -f $(ORIG_CILIB); then \
