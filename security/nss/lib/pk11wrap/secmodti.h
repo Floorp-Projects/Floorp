@@ -122,6 +122,10 @@ struct PK11SlotInfoStr {
     uint16 series;	/* break up the slot info into various groups of 
 			 * inserted tokens so that keys and certs can be
 			 * invalidated */
+    uint16 flagSeries;	/* record the last series for the last event
+                         * returned for this slot */
+    PRBool flagState;	/* record the state of the last event returned for this
+			 * slot. */
     uint16 wrapKey;	/* current wrapping key for SSL master secrets */
     CK_MECHANISM_TYPE wrapMechanism;
 			/* current wrapping mechanism for current wrapKey */

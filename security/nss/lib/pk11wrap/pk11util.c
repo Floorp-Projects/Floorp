@@ -62,7 +62,8 @@ extern int num_pk11_default_mechanisms;
 
 
 void
-SECMOD_Init() {
+SECMOD_Init() 
+{
     /* don't initialize twice */
     if (moduleLock) return;
 
@@ -72,7 +73,8 @@ SECMOD_Init() {
 
 
 SECStatus
-SECMOD_Shutdown() {
+SECMOD_Shutdown() 
+{
     /* destroy the lock */
     if (moduleLock) {
 	SECMOD_DestroyListLock(moduleLock);
@@ -128,13 +130,15 @@ SECMOD_Shutdown() {
  * retrieve the internal module
  */
 SECMODModule *
-SECMOD_GetInternalModule(void) {
+SECMOD_GetInternalModule(void)
+{
    return internalModule;
 }
 
 
 SECStatus
-secmod_AddModuleToList(SECMODModuleList **moduleList,SECMODModule *newModule) {
+secmod_AddModuleToList(SECMODModuleList **moduleList,SECMODModule *newModule)
+{
     SECMODModuleList *mlp, *newListElement, *last = NULL;
 
     newListElement = SECMOD_NewModuleListElement();
@@ -162,7 +166,8 @@ secmod_AddModuleToList(SECMODModuleList **moduleList,SECMODModule *newModule) {
 }
 
 SECStatus
-SECMOD_AddModuleToList(SECMODModule *newModule) {
+SECMOD_AddModuleToList(SECMODModule *newModule)
+{
     if (newModule->internal && !internalModule) {
 	internalModule = SECMOD_ReferenceModule(newModule);
     }
@@ -170,7 +175,8 @@ SECMOD_AddModuleToList(SECMODModule *newModule) {
 }
 
 SECStatus
-SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule) {
+SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule)
+{
     if (defaultDBModule == NULL) {
 	defaultDBModule = SECMOD_ReferenceModule(newModule);
     }
@@ -178,16 +184,29 @@ SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule) {
 }
 
 SECStatus
-SECMOD_AddModuleToUnloadList(SECMODModule *newModule) {
+SECMOD_AddModuleToUnloadList(SECMODModule *newModule)
+{
     return secmod_AddModuleToList(&modulesUnload,newModule);
 }
 
 /*
  * get the list of PKCS11 modules that are available.
  */
-SECMODModuleList *SECMOD_GetDefaultModuleList() { return modules; }
+SECMODModuleList * SECMOD_GetDefaultModuleList() { return modules; }
 SECMODModuleList *SECMOD_GetDeadModuleList() { return modulesUnload; }
 SECMODModuleList *SECMOD_GetDBModuleList() { return modulesDB; }
+
+/*
+ * This lock protects the global module lists.
+ * it also protects changes to the slot array (module->slots[]) and slot count 
+ * (module->slotCount) in each module. It is a read/write lock with multiple 
+ * readers or one writer. Writes are uncommon. 
+ * Because of legacy considerations protection of the slot array and count is 
+ * only necessary in applications if the application calls 
+ * SECMOD_UpdateSlotList() or SECMOD_WaitForAnyTokenEvent(), though all new
+ * applications are encouraged to acquire this lock when reading the
+ * slot array information directly.
+ */
 SECMODListLock *SECMOD_GetDefaultModuleListLock() { return moduleLock; }
 
 
@@ -196,7 +215,9 @@ SECMODListLock *SECMOD_GetDefaultModuleListLock() { return moduleLock; }
  * find a module by name, and add a reference to it.
  * return that module.
  */
-SECMODModule *SECMOD_FindModule(const char *name) {
+SECMODModule *
+SECMOD_FindModule(const char *name)
+{
     SECMODModuleList *mlp;
     SECMODModule *module = NULL;
 
@@ -229,7 +250,9 @@ found:
  * find a module by ID, and add a reference to it.
  * return that module.
  */
-SECMODModule *SECMOD_FindModuleByID(SECMODModuleID id) {
+SECMODModule *
+SECMOD_FindModuleByID(SECMODModuleID id) 
+{
     SECMODModuleList *mlp;
     SECMODModule *module = NULL;
 
@@ -242,30 +265,53 @@ SECMODModule *SECMOD_FindModuleByID(SECMODModuleID id) {
 	}
     }
     SECMOD_ReleaseReadLock(moduleLock);
-
+    if (module == NULL) {
+	PORT_SetError(SEC_ERROR_NO_MODULE);
+    }
     return module;
+}
+
+/*
+ * Find the Slot based on ID and the module.
+ */
+PK11SlotInfo *
+SECMOD_FindSlotByID(SECMODModule *module, CK_SLOT_ID slotID)
+{
+    int i;
+    PK11SlotInfo *slot = NULL;
+
+    SECMOD_GetReadLock(moduleLock);
+    for (i=0; i < module->slotCount; i++) {
+	PK11SlotInfo *cSlot = module->slots[i];
+
+	if (cSlot->slotID == slotID) {
+	    slot = PK11_ReferenceSlot(cSlot);
+	    break;
+	}
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
+
+    if (slot == NULL) {
+	PORT_SetError(SEC_ERROR_NO_SLOT_SELECTED);
+    }
+    return slot;
 }
 
 /*
  * lookup the Slot module based on it's module ID and slot ID.
  */
-PK11SlotInfo *SECMOD_LookupSlot(SECMODModuleID moduleID,CK_SLOT_ID slotID) {
-    int i;
+PK11SlotInfo *
+SECMOD_LookupSlot(SECMODModuleID moduleID,CK_SLOT_ID slotID) 
+{
     SECMODModule *module;
+    PK11SlotInfo *slot;
 
     module = SECMOD_FindModuleByID(moduleID);
     if (module == NULL) return NULL;
 
-    for (i=0; i < module->slotCount; i++) {
-	PK11SlotInfo *slot = module->slots[i];
-
-	if (slot->slotID == slotID) {
-	    SECMOD_DestroyModule(module);
-	    return PK11_ReferenceSlot(slot);
-	}
-    }
+    slot = SECMOD_FindSlotByID(module, slotID);
     SECMOD_DestroyModule(module);
-    return NULL;
+    return slot;
 }
 
 
@@ -338,7 +384,8 @@ found:
  * find a module by name and delete it off the module list
  */
 SECStatus
-SECMOD_DeleteModule(const char *name, int *type) {
+SECMOD_DeleteModule(const char *name, int *type) 
+{
     return SECMOD_DeleteModuleEx(name, NULL, type, PR_TRUE);
 }
 
@@ -346,7 +393,8 @@ SECMOD_DeleteModule(const char *name, int *type) {
  * find a module by name and delete it off the module list
  */
 SECStatus
-SECMOD_DeleteInternalModule(const char *name) {
+SECMOD_DeleteInternalModule(const char *name) 
+{
     SECMODModuleList *mlp;
     SECMODModuleList **mlpp;
     SECStatus rv = SECFailure;
@@ -418,7 +466,8 @@ SECMOD_DeleteInternalModule(const char *name) {
 }
 
 SECStatus
-SECMOD_AddModule(SECMODModule *newModule) {
+SECMOD_AddModule(SECMODModule *newModule) 
+{
     SECStatus rv;
     SECMODModule *oldModule;
 
@@ -450,10 +499,14 @@ SECMOD_AddModule(SECMODModule *newModule) {
     return rv;
 }
 
-PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,const char *name) {
+PK11SlotInfo *
+SECMOD_FindSlot(SECMODModule *module,const char *name) 
+{
     int i;
     char *string;
+    PK11SlotInfo *retSlot = NULL;
 
+    SECMOD_GetReadLock(moduleLock);
     for (i=0; i < module->slotCount; i++) {
 	PK11SlotInfo *slot = module->slots[i];
 
@@ -463,10 +516,17 @@ PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,const char *name) {
 	    string = PK11_GetSlotName(slot);
 	}
 	if (PORT_Strcmp(name,string) == 0) {
-	    return PK11_ReferenceSlot(slot);
+	    retSlot = PK11_ReferenceSlot(slot);
+	    break;
 	}
     }
+    SECMOD_ReleaseReadLock(moduleLock);
+
+    if (retSlot == NULL) {
+	PORT_SetError(SEC_ERROR_NO_SLOT_SELECTED);
+    }
     return NULL;
+    return retSlot;
 }
 
 SECStatus
@@ -501,11 +561,12 @@ PK11_IsFIPS(void)
 /* combines NewModule() & AddModule */
 /* give a string for the module name & the full-path for the dll, */
 /* installs the PKCS11 module & update registry */
-SECStatus SECMOD_AddNewModuleEx(const char* moduleName, const char* dllPath,
+SECStatus 
+SECMOD_AddNewModuleEx(const char* moduleName, const char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags,
-                              char* modparms,
-                              char* nssparms) {
+                              char* modparms, char* nssparms)
+{
     SECMODModule *module;
     SECStatus result = SECFailure;
     int s,i;
@@ -526,26 +587,28 @@ SECStatus SECMOD_AddNewModuleEx(const char* moduleName, const char* dllPath,
                 /* turn on SSL cipher enable flags */
                 module->ssl[0] = cipherEnableFlags;
 
+ 		SECMOD_GetReadLock(moduleLock);
                 /* check each slot to turn on appropriate mechanisms */
                 for (s = 0; s < module->slotCount; s++) {
                     slot = (module->slots)[s];
                     /* for each possible mechanism */
                     for (i=0; i < num_pk11_default_mechanisms; i++) {
                         /* we are told to turn it on by default ? */
-                        if (PK11_DefaultArray[i].flag & defaultMechanismFlags) {                            
-                            /* it ignores if slot attribute update failes */
-                            result = PK11_UpdateSlotAttribute(slot, &(PK11_DefaultArray[i]), PR_TRUE);
-                        } else { /* turn this mechanism of the slot off by default */
-                            result = PK11_UpdateSlotAttribute(slot, &(PK11_DefaultArray[i]), PR_FALSE);
-                        }
+			PRBool add = 
+			 (PK11_DefaultArray[i].flag & defaultMechanismFlags) ?
+						PR_TRUE: PR_FALSE;
+                        result = PK11_UpdateSlotAttribute(slot, 
+					&(PK11_DefaultArray[i]),  add);
                     } /* for each mechanism */
                     /* disable each slot if the defaultFlags say so */
                     if (defaultMechanismFlags & PK11_DISABLE_FLAG) {
                         PK11_UserDisableSlot(slot);
                     }
                 } /* for each slot of this module */
+ 		SECMOD_ReleaseReadLock(moduleLock);
 
-                /* delete and re-add module in order to save changes to the module */
+                /* delete and re-add module in order to save changes 
+		 * to the module */
 		result = SECMOD_UpdateModule(module);
             }
         }
@@ -554,7 +617,8 @@ SECStatus SECMOD_AddNewModuleEx(const char* moduleName, const char* dllPath,
     return result;
 }
 
-SECStatus SECMOD_AddNewModule(const char* moduleName, const char* dllPath,
+SECStatus 
+SECMOD_AddNewModule(const char* moduleName, const char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags)
 {
@@ -563,7 +627,8 @@ SECStatus SECMOD_AddNewModule(const char* moduleName, const char* dllPath,
                   NULL, NULL); /* don't pass module or nss params */
 }
 
-SECStatus SECMOD_UpdateModule(SECMODModule *module)
+SECStatus 
+SECMOD_UpdateModule(SECMODModule *module)
 {
     SECStatus result;
 
@@ -582,7 +647,9 @@ SECStatus SECMOD_UpdateModule(SECMODModule *module)
  * puts RANDOM_FLAG at bit 31 (Most-significant bit), but
  * public representation puts this bit at bit 28
  */
-unsigned long SECMOD_PubMechFlagstoInternal(unsigned long publicFlags) {
+unsigned long 
+SECMOD_PubMechFlagstoInternal(unsigned long publicFlags)
+{
     unsigned long internalFlags = publicFlags;
 
     if (publicFlags & PUBLIC_MECH_RANDOM_FLAG) {
@@ -592,7 +659,9 @@ unsigned long SECMOD_PubMechFlagstoInternal(unsigned long publicFlags) {
     return internalFlags;
 }
 
-unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags) {
+unsigned long 
+SECMOD_InternaltoPubMechFlags(unsigned long internalFlags) 
+{
     unsigned long publicFlags = internalFlags;
 
     if (internalFlags & SECMOD_RANDOM_FLAG) {
@@ -606,11 +675,15 @@ unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags) {
 /* Public & Internal(Security Library)  representation of */
 /* cipher flags conversion */
 /* Note: currently they are just stubs */
-unsigned long SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags) {
+unsigned long 
+SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags) 
+{
     return publicFlags;
 }
 
-unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags) {
+unsigned long 
+SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags) 
+{
     return internalFlags;
 }
 
@@ -624,7 +697,8 @@ SECMOD_IsModulePresent( unsigned long int pubCipherEnableFlags )
 
 
     for ( ; mods != NULL; mods = mods->next) {
-        if (mods->module->ssl[0] & SECMOD_PubCipherFlagstoInternal(pubCipherEnableFlags)) {
+        if (mods->module->ssl[0] & 
+		SECMOD_PubCipherFlagstoInternal(pubCipherEnableFlags)) {
             result = PR_TRUE;
         }
     }
@@ -634,7 +708,8 @@ SECMOD_IsModulePresent( unsigned long int pubCipherEnableFlags )
 }
 
 /* create a new ModuleListElement */
-SECMODModuleList *SECMOD_NewModuleListElement(void) {
+SECMODModuleList *SECMOD_NewModuleListElement(void) 
+{
     SECMODModuleList *newModList;
 
     newModList= (SECMODModuleList *) PORT_Alloc(sizeof(SECMODModuleList));
@@ -644,11 +719,13 @@ SECMODModuleList *SECMOD_NewModuleListElement(void) {
     }
     return newModList;
 }
+
 /*
  * make a new reference to a module so It doesn't go away on us
  */
 SECMODModule *
-SECMOD_ReferenceModule(SECMODModule *module) {
+SECMOD_ReferenceModule(SECMODModule *module) 
+{
     PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
     PORT_Assert(module->refCount > 0);
 
@@ -660,7 +737,8 @@ SECMOD_ReferenceModule(SECMODModule *module) {
 
 /* destroy an existing module */
 void
-SECMOD_DestroyModule(SECMODModule *module) {
+SECMOD_DestroyModule(SECMODModule *module) 
+{
     PRBool willfree = PR_FALSE;
     int slotCount;
     int i;
@@ -707,7 +785,8 @@ SECMOD_DestroyModule(SECMODModule *module) {
 /* we can only get here if we've destroyed the module, or some one has
  * erroneously freed a slot that wasn't referenced. */
 void
-SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot) {
+SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot) 
+{
     PRBool willfree = PR_FALSE;
     if (fromSlot) {
         PORT_Assert(module->refCount == 0);
@@ -737,7 +816,8 @@ SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot) {
  * on the chain. It makes it easy to implement for loops to delete
  * the chain. It also make deleting a single element easy */
 SECMODModuleList *
-SECMOD_DestroyModuleListElement(SECMODModuleList *element) {
+SECMOD_DestroyModuleListElement(SECMODModuleList *element) 
+{
     SECMODModuleList *next = element->next;
 
     if (element->module) {
@@ -753,7 +833,8 @@ SECMOD_DestroyModuleListElement(SECMODModuleList *element) {
  * Destroy an entire module list
  */
 void
-SECMOD_DestroyModuleList(SECMODModuleList *list) {
+SECMOD_DestroyModuleList(SECMODModuleList *list) 
+{
     SECMODModuleList *lp;
 
     for ( lp = list; lp != NULL; lp = SECMOD_DestroyModuleListElement(lp)) ;
@@ -763,4 +844,331 @@ PRBool
 SECMOD_CanDeleteInternalModule(void)
 {
     return (PRBool) (pendingModule == NULL);
+}
+
+/*
+ * check to see if the module has added new slots. PKCS 11 v2.20 allows for
+ * modules to add new slots, but never remove them. Slots cannot be added 
+ * between a call to C_GetSlotLlist(Flag, NULL, &count) and the subsequent
+ * C_GetSlotList(flag, &data, &count) so that the array doesn't accidently
+ * grow on the caller. It is permissible for the slots to increase between
+ * successive calls with NULL to get the size.
+ */
+SECStatus
+SECMOD_UpdateSlotList(SECMODModule *mod)
+{
+    CK_RV crv;
+    int count,i, oldCount;
+    PRBool freeRef = PR_FALSE;
+    void *mark;
+    CK_ULONG *slotIDs = NULL;
+    PK11SlotInfo **newSlots = NULL;
+    PK11SlotInfo **oldSlots = NULL;
+
+    /* C_GetSlotList is not a session function, make sure 
+     * calls are serialized */
+    PZ_Lock(mod->refLock);
+    freeRef = PR_TRUE;
+    /* see if the number of slots have changed */
+    crv = PK11_GETTAB(mod)->C_GetSlotList(PR_FALSE, NULL, &count);
+    if (crv != CKR_OK) {
+	PORT_SetError(PK11_MapError(crv));
+	goto loser;
+    }
+    /* nothing new, blow out early, we want this function to be quick
+     * and cheap in the normal case  */
+    if (count == mod->slotCount) {
+ 	PZ_Unlock(mod->refLock);
+	return SECSuccess;
+    }
+    if (count < mod->slotCount) {
+	/* shouldn't happen with a properly functioning PKCS #11 module */
+	PORT_SetError( SEC_ERROR_INCOMPATIBLE_PKCS11 );
+	goto loser;
+    }
+
+    /* get the new slot list */
+    slotIDs = PORT_NewArray(CK_SLOT_ID, count);
+    if (slotIDs == NULL) {
+	goto loser;
+    }
+
+    crv = PK11_GETTAB(mod)->C_GetSlotList(PR_FALSE, slotIDs, &count);
+    if (crv != CKR_OK) {
+	PORT_SetError(PK11_MapError(crv));
+	goto loser;
+    }
+    freeRef = PR_FALSE;
+    PZ_Unlock(mod->refLock);
+    mark = PORT_ArenaMark(mod->arena);
+    if (mark == NULL) {
+	goto loser;
+    }
+    newSlots = PORT_ArenaZNewArray(mod->arena,PK11SlotInfo *,count);
+
+    /* walk down the new slot ID list returned from the module. We keep
+     * the old slots which match a returned ID, and we initialize the new 
+     * slots. */
+    for (i=0; i < count; i++) {
+	PK11SlotInfo *slot = SECMOD_FindSlotByID(mod,slotIDs[i]);
+
+	if (!slot) {
+	    /* we have a new slot create a new slot data structure */
+	    slot = PK11_NewSlotInfo(mod);
+	    if (!slot) {
+		goto loser;
+	    }
+	    PK11_InitSlot(mod, slotIDs[i], slot);
+	    STAN_InitTokenForSlotInfo(NULL, slot);
+	}
+	newSlots[i] = slot;
+    }
+    STAN_ResetTokenInterator(NULL);
+    PORT_Free(slotIDs);
+    slotIDs = NULL;
+    PORT_ArenaUnmark(mod->arena, mark);
+
+    /* until this point we're still using the old slot list. Now we update
+     * module slot list. We update the slots (array) first then the count, 
+     * since we've already guarrenteed that count has increased (just in case 
+     * someone is looking at the slots field of  module without holding the 
+     * moduleLock */
+    SECMOD_GetWriteLock(moduleLock);
+    oldCount =mod->slotCount;
+    oldSlots = mod->slots;
+    mod->slots = newSlots; /* typical arena 'leak'... old mod->slots is
+			    * allocated out of the module arena and won't
+			    * be freed until the module is freed */
+    mod->slotCount = count;
+    SECMOD_ReleaseWriteLock(moduleLock);
+    /* free our old references before forgetting about oldSlot*/
+    for (i=0; i < oldCount; i++) {
+	PK11_FreeSlot(oldSlots[i]);
+    }
+    return SECSuccess;
+
+loser:
+    if (freeRef) {
+	PZ_Unlock(mod->refLock);
+    }
+    if (slotIDs) {
+	PORT_Free(slotIDs);
+    }
+    /* free all the slots we allocated. newSlots are part of the
+     * mod arena. NOTE: the newSlots array contain both new and old
+     * slots, but we kept a reference to the old slots when we built the new
+     * array, so we need to free all the slots in newSlots array. */
+    if (newSlots) {
+	for (i=0; i < count; i++) {
+	    if (newSlots[i] == NULL) {
+		break; /* hit the last one */
+	    }
+	    PK11_FreeSlot(newSlots[i]);
+	}
+    }
+    /* must come after freeing newSlots */
+    if (mark) {
+ 	PORT_ArenaRelease(mod->arena, mark);
+    }
+    return SECFailure;
+}
+
+/*
+ * this handles modules that do not support C_WaitForSlotEvent().
+ * The internal flags are stored. Note that C_WaitForSlotEvent() does not
+ * have a timeout, so we don't have one for handleWaitForSlotEvent() either.
+ */
+PK11SlotInfo *
+secmod_HandleWaitForSlotEvent(SECMODModule *mod,  unsigned long flags,
+						PRIntervalTime latency)
+{
+    PRBool removableSlotsFound = PR_FALSE;
+    int i;
+    int error = SEC_ERROR_NO_EVENT;
+
+    PZ_Lock(mod->refLock);
+    if (mod->evControlMask & SECMOD_END_WAIT) {
+	mod->evControlMask &= ~SECMOD_END_WAIT;
+	PZ_Unlock(mod->refLock);
+	PORT_SetError(SEC_ERROR_NO_EVENT);
+	return NULL;
+    }
+    mod->evControlMask |= SECMOD_WAIT_SIMULATED_EVENT;
+    while (mod->evControlMask & SECMOD_WAIT_SIMULATED_EVENT) {
+	PZ_Unlock(mod->refLock);
+	/* now is a good time to see if new slots have been added */
+	SECMOD_UpdateSlotList(mod);
+
+	/* loop through all the slots on a module */
+	SECMOD_GetReadLock(moduleLock);
+	for (i=0; i < mod->slotCount; i++) {
+	    PK11SlotInfo *slot = mod->slots[i];
+	    uint16 series;
+	    PRBool present;
+
+	    /* perm modules do not change */
+	    if (slot->isPerm) {
+		continue;
+	    }
+	    removableSlotsFound = PR_TRUE;
+	    /* simulate the PKCS #11 module flags. are the flags different
+	     * from the last time we called? */
+	    series = slot->series;
+	    present = PK11_IsPresent(slot);
+	    if ((slot->flagSeries != series) || (slot->flagState != present)) {
+		slot->flagState = present;
+		slot->flagSeries = series;
+		SECMOD_ReleaseReadLock(moduleLock);
+		PZ_Lock(mod->refLock);
+		mod->evControlMask &= ~SECMOD_END_WAIT;
+		PZ_Unlock(mod->refLock);
+		return PK11_ReferenceSlot(slot);
+	    }
+	}
+	SECMOD_ReleaseReadLock(moduleLock);
+	/* if everything was perm modules, don't lock up forever */
+	if (!removableSlotsFound) {
+	    error =SEC_ERROR_NO_SLOT_SELECTED;
+	    PZ_Lock(mod->refLock);
+	    break;
+	}
+	if (flags & CKF_DONT_BLOCK) {
+	    PZ_Lock(mod->refLock);
+	    break;
+	}
+	PR_Sleep(latency);
+ 	PZ_Lock(mod->refLock);
+    }
+    mod->evControlMask &= ~SECMOD_END_WAIT;
+    PZ_Unlock(mod->refLock);
+    PORT_SetError(error);
+    return NULL;
+}
+
+/*
+ * this function waits for a token event on any slot of a given module
+ * This function should not be called from more than one thread of the
+ * same process (though other threads can make other library calls
+ * on this module while this call is blocked).
+ */
+PK11SlotInfo *
+SECMOD_WaitForAnyTokenEvent(SECMODModule *mod, unsigned long flags,
+						 PRIntervalTime latency)
+{
+    CK_SLOT_ID id;
+    CK_RV crv;
+    PK11SlotInfo *slot;
+
+    /* first the the PKCS #11 call */
+    PZ_Lock(mod->refLock);
+    if (mod->evControlMask & SECMOD_END_WAIT) {
+	goto end_wait;
+    }
+    mod->evControlMask |= SECMOD_WAIT_PKCS11_EVENT;
+    PZ_Unlock(mod->refLock);
+    crv = PK11_GETTAB(mod)->C_WaitForSlotEvent(flags, &id, NULL);
+    PZ_Lock(mod->refLock);
+    mod->evControlMask &= ~SECMOD_WAIT_PKCS11_EVENT;
+    /* if we are in end wait, short circuit now, don't even risk
+     * going into secmod_HandleWaitForSlotEvent */
+    if (mod->evControlMask & SECMOD_END_WAIT) {
+	goto end_wait;
+    }
+    PZ_Unlock(mod->refLock);
+    if (crv == CKR_FUNCTION_NOT_SUPPORTED) {
+	/* module doesn't support that call, simulate it */
+	return secmod_HandleWaitForSlotEvent(mod, flags, latency);
+    }
+    if (crv != CKR_OK) {
+	/* we can get this error if finalize was called while we were
+	 * still running. This is the only way to force a C_WaitForSlotEvent()
+	 * to return in PKCS #11. In this case, just return that there
+	 * was no event. */
+	if (crv == CKR_CRYPTOKI_NOT_INITIALIZED) {
+	    PORT_SetError(SEC_ERROR_NO_EVENT);
+	} else {
+	    PORT_SetError(PK11_MapError(crv));
+	}
+	return NULL;
+    }
+    slot = SECMOD_FindSlotByID(mod, id);
+    if (slot == NULL) {
+	/* possibly a new slot that was added? */
+	SECMOD_UpdateSlotList(mod);
+	slot = SECMOD_FindSlotByID(mod, id);
+    }
+    return slot;
+
+    /* must be called with the lock on. */
+end_wait:
+    mod->evControlMask &= ~SECMOD_END_WAIT;
+    PZ_Unlock(mod->refLock);
+    PORT_SetError(SEC_ERROR_NO_EVENT);
+    return NULL;
+}
+
+/*
+ * This function "wakes up" WaitForAnyTokenEvent. It's a pretty drastic
+ * function, possibly bringing down the pkcs #11 module in question. This
+ * should be OK because 1) it does reinitialize, and 2) it should only be
+ * called when we are on our way to tear the whole system down anyway.
+ */
+SECStatus
+SECMOD_CancelWait(SECMODModule *mod)
+{
+    unsigned long controlMask = mod->evControlMask;
+    SECStatus rv = SECSuccess;
+    CK_RV crv;
+
+    PZ_Lock(mod->refLock);
+    mod->evControlMask |= SECMOD_END_WAIT;
+    controlMask = mod->evControlMask;
+    if (controlMask & SECMOD_WAIT_PKCS11_EVENT) {
+	/* NOTE: this call will drop all transient keys, in progress
+	 * operations, and any authentication. This is the only documented
+	 * way to get WaitForSlotEvent to return. Also note: for non-thread
+	 * safe tokens, we need to hold the module lock, this is not yet at
+	 * system shutdown/starup time, so we need to protect these calls */
+	crv = PK11_GETTAB(mod)->C_Finalize(NULL);
+	/* ok, we slammed the module down, now we need to reinit it in case
+	 * we intend to use it again */
+	if (crv = CKR_OK) {
+	    secmod_ModuleInit(mod);
+	} else {
+	    /* Finalized failed for some reason,  notify the application
+	     * so maybe it has a prayer of recovering... */
+	    PORT_SetError(PK11_MapError(crv));
+	    rv = SECFailure;
+	}
+    } else if (controlMask & SECMOD_WAIT_SIMULATED_EVENT) {
+	mod->evControlMask &= ~SECMOD_WAIT_SIMULATED_EVENT; 
+				/* Simulated events will eventually timeout
+				 * and wake up in the loop */
+    }
+    PZ_Unlock(mod->refLock);
+    return rv;
+}
+
+/*
+ * check to see if the module has removable slots that we may need to
+ * watch for.
+ */
+PRBool
+SECMOD_HasRemovableSlots(SECMODModule *mod)
+{
+    int i;
+    PRBool ret = PR_FALSE;
+
+    SECMOD_GetReadLock(moduleLock);
+    for (i=0; i < mod->slotCount; i++) {
+	PK11SlotInfo *slot = mod->slots[i];
+	/* perm modules are not inserted or removed */
+	if (slot->isPerm) {
+	    continue;
+	}
+	ret = PR_TRUE;
+	break;
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
+    return ret;
 }
