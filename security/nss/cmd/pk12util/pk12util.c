@@ -32,7 +32,6 @@
  */
 
 #include "nspr.h"
-#include "cdbhdl.h"
 #include "secutil.h"
 #include "pk11func.h"
 #include "pkcs12.h"

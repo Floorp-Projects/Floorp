@@ -56,7 +56,6 @@
 #include "cert.h"
 #include "certt.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 
 typedef struct {
     char *		name;

@@ -41,7 +41,6 @@
 
 #include "pk11func.h"
 #include "cert.h"
-#include "cdbhdl.h"
 #include "cryptohi.h"
 #include "secoid.h"
 #include "secder.h"
