@@ -96,7 +96,6 @@ class nsMediaDocumentStreamListener: public nsIStreamListener
 {
 public:
   nsMediaDocumentStreamListener(nsMediaDocument *aDocument);
-  nsMediaDocumentStreamListener() { NS_NOTREACHED("should never be called"); }
   virtual ~nsMediaDocumentStreamListener();
   void SetStreamListener(nsIStreamListener *aListener);
 
