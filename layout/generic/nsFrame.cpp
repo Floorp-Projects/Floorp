@@ -69,6 +69,7 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLHRElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDeviceContext.h"
 #include "nsIEventStateManager.h"
 #include "nsISelection.h"
@@ -83,7 +84,6 @@
 #include "nsCSSFrameConstructor.h"
 
 #include "nsFrameTraversal.h"
-#include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
 #include "nsITableLayout.h"    //selection neccesity
@@ -100,6 +100,7 @@
 #include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
+#include "nsUnicharUtils.h"
 #include "nsLayoutErrors.h"
 
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
@@ -1299,7 +1300,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
          a->GetHref(href);
        } else {
          // area?
-         nsCOMPtr<nsIDOMHTMLAnchorElement> area(do_QueryInterface(content));
+        nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(content));
          if (area) {
            area->GetHref(href);
          } else {
@@ -1308,12 +1309,21 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
            if (img) {
              img->GetSrc(href);
            } else {
-             // XLink?
-             nsAutoString value;
-             content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-             if (value.Equals(simple)) {
-               content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, href);
-             }
+            // input (image type) ?
+            nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
+            if (inputElement) {
+              nsAutoString type;
+              rv = inputElement->GetType(type);
+              if (NS_SUCCEEDED(rv) &&
+                  type.Equals(NS_LITERAL_STRING("image"), nsCaseInsensitiveStringComparator()))
+                inputElement->GetSrc(href);
+            } else {
+              // XLink ?
+              nsAutoString value;
+              content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
+              if (value.Equals(simple))
+                content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, href);
+            }
            }
          }
        }
