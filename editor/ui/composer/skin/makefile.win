@@ -62,7 +62,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\img-align-middle.gif $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\img-align-right.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\img-align-top.gif    $(DIST)\bin\chrome\editor\skin\default\images
-
+  $(MAKE_INSTALL) images\hover-teal.gif       $(DIST)\bin\chrome\editor\skin\default\images
 
 
 clobber::
@@ -108,3 +108,4 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-middle.gif    
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-right.gif    
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-top.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\hover-teal.gif    
