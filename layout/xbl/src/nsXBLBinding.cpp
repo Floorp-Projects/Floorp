@@ -805,12 +805,17 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
         if (!body.IsEmpty()) {
           void* myFunc;
           nsCAutoString cname; cname.AssignWithConversion(name.GetUnicode());
+          nsCAutoString functionUri = classStr;
+          functionUri += ".";
+          functionUri += cname;
+          functionUri += "()";
+          
           rv = context->CompileFunction(classObject,
                                         cname,
                                         argCount,
                                         (const char**)args,
                                         body, 
-                                        nsnull,
+                                        functionUri.GetBuffer(),
                                         0,
                                         PR_FALSE,
                                         &myFunc);
@@ -861,12 +866,16 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           }
           
           if (!getter.IsEmpty() && classObject) {
+            nsCAutoString functionUri = classStr;
+            functionUri += ".";
+            functionUri.AppendWithConversion(name.GetUnicode());
+            functionUri += " (getter)";
             rv = context->CompileFunction(classObject,
                                           nsCAutoString("onget"),
                                           0,
                                           nsnull,
                                           getter, 
-                                          nsnull,
+                                          functionUri.GetBuffer(),
                                           0,
                                           PR_FALSE,
                                           &getFunc);
@@ -895,12 +904,16 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           }
           
           if (!setter.IsEmpty() && classObject) {
+            nsCAutoString functionUri = classStr;
+            functionUri += ".";
+            functionUri.AppendWithConversion(name.GetUnicode());
+            functionUri += " (setter)";
             rv = context->CompileFunction(classObject,
                                           nsCAutoString("onset"),
                                           1,
                                           gPropertyArg,
                                           setter, 
-                                          nsnull,
+                                          functionUri.GetBuffer(),
                                           0,
                                           PR_FALSE,
                                           &setFunc);
