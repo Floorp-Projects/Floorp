@@ -42,7 +42,12 @@ namespace ICodeASM {
     static char *keyword_binaryops[] = {"add", "subtract", "multiply", "divide",
                                         "remainder", "leftshift", "rightshift",
                                         "lessorequal", "equal", "identical", 0};
-    
+
+#define IS_ALPHA(ch) ((ch >= 'a' && ch <= 'z') || \
+                      (ch >= 'A' && ch <= 'Z') || \
+                      (ch == '_'))
+#define IS_NUMBER(ch) (ch >= '0' && ch <= '9')
+
     int cmp_nocase (const string& s1, string::const_iterator s2_begin,
                     string::const_iterator s2_end)
     {
@@ -66,12 +71,12 @@ namespace ICodeASM {
         iter begin = source.begin();
         iter end = source.end();
 
-        while (begin != end)
+        while (begin < end)
         {
             try
             {
                 ++statementNo;
-                begin = ParseStatement (begin, end);
+                begin = ParseNextStatement (begin, end);
             }
             catch (ICodeParseException *e)
             {
@@ -81,6 +86,9 @@ namespace ICodeASM {
                 return;
             }
         }
+
+        if (begin > end)
+            NOT_REACHED ("Overran source buffer!");
     }
 
     TokenLocation
@@ -88,75 +96,86 @@ namespace ICodeASM {
     {
         TokenLocation tl;
         iter curpos;
+        bool inComment = false;
 
-        //        tl.type = ttUndetermined;
-        
         for (curpos = begin; curpos < end; ++curpos) {
-            switch (*curpos)
-            {
-                case ' ':
-                case '\t':
-                case '\n':
-                    /* look past the whitespace */
-                    break;
+            if (!inComment) {
+                switch (*curpos)
+                {
+                    case ' ':
+                    case '\t':
+                        /* look past the whitespace */
+                        break;
+                        
+                    case ';':
+                        inComment = true;
+                        break;
 
-                case 'a'...'z':
-                case 'A'...'Z':
-                case '_':
-                    tl.estimate = teAlpha;
-                    tl.begin = curpos;
-                    return tl;
-
-                case '0'...'9':
-                    tl.estimate = teNumeric;
-                    tl.begin = curpos;
-                    return tl;
-
-                case '-':
-                    tl.estimate = teMinus;
-                    tl.begin = curpos;
-                    return tl;
-                    
-                case '+':
-                    tl.estimate = tePlus;
-                    tl.begin = curpos;
-                    return tl;
-                    
-                case ',':
-                    tl.estimate = teComma;
-                    tl.begin = curpos;
-                    return tl;
-                    
-                case '"':
-                case '\'':
-                    tl.estimate = teString;
-                    tl.begin = curpos;
-                    return tl;
-
-                case '<':
-                    tl.estimate = teNotARegister;
-                    tl.begin = curpos;
-                    return tl;
-
-                case '(':
-                    tl.estimate = teOpenParen;
-                    tl.begin = curpos;
-                    return tl;
-
-                case ')':
-                    tl.estimate = teCloseParen;
-                    tl.begin = curpos;
-                    return tl;
-
-                case ':':
-                    tl.estimate = teColon;
-                    tl.begin = curpos;
-                    return tl;
-
-                default:
-                    tl.estimate = teUnknown;
-                    tl.begin = curpos;
-                    return tl;
+                    case '\n':
+                        tl.estimate = teNewline;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case '-':
+                        tl.estimate = teMinus;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case '+':
+                        tl.estimate = tePlus;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case ',':
+                        tl.estimate = teComma;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case '"':
+                    case '\'':
+                        tl.estimate = teString;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case '<':
+                        tl.estimate = teNotARegister;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case '(':
+                        tl.estimate = teOpenParen;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case ')':
+                        tl.estimate = teCloseParen;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    case ':':
+                        tl.estimate = teColon;
+                        tl.begin = curpos;
+                        return tl;
+                        
+                    default:
+                        if (IS_ALPHA(*curpos)) {
+                            tl.estimate = teAlpha;
+                            tl.begin = curpos;
+                            return tl;
+                        } else if (IS_NUMBER(*curpos)) {
+                            tl.estimate = teNumeric;
+                            tl.begin = curpos;
+                            return tl;
+                        } else {
+                            tl.estimate = teUnknown;
+                            tl.begin = curpos;
+                            return tl;
+                        }
+                }
+            } else if (*curpos == '\n') {
+                tl.estimate = teNewline;
+                tl.begin = curpos;
+                return tl;
             }
         }
 
@@ -176,20 +195,11 @@ namespace ICodeASM {
         string *str = new string();
         
         for (curpos = begin; curpos < end; ++curpos) {
-            switch (*curpos)
-            {
-                case 'a'...'z':
-                case 'A'...'Z':
-                case '0'...'9':
-                case '_':
-                    *str += *curpos;
-                    break;
-
-                default:
-                    goto scan_done;
-            }
+            if (IS_ALPHA(*curpos))
+                *str += *curpos;
+            else
+                break;
         }
-      scan_done:
 
         *rval = str;
         return curpos;
@@ -250,17 +260,11 @@ namespace ICodeASM {
         int32 position = 0;
         
         for (; curpos < end; ++curpos) {
-            switch (*curpos)
-            {
-                case '0'...'9':
-                    *rval += (*curpos - '0') * (1 / pow (10, ++position));
-                    break;
-                    
-                default:
-                    goto scan_done;
-            }
+            if (IS_NUMBER(*curpos))
+                *rval += (*curpos - '0') * (1 / pow (10, ++position));
+            else
+                break;
         }
-      scan_done:
 
         *rval *= sign;
         
@@ -424,18 +428,11 @@ namespace ICodeASM {
         iter curpos;
         
         for (curpos = begin; curpos < end; ++curpos) {
-            switch (*curpos)
-            {
-                case '0'...'9':
-                    position++;
-                    break;
-
-                default:
-                    goto scan_done;
-
-            }
+            if (IS_NUMBER(*curpos))
+                position++;
+            else
+                break;
         }
-    scan_done:
 
         for (curpos = begin; position >= 0; --position)
             *rval += (*curpos++ - '0') * static_cast<uint32>(pow (10, position));
@@ -682,7 +679,8 @@ namespace ICodeASM {
 
         fprintf (stderr, "parsing instruction %s\n", icodemap[icodeID].name);
         
-        /* add the node now, so the parse*operand functions can see it */
+        /* add the node now, so the parse*operand functions can see it
+         * (used for label calculations) */
         mStatementNodes.push_back (node);
 
 #       define CASE_TYPE(T, C, CTYPE)                                      \
@@ -719,6 +717,8 @@ namespace ICodeASM {
                     break;                    
             }
             if (i != 3 && icodemap[icodeID].otype[i + 1] != otNone) {
+                /* if the instruction has more arguments, eat a comma and
+                 * locate the next token */
                 TokenLocation tl = SeekTokenStart (curpos, end);
                 if (tl.estimate != teComma)
                     throw new ICodeParseException ("Expected comma");
@@ -729,18 +729,30 @@ namespace ICodeASM {
 
 #       undef CASE_TYPE
 
-        return curpos;
+        TokenLocation tl = SeekTokenStart (curpos, end);
+        if (tl.estimate != teNewline && tl.estimate != teEOF)
+            throw new ICodeParseException ("Expected newline");
+        
+        if (tl.estimate == teEOF)
+            return tl.begin;
+        else
+            return tl.begin + 1;
     }
 
     iter
-    ICodeParser::ParseStatement (iter begin, iter end)
+    ICodeParser::ParseNextStatement (iter begin, iter end)
     {
         bool isLabel = false;
         iter firstTokenEnd = end;
         TokenLocation tl = SeekTokenStart (begin, end);
 
+        if (tl.estimate == teNewline) {
+            /* empty statement, do nothing */
+            return tl.begin + 1;
+        }
+
         if (tl.estimate != teAlpha)
-            throw new ICodeParseException ("Expected an alphanumeric token (like maybe an instruction or a label.)");
+            throw new ICodeParseException ("Expected alphanumeric token");
 
         for (iter curpos = tl.begin; curpos < end; ++curpos) {
             switch (*curpos)
@@ -750,15 +762,11 @@ namespace ICodeASM {
                     firstTokenEnd = ++curpos;
                     goto scan_done;
 
-                case 'a'...'z':
-                case 'A'...'Z':
-                case '0'...'9':
-                case '_':
-                    break;
-
                 default:
-                    firstTokenEnd = curpos;
-                    goto scan_done;
+                    if (!IS_ALPHA(*curpos)) {
+                        firstTokenEnd = curpos;
+                        goto scan_done;
+                    }
             }
         }
     scan_done:
