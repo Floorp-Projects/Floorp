@@ -250,11 +250,6 @@ nsLocalFile::nsLocalFile()
 
 nsLocalFile::~nsLocalFile()
 {
-    PRBool uninitCOM = PR_FALSE;
-    if (mPersistFile || mShellLink)
-    {
-        uninitCOM = PR_TRUE;
-    }
     // Release the pointer to the IPersistFile interface. 
     if (mPersistFile)
         mPersistFile->Release(); 
@@ -262,9 +257,6 @@ nsLocalFile::~nsLocalFile()
     // Release the pointer to the IShellLink interface. 
     if(mShellLink)
         mShellLink->Release();
-
-    if (uninitCOM)
-        CoUninitialize();
 }
 
 /* nsISupports interface implementation. */
@@ -307,18 +299,18 @@ nsLocalFile::MakeDirty()
 nsresult 
 nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath)
 {
+#ifdef DOUGT_debug
+    printf("localfile - resolving symlink\n");
+#endif
+
     nsresult rv = NS_OK;
     
-
     if (strstr(workingPath, ".lnk") == nsnull)
         return NS_ERROR_FILE_INVALID_PATH;
 
     if (mPersistFile == nsnull || mShellLink == nsnull)
     {
-        CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
-
         HRESULT hres; 
-
         // FIX.  This should be in a service.
         // Get a pointer to the IShellLink interface. 
         hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&mShellLink); 
