@@ -19,6 +19,9 @@
 #ifndef ns4xPluginInstance_h__
 #define ns4xPluginInstance_h__
 
+#define _UINT32
+#define _INT32
+
 #include "nsplugin.h"
 #include "npupp.h"
 #include "jri.h"
