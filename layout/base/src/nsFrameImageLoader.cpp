@@ -321,7 +321,9 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
   nsIViewManager* vm = view->GetViewManager();
   bounds.x += offset.x;
   bounds.y += offset.y;
-  vm->UpdateView(view, bounds, 0);
+  // XXX At least for the time being don't allow a synchronous repaint, because
+  // we may already be repainting and we don't want to go re-entrant...
+  vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);
   NS_RELEASE(vm);
 }
 
