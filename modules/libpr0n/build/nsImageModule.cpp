@@ -126,7 +126,7 @@ static const char* gImageMimeTypes[] = {
   "image/x-icon",
   "image/bmp",
 #endif
-#ifdef IMB_BUILD_png
+#ifdef IMG_BUILD_png
   "image/png",
   "image/x-png",
 #endif
