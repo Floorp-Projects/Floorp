@@ -21,6 +21,8 @@
    Contributor(s): 
   -->
 
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-debug.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
