@@ -274,6 +274,16 @@ nsFontMetricsPS :: GetHeight(nscoord &aHeight)
 
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h
+ */
+NS_IMETHODIMP
+nsFontMetricsPS :: GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsPS.h
  *	@update 2/26/99 dwc
  */
 NS_IMETHODIMP

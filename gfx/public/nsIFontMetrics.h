@@ -132,15 +132,22 @@ public:
    */
   NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
+#if defined(XP_UNIX)
+#define NEW_FONT_HEIGHT_APIS 1
+#endif
+#ifdef NEW_FONT_HEIGHT_APIS
+  /**
+   * Returns the normal line height (em height + leading).
+   */
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight) = 0;
+#endif /* NEW_FONT_HEIGHT_APIS */
+
   /**
    * Returns the amount of internal leading (in app units) for the font. This
    * is computed as the "height  - (ascent + descent)"
    */
   NS_IMETHOD  GetLeading(nscoord &aLeading) = 0;
 
-#if defined(XP_UNIX)
-#define NEW_FONT_HEIGHT_APIS 1
-#endif
 #ifdef NEW_FONT_HEIGHT_APIS
 
   /**
