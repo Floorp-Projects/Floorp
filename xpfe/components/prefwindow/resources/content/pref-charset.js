@@ -5,12 +5,13 @@ var activeCharsetList		 = new Array();
 var availCharsetDict		 = new Array();
 var ccm						       = null; //Charset Coverter Mgr.
 var prefInt					     = null; //Preferences Interface
-var charsets_pref_string = new String();
-var applicationArea      = new String();
+var pref_string_title    = new String();
+var pref_string_content  = new String();
 
 function Init()
 {
 
+  var applicationArea      = new String();
   dump("*** pref-charset.js, Init()\n");
 
   try {
@@ -34,16 +35,17 @@ function Init()
 			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
 			
       if (applicationArea == 'mailnews') {
-        charsets_pref_string = prefInt.CopyCharPref("intl.charsetmenu.mailedit");
-        dump("*** intl.charsetmenu.mailedit\n");
+        pref_string_title = "intl.charsetmenu.mailedit";
       } else {
         //default is the browser
-        charsets_pref_string == prefInt.CopyCharPref("intl.charsetmenu.browser.static");
-        dump("*** intl.charsetmenu.browser.static\n");
+        pref_string_title = "intl.charsetmenu.browser.static";
       }
+
+      dump("*** " + pref_string_title +  " \n");
+      pref_string_content = prefInt.CopyCharPref(pref_string_title);
       
       //AddRemoveLatin1('add');
-			dump("*** Charset PrefString: " + charsets_pref_string + "\n");
+			dump("*** Charset PrefString: " + pref_string_content + "\n");
 		}
 	}
 
@@ -222,7 +224,7 @@ function AddRemoveLatin1(action)
 {
 	
   try {
-	arrayOfPrefs = charsets_pref_string.split(', ');
+	arrayOfPrefs = pref_string_content.split(', ');
   } 
   
   catch (ex) {
@@ -240,7 +242,7 @@ function AddRemoveLatin1(action)
 					arrayOfPrefs.length = arrayOfPrefs.length - 1;
 				}
 				
-				charsets_pref_string = arrayOfPrefs.join(', ');
+				pref_string_content = arrayOfPrefs.join(', ');
 				return;
 				
 			}
@@ -250,7 +252,7 @@ function AddRemoveLatin1(action)
 	if (action == 'add')	{
 
 		arrayOfPrefs[arrayOfPrefs.length]= 'iso-8859-1';
-		charsets_pref_string = arrayOfPrefs.join(', ');
+		pref_string_content = arrayOfPrefs.join(', ');
 
 	}
 	
@@ -265,7 +267,7 @@ function LoadActiveCharSets()
 
   
   try {
-	arrayOfPrefs = charsets_pref_string.split(', ');
+	arrayOfPrefs = pref_string_content.split(', ');
   } 
   
   catch (ex) {
@@ -508,7 +510,7 @@ function Save()
   var cell         = null;
   var charsetid    = new String();
   var num_charsets = 0;
-  charsets_pref_string = '';
+  pref_string_content = '';
 
   for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
 
@@ -522,9 +524,9 @@ function Save()
 
 		//separate >1 charsets by commas
 		if (num_charsets > 1) {
-			charsets_pref_string = charsets_pref_string + "," + " " + charsetid;
+			pref_string_content = pref_string_content + "," + " " + charsetid;
 		} else {
-			charsets_pref_string = charsetid;
+			pref_string_content = charsetid;
 		}
 
 	}
@@ -536,13 +538,13 @@ function Save()
 		{
 			
 			//AddRemoveLatin1('remove');
-			prefInt.SetCharPref("intl.charset_menu.static", charsets_pref_string);
-			//prefInt.SetCharPref("browser.startup.homepage", charsets_pref_string);
-			//prefInt.CopyCharPref("intl.charset_menu.static", charsets_pref_string);
+			prefInt.SetCharPref(pref_string_title, pref_string_content);
+			//prefInt.SetCharPref("browser.startup.homepage", pref_string_content);
+			//prefInt.CopyCharPref(pref_string_title, pref_string_content);
  			//prefInt.SetCharPref("browser.startup.homepage", "www.betak.net");
 
 			confirm_text = document.getElementById('confirm_text');
-			dump('intl.charset_menu.static set to ' + charsets_pref_string + '.\n');
+			dump('intl.charset_menu.static set to ' + pref_string_content + '.\n');
 			window.close();
 			confirm(confirm_text.getAttribute('value'));
 		}
@@ -551,7 +553,7 @@ function Save()
 	  catch(ex)
 	  {
 		  confirm('exception' + ex);
- 		  //prefInt.SetDefaultCharPref("intl.charset_menu.static", "iso-8859-1, iso-2022-jp, shift_jis, euc-jp");
+ 		  //prefInt.SetDefaultCharPref(pref_string_title, "iso-8859-1, iso-2022-jp, shift_jis, euc-jp");
 	  }
 
 } //Save
