@@ -827,6 +827,15 @@ nsresult nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
   return NS_OK;
 }
 
+nsresult nsPluginInstancePeerImpl::SetOwner(nsIPluginInstanceOwner *aOwner)
+{
+  // do not add refs to these objects to prevent circular references
+  mOwner = aOwner;
+  aOwner->GetInstance(mInstance);
+  NS_IF_RELEASE(mInstance);
+  return NS_OK;
+}
+
 nsresult nsPluginInstancePeerImpl::GetOwner(nsIPluginInstanceOwner *&aOwner)
 {
   aOwner = mOwner;

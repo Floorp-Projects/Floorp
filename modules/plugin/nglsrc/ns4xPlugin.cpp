@@ -518,23 +518,23 @@ ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 	if(!npp)
 		return -1;
 
-    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
-    NS_ASSERTION(wrapper != NULL, "null stream");
+  ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
+  NS_ASSERTION(wrapper != NULL, "null stream");
 
-    if (wrapper == NULL)
-        return -1;
+  if (wrapper == NULL)
+      return -1;
 
-    nsIOutputStream* stream;
-	wrapper->GetStream(stream);
+  nsIOutputStream* stream;
+  wrapper->GetStream(stream);
+  
+  PRUint32 count = 0;
+  nsresult rv = stream->Write((char *)buffer, len, &count);
+  NS_RELEASE(stream);
 
-    PRUint32 count = 0;
-    nsresult rv = stream->Write((char *)buffer, len, &count);
-    NS_RELEASE(stream);
+  if(rv != NS_OK)
+	  return -1;
 
-	if(rv != NS_OK)
-		return -1;
-
-    return (int32)count;
+  return (int32)count;
 }
 
 NPError NP_EXPORT
@@ -556,17 +556,17 @@ ns4xPlugin::_destroystream(NPP npp, NPStream *pstream, NPError reason)
 		return NPERR_NO_ERROR;
 	}
 
-    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
+  ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
 
-    NS_ASSERTION(wrapper != NULL, "null wrapper");
+  NS_ASSERTION(wrapper != NULL, "null wrapper");
 
-    if (wrapper == NULL)
-        return NPERR_INVALID_PARAM;
+  if (wrapper == NULL)
+      return NPERR_INVALID_PARAM;
 
-    // This will release the wrapped nsIOutputStream.
-    delete wrapper;
+  // This will release the wrapped nsIOutputStream.
+  delete wrapper;
 
-    return NPERR_NO_ERROR;
+  return NPERR_NO_ERROR;
 }
 
 void NP_EXPORT
@@ -704,27 +704,51 @@ ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
 
-    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+  switch(variable)
+  {
+#ifdef XP_UNIX
+  case NPNVxDisplay : return NPERR_GENERIC_ERROR;
 
-    NS_ASSERTION(inst != NULL, "null instance");
+  case NPNVxtAppContext : return NPERR_GENERIC_ERROR;
+#endif
 
-    if (inst == NULL)
-        return NPERR_INVALID_INSTANCE_ERROR;
+#ifdef XP_PC
+  case NPNVnetscapeWindow : return NPERR_GENERIC_ERROR;
+#endif
 
-    nsIPluginInstancePeer *peer;
+  case NPNVjavascriptEnabledBool : *(NPBool*)result = TRUE; return NPERR_NO_ERROR;
 
-    if (NS_OK == inst->GetPeer(&peer))
-    {
-      nsresult rv;
+  case NPNVasdEnabledBool : *(NPBool*)result = FALSE; return NPERR_NO_ERROR;
 
-      // XXX Note that for backwards compatibility, the old NPNVariables
-      // map correctly to NPPluginManagerVariables.
-      rv = peer->GetValue((nsPluginInstancePeerVariable)variable, result);
-      NS_RELEASE(peer);
-      return rv;
-    }
-    else
-      return NPERR_GENERIC_ERROR;
+  case NPNVisOfflineBool : *(NPBool*)result = FALSE; return NPERR_NO_ERROR;
+
+  default : return NPERR_GENERIC_ERROR;
+
+  }
+
+#if 0
+  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+
+  NS_ASSERTION(inst != NULL, "null instance");
+
+  if (inst == NULL)
+      return NPERR_INVALID_INSTANCE_ERROR;
+
+  nsIPluginInstancePeer *peer;
+
+  if (NS_OK == inst->GetPeer(&peer))
+  {
+    nsresult rv;
+
+    // XXX Note that for backwards compatibility, the old NPNVariables
+    // map correctly to NPPluginManagerVariables.
+    rv = peer->GetValue((nsPluginInstancePeerVariable)variable, result);
+    NS_RELEASE(peer);
+    return rv;
+  }
+  else
+    return NPERR_GENERIC_ERROR;
+#endif
 }
 
 NPError NP_EXPORT
@@ -818,7 +842,6 @@ ns4xPlugin::_memalloc (uint32 size)
 java_lang_Class* NP_EXPORT
 ns4xPlugin::_getJavaClass(void* handle)
 {
-    // Is this just a generic call into the Java VM?
     return NULL;
 }
 

@@ -148,8 +148,10 @@ public:
 
   //locals
 
-  nsresult Initialize(nsIPluginInstanceOwner *aInstance,
+  nsresult Initialize(nsIPluginInstanceOwner *aOwner,
                       const nsMIMEType aMimeType);
+
+  nsresult SetOwner(nsIPluginInstanceOwner *aOwner);
 
   nsresult GetOwner(nsIPluginInstanceOwner *&aOwner);
 

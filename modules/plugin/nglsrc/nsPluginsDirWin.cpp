@@ -68,6 +68,10 @@ static char* GetKeyValue(char* verbuf, char* key)
 static PRUint32 CalculateVariantCount(char* mimeTypes)
 {
 	PRUint32 variants = 1;
+
+  if(mimeTypes == NULL)
+    return 0;
+
 	char* index = mimeTypes;
 	while (*index)
 	{
@@ -85,6 +89,9 @@ static char** MakeStringArray(PRUint32 variants, char* data)
 	char* index = data;
 	PRUint32 count = 0;
 	
+  if(variants == 0)
+    return NULL;
+
 	buffer = (char **)PR_Malloc(variants * sizeof(char *));
 	if(!buffer)
 	    return NULL;
