@@ -742,6 +742,7 @@ static int generate_SF_file (char *manifile, char *who)
 		warningCount++;
       }
 
+    r2 = r1;
     while (fgets (buf, BUFSIZ, mf))
       {
       if (*buf == 0 || *buf == '\n' || *buf == '\r')
