@@ -39,7 +39,6 @@
   </script>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <xul:broadcaster id="args" value=""/>
-
   <table>
     <tr valign="top">
       <td colspan="3">
