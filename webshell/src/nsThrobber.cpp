@@ -471,7 +471,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   }
 
   if (nsnull != mask)
-    delete mask;
+    delete [] mask;
 
   mWidget->Invalidate(PR_TRUE);
 
@@ -515,7 +515,7 @@ class nsThrobberFactory : public nsIFactory
 {
 public:
   nsThrobberFactory();
-  ~nsThrobberFactory();
+  virtual ~nsThrobberFactory();
 
   // nsISupports methods
   NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
