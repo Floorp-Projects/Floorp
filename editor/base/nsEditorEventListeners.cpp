@@ -42,7 +42,7 @@
 #include "nsIPrivateCompositionEvent.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMNSUIEvent.h"
 #include "nsIPref.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresContext.h"
@@ -158,12 +158,12 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
   
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-  if(privateEvent) 
+  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
+  if(nsUIEvent) 
   {
-    PRBool dispatchStopped;
-    privateEvent->IsDispatchStopped(&dispatchStopped);
-    if(dispatchStopped)
+    PRBool defaultPrevented;
+    nsUIEvent->GetPreventDefault(&defaultPrevented);
+    if(defaultPrevented)
       return NS_OK;
   }
 
