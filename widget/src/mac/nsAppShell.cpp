@@ -249,12 +249,13 @@ nsIWidget *aWidget,
 				if ( window == eventWindow )
 					*aForWindow = PR_TRUE;
 				break;
+
+			case diskEvt:
+			    // I think dialogs might want to support floppy insertion, and it doesn't
+			    // interfere with modality...
 			case updateEvt:
 				// always let update events through, because if we don't handle them, we're
 				// doomed!
-				*aForWindow = PR_TRUE;
-				break;
-
 			case activateEvt:
 				// certainly we have to let the obvious activate events through. hopefully
 				// our consumption of other events will keep any unwanted activate events
