@@ -209,9 +209,9 @@ components\wallet.xpt
 ; download progress
 ; Optional - you can implement your own download progress dialog
 ;   then this is no longer required
-;components\nsProgressDialog.js
-;components\nsHelperAppDlg.js
-;components\nsDownloadProgressListener.js
+components\nsProgressDialog.js
+components\nsHelperAppDlg.js
+components\nsDownloadProgressListener.js
 
 ; psm2
 ; Optional - only if you need HTTPS support
