@@ -692,7 +692,7 @@ sub BuildInternationalProjects()
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 
-	BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.mcp",					"chardet.shlb", "chardet.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.mcp",				"chardet$D.shlb", "chardet.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
