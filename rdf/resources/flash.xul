@@ -45,7 +45,7 @@
 
     <template>
       <rule rootcontainment="treechildren" subcontainment="treechildren">
-        <treeitem uri="...">
+        <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
           <treerow>
             <treecell>
               <treeindentation />
