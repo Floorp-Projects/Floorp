@@ -39,11 +39,11 @@ public:
     // nsStdURL methods:
 
     nsStdURL(const char* i_Spec, nsISupports* outer=nsnull);
-	nsStdURL(const nsStdURL& i_URL); 
+    nsStdURL(const nsStdURL& i_URL); 
     virtual ~nsStdURL();
 
-	nsStdURL&	operator =(const nsStdURL& otherURL); 
-	PRBool		operator ==(const nsStdURL& otherURL) const;
+    nsStdURL&   operator =(const nsStdURL& otherURL); 
+    PRBool      operator ==(const nsStdURL& otherURL) const;
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -58,8 +58,8 @@ public:
     // nsIURL methods:
     NS_DECL_NSIURL
 
-	/* todo move this to protected later */
-	nsresult ParsePath(void);
+    /* todo move this to protected later */
+    nsresult ParsePath(void);
 
 protected:
     nsresult Parse(void);
@@ -67,8 +67,8 @@ protected:
     nsresult ReconstructSpec(void);
 
     // Some handy functions 
-	nsresult DupString(char* *o_Destination, char* i_Source);
-	nsresult ExtractString(char* i_Source, char* *o_Destination, PRUint32 start, PRUint32 length);
+    nsresult DupString(char* *o_Destination, char* i_Source);
+    nsresult ExtractString(char* i_Source, char* *o_Destination, PRUint32 start, PRUint32 length);
 protected:
 
     char*       mScheme;
@@ -77,10 +77,10 @@ protected:
     PRInt32     mPort;
     char*       mPath;
 
-	char*		mDirectory;
-	char*		mFileName;
-    char*		mParam;
-	char*       mQuery;
+    char*       mDirectory;
+    char*       mFileName;
+    char*       mParam;
+    char*       mQuery;
     char*       mRef;
 
     char*       mSpec; 
@@ -90,107 +90,107 @@ protected:
 inline NS_METHOD
 nsStdURL::GetSpec(char* *o_Spec)
 {
-	return DupString(o_Spec, mSpec);
+    return DupString(o_Spec, mSpec);
 }
 
 inline NS_METHOD
 nsStdURL::GetScheme(char* *o_Scheme)
 {
-	return DupString(o_Scheme, mScheme);
+    return DupString(o_Scheme, mScheme);
 }
 
 inline NS_METHOD
 nsStdURL::GetPreHost(char* *o_PreHost)
 {
-	return DupString(o_PreHost, mPreHost);
+    return DupString(o_PreHost, mPreHost);
 }
 
 inline NS_METHOD
 nsStdURL::GetHost(char* *o_Host)
 {
-	return DupString(o_Host, mHost);
+    return DupString(o_Host, mHost);
 }
 
 inline NS_METHOD
 nsStdURL::GetPath(char* *o_Path)
 {
-	return DupString(o_Path, mPath);
+    return DupString(o_Path, mPath);
 }
 
 inline NS_METHOD
 nsStdURL::GetDirectory(char* *o_Directory)
 {
-	return DupString(o_Directory, mDirectory);
+    return DupString(o_Directory, mDirectory);
 }
 
 inline NS_METHOD
 nsStdURL::GetFileName(char* *o_FileName)
 {
-	return DupString(o_FileName, mFileName);
+    return DupString(o_FileName, mFileName);
 }
 
 inline NS_METHOD
 nsStdURL::GetRef(char* *o_Ref)
 {
-	return DupString(o_Ref, mRef);
+    return DupString(o_Ref, mRef);
 }
 
 inline NS_METHOD
 nsStdURL::GetParam(char **o_Param)
 {
-	return DupString(o_Param, mParam);
+    return DupString(o_Param, mParam);
 }
 
 inline NS_METHOD
 nsStdURL::GetQuery(char* *o_Query)
 {
-	return DupString(o_Query, mQuery);
+    return DupString(o_Query, mQuery);
 }
 
 inline NS_METHOD
 nsStdURL::SetScheme(char* i_Scheme)
 {
     if (mScheme) nsCRT::free(mScheme);
-	nsresult status = DupString(&mScheme, i_Scheme);
-	ReconstructSpec();
-	return status;
+    nsresult status = DupString(&mScheme, i_Scheme);
+    ReconstructSpec();
+    return status;
 }
 
 inline NS_METHOD
 nsStdURL::SetPreHost(char* i_PreHost)
 {
     if (mPreHost) nsCRT::free(mPreHost);
-	nsresult status = DupString(&mPreHost, i_PreHost);
-	ReconstructSpec();
-	return status;
+    nsresult status = DupString(&mPreHost, i_PreHost);
+    ReconstructSpec();
+    return status;
 }
 
 inline NS_METHOD
 nsStdURL::SetHost(char* i_Host)
 {
     if (mHost) nsCRT::free(mHost);
-	nsresult status = DupString(&mHost, i_Host);
-	ReconstructSpec();
-	return status;
+    nsresult status = DupString(&mHost, i_Host);
+    ReconstructSpec();
+    return status;
 }
 
 inline NS_METHOD
 nsStdURL::GetPort(PRInt32 *aPort)
 {
-	if (aPort)
-	{
-		*aPort = mPort;
-		return NS_OK;
-	}
-	return NS_ERROR_NULL_POINTER;
+    if (aPort)
+    {
+        *aPort = mPort;
+        return NS_OK;
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 inline NS_METHOD
 nsStdURL::SetPort(PRInt32 aPort)
 {
-	mPort = aPort;
-	ReconstructSpec();
-	return NS_OK;
+    mPort = aPort;
+    ReconstructSpec();
+    return NS_OK;
 }
 
 #endif // nsStdURL_h__

@@ -87,7 +87,7 @@ NS_METHOD
 nsLoadGroup::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-	 NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
+     NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
 
     nsLoadGroup* group = new nsLoadGroup(aOuter);
     if (group == nsnull)
@@ -95,8 +95,8 @@ nsLoadGroup::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
     nsresult rv = group->AggregatedQueryInterface(aIID, aResult);
 
-	 if (NS_FAILED(rv))
-	     delete group;
+     if (NS_FAILED(rv))
+         delete group;
 
     return rv;
 }
@@ -134,19 +134,19 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-	 if (aIID.Equals(NS_GET_IID(nsISupports)))
-	     *aInstancePtr = GetInner();
+     if (aIID.Equals(NS_GET_IID(nsISupports)))
+         *aInstancePtr = GetInner();
     else if (aIID.Equals(kLoadGroupCID) ||   // for internal use only (to set parent)
         aIID.Equals(nsCOMTypeInfo<nsILoadGroup>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
-	 else {
+     else {
         *aInstancePtr = nsnull;
         return NS_NOINTERFACE;
     }
 
-	 NS_ADDREF((nsISupports*)*aInstancePtr);
+     NS_ADDREF((nsISupports*)*aInstancePtr);
     return NS_OK; 
 }
 
@@ -451,7 +451,7 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
     nsCRT::free(uriStr);
 #endif
 
-    rv = mChannels->AppendElement(channel) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
+    rv = mChannels->AppendElement(channel) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
     if (NS_FAILED(rv)) return rv;
 
     nsLoadFlags flags;
@@ -521,7 +521,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
     // the channel was *not* in the group so do not update the foreground
     // count or it will get messed up...
     //
-    rv = mChannels->RemoveElement(channel) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
+    rv = mChannels->RemoveElement(channel) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
     if (NS_FAILED(rv)) {
         PR_LOG(gLoadGroupLog, PR_LOG_ERROR, 
                ("LOADGROUP: %x Unable to remove channel %x. Not in group!\n", 
@@ -533,7 +533,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
     rv = channel->GetLoadAttributes(&flags);
     if (NS_SUCCEEDED(rv)) {
         if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
-			NS_ASSERTION(mForegroundCount > 0, "mForegroundCount messed up");
+            NS_ASSERTION(mForegroundCount > 0, "mForegroundCount messed up");
             --mForegroundCount;
 
             PRBool pending;
@@ -600,7 +600,7 @@ nsLoadGroup::AddSubGroup(nsILoadGroup *group)
 
     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
            ("LOADGROUP: %x Adding sub-group %x.\n", this, group));
-    return mSubGroups->AppendElement(group) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
+    return mSubGroups->AppendElement(group) ? NS_OK : NS_ERROR_FAILURE; // XXX this method incorrectly returns a bool
 }
 
 NS_IMETHODIMP
@@ -619,7 +619,7 @@ nsLoadGroup::RemoveSubGroup(nsILoadGroup *group)
 
     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
            ("LOADGROUP: %x Removing sub-group %x.\n", this, group));
-    return mSubGroups->RemoveElement(group) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
+    return mSubGroups->RemoveElement(group) ? NS_OK : NS_ERROR_FAILURE; // XXX this method incorrectly returns a bool
 }
 
 NS_IMETHODIMP

@@ -57,10 +57,10 @@ NS_IMETHODIMP
 nsNetModRegEntry::GetTopic(char **topic) 
 {
     if (mTopic) 
-	{
-		*topic = (char *) nsAllocator::Clone(mTopic, nsCRT::strlen(mTopic) + 1);
-		return NS_OK;
-	}
+    {
+        *topic = (char *) nsAllocator::Clone(mTopic, nsCRT::strlen(mTopic) + 1);
+        return NS_OK;
+    }
     return NS_ERROR_NULL_POINTER;
 }
 
@@ -80,8 +80,8 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
      
     if (topic) {
         nsAllocator::Free(topic);
-	topic=0;
-	}
+    topic=0;
+    }
     
     if (topic && PL_strcmp(topic, mTopic)) 
         return NS_OK;

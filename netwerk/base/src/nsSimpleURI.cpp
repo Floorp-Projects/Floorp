@@ -52,15 +52,15 @@ nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-	 if (aIID.Equals(kISupportsIID))
-	     *aInstancePtr = GetInner();
+     if (aIID.Equals(kISupportsIID))
+         *aInstancePtr = GetInner();
     else if (aIID.Equals(kThisSimpleURIImplementationCID) ||        // used by Equals
         aIID.Equals(nsIURI::GetIID()))
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
-	 else {
-	     *aInstancePtr = nsnull;
-		  return NS_NOINTERFACE;
-	 }
+     else {
+         *aInstancePtr = nsnull;
+          return NS_NOINTERFACE;
+     }
     NS_ADDREF((nsISupports*)*aInstancePtr);
     return NS_OK;
 }
@@ -98,12 +98,12 @@ nsSimpleURI::SetSpec(char* aSpec)
     n = spec.Mid(path, pos + 1, count);
     NS_ASSERTION(n == count, "Mid failed");
     if (mScheme) 
-		nsCRT::free(mScheme);
+        nsCRT::free(mScheme);
     mScheme = scheme.ToNewCString();
     if (mScheme == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     if (mPath)   
-		nsCRT::free(mPath);
+        nsCRT::free(mPath);
     mPath = path.ToNewCString();
     if (mPath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -222,7 +222,7 @@ NS_METHOD
 nsSimpleURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-	 NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
+     NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
 
     nsSimpleURI* url = new nsSimpleURI(aOuter);
     if (url == nsnull)
@@ -230,8 +230,8 @@ nsSimpleURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
     nsresult rv = url->AggregatedQueryInterface(aIID, aResult);
 
-	 if (NS_FAILED(rv))
-	     delete url;
+     if (NS_FAILED(rv))
+         delete url;
     return rv;
 }
 

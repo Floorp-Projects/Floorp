@@ -43,7 +43,7 @@ extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, 
-	nsIChannel* i_pTransport):
+    nsIChannel* i_pTransport):
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
     mRequest(nsnull)
@@ -58,14 +58,14 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
     mTransport = i_pTransport;
     NS_IF_ADDREF(mTransport);
 
-	// Send Host header by default
-	if (HTTP_ZERO_NINE != mVersion)
-	{
-		nsXPIDLCString host;
-		NS_ASSERTION(mURI, "No URI for the request!!");
-		mURI->GetHost(getter_Copies(host));
+    // Send Host header by default
+    if (HTTP_ZERO_NINE != mVersion)
+    {
+        nsXPIDLCString host;
+        NS_ASSERTION(mURI, "No URI for the request!!");
+        mURI->GetHost(getter_Copies(host));
         SetHeader(nsHTTPAtoms::Host, host);
-	}
+    }
 }
 
 nsHTTPRequest::~nsHTTPRequest()
@@ -284,10 +284,10 @@ nsHTTPRequest::Build()
         }
     }
 
-	nsCOMPtr<nsIInputStream> stream;
-	NS_ASSERTION(mConnection, "Hee ha!");
-	if (NS_FAILED(mConnection->GetPostDataStream(getter_AddRefs(stream))))
-			return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIInputStream> stream;
+    NS_ASSERTION(mConnection, "Hee ha!");
+    if (NS_FAILED(mConnection->GetPostDataStream(getter_AddRefs(stream))))
+            return NS_ERROR_FAILURE;
 
     // Currently nsIPostStreamData contains the header info and the data.
     // So we are forced to putting this here in the end. 
@@ -295,34 +295,34 @@ nsHTTPRequest::Build()
     // TODO- Gagan
 
     if (stream)
-	{
-		NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
+    {
+        NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
 
-		PRUint32 length;
-		stream->GetLength(&length);
+        PRUint32 length;
+        stream->GetLength(&length);
 
-		// TODO Change reading from nsIInputStream to nsIBuffer
-		char* tempBuff = new char[length+1];
-		if (!tempBuff)
-			return NS_ERROR_OUT_OF_MEMORY;
-		if (NS_FAILED(stream->Read(tempBuff, length, &length)))
+        // TODO Change reading from nsIInputStream to nsIBuffer
+        char* tempBuff = new char[length+1];
+        if (!tempBuff)
+            return NS_ERROR_OUT_OF_MEMORY;
+        if (NS_FAILED(stream->Read(tempBuff, length, &length)))
         {
             NS_ASSERTION(0, "Failed to read post data!");
             return NS_ERROR_FAILURE;
         }
         else
-		{
+        {
             tempBuff[length] = '\0';
             PRUint32 writtenLength;
-			out->Write(tempBuff, length, &writtenLength);
+            out->Write(tempBuff, length, &writtenLength);
 #ifdef DEBUG_gagan    
     printf(tempBuff);
 #endif
-			// ASSERT that you wrote length = stream's length
+            // ASSERT that you wrote length = stream's length
             NS_ASSERTION(writtenLength == length, "Failed to write post data!");
-		}
-		delete[] tempBuff;
-	}
+        }
+        delete[] tempBuff;
+    }
     else 
     {
 
@@ -344,14 +344,14 @@ nsHTTPRequest::Build()
 NS_METHOD 
 nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
                         
 NS_METHOD 
 nsHTTPRequest::SetMethod(HTTPMethod i_Method)
 {
     mMethod = i_Method;
-	return NS_OK;
+    return NS_OK;
 }
 
 HTTPMethod 
@@ -363,13 +363,13 @@ nsHTTPRequest::GetMethod(void) const
 NS_METHOD 
 nsHTTPRequest::SetPriority()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD 
 nsHTTPRequest::GetPriority()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

@@ -47,7 +47,7 @@ class nsIChannel;
 class nsHTTPChannel;
 
 class nsHTTPHandler : public nsIHTTPProtocolHandler
-		//, public nsIProxy 
+        //, public nsIProxy 
 {
 
 public:
@@ -69,7 +69,7 @@ public:
 
     /* 
         The GetScheme function uniquely identifies the scheme this handler 
-		is associated with. 
+        is associated with. 
     */
     NS_IMETHOD               GetScheme(char * *o_Scheme)
     {
@@ -101,7 +101,7 @@ public:
 
     /*
         Get and Set the Proxy Port 
-		-1 on Set call indicates switch to default port
+        -1 on Set call indicates switch to default port
     */
     NS_IMETHOD_(PRInt32)
                     GetProxyPort(void) const {return NS_ERROR_NOT_IMPLEMENTED;};
@@ -139,9 +139,9 @@ protected:
     nsHTTPHandler(void);
     virtual ~nsHTTPHandler();
 
-	// This is the array of connections that the handler thread maintains to 
+    // This is the array of connections that the handler thread maintains to 
     // verify unique requests. 
-	nsCOMPtr<nsISupportsArray> mConnections;
+    nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
     nsCOMPtr<nsISupportsArray> mTransportList;
 };

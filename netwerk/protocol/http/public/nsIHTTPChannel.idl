@@ -41,7 +41,7 @@ interface nsIHTTPChannel : nsIChannel
     */
     string GetRequestHeader(in nsIAtom headerAtom);
     void SetRequestHeader(in nsIAtom headerAtom, in string value);
-	nsISimpleEnumerator GetRequestHeaderEnumerator();
+    nsISimpleEnumerator GetRequestHeaderEnumerator();
 
     void SetRequestMethod(in unsigned long method);
 //    NS_IMETHOD          SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
@@ -57,7 +57,7 @@ interface nsIHTTPChannel : nsIChannel
         protocol instance. 
     */
     string GetResponseHeader(in nsIAtom headerAtom);
-	nsISimpleEnumerator GetResponseHeaderEnumerator();
+    nsISimpleEnumerator GetResponseHeaderEnumerator();
 
     readonly attribute unsigned long ResponseStatus;
 
