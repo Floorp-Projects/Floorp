@@ -6,7 +6,7 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPref.h"
-#include "nsIMimeHeaderConverter.h"
+#include "nsIMimeConverter.h"
   
 #include "rosetta_mailnews.h"
 #include "nsMsgCompose.h"
@@ -16,7 +16,7 @@
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 class MSG_Pane;
 
@@ -181,9 +181,9 @@ char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool 
   }
 
   char *encodedString = nsnull;
-  nsIMimeHeaderConverter *converter;
-  res = nsComponentManager::CreateInstance(kCMimeHeaderConverterCID, nsnull, 
-                                           nsIMimeHeaderConverter::GetIID(), (void **)&converter);
+  nsIMimeConverter *converter;
+  res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
     res = converter->EncodeMimePartIIStr(outCString, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
     NS_RELEASE(converter);
