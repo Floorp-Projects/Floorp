@@ -226,6 +226,8 @@ doc_attribute_declaration(TreeState *state)
 {
     IDL_tree attr = state->tree;
 
+    if (!verify_attribute_declaration(attr))
+        return FALSE;
     /*
      * Attribute idents can also take doc comments.  They're ignored here;
      * should they be?
