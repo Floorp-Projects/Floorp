@@ -508,19 +508,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoImageInspector();
     break;
 
-#if 0 // this is obsolete: trees are done with table frames now
-//#if defined(XP_WIN) || defined(XP_MAC)
-  case VIEWER_TREEVIEW:
-	// Instantiate a tree widget
-	DoTreeView();
-	break;
-#endif
-#if defined(XP_WIN) || defined(XP_MAC)
-  case VIEWER_TOOLBARDEMO:
-	// Instantiate a tree widget
-	DoToolbarDemo();
-	break;
-#endif
   }
 
   return nsEventStatus_eIgnore;
