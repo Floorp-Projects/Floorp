@@ -274,19 +274,17 @@ nsHttpChannel::Connect(PRBool firstTime)
 
     LOG(("nsHttpChannel::Connect [this=%x]\n", this));
 
-    PRBool offline = PR_FALSE;
-
-    // are we offline?
-    nsCOMPtr<nsIIOService> ioService;
-    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
-    if (NS_FAILED(rv)) return rv;
-
-    ioService->GetOffline(&offline);
-
     // true when called from AsyncOpen
     if (firstTime) {
         PRBool delayed = PR_FALSE;
+        PRBool offline = PR_FALSE;
+    
+        // are we offline?
+        nsCOMPtr<nsIIOService> ioService;
+        rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
+        if (NS_FAILED(rv)) return rv;
 
+        ioService->GetOffline(&offline);
         if (offline)
             mLoadFlags |= LOAD_ONLY_FROM_CACHE;
 
@@ -311,22 +309,20 @@ nsHttpChannel::Connect(PRBool firstTime)
         // inspect the cache entry to determine whether or not we need to go
         // out to net to validate it.  this call sets mCachedContentIsValid
         // and may set request headers as required for cache validation.
-        rv = CheckCache(offline);
+        rv = CheckCache();
         NS_ASSERTION(NS_SUCCEEDED(rv), "cache check failed");
 
         // read straight from the cache if possible...
-        if (mCachedContentIsValid)
+        if (mCachedContentIsValid) {
             return ReadFromCache();
-
-        // if we are not allowed to hit the net, there's nothing more to do.
-        // the document is effectively not in the cache.
-        if (mLoadFlags & LOAD_ONLY_FROM_CACHE)
+        }
+        else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
+            // the cache contains the requested resource, but it must be 
+            // validated before we can reuse it.  since we are not allowed
+            // to hit the net, there's nothing more to do.  the document
+            // is effectively not in the cache.
             return NS_ERROR_DOCUMENT_NOT_CACHED;
-
-        // if we are not allowed to write to the cache, then there's no point
-        // in keeping the cache entry open beyond this point.
-        if (mCacheAccess == nsICache::ACCESS_READ)
-            CloseCacheEntry(NS_OK);
+        }
     }
 
     // check to see if authorization headers should be included
@@ -1120,7 +1116,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline || (mLoadFlags & INHIBIT_CACHING))
+    if (offline)
         accessRequested = nsICache::ACCESS_READ; // have no way of writing to cache
     else if (mLoadFlags & LOAD_BYPASS_CACHE)
         accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
@@ -1135,8 +1131,9 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // access to the cache entry has been denied
         rv = session->AsyncOpenCacheEntry(cacheKey.get(), accessRequested, this);
-        if (NS_SUCCEEDED(rv))
-            *delayed = PR_TRUE; // we'll have to wait for the cache entry
+        if (NS_FAILED(rv)) return rv;
+        // we'll have to wait for the cache entry
+        *delayed = PR_TRUE;
     }
     else if (NS_SUCCEEDED(rv)) {
         mCacheEntry->GetAccessGranted(&mCacheAccess);
@@ -1217,7 +1214,7 @@ nsHttpChannel::UpdateExpirationTime()
 // mCachedContentIsValid flag, and to configure an If-Modified-Since request
 // if validation is required.
 nsresult
-nsHttpChannel::CheckCache(PRBool offline)
+nsHttpChannel::CheckCache()
 {
     nsresult rv = NS_OK;
 
@@ -1269,8 +1266,8 @@ nsHttpChannel::CheckCache(PRBool offline)
     if (NS_FAILED(rv)) return rv;
     buf.Adopt(0);
 
-    // If we are offline, then assume the entry is valid.
-    if (offline) {
+    // If we were only granted read access, then assume the entry is valid.
+    if (mCacheAccess == nsICache::ACCESS_READ) {
         mCachedContentIsValid = PR_TRUE;
         return NS_OK;
     }
