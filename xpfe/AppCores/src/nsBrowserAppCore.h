@@ -54,8 +54,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsBrowserAppCore();
     virtual ~nsBrowserAppCore();
                  
+    NS_DECL_ISUPPORTS_INHERITED
 
-    NS_DECL_ISUPPORTS
     NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
