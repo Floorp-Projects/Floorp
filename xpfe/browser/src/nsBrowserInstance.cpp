@@ -1519,7 +1519,11 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 	   * blank menu items in the 'go' menu. So, I'm taking sub-frames
 	   * totally off the go menu. This is how 4.x behaves.
 	   */ 
-      if (NS_SUCCEEDED(aStatus))
+      /* Partially loaded and unresolved urls now get in to SH. So,
+	   * add them in to go menu too for consistency sake. Revisit when
+	   * browser implements nsStreamListener or something similar when it can
+	   * distinguish between unresolved urls and partially loaded urls
+	   */
 	    UpdateGoMenu();
 
       /* To satisfy a request from the QA group */
