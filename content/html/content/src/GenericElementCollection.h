@@ -40,10 +40,12 @@
 #define GenericElementCollection_h__
 
 #include "nsGenericDOMHTMLCollection.h"
+#include "nsIAtom.h"
 
 class nsIContent;
-class nsIAtom;
+#ifdef DEBUG
 class nsISizeOfHandler;
+#endif
 
 /**
  * This class provides a late-bound collection of elements that are
@@ -54,22 +56,22 @@ class GenericElementCollection : public nsGenericDOMHTMLCollection
 {
 public:
   GenericElementCollection(nsIContent *aParent, 
-                         nsIAtom *aTag);
+                           nsIAtom *aTag);
   virtual ~GenericElementCollection();
 
-  NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsAString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD GetLength(PRUint32* aLength);
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn);
 
-  NS_IMETHOD    ParentDestroyed();
+  NS_IMETHOD ParentDestroyed();
 
 #ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
 protected:
-  nsIContent * mParent;
-  nsIAtom * mTag;
+  nsIContent* mParent;
+  nsCOMPtr<nsIAtom> mTag;
 };
 
 #endif

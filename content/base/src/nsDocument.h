@@ -657,14 +657,8 @@ protected:
   PRBool        mBidiEnabled;
 #endif // IBMBIDI
 
-  // disk file members
-  nsCOMPtr<nsIURI>    mDocumentURI;
-  PRInt32             mModCount;
-
-  nsIDTD* mDTD;
-
   nsCOMPtr<nsIBindingManager> mBindingManager;
-  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
+  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
 
   PRBool mIsGoingAway; // True if the document is being destroyed.
 

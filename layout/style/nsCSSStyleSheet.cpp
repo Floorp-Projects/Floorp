@@ -1317,7 +1317,7 @@ DOMMediaListImpl::Delete(const nsAString& aOldMedium)
   if (aOldMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
-  nsCOMPtr<nsIAtom> old(dont_AddRef(NS_NewAtom(aOldMedium)));
+  nsCOMPtr<nsIAtom> old = do_GetAtom(aOldMedium);
   NS_ENSURE_TRUE(old, NS_ERROR_OUT_OF_MEMORY);
 
   PRInt32 indx = IndexOf(old);
@@ -1337,7 +1337,7 @@ DOMMediaListImpl::Append(const nsAString& aNewMedium)
   if (aNewMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
-  nsCOMPtr<nsIAtom> media(dont_AddRef(NS_NewAtom(aNewMedium)));
+  nsCOMPtr<nsIAtom> media = do_GetAtom(aNewMedium);
   NS_ENSURE_TRUE(media, NS_ERROR_OUT_OF_MEMORY);
 
   PRInt32 indx = IndexOf(media);
@@ -1453,14 +1453,14 @@ CSSImportsCollectionImpl::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   nsresult result = NS_OK;
 
   *aReturn = nsnull;
-  if (nsnull != mStyleSheet) {
-    nsICSSStyleSheet *sheet;
 
-    result = mStyleSheet->GetStyleSheetAt(aIndex, sheet);
-    if (NS_OK == result) {
-      result = sheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void **)aReturn);
+  if (mStyleSheet) {
+    nsCOMPtr<nsICSSStyleSheet> sheet;
+
+    result = mStyleSheet->GetStyleSheetAt(aIndex, *getter_AddRefs(sheet));
+    if (NS_SUCCEEDED(result)) {
+      result = CallQueryInterface(sheet, aReturn);
     }
-    NS_RELEASE(sheet);
   }
   
   return result;
@@ -1667,8 +1667,7 @@ void CSSStyleSheetInner::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   PRBool rulesCounted=PR_FALSE;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSStyleSheetInner"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSStyleSheetInner");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(CSSStyleSheetInner);
 
@@ -2588,8 +2587,7 @@ void CSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSStyleSheet"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSStyleSheet");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(CSSStyleSheetImpl);
 
@@ -4350,13 +4348,13 @@ void CascadeSizeEnumFunc(RuleCascadeData *cascade, CascadeSizeEnumData *pData)
 
   // next add up the selectors and the weighted rules for the cascade
   nsCOMPtr<nsIAtom> stateSelectorSizeTag;
-  stateSelectorSizeTag = getter_AddRefs(NS_NewAtom("CascadeStateSelectors"));
+  stateSelectorSizeTag = do_GetAtom("CascadeStateSelectors");
   CascadeSizeEnumData stateData(pData->handler,pData->uniqueItems,stateSelectorSizeTag);
   cascade->mStateSelectors.EnumerateForwards(StateSelectorsSizeEnumFunc, &stateData);
   
   if(cascade->mWeightedRules){
     nsCOMPtr<nsIAtom> weightedRulesSizeTag;
-    weightedRulesSizeTag = getter_AddRefs(NS_NewAtom("CascadeWeightedRules"));
+    weightedRulesSizeTag = do_GetAtom("CascadeWeightedRules");
     CascadeSizeEnumData stateData2(pData->handler,pData->uniqueItems,weightedRulesSizeTag);
     cascade->mWeightedRules->EnumerateForwards(WeightedRulesSizeEnumFunc, &stateData2);
   }
@@ -4387,8 +4385,7 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSRuleProcessor"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSRuleProcessor");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(CSSRuleProcessor);
 
@@ -4413,7 +4410,7 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // and for the medium cascade table we account for the hash table overhead,
   // and then compute the sizeof each rule-cascade in the table
   {
-    nsCOMPtr<nsIAtom> tag2 = getter_AddRefs(NS_NewAtom("RuleCascade"));
+    nsCOMPtr<nsIAtom> tag2 = do_GetAtom("RuleCascade");
     CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag2);
     for (RuleCascadeData *cascadeData = mRuleCascades;
    cascadeData;

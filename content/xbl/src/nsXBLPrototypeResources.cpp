@@ -53,7 +53,7 @@
 
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
-MOZ_DECL_CTOR_COUNTER(nsXBLPrototypeResources);
+MOZ_DECL_CTOR_COUNTER(nsXBLPrototypeResources)
 
 nsXBLPrototypeResources::nsXBLPrototypeResources(nsIXBLPrototypeBinding* aBinding)
 :mStyleSheetList(nsnull)
@@ -112,11 +112,8 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // they'll still be in the chrome cache.
   mRuleProcessors->Clear();
 
-  nsCOMPtr<nsICSSLoader> loader;
-  nsresult rv = nsComponentManager::CreateInstance(kCSSLoaderCID,
-                                    nsnull,
-                                    NS_GET_IID(nsICSSLoader),
-                                    getter_AddRefs(loader));
+  nsresult rv;
+  nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID, &rv);
   if (NS_FAILED(rv) || !loader) return rv;
   
   nsCOMPtr<nsISupportsArray> newSheets;

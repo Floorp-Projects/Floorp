@@ -150,7 +150,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
     delete it;
     return rv;
   }
-  return it->QueryInterface(NS_GET_IID(nsIXMLContentSink), (void **)aResult);
+  return CallQueryInterface(it, aResult);
 }
 
 nsXMLContentSink::nsXMLContentSink()
@@ -233,10 +233,9 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
 
-  nsIHTMLContentContainer* htmlContainer = nsnull;
-  if (NS_SUCCEEDED(aDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer))) {
+  nsCOMPtr<nsIHTMLContentContainer> htmlContainer = do_QueryInterface(aDoc);
+  if (htmlContainer) {
     htmlContainer->GetCSSLoader(mCSSLoader);
-    NS_RELEASE(htmlContainer);
   }
 
   ProcessHTTPHeaders(aChannel);
@@ -1200,7 +1199,7 @@ nsXMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
       while(*name) {
         rv = httpchannel->GetResponseHeader(nsDependentCString(*name), tmp);
         if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
-          nsCOMPtr<nsIAtom> key(dont_AddRef(NS_NewAtom(*name)));
+          nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
           ProcessHeaderData(key,NS_ConvertASCIItoUCS2(tmp),nsnull);
         }
         name++;
@@ -1384,11 +1383,10 @@ nsXMLContentSink::StartLayout()
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
   nsCAutoString ref;
-  nsIURL* url;
-  nsresult rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-  if (NS_SUCCEEDED(rv)) {
+  nsresult rv;
+  nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL, &rv);
+  if (url) {
     rv = url->GetRef(ref);
-    NS_RELEASE(url);
   }
   if (rv == NS_OK) {
     NS_UnescapeURL(ref); // XXX this may result in random non-ASCII bytes!
@@ -1420,10 +1418,10 @@ nsXMLContentSink::StartLayout()
         if (vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);
-          if (nsnull != rootView) {
+          if (rootView) {
             nsIScrollableView* sview = nsnull;
-            rootView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sview);
-            if (nsnull != sview) {
+            CallQueryInterface(rootView, &sview);
+            if (sview) {
               sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
             }
           }
@@ -1837,21 +1835,15 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
 {
   FlushText();
 
-  nsIContent *comment;
-  nsIDOMComment *domComment;
-  nsresult result = NS_OK;
-
-  result = NS_NewCommentNode(&comment);
-  if (NS_OK == result) {
-    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void **)&domComment);
-    if (NS_OK == result) {
+  nsCOMPtr<nsIContent> comment;
+  nsresult result = NS_NewCommentNode(getter_AddRefs(comment));
+  if (comment) {
+    nsCOMPtr<nsIDOMComment> domComment = do_QueryInterface(comment, &result);
+    if (domComment) {
       domComment->AppendData(nsDependentString(aName));
-      NS_RELEASE(domComment);
-
       comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(comment);
     }
-    NS_RELEASE(comment);
   }
 
   return result;
@@ -1862,26 +1854,20 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
                                      PRUint32 aLength)
 {
   FlushText();
-
-  nsIContent *cdata;
-  nsIDOMCDATASection *domCDATA;
-  nsresult result = NS_OK;
   
   if (mInTitle) {
     mTitleText.Append(aData, aLength);
   }
   
-  result = NS_NewXMLCDATASection(&cdata);
-  if (NS_OK == result) {
-    result = cdata->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void **)&domCDATA);
-    if (NS_OK == result) {
+  nsCOMPtr<nsIContent> cdata;
+  nsresult result = NS_NewXMLCDATASection(getter_AddRefs(cdata));
+  if (cdata) {
+    nsCOMPtr<nsIDOMCDATASection> domCDATA = do_QueryInterface(cdata);
+    if (domCDATA) {
       domCDATA->SetData(nsDependentString(aData, aLength));
-      NS_RELEASE(domCDATA);
-
       cdata->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(cdata);
     }
-    NS_RELEASE(cdata);
   }
 
   return result;
@@ -2143,8 +2129,7 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
         if (*start == ':') {
           ++start;
 
-          prefixAtom =
-            dont_AddRef(NS_NewAtom(nsDependentSubstring(start, end)));
+          prefixAtom = do_GetAtom(Substring(start, end));
         }
       }
 
@@ -2200,7 +2185,7 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
 
     if (kNameSpaceID_Unknown == nameSpaceID) {
       nameSpaceID = kNameSpaceID_None;
-      nameAtom = dont_AddRef(NS_NewAtom(key));
+      nameAtom = do_GetAtom(key);
       nameSpacePrefix = nsnull;
     }
 

@@ -345,8 +345,7 @@ nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
     return NS_OK;
   }
 
-  return mOwnerDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
-                                        (void **)aOwnerDocument);
+  return CallQueryInterface(mOwnerDocument, aOwnerDocument);
 }
 
 NS_IMETHODIMP

@@ -499,10 +499,7 @@ nsXULDocument::~nsXULDocument()
         mListenerManager->SetListenerTarget(nsnull);
 
     if (--gRefCnt == 0) {
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
+        NS_IF_RELEASE(gRDFService);
 
         NS_IF_RELEASE(kNC_persist);
         NS_IF_RELEASE(kNC_attribute);
@@ -519,8 +516,7 @@ nsXULDocument::~nsXULDocument()
             if (mDocumentURL)
                 gXULCache->RemoveFromFastLoadSet(mDocumentURL);
 
-            nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
-            gXULCache = nsnull;
+            NS_RELEASE(gXULCache);
         }
     }
 
@@ -650,40 +646,23 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
     mStyleSheets.Clear();
 
     // Create an HTML style sheet for the HTML content.
-    nsCOMPtr<nsIHTMLStyleSheet> sheet;
-    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLStyleSheetCID,
-                                                       nsnull,
-                                                       NS_GET_IID(nsIHTMLStyleSheet),
-                                                       getter_AddRefs(sheet)))) {
-        if (NS_SUCCEEDED(rv = sheet->Init(anURL, this))) {
-            mAttrStyleSheet = sheet;
-            AddStyleSheet(mAttrStyleSheet, 0);
-        }
-    }
-
+    rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), anURL, this);
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to add HTML style sheet");
         return rv;
     }
 
+    AddStyleSheet(mAttrStyleSheet, 0);
+
     // Create an inline style sheet for inline content that contains a style
     // attribute.
-    nsIHTMLCSSStyleSheet* inlineSheet;
-    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLCSSStyleSheetCID,
-                                                       nsnull,
-                                                       NS_GET_IID(nsIHTMLCSSStyleSheet),
-                                                       (void**)&inlineSheet))) {
-        if (NS_SUCCEEDED(rv = inlineSheet->Init(anURL, this))) {
-            mInlineStyleSheet = dont_QueryInterface(inlineSheet);
-            AddStyleSheet(mInlineStyleSheet, 0);
-        }
-        NS_RELEASE(inlineSheet);
-    }
-
+    rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mInlineStyleSheet), anURL, this);
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to add inline style sheet");
         return rv;
     }
+
+    AddStyleSheet(mInlineStyleSheet, 0);
 
     return NS_OK;
 }
@@ -959,25 +938,19 @@ nsXULDocument::RemoveCharSetObserver(nsIObserver* aObserver)
 NS_IMETHODIMP
 nsXULDocument::GetLineBreaker(nsILineBreaker** aResult)
 {
-  if(! mLineBreaker) {
-     // no line breaker, find a default one
-     nsILineBreakerFactory *lf;
-     nsresult result;
-     result = nsServiceManager::GetService(kLWBrkCID,
-                                          NS_GET_IID(nsILineBreakerFactory),
-                                          (nsISupports **)&lf);
-     if (NS_SUCCEEDED(result)) {
-      nsILineBreaker *lb = nsnull ;
+  if (!mLineBreaker) {
+    // no line breaker, find a default one
+    nsresult rv;
+    nsCOMPtr<nsILineBreakerFactory> lf = do_GetService(kLWBrkCID, &rv);
+    if (lf) {
       nsAutoString lbarg;
-      result = lf->GetBreaker(lbarg, &lb);
-      if(NS_SUCCEEDED(result)) {
-         mLineBreaker = dont_AddRef(lb);
-      }
-      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
-     }
+      lf->GetBreaker(lbarg, getter_AddRefs(mLineBreaker));
+    }
   }
+
   *aResult = mLineBreaker;
   NS_IF_ADDREF(*aResult);
+
   return NS_OK; // XXX we should do error handling here
 }
 
@@ -990,25 +963,19 @@ nsXULDocument::SetLineBreaker(nsILineBreaker* aLineBreaker)
 NS_IMETHODIMP
 nsXULDocument::GetWordBreaker(nsIWordBreaker** aResult)
 {
-  if (! mWordBreaker) {
-     // no line breaker, find a default one
-     nsIWordBreakerFactory *lf;
-     nsresult result;
-     result = nsServiceManager::GetService(kLWBrkCID,
-                                          NS_GET_IID(nsIWordBreakerFactory),
-                                          (nsISupports **)&lf);
-     if (NS_SUCCEEDED(result)) {
-      nsIWordBreaker *lb = nsnull ;
+  if (!mWordBreaker) {
+    // no line breaker, find a default one
+    nsresult rv;
+    nsCOMPtr<nsIWordBreakerFactory> lf = do_GetService(kLWBrkCID, &rv);
+    if (lf) {
       nsAutoString lbarg;
-      result = lf->GetBreaker(lbarg, &lb);
-      if(NS_SUCCEEDED(result)) {
-         mWordBreaker = dont_AddRef(lb);
-      }
-      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
-     }
+      rv = lf->GetBreaker(lbarg, getter_AddRefs(mWordBreaker));
+    }
   }
+
   *aResult = mWordBreaker;
   NS_IF_ADDREF(*aResult);
+
   return NS_OK; // XXX we should do error handling here
 }
 
@@ -1363,7 +1330,7 @@ nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
     if (!aSheet)
         return;
 
-    if (aSheet == mAttrStyleSheet.get()) {  // always first
+    if (aSheet == mAttrStyleSheet) {  // always first
       mStyleSheets.InsertElementAt(aSheet, 0);
     }
     else if (aSheet == (nsIHTMLCSSStyleSheet*)mInlineStyleSheet) {  // always last
@@ -1562,11 +1529,8 @@ NS_IMETHODIMP
 nsXULDocument::GetCSSLoader(nsICSSLoader*& aLoader)
 {
   nsresult result = NS_OK;
-  if (! mCSSLoader) {
-    result = nsComponentManager::CreateInstance(kCSSLoaderCID,
-                                                nsnull,
-                                                NS_GET_IID(nsICSSLoader),
-                                                getter_AddRefs(mCSSLoader));
+  if (!mCSSLoader) {
+    mCSSLoader = do_CreateInstance(kCSSLoaderCID, &result);
     if (NS_SUCCEEDED(result)) {
       result = mCSSLoader->Init(this);
       mCSSLoader->SetCaseSensitive(PR_TRUE);
@@ -1883,7 +1847,7 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
     }
     else {
         // Find out if the attribute is even present at all.
-        nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(aAttr));
+        nsCOMPtr<nsIAtom> name = do_GetAtom(aAttr);
 
         nsAutoString value;
         nsresult rv = broadcaster->GetAttr(kNameSpaceID_None, name, value);
@@ -1966,7 +1930,7 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     }
 
     // Only add the listener if it's not there already!
-    nsCOMPtr<nsIAtom> attr = dont_AddRef(NS_NewAtom(aAttr));
+    nsCOMPtr<nsIAtom> attr = do_GetAtom(aAttr);
 
     BroadcastListener* bl;
     for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
@@ -2005,7 +1969,7 @@ nsXULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                                             PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-        nsCOMPtr<nsIAtom> attr = dont_AddRef(NS_NewAtom(aAttr));
+        nsCOMPtr<nsIAtom> attr = do_GetAtom(aAttr);
         for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
             BroadcastListener* bl =
                 NS_STATIC_CAST(BroadcastListener*, entry->mListeners[i]);
@@ -2610,12 +2574,12 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {
-      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
-      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
-        nsIPrivateDOMEvent *privateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
+        // Okay, so someone in the DOM loop (a listener, JS object) still has
+        // a ref to the DOM Event but the internal data hasn't been malloc'd.
+        // Force a copy of the data here so the DOM Event is still valid.
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+        if (privateEvent) {
           privateEvent->DuplicatePrivateData();
-          NS_RELEASE(privateEvent);
         }
       }
     }
@@ -2817,10 +2781,7 @@ NS_IMETHODIMP
 nsXULDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
   nsresult rv;
-  rv = nsComponentManager::CreateInstance(kDOMImplementationCID,
-                                          nsnull,
-                                          NS_GET_IID(nsIDOMDOMImplementation),
-                                          (void**) aImplementation);
+  rv = CallCreateInstance(kDOMImplementationCID, aImplementation);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIPrivateDOMImplementation> impl = do_QueryInterface(*aImplementation, &rv);
@@ -2833,17 +2794,15 @@ nsXULDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 NS_IMETHODIMP
 nsXULDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
 {
-    NS_PRECONDITION(aDocumentElement != nsnull, "null ptr");
-    if (! aDocumentElement)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aDocumentElement);
 
     if (mRootContent) {
-        return mRootContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aDocumentElement);
+        return CallQueryInterface(mRootContent, aDocumentElement);
     }
-    else {
-        *aDocumentElement = nsnull;
-        return NS_OK;
-    }
+
+    *aDocumentElement = nsnull;
+
+    return NS_OK;
 }
 
 
@@ -2860,7 +2819,7 @@ nsXULDocument::CreateElement(const nsAString& aTagName,
 
     nsCOMPtr<nsIAtom> name, prefix;
 
-    name = dont_AddRef(NS_NewAtom(aTagName));
+    name = do_GetAtom(aTagName);
     NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef PR_LOGGING
@@ -2887,7 +2846,7 @@ nsXULDocument::CreateElement(const nsAString& aTagName,
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
-    rv = result->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aReturn);
+    rv = CallQueryInterface(result, aReturn);
     NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
     if (NS_FAILED(rv)) return rv;
 
@@ -2913,14 +2872,13 @@ nsXULDocument::CreateTextNode(const nsAString& aData,
 
     nsresult rv;
 
-    nsCOMPtr<nsITextContent> text;
-    rv = nsComponentManager::CreateInstance(kTextNodeCID, nsnull, NS_GET_IID(nsITextContent), getter_AddRefs(text));
+    nsCOMPtr<nsITextContent> text = do_CreateInstance(kTextNodeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = text->SetText(aData, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**) aReturn);
+    rv = CallQueryInterface(text, aReturn);
     NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOMText");
     if (NS_FAILED(rv)) return rv;
 
@@ -2936,8 +2894,7 @@ nsXULDocument::CreateComment(const nsAString& aData,
     nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
 
     if (NS_SUCCEEDED(rv)) {
-        rv = comment->QueryInterface(NS_GET_IID(nsIDOMComment),
-                                     (void**)aReturn);
+        rv = CallQueryInterface(comment, aReturn);
         (*aReturn)->AppendData(aData);
     }
 
@@ -3030,21 +2987,19 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
         return rv;
     }
 
-    nsIContent* root = nsnull;
-    GetRootContent(&root);
-    NS_ASSERTION(root != nsnull, "no doc root");
+    nsCOMPtr<nsIContent> root;
+    GetRootContent(getter_AddRefs(root));
 
-    if (root != nsnull) {
-        nsIDOMNode* domRoot;
-        if (NS_SUCCEEDED(rv = root->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) &domRoot))) {
-            rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
-            NS_RELEASE(domRoot);
-        }
-        NS_RELEASE(root);
+    nsCOMPtr<nsIDOMNode> domRoot = do_QueryInterface(root);
+    NS_ASSERTION(domRoot, "no doc root");
+
+    if (domRoot) {
+        rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
     }
 
     *aReturn = elements;
-    return NS_OK;
+
+    return rv;
 }
 
 
@@ -3207,9 +3162,7 @@ nsXULDocument::GetCharacterSet(nsAString& aCharacterSet)
 NS_IMETHODIMP
 nsXULDocument::CreateRange(nsIDOMRange** aRange)
 {
-    return nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                              NS_GET_IID(nsIDOMRange),
-                                              (void **)aRange);
+  return CallCreateInstance(kRangeCID, aRange);
 }
 
 NS_IMETHODIMP    
@@ -3260,17 +3213,10 @@ nsXULDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   rv = ctx->GetContainer(getter_AddRefs(container));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
 
-  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
-  NS_ENSURE_TRUE(ifrq, NS_OK);
-
-  nsCOMPtr<nsIDOMWindowInternal> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
+  nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
   NS_ENSURE_TRUE(window, NS_OK);
 
-  window->QueryInterface(NS_GET_IID(nsIDOMAbstractView),
-                         (void **)aDefaultView);
-
-  return NS_OK;
+  return CallQueryInterface(window, aDefaultView);
 }
 
 nsresult
@@ -3300,8 +3246,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell,
             if (view) {
                 nsIScrollableView* scrollableView;
 
-                if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView),
-                                                      (void**)&scrollableView))) {
+                if (NS_SUCCEEDED(CallQueryInterface(view, &scrollableView))) {
                     scrollableView->GetScrolledView(view);
                 }
 
@@ -3456,7 +3401,7 @@ GetElementByAttribute(nsIContent* aContent,
   nsresult rv = aContent->GetAttr(kNameSpaceID_None, aAttrName, value);
   if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
     if (aUniversalMatch || value.Equals(aAttrValue))
-      return aContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);
+      return CallQueryInterface(aContent, aResult);
   }
 
 
@@ -3491,7 +3436,7 @@ nsXULDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
   if (!nodeList)
     return NS_OK;
 
-  nsCOMPtr<nsIAtom> attribute = getter_AddRefs(NS_NewAtom(aAttrName));
+  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttrName);
 
   PRUint32 length;
   nodeList->GetLength(&length);
@@ -3718,7 +3663,7 @@ nsXULDocument::CreateElementNS(const nsAString& aNamespaceURI,
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
-    rv = result->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aReturn);
+    rv = CallQueryInterface(result, aReturn);
     NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
     if (NS_FAILED(rv)) return rv;
 
@@ -3752,10 +3697,7 @@ nsXULDocument::GetElementById(const nsAString& aId,
     if (NS_FAILED(rv)) return rv;
 
     if (element) {
-        rv = element->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aReturn);
-    }
-    else {
-        rv = NS_OK;
+        rv = CallQueryInterface(element, aReturn);
     }
 
     return rv;
@@ -4119,13 +4061,11 @@ nsXULDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
         rv = nsRDFDOMNodeList::Create(&children);
 
         if (NS_SUCCEEDED(rv)) {
-            nsIDOMNode* domNode = nsnull;
-            rv = mRootContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&domNode);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "root content is not a DOM node");
+            nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(mRootContent);
+            NS_ASSERTION(domNode, "root content is not a DOM node");
 
-            if (NS_SUCCEEDED(rv)) {
+            if (domNode) {
                 rv = children->AppendNode(domNode);
-                NS_RELEASE(domNode);
 
                 *aChildNodes = children;
                 return NS_OK;
@@ -4136,10 +4076,10 @@ nsXULDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
         NS_RELEASE(children);
         return rv;
     }
-    else {
-        *aChildNodes = nsnull;
-        return NS_OK;
-    }
+
+    *aChildNodes = nsnull;
+
+    return NS_OK;
 }
 
 
@@ -4174,34 +4114,30 @@ nsXULDocument::HasAttributes(PRBool* aHasAttributes)
 NS_IMETHODIMP
 nsXULDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-    NS_PRECONDITION(aFirstChild != nsnull, "null ptr");
-    if (! aFirstChild)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aFirstChild);
 
     if (mRootContent) {
-        return mRootContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aFirstChild);
+        return CallQueryInterface(mRootContent, aFirstChild);
     }
-    else {
-        *aFirstChild = nsnull;
-        return NS_OK;
-    }
+
+    *aFirstChild = nsnull;
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-    NS_PRECONDITION(aLastChild != nsnull, "null ptr");
-    if (! aLastChild)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aLastChild);
 
     if (mRootContent) {
-        return mRootContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aLastChild);
+        return CallQueryInterface(mRootContent, aLastChild);
     }
-    else {
-        *aLastChild = nsnull;
-        return NS_OK;
-    }
+
+    *aLastChild = nsnull;
+
+    return NS_OK;
 }
 
 
@@ -4404,17 +4340,15 @@ nsXULDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 NS_IMETHODIMP
 nsXULDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 {
-    NS_PRECONDITION(nsnull != aResult, "null ptr");
-    if (nsnull == aResult) {
-        return NS_ERROR_NULL_POINTER;
-    }
+    NS_ENSURE_ARG_POINTER(aResult);
+
     *aResult = mAttrStyleSheet;
-    if (! mAttrStyleSheet) {
+    if (!mAttrStyleSheet) {
         return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
     }
-    else {
-        NS_ADDREF(*aResult);
-    }
+
+    NS_ADDREF(*aResult);
+
     return NS_OK;
 }
 
@@ -4448,11 +4382,7 @@ nsXULDocument::Init()
     rv = NS_NewHeapArena(getter_AddRefs(mArena), nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsComponentManager::CreateInstance(NS_NODEINFOMANAGER_CONTRACTID,
-                                            nsnull,
-                                            NS_GET_IID(nsINodeInfoManager),
-                                            getter_AddRefs(mNodeInfoManager));
-
+    mNodeInfoManager = do_CreateInstance(NS_NODEINFOMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     mNodeInfoManager->Init(this);
@@ -4462,21 +4392,10 @@ nsXULDocument::Init()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
     if (NS_FAILED(rv)) return rv;
 
-    // Get the local store. Yeah, I know. I wish GetService() used a
-    // 'void**', too.
-    nsIRDFDataSource* localstore;
-    rv = nsServiceManager::GetService(kLocalStoreCID,
-                                      NS_GET_IID(nsIRDFDataSource),
-                                      (nsISupports**) &localstore);
-
     // this _could_ fail; e.g., if we've tried to grab the local store
     // before profiles have initialized. If so, no big deal; nothing
     // will persist.
-
-    if (NS_SUCCEEDED(rv)) {
-        mLocalStore = localstore;
-        NS_IF_RELEASE(localstore);
-    }
+    mLocalStore = do_GetService(kLocalStoreCID);
 
     // Create a new nsISupportsArray for dealing with overlay references
     rv = NS_NewISupportsArray(getter_AddRefs(mUnloadedOverlays));
@@ -4489,23 +4408,10 @@ nsXULDocument::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mPrototypes));
     if (NS_FAILED(rv)) return rv;
 
-#if 0
-    // construct a selection object
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRangeListCID,
-                                                    nsnull,
-                                                    kIDOMSelectionIID,
-                                                    (void**) &mSelection))) {
-        NS_ERROR("unable to create DOM selection");
-    }
-#endif
-
     if (gRefCnt++ == 0) {
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDFService);
-
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF Service");
         if (NS_FAILED(rv)) return rv;
 
@@ -4513,24 +4419,15 @@ nsXULDocument::Init()
         gRDFService->GetResource(NC_NAMESPACE_URI "attribute", &kNC_attribute);
         gRDFService->GetResource(NC_NAMESPACE_URI "value",     &kNC_value);
 
-        rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIElementFactory),
-                                                (void**) &gHTMLElementFactory);
-
+        rv = CallCreateInstance(kHTMLElementFactoryCID, &gHTMLElementFactory);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get HTML element factory");
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsComponentManager::CreateInstance(kXMLElementFactoryCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIElementFactory),
-                                                (void**) &gXMLElementFactory);
+        rv = CallCreateInstance(kXMLElementFactoryCID, &gXMLElementFactory);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XML element factory");
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsServiceManager::GetService(kXULPrototypeCacheCID,
-                                          NS_GET_IID(nsIXULPrototypeCache),
-                                          (nsISupports**) &gXULCache);
+        rv = CallGetService(kXULPrototypeCacheCID, &gXULCache);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -4910,13 +4807,9 @@ nsXULDocument::CreateEventGroup(nsIDOMEventGroup **_retval)
 NS_IMETHODIMP
 nsXULDocument::GetListenerManager(nsIEventListenerManager** aResult)
 {
-    if (! mListenerManager) {
+    if (!mListenerManager) {
         nsresult rv;
-        rv = nsComponentManager::CreateInstance(kEventListenerManagerCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIEventListenerManager),
-                                                getter_AddRefs(mListenerManager));
-
+        mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIDocument*,this));
@@ -5023,11 +4916,8 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
 
     // Create a XUL content sink, a parser, and kick off a load for
     // the overlay.
-    nsCOMPtr<nsIXULContentSink> sink;
-    rv = nsComponentManager::CreateInstance(kXULContentSinkCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIXULContentSink),
-                                            getter_AddRefs(sink));
+    nsCOMPtr<nsIXULContentSink> sink = do_CreateInstance(kXULContentSinkCID,
+                                                         &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create XUL content sink");
     if (NS_FAILED(rv)) return rv;
 
@@ -5035,11 +4925,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to initialize datasource sink");
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIParser> parser;
-    rv = nsComponentManager::CreateInstance(kParserCID,
-                                            nsnull,
-                                            kIParserIID,
-                                            getter_AddRefs(parser));
+    nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
     if (NS_FAILED(rv)) return rv;
 
@@ -5151,7 +5037,7 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource, ns
         rv = property->GetValueConst(&attrname);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIAtom> attr = dont_AddRef(NS_NewAtom(attrname));
+        nsCOMPtr<nsIAtom> attr = do_GetAtom(attrname);
         if (! attr)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -5595,11 +5481,8 @@ nsXULDocument::ResumeWalk()
                     // and attach them to the parent node.
                     NS_ASSERTION(element != nsnull, "no element on context stack");
 
-                    nsCOMPtr<nsITextContent> text;
-                    rv = nsComponentManager::CreateInstance(kTextNodeCID,
-                                                            nsnull,
-                                                            NS_GET_IID(nsITextContent),
-                                                            getter_AddRefs(text));
+                    nsCOMPtr<nsITextContent> text =
+                        do_CreateInstance(kTextNodeCID, &rv);
                     if (NS_FAILED(rv)) return rv;
                     nsXULPrototypeText* textproto =
                         NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);

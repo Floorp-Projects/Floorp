@@ -276,8 +276,7 @@ nsDOMEvent::~nsDOMEvent()
     PR_DELETE(mEvent);
   }
 
-  if (mText!=nsnull)
-	delete mText;
+  delete mText;
 }
 
 NS_IMPL_ADDREF(nsDOMEvent)
@@ -333,8 +332,9 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
     manager->GetEventTargetContent(mEvent, getter_AddRefs(targetContent));
   }
   
-  if (targetContent) {    
-    if (NS_OK == targetContent->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget)) {
+  if (targetContent) {
+    CallQueryInterface(targetContent, &mTarget);
+    if (mTarget) {
       *aTarget = mTarget;
       NS_ADDREF(*aTarget);
     }
@@ -342,14 +342,15 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   else {
     //Always want a target.  Use document if nothing else.
     nsCOMPtr<nsIDocument> doc;
-		nsCOMPtr<nsIPresShell> presShell;
-		if (mPresContext && NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+    nsCOMPtr<nsIPresShell> presShell;
+    if (mPresContext && NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
       if (NS_SUCCEEDED(presShell->GetDocument(getter_AddRefs(doc))) && doc) {
-				if (NS_SUCCEEDED(doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget))) {
-					*aTarget = mTarget;
-					NS_ADDREF(mTarget);
-				}      
-			}
+        CallQueryInterface(doc, &mTarget);
+        if (mTarget) {
+          *aTarget = mTarget;
+          NS_ADDREF(*aTarget);
+        }      
+      }
     }
   }
 
@@ -483,14 +484,10 @@ nsDOMEvent::GetView(nsIDOMAbstractView** aView)
     rv = mPresContext->GetContainer(getter_AddRefs(container));
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
     
-    nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
-    NS_ENSURE_TRUE(ifrq, NS_OK);
-    
-    nsCOMPtr<nsIDOMWindowInternal> window;
-    ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
+    nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
     NS_ENSURE_TRUE(window, NS_OK);
-    
-    window->QueryInterface(NS_GET_IID(nsIDOMAbstractView), (void **)aView);
+
+    CallQueryInterface(container, aView);
   }
 
   return rv;
@@ -866,25 +863,25 @@ NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 
 NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 {
-  nsIEventStateManager *manager;
-  nsIContent *relatedContent = nsnull;
-  nsresult ret = NS_OK;
+  *aRelatedTarget = nsnull;
 
-  if (mPresContext && 
-      (NS_OK == mPresContext->GetEventStateManager(&manager))) {
-    manager->GetEventRelatedContent(&relatedContent);
-    NS_RELEASE(manager);
-  }
-  
-  if (relatedContent) {    
-    ret = relatedContent->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)aRelatedTarget);
-    NS_RELEASE(relatedContent);
-  }
-  else {
-    *aRelatedTarget = nsnull;
+  if (!mPresContext) {
+    return NS_OK;
   }
 
-  return ret;
+  nsCOMPtr<nsIEventStateManager> manager;
+  mPresContext->GetEventStateManager(getter_AddRefs(manager));
+  if (!manager) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> relatedContent;
+  manager->GetEventRelatedContent(getter_AddRefs(relatedContent));
+  if (!relatedContent) {
+    return NS_OK;
+  }
+
+  return CallQueryInterface(relatedContent, aRelatedTarget);
 }
 
 // nsINSEventInterface
@@ -1027,32 +1024,31 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
 NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 {
   nsIFrame* targetFrame = nsnull;
-  nsIEventStateManager* manager;
+  nsCOMPtr<nsIEventStateManager> manager;
 
   if (mPresContext && 
-      (NS_OK == mPresContext->GetEventStateManager(&manager))) {
+      (NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager)))) {
     manager->GetEventTarget(&targetFrame);
-    NS_RELEASE(manager);
   }
 
+  *aRangeParent = nsnull;
+
   if (targetFrame) {
-    nsIContent* parent = nsnull;
+    nsCOMPtr<nsIContent> parent;
     PRInt32 offset, endOffset;
     PRBool beginOfContent;
     if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
                                               mEvent->point,
-                                              &parent,
+                                              getter_AddRefs(parent),
                                               offset,
                                               endOffset,
                                               beginOfContent))) {
-      if (parent && NS_SUCCEEDED(parent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aRangeParent))) {
-        NS_RELEASE(parent);
-        return NS_OK;
+      if (parent) {
+        return CallQueryInterface(parent, aRangeParent);
       }
-      NS_IF_RELEASE(parent);
     }
   }
-  *aRangeParent = nsnull;
+
   return NS_OK;
 }
 
@@ -1143,7 +1139,7 @@ NS_METHOD nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 nsresult
 nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 {
-  nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aEventTypeArg)));
+  nsCOMPtr<nsIAtom> atom= do_GetAtom(NS_LITERAL_STRING("on") + aEventTypeArg);
 
   if (atom == nsLayoutAtoms::onmousedown && mEvent->eventStructType == NS_MOUSE_EVENT) {
     mEvent->message = NS_MOUSE_LEFT_BUTTON_DOWN;
@@ -1521,8 +1517,8 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  return it->QueryInterface(NS_GET_IID(nsIDOMEvent), (void **) aInstancePtrResult);
+
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent) 

@@ -1023,8 +1023,7 @@ nsHTMLSelectElement::GetSelectFrame()
   nsISelectControlFrame *select_frame = nsnull;
 
   if (form_control_frame) {
-    form_control_frame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
-                                       (void **)&select_frame);
+    CallQueryInterface(form_control_frame, &select_frame);
   }
 
   return select_frame;
@@ -1917,8 +1916,7 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
-                                                    (void **)&formFrame)) &&
+      NS_SUCCEEDED(CallQueryInterface(formControlFrame, &formFrame)) &&
       formFrame)
   {
     const nsStyleUserInterface* uiStyle;

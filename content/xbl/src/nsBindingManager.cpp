@@ -130,7 +130,7 @@ private:
   nsISupportsArray* mElements;
 };
 
-MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList);
+MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList)
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsAnonymousContentList, nsGenericDOMNodeList, nsIAnonymousContentList)
 
@@ -191,7 +191,7 @@ nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       nsCOMPtr<nsIContent> result;
       rv = point->ChildAt(aIndex, getter_AddRefs(result));
       if (result && NS_SUCCEEDED(rv))
-        return result->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
+        return CallQueryInterface(result, aReturn);
       else return rv;
     }
   }

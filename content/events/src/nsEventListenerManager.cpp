@@ -126,7 +126,7 @@ GenericListenersHashEnum(nsHashKey *aKey, void *aData, void* closure)
     PRBool* scriptOnly = NS_STATIC_CAST(PRBool*, closure);
     for (i = count-1; i >= 0; --i) {
       ls = (nsListenerStruct*)listeners->ElementAt(i);
-      if (ls != nsnull) {
+      if (ls) {
         if (*scriptOnly) {
           if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
             NS_RELEASE(ls->mListener);
@@ -375,7 +375,7 @@ void nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners, PRBool a
     nsListenerStruct *ls;
     for (i = 0; i < count; i++) {
       ls = (nsListenerStruct*)(*aListeners)->ElementAt(i);
-      if (ls != nsnull) {
+      if (ls) {
         if (aScriptOnly) {
           if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
             NS_RELEASE(ls->mListener);
@@ -801,8 +801,7 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 {
   PRInt32 subType;
   EventArrayType arrayType;
-  nsCOMPtr<nsIAtom> atom =
-           dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aType));
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
 
   if (NS_OK == GetIdentifiersForType(atom, &arrayType, &subType)) {
     AddEventListener(aListener, arrayType, subType, nsnull, aFlags, aEvtGrp);
@@ -824,8 +823,7 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
 {
   PRInt32 subType;
   EventArrayType arrayType;
-  nsCOMPtr<nsIAtom> atom =
-           dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aType));
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
 
   if (NS_OK == GetIdentifiersForType(atom, &arrayType, &subType)) {
     RemoveEventListener(aListener, arrayType, subType, nsnull, aFlags, aEvtGrp);
@@ -1199,7 +1197,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
         if (NS_SUCCEEDED(result)) {
           nsAutoString eventString;
           if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-            nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + eventString));
+            nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
 
             result = CompileEventHandlerInternal(scriptCX, target, atom,
                                                  aListenerStruct, aSubType);

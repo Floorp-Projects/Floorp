@@ -308,7 +308,7 @@ void BodyRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   // create a tag for this instance
   nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("BodyRule"));
+  tag = do_GetAtom("BodyRule");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   aSizeOfHandler->AddSize(tag, aSize);
@@ -645,11 +645,12 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        nsIHTMLContentContainer*  htmlContainer;
-        if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer),
-                                         (void**)&htmlContainer)) {
-          nsIHTMLStyleSheet* styleSheet;
-          if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
+        nsCOMPtr<nsIHTMLContentContainer> htmlContainer =
+          do_QueryInterface(doc);
+        if (htmlContainer) {
+          nsCOMPtr<nsIHTMLStyleSheet> styleSheet;
+          htmlContainer->GetAttributeStyleSheet(getter_AddRefs(styleSheet));
+          if (styleSheet) {
             aAttributes->GetAttribute(nsHTMLAtoms::link, value);
             if ((eHTMLUnit_Color == value.GetUnit()) || 
                 (eHTMLUnit_ColorName == value.GetUnit())) {
@@ -667,10 +668,7 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
                 (eHTMLUnit_ColorName == value.GetUnit())) {
               styleSheet->SetVisitedLinkColor(value.GetColorValue());
             }
-
-            NS_RELEASE(styleSheet);
           }
-          NS_RELEASE(htmlContainer);
         }
       }
     }

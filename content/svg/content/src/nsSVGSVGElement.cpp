@@ -501,7 +501,7 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
 #endif
   if (frame) {
     nsISVGFrame* svgframe;
-    frame->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&svgframe);
+    CallQueryInterface(frame, &svgframe);
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->NotifyRedrawSuspended();
@@ -548,7 +548,7 @@ nsSVGSVGElement::UnsuspendRedrawAll()
 #endif
   if (frame) {
     nsISVGFrame* svgframe;
-    frame->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&svgframe);
+    CallQueryInterface(frame, &svgframe);
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->NotifyRedrawUnsuspended();
@@ -995,7 +995,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
     if (view) {
       // handle scrolled views along the way:
       nsIScrollableView* scrollableView = nsnull;
-      view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+      CallQueryInterface(view, &scrollableView);
       if (scrollableView) {
         nscoord scrollX, scrollY;
         scrollableView->GetScrollPosition(scrollX, scrollY);

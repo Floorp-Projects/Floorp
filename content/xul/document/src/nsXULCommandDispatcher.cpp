@@ -158,7 +158,7 @@ nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
   nsresult rv = mFocusController->GetFocusedWindow(getter_AddRefs(window));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && window, rv);
 
-  return window->QueryInterface(NS_GET_IID(nsIDOMWindow), (void **)aWindow);
+  return CallQueryInterface(window, aWindow);
 }
 
 NS_IMETHODIMP

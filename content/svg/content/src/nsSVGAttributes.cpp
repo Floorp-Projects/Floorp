@@ -225,7 +225,7 @@ nsSVGAttribute::SetPrefix(const nsAString& aPrefix)
   nsCOMPtr<nsIAtom> prefix;
   
   if (!aPrefix.IsEmpty()) {
-    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+    prefix = do_GetAtom(aPrefix);
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
   
@@ -346,8 +346,7 @@ nsSVGAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 
   nsIContent *content;
   if (mOwner && (content = mOwner->GetContent())) {
-    return content->QueryInterface(NS_GET_IID(nsIDOMElement),
-                                    (void **)aOwnerElement);
+    return CallQueryInterface(content, aOwnerElement);
   }
 
   return NS_ERROR_FAILURE;
@@ -644,13 +643,14 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
       mutation.message = NS_MUTATION_ATTRMODIFIED;
       mutation.mTarget = node;
 
-//XXX      mutation.mRelatedNode = do_QueryInterface(attr);
-      attr->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(mutation.mRelatedNode));
+      CallQueryInterface(attr,
+                         NS_STATIC_CAST(nsIDOMNode**,
+                                        getter_AddRefs(mutation.mRelatedNode)));
       mutation.mAttrName = name;
       if (!oldValue.IsEmpty())
-        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
+        mutation.mPrevAttrValue = do_GetAtom(oldValue);
       if (!aValue.IsEmpty())
-        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
+        mutation.mNewAttrValue = do_GetAtom(aValue);
       mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
                                              nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -707,13 +707,14 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mutation.message = NS_MUTATION_ATTRMODIFIED;
         mutation.mTarget = node;
         
-//XXX        mutation.mRelatedNode = do_QueryInterface(attr);
-        attr->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(mutation.mRelatedNode));   
+        CallQueryInterface(attr,
+                           NS_STATIC_CAST(nsIDOMNode**,
+                                          getter_AddRefs(mutation.mRelatedNode)));
         mutation.mAttrName = aName;
         nsAutoString str;
         attr->GetValue()->GetValueString(str);
         if (!str.IsEmpty())
-          mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(str));
+          mutation.mPrevAttrValue = do_GetAtom(str);
         mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
         
         nsEventStatus status = nsEventStatus_eIgnore;

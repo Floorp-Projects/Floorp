@@ -157,7 +157,7 @@ void CSSFirstLineRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   // get or create a tag for this instance
   nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSFirstLine-LetterRule"));
+  tag = do_GetAtom("CSSFirstLine-LetterRule");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   aSizeOfHandler->AddSize(tag,aSize);
@@ -523,7 +523,7 @@ void HTMLCSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &a
 
   // create a tag for this instance
   nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("HTMLCSSStyleSheet"));
+  tag = do_GetAtom("HTMLCSSStyleSheet");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(HTMLCSSStyleSheetImpl);
   aSizeOfHandler->AddSize(tag,aSize);
@@ -534,13 +534,13 @@ void HTMLCSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &a
   if(mFirstLineRule && uniqueItems->AddItem((void*)mFirstLineRule)){
     localSize = sizeof(*mFirstLineRule);
     aSize += localSize;
-    tag = getter_AddRefs(NS_NewAtom("FirstLineRule"));
+    tag = do_GetAtom("FirstLineRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(mFirstLetterRule && uniqueItems->AddItem((void*)mFirstLetterRule)){
     localSize = sizeof(*mFirstLetterRule);
     aSize += localSize;
-    tag = getter_AddRefs(NS_NewAtom("FirstLetterRule"));
+    tag = do_GetAtom("FirstLetterRule");
     aSizeOfHandler->AddSize(tag,localSize);
   }
 }

@@ -396,9 +396,7 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
     static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                          NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-    nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                 NS_GET_IID(nsIDOMScriptObjectFactory),
-                                 (nsISupports **)&sDOMScriptObjectFactory);
+    CallGetService(kDOMScriptObjectFactoryCID, &sDOMScriptObjectFactory);
 
     if (!sDOMScriptObjectFactory) {
       return nsnull;

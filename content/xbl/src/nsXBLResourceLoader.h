@@ -52,7 +52,7 @@ class nsXBLPrototypeResources;
 // *********************************************************************/
 // The XBLResourceLoader class
 
-MOZ_DECL_CTOR_COUNTER(nsXBLResource);
+MOZ_DECL_CTOR_COUNTER(nsXBLResource)
 
 struct nsXBLResource {
   nsXBLResource* mNext;

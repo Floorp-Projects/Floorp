@@ -227,15 +227,11 @@ XULSortServiceImpl::XULSortServiceImpl(void)
     kAscendingStr = new nsString(NS_LITERAL_STRING("ascending"));
     kDescendingStr = new nsString(NS_LITERAL_STRING("descending"));
  
-    nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                               NS_GET_IID(nsIRDFService),
-                                               (nsISupports**) &gRDFService);
+    nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
     if (NS_FAILED(rv))
       NS_ERROR("couldn't create rdf service");
 
-    rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                      NS_GET_IID(nsIRDFContainerUtils),
-                                      (nsISupports**) &gRDFC);
+    rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
     if (NS_FAILED(rv))
       NS_ERROR("couldn't create rdf container utils");
 
@@ -286,12 +282,8 @@ XULSortServiceImpl::~XULSortServiceImpl(void) {
 
     NS_IF_RELEASE(gCollation);
 
-    if (gRDFService) {
-      nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-      gRDFService = nsnull;
-    }
-    if (gRDFC)
-      nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
+    NS_IF_RELEASE(gRDFService);
+    NS_IF_RELEASE(gRDFC);
   }
 }
 

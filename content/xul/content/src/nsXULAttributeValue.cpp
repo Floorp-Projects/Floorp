@@ -95,7 +95,7 @@ nsresult nsXULAttributeValue::SetValue(const nsAString& aValue,
 
     if (len && ((len <= kMaxAtomValueLength) || forceAtom))
     {
-        newAtom = getter_AddRefs( NS_NewAtom(aValue) );
+        newAtom = do_GetAtom(aValue);
     }
 
         // Release the old value

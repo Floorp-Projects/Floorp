@@ -144,8 +144,8 @@ protected:
   
   // For HTML elements in our content model
   // XXX This is not clean, but is there a better way? 
-  nsIHTMLStyleSheet*    mAttrStyleSheet;
-  nsIHTMLCSSStyleSheet* mInlineStyleSheet;
+  nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
+  nsCOMPtr<nsIHTMLCSSStyleSheet> mInlineStyleSheet;
   // For additional catalog sheets (if any) needed to layout the XML vocabulary
   // of the document. Catalog sheets are kept at the beginning of our array of
   // style sheets and this counter is used as an offset to distinguish them

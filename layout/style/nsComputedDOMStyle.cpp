@@ -205,7 +205,7 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
   }
 
   if (!DOMStringIsNull(aPseudoElt) && !aPseudoElt.IsEmpty()) {
-    mPseudo = dont_AddRef(NS_NewAtom(aPseudoElt));
+    mPseudo = do_GetAtom(aPseudoElt);
     NS_ENSURE_TRUE(mPseudo, NS_ERROR_OUT_OF_MEMORY);
   }
 

@@ -577,7 +577,7 @@ PRUint16 nsSVGLength::GetUnitTypeForString(const char* unitStr)
 {
   if (!unitStr || *unitStr=='\0') return SVG_LENGTHTYPE_NUMBER;
                    
-  nsCOMPtr<nsIAtom> unitAtom = NS_NewAtom(unitStr);
+  nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
 
   if (unitAtom == nsSVGAtoms::px)
     return SVG_LENGTHTYPE_PX;

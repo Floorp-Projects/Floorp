@@ -682,7 +682,7 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(this, it, aDeep);
 
-  rv = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+  rv = CallQueryInterface(it, aReturn);
   NS_RELEASE(it);
   return rv;
 }

@@ -95,11 +95,10 @@ nsresult
 nsXULContentUtils::Init()
 {
     if (gRefCnt++ == 0) {
-        nsresult rv;
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDF);
-        if (NS_FAILED(rv)) return rv;
+        nsresult rv = CallGetService(kRDFServiceCID, &gRDF);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
 
 #define XUL_RESOURCE(ident, uri)            \
   PR_BEGIN_MACRO                            \
@@ -117,14 +116,13 @@ nsXULContentUtils::Init()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-        rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIDateTimeFormat),
-                                                (void**) &gFormat);
-
-        if (NS_FAILED(rv)) return rv;
+        rv = CallCreateInstance(kDateTimeFormatCID, &gFormat);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
     }
 
+    // XXX HUH?
     return gRefCnt;
 }
 
@@ -133,10 +131,7 @@ nsresult
 nsXULContentUtils::Finish()
 {
     if (--gRefCnt == 0) {
-        if (gRDF) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
-            gRDF = nsnull;
-        }
+        NS_IF_RELEASE(gRDF);
 
 #define XUL_RESOURCE(ident, uri) NS_IF_RELEASE(ident)
 #define XUL_LITERAL(ident, val) NS_IF_RELEASE(ident)

@@ -71,9 +71,8 @@ NS_NewTreeWalker(nsIDOMNode *aRoot,
                                             aFilter,
                                             aEntityReferenceExpansion);
     NS_ENSURE_TRUE(walker, NS_ERROR_OUT_OF_MEMORY);
-    
-    return walker->QueryInterface(NS_GET_IID(nsIDOMTreeWalker),
-                                  (void**) aInstancePtrResult);
+
+    return CallQueryInterface(walker, aInstancePtrResult);
 }
 
 nsTreeWalker::nsTreeWalker(nsIDOMNode *aRoot,

@@ -334,7 +334,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   nsAutoString str;
   mEventName->ToString(str);
   onEvent += str;
-  nsCOMPtr<nsIAtom> onEventAtom = getter_AddRefs(NS_NewAtom(onEvent));
+  nsCOMPtr<nsIAtom> onEventAtom = do_GetAtom(onEvent);
 
   void* handler = nsnull;
   
@@ -869,7 +869,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       return;
   }
 
-  mEventName = getter_AddRefs(NS_NewAtom(event));
+  mEventName = do_GetAtom(event);
 
   if (aPhase) {
     const nsDependentString phase(aPhase);

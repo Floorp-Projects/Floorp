@@ -1795,9 +1795,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       // Add the new child too
       list->AppendElement(newChild);
 
-      nsCOMPtr<nsISupports> listSupports;
-      list->QueryInterface(NS_GET_IID(nsISupports),
-                           getter_AddRefs(listSupports));
+      nsCOMPtr<nsISupports> listSupports = do_QueryInterface(list);
 
       // Replace the element with the list.
       mNameLookupTable.Put(&key, listSupports);

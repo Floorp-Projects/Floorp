@@ -242,16 +242,14 @@ public:
 nsresult
 NS_NewAttributeContent(nsIContent** aContent)
 {
-  NS_PRECONDITION(aContent, "null OUT ptr");
-  if (nsnull == aContent) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aContent);
+
   nsAttributeContent* it = new nsAttributeContent;
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return NS_SUCCEEDED(it->QueryInterface(NS_GET_IID(nsIContent), (void **)aContent)) ?
-         NS_OK : NS_ERROR_FAILURE;
+
+  return CallQueryInterface(it, aContent);
 }
 
 //----------------------------------------------------------------------
@@ -542,7 +540,7 @@ nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  result = it->QueryInterface(NS_GET_IID(nsITextContent), (void**) aReturn);
+  result = CallQueryInterface(it, aReturn);
   if (NS_FAILED(result)) {
     return result;
   }

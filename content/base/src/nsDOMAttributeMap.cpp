@@ -104,8 +104,7 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
       domAttribute = new nsDOMAttribute(mContent, ni, value);
       NS_ENSURE_TRUE(domAttribute, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                        (void **)aAttribute);
+      rv = CallQueryInterface(domAttribute, aAttribute);
     }
   }
 
@@ -159,8 +158,7 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                        (void **)aReturn);
+      rv = CallQueryInterface(domAttribute, aReturn);
     }
 
     attribute->GetValue(value);
@@ -204,8 +202,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                        (void **)aReturn);
+      rv = CallQueryInterface(domAttribute, aReturn);
     } else {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
@@ -247,8 +244,7 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     nsDOMAttribute* domAttribute = new nsDOMAttribute(mContent, ni, value);
     NS_ENSURE_TRUE(domAttribute, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                      (void **)aReturn);
+    rv = CallQueryInterface(domAttribute, aReturn);
   }
   else {
     *aReturn = nsnull;
@@ -284,7 +280,7 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
 
   nsresult rv = NS_OK;
   if (mContent) {
-    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     PRInt32 nameSpaceID = kNameSpaceID_None;
     nsCOMPtr<nsIAtom> prefix;
 
@@ -318,8 +314,7 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
       domAttribute = new nsDOMAttribute(mContent, ni, value);
       NS_ENSURE_TRUE(domAttribute, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                        (void **)aReturn);
+      rv = CallQueryInterface(domAttribute, aReturn);
     }
   }
 
@@ -377,8 +372,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                        (void **)aReturn);
+      rv = CallQueryInterface(domAttribute, aReturn);
     }
 
     attribute->GetValue(value);
@@ -400,7 +394,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
   nsresult rv = NS_OK;
 
   if (mContent) {
-    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     PRInt32 nameSpaceID = kNameSpaceID_None;
     nsCOMPtr<nsIDOMNode> attribute;
     nsCOMPtr<nsIAtom> prefix;
@@ -436,8 +430,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                        (void **)aReturn);
+      rv = CallQueryInterface(domAttribute, aReturn);
     } else {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }

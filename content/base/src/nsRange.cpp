@@ -306,14 +306,14 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
 nsresult
 NS_NewRangeUtils(nsIRangeUtils** aResult)
 {
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aResult);
 
   nsRangeUtils* rangeUtil = new nsRangeUtils();
-  if (rangeUtil)
-    return rangeUtil->QueryInterface(NS_GET_IID(nsIRangeUtils), (void**) aResult);
-  return NS_ERROR_OUT_OF_MEMORY;
+  if (!rangeUtil) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(rangeUtil, aResult);
 }
 
 /******************************************************
@@ -400,15 +400,16 @@ nsRangeUtils::CompareNodeToRange(nsIContent* aNode,
 nsresult
 NS_NewRange(nsIDOMRange** aResult)
 {
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aResult);
 
   nsRange * range = new nsRange();
-  if (range)
-    return range->QueryInterface(NS_GET_IID(nsIDOMRange), (void**) aResult);
-  return NS_ERROR_OUT_OF_MEMORY;
+  if (!range) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(range, aResult);
 }
+
 /******************************************************
  * constructor/destructor
  ******************************************************/
@@ -608,10 +609,9 @@ nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
 {
   if (!aNode) 
     return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIContent> cN;
 
-  nsresult res = aNode->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(cN));
+  nsresult res;
+  nsCOMPtr<nsIContent> cN = do_QueryInterface(aNode, &res);
   if (NS_FAILED(res)) 
     return res;
 
@@ -624,10 +624,9 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
 {
   if (!aNode) 
     return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIContent> cN;
 
-  nsresult res = aNode->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(cN));
+  nsresult res;
+  nsCOMPtr<nsIContent> cN = do_QueryInterface(aNode, &res);
   if (NS_FAILED(res)) 
     return res;
 
@@ -836,29 +835,26 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
 
 PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
 {
-  nsCOMPtr<nsIDOMNode> parentNode;
-  nsCOMPtr<nsIContent> contentChild;
-  nsCOMPtr<nsIContent> contentParent;
-  PRInt32    theIndex = nsnull;
-  
   if (!aChildNode) 
     return 0;
 
   // get the parent node
+  nsCOMPtr<nsIDOMNode> parentNode;
   nsresult res = aChildNode->GetParentNode(getter_AddRefs(parentNode));
   if (NS_FAILED(res)) 
     return 0;
   
   // convert node and parent to nsIContent, so that we can find the child index
-  res = parentNode->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(contentParent));
+  nsCOMPtr<nsIContent> contentParent = do_QueryInterface(parentNode, &res);
   if (NS_FAILED(res)) 
     return 0;
 
-  res = aChildNode->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(contentChild));
+  nsCOMPtr<nsIContent> contentChild = do_QueryInterface(aChildNode, &res);
   if (NS_FAILED(res)) 
     return 0;
   
   // finally we get the index
+  PRInt32 theIndex = 0;
   res = contentParent->IndexOf(contentChild,theIndex); 
   if (NS_FAILED(res)) 
     return 0;
@@ -2585,168 +2581,155 @@ NS_IMETHODIMP
 nsRange::CreateContextualFragment(const nsAString& aFragment, 
                                   nsIDOMDocumentFragment** aReturn)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIParser> parser;
-  nsVoidArray tagStack;
-
   if (!mIsPositioned) {
     return NS_ERROR_FAILURE;
   }
 
   // Create a new parser for this entire operation
-  result = nsComponentManager::CreateInstance(kCParserCID, 
-                                              nsnull, 
-                                              NS_GET_IID(nsIParser), 
-                                              (void **)getter_AddRefs(parser));
-  if (NS_SUCCEEDED(result)) {
+  nsresult result;
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &result);
+  NS_ENSURE_SUCCESS(result, result);
 
-    nsCOMPtr<nsIDOMNode> parent;
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mStartParent, &result));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mStartParent, &result);
+  NS_ENSURE_SUCCESS(result, result);
 
-    if (NS_SUCCEEDED(result)) {
-      nsCOMPtr<nsIDocument> document;
-      nsCOMPtr<nsIDOMDocument> domDocument;
-      
-      result = content->GetDocument(*getter_AddRefs(document));
-      if (document && NS_SUCCEEDED(result)) {
-        domDocument = do_QueryInterface(document, &result);
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIDOMDocument> domDocument;
+
+  result = content->GetDocument(*getter_AddRefs(document));
+  domDocument = do_QueryInterface(document, &result);
+  NS_ENSURE_SUCCESS(result, result);
+
+  nsVoidArray tagStack;
+  nsCOMPtr<nsIDOMNode> parent = mStartParent;
+  while (parent && 
+         (parent != domDocument) && 
+         NS_SUCCEEDED(result)) {
+    PRUint16 nodeType;
+    
+    parent->GetNodeType(&nodeType);
+    if (nsIDOMNode::ELEMENT_NODE == nodeType) {
+      nsAutoString tagName;
+      parent->GetNodeName(tagName);
+      // XXX Wish we didn't have to allocate here
+      PRUnichar* name = ToNewUnicode(tagName);
+      if (name) {
+        tagStack.AppendElement(name);
+        nsCOMPtr<nsIDOMNode> temp = parent;
+        result = temp->GetParentNode(getter_AddRefs(parent));
       }
-
-      parent = mStartParent;
-      while (parent && 
-             (parent != domDocument) && 
-             NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIDOMNode> temp;
-        nsAutoString tagName;
-        PRUnichar* name = nsnull;
-        PRUint16 nodeType;
-        
-        parent->GetNodeType(&nodeType);
-        if (nsIDOMNode::ELEMENT_NODE == nodeType) {
-          parent->GetNodeName(tagName);
-          // XXX Wish we didn't have to allocate here
-          name = ToNewUnicode(tagName);
-          if (name) {
-            tagStack.AppendElement(name);
-            temp = parent;
-            result = temp->GetParentNode(getter_AddRefs(parent));
-          }
-          else {
-            result = NS_ERROR_OUT_OF_MEMORY;
-          }
-        }
-        else {
-          temp = parent;
-          result = temp->GetParentNode(getter_AddRefs(parent));
-        }
-      }
-      
-      if (NS_SUCCEEDED(result)) {
-        nsCAutoString contentType;
-        nsIHTMLFragmentContentSink* sink;
-        
-        result = NS_NewHTMLFragmentContentSink(&sink);
-        if (NS_SUCCEEDED(result)) {
-          parser->SetContentSink(sink);
-          nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(document));
-          if (domnsDocument) {
-            nsAutoString buf;
-            domnsDocument->GetContentType(buf);
-            CopyUCS2toASCII(buf, contentType);
-          }
-          else {
-            // Who're we kidding. This only works for html.
-            contentType = NS_LITERAL_CSTRING("text/html");
-          }
-
-          // If there's no JS or system JS running,
-          // push the current document's context on the JS context stack
-          // so that event handlers in the fragment do not get 
-          // compiled with the system principal.
-          nsCOMPtr<nsIJSContextStack> ContextStack;
-          nsCOMPtr<nsIScriptSecurityManager> secMan;
-          secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
-          if (document && NS_SUCCEEDED(result)) {
-            nsCOMPtr<nsIPrincipal> sysPrin;
-            nsCOMPtr<nsIPrincipal> subjectPrin;
-
-            // Just to compare, not to use!
-            result = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
-            if (NS_SUCCEEDED(result))
-                result = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
-            // If there's no subject principal, there's no JS running, so we're in system code.
-            // (just in case...null subject principal will probably never happen)
-            if (NS_SUCCEEDED(result) &&
-               (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
-              nsCOMPtr<nsIScriptGlobalObject> globalObj;
-              result = document->GetScriptGlobalObject(getter_AddRefs(globalObj));
-
-              nsCOMPtr<nsIScriptContext> scriptContext;
-              if (NS_SUCCEEDED(result) && globalObj) {
-                result = globalObj->GetContext(getter_AddRefs(scriptContext));
-              }
-
-              JSContext* cx = nsnull;
-              if (NS_SUCCEEDED(result) && scriptContext) {
-                cx = (JSContext*)scriptContext->GetNativeContext();
-              }
-
-              if(cx) {
-                ContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result);
-                if(NS_SUCCEEDED(result)) {
-                  result = ContextStack->Push(cx);
-                }
-              }
-            }
-          }
-          
-          nsDTDMode mode = eDTDMode_autodetect;
-          nsCOMPtr<nsIDOMDocument> ownerDoc;
-          mStartParent->GetOwnerDocument(getter_AddRefs(ownerDoc));
-          nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(ownerDoc));
-          if (htmlDoc) {
-            nsCompatibility compatMode;
-            htmlDoc->GetCompatibilityMode(compatMode);
-            switch (compatMode) {
-              case eCompatibility_NavQuirks:
-                mode = eDTDMode_quirks;
-                break;
-              case eCompatibility_AlmostStandards:
-                mode = eDTDMode_almost_standards;
-                break;
-              case eCompatibility_FullStandards:
-                mode = eDTDMode_full_standards;
-                break;
-              default:
-                NS_NOTREACHED("unknown mode");
-                break;
-            }
-          }
-          result = parser->ParseFragment(aFragment, (void*)0,
-                                         tagStack,
-                                         0, contentType, mode);
-
-          if (ContextStack) {
-            JSContext *notused;
-            ContextStack->Pop(&notused);
-          }
-          
-          if (NS_SUCCEEDED(result)) {
-            sink->GetFragment(aReturn);
-          }
-          
-          NS_RELEASE(sink);
-        }
+      else {
+        result = NS_ERROR_OUT_OF_MEMORY;
       }
     }
-      
-    // XXX Ick! Delete strings we allocated above.
-    PRInt32 count = tagStack.Count();
-    for (PRInt32 i = 0; i < count; i++) {
-      PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
-      if (str) {
-        nsCRT::free(str);
+    else {
+      nsCOMPtr<nsIDOMNode> temp = parent;
+      result = temp->GetParentNode(getter_AddRefs(parent));
+    }
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    nsCAutoString contentType;
+    nsCOMPtr<nsIHTMLFragmentContentSink> sink;
+
+    result = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
+    if (NS_SUCCEEDED(result)) {
+      parser->SetContentSink(sink);
+      nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(document));
+      if (domnsDocument) {
+        nsAutoString buf;
+        domnsDocument->GetContentType(buf);
+        CopyUCS2toASCII(buf, contentType);
       }
+      else {
+        // Who're we kidding. This only works for html.
+        contentType = NS_LITERAL_CSTRING("text/html");
+      }
+
+      // If there's no JS or system JS running,
+      // push the current document's context on the JS context stack
+      // so that event handlers in the fragment do not get 
+      // compiled with the system principal.
+      nsCOMPtr<nsIJSContextStack> ContextStack;
+      nsCOMPtr<nsIScriptSecurityManager> secMan;
+      secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
+      if (document && NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIPrincipal> sysPrin;
+        nsCOMPtr<nsIPrincipal> subjectPrin;
+
+        // Just to compare, not to use!
+        result = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+        if (NS_SUCCEEDED(result))
+            result = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
+        // If there's no subject principal, there's no JS running, so we're in system code.
+        // (just in case...null subject principal will probably never happen)
+        if (NS_SUCCEEDED(result) &&
+           (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
+          nsCOMPtr<nsIScriptGlobalObject> globalObj;
+          result = document->GetScriptGlobalObject(getter_AddRefs(globalObj));
+
+          nsCOMPtr<nsIScriptContext> scriptContext;
+          if (NS_SUCCEEDED(result) && globalObj) {
+            result = globalObj->GetContext(getter_AddRefs(scriptContext));
+          }
+
+          JSContext* cx = nsnull;
+          if (NS_SUCCEEDED(result) && scriptContext) {
+            cx = (JSContext*)scriptContext->GetNativeContext();
+          }
+
+          if(cx) {
+            ContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result);
+            if(NS_SUCCEEDED(result)) {
+              result = ContextStack->Push(cx);
+            }
+          }
+        }
+      }
+
+      nsDTDMode mode = eDTDMode_autodetect;
+      nsCOMPtr<nsIDOMDocument> ownerDoc;
+      mStartParent->GetOwnerDocument(getter_AddRefs(ownerDoc));
+      nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(ownerDoc));
+      if (htmlDoc) {
+        nsCompatibility compatMode;
+        htmlDoc->GetCompatibilityMode(compatMode);
+        switch (compatMode) {
+          case eCompatibility_NavQuirks:
+            mode = eDTDMode_quirks;
+            break;
+          case eCompatibility_AlmostStandards:
+            mode = eDTDMode_almost_standards;
+            break;
+          case eCompatibility_FullStandards:
+            mode = eDTDMode_full_standards;
+            break;
+          default:
+            NS_NOTREACHED("unknown mode");
+            break;
+        }
+      }
+      result = parser->ParseFragment(aFragment, (void*)0,
+                                     tagStack,
+                                     0, contentType, mode);
+
+      if (ContextStack) {
+        JSContext *notused;
+        ContextStack->Pop(&notused);
+      }
+
+      if (NS_SUCCEEDED(result)) {
+        sink->GetFragment(aReturn);
+      }
+    }
+  }
+
+  // XXX Ick! Delete strings we allocated above.
+  PRInt32 count = tagStack.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
+    if (str) {
+      nsCRT::free(str);
     }
   }
 

@@ -1465,7 +1465,7 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
   nsAutoString eventStr(NS_LITERAL_STRING("on"));
   eventStr += val;
 
-  nsCOMPtr<nsIAtom> eventName = getter_AddRefs(NS_NewAtom(eventStr));
+  nsCOMPtr<nsIAtom> eventName = do_GetAtom(eventStr);
 
   nsresult rv;
   nsCOMPtr<nsIDocument> document;

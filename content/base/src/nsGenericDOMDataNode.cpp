@@ -1146,7 +1146,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     }
   }
 
-  return newNode->QueryInterface(NS_GET_IID(nsIDOMText), (void**)aReturn);
+  return CallQueryInterface(newNode, aReturn);
 }
 
 //----------------------------------------------------------------------
@@ -1221,7 +1221,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
     // XXX Handle the setting of prevValue!
     nsAutoString newVal(aBuffer);
     if (!newVal.IsEmpty())
-      mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
+      mutation.mNewAttrValue = do_GetAtom(newVal);
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);
@@ -1263,7 +1263,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
     // XXX Handle the setting of prevValue!
     nsAutoString newVal; newVal.AssignWithConversion(aBuffer);
     if (!newVal.IsEmpty())
-      mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
+      mutation.mNewAttrValue = do_GetAtom(newVal);
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);
@@ -1302,7 +1302,7 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
     // XXX Handle the setting of prevValue!
     nsAutoString newVal(aStr);
     if (!newVal.IsEmpty())
-      mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
+      mutation.mNewAttrValue = do_GetAtom(newVal);
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);

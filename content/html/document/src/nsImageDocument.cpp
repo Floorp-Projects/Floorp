@@ -144,8 +144,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(ImageListener, nsIStreamListener)
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
-  nsresult rv;
-
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) return NS_ERROR_NULL_POINTER;
 
@@ -428,18 +426,12 @@ nsresult nsImageDocument::UpdateTitle( void )
   // so instead we just get the image-extension
   //  - get the URL interface, get the extension, convert to upper-case
   //  Unless the Imagerequest or Image can tell us the type this is the best we can do.
-  nsIURL *pURL=nsnull;
-  if(NS_SUCCEEDED(mDocumentURL->QueryInterface(NS_GET_IID(nsIURL),(void **)&pURL))) {
-    char *pExtension=nsnull;
-    pURL->GetFileExtension(&pExtension);
-    if(pExtension){
-      nsString strExt; strExt.AssignWithConversion(pExtension);
-      ToUpperCase(strExt);
-      titleStr.Append(strExt);
-      nsCRT::free(pExtension);
-      pExtension=nsnull;
-    }
-    NS_IF_RELEASE(pURL);
+  nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
+  if (url) {
+    nsXPIDLCString extension;
+    url->GetFileExtension(getter_Copies(extension));
+    ToUpperCase(extension);
+    titleStr.AppendWithConversion(extension);
   }
 #endif
  

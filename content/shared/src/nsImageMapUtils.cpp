@@ -83,7 +83,7 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
       nsCOMPtr<nsIDOMElement> element;
       domDoc->GetElementById(usemap,getter_AddRefs(element));
       if (element) {
-        element->QueryInterface(NS_GET_IID(nsIDOMHTMLMapElement),(void**)aMap);
+        CallQueryInterface(element, aMap);
       }
     }
   }

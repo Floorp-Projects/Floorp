@@ -188,9 +188,11 @@ private:
 nsresult NS_NewGenRegularIterator(nsIContentIterator ** aInstancePtrResult)
 {
   nsGeneratedContentIterator * iter = new nsGeneratedContentIterator();
-  if (iter)
-    return iter->QueryInterface(NS_GET_IID(nsIContentIterator), (void**) aInstancePtrResult);
-  return NS_ERROR_OUT_OF_MEMORY;
+  if (!iter) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(iter, aInstancePtrResult);
 }
 
 
@@ -825,13 +827,15 @@ nsresult nsGeneratedContentIterator::PositionAt(nsIContent* aCurNode)
 
 nsresult nsGeneratedContentIterator::CurrentNode(nsIContent **aNode)
 {
-  if (!mCurNode) 
+  if (!mCurNode || mIsDone) {
     return NS_ERROR_FAILURE;
-  if (mIsDone) 
-    return NS_ERROR_FAILURE;
-  if (mGenIter)
+  }
+
+  if (mGenIter) {
     return mGenIter->CurrentNode(aNode);
-  return mCurNode->QueryInterface(NS_GET_IID(nsIContent), (void**) aNode);
+  }
+
+  return CallQueryInterface(mCurNode, aNode);
 }
 
 
@@ -893,9 +897,11 @@ nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsGeneratedSubtreeIterator * iter = new nsGeneratedSubtreeIterator();
-  if (iter)
-    return iter->QueryInterface(NS_GET_IID(nsIContentIterator), (void**) aInstancePtrResult);
-  return NS_ERROR_OUT_OF_MEMORY;
+  if (!iter) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(iter, aInstancePtrResult);
 }
 
 

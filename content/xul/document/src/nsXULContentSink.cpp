@@ -553,10 +553,9 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
                 if (mPreferredStyle.IsEmpty()) {
                     mPreferredStyle = aTitle;
                     mCSSLoader->SetPreferredSheet(aTitle);
-                    nsIAtom* defaultStyle = NS_NewAtom("default-style");
+                    nsCOMPtr<nsIAtom> defaultStyle = do_GetAtom("default-style");
                     if (defaultStyle) {
                         mPrototype->SetHeaderData(defaultStyle, aTitle);
-                        NS_RELEASE(defaultStyle);
                     }
                 }
             }
@@ -614,7 +613,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
 
     // XXX this presumes HTTP header info is already set in document
     // XXX if it isn't we need to set it here...
-    nsCOMPtr<nsIAtom> defaultStyle = dont_AddRef( NS_NewAtom("default-style") );
+    nsCOMPtr<nsIAtom> defaultStyle = do_GetAtom("default-style");
     if (! defaultStyle)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -725,7 +724,7 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
     if (!FindCharInReadable(kNameSpaceSeparator, colon, end)) {
         colon = start; // No ':' found, reset colon
     } else if (start != colon) {
-        prefix = dont_AddRef(NS_NewAtom(Substring(start, colon)));
+        prefix = do_GetAtom(Substring(start, colon));
 
         nsCOMPtr<nsINameSpace> ns;
         GetTopNameSpace(address_of(ns));
@@ -1166,8 +1165,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
                 start.advance(xmlns_len);
 
                 if (*start == ':' && ++start != end) {
-                    prefixAtom =
-                        dont_AddRef(NS_NewAtom(Substring(start, end)));
+                    prefixAtom = do_GetAtom(Substring(start, end));
                 } else {
                     NS_WARNING("Bad XML namespace declaration 'xmlns:' "
                                "found!");
@@ -1240,7 +1238,7 @@ XULContentSinkImpl::ParseTag(const PRUnichar* aText,
     if (!FindCharInReadable(kNameSpaceSeparator, colon, end)) {
         colon = start; // No ':' found, reset colon
     } else if (colon != start) {
-        prefix = dont_AddRef(NS_NewAtom(Substring(start, colon)));
+        prefix = do_GetAtom(Substring(start, colon));
 
         ++colon; // Step over ':'
     }
@@ -1539,11 +1537,8 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
       if (NS_FAILED(rv)) return rv;
 
       if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-          if (! mCSSParser) {
-              rv = nsComponentManager::CreateInstance(kCSSParserCID,
-                                                      nsnull,
-                                                      NS_GET_IID(nsICSSParser),
-                                                      getter_AddRefs(mCSSParser));
+          if (!mCSSParser) {
+              mCSSParser = do_CreateInstance(kCSSParserCID, &rv);
 
               if (NS_FAILED(rv)) return rv;
           }

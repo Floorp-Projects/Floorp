@@ -858,7 +858,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
     k.Assign(key);
     ToLowerCase(k);
 
-    nsCOMPtr<nsIAtom>  keyAtom(dont_AddRef(NS_NewAtom(k)));
+    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
 
     if (!aContent->HasAttr(kNameSpaceID_None, keyAtom)) {
       // Get value and remove mandatory quotes
@@ -1033,7 +1033,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
       NS_ASSERTION(name_str, "What? No string in atom?!?");
 
       if (nsCRT::strcmp(tag, name_str) != 0) {
-        nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag)));
+        nsCOMPtr<nsIAtom> atom = do_GetAtom(tag);
 
         rv = aNodeInfo->NameChanged(atom, *getter_AddRefs(kungFuDeathGrip));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -2382,12 +2382,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIWebShell *aContainer)
   // Getting context is tricky if the document hasn't had it's
   // GlobalObject set yet
   if (!globalObject) {
-    nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aContainer));
-    NS_ENSURE_TRUE(requestor, PR_TRUE);
-
-    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
-    requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
-                            getter_AddRefs(owner));
+    nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(aContainer);
     NS_ENSURE_TRUE(owner, PR_TRUE);
 
     owner->GetScriptGlobalObject(getter_AddRefs(globalObject));
@@ -2436,7 +2431,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aDoc);
 
   aDoc->AddObserver(this);
-  aDoc->QueryInterface(NS_GET_IID(nsIHTMLDocument), (void**)&mHTMLDocument);
+  CallQueryInterface(aDoc, &mHTMLDocument);
 
   rv = mDocument->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5022,7 +5017,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
         if (!result.IsEmpty()) {
           ToLowerCase(header);
-          nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
+          nsCOMPtr<nsIAtom> fieldAtom = do_GetAtom(header);
           rv = ProcessHeaderData(fieldAtom, result, it);
         }
       }
@@ -5059,7 +5054,7 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
   while (*name) {
     rv = httpchannel->GetResponseHeader(nsDependentCString(*name), tmp);
     if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
-      nsCOMPtr<nsIAtom> key(dont_AddRef(NS_NewAtom(*name)));
+      nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
       ProcessHeaderData(key, NS_ConvertASCIItoUCS2(tmp));
     }
     name++;
