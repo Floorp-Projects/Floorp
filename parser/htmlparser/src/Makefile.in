@@ -22,8 +22,8 @@ VPATH		= .:@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= raptorhtmlpars
 MODULE		= htmlparser
+LIBRARY_NAME	= raptorhtmlpars
 
 REQUIRES	= xpcom netlib raptor
 
@@ -111,14 +111,15 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+#
 # Currently on HP, we need this sl to be linked using aCC to call the
 # global constructs for the CTagList.  Unfortunately if we turn on CXX
 # linking for all .sl's there is a problem with gfx
-
+#
 ifeq ($(OS_ARCH),HP-UX)
 ifneq (,$(filter aCC,$(CXX)))
-DSO_LDOPTS      = -b -Wl,-E -Wl,+s -L$(DIST)/bin
-MKSHLIB         = $(CXX) $(DSO_LDOPTS)
+DSO_LDOPTS	= -b -Wl,-E -Wl,+s -L$(DIST)/bin
+MKSHLIB		= $(CXX) $(DSO_LDOPTS)
 endif
 endif
 
