@@ -60,7 +60,8 @@ js_UnlockGlobal(void *id)
 	n = ReadWord(*(P));\
     } while (!js_CompareAndSwap(P, n, n + I));
 
-#if defined(_WIN32) && !defined(NSPR_LOCK)
+/* Exclude Alpha NT. */
+#if defined(_WIN32) && defined(_M_IX86) && !defined(NSPR_LOCK)
 #pragma warning( disable : 4035 )
 
 JS_INLINE int

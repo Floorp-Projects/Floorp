@@ -311,7 +311,10 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 	/*where Netscape was calling control87 on Windows...                                        */
 	_control87(MCW_EM+PC_53+RC_NEAR,MCW_EM+MCW_PC+MCW_RC);
 #else
-	_control87(MCW_EM, MCW_EM);
+#if defined (_M_IX86)
+        /* On Alpha platform this is handled via Compiler option */
+        _control87(MCW_EM, MCW_EM);
+#endif
 #endif
 #endif
 
