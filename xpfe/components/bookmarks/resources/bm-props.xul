@@ -22,6 +22,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bm-props.dtd" >
 <xul:window
