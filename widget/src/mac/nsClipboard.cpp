@@ -449,16 +449,19 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 a
       // the mapper returns a null flavor, then it ain't there.
       ResType macFlavor = theMapper.MapMimeTypeToMacOSType ( flavor, PR_FALSE );
       if ( macFlavor ) {
-        if ( CheckIfFlavorPresent(macFlavor) )   
+        if ( CheckIfFlavorPresent(macFlavor) ) {
           *outResult = PR_TRUE;   // we found one!
-        break;
+          break;
+        }
       }
       else {
         // if the client asked for unicode and it wasn't present, check if we have TEXT.
         // We'll handle the actual data substitution in GetNativeClipboardData().
         if ( strcmp(flavor, kUnicodeMime) == 0 ) {
-          if ( CheckIfFlavorPresent('TEXT') )
+          if ( CheckIfFlavorPresent('TEXT') ) {
             *outResult = PR_TRUE;
+            break;
+          }
         }
       }
     }  
