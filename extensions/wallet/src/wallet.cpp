@@ -1883,8 +1883,10 @@ PRInt32 FieldToValue(
     } else {
       /* value not found, see if concatenation rule exists */
       nsVoidArray * itemList2;
-
       nsAutoString dummy2;
+      if (index > 0) {
+        index = 0;
+      }
       if (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list, PR_FALSE)) {
         /* concatenation rules exist, generate value as a concatenation */
         wallet_Sublist * ptr1;
