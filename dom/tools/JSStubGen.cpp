@@ -80,6 +80,7 @@ JSStubGen::Generate(char *aFileName,
   GeneratePropertySlots(aSpec);
   GeneratePropertyFunc(aSpec, PR_TRUE);
   GeneratePropertyFunc(aSpec, PR_FALSE);
+  GenerateCustomPropertyFuncs(aSpec);
   GenerateFinalize(aSpec);
   GenerateEnumerate(aSpec);
   GenerateResolve(aSpec);
@@ -610,7 +611,7 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
 
-      if (attr->GetIsNoScript() || (!aIsGetter && (attr->GetReadOnly()))) {
+      if (attr->GetIsNoScript() || attr->GetReplaceable() || (!aIsGetter && (attr->GetReadOnly()))) {
         continue;
       }
 
@@ -976,6 +977,98 @@ JSStubGen::GeneratePropSetter(ofstream *file,
 
   *file << buf;
 }
+
+static const char kCustomPropFuncBeginStr[] = "\n"
+"/***********************************************************************/\n"
+"//\n"
+"// %s Property %ster\n"
+"//\n"
+"PR_STATIC_CALLBACK(JSBool)\n"
+"%s%s%ster(JSContext *cx, JSObject *obj, jsval id, jsval *vp)\n"
+"{\n"
+"  nsIDOM%s *a = (nsIDOM%s*)nsJSUtils::nsGetNativeThis(cx, obj);\n"
+"\n"
+"  // If there's no private data, this must be the prototype, so ignore\n"
+"  if (nsnull == a) {\n"
+"    return JS_TRUE;\n"
+"  }\n"
+"\n"
+"  nsresult rv;\n"
+"  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
+"                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
+"  if (NS_FAILED(rv)) {\n"
+"    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
+"  }\n"
+"\n"
+"  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, %s);\n"
+"  if (NS_FAILED(rv)) {\n"
+"    return nsJSUtils::nsReportError(cx, obj, rv);\n"
+"  }\n" 
+"\n";
+
+static const char kCustomPropGetterFuncEndStr[] = "\n"
+"  return PR_TRUE;\n"
+"}\n";
+
+static const char kCustomPropSetterFuncEndStr[] = "\n"
+"  JS_DefineProperty(cx, obj, \"%s\", *vp, nsnull, nsnull, JSPROP_ENUMERATE);\n"
+"  return PR_TRUE;\n"
+"}\n";
+
+void     
+JSStubGen::GenerateCustomPropertyFuncs(IdlSpecification &aSpec)
+{
+  char buf[1024];
+  ofstream *file = GetFile();
+  IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
+  PRBool any = PR_FALSE;
+  static char* get_str = "Get";
+  static char* set_str = "Set";
+
+  int i, icount = aSpec.InterfaceCount();
+  for (i = 0; i < icount; i++) {
+    IdlInterface *iface = aSpec.GetInterfaceAt(i);
+    char iface_name[128];
+    char iface_name_upper[128];
+
+    strcpy(iface_name, iface->GetName());
+    strcpy(iface_name_upper, iface->GetName());
+    StrUpr(iface_name_upper);
+
+    int a, acount = iface->AttributeCount();
+    for (a = 0; a < acount; a++) {
+      IdlAttribute *attr = iface->GetAttributeAt(a);
+
+      if (attr->GetReplaceable()) {
+        char attr_name[128];
+        char attr_name_upper[128];
+        
+        strcpy(attr_name, attr->GetName());
+        strcpy(attr_name_upper, attr->GetName());
+        StrUpr(attr_name_upper);
+
+        sprintf(buf, kCustomPropFuncBeginStr, attr_name, 
+                get_str, iface_name, attr_name, get_str, 
+                iface_name, iface_name, iface_name_upper, attr_name_upper, 
+                "PR_FALSE");
+        *file << buf;
+
+        GeneratePropGetter(file, *iface, *attr, 
+            iface == primary_iface ? JSSTUBGEN_PRIMARY : JSSTUBGEN_NONPRIMARY);
+        *file << kCustomPropGetterFuncEndStr;
+        
+        sprintf(buf, kCustomPropFuncBeginStr, attr_name, 
+                set_str, iface_name, attr_name, set_str, 
+                iface_name, iface_name, iface_name_upper, attr_name_upper, 
+                "PR_TRUE");
+        *file << buf;
+        sprintf(buf, kCustomPropSetterFuncEndStr, attr_name);
+        *file << buf;
+      }
+    }
+  }
+}
+
 
 static const char kFinalizeStr[] = 
 "\n\n//\n"
@@ -1508,6 +1601,9 @@ static const char kPropSpecEntryStr[] =
 
 static const char kPropSpecReadOnlyStr[] = " | JSPROP_READONLY";
 
+static const char kPropSpecEntryReplaceableStr[] = 
+"  {\"%s\",    %s_%s,    JSPROP_ENUMERATE, %s%sGetter, %s%sSetter},\n";
+
 static const char kPropSpecEndStr[] = 
 "  {0}\n"
 "};\n";
@@ -1542,9 +1638,16 @@ JSStubGen::GenerateClassProperties(IdlSpecification &aSpec)
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
 
-      sprintf(buf, kPropSpecEntryStr, attr->GetName(),
-              iface_name, attr_name, 
-              attr->GetReadOnly() ? kPropSpecReadOnlyStr : "");
+      if (attr->GetReplaceable()) {
+        sprintf(buf, kPropSpecEntryReplaceableStr, attr->GetName(),
+                iface_name, attr_name, iface->GetName(), attr->GetName(),
+                iface->GetName(), attr->GetName());
+      }
+      else {
+        sprintf(buf, kPropSpecEntryStr, attr->GetName(),
+                iface_name, attr_name, 
+                attr->GetReadOnly() ? kPropSpecReadOnlyStr : "");
+      }
       *file << buf;
     }
   }

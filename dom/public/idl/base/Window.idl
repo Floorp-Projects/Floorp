@@ -9,8 +9,8 @@
         readonly attribute  History history;
         readonly attribute  Window parent;
         readonly attribute  Window top;
-        readonly attribute  Window content;
-        readonly attribute  xpidl nsISidebar sidebar;
+        readonly replaceable attribute  Window content;
+        readonly replaceable attribute  xpidl nsISidebar sidebar;
         readonly attribute  BarProp menubar;
         readonly attribute  BarProp toolbar;
         readonly attribute  BarProp locationbar;
@@ -20,7 +20,7 @@
         readonly attribute  BarProp directories;
         readonly attribute  boolean closed;
         readonly attribute  WindowCollection frames;
-		readonly attribute  xpidl nsIControllers controllers;
+		readonly replaceable attribute  xpidl nsIControllers controllers;
                  attribute  Window opener;
                  attribute  wstring status;
                  attribute  wstring defaultStatus;

@@ -947,6 +947,33 @@ void IdlScanner::RKeywords(char *aCurrentPos, Token *aToken)
       aToken->SetToken(RAISES_TOKEN);
     }
   }
+  else if (c != EOF && c == 'p' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'l' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'a' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'c' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'e' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'a' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'b' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'l' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'e' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(REPLACEABLE_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(REPLACEABLE_TOKEN);
+    }
+  }
   else {
     // it must be an identifier
     KeywordMismatch(c, aCurrentPos, aToken);
