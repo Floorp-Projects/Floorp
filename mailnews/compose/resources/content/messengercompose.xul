@@ -192,7 +192,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-			<menuitem value="&pasteAsQuotCmd.label;" disabled="true" accesskey="&pasteAsQuotCmd.accesskey;" oncommand="nsCmd:ComposeNYI"/>
+                        <menuitem id="menu_pasteQuote"/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>

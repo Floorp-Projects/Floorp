@@ -40,8 +40,6 @@
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
-<!ENTITY pasteAsQuotCmd.label ".Paste as Quotation">
-	<!ENTITY pasteAsQuotCmd.accesskey "Q">
 <!ENTITY findCmd.label ".Find">
 	<!ENTITY findCmd.key "F">
 	<!ENTITY findCmd.accesskey "F">
