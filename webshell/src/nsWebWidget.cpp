@@ -35,10 +35,6 @@
 #include "nsIStyleSheet.h"
 #include "nsWidgetsCID.h"
 #include "nsString.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
 #include "nsIDOMDocument.h"
 #include "nsIStyleContext.h"
@@ -59,7 +55,7 @@
   ((nsWebWidget*) ((char*)this - nsWebWidget::GetOuterOffset()))
 
 // Machine independent implementation portion of the web widget
-class WebWidgetImpl : public nsIWebWidget, public nsIScriptContextOwner {
+class WebWidgetImpl : public nsIWebWidget {
 public:
   WebWidgetImpl();
   ~WebWidgetImpl();
@@ -118,8 +114,6 @@ public:
   virtual void ShowFrameBorders(PRBool aEnable);
   virtual PRBool GetShowFrameBorders();
   virtual nsIWidget* GetWWWindow();
-  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
-  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument);
 
   NS_IMETHOD BindToDocument(nsISupports *aDoc, const char *aCommand);
@@ -142,8 +136,6 @@ private:
   nsILinkHandler* mLinkHandler;
   nsISupports* mContainer;
   nsIDocument* mDocument;
-  nsIScriptGlobalObject *mScriptGlobal;
-  nsIScriptContext* mScriptContext;
 
   nsVoidArray mChildren;
   //static nsIWebWidget* gRootWebWidget;
@@ -154,7 +146,6 @@ private:
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
-static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 //nsIWebWidget* WebWidgetImpl::gRootWebWidget = nsnull;
@@ -170,7 +161,6 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
   static NS_DEFINE_IID(kIDocumentWidgetIID, NS_IDOCUMENTWIDGET_IID);
   if (aIID.Equals(kIWebWidgetIID)) {
     *aInstancePtr = (void*)(nsIWebWidget*)this;
@@ -179,11 +169,6 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDocumentWidgetIID)) {
     *aInstancePtr = (void*)(nsIDocumentWidget*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptContextOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptContextOwner*)this;
     AddRef();
     return NS_OK;
   }
@@ -232,8 +217,6 @@ printf("del %d ", this);
 
   NS_IF_RELEASE(mUAStyleSheet);
 
-  NS_IF_RELEASE(mScriptContext);
-  NS_IF_RELEASE(mScriptGlobal);
   NS_IF_RELEASE(mDeviceContext);
 }
 
@@ -678,10 +661,6 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
     // Break circular reference first
     mPresShell->EndObservingDocument();
 
-    if (nsnull != mScriptGlobal) {
-      mScriptGlobal->SetNewDocument(nsnull);
-    }
-
     // Then release the shell
     NS_RELEASE(mPresShell);
     mPresShell = nsnull;
@@ -737,18 +716,6 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
 
   PRTime start = PR_Now();
 
-  if (nsnull != mScriptGlobal) {
-    nsIDOMDocument *domdoc;
-    GetDOMDocument(&domdoc);
-    if (nsnull != domdoc) {
-      mScriptGlobal->SetNewDocument(domdoc);
-      NS_RELEASE(domdoc);
-    }
-  }
-
-  // Set the script object owner to ourselves
-  doc->SetScriptContextOwner(this);
-  
   // Now load the document
   mPresShell->EnterReflowLock();
   doc->LoadURL(url, aListener, this, aPostData);
@@ -1076,45 +1043,6 @@ nsIWidget* WebWidgetImpl::GetWWWindow()
     NS_ADDREF(mWindow);
   }
   return mWindow;
-}
-
-nsresult WebWidgetImpl::GetScriptContext(nsIScriptContext **aContext)
-{
-  NS_PRECONDITION(nsnull != aContext, "null arg");
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptGlobal) {
-    res = NS_NewScriptGlobalObject(&mScriptGlobal);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    nsIDOMDocument *document;
-    res = GetDOMDocument(&document);
-    if (NS_OK != res) {
-      return res;
-    }
-    mScriptGlobal->SetNewDocument(document);
-    NS_RELEASE(document);
-  }
-
-  if (nsnull == mScriptContext) {
-    res = NS_CreateContext(mScriptGlobal, &mScriptContext);
-  }
-
-  if (NS_OK == res) {
-    *aContext = mScriptContext;
-    NS_ADDREF(mScriptContext);
-  }
-
-  return res;
-}
-
-nsresult WebWidgetImpl::ReleaseScriptContext(nsIScriptContext *aContext)
-{
-  NS_IF_RELEASE(aContext);
-
-  return NS_OK;
 }
 
 nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)

@@ -204,7 +204,7 @@ void nsWin32Viewer::ShowConsole(WindowData* aWinData)
       
       nsIScriptContextOwner *owner = nsnull;
       nsIScriptContext *context = nsnull;        
-      if (NS_OK == aWinData->observer->mWebWidget->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
+      if (NS_OK == aWinData->observer->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
         if (NS_OK == owner->GetScriptContext(&context)) {
 
           // create the console

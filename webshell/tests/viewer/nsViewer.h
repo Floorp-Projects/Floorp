@@ -28,8 +28,11 @@
 #include "nsString.h"
 #include "nsINetContainerApplication.h"
 #include "nsVoidArray.h"
+#include "nsIScriptContextOwner.h"
 
 class nsITextWidget;
+class nsIScriptContext;
+class nsIScriptGlobalObject;
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
@@ -49,7 +52,8 @@ class nsITextWidget;
 class DocObserver : public nsIDocumentObserver,
                     public nsIStreamObserver,
                     public nsILinkHandler,
-                    public nsIViewerContainer
+                    public nsIViewerContainer,
+                    public nsIScriptContextOwner
 {
 public:
   DocObserver(nsIWidget* aWindow, nsIWebWidget* aWebWidget);
@@ -101,6 +105,10 @@ public:
                         const nsString& aTargetSpec);
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
+  // nsIScriptContextOwner
+  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
+  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
+
   // nsIViewerContainer
   NS_IMETHOD Embed(nsIDocumentWidget* aDocViewer, 
                    const char* aCommand, 
@@ -115,6 +123,8 @@ public:
   nsIWebWidget* mWebWidget;
   nsIWidget* mWindowWidget;
   nsViewer* mViewer;
+  nsIScriptGlobalObject *mScriptGlobal;
+  nsIScriptContext* mScriptContext;
 
   nsIDocumentLoader* mDocLoader;
 
