@@ -50,6 +50,7 @@ pref("mailnews.attachments.display.largeView", false);
 pref("mail.pane_config.dynamic",            0);
 pref("mailnews.display.sanitizeJunkMail", true);
 pref("mail.standalone", true); 
+pref("editor.singleLine.pasteNewlines", 4);  // substitute commas for new lines in single line text boxes
 
 /////////////////////////////////////////////////////////////////
 // End seamonkey suite mailnews.js pref overrides
