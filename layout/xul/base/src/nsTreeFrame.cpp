@@ -19,6 +19,7 @@
 
 #include "nsTreeFrame.h"
 #include "nsIStyleContext.h"
+#include "nsIContent.h"
 #include "nsCSSRendering.h"
 #include "nsTreeCellFrame.h"
 #include "nsCellMap.h"
@@ -59,6 +60,8 @@ void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pF
 	ClearSelection(aPresContext);
 	mSelectedItems.AppendElement(pFrame);
 	pFrame->Select(aPresContext, PR_TRUE);
+
+  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
@@ -105,6 +108,8 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 		mSelectedItems.RemoveElementAt(inArray);
 		pFrame->Select(aPresContext, PR_FALSE);
 	}
+
+  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame)
@@ -145,6 +150,8 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 		mSelectedItems.AppendElement(pTreeCell);
 		pTreeCell->Select(aPresContext, PR_TRUE);
 	}
+
+  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
@@ -161,7 +168,7 @@ void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
 }
 
 void
-nsTreeFrame::RemoveFromSelection(nsTreeCellFrame* frame)
+nsTreeFrame::RemoveFromSelection(nsIPresContext& aPresContext, nsTreeCellFrame* frame)
 {
   PRInt32 count = mSelectedItems.Count();
   for (PRInt32 i = 0; i < count; i++)
@@ -173,6 +180,8 @@ nsTreeFrame::RemoveFromSelection(nsTreeCellFrame* frame)
       break;
     }
 	}
+
+  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
@@ -240,4 +249,19 @@ void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt3
 	// We now have the cell that should be selected. 
 	nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
 	SetSelection(aPresContext, pTreeCell);
+
+  FireChangeHandler(aPresContext);
 }
+
+void nsTreeFrame::FireChangeHandler(nsIPresContext& aPresContext)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
+
+  event.message = NS_FORM_CHANGE;
+  if (nsnull != mContent) {
+    mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  }
+}
+

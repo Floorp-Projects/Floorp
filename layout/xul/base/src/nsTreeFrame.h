@@ -31,17 +31,16 @@ public:
   void ClearSelection(nsIPresContext& presContext);
   void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame);
-  void RemoveFromSelection(nsTreeCellFrame* frame);
+  void RemoveFromSelection(nsIPresContext& aPresContext, nsTreeCellFrame* frame);
 
   void MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-//  using nsTableFrame::MoveTo;    // don't hide inherited::Move
   void MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame);
-     // NOTE: CWPro4 still reports a warning about hiding inherited virtual functions.
-     // Compiler bug, ignore it.
-     
+    
+  void FireChangeHandler(nsIPresContext& aPresContext);
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
