@@ -113,7 +113,7 @@
     <spring flex="100%"/>
   </menubar>
 
-<toolbox>
+<toolbox id="EditorToolbox">
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
   <toolbar id="EditToolbar" class="standard" persist="collapsed">

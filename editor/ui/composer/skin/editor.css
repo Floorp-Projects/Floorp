@@ -23,13 +23,14 @@
 @import url(chrome://global/skin/);
 
 iframe#content-frame { 
-  min-width: 100px; 
-  min-height: 20px;
+  min-width: 10px; 
+  min-height: 10px;
   height: 400px;
 } 
 
-toolbox#EditorToolbars {
-  min-width: 20px;
+
+toolbox#EditorToolbox {
+  min-width: 1px;
 }
 
 toolbar#FormatToolbar {
@@ -38,14 +39,15 @@ toolbar#FormatToolbar {
 
 /* A small "toolbar" below content, above status */
 box#DisplayModeBar {
-  padding: 0px;
+  padding:       0px;
   /* Same as "standard" toolbar background */
-  border-top: 1px solid #003366;
+  border-top:    1px solid #003366;
   border-bottom: 1px solid darkgray;
   margin-bottom: 0px;
-  min-width:1em;
-  color: white;
-	background-color: #999999;
+  min-width:     1px;
+  color:         white;
+  background-color: #999999;
+  overflow:      hidden;
 }
 
 toolbar#FormatToolbar titledbutton.format {
