@@ -1798,21 +1798,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         nsIStyleContext* undisplayedContext = nsnull;
         undisplayed->mStyle->GetPseudoType(pseudoTag);
         if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
-          
-          // DIAGNOSTIC CHECK: bug 118014 tracks a topcrash coming out of this call. The following
-          // code to discriminate beween HTML and non HTML is an attempt to better understand
-          // what kind of element is causing the crash, since it cannot so far be reproduced in a
-          // debugging environment. (temporary: 04.02.2002 attinasi@netscape.com)
-          nsIContent *theContent = undisplayed->mContent;
-          if (theContent->IsContentOfType(nsIContent::eHTML)) {
-            // HTML element
-            aPresContext->ResolveStyleContextFor(theContent, newContext, 
-                                                &undisplayedContext);
-          } else {
-            // non-HTML element (probably XUL)
-            aPresContext->ResolveStyleContextFor(theContent, newContext, 
-                                                 &undisplayedContext);
-          }
+          aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
+                                               &undisplayedContext);
         }
         else if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
           aPresContext->ResolveStyleContextForNonElement(newContext, 
