@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 #

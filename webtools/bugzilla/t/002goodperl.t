@@ -59,13 +59,8 @@ foreach my $file (@testitems) {
             ok(0, "$file is a module, but has a shebang");
             next;
         } elsif ($ext eq "cgi") {
-            # cgi files must be taint checked, but only the user-accessible
-            # ones have been checked so far
-            if ($file =~ m/^edit/) {
-                $flags = "w";
-            } else {
-                $flags = "wT";
-            }
+            # cgi files must be taint checked
+            $flags = "wT";
         } else {
             ok(0, "$file has shebang but unknown extension");
             next;
