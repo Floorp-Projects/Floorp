@@ -5132,12 +5132,17 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
     newSpec.BeginReading(urlStart);
     newSpec.EndReading(refEnd);
     
+    // hasAnchor is used to check if the new URI really has anchor
+    // We can't always scroll, it would break submitting a form that has
+    // same target page.
+    PRBool hasAnchor = PR_FALSE;
     PRInt32 hashNew = newSpec.FindChar(kHash);
     if (hashNew == 0) {
         return NS_OK;           // Strange URI
     }
     else if (hashNew > 0) {
         // found it
+        hasAnchor = PR_TRUE;
         urlEnd = urlStart;
         urlEnd.advance(hashNew);
         
@@ -5254,7 +5259,8 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
         }
     }
     else {
-        *aWasAnchor = PR_TRUE;
+        // Tell there was an anchor only if there really was one (bug 135679)
+        *aWasAnchor = hasAnchor;
     }
 
     return NS_OK;
