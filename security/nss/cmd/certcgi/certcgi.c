@@ -1796,7 +1796,7 @@ MakeNameConstraints(Pair             *data,
 	constraint = find_field(data, which, PR_TRUE);
 	if (constraint != NULL) {
 	    current = (CERTNameConstraint *) PORT_ZAlloc(sizeof(CERTNameConstraint));
-	    if (current = NULL) {
+	    if (current == NULL) {
 		error_allocate();
 	    }
 	}
@@ -1893,9 +1893,11 @@ AddAltName(void              *extHandle,
     if (issuerCert != NULL) {
 	CERT_DestroyCertificate(issuerCert);
     }
+#if 0
     if (arena != NULL) {
 	PORT_ArenaRelease (arena, mark);
     }
+#endif
     return rv;
 }
 
@@ -2408,7 +2410,8 @@ main(int argc, char **argv)
 					    NULL);
     if (encodedCertChain) {
 #if !defined(FILEOUT)
-	printf("Content-type: application/x-x509-user-cert\n\n");
+	printf("Content-type: application/x-x509-user-cert\r\n");
+	printf("Content-length: %d\r\n\r\n", encodedCertChain->len);
 	fwrite (encodedCertChain->data, 1, encodedCertChain->len, stdout);
 #else
 	fwrite (encodedCertChain->data, 1, encodedCertChain->len, outfile);
