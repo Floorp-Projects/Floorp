@@ -29,9 +29,11 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  ondraggesture="return TopLevelDrag(event);"
   align="vertical">
 
   <html:script src="chrome://bookmarks/content/bm-panel.js" />
+  <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
 
   <html:div style="width:100px;height:100px" flex="1">
 
@@ -42,6 +44,9 @@
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
       style="height: 100%; width:100%;"
       multiple="true"
+      ondragover="return DragOverTree(event);"
+      ondraggesture="return BeginDragTree(event);"
+      ondragdrop="return DropOnTree(event);"
       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
       onclick="return clicked(event, event.target.parentNode.parentNode)">
 

@@ -77,3 +77,39 @@ function OpenBookmarkURL(node, datasources)
   	}
 }
 
+
+function getAbsoluteID(root, node)
+{
+	var url = node.getAttribute("ref");
+	if ((url == null) || (url == ""))
+	{
+		url = node.getAttribute("id");
+	}
+	try
+	{
+		var rootNode = document.getElementById(root);
+		var ds = null;
+		if (rootNode)
+		{
+			ds = rootNode.database;
+		}
+
+		// add support for anonymous resources such as Internet Search results,
+		// IE favorites under Win32, and NetPositive URLs under BeOS
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf && ds)
+		{
+			var src = rdf.GetResource(url, true);
+			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+			var target = ds.GetTarget(src, prop, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target)	url = target;
+		}
+	}
+	catch(ex)
+	{
+	}
+	return(url);
+}
