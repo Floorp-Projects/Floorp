@@ -330,9 +330,7 @@ NS_IMETHODIMP nsChromeTreeOwner::GetTitle(PRUnichar** aTitle)
 
 NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const PRUnichar* aTitle)
 {
-   // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
-   // return mXULWindow->SetTitle(title.get());
-   return mXULWindow->nsXULWindow::SetTitle(aTitle);
+   return mXULWindow->SetTitle(aTitle);
 }
 
 //*****************************************************************************

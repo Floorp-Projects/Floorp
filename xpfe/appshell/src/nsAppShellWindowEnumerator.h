@@ -38,7 +38,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#include "nsIRDFResource.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIXULWindow.h"
 
@@ -53,7 +52,6 @@ struct nsWindowInfo
   nsWindowInfo(nsIXULWindow* inWindow, PRInt32 inTimeStamp);
   ~nsWindowInfo();
 
-  nsCOMPtr<nsIRDFResource>  mRDFID;
   nsCOMPtr<nsIXULWindow>    mWindow;
   PRInt32                   mTimeStamp;
 

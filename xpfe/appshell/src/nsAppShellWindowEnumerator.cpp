@@ -216,13 +216,13 @@ nsAppShellWindowEnumerator::nsAppShellWindowEnumerator (
   NS_INIT_REFCNT();
 
   mWindowMediator->AddEnumerator(this);
-  mWindowMediator->AddRef();
+  NS_ADDREF(mWindowMediator);
 }
 
 nsAppShellWindowEnumerator::~nsAppShellWindowEnumerator() {
 
   mWindowMediator->RemoveEnumerator(this);
-  mWindowMediator->Release();
+  NS_RELEASE(mWindowMediator);
 }
 
 // after mCurrentPosition has been initialized to point to the beginning

@@ -51,6 +51,8 @@ REQUIRES	= xpcom \
 		  pref \
 		  docshell \
 		  webshell \
+		  appshell \
+		  history \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
@@ -75,6 +77,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)search_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)timebomb_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -87,6 +90,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../search/src        \
 	-I$(srcdir)/../timebomb          \
 	-I$(srcdir)/../urlbarhistory/src \
+	-I$(srcdir)/../windowds \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

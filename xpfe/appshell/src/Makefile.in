@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  js \
 		  locale \
 		  webbrwsr \
-		  rdf \
 		  pref \
 		  xpconnect \
 		  intl \

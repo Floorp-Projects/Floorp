@@ -51,6 +51,7 @@
 #include "nsXPIDLString.h"
 #include "nsCharsetMenu.h"
 #include "nsFontPackageHandler.h"
+#include "nsWindowDataSource.h"
 #if defined(XP_WIN)
 #include "nsAlertsService.h" 
 #include "nsUrlWidget.h"
@@ -75,6 +76,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
@@ -184,6 +186,10 @@ static const nsModuleComponentInfo components[] = {
     { "nsFontPackageHandler", NS_FONTPACKAGEHANDLER_CID,
       "@mozilla.org/locale/default-font-package-handler;1",
       nsFontPackageHandlerConstructor },
+    { "nsWindowDataSource",
+      NS_WINDOWDATASOURCE_CID,
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
+      nsWindowDataSourceConstructor },
 #if defined(XP_WIN)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
       nsUrlWidgetConstructor },

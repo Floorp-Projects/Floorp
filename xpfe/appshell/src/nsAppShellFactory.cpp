@@ -41,7 +41,6 @@
 #include "nsAppShellCIDs.h"
 #include "nsICmdLineService.h"
 #include "nsIWindowMediator.h"
-#include "rdf.h"
 #include "nsAbout.h"
 #include "nsIGenericFactory.h"
 
@@ -85,11 +84,6 @@ static const nsModuleComponentInfo gAppShellModuleInfo[] =
   { "Window Mediator",
     NS_WINDOWMEDIATOR_CID,
     NS_WINDOWMEDIATOR_CONTRACTID,
-    nsWindowMediatorConstructor,
-  },
-  { "Window Mediator",
-    NS_WINDOWMEDIATOR_CID,
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
     nsWindowMediatorConstructor,
   },
   { "kAboutModuleCID",

@@ -345,8 +345,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId(NS_LITERAL_STRING("XULBrowserWindow"));
-   piDOMWindow->GetObjectProperty(xulBrowserWinId.get(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("XULBrowserWindow").get(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if (xulBrowserWindow)
