@@ -1441,13 +1441,6 @@ nsXULDocument::CreateElement(const nsAString& aTagName,
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
-
-    nsCOMPtr<nsIAtom> name, prefix;
-
-    name = do_GetAtom(aTagName);
-    NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
       char* tagCStr = ToNewCString(aTagName);
@@ -1459,24 +1452,12 @@ nsXULDocument::CreateElement(const nsAString& aTagName,
     }
 #endif
 
-    *aReturn = nsnull;
-
-    nsCOMPtr<nsINodeInfo> ni;
-
     // CreateElement in the XUL document defaults to the XUL namespace.
-    mNodeInfoManager->GetNodeInfo(name, prefix, kNameSpaceID_XUL,
+    nsCOMPtr<nsINodeInfo> ni;
+    mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_XUL,
                                   getter_AddRefs(ni));
 
-    nsCOMPtr<nsIContent> result;
-    rv = CreateElement(ni, getter_AddRefs(result));
-    if (NS_FAILED(rv)) return rv;
-
-    // get the DOM interface
-    rv = CallQueryInterface(result, aReturn);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
+    return nsDocument::CreateElement(ni, aReturn);
 }
 
 
@@ -2323,40 +2304,6 @@ nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
         }
     }
 
-    return NS_OK;
-}
-
-
-nsresult
-nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
-{
-    NS_ENSURE_ARG_POINTER(aNodeInfo);
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    nsresult rv;
-    nsCOMPtr<nsIContent> result;
-
-    if (aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
-        rv = nsXULElement::Create(aNodeInfo, getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(aNodeInfo->NamespaceID(),
-                          getter_AddRefs(elementFactory));
-
-        rv = elementFactory->CreateInstanceByTag(aNodeInfo,
-                                                 getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
-    }
-
-    result->SetContentID(mNextContentID++);
-
-    *aResult = result;
-    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
@@ -3419,6 +3366,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
     if (! aPrototype)
         return NS_ERROR_NULL_POINTER;
 
+    *aResult = nsnull;
     nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING

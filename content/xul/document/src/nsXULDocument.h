@@ -201,8 +201,6 @@ protected:
 
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
-    nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult);
-
     nsresult PrepareToLoad(nsISupports* aContainer,
                            const char* aCommand,
                            nsIChannel* aChannel,

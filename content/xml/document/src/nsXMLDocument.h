@@ -125,8 +125,6 @@ protected:
   virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
   virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
-  nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
-  
   virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
 
   nsresult SetDefaultStylesheets(nsIURI* aUrl);

@@ -118,6 +118,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsScriptEventManager.h"
 #include "nsIXPathEvaluatorInternal.h"
+#include "nsIElementFactory.h"
 
 #ifdef DEBUG
 #include "nsICharsetAlias.h"
@@ -4072,4 +4073,30 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
                               getter_Copies(mContentLanguage));
     }
   }
+}
+
+nsresult
+nsDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+  
+  PRInt32 namespaceID = aNodeInfo->NamespaceID();
+
+  nsCOMPtr<nsIElementFactory> elementFactory;
+  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
+                                                           getter_AddRefs(elementFactory));
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content;
+  if (elementFactory) {
+    rv = elementFactory->CreateInstanceByTag(aNodeInfo,
+                                             getter_AddRefs(content));
+  } else {
+    rv = NS_NewXMLElement(getter_AddRefs(content), aNodeInfo);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  content->SetContentID(mNextContentID++);
+
+  return CallQueryInterface(content, aResult);
 }
