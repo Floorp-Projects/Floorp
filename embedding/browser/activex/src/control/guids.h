@@ -28,6 +28,7 @@
 // Class IDs
 NS_EXTERN_IID(kEventQueueServiceCID);
 NS_EXTERN_IID(kHTMLEditorCID);
+NS_EXTERN_IID(kCookieServiceCID);
 
 // Interface IDs
 NS_EXTERN_IID(kIBrowserWindowIID);
