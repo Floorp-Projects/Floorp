@@ -81,9 +81,7 @@ public:
     
 protected:
     nsIThread*            mThread;
-#ifdef USE_POLLABLE_EVENT
     PRFileDesc*           mThreadEvent;
-#endif /* USE_POLLABLE_EVENT */
     PRLock*               mThreadLock;
     PRBool                mThreadRunning;
     

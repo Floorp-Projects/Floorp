@@ -49,6 +49,9 @@ CPPSRCS		= \
 		nsHTTPSHandler.cpp \
 		$(NULL)
 
+install:: $(TARGETS)
+	$(INSTALL) $(srcdir)/redirect.html $(DIST)/bin/res/errors
+
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk

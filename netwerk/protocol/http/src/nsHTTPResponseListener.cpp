@@ -223,8 +223,8 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mBodyBytesReceived (0),
                       mCompressHeaderChecked (PR_FALSE),
                       mChunkHeaderChecked (PR_FALSE),
-                      mPipelinedRequest (request),
-                      mDataReceived (PR_FALSE)
+                      mDataReceived (PR_FALSE),
+                      mPipelinedRequest (request)
 {
     nsHTTPRequest * req = nsnull;    
     mChannel -> mHTTPServerListener = this;
@@ -612,7 +612,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         // Ignore the return code, since the request is being completed...
         //
         mHeadersDone = PR_TRUE;
-        if (mResponse && mResponseDataListener) {
+        if (mResponse)  {
             FinishedResponseHeaders();
         }
     }

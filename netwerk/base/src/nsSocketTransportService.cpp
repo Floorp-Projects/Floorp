@@ -40,9 +40,7 @@ nsSocketTransportService::nsSocketTransportService ()   :
   PR_INIT_CLIST(&mWorkQ);
 
   mThread      = nsnull;
-#ifdef USE_POLLABLE_EVENT
   mThreadEvent = nsnull;
-#endif /* USE_POLLABLE_EVENT */
   mThreadLock  = nsnull;
 
   mSelectFDSet      = nsnull;
@@ -74,12 +72,11 @@ nsSocketTransportService::~nsSocketTransportService()
     mActiveTransportList = nsnull;
   }
 
-#ifdef USE_POLLABLE_EVENT
-  if (mThreadEvent) {
+  if (mThreadEvent)
+  {
     PR_DestroyPollableEvent(mThreadEvent);
     mThreadEvent = nsnull;
   }
-#endif /* USE_POLLABLE_EVENT */
 
   if (mThreadLock) {
     PR_DestroyLock(mThreadLock);
@@ -139,19 +136,14 @@ nsSocketTransportService::Init(void)
     }
   }
 
-#ifdef USE_POLLABLE_EVENT
   //
   // Create the pollable event used to immediately wake up the transport 
   // thread when it is blocked in PR_Poll(...)
   //
-  if (NS_SUCCEEDED(rv) && !mThreadEvent) {
+#ifdef USE_POLLABLE_EVENT
+  if (NS_SUCCEEDED(rv) && !mThreadEvent)
     mThreadEvent = PR_NewPollableEvent();
-    if (!mThreadEvent) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-#endif /* USE_POLLABLE_EVENT */
-
+#endif
   //
   // Create the synchronization lock for the transport thread...
   //
@@ -198,14 +190,9 @@ nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
   // all of the entries at once...
   //
   if (bFireEvent) {
-#ifdef USE_POLLABLE_EVENT
-    status = PR_SetPollableEvent(mThreadEvent);
-#else
-  //
-  // Need to break the socket transport thread out of the call to PR_Poll(...)
-  // since a new transport needs to be processed...
-  //
-#endif /* USE_POLLABLE_EVENT */
+    if (mThreadEvent)
+        status = PR_SetPollableEvent(mThreadEvent);
+
     if (PR_FAILURE == status) {
       rv = NS_ERROR_FAILURE;
     }
@@ -363,26 +350,30 @@ NS_IMETHODIMP
 nsSocketTransportService::Run(void)
 {
   PRIntervalTime pollTimeout;
-#ifdef USE_POLLABLE_EVENT
-  //
-  // Initialize the FDSET used by PR_Poll(...).  The first item in the FDSet
-  // is *always* the pollable event (ie. mThreadEvent).
-  //
-  mSelectFDSet[0].fd       = mThreadEvent;
-  mSelectFDSet[0].in_flags = PR_POLL_READ;
-  mSelectFDSetCount = 1;
-  pollTimeout = PR_MillisecondsToInterval (DEFAULT_POLL_TIMEOUT_IN_MS);
-#else
-  //
-  // For now, rather than breaking out of the call to PR_Poll(...) just set
-  // the time out small enough...
-  //
-  // This means that new transports will only be processed once a timeout
-  // occurs...
-  //
-  mSelectFDSetCount = 0;
-  pollTimeout = PR_MillisecondsToInterval(5);
-#endif /* USE_POLLABLE_EVENT */
+
+  if (mThreadEvent)
+  {
+    //
+    // Initialize the FDSET used by PR_Poll(...).  The first item in the FDSet
+    // is *always* the pollable event (ie. mThreadEvent).
+    //
+    mSelectFDSet[0].fd       = mThreadEvent;
+    mSelectFDSet[0].in_flags = PR_POLL_READ;
+    mSelectFDSetCount = 1;
+    pollTimeout = PR_MillisecondsToInterval (DEFAULT_POLL_TIMEOUT_IN_MS);
+  }
+  else
+  {
+    //
+    // For now, rather than breaking out of the call to PR_Poll(...) just set
+    // the time out small enough...
+    //
+    // This means that new transports will only be processed once a timeout
+    // occurs...
+    //
+    mSelectFDSetCount = 0;
+    pollTimeout = PR_MillisecondsToInterval(5);
+  }
 
   while (mThreadRunning) {
     nsresult rv;
@@ -437,27 +428,30 @@ nsSocketTransportService::Run(void)
           }
         }
         else {
-#ifdef USE_POLLABLE_EVENT
-          /* Process any pending operations on the mWorkQ... */
-          NS_ASSERTION(0 == i, "Null transport in active list...");
-          if (0 == i) {
-            //
-            // Clear the pollable event...  This call should *never* block since 
-            // PR_Poll(...) said that it had been fired...
-            //
-            NS_ASSERTION(!(mSelectFDSet[0].out_flags & PR_POLL_EXCEPT), 
+          if (mThreadEvent)
+          {
+            /* Process any pending operations on the mWorkQ... */
+            NS_ASSERTION(0 == i, "Null transport in active list...");
+            if (0 == i) {
+              //
+              // Clear the pollable event...  This call should *never* block since 
+              // PR_Poll(...) said that it had been fired...
+              //
+              NS_ASSERTION(!(mSelectFDSet[0].out_flags & PR_POLL_EXCEPT), 
                          "Exception on Pollable event.");
-            PR_WaitForPollableEvent(mThreadEvent);
+              PR_WaitForPollableEvent(mThreadEvent);
 
-            rv = ProcessWorkQ();
+              rv = ProcessWorkQ();
+            }
           }
-#else
-          //
-          // The pollable event should be the *only* null transport
-          // in the active transport list.
-          //
-          NS_ASSERTION(transport, "Null transport in active list...");
-#endif /* USE_POLLABLE_EVENT */
+          else
+          {
+            //
+            // The pollable event should be the *only* null transport
+            // in the active transport list.
+            //
+            NS_ASSERTION(transport, "Null transport in active list...");
+          }
         }
       //
       // Check to see if the transport has timed out...
@@ -478,10 +472,9 @@ nsSocketTransportService::Run(void)
       }
     } // end-for
 
-#ifndef USE_POLLABLE_EVENT
-    /* Process any pending operations on the mWorkQ... */
-    rv = ProcessWorkQ();
-#endif /* !USE_POLLABLE_EVENT */
+    if (!mThreadEvent)
+        /* Process any pending operations on the mWorkQ... */
+        rv = ProcessWorkQ();
   }
 
   return NS_OK;
@@ -582,12 +575,13 @@ nsSocketTransportService::Wakeup (nsIChannel* i_Transport)
 
     AddToWorkQ (transport);
 
-#ifdef USE_POLLABLE_EVENT
-    PR_SetPollableEvent (mThreadEvent);
-#else
+    if (mThreadEvent)
+        PR_SetPollableEvent (mThreadEvent);
+
+    // else
     // XXX/ruslan: normally we would call PR_Interrupt (), but since it did work
-    //  wait till NSPR fixes it one day
-#endif
+    // wait till NSPR fixes it one day
+
     return NS_OK;
 }
 
@@ -602,14 +596,15 @@ nsSocketTransportService::Shutdown(void)
     // Clear the running flag and wake up the transport thread...
     //
     mThreadRunning = PR_FALSE;
-#ifdef USE_POLLABLE_EVENT
-    status = PR_SetPollableEvent(mThreadEvent);
 
-    // XXX: what should happen if this fails?
-    NS_ASSERTION(PR_SUCCESS == status, "Unable to wake up the transport thread.");
-#else
-    status = PR_SUCCESS;
-#endif /* USE_POLLABLE_EVENT */
+    if (mThreadEvent)
+    {
+        status = PR_SetPollableEvent(mThreadEvent);
+        // XXX: what should happen if this fails?
+        NS_ASSERTION(PR_SUCCESS == status, "Unable to wake up the transport thread.");
+    }
+    else
+        status = PR_SUCCESS;
     
     // Wait for the transport thread to exit nsIRunnable::Run()
     if (PR_SUCCESS == status) {
