@@ -110,7 +110,8 @@ public:
     kOpSetTextProperty     = 3010,
     kOpRemoveTextProperty  = 3011,
     kOpHTMLPaste           = 3012,
-    kOpLoadHTML            = 3013
+    kOpLoadHTML            = 3013,
+    kOpResetTextProperties = 3014
   };
 
   enum ResizingRequestID
@@ -149,6 +150,16 @@ public:
 
   NS_IMETHOD ParseStyleAttrIntoCSSRule(const nsAString& aString,
                                        nsIDOMCSSStyleRule **_retval); 
+
+  NS_IMETHOD AddDefaultProperty(nsIAtom *aProperty, 
+                                const nsAString & aAttribute, 
+                                const nsAString & aValue);
+
+  NS_IMETHOD RemoveDefaultProperty(nsIAtom *aProperty, 
+                                   const nsAString & aAttribute, 
+                                   const nsAString & aValue);
+
+  NS_IMETHOD RemoveAllDefaultProperties();
 
   NS_IMETHOD SetCSSInlineProperty(nsIAtom *aProperty, 
                              const nsAString & aAttribute, 
@@ -646,7 +657,7 @@ protected:
                                           const nsAString   *aValue,
                                           PRBool            &aIsSet,
                                           nsIDOMNode       **aStyleNode,
-                                          nsAString *outValue = nsnull) const;
+                                          nsAString *outValue = nsnull);
 
   void ResetTextSelectionForRange(nsIDOMNode *aParent,
                                   PRInt32     aStartOffset,
@@ -781,6 +792,7 @@ protected:
                                 const nsAString *aAttribute,
                                 nsCOMPtr<nsIDOMNode> *outLeftNode = nsnull,
                                 nsCOMPtr<nsIDOMNode> *outRightNode = nsnull);
+  nsresult ApplyDefaultProperties();
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 
                              const nsAString *aAttribute, 
@@ -824,7 +836,8 @@ protected:
                              PRBool *aFirst, 
                              PRBool *aAny, 
                              PRBool *aAll,
-                             nsAString *outValue);
+                             nsAString *outValue,
+                             PRBool aCheckDefaults = PR_TRUE);
   nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass);
   nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag);
 
@@ -866,6 +879,9 @@ protected:
   nsStringArray mStyleSheetURLs;
   nsCOMArray<nsICSSStyleSheet> mStyleSheets;
   PRInt32 mNumStyleSheets;
+  
+  // an array for holding default style settings
+  nsVoidArray mDefaultStyles;
 
   // Maintain a static parser service ...
   static nsCOMPtr<nsIParserService> sParserService;

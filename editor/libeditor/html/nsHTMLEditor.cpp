@@ -217,6 +217,9 @@ nsHTMLEditor::~nsHTMLEditor()
 
   if (mHTMLCSSUtils)
     delete mHTMLCSSUtils;
+  
+  // free any default style propItems
+  RemoveAllDefaultProperties();
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditor, nsEditor)
@@ -4573,7 +4576,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
                                               const nsAString   *aValue, 
                                               PRBool            &aIsSet,
                                               nsIDOMNode       **aStyleNode,
-                                              nsAString *outValue) const
+                                              nsAString *outValue)
 {
   nsresult result;
   aIsSet = PR_FALSE;  // must be initialized to false for code below to work

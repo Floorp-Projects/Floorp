@@ -76,6 +76,7 @@ TypeInState::TypeInState() :
 ,mClearedArray()
 ,mRelativeFontSize(0)
 ,mLastSelectionOffset(0)
+,mIgnoreSelNotificationHACK(PR_FALSE)
 {
   Reset();
 }
@@ -100,6 +101,14 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
 
+  if (mIgnoreSelNotificationHACK)
+  {
+    // short circuit the notification if editor has warned us that bogus
+    // notification is coming.
+    mIgnoreSelNotificationHACK = PR_FALSE;
+    return NS_OK;
+  }
+  
   if (aSelection)
   {
     PRBool isCollapsed = PR_FALSE;
@@ -428,8 +437,8 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
 }
 
 PRBool TypeInState::FindPropInList(nsIAtom *aProp, 
-                                   const nsString &aAttr,
-                                   nsString *outValue,
+                                   const nsAString &aAttr,
+                                   nsAString *outValue,
                                    nsVoidArray &aList,
                                    PRInt32 &outIndex)
 {
@@ -455,7 +464,7 @@ PRBool TypeInState::FindPropInList(nsIAtom *aProp,
  *    PropItem: helper struct for TypeInState
  *******************************************************************/
 
-PropItem::PropItem(nsIAtom *aTag, const nsString &aAttr, const nsString &aValue) :
+PropItem::PropItem(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue) :
  tag(aTag)
 ,attr(aAttr)
 ,value(aValue)
