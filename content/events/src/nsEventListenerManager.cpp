@@ -1989,7 +1989,8 @@ nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
 
-  if (str.EqualsIgnoreCase("MutationEvent"))
+  if ((aEvent && aEvent->eventStructType == NS_MUTATION_EVENT) ||
+      (!aEvent && str.EqualsIgnoreCase("MutationEvent")))
     return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
   return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEventType, aEvent);
 }
