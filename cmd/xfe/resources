@@ -1315,6 +1315,7 @@
 *languageRegionList:				\n\
 	Afrikaans [af]				\n\
 	Albanian [sq]				\n\
+	Armenian [hy]				\n\
 	Basque [eu]				\n\
 	Bulgarian [bg]				\n\
 	Byelorussian [be]			\n\
@@ -2117,6 +2118,7 @@ Change character encoding of the current page
 *koi8rEncCmdString:			Cyrillic (KOI8-R)
 *88595EncCmdString:			Cyrillic (ISO-8859-5)
 *Win1251EncCmdString:		Cyrillic (Windows-1251)
+*armenianEncCmdString:		Armenian (ArmSCII-8)
 *greekEncCmdString:			Greek (ISO-8859-7)
 *Win1253EncCmdString:		Greek (Windows-1253)
 *88599EncCmdString:			Turkish (ISO-8859-9)
@@ -5377,6 +5379,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charsetlang*iso-8859-1:			Western
 *documentFonts.charsetlang*iso-8859-2:			Central European
 *documentFonts.charsetlang*iso-8859-5:			Cyrillic
+*documentFonts.charsetlang*armscii-8:			Armenian
 *documentFonts.charsetlang*iso-8859-7:			Greek
 *documentFonts.charsetlang*iso-8859-9:			Turkish
 *documentFonts.charsetlang*jis_x0201:			Japanese
@@ -5399,6 +5402,7 @@ from the network, or save to a file and then play from the file?
 !
 *documentFonts.charset*-:					x-ignore
 *documentFonts.charset*-ascii:					x-ignore
+*documentFonts.charset*armscii-8:				armscii-8
 *documentFonts.charset*-dingbats:				x-ignore
 *documentFonts.charset*-hiragana:				x-ignore
 *documentFonts.charset*-ibm pc:					x-ignore
@@ -5491,6 +5495,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*ksc5601.1987-0:				ks_c_5601-1987
 *documentFonts.charset*ksc5601.1987-1:				x-ksc5601-11
 *documentFonts.charset*misc-fontspecific:			x-ignore
+*documentFonts.charset*mswcyr-1:				windows-1251
 *documentFonts.charset*necjisx0208.1983-0:			x-ignore
 *documentFonts.charset*novanet-1:				x-ignore
 *documentFonts.charset*nwp-h:					x-ignore

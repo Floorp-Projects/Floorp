@@ -477,6 +477,7 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_CP_874       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_1257      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_1258      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_ARMSCII8     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       }
 };
 
 static unsigned char *fe_LocaleCharSets = NULL;

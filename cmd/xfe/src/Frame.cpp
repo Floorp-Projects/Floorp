@@ -378,6 +378,8 @@ MenuSpec XFE_Frame::encoding_menu_spec[] = {
 	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KOI8_R },
 	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1251 },
 	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_ARMSCII8 },
+	MENU_SEPARATOR,
 	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_7 },
 	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1253 },
 	MENU_SEPARATOR,

@@ -1557,6 +1557,9 @@ XFE_HTMLView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo*)
           case CS_8859_5:
             res = "88595EncCmdString";
             break;
+          case CS_ARMSCII8:
+            res = "armenianEncCmdString";
+            break;
           case CS_8859_7:
             res = "greekEncCmdString";
             break;
