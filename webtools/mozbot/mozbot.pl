@@ -738,24 +738,24 @@ sub create_pid_file
 	}
 
 sub slashdot
-	{
+{
 	return if (! defined $slashdot);
 	&debug ("fetching slashdot headlines");
 
-  my $output = get $slashdot;
+    $bot->schedule (3600, \&slashdot);
+    my $output = get $slashdot;
 	$last_slashdot = time;
-  return if (! $output);
-  my @sd = split /\n/, $output;
- 
-  @slashdot = ();
+    return if (! $output);
+    my @sd = split /\n/, $output;
 
-  foreach my $i (0 .. $#sd)
+    @slashdot = ();
+
+    foreach my $i (0 .. $#sd)
     {
-    push @slashdot, $sd[$i+1] if ($sd[$i] eq "%%" && $i != $#sd);
+        push @slashdot, $sd[$i+1] if ($sd[$i] eq "%%" && $i != $#sd);
     }
 	push @slashdot, "last updated: " . &logdate ($last_slashdot);
-  $bot->schedule (3600, \&slashdot);
-  }
+}
 
 # fetches headlines from mozillaZine
 #
