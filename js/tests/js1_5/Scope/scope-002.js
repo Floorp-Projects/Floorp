@@ -62,7 +62,7 @@ addThis();
 
 
 
-// TEST 2 
+// TEST 2
 function Car(make)
 {
   this.make = make;
@@ -75,14 +75,15 @@ function Car(make)
   }
 }
 
-var myCar = new Car(cnMake);
-myCar.paint();
 
+var myCar = new Car(cnMake);
 status = 'Section 3 of test';
 actual = myCar.make;
 expect = cnMake;
 addThis();
 
+
+myCar.paint();
 status = 'Section 4 of test';
 actual = myCar.color;
 expect = cnColor;
