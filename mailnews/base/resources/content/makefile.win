@@ -75,6 +75,7 @@ CHROME_CONTENT = \
 	.\mailMessengerOverlay.xul \
 	.\mailMessengerComposeOverlay.xul \
 	.\mailOverlay.xul \
+	.\mailWidgets.xml \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
