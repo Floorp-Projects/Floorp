@@ -2596,7 +2596,11 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       NS_IF_RELEASE(gLastFocusedContent);
       gLastFocusedContent = mCurrentFocus;
       NS_IF_ADDREF(gLastFocusedContent);
-      aContent = nsnull;
+      //If this notification was for focus alone then get rid of aContent
+      //ref to avoid unnecessary notification.
+      if (!(aState & ~NS_EVENT_STATE_FOCUS)) {
+        aContent = nsnull;
+      }
     } else {
       notifyContent[3] = gLastFocusedContent;
       NS_IF_ADDREF(gLastFocusedContent);
