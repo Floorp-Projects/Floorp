@@ -748,6 +748,13 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
 
 NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
 {
+  /* lazily instantiate an about:blank document if necessary, and if we have
+     what it takes to do so. Note that domdoc here is the same thing as
+     our mDocument, but we don't have to explicitly set the member variable
+     because the docshell has already called SetNewDocument(). */
+  if (!mDocument && mDocShell)
+    nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(mDocShell));
+
   *aDocument = mDocument;
   NS_IF_ADDREF(*aDocument);
   return NS_OK;
