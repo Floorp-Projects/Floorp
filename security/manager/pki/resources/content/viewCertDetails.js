@@ -62,21 +62,30 @@ function AddCertChain(node, chain)
 
 function setWindowName()
 {
-  myName = self.name;
-  var windowReference=document.getElementById('certDetails');
-  windowReference.setAttribute("title","Certificate Detail: \""+myName+"\"");
-
-  //  Get the token
-  //  XXX ignore this for now.  NSS will find the cert on a token
-  //      by "tokenname:certname", which is what we have.
-  //var tokenName = "";
-  //var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
-  //var token = pk11db.findTokenByName(tokenName);
-
   //  Get the cert from the cert database
   var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  //var cert = certdb.getCertByNickname(token, myName);
-  var cert = certdb.getCertByNickname(null, myName);
+
+  //  See if the caller tried to open this window with the 
+  //  cert's keyDB.
+  var cert = certdb.getCertByKeyDB(self.name);
+  var windowReference=document.getElementById('certDetails');
+
+  if (cert == null) {
+    myName = self.name;
+    windowReference.setAttribute("title","Certificate Detail: \""+myName+"\"");
+    //  Get the token
+    //  XXX ignore this for now.  NSS will find the cert on a token
+    //      by "tokenname:certname", which is what we have.
+    //var tokenName = "";
+    //var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
+    //var token = pk11db.findTokenByName(tokenName);
+
+    //var cert = certdb.getCertByNickname(token, myName);
+    cert = certdb.getCertByNickname(null, myName);
+  } else {
+    windowReference.setAttribute("title", 
+                                 "Certificate Detail: \""+cert.windowTitle+'"');
+  }
 
   //
   //  Set the cert attributes for viewing

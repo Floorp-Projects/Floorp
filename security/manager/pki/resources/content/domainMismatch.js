@@ -28,13 +28,13 @@ const nsIX509Cert         = Components.interfaces.nsIX509Cert;
 
 var pkiParams;
 var dialogParams;
-
+var cert;
 
 function onLoad()
 {
   pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
   var isupport = pkiParams.getISupportAtIndex(1);
-  var cert     = isupport.QueryInterface(nsIX509Cert);
+  cert     = isupport.QueryInterface(nsIX509Cert);
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
   var connectURL = dialogParams.GetString(1); 
 
@@ -52,6 +52,8 @@ function onLoad()
 
 function viewCert()
 {
+  window.openDialog('chrome://pippki/content/viewCertDetails.xul', cert.dbKey,
+                    'chrome,width=500,height=400,resizable=1');  
 }
 
 function doOK()

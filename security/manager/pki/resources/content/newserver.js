@@ -28,6 +28,7 @@ const nsIX509Cert         = Components.interfaces.nsIX509Cert;
 
 var dialogParams;
 var pkiParams;
+var cert;
 
 
 function onLoad()
@@ -36,7 +37,7 @@ function onLoad()
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
   var isupport = pkiParams.getISupportAtIndex(1); 
-  var cert = isupport.QueryInterface(nsIX509Cert);
+  cert = isupport.QueryInterface(nsIX509Cert);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
   var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
@@ -64,4 +65,10 @@ function doCancel()
 {
   dialogParams.SetInt(1,0);
   window.close();
+}
+
+function viewCert()
+{
+  window.openDialog('chrome://pippki/content/viewCertDetails.xul', cert.dbKey,
+                    'chrome,width=500,height=400,resizable=1'); 
 }

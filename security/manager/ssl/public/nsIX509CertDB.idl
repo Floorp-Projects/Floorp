@@ -54,6 +54,15 @@ interface nsIX509CertDB : nsISupports {
                                 in wstring aNickname);
 
   /*
+   * getCertByKeyDB
+   *
+   * Will find a certificate based on its dbkey
+   * retrieved by getting the dbKey attribute of
+   * the certificate.
+   */
+  nsIX509Cert getCertByKeyDB(in string dbkey);
+
+  /*
    * getCertificateList
    *
    * Obtain a list of certificates from the database.

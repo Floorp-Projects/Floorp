@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.4 2001/03/21 01:27:04 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.5 2001/03/21 03:37:49 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -60,6 +60,7 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 #define PIP_PKCS12_TMPFILENAME ".p12tmp"
 
+#if 0
 /* XXX temporary -- allows login to slot */
 char * 
 pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg)
@@ -74,23 +75,24 @@ pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg)
     return NULL;
   }
   tokenName = NS_ConvertUTF8toUCS2(PK11_GetTokenName(slot)).get();
-  nsCOMPtr<nsIInterfaceRequestor> uiContext = new PipUIContext();
   nsCOMPtr<nsITokenPasswordDialogs> tokenDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(tokenDialogs), 
                        NS_GET_IID(nsITokenPasswordDialogs));
   if (NS_FAILED(rv))
     return NULL;
-  rv = tokenDialogs->GetPassword(uiContext, tokenName, &password, &canceled);
+  rv = tokenDialogs->GetPassword(mUIContext, tokenName, &password, &canceled);
   if (NS_FAILED(rv) || canceled)
     return NULL;
   const char *pass = NS_ConvertUCS2toUTF8(password).get();
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("password is: \"%s\"\n", pass));
   return PL_strdup(pass);
 }
+#endif
 
-nsPKCS12Blob::nsPKCS12Blob() : mCertArray(nsnull), mToken(nsnull)
+nsPKCS12Blob::nsPKCS12Blob()
 {
   __mTmpFilePath = NULL;
+  mUIContext = new PipUIContext();
 }
 
 nsPKCS12Blob::~nsPKCS12Blob()
@@ -132,17 +134,15 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   if (!mToken)
     SetToken(NULL); // uses internal slot
   // XXX fix this later by getting it from mToken
-  int count = 0;
   slot = PK11_GetInternalKeySlot();
   if (PK11_NeedLogin(slot)) {
     PK11_Logout(slot);
   }
-  nsCOMPtr<nsIInterfaceRequestor>uiContext = new PipUIContext();
-  rv = setPassword(slot, uiContext);
+  rv = setPassword(slot, mUIContext);
   if (NS_FAILED(rv))
     goto finish;
       
-  PK11_Authenticate(slot, PR_TRUE, &count);
+  PK11_Authenticate(slot, PR_TRUE, mUIContext);
 #if 0
   // init slot
   rv = mToken->Login(PR_TRUE);
@@ -265,9 +265,8 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file)
   if (!mToken)
     SetToken(NULL); // uses internal slot
   // XXX fix this later by getting it from mToken
-  int count = 0;
   slot = PK11_GetInternalKeySlot();
-  PK11_Authenticate(slot, PR_TRUE, &count);
+  PK11_Authenticate(slot, PR_TRUE, mUIContext);
 #if 0
   // init slot
   rv = mToken->Login(PR_TRUE);
@@ -400,13 +399,12 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
   nsresult rv = NS_OK;
   PRUnichar *password;
   PRBool canceled;
-  nsCOMPtr<nsIInterfaceRequestor> uiContext = new PipUIContext();
   nsCOMPtr<nsICertificateDialogs> certDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
                        NS_GET_IID(nsICertificateDialogs));
   if (NS_FAILED(rv)) return rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got dialog"));
-  rv = certDialogs->SetPKCS12FilePassword(uiContext, &password, &canceled);
+  rv = certDialogs->SetPKCS12FilePassword(mUIContext, &password, &canceled);
   if (NS_FAILED(rv) || canceled) return rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got pass"));
 #ifdef DEBUG_mcgreer
@@ -427,13 +425,12 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
   nsresult rv = NS_OK;
   PRUnichar *password;
   PRBool canceled;
-  nsCOMPtr<nsIInterfaceRequestor> uiContext = new PipUIContext();
   nsCOMPtr<nsICertificateDialogs> certDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
                        NS_GET_IID(nsICertificateDialogs));
   if (NS_FAILED(rv)) return rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got dialog"));
-  rv = certDialogs->GetPKCS12FilePassword(uiContext, &password, &canceled);
+  rv = certDialogs->GetPKCS12FilePassword(mUIContext, &password, &canceled);
   if (NS_FAILED(rv) || canceled) return rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got pass"));
 #ifdef DEBUG_mcgreer
