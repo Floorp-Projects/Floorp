@@ -40,7 +40,7 @@
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
                          anonid="button" flex="1" allowevents="true"
-                         xbl:inherits="disabled,crop,image,label,accessKey,command,
+                         xbl:inherits="disabled,crop,image,label,accesskey,command,
                                        align,dir,pack,orient,toolbarmode,buttonstyle"/>
       <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
                       xbl:inherits="align,dir,pack,orient,disabled,toolbarmode,buttonstyle"/>
