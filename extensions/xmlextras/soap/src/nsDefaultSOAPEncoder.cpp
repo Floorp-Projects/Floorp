@@ -43,6 +43,7 @@
 #include "nsReadableUtils.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
+#include "nsPrintfCString.h"
 
 NS_NAMED_LITERAL_STRING(kEmpty,"");
 
@@ -520,6 +521,11 @@ NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
         if (NS_FAILED(rc)) return rc;\
         value.Append(nsSOAPUtils::kQualifiedSeparator);\
         value.Append(k##SOAPType##SchemaType);\
+        if (count) { \
+          value.Append(NS_LITERAL_STRING("[") + \
+                       NS_ConvertUTF8toUCS2(nsPrintfCString("%d", count)) + \
+                       NS_LITERAL_STRING("]")); \
+        } \
         rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);\
         if (NS_FAILED(rc)) return rc;\
 	XPType* values = NS_STATIC_CAST(XPType*, array);\
