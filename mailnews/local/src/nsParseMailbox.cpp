@@ -1247,8 +1247,10 @@ int nsParseMailMessageState::FinalizeHeaders()
         ch = PL_strchr(recipient->value, ',');
         if (ch)
         {
-          *ch = 0;
-          recipient->length = strlen(recipient->value);
+          /* generate a new string that terminates before the , */
+          nsCAutoString firstGroup;
+          firstGroup.Assign(recipient->value, ch - recipient->value);
+          m_newMsgHdr->SetRecipients(firstGroup.get());
         }
         m_newMsgHdr->SetRecipients(recipient->value);
       }
@@ -1317,11 +1319,16 @@ int nsParseMailMessageState::FinalizeHeaders()
         /* Take off <> around message ID. */
         if (id->value[0] == '<')
           id->value++, id->length--;
-        if (id->value[id->length-1] == '>')
-          ((char *) id->value) [id->length-1] = 0, id->length--; /* #### const */
-        
-        m_newMsgHdr->SetMessageId(id->value);
-        
+
+        if (id->value[id->length-1] == '>') {
+          /* generate a new null-terminated string without the final > */
+          nsCAutoString rawMsgId;
+          rawMsgId.Assign(id->value, id->length - 1);
+          m_newMsgHdr->SetMessageId(rawMsgId.get());
+        } else {
+          m_newMsgHdr->SetMessageId(id->value);
+        }
+
         if (!mozstatus && statush)
         {
           /* Parse a little bit of the Berkeley Mail status header. */
@@ -1378,8 +1385,15 @@ int nsParseMailMessageState::FinalizeHeaders()
                 end++;
               if (*charset)
               {
-                *end = '\0';
-                m_newMsgHdr->SetCharset(charset);
+                if (*end != '\0') {
+                  // if we're not at the very end of the line, we need
+                  // to generate a new string without the trailing crud
+                  nsCAutoString rawCharSet;
+                  rawCharSet.Assign(charset, end - charset);
+                  m_newMsgHdr->SetCharset(rawCharSet.get());
+                } else {
+                  m_newMsgHdr->SetCharset(charset);
+                }
               }
             }
           }
