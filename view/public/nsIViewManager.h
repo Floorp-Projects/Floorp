@@ -149,7 +149,7 @@ public:
    * @param event event to dispatch
    * @result event handling status
    */
-  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus& aStatus) = 0;
+  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus) = 0;
 
   /**
    * Used to grab/capture all mouse events for a specific view,

@@ -65,7 +65,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
     nsIViewManager    *vm;
 
     view->GetViewManager(vm);
-    vm->DispatchEvent(aEvent, result);
+    vm->DispatchEvent(aEvent, &result);
     NS_RELEASE(vm);
   }
 
@@ -778,8 +778,9 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region,
 }
 
 NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
-                                    nsEventStatus &aStatus, PRBool& aHandled)
+                                    nsEventStatus* aStatus, PRBool& aHandled)
 {
+  NS_ENSURE_ARG_POINTER(aStatus);
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
 
@@ -790,10 +791,10 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   if (NS_FAILED(mViewManager->GetViewObserver(obs)))
     obs = nsnull;
 
-  aStatus = nsEventStatus_eIgnore;
+  *aStatus = nsEventStatus_eIgnore;
 
   //see if any of this view's children can process the event
-  if (aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN)) {
+  if (*aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN)) {
     PRInt32 numkids;
     nsRect  trect;
     nscoord x, y;
