@@ -25,6 +25,7 @@
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
+#include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
@@ -32,6 +33,13 @@
 #include "nsMenuBarFrame.h"
 #include "nsIView.h"
 #include "nsIWidget.h"
+#include "nsIDocument.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMElement.h"
+#include "nsISupportsArray.h"
+#include "nsIDOMText.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -76,7 +84,12 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                  
   *aInstancePtr = NULL;
-  if (aIID.Equals(nsITimerCallback::GetIID())) {                           
+  if (aIID.Equals(nsIAnonymousContentCreator::GetIID())) {                           
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  else if (aIID.Equals(nsITimerCallback::GetIID())) {                           
     *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -88,7 +101,7 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
-:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull)
+:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull), mPresContext(nsnull)
 {
 
 } // cntr
@@ -100,6 +113,8 @@ nsMenuFrame::Init(nsIPresContext&  aPresContext,
                      nsIStyleContext* aContext,
                      nsIFrame*        aPrevInFlow)
 {
+  mPresContext = &aPresContext; // Don't addref it.  Our lifetime is shorter.
+
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // Set our menu parent.
@@ -224,7 +239,8 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() &&
            mMenuParent) {
     // The menu item was invoked and can now be dismissed.
-    // XXX Execute the execute event handler.
+    // Execute the execute event handler.
+    Execute();
     mMenuParent->DismissChain();
   }
   else if (aEvent->message == NS_MOUSE_EXIT) {
@@ -315,7 +331,10 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
 
   if (aActivateFlag) {
-    // XXX Execute the oncreate handler
+    // Execute the oncreate handler
+    if (!OnCreate())
+      return;
+
     // Sync up the view.
     PRBool onMenuBar = PR_TRUE;
     if (mMenuParent)
@@ -340,7 +359,10 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   }
   else {
     // Close the menu. 
-    // XXX Execute the ondestroy handler
+    // Execute the ondestroy handler
+    if (!OnDestroy())
+      return;
+
     mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
     if (child)
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
@@ -412,6 +434,41 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   return rv;
 }
 
+// Overridden Box method.
+NS_IMETHODIMP
+nsMenuFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+{
+  incrementalChild = nsnull;
+  nsresult rv = NS_OK;
+
+  // Dirty any children that need it.
+  nsIFrame* frame;
+  aReflowState.reflowCommand->GetNext(frame, PR_FALSE);
+
+  // Now call our original box frame method
+  rv = nsBoxFrame::Dirty(aReflowState, incrementalChild);
+  if (rv != NS_OK || incrementalChild)
+    return rv;
+
+  nsIFrame* popup = mPopupFrames.FirstChild();
+  if (popup && (frame == popup)) {
+    // An incremental reflow command is targeting something inside our
+    // hidden popup view.  We can't actually return the child, since it
+    // won't ever be found by box.  Instead return ourselves, so that box
+    // will later send us an incremental reflow command.
+    incrementalChild = this;
+
+    // In order for the child box to know what it needs to reflow, we need
+    // to call its Dirty method...
+    nsIFrame* ignore;
+    nsIBox* ibox;
+    if (NS_SUCCEEDED(popup->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
+      ibox->Dirty(aReflowState, ignore);
+  }
+
+  return rv;
+}
+
 void 
 nsMenuFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
@@ -447,8 +504,10 @@ nsMenuFrame::Enter()
 {
   if (!mMenuOpen) {
     // The enter key press applies to us.
-    // XXX Execute the event handler.
     if (!IsMenu() && mMenuParent) {
+      // Execute our event handler
+      Execute();
+
       // Close up the parent.
       mMenuParent->DismissChain();
     }
@@ -517,4 +576,273 @@ nsMenuFrame::IsDisabled()
   if (disabled == "true")
     return PR_TRUE;
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+{
+  // Create anonymous children only if the menu has no children or
+  // only has a menuchildren as its child.
+  nsCOMPtr<nsIDOMNode> dummyResult;
+  
+  PRInt32 childCount;
+  mContent->ChildCount(childCount);
+  PRBool createContent = PR_FALSE;
+  if (childCount == 0)
+    createContent = PR_TRUE;
+  else if (childCount == 1) {
+    // Figure out if our child is a menuchildren tag.
+    nsCOMPtr<nsIContent> childContent;
+    mContent->ChildAt(0, *getter_AddRefs(childContent));
+    nsCOMPtr<nsIAtom> tag;
+    childContent->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenuchildren)
+      createContent = PR_TRUE;
+  }
+
+  if (!createContent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDocument> idocument;
+  mContent->GetDocument(*getter_AddRefs(idocument));
+  nsCOMPtr<nsIDOMNSDocument> nsDocument(do_QueryInterface(idocument));
+  nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
+
+  nsString xulNamespace = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  nsString htmlNamespace = "http://www.w3.org/TR/REC-html40";  
+  nsCOMPtr<nsIAtom> classAtom = dont_AddRef(NS_NewAtom("class"));
+
+  nsCOMPtr<nsIDOMElement> node;
+  nsCOMPtr<nsIContent> content;
+
+  // Create the "menu-left" object. It's a titledbutton. Don't make this for menu bar items.
+  PRBool onMenuBar = PR_FALSE;
+  if (mMenuParent)
+    mMenuParent->IsMenuBar(onMenuBar);
+  
+  if (!onMenuBar) { // XXX Maybe we should make one for a .menubar-left class so that the option exists
+    nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
+    content = do_QueryInterface(node);
+    content->SetAttribute(kNameSpaceID_None, classAtom, "menu-left", PR_FALSE);
+    aAnonymousChildren.AppendElement(content);
+  }
+  
+  // Create the div object. Split the text based on our accesskey value and
+  // make a div that contains the before string, an underline node with the
+  // access key as a child, and the after string.
+  nsDocument->CreateElementWithNameSpace("div", htmlNamespace, getter_AddRefs(node));
+  content = do_QueryInterface(node);
+  aAnonymousChildren.AppendElement(content);
+  
+  nsString beforeString;
+  nsString accessString;
+  nsString afterString;
+  SplitOnShortcut(beforeString, accessString, afterString);
+  
+  // Create the before text node.
+  nsCOMPtr<nsIDOMText> beforeTextNode;
+  if (beforeString != "")
+    document->CreateTextNode(beforeString, getter_AddRefs(beforeTextNode));
+  
+  // Create the <html:u> element.
+  nsCOMPtr<nsIDOMElement> underlineElement;
+
+  if (accessString != "") {
+    nsDocument->CreateElementWithNameSpace("u", htmlNamespace, getter_AddRefs(underlineElement));
+ 
+    // Create the child of the <html:u> element and append it to the U element.
+    nsCOMPtr<nsIDOMText> accessTextNode;
+    document->CreateTextNode(accessString, getter_AddRefs(accessTextNode));
+    underlineElement->AppendChild(accessTextNode, getter_AddRefs(dummyResult));
+  }
+
+  // Create the after text node.
+  nsCOMPtr<nsIDOMText> afterTextNode;
+  if (afterString != "") {
+    document->CreateTextNode(afterString, getter_AddRefs(afterTextNode));
+  }
+
+  // Append the before, the underline, and the after to the div.
+  if (beforeTextNode)
+    node->AppendChild(beforeTextNode, getter_AddRefs(dummyResult));
+  if (underlineElement) 
+    node->AppendChild(underlineElement, getter_AddRefs(dummyResult));
+  if (afterTextNode)
+    node->AppendChild(afterTextNode, getter_AddRefs(dummyResult));
+
+  // Create a spring that serves as padding between the text and the
+  // accelerator.
+  nsDocument->CreateElementWithNameSpace("spring", xulNamespace, getter_AddRefs(node));
+  content = do_QueryInterface(node);
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100", PR_FALSE);
+  aAnonymousChildren.AppendElement(content);
+
+  // Build the accelerator out of the corresponding key node.
+  nsString accelString;
+  BuildAcceleratorText(accelString);
+  if (accelString != "") {
+    // Create the accelerator (it's a div)
+    nsDocument->CreateElementWithNameSpace("div", htmlNamespace, getter_AddRefs(node));
+    content = do_QueryInterface(node);
+    aAnonymousChildren.AppendElement(content);
+
+    nsCOMPtr<nsIDOMText> accelNode;
+    document->CreateTextNode(accelString, getter_AddRefs(accelNode));
+    node->AppendChild(accelNode, getter_AddRefs(dummyResult));
+  }
+
+  // Create the "menu-right" object.  It's a titledbutton.
+  if (!onMenuBar) { // XXX Maybe we should make one for a .menubar-right class so that the option exists
+    nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
+    content = do_QueryInterface(node);
+    content->SetAttribute(kNameSpaceID_None, classAtom, "menu-right", PR_FALSE);
+    aAnonymousChildren.AppendElement(content);
+  }
+
+  return NS_OK;
+}
+
+void 
+nsMenuFrame::SplitOnShortcut(nsString& aBeforeString, nsString& aAccessString, nsString& aAfterString)
+{
+  nsString value;
+  nsString accessKey;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+  
+  aBeforeString = value;
+  aAccessString = "";
+  aAfterString = "";
+
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+  if (accessKey == "") // Nothing to do. 
+    return;
+
+  // Find the index of the first occurrence of the accessKey
+  PRInt32 index = value.Find(accessKey, PR_TRUE);
+
+  if (index == -1) // Wasn't in there. Just return.
+    return;
+
+  // It was in the value string. Split based on the index.
+  value.Left(aBeforeString, index);
+  value.Mid(aAccessString, index, 1);
+  value.Right(aAfterString, value.Length()-index-1);
+}
+
+void 
+nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
+{
+  nsString accelText;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
+  if (accelText != "") {
+    // Just use this.
+    aAccelString = accelText;
+    return;
+  }
+
+  // See if we have a key node and use that instead.
+  nsString keyValue;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::key, keyValue);
+
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+
+  // Turn the document into a XUL document so we can use getElementById
+  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+  if (!xulDocument)
+    return;
+
+  nsCOMPtr<nsIDOMElement> keyElement;
+  xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
+  
+  if (!keyElement)
+    return;
+    
+  nsAutoString keyAtom("key");
+  nsAutoString shiftAtom("shift");
+	nsAutoString altAtom("alt");
+	nsAutoString commandAtom("command");
+  nsAutoString controlAtom("control");
+
+	nsString shiftValue;
+	nsString altValue;
+	nsString commandValue;
+  nsString controlValue;
+	nsString keyChar = " ";
+	
+	keyElement->GetAttribute(keyAtom, keyChar);
+	keyElement->GetAttribute(shiftAtom, shiftValue);
+	keyElement->GetAttribute(altAtom, altValue);
+	keyElement->GetAttribute(commandAtom, commandValue);
+  keyElement->GetAttribute(controlAtom, controlValue);
+	  
+  PRBool prependPlus = PR_FALSE;
+
+  if(commandValue != "") {
+    prependPlus = PR_TRUE;
+	  aAccelString += "Ctrl"; // Hmmm. Kinda defeats the point of having an abstraction.
+  }
+
+  if(controlValue != "") {
+    prependPlus = PR_TRUE;
+	  aAccelString += "Ctrl";
+  }
+
+  if(shiftValue != "") {
+    if (prependPlus)
+      aAccelString += "+";
+    prependPlus = PR_TRUE;
+    aAccelString += "Shift";
+  }
+
+  if (altValue != "") {
+	  if (prependPlus)
+      aAccelString += "+";
+    prependPlus = PR_TRUE;
+    aAccelString += "Alt";
+  }
+
+  keyChar.ToUpperCase();
+  if (keyChar != "") {
+    if (prependPlus)
+      aAccelString += "+";
+    prependPlus = PR_TRUE;
+    aAccelString += keyChar;
+  }
+}
+
+void
+nsMenuFrame::Execute()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_ACTION;
+  mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+}
+
+PRBool
+nsMenuFrame::OnCreate()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_CREATE;
+  nsresult rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+PRBool
+nsMenuFrame::OnDestroy()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_DESTROY;
+  nsresult rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+    return PR_FALSE;
+  return PR_TRUE;
 }

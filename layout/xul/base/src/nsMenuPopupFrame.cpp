@@ -134,6 +134,11 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   viewManager->GetRootView(rootView);
   viewManager->InsertChild(rootView, ourView, kMaxZ);
 
+  // XXX Hack. Change our transparency to be non-transparent
+  // until the bug related to update of transparency on show/hide
+  // is fixed.
+  viewManager->SetViewContentTransparency(ourView, PR_FALSE);
+
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
   ourView->SetZIndex(kMaxZ);

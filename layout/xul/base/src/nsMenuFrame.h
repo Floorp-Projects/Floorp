@@ -27,23 +27,28 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
+#include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsISupportsArray.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
 
-class nsMenuFrame : public nsBoxFrame, public nsITimerCallback
+class nsMenuFrame : public nsBoxFrame, public nsITimerCallback, public nsIAnonymousContentCreator
 {
 public:
   nsMenuFrame();
 
   NS_DECL_ISUPPORTS
+  
+  // The nsIAnonymousContentCreator interface
+  NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
   
   // The nsITimerCallback interface
   virtual void Notify(nsITimer *timer);
@@ -81,6 +86,7 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
 
   void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
@@ -105,12 +111,28 @@ public:
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 
+  // Called to split the accesskey attribute up based on the specified string.
+  void SplitOnShortcut(nsString& aBeforeString, nsString& aAccessString, nsString& aAfterString);
+
+  // Examines the key node and builds the accelerator.
+  void BuildAcceleratorText(nsString& aAccelString);
+
+  // Called to execute our "onaction" handler.
+  void Execute();
+
+  // Called as a hook just before the menu gets opened.
+  PRBool OnCreate();
+
+  // Called as a hook just before the menu goes away.
+  PRBool OnDestroy();
+
 protected:
   nsFrameList mPopupFrames;
   PRBool mIsMenu; // Whether or not we can even have children or not.
   PRBool mMenuOpen;
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
+  nsIPresContext* mPresContext; // Our pres context.
 }; // class nsMenuFrame
 
 #endif
