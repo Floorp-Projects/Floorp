@@ -64,33 +64,70 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 #define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                        \
 static NS_IMETHODIMP                                                          \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
-{                                                                             \
-    nsresult rv;                                                              \
-                                                                              \
-    _InstanceClass * inst;                                                    \
-                                                                              \
-    if (NULL == aResult) {                                                    \
-        rv = NS_ERROR_NULL_POINTER;                                           \
-        goto done;                                                            \
-    }                                                                         \
-    *aResult = NULL;                                                          \
-    if (NULL != aOuter) {                                                     \
-        rv = NS_ERROR_NO_AGGREGATION;                                         \
-        goto done;                                                            \
-    }                                                                         \
-                                                                              \
-    NS_NEWXPCOM(inst, _InstanceClass);                                        \
-    if (NULL == inst) {                                                       \
-        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
-        goto done;                                                            \
-    }                                                                         \
-    NS_ADDREF(inst);                                                          \
-    rv = inst->QueryInterface(aIID, aResult);                                 \
-    NS_RELEASE(inst);                                                         \
-                                                                              \
-  done:                                                                       \
-    return rv;                                                                \
-} 
+{                                                                               \
+    nsresult rv;                                                                \
+                                                                                \
+    _InstanceClass * inst;                                                      \
+                                                                                \
+    if (NULL == aResult) {                                                      \
+        rv = NS_ERROR_NULL_POINTER;                                             \
+        return rv;                                                              \
+    }                                                                           \
+    *aResult = NULL;                                                            \
+    if (NULL != aOuter) {                                                       \
+        rv = NS_ERROR_NO_AGGREGATION;                                           \
+        return rv;                                                              \
+    }                                                                           \
+                                                                                \
+    NS_NEWXPCOM(inst, _InstanceClass);                                          \
+    if (NULL == inst) {                                                         \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                            \
+        return rv;                                                              \
+    }                                                                           \
+    NS_ADDREF(inst);                                                            \
+    rv = inst->QueryInterface(aIID, aResult);                                   \
+    NS_RELEASE(inst);                                                           \
+                                                                                \
+    return rv;                                                                  \
+}                                                                               \
+
+
+#define NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(_InstanceClass, _InitMethod)        \
+static NS_IMETHODIMP                                                            \
+_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
+{                                                                               \
+    nsresult rv;                                                                \
+                                                                                \
+    _InstanceClass * inst;                                                      \
+                                                                                \
+    if (NULL == aResult) {                                                      \
+        rv = NS_ERROR_NULL_POINTER;                                             \
+        return rv;                                                              \
+    }                                                                           \
+    *aResult = NULL;                                                            \
+    if (NULL != aOuter) {                                                       \
+        rv = NS_ERROR_NO_AGGREGATION;                                           \
+        return rv;                                                              \
+    }                                                                           \
+                                                                                \
+    NS_NEWXPCOM(inst, _InstanceClass);                                          \
+    if (NULL == inst) {                                                         \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                            \
+        return rv;                                                              \
+    }                                                                           \
+	rv = inst->_InitMethod();                                               \
+    if(NS_FAILED(rv)) {                                                         \
+        NS_DELETEXPCOM(inst);                                                   \
+        return rv;                                                              \
+    }                                                                           \
+    NS_ADDREF(inst);                                                            \
+    rv = inst->QueryInterface(aIID, aResult);                                   \
+    NS_RELEASE(inst);                                                           \
+                                                                                \
+    return rv;                                                                  \
+}                                                                               \
+
+
 
 #define NS_DECL_MODULE(_class)                                                \
 class _class : public nsIModule {                                             \
