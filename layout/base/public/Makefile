@@ -27,12 +27,13 @@ EXPORTS =			\
 	nsIDocumentContainer.h	\
 	nsIDocumentObserver.h	\
 	nsIFrame.h		\
+	nsIFrameImageLoader.h	\
 	nsIPresContext.h	\
 	nsIPresShell.h		\
 	nsIRunaround.h		\
-	nsISelection.h	\
+	nsISelection.h		\
 	nsISpaceManager.h	\
-	nsStyleCoord.h	\
+	nsStyleCoord.h		\
 	nsIStyleContext.h	\
 	nsIStyleRule.h		\
 	nsIStyleSet.h		\
