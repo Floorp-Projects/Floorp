@@ -913,6 +913,11 @@ if [ "$MOZ_LEAKY" ]; then
     MAKEFILES_leaky="tools/leaky/Makefile"
 fi
 
+# tools/trace-malloc
+if [ "$NS_TRACE_MALLOC" ]; then
+    MAKEFILES_tracemalloc="tools/trace-malloc/Makefile"
+fi
+
 # layout/mathml
 if [ "$MOZ_MATHML" ]; then
     MAKEFILES_layout="$MAKEFILES_layout
@@ -1123,6 +1128,7 @@ $MAKEFILES_rdf
 $MAKEFILES_static_components
 $MAKEFILES_sun_java
 $MAKEFILES_themes
+$MAKEFILES_tracemalloc
 $MAKEFILES_uriloader
 $MAKEFILES_view
 $MAKEFILES_webshell
