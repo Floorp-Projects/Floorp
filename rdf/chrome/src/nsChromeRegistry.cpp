@@ -1180,12 +1180,16 @@ NS_IMETHODIMP nsChromeRegistry::SetLocale(const PRUnichar *aLocale,
 NS_IMETHODIMP nsChromeRegistry::SetDefaultSkin(const PRUnichar *aSkin,
                                                const PRUnichar *aPackageName)
 {
+  // XXX To do.
+  NS_ERROR("WRITE ME!\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeRegistry::SetDefaultLocale(const PRUnichar *aSkin,
                                                  const PRUnichar *aPackageName)
 {
+  // XXX To do.
+  NS_ERROR("WRITE ME!\n");
   return NS_OK;
 }
 
