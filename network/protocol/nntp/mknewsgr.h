@@ -15,10 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* functions to manage large numbers of USENET newsgroups
+
+/*
+ * functions to manage large numbers of USENET newsgroups
  * store them on disk, free them, search them, etc.
  *
- * Lou Montulli
  */
 
 #ifndef MKNEWSGR_H

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+ * Global NNTP-related functions and error conditions
+ */
+
 #ifndef MKNEWS_H
 #define MKNEWS_H
 
