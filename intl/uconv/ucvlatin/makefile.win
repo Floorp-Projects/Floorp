@@ -49,6 +49,7 @@ CPPSRCS =				\
 	nsISO885913ToUnicode.cpp	\
 	nsISO885914ToUnicode.cpp	\
 	nsISO885915ToUnicode.cpp	\
+	nsISO885916ToUnicode.cpp	\
 	nsISOIR111ToUnicode.cpp	\
 	nsCP1250ToUnicode.cpp		\
 	nsCP1251ToUnicode.cpp		\
@@ -108,6 +109,7 @@ CPPSRCS =				\
 	nsUnicodeToISO885913.cpp	\
 	nsUnicodeToISO885914.cpp	\
 	nsUnicodeToISO885915.cpp	\
+	nsUnicodeToISO885916.cpp	\
 	nsUnicodeToISOIR111.cpp	\
 	nsUnicodeToCP1250.cpp		\
 	nsUnicodeToCP1251.cpp		\
@@ -174,6 +176,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsISO885913ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO885914ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO885915ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO885916ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISOIR111ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1250ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1251ToUnicode.obj 		\
@@ -233,6 +236,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToISO885913.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO885914.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO885915.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO885916.obj		\
 	.\$(OBJDIR)\nsUnicodeToISOIR111.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1250.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1251.obj		\
