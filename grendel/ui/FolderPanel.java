@@ -755,7 +755,7 @@ public class FolderPanel extends GeneralPanel {
 
     DeleteMessageAction() {
       super("msgDelete");
-      setEnabled(false);
+      this.setEnabled(false);
     }
 
     public void actionPerformed(ActionEvent aEvent) {
@@ -866,7 +866,7 @@ public class FolderPanel extends GeneralPanel {
     boolean replyall;
     public ReplyAction(String aAction, boolean r) {
       super(aAction);
-      setEnabled(false);
+      this.setEnabled(false);
 
       replyall = r;
     }
@@ -895,7 +895,7 @@ public class FolderPanel extends GeneralPanel {
       super(aName);
       fScope = aScope;
 
-      setEnabled(aScope == kAll);
+      this.setEnabled(aScope == kAll);
     }
 
     public void actionPerformed(ActionEvent aEvent) {

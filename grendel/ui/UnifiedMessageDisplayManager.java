@@ -300,7 +300,6 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
-      System.out.println("Foo");
       splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
       
@@ -482,7 +481,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     String action;
     public LayoutAction(String aAction) {
       super(aAction);
-      setEnabled(true);
+      this.setEnabled(true);
       action = aAction;
       fIcon = new ImageIcon(getClass().getResource("images/" +
                                                    aAction + ".gif"));

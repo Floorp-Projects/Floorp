@@ -150,7 +150,7 @@ public class FolderCombo extends JComboBox {
         setText("");
       }
 
-      setEnabled(isEnabled);
+      this.setEnabled(isEnabled);
 
       if (aIsSelected) {
         setBackground(fHighlightColor);
