@@ -48,7 +48,7 @@ CPPSRCS =                              \
 
 REQUIRES = raptor plugin java xpcom netlib libplc21 oji
 
-LCFLAGS =-D_IMPL_NS_PLUGIN
+CFLAGS += -D_IMPL_NS_PLUGIN
 
 TARGETS = $(LIBRARY)
 
