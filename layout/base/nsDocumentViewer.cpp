@@ -515,9 +515,9 @@ void DocumentViewerImpl::PrepareToStartLoad()
 // Note: operator new zeros our memory, so no need to init things to null.
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   : mPresContext(aPresContext),
+    mHintCharsetSource(kCharsetUninitialized),
     mAllowPlugins(PR_TRUE),
-    mIsSticky(PR_TRUE),
-    mHintCharsetSource(kCharsetUninitialized)
+    mIsSticky(PR_TRUE)
 {
   PrepareToStartLoad();
 }
