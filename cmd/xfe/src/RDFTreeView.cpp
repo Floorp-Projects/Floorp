@@ -182,6 +182,7 @@ XFE_RDFTreeView::createTree()
 						 XmNheadingRows,			1,
 						 XmNvisibleRows,			14,
 						 XmNhideUnhideButtons,		True,
+                         XmNminColumnWidth,         6,
 						 NULL);
 	
 	XtVaSetValues(_tree, XmNcellAlignment, XmALIGNMENT_LEFT, NULL);
