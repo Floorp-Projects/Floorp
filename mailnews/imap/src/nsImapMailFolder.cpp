@@ -2899,7 +2899,7 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 		if(NS_FAILED(rv))
 			return rv;
 
-		nsFileSpec tempPath(path, PR_TRUE);	// create incoming directories.
+		nsFileSpec tempPath((const nsFileSpec &) path, PR_TRUE);	// create incoming directories.
 		//If that doesn't exist, then we have to create this directory
 		if(!path.IsDirectory())
 		{
