@@ -937,7 +937,7 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
         PRBool wasSelected = PR_FALSE;
         GetOptionSelected(viewIndex, &wasSelected);
         
-        if (wasSelected = PR_FALSE) {
+        if (wasSelected == PR_FALSE) {
           changed = PR_TRUE;
         }
       }
