@@ -85,7 +85,10 @@ nsImapMailFolder::nsImapMailFolder() :
     m_curMsgUid(0), m_nextMessageByteLength(0),
     m_urlRunning(PR_FALSE),
 	m_verifiedAsOnlineFolder(PR_FALSE),
-	m_explicitlyVerify(PR_FALSE) 
+	m_explicitlyVerify(PR_FALSE),
+    m_folderNeedsSubscribing(PR_FALSE),
+    m_folderNeedsAdded(PR_FALSE),
+    m_folderNeedsACLListed(PR_TRUE)
 {
     m_appendMsgMonitor = nsnull;	// since we're not using this (yet?) make it null.
 								// if we do start using it, it should be created lazily
@@ -3843,3 +3846,48 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsSubscribing(PRBool *bVal)
+{
+    if (!bVal)
+        return NS_ERROR_NULL_POINTER;
+    *bVal = m_folderNeedsSubscribing;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsSubscribing(PRBool bVal)
+{
+    m_folderNeedsSubscribing = bVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsACLListed(PRBool *bVal)
+{
+    if (!bVal)
+        return NS_ERROR_NULL_POINTER;
+    // *** jt -- come back later; still need to worry about if the folder
+    // itself is a namespace
+    *bVal = (m_folderNeedsACLListed && !(mFlags &
+                                         MSG_FOLDER_FLAG_IMAP_NOSELECT) 
+             /* && !GetFolderIsNamespace() */ );
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsACLListed(PRBool bVal)
+{
+    m_folderNeedsACLListed = bVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsAdded(PRBool *bVal)
+{
+    if (!bVal)
+        return NS_ERROR_NULL_POINTER;
+    *bVal = m_folderNeedsAdded;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsAdded(PRBool bVal)
+{
+    m_folderNeedsAdded = bVal;
+    return NS_OK;
+}

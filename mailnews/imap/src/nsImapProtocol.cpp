@@ -4586,11 +4586,15 @@ void nsImapProtocol::OnUnsubscribe(const char * sourceMailbox)
 
 void nsImapProtocol::RefreshACLForFolderIfNecessary(const char *mailboxName)
 {
-    if (m_folderNeedsACLRefreshed &&
-        GetServerStateParser().ServerHasACLCapability())
+    if (GetServerStateParser().ServerHasACLCapability())
     {
-        OnRefreshACLForFolder(mailboxName);
-        m_folderNeedsACLRefreshed = PR_FALSE;
+        if (!m_folderNeedsACLRefreshed && m_imapMailFolderSink)
+            m_imapMailFolderSink->GetFolderNeedsACLListed(&m_folderNeedsACLRefreshed);
+        if (m_folderNeedsACLRefreshed)
+        {
+            OnRefreshACLForFolder(mailboxName);
+            m_folderNeedsACLRefreshed = PR_FALSE;
+        }
     }
 }
 

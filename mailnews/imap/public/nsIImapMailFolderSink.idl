@@ -48,6 +48,9 @@
 [scriptable, uuid(3b2dd7e0-e72c-11d2-ab7b-00805f8ac968)]
 
 interface nsIImapMailFolderSink : nsISupports {
+    attribute boolean folderNeedsACLListed;
+    attribute boolean folderNeedsSubscribing;
+    attribute boolean folderNeedsAdded;
     string GetOnlineDelimiter();
     // Tell mail master about the newly selected mailbox
     void UpdateImapMailboxInfo(in nsIImapProtocol aProtocol,

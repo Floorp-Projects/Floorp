@@ -329,6 +329,10 @@ protected:
 	PRInt32 m_boxFlags;
 	nsCString m_onlineFolderName;
 	nsFileSpec *m_pathName;
+
+    PRBool m_folderNeedsSubscribing;
+    PRBool m_folderNeedsAdded;
+    PRBool m_folderNeedsACLListed;
 };
 
 #endif
