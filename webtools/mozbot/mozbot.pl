@@ -582,9 +582,10 @@ sub on_disconnected {
 }
 
 # on_join_channel: called when we join a channel
-sub on_join_channel: {
+sub on_join_channel {
     my ($self, $event) = @_;
     my ($nick, $channel) = $event->args;
+    $channel = lc($channel);
     push(@channels, $channel);
     &Configuration::Save($cfgfile, &configStructure(\@channels));
     &debug("joined $channel, about to autojoin modules...");
