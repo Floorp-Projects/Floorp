@@ -1,0 +1,12 @@
+interface Plugin {
+/* IID: { 0xf6134681, 0xf28b, 0x11d2, { 0x83, 0x60, 0xc9, 0x08, 0x99, 0x04, 0x9c, 0x3c } } */
+
+	readonly attribute DOMString			description;
+	readonly attribute DOMString			filename;
+	readonly attribute DOMString			name;
+
+
+	readonly attribute  unsigned long		length;
+	MimeType			                    item(in unsigned long index);
+	MimeType								namedItem(in DOMString name);
+};
