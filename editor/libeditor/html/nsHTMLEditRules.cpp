@@ -2169,7 +2169,14 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         leftNode = startNode;
       }
-      
+
+      // nothing to join
+      if (!leftNode || !rightNode)
+      {
+        *aCancel = PR_TRUE;
+        return NS_OK;
+      }
+
       // dont cross table boundaries
       PRBool bInDifTblElems;
       res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
