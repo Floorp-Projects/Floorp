@@ -68,6 +68,8 @@
 #include "nsIMailboxUrl.h"
 #include "nsMailboxUrl.h"
 #include "nsMailboxProtocol.h"
+#include "nsIUrlListener.h"
+#include "nsIUrlListenerManager.h"
 
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
@@ -78,6 +80,7 @@
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define LOCAL_DLL  "msglocal.dll"
+#define MAILNEWS_DLL "mailnews.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -85,12 +88,15 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define LOCAL_DLL  "msglocal.so"
+#define MAILNEWS_DLL "mailnewsbase.so"
 #endif
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
+static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
+
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -105,7 +111,12 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 /////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_URL_TYPE  "mailbox://"	
+#ifdef DEBUG_bienvenu
 #define	DEFAULT_MAILBOX_PATH "/c|/raptor/mozilla/bugsplat"
+#else
+#define DEFAULT_MAILBOX_PATH "/f|mozilla/mozilla/mailnews/public/makefile.win"
+#endif
+
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
@@ -149,9 +160,15 @@ static void strip_nonprintable(char *string) {
 // would be asked to process it....right now it is just Mailbox specific....
 ///////////////////////////////////////////////////////////////////////////////////
 
-class nsMailboxTestDriver
+class nsMailboxTestDriver : public nsIUrlListener
 {
 public:
+	NS_DECL_ISUPPORTS;
+
+	// nsIUrlListener support
+	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+
 	nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser);
 	virtual ~nsMailboxTestDriver();
 
@@ -182,17 +199,49 @@ protected:
 	nsIStreamListener	*m_mailboxParser;
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
+	PRBool	    m_runTestHarness;
 
 	void InitializeProtocol(const char * urlSpec);
     nsresult SetupUrl(char *group); 
 };
 
+nsresult nsMailboxTestDriver::OnStartRunningUrl(nsIURL * aUrl)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	m_runningURL = PR_TRUE;
+	return NS_OK;
+}
+
+nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	nsresult rv = NS_OK;
+	m_runningURL = PR_FALSE;
+	if (aUrl)
+	{
+		// query it for a mailnews interface for now....
+		nsIMsgMailNewsUrl * mailUrl = nsnull;
+		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::IID(), (void **) mailUrl);
+		if (NS_SUCCEEDED(rv))
+		{
+			mailUrl->UnRegisterListener(this);
+			NS_RELEASE(mailUrl);
+		}
+	}
+
+	return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(nsMailboxTestDriver, nsIUrlListener::IID())
+
 nsMailboxTestDriver::nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser)
 {
+	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_url = nsnull;
-	m_runningURL = PR_TRUE;
+	m_runningURL = PR_FALSE;
+	m_runTestHarness = PR_TRUE;
     m_eventQueue = queue;
 	
 	InitializeTestDriver(); // prompts user for initialization information...
@@ -215,13 +264,9 @@ nsresult nsMailboxTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
-	while (m_runningURL)
+	while (m_runTestHarness)
 	{
-		PRBool urlBusy = PR_FALSE;
-		if (m_url)
-			m_url->GetRunningUrlFlag(&urlBusy);
-
-		if (!urlBusy) // if we aren't running the url anymore, ask ueser for another command....
+		if (!m_runningURL) // if we aren't running the url anymore, ask ueser for another command....
 		{
 			NS_IF_RELEASE(m_url); // release the old one before we run a new one...
 			status = ReadAndDispatchCommand();
@@ -323,7 +368,7 @@ nsresult nsMailboxTestDriver::ListCommands()
 nsresult nsMailboxTestDriver::OnExit()
 {
 	printf("Terminating Mailbox test harness....\n");
-	m_runningURL = PR_FALSE; // next time through the test driver loop, we'll kick out....
+	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
 
@@ -345,7 +390,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	if (NS_SUCCEEDED(rv) && mailboxService)
 	{
 		nsIURL * url = nsnull;
-		mailboxService->ParseMailbox(filePath, m_mailboxParser, &url);
+		mailboxService->ParseMailbox(filePath, m_mailboxParser, this /* register self as url listener */, &url);
 		if (url)
 			url->QueryInterface(nsIMailboxUrl::IID(), (void **) &m_url);
 		NS_IF_RELEASE(url);
@@ -369,6 +414,7 @@ int main()
     nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterComponent(kCMailboxServiceCID, NULL, NULL, LOCAL_DLL, PR_FALSE, PR_FALSE);
+	nsRepository::RegisterComponent(kCUrlListenerManagerCID, nsnull, nsnull, MAILNEWS_DLL, PR_TRUE, PR_TRUE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
@@ -404,9 +450,10 @@ int main()
 	nsMailboxTestDriver * driver = new nsMailboxTestDriver(queue, mailboxParser);
 	if (driver)
 	{
+		NS_ADDREF(driver);
 		driver->RunDriver();
 		// when it kicks out...it is done....so delete it...
-		delete driver;
+		NS_RELEASE(driver);
 	}
 
 	// shut down:
