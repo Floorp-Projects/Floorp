@@ -449,7 +449,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
     
     case NS_THEME_TAB:
-      DrawTab(macRect, IsDisabled(aFrame), IsSelected(aFrame), PR_TRUE, IsBottomTab(aFrame), eventState);
+      DrawTab(macRect, IsDisabled(aFrame), IsSelectedTab(aFrame), PR_TRUE, IsBottomTab(aFrame), eventState);
       break;      
     case NS_THEME_TAB_PANELS:
       DrawTabPanel(macRect, IsDisabled(aFrame));
@@ -761,7 +761,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
   switch ( aWidgetType ) {
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
-    case NS_THEME_MENU:
+      //    case NS_THEME_MENU:     // no support for painting menu backgrounds
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
