@@ -1527,6 +1527,8 @@ print_td:
     case bltestDES_CBC:
     case bltestDES_EDE_ECB:
     case bltestDES_EDE_CBC:
+    case bltestAES_ECB:
+    case bltestAES_CBC:
     case bltestRC2_ECB:
     case bltestRC2_CBC:
     case bltestRC4:
