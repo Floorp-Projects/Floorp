@@ -46,10 +46,10 @@ static PRInt16 *g_EUCJPShiftTable[4] =  {
 };
 
 static PRUint16 *g_EUCJPMappingTable[4] = {
-    g_0208Mapping,
-    g_0201Mapping,
-    g_0201Mapping,
-    g_0212Mapping
+    g_ut0208Mapping,
+    g_ut0201Mapping,
+    g_ut0201Mapping,
+    g_ut0212Mapping
 };
 
 static uRange g_EUCJPRanges[] = {
@@ -83,7 +83,7 @@ NS_IMETHODIMP nsEUCJPToUnicode::GetMaxLength(const char * aSrc,
                                              PRInt32 aSrcLength, 
                                              PRInt32 * aDestLength)
 {
-  // we are a single byte to Unicode converter, so...
+  // worst case
   *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
+  return NS_OK;
 }

@@ -49,16 +49,28 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 extern "C" PRInt32 g_InstanceCount = 0;
 extern "C" PRInt32 g_LockCount = 0;
 
-extern "C" PRUint16 g_0201Mapping[] = {
+extern "C" PRUint16 g_ut0201Mapping[] = {
 #include "jis0201.ut"
 };
 
-extern "C" PRUint16 g_0208Mapping[] = {
+extern "C" PRUint16 g_ut0208Mapping[] = {
 #include "jis0208.ut"
 };
 
-extern "C" PRUint16 g_0212Mapping[] = {
+extern "C" PRUint16 g_ut0212Mapping[] = {
 #include "jis0212.ut"
+};
+
+extern "C" PRUint16 g_uf0201Mapping[] = {
+#include "jis0201.uf"
+};
+
+extern "C" PRUint16 g_uf0208Mapping[] = {
+#include "jis0208.uf"
+};
+
+extern "C" PRUint16 g_uf0212Mapping[] = {
+#include "jis0212.uf"
 };
 
 typedef nsresult (* fpCreateInstance) (nsISupports **);
