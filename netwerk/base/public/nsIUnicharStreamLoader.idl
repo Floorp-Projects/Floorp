@@ -54,4 +54,27 @@ interface nsIUnicharStreamLoader : nsISupports
     {0x93, 0xad, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+#include "nsIComponentManager.h"
+
+inline nsresult
+NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
+                          nsIURI* uri,
+                          nsILoadGroup* loadGroup,
+                          nsIUnicharStreamLoaderObserver* observer)
+{
+    nsresult rv;
+    nsCOMPtr<nsIUnicharStreamLoader> loader;
+    static NS_DEFINE_CID(kUnicharStreamLoaderCID, NS_UNICHARSTREAMLOADER_CID);
+    rv = nsComponentManager::CreateInstance(kUnicharStreamLoaderCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIUnicharStreamLoader),
+                                            getter_AddRefs(loader));
+    if (NS_FAILED(rv)) return rv;
+    rv = loader->Init(uri, loadGroup, observer);
+    if (NS_FAILED(rv)) return rv;
+    *result = loader;
+    NS_ADDREF(*result);
+    return rv;
+}
+
 %}

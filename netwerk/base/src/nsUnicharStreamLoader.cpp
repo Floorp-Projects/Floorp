@@ -24,9 +24,10 @@
 #include "nsCOMPtr.h"
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
 
-static NS_DEFINE_IID(kIStreamListenerIID,  NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIUnicharStreamLoaderIID,  NS_IUNICHARSTREAMLOADER_IID);
+static NS_DEFINE_CID(kIOServiceCID,  NS_IOSERVICE_CID);
 
 nsUnicharStreamLoader::nsUnicharStreamLoader()
   : mData(nsnull)
@@ -46,7 +47,17 @@ nsUnicharStreamLoader::Init(nsIURI* aURL, nsILoadGroup* aLoadGroup,
 ///  rv = mLoadGroup->AddChannel(channel, nsnull);
 ///  if (NS_FAILED(rv)) return;
 
-  rv = NS_OpenURI(this, nsnull, aURL, aLoadGroup);
+  NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIChannel* channel;
+  rv = serv->NewChannelFromURI("load", aURL, aLoadGroup, nsnull, 
+                               nsnull, &channel);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = channel->AsyncRead(0, -1, nsnull, this);
+  NS_RELEASE(channel);
+
   if (NS_FAILED(rv) && mObserver) {
     nsresult rv2 = mObserver->OnUnicharStreamComplete(this, rv, mData->GetUnicode());
     if (NS_FAILED(rv2))
