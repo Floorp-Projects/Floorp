@@ -94,6 +94,7 @@ bin\components\dom.xpt
 bin\components\editor.xpt
 bin\components\editor.dll
 bin\components\evntloop.dll
+bin\components\find.xpt
 bin\components\gfx.xpt
 bin\components\gfx2.xpt
 bin\components\gfx2.dll
