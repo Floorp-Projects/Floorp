@@ -41,6 +41,7 @@
 #include "nsIDOMScreen.h"
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
+#include "nsCOMPtr.h"
 
 class nsIDocShell;
 class nsIDeviceContext;
@@ -69,7 +70,7 @@ public:
 
 
 protected:
-	nsIDeviceContext* GetDeviceContext();
+	already_AddRefed<nsIDeviceContext> GetDeviceContext();
 	
   nsIDocShell* mDocShell; // Weak Reference
 };
