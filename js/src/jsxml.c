@@ -2324,7 +2324,8 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
             ns = XMLARRAY_MEMBER(decls, i, JSXMLNamespace);
             if (ns->prefix &&
                 JSSTRING_LENGTH(ns->prefix) == length &&
-                !memcmp(JSSTRING_CHARS(ns->prefix), cp, length)) {
+                !memcmp(JSSTRING_CHARS(ns->prefix), cp,
+                        length * sizeof(jschar))) {
                 if (!bp) {
                     newlength = length + 2 + (size_t) log10(n);
                     bp = (jschar *)
@@ -2545,7 +2546,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, JSXMLArray *ancestorNSes,
         /*
          * Create a namespace prefix that isn't used by any member of decls.
          * Assign the new prefix to a copy of ns.  Flag this namespace as if
-         * it were declared for assertion-testing's sake later below.
+         * it were declared, for assertion-testing's sake later below.
          */
         prefix = GeneratePrefix(cx, ns->uri, &ancdecls);
         if (!prefix)
@@ -2641,7 +2642,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, JSXMLArray *ancestorNSes,
     if (n == 0) {
         js_AppendCString(&sb, "/>");
     } else {
-        /* Steps 19 through 25: handle element tag content, and the end-tag. */
+        /* Steps 19 through 25: handle element content, and open the end-tag. */
         js_AppendChar(&sb, '>');
         indentKids = n > 1 ||
                      (n == 1 &&
