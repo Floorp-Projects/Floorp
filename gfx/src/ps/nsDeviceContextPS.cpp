@@ -70,7 +70,8 @@ static int instance_counter = 0;
 nsDeviceContextPS :: nsDeviceContextPS()
   : DeviceContextImpl(),
   mSpec(nsnull),
-  mParentDeviceContext(nsnull)
+  mParentDeviceContext(nsnull),
+  mPSObj(nsnull)
 { 
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::nsDeviceContextPS()\n"));
 
