@@ -265,7 +265,7 @@ static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *ar
             if ((uint32)arg1 >= str->size()) 
                 pos = str->size();
             else
-                pos = arg1;
+                pos = (uint32)arg1;
     }
     pos = str->find(*searchStr, pos);
     if (pos == String::npos)

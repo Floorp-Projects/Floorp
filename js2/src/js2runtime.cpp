@@ -679,7 +679,7 @@ void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode
     cx->getGlobalObject()->defineVariable(cx, name, attr, Object_Type, v);
 }
 
-bool ScopeChain::deleteName(Context *cx, const String& name, AttributeStmtNode *attr)
+bool ScopeChain::deleteName(Context *, const String& name, AttributeStmtNode *attr)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
@@ -2418,16 +2418,16 @@ static JSValue GlobalObject_unescape(Context *cx, const JSValue& /*thisValue*/, 
                 if (i + 1 < length &&
                     isASCIIHexDigit(chars[i], hexValue[0]) && isASCIIHexDigit(chars[i + 1], hexValue[1]))
                 {
-                    ch = hexValue[0] * 16 + hexValue[1];
+                    ch = static_cast<char16>(hexValue[0] * 16 + hexValue[1]);
                     i += 2;
                 } else if (i + 4 < length && chars[i] == 'u' &&
                            isASCIIHexDigit(chars[i + 1], hexValue[0]) && isASCIIHexDigit(chars[i + 2], hexValue[1]) &&
                            isASCIIHexDigit(chars[i + 3], hexValue[2]) && isASCIIHexDigit(chars[i + 4], hexValue[3]))
                 {
-                    ch = (((((hexValue[0] << 4)
+                    ch = static_cast<char16>((((((hexValue[0] << 4)
                             + hexValue[1]) << 4)
                           + hexValue[2]) << 4)
-                        + hexValue[3];
+                        + hexValue[3]);
                     i += 5;
                 }
             }
@@ -2443,7 +2443,7 @@ static JSValue GlobalObject_unescape(Context *cx, const JSValue& /*thisValue*/, 
 }
 
 
-JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain) 
+JSFunction::JSFunction(Context *, JSType *resultType, ScopeChain *scopeChain) 
             : JSObject(Function_Type), 
                 mParameterBarrel(NULL),
                 mActivation(),
@@ -2470,7 +2470,7 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
     mActivation.mContainer = this;
 }
 
-JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType) 
+JSFunction::JSFunction(Context *, NativeCode *code, JSType *resultType) 
             : JSObject(Function_Type), 
                 mParameterBarrel(NULL),
                 mActivation(),
