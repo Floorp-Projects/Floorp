@@ -146,7 +146,7 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   
   rv = nsXFormsControlStub::HandleDefault(aEvent, aHandled);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aHandled) {
+  if (*aHandled) {
     return NS_OK;
   }
 
