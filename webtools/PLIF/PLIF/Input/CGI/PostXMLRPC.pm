@@ -49,6 +49,8 @@ sub decodeHTTPArguments {
     local $/ = undef;
     my $input = <STDIN>;
 
+    $self->dump(9, 'XML-RPC call. Input was:', '=' x 72 . "\n$input", '=' x 72);
+
     # find someone who understands XML RPC
     my $service = $self->app->getService('service.xmlrpc');
 

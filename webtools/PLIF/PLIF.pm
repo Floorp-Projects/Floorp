@@ -30,7 +30,7 @@ package PLIF;
 use strict; # require strict adherence to perl standards
 use vars qw($AUTOLOAD);  # it's a package global
 use Carp qw(cluck confess); # stack trace versions of warn and die
-my $DEBUG = 4; # level of warnings and dumps to print to STDERR (none go to user)
+my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
 my $USER = 1; # level of errors to report to user (all go to STDERR)
 my @FATAL = (); # a list of pointers to functions that want to report errors to the user
 my $LOCKED = 0; # set to '1' while we are calling the error reporting code
@@ -222,6 +222,11 @@ sub error {
         $self->dump(10, 'done calling @FATAL error handlers');
         $LOCKED = 0;
     }
+    $self->dump(9, 'Environment dump:');
+    foreach my $key (sort keys %ENV) {
+        $self->dump(9, "$key = $ENV{$key}");
+    }
+    $self->dump(9, 'Stack trace:');
     confess(@data); # die with stack trace
 }
 
