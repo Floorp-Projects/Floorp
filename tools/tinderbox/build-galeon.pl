@@ -28,9 +28,15 @@ sub checkout {
   # Hack to get around po/ChangeLog cvs conflict bug in gettext lib.
   my $status = TinderUtils::run_shell_command("\\rm -f galeon/po/ChangeLog");
 
-  # checkout galeon source
-  #$ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
-  $ENV{CVSROOT} = ":pserver:anonymous@cvs.galeon.sourceforge.net:/cvsroot/galeon";
+  # Checkout galeon source.  First set up cvsroot:
+  # Both of these as of 10/2001 are kinda flakey:
+  #   $ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
+  #   $ENV{CVSROOT} = ":pserver:anonymous@cvs.galeon.sourceforge.net:/cvsroot/galeon";
+  #
+  # Asked for direct cvs access and got it:
+  $ENV{CVSROOT} = ":pserver:mcafee\@cvs.gnome.org:/cvs/gnome";
+
+  # Next, actually do the checkout:
   my $status = TinderUtils::run_shell_command("$Settings::CVS checkout galeon");
 
   # hack in the galeon prefs, if needed
