@@ -55,11 +55,13 @@ ConnectToDatabase();
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {
-    my $url = "query.cgi#chart?$::buffer";
+    my $url = "query.cgi?$::buffer#chart";
     print qq{Refresh: 0; URL=$url
 Content-type: text/html
 
-<A HREF="$url">Adding field to query page...</A>
+Adding field to query page...
+<P>
+<A HREF="$url">Click here if page doesn't redisplay automatically.</A>
 };
     exit();
 }
