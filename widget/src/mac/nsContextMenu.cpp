@@ -184,21 +184,16 @@ NS_METHOD nsContextMenu::AddMenuItem(nsIMenuItem * aMenuItem)
       
 	  nsString label;
 	  nsString labelHack; labelHack.AssignWithConversion(" ");
-	  nsString tmp; tmp.AssignWithConversion("-");
 	  aMenuItem->GetLabel(label);
-	  PRUnichar slash = tmp.CharAt(0);
-	  char* menuLabel;
-	  if(label[0] == slash) {
-	    labelHack.Append(label);
-	    menuLabel = labelHack.ToNewCString();
-	  } else {
-	    menuLabel = label.ToNewCString();
-	  }
 	    
 	  mNumMenuItems++;
 	  ::InsertMenuItem(mMacMenuHandle, (const unsigned char *)" ", mNumMenuItems);
-	  ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
-	  delete[] menuLabel;
+	  if(label[0] == PRUnichar('-')) {
+	    labelHack.Append(label);
+ 	    NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems, labelHack);
+	  } else {
+	    NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems, label);
+	  }
 	}
   }
   return NS_OK;

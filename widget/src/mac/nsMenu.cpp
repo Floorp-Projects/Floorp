@@ -106,9 +106,28 @@ nsMenu::nsMenu() : nsIMenu()
   // create a multi-destination Unicode converter which can handle all of the installed
   //	script systems
   //
-  OSErr err = ::CreateUnicodeToTextRunInfoByScriptCode(0,NULL,&mUnicodeTextRunConverter);
-  NS_ASSERTION(err==noErr,"nsMenu::nsMenu: CreateUnicodeToTextRunInfoByScriptCode failed.");	
+  // To fix the menu bar problem, we add the primary script by using 0x80000000 with one 
+  // script. This will make sure the converter first try to convert to the system script
+  // before it try other script.
+  //
+  // Mac OS 8 and 9 Developer Document > Text and Other Interionational Service >
+  //  Text Encoding Converter Manager
+  // Inside Macintosh: Programming With the Text Encoding Conversion Manager
+  //   CreateUnicodeToTextRunInfoByScriptCode
+  // iNumberOfScriptCodes
+  //   The number of desired scripts. .... If you set the high-order bit for this parameter, the 
+  // Unicode converter assumes that the iScripts parameter contains a singel element specifying 
+  // the preferred script. This feature i ssupported beginning with the Text
+  // Encoding Conversion Manager 1.2
+  // Also .. from About Eariler Release:
+  // .. TEC Manager 1.2 was included with Mac OS 8 in July 1997...
 
+  ScriptCode ps[1];
+  ps[0] = ::GetScriptManagerVariable(smSysScript);
+  
+  OSErr err = ::CreateUnicodeToTextRunInfoByScriptCode(0x80000000,ps,&mUnicodeTextRunConverter);
+  NS_ASSERTION(err==noErr,"nsMenu::nsMenu: CreateUnicodeToTextRunInfoByScriptCode failed.");	
+  
 }
 
 //-------------------------------------------------------------------------
@@ -308,9 +327,8 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  mNumMenuItems++;
 	  
 	  if(mIsHelpMenu) {
-	    char labelStr[256];
-	    ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToCString(labelStr, sizeof(labelStr))),
-	                     mMenuItemVoidArray.Count());
+	    ::InsertMenuItem(mMacMenuHandle,  "\pa", mMenuItemVoidArray.Count());
+	    NSStringSetMenuItemText(mMacMenuHandle, mMenuItemVoidArray.Count(), label);
 	  } else {
 	    ::InsertMenuItem(mMacMenuHandle, "\pa", currItemIndex);
 	    NSStringSetMenuItemText(mMacMenuHandle, currItemIndex, label);
@@ -1099,14 +1117,9 @@ void nsMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, n
 	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: GetThemeFont failed.");
 	if (err!=noErr) { delete [] scriptRunText; return; }
 	::GetFNum(themeFontName,&themeFontID);
-	err = ::SetMenuItemFontID(macMenuHandle,menuItem,themeFontID);
-#if DEBUG
-	if (err != noErr)
-		NS_WARNING("nsMenu::NSStringSetMenuItemText: SetMenuItemFontID failed.");
-#endif
 
 	::SetMenuItemText(macMenuHandle,menuItem,c2pstr(scriptRunText));
-	
+	err = ::SetMenuItemFontID(macMenuHandle,menuItem,themeFontID);	
 	
 	//
 	// clean up and exit
