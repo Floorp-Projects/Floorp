@@ -1907,6 +1907,10 @@ PRBool PK11_UserEnableSlot(PK11SlotInfo *slot) {
     return PR_TRUE;
 }
 
+PRBool PK11_HasRootCerts(PK11SlotInfo *slot) {
+    return slot->hasRootCerts;
+}
+
 /* Get the module this slot is attatched to */
 SECMODModule *
 PK11_GetModule(PK11SlotInfo *slot)
