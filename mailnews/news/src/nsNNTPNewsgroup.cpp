@@ -96,7 +96,7 @@ nsNNTPNewsgroup::nsNNTPNewsgroup()
 
 nsNNTPNewsgroup::~nsNNTPNewsgroup()
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("destroying newsgroup: %s", m_groupName ? m_groupName : "");
 #endif
 	PR_FREEIF(m_groupName);
@@ -121,7 +121,7 @@ nsresult nsNNTPNewsgroup::SetName(char *aName)
 {
 	if (aName)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting newsgroup name to %s. \n", aName);
 #endif
 		m_groupName = PL_strdup(aName);
@@ -144,7 +144,7 @@ nsresult nsNNTPNewsgroup::SetPrettyName(char *aName)
 {
 	if (aName)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting pretty newsgroup name to %s. \n", aName);
 #endif
 		m_prettyName = PL_strdup(aName);
@@ -167,7 +167,7 @@ nsresult nsNNTPNewsgroup::SetPassword(char *aName)
 {
 	if (aName)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting password for newsgroup %s to %s. \n", m_groupName, aName);
 #endif
 		m_password = PL_strdup(aName);
@@ -190,7 +190,7 @@ nsresult nsNNTPNewsgroup::SetUsername(char *aUsername)
 {
 	if (aUsername)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting username for newsgroup %s to %s. \n", m_groupName, aUsername);
 #endif
 		m_userName = PL_strdup(aUsername);
@@ -213,7 +213,7 @@ nsresult nsNNTPNewsgroup::SetNeedsExtraInfo(PRBool aNeedsExtraInfo)
 {
 	if (aNeedsExtraInfo)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting needs extra info for newsgroup %s to %s. \n", m_groupName, aNeedsExtraInfo ? "TRUE" : "FALSE" );
 #endif
 		m_needsExtraInfo = aNeedsExtraInfo;
@@ -224,7 +224,7 @@ nsresult nsNNTPNewsgroup::SetNeedsExtraInfo(PRBool aNeedsExtraInfo)
 
 nsresult nsNNTPNewsgroup::IsOfflineArticle(PRInt32 num, PRBool *_retval)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("Testing for offline article %d in %s. \n", num, m_groupName);
 #endif
 	if (_retval)
@@ -247,7 +247,7 @@ nsresult nsNNTPNewsgroup::SetCategory(PRBool aCategory)
 {
 	if (aCategory)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting is category for newsgroup %s to %s. \n", m_groupName, aCategory ? "TRUE" : "FALSE" );
 #endif
 		m_category = aCategory;
@@ -290,7 +290,7 @@ nsresult nsNNTPNewsgroup::SetWantNewTotals(PRBool aWantNewTotals)
 {
 	if (aWantNewTotals)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting wants new totals for newsgroup %s to %s. \n", m_groupName, aWantNewTotals ? "TRUE" : "FALSE" );
 #endif
 		m_wantsNewTotals = aWantNewTotals;
@@ -314,7 +314,7 @@ nsresult nsNNTPNewsgroup::SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList
 {
 	if (aNewsgroupList)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting newsgroup list for newsgroup %s. \n", m_groupName);
 #endif
 		m_newsgroupList = aNewsgroupList;
@@ -326,7 +326,7 @@ nsresult nsNNTPNewsgroup::SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList
 
 nsresult nsNNTPNewsgroup::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("Updating summary with oldest= %d, youngest= %d, and total messages = %d. \n", oldest, youngest, total_messages);
 #endif
 	return NS_OK;
@@ -348,7 +348,7 @@ nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
 		rv = group->QueryInterface(nsINNTPNewsgroup::GetIID(), (void **) info);
 	}
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("NS_NewNewsgroup(%s)\n",line?line:"(null)");
 #endif
 

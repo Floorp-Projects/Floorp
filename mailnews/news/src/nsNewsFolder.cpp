@@ -46,10 +46,6 @@
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
 
-#ifdef DEBUG_sspitzer_
-#define DEBUG_NEWS 1
-#endif
-
 //not using nsMsgLineBuffer yet, but I need to soon...
 //#include "nsMsgLineBuffer.h"
 

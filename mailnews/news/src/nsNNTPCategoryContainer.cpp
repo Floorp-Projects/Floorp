@@ -74,7 +74,7 @@ nsresult nsNNTPCategoryContainerStub::SetRootCategory(nsINNTPNewsgroup * aRootCa
 	{
 		char * name = nsnull;
 		aRootCategory->GetName(&name);
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("Setting root category for container to %s", name ? name : "unspecified");
 #endif
 		m_newsgroup = aRootCategory;

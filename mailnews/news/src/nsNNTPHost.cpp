@@ -63,10 +63,6 @@ static const char LINEBREAK_START = '\015';
 
 #define PROTOCOL_DEBUG 
 
-#ifdef DEBUG_sspitzer_
-#define DEBUG_NEWS 1
-#endif
-
 class nsNNTPHost : public nsINNTPHost {
 public:
 #ifdef HAVE_MASTER
