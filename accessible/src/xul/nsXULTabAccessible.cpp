@@ -197,6 +197,7 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
 {
   // get focus and disable status from base class -- skip container because we have state
   nsAccessible::GetAccState(_retval);
+  *_retval &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
 
