@@ -125,24 +125,31 @@ CRDFCoordinator::FinishCreateSelf()
 	
 	// Register the title strip as a listener so we can update it when the view
 	// changes.
+	// NOTE: There is no guarantee that the title strip will be there. 	
 	mTitleStrip = dynamic_cast<CNavCenterTitle*>(FindPaneByID(mTitleStripID));
-	Assert_( mTitleStrip != NULL );
 	if ( mTitleStrip )
 		AddListener(mTitleStrip);
 
 	// Register the title command area as a listener so we can update it when the view
 	// changes
+	// NOTE: There is no guarantee that the command strip will be there. 	
 	mTitleCommandArea = dynamic_cast<CNavCenterCommandStrip*>(FindPaneByID(mTitleCommandID));
-	Assert_ ( mTitleCommandArea != NULL );
 	if ( mTitleCommandArea ) {
 		AddListener(mTitleCommandArea);
 
-		// If the "show details" caption is there, register this class as a listener so we get the
-		// mode toggle message
-		LBroadcaster* showDetails = 
-				dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kDetailsPaneID));
-		if ( showDetails )
-			showDetails->AddListener(this);
+		// If the "add page" caption is there, register this class as a listener so we get the
+		// add page message
+		LBroadcaster* addPage = 
+				dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kAddPagePaneID));
+		if ( addPage )
+			addPage->AddListener(this);
+
+		// If the "manage" caption is there, register this class as a listener so we get the
+		// tree management message
+		LBroadcaster* manage = 
+				dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kManagePaneID));
+		if ( manage )
+			manage->AddListener(this);
 	}
 
 } // FinishCreateSelf
@@ -236,9 +243,6 @@ void CRDFCoordinator::HandleNotification(
 	{
 		case HT_EVENT_VIEW_MODECHANGED:
 
-			// tell the command bar about the mode switch
-			BroadcastMessage ( CNavCenterCommandStrip::msg_ModeSwitch ) ;
-			
 			ShowOrHideColumnHeaders();
 			
 			// redraw the tree with new colors, etc
@@ -249,7 +253,8 @@ void CRDFCoordinator::HandleNotification(
 				if ( URDFUtilities::PropertyValueBool(node, gNavCenter->useSelection, true) == false )
 					mTreePane->UnselectAllCells();
 #endif
-				mTitleStrip->Refresh();
+				if ( mTitleStrip )
+					mTitleStrip->Refresh();
 				mTreePane->Refresh();
 				
 				// make sure the tree knows the right number of clicks to open up a row. It may
@@ -459,9 +464,13 @@ CRDFCoordinator::ListenToMessage ( MessageT inMessage, void *ioParam )
 {
 	switch (inMessage) {
 
-		case CNavCenterCommandStrip::msg_ModeSwitch:
-			// this will cause us to get a HT_EVENT_VIEW_MODECHANGED event above
-//			HT_ToggleTreeMode ( HT_GetSelectedView(HTPane()) );
+		case CNavCenterCommandStrip::msg_AddPage:
+			LCommander::GetTarget()->ProcessCommand(cmd_AddToBookmarks, NULL );
+			break;
+
+		case CNavCenterCommandStrip::msg_Manage:
+			HT_Resource topNode = HT_TopNode ( HT_GetSelectedView(HTPane()) );
+			LCommander::GetTopCommander()->ProcessCommand(cmd_NCOpenNewWindow, topNode );
 			break;
 			
 #if 0
