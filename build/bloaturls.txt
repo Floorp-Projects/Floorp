@@ -1,6 +1,6 @@
-http://www.mozilla.org
+http://lxr.mozilla.org
 ftp://ftp.netscape.com/Welcome
-http://www.mozilla.org
+http://lxr.mozilla.org
 resource:///res/samples/test2.html
 resource:///res/samples/test8.html
 resource:///res/samples/test6.html
