@@ -872,11 +872,10 @@ HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
       aData->mStyledContent &&
       aData->mIsHTMLContent &&
       aData->mContentTag == nsHTMLAtoms::a) {
-    nsAutoString href;
-    nsresult attrState =
-      aData->mStyledContent->GetAttr(kNameSpaceID_None,
-                                     nsHTMLAtoms::href, href);
-    if (NS_CONTENT_ATTR_HAS_VALUE == attrState)
+    PRBool hasHrefAttr =
+      aData->mStyledContent->HasAttr(kNameSpaceID_None,
+                                     nsHTMLAtoms::href);
+    if (hasHrefAttr)
       result = NS_OK; // yes, style will depend on link state
   }
 
