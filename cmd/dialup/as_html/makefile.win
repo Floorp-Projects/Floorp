@@ -36,7 +36,7 @@ install:: $(JAVA_DESTPATH)\$(PACKAGE)
 	-rm -rf $(SIGNDIR)\asw.arc
 	cd $(SIGNDIR) 
 #	signtool \
-	$(PERL) $(DEPTH)\security\cmd\jar\signPages.pl \
+	$(PERL) $(DEPTH)\..\security\cmd\jar\signPages.pl \
 !ifdef MOZ_CERT_DIR
 	-d $(MOZ_CERT_DIR) \
 !endif
