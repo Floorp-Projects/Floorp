@@ -145,7 +145,7 @@ public:
 
 #include "plstr.h"
 
-class nsCStringKey : public nsHashKey {
+class NS_COM nsCStringKey : public nsHashKey {
 private:
   char  mBuf[64];
   char* mStr;
