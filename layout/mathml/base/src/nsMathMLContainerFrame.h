@@ -105,6 +105,21 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
+  // helper to reflow our children. We are inline frames, and we don't
+  // know our positions until reflow is finished. That's why we ask the
+  // base method not to worry about our position.
+  nsresult 
+  ReflowChild(nsIFrame*                aKidFrame,
+              nsIPresContext&          aPresContext,
+              nsHTMLReflowMetrics&     aDesiredSize,
+              const nsHTMLReflowState& aReflowState,
+              nsReflowStatus&          aStatus)
+  {
+  return nsHTMLContainerFrame::ReflowChild(aKidFrame, aPresContext, aDesiredSize, aReflowState,
+                                           0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
+
+  }
+
   // helper method for altering the style contexts of subscript/superscript elements
   // XXX this is pretty much a hack until the content model caters for MathML and
   // the style system has some provisions for MathML
