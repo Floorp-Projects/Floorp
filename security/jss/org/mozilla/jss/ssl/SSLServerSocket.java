@@ -73,6 +73,21 @@ public class SSLServerSocket extends java.net.ServerSocket {
     public SSLServerSocket(int port, int backlog, InetAddress bindAddr)
         throws IOException 
     {
+        this(port, backlog, bindAddr, null);
+    }
+
+    /**
+     * Creates a server socket listening on the given port.
+     * @param backlog The size of the socket's listen queue.
+     * @param bindAddr The local address to which to bind. If null, an
+     *      unspecified local address will be bound to.
+     * @param certApprovalCallback Will get called to approve any certificate
+     *      presented by the client.
+     */
+    public SSLServerSocket(int port, int backlog, InetAddress bindAddr,
+                SSLCertificateApprovalCallback certApprovalCallback)
+        throws IOException 
+    {
         // Dance the dance of fools.  The superclass doesn't have a default
         // constructor, so we have to trick it here. This is an example
         // of WHY WE SHOULDN'T BE EXTENDING SERVERSOCKET.
@@ -80,7 +95,8 @@ public class SSLServerSocket extends java.net.ServerSocket {
         super.close();
 
         // create the socket
-        sockProxy = new SocketProxy( base.socketCreate(this, null, null) );
+        sockProxy = new SocketProxy(
+            base.socketCreate(this, certApprovalCallback, null) );
 
         base.setProxy(sockProxy);
 
