@@ -250,7 +250,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 
 
     nsCOMPtr<nsIRDFDataSource> dataSource;
-    InitializeDataSource(nsAutoString(package), nsAutoString(provider), getter_AddRefs(dataSource));
+    nsString packageStr(package), providerStr(provider);
+    InitializeDataSource(packageStr, providerStr, getter_AddRefs(dataSource));
 
 
     rv = GetChromeResource(dataSource, name, chromeResource, kCHROME_name);
