@@ -10197,7 +10197,7 @@ fi
 
 
 
-MOZ_EXTENSIONS_DEFAULT="cookie wallet psm-glue xml-rpc"
+MOZ_EXTENSIONS_DEFAULT="cookie wallet psm-glue xml-rpc xmlextras"
 
 # Check whether --with-extensions or --without-extensions was given.
 if test "${with_extensions+set}" = set; then
