@@ -129,6 +129,7 @@ typedef struct UIEvent {
   CMInt32 resourceID;
   CMInt32 width;
   CMInt32 height;
+  CMBool isModal;
   char *url;
   CMTItem clientContext;
 } UIEvent;
