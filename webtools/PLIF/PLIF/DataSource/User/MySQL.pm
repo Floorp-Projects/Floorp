@@ -247,6 +247,7 @@ sub getGroups {
     my $self = shift;
     my($app) = @_;
     # groups
+    # XXX this should be optimised to one query
     my $groups = $self->database($app)->execute('SELECT groups.groupID, groups.name FROM groups')->rows;
     foreach my $group (@$groups) {
         # rights
@@ -303,9 +304,21 @@ sub setGroup {
     return $groupID;
 }
 
-sub getRights {
+sub getRightForGroups {
     my $self = shift;
     my($app, @groups) = @_;
+    my $rights = $self->database($app)->execute('SELECT rights.name FROM rights, groupRightsMapping WHERE groupRightsMapping.rightID = rights.ID AND groupRightsMapping.groupID IN(' .
+                                                ('?, ' x (@groups-1)) . '?'.')', @groups)->rows;
+    foreach my $right (@$rights) {
+        $right = $right->[0];
+    }
+    return $rights;
+    # return [rightName]*
+}
+
+sub getAllRights {
+    my $self = shift;
+    my($app) = @_;
     my $rights = $self->database($app)->execute('SELECT rights.name FROM rights')->rows;
     foreach my $right (@$rights) {
         $right = $right->[0];

@@ -283,9 +283,16 @@ sub setGroup {
     $self->notImplemented();
 }
 
-sub getRights {
+sub getRightForGroups {
     my $self = shift;
     my($app, @groups) = @_;
+    $self->notImplemented();
+    # return [rightName]*
+}
+
+sub getAllRights {
+    my $self = shift;
+    my($app) = @_;
     $self->notImplemented();
     # return [rightName]*
 }

@@ -246,7 +246,15 @@ sub hash {
     $result->{'groupsByID'} = $self->groupsByID;
     $result->{'groupsByName'} = $self->groupsByName;
     $result->{'rights'} = [keys(%{$self->rights})];
-    $result->{'right'} = $self->rights;
+    if ($self->levelInGroup(1)) {
+        # has all rights
+        $result->{'right'} = {};
+        foreach my $right (@{$self->app->getService('dataSource.user')->getAllRights($self->app)}) {
+            $result->{'right'}->{$right} = 1;
+        }
+    } else {
+        $result->{'right'} = $self->rights;
+    }
     $result->{'fields'} = {};
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
@@ -315,7 +323,7 @@ sub insertField {
 
 sub invalidateRights {
     my $self = shift;
-    my $rights = $self->app->getService('dataSource.user')->getRights($self->app, keys(%{$self->{'groupsByID'}}));
+    my $rights = $self->app->getService('dataSource.user')->getRightsForGroup($self->app, keys(%{$self->{'groupsByID'}}));
     $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
     # don't set a dirty flag, because rights are merely a convenient
     # cached expansion of the rights data. Changing this externally
