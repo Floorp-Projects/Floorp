@@ -506,11 +506,20 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     // can simply use that as the resolved path.  This simplification can
     // be done on windows cause its symlinks (shortcuts) use the .lnk
     // file extension.
-    
-    
-    const char *workingFilePath = mWorkingPath.GetBuffer();
 
-    PRStatus status = PR_GetFileInfo64(workingFilePath, &mFileInfo64);
+    char temp[4];
+    const char* workingFilePath = mWorkingPath.GetBuffer();
+    const char* nsprPath = workingFilePath;
+
+    if (mWorkingPath.Length() == 2 && mWorkingPath.CharAt(1) == ':') {
+        temp[0] = workingFilePath[0];
+        temp[1] = workingFilePath[1];
+        temp[2] = '\\';
+        temp[3] = '\0';
+        nsprPath = temp;
+    }
+
+    PRStatus status = PR_GetFileInfo64(nsprPath, &mFileInfo64);
     if ( status == PR_SUCCESS )
     {
         mResolvedPath.SetString(workingFilePath);
