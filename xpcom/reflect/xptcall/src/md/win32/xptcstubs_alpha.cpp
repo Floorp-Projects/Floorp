@@ -78,7 +78,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint64* args,
             if (iCount < PARAM_GPR_COUNT)
              dp->val.p = (void*)gprData[iCount++];
             else
-             dp->val.p = (void*)*ap++;
+             dp->val.p = (void*)ap++;			
             continue;
         }
         // else
@@ -88,49 +88,49 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint64* args,
            if (iCount < PARAM_GPR_COUNT)
               dp->val.i8  = (PRInt8)gprData[iCount++];
            else
-              dp->val.i8  = (PRInt8)*ap++;
+              dp->val.i8  = *((PRInt8*)ap++);
            break;
 
         case nsXPTType::T_I16:
             if (iCount < PARAM_GPR_COUNT)
                dp->val.i16  = (PRInt16)gprData[iCount++];
             else
-               dp->val.i16  = (PRInt16)*ap++;
+               dp->val.i16  = *((PRInt16*)ap++);
             break;
 
         case nsXPTType::T_I32:
             if (iCount < PARAM_GPR_COUNT)
                dp->val.i32  = (PRInt32)gprData[iCount++];
             else
-               dp->val.i32  = (PRInt32)*ap++;
+               dp->val.i32  = *((PRInt32*)ap++);
             break;
 
         case nsXPTType::T_I64:
             if (iCount < PARAM_GPR_COUNT)
                dp->val.i64  = (PRInt64)gprData[iCount++];
             else
-               dp->val.i64  = (PRInt64)*ap++;
+               dp->val.i64  = *((PRInt64*)ap++);
             break;
 
         case nsXPTType::T_U8:
             if (iCount < PARAM_GPR_COUNT)
                dp->val.u8  = (PRUint8)gprData[iCount++];
             else
-               dp->val.u8  = (PRUint8)*ap++;
+               dp->val.u8  = *((PRUint8*)ap++);
             break;
 
         case nsXPTType::T_U16:
             if (iCount < PARAM_GPR_COUNT)
                dp->val.u16  = (PRUint16)gprData[iCount++];
             else
-                dp->val.u16  = (PRUint16)*ap++;
+                dp->val.u16  = *((PRUint16*)ap++);
             break;
 
         case nsXPTType::T_U32:
             if (iCount < PARAM_GPR_COUNT)
                dp->val.u32  = (PRUint32)gprData[iCount++];
             else
-               dp->val.u32  = (PRUint32)*ap++;
+               dp->val.u32  = *((PRUint32*)ap++);
             break;
 
         case nsXPTType::T_U64:
@@ -142,9 +142,9 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint64* args,
 
         case nsXPTType::T_FLOAT:
              if (iCount < PARAM_FPR_COUNT)
-                dp->val.f  = (double)fprData[iCount++];
+                dp->val.f  = (float)fprData[iCount++];
              else
-                dp->val.f  = *((double*)ap++);
+                dp->val.f  = *((float*)ap++);
              break;
 
         case nsXPTType::T_DOUBLE:
@@ -158,21 +158,21 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint64* args,
            if (iCount < PARAM_GPR_COUNT)
               dp->val.b  = (PRBool)gprData[iCount++];
            else
-              dp->val.b  = (PRBool)*ap++;
+              dp->val.b  = *((PRBool*)ap++);
            break;
 
         case nsXPTType::T_CHAR:
            if (iCount < PARAM_GPR_COUNT)
               dp->val.c  = (char)gprData[iCount++];
            else
-              dp->val.c  = (char)*ap++;
+              dp->val.c  = *((char*)ap++);
            break;
 
         case nsXPTType::T_WCHAR:
            if (iCount < PARAM_GPR_COUNT)
               dp->val.wc  = (wchar_t)gprData[iCount++];
            else
-              dp->val.wc  = (wchar_t)*ap++;
+              dp->val.wc  = *((wchar_t*)ap++);
            break;
 
         default:
