@@ -4142,12 +4142,14 @@ lo_IsEmptyTag(TagType type)
        || type == P_EMBED
        || type == P_KEYGEN
        || type == P_JAVA_APPLET
-       || type == P_LIST_ITEM
-       || type == P_BASEFONT
-       || type == P_AREA
+#ifndef DOM
+       || type == P_LIST_ITEM   /* not really empty! */
        || type == P_DESC_TITLE
        || type == P_NSDT
        || type == P_DESC_TEXT
+#endif
+       || type == P_BASEFONT
+       || type == P_AREA
        || type == P_BASE)
     {
         return TRUE;
@@ -7311,18 +7313,6 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
      */
 	lo_PostLayoutTag( context, state, tag, started_in_head);
 
-#ifdef DOM_NOTYET
-    if (tag->is_end && state->current_node) {
-        /* mark the end LO_Element for the _last_ node */
-        LO_Element *eptr = state->line_list;
-        XP_ASSERT(eptr);
-        while (eptr->lo_any.next != NULL) {
-            eptr = eptr->lo_any.next;
-        }
-        XP_ASSERT(ELEMENT_PRIV(state->last_node)->ele_start);
-        ELEMENT_PRIV(state->last_node)->ele_end = eptr;
-    }
-#endif
 
 	LO_UnlockLayout();
 }

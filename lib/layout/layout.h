@@ -658,9 +658,8 @@ typedef struct lo_DocState_struct {
 #ifdef DOM
 	Bool in_span;
 	PA_Block current_span;
-    void /*DOM_Node*/ *top_node;
-    void /*DOM_Node*/ *current_node;
-    void /*DOM_Node*/ *last_node;
+    void /*DOM_Node*/ *top_node;     /* top of the DOM_Node tree */
+    void /*DOM_Node*/ *current_node; /* active node (only during tree gen) */
 #endif
 } lo_DocState;
 
