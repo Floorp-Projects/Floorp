@@ -336,6 +336,8 @@ public:
   NS_IMETHOD SetIsFrame(PRBool aIsFrame)       = 0;
   NS_IMETHOD GetIsFrame(PRBool& aIsFrame)      = 0;
 
+  NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet) = 0;
+  NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  = 0;
   /**
     * Finds text in content
    */

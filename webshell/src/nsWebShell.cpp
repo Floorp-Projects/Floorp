@@ -305,6 +305,9 @@ public:
   nsresult CreatePluginHost(PRBool aAllowPlugins);
   nsresult DestroyPluginHost(void);
 
+  NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet);
+  NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet);
+
 protected:
   void InitFrameData();
   nsresult CheckForTrailingSlash(nsIURL* aURL);
@@ -326,6 +329,7 @@ protected:
   nsIWebShell* mParent;
   nsVoidArray mChildren;
   nsString mName;
+  nsString mDefaultCharacterSet;
 
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
@@ -2492,6 +2496,19 @@ NS_IMETHODIMP
 nsWebShell::SelectNone(void)
 {
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsWebShell::GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet)
+{
+  *aDefaultCharacterSet = mDefaultCharacterSet;
+  return NS_OK;
+}
+NS_IMETHODIMP 
+nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  
+{
+  mDefaultCharacterSet = aDefaultCharacterSet;
+  return NS_OK;
 }
 
 //----------------------------------------------------
