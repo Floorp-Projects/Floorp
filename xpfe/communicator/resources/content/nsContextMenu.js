@@ -123,7 +123,7 @@ nsContextMenu.prototype = {
         // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
         this.showItem( "context-setWallpaper", this.onImage && navigator.appVersion.indexOf("Windows") != -1);
         
-        this.showItem( "context-sep-setWallpaper", this.onImage && navigator.appVersion.indexOf("Windows") != -1);
+        this.showItem( "context-sep-image", this.onImage );
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
