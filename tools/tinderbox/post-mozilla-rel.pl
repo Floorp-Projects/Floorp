@@ -42,9 +42,10 @@ my $cachebuild = 0;
 
 sub is_windows { return $Settings::OS =~ /^WIN/; }
 sub is_linux { return $Settings::OS eq 'Linux'; }
+sub is_os2 { return $Settings::OS eq 'OS2'; }
 # XXX Not tested on mac yet.  Probably needs changes.
 sub is_mac { return $Settings::OS eq 'Darwin'; }
-sub do_installer { return is_windows() || is_linux(); }
+sub do_installer { return is_windows() || is_linux() || is_os2(); }
 
 sub shorthost {
   my $host = ::hostname();
@@ -217,11 +218,15 @@ sub packit {
   }
   chomp($builddir);
 
+  mkdir($stagedir, 0775);
+
   if (do_installer()) {
     if (is_windows()) {
       $ENV{INSTALLER_URL} = "$url/windows-xpi";
     } elsif (is_linux()) {
       $ENV{INSTALLER_URL} = "$url/linux-xpi/";
+    } elsif (is_os2()) {
+      $ENV{INSTALLER_URL} = "$url/os2-xpi/";
     } else {
       die "Can't make installer for this platform.\n";
     }
@@ -249,7 +254,6 @@ sub packit {
       #my $dos_stagedir = `cygpath -w $stagedir`;
       #chomp ($dos_stagedir);
     }
-    mkdir($stagedir, 0775);
 
     my $push_raw_xpis;
     if ($Settings::stub_installer) {
@@ -258,7 +262,7 @@ sub packit {
       $push_raw_xpis = $Settings::push_raw_xpis;
     }
 
-    if (is_windows()) {
+    if (is_windows() || is_os2()) {
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command "cp $package_location/stub/*.exe $stagedir/";
       }
@@ -357,6 +361,13 @@ sub packit {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
         TinderUtils::run_shell_command "mkdir -p $stagedir/mac-xpi/" if ( ! -e "$stagedir/mac-xpi/" );
         TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/mac-xpi/";
+      }
+    } elsif (is_os2()) {
+      TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
+      if ( scalar(@xforms_xpi) gt 0 ) {
+        my $xforms_xpi_files = join(' ', @xforms_xpi);
+        TinderUtils::run_shell_command "mkdir -p $stagedir/os2-xpi/" if ( ! -e "$stagedir/os2-xpi/" );
+        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/os2-xpi/";
       }
     } else {
       my $archive_loc = "$package_location/..";
@@ -712,7 +723,7 @@ sub main {
   # need to modify the settings from tinder-config.pl
   my $package_creation_path = $objdir . $Settings::package_creation_path;
   my $package_location;
-  if (is_windows() || is_mac() || $Settings::package_creation_path ne "/xpinstall/packager") {
+  if (is_windows() || is_mac() || is_os2() || $Settings::package_creation_path ne "/xpinstall/packager") {
     $package_location = $objdir . "/dist/install";
   } else {
     $package_location = $objdir . "/installer";
@@ -748,7 +759,9 @@ sub main {
     $url_path   = $Settings::tbox_url_path . "/" . $upload_directory;
   }
 
-  processtalkback($cachebuild && $Settings::shiptalkback, $objdir, "$mozilla_build_dir/${Settings::Topsrcdir}");
+  if (!is_os2()) {
+    processtalkback($cachebuild && $Settings::shiptalkback, $objdir, "$mozilla_build_dir/${Settings::Topsrcdir}");
+  }
 
   $upload_directory = $package_location . "/" . $upload_directory;
 
