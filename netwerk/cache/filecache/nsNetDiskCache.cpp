@@ -264,7 +264,7 @@ nsNetDiskCache::Init(void)
 		rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
 		if(NS_FAILED(rv))
 	      return rv ;
-	    nsCOMPtr<nsIFileSpec> spec =  NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
+	    nsCOMPtr<nsIFileSpec> spec( dont_AddRef(  NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50) ));
 	    
 	   	rv = cacheSubDir->FromFileSpec(spec) ;
 	    if(NS_FAILED(rv))
