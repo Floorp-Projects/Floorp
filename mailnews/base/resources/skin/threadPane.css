@@ -50,6 +50,11 @@ treeitem > treerow > treecell > .tree-icon {
  list-style-image: url("chrome://messenger/skin/mail-message.gif");
 }
 
+treeitem[open="true"] > treerow > treecell > .tree-icon
+{
+ list-style-image: url("chrome://messenger/skin/mail-message.gif");
+}
+
 treecell.unreadcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }

@@ -128,3 +128,7 @@ treeitem[IsServer="true"][ServerType="nntp"] > treerow > treecell > .tree-icon
     list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 
+#folder-panel {
+	min-width: 10px;
+}
+
