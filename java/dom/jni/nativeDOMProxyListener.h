@@ -17,7 +17,7 @@ class NativeDOMProxyListener: public nsIDOMEventListener{
 
 	NativeDOMProxyListener(JNIEnv *env, jobject jlistener);
 
-	virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+	NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
 	NS_IMETHOD QueryInterface(const nsIID &aIID,  void **aResult);  
 	NS_IMETHOD_(nsrefcnt) AddRef(void);  

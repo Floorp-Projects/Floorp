@@ -59,7 +59,7 @@ NativeDOMProxyListener::~NativeDOMProxyListener()
     }
 }
 
-nsresult NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEvent) 
+NS_IMETHODIMP NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEvent) 
 {
     jobject jevent;
     JNIEnv *env;
@@ -92,7 +92,7 @@ nsresult NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
 }
 
-nsresult NativeDOMProxyListener::QueryInterface(const nsIID &aIID, void **aResult)
+NS_IMETHODIMP NativeDOMProxyListener::QueryInterface(const nsIID &aIID, void **aResult)
 {
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
@@ -115,12 +115,12 @@ nsresult NativeDOMProxyListener::QueryInterface(const nsIID &aIID, void **aResul
     return NS_OK;  
 }
 
-nsrefcnt NativeDOMProxyListener::AddRef()
+NS_IMETHODIMP_(nsrefcnt) NativeDOMProxyListener::AddRef()
 {
     return mRefCnt++;
 }
 
-nsrefcnt NativeDOMProxyListener::Release()
+NS_IMETHODIMP_(nsrefcnt) NativeDOMProxyListener::Release()
 {
     if (--mRefCnt == 0) {  
         delete this;  
