@@ -89,9 +89,10 @@ static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
-NS_IMPL_ISUPPORTS2(nsHTTPHandler,
+NS_IMPL_ISUPPORTS3(nsHTTPHandler,
                    nsIHTTPProtocolHandler,
-                   nsIProtocolHandler)
+                   nsIProtocolHandler,
+                   nsISupportsWeakReference)
 
 // nsIProtocolHandler methods
 NS_IMETHODIMP
