@@ -50,6 +50,9 @@ ifdef MOZ_ENABLE_XFT
 endif
 	$(MAKE) tier_1
 	$(MAKE) tier_9
+ifdef MOZ_EXTENSIONS
+	$(MAKE) tier_94
+endif
 ifdef MOZ_PSM
 	$(MAKE) tier_95
 endif
@@ -72,6 +75,9 @@ ifdef GC_LEAK_DETECTOR
 DIRS += gc/boehm
 endif
 
+ifdef MOZ_EXTENSIONS
+DIRS += $(tier_94_dirs)
+endif
 ifdef MOZ_PSM
 DIRS += $(tier_95_dirs)
 endif
@@ -212,10 +218,6 @@ endif
 
 tier_9_dirs	+= xpfe xpinstall
 
-ifdef MOZ_EXTENSIONS
-tier_9_dirs	+= extensions
-endif
-
 ifdef MOZ_LEAKY
 tier_9_dirs        += tools/leaky
 endif
@@ -233,6 +235,10 @@ tier_9_dirs	+= l10n
 #
 # tier 9x - application features
 #
+
+ifdef MOZ_EXTENSIONS
+tier_94_dirs	+= extensions
+endif
 
 ifdef MOZ_PSM
 tier_95_dirs	+= security/manager
