@@ -25,6 +25,7 @@
 #include "nsIMimeEmitter.h"
 #include "nsRepository.h"
 #include "nscore.h"
+#include "nsString.h"
 
 // Need this for FO_NGLAYOUT
 #include "net.h"
@@ -107,10 +108,6 @@ MimePluginInstance::MimePluginInstance(void)
 MimePluginInstance::~MimePluginInstance(void)
 {
 }
-
-static NS_DEFINE_IID(kMimeHTMLEmitterCID, NS_HTML_MIME_EMITTER_CID);
-static NS_DEFINE_IID(kMimeXMLEmitterCID, NS_XML_MIME_EMITTER_CID);
-static NS_DEFINE_IID(kMimeRawEmitterCID, NS_RAW_MIME_EMITTER_CID);
 
 NS_METHOD
 MimePluginInstance::DetermineOutputFormat(const char *url)
@@ -209,28 +206,17 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
   // output format.
   //
   mOutStream = stream;
-  if (PL_strcmp(mOutputFormat, "text/xml") == 0)
-  {
-    res = nsRepository::CreateInstance(kMimeXMLEmitterCID, 
-                                       NULL, nsIMimeEmitter::GetIID(), 
-                                       (void **) getter_AddRefs(mEmitter)); 
-  }
-  else if (PL_strcmp(mOutputFormat, "text/html") == 0)
-  {
-    res = nsRepository::CreateInstance(kMimeHTMLEmitterCID, 
-                                       NULL, nsIMimeEmitter::GetIID(), 
-                                       (void **) getter_AddRefs(mEmitter)); 
-  }
-  else
-  {
-    // Need to create a raw emitter here!
-    res = nsRepository::CreateInstance(kMimeRawEmitterCID, 
-                                        NULL, nsIMimeEmitter::GetIID(), 
-                                        (void **) getter_AddRefs(mEmitter)); 
-  }
+  nsAutoString progID (eOneByte);
+  progID = "component://netscape/messenger/mimeemitter;type=";
+  progID += mOutputFormat;
 
-  if ((NS_OK != res) || (!mEmitter))
+  res = nsComponentManager::CreateInstance(progID.GetBuffer(), nsnull,
+										   nsIMimeEmitter::GetIID(),
+										   (void **) getter_AddRefs(mEmitter));
+
+  if (NS_FAILED(res) || (!mEmitter))
   {
+	NS_ASSERTION(PR_FALSE, "unable to create the correct converter");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
