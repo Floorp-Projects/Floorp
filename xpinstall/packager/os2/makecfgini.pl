@@ -82,7 +82,7 @@ if($#ARGV < 5)
        staging path  : path to where the components are staged at
 
        .xpi path     : path to where the .xpi files have been built to
-                       ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install\\xpi
+                       ie: d:/builds/mozilla/dist/win32_o.obj/install/xpi
 
        redirect file : url to where the redirect.ini file will be staged at.
 
@@ -105,11 +105,14 @@ $userAgentShort   = $ENV{WIZ_userAgentShort};
 $xpinstallVersion = $ENV{WIZ_xpinstallVersion};
 $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
-$nameProductNoVersion = $ENV{WIZ_nameProductNoVersion};
+$nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileMainIco      = $ENV{WIZ_fileMainIco};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
 $fileUninstallZip = $ENV{WIZ_fileUninstallZip};
+$greBuildID       = $ENV{WIZ_greBuildID};
+$greFileVersion   = $ENV{WIZ_greFileVersion};
+$greUniqueID      = $ENV{WIZ_greUniqueID};
 
 $inDomain;
 $inRedirDomain;
@@ -139,6 +142,7 @@ while($line = <fpInIt>)
   if($line =~ /\$InstallSize\$/i)
   {
     $installSize          = 0;
+    $installSizeSystem    = 0;
 
     # split read line by ":" deliminator
     @colonSplit = split(/:/, $line);
@@ -149,15 +153,39 @@ while($line = <fpInIt>)
 
       if($componentName =~ /\$UninstallFileZip\$/i)
       {
-        $installSize = OutputInstallSizeArchive("$inXpiPath\\$fileUninstallZip") * 2;
+        $installSize = OutputInstallSizeArchive("$inXpiPath/$fileUninstallZip") * 2;
       }
       else
       {
-        $installSize = OutputInstallSize("$inStagePath\\$componentName");
+        $installSize = OutputInstallSize("$inStagePath/$componentName");
+
+        # special oji consideration here.  Since it's an installer that 
+        # seamonkey installer will be calling, the disk space allocation
+        # needs to be adjusted by an expansion factor of 3.62.
+        if($componentName =~ /oji/i)
+        {
+          $installSize = int($installSize * 3.62);
+        }
+
+        if($componentName =~ /gre/i)
+        {
+          $installSize = int($installSize * 4.48);
+        }
       }
     }
 
+    # Read the next line to calculate for the "Install Size System="
+    if($line = <fpInIt>)
+    {
+      if($line =~ /\$InstallSizeSystem\$/i)
+      {
+        $installSizeSystem = OutputInstallSizeSystem($line, "$inStagePath/$componentName");
+      }
+    }
+
+    $installSize -= $installSizeSystem;
     print fpOutIni "Install Size=$installSize\n";
+    print fpOutIni "Install Size System=$installSizeSystem\n";
   }
   elsif($line =~ /\$InstallSizeArchive\$/i)
   {
@@ -170,7 +198,7 @@ while($line = <fpInIt>)
       $componentName = $colonSplit[1];
       chop($componentName);
       $componentName      =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
-      $installSizeArchive = OutputInstallSizeArchive("$inXpiPath\\$componentName");
+      $installSizeArchive = OutputInstallSizeArchive("$inXpiPath/$componentName");
     }
 
     print fpOutIni "Install Size Archive=$installSizeArchive\n";
@@ -191,11 +219,14 @@ while($line = <fpInIt>)
     $line =~ s/\$XPInstallVersion\$/$xpinstallVersion/gi;
     $line =~ s/\$CompanyName\$/$nameCompany/gi;
     $line =~ s/\$ProductName\$/$nameProduct/gi;
-    $line =~ s/\$ProductNameNoVersion\$/$nameProductNoVersion/gi;
+    $line =~ s/\$ProductNameInternal\$/$nameProductInternal/gi;
     $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
     $line =~ s/\$MainIcoFile\$/$fileMainIco/gi;
     $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
     $line =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
+    $line =~ s/\$GreBuildID\$/$greBuildID/gi;
+    $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
+    $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;
     print fpOutIni $line;
   }
 }
@@ -264,9 +295,51 @@ sub OutputInstallSizeArchive()
 
   print "   calculating size for $inPath\n";
   ($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat $inPath;
+  $installSizeArchive   += 32768; # take into account install.js
   $installSizeArchive    = int($size / 1024);
   $installSizeArchive   += 1;
   return($installSizeArchive);
+}
+
+sub OutputInstallSizeSystem()
+{
+  my($inLine, $inPath) = @_;
+  my($installSizeSystem) = 0;
+
+  # split read line by ":" deliminator
+  @colonSplit = split(/:/, $inLine);
+  if($#colonSplit >= 0)
+  {
+    # split line by "," deliminator
+    @commaSplit = split(/\,/, $colonSplit[1]);
+    if($#commaSplit >= 0)
+    {
+      foreach(@commaSplit)
+      {
+        # calculate the size of component installed using ds32.exe in Kbytes
+        print "   calculating size for $inPath/$_";
+        $installSizeSystem    = GetSpaceRequired($inPath/$_);
+      }
+    }
+  }
+
+  $installSizeSystem  = int($installSizeSystem / 1024);
+  $installSizeSystem += 1;
+  return($installSizeSystem);
+}
+
+sub ParseUserAgentShort()
+{
+  my($aUserAgent) = @_;
+  my($aUserAgentShort);
+
+  @spaceSplit = split(/ /, $aUserAgent);
+  if($#spaceSplit >= 0)
+  {
+    $aUserAgentShort = $spaceSplit[0];
+  }
+
+  return($aUserAgentShort);
 }
 
 ##
