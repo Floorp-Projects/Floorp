@@ -547,7 +547,7 @@
     </menu>
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
     <menupopup>
-        <menuitem value="&tableTable.label;"        accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
+        <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorInsertTable()"/>
         <menuseparator />
         <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
         <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
@@ -576,14 +576,14 @@
     <popup id="TextColorPicker"  popupanchor="bottomleft">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker palettename="standard" onclick="EditorSelectTextColor(); window.close()"/>
+      <colorpicker palettename="standard" onclick="EditorSelectTextColor();"/>
     </popup>
 
     <popup id="BackColorPicker"  popupanchor="bottomleft">
       <!-- Text Caption is filled in at runtime -->
   		<!-- TODO: Add "Last color picked" button and text -->
       <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
-  		<colorpicker palettename="standard" onclick="EditorSelectBackColor() window.close()"/>
+  		<colorpicker palettename="standard" onclick="EditorSelectBackColor()"/>
     </popup>
 
     <menupopup id="AlignmentPopup">
