@@ -123,7 +123,7 @@ RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
 #//
 #//------------------------------------------------------------------------
 OS_CFLAGS=$(OPTIMIZER) $(RTL_FLAGS) -W3 -nologo -D_X86_ -D_WINDOWS  -DWIN32 \
-            -DXP_PC -DHW_THREADS -DWINVER=0x400
+            -DXP_PC -DXP_WIN -DXP_WIN32 -DHW_THREADS -DWINVER=0x400
 
 OS_CFLAGS=$(OS_CFLAGS) -DMSVC4 
 
