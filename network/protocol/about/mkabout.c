@@ -755,7 +755,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\211\207\206\213\213\212") ||			/* rpotts */
 	 !PL_strcmp((char*)user, "\211\214\212\203\170\205") ||			/* ruslan */
 	 !PL_strcmp((char*)user, "\212\172\172") ||				/* scc */
-	 !PL_strcmp((char*)user, "\212\172\214\203\203\176\172") ||		/* scullin */
+	 !PL_strcmp((char*)user, "\212\172\214\203\203\200\205") ||		/* scullin */
 	 !PL_strcmp((char*)user, "\212\173\170\176\203\174\220") ||		/* sdagley */
 	 !PL_strcmp((char*)user, "\212\177\170\211\206\205\200") ||		/* sharoni */
 	 !PL_strcmp((char*)user, "\212\177\214\170\205\176") ||			/* shuang */
