@@ -42,8 +42,7 @@
 //
 // This is the dummy plugin manager that interacts with the 5.0 plugin.
 //
-class CPluginManager : public nsIPluginManager,
-                       public nsINetworkManager {
+class CPluginManager : public nsIPluginManager {
 public:
 
     CPluginManager(void);
@@ -348,7 +347,6 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-NS_DEFINE_IID(kINetworkManagerIID, NS_INETWORKMANAGER_IID);
 NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
@@ -1091,11 +1089,6 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
   
     if (iid.Equals(kIPluginManagerIID)) {
         *ptr = (void*) (nsIPluginManager*)this;                                        
-        AddRef();                                                            
-        return NS_OK;                                                        
-    }                                                                      
-    if (iid.Equals(kINetworkManagerIID)) {
-        *ptr = (void*) (nsINetworkManager*)this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
     }                                                                      
