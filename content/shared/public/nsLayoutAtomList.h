@@ -135,6 +135,7 @@ LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 LAYOUT_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
 LAYOUT_ATOM(IBSplitSpecialPrevSibling, "IBSplitSpecialPrevSibling")// nsIFrame*
 LAYOUT_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
+LAYOUT_ATOM(lineCursorProperty, "LineCursorProperty") // nsLineBox*
 LAYOUT_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
 LAYOUT_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*

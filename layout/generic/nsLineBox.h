@@ -1063,6 +1063,16 @@ class nsLineList {
       return rv;
     }
 
+    iterator begin(nsLineBox* aLine)
+    {
+      iterator rv;
+      rv.mCurrent = aLine;
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      rv.mListLink = &mLink;
+#endif
+      return rv;
+    }
+
     const_iterator end() const
     {
       const_iterator rv;
