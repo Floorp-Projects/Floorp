@@ -526,7 +526,7 @@ nsSizeEvent 	event;
   event.windowSize = &mBounds;
   event.eventStructType = NS_SIZE_EVENT;
   event.widget = this;
- 	return ( this->DispatchEvent(&event) );
+ 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
 }
 
     
@@ -560,7 +560,7 @@ nsSizeEvent 	event;
   event.windowSize = &mBounds;
   event.widget = this;
   event.eventStructType = NS_SIZE_EVENT;
- 	return (this->DispatchEvent(&event) );
+ 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
 }
 
     
@@ -941,19 +941,25 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event)
 {
-  PRBool result = PR_FALSE;
-  event->widgetSupports = this;
-
+  aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
-    result = ConvertStatus((*mEventCallback)(event));
+    aStatus = (*mEventCallback)(event);
   }
+
     // Dispatch to event listener if event was not consumed
-  if ((result != PR_TRUE) && (nsnull != mEventListener)) {
-    return ConvertStatus(mEventListener->ProcessEvent(*event));
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*event);
   }
-  else {
-    return(result); 
-  }
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
 }
 
 //-------------------------------------------------------------------------
@@ -972,7 +978,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
   // call the event callback 
   if (nsnull != mEventCallback) 
   	{
-    result = (DispatchEvent(&aEvent)==NS_OK);
+    result = (DispatchWindowEvent(&aEvent));
     return result;
   	}
 
@@ -1090,7 +1096,7 @@ nsRect 					rr;
         SetPort(theport);
 
         event.renderingContext->Init(mContext, this);
-        result = (DispatchEvent(&event)==NS_OK);
+        result = (DispatchWindowEvent(&event));
         NS_RELEASE(event.renderingContext);
       }
     else 
@@ -1140,7 +1146,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
   nsRect* size = aEvent.windowSize;
   if (mEventCallback && !mIgnoreResize) {
-    return(DispatchEvent(&aEvent));
+    return(DispatchWindowEvent(&aEvent));
   }
 
   return FALSE;
@@ -1154,7 +1160,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
   if (mEventCallback) {
-    return(DispatchEvent(aEvent));
+    return(DispatchWindowEvent(aEvent));
   }
   else
    return FALSE;
@@ -1168,7 +1174,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEven
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
   if (mEventCallback) {
-    return(DispatchEvent(&aEvent));
+    return(DispatchWindowEvent(&aEvent));
   }
 
  return FALSE;
