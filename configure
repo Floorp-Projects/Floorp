@@ -2810,13 +2810,13 @@ case "$target" in
 
 *-hpux*)
     DLL_SUFFIX="sl"
-    if test ! "$GNU_CC"; then
+    if test "$GNU_CC"; then
+	DSO_LDOPTS="$DSO_LDOPTS -Wl,-E"
+    else
 	DSO_CFLAGS=""
 	DSO_PIC_CFLAGS="+Z"
+	DSO_LDOPTS='-b -E -L$(DIST)/bin'
     fi
-    DSO_LDOPTS='-b -E -L$(DIST)/bin'
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     cat >> confdefs.h <<\EOF
 #define NSCAP_DISABLE_DEBUG_PTR_TYPES 1
 EOF
