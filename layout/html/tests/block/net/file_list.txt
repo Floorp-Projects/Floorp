@@ -294,11 +294,7 @@ http://www.editions-eyrolles.com/livres/glazman/tests/acss/acss16.htm
 http://www.hixie.ch/tests/adhoc/compat/fonts/001.html
 http://www.hixie.ch/tests/adhoc/compat/fonts/002.html
 http://www.hixie.ch/tests/adhoc/compat/fonts/003.html
-http://www.hixie.ch/tests/adhoc/compat/forms/001.html
-http://www.hixie.ch/tests/adhoc/compat/forms/002.html
-http://www.hixie.ch/tests/adhoc/compat/forms/003.html
 http://www.hixie.ch/tests/adhoc/compat/mozilla/001.cgi
-http://www.hixie.ch/tests/adhoc/compat/mozilla/001.txt
 http://www.hixie.ch/tests/adhoc/compat/tables/001.html
 http://www.hixie.ch/tests/adhoc/compat/xml/001.xml
 http://www.hixie.ch/tests/adhoc/css/background/01.html
