@@ -163,7 +163,7 @@ friend class CTokenHandler;
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
+    virtual nsresult Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
 
 
     /**

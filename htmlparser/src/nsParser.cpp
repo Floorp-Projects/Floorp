@@ -631,7 +631,7 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
  * @param   anHTMLString tells us whether we should assume the content is HTML (usually true)
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall){
+nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall){
  
 #ifdef _rickgdebug
   {
@@ -644,13 +644,17 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEna
   //      bug #2361 to break again!
 
   nsresult result=NS_OK;
+  nsParser* me = this;
+  // Maintain a reference to ourselves so we don't go away
+  // till we're completely done.
+  NS_ADDREF(me);
   if(aSourceBuffer.Length() || mUnusedInput.Length()) {
     mDTDVerification=aEnableVerify;
     CParserContext* pc=0; 
 
-    if((!mParserContext) || (mParserContext->mKey!=&aSourceBuffer))  {
+    if((!mParserContext) || (mParserContext->mKey!=aKey))  {
       //only make a new context if we dont have one, OR if we do, but has a different context key...
-      pc=new CParserContext(new nsScanner(mUnusedInput),&aSourceBuffer,0);
+      pc=new CParserContext(new nsScanner(mUnusedInput),aKey,0);
       if(pc) {
         PushContext(*pc);
         pc->mStreamListenerState=eOnStart;  
@@ -658,7 +662,10 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEna
         if(PR_TRUE==anHTMLString)
           pc->mSourceType="text/html";
       } 
-      else return NS_ERROR_OUT_OF_MEMORY;
+      else {
+        NS_RELEASE(me);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
     else {
       pc=mParserContext;
@@ -673,6 +680,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEna
       delete pc;
     }//if
   }//if
+  NS_RELEASE(me);
   return result;
 }
 
