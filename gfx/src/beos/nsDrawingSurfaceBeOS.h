@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Sergei Dolgov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -80,6 +80,8 @@ public:
   NS_IMETHOD ReleaseBitmap(void);
 
   void GetSize(PRUint32 *aWidth, PRUint32 *aHeight) { *aWidth = mWidth; *aHeight = mHeight; } 
+  bool LockDrawable();
+  void UnlockDrawable();
  
 private: 
   BView			*mView;

@@ -224,8 +224,8 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsIDrawingSurface
 					BRect(dstX, dstY, dstMostX - 1, dstMostY - 1));
 			}
 			// view was locked by LockAndUpdateView() before it was aquired. So unlock.
-			view->UnlockLooper();
 		}
+		((nsRenderingContextBeOS&)aContext).UnlockView();
 		beosdrawing->ReleaseView();
 	}
 	
@@ -291,8 +291,8 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsIDrawingSurface
 				view->DrawBitmap(mImage, BRect(validX, validY, validMostX - 1, validMostY - 1), 
 								BRect(aX + validX, aY + validY, aX + validMostX - 1, aY + validMostY - 1));
 			}
-			view->UnlockLooper();
 		}
+		((nsRenderingContextBeOS&)aContext).UnlockView();
 		beosdrawing->ReleaseView();
 	}
 
@@ -352,7 +352,7 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 			if (!tmpbmp || tmpbitlength == 0)
 			{
 				// Failed. Cleaning things a bit.
-				view->UnlockLooper();
+				((nsRenderingContextBeOS&)aContext).UnlockView();
 				if(tmpbmp)
 					delete tmpbmp;
 				beosdrawing->ReleaseView();
@@ -406,13 +406,14 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 			view->DrawBitmap(tmpbmp, BPoint(aTileRect.x , aTileRect.y ));
 			view->SetDrawingMode(B_OP_COPY);
 			view->Sync(); // useful in multilayered pages with animation
-			view->UnlockLooper();
+			
 			if (tmpbmp) 
 			{
 				delete tmpbmp;
 				tmpbmp = 0;
 			}
 		}
+		((nsRenderingContextBeOS&)aContext).UnlockView();
 		beosdrawing->ReleaseView();
 	}
 	mFlags = 0;
