@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
+
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>&brandShortName; Navigator Preferences Help</title>
 <link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
-  type="text/css"></link>
+  type="text/css"/>
 </head>
 <body>
 
 <h1 id="navigator_preferences">Navigator Preferences</h1>
 
-<p>This section describes how to use the Navigator preference panel. If you are
-  not already viewing the panel, follow these steps:</p>
+<p>This section describes how to use the Navigator preference panel. If
+  you&apos;re not already viewing the panel, follow these steps:</p>
 
 <ol>
   <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
@@ -42,31 +43,46 @@
 
 <p>This section describes how to use the main Navigator preferences panel. If
   you&apos;re not already viewing it, follow these steps:</p>
+
 <ol>
   <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
     Preferences.</li>
   <li>Click the Navigator category.</li>
 </ol>
 
-<p>The Navigator preferences panel allows you to customize three aspects of the
-  browser.</p>
+<p>The Navigator preferences panel allows you to customize certain aspects of
+  the browser.</p>
 
 <ul>
-  <li><strong>When Navigator starts up, display</strong>: Choose one of these
-    buttons to determine what &brandShortName; displays when it first starts
-    up:
-    <ul>
-      <li><strong>Blank page</strong>: Causes Navigator to start up without
-        automatically loading a web page.</li>
-      <li><strong>Home page</strong>: Causes Navigator to load your home page
-        (specified below) every time it starts up.</li>
-      <li><strong>Last page visited</strong>: Causes Navigator to start up by
-        loading the page you were viewing right before you last exited
-	&brandShortName;.</li>
-    </ul>
+  <li><strong>Display on</strong>: Use the drop-down list in combination with
+    the checkboxes to control what will be displayed at startup or when you
+    open a new window or tab:
+    <ol>
+      <li>
+        <ul>
+          <li>Select <strong>Navigator Startup</strong> to set what Navigator
+	    will display at startup.</li>
+          <li>Select <strong>New Window</strong> to set what will be displayed
+	    when opening a new Navigator window.</li>
+          <li>Select <strong>New Tab</strong> to set what will be displayed
+	    when opening a new tab.</li>
+        </ul>
+      </li>
+      <li>Select one of the following checkboxes:
+        <ul>
+          <li><strong>Blank page</strong>: Causes Navigator to display a blank
+            page.</li>
+          <li><strong>Home page</strong>: Causes Navigator to load your home
+	    page (specified below).</li>
+          <li><strong>Last page visited</strong>: Causes Navigator to load the
+	    page you were viewing right before you last exited
+	    &brandShortName;.</li>
+        </ul>
+      </li>
+    </ol>
   </li>
-  <li><strong>Default Browser:</strong> Allows you to set &brandShortName; as
-    the default browser or shows you that it is.
+  <li class="win"><strong>Default Browser:</strong> Allows you to set
+    &brandShortName; as the default browser or shows you that it is.
     <ul>
       <li><strong>Set Default Browser:</strong> Unless it is greyed out, click
         this to set &brandShortName; as your default browser.</li>
@@ -85,8 +101,10 @@
         
 	<p><strong>Caution</strong>: If you edit the field after clicking Use
 	  Current Group, your Home Page Group will be lost.</p>
-
+      
       </li>
+      <li><strong>Restore Default</strong>: Click this to revert to the
+        the default home page.</li>
       <li><strong>Choose File</strong>: Click this to locate a file on disk
         that you want to load as your home page.</li>
     </ul>
@@ -191,49 +209,73 @@
     subcategories are visible, double-click Navigator to expand the list.)</li>
 </ol>
 
-<p>The Helper Applications preferences panel allows you set up how different
-  file types are opened by other applications in &brandShortName;:</p>
+<p>The Helper Applications preferences panel allows you to control how
+  different file types are opened by other applications in
+  &brandShortName;:</p>
 
 <ul>
-  <li><strong>Specify which application should handle each file
-    type:</strong>
+  <li><strong>Specify how to handle files of each type:</strong>
     <ul>
       <li><strong>File types</strong>: Displays the file types that
         &brandShortName; uses. Select one of them to show the following
 	information:
         <ul>
-          <li><strong>Extension</strong>:Displays the file extension of the
+	  <li><strong>Description</strong>: Displays a description of the
 	    selected file type.</li>
-          <li><strong>MIME type</strong>:Displays the MIME type of the selected
+          <li><strong>Extension(s)</strong>: Displays the file extension(s) of
+	    the selected file type.</li>
+          <li><strong>MIME type</strong>: Displays the MIME type of the
+	    selected file type.</li>
+          <li><strong>When encountered</strong>: Displays what kind of action
+	    that will be taken when &brandShortName; encounter the selected
 	    file type.</li>
-          <li><strong>Handled by</strong>: Displays the program that will be
-	    used to open each file of the selected file type.</li>
         </ul>
       </li>
-      <li><strong>New Type</strong>: Click this to add a new file type. Type or
-        choose the description, file extension, MIME type, and
-	application.</li>
+      <li><strong>New Type</strong>: Click this to add a new file type. You see
+        a dialog box:
+	<ul>
+	  <li><strong>Mime Type</strong>: Type the Mime type of the file type
+	    you want to add.</li>
+	  <li><strong>Description</strong>: Type a Descrition of the file
+	    type you want to add.</li>
+	  <li><strong>Extension</strong>: Type the file extension of the file
+	    type you want to add.</li>
+	  <li><strong>When a file of this type is encountered</strong>:
+	    Select one option from the checkboxes:
+	    <ul>
+              <li><strong>Open it using the default application</strong>:
+		Causes the the file to be opened by the default program in
+		your systems settings.</li>
+	      <li><strong>Open it with</strong>: Causes the file to be
+		opened by a program you specify. Use the Choose File button
+		to locate the program on your disk</li>
+	      <li><strong>Save it to disk</strong>: The file will be saved
+		to disk.</li>
+            </ul>
+	  </li>
+	  <li><strong>Always ask me when handling files of this
+	    type</strong>: Select this to make the Download Dialog box always
+	    appear when files of this type are encountered.</li>
+	</ul>
+      </li>
       <li><strong>Edit</strong>: Click this to change the file-handling
         information of a selected file type.</li>
       <li><strong>Remove</strong>: Click this to remove a selected file
         type.</li>
     </ul>
   </li>
-  <li><strong>Plug-in Finder Service</strong>: Select this to always use the
-    Plugin Finder Service (PFS) whenever &brandShortName; needs a new plug-in.
-    If left unselected, the PFS is only used when a plug-in location is not
-    provided by the web page that requires the plug-in.</li>
-  <li><strong>Opening files</strong>:
+  <li><strong>Plug-in Finder Service</strong>:
     <ul>
-      <li><strong>Reset</strong>: Click this to clear any file-opening
-        preferences you may have set by unselecting the &quot;Always ask before
-	opening this type of file&quot; checkbox in the download dialog
-	box.</li>
+      <li><strong>Always use the Netscape Plug-in Finder Service (PFS) to get
+        plug-ins</strong>: Select this to always use the Plugin Finder Service
+	(PFS) whenever &brandShortName; needs a new plug-in. If left
+	unselected, the PFS is only used when a plug-in location is not
+	provided by the web page that requires the plug-in.</li>
     </ul>
   </li>
 </ul>
 
-<p>For more information about handling different file types in
+<p>To learn more about how to handle different file types with
   &brandShortName;, see
   <a href="nav_help.xhtml#managing_different_file_types">Managing Different
   File Types</a>.</p>
@@ -251,7 +293,7 @@
 </ol>
 
 <p>The Smart Browsing preferences panel allows you to better browse web pages
-  using Internet Keywords, and Location bar autocomplete.</p>
+  using Internet Keywords, Location Bar Autocomplete and Domain Guessing.</p>
 
 <ul>
   <li><strong>Internet Keywords</strong>:
@@ -290,6 +332,12 @@
       </li>
     </ul>
   </li>
+  <li><strong>Domain Guessing</strong>: Select this if you want
+    &brandShortName; to automatically add <tt>www.</tt> and <tt>com.</tt> to a
+    web page location that can&apos;t be found. For more detailed information
+    about the Domain Guessing feature, see the online document
+    <a href="http://www.mozilla.org/docs/end-user/domain-guessing.html"
+    target="_blank">Domain Guessing</a>.</li>
 </ul>
 
 <h2 id="internet_search">Navigator Preferences - Internet Search</h2>
@@ -347,9 +395,6 @@
 <p>The Tabbed Browsing preferences panel allows you to set up Tabbed
   Browsing:</p>
 
-<p><strong>Note</strong>: On Mac OS, where instructed to press Control (Ctrl),
-  press Command instead.</p>
-
 <ul>
   <li><strong>Tab Display</strong>:
     <ul>
@@ -361,15 +406,39 @@
 	New Tab&quot; to open a link.</li>
     </ul>
   </li>
+  <li><strong>When opening a bookmark group</strong>:
+    <ul>
+      <li><strong>Add tabs</strong>: Select this if you want a bookmark group
+        to be opened in new tabs.</li>
+      <li><strong>Replace existing tabs</strong>: Select this if you want a
+        bookmark group to replace your existing tabs.</li>
+    </ul>
+  </li>
   <li><strong>Open tabs instead of windows for</strong>:
     <ul>
-      <li><strong>Middle-click or control-click of links in a Web
-        page</strong>: Select this to open web page links in a new tab when
-	clicking a link with the middle mouse button or while pressing
-	Ctrl.</li>
-      <li><strong>Control+Enter in the Location bar</strong>: Select this to
-        open a web-page link in a new tab when you type a URL in the Location
-	Bar and press Ctrl+Enter.</li>
+      <li><strong><span class="mac"><kbd>Cmd</kbd>+click or
+        <kbd>Cmd</kbd>+<kbd>Return</kbd></span><span
+	class="noMac">Middle-click, <kbd>Ctrl</kbd>+click or
+	<kbd>Ctrl</kbd>+<kbd>Enter</kbd> on links in a Web
+	page</span></strong>: Select this to open Web page links in a new tab
+	when clicking a link <span class="mac">and holding down the
+	<kbd>Command</kbd> key or holding down the <kbd>Command</kbd> key and
+	pressing <kbd>Return</kbd> on links</span><span class="noMac">with the
+	middle mouse button, <kbd>Ctrl</kbd>-clicking on links, and pressing
+	<kbd>Ctrl</kbd>+<kbd>Enter</kbd> on links</span>.
+
+	<p><strong>Tip</strong>: Use Find Links as You Type to navigate to the
+	  link you want to open with the keyboard commands above.</p>
+
+      </li>
+
+      <li><strong>
+        <kbd class="mac">Cmd</kbd><kbd class="noMac">Ctrl</kbd>+<kbd
+	class="mac">Return</kbd><kbd class="noMac">Enter</kbd> in the Location
+	bar</strong>: Select this to open a Web page in a new tab when you type
+	the URL of the page in the Location Bar and press
+	<kbd class="mac">Cmd</kbd><kbd class="noMac">Ctrl</kbd>+<kbd
+	class="mac">Return</kbd><kbd class="noMac">Enter</kbd>.</li>
     </ul>
   </li>
 </ul>
@@ -408,7 +477,7 @@
 </ul>
 
 <p>For more information about downloading files from web pages, see
-  <a href="nav_help.xhtml#managing_different_file_types">Managing Different
+  <a href= "nav_help.xhtml#managing_different_file_types">Managing Different
   File Types</a>.</p>
 
 <p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
