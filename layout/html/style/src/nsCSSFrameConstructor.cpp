@@ -979,6 +979,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
     if (NS_FAILED(rv)) return rv;
     aInnerFrame->Init(*aPresContext, aContent, aOuterFrame, innerStyleContext,
                       nsnull);
+    //XXX duplicated call here
     aOuterFrame->SetInitialChildList(*aPresContext, nsnull, aInnerFrame);
 
     if (cellIsParent) {
@@ -1038,6 +1039,8 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
     aNewCaptionFrame->Init(*aPresContext, aContent, outerFrame, 
                            adjStyleContext, nsnull);
     innerFrame->SetNextSibling(aNewCaptionFrame);
+    //XXX duplicated call here
+    outerFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame);
   }
 
   nsFrameItems childItems;
@@ -3027,7 +3030,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
     {
       rv = ConstructTableCaptionFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                      aAbsoluteItems, ignore, newFrame, aFixedItems, tableCreator);
+                                      aAbsoluteItems, newFrame, ignore, aFixedItems, tableCreator);
       aFrameItems.AddChild(newFrame);
       return rv;
     }
