@@ -303,6 +303,7 @@ do_typedef(TreeState *state)
                  (long)IDL_INTEGER(IDL_LIST(IDL_TYPE_ARRAY(complex).size_list).
                                 data).value);
         } else {
+            fputs(" ", state->file);
             fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
         }
     }
