@@ -286,6 +286,10 @@ void nsCaret::DrawCaret()
 					{
 						nsRect		frameRect;
 						theFrame->GetRect(frameRect);
+            if (0 == frameRect.height){
+              frameRect.height = 200;
+              frameRect.y += 200;
+            }
 
 						nsCOMPtr<nsIPresContext> presContext;
 						mPresShell->GetPresContext(getter_AddRefs(presContext));
