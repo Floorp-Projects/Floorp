@@ -62,28 +62,28 @@
 
     <dialogheader id="headertitle"/>
 
-    <groupbox id="offline.titlebox" hidefor="movemail,pop3">
+    <groupbox id="offline.titlebox" hidefor="movemail,pop3,none">
       <caption label="&offlineGroupTitle.label;"/>
 
     <description hidefor="movemail,pop3">&offlineDesc.label;</description>
 
-    <checkbox hidefor="movemail,pop3,nntp" 
+    <checkbox hidefor="movemail,pop3,nntp,none" 
               id="offline.downloadBodiesOnGetNewMail" wsm_persist="true" 
               label="&makeInboxMsgsAvailable.label;" 
               accesskey="&makeInboxMsgsAvailable.accesskey;"/>
 
-    <checkbox hidefor="movemail,pop3,nntp" 
+    <checkbox hidefor="movemail,pop3,nntp,none" 
               id="offline.newFolder" label="&offlineNewFolder.label;" 
               accesskey="&offlineNewFolder.accesskey;"/>
 
-    <separator class="thin" hidefor="movemail,pop3,nntp"/>
+    <separator class="thin" hidefor="movemail,pop3,nntp,none"/>
 
-    <hbox hidefor="movemail,pop3,nntp" align="right">
+    <hbox hidefor="movemail,pop3,nntp,none" align="right">
         <button label="&offlineSelectImap.label;" accesskey="&offlineSelect.accesskey;"
                 oncommand="onClickSelect()" id="selectImapFoldersButton" class="selectForOfflineUseButton"/>
     </hbox>
 
-    <hbox hidefor="movemail,pop3,imap" align="right">
+    <hbox hidefor="movemail,pop3,imap,none" align="right">
         <button label="&offlineSelectNntp.label;" accesskey="&offlineSelect.accesskey;"
                 oncommand="onClickSelect()" id="selectNewsgroupsButton" class="selectForOfflineUseButton"/>
     </hbox>
@@ -93,22 +93,22 @@
     <groupbox id="diskspace.titlebox">
       <caption label="&diskspaceGroupTitle.label;"/>
 
-    <description hidefor="pop3,movemail">&doNotDownload.label;</description>
-    <description hidefor="imap,nntp">&doNotDownloadPop3Movemail.label;</description>
+    <description hidefor="pop3,movemail,none">&doNotDownload.label;</description>
+    <description hidefor="imap,nntp,none">&doNotDownloadPop3Movemail.label;</description>
     
     <hbox align="center" class="indent">
-        <checkbox hidefor="movemail,pop3,imap" wsm_persist="true" id="nntp.notDownloadRead"
+        <checkbox hidefor="movemail,pop3,imap,none" wsm_persist="true" id="nntp.notDownloadRead"
                   label="&nntpNotDownloadRead.label;" accesskey="&nntpNotDownloadRead.accesskey;"/>
     </hbox>
 
-    <hbox align="center" class="indent">
+    <hbox align="center" class="indent" hidefor="none">
         <checkbox  wsm_persist="true" id="offline.notDownload"
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;" oncommand="onCheckItem('bc_notDownload', 'offline.notDownload');"/>
         <textbox wsm_persist="true" id="offline.notDownloadMin" size="2" value="50"  observes="bc_notDownload"/> 
         <label value="&kb.label;"/>
     </hbox>
 
-    <hbox align="center" class="indent" hidefor="movemail,pop3,imap">
+    <hbox align="center" class="indent" hidefor="movemail,pop3,imap,none">
         <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;" oncommand="onCheckItem('bc_downloadMsg', 'nntp.downloadMsg');"/>
         <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="2" value="30" observes="bc_downloadMsg"/>
         <label value="&daysOld.label;"/>
