@@ -1283,6 +1283,15 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 /*  border: 2px dashed green; */
 }
 
+:-moz-anonymous-positioned-block {
+  display: block;
+  position: relative;
+  top: inherit; /* XXXwaterson are there others? */
+  left: inherit;
+  bottom: inherit;
+  right: inherit;
+}
+
 :-moz-line-frame {
   
 }
