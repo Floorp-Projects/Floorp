@@ -63,8 +63,5 @@ Rights Reserved.
 
 <!ENTITY sendDefaultCharset.label             "Default Character Coding:">
 <!ENTITY languages.label					  "Languages">
-<!ENTITY addressingTitle.label				  "Addressing Messages">
-<!ENTITY addressingText.label				  "When you address messages, Mail can autocomplete addresses for you by looking for matching entries in your address books, or showing you a list of possible matches.">
-<!ENTITY addressingEnable.label				  "Enable address autocompletion">
 
 <!-- Tooltips -->  

@@ -12,7 +12,7 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing"];
+    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "addressingAutocomplete"];
   ]]>
   </script>  
     
@@ -35,6 +35,12 @@
 	</box>
 	</titledbox>
 	
-	<box orient="vertical" id="additional_addrbook_prefs"/>
+    <titledbox orient="vertical">
+      <title><text value="&addressingTitle.label;"/></title>
+      <html>&addressingText.label;</html>
+        <checkbox id="addressingAutocomplete" value="&addressingEnable.label;"
+          pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
+          prefattribute="checked"/>
+    </titledbox>
 
 </window>

@@ -16,7 +16,7 @@
     
   <script language="JavaScript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList", "addressingAutocomplete"];
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList"];
 
     function Startup()
     {
@@ -126,13 +126,6 @@
 -->
               
       
-  <titledbox orient="vertical">
-    <title><text value="&addressingTitle.label;"/></title>
-	<html>&addressingText.label;</html>
-		<checkbox id="addressingAutocomplete" value="&addressingEnable.label;"
-              pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
-              prefattribute="checked"/>
-  </titledbox>
 
     
 </window>
