@@ -368,9 +368,11 @@ public class Interpreter {
             case TokenStream.TARGET : {
                 markTargetLabel(node, iCodeTop);
                 // if this target has a FINALLY_PROP, it is a JSR target
-                // and so has a PC value on the top of the stack
+                // and so has a PC value on the top of the stack.
+                // In addition, when called from exception handler, it
+                // will have js object to rethrow behind it
                 if (node.getProp(Node.FINALLY_PROP) != null) {
-                    itsStackDepth = 1;
+                    itsStackDepth = 2;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
                 }
@@ -889,14 +891,8 @@ public class Interpreter {
                     itsStackDepth = 1;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
-                    int theLocalSlot = itsData.itsMaxLocals++;
-                    iCodeTop = addByte(TokenStream.NEWTEMP, iCodeTop);
-                    iCodeTop = addByte(theLocalSlot, iCodeTop);
-                    iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     iCodeTop = addGoto(finallyTarget, TokenStream.GOSUB,
                                        iCodeTop);
-                    iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
-                    iCodeTop = addByte(theLocalSlot, iCodeTop);
                     iCodeTop = addByte(TokenStream.JTHROW, iCodeTop);
                     itsStackDepth = 0;
                     resolveForwardGoto(skippyJumpStart, iCodeTop);
