@@ -2386,7 +2386,6 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
 VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
 {
     REGERR      err = REGERR_OK;
-    REGHANDLE*  reghnd = (REGHANDLE*)hReg;
 
     PR_Lock( reglist_lock );
 
@@ -3606,7 +3605,6 @@ static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *
     REGENUM state = 0;
     REGENUM entrystate = 0;
     REGINFO info;
-	char *path = NULL;
 	int err = REGERR_OK;
     int status = REGERR_OK;
     RKEY key;
@@ -3690,15 +3688,10 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
     HREG hRegTemp;
     char tempfilename[MAX_PATH] = {0};
     char oldfilename[MAX_PATH] = {0};
-    char regbuf[MAXREGPATHLEN+1] = {0};
-    char buffer[MAXREGPATHLEN+1] = {0};
-    char bufvalue[MAXREGPATHLEN+1] = {0};
 
     XP_Bool bCloseTempFile = FALSE;
 
-    char *path = NULL;
     int err = REGERR_OK;
-    int status = REGERR_OK;
     RKEY key;
 
     XP_ASSERT( regStartCount > 0 );
