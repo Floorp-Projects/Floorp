@@ -17,7 +17,7 @@
   </box>
   <box align="vertical" class="cleanborder" flex="100%">
     <html:div>
-      <html:input type="radio" name="andor" value="and"/>
+      <html:input type="radio" checked="1" name="andor" value="and"/>
       Match all of the following
     </html:div>
     <html:div>
