@@ -96,15 +96,14 @@ HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInit
 		return E_INVALIDARG;
 	}
 
+	m_hWndParent = hwndParent;
+	m_rcObjectPos = rcPos;
+
 	// Object must have been created
 	if (m_spObject == NULL)
 	{
-		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-
-	m_hWndParent = hwndParent;
-	m_rcObjectPos = rcPos;
 
 	m_spIViewObject = m_spObject;
 	m_spIOleObject = m_spObject;
@@ -281,6 +280,14 @@ HRESULT CControlSite::Draw(HDC hdc)
 			m_spIViewObject->Draw(DVASPECT_CONTENT, -1, NULL, NULL, NULL, hdc, prcBounds, NULL, NULL, 0);
 		}
 	}
+	else
+	{
+		// Draw something to indicate no control is there
+		HBRUSH hbr = CreateSolidBrush(RGB(200,200,200));
+		FillRect(hdc, &m_rcObjectPos, hbr);
+		DeleteObject(hbr);
+	}
+
 	return S_OK;
 }
 
@@ -303,14 +310,11 @@ HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 HRESULT CControlSite::SetPosition(const RECT &rcPos)
 {
 	NG_TRACE_METHOD(CControlSite::SetPosition);
-	
-	if (m_spIOleInPlaceObject == NULL)
-	{
-		return E_UNEXPECTED;
-	}
-
 	m_rcObjectPos = rcPos;
-	m_spIOleInPlaceObject->SetObjectRects(&m_rcObjectPos, &m_rcObjectPos);
+	if (m_spIOleInPlaceObject)
+	{
+		m_spIOleInPlaceObject->SetObjectRects(&m_rcObjectPos, &m_rcObjectPos);
+	}
 	return S_OK;
 }
 
