@@ -1,3 +1,30 @@
+USERS
+-----
+
+It is helpful to consider the types of users for this system and their
+special needs.
+
+1) Project Managers: not very technical will be administering the
+project and need a GUI to help change various types of project
+information (treestate, message of the day, etc).  They will also need
+summary pages which will show them the current status of all the
+projects which they are working on.  They may occassionally "drill
+down" into the detailed status page but this will not be their primary
+view of the tinderbox system.
+
+2) Build Administrator: A system administrator who will be in charge
+of setting up the build machines, configuring tinderbox and other
+build systems (bugzilla, cvs, bonsai, etc).  A GUI would not be
+helpful as local customizations may require small changes to the code.
+Configurations need to be kept (mostly) in files which are separate
+from the Tinderbox source code so that they can be version controled
+and will not get stepped on when tinderbox is upgradded.
+
+3) Developers: need to view the "state of development" and add notices
+to the notice board.
+
+Improvements needed from Tinderbox1
+-----------------------------------
 
 highly configurable design with multiple Version Control systems
 possible (bonsai, raw cvs, perforce, continuious, clearcase) and
@@ -69,3 +96,7 @@ production machines.
 Put CVS keywords into all the source files so that when the software
 is deployed, there is no doubt what version was checked out and where
 the files are stored in the local version control system.
+
+Pay closer attention to security.  Use taint perl to ensure that
+harmful input does not get used in unexpected ways.  Keep the flow of
+control clear and simple.
