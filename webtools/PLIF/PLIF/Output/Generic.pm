@@ -86,6 +86,9 @@ use PLIF::Output;
 # (which typically calls expat) to get it parsed and then handles it
 # as appropriate to get some string output.
 #
+# The resulting string is then passed to any output filter objects for
+# postprocessing.
+#
 # The output method then looks for a protocol outputter and passes it
 # the final string.
 #
@@ -117,7 +120,7 @@ sub serviceInstanceInit {
     my($app, $session, $protocol) = @_;
     $self->propertySet('actualSession', $session);
     $self->propertySet('actualProtocol', $protocol);
-    $self->propertySet('outputter', $self->app->getService('output.generic.'.$self->actualProtocol));
+    $self->propertySet('outputter', $self->app->getService("output.generic.$protocol"));
 }
 
 # output.generic service instance method
@@ -129,11 +132,14 @@ sub output {
     }
     $self->dump(9, "outputting string '$string' on protocol '". ($self->actualProtocol) .'\'');
     $self->fillData($data);
-    $self->outputter->output($self->app, $session,
-                             $self->app->getService('dataSource.strings')->getExpandedString($self->app, $session, $self->actualProtocol, $string, $data));
-                             # it's not that anyone would override dataSource.strings, it's just that
-                             # people might call it without calling output(), so the right thing here
-                             # is also to call it through getService().
+    # it's not that anyone would override dataSource.strings, it's just that
+    # people might call it without calling output(), so the right thing here
+    # is also to call it through getService():
+    $string = $self->app->getService('dataSource.strings')->getExpandedString($self->app, $session, $self->actualProtocol, $string, $data);
+    foreach my $filter ($self->app->getObjectList('output.filter')) {
+        $string = $filter->filterOutput($self->app, $session, $string);
+    }
+    $self->outputter->output($self->app, $session, $string);
 }
 
 # output.generic service instance method
