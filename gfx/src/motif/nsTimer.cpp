@@ -28,7 +28,7 @@ static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 // Hack for now. This is Bad because it creates a dependency between the widget
 // library and this library. This needs to be replaced with having code 
 // to pass an interface which can be queried for the app context.
-extern XtAppContext gAppContext;
+XtAppContext gAppContext;
 
 extern void nsTimerExpired(XtPointer aCallData);
 
