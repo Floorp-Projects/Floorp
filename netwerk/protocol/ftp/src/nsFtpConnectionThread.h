@@ -68,6 +68,7 @@
 // ftp server types
 #define FTP_GENERIC_TYPE     0
 #define FTP_UNIX_TYPE        1
+#define FTP_VMS_TYPE         8
 #define FTP_NT_TYPE          9
 #define FTP_OS2_TYPE         11
 
@@ -164,6 +165,8 @@ private:
     nsresult StopProcessing();
     nsresult EstablishControlConnection();
     nsresult SendFTPCommand(nsCString& command);
+    void ConvertFilespecToVMS(nsCString& fileSpec);
+    void ConvertDirspecToVMS(nsCString& fileSpec);
     nsresult BuildStreamConverter(nsIStreamListener** convertStreamListener);
     nsresult SetContentType();
     PRBool CanReadEntry();

@@ -1170,16 +1170,18 @@ FTP_STATE
 nsFtpState::R_pwd() {
     if (mResponseCode/100 != 2) 
         return FTP_ERROR;
-    nsCAutoString respStr(mResponseMsg);
-    PRInt32 pos = respStr.FindChar('"');
-    if (pos > -1) {
-        respStr.Cut(0,pos+1);
-        pos = respStr.FindChar('"');
+    if (mServerType != FTP_VMS_TYPE) {
+        nsCAutoString respStr(mResponseMsg);
+        PRInt32 pos = respStr.FindChar('"');
         if (pos > -1) {
-            respStr.Truncate(pos);
-            if (respStr.Last() != '/')
-                respStr.Append("/");
-            mPwd = respStr;
+            respStr.Cut(0,pos+1);
+            pos = respStr.FindChar('"');
+            if (pos > -1) {
+                respStr.Truncate(pos);
+                if (respStr.Last() != '/')
+                    respStr.Append("/");
+                mPwd = respStr;
+            }
         }
     }
     return FTP_S_TYPE;
@@ -1209,6 +1211,10 @@ nsFtpState::R_syst() {
         else if ( mResponseMsg.Find("OS/2", PR_TRUE) > -1)
         {
             mServerType = FTP_OS2_TYPE;
+        }
+        else if ( mResponseMsg.Find("VMS", PR_TRUE) > -1)
+        {
+            mServerType = FTP_VMS_TYPE;
         }
         else
         {
@@ -1289,8 +1295,12 @@ nsFtpState::R_type() {
 nsresult
 nsFtpState::S_cwd() {
     nsCAutoString cwdStr(mPath);
-    if (cwdStr.IsEmpty() || cwdStr.First() != '/')
-        cwdStr.Insert(mPwd,0);
+    if (mServerType == FTP_VMS_TYPE)
+        ConvertDirspecToVMS(cwdStr);
+    else {
+        if (cwdStr.IsEmpty() || cwdStr.First() != '/')
+            cwdStr.Insert(mPwd,0);
+    }
     cwdStr.Insert("CWD ",0);
     cwdStr.Append(CRLF);
 
@@ -1312,8 +1322,12 @@ nsFtpState::R_cwd() {
 nsresult
 nsFtpState::S_size() {
     nsCAutoString sizeBuf(mPath);
-    if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
-        sizeBuf.Insert(mPwd,0);
+    if (mServerType == FTP_VMS_TYPE)
+        ConvertFilespecToVMS(sizeBuf);
+    else {
+        if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
+            sizeBuf.Insert(mPwd,0);
+    }
     sizeBuf.Insert("SIZE ",0);
     sizeBuf.Append(CRLF);
 
@@ -1334,8 +1348,12 @@ nsFtpState::R_size() {
 nsresult
 nsFtpState::S_mdtm() {
     nsCAutoString mdtmBuf(mPath);
-    if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
-        mdtmBuf.Insert(mPwd,0);
+    if (mServerType == FTP_VMS_TYPE)
+        ConvertFilespecToVMS(mdtmBuf);
+    else {
+        if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
+            mdtmBuf.Insert(mPwd,0);
+    }
     mdtmBuf.Insert("MDTM ",0);
     mdtmBuf.Append(CRLF);
 
@@ -1504,8 +1522,12 @@ nsresult
 nsFtpState::S_retr() {
     nsresult rv = NS_OK;
     nsCAutoString retrStr(mPath);
-    if (retrStr.IsEmpty() || retrStr.First() != '/')
-        retrStr.Insert(mPwd,0);
+    if (mServerType == FTP_VMS_TYPE)
+        ConvertFilespecToVMS(retrStr);
+    else {
+        if (retrStr.IsEmpty() || retrStr.First() != '/')
+            retrStr.Insert(mPwd,0);
+    }
     retrStr.Insert("RETR ",0);
     retrStr.Append(CRLF);
     
@@ -1544,6 +1566,12 @@ nsFtpState::R_retr() {
     // If we encounter any at this point, do not try CWD and abort.
     if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
         return FTP_ERROR;
+
+    if (mServerType == FTP_VMS_TYPE) {
+        // We don't handle VMS directory listings yet. If we continue, we get
+        // scs->AsyncConvertData failed (rv=80004005)
+        return FTP_ERROR;
+    }
 
     if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
@@ -1602,6 +1630,9 @@ nsFtpState::S_stor() {
     {
         // kill the first slash since we want to be relative to CWD.
         storStr.Cut(0,1);
+    }
+    if (mServerType == FTP_VMS_TYPE) {
+        ConvertFilespecToVMS(storStr);
     }
     NS_UnescapeURL(storStr);
     storStr.Insert("STOR ",0);
@@ -2383,6 +2414,9 @@ nsFtpState::SetDirMIMEType(nsString& aString) {
     case FTP_OS2_TYPE:
         aString.Append(NS_LITERAL_STRING("os2"));
         break;
+    case FTP_VMS_TYPE:
+        aString.Append(NS_LITERAL_STRING("vms"));
+        break;
     default:
         aString.Append(NS_LITERAL_STRING("generic"));
     }
@@ -2485,3 +2519,31 @@ nsFtpState::SendFTPCommand(nsCString& command)
     return NS_ERROR_FAILURE;
 }
 
+// Convert a relative unix-style filespec to VMS format
+void 
+nsFtpState::ConvertFilespecToVMS(nsCString& fileSpec)
+{
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS %s\n", this, fileSpec.get())); 
+    if (fileSpec.IsEmpty()) {
+        fileSpec.Insert("[]",0);
+    }
+    else {
+        PRInt32 endDir = fileSpec.RFindChar('/');
+        if (endDir > -1) {
+            fileSpec.Cut(endDir,1);
+            fileSpec.Insert(']',endDir);
+            fileSpec.Insert("[.",0);
+            fileSpec.ReplaceChar('/','.');
+        }
+    }
+}
+
+// Convert a relative unix-style dirspec to VMS format
+void 
+nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
+{
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecToVMS %s\n", this, dirSpec.get())); 
+    dirSpec.ReplaceChar('/','.');
+    dirSpec.Insert("[.",0);
+    dirSpec.Append(']');
+}
