@@ -49,6 +49,7 @@ Rights Reserved.
               label="&accountTypeTitle.label;"
               onpageadvanced="return acctTypePageUnload();">
     <vbox flex="1">
+      <description>&accountSetupInfo.label;</description>
       <description>&accountTypeDesc.label;</description>
       <description>&accountTypeDirections.label;</description>
       <separator/>
