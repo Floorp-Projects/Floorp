@@ -1289,9 +1289,12 @@ nsXBLPrototypeBinding::CreateKeyHandlers()
       }
 
       if (i == count) {
-        NS_NewXBLKeyEventHandler(eventAtom, phase, type, &handler);
-        if (handler)
-          mKeyHandlers.AppendObject(handler);
+        nsRefPtr<nsXBLKeyEventHandler> newHandler;
+        NS_NewXBLKeyEventHandler(eventAtom, phase, type,
+                                 getter_AddRefs(newHandler));
+        if (newHandler)
+          mKeyHandlers.AppendObject(newHandler);
+        handler = newHandler;
       }
 
       if (handler)
