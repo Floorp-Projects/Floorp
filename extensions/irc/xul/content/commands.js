@@ -1557,7 +1557,7 @@ function cmdRejoin(e)
     {
         if (!e.reason)
             e.reason = "";
-        e.channel.part(e.reason);
+        e.channel.dispatch("part", { reason: e.reason, noDelete: true });
     }
 
     e.channel.join(e.channel.mode.key);
