@@ -13,30 +13,16 @@
 <html:script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
 	<!-- Charset Menu -->
-	<menu id="charsetMenu" value="&charsetMenu.label;">
+	<menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BSCharsetMenuRoot">
+        <template>
+            <rule>
+	            <menupopup>
+                <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+	            </menupopup>
+            </rule>
+        </template>
+
         <menupopup>
-  	    <menu value="Static"  datasources="rdf:charset-menu" ref="NC:BSCharsetMenuRoot">
-            <template>
-                <rule>
-		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
-			        </menupopup>
-                </rule>
-            </template>
-            <menupopup>
-            </menupopup>
-        </menu>
-  	    <menu value="Dynamic"  datasources="rdf:charset-menu" ref="NC:BDCharsetMenuRoot">
-            <template>
-                <rule>
-		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
-			        </menupopup>
-                </rule>
-            </template>
-            <menupopup>
-            </menupopup>
-        </menu>
   	    <menu value="More"  datasources="rdf:charset-menu" ref="NC:BMCharsetMenuRoot">
             <template>
                 <rule>
