@@ -34,16 +34,23 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsAuthEngine::nsAuthEngine()
 {
-    if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mAuthList))))
-        NS_ERROR("unable to create new auth list");
-    if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mProxyAuthList))))
-        NS_ERROR("unable to create new auth list");
+    Init();
 }
 
 nsAuthEngine::~nsAuthEngine()
 {
     mAuthList->Clear();
     mProxyAuthList->Clear();
+}
+
+nsresult
+nsAuthEngine::Init()
+{
+    if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mAuthList))))
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mProxyAuthList))))
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 nsresult
@@ -61,8 +68,8 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
     if (!i_URI || !o_AuthString)
         return NS_ERROR_NULL_POINTER;
     *o_AuthString = nsnull;
-    NS_ASSERTION(mAuthList, "No auth list!");
-    if (!mAuthList) return NS_ERROR_FAILURE;
+    // mAuthList may have been cleared from logout
+    if (!mAuthList) return NS_OK;
 
     nsXPIDLCString host;
     rv = i_URI->GetHost(getter_Copies(host));
@@ -72,13 +79,17 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString dir;
     rv = i_URI->GetPath(getter_Copies(dir));
+    if (NS_FAILED(rv)) return rv;
+
+    // just in case there is a prehost in the URL...
+    nsXPIDLCString prehost;
+    rv = i_URI->GetPreHost(getter_Copies(prehost));
+    if (NS_FAILED(rv)) return rv;
 
     // remove everything after the last slash
     // so we're comparing raw dirs
     char *lastSlash = PL_strrchr(dir, '/');
     if (lastSlash) lastSlash[1] = '\0';
-
-    if (NS_FAILED(rv)) return rv;
 
     PRUint32 count=0; 
     (void)mAuthList->Count(&count);
@@ -94,31 +105,39 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
             return (!*o_AuthString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
         }
 
-        /*
-        // TODO
-        if (prehost)
-        {
-            if (0 == PL_strncasecmp(prehost, auth->username, 
-                        PL_strlen(auth->username)))
-            {
-                char* passwordStart = PL_strchr(prehost, ':');
-                if (passwordStart)
-                {
-                    if (0 == PL_strncasecmp(passwordStart+1, 
-                                auth->password,
-                                PL_strlen(auth->password)))
-                    {
-                    }
-                }
-            }
-        }
-        */
         nsXPIDLCString authHost;
         PRInt32 authPort;
         nsXPIDLCString authDir;
         (void)auth->uri->GetHost(getter_Copies(authHost));
         (void)auth->uri->GetPort(&authPort);
         (void)auth->uri->GetPath(getter_Copies(authDir));
+
+#if 0 // turn on later...
+        // if a prehost was provided compare the usernames (which should) 
+        // at least be there... 
+        if (prehost)
+        {
+            if (0 == PL_strncasecmp(prehost, auth->username, 
+                        PL_strlen(auth->username)))
+            {
+                char* passwordStart = PL_strchr(prehost, ':');
+                if (passwordStart && auth->password)
+                {
+                    if (0 != PL_strncasecmp(passwordStart+1, 
+                                auth->password,
+                                PL_strlen(auth->password)))
+                    {
+                        // no match since the passwords didn't match...
+                        return NS_OK; 
+                    }
+                }
+                else
+                    return NS_OK;
+            }
+            else // no match
+                return NS_OK;
+        }
+#endif
 
         // remove everything after the last slash
         // so we're comparing raw dirs
@@ -143,13 +162,19 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
         const char* i_AuthString, 
         PRBool bProxyAuth)
 {
+    nsresult rv;
     if (!i_URI || !i_AuthString)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(bProxyAuth ? mProxyAuthList : mAuthList, 
-            "No authentication list");
-    if ((bProxyAuth && !mProxyAuthList) || (!bProxyAuth && !mAuthList))
-        return NS_ERROR_FAILURE;
+    nsISupportsArray* list = bProxyAuth ? mProxyAuthList : mAuthList; 
+
+    // list may have been cleared by Logout...
+    if (!list)
+        rv = Init();
+
+    NS_ASSERTION(list, "Failed to create the auth list!");
+    if (!list)
+        return rv;
 
     // TODO Extract user/pass info if available
     nsAuth* auth = new nsAuth(i_URI, i_AuthString);
@@ -157,10 +182,7 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
         return NS_ERROR_OUT_OF_MEMORY;
     
     // We have to replace elements with earliar matching...TODO
-    return
-        bProxyAuth ? 
-        (mProxyAuthList->AppendElement(auth) ? NS_OK : NS_ERROR_FAILURE):
-        (mAuthList->AppendElement(auth) ? NS_OK : NS_ERROR_FAILURE);
+    return (list->AppendElement(auth) ? NS_OK : NS_ERROR_FAILURE);
 }
 
 
@@ -173,9 +195,9 @@ nsAuthEngine::GetProxyAuthString(const char* i_Host,
     if (!o_AuthString)
         return NS_ERROR_NULL_POINTER;
     *o_AuthString = nsnull;
-    NS_ASSERTION(mProxyAuthList, "No proxy auth list!");
+    // list may have been cleared by logout...
     if (!mProxyAuthList)
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
     PRUint32 count=0;
     (void)mProxyAuthList->Count(&count);
@@ -200,7 +222,6 @@ nsAuthEngine::GetProxyAuthString(const char* i_Host,
     return rv;
 }
 
-   
 nsresult
 nsAuthEngine::SetProxyAuthString(const char* host,
         PRInt32 port,

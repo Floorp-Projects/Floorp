@@ -106,8 +106,8 @@ nsHTTPHandler::GetScheme(char * *o_Scheme)
 
 /*
  * CategoryCreateService()
- * Given a category, this convenience functions enumerates the category and creates
- * a service of every CID or ProgID registered under the category
+ * Given a category, this convenience functions enumerates the category and 
+ * creates a service of every CID or ProgID registered under the category
  * @category: Input category
  * @return: returns error if any CID or ProgID registered failed to create.
  */
@@ -117,11 +117,13 @@ CategoryCreateService( const char *category )
     nsresult rv = NS_OK;
 
     int nFailed = 0; 
-    nsCOMPtr<nsICategoryManager> categoryManager = do_GetService("mozilla.categorymanager.1", &rv);
+    nsCOMPtr<nsICategoryManager> categoryManager = 
+        do_GetService("mozilla.categorymanager.1", &rv);
     if (!categoryManager) return rv;
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = categoryManager->EnumerateCategory(category, getter_AddRefs(enumerator));
+    rv = categoryManager->EnumerateCategory(category, 
+            getter_AddRefs(enumerator));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISupports> entry;
@@ -146,8 +148,9 @@ CategoryCreateService( const char *category )
         if (NS_SUCCEEDED(rv))
         {
 #ifdef DEBUG_dp
-            printf("CategoryCreateInstance: Instantiating cid: %s in category %s.\n",
-                   (const char *)cidString, category);
+        printf("CategoryCreateInstance: Instantiating cid: %s \
+                in category %s.\n",
+               (const char *)cidString, category);
 #endif /* DEBUG_dp */
             // Create a service from the cid
             nsCOMPtr<nsISupports> instance = do_GetService(cid, &rv);
@@ -155,7 +158,8 @@ CategoryCreateService( const char *category )
         else
         {
 #ifdef DEBUG_dp
-            printf("HTTP Handler: Instantiating progid %s in http startup category.\n", (const char *)cidString);
+            printf("HTTP Handler: Instantiating progid %s \
+                    in http startup category.\n", (const char *)cidString);
 #endif /* DEBUG_dp */
             // This might be a progid. Try that too.
             nsCOMPtr<nsISupports> instance = do_GetService(cidString, &rv);
@@ -691,7 +695,8 @@ nsHTTPHandler::Init()
 
     mSessionStartTime = PR_Now();
 
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("Creating nsHTTPHandler [this=%x].\n", this));
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("Creating nsHTTPHandler [this=%x].\n", 
+                this));
 
     // Initialize the Atoms used by the HTTP protocol...
     nsHTTPAtoms::AddRefAtoms();
@@ -715,8 +720,8 @@ nsHTTPHandler::Init()
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
     CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
-    // if creating the category service fails, that doesn't mean we should fail to create
-    // the http handler
+    // if creating the category service fails, that doesn't mean we should 
+    // fail to create the http handler
     return NS_OK;
 }
 
@@ -862,7 +867,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::RequestTransport."
-            "\tGot a socket transport for nsHTTPChannel [%x]. %d Active transports.\n",
+            "\tGot a socket transport for nsHTTPChannel [%x]. %d " 
+            " Active transports.\n",
             i_Channel, count+1));
 
     return rv;
@@ -965,7 +971,8 @@ nsresult nsHTTPHandler::CancelPendingChannel(nsHTTPChannel* aChannel)
   PRBool ret;
 
   // XXX: RemoveElement *really* returns a PRBool :-(
-  ret = (PRBool) mPendingChannelList->RemoveElement((nsISupports*)(nsIRequest*)aChannel);
+  ret = (PRBool) mPendingChannelList->RemoveElement(
+            (nsISupports*)(nsIRequest*)aChannel);
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPHandler::CancelPendingChannel."
@@ -1074,7 +1081,8 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
 	nsXPIDLCString httpVersion;
-    rv = mPrefs -> CopyCharPref("network.http.version", getter_Copies(httpVersion));
+    rv = mPrefs -> CopyCharPref("network.http.version", 
+            getter_Copies(httpVersion));
 	if (NS_SUCCEEDED (rv) && httpVersion)
 	{
 		if (!PL_strcmp (httpVersion, "1.1"))

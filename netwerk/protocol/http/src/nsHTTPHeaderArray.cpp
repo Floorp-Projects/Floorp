@@ -140,7 +140,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(entry);
-    nsresult rv = mHTTPHeaders->AppendElement(entry) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+    // XXX this method incorrectly returns a bool
+    nsresult rv = mHTTPHeaders->AppendElement(entry) ? NS_OK : NS_ERROR_FAILURE;
     NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
   } 
   // 
@@ -156,7 +157,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
         entry->mValue.Append(LF);
         entry->mValue.Append(aValue);
     } else {
-        // delimit each value from the others using a comma (HTTP spec delimiter)
+        // delimit each value from the others using a comma(HTTP spec delimiter)
         entry->mValue.Append(", ");
         entry->mValue.Append(aValue);
     }

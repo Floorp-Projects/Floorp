@@ -53,8 +53,6 @@ nsBasicAuth::Authenticate(nsIURI* i_URI,
             return NS_ERROR_FAILURE; // ??
         nsString authString("Basic ");
         authString += tempBuff;
-        // Copy this set into an nsAuth and save to nsAuthList
-        // TODO
         *oResult = authString.ToNewCString();
         PR_Free(tempBuff);
         rv = NS_OK;
@@ -62,23 +60,7 @@ nsBasicAuth::Authenticate(nsIURI* i_URI,
     return rv;
 }
 
-NS_IMETHODIMP
-nsBasicAuth::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    *aInstancePtr = NULL;
-    
-    if (aIID.Equals(NS_GET_IID(nsISupports))) 
-    {
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
- 
 NS_IMPL_ADDREF(nsBasicAuth);
 NS_IMPL_RELEASE(nsBasicAuth);
 
+NS_IMPL_QUERY_INTERFACE0(nsBasicAuth);
