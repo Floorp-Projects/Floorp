@@ -99,15 +99,6 @@ public:
                             const nsIID &aIID,
                             void **aResult) = 0;
 
-  // Creates a class instance for a specific class ID
-  /*
-  NS_IMETHOD CreateInstance2(const nsCID &aClass, 
-                             nsISupports *aDelegate,
-                             const nsIID &aIID,
-                             void *aSignature,
-                             void **aResult) = 0;
-  */
-
   // Manually registry a factory for a class
   NS_IMETHOD RegisterFactory(const nsCID &aClass,
                              const char *aClassName,
@@ -127,10 +118,6 @@ public:
   NS_IMETHOD UnregisterFactory(const nsCID &aClass,
                                nsIFactory *aFactory) = 0;
 
-  // Manually unregister a dynamically loaded factory for a class
-  NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                               const char *aLibrary) = 0;
-
   // Manually unregister a dynamically loaded component
   NS_IMETHOD UnregisterComponent(const nsCID &aClass,
                                  const char *aLibrary) = 0;
@@ -146,13 +133,13 @@ public:
   // ".dso",    // Unix
   // ".so",     // Unix
   // ".sl",     // Unix: HP
-  // "_dll",    // Mac
+  // ".shlb",	// Mac
   // ".dlm",    // new for all platforms
   //
   // Directory and fullname are what NSPR will accept. For eg.
-  // 	WIN	y:/home/dp/mozilla/dist/bin
-  //	UNIX	/home/dp/mozilla/dist/bin
-  //	MAC	/Hard drive/mozilla/dist/apprunner
+  //	MAC		/Hard drive/mozilla/dist/bin
+  // 	WIN		y:\Hard drive\mozilla\dist\bin (or) y:/Hard drive/mozilla/dist/bin
+  //	UNIX	/Hard drive/mozilla/dist/bin
   //
   enum RegistrationTime {
 	NS_Startup = 0,
@@ -221,10 +208,6 @@ public:
   // Manually unregister a factory for a class
   static nsresult UnregisterFactory(const nsCID &aClass,
                                     nsIFactory *aFactory);
-
-  // Manually unregister a dynamically loaded factory for a class
-  static nsresult UnregisterFactory(const nsCID &aClass,
-                                    const char *aLibrary);
 
   // Manually unregister a dynamically loaded component
   static nsresult UnregisterComponent(const nsCID &aClass,

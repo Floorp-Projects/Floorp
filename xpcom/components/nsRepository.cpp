@@ -119,16 +119,6 @@ nsComponentManager::UnregisterFactory(const nsCID &aClass,
 }
 
 nsresult
-nsComponentManager::UnregisterFactory(const nsCID &aClass,
-                                      const char *aLibrary)
-{
-    nsIComponentManager* cm;
-    nsresult rv = NS_GetGlobalComponentManager(&cm);
-    if (NS_FAILED(rv)) return rv;
-    return cm->UnregisterFactory(aClass, aLibrary);
-}
-
-nsresult
 nsComponentManager::UnregisterComponent(const nsCID &aClass,
                                         const char *aLibrary)
 {
