@@ -92,7 +92,6 @@ xp_mem.h
 xp_mesg.h
 xp_ncent.h
 xp_qsort.h
-xp_reg.h
 xp_rgb.h
 xp_sec.h
 xp_str.h
