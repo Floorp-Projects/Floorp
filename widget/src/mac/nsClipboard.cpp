@@ -43,7 +43,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsIImage.h"
+#include "nsIImageMac.h"
 #include "nsMemory.h"
 
 #include <Scrap.h>
@@ -146,28 +146,21 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
       else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
                   strcmp(flavorStr, kGIFImageMime) == 0 ) {
         // we have an image, which is in the transferable as an nsIImage. Convert it
-        // to PICT and put those bits on the clipboard. Don't put the pointer itself on
-        // the clipboard.
-#if NOT_YET_IMPLEMENTED      
+        // to PICT (PicHandle) and put those bits on the clipboard. The actual size
+        // of the picture is the size of the handle, not sizeof(Picture).
         nsCOMPtr<nsISupports> imageSupports;
         errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(imageSupports), &dataSize );
-        nsCOMPtr<nsIImage> image ( do_QueryInterface(imageSupports) );
+        nsCOMPtr<nsIImageMac> image ( do_QueryInterface(imageSupports) );
         if ( image ) {
-          PixMap* pm = NS_REINTERPRET_CAST(PixMap*, image->GetBitInfo());          
-          if ( pm ) {
-          
-            // create a GWorld, clear it out
-            
-            // blit pixmap into GWorld, code from sfraser
-            
-            errCode = PutOnClipboard ( 'PICT', data, dataSize );
-          
-          
+          PicHandle picture = nsnull;
+          image->ConvertToPICT ( &picture );
+          if ( picture ) {
+            errCode = PutOnClipboard ( 'PICT', *picture, ::GetHandleSize((Handle)picture) );
+            ::KillPicture ( picture );
           }
         }
         else
-          NS_WARNING ( "Image isn't an nsIImage in transferable" );
-#endif      
+          NS_WARNING ( "Image isn't an nsIImageMac in transferable" );
       }
       else {
         // we don't know what we have. let's just assume it's unicode but doesn't need to be
