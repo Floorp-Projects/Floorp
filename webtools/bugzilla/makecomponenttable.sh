@@ -154,7 +154,8 @@ insert into components (value, program, initialowner) values ("xpidl", "NGLayout
 insert into components (value, program, initialowner) values ("Bonsai", "Webtools", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("Bugzilla", "Webtools", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("Despot", "Webtools", "terry@mozilla.org");
-insert into components (value, program, initialowner) values ("Mozbot", "Webtools", "harrison@netscape.com");
+insert into components (value, program, initialowner) values ("LXR", "Webtools", "endico@mozilla.org");
+insert into components (value, program, initialowner) values ("Mozbot", "Webtools", "terry@netscape.com");
 insert into components (value, program, initialowner) values ("Tinderbox", "Webtools", "terry@mozilla.org");
 
 
