@@ -44,7 +44,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptEventListener.h"
 #include "nsIJSEventListener.h"
-#include "nsDOMEventsIIDs.h"
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsLayoutAtoms.h"
@@ -279,20 +278,48 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
 
 EventArrayType nsEventListenerManager::GetTypeForIID(const nsIID& aIID)
 { 
-  if (aIID.Equals(kIDOMMouseListenerIID)) return eEventArrayType_Mouse;
-  if (aIID.Equals(kIDOMMouseMotionListenerIID)) return eEventArrayType_MouseMotion;
-  if (aIID.Equals(kIDOMContextMenuListenerIID)) return eEventArrayType_ContextMenu;
-  if (aIID.Equals(kIDOMKeyListenerIID)) return eEventArrayType_Key;
-  if (aIID.Equals(kIDOMLoadListenerIID)) return eEventArrayType_Load;
-  if (aIID.Equals(kIDOMFocusListenerIID)) return eEventArrayType_Focus;
-  if (aIID.Equals(kIDOMFormListenerIID)) return eEventArrayType_Form;
-  if (aIID.Equals(kIDOMDragListenerIID)) return eEventArrayType_Drag;
-  if (aIID.Equals(kIDOMPaintListenerIID)) return eEventArrayType_Paint;
-  if (aIID.Equals(kIDOMTextListenerIID)) return eEventArrayType_Text;
-  if (aIID.Equals(kIDOMCompositionListenerIID)) return eEventArrayType_Composition;
-  if (aIID.Equals(kIDOMMenuListenerIID)) return eEventArrayType_Menu;
-  if (aIID.Equals(kIDOMScrollListenerIID)) return eEventArrayType_Scroll;
-  if (aIID.Equals(kIDOMMutationListenerIID)) return eEventArrayType_Mutation;
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener)))
+      return eEventArrayType_Mouse;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseMotionListener)))
+    return eEventArrayType_MouseMotion;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMContextMenuListener)))
+    return eEventArrayType_ContextMenu;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener)))
+    return eEventArrayType_Key;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMLoadListener)))
+    return eEventArrayType_Load;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMFocusListener)))
+    return eEventArrayType_Focus;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMFormListener)))
+    return eEventArrayType_Form;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMDragListener)))
+    return eEventArrayType_Drag;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMPaintListener)))
+    return eEventArrayType_Paint;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMTextListener)))
+    return eEventArrayType_Text;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMCompositionListener)))
+    return eEventArrayType_Composition;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMMenuListener)))
+    return eEventArrayType_Menu;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMScrollListener)))
+    return eEventArrayType_Scroll;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMMutationListener)))
+    return eEventArrayType_Mutation;
+
   return eEventArrayType_None;
 }
 

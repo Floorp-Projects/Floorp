@@ -46,7 +46,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsString.h"
-#include "nsDOMEventsIIDs.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
