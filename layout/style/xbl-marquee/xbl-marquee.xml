@@ -73,6 +73,9 @@
           return myScrollDelay;
           ]]>
         </getter>
+        <setter>
+          this.setAttribute("scrolldelay", val);
+        </setter>
       </property>
 
       <property name="direction">
@@ -233,13 +236,13 @@
 
           if (this.hasAttribute('height')) {
             height = this.getAttribute('height');
-            this.outerDiv.style.height = height;
+            this.outerDiv.style.height = height + "px";
           }
 
-          this.outerDiv.style.width = this.width;
+          this.outerDiv.style.width = this.width + "px";
 
           if ((this.direction == "up") || (this.direction == "down")) {
-            this.innerDiv.style.padding = height + " 0";
+            this.innerDiv.style.padding = height + "px" + " 0";
           }
   
           // Some sites access the element via the evil IE way of elementID.foo()
