@@ -51,11 +51,6 @@ static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
 
 NS_IMPL_AGGREGATED(nsObserver)
 
-NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer)
-{
-    return nsObserver::Create(outer, NS_GET_IID(nsIObserver), (void**)anObserver);
-}
-
 NS_METHOD
 nsObserver::Create(nsISupports* outer, const nsIID& aIID, void* *anObserver)
 {

@@ -38,7 +38,6 @@
 #include "nsIModule.h"
 #include "xcDll.h"
 #include "nsHashtable.h"
-#include "nsHashtableEnumerator.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"

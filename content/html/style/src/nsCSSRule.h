@@ -40,7 +40,6 @@
 
 #include "nsISupports.h"
 
-class nsIArena;
 class nsIStyleSheet;
 class nsICSSStyleSheet;
 class nsIPresContext;

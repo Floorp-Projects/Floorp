@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCSSRule.h"
 #include "nsCRT.h"
-#include "nsIArena.h"
 #include "nsICSSStyleSheet.h"
 
 nsCSSRule::nsCSSRule(void)

@@ -50,7 +50,6 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
-#include "nsIArena.h"
 #include "nsIAtom.h"
 #include "nsCRT.h"
 #include "nsString.h"

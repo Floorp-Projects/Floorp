@@ -48,7 +48,6 @@
 #include "nsIAtom.h"
 
 class nsIAtom;
-class nsIArena;
 class nsCSSDeclaration;
 class nsICSSStyleSheet;
 

@@ -79,9 +79,6 @@ interface nsIBinaryOutputStream : nsIOutputStream {
 
 %{C++
 
-NS_COM nsresult
-NS_NewBinaryOutputStream(nsIBinaryOutputStream* *aResult, nsIOutputStream* aDestStream);
-
 inline nsresult
 NS_WriteOptionalStringZ(nsIBinaryOutputStream* aStream, const char* aString)
 {

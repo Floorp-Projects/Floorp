@@ -73,9 +73,6 @@ interface nsIBinaryInputStream : nsIInputStream {
 
 %{C++
 
-NS_COM nsresult
-NS_NewBinaryInputStream(nsIBinaryInputStream* *aResult, nsIInputStream* aSrcStream);
-
 inline nsresult
 NS_ReadOptionalCString(nsIBinaryInputStream* aStream, nsACString& aResult)
 {

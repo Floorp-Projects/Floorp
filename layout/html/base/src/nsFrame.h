@@ -140,7 +140,7 @@ public:
   void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
 
   // Overridden to prevent the global delete from being called, since the memory
-  // came out of an nsIArena instead of the global delete operator's heap.  
+  // came out of an arena instead of the global delete operator's heap.  
   // XXX Would like to make this private some day, but our UNIX compilers can't 
   // deal with it.
   void operator delete(void* aPtr, size_t sz);

@@ -68,6 +68,4 @@ private:
 
 };
 
-extern NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer = NULL);
-
 #endif /* nsObserver_h___ */

@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsReflowType.h"
 class nsHTMLReflowCommand;
-class nsIArena;
 class nsIAtom;
 class nsINodeInfo;
 class nsIContent;
