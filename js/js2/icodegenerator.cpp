@@ -1640,14 +1640,13 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
             icg.parameterList->setPositionalCount(positionalCount);
             unnamed = false;
         }
-        positionalCount++;
 
         // The rest parameter is ignored in this processing - we push it to the end of the list.
         // But we need to track whether it comes before or after the |
         if (v == f->function.restParameter) {
             icg.parameterList->setRestParameter( (unnamed) ? ParameterList::HasRestParameterBeforeBar : ParameterList::HasRestParameterAfterBar );
         }
-        else {
+        else {            
             if (v->name && (v->name->getKind() == ExprNode::identifier)) {
                 JSType *pType = extractType(v->type);
                 TypedRegister r = icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, (v->initializer != NULL), pType);
@@ -1658,6 +1657,7 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
                 }
                 // every unnamed parameter is also named with it's positional name
                 if (unnamed) {
+                    positionalCount++;
                     s << r.first - 1;  // the first positional parameter is '0'
                     icg.parameterList->add(mContext->getWorld().identifiers[s], r, (v->initializer != NULL));
                     s.clear();
@@ -1666,6 +1666,7 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
         }
         v = v->next;
     }
+    if (unnamed) icg.parameterList->setPositionalCount(positionalCount);
 
     // now allocate the rest parameter
     if (f->function.restParameter) {
