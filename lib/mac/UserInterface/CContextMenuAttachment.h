@@ -21,6 +21,7 @@
 #pragma once
 
 #include <LAttachment.h>
+#include "Netscape_Constants.h"		// for EClickState
 
 class LCommander;
 struct SMouseDownEvent;
@@ -50,13 +51,6 @@ public:
 							CContextMenuAttachment(LStream* inStream);
 	virtual					~CContextMenuAttachment();
 	
-		enum EClickState {
-			eMouseHysteresis	=	6
-		,	eMouseDragging		=	1
-		,	eMouseTimeout
-		,	eMouseUpEarly
-		,	eHandledByAttachment
-		};
 	struct SExecuteParams
 	{
 		const SMouseDownEvent*	inMouseDown;

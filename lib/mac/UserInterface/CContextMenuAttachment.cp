@@ -41,7 +41,7 @@ CContextMenuAttachment::~CContextMenuAttachment()
 } // CContextMenuAttachment::CContextMenuAttachment
 
 //-----------------------------------
-CContextMenuAttachment::EClickState CContextMenuAttachment::WaitMouseAction(
+EClickState CContextMenuAttachment::WaitMouseAction(
 	const Point& 	inInitialPoint,
 	Int32			inWhen,
 	Int32			inDelay)
@@ -61,8 +61,8 @@ CContextMenuAttachment::EClickState CContextMenuAttachment::WaitMouseAction(
 	{
 		Point theCurrentPoint;
 		::GetMouse(&theCurrentPoint);
-		if ((abs(theCurrentPoint.h - inInitialPoint.h) >= eMouseHysteresis) ||
-			(abs(theCurrentPoint.v - inInitialPoint.v) >= eMouseHysteresis))
+		if ((abs(theCurrentPoint.h - inInitialPoint.h) >= kMouseHysteresis) ||
+			(abs(theCurrentPoint.v - inInitialPoint.v) >= kMouseHysteresis))
 			return eMouseDragging;
 		Int32 now = ::TickCount();
 		if (abs( now - inWhen ) > inDelay)
@@ -215,7 +215,7 @@ void CContextMenuAttachment::DoPopup(const SMouseDownEvent& inMouseDown, EClickS
 							whereGlobal.h - 5,
 							defaultItem);
 			mExecuteHost = false;
-			outResult = eHandledByAttachment;
+			outResult = eMouseHandledByAttachment;
 			// Restore the system font
 			::LMSetSysFontFam(saveFont);
 			::LMSetSysFontSize(saveSize);

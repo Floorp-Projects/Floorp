@@ -36,15 +36,6 @@ class CHTMLClickRecord
 	
 	public:
 	
-		enum EClickState {
-			eUndefined					=	0,
-			eMouseHystersis				=	6,
-			eMouseDragging				=	1,
-			eMouseTimeout,
-			eMouseUpEarly,
-			eHandledByAttachment
-		};
-		
 					CHTMLClickRecord(
 								Point 				inLocalWhere,
 								const SPoint32&		inImageWhere,

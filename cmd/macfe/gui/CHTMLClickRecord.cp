@@ -194,7 +194,7 @@ Boolean CHTMLClickRecord::PixelReallyInElement(
 }
 
 //-----------------------------------
-CHTMLClickRecord::EClickState CHTMLClickRecord::WaitForMouseAction(
+EClickState CHTMLClickRecord::WaitForMouseAction(
 	const SMouseDownEvent&		inMouseDown,
 	LAttachable*				inAttachable,
 	Int32						inDelay,
@@ -209,14 +209,14 @@ CHTMLClickRecord::EClickState CHTMLClickRecord::WaitForMouseAction(
 	
 	CContextMenuAttachment::SExecuteParams params;
 	params.inMouseDown = &inMouseDown;
-	params.outResult = (CContextMenuAttachment::EClickState)eUndefined;
+	params.outResult = eMouseUndefined;
 	if (inExecuteContextMenuAttachment)
 	{
 	 	inAttachable->ExecuteAttachments(
 			CContextMenuAttachment::msg_ContextMenu,
 			(void*)&params);
 	}
-	if (params.outResult != eUndefined)
+	if (params.outResult != eMouseUndefined)
 		return (EClickState)params.outResult;
 
 	// ¥ The old way.
@@ -227,7 +227,7 @@ CHTMLClickRecord::EClickState CHTMLClickRecord::WaitForMouseAction(
 } // CHTMLClickRecord::WaitForMouseAction
 
 //-----------------------------------
-CHTMLClickRecord::EClickState CHTMLClickRecord::WaitForMouseAction(
+EClickState CHTMLClickRecord::WaitForMouseAction(
 	const Point& 	inInitialPoint,
 	Int32			inWhen,
 	Int32			inDelay)
@@ -246,8 +246,8 @@ CHTMLClickRecord::EClickState CHTMLClickRecord::WaitForMouseAction(
 		Point theCurrentPoint;
 		::GetMouse(&theCurrentPoint);
 		
-		if ((abs(theCurrentPoint.h - inInitialPoint.h) >= eMouseHystersis) ||
-			(abs(theCurrentPoint.v - inInitialPoint.v) >= eMouseHystersis))
+		if ((abs(theCurrentPoint.h - inInitialPoint.h) >= kMouseHysteresis) ||
+			(abs(theCurrentPoint.v - inInitialPoint.v) >= kMouseHysteresis))
 			return eMouseDragging;
 
 		Int32 now = ::TickCount();
