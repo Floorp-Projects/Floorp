@@ -849,6 +849,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
 {
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+  ForceCompositionEnd();
 
   nsAutoEditBatch batchIt(this);
   
@@ -1107,6 +1108,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
 {
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+  ForceCompositionEnd();
 
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpRemoveTextProperty, nsIEditor::eNext);
@@ -1355,6 +1357,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 {
+  ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
   
@@ -1545,6 +1548,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
   if (!aElement)
     return NS_ERROR_NULL_POINTER;
   
+  ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
 

@@ -54,6 +54,9 @@
 #include "nsICaret.h"
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
+#include "nsIKBStateControl.h"
+#include "nsIWidget.h"
+#include "nsIScrollbar.h"
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
@@ -824,6 +827,9 @@ nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveC
 {
   if (!aFileSpec)
     return NS_ERROR_NULL_POINTER;
+  
+  ForceCompositionEnd();
+  
 
   // get the document
   nsCOMPtr<nsIDOMDocument> doc;
@@ -1456,6 +1462,71 @@ nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTex
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsIWidget * GetDeepestWidget(nsIView * aView)
+{
+
+  PRInt32 count;
+  aView->GetChildCount(count);
+  if (0 != count) {
+    for (PRInt32 i=0;i<count;i++) {
+      nsIView * child;
+      aView->GetChild(i, child);
+      nsIWidget * widget = GetDeepestWidget(child);
+      if (widget) {
+        return widget;
+      } else {
+        aView->GetWidget(widget);
+        if (widget) {
+          nsCOMPtr<nsIScrollbar> scrollbar(do_QueryInterface(widget));
+          if (scrollbar) {
+            NS_RELEASE(widget);
+          } else {
+            return widget;
+          }
+        }
+      }
+    }
+  }
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsEditor::ForceCompositionEnd()
+{
+
+// We can test mInIMEMode and do some optimization for Mac and Window
+// Howerver, since UNIX support over-the-spot, we cannot rely on that 
+// flag for Unix.
+// We should use nsILookAndFeel to resolve this
+
+#if defined(XP_MAC) || defined(XP_WIN)
+  if(! mInIMEMode)
+    return NS_OK;
+#endif
+
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIPresShell> shell;
+  
+  GetPresShell(getter_AddRefs(shell));
+  if (shell) {
+      nsCOMPtr<nsIViewManager> viewmgr;
+
+      shell->GetViewManager(getter_AddRefs(viewmgr));
+      if (viewmgr) {
+        nsIView* view;
+        viewmgr->GetRootView(view);      // views are not refCounted
+        nsIWidget *widget =  GetDeepestWidget(view);
+        if (widget) {
+           nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
+           if(kb) {
+                res = kb->ResetInputState();
+           }
+        }
+      }
+  }
+  
+  return NS_OK;
+}
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark --- public nsEditor methods ---
