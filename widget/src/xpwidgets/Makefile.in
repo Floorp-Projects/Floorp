@@ -31,18 +31,7 @@ LIBRARY_NAME = raptorbasewidget_s
 CPPSRCS=							\
     nsBaseWidget.cpp                \
 	nsMenuButton.cpp                \
-	nsToolbarItemHolder.cpp         \
-	nsToolbarManager.cpp            \
 	nsImageButton.cpp               \
-	nsToolbar.cpp                   \
-	nsHTToolbarDataModel.cpp        \
-	nsHTColumn.cpp \
-	nsHTControlStripItem.cpp \
-	nsHTTreeItem.cpp \
-	nsHTItem.cpp \
-	nsHTTreeDataModel.cpp \
-	nsHTDataModel.cpp \
-	nsTreeView.cpp \
 	$(NULL)
 
 LOCAL_INCLUDES := \
