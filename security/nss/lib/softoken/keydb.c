@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.17 2002/04/11 00:59:42 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.18 2002/04/12 03:43:34 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -892,10 +892,16 @@ newdb:
 	    handle->db = rdbopen( appName, prefix, "key", NO_CREATE);
 	    handle->updatedb = dbopen( dbname, NO_RDONLY, 0600, DB_HASH, 0 );
 	    if (handle->updatedb) {
-		db_Copy(handle->db, handle->updatedb);
-		(*handle->updatedb->close)(handle->updatedb);
-		handle->updatedb = NULL;
-		goto done;
+		handle->version = nsslowkey_version(handle->updatedb);
+		if (handle->version != NSSLOWKEY_DB_FILE_VERSION) {
+		    (*handle->updatedb->close)(handle->updatedb);
+		    handle->updatedb = NULL;
+		} else {
+		    db_Copy(handle->db, handle->updatedb);
+		    (*handle->updatedb->close)(handle->updatedb);
+		    handle->updatedb = NULL;
+		    goto done;
+		}
 	    }
 	} else {
 	    handle->db = dbopen( dbname, NO_CREATE, 0600, DB_HASH, 0 );
