@@ -269,6 +269,14 @@ public:
 
 #endif
 
+   void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
+   void                ApplyTransparencyBitmap();
+#ifdef MOZ_XUL
+   NS_IMETHOD          SetWindowTranslucency(PRBool aTransparent);
+   NS_IMETHOD          GetWindowTranslucency(PRBool& aTransparent);
+   NS_IMETHOD          UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
+#endif
+
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     void               GetContainerWindow(nsWindow  **aWindow);
@@ -306,6 +314,13 @@ private:
     // The cursor cache
     static GdkCursor   *gsGtkCursorCache[eCursorCount];
 
+    // Transparency
+    PRBool       mIsTranslucent;
+    // This bitmap tracks which pixels are transparent. We don't support
+    // full translucency at this time; each pixel is either fully opaque
+    // or fully transparent.
+    gchar*       mTransparencyBitmap;
+ 
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
     static nsWindow    *mLastDragMotionWindow;
