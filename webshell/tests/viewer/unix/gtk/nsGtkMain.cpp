@@ -124,28 +124,8 @@ ah_crap_handler(int signum)
          getpid(),
          strsignal(signum));
   
-  char stack[4096];
-  
-  nsTraceRefcnt::WalkTheStack(stack, sizeof(stack));
-  
-  // Convert all spaces between symbols to newlines for readability
-  char * needle  = "+0x";
-  char * haystack  = stack;
-  char * sp = NULL;
-  
-  while((sp = strstr(haystack,needle)))
-  {
-    char * ws = strchr(sp,' ');
-
-    if (ws)
-    {
-      *ws = '\n';
-
-      haystack = ws + 1;
-    }
-  }
-
-  printf("stack = %s\n\n",stack);
+  printf("stack\n",stack);
+  nsTraceRefcnt::WalkTheStack(stdout);
 
   printf("Sleeping for 5 minutes.\n");
   printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
