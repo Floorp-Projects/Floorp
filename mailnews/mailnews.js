@@ -390,11 +390,11 @@ pref("mail.server.default.manualMarkMode",0); // 0 == "move to junk folder", 1 =
 
 // if true, we'll use the password from an incoming server with
 // matching username and domain
-user_pref("mail.smtp.useMatchingDomainServer", false);
+pref("mail.smtp.useMatchingDomainServer", false);
 
 // if true, we'll use the password from an incoming server with
 // matching username and host name
-user_pref("mail.smtp.useMatchingHostNameServer", false);
+pref("mail.smtp.useMatchingHostNameServer", false);
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.trySecAuth", true);
