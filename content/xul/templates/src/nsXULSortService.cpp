@@ -587,7 +587,7 @@ XULSortServiceImpl::RemoveAllChildren(nsIContent *container)
 	for (childIndex=numChildren-1; childIndex >= 0; childIndex--)
 	{
 		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	break;
-		container->RemoveChildAt(childIndex, PR_TRUE);
+		container->RemoveChildAt(childIndex, PR_FALSE);
 	}
 	return(rv);
 }
@@ -832,7 +832,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			numChildren = 0;
 			for (loop=0; loop<numElements; loop++)
 			{
-				container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_TRUE);
+				container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_FALSE);
 			}
 
 			// recurse on grandchildren
@@ -1039,18 +1039,22 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 		else if (sortDirection.EqualsIgnoreCase("descending"))	sortInfo.descendingSort = PR_TRUE;
 	}
 
-	// get index of sort column, find tree body, remove tree body from tree, sort, then re-add tree body
+	// get index of sort column, find tree body, and sort. The sort
+	// _won't_ send any notifications, so we won't trigger any
+	// reflows...
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
 	sortInfo.colIndex = colIndex;
 	if (NS_FAILED(rv = FindTreeBodyElement(treeNode, &treeBody)))	return(rv);
-	if (NS_FAILED(rv = treeBody->GetParent(treeParent)))	return(rv);
-	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
-	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
 	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, &sortInfo, 0)))
 	{
 	}
 
-	if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
+    // Now remove the treebody and re-insert it to force the frames to be rebuilt.
+	if (NS_FAILED(rv = treeBody->GetParent(treeParent)))	return(rv);
+	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
+	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
+
+    if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
 		kTreeContentsGeneratedAtom,PR_FALSE)))
 	{
 	}
