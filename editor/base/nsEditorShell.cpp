@@ -5175,6 +5175,9 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
       case eCantEditOther:
         stringID.AssignWithConversion("CantEditDocumentMsg");
         break;
+      default:
+        // Do nothing.
+        break;
     }
     
     GetBundleString(stringID, alertMessage);

@@ -6190,7 +6190,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
       nsCOMPtr<nsIDocumentEncoder> encoder;
       nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
       formatType.AppendWithConversion(aFormatType);
-      rv = nsComponentManager::CreateInstance(formatType,
+      rv = nsComponentManager::CreateInstance((char*)formatType,
                                               nsnull,
                                               NS_GET_IID(nsIDocumentEncoder),
                                               getter_AddRefs(encoder));

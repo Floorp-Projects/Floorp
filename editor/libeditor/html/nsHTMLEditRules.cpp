@@ -621,7 +621,7 @@ nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
       {
         nsAutoString typeAttrName; typeAttrName.AssignWithConversion("align");
         nsAutoString typeAttrVal;
-        nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
+        res = elem->GetAttribute(typeAttrName, typeAttrVal);
         typeAttrVal.ToLowerCase();
         if (NS_SUCCEEDED(res) && typeAttrVal.Length())
         {
@@ -705,7 +705,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     nsCOMPtr<nsIDOMNode> selNode;
     PRInt32 selOffset;
     nsCOMPtr<nsISelection>selection;
-    nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+    res = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     res = mEditor->GetStartNodeAndOffset(selection, &selNode, &selOffset);
     if (NS_FAILED(res)) return res;
@@ -1108,8 +1108,6 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   // its something else (body, div, td, ...): insert a normal br
   else
   {
-    nsCOMPtr<nsISelection> selection(aSelection);
-    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
     nsCOMPtr<nsIDOMNode> brNode;
     res = mEditor->CreateBR(node, offset, &brNode);  
     if (NS_FAILED(res)) return res;
@@ -3445,7 +3443,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
       res = item->GetRange(&opRange);
       if (NS_FAILED(res)) return res;
       delete item;
-      nsCOMPtr<nsISupports> isupports = do_QueryInterface(opRange);
+      isupports = do_QueryInterface(opRange);
       inArrayOfRanges->AppendElement(isupports);
     }    
   }
@@ -3472,7 +3470,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     (*outArrayOfNodes)->Count(&listCount);
     for (i=(PRInt32)listCount-1; i>=0; i--)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
       if ( (nsHTMLEditUtils::IsTableElement(node) && !nsHTMLEditUtils::IsTable(node))
           || (nsHTMLEditUtils::IsListItem(node)))
@@ -3492,7 +3490,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     (*outArrayOfNodes)->Count(&listCount);
     for (i=(PRInt32)listCount-1; i>=0; i--)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
       if ( (nsHTMLEditUtils::IsTableElement(node) && !nsHTMLEditUtils::IsTable(node)) )
       {
@@ -3516,7 +3514,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     (*outArrayOfNodes)->Count(&listCount);
     for (i=(PRInt32)listCount-1; i>=0; i--)
     {
-      nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
       if (!aDontTouchContent && mEditor->IsInlineNode(node) 
            && mEditor->IsContainer(node) && !mEditor->IsTextNode(node))
@@ -4324,12 +4322,12 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
     // further nodes in a new parent
     if (prevParent)
     {
-      nsCOMPtr<nsIDOMNode> curParent;
-      curNode->GetParentNode(getter_AddRefs(curParent));
-      if (curParent != prevParent)
+      nsCOMPtr<nsIDOMNode> temp;
+      curNode->GetParentNode(getter_AddRefs(temp));
+      if (temp != prevParent)
       {
         curBlock = 0;  // forget any previous blockquote node we were using
-        prevParent = curParent;
+        prevParent = temp;
       }
     }
     else     

@@ -899,6 +899,8 @@ nsEditor::nsEditor()
 ,  mRangeUpdater()
 ,  mShouldTxnSetSelection(PR_TRUE)
 ,  mBodyElement(nsnull)
+,  mAction(nsnull)
+,  mDirection(eNone)
 ,  mInIMEMode(PR_FALSE)
 ,  mIMETextRangeList(nsnull)
 ,  mIMETextNode(nsnull)
@@ -908,8 +910,6 @@ nsEditor::nsEditor()
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
-,  mAction(nsnull)
-,  mDirection(eNone)
 {
   //initialize member variables here
   NS_INIT_REFCNT();
