@@ -10,3 +10,6 @@ typedef struct s_jar {
 void CreateRshell(void);
 void CreateHelpMenu(void);
 void CreateBuddyList(void);
+void CreateIspMenu(void);
+void CreateNewsMenu(void);
+
