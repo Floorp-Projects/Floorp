@@ -122,4 +122,7 @@ class BookmarksService;
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;
 
+- (void)updatePrebinding;
+- (void)prebindFinished:(NSNotification *)aNotification;
+
 @end

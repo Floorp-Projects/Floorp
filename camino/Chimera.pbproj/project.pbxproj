@@ -197,6 +197,7 @@
 			children = (
 				29B97316FDCFA39411CA2CEA,
 				F56F241F02AC6D0401A967F3,
+				F5D1421902BC88F801A967F3,
 			);
 			isa = PBXGroup;
 			name = "Other Sources";
@@ -4224,7 +4225,6 @@
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -D_BUILD_STATIC_BIN";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lmozjs -lmozjpeg -ljsj -lmozpng -lmozmng -lpthread -lz -lm";
-				PREBINDING = NO;
 				PRODUCT_NAME = Navigator;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
@@ -6121,6 +6121,7 @@
 				F5BAAC3F02AC6AA201A967F3,
 				F5BAAC4002AC6AA201A967F3,
 				F585F52902B2C66C01A967F3,
+				F5D1421A02BC88F901A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
@@ -6207,6 +6208,17 @@
 		};
 		F5C3AB840270072A01A80166 = {
 			fileRef = F5C3AB820270072A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5D1421902BC88F801A967F3 = {
+			isa = PBXFileReference;
+			path = "redo-prebinding.sh";
+			refType = 2;
+		};
+		F5D1421A02BC88F901A967F3 = {
+			fileRef = F5D1421902BC88F801A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};

@@ -47,6 +47,7 @@
 #include "nsIChromeRegistry.h"
 #import	"CHAboutBox.h"
 #include <Foundation/NSUserDefaults.h>
+#include <mach-o/dyld.h>
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -104,6 +105,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(void)awakeFromNib
 {
+#ifdef _BUILD_STATIC_BIN
+    [self updatePrebinding];
+#endif
+
     mPreferenceManager = [[CHPreferenceManager sharedInstance] retain];
 
     [self newWindow: self];
@@ -553,6 +558,34 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return NO;
 }
 
+- (void) updatePrebinding
+{
+  // Check our prebinding status.  If we didn't launch prebound,
+  // fork the update script.
+
+  if (!_dyld_launched_prebound()) {
+    NSLog(@"Not prebound, launching update script\n");
+    NSTask* aTask = [[NSTask alloc] init];
+    NSArray* args = [NSArray arrayWithObject: @"redo-prebinding.sh"];
+
+    [aTask setCurrentDirectoryPath:[[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent]];
+    [aTask setLaunchPath:@"/bin/sh"];
+    [aTask setArguments:args];
+
+    [[NSNotificationCenter defaultCenter] addObserver: self
+          selector:@selector(prebindFinished:)
+          name:NSTaskDidTerminateNotification
+          object: nil];
+
+    [aTask launch];
+  }
+}
+
+- (void)prebindFinished:(NSNotification *)aNotification
+{
+  [[aNotification object] release];
+}
+ 
 // services
 
 - (void)openURL:(NSPasteboard *) pboard userData:(NSString *) userData error:(NSString **) error
