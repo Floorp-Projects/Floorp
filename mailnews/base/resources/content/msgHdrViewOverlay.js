@@ -579,46 +579,34 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
 
   if (msgHeaderParser)
   {
-    var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
-    enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
-    var numAddressesParsed = 0;
-    if (enumerator)
+    var addresses = {};
+    var fullNames = {};
+    var names = {};
+    var numAddresses =  0;
+
+    numAddresses = msgHeaderParser.ParseHeadersWithArray(emailAddresses, addresses, names, fullNames);
+    var index = 0;
+    var address = {};
+    while (index < numAddresses)
     {
-      var emailAddress = {};
-      var name = {};
-
-      while (enumerator.hasMoreElements())
+      // if we want to include short/long toggle views and we have a long view, always add it.
+      // if we aren't including a short/long view OR if we are and we haven't parsed enough
+      // addresses to reach the cutoff valve yet then add it to the default (short) div.
+      if (headerEntry.useToggle)
       {
-        var headerResult = enumerator.getNext();
-        headerResult = enumerator.QueryInterface(Components.interfaces.nsIMsgHeaderParserResult);
-        
-        // get the email and name fields
-        var addrValue = {};
-        var nameValue = {};
-        var fullAddress = headerResult.getAddressAndName(addrValue, nameValue);
-        emailAddress = addrValue.value;
-        name = nameValue.value;
+        address.emailAddress = addresses.value[index];
+        address.fullAddress = fullNames.value[index];
+        address.displayName = names.value[index];
+        headerEntry.enclosingBox.addAddressView(address);
+      }
+      else
+      {
+        updateEmailAddressNode(headerEntry.enclosingBox.emailAddressNode, addresses.value[index], 
+                               fullNames.value[index], names.value[index], headerEntry.useShortView);
+      }
 
-        // if we want to include short/long toggle views and we have a long view, always add it.
-        // if we aren't including a short/long view OR if we are and we haven't parsed enough
-        // addresses to reach the cutoff valve yet then add it to the default (short) div.
-        if (headerEntry.useToggle)
-        {
-          var addresses = {};
-          addresses.emailAddress = emailAddress;
-          addresses.fullAddress = fullAddress;
-          addresses.displayName = name;
-
-          headerEntry.enclosingBox.addAddressView(addresses);
-        }
-        else
-        {
-          updateEmailAddressNode(headerEntry.enclosingBox.emailAddressNode, emailAddress, fullAddress, name, headerEntry.useShortView);
-        }
-        
-        numAddressesParsed++;
-      } 
-    } // if enumerator
+      index++;
+    }
     
     if (headerEntry.useToggle)
       headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
