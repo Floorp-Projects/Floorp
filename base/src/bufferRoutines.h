@@ -279,7 +279,7 @@ CopyChars gCopyChars[2][2]={
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32  theIndex=0;
   for(theIndex=0;theIndex<aLength;theIndex++){
@@ -303,7 +303,7 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32  theIndex=0;
   for(theIndex=0;theIndex<aLength;theIndex++){
@@ -329,7 +329,7 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32 theIndex=0;
   for(theIndex=aLength-1;theIndex>=0;theIndex--){
@@ -355,7 +355,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32 theIndex=0;
   for(theIndex=aLength-1;theIndex>=0;theIndex--){
@@ -368,7 +368,7 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
   return kNotFound;
 }
 
-typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase);
+typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase);
 FindChars gFindChars[]={&FindChar1,&FindChar2};
 FindChars gRFindChars[]={&RFindChar1,&RFindChar2};
 
