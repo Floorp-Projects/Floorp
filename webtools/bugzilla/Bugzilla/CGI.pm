@@ -24,6 +24,7 @@ use strict;
 package Bugzilla::CGI;
 
 use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers);
+use CGI::Util qw(rearrange);
 
 use base qw(CGI);
 
@@ -44,6 +45,9 @@ sub new {
     my $class = ref($invocant) || $invocant;
 
     my $self = $class->SUPER::new(@args);
+
+    # Make sure our outgoing cookie list is empty on each invocation
+    $self->{Bugzilla_cookie_list} = [];
 
     # Make sure that we don't send any charset headers
     $self->charset('');
@@ -116,13 +120,48 @@ sub multipart_init {
     return $self->SUPER::multipart_init(@_);
 }
 
+# Override header so we can add the cookies in
+sub header {
+    my $self = shift;
+
+    # Add the cookies in if we have any
+    if (scalar(@{$self->{Bugzilla_cookie_list}})) {
+        if (scalar(@_) == 1) {
+            # if there's only one parameter, then it's a Content-Type.
+            # Since we're adding parameters we have to name it.
+            unshift(@_, '-type' => shift(@_));
+        }
+        unshift(@_, '-cookie' => $self->{Bugzilla_cookie_list});
+    }
+
+    return $self->SUPER::header(@_);
+}
+
+# We override the entirety of multipart_start instead of falling through to
+# SUPER because the built-in one can't deal with cookies in any kind of sane
+# way.  This sub is gratuitously swiped from the real CGI.pm, but fixed so
+# it actually works (but only as much as we need it to).
+sub multipart_start {
+    my(@header);
+    my($self,@p) = @_;
+    my($type,@other) = rearrange([['TYPE','CONTENT_TYPE','CONTENT-TYPE']],@p);
+    $type = $type || 'text/html';
+    push(@header,"Content-Type: $type");
+
+    # Add the cookies in if we have any
+    if (scalar(@{$self->{Bugzilla_cookie_list}})) {
+        foreach my $cookie (@{$self->{Bugzilla_cookie_list}}) {
+            push @header, "Set-Cookie: $cookie";
+        }
+    }
+
+    my $header = join($CGI::CRLF,@header)."${CGI::CRLF}${CGI::CRLF}";
+    return $header;
+}
+
 # The various parts of Bugzilla which create cookies don't want to have to
 # pass them arround to all of the callers. Instead, store them locally here,
-# and then output as required from |headers|.
-# This is done instead of just printing the result from the script, because
-# we need to use |$r->header_out| under mod_perl (which is what CGI.pm
-# does, and we need to match, plus if we don't |print| anything, we can turn
-# off mod_perl/Apache's header parsing for a small perf gain)
+# and then output as required from |header|.
 sub send_cookie {
     my $self = shift;
 
@@ -134,9 +173,7 @@ sub send_cookie {
     # we're expiring an entry.
     require CGI::Cookie;
     my $cookie = CGI::Cookie->new(@_);
-
-    # XXX - mod_perl
-    print "Set-Cookie: $cookie\r\n";
+    push @{$self->{Bugzilla_cookie_list}}, $cookie;
 
     return;
 }
