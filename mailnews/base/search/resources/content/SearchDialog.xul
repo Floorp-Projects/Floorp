@@ -173,7 +173,7 @@ Rights Reserved.
         
     <box autostretch="never" align="right">
 
-      <button label="&closeButton.label;" oncommand="window.close();"/>
+      <button label="&closeButton.label;" oncommand="onSearchStop(); window.close();"/>
     </box>
   
   </box>
