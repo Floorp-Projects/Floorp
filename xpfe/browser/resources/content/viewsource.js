@@ -92,11 +92,3 @@ function BrowserFindAgain()
   }
 }
 
-  function BrowserSelectAll() {
-    if (appCore != null) {
-        appCore.selectAll();
-    } else {
-        dump("BrowserAppCore has not been created!\n");
-    }
-  }
-

@@ -85,7 +85,7 @@ function open()
         switch ( dialog.openAppList.data ) 
           {
             case "0":
-              browser.loadUrl( dialog.input.value );
+              browser.loadURI(dialog.input.value);
               break;
             case "1": 
               dump("*** foopy\n");

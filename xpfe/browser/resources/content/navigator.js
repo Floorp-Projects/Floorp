@@ -744,7 +744,7 @@ function RevealSearchPanel()
 function BrowserOpenWindow()
 {
   //opens a window where users can select a web location to open
-  openDialog("chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", appCore);
+  openDialog("chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
