@@ -1075,11 +1075,12 @@ sub GetCommandMenu {
             my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
             $html = $html . " | <A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
         }
-        SendSQL("SELECT name,query FROM namedqueries " .
+        SendSQL("SELECT name FROM namedqueries " .
                 "WHERE userid = $userid AND linkinfooter");
         while (MoreSQLData()) {
-            my ($name, $query) = (FetchSQLData());
-            $html .= qq{ | <A HREF="buglist.cgi?$query"><NOBR>$name</NOBR></A>};
+            my ($name) = (FetchSQLData());
+            $html .= " | <A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
+                     url_quote($name) . "\"><NOBR>$name</NOBR></A>";
         }
         $html .= " | <NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {

@@ -662,11 +662,12 @@ sub LookupNamedQuery {
 
 
         
-
+$::querytitle = "Bug List";
 
 CMD: for ($::FORM{'cmdtype'}) {
     /^runnamed$/ && do {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
+        $::querytitle = "Bug List: $::FORM{'namedcmd'}";
         ProcessFormFields($::buffer);
         last CMD;
     };
@@ -1155,7 +1156,7 @@ if (length($buglist) < 4000) {
     print "Set-Cookie: BUGLIST=\n\n";
     $toolong = 1;
 }
-PutHeader("Bug List");
+PutHeader($::querytitle);
 
 
 print "
