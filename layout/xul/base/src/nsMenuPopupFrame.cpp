@@ -1144,9 +1144,9 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
 
     // shrink to fit onto the screen, vertically and horizontally
     if(mRect.width > screenWidthTwips) 
-      mRect.width = screenWidthTwips;    
+        mRect.width = screenWidthTwips;    
     if(mRect.height > screenHeightTwips)
-      mRect.height = screenHeightTwips;   
+        mRect.height = screenHeightTwips;   
     
     // we now know where the view is...make sure that it's still onscreen at all!
     if ( screenViewLocX < screenLeftTwips ) {
