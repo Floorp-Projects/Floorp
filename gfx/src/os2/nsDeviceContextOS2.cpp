@@ -64,6 +64,7 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   mCachedClientRect = PR_FALSE;
   mCachedFullRect = PR_FALSE;
   mSupportsRasterFonts = PR_FALSE;
+  mPelsPerMeter = 0;
 #ifdef XP_OS2
   mPrintState = nsPrintState_ePreBeginDoc;
 #endif
@@ -121,7 +122,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
                                    nsIDeviceContext *aOrigContext)
 {
-  float origscale, newscale;
+//  float origscale, newscale;
   float t2d, a2d;
 
   mPrintDC = (HDC)aContext;
@@ -141,10 +142,13 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
   CommonInit( mPrintDC);
 
-  GetTwipsToDevUnits( newscale);
-  aOrigContext->GetTwipsToDevUnits( origscale);
+//  GetTwipsToDevUnits( newscale);
+//  aOrigContext->GetTwipsToDevUnits( origscale);
 
-  mPixelScale = newscale / origscale;
+//  mPixelScale = newscale / origscale;
+
+  mPixelScale = (float)mPelsPerMeter / 3622.0f; /* This is ugly - it prevents different size printing on different */
+                                                /* Resolutions */
 
   aOrigContext->GetTwipsToDevUnits( t2d);
   aOrigContext->GetAppUnitsToDevUnits( a2d);
@@ -181,6 +185,8 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
   mTwipsToPixels = ((float)alArray [CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
+
+  mPelsPerMeter = alArray[CAPS_VERTICAL_RESOLUTION];
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
   mPaletteInfo.isPaletteDevice = !!(alArray[CAPS_ADDITIONAL_GRAPHICS] & CAPS_PALETTE_MANAGER);
