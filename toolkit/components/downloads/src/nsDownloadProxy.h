@@ -46,6 +46,7 @@
 #include "nsIMIMEInfo.h"
 
 #define SHOW_DLMGR_PREF "browser.download.manager.showWhenStarting"
+#define USE_DL_WINDOW_PREF "browser.download.manager.useWindow"
 
 class nsDownloadProxy : public nsIDownload,
                         public nsIWebProgressListener
@@ -76,7 +77,10 @@ public:
 
     PRBool showDM = PR_TRUE;
     branch->GetBoolPref(SHOW_DLMGR_PREF, &showDM);
-    if (showDM) {
+
+    PRBool useWindow = PR_TRUE;
+    branch->GetBoolPref(USE_DL_WINDOW_PREF, &useWindow);
+    if (showDM && useWindow) {
       nsAutoString path;
       rv = aTarget->GetPath(path);
       if (NS_FAILED(rv)) return rv;

@@ -63,6 +63,7 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   
   <stringbundleset id="downloadSet">
+    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="downloadStrings" src="chrome://mozapps/locale/downloads/downloads.properties"/>
   </stringbundleset>
 

@@ -34,6 +34,9 @@
 <!ENTITY cmd.cancel.accesskey             "c">
 <!ENTITY cmd.show.label                   "Show">
 <!ENTITY cmd.show.accesskey               "s">
+<!ENTITY cmd.show.tooltipWin              "Show this file in Explorer">
+<!ENTITY cmd.show.tooltipMac              "Show this file in Finder">
+<!ENTITY cmd.show.tooltipUnix             "Show this file in a browser window">
 <!ENTITY cmd.open.label                   "Open">
 <!ENTITY cmd.open.accesskey               "o">
 <!ENTITY cmd.openWith.label               "Open With...">

@@ -119,8 +119,15 @@ function autoClose(aDownload)
                         .getService(Components.interfaces.nsIPrefBranch);
     var autoClose = pref.getBoolPref("browser.download.closeWhenDone")
     if (autoClose && (!window.opener || window.opener.location.href == window.location.href))
-      window.close();
+      gCloseDownloadManager();
   }
+}
+
+// This function can be overwritten by extensions that wish to place the Download Window in
+// another part of the UI, such as in a tab or a sidebar panel. 
+function gCloseDownloadManager()
+{
+  window.close();
 }
 
 var gDownloadObserver = {
@@ -211,6 +218,26 @@ function onDownloadShow(aEvent)
     f.reveal();
 #endif
   }
+  else {
+    var brandStrings = document.getElementById("brandStrings");
+    var appName = brandStrings.getString("brandShortName");
+  
+    var strings = document.getElementById("downloadStrings");
+    var name = aEvent.target.getAttribute("target");
+#ifdef XP_WIN
+    var message = strings.getFormattedString("fileDoesNotExistShowErrorWin", [name, appName]);
+#else
+#ifdef XP_MACOSX
+    var message = strings.getFormattedString("fileDoesNotExistShowErrorMac", [name, appName]);
+#else
+    var message = strings.getFormattedString("fileDoesNotExistShowErrorUnix", [name, appName]);
+#endif
+#endif
+    var title = strings.getFormattedString("fileDoesNotExistShowTitle", [name]);
+
+    var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    promptSvc.alert(window, title, message);
+  }
 }
 
 function onDownloadOpen(aEvent)
@@ -224,6 +251,19 @@ function onDownloadOpen(aEvent)
       if (f.exists()) {
         // XXXben security check!  
         f.launch();
+      }
+      else {
+        var brandStrings = document.getElementById("brandStrings");
+        var appName = brandStrings.getString("brandShortName");
+      
+        var strings = document.getElementById("downloadStrings");
+        var name = aEvent.target.getAttribute("target");
+        var message = strings.getFormattedString("fileDoesNotExistOpenError", [name, appName]);
+
+        var title = strings.getFormattedString("fileDoesNotExistOpenTitle", [name]);
+
+        var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+        promptSvc.alert(window, title, message);
       }
     }
     else if(download.canceledOrFailed) {

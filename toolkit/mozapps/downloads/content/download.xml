@@ -321,6 +321,15 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&show.label;" class="link" 
+#ifdef XP_WIN
+                     tooltip="&cmd.show.tooltipWin;"
+#else
+#ifdef XP_MACOSX
+                     tooltip="&cmd.show.tooltipMac;"
+#else
+                     tooltip="&cmd.show.tooltipUnix;"
+#endif
+#endif
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('show');"/>
         </xul:vbox>
       </xul:hbox>
