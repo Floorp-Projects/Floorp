@@ -2892,6 +2892,15 @@ dnl ========================================================
 MOZ_ARG_HEADER(Components and Features)
 
 dnl =========================================================
+dnl = Calendar client
+dnl =========================================================
+MOZ_CALENDAR=
+MOZ_ARG_ENABLE_BOOL(calendar,
+[  --enable-calendar       Enable building of the calendar client],
+    MOZ_CALENDAR=1 )
+AC_SUBST(MOZ_CALENDAR)
+
+dnl =========================================================
 dnl = Mail & News
 dnl =========================================================
 MOZ_MAIL_NEWS=1
@@ -2936,7 +2945,17 @@ fi
 AC_SUBST(MOZ_ENABLE_FREETYPE2)
 
 dnl ========================================================
-dnl = Xprint
+dnl = PostScript print module
+dnl ========================================================
+MOZ_ENABLE_POSTSCRIPT=1
+
+MOZ_ARG_DISABLE_BOOL(postscript,
+[  --disable-postscript        Disable PostScript printing support ],
+    MOZ_ENABLE_POSTSCRIPT=,
+    MOZ_ENABLE_POSTSCRIPT=1 )
+
+dnl ========================================================
+dnl = Xprint print module
 dnl ========================================================
 if test "$no_x" != "yes"
 then
@@ -2953,7 +2972,7 @@ then
     MOZ_XPRINT_LDFLAGS="$MOZ_XPRINT_LDFLAGS $XEXT_LIBS $X11_LIBS"
 
     MOZ_ARG_DISABLE_BOOL(xprint,
-    [  --disable-xprint        Disable Xprint support ],
+    [  --disable-xprint        Disable Xprint printing support ],
         MOZ_ENABLE_XPRINT=,
         MOZ_ENABLE_XPRINT=1 )
 fi
