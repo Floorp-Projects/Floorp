@@ -61,7 +61,6 @@
 #include "nsIInterfaceRequestor.h"
 #ifdef DEBUG
 #include "pure.h"
-extern "C" NS_EXPORT void* NS_CurrentThread(void);
 #endif
 
 class dummyComparitor: public nsAVLNodeComparitor {
@@ -127,7 +126,6 @@ void XXXNeverCalled()
     nsCOMPtr<nsISupports> dummyFoo(do_GetInterface(nsnull));
 #ifdef DEBUG
     TestSegmentedBuffer();
-    NS_CurrentThread();
 #endif
     NS_NewSizeOfHandler(0);
     nsStorageStream();
