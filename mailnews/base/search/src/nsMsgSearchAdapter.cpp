@@ -321,7 +321,7 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
   nsresult rv;
   NS_ENSURE_ARG(srcCharset);
   NS_ENSURE_ARG(dstCharset);
-
+  
   if (m_defaultCharset.IsEmpty())
   {
     m_forceAsciiSearch = PR_FALSE;  // set the default value in case of error
@@ -333,65 +333,65 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
     }
   }
   *srcCharset = nsCRT::strdup(m_defaultCharset.IsEmpty() ?
-                    NS_LITERAL_STRING("ISO-8859-1").get() : m_defaultCharset.get());
+    NS_LITERAL_STRING("ISO-8859-1").get() : m_defaultCharset.get());
   *dstCharset = nsCRT::strdup(*srcCharset);
-
-	if (m_scope)
-	{
+  
+  if (m_scope)
+  {
     // ### DMB is there a way to get the charset for the "window"?
-
-        nsCOMPtr<nsIMsgFolder> folder;
-        rv = m_scope->GetFolder(getter_AddRefs(folder));
-        
-		// Ask the newsgroup/folder for its csid.
-		if (NS_SUCCEEDED(rv) && folder)
-        {
-            nsXPIDLCString folderCharset;
-            folder->GetCharset(getter_Copies(folderCharset));
+    
+    nsCOMPtr<nsIMsgFolder> folder;
+    rv = m_scope->GetFolder(getter_AddRefs(folder));
+    
+    // Ask the newsgroup/folder for its csid.
+    if (NS_SUCCEEDED(rv) && folder)
+    {
+      nsXPIDLCString folderCharset;
+      folder->GetCharset(getter_Copies(folderCharset));
       PR_Free(*dstCharset);
-            *dstCharset = ToNewUnicode(folderCharset);
-        }
-	}
-
-
-	// If 
-	// the destination is still CS_DEFAULT, make the destination match
-	// the source. (CS_DEFAULT is an indication that the charset
-	// was undefined or unavailable.)
+      *dstCharset = ToNewUnicode(folderCharset);
+    }
+  }
+  
+  
+  // If 
+  // the destination is still CS_DEFAULT, make the destination match
+  // the source. (CS_DEFAULT is an indication that the charset
+  // was undefined or unavailable.)
   // ### well, it's not really anymore. Is there an equivalent?
   if (!nsCRT::strcmp(*dstCharset, m_defaultCharset.get()))
   {
     PR_Free(*dstCharset);
     *dstCharset = nsCRT::strdup(*srcCharset);
   }
-
-	if (m_forceAsciiSearch)
-	{
-		// Special cases to use in order to force US-ASCII searching with Latin1
-		// or MacRoman text. Eurgh. This only has to happen because IMAP
-		// and Dredd servers currently (4/23/97) only support US-ASCII.
-		// 
-		// If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
-		// source text to US-ASCII. (Not for now.)
-		// if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
+  
+  if (m_forceAsciiSearch)
+  {
+    // Special cases to use in order to force US-ASCII searching with Latin1
+    // or MacRoman text. Eurgh. This only has to happen because IMAP
+    // and Dredd servers currently (4/23/97) only support US-ASCII.
+    // 
+    // If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
+    // source text to US-ASCII. (Not for now.)
+    // if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
     PR_Free(*dstCharset);
     *dstCharset = nsCRT::strdup(NS_LITERAL_STRING("us-ascii").get());
-	}
+  }
   return NS_OK;
 }
 
 nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm)
 {
-	nsresult err = NS_OK;
-	PRBool useNot = PR_FALSE;
-	PRBool useQuotes = PR_FALSE;
-	PRBool excludeHeader = PR_FALSE;
-	PRBool ignoreValue = PR_FALSE;
-	char *arbitraryHeader = nsnull;
-	const char *whichMnemonic = nsnull;
-	const char *orHeaderMnemonic = nsnull;
+  nsresult err = NS_OK;
+  PRBool useNot = PR_FALSE;
+  PRBool useQuotes = PR_FALSE;
+  PRBool excludeHeader = PR_FALSE;
+  PRBool ignoreValue = PR_FALSE;
+  char *arbitraryHeader = nsnull;
+  const char *whichMnemonic = nsnull;
+  const char *orHeaderMnemonic = nsnull;
 
-	*ppOutTerm = nsnull;
+  *ppOutTerm = nsnull;
 
   nsCOMPtr <nsIMsgSearchValue> searchValue;
   nsresult rv = term->GetValue(getter_AddRefs(searchValue));

@@ -927,74 +927,74 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
                                        const char *charset,
                                        PRBool *pResult)
 {
-	NS_ENSURE_ARG_POINTER(pResult);
-	PRBool result = PR_FALSE;
-
-	nsresult err = NS_OK;
-	nsCAutoString n_str;
-	const char *utf8 = stringToMatch;
-	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
-	{
-		n_str = m_value.string;
-		if (charset != nsnull)
-		{
-			nsString out;
-			ConvertToUnicode(charset, stringToMatch ? stringToMatch : "", out);
-			utf8 = ToNewUTF8String(out);
-		}
-	}
-
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::Contains:
-		if ((nsnull != utf8) && ((n_str.get())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-			PL_strcasestr(utf8, n_str.get()))
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::DoesntContain:
-		if ((nsnull != utf8) && ((n_str.get())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-			!PL_strcasestr(utf8, n_str.get()))
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::Is:
-		if(utf8)
-		{
-			if ((n_str.get())[0])
-			{
-				if (n_str.EqualsWithConversion(utf8, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
-					result = PR_TRUE;
-			}
-			else if (utf8[0] == '\0') // Special case for "is <the empty string>"
-				result = PR_TRUE;
-		}
-		break;
-	case nsMsgSearchOp::Isnt:
-		if(utf8)
-		{
-			if ((n_str.get())[0])
-			{
-				if (!n_str.EqualsWithConversion(utf8, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
-					result = PR_TRUE;
-			}
-			else if (utf8[0] != '\0') // Special case for "isn't <the empty string>"
-				result = PR_TRUE;
-		}
-		break;
-	case nsMsgSearchOp::IsEmpty:
-		if (!PL_strlen(utf8))
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::BeginsWith:
+  NS_ENSURE_ARG_POINTER(pResult);
+  PRBool result = PR_FALSE;
+  
+  nsresult err = NS_OK;
+  nsCAutoString n_str;
+  const char *utf8 = stringToMatch;
+  if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
+  {
+    n_str = m_value.string;
+    if (charset != nsnull)
+    {
+      nsString out;
+      ConvertToUnicode(charset, stringToMatch ? stringToMatch : "", out);
+      utf8 = ToNewUTF8String(out);
+    }
+  }
+  
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::Contains:
+    if ((nsnull != utf8) && ((n_str.get())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
+      PL_strcasestr(utf8, n_str.get()))
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::DoesntContain:
+    if ((nsnull != utf8) && ((n_str.get())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
+      !PL_strcasestr(utf8, n_str.get()))
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::Is:
+    if(utf8)
+    {
+      if ((n_str.get())[0])
+      {
+        if (n_str.EqualsWithConversion(utf8, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
+          result = PR_TRUE;
+      }
+      else if (utf8[0] == '\0') // Special case for "is <the empty string>"
+        result = PR_TRUE;
+    }
+    break;
+  case nsMsgSearchOp::Isnt:
+    if(utf8)
+    {
+      if ((n_str.get())[0])
+      {
+        if (!n_str.EqualsWithConversion(utf8, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
+          result = PR_TRUE;
+      }
+      else if (utf8[0] != '\0') // Special case for "isn't <the empty string>"
+        result = PR_TRUE;
+    }
+    break;
+  case nsMsgSearchOp::IsEmpty:
+    if (!PL_strlen(utf8))
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::BeginsWith:
 #ifdef DO_I18N_YET
-		if((nsnull != n_str) && (nsnull != utf8) && INTL_StrBeginWith(csid, utf8, n_str))
-			result = PR_TRUE;
+    if((nsnull != n_str) && (nsnull != utf8) && INTL_StrBeginWith(csid, utf8, n_str))
+      result = PR_TRUE;
 #else
-		// ### DMB - not the  most efficient way to do this.
-		if (PL_strncmp(utf8, n_str.get(), n_str.Length()) == 0)
-			result = PR_TRUE;
+    // ### DMB - not the  most efficient way to do this.
+    if (PL_strncmp(utf8, n_str.get(), n_str.Length()) == 0)
+      result = PR_TRUE;
 #endif
-		break;
-	case nsMsgSearchOp::EndsWith: 
+    break;
+  case nsMsgSearchOp::EndsWith: 
     {
       PRUint32 searchStrLen = (PRUint32) PL_strlen(utf8);
       if (n_str.Length() <= searchStrLen)
@@ -1005,157 +1005,153 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
       }
     }
 #ifdef DO_I18N_YET
-		{
-		if((nsnull != n_str) && (nsnull != utf8) && INTL_StrEndWith(csid, utf8, n_str))
-			result = PR_TRUE;
-		}
+    {
+      if((nsnull != n_str) && (nsnull != utf8) && INTL_StrEndWith(csid, utf8, n_str))
+        result = PR_TRUE;
+    }
 #else
-
+    
 #endif
-		break;
-	default:
-		NS_ASSERTION(PR_FALSE, "invalid operator matching search results");
-	}
-
-	if (utf8 != nsnull && utf8 != stringToMatch)
-	  free((void *)utf8);
-
-	*pResult = result;
-	return err;
+    break;
+  default:
+    NS_ASSERTION(PR_FALSE, "invalid operator matching search results");
+  }
+  
+  if (utf8 != nsnull && utf8 != stringToMatch)
+    free((void *)utf8);
+  
+  *pResult = result;
+  return err;
 }
 
-nsresult nsMsgSearchTerm::GetMatchAllBeforeDeciding (PRBool *aResult)
+NS_IMETHODIMP nsMsgSearchTerm::GetMatchAllBeforeDeciding (PRBool *aResult)
 {
-	if (m_operator == nsMsgSearchOp::DoesntContain || m_operator == nsMsgSearchOp::Isnt)
-		*aResult = PR_TRUE;
-    else
-        *aResult = PR_FALSE;
-
-    return NS_OK;
+ *aResult = (m_operator == nsMsgSearchOp::DoesntContain || m_operator == nsMsgSearchOp::Isnt);
+ return NS_OK;
 }
-
-nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool charsetOverride, PRBool *pResult)
-{
-	NS_ENSURE_ARG_POINTER(pResult);
-	*pResult = PR_FALSE;
-	PRBool result;
-	nsresult err = InitHeaderAddressParser();
-	if (NS_FAILED(err))
-		return err;
-	// Isolate the RFC 822 parsing weirdnesses here. MSG_ParseRFC822Addresses
-	// returns a catenated string of null-terminated strings, which we walk
-	// across, tring to match the target string to either the name OR the address
-
-	char *names = nsnull, *addresses = nsnull;
-
-	// Change the sense of the loop so we don't bail out prematurely
-	// on negative terms. i.e. opDoesntContain must look at all recipients
-	PRBool boolContinueLoop;
-    GetMatchAllBeforeDeciding(&boolContinueLoop);
-    result = boolContinueLoop;
-
-	PRUint32 count;
-	nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, &count) ;
-
-	if (NS_SUCCEEDED(parseErr) && count > 0)
-	{
-		NS_ASSERTION(names, "couldn't get names");
-		NS_ASSERTION(addresses, "couldn't get addresses");
-		if (!names || !addresses)
-			return err;
-
-		nsCAutoString walkNames;
-		nsCAutoString walkAddresses;
-		PRInt32 namePos = 0;
-		PRInt32 addressPos = 0;
-		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
-		{
-			walkNames = names + namePos;
-			walkAddresses = addresses + addressPos;
-            if (m_attribute == nsMsgSearchAttrib::Sender && 
-                (m_operator == nsMsgSearchOp::IsInAB ||
-                 m_operator == nsMsgSearchOp::IsntInAB))
-            {
-              err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
-            }
-            else
-            {
-			  err = MatchRfc2047String (walkNames.get(), charset, charsetOverride, &result);
-			  if (boolContinueLoop == result)
-			  	err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
-            }
-
-			namePos += walkNames.Length() + 1;
-			addressPos += walkAddresses.Length() + 1;
-		}
-
-		PR_Free(names);
-		PR_Free(addresses);
-	}
-	*pResult = result;
-	return err;
-}
+                                       
+ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool charsetOverride, PRBool *pResult)
+ {
+   NS_ENSURE_ARG_POINTER(pResult);
+   *pResult = PR_FALSE;
+   PRBool result;
+   nsresult err = InitHeaderAddressParser();
+   if (NS_FAILED(err))
+     return err;
+   // Isolate the RFC 822 parsing weirdnesses here. MSG_ParseRFC822Addresses
+   // returns a catenated string of null-terminated strings, which we walk
+   // across, tring to match the target string to either the name OR the address
+   
+   char *names = nsnull, *addresses = nsnull;
+   
+   // Change the sense of the loop so we don't bail out prematurely
+   // on negative terms. i.e. opDoesntContain must look at all recipients
+   PRBool boolContinueLoop;
+   GetMatchAllBeforeDeciding(&boolContinueLoop);
+   result = boolContinueLoop;
+   
+   PRUint32 count;
+   nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, &count) ;
+   
+   if (NS_SUCCEEDED(parseErr) && count > 0)
+   {
+     NS_ASSERTION(names, "couldn't get names");
+     NS_ASSERTION(addresses, "couldn't get addresses");
+     if (!names || !addresses)
+       return err;
+     
+     nsCAutoString walkNames;
+     nsCAutoString walkAddresses;
+     PRInt32 namePos = 0;
+     PRInt32 addressPos = 0;
+     for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
+     {
+       walkNames = names + namePos;
+       walkAddresses = addresses + addressPos;
+       if (m_attribute == nsMsgSearchAttrib::Sender && 
+         (m_operator == nsMsgSearchOp::IsInAB ||
+         m_operator == nsMsgSearchOp::IsntInAB))
+       {
+         err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
+       }
+       else
+       {
+         err = MatchRfc2047String (walkNames.get(), charset, charsetOverride, &result);
+         if (boolContinueLoop == result)
+           err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
+       }
+       
+       namePos += walkNames.Length() + 1;
+       addressPos += walkAddresses.Length() + 1;
+     }
+     
+     PR_Free(names);
+     PR_Free(addresses);
+   }
+   *pResult = result;
+   return err;
+ }
 
 
 nsresult nsMsgSearchTerm::GetLocalTimes (PRTime a, PRTime b, PRExplodedTime &aExploded, PRExplodedTime &bExploded)
 {
-	PR_ExplodeTime(a, PR_LocalTimeParameters, &aExploded);
-	PR_ExplodeTime(b, PR_LocalTimeParameters, &bExploded);
-	return NS_OK;
+  PR_ExplodeTime(a, PR_LocalTimeParameters, &aExploded);
+  PR_ExplodeTime(b, PR_LocalTimeParameters, &bExploded);
+  return NS_OK;
 }
 
 
 nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch, PRBool *pResult)
 {
-	NS_ENSURE_ARG_POINTER(pResult);
-
-	nsresult err = NS_OK;
-	PRBool result = PR_FALSE;
-	nsTime t_date(dateToMatch);
-	
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::IsBefore:
-		if (t_date < nsTime(m_value.u.date))
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::IsAfter:
-		{
-			nsTime adjustedDate = nsTime(m_value.u.date);
-			adjustedDate += 60*60*24; // we want to be greater than the next day....
-			if (t_date > adjustedDate)
-				result = PR_TRUE;
-		}
-		break;
-	case nsMsgSearchOp::Is:
-		{
-			PRExplodedTime tmToMatch, tmThis;
-			if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
-			{
-				if (tmThis.tm_year == tmToMatch.tm_year &&
-					tmThis.tm_month == tmToMatch.tm_month &&
-					tmThis.tm_mday == tmToMatch.tm_mday)
-					result = PR_TRUE;
-			}
-		}
-		break;
-	case nsMsgSearchOp::Isnt:
-		{
-			PRExplodedTime tmToMatch, tmThis;
-			if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
-			{
-				if (tmThis.tm_year != tmToMatch.tm_year ||
-					tmThis.tm_month != tmToMatch.tm_month ||
-					tmThis.tm_mday != tmToMatch.tm_mday)
-					result = PR_TRUE;
-			}
-		}
-		break;
-	default:
-		NS_ASSERTION(PR_FALSE, "invalid compare op for dates");
-	}
-	*pResult = result;
-	return err;
+  NS_ENSURE_ARG_POINTER(pResult);
+  
+  nsresult err = NS_OK;
+  PRBool result = PR_FALSE;
+  nsTime t_date(dateToMatch);
+  
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::IsBefore:
+    if (t_date < nsTime(m_value.u.date))
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::IsAfter:
+    {
+      nsTime adjustedDate = nsTime(m_value.u.date);
+      adjustedDate += 60*60*24; // we want to be greater than the next day....
+      if (t_date > adjustedDate)
+        result = PR_TRUE;
+    }
+    break;
+  case nsMsgSearchOp::Is:
+    {
+      PRExplodedTime tmToMatch, tmThis;
+      if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
+      {
+        if (tmThis.tm_year == tmToMatch.tm_year &&
+          tmThis.tm_month == tmToMatch.tm_month &&
+          tmThis.tm_mday == tmToMatch.tm_mday)
+          result = PR_TRUE;
+      }
+    }
+    break;
+  case nsMsgSearchOp::Isnt:
+    {
+      PRExplodedTime tmToMatch, tmThis;
+      if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
+      {
+        if (tmThis.tm_year != tmToMatch.tm_year ||
+          tmThis.tm_month != tmToMatch.tm_month ||
+          tmThis.tm_mday != tmToMatch.tm_mday)
+          result = PR_TRUE;
+      }
+    }
+    break;
+  default:
+    NS_ASSERTION(PR_FALSE, "invalid compare op for dates");
+  }
+  *pResult = result;
+  return err;
 }
 
 
@@ -1383,8 +1379,8 @@ nsMsgSearchTerm::GetValue(nsIMsgSearchValue **aResult)
 NS_IMETHODIMP
 nsMsgSearchTerm::SetValue(nsIMsgSearchValue* aValue)
 {
-	nsMsgResultElement::AssignValues (aValue, &m_value);
-    return NS_OK;
+  nsMsgResultElement::AssignValues (aValue, &m_value);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1430,15 +1426,15 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
                                             nsMsgSearchScopeValue attribute,
                                             nsIMsgFolder *folder)
 {
-	m_attribute = attribute;
-	m_folder = folder;
-	m_searchServer = PR_TRUE;
-    m_searchSession = do_GetWeakReference(session);
+  m_attribute = attribute;
+  m_folder = folder;
+  m_searchServer = PR_TRUE;
+  m_searchSession = do_GetWeakReference(session);
 }
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 {
-	m_searchServer = PR_TRUE;
+  m_searchServer = PR_TRUE;
 }
 
 nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
@@ -1526,7 +1522,7 @@ nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsISupportsArray *termList)
 
 char *nsMsgSearchScopeTerm::GetStatusBarName ()
 {
-	return nsnull;
+  return nsnull;
 }
 
 
@@ -1537,8 +1533,8 @@ char *nsMsgSearchScopeTerm::GetStatusBarName ()
 
 nsMsgResultElement::nsMsgResultElement(nsIMsgSearchAdapter *adapter)
 {
-    NS_NewISupportsArray(getter_AddRefs(m_valueList));
-	m_adapter = adapter;
+  NS_NewISupportsArray(getter_AddRefs(m_valueList));
+  m_adapter = adapter;
 }
 
 
@@ -1549,114 +1545,114 @@ nsMsgResultElement::~nsMsgResultElement ()
 
 nsresult nsMsgResultElement::AddValue (nsIMsgSearchValue *value)
 { 
-	m_valueList->AppendElement (value); 
-	return NS_OK;
+  m_valueList->AppendElement (value); 
+  return NS_OK;
 }
 
 nsresult nsMsgResultElement::AddValue (nsMsgSearchValue *value)
 {
-    nsMsgSearchValueImpl* valueImpl = new nsMsgSearchValueImpl(value);
-    delete value;               // we keep the nsIMsgSearchValue, not
-                                // the nsMsgSearchValue
-    return AddValue(valueImpl);
+  nsMsgSearchValueImpl* valueImpl = new nsMsgSearchValueImpl(value);
+  delete value;               // we keep the nsIMsgSearchValue, not
+                              // the nsMsgSearchValue
+  return AddValue(valueImpl);
 }
 
 
 nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchValue *dst)
 {
-    NS_ENSURE_ARG_POINTER(src);
-    NS_ENSURE_ARG_POINTER(dst);
-
-	// Yes, this could be an operator overload, but nsMsgSearchValue is totally public, so I'd
-	// have to define a derived class with nothing by operator=, and that seems like a bit much
-	nsresult err = NS_OK;
-    src->GetAttrib(&dst->attribute);
-	switch (dst->attribute)
-	{
-	case nsMsgSearchAttrib::Priority:
-		err = src->GetPriority(&dst->u.priority);
-		break;
-	case nsMsgSearchAttrib::Date:
-        err = src->GetDate(&dst->u.date);
-		break;
-        case nsMsgSearchAttrib::HasAttachmentStatus:
-	case nsMsgSearchAttrib::MsgStatus:
-        err = src->GetStatus(&dst->u.msgStatus);
-		break;
-	case nsMsgSearchAttrib::MessageKey:
-        err = src->GetMsgKey(&dst->u.key);
-		break;
-	case nsMsgSearchAttrib::AgeInDays:
-        err = src->GetAge(&dst->u.age);
-		break;
+  NS_ENSURE_ARG_POINTER(src);
+  NS_ENSURE_ARG_POINTER(dst);
+  
+  // Yes, this could be an operator overload, but nsMsgSearchValue is totally public, so I'd
+  // have to define a derived class with nothing by operator=, and that seems like a bit much
+  nsresult err = NS_OK;
+  src->GetAttrib(&dst->attribute);
+  switch (dst->attribute)
+  {
+  case nsMsgSearchAttrib::Priority:
+    err = src->GetPriority(&dst->u.priority);
+    break;
+  case nsMsgSearchAttrib::Date:
+    err = src->GetDate(&dst->u.date);
+    break;
+  case nsMsgSearchAttrib::HasAttachmentStatus:
+  case nsMsgSearchAttrib::MsgStatus:
+    err = src->GetStatus(&dst->u.msgStatus);
+    break;
+  case nsMsgSearchAttrib::MessageKey:
+    err = src->GetMsgKey(&dst->u.key);
+    break;
+  case nsMsgSearchAttrib::AgeInDays:
+    err = src->GetAge(&dst->u.age);
+    break;
   case nsMsgSearchAttrib::Label:
     err = src->GetLabel(&dst->u.label);
     break;
   case nsMsgSearchAttrib::JunkStatus:
     err = src->GetJunkStatus(&dst->u.junkStatus);
     break;
-	default:
-		if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
-		{
-			NS_ASSERTION(IS_STRING_ATTRIBUTE(dst->attribute), "assigning non-string result");
-            nsXPIDLString unicodeString;
-			err = src->GetStr(getter_Copies(unicodeString));
-            dst->string = ToNewUTF8String(unicodeString);
-		}
-		else
-			err = NS_ERROR_INVALID_ARG;
-	}
-	return err;
+  default:
+    if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+    {
+      NS_ASSERTION(IS_STRING_ATTRIBUTE(dst->attribute), "assigning non-string result");
+      nsXPIDLString unicodeString;
+      err = src->GetStr(getter_Copies(unicodeString));
+      dst->string = ToNewUTF8String(unicodeString);
+    }
+    else
+      err = NS_ERROR_INVALID_ARG;
+  }
+  return err;
 }
 
 
 nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribValue attrib,
                                        nsMsgSearchValue **outValue) const
 {
-	nsresult err = NS_OK;
-	nsCOMPtr<nsIMsgSearchValue> value;
-	*outValue = NULL;
-
-    PRUint32 count;
-    m_valueList->Count(&count);
-	for (PRUint32 i = 0; i < count && err != NS_OK; i++)
-	{
-		m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
-                                   (void **)getter_AddRefs(value));
-
-        nsMsgSearchAttribValue valueAttribute;
-        value->GetAttrib(&valueAttribute);
-		if (attrib == valueAttribute)
-		{
-			*outValue = new nsMsgSearchValue;
-			if (*outValue)
-			{
-				err = AssignValues (value, *outValue);
-				err = NS_OK;
-			}
-			else
-				err = NS_ERROR_OUT_OF_MEMORY;
-		}
-	}
+  nsresult err = NS_OK;
+  nsCOMPtr<nsIMsgSearchValue> value;
+  *outValue = NULL;
+  
+  PRUint32 count;
+  m_valueList->Count(&count);
+  for (PRUint32 i = 0; i < count && err != NS_OK; i++)
+  {
+    m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
+      (void **)getter_AddRefs(value));
+    
+    nsMsgSearchAttribValue valueAttribute;
+    value->GetAttrib(&valueAttribute);
+    if (attrib == valueAttribute)
+    {
+      *outValue = new nsMsgSearchValue;
+      if (*outValue)
+      {
+        err = AssignValues (value, *outValue);
+        err = NS_OK;
+      }
+      else
+        err = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 #ifdef HAVE_SEARCH_PORT
-	// No need to store the folderInfo separately; we can always get it if/when
-	// we need it. This code is to support "view thread context" in the search dialog
-	if (SearchError_ScopeAgreement == err && attrib == nsMsgSearchAttrib::FolderInfo)
-	{
-		nsMsgFolderInfo *targetFolder = m_adapter->FindTargetFolder (this);
-		if (targetFolder)
-		{
-			*outValue = new nsMsgSearchValue;
-			if (*outValue)
-			{
-				(*outValue)->u.folder = targetFolder;
-				(*outValue)->attribute = nsMsgSearchAttrib::FolderInfo;
-				err = NS_OK;
-			}
-		}
-	}
+  // No need to store the folderInfo separately; we can always get it if/when
+  // we need it. This code is to support "view thread context" in the search dialog
+  if (SearchError_ScopeAgreement == err && attrib == nsMsgSearchAttrib::FolderInfo)
+  {
+    nsMsgFolderInfo *targetFolder = m_adapter->FindTargetFolder (this);
+    if (targetFolder)
+    {
+      *outValue = new nsMsgSearchValue;
+      if (*outValue)
+      {
+        (*outValue)->u.folder = targetFolder;
+        (*outValue)->attribute = nsMsgSearchAttrib::FolderInfo;
+        err = NS_OK;
+      }
+    }
+  }
 #endif
-	return err;
+  return err;
 }
 
 
@@ -1664,84 +1660,84 @@ nsresult
 nsMsgResultElement::GetValueRef (nsMsgSearchAttribValue attrib,
                                  nsIMsgSearchValue* *aResult) const 
 {
-	nsCOMPtr<nsIMsgSearchValue> value;
-    PRUint32 count;
-    m_valueList->Count(&count);
-    nsresult rv;
-	for (PRUint32 i = 0; i < count; i++)
-	{
-		rv = m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
-                                            getter_AddRefs(value));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "bad element of array");
-        if (NS_FAILED(rv)) continue;
-        
-        nsMsgSearchAttribValue valueAttribute;
-        value->GetAttrib(&valueAttribute);
-		if (attrib == valueAttribute) {
-            *aResult = value;
-            NS_ADDREF(*aResult);
-        }
-	}
-	return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIMsgSearchValue> value;
+  PRUint32 count;
+  m_valueList->Count(&count);
+  nsresult rv;
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    rv = m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
+      getter_AddRefs(value));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "bad element of array");
+    if (NS_FAILED(rv)) continue;
+    
+    nsMsgSearchAttribValue valueAttribute;
+    value->GetAttrib(&valueAttribute);
+    if (attrib == valueAttribute) {
+      *aResult = value;
+      NS_ADDREF(*aResult);
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 
 nsresult nsMsgResultElement::GetPrettyName (nsMsgSearchValue **value)
 {
-	nsresult err = GetValue (nsMsgSearchAttrib::Location, value);
+  nsresult err = GetValue (nsMsgSearchAttrib::Location, value);
 #ifdef HAVE_SEARCH_PORT
-	if (NS_OK == err)
-	{
-		nsMsgFolderInfo *folder = m_adapter->m_scope->m_folder;
-		nsMsgNewsHost *host = NULL;
-		if (folder)
-		{
-			// Find the news host because only the host knows whether pretty
-			// names are supported. 
-			if (FOLDER_CONTAINERONLY == folder->GetType())
-				host = ((nsMsgNewsFolderInfoContainer*) folder)->GetHost();
-			else if (folder->IsNews())
-				host = folder->GetNewsFolderInfo()->GetHost();
-
-			// Ask the host whether it knows pretty names. It isn't strictly
-			// necessary to avoid calling folder->GetPrettiestName() since it
-			// does the right thing. But we do have to find the folder from the host.
-			if (host && host->QueryExtension ("LISTPNAMES"))
-			{
-				folder = host->FindGroup ((*value)->u.string);
-				if (folder)
-				{
-					char *tmp = nsCRT::strdup (folder->GetPrettiestName());
-					if (tmp)
-					{
-						XP_FREE ((*value)->u.string);
-						(*value)->u.utf8SstringZ = tmp;
-					}
-				}
-			}
-		}
-	}
+  if (NS_OK == err)
+  {
+    nsMsgFolderInfo *folder = m_adapter->m_scope->m_folder;
+    nsMsgNewsHost *host = NULL;
+    if (folder)
+    {
+      // Find the news host because only the host knows whether pretty
+      // names are supported. 
+      if (FOLDER_CONTAINERONLY == folder->GetType())
+        host = ((nsMsgNewsFolderInfoContainer*) folder)->GetHost();
+      else if (folder->IsNews())
+        host = folder->GetNewsFolderInfo()->GetHost();
+      
+      // Ask the host whether it knows pretty names. It isn't strictly
+      // necessary to avoid calling folder->GetPrettiestName() since it
+      // does the right thing. But we do have to find the folder from the host.
+      if (host && host->QueryExtension ("LISTPNAMES"))
+      {
+        folder = host->FindGroup ((*value)->u.string);
+        if (folder)
+        {
+          char *tmp = nsCRT::strdup (folder->GetPrettiestName());
+          if (tmp)
+          {
+            XP_FREE ((*value)->u.string);
+            (*value)->u.utf8SstringZ = tmp;
+          }
+        }
+      }
+    }
+  }
 #endif // HAVE_SEARCH_PORT
-	return err;
+  return err;
 }
 
 int nsMsgResultElement::CompareByFolderInfoPtrs (const void *e1, const void *e2)
 {
 #ifdef HAVE_SEARCH_PORT
-	nsMsgResultElement * re1 = *(nsMsgResultElement **) e1;
-	nsMsgResultElement * re2 = *(nsMsgResultElement **) e2;
-
-	// get the src folder for each one
-	
-	const nsMsgSearchValue * v1 = re1->GetValueRef(attribFolderInfo);
-	const nsMsgSearchValue * v2 = re2->GetValueRef(attribFolderInfo);
-
-	if (!v1 || !v2)
-		return 0;
-
-	return (v1->u.folder - v2->u.folder);
+  nsMsgResultElement * re1 = *(nsMsgResultElement **) e1;
+  nsMsgResultElement * re2 = *(nsMsgResultElement **) e2;
+  
+  // get the src folder for each one
+  
+  const nsMsgSearchValue * v1 = re1->GetValueRef(attribFolderInfo);
+  const nsMsgSearchValue * v2 = re2->GetValueRef(attribFolderInfo);
+  
+  if (!v1 || !v2)
+    return 0;
+  
+  return (v1->u.folder - v2->u.folder);
 #else
-	return -1;
+  return -1;
 #endif // HAVE_SEARCH_PORT
 }
 
@@ -1749,146 +1745,146 @@ int nsMsgResultElement::CompareByFolderInfoPtrs (const void *e1, const void *e2)
 
 int nsMsgResultElement::Compare (const void *e1, const void *e2)
 {
-	int ret = 0;
+  int ret = 0;
 #ifdef HAVE_SEARCH_PORT
-	// Bad karma to cast away const, but they're my objects anway.
-	// Maybe if we go through and const everything this should be a const ptr.
-	nsMsgResultElement *re1 = *(nsMsgResultElement**) e1;
-	nsMsgResultElement *re2 = *(nsMsgResultElement**) e2;
-
-	NS_ASSERTION(re1->IsValid(), "invalid result element1 in resultElement::Compare");
-	NS_ASSERTION(re2->IsValid(), "invalid result element2 in resultElement::Compare");
-
-	nsMsgSearchAttribute attrib = re1->m_adapter->m_scope->m_frame->m_sortAttribute;
-
-	const nsMsgSearchValue *v1 = re1->GetValueRef (attrib);
-	const nsMsgSearchValue *v2 = re2->GetValueRef (attrib);
-
-	if (!v1 || !v2)
-		return ret; // search result doesn't contain the attrib we want to sort on
-
-	switch (attrib)
-	{
-	case nsMsgSearchAttrib::Date:
-		{
-			// on Win 3.1, the requisite 'int' return type is a short, so use a 
-			// real time_t for comparison
-			time_t date = v1->u.date - v2->u.date;
-			if (date)
-				ret = ((long)date) < 0 ? -1 : 1;
-			else
-				ret = 0;
-		}
-		break;
-	case nsMsgSearchAttrib::Priority:
-		ret = v1->u.priority - v2->u.priority;
-		break;
-	case nsMsgSearchAttrib::MsgStatus:
-		{
-			// Here's a totally arbitrary sorting protocol for msg status
-			uint32 s1, s2;
-
-			s1 = v1->u.msgStatus & ~MSG_FLAG_REPLIED;
-			s2 = v2->u.msgStatus & ~MSG_FLAG_REPLIED;
-			if (s1 || s2)
-				ret = s1 - s2;
-			else
-			{
-				s1 = v1->u.msgStatus & ~MSG_FLAG_FORWARDED;
-				s2 = v2->u.msgStatus & ~MSG_FLAG_FORWARDED;
-				if (s1 || s2)
-					ret = s1 - s2;
-				else
-				{
-					s1 = v1->u.msgStatus & ~MSG_FLAG_READ;
-					s2 = v2->u.msgStatus & ~MSG_FLAG_READ;
-					if (s1 || s2)
-						ret = s1 - s2;
-					else
-						// statuses don't contain any flags we're interested in, 
-						// so they're equal as far as we care
-						ret = 0;
-				}
-			}
-		}
-		break;
-	default:
-		if (attrib == nsMsgSearchAttrib::Subject)
-		{
-			// Special case for subjects, so "Re:foo" sorts under 'f' not 'r'
-			const char *s1 = v1->u.string;
-			const char *s2 = v2->u.string;
-			NS_MsgStripRE (&s1, NULL);
-			NS_MsgStripRE (&s2, NULL);
-			ret = PL_strcasecomp (s1, s2);
-		}
-		else
-			ret = strcasecomp (v1->u.string, v2->u.string);
-	}
-	// ### need different hack for this.
-	// qsort's default sort order is ascending, so in order to get descending
-	// behavior, we'll tell qsort a lie and reverse the comparison order.
-	if (re1->m_adapter->m_scope->m_frame->m_descending && ret != 0)
-		if (ret < 0)
-			ret = 1;
-		else
-			ret = -1;
-
-	// <0 --> e1 less than e2
-	// 0  --> e1 equal to e2
-	// >0 --> e1 greater than e2
+  // Bad karma to cast away const, but they're my objects anway.
+  // Maybe if we go through and const everything this should be a const ptr.
+  nsMsgResultElement *re1 = *(nsMsgResultElement**) e1;
+  nsMsgResultElement *re2 = *(nsMsgResultElement**) e2;
+  
+  NS_ASSERTION(re1->IsValid(), "invalid result element1 in resultElement::Compare");
+  NS_ASSERTION(re2->IsValid(), "invalid result element2 in resultElement::Compare");
+  
+  nsMsgSearchAttribute attrib = re1->m_adapter->m_scope->m_frame->m_sortAttribute;
+  
+  const nsMsgSearchValue *v1 = re1->GetValueRef (attrib);
+  const nsMsgSearchValue *v2 = re2->GetValueRef (attrib);
+  
+  if (!v1 || !v2)
+    return ret; // search result doesn't contain the attrib we want to sort on
+  
+  switch (attrib)
+  {
+  case nsMsgSearchAttrib::Date:
+    {
+      // on Win 3.1, the requisite 'int' return type is a short, so use a 
+      // real time_t for comparison
+      time_t date = v1->u.date - v2->u.date;
+      if (date)
+        ret = ((long)date) < 0 ? -1 : 1;
+      else
+        ret = 0;
+    }
+    break;
+  case nsMsgSearchAttrib::Priority:
+    ret = v1->u.priority - v2->u.priority;
+    break;
+  case nsMsgSearchAttrib::MsgStatus:
+    {
+      // Here's a totally arbitrary sorting protocol for msg status
+      uint32 s1, s2;
+      
+      s1 = v1->u.msgStatus & ~MSG_FLAG_REPLIED;
+      s2 = v2->u.msgStatus & ~MSG_FLAG_REPLIED;
+      if (s1 || s2)
+        ret = s1 - s2;
+      else
+      {
+        s1 = v1->u.msgStatus & ~MSG_FLAG_FORWARDED;
+        s2 = v2->u.msgStatus & ~MSG_FLAG_FORWARDED;
+        if (s1 || s2)
+          ret = s1 - s2;
+        else
+        {
+          s1 = v1->u.msgStatus & ~MSG_FLAG_READ;
+          s2 = v2->u.msgStatus & ~MSG_FLAG_READ;
+          if (s1 || s2)
+            ret = s1 - s2;
+          else
+            // statuses don't contain any flags we're interested in, 
+            // so they're equal as far as we care
+            ret = 0;
+        }
+      }
+    }
+    break;
+  default:
+    if (attrib == nsMsgSearchAttrib::Subject)
+    {
+      // Special case for subjects, so "Re:foo" sorts under 'f' not 'r'
+      const char *s1 = v1->u.string;
+      const char *s2 = v2->u.string;
+      NS_MsgStripRE (&s1, NULL);
+      NS_MsgStripRE (&s2, NULL);
+      ret = PL_strcasecomp (s1, s2);
+    }
+    else
+      ret = strcasecomp (v1->u.string, v2->u.string);
+  }
+  // ### need different hack for this.
+  // qsort's default sort order is ascending, so in order to get descending
+  // behavior, we'll tell qsort a lie and reverse the comparison order.
+  if (re1->m_adapter->m_scope->m_frame->m_descending && ret != 0)
+    if (ret < 0)
+      ret = 1;
+    else
+      ret = -1;
+    
+    // <0 --> e1 less than e2
+    // 0  --> e1 equal to e2
+    // >0 --> e1 greater than e2
 #endif
-	return ret;
+    return ret;
 }
 
 #ifdef HAVE_SEARCH_PORT
 MWContextType nsMsgResultElement::GetContextType ()
 {
-	MWContextType type=(MWContextType)0;
-	switch (m_adapter->m_scope->m_attribute)
-	{
-	case nsMsgSearchScopeMailFolder:
-		type = MWContextMailMsg;
-		break;
-	case nsMsgSearchScopeOfflineNewsgroup:    // added by mscott could be bug fix...
-	case nsMsgSearchScopeNewsgroup:
-	case nsMsgSearchScopeAllSearchableGroups:
-		type = MWContextNewsMsg;
-		break;
-	case nsMsgSearchScopeLdapDirectory:
-		type = MWContextBrowser;
-		break;
-	default:
-		NS_ASSERTION(PR_FALSE, "invalid scope"); // should never happen
-	}
-	return type;
+  MWContextType type=(MWContextType)0;
+  switch (m_adapter->m_scope->m_attribute)
+  {
+  case nsMsgSearchScopeMailFolder:
+    type = MWContextMailMsg;
+    break;
+  case nsMsgSearchScopeOfflineNewsgroup:    // added by mscott could be bug fix...
+  case nsMsgSearchScopeNewsgroup:
+  case nsMsgSearchScopeAllSearchableGroups:
+    type = MWContextNewsMsg;
+    break;
+  case nsMsgSearchScopeLdapDirectory:
+    type = MWContextBrowser;
+    break;
+  default:
+    NS_ASSERTION(PR_FALSE, "invalid scope"); // should never happen
+  }
+  return type;
 }
 
 #endif
 nsresult nsMsgResultElement::Open (void *window)
 {
 #ifdef HAVE_SEARCH_PORT
-	// ###phil this is a little ugly, but I'm not inclined to invest more in it
-	// until the libnet rework is done and I know what kind of context we'll end up with
-
-	if (window)
-	{
-		if (m_adapter->m_scope->m_attribute != nsMsgSearchScopeLdapDirectory)
-		{
-			msgPane = (MSG_MessagePane *) window; 
-			PR_ASSERT (MSG_MESSAGEPANE == msgPane->GetPaneType());
-			return m_adapter->OpenResultElement (msgPane, this);
-		}
-		else
-		{
-			context = (MWContext*) window;
-			PR_ASSERT (MWContextBrowser == context->type);
-			msg_SearchLdap *thisAdapter = (msg_SearchLdap*) m_adapter;
-			return thisAdapter->OpenResultElement (context, this);
-		}
-	}
+  // ###phil this is a little ugly, but I'm not inclined to invest more in it
+  // until the libnet rework is done and I know what kind of context we'll end up with
+  
+  if (window)
+  {
+    if (m_adapter->m_scope->m_attribute != nsMsgSearchScopeLdapDirectory)
+    {
+      msgPane = (MSG_MessagePane *) window; 
+      PR_ASSERT (MSG_MESSAGEPANE == msgPane->GetPaneType());
+      return m_adapter->OpenResultElement (msgPane, this);
+    }
+    else
+    {
+      context = (MWContext*) window;
+      PR_ASSERT (MWContextBrowser == context->type);
+      msg_SearchLdap *thisAdapter = (msg_SearchLdap*) m_adapter;
+      return thisAdapter->OpenResultElement (context, this);
+    }
+  }
 #endif
-	return NS_ERROR_NULL_POINTER;
+  return NS_ERROR_NULL_POINTER;
 }
 
 
