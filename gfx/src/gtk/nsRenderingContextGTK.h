@@ -42,7 +42,7 @@
 
 #include <gtk/gtk.h>
 
-//#define USE_NATIVE_TILING 1
+#define USE_NATIVE_TILING 1
 
 class nsRenderingContextGTK : public nsRenderingContextImpl
 {
@@ -160,7 +160,9 @@ public:
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 #ifdef USE_NATIVE_TILING
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                        nscoord aWidth,nscoord aHeight);
+                      nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
+                      nscoord aSrcYOffset, const nsRect &aTileRect);
 #endif
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);

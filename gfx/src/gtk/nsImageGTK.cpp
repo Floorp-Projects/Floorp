@@ -669,7 +669,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
 
   readX = aX; readY = aY;
   destX = 0;  destY = 0;
-  if ((readY>=surfaceHeight) || (readX>=surfaceWidth)) {
+  if ((readY>=(int)surfaceHeight) || (readX>=(int)surfaceWidth)) {
     // This should never happen if the layout engine is sane,
     // but pavlov says he saw it.  Bulletproof gfx for now...
     return;
@@ -1001,7 +1001,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 }
 
 /* inline */
-void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest, const nsRect &destRect, 
+void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest, 
+                            PRInt32 aSXOffset, PRInt32 aSYOffset,
+                            const nsRect &destRect, 
                             const nsRect &clipRect, PRBool useClip)
 {
   GdkGC *gc;
@@ -1010,8 +1012,8 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest, const nsRect &destR
   memset(&values, 0, sizeof(GdkGCValues));
   values.fill = GDK_TILED;
   values.tile = src;
-  values.ts_x_origin = destRect.x;
-  values.ts_y_origin = destRect.y;
+  values.ts_x_origin = destRect.x - aSXOffset;
+  values.ts_y_origin = destRect.y - aSYOffset;
   valuesMask = GdkGCValuesMask(GDK_GC_FILL | GDK_GC_TILE | GDK_GC_TS_X_ORIGIN | GDK_GC_TS_Y_ORIGIN);
   gc = gdk_gc_new_with_values(src, &values, valuesMask);
 
@@ -1060,7 +1062,12 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
          aTileRect.width, aTileRect.height, this);
 #endif
 
-  if (mAlphaDepth == 8) {
+  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
+
+  if ((drawing->GetDepth() == 8) || (mAlphaDepth == 8)) {
+#ifdef DEBUG_TILING
+    printf("Warning: using slow tiling\n");
+#endif
     PRInt32 aY0 = aTileRect.y,
             aX0 = aTileRect.x,
             aY1 = aTileRect.y + aTileRect.height,
@@ -1072,8 +1079,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   
     return NS_OK;
   }
-
-  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
   PRInt32
     validX = 0,
@@ -1112,12 +1117,12 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
 
     tileImg = gdk_pixmap_new(mImagePixmap, aTileRect.width, aTileRect.height, mDepth);
-    TilePixmap(mImagePixmap, tileImg, tmpRect, tmpRect, PR_FALSE);
+    TilePixmap(mImagePixmap, tileImg, 0, 0, tmpRect, tmpRect, PR_FALSE);
 
 
     // tile alpha mask
     tileMask = gdk_pixmap_new(mAlphaPixmap, aTileRect.width, aTileRect.height, mAlphaDepth);
-    TilePixmap(mAlphaPixmap, tileMask, tmpRect, tmpRect, PR_FALSE);
+    TilePixmap(mAlphaPixmap, tileMask, 0, 0, tmpRect, tmpRect, PR_FALSE);
 
     GdkGC *fgc = gdk_gc_new(drawing->GetDrawable());
     gdk_gc_set_clip_mask(fgc, (GdkBitmap*)tileMask);
@@ -1140,11 +1145,128 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     PRBool isValid;
     aContext.GetClipRect(clipRect, isValid);
 
-    TilePixmap(mImagePixmap, drawing->GetDrawable(), aTileRect, clipRect, PR_TRUE);
+    TilePixmap(mImagePixmap, drawing->GetDrawable(), aTileRect.x, aTileRect.y, aTileRect, clipRect, PR_TRUE);
   }
 
   return NS_OK;
 }
+
+
+
+NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
+{
+#ifdef DEBUG_TILING
+  printf("nsImageGTK::DrawTile: mWidth=%d, mHeight=%d\n", mWidth, mHeight);
+  printf("nsImageGTK::DrawTile((src: %d, %d), (tile: %d,%d, %d, %d) %p\n", aSXOffset, aSYOffset,
+         aTileRect.x, aTileRect.y,
+         aTileRect.width, aTileRect.height, this);
+#endif
+
+  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
+
+  PRInt32
+    validX = 0,
+    validY = 0,
+    validWidth  = mWidth,
+    validHeight = mHeight;
+  
+  // limit the image rectangle to the size of the image data which
+  // has been validated.
+  if ((mDecodedY2 < mHeight)) {
+    validHeight = mDecodedY2 - mDecodedY1;
+  }
+  if ((mDecodedX2 < mWidth)) {
+    validWidth = mDecodedX2 - mDecodedX1;
+  }
+  if ((mDecodedY1 > 0)) {   
+    validHeight -= mDecodedY1;
+    validY = mDecodedY1;
+  }
+  if ((mDecodedX1 > 0)) {
+    validWidth -= mDecodedX1;
+    validX = mDecodedX1; 
+  }
+
+  if (mAlphaDepth == 8) {
+#ifdef DEBUG_TILING
+    printf("Warning: using slow tiling\n");
+#endif
+    PRInt32 aY0 = aTileRect.y - aSYOffset,
+            aX0 = aTileRect.x - aSXOffset,
+            aY1 = aTileRect.y + aTileRect.height,
+            aX1 = aTileRect.x + aTileRect.width;
+
+    // Set up clipping and call Draw().
+    PRBool clipState;
+    aContext.PushState();
+    aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect,
+                         clipState);
+
+    for (PRInt32 y = aY0; y < aY1; y+=validHeight)
+      for (PRInt32 x = aX0; x < aX1; x+=validWidth)
+        Draw(aContext,aSurface,x,y,validWidth,validHeight);
+
+    aContext.PopState(clipState);
+
+    return NS_OK;
+  }
+
+  // draw the tile offscreen
+  CreateOffscreenPixmap(validWidth, validHeight);
+  DrawImageOffscreen(validX, validY, validWidth, validHeight);
+
+  if (mAlphaDepth == 1) {
+    GdkPixmap *tileImg;
+    GdkPixmap *tileMask;
+
+    CreateAlphaBitmap(validWidth, validHeight);
+
+    nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
+
+    tileImg = gdk_pixmap_new(mImagePixmap, aTileRect.width, 
+                             aTileRect.height, drawing->GetDepth());
+    TilePixmap(mImagePixmap, tileImg, aSXOffset, aSYOffset, tmpRect,
+               tmpRect, PR_FALSE);
+
+
+    // tile alpha mask
+    tileMask = gdk_pixmap_new(mAlphaPixmap, aTileRect.width, aTileRect.height, mAlphaDepth);
+    TilePixmap(mAlphaPixmap, tileMask, aSXOffset, aSYOffset, tmpRect,
+               tmpRect, PR_FALSE);
+
+    GdkGC *fgc = gdk_gc_new(drawing->GetDrawable());
+    gdk_gc_set_clip_mask(fgc, (GdkBitmap*)tileMask);
+    gdk_gc_set_clip_origin(fgc, aTileRect.x, aTileRect.y);
+
+    // and copy it back
+    gdk_window_copy_area(drawing->GetDrawable(), fgc, aTileRect.x,
+                         aTileRect.y, tileImg, 0, 0,
+                         aTileRect.width, aTileRect.height);
+    gdk_gc_unref(fgc);
+
+    gdk_pixmap_unref(tileImg);
+    gdk_pixmap_unref(tileMask);
+
+  } else {
+
+    // In the non-alpha case, gdk can tile for us
+
+    nsRect clipRect;
+    PRBool isValid;
+    aContext.GetClipRect(clipRect, isValid);
+
+    TilePixmap(mImagePixmap, drawing->GetDrawable(), aSXOffset, aSYOffset,
+               aTileRect, clipRect, PR_FALSE);
+  }
+
+  mFlags = 0;
+  return NS_OK;
+}
+
+
 
 //------------------------------------------------------------
 

@@ -72,6 +72,11 @@ public:
                       nsRect &aSrcRect,
                       nsRect &aTileRect);
 
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
+                      nsDrawingSurface aSurface,
+                      PRInt32 aSXOffset, PRInt32 aSYOffset,
+                      const nsRect &aTileRect);
+
   virtual void ImageUpdated(nsIDeviceContext *aContext,
                             PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
@@ -135,7 +140,8 @@ private:
                              PRInt32 aX, PRInt32 aY,
                              PRInt32 aWidth, PRInt32 aHeight);
 
-  inline void TilePixmap(GdkPixmap *src, GdkPixmap *dest, const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
+  inline void TilePixmap(GdkPixmap *src, GdkPixmap *dest, PRInt32 aSXOffset, PRInt32 aSYOffset, 
+                         const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
   inline void CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight);
   inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight);
   inline void DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 validWidth, PRInt32 validHeight);

@@ -64,6 +64,7 @@ public:
 
   void GetSize(PRUint32 *aWidth, PRUint32 *aHeight) { *aWidth = mWidth; *aHeight = mHeight; }
 
+  PRInt32 GetDepth() { return mDepth; }
 
 protected:
   PRUint8 ConvertMaskToCount(unsigned long val);
