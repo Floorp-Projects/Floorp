@@ -1,7 +1,8 @@
 #include "nsStreamListenerTee.h"
 
-NS_IMPL_ISUPPORTS2(nsStreamListenerTee,
+NS_IMPL_ISUPPORTS3(nsStreamListenerTee,
                    nsIStreamListener,
+                   nsIRequestObserver,
                    nsIStreamListenerTee)
 
 NS_IMETHODIMP
