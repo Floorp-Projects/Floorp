@@ -99,6 +99,7 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsObjectFrame.h"
 #include "nsRuleNode.h"
 #include "nsIDOMMutationEvent.h"
@@ -4997,7 +4998,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
       widgetData.mWindowType  = eWindowType_popup;
       widgetData.mBorderStyle = eBorderStyle_default;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
       static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
       view->CreateWidget(kCPopUpCID, &widgetData, nsnull);
 #else
@@ -5834,13 +5835,32 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         rv = NS_NewMenuFrame(mPresShell, &newFrame, (aTag != nsXULAtoms::menuitem));
       }
       else if (aTag == nsXULAtoms::menubar) {
-  #if defined(XP_MAC) || defined(XP_MACOSX) // The Mac uses its native menu bar.
-        aHaltProcessing = PR_TRUE;
-        return NS_OK;
-  #else
+  #ifdef XP_MACOSX
+        // On Mac OS X, we use the system menubar for any root chrome shell
+        // XUL menubars.
+        PRBool isRootChromeShell = PR_FALSE;
+        nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
+        if (container) {
+          nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+          if (treeItem) {
+            PRInt32 type;
+            treeItem->GetItemType(&type);
+            if (nsIDocShellTreeItem::typeChrome == type) {
+              nsCOMPtr<nsIDocShellTreeItem> parent;
+              treeItem->GetParent(getter_AddRefs(parent));
+              isRootChromeShell = !parent;
+            }
+          }
+        }
+
+        if (isRootChromeShell) {
+          aHaltProcessing = PR_TRUE;
+          return NS_OK;
+        }
+  #endif
+
         processChildren = PR_TRUE;
         rv = NS_NewMenuBarFrame(mPresShell, &newFrame);
-  #endif
       }
       else if (aTag == nsXULAtoms::popupgroup) {
         // This frame contains child popups
