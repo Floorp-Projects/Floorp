@@ -474,6 +474,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     }
     NS_RELEASE(text);
   } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea)) {
+    GetText(&value, PR_TRUE);
     textArea->SetText(value, ignore);
     NS_RELEASE(textArea);
   }
