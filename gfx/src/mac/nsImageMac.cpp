@@ -32,6 +32,7 @@ nsImageMac :: nsImageMac()
 
 	NS_INIT_REFCNT();
 	mThePixelmap.baseAddr = nsnull;
+	mImageBits = nsnull;
   mWidth = 0;
   mHeight = 0;	
 }
@@ -40,15 +41,29 @@ nsImageMac :: nsImageMac()
 
 nsImageMac :: ~nsImageMac()
 {
+	if(mImageBits)
+		delete[] mImageBits;
 }
 
 NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
 
 //------------------------------------------------------------
 
+PRUint8* nsImageMac::GetBits()
+{ 
+	return mImageBits; 
+}
+
+//------------------------------------------------------------
+
 nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
 PRInt32	bufferdepth;
+
+	if(nsnull==mImageBits)
+		{
+		delete [] mImageBits;
+		}
 
 		switch(aDepth)
 			{
@@ -102,27 +117,48 @@ PRInt32	bufferdepth;
 		mThePixelmap.vRes = 72<<16;
 		mThePixelmap.planeBytes = 0;
 		mThePixelmap.pmReserved = 0;
+		mThePixelmap.pmVersion = 0;
 		mWidth = aWidth;
 		mHeight = aHeight;
 		}
 
+
+    // Allocate mask image bits if requested
+    if (aMaskRequirements != nsMaskRequirements_kNoMask)
+    {
+      if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements)
+      {
+        mARowBytes = (aWidth + 7) / 8;
+        mAlphaDepth = 1;
+      }
+      else
+      {
+        NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
+                     "unexpected mask depth");
+        mARowBytes = aWidth;
+        mAlphaDepth = 8;
+      }
+
+      // 32-bit align each row
+      mARowBytes = (mARowBytes + 3) & ~0x3;
+
+      mAlphaBits = new unsigned char[mARowBytes * aHeight];
+      mAlphaWidth = aWidth;
+      mAlphaHeight = aHeight;
+    }
+    else
+    {
+      mAlphaBits = nsnull;
+      mAlphaWidth = 0;
+      mAlphaHeight = 0;
+    }
+
+
+
+
+
   return NS_OK;
 }
-
-//------------------------------------------------------------
-
-
-
-
-//------------------------------------------------------------
-
-/*void nsImageMac::ComputMetrics()
-{
-
-  mRowBytes = CalcBytesSpan(mWidth);
-  mSizeImage = mRowBytes * mHeight;
-
-}*/
 
 //------------------------------------------------------------
 
@@ -176,17 +212,6 @@ PRUint32	*value,i,end;
 
 	::RGBForeColor(&rgbblack);
 	::RGBBackColor(&rgbwhite);
-
-/*	
-	end = (mRowBytes * mHeight)/8;
-	value = (PRUint32*)mImageBits; 
-	for(i=0;i<end;i++)
-		{
-		*value = 0xffff0000;
-		value++;
-		}
-*/	
-	
 	
 	::CopyBits((BitMap*)&mThePixelmap,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
 
