@@ -132,6 +132,7 @@ interface nsIX509Cert : nsISupports {
   readonly attribute nsIX509CertValidity validity;
   readonly attribute string dbKey;
   readonly attribute string windowTitle;
+  readonly attribute boolean usesOCSP;
 
   /*
    * enums for certs

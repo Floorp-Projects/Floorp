@@ -70,6 +70,15 @@ function LoadCerts()
   document.getElementById('user-outliner')
    .outlinerBoxObject.view = userOutlinerView;
 
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var verifiedColText;
+  if (certdb.ocspOn) {
+    verifiedColText = bundle.GetStringFromName("certmgr.verifiedNoOCSP");
+  } else {
+    verifiedColText = bundle.GetStringFromName("certmgr.verified");
+  }
+  var verifiedCol = document.getElementById('verifiedcol');
+  verifiedCol.setAttribute('label', verifiedColText);
 }
 
 function ReloadCerts()
