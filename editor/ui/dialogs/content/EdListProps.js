@@ -157,7 +157,7 @@ dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
 
 function SelectListType()
 {
-dump(ListTypeList+"ListTypeList\n");
+//dump(ListTypeList+"ListTypeList\n");
   switch (ListTypeList.selectedIndex)
   {
     case 1:
@@ -192,7 +192,40 @@ function SelectBulletStyle()
   if (ListType == "ul")
     BulletStyleIndex = BulletStyleList.selectedIndex;
   else if (ListType == "ol")
+  {
+    if (NumberStyleIndex != BulletStyleList.selectedIndex)
+      StartingNumberInput.value = "";  
     NumberStyleIndex = BulletStyleList.selectedIndex;
+  }
+}
+
+function FilterStartNumber()
+{
+  var stringIn = StartingNumberInput.value.trimString();
+  if (stringIn.length > 0)
+  {
+    switch (NumberStyleIndex)
+    {
+      case 0:
+        // Allow only integers
+        stringIn = stringIn.replace(/\D+/g,"");
+        break;
+      case 1:  // "I";
+        stringIn = stringIn.toUpperCase().replace(/[^ICDVXL]+/g,"");
+        break;
+      case 2:  // "i";
+        stringIn = stringIn.toLowerCase().replace(/[^icdvxl]+/g,"");
+        break;
+      case 3:  // "A";
+        stringIn.toUpperCase();
+        break;
+      case 4:  // "a";
+        stringIn.toLowerCase();
+        break;
+    }
+    if (!stringIn) stringIn = "";
+    StartingNumberInput.value = stringIn;
+  }
 }
 
 function ValidateData()

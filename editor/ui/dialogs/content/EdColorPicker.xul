@@ -84,7 +84,7 @@
       <spring flex="1"/>
       <spring id="ColorPickerSwatch"/>
       <spring flex="1"/>
-      <button class="dialog" value="&default.label;" 
+      <button id="DefaultColorButton" class="dialog" value="&default.label;" 
         style="margin-right:0px;" oncommand="RemoveColor()"/>
     </box>
   </box>

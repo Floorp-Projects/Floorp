@@ -342,49 +342,29 @@ function editorSendPage()
                         "chrome,all,dialog=no", "attachment='" + pageUrl + "',body='" + pageUrl +
                         "',subject='" + pageTitle + "',bodyislink=true");
   } 
-  else if (CheckAndSaveDocument(GetString("SendPageReason")))
+  else if (CheckAndSaveDocument(GetString("SendPageReason")), DocumentHasBeenSaved())
     editorSendPage();
 
   window._content.focus();
 }
 
-/*
-// This is redundant -- use CheckAndSaveDocument instead
-function sendPageMustSave()
+function DocumentHasBeenSaved()
 {
-  var result = {value:0};
-  commonDialogsService.UniversalDialog(
-    window,
-    null,
-    window.editorShell.GetString("SendPage"),
-    window.editorShell.GetString("SendPageCaption"),
-    null,
-    window.editorShell.GetString("Yes"),
-    window.editorShell.GetString("No"),
-    null,
-    null,
-    null,
-    null,
-    {value:0},
-    {value:0},
-    "chrome://global/skin/question-icon.gif",
-    {value:"false"},
-    2,
-    0,
-    0,
-    result
-    );
-  
-  if (result.value == 0)  // They chose "Yes" -- they'd like to save their document now
-  {
-    var returned = window.editorShell.saveDocument(false, false);
-    if (returned)
-      editorSendPage(); // They saved the page, now we can send page :)
+  fileurl = "";
+  try {
+    fileurl = window._content.location;
+  } catch (e) {
+    return false;
   }
-}
-*/
 
-function CheckAndSaveDocument(reasonToSave)
+  if (fileurl == "" || fileurl == "about:blank")
+    return false;
+
+  // We have a file URL already
+  return true;
+}
+
+function CheckAndSaveDocument(reasonToSave, allowDontSave)
 {
   var document = editorShell.editorDocument;
   if (!editorShell.documentModified)
@@ -407,7 +387,7 @@ function CheckAndSaveDocument(reasonToSave)
     null,
     window.editorShell.GetString("Save"),     // Save Button
     window.editorShell.GetString("Cancel"),   // Cancel Button
-    window.editorShell.GetString("DontSave"), // Don't Save Button
+    (allowDontSave ? window.editorShell.GetString("DontSave") : null), // Don't Save Button
     null,
     null,
     null,
@@ -415,7 +395,7 @@ function CheckAndSaveDocument(reasonToSave)
     {value:0},
     "chrome://global/skin/question-icon.gif",
     {value:"false"},
-    3,
+    (allowDontSave ? 3 : 2),
     0,
     0,
     result
@@ -462,7 +442,8 @@ function EditorCanClose()
   // Returns FALSE only if user cancels save action
   //dump("Calling EditorCanClose\n");
 
-  var canClose = CheckAndSaveDocument(GetString("BeforeClosing"));
+  // "true" means allow "Don't Save" button
+  var canClose = CheckAndSaveDocument(GetString("BeforeClosing"), true);
 
   // This is our only hook into closing via the "X" in the caption
   //   or "Quit" (or other paths?)
@@ -475,34 +456,6 @@ function EditorCanClose()
 }
 
 // --------------------------- View menu ---------------------------
-
-function EditorViewSource()
-{
-  // Temporary hack: save to a file and call up the source view window
-  // using the local file url.
-  if (CheckAndSaveDocument(GetString("BeforeViewSource")))
-    return;
-
-  fileurl = "";
-  try {
-    fileurl = window._content.location;
-  } catch (e) {
-    return;
-  }
-
-  // CheckAndSave doesn't tell us if the user said "Don't Save",
-  // so make sure we have a url:
-  if (fileurl != "" && fileurl != "about:blank")
-  {
-    // Use a browser window to view source
-    window.openDialog( "chrome://navigator/content/viewSource.xul",
-                       "_blank",
-                       "chrome,menubar,status,dialog=no,resizable",
-                       fileurl,
-                       "view-source" );
-  }
-}
-
 
 function EditorSetDocumentCharacterSet(aCharset)
 {
@@ -822,16 +775,24 @@ function EditorSelectColor(colorType)
   // Launch the ColorPicker dialog
   // TODO: Figure out how to position this under the color buttons on the toolbar
   window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", gColorObj);
+
+  // User canceled the dialog
+  if (gColorObj.Cancel)
+    return;
+
+  var broadcaster;
   
   if (colorType == "Text")
   {
     if (currentColor != gColorObj.TextColor)
       window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
   
-    // Trying to force updating of "state" in command node
-    //  so next caret move updates color button, but not working!
-    //goUpdateCommand("cmd_fontColor");
-    SetTextColorButton(gColorObj.TextColor);
+    // Update the broadcaster state (this will trigger color button update)
+    broadcaster = document.getElementById("cmd_fontColor");
+    if (broadcaster)
+      broadcaster.setAttribute("state",gColorObj.TextColor);
+
+    //SetTextColorButton(gColorObj.TextColor);
   }
   else if (element)
   {
@@ -853,9 +814,10 @@ function EditorSelectColor(colorType)
     } 
     else if (currentColor != gColorObj.BackgroundColor)
       window.editorShell.SetBackgroundColor(gColorObj.BackgroundColor);
-  
-//    goUpdateCommand("cmd_backgroundColor");
-    SetBackgroundColorButton(gColorObj.BackgroundColor);
+    
+    broadcaster = document.getElementById("cmd_backgroundColor");
+    if (broadcaster)
+      broadcaster.setAttribute("state",gColorObj.BackgroundColor);
   }
   window._content.focus();
 }
@@ -909,31 +871,28 @@ function SetEditMode(mode)
 
     if (mode == DisplayModeSource)
     {
-      // Get the current contents and output into the SourceWindow
-      if (bodyNode)
+      // Get the entire document's source string
+      var source = editorShell.GetContentsAs("text/html", 0);
+      if (source.length > 0)
       {
-        var childCount = bodyNode.childNodes.length;
-        if( childCount)
-        {
-          gSourceContentWindow.setAttribute("value",editorShell.GetContentsAs("text/html", 0)); //gOutputBodyOnly));
-          gSourceContentWindow.focus();
-          // Note: We can't set the caret location in a multiline textfield
-          return;
-        }
+        // Don't include anything before "<head", such as "<DOCTYPE..."
+        headStart = source.indexOf("<head");
+        if (headStart > 0)
+          gSourceContentWindow.value = source.slice(headStart);
+        else
+          headStart = source;
+
+        gSourceContentWindow.focus();
       }
-      // If we fall through, revert to previous node
-      SetDisplayMode(PreviousNonSourceDisplayMode);
+      else
+        SetDisplayMode(PreviousNonSourceDisplayMode);
     }
     else if (previousMode == DisplayModeSource) 
     {
       // We are comming from edit source mode,
       //   so transfer that back into the document
-      //TODO: THIS IS NOT WORKING YET!
       editorShell.RebuildDocumentFromSource(gSourceContentWindow.value);
-/*
-      editorShell.SelectAll();
-      editorShell.InsertSource(gSourceContentWindow.value);
-*/
+
       // Clear out the source editor buffer
       gSourceContentWindow.value = "";
 
@@ -1040,6 +999,32 @@ function SetDisplayMode(mode)
 
       window._content.focus();
     }
+
+    // We must set check on menu item since toolbar may have been used
+    document.getElementById("viewPreviewMode").setAttribute("checked","false");
+    document.getElementById("viewNormalMode").setAttribute("checked","false");
+    document.getElementById("viewAllTagsMode").setAttribute("checked","false");
+    document.getElementById("viewSourceMode").setAttribute("checked","true");
+
+    var menuID;
+    switch(mode)
+    {
+      case DisplayModePreview:
+        menuID = "viewPreviewMode";
+        break;
+      case DisplayModeNormal:
+        menuID = "viewNormalMode";
+        break;
+      case DisplayModeAllTags:
+        menuID = "viewAllTagsMode";
+        break;
+      case DisplayModeSource:
+        menuID = "viewSourceMode";
+        break;
+    }
+    if (menuID.length > 0)
+      document.getElementById(menuID).setAttribute("checked","true");
+    
     return true;
   }
 }
@@ -1048,13 +1033,16 @@ function SetDisplayMode(mode)
 function DisableMenusForHTMLSource(disable)
 {
   // Disable toolbar buttons
-  DisableItem("findButton", disable);
   DisableItem("spellingButton", disable);
   DisableItem("imageButton", disable);
   DisableItem("hlineButton", disable);
   DisableItem("tableButton", disable);
   DisableItem("linkButton", disable);
   DisableItem("namedAnchorButton", disable);
+
+  // Any toolbar can be toggled on/off except the format toolbar
+  DisableItem("viewFormatToolbar", disable);
+
 
   // Top-level menus that we completely hide
   CollapseItem("insertMenu", disable);
@@ -1073,7 +1061,8 @@ function DisableMenusForHTMLSource(disable)
   for (var i = 0; i < children.length; i++)
   {
     var item = children.item(i);
-    if (item.id != "viewNormalMode" &&
+    if (item.id != "viewToolbar" &&
+        item.id != "viewNormalMode" &&
         item.id != "viewAllTagsMode" &&
         item.id != "viewSourceMode" &&
         item.id != "viewPreviewMode" &&

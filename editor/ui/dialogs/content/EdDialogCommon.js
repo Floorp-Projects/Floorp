@@ -574,14 +574,6 @@ function onAdvancedEdit()
     if (window.AdvancedEditOK) {
       // Copy edited attributes to the dialog widgets:
       InitDialog();
-/*
-// Use this if we want to close the parent dialog immediately
-      if (onOK()) {
-        // I'm not sure why, but calling onOK() from JS doesn't trigger closing
-        //   automatically as it does when you click on the OK button!
-        window.close();
-      }
-*/
     }
   }
 }

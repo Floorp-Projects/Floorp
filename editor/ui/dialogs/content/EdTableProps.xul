@@ -56,7 +56,7 @@
 
       <!-- TABLE PANEL -->
       <box id="TablePanel" orient="vertical">
-        <titledbox><title><text value="&size.label;"/></title>
+        <titledbox><title value="&size.label;"/>
           <grid>
             <columns><column/><column/></columns>
             <rows>
@@ -88,7 +88,7 @@
           </grid>
         </titledbox>
         <box><!-- Border and Alignment -->
-          <titledbox orient="vertical"><title><text align="left" value="&tableBorderSpacing.label;"/></title>
+          <titledbox orient="vertical"><title align="left" value="&tableBorderSpacing.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
@@ -170,7 +170,7 @@
       <!-- CELL PANEL -->
     	<box id="CellPanel" orient="vertical">
         <titledbox autostretch="never" valign="middle">
-          <title><text align="left" value="&cellSelection.label;"/></title>
+          <title value="&cellSelection.label;"/>
           <box orient="vertical">
             <menulist id="SelectionList" oncommand="ChangeSelection(event.target.data)" flex="1">
               <menupopup>
@@ -193,7 +193,7 @@
           </box>
         </titledbox>
         <!-- cell size titledbox -->
-        <titledbox><title><text align="left" value="&size.label;"/></title>
+        <titledbox><title align="left" value="&size.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
@@ -226,7 +226,7 @@
         </titledbox>
         <box><!-- Alignment and style -->
           <titledbox orient="vertical" flex="1">
-            <title><text align="left" value="&cellContentAlignment.label;"/></title>
+            <title align="left" value="&cellContentAlignment.label;"/>
             <grid>
               <columns><column/><column/><column/></columns>
               <rows>

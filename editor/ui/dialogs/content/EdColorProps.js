@@ -28,31 +28,25 @@
  When in "Custom Colors" mode, all colors will be set on body tag,
   even if they are just default colors, to assure compatable colors in page.
  User cannot select "use default" for individual colors
- When in UseDefaultColors mode, the color buttons can be used,
- Instead of disabling using color buttons while in UseDefault mode,
-  and we switch to UseCustom mode automatically
- This let's user start with default palette as starting point for
-  really setting colors
-  (2_13 Can't disable color buttons anyway!)
 */
 
 //Cancel() is in EdDialogCommon.js
 
 var BodyElement;
 var prefs;
-var lastSetBackgroundImage;
+var backgroundImage;
 
 // Initialize in case we can't get them from prefs???
 var defaultTextColor="#000000";
 var defaultLinkColor="#000099";
-var defaultVisitedLinkColor="#990099";
+var defaultActiveColor="#000099";
+var defaultVisitedColor="#990099";
 var defaultBackgroundColor="#FFFFFF";
 
-// Save
 var customTextColor;
 var customLinkColor;
-var customVisitedColor;
 var customActiveColor;
+var customVisitedColor;
 var customBackgroundColor;
 
 // Strings we use often
@@ -64,6 +58,7 @@ var alinkStr =       "alink";
 var bgcolorStr =     "bgcolor";
 var backgroundStr =  "background";
 var colorStyle =     "color: ";
+var backColorStyle = "background-color: ";
 var backImageStyle = " background-image: url(";
 
 // dialog initialization code
@@ -94,7 +89,6 @@ function Startup()
     dump("Failed to get BODY element!\n");
     window.close();
   }
-  dump(BodyElement+"\n");
 
   // Set element we will edit
   globalElement = BodyElement.cloneNode(false);
@@ -105,14 +99,11 @@ function Startup()
   var prefs = GetPrefs();
   if (prefs)
   {
-    dump("Getting browser prefs...\n");
-
     // This doesn't necessarily match what appears in the page
     // It is complicated by browser.display.use_document_colors
     // TODO: WE MUST FORCE WINDOW TO USE DOCUMENT COLORS!!!
     //       How do we do that without changing browser prefs?
     var useDocumentColors =    prefs.GetBoolPref("browser.display.use_document_colors");
-    dump("browser.display.use_document_colors = "+ useDocumentColors+"\n");
     if (useDocumentColors)
     {
       // How do I get current colors as show in page?
@@ -122,19 +113,13 @@ function Startup()
         defaultTextColor =         prefs.CopyCharPref("browser.display.foreground_color");
         defaultLinkColor =         prefs.CopyCharPref("browser.anchor_color");
         // Note: Browser doesn't store a value for ActiveLinkColor
-        defaultVisitedLinkColor =  prefs.CopyCharPref("browser.visited_color");
+        defaultActiveColor = defaultLinkColor;
+        defaultVisitedColor =  prefs.CopyCharPref("browser.visited_color");
         defaultBackgroundColor=    prefs.CopyCharPref("browser.display.background_color");
       }
       catch (ex) {
         dump("Failed getting browser colors from prefs\n");
       }
-    }
-    try {
-      // Get the last-set background image
-      lastSetBackgroundImage = prefs.CopyCharPref("editor.default_background_image");
-    }
-    catch (ex) {
-      dump("Failed getting browser colors from prefs\n");
     }
   }
   InitDialog();
@@ -149,159 +134,235 @@ function Startup()
 
 function InitDialog()
 {
-  SetColor("textCW",       globalElement.getAttribute(textStr));
-  SetColor("linkCW",       globalElement.getAttribute(linkStr));
-  SetColor("visitedCW",    globalElement.getAttribute(vlinkStr));
-  SetColor("activeCW",     globalElement.getAttribute(alinkStr));
-  SetColor("backgroundCW", globalElement.getAttribute(bgcolorStr));
-
-  if (dialog.textColor ||
-      dialog.linkColor ||
-      dialog.visitedLinkColor ||
-      dialog.activeLinkColor ||
-      dialog.backgroundColor)
+  // Get image from document
+  backgroundImage = globalElement.getAttribute(backgroundStr);
+  if (backgroundImage.length > 0)
   {
+    dialog.BackgroundImageInput.value = backgroundImage;
+    dialog.ColorPreview.setAttribute(styleStr, backImageStyle+backgroundImage+");");
+  }
+
+  customTextColor        = globalElement.getAttribute(textStr);
+  customLinkColor        = globalElement.getAttribute(linkStr);
+  customActiveColor      = globalElement.getAttribute(alinkStr);
+  customVisitedColor     = globalElement.getAttribute(vlinkStr);
+  customBackgroundColor  = globalElement.getAttribute(bgcolorStr);
+
+  if (customTextColor       ||
+      customLinkColor       ||
+      customVisitedColor    ||
+      customActiveColor     ||
+      customBackgroundColor)
+  {
+    // Set default color explicitly for any that are missing
+    if (!customTextColor) customTextColor = defaultTextColor;
+    if (!customLinkColor) customLinkColor = defaultLinkColor;
+    if (!customActiveColor) customActiveColor = defaultActiveColor;
+    if (!customVisitedColor) customVisitedColor = defaultVisitedColor;
+    if (!customBackgroundColor) customBackgroundColor = defaultBackgroundColor;
+
     // If any colors are set, then check the "Custom" radio button
     dialog.CustomColorsRadio.checked = true;
-  } else {
-    dialog.DefaultColorsRadio.checked = true;
+    UseCustomColors();
   }
-  
-  // Save a copy to use when switching from UseDefault to UseCustom
-  SaveCustomColors();
-
-  // Get image from document
-  dialog.BackgroundImage = globalElement.getAttribute(backgroundStr);
-  if (dialog.BackgroundImage)
+  else 
   {
-    dialog.BackgroundImageInput.value = dialog.BackgroundImage;
-    dialog.ColorPreview.setAttribute(backgroundStr, dialog.BackgroundImage);
+    dialog.DefaultColorsRadio.checked = true;
+    UseDefaultColors();
   }
 }
 
+function GetColorAndUpdate(ColorWellID)
+{
+  // Only allow selecting when in custom mode
+  if (!dialog.CustomColorsRadio.checked) return;
 
-function SetColor(ColorWellID, color)
+  var colorObj = new Object;
+  var colorWell = document.getElementById(ColorWellID);
+  if (!colorWell) return;
+
+  // Don't allow a blank color, i.e., using the "default"
+  colorObj.NoDefault = true;
+
+  switch( ColorWellID )
+  {
+    case "textCW":
+      colorObj.Type = "Text";
+      colorObj.TextColor = customTextColor;
+      break;
+    case "linkCW":
+      colorObj.Type = "Link";
+      colorObj.TextColor = customLinkColor;
+      break;
+    case "activeCW":
+      colorObj.Type = "ActiveLink";
+      colorObj.TextColor = customActiveColor;
+      break;
+    case "visitedCW":
+      colorObj.Type = "VisitedLink";
+      colorObj.TextColor = customVisitedColor;
+      break;
+    case "backgroundCW":
+      colorObj.Type = "Page";
+      colorObj.PageColor = customBackgroundColor;
+      break;
+  }
+
+  window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", colorObj);
+
+  // User canceled the dialog
+  if (colorObj.Cancel)
+    return;
+
+  color = "";
+  switch( ColorWellID )
+  {
+    case "textCW":
+      color = customTextColor = colorObj.TextColor;
+      break;
+    case "linkCW":
+      color = customLinkColor = colorObj.TextColor;
+      break;
+    case "activeCW":
+      color = customActiveColor = colorObj.TextColor;
+      break;
+    case "visitedCW":
+      color = customVisitedColor = colorObj.TextColor;
+      break;
+    case "backgroundCW":
+      color = customBackgroundColor = colorObj.BackgroundColor;
+      break;
+  }
+
+  setColorWell(ColorWellID, color); 
+  SetColorPreview(ColorWellID, color);
+  
+  // Setting a color automatically changes into UseCustomColors mode
+  //dialog.CustomColorsRadio.checked = true;
+}
+
+function SetColorPreview(ColorWellID, color)
 {
   switch( ColorWellID )
   {
     case "textCW":
-      if (!color) color = defaultTextColor;
-      dialog.textColor = color;
       dialog.NormalText.setAttribute(styleStr,colorStyle+color);
       break;
     case "linkCW":
-      if (!color) color = defaultLinkColor;
-      dialog.linkColor = color;
       dialog.LinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "activeCW":
-      if (!color) color = defaultLinkColor;
-      dialog.activeLinkColor = color;
       dialog.ActiveLinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "visitedCW":
-      if (!color) color = defaultVisitedLinkColor;
-      dialog.visitedLinkColor = color;
       dialog.VisitedLinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "backgroundCW":
-      if (!color) color = defaultBackgroundColor;
-      dialog.backgroundColor = color;
       // Must combine background color and image style values
-      styleValue = colorStyle+color;
-      if (dialog.backgroundImage > 0)
-        styleValue += ";"+backImageStyle+backImageStyle+");";
+      styleValue = backColorStyle+color;
+      if (backgroundImage.length > 0)
+        styleValue += ";"+backImageStyle+backgroundImage+");";
 
       dialog.ColorPreview.setAttribute(styleStr,styleValue);
       break;
   }
-  setColorWell(ColorWellID, color); 
-}
-
-function GetColorAndUpdate(ColorPickerID, ColorWellID, widget)
-{
-  // Close the colorpicker
-  widget.parentNode.closePopup();
-  SetColor(ColorWellID, getColor(ColorPickerID));
-  
-  // Setting a color automatically changes into UseCustomColors mode
-  dialog.CustomColorsRadio.checked = true;
-}
-
-function SaveCustomColors()
-{
-  customTextColor = dialog.textColor;     
-  customLinkColor = dialog.linkColor;
-  customVisitedColor = dialog.visitedLinkColor;
-  customActiveColor = dialog.activeLinkColor;
-  customBackgroundColor = dialog.backgroundColor;
 }
 
 function UseCustomColors()
 {
-  // Restore from saved colors
-  SetColor("textCW",       customTextColor);
-  SetColor("linkCW",       customLinkColor);
-  SetColor("activeCW",     customActiveColor);
-  SetColor("visitedCW",    customVisitedColor);
-  SetColor("backgroundCW", customBackgroundColor);
+  SetElementEnabledById("TextButton", true);
+  SetElementEnabledById("LinkButton", true);
+  SetElementEnabledById("ActiveLinkButton", true);
+  SetElementEnabledById("VisitedLinkButton", true);
+  SetElementEnabledById("BackgroundButton", true);
+
+  SetColorPreview("textCW",       customTextColor);
+  SetColorPreview("linkCW",       customLinkColor);
+  SetColorPreview("activeCW",     customActiveColor);
+  SetColorPreview("visitedCW",    customVisitedColor);
+  SetColorPreview("backgroundCW", customBackgroundColor);
+
+  setColorWell("textCW",          customTextColor);
+  setColorWell("linkCW",          customLinkColor);
+  setColorWell("activeCW",        customActiveColor);
+  setColorWell("visitedCW",       customVisitedColor);
+  setColorWell("backgroundCW",    customBackgroundColor);
 }
 
 function UseDefaultColors()
 {
-  dump("UseDefaultColors\n");
-  // Save colors to use when switching back to UseCustomColors
-  SaveCustomColors();
+  SetColorPreview("textCW",       defaultTextColor);
+  SetColorPreview("linkCW",       defaultLinkColor);
+  SetColorPreview("activeCW",     defaultActiveColor);
+  SetColorPreview("visitedCW",    defaultVisitedColor);
+  SetColorPreview("backgroundCW", defaultBackgroundColor);
 
-  SetColor("textCW",       defaultTextColor);
-  SetColor("linkCW",       defaultLinkColor);
-  SetColor("activeCW",     defaultLinkColor); //Browser doesn't store this separately
-  SetColor("visitedCW",    defaultVisitedLinkColor);
-  SetColor("backgroundCW", defaultBackgroundColor);
+  // Setting to blank color will remove color from buttons,
+  setColorWell("textCW",       "");
+  setColorWell("linkCW",       "");
+  setColorWell("activeCW",     "");
+  setColorWell("visitedCW",    "");
+  setColorWell("backgroundCW", "");
+
+  // Disable color buttons
+  SetElementEnabledById("TextButton", false);
+  SetElementEnabledById("LinkButton", false);
+  SetElementEnabledById("ActiveLinkButton", false);
+  SetElementEnabledById("VisitedLinkButton", false);
+  SetElementEnabledById("BackgroundButton", false);
 }
 
 function chooseFile()
 {
-  // Get a local file, converted into URL format
+  // Get a local image file, converted into URL format
   fileName = GetLocalFileURL("img");
   if (fileName && fileName != "")
   {
-    dialog.BackgroundImage = fileName;
-    dialog.BackgroundImageInput.value = fileName;
-    dialog.ColorPreview.setAttribute(backgroundStr, fileName);
-    // First make a string with just background color
-    var styleValue = colorStyle+dialog.backgroundColor+";";
-    if (ValidateImage())
-    {
-      // Append image style
-      styleValue += backImageStyle+dialog.BackgroundImage+");";
-    }
-dump(styleValue+"=style value when setting image\n")
-    // Set style on preview (removes image if not checked or not valid)
-    dialog.ColorPreview.setAttribute(styleStr, styleValue);
+    dialog.BackgroundImageInput = filename;
+    ValidateAndPreviewImage(true);
   }
-  
-  // Put focus into the input field
   SetTextfieldFocus(dialog.BackgroundImageInput);
 }
 
-function ValidateImage()
+function ChangeBackgroundImage()
 {
+  // Don't show error message for image while user is typing
+  ValidateAndPreviewImage(false);
+}
+
+function ValidateAndPreviewImage(ShowErrorMessage)
+{
+  // First make a string with just background color
+  var styleValue = backColorStyle+dialog.backgroundColor+";";
+
   var image = dialog.BackgroundImageInput.value.trimString();
-  if (image && image != "")
+  if (image.length > 0)
   {
     if (IsValidImage(image))
     {
-      dialog.BackgroundImage = image;
-      return true;
-    } else {
-      dialog.BackgroundImage = null;
+      backgroundImage = image;
+      // Append image style
+      styleValue += backImageStyle+backgroundImage+");";
+    }
+    else
+    {
+      backgroundImage = null;
+      if (ShowErrorMessage)
+      {
+        SetTextfieldFocus(dialog.BackgroundImageInput);
+        // Tell user about bad image
+        ShowInputErrorMessage(GetString("MissingImageError"));
+      }
+      return false;
     }
   }
-  SetTextfieldFocus(dialog.BackgroundImageInput);
-  ShowInputErrorMessage(GetString("MissingImageError"));
+  else backgroundImage = null;
 
-  return false;
+  // Set style on preview (removes image if not valid)
+  dialog.ColorPreview.setAttribute(styleStr, styleValue);
+
+  // Note that an "empty" string is valid
+  return true;
 }
 
 function ValidateData()
@@ -317,21 +378,24 @@ function ValidateData()
   }
   else
   {
-    globalElement.setAttribute(textStr,    dialog.textColor);
-    globalElement.setAttribute(linkStr,    dialog.linkColor);
-    globalElement.setAttribute(vlinkStr,   dialog.visitedLinkColor);
-    globalElement.setAttribute(alinkStr,   dialog.activeLinkColor);
-    globalElement.setAttribute(bgcolorStr, dialog.backgroundColor);
+    globalElement.setAttribute(textStr,    customTextColor);
+    globalElement.setAttribute(linkStr,    customLinkColor);
+    globalElement.setAttribute(vlinkStr,   customVisitedColor);
+    globalElement.setAttribute(alinkStr,   customActiveColor);
+    globalElement.setAttribute(bgcolorStr, customBackgroundColor);
   }
 
-  if (ValidateImage())
+  if (ValidateAndPreviewImage(true))
   {
-    globalElement.setAttribute(backgroundStr, dialog.BackgroundImage);
-  } else {
-    globalElement.removeAttribute(backgroundStr);
-    return false;
-  }
-  
+    // A valid image may be null for no image
+    if (backgroundImage)
+    {
+      globalElement.setAttribute(backgroundStr, backgroundImage);
+    } else {
+      globalElement.removeAttribute(backgroundStr);
+      return false;
+    }
+  }  
   return true;
 }
 
@@ -339,13 +403,6 @@ function onOK()
 {
   if (ValidateData())
   {
-    // Save image for future editing
-    if (prefs && dialog.BackgroundImage)
-    {
-      dump("Saving default background image in prefs\n");
-      prefs.SetCharPref("editor.default_background_image", dialog.BackgroundImage);
-    }
-
     // Copy attributes to element we are changing
     editorShell.CloneAttributes(BodyElement, globalElement);
 

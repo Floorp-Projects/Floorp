@@ -148,8 +148,8 @@
     <command id="cmd_saveAs"        value="&saveAsCmd.label;"        oncommand="goDoCommand('cmd_saveAs')"/>
     <command id="cmd_saveAsCharset" value="&saveAsCharsetCmd.label;" oncommand="goDoCommand('cmd_saveAsCharset')"/>
     <command id="cmd_revert"        value="&fileRevert.label;"       oncommand="goDoCommand('cmd_revert')"/>
-
-    <command id="cmd_preview"                                       oncommand="goDoCommand('cmd_preview')"/>
+    <command id="cmd_preview"                                        oncommand="goDoCommand('cmd_preview')"/>
+    <command id="cmd_editSendPage"    value="&sendPageCmd.label;"      oncommand="goDoCommand('cmd_editSendPage')"/>
   </commandset>
 
 
@@ -309,8 +309,9 @@
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
-      <menuitem id="menu_preview" value="&previewCmd.label;" accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
-      <menuitem id="menu_sendPage" value="&sendPageCmd.label;" accesskey="&sendPage.accesskey;" oncommand="editorSendPage();"/>
+      <menuitem id="menu_preview"      value="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
+      <!-- Editor needs a different menuItem and cmd node than other module's send page (we need to prompt for filesave) -->
+      <menuitem id="menu_editSendPage" accesskey="&sendPage.accesskey;"    observes="cmd_editSendPage"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
       <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>
@@ -345,11 +346,10 @@
   <!-- view menu items -->
   <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
     <menupopup> 
-
-  	<menuitem value="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
-  	<menuitem value="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
-    <menuitem value="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
-  	<menuitem value="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
+      <menuitem id="viewComposerToolbar" value="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
+      <menuitem id="viewFormatToolbar"   value="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
+      <menuitem id="viewEditModeToolbar" value="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
+      <menuitem id="viewTaskBar"         value="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
     </menupopup>
   </menu>
 

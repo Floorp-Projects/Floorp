@@ -106,7 +106,6 @@ function Startup()
  **/
 function onOK()
 {
-  dump("in onOK\n")
   UpdateObject(); // call UpdateObject fn to update element in document
   window.opener.AdvancedEditOK = true;
   window.opener.globalElement = element;
@@ -191,7 +190,7 @@ function doRemoveAttribute( which )
     switch ( tree.id ) {
       case "HTMLATree":
         HTMLRAttrs[HTMLRAttrs.length] = TrimString(name.getAttribute("value"));
-        dump("HTMLRAttrs[" + (HTMLRAttrs.length - 1) + "]: " + HTMLRAttrs[HTMLRAttrs.length-1] + "\n");
+//        dump("HTMLRAttrs[" + (HTMLRAttrs.length - 1) + "]: " + HTMLRAttrs[HTMLRAttrs.length-1] + "\n");
         break;
       case "CSSATree":   
         CSSRAttrs[CSSRAttrs.length] = TrimString(name.getAttribute("value"));

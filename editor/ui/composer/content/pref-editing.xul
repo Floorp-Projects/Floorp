@@ -45,14 +45,14 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
-    <title><text value="&authorName.label;"/></title>
+    <title value="&authorName.label;"/>
     <textfield id="editorAuthor" flex="1"
                pref="true" preftype="string" prefstring="editor.author"
                prefattribute="value"/>
   </titledbox>
 
   <titledbox orient="vertical">
-    <title><text value="&pageColorHeader;"/></title> 
+    <title value="&pageColorHeader;"/> 
 
     <box>
       <box orient="vertical">

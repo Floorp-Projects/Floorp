@@ -25,11 +25,14 @@
 var insertNew = true;
 var tagname = "TAG NAME"
 var dialog;
+var color = "";
 var LastPickedColor = "";
-var ColorType; // = "Text";
+var ColorType = "Text";
+var TextType = false;
 var TableOrCell = false;
 var LastPickedIsDefault = true;
-var gLocation;
+var NoDefault = false;
+
 
 // dialog initialization code
 function Startup()
@@ -39,6 +42,8 @@ function Startup()
     dump("EdColorPicker: Failed to get EditorShell or arguments[1]\n");
     return;
   }
+
+  window.arguments[1].Cancel = false;
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -53,34 +58,40 @@ function Startup()
   dialog.ColorSwatch      = document.getElementById("ColorPickerSwatch");
   
   // The type of color we are setting: 
-  //    Text, or background: Page, Table, or Cell
-  ColorType = window.arguments[1].Type;
+  //  text: Text, Link, ActiveLink, VisitedLink, 
+  //  or background: Page, Table, or Cell
+  if (window.arguments[1].Type)
+  {
+    ColorType = window.arguments[1].Type;
+    // Get string for dialog title from passed-in type 
+    //   (note constraint on editor.properties string name)
+    window.title = GetString(ColorType+"Color");
+  }
+
+  if (!window.title)
+    window.title = GetString("Color");
+
 
   dialog.ColorInput.value = "";
-  var color = "";
 
   // window.arguments[1] is object to set initial and return color
   switch (ColorType)
   {
     case "Page":
-      window.title = GetString("PageBackgroundColor");
       if (window.arguments[1].PageColor)
         color = window.arguments[1].PageColor;
       break;
     case "Table":
-      window.title = GetString("TableBackgroundColor");
       if (window.arguments[1].TableColor)
         color = window.arguments[1].TableColor;
       break;
     case "Cell":
-      window.title = GetString("CellBackgroundColor");
       if (window.arguments[1].CellColor)
         color = window.arguments[1].CellColor;
       break;
     case "TableOrCell":
       TableOrCell = true;
       document.getElementById("TableOrCellGroup").setAttribute("collapsed", "false");
-      window.title = GetString("TableOrCellColor");
       if (window.arguments[1].TableColor)
       {
         color = window.arguments[1].TableColor;
@@ -88,14 +99,13 @@ function Startup()
       }
       else 
       {
-        if (window.arguments[1].CellColor)
-          color = window.arguments[1].CellColor;
-
+        color = window.arguments[1].CellColor;
         dialog.CellRadio.checked = true;
       }
       break;
     default:
-      window.title = GetString("TextColor");
+      // Any other type will change some kind of text,
+      TextType = true;
       if (window.arguments[1].TextColor)
         color = window.arguments[1].TextColor;
       break;
@@ -103,16 +113,14 @@ function Startup()
 
   SetCurrentColor(color)
 
-  if (ColorType == "Text")
+  if (TextType)
     LastPickedColor = dialog.LastPickedColor.getAttribute("LastTextColor");
   else
     LastPickedColor = dialog.LastPickedColor.getAttribute("LastBackgroundColor");
 
-dump("LastPickedColor = "+LastPickedColor+"|\n");
-
   dialog.LastPickedColor.setAttribute("style","background-color: "+LastPickedColor);
 
-  doSetOKCancel(onOK, onCancel);
+  doSetOKCancel(onOK, onCancelColor);
 
   // Set method to detect clicking on OK button
   //  so we don't get fooled by changing "default" behavior
@@ -120,9 +128,16 @@ dump("LastPickedColor = "+LastPickedColor+"|\n");
 
   // Make the "Last-picked" the default button
   //  until the user selects a color
-  
   dialog.Ok.removeAttribute("default");
   dialog.LastPickedButton.setAttribute("default","true");
+
+  // Caller can prevent user from submitting an empty, i.e., default color
+  NoDefault = window.arguments[1].NoDefault;
+  if (NoDefault)
+  {
+    // Hide the "Default button -- user must pick a color
+    document.getElementById("DefaultColorButton").setAttribute("collapsed","true");
+  }
 
   SetTextfieldFocus(dialog.ColorInput);
 
@@ -162,6 +177,7 @@ function SelectLastPickedColor()
 function SetCurrentColor(color)
 {
   // TODO: Validate color?
+  if(!color) color = "";
   dialog.ColorInput.value = color.trimString().toLowerCase();
   SetColorSwatch();
 }
@@ -198,21 +214,32 @@ function onOKClick()
   window.close();
 }
 
-function onOK()
+function ValidateData()
 {
-  var color;
   if (LastPickedIsDefault)
     color = LastPickedColor;
   else
     color = dialog.ColorInput.value;
-
+  
   color = color.trimString().toLowerCase();
+
   // TODO: Validate the color string!
 
-dump("ColorPicker onOK: color = "+color+"|\n");
+  if (NoDefault && color.length == 0)
+  {
+    ShowInputErrorMessage(GetString("NoColorError"));
+    SetTextfieldFocus(dialog.ColorInput);
+    return false;   
+  }
+  return true;
+}
+
+function onOK()
+{
+  if (!ValidateData()) return;
 
   // Set return values and save in persistent color attributes
-  if (ColorType == "Text")
+  if (TextType)
   {
     window.arguments[1].TextColor = color;
     if (color.length > 0)
@@ -231,4 +258,12 @@ dump("ColorPicker onOK: color = "+color+"|\n");
   SaveWindowLocation();
 
   return true; // do close the window
+}
+
+function onCancelColor()
+{
+  // Tells caller that user canceled
+  window.arguments[1].Cancel = true;
+  SaveWindowLocation();
+  window.close();
 }

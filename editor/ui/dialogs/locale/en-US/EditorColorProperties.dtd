@@ -23,7 +23,8 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Page Colors and Background">
 <!ENTITY pageColors.label "Page Colors">
-<!ENTITY defaultColorsRadio.label "Reader's default colors (Don't set colors in page)">
+<!ENTITY defaultColorsRadio.label "Reader's default colors">
+<!ENTITY defaultColorsMsg.label   "(Don't set colors in page)">
 <!ENTITY defaultColorsRadio.tooltip "Use the color settings from the viewer (reader's) browser only">
 <!ENTITY customColorsRadio.label "Use custom colors:">
 <!ENTITY customColorsRadio.tooltip "These color settings override the viewer's browser settings">

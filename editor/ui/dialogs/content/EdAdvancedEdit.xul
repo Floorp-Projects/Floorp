@@ -102,7 +102,7 @@
           <box orient="vertical">
             <spring class="spacer"/>
             <titledbox orient="vertical">
-              <title><text value="&AddHTMLAttributeLabel.label;"/></title>
+              <title value="&AddHTMLAttributeLabel.label;"/>
               <box autostretch="never">
                 <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
                 <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
@@ -134,7 +134,7 @@
           <box orient="vertical">
             <spring class="spacer"/>
             <titledbox orient="vertical">
-              <title><text value="&AddCSSAttributeLabel.label;"/></title>
+              <title value="&AddCSSAttributeLabel.label;"/>
               <box autostretch="never">
                 <text class="label" for="AddCSSAttributeNameInput" value="&AttName.label;"/>
                 <textfield flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
@@ -166,7 +166,7 @@
           <box orient="vertical">
             <spring class="spacer"/>
             <titledbox orient="vertical">
-              <title><text value="&AddJSEAttributeLabel.label;"/></title>
+              <title value="&AddJSEAttributeLabel.label;"/>
               <box autostretch="never">
                 <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
                 <textfield type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
