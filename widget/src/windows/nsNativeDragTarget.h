@@ -54,58 +54,58 @@ struct IDataObject;
 
 class nsNativeDragTarget : public IDropTarget
 {
-	public: // construction, destruction
+public:
+  nsNativeDragTarget(nsIWidget * aWnd);
+  ~nsNativeDragTarget();
 
-		nsNativeDragTarget(nsIWidget * aWnd);
-		~nsNativeDragTarget();
+  // IUnknown members - see iunknown.h for documentation
+  STDMETHODIMP QueryInterface(REFIID, void**);
+  STDMETHODIMP_(ULONG) AddRef();
+  STDMETHODIMP_(ULONG) Release();
 
-	public: // IUnknown members - see iunknown.h for documentation
-		STDMETHODIMP         QueryInterface(REFIID, void**);
-		STDMETHODIMP_(ULONG) AddRef        ();
-		STDMETHODIMP_(ULONG) Release       ();
+  // IDataTarget members
 
-	public: // IDataTarget members
+  // Set pEffect based on whether this object can support a drop based on
+  // the data available from pSource, the key and mouse states specified
+  // in grfKeyState, and the coordinates specified by point. This is
+  // called by OLE when a drag enters this object's window (as registered
+  // by Initialize).
+  STDMETHODIMP DragEnter(LPDATAOBJECT pSource, DWORD grfKeyState,
+                         POINTL point, DWORD* pEffect);
 
-		// Set pEffect based on whether this object can support a drop based on
-		// the data available from pSource, the key and mouse states specified
-		// in grfKeyState, and the coordinates specified by point. This is
-		// called by OLE when a drag enters this object's window (as registered
-		// by Initialize).
-		STDMETHODIMP DragEnter(LPDATAOBJECT pSource, DWORD grfKeyState,
-										       POINTL point, DWORD* pEffect);
+  // Similar to DragEnter except it is called frequently while the drag
+  // is over this object's window.
+  STDMETHODIMP DragOver(DWORD grfKeyState, POINTL point, DWORD* pEffect);
 
-		// Similar to DragEnter except it is called frequently while the drag
-		// is over this object's window.
-		STDMETHODIMP DragOver(DWORD grfKeyState, POINTL point, DWORD* pEffect);
+  // Release the drag-drop source and put internal state back to the point
+  // before the call to DragEnter. This is called when the drag leaves
+  // without a drop occurring.
+  STDMETHODIMP DragLeave();
 
-		// Release the drag-drop source and put internal state back to the point
-		// before the call to DragEnter. This is called when the drag leaves
-		// without a drop occurring.
-		STDMETHODIMP DragLeave();
+  // If point is within our region of interest and pSource's data supports
+  // one of our formats, get the data and set pEffect according to
+  // grfKeyState (DROPEFFECT_MOVE if the control key was not pressed,
+  // DROPEFFECT_COPY if the control key was pressed). Otherwise return
+  // E_FAIL.
+  STDMETHODIMP Drop(LPDATAOBJECT pSource, DWORD grfKeyState,
+                    POINTL point, DWORD* pEffect);
 
-		// If point is within our region of interest and pSource's data supports
-		// one of our formats, get the data and set pEffect according to
-		// grfKeyState (DROPEFFECT_MOVE if the control key was not pressed,
-		// DROPEFFECT_COPY if the control key was pressed). Otherwise return
-		// E_FAIL.
-		STDMETHODIMP Drop(LPDATAOBJECT pSource, DWORD grfKeyState,
-									    POINTL point, DWORD* pEffect);
+protected:
 
-  protected:
+  void GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyState,
+                          LPDWORD pdwEffect, PRUint32 * aGeckoAction);
+  void ProcessDrag(LPDATAOBJECT pData, PRUint32 aEventType, DWORD grfKeyState,
+                   POINTL pt, DWORD* pdwEffect);
+  void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
 
-    void GetGeckoDragAction ( LPDATAOBJECT pData, DWORD grfKeyState, LPDWORD pdwEffect, PRUint32 * aGeckoAction );
-    void ProcessDrag ( LPDATAOBJECT pData, PRUint32 aEventType, DWORD grfKeyState,
-							          POINTL pt, DWORD* pdwEffect );
-    void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
+  // Native Stuff
+  ULONG            m_cRef;      // reference count
+  HWND             mHWnd;
+  PRBool           mCanMove;
 
-    // Native Stuff
-    ULONG            m_cRef;      // reference count
-    HWND             mHWnd;
-    PRBool           mCanMove;
-
-    // Gecko Stuff
-    nsIWidget      * mWindow;
-    nsIDragService * mDragService;
+  // Gecko Stuff
+  nsIWidget      * mWindow;
+  nsIDragService * mDragService;
 };
 
 #endif // _nsNativeDragTarget_h_

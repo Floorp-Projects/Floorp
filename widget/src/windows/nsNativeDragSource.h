@@ -43,41 +43,41 @@
 //class nsIDragSource;
 
 /*
- * nsNativeDragSource implements the IDropSource interface and gets most of its
- * behavior from the associated adapter (m_dragDrop).
+ * nsNativeDragSource implements the IDropSource interface and gets
+ * most of its behavior from the associated adapter (m_dragDrop).
  */
 class nsNativeDragSource : public IDropSource
 {
-	public: // construction, destruction
+public:
 
-		// construct an nsNativeDragSource referencing adapter
-		//nsNativeDragSource(nsIDragSource * adapter);
-		nsNativeDragSource();
-		~nsNativeDragSource();
+  // construct an nsNativeDragSource referencing adapter
+  // nsNativeDragSource(nsIDragSource * adapter);
+  nsNativeDragSource();
+  ~nsNativeDragSource();
 
-	public: // IUnknown methods - see iunknown.h for documentation
+  // IUnknown methods - see iunknown.h for documentation
 
-		STDMETHODIMP         QueryInterface(REFIID, void**);
-		STDMETHODIMP_(ULONG) AddRef        ();
-		STDMETHODIMP_(ULONG) Release       ();
+  STDMETHODIMP QueryInterface(REFIID, void**);
+  STDMETHODIMP_(ULONG) AddRef();
+  STDMETHODIMP_(ULONG) Release();
 
-	public: // IDropSource methods - see idropsrc.h for documentation
+  // IDropSource methods - see idropsrc.h for documentation
 
-		// Return DRAGDROP_S_USEDEFAULTCURSORS if this object lets OLE provide
-		// default cursors, otherwise return NOERROR. This method gets called in
-		// response to changes that the target makes to dEffect (DragEnter,
-		// DragOver).
-		STDMETHODIMP GiveFeedback (DWORD dEffect);
+  // Return DRAGDROP_S_USEDEFAULTCURSORS if this object lets OLE provide
+  // default cursors, otherwise return NOERROR. This method gets called in
+  // response to changes that the target makes to dEffect (DragEnter,
+  // DragOver).
+  STDMETHODIMP GiveFeedback(DWORD dEffect);
 
-		// This method gets called if there is any change in the mouse or key
-		// state.  Return DRAGDROP_S_CANCEL to stop the drag, DRAGDROP_S_DROP
-		// to execute the drop, otherwise NOERROR. 
-		STDMETHODIMP QueryContinueDrag (BOOL fESC, DWORD grfKeyState);
+  // This method gets called if there is any change in the mouse or key
+  // state.  Return DRAGDROP_S_CANCEL to stop the drag, DRAGDROP_S_DROP
+  // to execute the drop, otherwise NOERROR.
+  STDMETHODIMP QueryContinueDrag(BOOL fESC, DWORD grfKeyState);
 
-	protected:
-		ULONG        m_cRef;     // reference count
-		//nsIDragSource *  mDragSource; // adapter
-		//CfDragDrop *  mDragSource; // adapter
+protected:
+  ULONG        m_cRef;     // reference count
+  //nsIDragSource *  mDragSource; // adapter
+  //CfDragDrop *  mDragSource; // adapter
 
 };
 
