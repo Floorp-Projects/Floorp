@@ -41,38 +41,7 @@
 // calItemBase.js
 //
 
-const kCalRecurrenceInfoContractID = "@mozilla.org/calendar/recurrence-info;1";
-const kCalIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
-var CalRecurrenceInfo = null;
-
-const kCalRecurrenceRuleContractID = "@mozilla.org/calendar/recurrence-rule;1";
-const kCalIRecurrenceRule = Components.interfaces.calIRecurrenceRule;
-var CalRecurrenceRule = null;
-
-const kCalRecurrenceDateSetContractID = "@mozilla.org/calendar/recurrence-date-set;1";
-const kCalIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
-var CalRecurrenceDateSet = null;
-
-const kCalRecurrenceDateContractID = "@mozilla.org/calendar/recurrence-date;1";
-const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
-var CalRecurrenceDate = null;
-
-var CalDateTime = null;
-var CalAttendee = null;
-
 const ICAL = Components.interfaces.calIIcalComponent;
-
-function onCalItemBaseLoad() {
-    CalRecurrenceInfo = new Components.Constructor(kCalRecurrenceInfoContractID, kCalIRecurrenceInfo);
-    CalRecurrenceRule = new Components.Constructor(kCalRecurrenceRuleContractID, kCalIRecurrenceRule);
-    CalRecurrenceDateSet = new Components.Constructor(kCalRecurrenceDateSetContractID, kCalIRecurrenceDateSet);
-    CalRecurrenceDate = new Components.Constructor(kCalRecurrenceDateContractID, kCalIRecurrenceDate);
-
-    CalDateTime = new Components.Constructor("@mozilla.org/calendar/datetime;1",
-                                             Components.interfaces.calIDateTime);
-    CalAttendee = new Components.Constructor("@mozilla.org/calendar/attendee;1",
-                                             Components.interfaces.calIAttendee);
-}
 
 function calItemBase() { }
 
