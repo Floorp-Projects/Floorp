@@ -1044,7 +1044,7 @@ NPError NP_EXPORT
 _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_NewStream: npp=%p, type=%s, window=%s\n", (void*)npp, (const char *)type, target));
+  ("NPN_NewStream: npp=%p, type=%s, target=%s\n", (void*)npp, (const char *)type, target));
 
   NPError err = NPERR_INVALID_INSTANCE_ERROR;
   if(npp && npp->ndata) {
