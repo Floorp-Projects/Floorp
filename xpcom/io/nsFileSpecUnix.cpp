@@ -85,7 +85,7 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
     if (inMakeDirs)
     {
         const mode_t mode = 0700;
-        nsFileSpecHelpers::MakeAllDirectories((char*)ioPath, mode);
+        nsFileSpecHelpers::MakeAllDirectories((const char*)ioPath, mode);
     }
 
     errno = 0;  // needed?
@@ -98,7 +98,7 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
         (void) getcwd(buffer, MAXPATHLEN);
 
         strcat(buffer, "/");
-        strcat(buffer, (char *)ioPath);
+        strcat(buffer, ioPath);
 
         ioPath = buffer;
     }
@@ -201,7 +201,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
     wasAliased = PR_FALSE;
 
     char resolvedPath[MAXPATHLEN];
-    int charCount = readlink((char *)mPath, (char*)&resolvedPath, MAXPATHLEN);
+    int charCount = readlink(mPath, (char*)&resolvedPath, MAXPATHLEN);
     if (0 < charCount)
     {
         if (MAXPATHLEN > charCount)
@@ -218,7 +218,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
         	mPath = (char*)&resolvedPath;
         }
 	
-	char* canonicalPath = realpath((char *)mPath, resolvedPath);
+	char* canonicalPath = realpath((const char *)mPath, resolvedPath);
 	NS_ASSERTION(canonicalPath, "realpath failed");
 	if (canonicalPath) {
 		mPath = (char*)&resolvedPath;
@@ -251,7 +251,7 @@ void nsFileSpec::operator += (const char* inRelativePath)
     if (!inRelativePath || mPath.IsEmpty())
         return;
     
-    char endChar = mPath[(int)(strlen((char *)mPath) - 1)];
+    char endChar = mPath[(int)(strlen(mPath) - 1)];
     if (endChar == '/')
         mPath += "x";
     else
@@ -266,7 +266,7 @@ void nsFileSpec::CreateDirectory(int mode)
     // Note that mPath is canonical!
     if (mPath.IsEmpty())
         return;
-    mkdir((char *)mPath, mode);
+    mkdir(mPath, mode);
 } // nsFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
@@ -343,11 +343,11 @@ nsresult nsFileSpec::Rename(const char* inNewName)
     if (mPath.IsEmpty() || strchr(inNewName, '/')) 
         return NS_FILE_FAILURE;
 
-    char* oldPath = nsCRT::strdup((char *)mPath);
+    char* oldPath = nsCRT::strdup(mPath);
     
     SetLeafName(inNewName); 
 
-    if (PR_Rename(oldPath, (char *)mPath) != NS_OK)
+    if (PR_Rename(oldPath, mPath) != NS_OK)
     {
         // Could not rename, set back to the original.
         mPath = oldPath;
@@ -425,7 +425,7 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
         destPath += "/";
         destPath += leafname;
         nsCRT::free(leafname);
-        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), (char *)destPath));
+        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), destPath));
     }
     return result;
 } // nsFileSpec::Copy
@@ -445,7 +445,7 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory)
         destPath += leafname;
         nsCRT::free(leafname);
 
-        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), (char*)destPath));
+        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), (const char*)destPath));
         if (result == NS_OK)
         {
             // cast to fix const-ness
@@ -466,7 +466,7 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
     if (!mPath.IsEmpty() && !IsDirectory())
     {
         nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;
-        result = NS_FILE_RESULT(system((char *)fileNameWithArgs));
+        result = NS_FILE_RESULT(system(fileNameWithArgs));
     } 
 
     return result;

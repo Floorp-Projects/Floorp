@@ -78,7 +78,7 @@ nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor
     sprintf(littleBuf, "%.8x", dataSize);
     s << littleBuf;
     // Now write the data itself
-    s << (char*)data;
+    s << (const char*)data;
     return s;
 }
 
