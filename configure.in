@@ -5315,6 +5315,8 @@ mingw*|cygwin*|msvc*|mks*)
     if test -z "${_CYGWIN_PERL}"; then
         PERL="\$(CYGWIN_WRAPPER) $PERL"
     fi
+    CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
+    AC_SUBST(CYGDRIVE_MOUNT)
     ;;
 esac
 
