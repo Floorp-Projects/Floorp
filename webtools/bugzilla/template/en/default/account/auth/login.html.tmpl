@@ -31,7 +31,7 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Login",
+  title = "Log in to $terms.Bugzilla",
   onload = "document.forms['login'].Bugzilla_login.focus()"
 %]
 
@@ -90,11 +90,11 @@
   [% PROCESS "global/hidden-fields.html.tmpl"
      exclude="^Bugzilla_(login|password|restrictlogin)$" %]
 
-  <input type="submit" name="GoAheadAndLogIn" value="Login">
+  <input type="submit" name="GoAheadAndLogIn" value="Log in">
   
   <p>
     (Note: you should make sure cookies are enabled for this site. 
-    Otherwise, you will frequently be required to re-login.)
+    Otherwise, you will be required to log in frequently.)
   </p>
 </form>
 

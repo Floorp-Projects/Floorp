@@ -69,7 +69,7 @@ function addSidebar() {
 [% IF user.id %]
     <li id="userprefs"><a href="userprefs.cgi">Change password or user preferences</a></li>
   [% IF user.get_flag('can_logout') %]
-    <li id="logout"><a href="relogin.cgi">Logout [% user.login FILTER html %]</a></li>
+    <li id="logout"><a href="relogin.cgi">Log out [% user.login FILTER html %]</a></li>
   [% END %]
 [% ELSE %]
     <li id="login"><a href="index.cgi?GoAheadAndLogIn=1">Log in to an existing account</a></li>
