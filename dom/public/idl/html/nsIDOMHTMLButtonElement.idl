@@ -58,6 +58,9 @@ interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
            attribute boolean               disabled;
            attribute DOMString             name;
            attribute long                  tabIndex;
-  readonly attribute DOMString             type;
+  // The scriptable version of type is writable and lives on
+  // nsIDOMNSHTMLButtonElement (have to do it this way because this
+  // interface is frozen and we don't want to break binary compat).
+  [noscript] readonly attribute DOMString  type;
            attribute DOMString             value;
 };
