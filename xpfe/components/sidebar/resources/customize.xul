@@ -103,48 +103,20 @@
     <vbox flex="1">
       <label value="&sidebar.customize.current.label;"
         crop="right"/>
-      <tree id="current-panels" flex="1"
-            datasources="rdf:null" hidecolumnpicker="true"
-            onclick="SelectChangeForCurrentPanels();">
-        <template>
-          <rule>
-            <conditions>
-              <content uri="?uri"/>
-              <triple subject="?uri" object="?panel-list"
-                predicate="http://home.netscape.com/NC-rdf#panel-list"/>
-              <member container="?panel-list" child="?panel"/>
-            </conditions>
-            
-            <bindings>
-              <binding subject="?panel" object="?title"
-                predicate="http://home.netscape.com/NC-rdf#title"/>
-              <binding subject="?panel" object="?customize"
-                predicate="http://home.netscape.com/NC-rdf#customize"/>
-            </bindings>
-            
-            <action>
-              <treechildren>
-                <treeitem uri="?panel" customize="?customize">
-                  <treerow>
-                    <treecell label="?title"/>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </action>
-          </rule>
-        </template>
-        
+      <tree id="current-panels" flex="1" hidecolumnpicker="true"
+            onselect="SelectChangeForCurrentPanels();">
         <treecols>
           <treecol id="CurrentNameCol" flex="1" hideheader="true"/>
         </treecols>
+
+        <treechildren/>
       </tree>
       
       <hbox class="button-group">
-        <button id="customize-button"
-          oncommand="CustomizePanel();" 
-          label="&sidebar.customize.customize.label;" />
-        <button id="remove-button" onclick="RemovePanel()"
-          label="&sidebar.customize.remove.label;" />
+        <button id="customize-button" oncommand="CustomizePanel();"
+          label="&sidebar.customize.customize.label;" disabled="true"/>
+        <button id="remove-button" oncommand="RemovePanel()"
+          label="&sidebar.customize.remove.label;" disabled="true"/>
       </hbox>      
     </vbox>
 
@@ -153,9 +125,9 @@
     <!-- The 'reorder' buttons -->
     <vbox id="reorder">
       <spacer flex="1"/>
-      <button oncommand="MoveUp();" id="up"
+      <button oncommand="MoveUp();" id="up" disabled="true"
         label="&sidebar.customize.up.label;"/>
-      <button oncommand="MoveDown();" id="down"
+      <button oncommand="MoveDown();" id="down" disabled="true"
         label="&sidebar.customize.down.label;"/>
       <spacer flex="1"/>
     </vbox> 
