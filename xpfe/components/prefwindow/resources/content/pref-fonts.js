@@ -112,24 +112,8 @@ function SetFields( aDataObject )
             resolution = 96; // If it all goes horribly wrong, fall back on 96.
       }
     
-    var userResolution = document.getElementById("userResolution");
-
-    var item = screenResolution.getElementsByAttribute( "value", resolution )[0];
-    if (item != null)
-      {
-        // If it's one of the hard-coded values, we'll select it directly 
-        screenResolution.selectedItem = item;
-        userResolution.setAttribute("hidden", "true");
-      }   
-    else
-      {
-        // Otherwise we need to set up the userResolution field
-        var dpi = screenResolution.getAttribute( "dpi" );
-        userResolution.setAttribute("value", resolution);
-        userResolution.setAttribute("label", dpi.replace(/\$val/, resolution));
-        userResolution.removeAttribute("hidden");
-        screenResolution.selectedItem = userResolution;   
-      }
+    setResolution( resolution );
+    
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.screen_resolution" ) ) {
         screenResolution.disabled = true;
     }
@@ -451,10 +435,7 @@ function changeScreenResolution()
           {
             // They have entered values, and we have a DPI value back
             var dpi = screenResolution.getAttribute( "dpi" );
-            userResolution.setAttribute("value", rv.newdpi);
-            userResolution.setAttribute("label", dpi.replace(/\$val/, rv.newdpi));
-            userResolution.removeAttribute("hidden");
-            screenResolution.selectedItem = userResolution;
+            setResolution ( rv.newdpi );
           }
         else
           {
@@ -471,6 +452,31 @@ function changeScreenResolution()
       }
   }
 
+function setResolution( resolution )
+  {
+    // Given a number, if it's equal to a hard-coded resolution we use that,
+    // otherwise we set the userResolution field.
+    var screenResolution = document.getElementById( "screenResolution" );
+    var userResolution = document.getElementById( "userResolution" );
+
+    var item = screenResolution.getElementsByAttribute( "value", resolution )[0];
+    if (item)
+      {
+        // If it's one of the hard-coded values, we'll select it directly 
+        screenResolution.selectedItem = item;
+        userResolution.setAttribute( "hidden", "true" );
+      }   
+    else
+      {
+        // Otherwise we need to set up the userResolution field
+        var dpi = screenResolution.getAttribute( "dpi" );
+        userResolution.setAttribute( "value", resolution );
+        userResolution.setAttribute( "label", dpi.replace(/\$val/, resolution) );
+        userResolution.removeAttribute( "hidden" );
+        screenResolution.selectedItem = userResolution;   
+      }
+  }
+  
 // "Calibrate screen" dialog code
 
 function Init()
