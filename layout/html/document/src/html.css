@@ -917,10 +917,21 @@ label {
 }
 
 /* Combo box style */
+select:-moz-display-comboboxcontrol-frame {
+  overflow:hidden;
+	white-space:nowrap;
+	background-color: inherit;
+	color: inherit;
+	text-align: inherit;
+  padding-left:   4px;
+  padding-right:  5px;
+  padding-bottom: 1px;
+  padding-top:    1px;
+}
+
 select:-moz-dummy-option { 
   visibility: hidden; 
-  content: "X"; 
-  /*display: block;*/
+  content: "XX"; 
 }
 
 select[size] {
@@ -991,52 +1002,13 @@ select[disabled] > input[type="button"] {
 
 
 /* combobox display area */
-select > input#-moz-display {
-  font-family: inherit;
-  font-size: inherit;
-  border: none;
-  background-color: inherit;
-  background-image: none;
-  -moz-border-radius:0px;
-  padding-left:   0px;
-  padding-right:  0px;
-  padding-top:    1px;
-  padding-bottom: 1px;
-  margin: 0px;
-}
-
 select > input:button-content {
   text-align: left;
 }
 
-select[disabled] > input#-moz-display {
-  font-family: inherit;
-  font-size: inherit;
-  border: none;
+select[disabled]:-moz-display-comboboxcontrol-frame {
   color: gray;
-  background-color: inherit;
-  background-image: none;
-  -moz-border-radius:0px;
-  padding-left:   0px;
-  padding-right:  0px;
-  padding-top:    1px;
-  padding-bottom: 1px;
 }
-
-/* combbox display area - active */
-select > input#-moz-display:active {
-  font-family: inherit;
-  font-size: inherit;
-  border: none;
-  background-color:inherit;
-  background-image: none;
-  -moz-border-radius:0px;
-  padding-left:   0px;
-  padding-right:  0px;
-  padding-top:    1px;
-  padding-bottom: 1px;
-}
-
 
 option {
   min-height: 1em;
@@ -1055,18 +1027,19 @@ option[label]:before {
 select[size] option {
   padding-left:   3px;
   padding-top:    0px;
-  padding-right:  11px;
+  padding-right:  5px;
   padding-bottom: 0px;
 }
 
 select option, select[size="1"] option {
   padding-left:   3px;
   padding-top:    0px;
-  padding-right:  5px;
+  padding-right:  0px;
   padding-bottom: 0px;
 }
 
-select[disabled] > option {
+
+select[disabled] option {
   color:rgb(153, 153, 153);
   background-color:white; 
 }
@@ -1123,24 +1096,6 @@ select[multiple][size="1"] option[-moz-option-selected] {
   background-color:rgb(51,51,102); 
 }
 
-select > input[type="button"]#-moz-display:-moz-focus-inner {
-   border:none;
-   padding-left  : 3px;
-   padding-right : 0px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;
-}
-
-select > input[type="button"]#-moz-display:focus:-moz-focus-inner {
-   border:none;
-   padding-left  : 0px;
-   padding-right : 0px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;
-}
-
 optgroup {
   font-family: sans-serif;
   font-size: small;
@@ -1179,14 +1134,6 @@ select:focus, select[size="1"]:focus {
 
 select[multiple]:focus {
   border: 2px dotted rgb(128,128,128);
-}
-
-select:focus > input#-moz-display {
-  border: none;
-}
-
-select[size="1"]:focus > input#-moz-display {
-  border: none;
 }
 
 /* Begin - Margin setting for form controls inside tables for Nav Quirks */
