@@ -39,6 +39,7 @@
 #define nsIThreadManager_h___
 
 #include "nsISupports.h"
+#include "nspr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -112,7 +113,7 @@ public:
 	 * Creates a new thread, calling the specified runnable's Run method (a la Java).
 	 */
 	NS_IMETHOD
-	CreateThread(PRUint32* threadID, nsIRunnable* runnable) = 0;
+	CreateThread(PRThread **thread, nsIRunnable* runnable) = 0;
 	
 	/**
 	 * Posts an event to specified thread, calling the runnable from that thread.
@@ -121,7 +122,7 @@ public:
 	 * @param async if true, won't block current thread waiting for result
 	 */
 	NS_IMETHOD
-	PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async) = 0;
+	PostEvent(PRThread* thread, nsIRunnable* runnable, PRBool async) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

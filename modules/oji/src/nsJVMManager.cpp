@@ -284,11 +284,11 @@ static void PR_CALLBACK thread_starter(void* arg)
 }
 
 NS_METHOD
-nsJVMManager::CreateThread(PRUint32* outThreadID, nsIRunnable* runnable)
+nsJVMManager::CreateThread(PRThread **outThread, nsIRunnable* runnable)
 {
 	PRThread* thread = PR_CreateThread(PR_USER_THREAD, &thread_starter, (void*) runnable,
 									PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
-	*outThreadID = NS_PTR_TO_INT32(thread);
+	*outThread = thread;
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
 }
 
@@ -324,7 +324,7 @@ JVMRunnableEvent::~JVMRunnableEvent()
 }
 
 NS_METHOD
-nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
+nsJVMManager::PostEvent(PRThread* thread, nsIRunnable* runnable, PRBool async)
 {
     nsresult rv;
     nsCOMPtr<nsIEventQueueService> eventService = 
@@ -332,7 +332,7 @@ nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIEventQueue> eventQueue = NULL;
-    rv = eventService->GetThreadEventQueue((PRThread*)threadID, getter_AddRefs(eventQueue));
+    rv = eventService->GetThreadEventQueue(thread, getter_AddRefs(eventQueue));
     if (NS_FAILED(rv)) return rv;
 
     JVMRunnableEvent* runnableEvent = new JVMRunnableEvent(runnable);
