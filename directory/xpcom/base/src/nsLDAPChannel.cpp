@@ -603,9 +603,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
         //
         rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), 
                         getter_AddRefs(mReadPipeOut), 
-                        NS_PIPE_DEFAULT_SEGMENT_SIZE, 
-                        NS_PIPE_DEFAULT_BUFFER_SIZE,
-                        PR_TRUE, PR_FALSE, 0);
+                        0, 0, PR_TRUE, PR_FALSE, 0);
         if (NS_FAILED(rv)) {
             NS_ERROR("nsLDAPChannel::AsyncRead(): unable to create new pipe");
             return NS_ERROR_FAILURE;
