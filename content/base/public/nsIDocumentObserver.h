@@ -506,7 +506,7 @@ _class::StyleSheetRemoved(nsIDocument* aDocument,                         \
 {                                                                         \
   return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \                                                             \
+NS_IMETHODIMP                                                             \
 _class::StyleSheetDisabledStateChanged(nsIDocument* aDocument,            \
                                        nsIStyleSheet* aStyleSheet,        \
                                        PRBool aDisabled)                  \
