@@ -32,11 +32,11 @@ GENHASH_INC = genhash.inc
 GENHASH = $(PERL) $(GENHASH_PL)
 
 nsCSSProps.cpp: $(GENHASH_PL) $(GENHASH_INC) CSSProps.txt Makefile
-	$(GENHASH) "1,2,6,12" "" nsCSSProps PROP_ CSSProps.txt nsCSSPropIDs.h > nsCSSProps.cpp
+	$(GENHASH) "1,2,6,8,12" "-r" nsCSSProps PROP_ CSSProps.txt nsCSSPropIDs.h > nsCSSProps.cpp
 	cp nsCSSProps.cpp nsCSSPropIDs.h ../html/style/src
 
 nsCSSKeywords.cpp: $(GENHASH_PL) $(GENHASH_INC) CSSKeywords.txt Makefile
-	$(GENHASH) "1,2,3,7" "" nsCSSKeywords KEYWORD_ CSSKeywords.txt nsCSSKeywordIDs.h > nsCSSKeywords.cpp
+	$(GENHASH) "1,2,3,4,6,8,12" "-r" nsCSSKeywords KEYWORD_ CSSKeywords.txt nsCSSKeywordIDs.h > nsCSSKeywords.cpp
 	cp nsCSSKeywords.cpp nsCSSKeywordIDs.h ../html/style/src
 
 RGB = nsColorNamesRGB.cpp
@@ -48,6 +48,6 @@ nsColorNames.cpp: $(GENHASH_PL) $(GENHASH_INC) ColorNames.txt Makefile
 	echo "nscolor nsColorNames::kColors[COLOR_MAX] = {" >> $(RGB)
 	sed -e 's/.*://' -e 's/$$/,/' < ColorNames.txt >> $(RGB)
 	echo "};" >> $(RGB)
-	$(GENHASH) "1,2,5,6,7,9,11" "-o" nsColorNames COLOR_ cnames nsColorNameIDs.h > nsColorNames.cpp
+	$(GENHASH) "1,2,3,5,6,7,8,9,11,12,13" "-o" nsColorNames COLOR_ cnames nsColorNameIDs.h > nsColorNames.cpp
 	cp nsColorNames.cpp nsColorNameIDs.h nsColorNamesRGB.cpp ../../gfx/src
 	rm cnames

@@ -5,9 +5,9 @@ background-color
 background-filter
 background-image
 background-position
+background-repeat
 background-x-position
 background-y-position
-background-repeat
 border
 border-bottom
 border-bottom-color
@@ -30,6 +30,8 @@ border-top-color
 border-top-style
 border-top-width
 border-width
+border-x-spacing
+border-y-spacing
 bottom
 caption-side
 clear
@@ -46,7 +48,6 @@ cue
 cue-after
 cue-before
 cursor
-cursor-image
 direction
 display
 elevation
@@ -102,11 +103,16 @@ pause-before
 pitch
 pitch-range
 play-during
+play-during-flags
 position
 quotes
+quotes-close
+quotes-open
 richness
 right
 size
+size-height
+size-width
 speak
 speak-header
 speak-numeral
