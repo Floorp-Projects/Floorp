@@ -284,11 +284,14 @@ CNavDTD::~CNavDTD(){
 
  // delete mNodeRecycler;
 
+
   if(mSink) {
     nsLoggingSink *theLogSink=GetLoggingSink();
     if(mSink==theLogSink) {
       theLogSink->ReleaseProxySink();
     }
+
+    NS_IF_RELEASE(mSink);
   }
 
   NS_IF_RELEASE(mDTDDebug);
@@ -1027,7 +1030,7 @@ PRInt32 CNavDTD::LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
 static
 PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
 
-#if 0
+#if 1
   PRInt32 theChildIndex=nsHTMLElement::GetIndexOfChildOrSynonym(aContext,aChildTag);
 #else 
   PRInt32 theChildIndex=aContext.LastOf(aChildTag);
