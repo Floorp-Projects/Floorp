@@ -273,6 +273,18 @@ depend:
 	set CLIENT_DIRS=1
 	nmake -f makefile.win depend 
 
+depend_xpconnect:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win depend
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
+	nmake -f makefile.win depend
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
+	nmake -f makefile.win depend
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
+	nmake -f makefile.win depend
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
+	nmake -f makefile.win depend
+
 !ifdef USE_NSPR_AUTOCONF
 nsprpub\config.status: nsprpub\configure nsprpub\configure.in
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
