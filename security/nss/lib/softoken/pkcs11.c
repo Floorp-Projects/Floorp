@@ -3457,6 +3457,7 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     PK11Slot *slot;
     PK11Session *session;
     NSSLOWKEYDBHandle *handle;
+    CK_FLAGS sessionFlags;
     SECItem *pin;
     char pinStr[PK11_MAX_PIN+1];
 
@@ -3466,10 +3467,10 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
 
     /* make sure the session is valid */
     session = pk11_SessionFromHandle(hSession);
-    if (session == NULL) {
-	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
-    }
+    if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
+    sessionFlags = session->info.flags;
     pk11_FreeSession(session);
+    session = NULL;
 
     /* can't log into the Netscape Slot */
     if (slot->slotID == NETSCAPE_SLOT_ID)
@@ -3497,7 +3498,7 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     if (nsslowkey_HasKeyDBPassword(handle) == SECFailure) {
 	/* allow SSO's to log in only if there is not password on the
 	 * key database */
-	if (((userType == CKU_SO) && (session->info.flags & CKF_RW_SESSION))
+	if (((userType == CKU_SO) && (sessionFlags & CKF_RW_SESSION))
 	    /* fips always needs to authenticate, even if there isn't a db */
 					|| (slot->slotID == FIPS_SLOT_ID)) {
 	    /* should this be a fixed password? */
@@ -3552,9 +3553,9 @@ CK_RV NSC_Logout(CK_SESSION_HANDLE hSession)
     SECItem *pw = NULL;
 
     session = pk11_SessionFromHandle(hSession);
-    if (session == NULL) {
-	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
-    }
+    if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
+    pk11_FreeSession(session);
+    session = NULL;
 
     if (!slot->isLoggedIn) return CKR_USER_NOT_LOGGED_IN;
 
