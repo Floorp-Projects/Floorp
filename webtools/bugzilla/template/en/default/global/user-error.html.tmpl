@@ -134,8 +134,8 @@
 
   [% ELSIF error == "dupe_invalid_bug_id" %]
     [% title = "Valid Bug Number Required" %]
-     You must specify a valid bug number of which this bug
-     is a duplicate.  The bug has not been changed.
+    You must specify a valid bug number of which this bug
+    is a duplicate.  The bug has not been changed.
      
   [% ELSIF error == "dupe_of_self_disallowed" %]
     [% title = "Nice Try..." %]
@@ -145,16 +145,16 @@
     
   [% ELSIF error == "email_change_in_progress" %]
     [% title = "Email Change Already In Progress" %]
-     Email change already in progress; please check your email. 
+    Email change already in progress; please check your email. 
         
   [% ELSIF error == "email_confirmation_failed" %]
-    [% title = "Email Address Email Address Confirmation Failed" %]
+    [% title = "Email Address Confirmation Failed" %]
     Email address confirmation failed.
 
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
-     Sorry; you do not have the permissions necessary to enter a bug against
-     the [% product FILTER html %] product.
+    Sorry; you do not have the permissions necessary to enter a bug against
+    the [% product FILTER html %] product.
      
   [% ELSIF error == "file_not_specified" %]
     [% title = "No File Specified" %]
@@ -193,12 +193,12 @@
     
   [% ELSIF error == "illegal_attachment_edit" %]
     [% title = "Unauthorised Action" %]
-     You are not authorised to edit attachment [% attach_id %].
+    You are not authorised to edit attachment [% attach_id %].
          
   [% ELSIF error == "illegal_attachment_is_patch" %]
     [% title = "Your Query Makes No Sense" %]
-     The only legal values for the <em>Attachment is patch</em> field are
-     0 and 1.
+    The only legal values for the <em>Attachment is patch</em> field are
+    0 and 1.
          
   [% ELSIF error == "illegal_change" %]
     You tried to change the <strong>[% field %]</strong> field 
@@ -226,8 +226,8 @@
     
   [% ELSIF error == "illegal_is_obsolete" %]
     [% title = "Your Query Makes No Sense" %]
-     The only legal values for the <em>Attachment is obsolete</em> field are
-     0 and 1.
+    The only legal values for the <em>Attachment is obsolete</em> field are
+    0 and 1.
 
   [% ELSIF error == "illegal_query_name" %]
     [% title = "Illegal Query Name" %]
@@ -283,8 +283,8 @@
                     
   [% ELSIF error == "ldap_cant_create_account" %]
     [% title = "Can't create LDAP accounts" %]
-     This site is using LDAP for authentication.  Please contact 
-     an LDAP administrator to get a new account created.
+    This site is using LDAP for authentication.  Please contact 
+    an LDAP administrator to get a new account created.
      
   [% ELSIF error == "login_needed_for_password_change" %]
     [% title = "Login Name Required" %]
@@ -384,8 +384,8 @@
     
   [% ELSIF error == "no_html_in_quips" %]
     [% title = "No HTML In Quips" %]
-     Sorry - for security reasons, support for HTML tags has been turned off 
-     in quips.
+    Sorry - for security reasons, support for HTML tags has been turned off 
+    in quips.
          
   [% ELSIF error == "no_new_quips" %]
     [% title = "No New Quips" %]
@@ -397,12 +397,12 @@
 
   [% ELSIF error == "no_products" %]
     [% title = "No Products" %]
-     Either no products have been defined to enter bugs against or you have not
-     been given access to any.
+    Either no products have been defined to enter bugs against or you have not
+    been given access to any.
      
   [% ELSIF error == "old_password_incorrect" %]
     [% title = "Incorrect Old Password" %]
-     You did not enter your old password correctly.
+    You did not enter your old password correctly.
      
   [% ELSIF error == "old_password_required" %]
     [% title = "Old Password Required" %]
@@ -410,7 +410,7 @@
          
   [% ELSIF error == "passwords_dont_match" %]
     [% title = "Passwords Don't Match" %]
-     The two passwords you entered did not match.
+    The two passwords you entered did not match.
      
   [% ELSIF error == "password_too_long" %]
     [% title = "Password Too Long" %]
@@ -430,7 +430,7 @@
 
   [% ELSIF error == "product_access_denied" %]
     [% title = "Access Denied" %]
-     You do not have the permissions necessary to access that product.
+    You do not have the permissions necessary to access that product.
      
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Query Name Specified" %]
@@ -444,7 +444,7 @@
 
   [% ELSIF error == "report_access_denied" %]
     [% title = "Access Denied" %]
-     You do not have the permissions necessary to view reports for this product.
+    You do not have the permissions necessary to view reports for this product.
      
   [% ELSIF error == "requestee_too_short" %]
     [% title = "Requestee Name Too Short" %]
@@ -454,9 +454,9 @@
   
   [% ELSIF error == "requestee_too_many_matches" %]
     [% title = "Requestee String Matched Too Many Times" %]
-      The string <em>[% requestee FILTER html %]</em> matched more than 
-      100 users.  Enter more of the name to bring the number of matches 
-      down to a reasonable amount.
+    The string <em>[% requestee FILTER html %]</em> matched more than 
+    100 users.  Enter more of the name to bring the number of matches 
+    down to a reasonable amount.
   
   [% ELSIF error == "require_component" %]
     [% title = "Component Needed" %]
@@ -464,37 +464,37 @@
     just guess.
     
   [% ELSIF error == "require_new_password" %]
-     [% title = "New Password Needed" %]
-     You cannot change your password without submitting a new one.
+    [% title = "New Password Needed" %]
+    You cannot change your password without submitting a new one.
 
   [% ELSIF error == "require_summary" %]
-     [% title = "Summary Needed" %]
-     You must enter a summary for this bug.
+    [% title = "Summary Needed" %]
+    You must enter a summary for this bug.
 
   [% ELSIF error == "sanity_check_access_denied" %]
     [% title = "Access Denied" %]
-     You do not have the permissions necessary to run a sanity check.
+    You do not have the permissions necessary to run a sanity check.
      
   [% ELSIF error == "sidebar_supports_mozilla_only" %]
-     Sorry - sidebar.cgi currently only supports Mozilla based web browsers.
-     <a href="http://www.mozilla.org">Upgrade today</a>. :-)
+    Sorry - sidebar.cgi currently only supports Mozilla based web browsers.
+    <a href="http://www.mozilla.org">Upgrade today</a>. :-)
 
   [% ELSIF error == "too_many_votes_for_bug" %]
-     [% title = "Illegal Vote" %]
-     You may only use at most [% max %] votes for a single bug in the
-     <tt>[% prod FILTER html %]</tt> product, but you are trying to use 
-     [% votes %].
+    [% title = "Illegal Vote" %]
+    You may only use at most [% max %] votes for a single bug in the
+    <tt>[% prod FILTER html %]</tt> product, but you are trying to use 
+    [% votes %].
      
   [% ELSIF error == "too_many_votes_for_product" %]
-     [% title = "Illegal Vote" %]
-     You may only use at most [% max %] votes for bugs in the
-     <tt>[% prod FILTER html %]</tt> product, but you are trying to use 
-     [% votes %].
+    [% title = "Illegal Vote" %]
+    You may only use at most [% max %] votes for bugs in the
+    <tt>[% prod FILTER html %]</tt> product, but you are trying to use 
+    [% votes %].
      
   [% ELSIF error == "token_inexistent" %]
-     [% title = "Token Does Not Exist" %]
-     The token you submitted does not exist, has expired, or has
-     been cancelled.
+    [% title = "Token Does Not Exist" %]
+    The token you submitted does not exist, has expired, or has
+    been cancelled.
 
   [% ELSIF error == "unknown_keyword" %]
     [% title = "Unknown Keyword" %]
