@@ -552,7 +552,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
   // XXX deal with border and padding the usual way...wrap it up!
 
   //~~~
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   nsIAtom* atom;
   mContent->GetTag(atom);
