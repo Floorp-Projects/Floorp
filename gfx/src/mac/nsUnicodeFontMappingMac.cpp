@@ -51,7 +51,12 @@
 
 
 //------------------------------------------------------------------------
-static UnicodeToTextInfo gConverters[32] = { nsnull };
+static UnicodeToTextInfo gConverters[32] = { 
+       nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+       nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+       nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+       nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull
+};
 //------------------------------------------------------------------------
 static UnicodeToTextInfo
 GetConverterByScript(ScriptCode sc)
@@ -121,7 +126,8 @@ public:
         UnicodeToTextInfo converter = GetConverterByScript(mScript);
         if(converter)
         {
-            OSStatus err = ::ConvertFromUnicodeToText(converter, 2 * aStringLength, aString,
+            OSStatus err = ::ConvertFromUnicodeToText(converter, 2 * aStringLength,
+                (ConstUniCharArrayPtr) aString,
                 opts, 0, NULL, 0, NULL,
                 aBufferLength, &oBytesRead, &oActualLength,
                 (LogicalAddress) aBuffer);
@@ -256,7 +262,7 @@ PRBool nsUnicodeFontMappingMac::FontEnumCallback(const nsString& aFamily, PRBool
 }
 
 PRBool nsUnicodeFontMappingMac::ConvertUnicodeToGlyphs(short aFontNum, 
-    ConstUniCharArrayPtr aString, ByteCount aStringLength,
+    PRUnichar* aString, ByteCount aStringLength,
     char *aBuffer, ByteCount aBufferLength, ByteCount& oActualLength,
     ByteCount& oBytesRead, OptionBits opts)
 {

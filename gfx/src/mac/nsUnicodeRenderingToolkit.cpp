@@ -50,6 +50,8 @@
 #include "nsMacUnicodeFontInfo.h"
 #include "nsICharRepresentable.h"
 
+#include <FixMath.h>
+
 
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
