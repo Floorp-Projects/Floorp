@@ -32,7 +32,7 @@
  *
  */
 
-namespace Silverstone.Manticore.Toolkit.Toolbars
+namespace Silverstone.Manticore.Toolkit
 {
   using System;
   using System.ComponentModel;
@@ -77,7 +77,7 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
 					// 
 					String[] tbvalues = new String[4] {"", "", "",  ""};
 					String[] tbnames = new String[4] {"id", "label", "description", "visible"};
-					for (Byte i = 0; i < tbnames.Length; ++i) 
+					for (int i = 0; i < tbnames.Length; ++i) 
 					{
 						if (reader.MoveToAttribute(tbnames[i]) &&
 							reader.ReadAttributeValue())
@@ -108,7 +108,7 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
 				{
 					String[] tbbvalues = new String[2] {"", ""};
 					String[] tbbnames = new String[2] {"label", "command"};
-					for (Byte i = 0; i < tbbnames.Length; ++i) 
+					for (int i = 0; i < tbbnames.Length; ++i) 
 					{
 						if (reader.MoveToAttribute(tbbnames[i]) &&
 							reader.ReadAttributeValue())

@@ -61,11 +61,15 @@ _COMPILE_CMD=csc /nologo /t:exe /out:$(_OUT_FILE) $(_DEBUG_FLAGS) $(_IMPORTS)
 FILES =	app.cs \
 	browser\browserwindow.cs \
 	browser\aboutdialog.cs \
-	layout\layoutabstraction.cs \
+	browser\PrefsDialog.cs \
+	browser\RestoreSessionSettings.cs \
 	browser\OpenLocDialog.cs \
+	layout\layoutabstraction.cs \
 	toolkit\toolkit.menus.cs \
 	toolkit\toolkit.toolbars.cs \
-	core\preferences.cs 
+	toolkit\ManticoreDialog.cs \
+	core\preferences.cs \
+	bookmarks\bookmarks.cs
 
 SUBDIR = WIN32_O.OBJ
 !if defined(MOZ_DEBUG)

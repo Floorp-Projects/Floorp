@@ -32,7 +32,7 @@
  *
  */
 
-namespace Silverstone.Manticore.Toolkit.Menus
+namespace Silverstone.Manticore.Toolkit
 {
   using System;
   using System.ComponentModel;
@@ -87,7 +87,7 @@ namespace Silverstone.Manticore.Toolkit.Menus
             // Menuitem. Find the name, accesskey, command and id strings
             String[] values = new String[3] {"", "", ""};
             String[] names = new String[3] {"label", "accesskey", "command"};
-            for (Byte i = 0; i < names.Length; ++i) {
+            for (int i = 0; i < names.Length; ++i) {
               if (reader2.MoveToAttribute(names[i]) &&
                   reader2.ReadAttributeValue())
                 values[i] = reader2.Value; // XXX need to handle entities

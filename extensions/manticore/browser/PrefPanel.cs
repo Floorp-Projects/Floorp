@@ -35,41 +35,74 @@
 namespace Silverstone.Manticore.Browser
 {
   using System;
+  using System.Collections;
   using System.ComponentModel;
   using System.Drawing;
+  using System.Data;
   using System.Windows.Forms;
+  
+  /// <summary>
+	/// Summary description for UserControl1.
+	/// </summary>
+	public class PrefPanel : Panel
+	{
+		/// <summary> 
+		/// Required designer variable.
+		/// </summary>
+		private System.ComponentModel.Container components = null;
 
-  using Silverstone.Manticore.Toolkit;
+    private bool mGenerated = false;
 
-  public class AboutDialog : ManticoreDialog
-  {
-    public AboutDialog(Form aOpener) : base(aOpener)
+		public PrefPanel()
+		{
+			// This call is required by the Windows.Forms Form Designer.
+			InitializeComponent();
+
+      this.VisibleChanged += new EventHandler(OnVisibleChanged);
+		}
+
+    /// <summary>
+    /// Called when the visibility of the panel changes. 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public void OnVisibleChanged(Object sender, EventArgs e) 
     {
-      InitializeComponent();
+      if (!mGenerated) {
+        // The first time we display the panel, read the values 
+        // for UI elements from preferences and fill the controls.
+      }
     }
 
-    private void InitializeComponent()
+    public void Save() 
     {
-      this.ClientSize = new Size(253, 195);
-      this.ShowInTaskbar = false;
-      this.MaximizeBox = false;
-      this.MinimizeBox = false;
-
-      // Borderless dialog
-      this.FormBorderStyle = FormBorderStyle.FixedDialog;
-
-      this.BackgroundImage = Image.FromFile("resources\\manticore.png");
       
-      this.Text = "About Manticore"; // XXX localize
-
-      this.Click += new EventHandler(this.CloseAboutDialog);
     }
 
-    public void CloseAboutDialog(Object sender, EventArgs e)
-    {
-      this.Close();
-    }
-  }
+		/// <summary> 
+		/// Clean up any resources being used.
+		/// </summary>
+		protected override void Dispose( bool disposing )
+		{
+			if( disposing )
+			{
+				if(components != null)
+				{
+					components.Dispose();
+				}
+			}
+			base.Dispose( disposing );
+		}
+
+		#region Component Designer generated code
+		/// <summary> 
+		/// Required method for Designer support - do not modify 
+		/// the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent()
+		{
+			components = new System.ComponentModel.Container();
+		}
+		#endregion
+	}
 }
-
-

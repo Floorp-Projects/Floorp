@@ -32,7 +32,7 @@
  *
  */
 
-namespace Silverstone.Manticore.BrowserWindow
+namespace Silverstone.Manticore.Browser
 {
   using System;
   using System.ComponentModel;
@@ -40,14 +40,10 @@ namespace Silverstone.Manticore.BrowserWindow
   using System.Windows.Forms;
 
   using Silverstone.Manticore.App;
-  using Silverstone.Manticore.Toolkit.Menus;
-  using Silverstone.Manticore.Toolkit.Toolbars;
-  using Silverstone.Manticore.AboutDialog;
-  using Silverstone.Manticore.OpenDialog;
+  using Silverstone.Manticore.Toolkit;
+  using Silverstone.Manticore.Layout;
 
-  using Silverstone.Manticore.LayoutAbstraction;
-
-  public class BrowserWindow : System.Windows.Forms.Form 
+  public class BrowserWindow : Form 
   {
     private System.ComponentModel.Container components;
 
@@ -199,7 +195,12 @@ namespace Silverstone.Manticore.BrowserWindow
           mBrowserWindow.webBrowser.SwitchLayoutEngine("trident");
           break;
         case "help-about":
-          AboutDialog dlg = new AboutDialog(mBrowserWindow);
+          AboutDialog aboutDialog = new AboutDialog(mBrowserWindow);
+          aboutDialog.ShowDialog();
+          break;
+        case "tools-options":
+          PrefsDialog prefsDialog = new PrefsDialog(mBrowserWindow);
+          prefsDialog.ShowDialog();
           break;
       }
     }

@@ -1,0 +1,198 @@
+<VisualStudioProject>
+    <CSHARP
+        ProjectType = "Local"
+        ProductVersion = "7.0.9254"
+        SchemaVersion = "1.0"
+        ProjectGuid = "{B40F4C31-96AF-4E5F-A088-546389BC78C4}"
+    >
+        <Build>
+            <Settings
+                ApplicationIcon = ""
+                AssemblyKeyContainerName = ""
+                AssemblyName = "Project"
+                AssemblyOriginatorKeyFile = ""
+                DefaultClientScript = "JScript"
+                DefaultHTMLPageLayout = "Grid"
+                DefaultTargetSchema = "IE50"
+                DelaySign = "false"
+                NoStandardLibraries = "true"
+                OutputType = "WinExe"
+                RootNamespace = "Project"
+                StartupObject = ""
+            >
+                <Config
+                    Name = "Debug"
+                    AllowUnsafeBlocks = "false"
+                    BaseAddress = "285212672"
+                    CheckForOverflowUnderflow = "false"
+                    ConfigurationOverrideFile = ""
+                    DefineConstants = ""
+                    DocumentationFile = ""
+                    DebugSymbols = "true"
+                    FileAlignment = "4096"
+                    IncrementalBuild = "true"
+                    Optimize = "false"
+                    OutputPath = "bin\"
+                    RegisterForComInterop = "false"
+                    RemoveIntegerChecks = "false"
+                    TreatWarningsAsErrors = "false"
+                    WarningLevel = "1"
+                />
+                <Config
+                    Name = "Release"
+                    AllowUnsafeBlocks = "false"
+                    BaseAddress = "285212672"
+                    CheckForOverflowUnderflow = "false"
+                    ConfigurationOverrideFile = ""
+                    DefineConstants = ""
+                    DocumentationFile = ""
+                    DebugSymbols = "false"
+                    FileAlignment = "4096"
+                    IncrementalBuild = "true"
+                    Optimize = "false"
+                    OutputPath = "bin\"
+                    RegisterForComInterop = "false"
+                    RemoveIntegerChecks = "false"
+                    TreatWarningsAsErrors = "false"
+                    WarningLevel = "1"
+                />
+            </Settings>
+            <References>
+                <Reference
+                    Name = "System"
+                    AssemblyName = "System"
+                />
+                <Reference
+                    Name = "System.Data"
+                    AssemblyName = "System.Data"
+                />
+                <Reference
+                    Name = "System.Drawing"
+                    AssemblyName = "System.Drawing"
+                />
+                <Reference
+                    Name = "System.Windows.Forms"
+                    AssemblyName = "System.Windows.Forms"
+                />
+                <Reference
+                    Name = "System.XML"
+                    AssemblyName = "System.Xml"
+                />
+            </References>
+        </Build>
+        <Files>
+            <Include>
+                <File
+                    RelPath = "app.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "licenses.licx"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "makefile.win"
+                    BuildAction = "None"
+                />
+                <File
+                    RelPath = "bookmarks\bookmarks.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\aboutdialog.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\browser-menu.xml"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "browser\browser-toolbar.xml"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "browser\browserwindow.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\browserwindow.resx"
+                    DependentUpon = "browserwindow.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "browser\OpenLocDialog.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\OpenLocDialog.resx"
+                    DependentUpon = "OpenLocDialog.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "browser\PrefsDialog.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\PrefsDialog.resx"
+                    DependentUpon = "PrefsDialog.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "browser\RestoreSessionSettings.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\RestoreSessionSettings.resx"
+                    DependentUpon = "RestoreSessionSettings.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "core\preferences.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "layout\layoutabstraction.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "resources\manticore.png"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "resources\manticore.psd"
+                    BuildAction = "None"
+                />
+                <File
+                    RelPath = "toolkit\ManticoreDialog.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\toolkit.menus.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\toolkit.menus.resx"
+                    DependentUpon = "toolkit.menus.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "toolkit\toolkit.toolbars.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+            </Include>
+        </Files>
+    </CSHARP>
+</VisualStudioProject>
+

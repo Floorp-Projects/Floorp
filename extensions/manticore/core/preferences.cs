@@ -32,7 +32,7 @@
  *
  */
 
-namespace Silverstone.Manticore.Preferences
+namespace Silverstone.Manticore.Core
 {
   using System;
   using System.Collections;
@@ -55,12 +55,42 @@ namespace Silverstone.Manticore.Preferences
     public void InitializeDefaults(String aDefaults)
     {
       // Do we ever want to support multiple defaults files? For now, no.
-      mDefaultsDocument.Load(aDefaults);
+      ReadDocument(aDefaults, mDefaultsDocument);
     }
 
+    private void ReadDocument(String aFile, XmlDocument aDocument)
+    {
+      XmlTextReader reader = new XmlTextReader(aFile);
+      reader.WhitespaceHandling = WhitespaceHandling.None;
+      reader.MoveToContent();
+      String xml = reader.ReadOuterXml();
+      reader.Close();
+      aDocument.LoadXml(xml);
+    }
+
+    // Called once at Startup
     public void LoadPreferencesFile(String aFile)
     {
-      mPrefsDocument.Load(aFile);
+      ReadDocument(aFile, mPrefsDocument);
+
+      mPrefsDocument.NodeChanged += new XmlNodeChangedEventHandler(OnNodeChanged);
+      mPrefsDocument.NodeRemoved += new XmlNodeChangedEventHandler(OnNodeRemoved);
+      mPrefsDocument.NodeInserted += new XmlNodeChangedEventHandler(OnNodeInserted);
+    }
+
+    public void OnNodeChanged(object sender, XmlNodeChangedEventArgs e)
+    {
+      Console.WriteLine(e.ToString());
+    }
+
+    public void OnNodeRemoved(object sender, XmlNodeChangedEventArgs e)
+    {
+      Console.WriteLine(e.ToString());
+    }
+
+    public void OnNodeInserted(object sender, XmlNodeChangedEventArgs e)
+    {
+      Console.WriteLine(e.ToString());
     }
 
     public void FlushPreferencesFile(String aFile)
@@ -71,60 +101,112 @@ namespace Silverstone.Manticore.Preferences
       mPrefsDocument.WriteTo(writer);
       writer.Flush();
     }
-
-    private XmlElement GetPrefElement(String aPrefType, String aPrefName)
+ 
+    //
+    // The Manticore preferences file takes the following (XML) format:
+    // 
+    // <preferences>
+    //   <foopy>
+    //     <noopy type="int" value="42">
+    //       <noo type="bool" value="true"/>
+    //       <goo type="string" value="goats"/>
+    //     </noopy>
+    //   </foopy>
+    // </preferences>
+    //
+    // where this maps to preferences called:
+    // foopy.noopy (int pref, value 42)
+    // foopy.noopy.noo (bool pref, value true);
+    // foopy.noopy.goo (string pref, value "goats");
+    //
+    private XmlElement CreateBranch(String aPrefName) 
     {
-      return GetPrefElement(aPrefType, aPrefName, false);
+      String[] names = aPrefName.Split('.');
+      XmlElement elt = mPrefsDocument.DocumentElement;
+      for (int i = 0; i < names.Length; ++i)
+        elt = CreateBranch(names[i], elt);
+      return elt;
     }
 
-    private XmlElement GetPrefElement(String aPrefType, String aPrefName, 
-                                      bool aCreate)
+    private XmlElement CreateBranch(String aBranchName, XmlElement aRoot) 
     {
-      XmlDocument[] documents = {mPrefsDocument, mDefaultsDocument};
-      for (int i = 0; i < documents.Length; ++i) {
-        XmlNodeList prefs = documents[i].GetElementsByTagName(aPrefType);
-        int prefCount = prefs.Count;
-        for (int k = 0; k < prefCount; ++k) {
-          XmlNode currentNode = prefs[k];
-          if (currentNode is XmlElement) {
-            XmlElement elt = currentNode as XmlElement;
-            if (elt.GetAttribute("name") == aPrefName)
-              return elt;
-          }
-        }
+      XmlElement elt = GetBranch(aBranchName, aRoot);
+      if (elt == null) {
+        elt = mPrefsDocument.CreateElement(aBranchName);
+        aRoot.AppendChild(elt);
       }
-      if (aCreate) {
-        // If an element is not found, create one. 
-        XmlElement elt = mPrefsDocument.CreateElement(aPrefType);
-        elt.SetAttribute("name", aPrefName);
-        elt.SetAttribute("value", "");
-        mPrefsDocument.DocumentElement.AppendChild(elt);
+      return elt;
+    }
+
+    private XmlElement GetBranch(String aBranchName) 
+    {
+      String[] names = aBranchName.Split('.');
+      XmlElement elt = mPrefsDocument.DocumentElement;
+      for (int i = 0; i < names.Length && elt != null; ++i)
+        elt = GetBranch(names[i], elt);
+      
+      // The preference wasn't found in the user preferences
+      // file, look in the default preferences file. 
+      if (elt == null) {
+        elt = mDefaultsDocument.DocumentElement;
+        for (int i = 0; i < names.Length; ++i)
+          elt = GetBranch(names[i], elt);
+      }
+
+      return elt;
+    }
+
+    private XmlElement GetBranch(String aBranchName, XmlElement aRoot) 
+    {
+      // First, check to see if the specified root already has a branch
+      // specified. If it exists, hand that root back. 
+      int childCount = aRoot.ChildNodes.Count;
+      for (int i = 0; i < childCount; ++i) {
+        if (aRoot.ChildNodes[i].LocalName == aBranchName)
+          return aRoot.ChildNodes[i] as XmlElement;
       }
       return null;
     }
 
+    private void RemoveBranch(String aBranchName) 
+    {
+      XmlElement elt = GetBranch(aBranchName);
+      XmlNode parent = elt.ParentNode;
+      parent.RemoveChild(elt);
+      while (parent != (mPrefsDocument.DocumentElement as XmlNode)) {
+        parent.RemoveChild(elt);
+        if (!parent.HasChildNodes) 
+          parent = parent.ParentNode;
+      }
+    }
+
     public bool GetBoolPref(String aPrefName)
     {
-      XmlElement elt = GetPrefElement("boolpref", aPrefName);
-      return elt != null ? elt.GetAttribute("value") == "true" : false; 
+      XmlElement elt = GetBranch(aPrefName);
+      return elt != null ? elt.GetAttribute("value") == "true" : false;
     }
 
     public void SetBoolPref(String aPrefName, bool aPrefValue)
     {
-      XmlElement elt = GetPrefElement("boolpref", aPrefName, true);
-      if (elt != null)
-        elt.SetAttribute("value", aPrefValue ? "true" : "false");
+      XmlElement childElt = CreateBranch(aPrefName);
+      if (childElt != null) 
+        childElt.SetAttribute("value", aPrefValue ? "true" : "false");
+    }
+
+    public void RemovePref(String aPrefName)
+    {
+      RemoveBranch(aPrefName);
     }
 
     public int GetIntPref(String aPrefName)
     {
-      XmlElement elt = GetPrefElement("intpref", aPrefName);
+      XmlElement elt = GetBranch(aPrefName);
       return elt != null ? Int32.Parse(elt.GetAttribute("value")) : 0;
     }
 
     public void SetIntPref(String aPrefName, int aPrefValue)
     {
-      XmlElement elt = GetPrefElement("intpref", aPrefName, true);
+      XmlElement elt = CreateBranch(aPrefName);
       if (elt != null) {
         Object o = aPrefValue;
         elt.SetAttribute("value", o.ToString());
@@ -133,17 +215,24 @@ namespace Silverstone.Manticore.Preferences
 
     public String GetStringPref(String aPrefName)
     {
-      XmlElement elt = GetPrefElement("stringpref", aPrefName);
+      XmlElement elt = GetBranch(aPrefName);
       return elt != null ? elt.GetAttribute("value") : "";
     }
 
     public void SetStringPref(String aPrefName, String aPrefValue)
     {
-      XmlElement elt = GetPrefElement("stringpref", aPrefName, true);
-      if (elt != null) 
+      XmlElement elt = CreateBranch(aPrefName);
+      if (elt != null)
         elt.SetAttribute("value", aPrefValue);
     }
-
   }
 
+  public class PrefBranch 
+  {
+    //private XmlElement mRoot;
+
+    public PrefBranch()
+    {
+    }
+  }
 }

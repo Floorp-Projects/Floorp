@@ -6,8 +6,9 @@ namespace Silverstone.Manticore.App
   using System.Windows.Forms;
   using System.Collections;
 
-  using Silverstone.Manticore.BrowserWindow;
-  using Silverstone.Manticore.Preferences;
+  using Silverstone.Manticore.Browser;
+  using Silverstone.Manticore.Core;
+  using Silverstone.Manticore.Bookmarks;
 
   public class ManticoreApp
   {
@@ -16,10 +17,17 @@ namespace Silverstone.Manticore.App
     //     window types.
     private Queue mBrowserWindows;
     private Preferences mPreferences;
+    private Bookmarks mBookmarks;
 
     public Preferences Prefs {
       get {
         return mPreferences;
+      }
+    }
+
+    public Bookmarks BM {
+      get {
+        return mBookmarks;
       }
     }
 
@@ -32,9 +40,19 @@ namespace Silverstone.Manticore.App
       mPreferences.InitializeDefaults("default-prefs.xml");
       mPreferences.LoadPreferencesFile("user-prefs.xml");
 
+      // Initialize bookmarks
+      mBookmarks = new Bookmarks(this);
+      mBookmarks.LoadBookmarks();
+      
       OpenNewBrowser();
 
       Application.Run();
+    }
+
+    ~ManticoreApp()
+    {
+      // Flush preferences to disk.
+      mPreferences.FlushPreferencesFile("user-prefs.xml");
     }
 
     // Opens and displays a new browser window

@@ -32,7 +32,7 @@
  *
  */
 
-namespace Silverstone.Manticore.LayoutAbstraction
+namespace Silverstone.Manticore.Layout
 {
   using System;
   using Microsoft.Win32;
@@ -49,7 +49,7 @@ namespace Silverstone.Manticore.LayoutAbstraction
   using AxMOZILLACONTROLLib;
   using MOZILLACONTROLLib;
 
-  using Silverstone.Manticore.BrowserWindow;
+  using Silverstone.Manticore.Browser;
 
   public class WebBrowser : ContainerControl
   {
@@ -115,6 +115,9 @@ namespace Silverstone.Manticore.LayoutAbstraction
         host.EndInit();
         this.Controls.Add(host);
       }
+
+      mBrowserWindow.application.Prefs.SetStringPref("browser.layoutengine", id);
+      mBrowserWindow.application.Prefs.FlushPreferencesFile("user-prefs.xml");
 
       LoadURL(url, false);
     }

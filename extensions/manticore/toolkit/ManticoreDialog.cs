@@ -32,44 +32,31 @@
  *
  */
 
-namespace Silverstone.Manticore.Browser
+namespace Silverstone.Manticore.Toolkit
 {
   using System;
-  using System.ComponentModel;
-  using System.Drawing;
   using System.Windows.Forms;
 
-  using Silverstone.Manticore.Toolkit;
+  /// <summary>
+	/// Dialog that centers itself with respect to opening window
+	/// </summary>
+	public class ManticoreDialog : Form
+	{
+    private Form mOpener;
 
-  public class AboutDialog : ManticoreDialog
-  {
-    public AboutDialog(Form aOpener) : base(aOpener)
-    {
-      InitializeComponent();
-    }
-
-    private void InitializeComponent()
-    {
-      this.ClientSize = new Size(253, 195);
-      this.ShowInTaskbar = false;
-      this.MaximizeBox = false;
-      this.MinimizeBox = false;
-
-      // Borderless dialog
-      this.FormBorderStyle = FormBorderStyle.FixedDialog;
-
-      this.BackgroundImage = Image.FromFile("resources\\manticore.png");
+		public ManticoreDialog(Form aOpener) : base()
+		{
+      mOpener = aOpener;
       
-      this.Text = "About Manticore"; // XXX localize
+      // Add a new event handler that centers the dialog when the
+      // visibility bit is flipped.
+      this.VisibleChanged += new EventHandler(VisibleChangedHandler);
+		}
 
-      this.Click += new EventHandler(this.CloseAboutDialog);
-    }
-
-    public void CloseAboutDialog(Object sender, EventArgs e)
+    public void VisibleChangedHandler(Object sender, EventArgs e) 
     {
-      this.Close();
+      this.Left = mOpener.Left + ((mOpener.Width / 2) - (this.Width / 2));
+      this.Top = mOpener.Top + ((mOpener.Height / 2) - (this.Height / 2));
     }
-  }
+	}
 }
-
-
