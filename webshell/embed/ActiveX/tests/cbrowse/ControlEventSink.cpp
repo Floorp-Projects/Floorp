@@ -69,7 +69,26 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
 		szEvent = _T("BeforeNavigate2");
 		break;
 	case 0xfb:
-		szEvent = _T("NewWindow2");
+		{
+			szEvent = _T("NewWindow2");
+			
+			VARIANTARG *pvars = pDispParams->rgvarg;
+			CBrowseDlg *pDlg = new CBrowseDlg;
+			if (pDlg)
+			{
+				pDlg->m_clsid = m_pBrowseDlg->m_clsid;
+				pDlg->Create(IDD_CBROWSE_DIALOG);
+				
+				if (pDlg->m_pControlSite)
+				{
+					CIUnkPtr spUnkBrowser;
+					pDlg->m_pControlSite->GetControlUnknown(&spUnkBrowser);
+
+					pvars[0].byref = (void *) VARIANT_FALSE;
+					spUnkBrowser->QueryInterface(IID_IDispatch, (void **) pvars[1].byref);
+				}
+			}
+		}
 		break;
 	case 0xfc:
 		szEvent = _T("NavigateComplete2");

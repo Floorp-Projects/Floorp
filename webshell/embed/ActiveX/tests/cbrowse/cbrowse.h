@@ -14,6 +14,7 @@
 
 #include "resource.h"		// main symbols
 #include "Cbrowse_i.h"
+#include "CBrowseDlg.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CBrowseApp:
@@ -42,7 +43,7 @@ public:
 	DECLARE_MESSAGE_MAP()
 private:
 
-
+	CBrowseDlg *m_pDlg;
 	BOOL m_bATLInited;
 private:
 	BOOL InitATL();

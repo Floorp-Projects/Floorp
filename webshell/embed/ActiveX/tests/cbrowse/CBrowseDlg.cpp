@@ -51,17 +51,12 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 
 	//{{AFX_DATA_INIT(CBrowseDlg)
 	m_szTestDescription = _T("");
+	m_bNewWindow = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	
 	m_pBrowseDlg = this;
 	m_pControlSite = NULL;
 	m_clsid = CLSID_NULL;
-
-	CWinApp *pApp = AfxGetApp();
-	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
-	m_szTestCGI = pApp->GetProfileString(SECTION_TEST, KEY_TESTCGI, KEY_TESTCGI_DEFAULTVALUE);
 }
 
 void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
@@ -74,6 +69,7 @@ void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_TESTLIST, m_tcTests);
 	DDX_Control(pDX, IDC_LISTMESSAGES, m_lbMessages);
 	DDX_Text(pDX, IDC_TESTDESCRIPTION, m_szTestDescription);
+	DDX_Check(pDX, IDC_NEWWINDOW, m_bNewWindow);
 	//}}AFX_DATA_MAP
 }
 
@@ -88,6 +84,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TESTLIST, OnSelchangedTestlist)
 	ON_NOTIFY(NM_DBLCLK, IDC_TESTLIST, OnDblclkTestlist)
 	ON_BN_CLICKED(IDC_REFRESHDOM, OnRefreshDOM)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -104,6 +101,13 @@ END_MESSAGE_MAP()
 BOOL CBrowseDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	
+
+	CWinApp *pApp = AfxGetApp();
+	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
+	m_szTestCGI = pApp->GetProfileString(SECTION_TEST, KEY_TESTCGI, KEY_TESTCGI_DEFAULTVALUE);
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
@@ -185,25 +189,11 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 	pEventSink->m_pBrowseDlg = this;
 
 	PropertyList pl;
+	m_pControlSite->AddRef();
 	m_pControlSite->Create(m_clsid, pl);
 	m_pControlSite->Attach(GetSafeHwnd(), rcMarker, NULL);
 	m_pControlSite->SetPosition(rcMarker);
-
-	// Set up an event sink
-	CIUnkPtr spUnkObject;
-	m_pControlSite->GetControlUnknown(&spUnkObject);
-
-	IID iid = DIID_DWebBrowserEvents2;
-	CIPtr(IConnectionPointContainer) spICPContainer = spUnkObject;
-	if (spICPContainer)
-	{
-		CIPtr(IConnectionPoint) spICP;
-		spICPContainer->FindConnectionPoint(iid, &spICP);
-		if (spICP)
-		{
-			spICP->Advise(pEventSink, &m_dwCookie);
-		}
-	}
+	m_pControlSite->Advise(pEventSink, DIID_DWebBrowserEvents2, &m_dwCookie);
 
 	return S_OK;
 }
@@ -211,7 +201,13 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 
 HRESULT CBrowseDlg::DestroyWebBrowser()
 {
-	// TODO unsubscribe web event sink
+	if (m_pControlSite)
+	{
+		m_pControlSite->Unadvise(DIID_DWebBrowserEvents2, m_dwCookie);
+		m_pControlSite->Detach();
+		m_pControlSite->Release();
+		m_pControlSite = NULL;
+	}
 
 	return S_OK;
 }
@@ -293,8 +289,10 @@ void CBrowseDlg::OnGo()
 //		int nItem = m_cmbURLs.GetCurSel();
 //		CString szURL = (nItem == 0) ? m_szTestURL : aURLs[nItem - 1];
 
+		CComVariant vFlags(m_bNewWindow ? navOpenInNewWindow : 0);
+
 		BSTR bstrURL = szURL.AllocSysString();
-		pIWebBrowser->Navigate(bstrURL, NULL, NULL, NULL, NULL);
+		pIWebBrowser->Navigate(bstrURL, &vFlags, NULL, NULL, NULL);
 		::SysFreeString(bstrURL);
 		pIWebBrowser->Release();
 	}
@@ -605,3 +603,9 @@ void CBrowseDlg::OnRefreshDOM()
 	}
 }
 
+
+void CBrowseDlg::OnClose() 
+{
+	DestroyWebBrowser();
+	DestroyWindow();
+}
