@@ -608,19 +608,6 @@ nsNSSCertificate::GetSerialNumber(nsAString &_serialNumber)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetRsaPubModulus(nsAString &_rsaPubModulus)
-{
-  _rsaPubModulus.Truncate();
-  //nsXPIDLCString tmpstr; tmpstr.Adopt(CERT_Hexify(&mCert->serialNumber, 1));
-  NS_NAMED_LITERAL_CSTRING(tmpstr, "not yet implemented");
-  if (tmpstr.get()) {
-    _rsaPubModulus = NS_ConvertASCIItoUCS2(tmpstr);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsNSSCertificate::GetSha1Fingerprint(nsAString &_sha1Fingerprint)
 {
   _sha1Fingerprint.Truncate();
