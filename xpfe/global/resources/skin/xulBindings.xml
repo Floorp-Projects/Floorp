@@ -110,7 +110,7 @@
     </interface>  
   </binding>
 
-  <binding id="treecell-indent">
+  <binding id="treecell-indented-folder">
     <content autostretch="never">
       <xul:treeindentation/>
       <xul:image class="tree-cell-twisty" twisty="true" allowevents="true"/>
