@@ -51,6 +51,9 @@
 #include "prlog.h"
 #include "prmem.h"
 
+// XXX misnamed header file, but oh well
+#include "nsHTMLTokens.h"  
+
 static char kNameSpaceSeparator[] = ":";
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "<?xml-stylesheet";
@@ -695,7 +698,24 @@ nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   // XXX For now, all leaf content is character data
   // XXX make sure to push/pop name spaces here too (for attributes)
-  AddCharacterData(aNode);
+  switch (aNode.GetTokenType()) {
+  case eToken_text:
+  case eToken_whitespace:
+  case eToken_newline:
+    AddText(aNode.GetText());
+    break;
+
+  case eToken_entity:
+  {
+    nsAutoString tmp;
+    PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+    if (unicode < 0) {
+      return AddText(aNode.GetText());
+    }
+    return AddText(tmp);
+  }
+
+  }
   return NS_OK;
 }
 
@@ -1176,9 +1196,13 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 NS_IMETHODIMP 
 nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
 {
-  nsAutoString text = aNode.GetText();
+  return AddText(aNode.GetText());
+}
 
-  PRInt32 addLen = text.Length();
+nsresult
+nsXMLContentSink::AddText(const nsString& aString)
+{
+  PRInt32 addLen = aString.Length();
   if (0 == addLen) {
     return NS_OK;
   }
@@ -1214,7 +1238,7 @@ nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
         }
       }
     }
-    memcpy(&mText[mTextLength], text.GetUnicode() + offset,
+    memcpy(&mText[mTextLength], aString.GetUnicode() + offset,
            sizeof(PRUnichar) * amount);
     mTextLength += amount;
     offset += amount;
