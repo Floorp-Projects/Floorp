@@ -184,55 +184,44 @@
   <xul:toolbox>
   
     <xul:toolbar>
-	    <html:button onClick="BrowserBack()">	
+	  <xul:titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onClick="BrowserBack()">	
 			  <xul:observes xul:element="canGoBack" xul:attribute="disabled"/>			
-        <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back
-      </html:button>
+      </xul:titledbutton>
 
-      <html:button onClick="BrowserForward()" style="background-color:rgb(192,192,50);">
+      <xul:titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
+			onClick="BrowserForward()" style="background-color:rgb(192,192,50);">
 			  <xul:observes xul:element="canGoForward" xul:attribute="disabled"/>
-        <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:br/>Forward
-      </html:button>
+      </xul:titledbutton>
 
-      <html:button onClick="window.frames[0].location.reload()">
+      <xul:titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
+			  onClick="window.frames[0].location.reload()">
 			  <xul:observes xul:element="canReload" xul:attribute="disabled"/>
-        <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:br/>Reload
-      </html:button>
+      </xul:titledbutton>
 
-      <html:button onClick="window.frames[0].stop()">
+      <xul:titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
+			onClick="window.frames[0].stop()">
         <xul:observes xul:element="canStop" xul:attribute="disabled"/>
-			  <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:br/>Stop
-      </html:button>
+      </xul:titledbutton>
 
-      <html:button onClick="window.frames[0].home()">
-         <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:br/>Home
-      </html:button>
+      <xul:titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
+			onClick="window.frames[0].home()"/>
 
-      <html:button onClick="window.frames[0].print()">
+      <xul:titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
+			onClick="window.frames[0].print()">
         <xul:observes xul:element="canPrint" xul:attribute="disabled"/>
-			  <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
-      </html:button>
+      </xul:titledbutton>
 
-     <html:input html:id="urlbar" html:type="text" 
+	  <html:input html:id="urlbar" html:style="vertical-align: center" html:type="text" 
 		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
+	  
+      <xul:titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
+         
 
-      <html:button onClick="window.frames[0].home()">
-        <html:img src="resource:/res/throbber/anims00.gif"/>
-      </html:button>	      
     </xul:toolbar>
 
     <xul:toolbar>
-      <html:button onClick="window.frames[0].home()">
-        <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-      </html:button>
-
-	    <html:button onClick="window.frames[0].home()">
-        <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-      </html:button>
-
-	    <html:button onClick="window.frames[0].home()">
-        <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-      </html:button>
+      <xul:titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" onClick="window.frames[0].location.href='http://www.mozilla.org'"/>
+	  <xul:titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News" onClick="window.frames[0].location.href='http://www.abcnews.com'"/>
     </xul:toolbar>
     
   </xul:toolbox>
