@@ -63,10 +63,18 @@ extern int XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY;
 extern int XP_FORTEZZA_PROXY_AUTH;
 extern int MK_ACCESS_COOKIES_THE_SERVER;
 extern int MK_ACCESS_COOKIES_WISHES; 
+#if defined(CookieManagement)
+extern int MK_ACCESS_COOKIES_WISHES0;
+extern int MK_ACCESS_COOKIES_WISHES1;
+extern int MK_ACCESS_COOKIES_REMEMBER;
+extern int MK_ACCESS_COOKIES_ACCEPTED;
+extern int MK_ACCESS_COOKIES_PERMISSION;
+#else
 extern int MK_ACCESS_COOKIES_TOANYSERV; 
 extern int MK_ACCESS_COOKIES_TOSELF;
 extern int MK_ACCESS_COOKIES_NAME_AND_VAL;
 extern int MK_ACCESS_COOKIES_COOKIE_WILL_PERSIST;
+#endif
 extern int MK_ACCESS_COOKIES_SET_IT;
 extern int MK_ACCESS_YOUR_COOKIES;
 extern int MK_ACCESS_MAXIMUM_COOKS;
@@ -99,6 +107,9 @@ PRIVATE XP_List * net_auth_list = NULL;
 PRIVATE XP_List * net_proxy_auth_list = NULL;
 
 PRIVATE Bool cookies_changed = FALSE;
+#if defined(CookieManagement)
+PRIVATE Bool cookie_permissions_changed = FALSE;
+#endif
 
 PRIVATE NET_CookieBehaviorEnum net_CookieBehavior = NET_Accept;
 PRIVATE Bool net_WarnAboutCookies = FALSE;
@@ -861,6 +872,9 @@ NET_AskForAuthString(MWContext *context,
  */
 
 PRIVATE XP_List * net_cookie_list=0;
+#if defined(CookieManagement)
+PRIVATE XP_List * net_cookie_permission_list=0;
+#endif
 
 typedef struct _net_CookieStruct {
     char * path;
@@ -872,6 +886,13 @@ typedef struct _net_CookieStruct {
 	Bool   secure;      /* only send for https connections */
 	Bool   is_domain;   /* is it a domain instead of an absolute host? */
 } net_CookieStruct;
+
+#if defined(CookieManagement)
+typedef struct _net_CookiePermissionStruct {
+    char * host;
+    Bool permission;
+} net_CookiePermissionStruct;
+#endif
 
 /* Routines and data to protect the cookie list so it
 **   can be accessed by mulitple threads
@@ -930,6 +951,111 @@ net_unlock_cookie_list(void)
 
 }
 
+#if defined(CookieManagement)
+static PRMonitor * cookie_permission_lock_monitor = NULL;
+static PRThread  * cookie_permission_lock_owner = NULL;
+static int cookie_permission_lock_count = 0;
+
+PRIVATE void
+net_lock_cookie_permission_list(void)
+{
+    if(!cookie_permission_lock_monitor)
+	cookie_permission_lock_monitor =
+            PR_NewNamedMonitor("cookie_permission-lock");
+
+    PR_EnterMonitor(cookie_permission_lock_monitor);
+
+    while(TRUE) {
+
+	/* no current owner or owned by this thread */
+	PRThread * t = PR_CurrentThread();
+	if(cookie_permission_lock_owner == NULL || cookie_permission_lock_owner == t) {
+	    cookie_permission_lock_owner = t;
+	    cookie_permission_lock_count++;
+
+	    PR_ExitMonitor(cookie_permission_lock_monitor);
+	    return;
+	}
+
+	/* owned by someone else -- wait till we can get it */
+	PR_Wait(cookie_permission_lock_monitor, PR_INTERVAL_NO_TIMEOUT);
+
+    }
+}
+
+PRIVATE void
+net_unlock_cookie_permission_list(void)
+{
+   PR_EnterMonitor(cookie_permission_lock_monitor);
+
+#ifdef DEBUG
+    /* make sure someone doesn't try to free a lock they don't own */
+    PR_ASSERT(cookie_permission_lock_owner == PR_CurrentThread());
+#endif
+
+    cookie_permission_lock_count--;
+
+    if(cookie_permission_lock_count == 0) {
+	cookie_permission_lock_owner = NULL;
+	PR_Notify(cookie_permission_lock_monitor);
+    }
+    PR_ExitMonitor(cookie_permission_lock_monitor);
+
+}
+
+PRIVATE int
+net_SaveCookiePermissions(char * filename);
+
+PRIVATE void
+net_FreeCookiePermission
+    (net_CookiePermissionStruct * cookie_permission, Bool save)
+{
+
+    /*
+     * This routine should only be called while holding the
+     * cookie permission list lock
+     */
+
+    if(!cookie_permission) {
+	return;
+    }
+    XP_ListRemoveObject(net_cookie_permission_list, cookie_permission);
+    PR_FREEIF(cookie_permission->host);
+    PR_Free(cookie_permission);
+    if (save) {
+	cookie_permissions_changed = TRUE;
+	net_SaveCookiePermissions(NULL);
+    }
+}
+
+/* blows away all cookie permissions currently in the list */
+PRIVATE void
+net_RemoveAllCookiePermissions()
+{
+    net_CookiePermissionStruct * victim;
+    XP_List * cookiePermissionList;
+
+    /* check for NULL or empty list */
+    net_lock_cookie_permission_list();
+    cookiePermissionList = net_cookie_permission_list;
+
+    if(XP_ListIsEmpty(cookiePermissionList)) {
+	net_unlock_cookie_permission_list();
+	return;
+    }
+    while((victim =
+	    (net_CookiePermissionStruct *)
+	    XP_ListNextObject(cookiePermissionList)) != 0) {
+	net_FreeCookiePermission(victim, FALSE);
+	cookiePermissionList = net_cookie_permission_list;
+    }
+    XP_ListDestroy(net_cookie_permission_list);
+    net_cookie_permission_list = NULL;
+    net_unlock_cookie_permission_list();
+}
+#endif
+
+
 /* This should only get called while holding the cookie-lock
 **
 */
@@ -953,6 +1079,31 @@ net_FreeCookie(net_CookieStruct * cookie)
 }
 
 
+PUBLIC void
+NET_DeleteCookie(char* cookieURL)
+{
+    net_CookieStruct * cookie;
+    XP_List * list_ptr;
+    char * cookieURL2 = 0;
+
+    net_lock_cookie_list();
+    list_ptr = net_cookie_list;
+    while((cookie = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
+        StrAllocCopy(cookieURL2, "cookie:");
+	StrAllocCat(cookieURL2, cookie->host);
+        StrAllocCat(cookieURL2, "!");
+	StrAllocCat(cookieURL2, cookie->path);
+        StrAllocCat(cookieURL2, "!");
+	StrAllocCat(cookieURL2, cookie->name);
+	if (XP_STRCMP(cookieURL, cookieURL2)==0) {
+	    net_FreeCookie(cookie);
+	    break;
+	}
+    }
+    XP_FREEIF(cookieURL2);
+    net_unlock_cookie_list();
+}
+
 
 /* blows away all cookies currently in the list, then blows away the list itself
  * nulling it after it's free'd
@@ -962,6 +1113,10 @@ NET_RemoveAllCookies()
 {
 	net_CookieStruct * victim;
 	XP_List * cookieList;
+
+#if defined(CookieManagement)
+	net_RemoveAllCookiePermissions();
+#endif
 
 	/* check for NULL or empty list */
 	net_lock_cookie_list();
@@ -1113,11 +1268,17 @@ NET_SetCookieBehaviorPref(NET_CookieBehaviorEnum x)
 
 	if(net_CookieBehavior == NET_DontUse)
 		XP_FileRemove("", xpHTTPCookie);
+#if defined(CookieManagement)
+            XP_FileRemove("", xpHTTPCookiePermission);
+#endif
 }
 
 PRIVATE void
 NET_SetCookieWarningPref(Bool x)
 {
+/* morse start -- temporary until preference bug is fixed */
+    /*	x = TRUE;  */
+/* morse end */
 	net_WarnAboutCookies = x;
 }
 
@@ -1178,6 +1339,27 @@ NET_CookieScriptPrefChanged(const char * newpref, void * data)
     return PREF_NOERROR;
 }
  
+#if defined(CookieManagement)
+/*
+ * search if permission already exists
+ */
+PRIVATE net_CookiePermissionStruct *
+net_CheckForCookiePermission(char * hostname) {
+    XP_List * list_ptr;
+    net_CookiePermissionStruct * cookie_s;
+
+    net_lock_cookie_permission_list();
+    list_ptr = net_cookie_permission_list;
+    while((cookie_s = (net_CookiePermissionStruct *) XP_ListNextObject(list_ptr))!=0) {
+	if(hostname && cookie_s->host
+		&& !XP_STRCMP(hostname, cookie_s->host)) {
+	    net_unlock_cookie_permission_list();
+	    return(cookie_s);
+	}
+    }
+    return(NULL);
+}
+#endif
 
 /* called from mkgeturl.c, NET_InitNetLib(). This sets the module local cookie pref variables
    and registers the callbacks */
@@ -1348,6 +1530,73 @@ NET_GetCookie(MWContext * context, char * address)
 	/* may be NULL */
 	return(rv);
 }
+
+#if defined(CookieManagement)
+void
+net_AddCookiePermission
+	(char *host_from_header, Bool userHasAccepted, Bool save) {
+    net_CookiePermissionStruct * cookie_permission;
+    char * host_from_header2=NULL;
+
+    /*
+     * This routine should only be called while holding the
+     * cookie permission list lock
+     */
+
+    cookie_permission = XP_NEW(net_CookiePermissionStruct);
+    if (cookie_permission) {
+	XP_List * list_ptr = net_cookie_permission_list;
+
+	StrAllocCopy(host_from_header2, host_from_header);
+	cookie_permission->host = host_from_header2;
+	cookie_permission->permission = userHasAccepted;
+
+	if(!net_cookie_permission_list) {
+	    net_cookie_permission_list = XP_ListNew();
+	    if(!net_cookie_permission_list) {
+		PR_Free(cookie_permission->host);
+		return;
+	    }
+	}
+
+#ifdef alphabetize
+	/* add it to the list in alphabetical order */
+	{
+	    net_CookiePermissionStruct * tmp_cookie_permission;
+	    Bool permissionAdded = FALSE;
+	    while((tmp_cookie_permission = (net_CookiePermissionStruct *)
+					   XP_ListNextObject(list_ptr))!=0) {
+		if (XP_STRCMP
+			(cookie_permission->host,tmp_cookie_permission->host)<0) {
+		    XP_ListInsertObject
+			(net_cookie_permission_list,
+			tmp_cookie_permission,
+			cookie_permission);
+		    permissionAdded = TRUE;
+		    break;
+		}
+	    }
+	    if (!permissionAdded) {
+		XP_ListAddObjectToEnd
+		    (net_cookie_permission_list, cookie_permission);
+	    }
+	}
+#else
+	/* add it to the list in alphabetical order */
+	XP_ListAddObjectToEnd (net_cookie_permission_list, cookie_permission);
+#endif
+
+	if (save) {
+	    cookie_permissions_changed = TRUE;
+	    net_SaveCookiePermissions(NULL);
+	}
+
+    //	RDF_AddCookiePermissionResource (
+    //	    cookie_permission->host, cookie_permission->permission);
+    }
+}
+#endif
+
 
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
@@ -1658,6 +1907,22 @@ net_IntSetCookieString(MWContext * context,
 			}
 		}
 		PR_Free(cd);
+#if defined(CookieManagement)
+    } else {
+	net_CookiePermissionStruct * cookie_permission;
+	cookie_permission = net_CheckForCookiePermission(host_from_header);
+	if (cookie_permission != NULL) {
+	    if (cookie_permission->permission == FALSE) {
+		XP_FREEIF(path_from_header);
+		XP_FREEIF(host_from_header);
+		XP_FREEIF(name_from_header);
+		XP_FREEIF(cookie_from_header);
+		return;
+	    } else {
+		accept = TRUE;
+            }
+	}
+#endif
     }
  
 
@@ -1668,7 +1933,34 @@ net_IntSetCookieString(MWContext * context,
 		 */
 		char * new_string=0;
 		char * tmp_host = NET_ParseURL(cur_url, GET_HOST_PART);
+#if defined(CookieManagement)
+		XP_List * list_ptr;
+		net_CookieStruct * cookie;
+		int count = 0;
 
+		/* find out how many cookies this host has already set */
+		net_lock_cookie_list();
+		list_ptr = net_cookie_list;
+		while((cookie = (net_CookieStruct *)
+				XP_ListNextObject(list_ptr))!=0) {
+		    if (tmp_host && cookie->host &&
+			    XP_STRCMP(tmp_host, cookie->host) == 0) {
+			count++;
+		    }
+		}
+		net_unlock_cookie_list();
+
+		if (count>0) {
+		    new_string = PR_smprintf(
+			XP_GetString(MK_ACCESS_COOKIES_WISHES1),
+                        tmp_host ? tmp_host : "",
+			count);
+		} else {
+		    new_string = PR_smprintf(
+			XP_GetString(MK_ACCESS_COOKIES_WISHES0),
+                        tmp_host ? tmp_host : "");
+		}
+#else
         StrAllocCopy(new_string, XP_GetString(MK_ACCESS_COOKIES_THE_SERVER));
         StrAllocCat(new_string, tmp_host ? tmp_host : "");
         StrAllocCat(new_string, XP_GetString(MK_ACCESS_COOKIES_WISHES));
@@ -1699,15 +1991,40 @@ net_IntSetCookieString(MWContext * context,
 		  }
 
 		StrAllocCat(new_string, XP_GetString(MK_ACCESS_COOKIES_SET_IT));
+#endif
 
 		/* 
 		 * Who knows what thread we are on.  Only the mozilla thread
 		 *   is allowed to post dialogs so, if need be, go over there
 		 */
+#if defined(CookieManagement)
+
+	    {
+		Bool userHasAccepted =
+			ET_PostMessageBox(context, new_string, TRUE);
+		Bool userWantsRemembered =
+			ET_PostMessageBox
+			    (context,
+			     XP_GetString(MK_ACCESS_COOKIES_REMEMBER),
+			     TRUE);
+
+		net_lock_cookie_permission_list();
+		if (userWantsRemembered) {
+			net_AddCookiePermission
+			    (host_from_header, userHasAccepted, TRUE);
+		}
+		net_unlock_cookie_permission_list();
+		if (!userHasAccepted) {
+			XP_FREEIF(new_string);
+			return;
+		}
+	    }
+#else
 		if(!ET_PostMessageBox(context, new_string, TRUE)) {
 			PR_FREEIF(new_string);
 			return;
 		}
+#endif
 		PR_FREEIF(new_string);
 	  }
 
@@ -1791,17 +2108,24 @@ net_IntSetCookieString(MWContext * context,
 		new_len = PL_strlen(prev_cookie->path);
 		while((tmp_cookie_ptr = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0) { 
 			if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
+				RDF_AddCookieResource
+				    (prev_cookie->name,
+				    prev_cookie->path,
+				    prev_cookie->host,
+				    ctime(&(prev_cookie->expires)));
 				XP_ListInsertObject(net_cookie_list, tmp_cookie_ptr, prev_cookie);
-                RDF_AddCookieResource(tmp_cookie_ptr->name, tmp_cookie_ptr->path, 
-                                      tmp_cookie_ptr->host, "" /* tmp_cookie_ptr->expires */ ) ;
-				net_unlock_cookie_list();
 				cookies_changed = TRUE;
+				NET_SaveCookies(NULL);
+				net_unlock_cookie_list();
 				return;
 			  }
 		  }
 		/* no shorter strings found in list */
-        RDF_AddCookieResource(prev_cookie->name, prev_cookie->path, 
-                              prev_cookie->host, "" /* prev_cookie->expires */);		
+		RDF_AddCookieResource
+		    (prev_cookie->name,
+		     prev_cookie->path,
+		     prev_cookie->host,
+		     ctime(&(prev_cookie->expires)));
 		XP_ListAddObjectToEnd(net_cookie_list, prev_cookie);
 	  }
 
@@ -1960,6 +2284,136 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	net_IntSetCookieString(context, cur_url, set_cookie_header, gmtCookieExpires);
 }
 
+#if defined(CookieManagement)
+/* saves the HTTP cookies permissions to disk
+ * the parameter passed in on entry is ignored
+ * returns 0 on success -1 on failure.
+ */
+PRIVATE int
+net_SaveCookiePermissions(char * filename)
+{
+    XP_List * list_ptr;
+    net_CookiePermissionStruct * cookie_permission_s;
+    XP_File fp;
+    int32 len = 0;
+
+    if(NET_GetCookieBehaviorPref() == NET_DontUse) {
+	return(-1);
+    }
+
+    if(!cookie_permissions_changed) {
+	return(-1);
+    }
+
+    net_lock_cookie_permission_list();
+    list_ptr = net_cookie_permission_list;
+
+    if(XP_ListIsEmpty(net_cookie_permission_list)) {
+	net_unlock_cookie_permission_list();
+	return(-1);
+    }
+
+    if(!(fp = XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_WRITE))) {
+	net_unlock_cookie_permission_list();
+	return(-1);
+    }
+    len = XP_FileWrite("# Netscape HTTP Cookie Permission File" LINEBREAK
+                 "# http://www.netscape.com/newsref/std/cookie_spec.html"
+                  LINEBREAK "# This is a generated file!  Do not edit."
+		  LINEBREAK LINEBREAK, -1, fp);
+
+    if (len < 0) {
+	XP_FileClose(fp);
+	net_unlock_cookie_permission_list();
+	return -1;
+    }
+
+    /* format shall be:
+     * host \t permission
+     */
+    while((cookie_permission_s = (net_CookiePermissionStruct *)
+	    XP_ListNextObject(list_ptr)) != NULL) {
+	len = XP_FileWrite(cookie_permission_s->host, -1, fp);
+	if (len < 0) {
+	    XP_FileClose(fp);
+	    net_unlock_cookie_permission_list();
+	    return -1;
+	}
+
+        XP_FileWrite("\t", 1, fp);
+
+	if(cookie_permission_s->permission) {
+            XP_FileWrite("TRUE", -1, fp);
+	} else {
+            XP_FileWrite("FALSE", -1, fp);
+	}
+
+	len = XP_FileWrite(LINEBREAK, -1, fp);
+	if (len < 0) {
+	    XP_FileClose(fp);
+	    net_unlock_cookie_permission_list();
+	    return -1;
+	}
+    }
+
+    cookie_permissions_changed = FALSE;
+    XP_FileClose(fp);
+    net_unlock_cookie_permission_list();
+    return(0);
+}
+
+/* reads the HTTP cookies permission from disk
+ * the parameter passed in on entry is ignored
+ * returns 0 on success -1 on failure.
+ *
+ */
+#define PERMISSION_LINE_BUFFER_SIZE 4096
+
+PRIVATE int
+net_ReadCookiePermissions(char * filename)
+{
+    XP_File fp;
+    char buffer[PERMISSION_LINE_BUFFER_SIZE];
+    char *host, *permission;
+
+    if(!(fp = XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_READ)))
+	return(-1);
+
+    /* format is:
+     * host \t permission
+     * if this format isn't respected we move onto the next line in the file.
+     */
+
+    net_lock_cookie_permission_list();
+    while(XP_FileReadLine(buffer, PERMISSION_LINE_BUFFER_SIZE, fp)) {
+        if (*buffer == '#' || *buffer == CR || *buffer == LF || *buffer == 0) {
+	    continue;
+	}
+	host = buffer;
+
+        if( !(permission = XP_STRCHR(host, '\t')) ) {
+	    continue;
+	}
+        *permission++ = '\0';
+	if(*permission == CR || *permission == LF || *permission == 0) {
+	    continue;
+	}
+        XP_StripLine(permission); /* remove '\n' from end of permission */
+
+        if(!XP_STRCMP(permission, "TRUE")) {
+	    net_AddCookiePermission(host, TRUE, FALSE);
+	} else {
+	    net_AddCookiePermission(host, FALSE, FALSE);
+	}
+    }
+
+    net_unlock_cookie_permission_list();
+    XP_FileClose(fp);
+    cookie_permissions_changed = FALSE;
+    return(0);
+}
+#endif
+
 /* saves out the HTTP cookies to disk
  *
  * on entry pass in the name of the file to save
@@ -2077,13 +2531,15 @@ NET_InitRDFCookieResources (void) {
   net_CookieStruct * item=NULL;
   net_lock_cookie_list();
   while ( (item=XP_ListNextObject(tmpList)) ) {
-    RDF_AddCookieResource(item->name, item->path, item->host, "" /* item->expires */) ;
+    RDF_AddCookieResource
+      (item->name,
+      item->path,
+      item->host,
+      "" /* item->expires */) ;
   }
   net_unlock_cookie_list();
 }
     
-
-
 /* reads HTTP cookies from disk
  *
  * on entry pass in the name of the file to read
@@ -2104,6 +2560,10 @@ NET_ReadCookies(char * filename)
 	char buffer[LINE_BUFFER_SIZE];
 	char *host, *is_domain, *path, *secure, *expires, *name, *cookie;
 	Bool added_to_list;
+
+#if defined(CookieManagement)
+    net_ReadCookiePermissions(NULL);
+#endif
 
     if(!(fp = XP_FileOpen(filename, xpHTTPCookie, XP_FILE_READ)))
         return(-1);
@@ -2232,9 +2692,6 @@ NET_ReadCookies(char * filename)
 
     return(0);
 }
-
-
-
 
 
 /* --- New stuff: General auth utils (currently used only by proxy auth) --- */
@@ -2748,198 +3205,486 @@ NET_AskForProxyAuth(MWContext * context,
 	return TRUE;
 }
 
-#define BUFLEN 2048
-/* create an HTML stream and push a bunch of HTML about cookies. Such as:
- * GENERAL INFO
- * The number of cookies you have in mem (expired cookies don't show up).
- * The maximum number allowed.
- * The maximum allowed per server.
- * The maximum allowable size of a cookie (in bytes).
- *
- * PER COOKIE INFO
- * Cookie name & Value.
- * The host it came from.
- * Whether or not there's a domain.
- * The path the cookie will be sent to.
- * Whether or not the cookie is sent secure.
- * When the cookie expires.
- * 
- */
+
+#if defined(CookieManagement)
+#include "/mozilla/lib/htmldlgs/htmldlgs.h" /* why is full pathname needed? */
+extern int XP_EMPTY_STRINGS;
+extern int SA_VIEW_BUTTON_LABEL;
+extern int SA_REMOVE_BUTTON_LABEL;
+
+#define BUFLEN 5000
+
+#define FLUSH_BUFFER			\
+    if (buffer) {			\
+	StrAllocCat(buffer2, buffer);	\
+	g = 0;				\
+    }
+
 MODULE_PRIVATE void 
-NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry) {
-	char *buffer=(char*)PR_Malloc(BUFLEN), *expireDate=NULL;
-   	NET_StreamClass *stream;
-	int i, g, numOfCookies;
-	XP_List *list=net_cookie_list;
-	net_CookieStruct *cookie;
+net_DisplayCookieDetailsAsHTML(MWContext *context,
+    char* cookie_path, char* cookie_host,
+    char* cookie_name, char* cookie_cookie,
+    time_t cookie_expires, Bool cookie_secure, Bool cookie_is_domain)
+{
+    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    char *buffer2 = 0;
+    int g = 0;
+    XP_List *list=net_cookie_list;
+    char *expireDate = NULL;
 
-	if(!buffer) {
-		cur_entry->status = MK_UNABLE_TO_CONVERT;
-		return;
-	  }
+    static XPDialogInfo dialogInfo = {
+	XP_DIALOG_OK_BUTTON,
+	NULL,
+	600,
+	300
+    };
 
-	/* The the current entry's content type */
-	StrAllocCopy(cur_entry->URL_s->content_type, TEXT_HTML);
+    XPDialogStrings* strings;
+    StrAllocCopy(buffer2, "");
 
-	cur_entry->format_out = CLEAR_CACHE_BIT(cur_entry->format_out);
-	stream = NET_StreamBuilder(cur_entry->format_out, 
-							   cur_entry->URL_s, 
-							   cur_entry->window_id);
+    /* Write out cookie details */
 
-	if(!stream) {
-		cur_entry->status = MK_UNABLE_TO_CONVERT;
-		PR_Free(buffer);
-		return;
-	  }
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+        "<TABLE>");
 
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_NAME), cookie_name);
+    FLUSH_BUFFER
 
-/* define a macro to push a string up the stream and handle errors */
-#define PUT_PART(part)													\
-cur_entry->status = (*stream->put_block)(stream,			\
-										part ? part : "Unknown",		\
-										part ? PL_strlen(part) : 7);	\
-	if(cur_entry->status < 0)												\
-	  goto END;
-/* End PUT_PART macro */
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_VALUE), cookie_cookie);
+    FLUSH_BUFFER
 
-	/* Get rid of any expired cookies now so user doesn't
-	 * think/see that we're keeping cookies in mem.
-	 */
-	net_remove_expired_cookies();
-	numOfCookies=XP_ListCount(net_cookie_list);
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+        "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_HOST), cookie_host);
+    FLUSH_BUFFER
 
-	/* Write out the initial statistics. */
-	g = PR_snprintf(buffer, BUFLEN,
-"<TITLE>%s</TITLE>\n"
+    if (cookie_is_domain) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SEND_TO_HOST),
+	    XP_GetString(MK_ACCESS_IS_DOMAIN));
+    } else {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SEND_TO_HOST),
+	    XP_GetString(MK_ACCESS_IS_NOT_DOMAIN));
+    }
+    FLUSH_BUFFER
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+        "<TR><TD><b>%s</b></TD> <TD>%s %s</TD></TR>", XP_GetString(MK_ACCESS_SEND_TO_PATH),
+	cookie_path, XP_GetString(MK_ACCESS_AND_BELOW));
+    FLUSH_BUFFER
+
+    if(cookie_secure) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SECURE),
+            "Yes"); /* bad -- needs i18n */
+    } else {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_SECURE),
+            "No"); /* bad -- needs i18n */
+    }
+    FLUSH_BUFFER
+
+    if(cookie_expires) {
+	expireDate=ctime(&(cookie_expires));
+	if (expireDate) {
+	    g += PR_snprintf(buffer+g, BUFLEN-g,
+                "<TR><TD><b>%s</b></TD> <TD>%s %s</TD></TR>", XP_GetString(MK_ACCESS_EXPIRES),
+		expireDate);
+	} else {
+	    g += PR_snprintf(buffer+g, BUFLEN-g,
+                "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_EXPIRES),
+                "");
+	}
+    } else {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+            "<TR><TD><b>%s</b></TD> <TD>%s</TD></TR>", XP_GetString(MK_ACCESS_EXPIRES),
+	    XP_GetString(MK_ACCESS_END_OF_SESSION));
+    }
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,"</TABLE>");
+    FLUSH_BUFFER
+
+    /* free buffer since it is no longer needed */
+    if (buffer) {
+	XP_FREE(buffer);
+    }
+
+    /* do html dialog */
+    strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
+    if (!strings) {
+	if (buffer2) {
+	    XP_FREE(buffer2);
+	}
+	return;
+    }
+    if (buffer2) {
+	XP_CopyDialogString(strings, 0, buffer2);
+	XP_FREE(buffer2);
+	buffer2 = NULL;
+    }
+    XP_MakeHTMLDialog(context, &dialogInfo, MK_ACCESS_YOUR_COOKIES,
+		strings, context, PR_FALSE);
+
+    return;
+}
+
+/* return TRUE if "number" is in sequence of comma-separated numbers */
+Bool net_InSequence(char* sequence, int number) {
+    char* ptr;
+    char* endptr;
+    char* undo = NULL;
+    Bool retval = FALSE;
+    int i;
+
+    /* not necessary -- routine will work even with null sequence */
+    if (!*sequence) {
+	return FALSE;
+    }
+
+    for (ptr = sequence ; ptr ; ptr = endptr) {
+
+	/* get to next comma */
+        endptr = XP_STRCHR(ptr, ',');
+
+	/* if comma found, set it to null */
+	if (endptr) {
+
+	    /* restore last comma-to-null back to comma */
+	    if (undo) {
+                *undo = ',';
+	    }
+	    undo = endptr;
+            *endptr++ = '\0';
+	}
+
+        /* if there is a number before the comma, compare it with "number" */
+	if (*ptr) {
+	    i = atoi(ptr);
+	    if (i == number) {
+
+                /* "number" was in the sequence so return TRUE */
+		retval = TRUE;
+		break;
+	    }
+	}
+    }
+
+    if (undo) {
+        *undo = ',';
+    }
+    return retval;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
+						unsigned int button)
+{
+    XP_List *list;
+    net_CookieStruct *cookie;
+    net_CookiePermissionStruct *cookiePermission;
+    char *buttonName, *cookieNumberAsString;
+    int cookieNumber;
+    net_CookieStruct *cookieToDelete = 0;
+    net_CookiePermissionStruct *cookiePermissionToDelete = 0;
+
+    char* gone;
+
+    buttonName = XP_FindValueInArgs("button", argv, argc);
+    if (buttonName &&
+	    !XP_STRCASECMP(buttonName, XP_GetString(SA_VIEW_BUTTON_LABEL))) {
+
+	/* view button was pressed */
+
+        /* get "selname" value in argv list */
+        if (cookieNumberAsString = XP_FindValueInArgs("selname", argv, argc)) {
+
+            /* convert "selname" value from string to an integer */
+	    cookieNumber = atoi(cookieNumberAsString);
+
+	    /* get the cookie corresponding to that integer */
+	    list=net_cookie_list;
+	    while (cookieNumber-- >= 0) {
+		cookie=(net_CookieStruct *) XP_ListNextObject(list);
+	    }
+
+	    /* display the details for that cookie */
+	    net_DisplayCookieDetailsAsHTML
+		((MWContext *)(state->arg),
+		cookie->path, cookie->host,
+		cookie->name, cookie->cookie,
+		cookie->expires, cookie->secure, cookie->is_domain);
+
+	}
+	return(PR_TRUE);
+    }
+
+    if (button != XP_DIALOG_OK_BUTTON) {
+	/* OK button not pressed (must be cancel button that was pressed) */
+	return PR_FALSE;
+    }
+
+    /* OK was pressed, do the deletions */
+
+    /* get the comma-separated sequence of cookies to be deleted */
+    gone = XP_FindValueInArgs("goneC", argv, argc);
+    XP_ASSERT(gone);
+    if (!gone) {
+	return PR_FALSE;
+    }
+
+    /*
+     * walk through the cookie list, deleting the designated cookies
+     * Note: we can't delete cookie while "list" is pointing to it because
+     * that would destroy "list".  So we do a lazy deletion
+     */
+    list = net_cookie_list;
+    cookieNumber = 0;
+    while ( (cookie=(net_CookieStruct *) XP_ListNextObject(list)) ) {
+	if (net_InSequence(gone, cookieNumber)) {
+	    if (cookieToDelete) {
+		net_FreeCookie(cookieToDelete);
+	    }
+	    cookieToDelete = cookie;
+	}
+	cookieNumber++;
+    }
+
+    if (cookieToDelete) {
+	net_FreeCookie(cookieToDelete);
+    }
+
+    /* get the comma-separated sequence of permissions to be deleted */
+    gone = XP_FindValueInArgs("goneP", argv, argc);
+    XP_ASSERT(gone);
+    if (!gone) {
+	return PR_FALSE;
+    }
+
+    /*
+     * walk through the cookie permission list, deleting the designated permissions
+     * Note: we can't delete permissions while "list" is pointing to it because
+     * that would destroy "list".  So we do a lazy deletion
+     */
+    net_lock_cookie_permission_list();
+    list = net_cookie_permission_list;
+    cookieNumber = 0;
+    while ( (cookiePermission=(net_CookiePermissionStruct *) XP_ListNextObject(list)) ) {
+	if (net_InSequence(gone, cookieNumber)) {
+	    if (cookiePermissionToDelete) {
+		net_FreeCookiePermission(cookiePermissionToDelete, TRUE);
+	    }
+	    cookiePermissionToDelete = cookiePermission;
+	}
+	cookieNumber++;
+    }
+
+    if (cookiePermissionToDelete) {
+	net_FreeCookiePermission(cookiePermissionToDelete, TRUE);
+    }
+
+    net_unlock_cookie_permission_list();
+    return PR_FALSE;
+}
+
+MODULE_PRIVATE void
+NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
+{
+    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    char *buffer2 = 0;
+    int g = 0, numOfCookies, cookieNum;
+    XP_List *cookie_list=net_cookie_list;
+    XP_List *cookie_permission_list=net_cookie_permission_list;
+    net_CookieStruct *cookie;
+    net_CookiePermissionStruct *cookperm;
+    MWContext *context = cur_entry->window_id;
+
+    static XPDialogInfo dialogInfo = {
+	XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON,
+	net_AboutCookiesDialogDone,
+	600,
+	420
+    };
+
+    XPDialogStrings* strings;
+    StrAllocCopy(buffer2, "");
+
+    /* Write out the javascript */
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<script>\n"
+"function DeleteCookieSelected() {\n"
+"  selname = document.theform.selname;\n"
+"  goneC = document.theform.goneC;\n"
+"  var p;\n"
+"  var i;\n"
+"  for (i=selname.options.length-1 ; i>=0 ; i--) {\n"
+"    if (selname.options[i].selected) {\n"
+"      selname.options[i].selected = 0;\n"
+"      goneC.value = goneC.value + \",\" + selname.options[i].value;\n"
+"      for (j=i ; j<selname.options.length ; j++) {\n"
+"        selname.options[j] = selname.options[j+1];\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
+"function DeleteCookiePermissionSelected() {\n"
+"  selname2 = document.theform.selname2;\n"
+"  goneP = document.theform.goneP;\n"
+"  var p;\n"
+"  var i;\n"
+"  for (i=selname2.options.length-1 ; i>=0 ; i--) {\n"
+"    if (selname2.options[i].selected) {\n"
+"      selname2.options[i].selected = 0;\n"
+"      goneP.value = goneP.value + \",\" + selname2.options[i].value;\n"
+"      for (j=i ; j<selname2.options.length ; j++) {\n"
+"        selname2.options[j] = selname2.options[j+1];\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
+"</script>\n"
+	);
+    FLUSH_BUFFER
+
+    /* Get rid of any expired cookies now so user doesn't
+     * think/see that we're keeping cookies in memory.
+     */
+    net_lock_cookie_list();
+    net_remove_expired_cookies();
+    numOfCookies=XP_ListCount(net_cookie_list);
+
+    /* Write out the initial statistics. */
+goto after_stats;
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
 "<h2>%s</h2>\n"
 "<TABLE>\n"
 "<TR>\n",
-		XP_GetString(MK_ACCESS_YOUR_COOKIES),
-		XP_GetString(MK_ACCESS_YOUR_COOKIES));
+	XP_GetString(MK_ACCESS_YOUR_COOKIES));
 
-	g += PR_snprintf(buffer+g, BUFLEN-g,
+    g += PR_snprintf(buffer+g, BUFLEN-g,
 "<TD ALIGN=RIGHT><b>%s</TD>\n"
 "<TD>%ld</TD>\n"
 "</TR>\n"
 "<TR>\n",
-		XP_GetString(MK_ACCESS_MAXIMUM_COOKS),
-		MAX_NUMBER_OF_COOKIES);
+	XP_GetString(MK_ACCESS_MAXIMUM_COOKS),
+	MAX_NUMBER_OF_COOKIES);
 
-	g += PR_snprintf(buffer+g, BUFLEN-g,
+    g += PR_snprintf(buffer+g, BUFLEN-g,
 "<TD ALIGN=RIGHT><b>%s</TD>\n"
 "<TD>%ld</TD>\n"
 "</TR>\n"
 "<TR>\n",
-		XP_GetString(MK_ACCESS_COOK_COUNT),
-		numOfCookies);
+	XP_GetString(MK_ACCESS_COOK_COUNT),
+	numOfCookies);
 
-	g += PR_snprintf(buffer+g, BUFLEN-g,
+    g += PR_snprintf(buffer+g, BUFLEN-g,
 "<TD ALIGN=RIGHT><b>%s</TD>\n"
 "<TD>%ld</TD>\n"
 "</TR>\n"
 "<TR>\n",
-		XP_GetString(MK_ACCESS_MAXIMUM_COOKS_PER_SERV),
-		MAX_COOKIES_PER_SERVER);
+	XP_GetString(MK_ACCESS_MAXIMUM_COOKS_PER_SERV),
+	MAX_COOKIES_PER_SERVER);
 
-	g += PR_snprintf(buffer+g, BUFLEN-g,
+    g += PR_snprintf(buffer+g, BUFLEN-g,
 "<TD ALIGN=RIGHT><b>%s</TD>\n"
 "<TD>%ld</TD>\n"
 "</TR>\n"
-"</TABLE>\n"
-"<HR>",
-		XP_GetString(MK_ACCESS_MAXIMUM_COOK_SIZE),
-		MAX_BYTES_PER_COOKIE);
+"</TABLE>\n",
+	XP_GetString(MK_ACCESS_MAXIMUM_COOK_SIZE),
+	MAX_BYTES_PER_COOKIE);
+    FLUSH_BUFFER
+after_stats:
 
+    /* Write out each cookie */
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<FORM><TABLE COLS=2>\n"
+"<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname\" MULTIPLE SIZE=15>\n",
+	XP_GetString(MK_ACCESS_COOKIES_ACCEPTED));
+    FLUSH_BUFFER
+    cookieNum = 0;
+    while ( (cookie=(net_CookieStruct *) XP_ListNextObject(cookie_list)) ) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+"<OPTION VALUE=%d>%s: %s</OPTION>",
+	    cookieNum, cookie->host, cookie->name);
+	FLUSH_BUFFER
+	cookieNum++;
+    }
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"</SELECT></CENTER>\n"
+	);
+    FLUSH_BUFFER
 
-	PUT_PART(buffer);
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<CENTER>\n"
+"<INPUT TYPE=\"BUTTON\" VALUE=%s ONCLICK=\"DeleteCookieSelected();\">\n"
+"<INPUT TYPE=\"BUTTON\" NAME=\"view\" VALUE=%s ONCLICK=\"parent.clicker(this,window.parent)\">\n"
+"<INPUT TYPE=\"HIDDEN\" NAME=\"goneC\" VALUE=\"\">\n"
+"</CENTER></TH>\n",
+	XP_GetString(SA_REMOVE_BUTTON_LABEL),
+	XP_GetString(SA_VIEW_BUTTON_LABEL) );
+    FLUSH_BUFFER
+    net_unlock_cookie_list();
 
-	if(!numOfCookies) {
-		PL_strcpy(buffer, XP_GetString(MK_ACCESS_NO_COOKIES));
-		PUT_PART(buffer);
-		goto END;
-	  }
+    /* Write out each cookie permission */
+    net_lock_cookie_permission_list();
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname2\" MULTIPLE SIZE=15>\n",
+	XP_GetString(MK_ACCESS_COOKIES_PERMISSION));
+    FLUSH_BUFFER
+    cookieNum = 0;
+    while ( (cookperm=(net_CookiePermissionStruct *)
+		      XP_ListNextObject(cookie_permission_list)) ) {
+        char permit = cookperm->permission ? '+' : '-';
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+"<OPTION VALUE=%d>%c %s</OPTION>",
+	    cookieNum, permit, cookperm->host);
+	FLUSH_BUFFER
+	cookieNum++;
+    }
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"</SELECT></CENTER>\n"
+	);
+    FLUSH_BUFFER
 
-/* define some macros to help us output HTML */
-#define HEADING(arg1)					\
-	PL_strcpy(buffer, "<tt>");			\
-	for(i=PL_strlen(arg1); i < 16; i++)	\
-		PL_strcat(buffer, "&nbsp;");	\
-	PL_strcat(buffer, arg1);			\
-	PL_strcat(buffer, " </tt>");		\
-	PUT_PART(buffer);
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<CENTER>\n"
+"<INPUT TYPE=\"BUTTON\" VALUE=%s ONCLICK=\"DeleteCookiePermissionSelected();\">\n"
+"<INPUT TYPE=\"HIDDEN\" NAME=\"goneP\" VALUE=\"\">\n"
+"</CENTER></TH>\n"
+"</TABLE></FORM>\n",
+	XP_GetString(SA_REMOVE_BUTTON_LABEL) );
+    FLUSH_BUFFER
+    net_unlock_cookie_permission_list();
 
-#define BRCRLF					\
-	PL_strcpy(buffer, "<BR>\n");		\
-	PUT_PART(buffer);
-/* End html macros */
+    /* free buffer since it is no longer needed */
+    if (buffer) {
+	XP_FREE(buffer);
+    }
 
-	/* Write out each cookie */
-	while ( (cookie=(net_CookieStruct *) XP_ListNextObject(list)) ) {
-
-		HEADING(XP_GetString(MK_ACCESS_NAME));
-		PL_strcpy(buffer, cookie->name);
-		PUT_PART(buffer);
-		BRCRLF;
-
-		HEADING(XP_GetString(MK_ACCESS_VALUE));
-		PL_strcpy(buffer, cookie->cookie);
-		PUT_PART(buffer);
-		BRCRLF;
-
-		HEADING(XP_GetString(MK_ACCESS_HOST));
-		PL_strcpy(buffer, cookie->host);
-		PUT_PART(buffer);
-		BRCRLF;
-
-		HEADING(XP_GetString(MK_ACCESS_SEND_TO_HOST));
-		if(cookie->is_domain)
-			PL_strcpy(buffer, XP_GetString(MK_ACCESS_IS_DOMAIN));
-		else
-			PL_strcpy(buffer, XP_GetString(MK_ACCESS_IS_NOT_DOMAIN));
-		PUT_PART(buffer);
-		BRCRLF;
-
-		HEADING(XP_GetString(MK_ACCESS_SEND_TO_PATH));
-		PL_strcpy(buffer, cookie->path);
-		PUT_PART(buffer);
-		PL_strcpy(buffer, XP_GetString(MK_ACCESS_AND_BELOW));
-		PUT_PART(buffer);
-		BRCRLF;
-
-		HEADING(XP_GetString(MK_ACCESS_SECURE));
-		if(cookie->secure)
-			PL_strcpy(buffer, "Yes");
-		else
-			PL_strcpy(buffer, "No");
-		PUT_PART(buffer);
-		BRCRLF;
-
-		HEADING(XP_GetString(MK_ACCESS_EXPIRES));
-		if(cookie->expires) {
-			expireDate=ctime(&(cookie->expires));
-			if(expireDate)
-				PL_strcpy(buffer, expireDate);
-			else
-				PL_strcpy(buffer, "NULL");
-		} else {
-			PL_strcpy(buffer, XP_GetString(MK_ACCESS_END_OF_SESSION));
-		}
-		PUT_PART(buffer);
-		PL_strcpy(buffer, " GMT");
-		PUT_PART(buffer);
-		BRCRLF;
-
-		PL_strcpy(buffer, "\n<P>\n");
-		PUT_PART(buffer);
+    /* do html dialog */
+    strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
+    if (!strings) {
+	if (buffer2) {
+	    XP_FREE(buffer2);
 	}
-	/* End each cookie */
-
-END:
-	PR_Free(buffer);
-	if(cur_entry->status < 0)
-		(*stream->abort)(stream, cur_entry->status);
-	else
-		(*stream->complete)(stream);
 	return;
+    }
+    if (buffer2) {
+	XP_CopyDialogString(strings, 0, buffer2);
+	XP_FREE(buffer2);
+	buffer2 = NULL;
+    }
+    XP_MakeHTMLDialog(context, &dialogInfo, MK_ACCESS_YOUR_COOKIES,
+		strings, context, PR_FALSE);
+
+    return;
 }
 
+#else
+MODULE_PRIVATE void
+NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
+{
+}
+#endif
