@@ -80,14 +80,12 @@ function setOfflineUI(offline)
       broadcaster.setAttribute("offline", "true");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
       broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
-      FillInTooltip(broadcaster);
     }
   else
     {
       broadcaster.removeAttribute("offline");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
       broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
-      FillInTooltip(broadcaster);
     }
 }
 
@@ -317,6 +315,12 @@ function NewEditorFromDraft()
 //   and we need a delay to let dialog close)
 function editPage(url, launchWindow, delay)
 {
+  var webNav = null;
+  if ("getWebNavigation" in window)
+    webNav = getWebNavigation();
+  if (webNav && webNav.postData)
+    return;
+
   // User may not have supplied a window
   if (!launchWindow)
   {
