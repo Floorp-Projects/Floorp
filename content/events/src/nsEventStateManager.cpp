@@ -40,6 +40,7 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIFocusableContent.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMSelection.h"
@@ -1638,23 +1639,13 @@ nsEventStateManager::ShiftFocus(PRBool forward)
 
     SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
-    //Pass focus up to nsIWebShellContainer FocusAvailable
-    nsISupports* container;
-    mPresContext->GetContainer(&container);
-    if (nsnull != container) {
-      nsIWebShell* webShell;
-      if (NS_OK == container->QueryInterface(NS_GET_IID(nsIWebShell),
-                                             (void**)&webShell)) {
-        nsIWebShellContainer* webShellContainer;
-        webShell->GetContainer(webShellContainer);
-        if (nsnull != webShellContainer) {
-          webShellContainer->FocusAvailable(webShell, focusTaken);
-          NS_RELEASE(webShellContainer);
-        }
-        NS_RELEASE(webShell);
-      }
-      NS_RELEASE(container);
+    nsCOMPtr<nsISupports> container;
+    mPresContext->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(container));
+    if (docShellAsWin) {
+      docShellAsWin->FocusAvailable(docShellAsWin, &focusTaken);
     }
+      
     if (!focusTaken && !topOfDoc) {
       ShiftFocus(forward);
     }
