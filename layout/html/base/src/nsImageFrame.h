@@ -246,7 +246,7 @@ private:
   PRPackedBool        mCanSendLoadEvent;
   PRPackedBool        mImageBlocked;   // true if the image has been blocked
 
-  PRBool              mFailureReplace;
+  PRPackedBool        mFailureReplace;
 
   nsMargin            mBorderPadding;
   PRUint32            mNaturalImageWidth, 

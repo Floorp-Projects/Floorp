@@ -1153,25 +1153,27 @@ protected:
 
   // these are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
-  nsCOMPtr<nsIDocument> mDocument;
-  nsCOMPtr<nsIPresContext> mPresContext;
-  nsCOMPtr<nsIStyleSet> mStyleSet;
-  nsICSSStyleSheet* mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
-  PRPackedBool mEnablePrefStyleSheet;
-  nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
-  nsWeakPtr mHistoryState; // [WEAK] session history owns this
-  PRUint32 mUpdateCount;
+  nsCOMPtr<nsIDocument>     mDocument;
+  nsCOMPtr<nsIPresContext>  mPresContext;
+  nsCOMPtr<nsIStyleSet>     mStyleSet;
+  nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
+  nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
+  nsWeakPtr                 mHistoryState; // [WEAK] session history owns this
+  PRUint32                  mUpdateCount;
   // normal reflow commands
-  nsVoidArray mReflowCommands; 
+  nsVoidArray               mReflowCommands; 
   // reflow commands targeted at each aFrame who calls SendInterruptNotificationTo(aFrame, Timeout);
-  nsVoidArray mTimeoutReflowCommands; 
+  nsVoidArray               mTimeoutReflowCommands; 
 
+  PRPackedBool mEnablePrefStyleSheet;
   PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
+
   PRPackedBool mDidInitialReflow;
   PRPackedBool mIgnoreFrameDestruction;
-  nsIFrame* mCurrentEventFrame;
+
+  nsIFrame*   mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
   nsVoidArray mCurrentEventContentStack;
@@ -1184,16 +1186,16 @@ protected:
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
-  PRBool                        mDisplayNonTextSelection;
-  PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
+  PRPackedBool                  mDisplayNonTextSelection;
+  PRPackedBool                  mScrollingEnabled; //used to disable programmable scrolling from outside
+  PRPackedBool                  mPendingReflowEvent;
+  PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
   nsIFrameManager*              mFrameManager;  // we hold a reference
   PresShellViewEventListener    *mViewEventListener;
-  PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
   PRInt32                       mAccumulatedReflowTime;  // Time spent in reflow command processing so far  
-  PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
   nsCOMPtr<nsIObserverService>  mObserverService; // Observer service for reflow events
   nsCOMPtr<nsIDragService>      mDragService;
   PRInt32                       mRCCreatedDuringLoad; // Counter to keep track of reflow commands created during doc
@@ -1208,12 +1210,12 @@ protected:
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
 
-  PRBool mIsDocumentGone; // We've been disconnected from the document.
-  PRBool mPaintingSuppressed; // For all documents we initially lock down painting.
-                              // We will refuse to paint the document until either
-                              // (a) our timer fires or (b) all frames are constructed.
-  PRBool mShouldUnsuppressPainting; // Indicates that it is safe to unlock painting once all pending
-                                    // reflows have been processed.
+  PRPackedBool      mIsDocumentGone;      // We've been disconnected from the document.
+  PRPackedBool      mPaintingSuppressed;  // For all documents we initially lock down painting.
+                                          // We will refuse to paint the document until either
+                                          // (a) our timer fires or (b) all frames are constructed.
+  PRPackedBool      mShouldUnsuppressPainting;  // Indicates that it is safe to unlock painting once all pending
+                                                // reflows have been processed.
   nsCOMPtr<nsITimer> mPaintSuppressionTimer; // This timer controls painting suppression.  Until it fires
                                              // or all frames are constructed, we won't paint anything but
                                              // our <body> background and scrollbars.

@@ -230,34 +230,42 @@ protected:
   nscoord               mMinimumFontSize;
 
   PRInt32               mFontScaler;
+
   PRPackedBool          mUseDocumentFonts;        // set in GetUserPrefs
-  nscolor               mDefaultColor;            // set in GetUserPrefs
-  nscolor               mDefaultBackgroundColor;  // set in GetUserPrefs
   PRPackedBool          mUseDocumentColors;       // set in GetUserPrefs
-  nscolor               mLinkColor;               // set in GetUserPrefs
-  nscolor               mVisitedLinkColor;        // set in GetUserPrefs
   PRPackedBool          mUnderlineLinks;          // set in GetUserPrefs
   PRPackedBool          mUseFocusColors;          // set in GetUserPrefs
+
+  nscolor               mDefaultColor;            // set in GetUserPrefs
+  nscolor               mDefaultBackgroundColor;  // set in GetUserPrefs
+  nscolor               mLinkColor;               // set in GetUserPrefs
+  nscolor               mVisitedLinkColor;        // set in GetUserPrefs
   nscolor               mFocusTextColor;          // set in GetUserPrefs
   nscolor               mFocusBackgroundColor;    // set in GetUserPrefs
+
   PRUint8               mFocusRingWidth;          // set in GetUserPrefs
   PRPackedBool          mFocusRingOnAnything;     // set in GetUserPrefs
-  nsString              mDefaultBackgroundImage;
+
+  PRPackedBool  				mDrawBackground;
+  PRUint8               mDefaultBackgroundImageAttachment;
   PRUint8               mDefaultBackgroundImageRepeat;
+
   nscoord               mDefaultBackgroundImageOffsetX;
   nscoord               mDefaultBackgroundImageOffsetY;
-  PRUint8               mDefaultBackgroundImageAttachment;
-  PRBool				mDrawBackground;
+  nsString              mDefaultBackgroundImage;
 
   nsSupportsHashtable   mImageLoaders;
 
   nsCOMPtr<nsIEventStateManager> mEventManager;
   nsCOMPtr<nsIURI>      mBaseURL;
+
   nsCompatibility       mCompatibilityMode;
   PRPackedBool          mCompatibilityLocked;
   nsWidgetRendering     mWidgetRenderingMode;
-  PRUint16      mImageAnimationMode;
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
+
+  PRUint16              mImageAnimationMode;
+
   PRPackedBool          mStopped;                 // loading stopped
   PRPackedBool          mStopChrome;              // should we stop chrome?
 #ifdef IBMBIDI

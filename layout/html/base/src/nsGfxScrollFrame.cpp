@@ -193,14 +193,14 @@ public:
   nsIScrollableView* mScrollableView;
   nsSize mMaxElementSize;
 
-  PRBool mNeverHasVerticalScrollbar;   
-  PRBool mNeverHasHorizontalScrollbar; 
+  PRPackedBool mNeverHasVerticalScrollbar;   
+  PRPackedBool mNeverHasHorizontalScrollbar; 
 
-  PRBool mHasVerticalScrollbar;
-  PRBool mHasHorizontalScrollbar;
-  PRBool mFirstPass;
-  PRBool mIsRoot;
-  PRBool mNeverReflowed;
+  PRPackedBool mHasVerticalScrollbar;
+  PRPackedBool mHasHorizontalScrollbar;
+  PRPackedBool mFirstPass;
+  PRPackedBool mIsRoot;
+  PRPackedBool mNeverReflowed;
 };
 
 NS_IMPL_ISUPPORTS2(nsGfxScrollFrameInner, nsIDocumentObserver, nsIScrollPositionListener)
@@ -968,7 +968,9 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScr
      if (!aAdd)
         SetScrollbarVisibility(mHScrollbarBox, aAdd);
 
-     PRBool fit = AddRemoveScrollbar(mHasHorizontalScrollbar, aScrollAreaSize.y, aScrollAreaSize.height, hSize.height, aOnTop, aAdd);  
+     PRBool hasHorizontalScrollbar;
+     PRBool fit = AddRemoveScrollbar(hasHorizontalScrollbar, aScrollAreaSize.y, aScrollAreaSize.height, hSize.height, aOnTop, aAdd);
+     mHasHorizontalScrollbar = hasHorizontalScrollbar;    // because mHasHorizontalScrollbar is a PRPackedBool
      if (!fit)
         SetScrollbarVisibility(mHScrollbarBox, !aAdd);
 
@@ -987,7 +989,9 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScr
        SetScrollbarVisibility(mVScrollbarBox, aAdd);
 
      nsBox::AddMargin(mVScrollbarBox, vSize);
-     PRBool fit = AddRemoveScrollbar(mHasVerticalScrollbar, aScrollAreaSize.x, aScrollAreaSize.width, vSize.width, aOnTop, aAdd);
+     PRBool hasVerticalScrollbar;
+     PRBool fit = AddRemoveScrollbar(hasVerticalScrollbar, aScrollAreaSize.x, aScrollAreaSize.width, vSize.width, aOnTop, aAdd);
+     mHasVerticalScrollbar = hasVerticalScrollbar;    // because mHasVerticalScrollbar is a PRPackedBool
      if (!fit)
         SetScrollbarVisibility(mVScrollbarBox, !aAdd);
 
