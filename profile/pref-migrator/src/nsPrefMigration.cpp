@@ -158,6 +158,25 @@ typedef struct
 
 } MigrateProfileItem;
 
+/* 
+ * In 4.x the mac cookie file used expiration times starting from
+ * 1900 whereas all the other platforms started from
+ * 1970.  In 5.0 it was made cross platform so that all platforms use
+ * expiration times starting from 1970.  That means that mac cookies 
+ * generated in 4.x cannot be migrated to 5.0 as is -- instead the 
+ * expiration time must first be reduced by
+ * the number of seconds between 1-1-1900 and 1-1-1970
+ * 
+ *  70 years * 365 days/year * 86,400 secs/day      = 2,207,520,000 seconds
+ * + 17 leap years * 86,400 additional sec/leapyear =     1,468,800 seconds
+ *                                                  = 2,208,988,800 seconds
+ */
+//turned off until we finish testing it
+//#if defined(XP_MAC)
+#if 0
+#define NEED_TO_FIX_4X_COOKIES 1
+#define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
+#endif /* XP_MAC */
 
 /*-----------------------------------------------------------------
  * Globals
@@ -1336,7 +1355,119 @@ nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, PRBool 
 {
   return DoTheCopyAndRename(oldPath, newPath, readSubdirs, PR_FALSE, "", "");
 }
- 
+
+
+#if defined(NEED_TO_FIX_4X_COOKIES)
+
+PRInt32
+GetLine(nsInputFileStream strm, nsAutoString& aLine) {
+
+  /* read the line */
+  aLine.Truncate();
+  char c;
+  for (;;) {
+    c = strm.get();
+
+    /* note that eof is not set until we read past the end of the file */
+    if (strm.eof()) {
+      return -1;
+    }
+
+    aLine.Append(c);
+    if (c == '\n') {
+      break;
+    }
+  }
+  return 0;
+}
+
+nsresult
+Put(nsOutputFileStream strm, const nsString& aLine)
+{
+  /* allocate a buffer from the heap */
+  char * cp = aLine.ToNewCString();
+  if (! cp) {
+    return NS_ERROR_FAILURE;
+  }
+
+  /* output each character */
+  char* p = cp;
+  while (*p) {
+    strm.put(*(p++));
+  }
+  nsCRT::free(cp);
+  return NS_OK;
+}
+
+static nsresult
+Fix4xCookies(nsIFileSpec * profilePath) {
+  nsAutoString inBuffer, outBuffer;
+  nsFileSpec profileDirectory;
+  nsresult rv = profilePath->GetFileSpec(&profileDirectory);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* open input file */
+  nsInputFileStream inStream(profileDirectory + COOKIES_FILE_NAME_IN_4x);
+  if (!inStream.is_open()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  /* open output file */
+  nsOutputFileStream outStream(profileDirectory + COOKIES_FILE_NAME_IN_5x);
+  if (!outStream.is_open()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  while (GetLine(inStream,inBuffer) != -1){
+
+    /* skip line if it is a comment or null line */
+    if (inBuffer.CharAt(0) == '#' || inBuffer.CharAt(0) == CR ||
+        inBuffer.CharAt(0) == LF || inBuffer.CharAt(0) == 0) {
+      Put(outStream, inBuffer);
+      continue;
+    }
+
+    /* locate expire field, skip line if it does not contain all its fields */
+    int hostIndex, isDomainIndex, pathIndex, xxxIndex, expiresIndex, nameIndex, cookieIndex;
+    hostIndex = 0;
+    if ((isDomainIndex=inBuffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
+        (pathIndex=inBuffer.FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
+        (xxxIndex=inBuffer.FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
+        (expiresIndex=inBuffer.FindChar('\t', PR_FALSE,xxxIndex)+1) == 0 ||
+        (nameIndex=inBuffer.FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
+        (cookieIndex=inBuffer.FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
+      continue;
+    }
+
+    /* separate the expires field from the rest of the cookie line */
+    nsAutoString prefix, expiresString, suffix;
+    inBuffer.Mid(prefix, hostIndex, expiresIndex-hostIndex-1);
+    inBuffer.Mid(expiresString, expiresIndex, nameIndex-expiresIndex-1);
+    inBuffer.Mid(suffix, nameIndex, inBuffer.Length()-nameIndex);
+
+    /* correct the expires field */
+    char * expiresCString = expiresString.ToNewCString();
+    unsigned long expires = strtoul(expiresCString, nsnull, 10);
+    nsCRT::free(expiresCString);
+
+    expires -= SECONDS_BETWEEN_1900_AND_1970;
+    char dateString[36];
+    PR_snprintf(dateString, sizeof(dateString), "%lu", expires);
+
+    /* generate the output buffer and write it to file */
+    outBuffer = prefix + '\t' + dateString + '\t' + suffix;
+    Put(outStream, outBuffer);
+  }
+
+  inStream.close();
+  outStream.close();
+  return NS_OK;
+}
+
+#endif /* NEED_TO_FIX_4X_COOKIES */
+
 /*----------------------------------------------------------------------------
  * DoSpecialUpdates updates is a routine that does some miscellaneous updates 
  * like renaming certain files, etc.
@@ -1368,8 +1499,15 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
   fsStream.close();
 
   // rename the cookies file, but only if we need to.
+#if defined(NEED_TO_FIX_4X_COOKIES)
+  rv = Fix4xCookies(profilePath);  
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+#else
   rv = Rename4xFileAfterMigration(profilePath,COOKIES_FILE_NAME_IN_4x,COOKIES_FILE_NAME_IN_5x);
   if (NS_FAILED(rv)) return rv;
+#endif /* NEED_TO_FIX_4X_COOKIES */
 
   // rename the bookmarks file, but only if we need to.
   rv = Rename4xFileAfterMigration(profilePath,BOOKMARKS_FILE_NAME_IN_4x,BOOKMARKS_FILE_NAME_IN_5x);
