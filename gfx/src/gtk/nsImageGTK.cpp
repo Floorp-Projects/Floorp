@@ -30,7 +30,7 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 //------------------------------------------------------------
 
-nsImageGTK :: nsImageGTK()
+nsImageGTK::nsImageGTK()
 {
   NS_INIT_REFCNT();
   mImageBits = nsnull;
@@ -43,7 +43,7 @@ nsImageGTK :: nsImageGTK()
 
 //------------------------------------------------------------
 
-nsImageGTK :: ~nsImageGTK()
+nsImageGTK::~nsImageGTK()
 {
   if(nsnull != mImageBits) {
     delete[] (PRUint8*)mImageBits;
@@ -61,7 +61,7 @@ NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
 
 //------------------------------------------------------------
 
-nsresult nsImageGTK :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
+nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
   g_return_val_if_fail ((aWidth != 0) || (aHeight != 0), NS_ERROR_FAILURE);
 
@@ -123,7 +123,7 @@ void nsImageGTK::ComputMetrics()
 
 //------------------------------------------------------------
 
-PRInt32  nsImageGTK :: CalcBytesSpan(PRUint32  aWidth)
+PRInt32  nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
 {
 PRInt32 spanbytes;
 
@@ -138,7 +138,7 @@ PRInt32 spanbytes;
 //------------------------------------------------------------
 
 // set up the palette to the passed in color array, RGB only in this array
-void nsImageGTK :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
+void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
 
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, aFlags)){
@@ -243,7 +243,7 @@ moz_gdk_draw_bgr_image (GdkDrawable *drawable,
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -264,7 +264,7 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
+NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext,
                                   nsDrawingSurface aSurface,
                                   PRInt32 aX, PRInt32 aY,
                                   PRInt32 aWidth, PRInt32 aHeight)

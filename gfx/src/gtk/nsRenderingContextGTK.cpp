@@ -49,7 +49,7 @@ public:
   GdkFont        *mFont;
 };
 
-GraphicsState :: GraphicsState()
+GraphicsState::GraphicsState()
 {
   mMatrix = nsnull;
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
@@ -60,12 +60,12 @@ GraphicsState :: GraphicsState()
   mFont = nsnull;
 }
 
-GraphicsState :: ~GraphicsState()
+GraphicsState::~GraphicsState()
 {
 }
 
 
-nsRenderingContextGTK :: nsRenderingContextGTK()
+nsRenderingContextGTK::nsRenderingContextGTK()
 {
   NS_INIT_REFCNT();
 
@@ -83,7 +83,7 @@ nsRenderingContextGTK :: nsRenderingContextGTK()
   PushState();
 }
 
-nsRenderingContextGTK :: ~nsRenderingContextGTK()
+nsRenderingContextGTK::~nsRenderingContextGTK()
 {
   if (mRegion) {
     ::gdk_region_destroy(mRegion);
