@@ -22,6 +22,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_ENABLE_XLIB
+DIRS += xlib
+endif
+
 ifdef MOZ_ENABLE_GTK_MOZILLA
 all:: export libs install
 
