@@ -634,7 +634,7 @@ float nsCString::ToFloat(PRInt32* aErrorCode) const {
 
 /**
  * Perform numeric string to int conversion with given radix.
- * NOTE: 1. This method mandates that the string is well formed.
+ * NOTE: 1. This method mandates that the string is well formed and uppercased.
  *       2. This method will return an error if the string you give
             contains chars outside the range for the specified radix.
 
@@ -703,7 +703,7 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
  * Call this method to extract the rightmost numeric value from the given 
  * 1-byte input string, and simultaneously determine the radix.
  * NOTE: This method mandates that the string is well formed.
- *       Leading and trailing gunk should be removed, and the case upper.
+ *       Leading and trailing gunk should be removed, and upper-cased.
  * @update  gess 10/01/98
  * @param   anInputString contains orig string
  * @param   anOutString contains numeric portion copy of input string
@@ -711,52 +711,74 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
  * @return  non-zero error code if this string is non-numeric
  */
 static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
-  static const char* validChars="0123456789abcdefABCDEF-+#";
 
   const char* cp=aString.GetBuffer();
   PRInt32 result=NS_ERROR_ILLEGAL_VALUE;
   if(cp) {
 
+    
     //begin by skipping over leading chars that shouldn't be part of the number...
     
     char* to=(char*)cp;
     const char* endcp=cp+aString.mLength;
-    int   len=strlen(validChars);
+    PRBool  done=PR_FALSE;
 
-    while(cp<endcp){
-      const char* pos=(const char*)memchr(validChars,*cp,len);
-      if(!pos) {
-        cp++;
-      }
-      else break;
+    while(!done){
+      switch(*cp) {
+        case '0': case '1': case '2': case '3': case '4': 
+        case '5': case '6': case '7': case '8': case '9':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+        case '-': case '+': case '#': 
+          done=PR_TRUE;
+          break;
+        default:
+          cp++;
+          done=cp<endcp;
+          break;
+      } //switch
     }
 
-    while(cp<endcp){
-      char theChar=toupper(*cp);
-
-      if((theChar>='0') && (theChar<='9')) {
-        *to++=theChar;
+    while(cp<endcp) {
+      char theChar=*cp;
+      
+      if('A'<=theChar) {
+        if('F'>=theChar) {
+          aRadix=16;
+          *to++=theChar;
+        }
+        else if('X'==theChar) {
+          if('-'==aString.mStr[0])
+            to=&aString.mStr[1];
+          else to=aString.mStr;
+          aRadix=16;
+        }
+        else if('a'<=theChar) {
+          if('f'>=theChar) {
+            aRadix=16;
+            *to++='A'+(theChar-'a');
+          }
+          else if('x'==theChar) {
+            if('-'==aString.mStr[0])
+              to=&aString.mStr[1];
+            else to=aString.mStr;
+            aRadix=16;
+          }
+        }
+        else break; //bad char
       }
-      else if((theChar>='A') && (theChar<='F')) {
-        aRadix=16;
+      else if((theChar>='0') && (theChar<='9')) {
         *to++=theChar;
-      }
-      else if('X'==theChar){
-        if('-'==aString.mStr[0])
-          to=&aString.mStr[1];
-        else to=aString.mStr;
-        aRadix=16;
-        //root=cp;
       }
       else if('-'==theChar) {
         *to++=theChar;
       }
-      else if(('#'==theChar) || ('+'==theChar)){
-        //just skip this char...
+      else if(('#'!=theChar) && ('+'!=theChar)){
+        break; //terminate on invalid char!
       }
-      else break;
       cp++;
     }
+
     aString.Truncate(to-aString.mStr);
     result=(0==aString.mLength) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
   }
