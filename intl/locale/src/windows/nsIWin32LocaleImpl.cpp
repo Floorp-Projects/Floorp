@@ -418,7 +418,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 		if (!ParseLocaleString(locale_string,language_code,country_code,region_code)) {
 			*winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
 				SORT_DEFAULT);
-			delete [] locale_string;
+			free(locale_string);
 			return NS_OK;
 		}
 		// we have a LL-CC-RR style string
@@ -427,13 +427,13 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 			if (strcmp(language_code,iso_list[i].iso_code)==0) {
 				for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
 					if (strcmp(country_code,iso_list[i].sublang_list[j].iso_code)==0) {
-						delete [] locale_string;
+						free(locale_string);
 						*winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,iso_list[i].sublang_list[j].win_code),SORT_DEFAULT);
 						return NS_OK;
 					}
 				}
 				// here we have a language match but no country match
-				delete [] locale_string;
+				free(locale_string);
 				*winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,SUBLANG_DEFAULT),SORT_DEFAULT);
 				return NS_OK;
 			}

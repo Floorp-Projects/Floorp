@@ -1069,7 +1069,7 @@ int main(int argc, char** argv) {
     }
 
     // print locale string
-    const PRUnichar *localeUnichar;
+    PRUnichar *localeUnichar;
     nsString aLocaleString, aCategory("NSILOCALE_COLLATE");
     locale->GetCategory(aCategory.GetUnicode(), &localeUnichar);
     aLocaleString.SetString(localeUnichar);
