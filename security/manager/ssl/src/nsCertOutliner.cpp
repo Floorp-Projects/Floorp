@@ -231,7 +231,7 @@ nsCertOutliner::GetCertAtIndex(PRInt32 index)
                              dont_AddRef(mCertArray->ElementAt(certIndex));
       nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(isupport);
       rawPtr = cert;
-      NS_ADDREF(rawPtr);
+      NS_IF_ADDREF(rawPtr);
       break;
     }
     if (mOutlinerArray[i].open)
