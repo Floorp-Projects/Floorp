@@ -249,12 +249,13 @@ export MOZCONFIG
 
 #./configure --disable-debug --enable-optimize --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --enable-strip-libs --disable-gtk-mozilla
 
-make everything
+make
 
 fi
 ################################
 
 mkdir -p $RPM_BUILD_ROOT/%{prefix}/lib/mozilla
+mkdir -p $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/plugins
 
 ################################
 #
@@ -300,13 +301,7 @@ install -m 755 build/package/rpm/mozilla $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/b
 ## new components that are installed in the system get 
 ## registered to component.reg
 ##
-call-regxpcom()
-{
-	here=`pwd`
-	cd %{prefix}/lib/mozilla
-	MOZILLA_FIVE_HOME=`pwd` LD_LIBRARY_PATH=`pwd`/lib ./bin/regxpcom
-	cd $here
-}
+%define call_regxpcom here=`pwd` ; cd %{prefix}/lib/mozilla ; LD_LIBRARY_PATH=`pwd`/lib ./bin/regxpcom ; cd $here
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -333,7 +328,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post core
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-network-file-list.txt network
 %defattr(-,root,root)
@@ -342,7 +337,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post network
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-layout-file-list.txt layout
 %defattr(-,root,root)
@@ -351,7 +346,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post layout
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-xpinstall-file-list.txt xpinstall
 %defattr(-,root,root)
@@ -360,7 +355,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post xpinstall
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-profile-file-list.txt profile
 %defattr(-,root,root)
@@ -369,7 +364,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post profile
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-xptoolkit-file-list.txt xptoolkit
 %defattr(-,root,root)
@@ -379,7 +374,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post xptoolkit
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-cookie-file-list.txt cookie
 %defattr(-,root,root)
@@ -388,7 +383,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post cookie
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-wallet-file-list.txt wallet
 %defattr(-,root,root)
@@ -397,7 +392,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post wallet
-call-regxpcom
+%{call_regxpcom}
 
 %files -f file-lists/mozilla-mailnews-file-list.txt mailnews
 %defattr(-,root,root)
@@ -406,7 +401,7 @@ call-regxpcom
 %defattr(-,root,root)
 
 %post mailnews
-call-regxpcom
+%{call_regxpcom}
 
 %changelog
 * Wed Oct 20 1999 Ramiro Estrugo <ramiro@fateware.com>
