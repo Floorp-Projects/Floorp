@@ -170,9 +170,11 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     nsresult error = NS_OK;
 
-    if (fCallbacks->setwindow) {
+    if (fCallbacks->setwindow)
+    {
         // XXX Turns out that NPPluginWindow and NPWindow are structurally
         // identical (on purpose!), so there's no need to make a copy.
+
         error = (nsresult) CallNPP_SetWindowProc(fCallbacks->setwindow,
                                                  &fNPP,
                                                  (NPWindow*) window);
@@ -180,6 +182,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
         // XXX In the old code, we'd just ignore any errors coming
         // back from the plugin's SetWindow(). Is this the correct
         // behavior?!?
+
         NS_ASSERTION(error == NS_OK, "error in setwindow");
     }
 
