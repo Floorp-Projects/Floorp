@@ -99,6 +99,7 @@ public:
   PRInt32       FolderUID();
   PRUint32      CurrentResponseUID();
   PRUint32      HighestRecordedUID();
+  void          SetCurrentResponseUID(PRUint32 uid);
   void          CopyResponseUID(nsMsgKeyArray& keyArray);
   void          ClearCopyResponseUID();
 	PRBool		IsNumericString(const char *string);

@@ -1875,6 +1875,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   SetContentModified(modType);
                   foundShell->SetConnection(this);
                   GetServerStateParser().UseCachedShell(foundShell);
+                  //Set the current uid in server state parser (in case it was used for new mail msgs earlier).
+                  GetServerStateParser().SetCurrentResponseUID((PRUint32)atoi(messageIdString));
                   foundShell->Generate(imappart);
                   GetServerStateParser().UseCachedShell(NULL);
                 }
@@ -1934,6 +1936,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
                     //PR_LOG(IMAP, out, ("BODYSHELL: Loading message, using cached shell."));
                     foundShell->SetConnection(this);
                     GetServerStateParser().UseCachedShell(foundShell);
+                    //Set the current uid in server state parser (in case it was used for new mail msgs earlier).
+                    GetServerStateParser().SetCurrentResponseUID((PRUint32)atoi(messageIdString));
                     foundShell->Generate(NULL);
                     GetServerStateParser().UseCachedShell(NULL);
                   }
