@@ -19,6 +19,7 @@
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
  */ 
 
+
 #sidebar-splitter {
     -moz-binding: url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#sidebar-splitter");
     border: none;
@@ -27,46 +28,28 @@
     background-image: url("chrome://communicator/skin/sidebar/sbsplitter-bg.gif");
 }
 
-.sidebar-splitter-topright-cap {
-}
-
-.sidebar-splitter-bottomright-cap {
-}
-
 .sidebar-splitter-grippy {
-    margin: 0px;
-    padding: 0px;
-    width: 10px;
-    height: 110px;
-    border: none !important;
-    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-right.gif"); 
-    background-color: transparent;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
+    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-left.gif") !important; 
 }
-/*
+
 .sidebar-splitter-grippy:hover,
 .sidebar-splitter-grippy:active {
-    background-color: transparent;
-    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif"); 
+    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif") !important; 
 }
 
 #sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy {
-    background-image:
-       url("chrome://communicator/skin/sidebar/sbgrippy-right.gif"); 
+    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-right.gif") !important;
 }
 
 #sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy:hover,
 #sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy:active {
-    background-image:
-       url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif"); 
+    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif") !important; 
 }
-*/
+
 
 #sidebar-box {
     margin-top: 0px;
     border-top: 1px solid #8C9AB2;
-    border-bottom: 4px solid #5C7794;
 }
 
 .text-panel-loading {
@@ -183,8 +166,14 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
       border-bottom       : none;
     }
 
-  .box-texttab[last-panel="true"][selected="true"] > .box-texttab-right-space 
+  .box-texttab[last-panel="true"]
     {
+      border-bottom       : 7px solid #5C7794;
+    } 
+
+  .box-texttab[last-panel="true"][selected="true"] 
+    {
+      border-bottom       : 3px solid #C1C8D5;
     } 
 
   .box-texttab-left
