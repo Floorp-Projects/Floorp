@@ -64,6 +64,8 @@
 #include "nsISelectionListener.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMRange.h"
 #include "nsContentCID.h"
@@ -306,6 +308,22 @@ private:
 #endif
 
 //---------------------------------------------------
+//-- Object for Caching the Presentation
+//---------------------------------------------------
+class CachedPresentationObj
+{
+public:
+  CachedPresentationObj(nsIPresShell* aShell, nsIPresContext* aPC, nsIViewManager* aVM, nsIWidget* aW):
+      mPresShell(aShell), mPresContext(aPC), mViewManager(aVM), mWindow(aW) {}
+
+      
+  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsIPresShell>   mPresShell;
+  nsCOMPtr<nsIViewManager> mViewManager;
+  nsCOMPtr<nsIWidget>      mWindow;
+};
+
+//---------------------------------------------------
 //-- PrintObject Class
 //---------------------------------------------------
 struct PrintObject
@@ -424,6 +442,16 @@ public:
   nsCOMPtr<nsIPrintOptions>   mPrintOptions;
   nsPrintPreviewListener*     mPPEventListeners;
 
+  // CachedPresentationObj is used to cache the presentation
+  // so we can bring it back later
+  PRBool HasCachedPres()                  { return mIsCachingPresentation && mCachedPresObj; }
+  PRBool IsCachingPres()                  { return mIsCachingPresentation;                   }
+  void   SetCacheOldPres(PRBool aDoCache) { mIsCachingPresentation = aDoCache;               }
+
+  PRBool                      mIsCachingPresentation;
+  CachedPresentationObj*      mCachedPresObj;
+
+
 #ifdef DEBUG_PRINTING
   FILE *           mDebugFD;
 #endif
@@ -505,7 +533,10 @@ private:
   nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
   nsresult MakeWindow(nsIWidget* aParentWidget,
                       const nsRect& aBounds);
-
+  nsresult InitInternal(nsIWidget* aParentWidget,
+                        nsIDeviceContext* aDeviceContext,
+                        const nsRect& aBounds,
+                        PRBool aDoCreation);
   nsresult GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell = nsnull);
   nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID);
   PRBool   IsThereARangeSelection(nsIDOMWindowInternal * aDOMWin);
@@ -591,6 +622,7 @@ private:
   void InstallNewPresentation();
   void ReturnToGalleyPresentation();
   void TurnScriptingOn(PRBool aDoTurnOn);
+  PRBool CheckDocumentForPPCaching();
   void InstallPrintPreviewListener();
 #endif
 
@@ -813,7 +845,8 @@ PrintData::PrintData() :
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL)
+  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
+  mIsCachingPresentation(PR_FALSE), mCachedPresObj(nsnull)
 {
 #ifdef DEBUG_PRINTING
   mDebugFD = fopen("printing.log", "w");
@@ -822,6 +855,11 @@ PrintData::PrintData() :
 
 PrintData::~PrintData() 
 {
+  // removed any cached
+  if (mCachedPresObj) {
+    delete mCachedPresObj;
+  }
+
   // remove the event listeners
   if (mPPEventListeners) {
     mPPEventListeners->RemoveListeners();
@@ -1104,6 +1142,19 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          nsIDeviceContext* aDeviceContext,
                          const nsRect& aBounds)
 {
+  return InitInternal(aParentWidget, aDeviceContext, aBounds, PR_TRUE);
+}
+
+//-----------------------------------------------
+// This method can be used to initial the "presentation"
+// The aDoCreation indicates whether it should create
+// all the new objects or just initialize the existing ones
+nsresult
+DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
+                                 nsIDeviceContext* aDeviceContext,
+                                 const nsRect& aBounds,
+                                 PRBool aDoCreation)
+{
   NS_ASSERTION(aParentWidget != nsnull, "Null aParentWidget");
 
 #ifdef NS_PRINT_PREVIEW
@@ -1123,21 +1174,23 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 #endif
 
   PRBool makeCX = PR_FALSE;
-  if (!mPresContext) {
-    // Create presentation context
-    if (mIsCreatingPrintPreview) {
-      mPresContext = do_CreateInstance(kPrintPreviewContextCID,&rv);
-    } else {
-      mPresContext = do_CreateInstance(kGalleyContextCID,&rv);
-    }
-    if (NS_FAILED(rv)) return rv;
+  if (aDoCreation) {
+    if (!mPresContext) {
+      // Create presentation context
+      if (mIsCreatingPrintPreview) {
+        mPresContext = do_CreateInstance(kPrintPreviewContextCID,&rv);
+      } else {
+        mPresContext = do_CreateInstance(kGalleyContextCID,&rv);
+      }
+      if (NS_FAILED(rv)) return rv;
 
-    mPresContext->Init(aDeviceContext); 
+      mPresContext->Init(aDeviceContext); 
 #ifdef NS_PRINT_PREVIEW
-    makeCX = !mIsDoingPrintPreview; // needs to be true except when we are already in PP
+      makeCX = !mIsDoingPrintPreview; // needs to be true except when we are already in PP
 #else
-    makeCX = PR_TRUE;
+      makeCX = PR_TRUE;
 #endif
+    }
   }
 
   nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
@@ -1170,59 +1223,63 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
     }
   }
 
-  // Create the ViewManager and Root View...
-  rv = MakeWindow(aParentWidget, aBounds);
-  Hide();
+  if (aDoCreation) {
+    // Create the ViewManager and Root View...
+    rv = MakeWindow(aParentWidget, aBounds);
+    Hide();
 
-  if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
-  // Create the style set...
-  nsIStyleSet* styleSet;
-  rv = CreateStyleSet(mDocument, &styleSet);
-  if (NS_FAILED(rv)) return rv;
+    // Create the style set...
+    nsIStyleSet* styleSet;
+    rv = CreateStyleSet(mDocument, &styleSet);
+    if (NS_FAILED(rv)) return rv;
 
     // Now make the shell for the document
     rv = mDocument->CreateShell(mPresContext, mViewManager, styleSet,
                                 getter_AddRefs(mPresShell));
     NS_RELEASE(styleSet);
-  if (NS_FAILED(rv)) return rv;
-  mPresShell->BeginObservingDocument();
+    if (NS_FAILED(rv)) return rv;
 
-      // Initialize our view manager
-      nsRect bounds;
-      mWindow->GetBounds(bounds);
-      nscoord width = bounds.width;
-      nscoord height = bounds.height;
-      float p2t;
-      mPresContext->GetPixelsToTwips(&p2t);
-      width = NSIntPixelsToTwips(width, p2t);
-      height = NSIntPixelsToTwips(height, p2t);
-      mViewManager->DisableRefresh();
-      mViewManager->SetWindowDimensions(width, height);
+    mPresShell->BeginObservingDocument();
 
-      /* Setup default view manager background color */
-      /* This may be overridden by the docshell with the background color for the
-         last document loaded into the docshell */
-      nscolor bgcolor = NS_RGB(0, 0, 0);
-      mPresContext->GetDefaultBackgroundColor(&bgcolor);
-      mViewManager->SetDefaultBackgroundColor(bgcolor);
+    // Initialize our view manager
+    nsRect bounds;
+    mWindow->GetBounds(bounds);
+    nscoord width = bounds.width;
+    nscoord height = bounds.height;
+    float p2t;
+    mPresContext->GetPixelsToTwips(&p2t);
+    width = NSIntPixelsToTwips(width, p2t);
+    height = NSIntPixelsToTwips(height, p2t);
+    mViewManager->DisableRefresh();
+    mViewManager->SetWindowDimensions(width, height);
 
-      if (!makeCX) {
-        // Make shell an observer for next time
-        // XXX - we observe the docuement always, see above after preshell is created
-        // mPresShell->BeginObservingDocument();
+    /* Setup default view manager background color */
+    /* This may be overridden by the docshell with the background color for the
+       last document loaded into the docshell */
+    nscolor bgcolor = NS_RGB(0, 0, 0);
+    mPresContext->GetDefaultBackgroundColor(&bgcolor);
+    mViewManager->SetDefaultBackgroundColor(bgcolor);
 
-//XXX I don't think this should be done *here*; and why paint nothing
-//(which turns out to cause black flashes!)???
-        // Resize-reflow this time
-        mPresShell->InitialReflow(width, height);
+    if (!makeCX) {
+      // Make shell an observer for next time
+      // XXX - we observe the docuement always, see above after preshell is created
+      // mPresShell->BeginObservingDocument();
 
-        // Now trigger a refresh
-        if (mEnableRendering) {
-          mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-        }
+      //XXX I don't think this should be done *here*; and why paint nothing
+      //(which turns out to cause black flashes!)???
+      // Resize-reflow this time
+      mPresShell->InitialReflow(width, height);
+
+      // Now trigger a refresh
+      if (mEnableRendering) {
+        mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }
-
+    }
+  } else {
+    mPresShell->BeginObservingDocument();
+  }
   // now register ourselves as a selection listener, so that we get called
   // when the selection changes in the window
   nsDocViewerSelectionListener *selectionListener;
@@ -1760,25 +1817,15 @@ DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent, const nsIID
 static nsIPresShell*
 GetPresShellFor(nsIDocShell* aDocShell)
 {
+  nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(aDocShell));
+  if (!domDoc) return nsnull;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc) return nsnull;
+
   nsIPresShell* shell = nsnull;
-  if (nsnull != aDocShell) {
-    nsIContentViewer* cv = nsnull;
-    aDocShell->GetContentViewer(&cv);
-    if (nsnull != cv) {
-      nsIDocumentViewer* docv = nsnull;
-      CallQueryInterface(cv, &docv);
-      if (nsnull != docv) {
-        nsIPresContext* cx;
-        docv->GetPresContext(cx);
-        if (nsnull != cx) {
-          cx->GetShell(&shell);
-          NS_RELEASE(cx);
-        }
-        NS_RELEASE(docv);
-      }
-      NS_RELEASE(cv);
-    }
-  }
+  doc->GetShellAt(0, &shell);
+
   return shell;
 }
 
@@ -2613,9 +2660,18 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
                               PrintObject*      aPO,
                               PRBool&           aInRange)
 {
-  NS_ASSERTION(aPresContext, "Pointer is null!");
-  NS_ASSERTION(aPrintSettings, "Pointer is null!");
-  NS_ASSERTION(aPO, "Pointer is null!");
+  NS_ASSERTION(aPresContext,   "aPresContext is null!");
+  NS_ASSERTION(aPrintSettings, "aPrintSettings is null!");
+  NS_ASSERTION(aPO,            "aPO is null!");
+  NS_ASSERTION(mPageSeqFrame,  "mPageSeqFrame is null!");
+  NS_ASSERTION(mPrt,           "mPrt is null!");
+
+  // Although these should NEVER be NULL
+  // This is added insurance, to make sure we don't crash in optimized builds
+  if (!mPrt || !aPresContext || !aPrintSettings || !aPO || !mPageSeqFrame) {
+    ShowPrintErrorDialog(NS_ERROR_FAILURE);
+    return PR_TRUE; // means we are done printing
+  }
 
   PRINT_DEBUG_MSG1("-----------------------------------\n");
   PRINT_DEBUG_MSG3("------ In DV::PrintPage PO: %p (%s)\n", aPO, gFrameTypesStr[aPO->mFrameType]);
@@ -3097,10 +3153,6 @@ DocumentViewerImpl::GetPresShellAndRootContent(nsIWebShell *  aWebShell,
 
   nsCOMPtr<nsIPresShell> presShell(getter_AddRefs(GetPresShellFor(docShell)));
   if (!presShell) return;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) return;
 
   nsCOMPtr<nsIDocument> doc;
   presShell->GetDocument(getter_AddRefs(doc));
@@ -3607,28 +3659,15 @@ DocumentViewerImpl::GetDOMWinForWebShell(nsIWebShell* aWebShell)
 {
   NS_ASSERTION(aWebShell, "Pointer is null!");
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
-  NS_ASSERTION(docShell, "The DocShell can't be NULL!");
-  if (!docShell) return nsnull;
-
-  nsCOMPtr<nsIPresShell>  presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ASSERTION(presShell, "The PresShell can't be NULL!");
-  if (!presShell) return nsnull;
-
-  nsCOMPtr<nsIDocument> document;
-  presShell->GetDocument(getter_AddRefs(document));
-  if (!document) return nsnull;
-  
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-  if (!scriptGlobalObject) return nsnull;
-
-  nsCOMPtr<nsIDOMWindowInternal> domWin = do_QueryInterface(scriptGlobalObject); 
+  nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(aWebShell); 
   if (!domWin) return nsnull;
 
-  nsIDOMWindowInternal * dw = domWin.get();
+  nsCOMPtr<nsIDOMWindowInternal> domWinInt(do_QueryInterface(domWin));
+  if (!domWinInt) return nsnull;
+
+  nsIDOMWindowInternal * dw = NS_STATIC_CAST(nsIDOMWindowInternal *, domWinInt.get());
   NS_ADDREF(dw);
+
   return dw;
 }
 
@@ -5400,7 +5439,12 @@ DocumentViewerImpl::InstallNewPresentation()
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
     if (NS_SUCCEEDED(rv) && selPrivate && mSelectionListener) 
       selPrivate->RemoveSelectionListener(mSelectionListener);
-    mPresShell->Destroy();
+
+    // We need to destroy the PreShell if there is an existing PP
+    // or we are not caching the original Presentation
+    if (!mPrt->IsCachingPres() || mOldPrtPreview) {
+      mPresShell->Destroy();
+    }
   }
 
   // clear weak references before we go away
@@ -5409,11 +5453,20 @@ DocumentViewerImpl::InstallNewPresentation()
     mPresContext->SetLinkHandler(nsnull);
   }
 
-  // Destroy the old Presentation
-  mPresShell    = nsnull;
-  mPresContext  = nsnull;
-  mViewManager  = nsnull;
-  mWindow       = nsnull;
+  // See if we are suppose to be caching the old Presentation
+  // and then check to see if we already have.
+  if (mPrt->IsCachingPres() && !mPrt->HasCachedPres()) {
+    NS_ASSERTION(!mPrt->mCachedPresObj, "Should be null!");
+    // Cach old presentation
+    mPrt->mCachedPresObj = new CachedPresentationObj(mPresShell, mPresContext, mViewManager, mWindow);
+    mWindow->Show(PR_FALSE);
+  } else {
+    // Destroy the old Presentation
+    mPresShell    = nsnull;
+    mPresContext  = nsnull;
+    mViewManager  = nsnull;
+    mWindow       = nsnull;
+  }
 
   // Default to the main Print Object
   PrintObject * prtObjToDisplay = mPrt->mPrintObject;
@@ -5471,7 +5524,7 @@ DocumentViewerImpl::InstallNewPresentation()
   mViewManager  = prtObjToDisplay->mViewManager;
   mWindow       = prtObjToDisplay->mWindow;
 
-  if (mIsDoingPrintPreview) {
+  if (mIsDoingPrintPreview && mOldPrtPreview) {
     delete mOldPrtPreview;
     mOldPrtPreview = nsnull;
   }
@@ -5505,8 +5558,11 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
     NS_ASSERTION(0, "Wow, we should never get here!");
     return;
   }
-  delete mPrtPreview;
-  mPrtPreview = nsnull;
+
+  if (!mPrtPreview->HasCachedPres()) {
+    delete mPrtPreview;
+    mPrtPreview = nsnull;
+  }
 
   // Get the current size of what is being viewed
   nsRect area;
@@ -5546,16 +5602,40 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
     mPresContext->SetLinkHandler(nsnull);
   }
 
-  // Destroy the old Presentation
-  mPresShell    = nsnull;
-  mPresContext  = nsnull;
-  mViewManager  = nsnull;
-  mWindow       = nsnull;
+  // wasCached will be used below to indicate whether the 
+  // InitInternal should create all new objects or just
+  // initialize the existing ones
+  PRBool wasCached = PR_FALSE;
+
+  if (mPrtPreview && mPrtPreview->HasCachedPres()) {
+    NS_ASSERTION(mPrtPreview->mCachedPresObj, "mCachedPresObj can't be null!");
+    mPresShell    = mPrtPreview->mCachedPresObj->mPresShell;
+    mPresContext  = mPrtPreview->mCachedPresObj->mPresContext;
+    mViewManager  = mPrtPreview->mCachedPresObj->mViewManager;
+    mWindow       = mPrtPreview->mCachedPresObj->mWindow;
+
+    mWindow->Show(PR_TRUE);
+
+    // Very important! Turn On scripting
+    TurnScriptingOn(PR_TRUE);
+
+    delete mPrtPreview;
+    mPrtPreview = nsnull;
+
+    wasCached = PR_TRUE;
+
+  } else {
+    // Destroy the old Presentation
+    mPresShell    = nsnull;
+    mPresContext  = nsnull;
+    mViewManager  = nsnull;
+    mWindow       = nsnull;
+  }
 
   // Very important! Turn On scripting
   TurnScriptingOn(PR_TRUE);
 
-  Init(mParentWidget, mDeviceContext, bounds);
+  InitInternal(mParentWidget, mDeviceContext, bounds, !wasCached);
 
   // this needs to be set here not earlier,
   // because it is needing when re-constructing the Galley Mode)
@@ -5625,6 +5705,94 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
   return rv;
 }
 
+
+/** ---------------------------------------------------
+ *  Check to see if the current Presentation should be cached
+ *
+ */
+PRBool
+DocumentViewerImpl::CheckDocumentForPPCaching()
+{
+  // Here is where we determine if we need to cache the old presentation
+  PRBool cacheOldPres = PR_FALSE;
+
+  // Only check if it is the first time into PP
+  if (!mOldPrtPreview) {
+    // First check the Pref
+    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+    if (prefs) {
+      prefs->GetBoolPref("print.always_cache_old_pres", &cacheOldPres);
+    }
+
+    // Temp fix for FrameSet Print Preview Bugs
+    if (!cacheOldPres && mPrt->mPrintObject->mFrameType == eFrameSet) {
+      cacheOldPres = PR_TRUE;
+    }
+
+    if (!cacheOldPres) {
+      for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
+        PrintObject* po = (PrintObject*)mPrt->mPrintDocList->ElementAt(i);
+        NS_ASSERTION(po, "PrintObject can't be null!");
+
+        // Temp fix for FrameSet Print Preview Bugs
+        if (po->mFrameType == eIFrame) {
+          cacheOldPres = PR_TRUE;
+          break;
+        }
+
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(po->mWebShell));
+        NS_ASSERTION(docShell, "The DocShell can't be NULL!");
+        if (!docShell) continue;
+
+        nsCOMPtr<nsIPresShell>  presShell;
+        docShell->GetPresShell(getter_AddRefs(presShell));
+        NS_ASSERTION(presShell, "The PresShell can't be NULL!");
+        if (!presShell) continue;
+
+        nsCOMPtr<nsIDocument> doc;
+        presShell->GetDocument(getter_AddRefs(doc));
+        NS_ASSERTION(doc, "The PresShell can't be NULL!");
+        if (!doc) continue;
+
+        // If we aren't caching because of prefs check embeds.
+        nsCOMPtr<nsIDOMNSHTMLDocument> nshtmlDoc = do_QueryInterface(doc);
+        if (nshtmlDoc) {
+          nsCOMPtr<nsIDOMHTMLCollection> applets;
+          nshtmlDoc->GetEmbeds(getter_AddRefs(applets));
+          if (applets) {
+            PRUint32 length = 0;
+            if (NS_SUCCEEDED(applets->GetLength(&length))) {
+              if (length > 0) {
+                cacheOldPres = PR_TRUE;
+                break;
+              }
+            }
+          }
+        }
+
+        // If we aren't caching because of prefs or embeds check applets.
+        nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(doc);
+        if (htmldoc) {
+          nsCOMPtr<nsIDOMHTMLCollection> embeds;
+          htmldoc->GetApplets(getter_AddRefs(embeds));
+          if (embeds) {
+            PRUint32 length = 0;
+            if (NS_SUCCEEDED(embeds->GetLength(&length))) {
+              if (length > 0) {
+                cacheOldPres = PR_TRUE;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return cacheOldPres;
+
+}
+
 /** ---------------------------------------------------
  *  See documentation above in the nsIContentViewerfile class definition
  *	@update 11/01/01 rods
@@ -5664,6 +5832,16 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   if (mPrt == nsnull) {
     mIsCreatingPrintPreview = PR_FALSE;
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // maintain the the original presentation if it is there
+  // by transfering it over to the new PrintData object
+  if (mOldPrtPreview && mOldPrtPreview->HasCachedPres()) {
+    mPrt->mIsCachingPresentation = mOldPrtPreview->mIsCachingPresentation;
+    mPrt->mCachedPresObj         = mOldPrtPreview->mCachedPresObj;
+    // don't want it to get deleted when the mOldPrtPreview is deleted 
+    mOldPrtPreview->mIsCachingPresentation = PR_FALSE;
+    mOldPrtPreview->mCachedPresObj         = nsnull;
   }
 
   // You have to have both a PrintOptions and a PrintSetting to call CheckForPrinters. 
@@ -5827,6 +6005,16 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
     mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATERC_REFLOW, PR_TRUE);
     mDeviceContext->SetUseAltDC(kUseAltDCFor_SURFACE_DIM, PR_TRUE);
   }
+
+  PRBool cacheOldPres = CheckDocumentForPPCaching();
+
+  // If we are caching the Presentation then
+  // end observing the document BEFORE we do any new reflows
+  if (cacheOldPres && !mPrt->HasCachedPres()) {
+    mPrt->SetCacheOldPres(PR_TRUE);
+    mPresShell->EndObservingDocument();
+  }
+
   rv = DocumentReadyForPrinting();
 
   mIsCreatingPrintPreview = PR_FALSE;

@@ -922,9 +922,10 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   nsIFrame * child = mFrames.FirstChild();
   if(child != nsnull)
     return HandleChild(aPresContext, aMetrics, aReflowState, aStatus, child);
-  // if we are printing, bail for now
+  // if we are printing or print previewing, bail for now
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if (thePrinterContext) {
+  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
+  if (thePrinterContext || thePrintPreviewContext) {
     aStatus = NS_FRAME_COMPLETE;
     return rv;
   }
@@ -1512,10 +1513,16 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
+  // If we are painting in Print Preview do nothing....
+  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
+  if (thePrintPreviewContext) {
+    return NS_OK;
+  }
+
   // determine if we are printing
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
-  if  (thePrinterContext || thePrintPreviewContext) {
+  if  (thePrinterContext) {
+    // UNIX Plugins can't PP at this time, so draw an empty box
     // we only want to print on the content layer pass
     if (eFramePaintLayer_Content != aWhichLayer)
       return NS_OK;
@@ -1572,14 +1579,12 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 
     // get a few things
     nsCOMPtr<nsIPrintSettings> printSettings;
-    if (thePrinterContext)      
+    if (thePrinterContext) {
       thePrinterContext->GetPrintSettings(getter_AddRefs(printSettings));
-    else if (thePrintPreviewContext)
-      thePrintPreviewContext->GetPrintSettings(getter_AddRefs(printSettings));
+      NS_ENSURE_TRUE(printSettings, NS_ERROR_FAILURE);
+      printSettings->GetMarginInTwips(margin);
+    }
     
-    NS_ENSURE_TRUE(printSettings, NS_ERROR_FAILURE);
-    printSettings->GetMarginInTwips(margin);
-
     aPresContext->GetTwipsToPixels(&t2p);
     GetOffsetFromView(aPresContext, origin, &parentWithView);
 
