@@ -577,3 +577,10 @@ if [ "$NECKO" ]; then
   htmlparser/robot/test/Makefile
 END_NECKO_MAKEFILES
 fi
+
+# tools/leaky
+if [ "$MOZ_LEAKY" ]; then
+  add_makefiles <<END_LEAKY_MAKEFILES
+  tools/leaky/Makefile
+END_LEAKY_MAKEFILES
+fi
