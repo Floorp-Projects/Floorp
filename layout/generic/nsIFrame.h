@@ -67,19 +67,23 @@ struct nsReflowMetrics {
   // Set this to null if you don't need to compute the max element size
   nsSize* maxElementSize;
 
-  // The caller of nsIFrame::Reflow will set these to the top margin
-  // value carried into the child frame. The child frame, if it has a
-  // top margin to apply will set it to the actual top margin to use.
-  nscoord posTopMargin;         // in/out 
+  // XXX Explain this better somehow!
 
-  // These values are set by the child frame indicating its bottom
-  // margin value.
-  nscoord posBottomMargin;      // out
+  // The caller of nsIFrame::Reflow will set these to the top margin
+  // value carried into the child frame. This allows the the child
+  // container to collapse the top margin with its first childs
+  // margin.
+  nscoord mCarriedInTopMargin;          // in
+
+  // These values are set by the child frame indicating its final
+  // inner bottom margin value (the value of the childs last child
+  // bottom margin)
+  nscoord mCarriedOutBottomMargin;      // out
 
   nsReflowMetrics(nsSize* aMaxElementSize) {
     maxElementSize = aMaxElementSize;
-    posTopMargin = 0;
-    posBottomMargin = 0;
+    mCarriedInTopMargin = 0;
+    mCarriedOutBottomMargin = 0;
     width = 0;
     height = 0;
     ascent = 0;
@@ -113,6 +117,7 @@ enum nsReflowReason {
  *
  * @see nsReflowState
  */
+//XXX enum's are prefixed wrong
 enum nsReflowConstraint {
   eReflowSize_Unconstrained = 0,  // choose whatever frame size you want
   eReflowSize_Constrained = 1,    // choose a frame size between the min and max sizes
@@ -139,6 +144,9 @@ struct nsReflowState {
   nsSize               maxSize;           // the max available space in which to reflow
   nsSize               minSize;           // the min available space in which to reflow.
                                           // Only used for eReflowSize_Constrained
+
+  // Note: there is no copy constructor so that the compiler can
+  // generate an optimal one.
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command
