@@ -225,13 +225,30 @@ do_end_crc_check(DataObject *obj)
     return 0; /* need more data */
 }
 
+/* Free up the unzip specific stream data object.
+ */
+PRIVATE void net_UnZipFreeDataObject (DataObject **objp)
+{
+    DataObject *obj;
+
+    PR_ASSERT(objp && *objp);
+
+    if (objp && *objp)
+    {
+        obj = *objp;
+        PR_FREEIF(obj->dcomp_buf);
+        PR_FREEIF(obj->incoming_buf);
+        PR_Free(obj);
+        *objp = NULL;
+    }
+}
+
 PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
 {
     int err;
     uint32 prev_total_out;
     uint32 new_data_total_out;
     uint32 input_used_up, input_left_over;
-	char * tempPtr = NULL;
 	DataObject *obj=stream->data_object;	
     if(obj->is_done) 
     {
@@ -239,12 +256,13 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
         PR_ASSERT(0);
 		return (1);
     }
-	
-    BlockAllocCat(  tempPtr, obj->incoming_buf_size, s, l);
-     obj->incoming_buf = (unsigned char*)tempPtr;
 
-    if(!obj->incoming_buf)
+    PR_ASSERT(stream && s && l);
+
+    if (!BlockAllocCat((char *)obj->incoming_buf, obj->incoming_buf_size, s, l))
+    {
         return MK_OUT_OF_MEMORY;
+    }
     obj->incoming_buf_size += l;
 
     /* parse and skip the header */
@@ -388,8 +406,7 @@ PRIVATE void net_UnZipComplete (NET_StreamClass *stream)
         PR_ASSERT(0);
     }
 
-    PR_Free(obj->dcomp_buf);
-    PR_Free(obj);
+    net_UnZipFreeDataObject((DataObject **)&stream->data_object);
     return;
 }
 
@@ -403,8 +420,7 @@ PRIVATE void net_UnZipAbort (NET_StreamClass *stream, int status)
     err = inflateEnd(&(obj->d_stream));
     PR_ASSERT(err == Z_OK);
 
-    PR_Free(obj->dcomp_buf);
-    PR_Free(obj);
+    net_UnZipFreeDataObject((DataObject **)&stream->data_object);
     return;
 }
 
@@ -418,8 +434,9 @@ NET_UnZipConverter (int         format_out,
     DataObject* obj;
     NET_StreamClass* stream;
     int err;
-    
+
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
+    PR_ASSERT(URL_s);
 
     stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
@@ -445,9 +462,9 @@ NET_UnZipConverter (int         format_out,
 
     if(!obj->dcomp_buf)
     {
-	PR_Free(stream);
-	PR_Free(obj);
-	return NULL;
+        PR_Free(stream);
+        net_UnZipFreeDataObject(&obj);
+        return NULL;
     }
 
     obj->URL_s = URL_s;
@@ -460,22 +477,21 @@ NET_UnZipConverter (int         format_out,
 
     if(err != Z_OK)
     {
-	PR_Free(stream);
-	PR_Free(obj);
-	return NULL;
+        PR_Free(stream);
+        net_UnZipFreeDataObject(&obj);
+        return NULL;
     }
 
     /* create the next stream, but strip the compressed encoding */
     PR_FREEIF(URL_s->content_encoding);
-    URL_s->content_encoding = NULL;
     obj->next_stream = NET_StreamBuilder(format_out, URL_s, window_id);
 
     if(!obj->next_stream)
     {
-	inflateEnd(&obj->d_stream);
-	PR_Free(stream);
-	PR_Free(obj);
-	return NULL;
+        inflateEnd(&obj->d_stream);
+        PR_Free(stream);
+        net_UnZipFreeDataObject(&obj);
+        return NULL;
     }
 
     TRACEMSG(("Returning stream from NET_UnZipConverter\n"));
