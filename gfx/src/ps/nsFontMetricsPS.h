@@ -341,10 +341,7 @@ public:
 
 protected:
   PRUint16        mPixelSize;
-  FTC_Image_Desc  mImageDesc;
   FT_Library      mFreeTypeLibrary;
-  FTC_Manager     mFTCacheManager;
-  FTC_Image_Cache mImageCache;
 
   int     ascent();
   int     descent();
@@ -478,9 +475,7 @@ public:
 
 protected:
   nsXftEntry *mEntry;
-  FTC_Image_Desc  mImageDesc;
   FT_Library      mFreeTypeLibrary;
-  FTC_Manager     mFTCacheManager;
 };
 #else
 #ifdef MOZ_ENABLE_FREETYPE2
