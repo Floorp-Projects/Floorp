@@ -28,6 +28,7 @@
  */
 
 interface nsIChannel;
+interface nsIURI;
 
 [scriptable, uuid(570F39D1-EFD0-11d3-B093-00A024FFC08C)]
 interface nsIWebProgressListener : nsISupports
@@ -105,4 +106,16 @@ interface nsIWebProgressListener : nsISupports
 		will be one or a combination of the progress status flags.
 	*/
 	void onChildStatusChange(in nsIChannel channel, in long progressStatusFlags);
+
+	/*
+	Called when the window being watched changes the location that is currently.
+	This is not when a load is requested, but rather once it is verified that 
+	the load is going to occur in the given window.  For instance, a load that
+	starts in a window might send progress and status messages, for the new site
+	but it will not send the onLocationChange until we are sure we are loading
+	this new page here.
+
+	@param location - The URI of the location that is being loaded.
+	*/
+	void onLocationChange(in nsIURI location);
 };
