@@ -72,7 +72,7 @@
     <vbox>
       <hbox id="nameBox" align="center">
         <label value="&folderProps.name.label;" for="name"/>
-        <textbox id="name" readonly="true" flex="1"/>
+        <textbox id="name" readonly="true" oninput="doEnabling();" flex="1"/>
       </hbox>
       
       <vbox>

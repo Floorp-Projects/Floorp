@@ -2,6 +2,9 @@ var gMsgFolder;
 var gServerTypeFolder = null;
 var gPreselectedFolderURI = null;
 var gParentMsgWindow = null;
+var gNameTextbox;
+var gOldName;
+var gOkButton;
 
 // services used
 var RDF;
@@ -101,6 +104,10 @@ var gFolderPropsSink = {
 
 };
 
+function doEnabling()
+{
+  gOkButton.disabled = !gNameTextbox.value;
+}
 
 function folderPropsOKButton()
 {
@@ -123,12 +130,25 @@ function folderPropsOKButton()
     else
       gMsgFolder.clearFlag(MSG_FOLDER_FLAG_CHECK_NEW);
   }
-  return true;
+
+  try
+  {
+    // This throws an exception when an illegal folder name was entered.
+    okCallback(gNameTextbox.value, gOldName, gPreselectedFolderURI);
+
+    return true;
+  }
+  catch (e)
+  {
+    return false;
+  }
 }
 
 function folderPropsOnLoad()
 {
   dump("folder props loaded"+'\n');
+
+  gOkButton = document.documentElement.getButton("accept");
 
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
@@ -156,8 +176,11 @@ function folderPropsOnLoad()
 
   if(window.arguments[0].name)
   {
-    var name = document.getElementById("name");
-    name.value = window.arguments[0].name;
+    // Initialize name textbox with the given name and remember this
+    // value so we can tell whether the folder needs to be renamed
+    // when the dialog is accepted.
+    gNameTextbox = document.getElementById("name");
+    gNameTextbox.value = gOldName = window.arguments[0].name;
 
 //  name.setSelectionRange(0,-1);
 //  name.focusTextField();
@@ -183,6 +206,9 @@ function folderPropsOnLoad()
     dump("no gMsgFolder preselectfolder uri = "+gPreselectedFolderURI+'\n');
 
   if (gMsgFolder) {
+    if (gMsgFolder.canRename)
+      gNameTextbox.removeAttribute("readonly");
+
     if (gMsgFolder.flags & MSG_FOLDER_FLAG_OFFLINE) {
 
       if(gServerTypeFolder == "imap" || gServerTypeFolder == "pop3")
