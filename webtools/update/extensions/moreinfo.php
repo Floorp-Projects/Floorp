@@ -218,7 +218,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     }
 
     $date = date("F d, Y g:i:sa",  strtotime("$timestamp"));
-    $releasedate = date("F d, Y",  strtotime("$timestamp"));
+    $releasedate = date("F d, Y",  strtotime("$dateadded"));
     $datestring = "$datetitle $date";
 
     //Rating
@@ -450,7 +450,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         <?php
         if ($homepage) {
         ?>
-		<li>View the Author's <a href="<?php echo"$homepage"; ?>">Homepage</a> for this Theme.</li>
+		<li>View the Author's <a href="<?php echo"$homepage"; ?>">homepage</a> for this extension.</li>
         <?php
         }
         ?>

@@ -218,7 +218,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     }
 
     $date = date("F d, Y g:i:sa",  strtotime("$timestamp"));
-    $releasedate = date("F d, Y",  strtotime("$timestamp"));
+    $releasedate = date("F d, Y",  strtotime("$dateadded"));
     $datestring = "$datetitle $date";
 
     //Rating
