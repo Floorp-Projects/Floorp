@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsPrefService_h__
+#define nsPrefService_h__
+
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
@@ -82,3 +85,4 @@ private:
   nsIFile*                mCurrentSharedFile;
 };
 
+#endif // nsPrefService_h__

@@ -40,6 +40,11 @@
 #include "nsPrefService.h"
 #include "nsPrefBranch.h"
 #include "nsIPref.h"
+#include "prefapi.h"
+
+#ifdef MOZ_PROFILESHARING
+#include "nsSharedPrefHandler.h"
+#endif
 
 // remove this when nsPref goes away
 extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -81,5 +86,15 @@ static const nsModuleComponentInfo components[] =
   },
 };
 
-NS_IMPL_NSGETMODULE(nsPrefModule, components)
+static void
+UnloadPrefsModule(nsIModule* unused)
+{
+  PREF_Cleanup();
 
+#ifdef MOZ_PROFILESHARING
+  NS_ASSERTION(!gSharedPrefHandler, "Leaking the shared pref handler (and the prefservice, presumably).");
+  gSharedPrefHandler = nsnull;
+#endif
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsPrefModule, components, UnloadPrefsModule)
