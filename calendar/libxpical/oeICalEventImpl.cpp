@@ -1933,7 +1933,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
         m_start->m_datetime = icalproperty_get_dtstart( prop );
-        m_start->m_datetime.is_utc = false; 
+        m_start->m_datetime.is_utc = false;
         if( m_start->m_datetime.is_date == true ) {
             m_allday = true;
             m_start->SetHour( 0 );
@@ -1966,6 +1966,12 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
         if ( prop != 0) {
             m_end->m_datetime = icalproperty_get_dtend( prop );
+            m_end->m_datetime.is_utc = false;
+            if( m_end->m_datetime.is_date == true ) {
+                m_end->SetHour( 0 );
+                m_end->SetMinute( 0 );
+                m_end->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
+            }
             icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_TZID_PARAMETER );
             const char *tzid=nsnull;
             if( tmppar )
@@ -2466,7 +2472,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     if( m_end && !icaltime_is_null_time( m_end->m_datetime ) ) {
         char *tzid=nsnull;
         m_end->GetTzID( &tzid );
-        if( m_allday && !tzid ) {
+        if( m_allday && !tzid && m_end->CompareDate( m_start )==0 ) {
             m_end->SetHour( 23 );
             m_end->SetMinute( 59 );
         }

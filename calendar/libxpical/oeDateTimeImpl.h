@@ -60,6 +60,7 @@ public:
   oeDateTimeImpl();
   virtual ~oeDateTimeImpl();
   void AdjustToWeekday( short weekday );
+  int CompareDate( oeDateTimeImpl *anotherdt );
   /* additional members */
   struct icaltimetype m_datetime;
   char *m_tzid;

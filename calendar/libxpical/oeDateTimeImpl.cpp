@@ -239,3 +239,12 @@ NS_IMETHODIMP oeDateTimeImpl::GetTzID(char **aRetVal)
 #endif
     return NS_OK;
 }
+
+int oeDateTimeImpl::CompareDate( oeDateTimeImpl *anotherdt ) {
+    if( m_datetime.year == anotherdt->m_datetime.year &&
+        m_datetime.month == anotherdt->m_datetime.month &&
+        m_datetime.day == anotherdt->m_datetime.day )
+        return 0;
+    return 1;
+}
+
