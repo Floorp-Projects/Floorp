@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: nssinit.c,v 1.66 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"

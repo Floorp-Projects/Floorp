@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: authcert.c,v 1.5 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 
 #include <stdio.h>
 #include <string.h>

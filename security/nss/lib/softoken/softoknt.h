@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: softoknt.h,v 1.3 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
 
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_

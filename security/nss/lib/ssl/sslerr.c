@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: sslerr.c,v 1.4 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 
 #include "prerror.h"
 #include "secerr.h"

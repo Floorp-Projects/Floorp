@@ -33,6 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: mpi_hp.c,v 1.5 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 /* This file contains routines that perform vector multiplication.  */
 

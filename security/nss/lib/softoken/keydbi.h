@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: keydbi.h,v 1.6 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
 
 #ifndef _KEYDBI_H_
 #define _KEYDBI_H_

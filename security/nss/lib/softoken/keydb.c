@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: keydb.c,v 1.38 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"

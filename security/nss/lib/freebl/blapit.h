@@ -38,6 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: blapit.h,v 1.14 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_

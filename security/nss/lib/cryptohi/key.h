@@ -33,6 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: key.h,v 1.4 2004/04/27 23:04:35 gerv%gerv.net Exp $ */
 
 #ifndef _KEY_H_
 #define _KEY_H_

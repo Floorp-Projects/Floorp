@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: sslt.h,v 1.6 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
