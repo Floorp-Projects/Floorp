@@ -346,6 +346,7 @@ nsDOMEvent::GetDetail(PRInt32* aDetail)
       default:
         break;
       }
+      return NS_OK;
     }
 
     default:
