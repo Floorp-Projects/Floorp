@@ -20,6 +20,7 @@
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
 #include "nsString2.h"
+#include "nsMsgUtils.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -423,9 +424,13 @@ NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
 {
-// ### TODO
 //	m_priority = MSG_GetPriorityFromString(priority);
-	return SetPriority(nsMsgPriority_Normal);
+	nsMsgPriority priorityVal = nsMsgPriorityNormal;
+
+	// NS_MsgGetPriorityFromString will return normal in case of error,
+	// so we can ignore return value.
+	nsresult res = NS_MsgGetPriorityFromString(priority, &priorityVal);
+	return SetPriority(priorityVal);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetAuthor(nsString &resultAuthor)

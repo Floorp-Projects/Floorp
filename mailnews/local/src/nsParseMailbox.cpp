@@ -976,7 +976,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	const char *s;
 	PRUint32 flags = 0;
 	PRUint32 delta = 0;
-	nsMsgPriority priorityFlags = nsMsgPriority_NotSet;
+	nsMsgPriority priorityFlags = nsMsgPriorityNotSet;
 
 	if (!m_mailDB)		// if we don't have a valid db, skip the header.
 		return 0;
@@ -1056,7 +1056,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				flags |= MSG_FLAG_MDN_REPORT_NEEDED;
 
 			m_newMsgHdr->SetFlags(flags);
-			if (priorityFlags != nsMsgPriority_NotSet)
+			if (priorityFlags != nsMsgPriorityNotSet)
 				m_newMsgHdr->SetPriority(priorityFlags);
 
 			if (delta < 0xffff) 
@@ -1198,8 +1198,8 @@ int nsParseMailMessageState::FinalizeHeaders()
 				}
 				if (priority)
 					m_newMsgHdr->SetPriority(priority->value);
-				else if (priorityFlags == nsMsgPriority_NotSet)
-					m_newMsgHdr->SetPriority(nsMsgPriority_None);
+				else if (priorityFlags == nsMsgPriorityNotSet)
+					m_newMsgHdr->SetPriority(nsMsgPriorityNone);
 			}
 		} 
 		else

@@ -48,13 +48,13 @@ const nsMsgViewIndex nsMsgViewIndex_None = 0xFFFFFFFF;
 
 /* Message priorities as determined by X-Priority hdr, or Priority header? */
 enum nsMsgPriority {
-  nsMsgPriority_NotSet = 0,
-  nsMsgPriority_None = 1,
-  nsMsgPriority_Lowest,
-  nsMsgPriority_Low,
-  nsMsgPriority_Normal,
-  nsMsgPriority_High,
-  nsMsgPriority_Highest
+  nsMsgPriorityNotSet = 0,
+  nsMsgPriorityNone = 1,
+  nsMsgPriorityLowest,
+  nsMsgPriorityLow,
+  nsMsgPriorityNormal,
+  nsMsgPriorityHigh,
+  nsMsgPriorityHighest
 };
 
 // The following enums are all persistent in databases, so don't go changing the values!
