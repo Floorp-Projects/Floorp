@@ -500,7 +500,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   nsAutoString valAttr;
   nsContentAttr valStatus = eContentAttr_NotThere;
   if (nsnull != aSpec.mColValueAttr) {
-    valStatus = content->GetAttribute(aSpec.mColValueAttr, valAttr);
+    valStatus = ((nsHTMLTagContent*)content)->GetAttribute(aSpec.mColValueAttr, valAttr);
   }
   nsHTMLValue colAttr;
   nsContentAttr colStatus = eContentAttr_NotThere;

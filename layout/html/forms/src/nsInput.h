@@ -121,7 +121,6 @@ public:
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aValue) const;
 
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, nsString& aValue) const;
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const;
  
   /**

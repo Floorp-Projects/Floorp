@@ -592,7 +592,7 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
   }
 
   nsString value;
-  nsContentAttr status = content->GetAttribute(nsHTMLAtoms::value, value);
+  nsContentAttr status = ((nsHTMLTagContent*)content)->GetAttribute(nsHTMLAtoms::value, value);
   if (eContentAttr_HasValue == status) {  
     button->SetLabel(value);
   } 

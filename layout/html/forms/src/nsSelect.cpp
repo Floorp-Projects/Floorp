@@ -705,7 +705,7 @@ nsOption::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 
   nsString valAttr;
-  nsContentAttr stat = nsOptionSuper::GetAttribute(nsHTMLAtoms::value, valAttr);
+  nsContentAttr stat = nsHTMLTagContent::GetAttribute(nsHTMLAtoms::value, valAttr);
   if (eContentAttr_HasValue == stat) {
     aValues[0] = valAttr;
     aNumValues = 1;
