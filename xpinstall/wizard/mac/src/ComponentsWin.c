@@ -234,6 +234,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	int				i;
 	Cell			currCell;
 	UInt8			hiliteVal;
+	PixPatHandle	ppH;
 	GrafPtr			oldPort;
 	GetPort(&oldPort);
 	
@@ -241,6 +242,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
 	
+	/* Mouse Up */
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->cw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->cw->compList);
@@ -260,6 +262,52 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 		}
 		
 		SetOptInfo(evt);
+	}
+	
+	/* Mouse Down */
+	if ((evt->what == mouseDown) && (PtInRect( localPt, &gControls->cw->compListBox)))
+	{
+		/* show depressed button state */
+	    for (i=0; i<numRows; i++)
+		{
+			SetPt(&currCell, 0, i);
+			LRect(&currCellRect, currCell, gControls->cw->compList);
+			if (PtInRect(localPt, &currCellRect))
+			{
+				SetRect(&checkbox, currCellRect.left+4, currCellRect.top+2, 
+							currCellRect.left+16, currCellRect.top+14);	
+				ppH = GetPixPat(rGrayPixPattern);
+				FillCRect(&checkbox, ppH);	
+				FrameRect(&checkbox);	
+				if (gControls->cfg->comp[rowToComp[i]].selected)
+				{
+					/* draw check mark */
+					MoveTo(checkbox.left+1, checkbox.top+1);
+					LineTo(checkbox.right-2, checkbox.bottom-2);
+					MoveTo(checkbox.right-2, checkbox.top+1);
+					LineTo(checkbox.left+1, checkbox.bottom-2); 
+				}
+				/* create 3D depression */
+				
+				MoveTo(checkbox.left+1, checkbox.top+1);
+				LineTo(checkbox.left+1, checkbox.bottom-1);
+				MoveTo(checkbox.left+1, checkbox.top+1);
+				LineTo(checkbox.right-1, checkbox.top+1);
+				
+				ForeColor(whiteColor);
+				
+				MoveTo(checkbox.right-1, checkbox.top+1);
+				LineTo(checkbox.right-1, checkbox.bottom-1);
+				MoveTo(checkbox.left+1, checkbox.bottom-1);
+				LineTo(checkbox.right-1, checkbox.bottom-1);
+				
+				ForeColor(blackColor);
+			
+				if (ppH)
+					DisposePixPat(ppH);
+				break;
+			}
+		}
 	}
 			
 	HLock((Handle)gControls->backB);

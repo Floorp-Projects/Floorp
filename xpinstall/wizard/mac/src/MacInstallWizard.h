@@ -155,6 +155,8 @@ if (err) 								\
 #define rAllProgBar		161
 #define rPerXPIProgBar	162
 
+#define rGrayPixPattern 128
+
 	
 #define rMBar			128		/* menu rsrc ids */	
 #define mApple			150

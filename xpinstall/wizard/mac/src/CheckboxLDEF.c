@@ -100,9 +100,9 @@ DrawCheckedCheckbox(Rect *cellRect)
 	
 	/* now fill in check mark */
 	
-	MoveTo(checkbox.left, checkbox.top);
-	LineTo(checkbox.right-1, checkbox.bottom-1);
-	MoveTo(checkbox.right-1, checkbox.top);
-	LineTo(checkbox.left, checkbox.bottom-1); 
+	MoveTo(checkbox.left+1, checkbox.top+1);
+	LineTo(checkbox.right-2, checkbox.bottom-2);
+	MoveTo(checkbox.right-2, checkbox.top+1);
+	LineTo(checkbox.left+1, checkbox.bottom-2); 
 
 }
