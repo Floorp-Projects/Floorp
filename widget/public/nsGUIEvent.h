@@ -25,6 +25,7 @@
 
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsHashtable.h"
 
 // nsIDOMEvent contains a long enum which includes a member called ERROR,
 // which conflicts with something that Windows defines somewhere.
@@ -90,6 +91,8 @@ struct nsEvent {
   PRUint32    flags;
   // flags for indicating more event state for Mozilla applications.
   PRUint32    internalAppFlags;
+  // additional type info for user defined events
+  nsHashKey*  userType;
 };
 
 /**
@@ -465,10 +468,13 @@ enum nsDragDropEventStatus {
 #define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
 #define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
 
+// Mutation events defined elsewhere starting at 1800
+
 // accessible events
-#define NS_ACCESSIBLE_START           1800
+#define NS_ACCESSIBLE_START           1900
 #define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
 
+#define NS_USER_DEFINED_EVENT         2000
 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \

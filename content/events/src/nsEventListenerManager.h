@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsHashtable.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -43,6 +44,39 @@ typedef struct {
 //Flag must live higher than all event flags in nsGUIEvent.h
 #define NS_PRIV_EVENT_FLAG_SCRIPT 0x80
 
+//These define the internal type of the EventListenerManager
+//No listener type defined, should happen only at creation
+#define NS_ELM_NONE   0
+//Simple indicates only a single event listener group type (i.e. mouse, key) 
+#define NS_ELM_SINGLE 1
+//Multi indicates any number of listener group types accessed as member vars
+#define NS_ELM_MULTI  2
+//Hash indicates any number of listener group types accessed out of a hash
+#define NS_ELM_HASH   4
+
+enum EventArrayType {
+  eEventArrayType_Mouse = 0,
+  eEventArrayType_MouseMotion = 1,
+  eEventArrayType_ContextMenu = 2,
+  eEventArrayType_Key = 3,
+  eEventArrayType_Load = 4,
+  eEventArrayType_Focus = 5,
+  eEventArrayType_Form = 6,
+  eEventArrayType_Drag = 7,
+  eEventArrayType_Paint = 8,
+  eEventArrayType_Text = 9,
+  eEventArrayType_Composition = 10,
+  eEventArrayType_Menu = 11,
+  eEventArrayType_Scroll = 12,
+  eEventArrayType_Mutation = 13,
+  eEventArrayType_Hash,
+  eEventArrayType_None
+};
+
+//Keep this in line with event array types, not counting
+//types HASH and NONE
+#define EVENT_ARRAY_TYPE_LENGTH 14
+
 /*
  * Event listener manager
  */
@@ -56,15 +90,6 @@ public:
   virtual ~nsEventListenerManager();
 
   NS_DECL_ISUPPORTS
-
-  nsVoidArray** GetListenersByIID(const nsIID& aIID);
-  
-  /**
-  * Retrieves events listeners of all types. 
-  * @param
-  */
-
-  virtual nsresult GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID);
 
   /**
   * Sets events listeners of all types. 
@@ -108,9 +133,9 @@ public:
 
   virtual nsresult SetListenerTarget(nsISupports* aTarget);
 
-  virtual nsresult HasMutationListeners(PRBool* aListener) { *aListener = (mMutationListeners != nsnull); return NS_OK; };
+  virtual nsresult HasMutationListeners(PRBool* aListener) { *aListener = (GetListenersByType(eEventArrayType_Mutation, nsnull, PR_FALSE) != nsnull); return NS_OK; };
 
-  static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
+  static nsresult GetIdentifiersForType(nsIAtom* aType, EventArrayType* aArrayType, PRInt32* aSubType);
 
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsAReadableString& aType, 
@@ -139,32 +164,31 @@ protected:
                                        nsIAtom *aName,
                                        nsListenerStruct *aListenerStruct,
                                        PRUint32 aSubType);
-  nsListenerStruct* FindJSEventListener(REFNSIID aIID);
+  nsListenerStruct* FindJSEventListener(EventArrayType aType);
   nsresult SetJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner, nsIAtom* aName, PRBool aIsString);
-  nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
-  nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
+  nsresult AddEventListener(nsIDOMEventListener *aListener, 
+                            EventArrayType aType, 
+                            PRInt32 aSubType,
+                            nsHashKey* aKey,
+                            PRInt32 aFlags);
+  nsresult RemoveEventListener(nsIDOMEventListener *aListener,
+                               EventArrayType aType,
+                               PRInt32 aSubType,
+                               nsHashKey* aKey,
+                               PRInt32 aFlags);
   void ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly);
   nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
+  nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
+  EventArrayType GetTypeForIID(const nsIID& aIID);
 
-  nsVoidArray* mEventListeners;
-  nsVoidArray* mMouseListeners;
-  nsVoidArray* mMouseMotionListeners;
-  nsVoidArray* mContextMenuListeners;
-  nsVoidArray* mKeyListeners;
-  nsVoidArray* mLoadListeners;
-  nsVoidArray* mFocusListeners;
-  nsVoidArray* mFormListeners;
-  nsVoidArray* mDragListeners;
-  nsVoidArray* mPaintListeners;
-  nsVoidArray* mTextListeners;
-  nsVoidArray* mCompositionListeners;
-  nsVoidArray* mMenuListeners;
-  nsVoidArray* mScrollListeners;
-  nsVoidArray* mMutationListeners;
+  PRUint8 mManagerType;
+  EventArrayType mSingleListenerType;
+  nsVoidArray* mSingleListener;
+  nsVoidArray* mMultiListeners;
+  nsHashtable* mGenericListeners;
+  PRBool mListenersRemoved;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  PRBool mDestroyed;
-
   nsISupports* mTarget;  //WEAK
 };
 

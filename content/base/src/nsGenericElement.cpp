@@ -1384,11 +1384,17 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 {
   nsresult ret = NS_OK;
   PRBool retarget = PR_FALSE;
+  PRBool externalDOMEvent = PR_FALSE;
   nsCOMPtr<nsIDOMEventTarget> oldTarget;
 
   nsIDOMEvent* domEvent = nsnull;
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    if (!aDOMEvent) {
+    if (aDOMEvent) {
+      if (*aDOMEvent) {
+        externalDOMEvent = PR_TRUE;   
+      }
+    }
+    else {
       aDOMEvent = &domEvent;
     }
     aEvent->flags = aFlags;
@@ -1537,8 +1543,9 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
-    // release here.
-    if (nsnull != *aDOMEvent) {
+    // release here.  If externalDOMEvent is set the event was passed in
+    // and we don't own it
+    if (*aDOMEvent && !externalDOMEvent) {
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {
@@ -1552,8 +1559,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
           NS_RELEASE(privateEvent);
         }
       }
+      aDOMEvent = nsnull;
     }
-    aDOMEvent = nsnull;
   }
 
   return ret;
