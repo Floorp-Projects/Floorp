@@ -110,7 +110,7 @@ function DEF_DoEnabling( nextButton, backButton, finishButton )
 	if( !this.currentPageTag ) 
     return;
   // "next" button enabling
-  nextTag = this.wizardMap[this.currentPageTag].next;
+  var nextTag = this.wizardMap[this.currentPageTag].next;
   if( nextTag && oParent.nextButton.getAttribute("disabled") ) {
     oParent.nextButton.removeAttribute( "disabled" );
   }
@@ -118,7 +118,7 @@ function DEF_DoEnabling( nextButton, backButton, finishButton )
     oParent.nextButton.setAttribute( "disabled", "true" );
   }
   // "finish" button enabling
-  finishTag = this.wizardMap[this.currentPageTag].finish;
+  var finishTag = this.wizardMap[this.currentPageTag].finish;
   if( finishTag && oParent.finishButton.getAttribute("disabled") ) {
     oParent.finishButton.removeAttribute( "disabled" );
   }
@@ -126,7 +126,7 @@ function DEF_DoEnabling( nextButton, backButton, finishButton )
     oParent.finishButton.setAttribute( "disabled", "true" );
   }
   // "back" button enabling
-  prevTag = this.wizardMap[this.currentPageTag].previous;
+  var prevTag = this.wizardMap[this.currentPageTag].previous;
 	if( prevTag && oParent.backButton.getAttribute("disabled") ) {
  	  oParent.backButton.removeAttribute("disabled");
   }
@@ -154,7 +154,7 @@ function DEF_onPageLoad( tag )
     // set the focus to the first focusable element
     var doc = window.frames[0].document;
     var controls = doc.controls;
-    for (i=0; i< controls.length; i++) {
+    for (var i=0; i< controls.length; i++) {
       if (controls[i].focus) {
         controls[i].focus();
         break;                  // stop when focus has been set
