@@ -272,10 +272,16 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
   if ( (obj->options && obj->options->charset_conversion_fn) &&
        (!obj->options->force_user_charset) )  /* Only convert if the user prefs is false */
 	{
-	  PRInt32 converted_len = 0;
-    const char *input_charset = (obj->options->override_charset
-									? obj->options->override_charset
-									: obj->options->default_charset);
+	  PRInt32         converted_len = 0;
+    const char      *input_charset = NULL;
+    MimeInlineText  *text = (MimeInlineText *) obj;
+
+    if (obj->options->override_charset && (*obj->options->override_charset))
+      input_charset = obj->options->override_charset;
+    else if ( (text) && (text->charset) && (*(text->charset)) )
+      input_charset = text->charset;
+    else
+      input_charset = obj->options->default_charset;
 
 	  status = obj->options->charset_conversion_fn(line, length,
 												   input_charset,
