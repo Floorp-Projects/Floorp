@@ -103,12 +103,17 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
   }
 
   mTransferable = aTransferable;
+  
+  nsresult rv = NS_ERROR_FAILURE;
+
   if (nsnull != mTransferable) {
     NS_ADDREF(mTransferable);
-    SetNativeClipboardData();
+    rv = SetNativeClipboardData();
+  } else {
+    printf("  nsBaseClipboard::SetData(), aTransferable is NULL.\n");
   }
 
-  return NS_OK;
+  return rv;
 }
 
 /**
@@ -119,6 +124,8 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable)
 {
   if (nsnull != aTransferable) {
     GetNativeClipboardData(aTransferable);
+  } else {
+    printf("  nsBaseClipboard::GetData(), aTransferable is NULL.\n");
   }
 
   return NS_OK;
