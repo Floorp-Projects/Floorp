@@ -741,6 +741,7 @@ var MessageWindowController =
 			case "cmd_file":
       case "cmd_markAsJunk":
       case "cmd_markAsNotJunk":
+      case "cmd_recalculateJunkScore":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -801,6 +802,7 @@ var MessageWindowController =
         // fall through
       case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
+      case "cmd_recalculateJunkScore":
         // can't do junk on news yet
         return (!isNewsURI(gCurrentFolderUri));
 			case "cmd_reply":
@@ -1005,6 +1007,9 @@ var MessageWindowController =
 			case "cmd_markAsNotJunk":
         JunkSelectedMessages(false);
 				return;
+      case "cmd_recalculateJunkScore":
+        analyzeMessagesForJunk();
+        return;
       case "cmd_label0":
         gDBView.doCommand(nsMsgViewCommandType.label0);
  				return;

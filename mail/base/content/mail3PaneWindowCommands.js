@@ -197,6 +197,7 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
+      case "cmd_recalculateJunkScore":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -315,6 +316,7 @@ var DefaultController =
         return (GetNumSelectedMessages() > 0 );
       case "cmd_markAsJunk":
       case "cmd_markAsNotJunk":
+      case "cmd_recalculateJunkScore":
         // can't do news on junk yet.
         return (GetNumSelectedMessages() > 0 && !isNewsURI(GetFirstSelectedMessage()));
       case "cmd_applyFilters":
@@ -625,6 +627,9 @@ var DefaultController =
 			case "cmd_markAsNotJunk":
         JunkSelectedMessages(false);
 				return;
+      case "cmd_recalculateJunkScore":
+        analyzeMessagesForJunk();
+        return;
       case "cmd_applyFilters":
         MsgApplyFilters(null);
         return;
