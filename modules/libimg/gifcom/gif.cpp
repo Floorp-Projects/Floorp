@@ -1240,7 +1240,10 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
         case gif_image_header:
         {
             PRUintn height, width;
-            
+
+            if(gs->images_decoded > 0) //animated image
+                   ic->imgdcb->ImgDCBHaveImageFrame();
+
             /* Get image offsets, with respect to the screen origin */
             gs->x_offset = GETINT16(q);
             gs->y_offset = GETINT16(q + 2);
@@ -1496,10 +1499,9 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
             {
                 /* Flush the image data unconditionally, so that we can
                    notify observers that the current frame has completed. */
-              if(ic->imgdcb){
-                ic->imgdcb->ImgDCBFlushImage();
-                ic->imgdcb->ImgDCBHaveImageFrame();
-              }
+                if(ic->imgdcb)
+                     ic->imgdcb->ImgDCBFlushImage();
+                
                 gs->images_decoded++;
 
                 /* An image can specify a delay time before which to display
@@ -1507,10 +1509,10 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                 if(gs->delay_time < MINIMUM_DELAY_TIME )
                     gs->delay_time = MINIMUM_DELAY_TIME;
                 if (gs->delay_time){
-          if(ic->imgdcb){
-              gs->delay_timeout = (void *)
-                      ic->imgdcb->ImgDCBSetTimeout(gif_delay_time_callback, gs->ic, gs->delay_time);
-          }
+                    if(ic->imgdcb){
+                          gs->delay_timeout = (void *)
+                                ic->imgdcb->ImgDCBSetTimeout(gif_delay_time_callback, gs->ic, gs->delay_time);
+                     }
                     /* Essentially, tell the decoder state machine to wait
                        forever.  The timeout callback routine will wake up the
                        state machine and force it to decode the next image. */
