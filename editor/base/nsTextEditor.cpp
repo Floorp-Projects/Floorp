@@ -187,6 +187,7 @@ nsTextEditor::~nsTextEditor()
   if (mRules) {
     delete mRules;
   }
+  NS_IF_RELEASE(mTypeInState);
   nsEditProperty::InstanceShutdown();
 }
 
@@ -228,12 +229,18 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     result = nsEditor::Init(aDoc, aPresShell);
     if (NS_OK != result) { return result; }
 
+    // init the type-in state
+    mTypeInState = new TypeInState();
+    if (!mTypeInState) {return NS_ERROR_NULL_POINTER;}
+    NS_ADDREF(mTypeInState);
+
     nsCOMPtr<nsIDOMSelection>selection;
     result = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_OK != result) { return result; }
-    if (selection) {
+    if (selection) 
+    {
       nsCOMPtr<nsIDOMSelectionListener>listener;
-      listener = do_QueryInterface(&mTypeInState);
+      listener = do_QueryInterface(mTypeInState);
       if (listener) {
         selection->AddSelectionListener(listener); 
       }
@@ -331,7 +338,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(mTypeInState, aProperty, aAttribute, aValue);
+      SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, aValue);
     }
     else
     {
@@ -646,7 +653,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(mTypeInState, aProperty, aAttribute, nsnull);
+      SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, nsnull);
     }
     else
     {
@@ -787,7 +794,7 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   ruleInfo.placeTxn = &placeholderTxn;
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
-  ruleInfo.typeInState = mTypeInState;
+  ruleInfo.typeInState = *mTypeInState;
 
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
@@ -1379,13 +1386,12 @@ nsTextEditor::GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent) co
 }
 
 NS_IMETHODIMP
-nsTextEditor::GetBlockDelimitedContent(nsIDOMNode *aParent, 
-                                       nsIDOMNode *aChild,
+nsTextEditor::GetBlockDelimitedContent(nsIDOMNode *aChild,
                                        nsIDOMNode **aLeftNode, 
                                        nsIDOMNode **aRightNode) const
 {
   nsresult result = NS_OK;
-  if (!aParent || !aChild || !aLeftNode || !aRightNode) {return NS_ERROR_NULL_POINTER;}
+  if (!aChild || !aLeftNode || !aRightNode) {return NS_ERROR_NULL_POINTER;}
   *aLeftNode = aChild;
   *aRightNode = aChild;
 
@@ -1429,6 +1435,94 @@ nsTextEditor::GetBlockDelimitedContent(nsIDOMNode *aParent,
   return result;
 }
 
+NS_IMETHODIMP
+nsTextEditor::GetBlockRanges(nsIDOMRange *aRange, nsISupportsArray *aSubRanges) const
+{
+  if (!aRange || !aSubRanges) {return NS_ERROR_NULL_POINTER;}
+
+  nsresult result;
+  nsCOMPtr<nsIContentIterator>iter;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              kIContentIteratorIID, getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    nsCOMPtr<nsIDOMRange> lastRange;
+    iter->Init(aRange);
+    nsCOMPtr<nsIContent> currentContent;
+    iter->CurrentNode(getter_AddRefs(currentContent));
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
+      if (currentNode)
+      {
+        PRBool isInlineOrText;
+        result = IsNodeInline(currentNode, isInlineOrText);
+        if (PR_FALSE==isInlineOrText)
+        {
+          PRUint16 nodeType;
+          currentNode->GetNodeType(&nodeType);
+          if (nsIDOMNode::TEXT_NODE == nodeType) {
+            isInlineOrText = PR_TRUE;
+          }
+        }
+        if (PR_TRUE==isInlineOrText)
+        {
+          nsCOMPtr<nsIDOMNode>leftNode;
+          nsCOMPtr<nsIDOMNode>rightNode;
+          result = GetBlockDelimitedContent(currentNode,
+                                            getter_AddRefs(leftNode),
+                                            getter_AddRefs(rightNode));
+          if (gNoisy) {printf("currentNode %p has block content (%p,%p)\n", currentNode.get(), leftNode.get(), rightNode.get());}
+          if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
+          {
+            // add range to the list if it doesn't overlap with the previous range
+            PRBool addRange=PR_TRUE;
+            if (lastRange)
+            {
+              nsCOMPtr<nsIDOMNode> lastStartNode;
+              nsCOMPtr<nsIDOMElement> blockParentOfLastStartNode;
+              lastRange->GetStartParent(getter_AddRefs(lastStartNode));
+              result = GetBlockParent(lastStartNode, getter_AddRefs(blockParentOfLastStartNode));
+              if ((NS_SUCCEEDED(result)) && blockParentOfLastStartNode)
+              {
+                if (gNoisy) {printf("lastStartNode %p has block parent %p\n", lastStartNode.get(), blockParentOfLastStartNode.get());}
+                nsCOMPtr<nsIDOMElement> blockParentOfLeftNode;
+                result = GetBlockParent(leftNode, getter_AddRefs(blockParentOfLeftNode));
+                if ((NS_SUCCEEDED(result)) && blockParentOfLeftNode)
+                {
+                  if (gNoisy) {printf("leftNode %p has block parent %p\n", leftNode.get(), blockParentOfLeftNode.get());}
+                  if (blockParentOfLastStartNode==blockParentOfLeftNode) {
+                    addRange = PR_FALSE;
+                  }
+                }
+              }
+            }
+            if (PR_TRUE==addRange) 
+            {
+              if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", leftNode.get());}
+              nsCOMPtr<nsIDOMRange> range;
+              result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
+                                                          kIDOMRangeIID, getter_AddRefs(range));
+              if ((NS_SUCCEEDED(result)) && range)
+              { // initialize the range
+                range->SetStart(leftNode, 0);
+                range->SetEnd(rightNode, 0);
+                aSubRanges->AppendElement(range);
+                lastRange = do_QueryInterface(range);
+              }
+            }        
+          }
+        }
+      }
+      /* do not check result here, and especially do not return the result code.
+       * we rely on iter->IsDone to tell us when the iteration is complete
+       */
+      iter->Next();
+      iter->CurrentNode(getter_AddRefs(currentContent));
+    }
+  }
+  return result;
+}
 
 NS_IMETHODIMP
 nsTextEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
@@ -2234,6 +2328,14 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
   }
 
   return result;
+}
+
+TypeInState * nsTextEditor::GetTypeInState()
+{
+  if (mTypeInState) {
+    NS_ADDREF(mTypeInState);
+  }
+  return mTypeInState;
 }
 
 NS_IMETHODIMP

@@ -428,7 +428,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // hard-coded ChangeTextAttributes test -- font color red
       case nsIDOMEvent::VK_1:
-        case nsIDOMEvent::VK_F:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -454,7 +453,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // hard-coded ChangeTextAttributes test -- remove font color
       case nsIDOMEvent::VK_2:
-        case nsIDOMEvent::VK_R:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -553,9 +551,8 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      // hard-coded change structure test -- block H1
+      // hard-coded change structure test -- transform block H1
       case nsIDOMEvent::VK_7:
-        case nsIDOMEvent::VK_Q:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -567,15 +564,49 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             {
               nsAutoString tag;
               nsIEditProperty::h1->ToString(tag);
-              htmlEditor->AddBlockParent(tag);
+              htmlEditor->ReplaceBlockParent(tag);
+            }
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- transform block H2
+      case nsIDOMEvent::VK_8:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) 
+            {
+              nsAutoString tag;
+              nsIEditProperty::h2->ToString(tag);
+              htmlEditor->ReplaceBlockParent(tag);
+            }
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- normal
+      case nsIDOMEvent::VK_9:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) {
+              htmlEditor->RemoveBlockParent();
             }
           }
         }
         break;
 
       // hard-coded change structure test -- block blockquote (indent)
-      case nsIDOMEvent::VK_8:
-        case nsIDOMEvent::VK_W:
+      case nsIDOMEvent::VK_COMMA:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -593,26 +624,8 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      // hard-coded change structure test -- normal
-      case nsIDOMEvent::VK_9:
-        case nsIDOMEvent::VK_E:
-        if (PR_TRUE==ctrlKey)
-        {
-          aProcessed=PR_TRUE;
-          if (mEditor)
-          {
-            nsCOMPtr<nsIHTMLEditor>htmlEditor;
-            htmlEditor = do_QueryInterface(mEditor);
-            if (htmlEditor) {
-              htmlEditor->RemoveBlockParent();
-            }
-          }
-        }
-        break;
-
       // hard-coded change structure test -- un-BlockQuote
-      case nsIDOMEvent::VK_0:
-        case nsIDOMEvent::VK_G:
+      case nsIDOMEvent::VK_PERIOD:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;

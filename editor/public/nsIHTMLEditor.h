@@ -31,6 +31,7 @@
 
 class nsIEditorCallback;
 class nsISupportsArray;
+class nsStringArray;
 class nsIAtom;
 class nsIInputStream;
 class nsIOutputStream;
@@ -98,13 +99,27 @@ public:
    * trigger off of ContentChanged notifications.
    */
 
+  NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList)=0;
+
   /** Add a block parent node around the selected content.
-    * If the selected content already has a block parent that is not a sub-document,
-    * that block parent is changed to  the type given by aParentTag.
-    * Otherwise, the new block parent is nested in the closest sub-document.
+    * Only legal nestings are allowed.
+    * An example of use is for indenting using blockquote nodes.
+    *
     * @param aParentTag  The tag from which the new parent is created.
     */
   NS_IMETHOD AddBlockParent(nsString& aParentTag)=0;
+
+  /** Replace the block parent node around the selected content with a new block
+    * parent node of type aParentTag.
+    * Only legal replacements are allowed.
+    * An example of use are is transforming H1 to LI ("paragraph type transformations").
+    * For containing block transformations (transforming UL to OL, for example),
+    * the caller should RemoveParent("UL"), set the selection appropriately,
+    * and call AddBlockParent("OL").
+    *
+    * @param aParentTag  The tag from which the new parent is created.
+    */
+  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag)=0;
 
   /** remove block parent of type aTagToRemove from the selection.
     * if aTagToRemove is null, the nearest enclosing block that 
