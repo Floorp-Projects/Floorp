@@ -6,4 +6,5 @@ browser.jar:
 classic.jar:  
 + skin/classic/global/icons/alert-exclam.png    (alert-exclam.png)
 + skin/classic/mozapps/update/icon32.png        (icon32.png)
++ icon.png                                      (icon32.png)
   
