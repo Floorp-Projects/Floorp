@@ -3320,3 +3320,4 @@ NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
    * its refreshData instance to be released...
    */
 }
+
