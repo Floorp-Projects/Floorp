@@ -39,6 +39,7 @@ compliance, performance and portability.
 %package devel
 Summary: Development files for Mozilla
 Group: Development/Libraries
+Requires: mozilla = %{version}-%{release}
 
 %description devel
 Development header files for mozilla.
