@@ -583,7 +583,7 @@ PRBool freeNodeRunProcessor(STRequest* inRequest, void* clientData, STCategoryNo
 }
 
 #if defined(DEBUG_dp)
-PRBool printNodeProcessor(void* clientData, STCategoryNode* node)
+PRBool printNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
 {
     STCategoryNode* root = (STCategoryNode*) clientData;
     fprintf(stderr, "%-25s [ %9s size", node->categoryName,
