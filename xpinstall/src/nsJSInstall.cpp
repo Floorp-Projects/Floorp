@@ -2467,8 +2467,6 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext,
                              const PRUnichar* args)
 {
   JSObject *installObject       = nsnull;
-  JSObject *winRegPrototype     = nsnull;
-  JSObject *winProfilePrototype = nsnull;
   nsInstall *nativeInstallObject;
 
   installObject  = JS_InitClass( jscontext,         // context
