@@ -425,22 +425,60 @@ List* ProcessorState::getImportFrames()
 }
 
 /*
- * Finds a template for the given Node. Only templates with
- * a mode attribute equal to the given mode will be searched.
+ * Find template in specified mode matching the supplied node
+ * @param aNode        node to find matching template for
+ * @param aMode        mode of the template
+ * @param aImportFrame out-param, is set to the ImportFrame containing
+ *                     the found template
+ * @return             root-node of found template, null if none is found
  */
 Node* ProcessorState::findTemplate(Node* aNode,
-                                   Node* aContext,
-                                   const String& aMode)
+                                   const String& aMode,
+                                   ImportFrame** aImportFrame)
 {
+    return findTemplate(aNode, aMode, 0, aImportFrame);
+}
+
+/*
+ * Find template in specified mode matching the supplied node. Only search
+ * templates imported by a specific ImportFrame
+ * @param aNode        node to find matching template for
+ * @param aMode        mode of the template
+ * @param aImportedBy  seach only templates imported by this ImportFrame,
+ *                     or null to search all templates
+ * @param aImportFrame out-param, is set to the ImportFrame containing
+ *                     the found template
+ * @return             root-node of found template, null if none is found
+ */
+Node* ProcessorState::findTemplate(Node* aNode,
+                                   const String& aMode,
+                                   ImportFrame* aImportedBy,
+                                   ImportFrame** aImportFrame)
+{
+    NS_ASSERTION(aImportFrame, "missing ImportFrame pointer");
+    NS_ASSERTION(aNode, "missing node");
+
     if (!aNode)
         return 0;
 
     Node* matchTemplate = 0;
     double currentPriority = Double::NEGATIVE_INFINITY;
-    ImportFrame* frame;
+    ImportFrame* endFrame = 0;
     txListIterator frameIter(&mImportFrames);
 
-    while (!matchTemplate && (frame = (ImportFrame*)frameIter.next())) {
+    if (aImportedBy) {
+        ImportFrame* curr = (ImportFrame*)frameIter.next();
+        while (curr != aImportedBy)
+               curr = (ImportFrame*)frameIter.next();
+
+        endFrame = aImportedBy->mFirstNotImported;
+    }
+
+    ImportFrame* frame;
+    while (!matchTemplate &&
+           (frame = (ImportFrame*)frameIter.next()) &&
+           frame != endFrame) {
+
         // get templatelist for this mode
         txList* templates;
         templates = (txList*)frame->mMatchableTemplates.get(aMode);
@@ -448,6 +486,7 @@ Node* ProcessorState::findTemplate(Node* aNode,
         if (templates) {
             txListIterator templateIter(templates);
 
+            // Find template with highest priority
             MatchableTemplate* templ;
             while ((templ = (MatchableTemplate*)templateIter.next())) {
                 String priorityAttr;
@@ -463,14 +502,15 @@ Node* ProcessorState::findTemplate(Node* aNode,
                 }
                 else {
                     tmpPriority = templ->mMatch->getDefaultPriority(aNode,
-                                                                    aContext,
+                                                                    0,
                                                                     this);
                 }
 
                 if (tmpPriority >= currentPriority &&
-                    templ->mMatch->matches(aNode, aContext, this)) {
+                    templ->mMatch->matches(aNode, 0, this)) {
 
                     matchTemplate = templ->mTemplate;
+                    *aImportFrame = frame;
                     currentPriority = tmpPriority;
                 }
             }
@@ -478,7 +518,23 @@ Node* ProcessorState::findTemplate(Node* aNode,
     }
 
     return matchTemplate;
-} //-- findTemplate
+}
+
+/*
+ * Gets current template rule
+ */
+ProcessorState::TemplateRule* ProcessorState::getCurrentTemplateRule()
+{
+    return mCurrentTemplateRule;
+}
+
+/*
+ * Sets current template rule
+ */
+void ProcessorState::setCurrentTemplateRule(TemplateRule* aTemplateRule)
+{
+    mCurrentTemplateRule = aTemplateRule;
+}
 
 /**
  * Returns the AttributeSet associated with the given name
@@ -1274,9 +1330,10 @@ void ProcessorState::initialize() {
     decimalFormats.setObjectDeletion(MB_TRUE);
 }
 
-ProcessorState::ImportFrame::ImportFrame()
+ProcessorState::ImportFrame::ImportFrame(ImportFrame* aFirstNotImported)
 {
     mNamedAttributeSets.setObjectDeletion(MB_TRUE);
+    mFirstNotImported = aFirstNotImported;
 }
 
 ProcessorState::ImportFrame::~ImportFrame()

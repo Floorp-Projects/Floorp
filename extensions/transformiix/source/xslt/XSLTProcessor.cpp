@@ -106,6 +106,7 @@ XSLTProcessor::XSLTProcessor() {
 
     //-- create XSL element types
     xslTypes.setObjectDeletion(MB_TRUE);
+    xslTypes.put(APPLY_IMPORTS,   new XSLType(XSLType::APPLY_IMPORTS));
     xslTypes.put(APPLY_TEMPLATES, new XSLType(XSLType::APPLY_TEMPLATES));
     xslTypes.put(ATTRIBUTE,       new XSLType(XSLType::ATTRIBUTE));
     xslTypes.put(ATTRIBUTE_SET,   new XSLType(XSLType::ATTRIBUTE_SET));
@@ -502,11 +503,22 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                                           element->getBaseURI(),
                                           href);
 
-                    importFrame->addAfter(new ProcessorState::ImportFrame);
-                    importFrame->next();
+                    // Create a new ImportFrame with correct firstNotImported
+                    ProcessorState::ImportFrame *nextFrame, *newFrame;
+                    nextFrame =
+                        (ProcessorState::ImportFrame*)importFrame->next();
+                    newFrame = new ProcessorState::ImportFrame(nextFrame);
+                    if (!newFrame) {
+                        // XXX ErrorReport: out of memory
+                        break;
+                    }
 
+                    // Insert frame and process stylesheet
+                    importFrame->addBefore(newFrame);
+                    importFrame->previous();
                     processInclude(href, aSource, importFrame, aPs);
 
+                    // Restore iterator to initial position
                     importFrame->previous();
 
                     break;
@@ -762,14 +774,14 @@ Document* XSLTProcessor::process
     //-------------------------------------------------------/
 
     ListIterator importFrame(ps.getImportFrames());
-    importFrame.addAfter(new ProcessorState::ImportFrame);
+    importFrame.addAfter(new ProcessorState::ImportFrame(0));
     importFrame.next();
     processStylesheet(&xmlDocument, &xslDocument, &importFrame, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
     //--------------------------------------/
-    process(&xmlDocument, &xmlDocument, NULL_STRING, &ps);
+    process(&xmlDocument, NULL_STRING, &ps);
 
     //-- return result Document
     return result;
@@ -808,14 +820,14 @@ void XSLTProcessor::process
     //-------------------------------------------------------/
 
     ListIterator importFrame(ps.getImportFrames());
-    importFrame.addAfter(new ProcessorState::ImportFrame);
+    importFrame.addAfter(new ProcessorState::ImportFrame(0));
     importFrame.next();
     processStylesheet(&xmlDocument, &xslDocument, &importFrame, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
     //--------------------------------------/
-    process(&xmlDocument, &xmlDocument, NULL_STRING, &ps);
+    process(&xmlDocument, NULL_STRING, &ps);
 
     print(*result, ps.getOutputFormat(), out);
 
@@ -1029,17 +1041,14 @@ void XSLTProcessor::notifyError(String& errorMessage, ErrorObserver::ErrorLevel 
 } //-- notifyError
 
 void XSLTProcessor::process(Node* node,
-                            Node* context,
                             const String& mode,
                             ProcessorState* ps) {
     if (!node)
         return;
 
-    Node* xslTemplate = ps->findTemplate(node, context, mode);
-    if (xslTemplate)
-        processTemplate(node, xslTemplate, ps);
-    else
-        processDefaultTemplate(node, ps, NULL_STRING);
+    ProcessorState::ImportFrame *frame;
+    Node* xslTemplate = ps->findTemplate(node, mode, &frame);
+    processMatchedTemplate(xslTemplate, node, 0, NULL_STRING, frame, ps);
 } //-- process
 
 void XSLTProcessor::processAction
@@ -1086,6 +1095,27 @@ void XSLTProcessor::processAction
 
         switch ( getElementType(nodeName, ps) ) {
 
+            //-- xsl:apply-imports
+            case XSLType::APPLY_IMPORTS :
+            {
+                ProcessorState::TemplateRule* curr;
+                Node* xslTemplate;
+                ProcessorState::ImportFrame *frame;
+
+                curr = ps->getCurrentTemplateRule();
+                if (!curr) {
+                    String err("apply-imports not allowed here");
+                    ps->recieveError(err);
+                    break;
+                }
+
+                xslTemplate = ps->findTemplate(node, *curr->mMode,
+                                               curr->mFrame, &frame);
+                processMatchedTemplate(xslTemplate, node, curr->mParams,
+                                       *curr->mMode, frame, ps);
+
+                break;
+            }
             //-- xsl:apply-templates
             case XSLType::APPLY_TEMPLATES :
             {
@@ -1129,18 +1159,14 @@ void XSLTProcessor::processAction
                     NamedMap* actualParams = processParameters(actionElement, node, ps);
 
                     for (int i = 0; i < nodeSet->size(); i++) {
+                        ProcessorState::ImportFrame *frame;
                         Node* currNode = nodeSet->get(i);
                         Node* xslTemplate;
-                        xslTemplate = ps->findTemplate(currNode, node, mode);
-                        if (xslTemplate) {
-                            ps->pushCurrentNode(currNode);
-                            processTemplate(currNode, xslTemplate, ps, actualParams);
-                            ps->popCurrentNode();
-                        }
-                        else {
-                            processDefaultTemplate(currNode, ps, mode);
-                        }
+                        xslTemplate = ps->findTemplate(currNode, mode, &frame);
+                        processMatchedTemplate(xslTemplate, currNode,
+                                               actualParams, mode, frame, ps);
                     }
+
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
 
@@ -1370,6 +1396,11 @@ void XSLTProcessor::processAction
                     }
                     sorter.sortNodeSet(nodeSet);
 
+                    // Set current template to null
+                    ProcessorState::TemplateRule *oldTemplate;
+                    oldTemplate = ps->getCurrentTemplateRule();
+                    ps->setCurrentTemplateRule(0);
+
                     for (int i = 0; i < nodeSet->size(); i++) {
                         Node* currNode = nodeSet->get(i);
                         ps->pushCurrentNode(currNode);
@@ -1377,7 +1408,9 @@ void XSLTProcessor::processAction
                         ps->popCurrentNode();
                     }
 
-                    //-- remove nodeSet from context stack
+                    ps->setCurrentTemplateRule(oldTemplate);
+
+                    // Remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
                 }
                 else {
@@ -1766,6 +1799,32 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
     bindings->pop();
 } //-- processTemplate
 
+void XSLTProcessor::processMatchedTemplate(Node* aXslTemplate,
+                                           Node* aNode,
+                                           NamedMap* aParams,
+                                           const String& aMode,
+                                           ProcessorState::ImportFrame* aFrame,
+                                           ProcessorState* aPs)
+{
+    if (aXslTemplate) {
+        ProcessorState::TemplateRule *oldTemplate, newTemplate;
+        oldTemplate = aPs->getCurrentTemplateRule();
+        newTemplate.mFrame = aFrame;
+        newTemplate.mMode = &aMode;
+        newTemplate.mParams = aParams;
+        aPs->setCurrentTemplateRule(&newTemplate);
+
+        aPs->pushCurrentNode(aNode);
+        processTemplate(aNode, aXslTemplate, aPs, aParams);
+        aPs->popCurrentNode();
+
+        aPs->setCurrentTemplateRule(oldTemplate);
+    }
+    else {
+        processDefaultTemplate(aNode, aPs, aMode);
+    }
+}
+
 /**
  * Invokes the default template for the specified node
  * @param node  context node
@@ -1804,15 +1863,11 @@ void XSLTProcessor::processDefaultTemplate(Node* node,
             ps->getNodeSetStack()->push(nodeSet);
             for (int i = 0; i < nodeSet->size(); i++) {
                 Node* currNode = nodeSet->get(i);
-                Node* xslTemplate = ps->findTemplate(currNode, node, mode);
-                if (xslTemplate) {
-                    ps->pushCurrentNode(currNode);
-                    processTemplate(currNode, xslTemplate, ps, NULL);
-                    ps->popCurrentNode();
-                }
-                else {
-                    processDefaultTemplate(currNode, ps, mode);
-                }
+
+                ProcessorState::ImportFrame *frame;
+                Node* xslTemplate = ps->findTemplate(currNode, mode, &frame);
+                processMatchedTemplate(xslTemplate, currNode, 0, mode, frame,
+                                       ps);
             }
             //-- remove nodeSet from context stack
             ps->getNodeSetStack()->pop();
@@ -2094,14 +2149,14 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
      //- index templates and process top level xsl elements -/
     //------------------------------------------------------/
     ListIterator importFrame(ps->getImportFrames());
-    importFrame.addAfter(new ProcessorState::ImportFrame);
+    importFrame.addAfter(new ProcessorState::ImportFrame(0));
     importFrame.next();
     processStylesheet(sourceDocument, xslDocument, &importFrame, ps);
 
       //---------------------------------------/
      //- Process root of XML source document -/
     //---------------------------------------/
-    process(sourceNode, sourceNode, NULL_STRING, ps);
+    process(sourceNode, NULL_STRING, ps);
 
     // XXX Hack, ProcessorState::addToResultTree should do the right thing
     // for adding several consecutive text nodes

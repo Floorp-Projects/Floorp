@@ -76,7 +76,7 @@ public:
      */
     class ImportFrame {
     public:
-        ImportFrame();
+        ImportFrame(ImportFrame* aFirstNotImported);
         ~ImportFrame();
     
         // Map of named templates
@@ -92,16 +92,16 @@ public:
         // Map of named attribute sets
         NamedMap mNamedAttributeSets;
 
+        // ImportFrame which is the first one *not* imported by this frame
+        ImportFrame* mFirstNotImported;
 
         // The following stuff is missing here:
 
-        // ImportFrame(?) for xsl:apply-imports
-        // Nametests for xsl:strip-space and xsl:preserve-space
         // Namespace aliases (xsl:namespace-alias)
-        // Named attribute sets
         // Toplevel variables/parameters
         // Output specifier (xsl:output)
     };
+    // To be able to do some cleaning up in destructor
     friend class ImportFrame;
 
     /*
@@ -234,17 +234,52 @@ public:
     **/
     List* getImportFrames();
 
-    /**
-     * Finds a template for the given Node. Only templates without
-     * a mode attribute will be searched.
-    **/
-    Element* findTemplate(Node* node, Node* context);
+    /*
+     * Find template in specified mode matching the supplied node
+     * @param aNode        node to find matching template for
+     * @param aMode        mode of the template
+     * @param aImportFrame out-param, is set to the ImportFrame containing
+     *                     the found template
+     * @return             root-node of found template, null if none is found
+     */
+    Node* findTemplate(Node* aNode,
+                       const String& aMode,
+                       ImportFrame** aImportFrame);
 
     /*
-     * Finds a template for the given Node. Only templates with
-     * a mode attribute equal to the given mode will be searched.
+     * Find template in specified mode matching the supplied node. Only search
+     * templates imported by a specific ImportFrame
+     * @param aNode        node to find matching template for
+     * @param aMode        mode of the template
+     * @param aImportedBy  seach only templates imported by this ImportFrame,
+     *                     or null to search all templates
+     * @param aImportFrame out-param, is set to the ImportFrame containing
+     *                     the found template
+     * @return             root-node of found template, null if none is found
      */
-    Node* findTemplate(Node* aNode, Node* aContext, const String& aMode);
+    Node* findTemplate(Node* aNode,
+                       const String& aMode,
+                       ImportFrame* aImportedBy,
+                       ImportFrame** aImportFrame);
+
+    /*
+     * Struct holding information about a current template rule
+     */
+    struct TemplateRule {
+        ImportFrame* mFrame;
+        const String* mMode;
+        NamedMap* mParams;
+    };
+
+    /*
+     * Gets current template rule
+     */
+    TemplateRule* getCurrentTemplateRule();
+
+    /*
+     * Sets current template rule
+     */
+    void setCurrentTemplateRule(TemplateRule* aTemplateRule);
 
     /**
      * Determines if the given XSL node allows Whitespace stripping
@@ -457,6 +492,11 @@ private:
      * patterns for an attribute name
      */
     Map            mPatternHashes[2];
+
+    /*
+     * Current template rule
+     */
+    TemplateRule*  mCurrentTemplateRule;
 
     Element*       mXPathParseContext;
     Stack          nodeSetStack;
