@@ -112,10 +112,6 @@
 #define INTL_PROPERTIES "chrome://navigator/locale/navigator.properties"
 #endif
 
-#ifndef MOZ_DISTRIBUTION_ID
-#define MOZ_DISTRIBUTION_ID "org.mozilla"
-#endif
-
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,             NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,        NS_RDFCONTAINERUTILS_CID);
