@@ -82,6 +82,39 @@ public:
 	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 
 												nsIImapMailFolderSink * aImapMailFolder,
 												nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD GetHeaders(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 PRBool messageIdsAreUID) = 0;
+	NS_IMETHOD Expunge(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD Biff(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL,
+												PRUint32 uidHighWater) = 0;
+	NS_IMETHOD DeleteMessages(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 PRBool messageIdsAreUID) = 0;
+	NS_IMETHOD DeleteAllMessages(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD AddMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID) = 0;
+	NS_IMETHOD SubtractMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID) = 0;
+	NS_IMETHOD SetMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID) = 0;
 };
 
 

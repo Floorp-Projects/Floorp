@@ -1782,7 +1782,7 @@ UpdateImapMailboxInfoProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->UpdateImapMailboxInfo(
         m_proxy->m_protocol, &m_mailboxSpec);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+//    m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 

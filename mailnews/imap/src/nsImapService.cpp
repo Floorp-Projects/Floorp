@@ -242,6 +242,52 @@ nsresult nsImapService::CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2 &url
 	return rv;
 }
 
+/* fetching the headers of RFC822 messages */
+/* imap4://HOST>header><UID/SEQUENCE>>MAILBOXPATH>x */
+/*   'x' is the message UID or sequence number list */
+/* will not affect the 'SEEN' flag */
+NS_IMETHODIMP nsImapService::GetHeaders(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 PRBool messageIdsAreUID)
+{
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+	
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			urlSpec.Append("/header>");
+			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+			urlSpec.Append(">");
+			urlSpec.Append(hierarchySeparator);
+			urlSpec.Append("Inbox>");
+			urlSpec.Append(messageIdentifierList);
+			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+
+
 // Noop, used to update a folder (causes server to send changes).
 NS_IMETHODIMP nsImapService::Noop(PLEventQueue * aClientEventQueue, 
 												nsIImapMailFolderSink * aImapMailFolder,
@@ -263,7 +309,7 @@ NS_IMETHODIMP nsImapService::Noop(PLEventQueue * aClientEventQueue,
 
 			urlSpec.Append("/selectnoop>");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox>");
+			urlSpec.Append("Inbox");
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
 			protocolInstance->LoadUrl(imapUrl, nsnull);
@@ -275,6 +321,235 @@ NS_IMETHODIMP nsImapService::Noop(PLEventQueue * aClientEventQueue,
 	}
 	return rv;
 }
+
+// Expunge, used to "compress" an imap folder,removes deleted messages.
+NS_IMETHODIMP nsImapService::Expunge(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapExpungeFolder);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			urlSpec.Append("/Expunge>");
+			urlSpec.Append(hierarchySeparator);
+			urlSpec.Append("Inbox");
+			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+
+/* old-stle biff that doesn't download headers */
+NS_IMETHODIMP nsImapService::Biff(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL,
+												PRUint32 uidHighWater)
+{
+	static const char *formatString = "biff>%c%s>%ld";
+	
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapExpungeFolder);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			urlSpec.Append("/Biff>");
+			urlSpec.Append(hierarchySeparator);
+			urlSpec.Append("Inbox>");
+			urlSpec.Append(uidHighWater, 10);
+			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsImapService::DeleteMessages(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 PRBool messageIdsAreUID)
+{
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+	
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			urlSpec.Append("/deletemsg>");
+			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+			urlSpec.Append(">");
+			urlSpec.Append(hierarchySeparator);
+			urlSpec.Append("Inbox>");
+			urlSpec.Append(messageIdentifierList);
+			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+
+// Delete all messages in a folder, used to empty trash
+NS_IMETHODIMP nsImapService::DeleteAllMessages(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder,
+												nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectNoopFolder);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			urlSpec.Append("/deleteallmsgs>");
+			urlSpec.Append(hierarchySeparator);
+			urlSpec.Append("Inbox");
+			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsImapService::AddMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID)
+{
+	return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
+		"addmsgflags", flags, messageIdsAreUID);
+}
+
+NS_IMETHODIMP nsImapService::SubtractMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID)
+{
+	return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
+		"subtractmsgflags", flags, messageIdsAreUID);
+}
+
+NS_IMETHODIMP nsImapService::SetMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID)
+{
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+
+	return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
+		"setmsgflags", flags, messageIdsAreUID);
+}
+
+nsresult nsImapService::DiddleFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
+		  								 const char *messageIdentifierList,
+										 const char *howToDiddle,
+										 imapMessageFlagsType flags,
+										 PRBool messageIdsAreUID)
+{
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+	
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			urlSpec.Append('/');
+			urlSpec.Append(howToDiddle);
+			urlSpec.Append('>');
+			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+			urlSpec.Append(">");
+			urlSpec.Append(hierarchySeparator);
+			urlSpec.Append("Inbox>");
+			urlSpec.Append(messageIdentifierList);
+			urlSpec.Append('>');
+			urlSpec.Append(flags, 10);
+			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+
 
 #ifdef HAVE_PORT
 
