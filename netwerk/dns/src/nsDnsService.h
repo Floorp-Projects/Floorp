@@ -91,6 +91,11 @@ public:
     static void             Lock();
     static void             Unlock();
 
+    // Attempts to reinitialize the dns resolver. This method must be called
+    // within the nsDNSService lock.
+    // Returns true if the dns resolves has been reset, otherwise false.
+    static PRBool           Reset();
+
     void                    EnqueuePendingQ(nsDNSLookup * lookup);
     nsDNSLookup *           DequeuePendingQ();
     
@@ -126,6 +131,9 @@ private:
     nsCOMPtr<nsIThread>     mThread;
     PRUint32                mState;
     nsCOMPtr<nsIIDNService> mIDNConverter;
+
+    PRIntervalTime          mLastReset;  
+    PRIntervalTime          mResetMaxInterval; 
 
     enum {
         DNS_NOT_INITIALIZED = 0,
