@@ -21,12 +21,6 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-#else
-static const PRBool gsDebug = PR_FALSE;
-#endif
-
 nsCellMap::nsCellMap(int aRowCount, int aColCount)
   : mRowCount(0),
     mNumCollapsedRows(0),
@@ -78,7 +72,7 @@ void nsCellMap::AddColsAtEnd(PRUint32 aNumCols)
   Grow(mRowCount, mNumCellsInCol.Count() + aNumCols);
 }
 
-PRInt32 nsCellMap::GetNextAvailRowIndex() 
+PRInt32 nsCellMap::GetNextAvailRowIndex()
 {
   return mNextAvailRowIndex++;
 }
@@ -86,7 +80,6 @@ PRInt32 nsCellMap::GetNextAvailRowIndex()
 void nsCellMap::Grow(PRInt32 aNumMapRows, 
                      PRInt32 aNumCols)
 {
-              if (gsDebug) printf("calling Grow(%d,%d) with mapRC=%d, RC=%d, CC=%d\n", aNumMapRows, aNumCols, mRows.Count(), mRowCount, mNumCellsInCol.Count());
   PRInt32 origNumMapRows = mRows.Count();
   PRInt32 origNumCols    = mNumCellsInCol.Count();
 
@@ -117,7 +110,6 @@ void nsCellMap::Grow(PRInt32 aNumMapRows,
     row = (0 == aNumCols) ? new nsVoidArray() : new nsVoidArray(aNumCols);
     mRows.AppendElement(row);
   }
-            if (gsDebug) printf("leaving Grow with TRC=%d, TCC=%d\n", mRows.Count(), mNumCellsInCol.Count());
 }
 
 PRInt32 nsCellMap::AppendCell(nsTableCellFrame* aCellFrame, 
@@ -146,7 +138,6 @@ PRInt32 nsCellMap::AppendCell(nsTableCellFrame* aCellFrame,
 
   PRInt32 rowSpan = aCellFrame->GetRowSpan();
   PRInt32 colSpan = aCellFrame->GetColSpan();
-                       if (gsDebug) printf("AppendCell: rowSpan = %d, colSpan = %d\n", rowSpan, colSpan);
   // Grow. we may need to add new rows/cols 
   PRInt32 spanNumRows = aRowIndex + rowSpan;
   PRInt32 spanNumCols = startColIndex + colSpan;
@@ -156,7 +147,6 @@ PRInt32 nsCellMap::AppendCell(nsTableCellFrame* aCellFrame,
 
   // Setup CellData for this cell
   CellData* origData = new CellData(aCellFrame, nsnull, nsnull);
-                       if (gsDebug) printf("AppendCell: calling SetMapCellAt(data, %d, %d)\n", aRowIndex, startColIndex);
   SetMapCellAt(*origData, aRowIndex, startColIndex);
 
   // reset the col index of the cell frame
@@ -175,16 +165,29 @@ PRInt32 nsCellMap::AppendCell(nsTableCellFrame* aCellFrame,
         CellData* cellData = GetMapCellAt(rowX, colX);
         if (cellData) {
           NS_ASSERTION(!cellData->mOrigCell, "cannot overlap originating cell");
-          if (cellData->mSpanData) {
-            NS_ASSERTION(!cellData->mSpanData2, "too many overlaps");
-            cellData->mSpanData2 = origData;
+          if (rowX > aRowIndex) { // row spanning into cell
+            if (cellData->mRowSpanData) {
+              NS_ASSERTION(PR_FALSE, "too many overlaps");
+            }
+            else {
+              cellData->mRowSpanData = origData;
+            }
           }
-          else {
-            cellData->mSpanData = origData;
+          if (colX > startColIndex) { // col spanning into cell
+            if (cellData->mColSpanData) {
+              NS_ASSERTION(PR_FALSE, "too many overlaps");
+            }
+            else {
+              cellData->mColSpanData = origData;
+            }
           }
         }
         else { 
-          cellData = new CellData(nsnull, origData, nsnull);
+          cellData = new CellData(nsnull, nsnull, nsnull);
+          if (rowX > aRowIndex) 
+            cellData->mRowSpanData = origData;
+          if (colX > startColIndex) 
+            cellData->mColSpanData = origData;
           SetMapCellAt(*cellData, rowX, colX);
         }
       }
@@ -199,7 +202,8 @@ void nsCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
   // XXX write me. For now the cell map is recalculate from scratch when a cell is deleted
 }
 
-PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex, PRBool aOriginating)
+PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex, 
+                                 PRBool aOriginating) const
 {
   PRInt32 colCount = mNumCellsInCol.Count();
   if ((aColIndex >= 0) && (aColIndex < colCount)) {
@@ -213,12 +217,12 @@ PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex, PRBool aOriginating)
   }
 }
 
-PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex)
+PRInt32 nsCellMap::GetNumCellsIn(PRInt32 aColIndex) const
 {
   return GetNumCellsIn(aColIndex, 1);
 }
   
-PRInt32 nsCellMap::GetNumCellsOriginatingIn(PRInt32 aColIndex)
+PRInt32 nsCellMap::GetNumCellsOriginatingIn(PRInt32 aColIndex) const
 {
   return GetNumCellsIn(aColIndex, 0);
 }
@@ -241,20 +245,23 @@ void nsCellMap::Dump() const
         if (cd->mOrigCell) {
           printf("C%d,%d  ", rowIndex, colIndex);
         } else {
-          nsTableCellFrame* cell = cd->mSpanData->mOrigCell;
-          nsTableRowFrame* row;
-          cell->GetParent((nsIFrame**)&row);
-          int rr = row->GetRowIndex();
-          int cc;
-          cell->GetColIndex(cc);
-          printf("S%d,%d  ", rr, cc);
-          if (cd->mSpanData2){
-            cell = cd->mSpanData2->mOrigCell;
+          nsTableCellFrame* cell = nsnull;
+          int rr, cc;
+          if (cd->mRowSpanData) {
+            nsTableCellFrame* cell = cd->mRowSpanData->mOrigCell;
+            nsTableRowFrame* row;
+            cell->GetParent((nsIFrame**)&row);
+            rr = row->GetRowIndex();
+            cell->GetColIndex(cc);
+            printf("r%d,%d  ", rr, cc);
+          }
+          if (cd->mColSpanData){
+            cell = cd->mColSpanData->mOrigCell;
             nsTableRowFrame* row2;
             cell->GetParent((nsIFrame**)&row2);
             rr = row2->GetRowIndex();
             cell->GetColIndex(cc);
-            printf("O%d,%c ", rr, cc);
+            printf("c%d,%d ", rr, cc);
           } 
         }
       } else {
@@ -317,7 +324,8 @@ void nsCellMap::SetMapCellAt(CellData& aNewCell,
   (*(numCells + 1))++;         // cell occupies this col
 }
 
-PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32 aColIndex, nsTableCellFrame* aCell)
+PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32                 aColIndex, 
+                                       const nsTableCellFrame* aCell) const
 {
   NS_PRECONDITION(nsnull != aCell, "bad cell arg");
 
@@ -327,39 +335,72 @@ PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32 aColIndex, nsTableCellFrame* aCel
   PRInt32 effColSpan = 0;
   PRInt32 colCount = mNumCellsInCol.Count();
   for (PRInt32 colX = aColIndex; colX < colCount; colX++) {
+    PRBool found = PR_FALSE;
     CellData* cellData = GetCellAt(initialRowX, colX);
-    if (cellData && cellData->IsOccupiedBy(aCell)) {
+    if (cellData) {
+      if (cellData->mOrigCell) {
+        if (cellData->mOrigCell == aCell) {
+          found = PR_TRUE;
+        }
+      }
+      else if (cellData->mColSpanData && 
+              (cellData->mColSpanData->mOrigCell == aCell)) {
+        found = PR_TRUE;
+      }
+    }
+    if (found) {
       effColSpan++;
     }
     else {
       break;
     }
   }
-  if (effColSpan == 0) {
-    //Dump();
-    printf("hello");
-  }
   NS_ASSERTION(effColSpan > 0, "invalid col span or col index");
   return effColSpan;
 }
 
-void nsCellMap::GetCellInfoAt(PRInt32            aRowX, 
-                              PRInt32            aColX, 
-                              nsTableCellFrame*& aCellFrame, 
-                              PRBool&            aOriginates, 
-                              PRInt32&           aColSpan)
+nsTableCellFrame* nsCellMap::GetCellFrameOriginatingAt(PRInt32 aRowX, 
+                                                       PRInt32 aColX) const
 {
-  aCellFrame = GetCellFrameAt(aRowX, aColX);
-  if (aCellFrame) {
-    aOriginates = PR_TRUE;
-    PRInt32 initialColIndex;
-    aCellFrame->GetColIndex(initialColIndex);
-    aColSpan = GetEffectiveColSpan(initialColIndex, aCellFrame);
+  CellData* data = GetCellAt(aRowX, aColX);
+  if (data) {
+    return data->mOrigCell;
   }
-  else {
-    aOriginates = PR_FALSE;
-    aColSpan = 0;
+  return nsnull;
+}
+
+nsTableCellFrame* nsCellMap::GetCellInfoAt(PRInt32  aRowX, 
+                                           PRInt32  aColX, 
+                                           PRBool*  aOriginates, 
+                                           PRInt32* aColSpan) const
+{
+  if (aOriginates)
+    *aOriginates = PR_FALSE;
+  CellData* data = GetCellAt(aRowX, aColX);
+  nsTableCellFrame* cellFrame = nsnull;  
+  if (data) {
+    if (data->mOrigCell) {
+      cellFrame = data->mOrigCell;
+      if (aOriginates)
+        *aOriginates = PR_TRUE;
+      if (aColSpan) {
+        PRInt32 initialColIndex;
+        cellFrame->GetColIndex(initialColIndex);
+        *aColSpan = GetEffectiveColSpan(initialColIndex, cellFrame);
+      }
+    }
+    else {
+      if (data->mRowSpanData) {
+        cellFrame = data->mRowSpanData->mOrigCell;
+      }
+      else if (data->mColSpanData) {
+        cellFrame = data->mColSpanData->mOrigCell;
+      }
+      if (aColSpan)
+        *aColSpan = 0;
+    }
   }
+  return cellFrame;
 }
   
 
@@ -369,12 +410,12 @@ nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex) const
   return (nsTableColFrame *)(mColFrames.ElementAt(aColIndex));
 }
 
-PRInt32 nsCellMap::GetNumCollapsedRows()
+PRInt32 nsCellMap::GetNumCollapsedRows() const
 {
   return mNumCollapsedRows;
 }
 
-PRBool nsCellMap::IsRowCollapsedAt(PRInt32 aRow)
+PRBool nsCellMap::IsRowCollapsedAt(PRInt32 aRow) const
 {
   if ((aRow >= 0) && (aRow < mRowCount)) {
     if (mIsCollapsedRows) {
@@ -404,12 +445,12 @@ void nsCellMap::SetRowCollapsedAt(PRInt32 aRow, PRBool aValue)
   }
 }
 
-PRInt32 nsCellMap::GetNumCollapsedCols()
+PRInt32 nsCellMap::GetNumCollapsedCols() const
 {
   return mNumCollapsedCols;
 }
 
-PRBool nsCellMap::IsColCollapsedAt(PRInt32 aCol)
+PRBool nsCellMap::IsColCollapsedAt(PRInt32 aCol) const
 {
   PRInt32 colCount = mNumCellsInCol.Count();
   if ((aCol >= 0) && (aCol < colCount)) {
@@ -441,171 +482,74 @@ void nsCellMap::SetColCollapsedAt(PRInt32 aCol, PRBool aValue)
   }
 }
 
-// The following are not used and may not work. They have been removed from 
-// nsTableFrame and nsCellMap headers but retained here if needed in the future.
-#if 0
-/** returns PR_TRUE if the row at aRowIndex has any cells that are the result
-  * of a row-spanning cell above it.  So, given this table:<BR>
-  * <PRE>
-  * TABLE
-  *   TR
-  *    TD ROWSPAN=2
-  *    TD
-  *   TR
-  *    TD
-  * </PRE>
-  * RowIsSpannedInto(0) returns PR_FALSE, and RowIsSpannedInto(1) returns PR_TRUE.
-  * @see RowHasSpanningCells
-  */
-// if computing this and related info gets expensive, we can easily 
-// cache it.  The only thing to remember is to rebuild the cache 
-// whenever a row|col|cell is added/deleted, or a span attribute is changed.
-PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex)
+PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex) const
 {
-  NS_PRECONDITION (0 <= aRowIndex && aRowIndex < mRowCount, "bad row index arg");
-  PRInt32 colCount = mTableColToMapCol.Count();
-  PRBool result = PR_FALSE;
+  NS_PRECONDITION ((0 <= aRowIndex) && (aRowIndex < mRowCount), "bad row index arg");
+  PRInt32 colCount = mNumCellsInCol.Count();
 	for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
 		CellData* cd = GetCellAt(aRowIndex, colIndex);
 		if (cd) { // there's really a cell at (aRowIndex, colIndex)
 			if (!cd->mOrigCell) { // the cell at (aRowIndex, colIndex) is the result of a span
-				nsTableCellFrame* cell = cd->mSpanData->mOrigCell;
-				NS_ASSERTION(cell, "bad cell map state, missing real cell");
-				PRInt32 realRowIndex;
-        cell->GetRowIndex (realRowIndex);
-				if (realRowIndex != aRowIndex) { // the span is caused by a rowspan
-					result = PR_TRUE;
-					break;
-				}
+				if (nsnull != cd->mRowSpanData->mOrigCell)
+          return PR_TRUE;
 			}
 		}
   }
-  return result;
+  return PR_FALSE;
 }
 
-/** returns PR_TRUE if the row at aRowIndex has any cells that have a rowspan>1
-  * So, given this table:<BR>
-  * <PRE>
-  * TABLE
-  *   TR
-  *    TD ROWSPAN=2
-  *    TD
-  *   TR
-  *    TD
-  * </PRE>
-  * RowHasSpanningCells(0) returns PR_TRUE, and RowHasSpanningCells(1) returns PR_FALSE.
-  * @see RowIsSpannedInto
-  */
-PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex)
+PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex) const
 {
-  NS_PRECONDITION (0 <= aRowIndex && aRowIndex < mRowCount, "bad row index arg");
-  PRBool result = PR_FALSE;
-  PRInt32 colCount = mTableColToMapCol.Count();
+  NS_PRECONDITION ((0 <= aRowIndex) && (aRowIndex < mRowCount), "bad row index arg");
+  PRInt32 colCount = mNumCellsInCol.Count();
   if (aRowIndex != mRowCount - 1) {
     // aRowIndex is not the last row, so we check the next row after aRowIndex for spanners
     for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
-      PRInt32 nextRowIndex = aRowIndex + 1;
-      CellData* cd = GetCellAt(nextRowIndex, colIndex);
-      if (cd) { // there's really a cell at (nextRowIndex, colIndex)
-        if (!cd->mOrigCell) { // the cell at (nextRowIndex, colIndex) is the result of a span
-          nsTableCellFrame* cell = cd->mSpanData->mOrigCell;
-          NS_ASSERTION(cell, "bad cell map state, missing real cell");
-          PRInt32 realRowIndex;
-          cell->GetRowIndex (realRowIndex);
-          if (realRowIndex != nextRowIndex) { // the span is caused by a rowspan
-            CellData* spanningCell = GetCellAt(aRowIndex, colIndex);
-            if (spanningCell) { // there's really a cell at (aRowIndex, colIndex)
-              if (spanningCell->mOrigCell) { // aRowIndex is where the rowspan originated
-                result = PR_TRUE;
-                break;
-              }
-            }
-          }
+      CellData* cd = GetCellAt(aRowIndex, colIndex);
+      if (cd && (cd->mOrigCell)) { // cell originates 
+        CellData* cd2 = GetCellAt(aRowIndex + 1, colIndex);
+        if (cd2 && !cd2->mOrigCell && cd2->mRowSpanData) { // cd2 is spanned by a row
+          if (cd->mOrigCell == cd2->mRowSpanData->mOrigCell)
+            return PR_TRUE;
         }
       }
     }
   }
-  return result;
+  return PR_FALSE;
 }
 
-/** returns PR_TRUE if the col at aColIndex has any cells that are the result
-  * of a col-spanning cell.  So, given this table:<BR>
-  * <PRE>
-  * TABLE
-  *   TR
-  *    TD COLSPAN=2
-  *    TD
-  *    TD
-  * </PRE>
-  * ColIsSpannedInto(0) returns PR_FALSE, ColIsSpannedInto(1) returns PR_TRUE,
-  * and ColIsSpannedInto(2) returns PR_FALSE.
-  * @see ColHasSpanningCells
-  */
-PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex)
+PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 {
-  PRInt32 colCount = mTableColToMapCol.Count();
-  NS_PRECONDITION (0 <= aColIndex && aColIndex < colCount, "bad col index arg");
-  PRBool result = PR_FALSE;
+  NS_PRECONDITION ((0 <= aColIndex) && (aColIndex < mNumCellsInCol.Count()), "bad col index arg");
+	for (PRInt32 rowIndex = 0; rowIndex < mRowCount; rowIndex++) {
+		CellData* cd = GetCellAt(rowIndex, aColIndex);
+		if (cd) { // there's really a cell at (aRowIndex, colIndex)
+			if (!cd->mOrigCell) { // the cell at (aRowIndex, colIndex) is the result of a span
+				if (nsnull != cd->mColSpanData->mOrigCell)
+          return PR_TRUE;
+			}
+		}
+  }
+  return PR_FALSE;
+}
+
+PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
+{
+  NS_PRECONDITION (aColIndex < mNumCellsInCol.Count(), "bad col index arg");
+  PRInt32 colCount = mNumCellsInCol.Count();
+  if (aColIndex >= colCount - 1)
+    return PR_FALSE;
   for (PRInt32 rowIndex = 0; rowIndex < mRowCount; rowIndex++) {
     CellData* cd = GetCellAt(rowIndex, aColIndex);
-    if (cd) { // there's really a cell at (aRowIndex, aColIndex)
-      if (!cd->mOrigCell) { // the cell at (rowIndex, aColIndex) is the result of a span
-        nsTableCellFrame* cell = cd->mSpanData->mOrigCell;
-        NS_ASSERTION(cell, "bad cell map state, missing real cell");
-        PRInt32 realColIndex;
-        cell->GetColIndex(realColIndex);
-        if (realColIndex != aColIndex) { // the span is caused by a colspan
-          result = PR_TRUE;
-          break;
-        }
+    if (cd && (cd->mOrigCell)) { // cell originates 
+      CellData* cd2 = GetCellAt(rowIndex + 1, aColIndex);
+      if (cd2 && !cd2->mOrigCell && cd2->mColSpanData) { // cd2 is spanned by a col
+        if (cd->mOrigCell == cd2->mColSpanData->mOrigCell)
+          return PR_TRUE;
       }
     }
   }
-  return result;
+  return PR_FALSE;
 }
-
-/** returns PR_TRUE if the row at aColIndex has any cells that have a colspan>1
-  * So, given this table:<BR>
-  * <PRE>
-  * TABLE
-  *   TR
-  *    TD COLSPAN=2
-  *    TD
-  * </PRE>
-  * ColHasSpanningCells(0) returns PR_TRUE, and ColHasSpanningCells(1) returns PR_FALSE.
-  * @see ColIsSpannedInto
-  */
-PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex)
-{
-  PRBool result = PR_FALSE;
-  PRInt32 colCount = mTableColToMapCol.Count();
-  if (aColIndex < colCount - 1) { 
-    // aColIndex is not the last col, so we check the next col after aColIndex for spanners
-    for (PRInt32 rowIndex=0; rowIndex < mRowCount; rowIndex++) {
-      PRInt32 nextColIndex = aColIndex+1;
-      CellData* cd = GetCellAt(rowIndex, nextColIndex);
-      if (cd) { // there's really a cell at (rowIndex, nextColIndex)
-        if (!cd->mOrigCell) { // the cell at (rowIndex, nextColIndex) is the result of a span
-          nsTableCellFrame* cell = cd->mSpanData->mOrigCell;
-          NS_ASSERTION(cell, "bad cell map state, missing real cell");
-          PRInt32 realColIndex;
-          cell->GetColIndex(realColIndex);
-          if (realColIndex != nextColIndex) { // the span is caused by a colspan
-            CellData* spanningCell = GetCellAtInternal(rowIndex, aColIndex);
-            if (spanningCell) { // there's really a cell at (rowIndex, aColIndex)
-              if (spanningCell->mOrigCell) { // aCowIndex is where the cowspan originated
-                result = PR_TRUE;
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return result;
-}
-
-#endif
 
 

@@ -58,6 +58,20 @@ public:
                                       const nsHTMLReflowState& aReflowState,
                                       nscoord                  aMaxWidth);
 
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
+                                   const nsTableCellFrame& aCellFrame,
+                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
+                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
+                            nscoord                 aPrevCellMin,
+                            nscoord                 aPrevCellDes) const;
+
 protected:
    /* assign the width of all columns
     * if there is a colframe with a width attribute, use it as the column width.

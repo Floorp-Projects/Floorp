@@ -152,6 +152,20 @@ protected:
                                       PRInt32*& aOutColumnIndexes);
   void ContinuingFrameCheck();
 
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
+                                   const nsTableCellFrame& aCellFrame,
+                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
+                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
+                            nscoord                 aPrevCellMin,
+                            nscoord                 aPrevCellDes) const;
+
 protected:
   nsTableFrame * mTableFrame;
   PRInt32        mCols;

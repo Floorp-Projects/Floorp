@@ -92,13 +92,7 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 
 			// We now need to find the cell at this particular row and column.
 			// This is the cell we should really select.
-			nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
-			if (nsnull==cellFrame)
-			{
-				CellData *cellData = mCellMap->GetCellAt(rowIndex, colIndex);
-				if (nsnull!=cellData)
-					cellFrame = cellData->mSpanData->mOrigCell;
-			}
+			nsTableCellFrame *cellFrame = mCellMap->GetCellInfoAt(rowIndex, colIndex);
 
 			// Select this cell frame.
 			mSelectedItems.AppendElement(cellFrame);
@@ -145,13 +139,7 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 	for (PRInt32 i = start; i <= end; i++)
 	{
 		// Select the cell at the appropriate index
-		nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(i, colIndex);
-		if (nsnull==cellFrame)
-		{
-			CellData *cellData = mCellMap->GetCellAt(i, colIndex);
-			if (nsnull!=cellData)
-				cellFrame = cellData->mSpanData->mOrigCell;
-		}
+		nsTableCellFrame *cellFrame = mCellMap->GetCellInfoAt(i, colIndex);
 
 		// We now have the cell that should be selected. 
 		nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
@@ -246,13 +234,7 @@ void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFram
 
 void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame)
 {
-	nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(row, col);
-	if (nsnull==cellFrame)
-	{
-		CellData *cellData = mCellMap->GetCellAt(row, col);
-		if (nsnull!=cellData)
-			cellFrame = cellData->mSpanData->mOrigCell;
-	}
+	nsTableCellFrame *cellFrame = mCellMap->GetCellInfoAt(row, col);
 
 	// We now have the cell that should be selected. 
 	nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);

@@ -24,6 +24,8 @@
 
 class nsIStyleContext;
 struct nsHTMLReflowState;
+class nsTableCellFrame;
+class nsStyleCoord;
 
 class nsITableLayoutStrategy
 {
@@ -74,6 +76,19 @@ public:
   /** return the total number of columns in the table */
   virtual nscoord GetNumCols() const = 0;
 
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  virtual PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
+                                           const nsTableCellFrame& aCellFrame,
+                                           PRBool                  aConsiderMinWidth = PR_FALSE) const = 0;
+
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  virtual PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
+                                           PRBool                  aConsiderMinWidth = PR_FALSE) const = 0;
+
+  // see nsTableFrame::ColumnsCanBeInvalidatedBy
+  virtual PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
+                                    nscoord                 aPrevCellMin,
+                                    nscoord                 aPrevCellDes) const = 0;
 };
 
 #endif

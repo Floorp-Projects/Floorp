@@ -36,16 +36,6 @@ NS_DEF_PTR(nsIContent);
 
 static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 
-
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-static PRBool gsDebugIR = PR_FALSE;
-#else
-static const PRBool gsDebug = PR_FALSE;
-static const PRBool gsDebugIR = PR_FALSE;
-#endif
-
-
 NS_IMETHODIMP
 nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
@@ -290,8 +280,6 @@ NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext&      aPresContext,
                                       const nsRect&        aDirtyRect,
                                       nsFramePaintLayer    aWhichLayer)
 {
-  if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::Paint\n");
-
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;
     aPresContext.GetCompatibilityMode(&mode);
@@ -373,7 +361,6 @@ NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext&          aPres
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsReflowStatus&          aStatus)
 {
-  if (PR_TRUE==gsDebugIR) printf("\nTCGF IR: IncrementalReflow\n");
   nsresult  rv = NS_OK;
 
   // determine if this frame is the target or not
@@ -408,7 +395,6 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   const nsStyleDisplay *childDisplay=nsnull;
   if (nsnull!=objectFrame)
     objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-  if (PR_TRUE==gsDebugIR) printf("nTCGF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
   case nsIReflowCommand::StyleChanged :
@@ -423,7 +409,6 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   default:
     NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TCGF IR: unexpected reflow command not implemented.\n");
     break;
   }
 
@@ -435,7 +420,6 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext&          aPresCo
                                                 const nsHTMLReflowState& aReflowState,
                                                 nsReflowStatus&          aStatus)
 {
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_StyleChanged for frame %p\n", this);
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
@@ -456,8 +440,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext&          aPresC
                                                  nsIFrame *               aNextFrame)
 {
   nsresult rv;
-  if (PR_TRUE==gsDebugIR) printf("\nTCGF IR: IR_TargetIsChild\n");
-
+ 
   // Remember the old col count
   const PRInt32 oldColCount = GetColumnCount();
 

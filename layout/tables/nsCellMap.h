@@ -56,10 +56,6 @@ public:
   CellData* GetCellAt(PRInt32 aRowIndex, 
                       PRInt32 aColIndex) const;
 
-  /** return the nsTableCellFrame for the cell at (aTableRowIndex, aTableColIndex) */
-  nsTableCellFrame* GetCellFrameAt(PRInt32 aRowIndex, 
-                                   PRInt32 aColIndex) const;
-
   /** append the cellFrame at the end of the row at aRowIndex and return the col index
     */
   PRInt32 AppendCell(nsTableCellFrame* aCellFrame, 
@@ -70,19 +66,19 @@ public:
 
   PRInt32 GetNextAvailRowIndex();
 
-  PRInt32 GetEffectiveColSpan(PRInt32           aColIndex, 
-                              nsTableCellFrame* aCell);
+  PRInt32 GetEffectiveColSpan(nsTableCellFrame* aCell) const;
+  PRInt32 GetEffectiveColSpan(PRInt32                 aColIndex, 
+                              const nsTableCellFrame* aCell) const;
+  PRInt32 GetNumCellsIn(PRInt32 aColIndex) const;
+  PRInt32 GetNumCellsOriginatingIn(PRInt32 aColIndex) const;
 
-  PRInt32 GetNumCellsIn(PRInt32 aColIndex);
-  PRInt32 GetNumCellsOriginatingIn(PRInt32 aColIndex);
-
-  PRInt32 GetNumCollapsedRows();
-  PRBool IsRowCollapsedAt(PRInt32 aRowIndex);
+  PRInt32 GetNumCollapsedRows() const;
+  PRBool IsRowCollapsedAt(PRInt32 aRowIndex) const;
   void SetRowCollapsedAt(PRInt32 aRowIndex, 
                          PRBool  aValue);
 
-  PRInt32 GetNumCollapsedCols();
-  PRBool IsColCollapsedAt(PRInt32 aColIndex);
+  PRInt32 GetNumCollapsedCols() const;
+  PRBool IsColCollapsedAt(PRInt32 aColIndex) const;
   void SetColCollapsedAt(PRInt32 aColIndex, 
                          PRBool aValue);
 
@@ -103,13 +99,21 @@ public:
   /** empty the column frame cache */
   void ClearColumnCache();
 
-  void GetCellInfoAt(PRInt32            aRowX, 
-                     PRInt32            aColX, 
-                     nsTableCellFrame*& aCellFrame, 
-                     PRBool&            aOriginates, 
-                     PRInt32&           aColSpan);
+  // temporary until nsTableFrame::GetCellData uses GetCellFrameAt
+  nsTableCellFrame* GetCellFrameOriginatingAt(PRInt32 aRowX, 
+                                              PRInt32 aColX) const;
+
+  nsTableCellFrame* GetCellInfoAt(PRInt32  aRowX, 
+                                  PRInt32  aColX, 
+                                  PRBool*  aOriginates = nsnull, 
+                                  PRInt32* aColSpan = nsnull) const;
 
   void AddColsAtEnd(PRUint32 aNumCols);
+
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex) const;
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex) const;
+  PRBool ColIsSpannedInto(PRInt32 aColIndex) const;
+  PRBool ColHasSpanningCells(PRInt32 aColIndex) const;
 
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef NS_DEBUG
@@ -129,7 +133,8 @@ protected:
   CellData* GetMapCellAt(PRInt32 aMapRowIndex, 
                          PRInt32 aColIndex) const;
 
-  PRInt32 GetNumCellsIn(PRInt32 aColIndex, PRBool aOriginating);
+  PRInt32 GetNumCellsIn(PRInt32 aColIndex, 
+                        PRBool aOriginating) const;
 
   /** an array containing col array. It can be larger than mRowCount due to
     * row spans extending beyond the table */
@@ -189,23 +194,6 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
   nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aMapRowIndex));
   if (row)
     result = (CellData *)(row->ElementAt(aColIndex));
-  return result;
-}
-
-inline nsTableCellFrame* nsCellMap::GetCellFrameAt(PRInt32 aRowIndex, 
-                                                   PRInt32 aColIndex) const
-{
-  if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
-      (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
-    //see bug 9024 comments above 
-    //printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
-    return nsnull;
-  }
-
-  nsTableCellFrame* result = nsnull;
-  CellData* cellData = GetCellAt(aRowIndex, aColIndex);
-  if (cellData)
-    result = cellData->mOrigCell;
   return result;
 }
 

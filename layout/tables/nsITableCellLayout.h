@@ -41,10 +41,10 @@ public:
   NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)=0;
 
   /** return the mapped cell's row index (starting at 0 for the first row) */
-  virtual nsresult GetRowIndex(PRInt32 &aRowIndex)=0;
+  virtual nsresult GetRowIndex(PRInt32 &aRowIndex) const = 0;
   
   /** return the mapped cell's column index (starting at 0 for the first column) */
-  virtual nsresult GetColIndex(PRInt32 &aColIndex)=0;
+  virtual nsresult GetColIndex(PRInt32 &aColIndex) const = 0;
 };
 
 
