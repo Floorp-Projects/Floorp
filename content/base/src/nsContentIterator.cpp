@@ -365,7 +365,7 @@ nsresult nsContentIterator::First()
 {
   if (!mFirst) 
     return NS_ERROR_FAILURE;
-  mIsDone = false;
+  mIsDone = PR_FALSE;
   if (mFirst == mCurNode) 
     return NS_OK;
   mCurNode = mFirst;
@@ -377,7 +377,7 @@ nsresult nsContentIterator::Last()
 {
   if (!mLast) 
     return NS_ERROR_FAILURE;
-  mIsDone = false;
+  mIsDone = PR_FALSE;
   if (mLast == mCurNode) 
     return NS_OK;
   mCurNode = mLast;
@@ -393,7 +393,7 @@ nsresult nsContentIterator::Next()
     return NS_OK;
   if (mCurNode == mLast) 
   {
-    mIsDone = true;
+    mIsDone = PR_TRUE;
     return NS_ERROR_FAILURE;
   }
   
