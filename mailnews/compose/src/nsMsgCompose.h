@@ -82,6 +82,7 @@ class nsMsgCompose : public nsIMsgCompose
 /******/
 
   nsresult LoadBody();
+  nsresult SetQuotingToFollow(PRBool aVal);
 
 private:
 
@@ -100,7 +101,10 @@ private:
   QuotingOutputStreamImpl *mOutStream;
   nsCOMPtr<nsIOutputStream>          mBaseStream;
   nsCOMPtr<nsIMsgQuote>              mQuote;
+
+  // For only making a single LoadUrl call on the editor
   PRBool                             mBodyLoaded;
+  PRBool                             mQuotingToFollow;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

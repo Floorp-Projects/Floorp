@@ -65,6 +65,7 @@ nsMsgCompose::nsMsgCompose()
 	mOutStream=nsnull;
 	m_compFields = do_QueryInterface(new nsMsgCompFields);
   mBodyLoaded = PR_FALSE;
+  mQuotingToFollow = PR_FALSE;
 
 	// Get the default charset from pref, use this as a mail charset.
 	char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
@@ -103,6 +104,14 @@ nsMsgCompose::~nsMsgCompose()
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
+
+
+nsresult 
+nsMsgCompose::SetQuotingToFollow(PRBool aVal)
+{
+  mQuotingToFollow = aVal;
+  return NS_OK;
+}
 
 
 nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI,
@@ -152,9 +161,9 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 //     is created, but we can't load the body in all cases because we don't
 //     have the body text yet for quoted operations (Reply, forward, etc...)
 //     Quoting, etc.. happens asynchronously, so we have to wait until that
-//     completes to do the LoadURL() call....which brings us to our next point.
+//     completes to do the LoadUrl() call....which brings us to our next point.
 //
-// 2.) We should call LoadURL() on composer's editor widget only once. Currently,
+// 2.) We should call LoadUrl() on composer's editor widget only once. Currently,
 //     if you do that, you get an editor window you can't edit, but even if that is
 //     fixed, we shouldn't load content into the editor window more than once...that
 //     would be very ugly/confusing to the user. 
@@ -162,6 +171,12 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 nsresult 
 nsMsgCompose::LoadBody()
 {
+  // If mQuotingToFollow is set, then we are waiting on an async quoting operation
+  // Also, check to make sure we don't run LoadUrl() on the editor window more than 
+  // once or the edit session will be dead in the water.
+  if ((mQuotingToFollow) || (mBodyLoaded) )
+    return NS_OK;
+
   if (!m_window || !m_webShell || !m_webShellWin || !m_compFields)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -196,12 +211,30 @@ nsMsgCompose::LoadBody()
     else
     {
       nsAutoString  urlStr;
-    		if (m_composeHTML)
-        		urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
-        else
-        		urlStr = "chrome://messengercompose/content/defaultTextBody.html";
+    	if (m_composeHTML)
+        	urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
+      else
+      {
+        nsString fileName(TEMP_PATH_DIR);
+        fileName += TEMP_MESSAGE_OUT_TEXT;
+        nsFileSpec aPath(fileName);
+        nsOutputFileStream tempFile(aPath);
         
-        m_editor->LoadUrl(urlStr.GetUnicode());
+        // RICHIE - probably should do a template or possibly attach an HTML
+        // sig!
+        if (tempFile.is_open())
+        {
+          char *textMessage = "--- This message was sent by Messenger 5.0 ---";
+  
+          // tempFile.write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+          tempFile.write(textMessage, PL_strlen(textMessage));
+          tempFile.close();
+          
+          urlStr = nsFileURL(aPath).GetURLString();
+        }          
+      }
+      
+      m_editor->LoadUrl(urlStr.GetUnicode());
     }
 
     mBodyLoaded = PR_TRUE;
@@ -262,8 +295,7 @@ nsresult nsMsgCompose::LoadFields()
         }
       }
 
-      // RICHIE
-      // Now we do the LoadURL on the editor because we don't have to wait for any
+      // Now we do the LoadURL on the editor because we *may* not have have to wait for any
       // sort of quoting operation...otherwise we are waiting for an async completion and do the load 
       // in that callback...this will prevent multiple LoadURL's which is not a good thing for the 
       // editor or our users
@@ -573,6 +605,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
       case MSGCOMP_TYPE_Reply : 
       case MSGCOMP_TYPE_ReplyAll:
         {
+          mQuotingToFollow = PR_TRUE;
           // get an original charset, used for a label, UTF-8 is used for the internal processing
           if (!aCharset.Equals(""))
             m_compFields->SetCharacterSet(nsAutoCString(aCharset), nsnull);
@@ -622,6 +655,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
       case MSGCOMP_TYPE_ForwardAsAttachment:
       case MSGCOMP_TYPE_ForwardInline:
         {
+          mQuotingToFollow = PR_TRUE;
+
           if (!aCharset.Equals(""))
             m_compFields->SetCharacterSet(nsAutoCString(aCharset), nsnull);
           
@@ -690,7 +725,10 @@ QuotingOutputStreamImpl::ConvertToPlainText()
         parser->SetContentSink(sink);
 
         // Set the charset...
-        nsAutoString utf8("UTF-8");
+        // RICHIE
+        //nsAutoString utf8("UTF-8");
+printf("Warning: UTF-8 output is choking Ender!!!\n");
+        nsAutoString utf8("US-ASCII");
         parser->SetDocumentCharset(utf8, kCharsetFromMetaTag);
         
         nsIDTD* dtd = nsnull;
@@ -737,6 +775,7 @@ QuotingOutputStreamImpl::Close(void)
       if (compFields)
         compFields->SetBody(nsAutoCString(mMsgBody), NULL);
 
+    mComposeObj->SetQuotingToFollow(PR_FALSE);
     mComposeObj->LoadBody();
   }
   
