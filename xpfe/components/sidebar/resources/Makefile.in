@@ -63,7 +63,6 @@ CHROME_SKIN	= \
 CHROME_L10N	= \
 		./locale/en-US/customize-panel.dtd \
 		./locale/en-US/customize.dtd \
-		./locale/en-US/flash.dtd \
 		./locale/en-UN/panel-add-confirm.dtd \
 		./locale/en-UN/panel-exists.dtd \
 		./locale/en-US/preview.dtd \
