@@ -64,6 +64,10 @@ ifndef TOOLKIT_EXORCISM
 	UN_EXORCISED_TK_FLAGS=$(TK_LIBS)
 endif
 
+ifdef MOZ_OJI
+OJI_LIBS=-loji -ljsj
+endif
+
 LIBS		+= \
 		$(UN_EXORCISED_WIDGET_FLAGS) \
 		-lraptorgfx \
@@ -78,7 +82,7 @@ LIBS		+= \
 		-ljsurl \
 		-lsecfree \
 		-lmozjs \
-		$(JSJ_LIB) \
+		$(OJI_LIBS) \
 		-lpref \
 		-limg \
 		-lmozutil \
