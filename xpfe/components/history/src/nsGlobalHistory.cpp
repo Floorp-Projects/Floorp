@@ -1022,8 +1022,10 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
   nsMdbPtr<nsIMdbRow> row(mEnv);
   rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
 
-  if (NS_FAILED(rv)) return rv;
-  if (!row) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)|| !row) {
+    *_retval = LL_ZERO;
+    return NS_OK;
+  }
   
   return GetRowValue(row, kToken_LastVisitDateColumn, _retval);
 
