@@ -351,6 +351,9 @@ protected:
     static nsIRDFResource* kXUL_element;
 
     static nsIXULSortService* gXULSortService;
+    
+    static nsString	trueStr;
+    static nsString	falseStr;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -382,6 +385,9 @@ nsIAtom* RDFGenericBuilderImpl::kTreeItemAtom;
 nsIAtom* RDFGenericBuilderImpl::kURIAtom;
 nsIAtom* RDFGenericBuilderImpl::kValueAtom;
 nsIAtom* RDFGenericBuilderImpl::kXULContentsGeneratedAtom;
+
+nsString RDFGenericBuilderImpl::trueStr;
+nsString RDFGenericBuilderImpl::falseStr;
 
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
@@ -531,6 +537,9 @@ RDFGenericBuilderImpl::Init()
         kURIAtom                        = NS_NewAtom("uri");
         kValueAtom                      = NS_NewAtom("value");
         kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
+
+	trueStr = "true";
+	falseStr = "false";
 
         nsresult rv;
 
@@ -1138,8 +1147,8 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
                 rv = element->GetAttribute(kNameSpaceID_None, kEmptyAtom, empty);
                 if (NS_FAILED(rv)) return rv;
 
-                if ((rv != NS_CONTENT_ATTR_HAS_VALUE) && (! empty.Equals("true"))) {
-                    rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, nsAutoString("true"), PR_TRUE);
+                if ((rv != NS_CONTENT_ATTR_HAS_VALUE) && (! empty.Equals(trueStr))) {
+                    rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, trueStr, PR_TRUE);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -1368,22 +1377,22 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
 		else if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsContainerAtom)) {
 			// check and see if aChild is a container
 			PRBool isContainer = IsContainer(aRule, aChild);
-			if (isContainer && (!value.Equals("true"))) {
+			if (isContainer && (!value.Equals(trueStr))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
-			else if (!isContainer && (!value.Equals("false"))) {
+			else if (!isContainer && (!value.Equals(falseStr))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
 		}
         else if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsEmptyAtom)) {
             PRBool isEmpty = IsEmpty(aRule, aChild);
-            if (isEmpty && (!value.Equals("true"))) {
+            if (isEmpty && (!value.Equals(trueStr))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
-            else if (!isEmpty && (!value.Equals("false"))) {
+            else if (!isEmpty && (!value.Equals(falseStr))) {
                 *aIsMatch = PR_FALSE;
                 return NS_OK;
             }
@@ -1818,11 +1827,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             if (IsContainer(tmplKid, aChild)) {
-                rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, nsAutoString("true"), PR_FALSE);
+                rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, trueStr, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 // test to see if the container has contents
-                nsAutoString isEmpty = IsEmpty(tmplKid, aChild) ? (const char *)"true" : (const char *)"false";
+                nsAutoString isEmpty = IsEmpty(tmplKid, aChild) ? trueStr : falseStr;
                 rv = realKid->SetAttribute(kNameSpaceID_None, kEmptyAtom, isEmpty, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -2661,7 +2670,7 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (value.Equals("true"))
+        if (value.Equals(trueStr))
             return PR_TRUE;
     }
 
@@ -3036,7 +3045,7 @@ RDFGenericBuilderImpl::SetEmpty(nsIContent *element, PRBool empty)
 {
 	nsresult rv;
 
-	nsAutoString newEmptyStr(empty ? "true" : "false");
+	nsAutoString newEmptyStr(empty ? trueStr : falseStr);
 	nsAutoString emptyStr;
 
 	rv = element->GetAttribute(kNameSpaceID_None, kEmptyAtom, emptyStr);
