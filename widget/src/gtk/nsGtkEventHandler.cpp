@@ -366,16 +366,24 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
       case GDK_KP_9:
         return '9';
     }
+  }
 
-    if (!isprint(aGEK->keyval))
-      return 0;
-    return (PRUint32)aGEK->keyval;
+  if (aGEK->state & GDK_CONTROL_MASK) {
+    if (isprint(aGEK->keyval))
+      return (PRUint32)aGEK->keyval;
+
+    return 0;
   }
 
   // For now (will this need to change for IME?),
   // only set a char code if the result is printable:
   if (!isprint(aGEK->string[0]))
     return 0;
+
+  if ((aGEK->state & GDK_MOD1_MASK)
+      && !(aGEK->state & GDK_SHIFT_MASK)
+      && isupper(aGEK->string[0]))
+    return tolower(aGEK->string[0]);
 
   //
   // placeholder for something a little more interesting and correct
