@@ -944,5 +944,10 @@ ImageFrame::AttributeChanged(nsIPresShell* aShell,
   if (NS_OK != rv) {
     return rv;
   }
+  if ((nsHTMLAtoms::width == aAttribute) ||
+      (nsHTMLAtoms::height == aAttribute)) {
+    nsHTMLContainerFrame::ApplyStyleChangeToTree(*aPresContext, this);
+    nsHTMLContainerFrame::StyleChangeReflow(*aPresContext, this);
+  }
   return NS_OK;
 }
