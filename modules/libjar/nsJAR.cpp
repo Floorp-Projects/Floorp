@@ -547,12 +547,12 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   PRUint32 sigLen;
   {
     nsCAutoString tempFilename(sigFilename); tempFilename.Append("rsa", 3);
-    rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
+    rv = LoadEntry(tempFilename.get(), getter_Copies(sigBuffer), &sigLen);
   }
   if (NS_FAILED(rv))
   {
     nsCAutoString tempFilename(sigFilename); tempFilename.Append("RSA", 3);
-    rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
+    rv = LoadEntry(tempFilename.get(), getter_Copies(sigBuffer), &sigLen);
   }
   if (NS_FAILED(rv))
   {
@@ -636,7 +636,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
             //-- If it's an internal item, it must correspond 
             //   to a valid jar entry
               nsIZipEntry* entry;
-              PRInt32 result = GetEntry(curItemName, &entry);
+              PRInt32 result = GetEntry(curItemName.get(), &entry);
               if (result != ZIP_OK || !entry)
                 curItemMF->mType = JAR_INVALID;
             }
@@ -731,7 +731,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
         curItemMF->storedEntryDigest = (char*)PR_MALLOC(lineData.Length()+1);
         if (!(curItemMF->storedEntryDigest))
           return NS_ERROR_OUT_OF_MEMORY;
-        PL_strcpy(curItemMF->storedEntryDigest, lineData);
+        PL_strcpy(curItemMF->storedEntryDigest, lineData.get());
       }
       else
         storedSectionDigest = lineData;

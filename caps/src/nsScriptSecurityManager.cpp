@@ -261,7 +261,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         // so we can assume this is a DOM class. Otherwise, we ask the ClassInfo.
         secLevel = GetSecurityLevel(subjectPrincipal,
                                     (aProperty || IsDOMClass(aClassInfo)),
-                                    className, propertyName, aAction, capability, aPolicy);
+                                    className, propertyName.get(), aAction, capability, aPolicy);
     }
 
     nsresult rv;
@@ -307,7 +307,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 		    printf("Level: Capability ");
 #endif
             PRBool capabilityEnabled = PR_FALSE;
-            rv = IsCapabilityEnabled(capability, &capabilityEnabled);
+            rv = IsCapabilityEnabled(capability.get(), &capabilityEnabled);
             if (NS_FAILED(rv) || !capabilityEnabled)
                 rv = NS_ERROR_DOM_SECURITY_ERR;
             else
@@ -410,7 +410,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         }
 
         JS_SetPendingException(aJSContext,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg.get())));
         //-- if (aProperty) we were called from somewhere other than xpconnect, so we need to
         //   tell xpconnect that an exception was thrown.
         if (aProperty)
@@ -491,7 +491,7 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
                                           const char* aClassName,
                                           const char* aPropertyName,
                                           PRUint32 aAction,
-                                          nsCString &capability,
+                                          nsCString &aCapability,
                                           void** aPolicy)
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -534,9 +534,7 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
         else
         {
             // string should be the name of a capability
-            capability = PL_strdup(propertyPolicy);
-            if (!capability)
-                return NS_ERROR_OUT_OF_MEMORY;
+            aCapability = propertyPolicy;
             secLevel = SCRIPT_SECURITY_CAPABILITY_ONLY;
         }
     }
@@ -600,7 +598,7 @@ nsScriptSecurityManager::TryToGetPref(nsISecurityPref* aSecurityPref,
     aPrefName += aPropertyName;
 
     //-- Try to look up the pref
-    if (NS_SUCCEEDED(aSecurityPref->SecurityGetCharPref(aPrefName, result)))
+    if (NS_SUCCEEDED(aSecurityPref->SecurityGetCharPref(aPrefName.get(), result)))
         return NS_OK;
 
     //-- If appropriate, try adding .get or .set and looking up again
@@ -608,7 +606,7 @@ nsScriptSecurityManager::TryToGetPref(nsISecurityPref* aSecurityPref,
     {
         aPrefName += 
             (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
-        return aSecurityPref->SecurityGetCharPref(aPrefName, result);
+        return aSecurityPref->SecurityGetCharPref(aPrefName.get(), result);
     }
     
     //-- Couldn't find a pref
@@ -1886,7 +1884,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext,
             }
         }
         JS_SetPendingException(aJSContext,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg.get())));
     }
     return rv;
 }
@@ -1904,7 +1902,7 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext,
         cidStr += aCID.ToString();
         errorMsg.Append(cidStr);
         JS_SetPendingException(aJSContext,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg.get())));
     }
     return rv;
 }
@@ -1928,7 +1926,7 @@ nsScriptSecurityManager::CanGetService(JSContext *aJSContext,
         cidStr += aCID.ToString();
         errorMsg.Append(cidStr);
         JS_SetPendingException(aJSContext,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg.get())));
     }
     return rv;
 }
