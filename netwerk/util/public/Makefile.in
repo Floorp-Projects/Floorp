@@ -23,10 +23,11 @@ topsrcdir   = @top_srcdir@
 srcdir      = @srcdir@
 VPATH       = @srcdir@
 
-EXPORTS =           \
-    nsIUnicharStreamLoader.h \
-    nsNeckoUtil.h       \
-    $(NULL)
+EXPORTS =			  \
+	nsNeckoUtil.h		  \
+	nsIUnicharStreamLoader.h  \
+        nsIBlockingNotification.h \
+	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 
