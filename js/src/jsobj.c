@@ -2218,7 +2218,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  * entry, compressing or shrinking the table as needed.
                  */
                 if (table->generation == generation &&
-                    table->removedCount < JS_BIT(table->sizeLog2) >> 2) {
+                    table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2) {
                     JS_DHashTableRawRemove(table, entry);
                 } else {
                     JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
@@ -3590,7 +3590,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 /* Routines to print out values during debugging. */
 
 void printChar(jschar *cp) {
-    fprintf(stderr, "jschar* (0x%p) \"", cp);
+    fprintf(stderr, "jschar* (0x%p) \"", (void *)cp);
     while (*cp)
         fputc(*cp++, stderr);
     fputc('"', stderr);
@@ -3599,7 +3599,7 @@ void printChar(jschar *cp) {
 
 void printString(JSString *str) {
     jsuint i;
-    fprintf(stderr, "string (0x%p) \"", str);
+    fprintf(stderr, "string (0x%p) \"", (void *)str);
     for (i=0; i < str->length; i++)
         fputc(str->chars[i], stderr);
     fputc('"', stderr);
@@ -3613,14 +3613,14 @@ void printObj(JSContext *cx, JSObject *jsobj) {
     jsval val;
     JSClass *clasp;
 
-    fprintf(stderr, "object 0x%p\n", jsobj);
+    fprintf(stderr, "object 0x%p\n", (void *)jsobj);
     clasp = OBJ_GET_CLASS(cx, jsobj);
-    fprintf(stderr, "class 0x%p %s\n", clasp, clasp->name);
+    fprintf(stderr, "class 0x%p %s\n", (void *)clasp, clasp->name);
     for (i=0; i < jsobj->map->nslots; i++) {
         fprintf(stderr, "slot %3d ", i);
         val = jsobj->slots[i];
         if (JSVAL_IS_OBJECT(val))
-            fprintf(stderr, "object 0x%p\n", JSVAL_TO_OBJECT(val));
+            fprintf(stderr, "object 0x%p\n", (void *)JSVAL_TO_OBJECT(val));
         else
             printVal(cx, val);
     }

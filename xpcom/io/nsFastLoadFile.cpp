@@ -497,7 +497,7 @@ nsFastLoadFileReader::EndMuxedDocument(nsISupports* aURI)
         return NS_ERROR_NOT_AVAILABLE;
 
     // Shrink the table if half the entries are removed sentinels.
-    PRUint32 size = PR_BIT(mFooter.mURIMap.sizeLog2);
+    PRUint32 size = PL_DHASH_TABLE_SIZE(&mFooter.mURIMap);
     if (mFooter.mURIMap.removedCount >= (size >> 2))
         PL_DHashTableOperate(&mFooter.mURIMap, key, PL_DHASH_REMOVE);
     else

@@ -298,7 +298,7 @@ nsTemplateMatchRefSet::First() const
         return ConstIterator(this, (nsTemplateMatch**) mStorageElements.mInlineMatches.mEntries);
 
     Entry* entry = NS_REINTERPRET_CAST(Entry*, mStorageElements.mTable.entryStore);
-    Entry* limit = entry + PR_BIT(mStorageElements.mTable.sizeLog2);
+    Entry* limit = entry + PL_DHASH_TABLE_SIZE(&mStorageElements.mTable);
     for ( ; entry < limit; ++entry) {
         if (ENTRY_IS_LIVE(entry))
             break;
@@ -319,7 +319,7 @@ nsTemplateMatchRefSet::Last() const
     }
 
     Entry* limit = NS_REINTERPRET_CAST(Entry*, mStorageElements.mTable.entryStore);
-    limit += PR_BIT(mStorageElements.mTable.sizeLog2);
+    limit += PL_DHASH_TABLE_SIZE(&mStorageElements.mTable);
     return ConstIterator(this, limit);
 }
 
@@ -331,7 +331,7 @@ nsTemplateMatchRefSet::ConstIterator::Next()
     else {
         const PLDHashTable& table = mSet->mStorageElements.mTable;
         Entry* limit = NS_REINTERPRET_CAST(Entry*, table.entryStore);
-        limit += PR_BIT(table.sizeLog2);
+        limit += PL_DHASH_TABLE_SIZE(&table);
         while (++mTableEntry < limit) {
             if (ENTRY_IS_LIVE(mTableEntry))
                 break;

@@ -465,7 +465,7 @@ nsFastLoadService::GetFastLoadReferent(nsISupports* *aPtrAddr)
         return rv;
 
     // Shrink the table if half the entries are removed sentinels.
-    PRUint32 size = PR_BIT(mFastLoadPtrMap->sizeLog2);
+    PRUint32 size = PL_DHASH_TABLE_SIZE(mFastLoadPtrMap);
     if (mFastLoadPtrMap->removedCount >= (size >> 2))
         PL_DHashTableOperate(mFastLoadPtrMap, entry, PL_DHASH_REMOVE);
     else

@@ -43,6 +43,10 @@ MODULE		= js
 LIBRARY_NAME	= mozjs
 EXPORT_LIBRARY = 1
 
+ifdef NS_TRACE_MALLOC
+REQUIRES	= xpcom
+endif
+
 CSRCS		= \
 		jsapi.c \
 		jsarena.c \

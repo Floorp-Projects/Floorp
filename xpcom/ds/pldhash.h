@@ -50,9 +50,15 @@ PR_BEGIN_EXTERN_C
 #define PL_DHASHMETER 1
 #endif
 
+/* Maximum table size, do not equal or exceed (see min&maxAlphaFrac, below). */
+#undef PL_DHASH_MAX_SIZE
+#define PL_DHASH_MAX_SIZE       PR_BIT(24)
+
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef PL_DHASH_MIN_SIZE
 #define PL_DHASH_MIN_SIZE 16
+#elif (PL_DHASH_MIN_SIZE & (PL_DHASH_MIN_SIZE - 1)) != 0
+#error "PL_DHASH_MIN_SIZE must be a power of two!"
 #endif
 
 /*
@@ -154,7 +160,7 @@ struct PLDHashEntryHdr {
  * assuming esize is not too large (in which case, chaining should probably be
  * used for any alpha).  For esize=2 and k=3, we want alpha >= .2; for esize=3
  * and k=2, we want alpha >= .4.  For k=4, esize could be 6, and alpha >= .5
- * would still obtain.
+ * would still obtain.  See the PL_DHASH_MIN_ALPHA macro further below.
  *
  * The current implementation uses a constant .25 as alpha's lower bound when
  * deciding to shrink the table (while respecting PL_DHASH_MIN_SIZE).
@@ -174,7 +180,8 @@ struct PLDHashTable {
     PLDHashTableOps     *ops;           /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     PRInt16             hashShift;      /* multiplicative hash shift */
-    PRInt16             sizeLog2;       /* log2(table size) */
+    uint8               maxAlphaFrac;   /* 8-bit fixed point max alpha */
+    uint8               minAlphaFrac;   /* 8-bit fixed point min alpha */
     PRUint32            entrySize;      /* number of bytes in an entry */
     PRUint32            entryCount;     /* number of entries in table */
     PRUint32            removedCount;   /* removed entry sentinels in table */
@@ -202,6 +209,13 @@ struct PLDHashTable {
     } stats;
 #endif
 };
+
+/*
+ * Size in entries (gross, not net of free and removed sentinels) for table.
+ * We store hashShift rather than sizeLog2 to optimize the collision-free case
+ * in SearchTable.
+ */
+#define PL_DHASH_TABLE_SIZE(table)  PR_BIT(PL_DHASH_BITS - (table)->hashShift)
 
 /*
  * Table space at entryStore is allocated and freed using these callbacks.
@@ -392,6 +406,28 @@ PL_DHashTableDestroy(PLDHashTable *table);
 PR_EXTERN(PRBool)
 PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
                   PRUint32 entrySize, PRUint32 capacity);
+
+/*
+ * Set maximum and minimum alpha for table.  The defaults are 0.75 and .25.
+ * maxAlpha must be in [0.5, 0.9375] for the default PL_DHASH_MIN_SIZE; or if
+ * MinSize=PL_DHASH_MIN_SIZE <= 256, in [0.5, (float)(MinSize-1)/MinSize]; or
+ * else in [0.5, 255.0/256].  minAlpha must be in [0, maxAlpha / 2), so that
+ * we don't shrink on next remove after growing a table upon adding an entry
+ * that brings entryCount past maxAlpha * tableSize.
+ */
+PR_IMPLEMENT(void)
+PL_DHashTableSetAlphaBounds(PLDHashTable *table,
+                            float maxAlpha,
+                            float minAlpha);
+
+/*
+ * Call this macro with k, the number of pointer-sized words wasted per entry
+ * under chaining, to compute the minimum alpha at which double hashing still
+ * beats chaining.
+ */
+#define PL_DHASH_MIN_ALPHA(table, k)                                          \
+    ((float)((table)->entrySize / sizeof(void *) - 1)                         \
+     / ((table)->entrySize / sizeof(void *) + (k)))
 
 /*
  * Finalize table's data, free its entry storage using table->ops->freeTable,
