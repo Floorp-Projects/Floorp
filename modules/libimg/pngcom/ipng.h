@@ -48,6 +48,7 @@ typedef struct ipng_str {
     int channels;               /* color channels (3 or 4) */
     PRUint8 *rgbrow;              /* RGB row buffer (3*width bytes) */
     PRUint8 *alpharow;            /* alpha row buffer (width bytes) */
+    PRUint8 *interlacebuf;        /* interlace buffer */
 
     /* One scanline's worth of post-processed sample data */
 
