@@ -2161,9 +2161,6 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
                             nsRuleNode* aHighestNode,
                             const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW FONT CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
 
   const nsCSSFont& fontData = NS_STATIC_CAST(const nsCSSFont&, aData);
@@ -2295,9 +2292,6 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
                             nsRuleNode* aHighestNode,
                             const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW TEXT CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
 
   const nsCSSText& textData = NS_STATIC_CAST(const nsCSSText&, aData);
@@ -2412,9 +2406,6 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& a
                                  nsRuleNode* aHighestNode,
                                  const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW TEXTRESET CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
 
   const nsCSSText& textData = NS_STATIC_CAST(const nsCSSText&, aData);
@@ -2484,9 +2475,6 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
                           nsRuleNode* aHighestNode,
                           const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW UI CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSUserInterface& uiData = NS_STATIC_CAST(const nsCSSUserInterface&, aData);
@@ -2596,9 +2584,6 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
                                nsRuleNode* aHighestNode,
                                const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW UIRESET CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSUserInterface& uiData = NS_STATIC_CAST(const nsCSSUserInterface&, aData);
@@ -2680,9 +2665,6 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
                                nsRuleNode* aHighestNode,
                                const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW DISPLAY CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSDisplay& displayData = NS_STATIC_CAST(const nsCSSDisplay&, aData);
@@ -2908,9 +2890,6 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
                                   nsRuleNode* aHighestNode,
                                   const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW VISIBILITY CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSDisplay& displayData = NS_STATIC_CAST(const nsCSSDisplay&, aData);
@@ -3020,9 +2999,6 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
                              nsRuleNode* aHighestNode,
                              const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW COLOR CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSColor& colorData = NS_STATIC_CAST(const nsCSSColor&, aData);
@@ -3088,9 +3064,6 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
                                   nsRuleNode* aHighestNode,
                                   const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW BACKGROUND CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSColor& colorData = NS_STATIC_CAST(const nsCSSColor&, aData);
@@ -3227,9 +3200,6 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
                               nsRuleNode* aHighestNode,
                               const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW MARGIN CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSMargin& marginData = NS_STATIC_CAST(const nsCSSMargin&, aData);
@@ -3292,9 +3262,6 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
                               nsRuleNode* aHighestNode,
                               const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW BORDER CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSMargin& marginData = NS_STATIC_CAST(const nsCSSMargin&, aData);
@@ -3572,9 +3539,6 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
                                nsRuleNode* aHighestNode,
                                const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW PADDING CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSMargin& marginData = NS_STATIC_CAST(const nsCSSMargin&, aData);
@@ -3637,9 +3601,6 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
                                nsRuleNode* aHighestNode,
                                const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW OUTLINE CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSMargin& marginData = NS_STATIC_CAST(const nsCSSMargin&, aData);
@@ -3709,9 +3670,6 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
                             nsRuleNode* aHighestNode,
                             const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW LIST CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSList& listData = NS_STATIC_CAST(const nsCSSList&, aData);
@@ -3827,9 +3785,6 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct, const nsCSSStruct& 
                                 nsRuleNode* aHighestNode,
                                 const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW POSITION CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSPosition& posData = NS_STATIC_CAST(const nsCSSPosition&, aData);
@@ -3935,9 +3890,6 @@ nsRuleNode::ComputeTableData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
                              nsRuleNode* aHighestNode,
                              const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW TABLE CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSTable& tableData = NS_STATIC_CAST(const nsCSSTable&, aData);
@@ -4005,9 +3957,6 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
                                    nsRuleNode* aHighestNode,
                                    const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW TABLE BORDER CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSTable& tableData = NS_STATIC_CAST(const nsCSSTable&, aData);
@@ -4105,9 +4054,6 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
                                nsRuleNode* aHighestNode,
                                const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW CONTENT CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSContent& contentData = NS_STATIC_CAST(const nsCSSContent&, aData);
@@ -4300,10 +4246,6 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
                                    nsRuleNode* aHighestNode,
                                    const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW QUOTES CREATED!\n");
-#endif
-
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSContent& contentData = NS_STATIC_CAST(const nsCSSContent&, aData);
@@ -4396,9 +4338,6 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
                            nsRuleNode* aHighestNode,
                            const RuleDetail& aRuleDetail, PRBool aInherited)
 {
-#ifdef DEBUG_hyatt
-  printf("NEW XUL CREATED!\n");
-#endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
   const nsCSSXUL& xulData = NS_STATIC_CAST(const nsCSSXUL&, aData);
