@@ -37,6 +37,7 @@ nsContentList::nsContentList(nsIDocument *aDocument)
   mFunc = nsnull;
   mMatchAtom = nsnull;
   mDocument = aDocument;
+  mData = nsnull;
   mMatchAll = PR_FALSE;
 }
 
@@ -76,6 +77,7 @@ nsContentList::nsContentList(nsIDocument *aDocument,
   mMatchAtom = nsnull;
   mRootContent = aRootContent;
   mMatchAll = PR_FALSE;
+  mData = nsnull;
   Init(aDocument);
 }
 
