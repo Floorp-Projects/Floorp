@@ -35,7 +35,7 @@
 *
 *
 * Date:    10 Jan 2002
-* SUMMARY: Assignment to a const is NOT an error per ECMA
+* SUMMARY: Reassignment to a const is NOT an error per ECMA
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=103602
 *
 * ------- Additional Comment #4 From Brendan Eich 2002-01-10 15:30 -------
@@ -51,7 +51,7 @@
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 103602;
-var summary = 'Assignment to a const is NOT an error per ECMA'
+var summary = 'Reassignment to a const is NOT an error per ECMA';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -76,7 +76,6 @@ catch(e)
 {
   quit(); // if const is not supported, this testcase is over -
 }
-
 
 
 status = inSection(1);
