@@ -31,7 +31,7 @@ sub _addDirToJar($$$$)
 {
     my($dir, $jar_root, $zip, $compress) = @_;
 
-    opendir(DIR, $dir) or die "Cannot open dir $dir\n";
+    opendir(DIR, $dir) or die "Error: Cannot open dir $dir\n";
     my @files = readdir(DIR);
     closedir DIR;
     
@@ -52,7 +52,7 @@ sub _addDirToJar($$$$)
         else
         {
             my $member = Archive::Zip::Member->newFromFile($filepath);
-            die "Failed to create zip file member $filepath\n" unless $member;
+            die "Error: Failed to create zip file member $filepath\n" unless $member;
             
             my $unixName = $filepath;
             $unixName =~ s|:|/|g;               # colon to slash conversion
@@ -161,11 +161,11 @@ sub safeSaveJarFile($$)
     
     my($temp_file_name) = $full_dest_path."_temp";
 
-    ($zip->writeToFileNamed($temp_file_name) == Archive::Zip::AZ_OK) || die "Error writing jar to temp file $temp_file_name\n";
+    ($zip->writeToFileNamed($temp_file_name) == Archive::Zip::AZ_OK) || die "Error: died writing jar to temp file $temp_file_name\n";
     
     unlink $full_dest_path;
     
-    (rename $temp_file_name, $full_dest_path) || die "Failed to rename $temp_file_name\n";
+    (rename $temp_file_name, $full_dest_path) || die "Error: Failed to rename $temp_file_name\n";
     
     MacPerl::SetFileInfo("ZIP ", "ZIP ", $full_dest_path);
 }
@@ -192,7 +192,7 @@ sub addToJarFile($$$$$$$)
 
     # print "addToJarFile with:\n  $jar_man_dir\n  $file_src\n  $jar_path\n  $file_jar_path\n";
 
-    unless ($jar_path =~ m/(.+:)([^:]+)$/) { die "Bad jar path $jar_path\n"; }
+    unless ($jar_path =~ m/(.+:)([^:]+)$/) { die "Error: Bad jar path $jar_path\n"; }
     
     my($target_dir) = $1;
     my($jar_name) = $2;
@@ -209,18 +209,18 @@ sub addToJarFile($$$$$$$)
         $src = $jar_man_dir.":".$file_src;
         
         if (!-e $src) {
-            die "Can't find chrome file $src\n";
+            die "Error: Can't find chrome file $src\n";
         }
     }
     
     if ($main::options{chrome_jars})
     {
         my($zip) = $jars->{$jar_id};
-        unless ($zip) { die "Can't find Zip entry for $jar_id\n"; }
+        unless ($zip) { die "Error: Can't find Zip entry for $jar_id\n"; }
         
         # print "Adding $file_src to jar file $jar_path at $file_jar_path\n";
         my($member) = Archive::Zip::Member->newFromFile($src);
-        unless ($member) { die "Failed to create zip file member $src\n"; }
+        unless ($member) { die "Error: Failed to create zip file member $src\n"; }
 
         $member->fileName($file_jar_path);    
     
@@ -345,7 +345,7 @@ sub setupJarFile($$$)
             if (-e $full_jar_path)
             {
                 print "Reading in jar file $jar_id\n";
-                if ($zip->read($full_jar_path) != Archive::Zip::AZ_OK) { die "Failed to re-read $full_jar_path\n"; }
+                if ($zip->read($full_jar_path) != Archive::Zip::AZ_OK) { die "Error: Failed to re-read $full_jar_path\n"; }
                 
                 # printZipContents($zip);
             }
@@ -460,17 +460,17 @@ sub registerChromePackage($$$$$$)
                 # $chrome_entry already appears in installed-chrome.txt file
                 # just update the mod date
                 my $now = time;
-                utime($now, $now, $inst_chrome) || die "couldn't touch $inst_chrome";
+                utime($now, $now, $inst_chrome) || die "Error: Couldn't touch $inst_chrome";
                 print "+++ updating chrome $inst_chrome\n+++\t\t$chrome_entry\n";
-                close(CHROMEFILE) || die "error: can't close $inst_chrome: $!";
+                close(CHROMEFILE) || die "Error: can't close $inst_chrome: $!";
                 return 0;
             }
         }
-        close(CHROMEFILE) || die "error: can't close $inst_chrome: $!";
+        close(CHROMEFILE) || die "Error: can't close $inst_chrome: $!";
     }
-    open(CHROMEFILE, ">>${inst_chrome}") || die "Failed to open $inst_chrome\n";
+    open(CHROMEFILE, ">>${inst_chrome}") || die "Error: Failed to open $inst_chrome\n";
     print(CHROMEFILE "${chrome_entry}\n");
-    close(CHROMEFILE) || die "Failed to close $inst_chrome\n";
+    close(CHROMEFILE) || die "Error: Failed to close $inst_chrome\n";
     print "+++ adding chrome $inst_chrome\n+++\t\t$chrome_entry\n";
 }
 
@@ -518,7 +518,7 @@ sub CreateJarFromManifest($$$)
     my($jar_file) = "";     # relative path to jar file (from $dest_path), with mac separators
     my($full_jar_path);
     
-    open(FILE, "<$jar_man_path") || die "could not open \"$jar_man_path\": $!";
+    open(FILE, "<$jar_man_path") || die "Error: could not open \"$jar_man_path\": $!";
     while (<FILE>)
     {
         my($line) = $_;
@@ -567,7 +567,7 @@ sub CreateJarFromManifest($$$)
             }
             else
             {
-                die "bad jar.mn format at $line\n";
+                die "Error: bad jar.mn format at $line\n";
             }
         }
         elsif ($line =~ /^\s*$/ )                                               # blank line
