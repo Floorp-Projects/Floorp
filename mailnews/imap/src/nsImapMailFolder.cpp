@@ -2579,21 +2579,22 @@ NS_IMETHODIMP nsImapMailFolder::AbortHeaderParseStream(nsIImapProtocol*
 NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMsgDBHdr *message)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!m_copyState) return rv;
-    if (m_copyState->m_tmpFileSpec) // leftover file spec nuke it
-    {
-        PRBool isOpen = PR_FALSE;
-        rv = m_copyState->m_tmpFileSpec->IsStreamOpen(&isOpen);
-        if (isOpen)
-            m_copyState->m_tmpFileSpec->CloseStream();
-        nsFileSpec fileSpec;
-        m_copyState->m_tmpFileSpec->GetFileSpec(&fileSpec);
-        if (fileSpec.Valid())
-            fileSpec.Delete(PR_FALSE);
-        m_copyState->m_tmpFileSpec = nsnull;
-    }
-    if (message)
-        m_copyState->m_message = do_QueryInterface(message, &rv);
+  if (!m_copyState) 
+    return rv;
+  if (m_copyState->m_tmpFileSpec) // leftover file spec nuke it
+  {
+    PRBool isOpen = PR_FALSE;
+    rv = m_copyState->m_tmpFileSpec->IsStreamOpen(&isOpen);
+    if (isOpen)
+      m_copyState->m_tmpFileSpec->CloseStream();
+    nsFileSpec fileSpec;
+    m_copyState->m_tmpFileSpec->GetFileSpec(&fileSpec);
+    if (fileSpec.Valid())
+      fileSpec.Delete(PR_FALSE);
+    m_copyState->m_tmpFileSpec = nsnull;
+  }
+  if (message)
+    m_copyState->m_message = do_QueryInterface(message, &rv);
 
   nsSpecialSystemDirectory tmpFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
   
@@ -2601,14 +2602,14 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMsgDBHdr *message)
   tmpFileSpec.MakeUnique();
   rv = NS_NewFileSpecWithSpec(tmpFileSpec,
                                 getter_AddRefs(m_copyState->m_tmpFileSpec));
-    if (NS_SUCCEEDED(rv) && m_copyState->m_tmpFileSpec)
-        rv = m_copyState->m_tmpFileSpec->OpenStreamForWriting();
-    if (!m_copyState->m_dataBuffer)
-    {
-        m_copyState->m_dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
-        if (!m_copyState->m_dataBuffer)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (NS_SUCCEEDED(rv) && m_copyState->m_tmpFileSpec)
+    rv = m_copyState->m_tmpFileSpec->OpenStreamForWriting();
+
+  m_copyState->m_dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
+  if (!m_copyState->m_dataBuffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+  m_copyState->m_dataBufferSize = COPY_BUFFER_SIZE;
+
   return rv;
 }
 
@@ -2616,77 +2617,69 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                      PRInt32 aLength)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
-    NS_ASSERTION(m_copyState && m_copyState->m_dataBuffer &&
-                 m_copyState->m_tmpFileSpec, "Fatal copy operation error\n");
-    if (!m_copyState || !m_copyState->m_dataBuffer ||
-        !m_copyState->m_tmpFileSpec) return rv;
+  NS_ASSERTION(m_copyState && m_copyState->m_tmpFileSpec 
+                  && m_copyState->m_dataBuffer, "Fatal copy operation error\n");
+  if (!m_copyState || !m_copyState->m_tmpFileSpec || !m_copyState->m_dataBuffer) 
+    return rv;
 
-    PRUint32 readCount, maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
-    PRInt32 writeCount;
-    char *start, *end;
-    PRUint32 linebreak_len = 0;
+  PRUint32 readCount;
+  PRInt32 writeCount;
 
-    while (aLength > 0)
+  if ( aLength + m_copyState->m_leftOver > m_copyState->m_dataBufferSize )
+  {
+    m_copyState->m_dataBuffer = (char *) PR_REALLOC(m_copyState->m_dataBuffer, aLength + m_copyState->m_leftOver+ 1);
+    if (!m_copyState->m_dataBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+    m_copyState->m_dataBufferSize = aLength + m_copyState->m_leftOver;
+  }
+
+  char *start, *end;
+  PRUint32 linebreak_len = 0;
+
+  rv = aIStream->Read(m_copyState->m_dataBuffer+m_copyState->m_leftOver, aLength, &readCount);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  m_copyState->m_leftOver += readCount;
+  m_copyState->m_dataBuffer[m_copyState->m_leftOver] = '\0';
+
+  start = m_copyState->m_dataBuffer;
+  end = PL_strchr(start, '\r');
+  if (!end)
+    end = PL_strchr(start, '\n');
+  else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
+    linebreak_len = 2;
+
+  if (linebreak_len == 0) // not initialize yet
+    linebreak_len = 1;
+
+  while (start && end)
+  {
+    if (PL_strncasecmp(start, "X-Mozilla-Status:", 17) &&
+        PL_strncasecmp(start, "X-Mozilla-Status2:", 18) &&
+        PL_strncmp(start, "From - ", 7))
     {
-        if (aLength < (PRInt32) maxReadCount)
-            maxReadCount = aLength;
-        rv = aIStream->Read(m_copyState->m_dataBuffer+m_copyState->m_leftOver,
-                            maxReadCount,
-                            &readCount);
-        if (NS_FAILED(rv)) return rv;
-
-        m_copyState->m_leftOver += readCount;
-        m_copyState->m_dataBuffer[m_copyState->m_leftOver] = '\0';
-
-        start = m_copyState->m_dataBuffer;
-        end = PL_strchr(start, '\r');
-        if (!end)
-            end = PL_strchr(start, '\n');
-        else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
-            linebreak_len = 2;
-
-        if (linebreak_len == 0) // not initialize yet
-            linebreak_len = 1;
-
-        aLength -= readCount;
-        maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
-
-        if (!end && aLength > (PRInt32) maxReadCount)
-            // must be a very very long line; sorry cannot handle it
-            return NS_ERROR_FAILURE;
-
-        while (start && end)
-        {
-            if (PL_strncasecmp(start, "X-Mozilla-Status:", 17) &&
-                PL_strncasecmp(start, "X-Mozilla-Status2:", 18) &&
-                PL_strncmp(start, "From - ", 7))
-            {
-                rv = m_copyState->m_tmpFileSpec->Write(start,
-                                                       end-start,
-                                                       &writeCount);
-                rv = m_copyState->m_tmpFileSpec->Write(CRLF, 2, &writeCount);
-            }
-            start = end+linebreak_len;
-            if (start >=
-                m_copyState->m_dataBuffer+m_copyState->m_leftOver)
-            {
-                maxReadCount = COPY_BUFFER_SIZE;
-                m_copyState->m_leftOver = 0;
-                break;
-            }
-            end = PL_strchr(start, '\r');
-            if (!end)
-                end = PL_strchr(start, '\n');
-            if (start && !end)
-            {
-                m_copyState->m_leftOver -= (start - m_copyState->m_dataBuffer);
-                memcpy(m_copyState->m_dataBuffer, start,
-                       m_copyState->m_leftOver+1); // including null
-                maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
-            }
-        }
-        if (NS_FAILED(rv)) return rv;
+      rv = m_copyState->m_tmpFileSpec->Write(start,
+                                             end-start,
+                                             &writeCount);
+      rv = m_copyState->m_tmpFileSpec->Write(CRLF, 2, &writeCount);
     }
+    start = end+linebreak_len;
+    if (start >=
+        m_copyState->m_dataBuffer+m_copyState->m_leftOver)
+    {
+       m_copyState->m_leftOver = 0;
+       break;
+    }
+    end = PL_strchr(start, '\r');
+    if (!end)
+      end = PL_strchr(start, '\n');
+    if (start && !end)
+    {
+      m_copyState->m_leftOver -= (start - m_copyState->m_dataBuffer);
+      memcpy(m_copyState->m_dataBuffer, start, m_copyState->m_leftOver+1); // including null
+    }
+  }
   return rv;
 }
 
@@ -5371,6 +5364,7 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 
   return rv;
 }
+
 // used when copying from local mail folder, or other imap server)
 nsresult
 nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
@@ -6126,14 +6120,15 @@ nsImapMailCopyState::nsImapMailCopyState() :
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE),
     m_isCrossServerOp(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
-    m_leftOver(0), m_allowUndo(PR_FALSE)
+    m_leftOver(0), m_allowUndo(PR_FALSE),
+    m_dataBufferSize(0)
 {
     NS_INIT_REFCNT();
 }
 
 nsImapMailCopyState::~nsImapMailCopyState()
 {
-    PR_FREEIF(m_dataBuffer);
+    PR_Free(m_dataBuffer);
     if (m_msgService && m_message)
     {
       nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_srcSupport);
@@ -6176,7 +6171,8 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
     nsImapMailCopyState* copyState = new nsImapMailCopyState();
     m_copyState = do_QueryInterface(copyState);
 
-    if (!m_copyState) return NS_ERROR_OUT_OF_MEMORY;
+    if (!m_copyState) 
+      return NS_ERROR_OUT_OF_MEMORY;
 
     if (srcSupport)
         m_copyState->m_srcSupport = do_QueryInterface(srcSupport, &rv);
@@ -6562,7 +6558,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
 
     rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
     if (NS_SUCCEEDED(rv) && mailDBFactory)
-	{
+    {
       nsCOMPtr<nsIMsgDatabase> unusedDB;
       nsCOMPtr <nsIFileSpec> dbFileSpec;
 
@@ -6592,7 +6588,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         imapFolder = do_QueryInterface(child);
 
         if (imapFolder)
-		{
+        {
           nsCAutoString onlineName(m_onlineFolderName); 
           if (onlineName.Length() > 0)
           onlineName.AppendWithConversion(hierarchyDelimiter);

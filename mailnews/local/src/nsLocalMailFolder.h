@@ -84,7 +84,8 @@ struct nsLocalMailCopyState
   PRBool m_isMove;
   PRBool m_isFolder;   // isFolder move/copy
   PRBool m_dummyEnvelopeNeeded;
-  char m_dataBuffer[COPY_BUFFER_SIZE+1];
+  char *m_dataBuffer;
+  PRUint32 m_dataBufferSize;
   PRUint32 m_leftOver;
   PRBool m_copyingMultipleMessages;
   PRBool m_fromLineSeen;

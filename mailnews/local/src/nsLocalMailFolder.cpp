@@ -118,12 +118,14 @@ extern void KillPopData(char* data);
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
   m_totalMsgCount(0), m_isMove(PR_FALSE),
-  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0), m_fromLineSeen(PR_FALSE)
+  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0), m_fromLineSeen(PR_FALSE), 
+  m_dataBufferSize(0)
 {
 }
 
 nsLocalMailCopyState::~nsLocalMailCopyState()
 {
+  PR_Free(m_dataBuffer);
   if (m_fileStream)
   {
     if (m_fileStream->is_open())
@@ -1685,6 +1687,14 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
     goto done;
   }
 
+  mCopyState->m_dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
+  if (!mCopyState->m_dataBuffer)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto done;
+  }
+  mCopyState->m_dataBufferSize = COPY_BUFFER_SIZE;
+
 	//Before we continue we should verify that there is enough diskspace.
 	//XXX How do we do this?
 	mCopyState->m_fileStream = new nsOutputFileStream(path, PR_WRONLY |
@@ -2288,7 +2298,8 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
 //nsICopyMessageListener
 NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMsgDBHdr *message)
 {
-  if (!mCopyState) return NS_ERROR_NULL_POINTER;
+  if (!mCopyState) 
+    return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
   mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
  
@@ -2318,108 +2329,101 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 	if(!haveSemaphore)
 		return NS_MSG_FOLDER_BUSY;
   
-	if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
+  if (!mCopyState) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	PRUint32 readCount, maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
+	PRUint32 readCount;
+  if ( aLength + mCopyState->m_leftOver > mCopyState->m_dataBufferSize )
+  {
+    mCopyState->m_dataBuffer = (char *) PR_REALLOC(mCopyState->m_dataBuffer, aLength + mCopyState->m_leftOver+ 1);
+    if (!mCopyState->m_dataBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+    mCopyState->m_dataBufferSize = aLength + mCopyState->m_leftOver;
+  }
+
 	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
   char *start, *end;
   PRUint32 linebreak_len = 0;
 
-  while (aLength > 0)
+  rv = aIStream->Read(mCopyState->m_dataBuffer + mCopyState->m_leftOver,
+                      aLength, &readCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mCopyState->m_leftOver += readCount;
+  mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
+  start = mCopyState->m_dataBuffer;
+  end = PL_strchr(start, '\r');
+  if (!end)
+   	end = PL_strchr(start, '\n');
+  else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
+    linebreak_len = 2;
+
+  if (linebreak_len == 0) // not set yet
+    linebreak_len = 1;
+
+  nsCString line;
+  char tmpChar = 0;
+
+  while (start && end)
   {
-    if (aLength < (PRInt32) maxReadCount)
-      maxReadCount = aLength;
-    
-    rv = aIStream->Read(mCopyState->m_dataBuffer + mCopyState->m_leftOver,
-                        maxReadCount, &readCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mCopyState->m_leftOver += readCount;
-    mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
-    start = mCopyState->m_dataBuffer;
-    end = PL_strchr(start, '\r');
-    if (!end)
-      	end = PL_strchr(start, '\n');
-    else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
-        linebreak_len = 2;
-
-    if (linebreak_len == 0) // not set yet
-        linebreak_len = 1;
-
-    aLength -= readCount;
-    maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
-
-    if (!end && aLength > (PRInt32) maxReadCount)
-    // this must be a gigantic line with no linefeed; sorry pal cannot handle
-        return NS_ERROR_FAILURE;
-
-    nsCString line;
-    char tmpChar = 0;
-
-    while (start && end)
+    if (mCopyState->m_fromLineSeen)
     {
-        if (mCopyState->m_fromLineSeen)
-        {
-          if (nsCRT::strncmp(start, "From ", 5) == 0)
-          {
-            line = ">";
-        
-            tmpChar = *end;
-            *end = 0;
-            line += start;
-            *end = tmpChar;
-            line += MSG_LINEBREAK;
-        
-            mCopyState->m_fileStream->write(line.get(), line.Length()); 
-            if (mCopyState->m_parseMsgState)
-              mCopyState->m_parseMsgState->ParseAFolderLine(line.get(),
-                                                            line.Length());
-            goto keepGoing;
-          }
-        }
-        else
-        {
-          mCopyState->m_fromLineSeen = PR_TRUE;
-          NS_ASSERTION(nsCRT::strncmp(start, "From ", 5) == 0, 
-                       "Fatal ... bad message format\n");
-        }
-        
-        mCopyState->m_fileStream->write(start, end-start+linebreak_len);
+      if (nsCRT::strncmp(start, "From ", 5) == 0)
+      {
+        line = ">";
+     
+        tmpChar = *end;
+        *end = 0;
+        line += start;
+        *end = tmpChar;
+        line += MSG_LINEBREAK;
+      
+        mCopyState->m_fileStream->write(line.get(), line.Length()); 
         if (mCopyState->m_parseMsgState)
-            mCopyState->m_parseMsgState->ParseAFolderLine(start,
-                                                  end-start+linebreak_len);
+          mCopyState->m_parseMsgState->ParseAFolderLine(line.get(),
+                                                         line.Length());
+        goto keepGoing;
+      }
+    }
+    else
+    {
+      mCopyState->m_fromLineSeen = PR_TRUE;
+      NS_ASSERTION(nsCRT::strncmp(start, "From ", 5) == 0, 
+                   "Fatal ... bad message format\n");
+    }
+        
+    mCopyState->m_fileStream->write(start, end-start+linebreak_len);
+    if (mCopyState->m_parseMsgState)
+      mCopyState->m_parseMsgState->ParseAFolderLine(start,
+                                                       end-start+linebreak_len);
     keepGoing:
-        start = end+linebreak_len;
-        if (start >=
-            &mCopyState->m_dataBuffer[mCopyState->m_leftOver])
-        {
-            maxReadCount = COPY_BUFFER_SIZE;
-            mCopyState->m_leftOver = 0;
-            break;
-        }
-        end = PL_strchr(start, '\r');
-        if (end)
-        {
-          if (*(end+1) == nsCRT::LF)  //need to set the linebreak_len each time
-             linebreak_len = 2;  //CRLF
-          else
-             linebreak_len = 1;  //only CR
-        }
-        if (!end)
-        {
-         end = PL_strchr(start, '\n');
-         if (end)
-            linebreak_len = 1;   //LF
-         else
-            linebreak_len =0;  //no LF
-        }
-
-        if (start && !end)
-        {
-            mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
-            memcpy (mCopyState->m_dataBuffer, start,
-                           mCopyState->m_leftOver+1);
-            maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
-        }
+      start = end+linebreak_len;
+    if (start >=
+         &mCopyState->m_dataBuffer[mCopyState->m_leftOver])
+    {
+      mCopyState->m_leftOver = 0;
+      break;
+    }
+    end = PL_strchr(start, '\r');
+    if (end)
+    {
+      if (*(end+1) == nsCRT::LF)  //need to set the linebreak_len each time
+        linebreak_len = 2;  //CRLF
+      else
+        linebreak_len = 1;  //only CR
+    }
+    if (!end)
+    {
+      end = PL_strchr(start, '\n');
+      if (end)
+        linebreak_len = 1;   //LF
+      else
+        linebreak_len =0;  //no LF
+    }
+    if (start && !end)
+    {
+      mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
+      memcpy (mCopyState->m_dataBuffer, start,
+                          mCopyState->m_leftOver+1);
     }
   }
   return rv;
@@ -3342,4 +3346,3 @@ nsMsgLocalMailFolder::NotifyCompactCompleted()
   NotifyFolderEvent(compactCompletedAtom);
   return NS_OK;
 }
-
