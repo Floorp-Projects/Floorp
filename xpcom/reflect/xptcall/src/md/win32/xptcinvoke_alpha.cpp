@@ -38,9 +38,9 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
     {
         if (s->IsPtrData()) {
             if (i < N_ARG_REGS)
-               regs[i] = (PRUint64)s->ptr;
+               regs[i] = (PRUint32)s->ptr;
             else
-               *d++ = (PRUint64)s->ptr;
+               *((PRUint32*)d++) = (PRUint32)s->ptr;
             continue;
         }
         switch (s->type) {
@@ -51,25 +51,25 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
            if (i < N_ARG_REGS)
               ((PRInt64*)regs)[i] = s->val.i8;
            else
-              *d++ = s->val.i8;
+              *((PRInt8 *)d++) = s->val.i8;
            break;
         case nsXPTType::T_I16:
            if (i < N_ARG_REGS)
               ((PRInt64*)regs)[i] = s->val.i16;
            else
-              *d++ = s->val.i16;
+              *((PRInt16 *)d++) = s->val.i16;
            break;
         case nsXPTType::T_I32:
            if (i < N_ARG_REGS)
               ((PRInt64*)regs)[i] = s->val.i32;
            else
-              *d++ = s->val.i32;
+              *((PRUint32*)d++) = s->val.i32;
            break;
         case nsXPTType::T_I64:
            if (i < N_ARG_REGS)
               ((PRInt64*)regs)[i] = s->val.i64;
            else
-              *d++ = s->val.i64;
+              *((PRInt64*)d++) = s->val.i64;
            break;
         //
         // unsigned types next
@@ -78,31 +78,31 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
            if (i < N_ARG_REGS)
               regs[i] = s->val.u8;
            else
-              *d++ = s->val.u8;
+              *((PRUint8 *)d++) = s->val.u8;
            break;
         case nsXPTType::T_U16:
            if (i < N_ARG_REGS)
               regs[i] = s->val.u16;
            else
-              *d++ = s->val.u16;
+              *((PRUint16 *)d++) = s->val.u16;
            break;
         case nsXPTType::T_U32:
            if (i < N_ARG_REGS)
               regs[i] = s->val.u32;
            else
-              *d++ = s->val.u32;
+              *((PRUint32*)d++) = s->val.u32;
            break;
         case nsXPTType::T_U64:
            if (i < N_ARG_REGS)
               regs[i] = s->val.u64;
            else
-              *d++ = s->val.u64;
+              *((PRUint64*)d++) = s->val.u64;
            break;
         case nsXPTType::T_FLOAT:
            if (i < N_ARG_REGS)
               ((double*)regs)[i] = s->val.f;
            else
-              *((double*)d++) = s->val.f;
+              *((float*)d++) = s->val.f;
            break;
         case nsXPTType::T_DOUBLE:
            if (i < N_ARG_REGS)
@@ -114,26 +114,26 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
            if (i < N_ARG_REGS)
               regs[i] = s->val.b;
            else
-              *d++ = s->val.b;
+              *((PRBool*)d++) = s->val.b;
            break;
         case nsXPTType::T_CHAR:
            if (i < N_ARG_REGS)
               regs[i] = s->val.c;
            else
-              *d++ = s->val.c;
+              *((char*)d++) = s->val.c;
            break;
         case nsXPTType::T_WCHAR:
            if (i < N_ARG_REGS)
               regs[i] = s->val.wc;
            else
-              *d++ = s->val.wc;
+              *((wchar_t*)d++) = s->val.wc;
            break;
         default:
            // all the others are plain pointer types
            if (i < N_ARG_REGS)
-              regs[i] = (PRUint64)s->val.p;
+              regs[i] = (PRUint32)s->val.p;
            else
-              *d++ = (PRUint64)s->val.p;
+              *((PRUint32*)d++) = (PRUint32)s->val.p;
            break;
         }
     }
