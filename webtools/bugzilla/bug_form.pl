@@ -32,6 +32,7 @@ sub bug_form_pl_sillyness {
     my $zz;
     $zz = %::FORM;
     $zz = %::components;
+    $zz = %::proddesc;
     $zz = %::prodmaxvotes;
     $zz = %::versions;
     $zz = @::legal_keywords;

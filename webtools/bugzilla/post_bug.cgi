@@ -33,6 +33,7 @@ require "CGI.pl";
 sub sillyness {
     my $zz;
     $zz = $::buffer;
+    $zz = $::usergroupset;
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
