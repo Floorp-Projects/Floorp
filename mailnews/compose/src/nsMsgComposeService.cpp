@@ -350,7 +350,7 @@ nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose, PRBool clos
 }
 
 NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, const char * aCommand,
-                                                const char * aWindowTarget, nsIChannel * aChannel)
+                                                const char * aWindowTarget, nsISupports * aWindowContext, nsIChannel * aChannel)
 {
   nsresult rv = NS_OK;
   if (aChannel)
