@@ -16,12 +16,6 @@
  * Reserved.
  */
 
-/**
- * MODULE NOTES:
- * @update  gess 4/1/98
- * 
- */
-
 
 #include "CParserContext.h"
 #include "nsToken.h"
@@ -39,19 +33,18 @@ public:
 CTokenDeallocator gTokenDeallocator;
 
 
-CParserContext::CParserContext(CScanner* aScanner,
-                               CParserContext* aPreviousContext,
-                               nsIStreamObserver* aListener) :
+CParserContext::CParserContext(CScanner* aScanner,void* aKey,nsIStreamObserver* aListener) :
   mSourceType(),
   mTokenDeque(gTokenDeallocator)
 {
   mScanner=aScanner;
-  mPrevContext=aPreviousContext;
+  mKey=aKey;
+  mPrevContext=0;
   mListener=aListener;
   NS_IF_ADDREF(mListener);
   mParseMode=eParseMode_unknown;
   mAutoDetectStatus=eUnknownDetect;
-  mTransferBuffer=new char[eTransferBufferSize+1];
+  mTransferBuffer=0;
   mCurrentPos=0;
   mMarkPos=0;
   mDTD=0;

@@ -55,6 +55,12 @@ class CToken {
 
     /**
      * Default constructor
+     * @update	gess7/21/98
+     */
+    CToken(PRInt32 aTag=0);
+
+    /**
+     * Constructor with string assignment for tag
      * @update	gess5/11/98
      * @param   aName is the given name of the token 
      */
@@ -78,14 +84,7 @@ class CToken {
      * @update	gess5/11/98
      * @return  reference to string containing string value
      */
-    virtual nsString& GetStringValue(void);
-
-    /**
-     * Get text of this token
-     * @update	gess5/11/98
-     * @return  string ref containing text value of this token
-     */
-    virtual nsString& GetText(void);
+    virtual nsString& GetStringValueXXX(void);
 
     /**
      * Setter method that changes the string value of this token
@@ -93,6 +92,13 @@ class CToken {
      * @param   name is a char* value containing new string value
      */
     virtual void SetStringValue(const char* name);
+
+    /**
+     * Retrieve string value of the token as a c-string
+     * @update	gess5/11/98
+     * @return  reference to string containing string value
+     */
+    virtual char* GetCStringValue(char* aBuffer, PRInt32 aMaxLen);
     
     /**
      * Sets the ordinal value of this token (not currently used)
@@ -168,10 +174,11 @@ class CToken {
     virtual void SelfTest(void);
 
 protected:
-            PRInt32   mTypeID;
-            PRInt16   mAttrCount;
-            PRInt16   mUnused;
-            nsString  mTextValue;
+    PRInt32       mTypeID;
+    PRInt16       mAttrCount;
+    PRBool        mStringInit;
+    PRBool        mUnused;
+    nsAutoString  mTextValue;
 };
 
 

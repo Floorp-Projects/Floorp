@@ -39,6 +39,7 @@ static nsAutoString gDigits("0123456789");
 static nsAutoString gWhitespace(" \t\b");
 static nsAutoString gOperatorChars("/?.<>[]{}~^+=-!%&*(),|:");
 static const char*  gUserdefined = "userdefined";
+static const char*  gEmpty = "";
 
 
 const PRInt32 kMAXNAMELEN=10;
@@ -111,22 +112,62 @@ CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
  *  @param   
  *  @return  
  */
-CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(GetTagName(aTag)) {
-  mTypeID=aTag; 
+CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
+
 }
 
-
-/*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
+/**
+ * Setter method that changes the string value of this token
+ * @update	gess5/11/98
+ * @param   name is a char* value containing new string value
  */
-CStartToken::CStartToken(const nsString& aName) : CHTMLToken(aName) {
-  mAttributed=PR_FALSE;
-  mEmpty=PR_FALSE;
+void CHTMLToken::SetStringValue(const char* name){
+  mTextValue=name;
+  mStringInit=PR_TRUE;
 }
+
+/**
+ *  This method retrieves the value of this internal string. 
+ *  
+ *  @update gess 3/25/98
+ *  @return nsString reference to internal string value
+ */
+static nsAutoString gTagName;
+nsString& CHTMLToken::GetStringValueXXX(void) {
+
+  if(!mStringInit) {
+    if((mTypeID>eHTMLTag_unknown) && (mTypeID<eHTMLTag_userdefined)) {
+      const char* str=GetTagName(mTypeID);
+      if(str)
+        gTagName=str;
+      else gTagName="";
+      return gTagName;
+    }
+  }
+  return mTextValue;
+}
+
+/**
+ *  This method retrieves the value of this internal string
+ *  as a cstring.
+ *  
+ *  @update gess 3/25/98
+ *  @return char* rep of internal string value
+ */
+char* CHTMLToken::GetCStringValue(char* aBuffer, PRInt32 aMaxLen) {
+
+  if(!mStringInit) {
+    if((mTypeID>eHTMLTag_unknown) && (mTypeID<eHTMLTag_userdefined)) {
+      const char* str=GetTagName(mTypeID);
+      if(str) 
+        strcpy(aBuffer,str);
+      else aBuffer[0]=0;
+    }
+  }
+  else mTextValue.ToCString(aBuffer,aMaxLen);
+  return aBuffer;
+}
+
 
 /*
  *  constructor from tag id
@@ -141,7 +182,20 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
 /*
- *  default destructor
+ *  constructor from tag id
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+CStartToken::CStartToken(nsString& aString) : CHTMLToken(aString) {
+  mAttributed=PR_FALSE;
+  mEmpty=PR_FALSE;
+}
+
+
+/*
+ *  This method returns the typeid (the tag type) for this token.
  *  
  *  @update  gess 3/25/98
  *  @param   
@@ -249,6 +303,14 @@ nsresult CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   mTextValue=aChar;
   nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_FALSE);
+  char buffer[300];
+  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  eHTMLTags theTag= NS_TagToEnum(buffer);
+  if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
+    mTypeID=theTag;
+  } 
+  else mStringInit=PR_TRUE;
+
 
    //Good. Now, let's skip whitespace after the identifier,
    //and see if the next char is ">". If so, we have a complete
@@ -278,11 +340,22 @@ nsresult CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @return  
  */
 void CStartToken::DebugDumpSource(ostream& out) {
-  char* cp=mTextValue.ToNewCString();
-  out << "<" << *cp;
+  char buffer[200];
+  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  out << "<" << buffer;
   if(!mAttributed)
     out << ">";
-  delete cp;
+}
+
+
+/*
+ *  constructor from tag id
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+CEndToken::CEndToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
 
@@ -294,7 +367,6 @@ void CStartToken::DebugDumpSource(ostream& out) {
  *  @return  
  */
 CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_unknown;
 }
 
 /*
@@ -315,6 +387,15 @@ nsresult CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   mTextValue="";
   static nsAutoString terminals(">");
   nsresult result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
+
+  char buffer[300];
+  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  eHTMLTags theTag= NS_TagToEnum(buffer);
+  if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
+    mTypeID=theTag;
+  } 
+  else mStringInit=PR_TRUE;
+
   if(NS_OK==result)
     result=aScanner.GetChar(aChar); //eat the closing '>;
   return result;
@@ -334,7 +415,7 @@ PRInt32 CEndToken::GetTypeID(){
   if(eHTMLTag_unknown==mTypeID) {
     nsAutoString tmp(mTextValue);
     tmp.ToUpperCase();
-    char cbuf[20];
+    char cbuf[200];
     tmp.ToCString(cbuf, sizeof(cbuf));
     mTypeID = NS_TagToEnum(cbuf);
     switch(mTypeID) {
@@ -379,14 +460,24 @@ PRInt32 CEndToken::GetTokenType(void) {
  *  @return  
  */
 void CEndToken::DebugDumpSource(ostream& out) {
-  char* cp=mTextValue.ToNewCString();
-  out << "</" << *cp << ">";
-  delete cp;
+  char buffer[200];
+  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  out << "</" << buffer << ">";
+}
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CTextToken::CTextToken() : CHTMLToken(eHTMLTag_text) {
 }
 
 
 /*
- *  Default constructor
+ *  string based constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string to init token name with
@@ -431,6 +522,16 @@ nsresult CTextToken::Consume(PRUnichar, CScanner& aScanner) {
   nsresult result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
   return result;
 };
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CCommentToken::CCommentToken() : CHTMLToken(eHTMLTag_comment) {
+}
 
 
 /*
@@ -509,6 +610,17 @@ PRInt32 CCommentToken::GetTokenType(void) {
  *  default constructor
  *  
  *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CNewlineToken::CNewlineToken() : CHTMLToken(eHTMLTag_newline) {
+}
+
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
  *  @return  
  */
@@ -544,7 +656,7 @@ PRInt32 CNewlineToken::GetTokenType(void) {
  *  @update gess 3/25/98
  *  @return nsString reference to internal string value
  */
-nsString& CNewlineToken::GetText(void) {
+nsString& CNewlineToken::GetStringValueXXX(void) {
   static nsAutoString theStr("\n");
   return theStr;
 }
@@ -587,6 +699,16 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
 /*
  *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
+}
+
+/*
+ *  string based constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
@@ -640,11 +762,11 @@ PRInt32 CAttributeToken::GetTokenType(void) {
  *  @return  
  */
 void CAttributeToken::DebugDumpToken(ostream& out) {
-  char* cp=mTextKey.ToNewCString();
-  out << "[" << GetClassName() << "] " << *cp << "=";
-  delete cp;
-  char* cp2=mTextValue.ToNewCString();
-  out << *cp2 << ": " << mTypeID << endl;
+  char buffer[200];
+  mTextKey.ToCString(buffer,sizeof(buffer)-1);
+  out << "[" << GetClassName() << "] " << buffer << "=";
+  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  out << buffer << ": " << mTypeID << endl;
 }
 
 
@@ -772,17 +894,27 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @return  
  */
 void CAttributeToken::DebugDumpSource(ostream& out) {
-  char* cp=mTextKey.ToNewCString();
-  out << " " << *cp;
-  delete cp;
-  if(mTextValue.Length()) {
-    cp=mTextValue.ToNewCString();
-    out << "=" << *cp;
-    delete cp;
+  char buffer[200];
+  mTextKey.ToCString(buffer,sizeof(buffer)-1);
+  out << " " << buffer;
+  if(mTextValue.Length()){
+    mTextValue.ToCString(buffer,sizeof(buffer)-1);
+    out << "=" << buffer;
   }
   if(mLastAttribute)
     out<<">";
 }
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CWhitespaceToken::CWhitespaceToken() : CHTMLToken(eHTMLTag_whitespace) {
+}
+
 
 /*
  *  default constructor
@@ -835,6 +967,16 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
     mTextValue.StripChars("\r");
   }
   return result;
+}
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CEntityToken::CEntityToken() : CHTMLToken(eHTMLTag_entity) {
 }
 
 /*
@@ -1112,6 +1254,16 @@ void CEntityToken::DebugDumpSource(ostream& out) {
 }
 
 /*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CScriptToken::CScriptToken() : CHTMLToken(eHTMLTag_script) {
+}
+
+/*
  *  
  *  
  *  @update  gess 3/25/98
@@ -1131,6 +1283,16 @@ const char*  CScriptToken::GetClassName(void) {
  */
 PRInt32 CScriptToken::GetTokenType(void) {
   return eToken_script;
+}
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CStyleToken::CStyleToken() : CHTMLToken(eHTMLTag_style) {
 }
 
 /*
@@ -1155,9 +1317,19 @@ PRInt32 CStyleToken::GetTokenType(void) {
   return eToken_style;
 }
 
-
 /*
  *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CSkippedContentToken::CSkippedContentToken() : CAttributeToken(eHTMLTag_unknown) {
+}
+
+
+/*
+ *  string based constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
@@ -1251,7 +1423,9 @@ public:
 const char* GetTagName(PRInt32 aTag) {
   const char* result = NS_EnumToTag((nsHTMLTag) aTag);
   if (0 == result) {
-    result = gUserdefined;
+    if(aTag>=eHTMLTag_userdefined)
+      result = gUserdefined;
+    else result= gEmpty;
   }
   return result;
 }

@@ -374,7 +374,7 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
  *
  * @update	gess5/18/98
  * @param 
- * @return
+ * @return  error code -- 0 if ok, non-zero if error.
  */
 PRInt32 nsParser::WillBuildModel(nsString& aFilename){
 
@@ -395,7 +395,7 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename){
  * 
  * @update	gess5/18/98
  * @param 
- * @return
+ * @return  error code -- 0 if ok, non-zero if error.
  */
 PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   //One last thing...close any open containers.
@@ -407,72 +407,34 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   return result;
 }
 
+
 /**
- *  This is the main controlling routine in the parsing process. 
- *  Note that it may get called multiple times for the same scanner, 
- *  since this is a pushed based system, and all the tokens may 
- *  not have been consumed by the scanner during a given invocation 
- *  of this method. 
- *
- *  @update  gess 3/25/98
- *  @param   aFilename -- const char* containing file to be parsed.
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ * This method adds a new parser context to the list,
+ * pushing the current one to the next position.
+ * @update	gess7/22/98
+ * @param   ptr to new context
+ * @return  nada
  */
-PRInt32 nsParser::Parse(nsString& aFilename){
-  PRInt32 status=kBadFilename;
-  
-  if(aFilename) {
+void nsParser::PushContext(CParserContext& aContext) {
+  aContext.mPrevContext=mParserContext;
+  mParserContext=&aContext;
+}
 
-    //ok, time to create our tokenizer and begin the process
-
-    mParserContext = new CParserContext(new CScanner(aFilename),mParserContext);
-    mParserContext->mScanner->Eof();
-    if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
-                                           mParserContext->mSourceType)) 
-    {
-      WillBuildModel(aFilename);
-      status=ResumeParse();
-      DidBuildModel(status);
-    } //if
+/**
+ * This method pops the topmost context off the stack,
+ * returning it to the user. The next context  (if any)
+ * becomes the current context.
+ * @update	gess7/22/98
+ * @return  prev. context
+ */
+CParserContext* nsParser::PopContext() {
+  CParserContext* oldContext=mParserContext;
+  if(oldContext) {
+    mParserContext=oldContext->mPrevContext;
   }
-  return status;
+  return oldContext;
 }
 
-/**
- * Cause parser to parse input from given stream 
- * @update	gess5/11/98
- * @param   aStream is the i/o source
- * @return  TRUE if all went well -- FALSE otherwise
- */
-PRInt32 nsParser::Parse(fstream& aStream){
-
-  PRInt32 status=kNoError;
-  
-  //ok, time to create our tokenizer and begin the process
-  mParserContext = new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),mParserContext);
-
-  mParserContext->mScanner->Eof();
-  if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
-                                         mParserContext->mSourceType)) {
-    WillBuildModel(mParserContext->mScanner->GetFilename());
-    status=ResumeParse();
-    DidBuildModel(status);
-  } //if
-
-  return status;
-}
-
-
-/**
- * 
- * @update	gess7/13/98
- * @param 
- * @return
- */
-PRInt32 nsParser::Parse(nsIInputStream* pIStream,nsIStreamObserver* aListener,nsIDTDDebug* aDTDDebug){
-  PRInt32 result=kNoError;
-  return result;
-}
 
 /**
  *  This is the main controlling routine in the parsing process. 
@@ -486,7 +448,7 @@ PRInt32 nsParser::Parse(nsIInputStream* pIStream,nsIStreamObserver* aListener,ns
  *
  *  @update  gess 3/25/98
  *  @param   aFilename -- const char* containing file to be parsed.
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug) {
   NS_PRECONDITION(0!=aURL,kNullURL);
@@ -500,9 +462,39 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
  
   if(aURL) {
     nsAutoString theName(aURL->GetSpec());
-    mParserContext=new CParserContext(new CScanner(theName,PR_FALSE),mParserContext,aListener);
+    CParserContext* cp=new CParserContext(new CScanner(theName,PR_FALSE),aURL,aListener);
+    PushContext(*cp);
     status=NS_OK;
   }
+  return status;
+}
+
+
+/**
+ * Cause parser to parse input from given stream 
+ * @update	gess5/11/98
+ * @param   aStream is the i/o source
+ * @return  error code -- 0 if ok, non-zero if error.
+ */
+PRInt32 nsParser::Parse(fstream& aStream){
+
+  PRInt32 status=kNoError;
+  
+  //ok, time to create our tokenizer and begin the process
+  CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
+  PushContext(*pc);
+
+  mParserContext->mScanner->Eof();
+  if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
+                                         mParserContext->mSourceType)) {
+    WillBuildModel(mParserContext->mScanner->GetFilename());
+    status=ResumeParse();
+    DidBuildModel(status);
+  } //if
+
+  pc=PopContext();
+  delete pc;
+
   return status;
 }
 
@@ -513,21 +505,25 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
  * string to feed to the parser in real-time.
  *
  * @update	gess5/11/98
- * @param   anHTMLString contains a string-full of real HTML
- * @param   appendTokens tells us whether we should insert tokens inline, or append them.
- * @return  TRUE if all went well -- FALSE otherwise
+ * @param   aSourceBuffer contains a string-full of real content
+ * @param   anHTMLString tells us whether we should assume the content is HTML (usually true)
+ * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
+PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
   PRInt32 result=kNoError;
 
-  mParserContext = new CParserContext(new CScanner(kUnknownFilename),mParserContext,0); 
+  CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename),&aSourceBuffer,0);
+  PushContext(*pc);
+  if(PR_TRUE==anHTMLString)
+    pc->mSourceType="text/html";
   mParserContext->mScanner->Append(aSourceBuffer);  
   if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
     WillBuildModel(mParserContext->mScanner->GetFilename());
     result=ResumeParse();
     DidBuildModel(result);
   }
-  
+  pc=PopContext();
+  delete pc;
   return result;
 }
 
@@ -539,7 +535,7 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
  *  
  *  @update  gess 3/25/98
  *  @param   
- *  @return  PR_TRUE if parsing concluded successfully.
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 PRInt32 nsParser::ResumeParse() {
   PRInt32 result=kNoError;
@@ -560,7 +556,7 @@ PRInt32 nsParser::ResumeParse() {
  *
  *  @update  gess 3/25/98
  *  @param   
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 PRInt32 nsParser::BuildModel() {
   
@@ -574,6 +570,20 @@ PRInt32 nsParser::BuildModel() {
   while((kNoError==result) && ((*mParserContext->mCurrentPos<e))){
     mMinorIteration++;
     CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
+
+    /**************************************************************************
+      The point of this code to serve as a testbed for parser reentrancy.
+      If you set recurse=1, we go reentrant, passing a text string of HTML onto 
+      the parser for inline processing, just like javascript/DOM would do it.
+      And guess what? It worked the first time!
+      Uncomment the following code to enable the test:
+
+    int recurse=0;
+    if(recurse){
+      nsString theString("<table border=1><tr><td BGCOLOR=blue>cell</td></tr></table>");
+      Parse(theString,PR_TRUE);
+    }
+      **************************************************************************/
 
     theMarkPos=*mParserContext->mCurrentPos;
     result=mParserContext->mDTD->HandleToken(theToken);
@@ -651,7 +661,7 @@ PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
  *  
  *  @update  gess 5/12/98
  *  @param   
- *  @return  
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::GetBindInfo(nsIURL* aURL){
   nsresult result=0;
@@ -663,7 +673,7 @@ nsresult nsParser::GetBindInfo(nsIURL* aURL){
  *  
  *  @update  gess 5/12/98
  *  @param   
- *  @return  
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
 nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
@@ -681,7 +691,7 @@ nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
  *  
  *  @update  gess 5/12/98
  *  @param   
- *  @return  
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
   if (nsnull != mObserver) {
@@ -718,7 +728,11 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
   int len=1; //init to a non-zero value
   int err;
 
+  if(!mParserContext->mTransferBuffer)
+    mParserContext->mTransferBuffer = new char[CParserContext::eTransferBufferSize+1];
+
   while (len > 0) {
+
     len = pIStream->Read(&err, mParserContext->mTransferBuffer, 0, mParserContext->eTransferBufferSize);
     if(len>0) {
 
@@ -793,7 +807,7 @@ PRBool nsParser::WillTokenize(){
  *  of data.
  *  
  *  @update  gess 3/25/98
- *  @return  error code 
+ *  @return  error code -- 0 if ok, non-zero if error.
  */
 PRInt32 nsParser::Tokenize(){
   CToken* theToken=0;
@@ -803,7 +817,7 @@ PRInt32 nsParser::Tokenize(){
 
   while((PR_FALSE==done) && (kNoError==result)) {
     mParserContext->mScanner->Mark();
-    result=ConsumeToken(theToken);
+    result=mParserContext->mDTD->ConsumeToken(theToken);
     if(kNoError==result) {
       if(theToken) {
 

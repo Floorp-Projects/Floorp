@@ -46,7 +46,7 @@ public:
     enum {eTransferBufferSize=4096};
 
     CParserContext( CScanner* aScanner,
-                    CParserContext* aPreviousContext=0,
+                    void* aKey=0,
                     nsIStreamObserver* aListener=0);
 
 
@@ -67,6 +67,7 @@ public:
     nsIStreamObserver*  mListener;
 
     CParserContext*     mPrevContext;
+    void*               mKey;
 
 };
 

@@ -16,20 +16,6 @@
  * Reserved.
  */
 
-/**
- * MODULE NOTES:
- * @update  gess 4/8/98
- * 
- *         
- */
-
-/**
- * TRANSIENT STYLE-HANDLING NOTES:
- * @update  gess 6/15/98
- * 
- * ...add comments here about transient style stack.
- *         
-   */
 
 #include "nsIDTDDebug.h"
 #include "CNavDTD.h"
@@ -1451,6 +1437,15 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
       } //switch
       break;
 
+      //this code prevents table container elements from
+      //opening unless a table is actually already opened.
+    case eHTMLTag_tr:       case eHTMLTag_thead:    
+    case eHTMLTag_tfoot:    case eHTMLTag_tbody:    
+    case eHTMLTag_td:
+      if(PR_FALSE==HasOpenContainer(eHTMLTag_table))
+        result=PR_TRUE;
+      break;
+
     case eHTMLTag_entity:
       switch((eHTMLTags)aParent) {
         case eHTMLTag_tr:       case eHTMLTag_table:  
@@ -1472,16 +1467,22 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
 
 
 /**
- * 
+ * This method is called when you want to determine if one tag is
+ * synonymous with another. Cases where this are true include style
+ * tags (where <i> is allowed to close <b> for example). Another
+ * is <H?>, where any open heading tag can be closed by any close heading tag.
  * @update	gess6/16/98
  * @param 
  * @return
  */
-PRBool IsCompatibleStyleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
+PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
   PRBool result=PR_FALSE;
 
   if(0!=strchr(gStyleTags,aTag1)) {
     result=PRBool(0!=strchr(gStyleTags,aTag2));
+  }
+  if(0!=strchr(gHeadingTags,aTag1)) {
+    result=PRBool(0!=strchr(gHeadingTags,aTag2));
   }
   return result;
 }
@@ -1504,7 +1505,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_comment:
       result=PR_TRUE; 
       break;
-
+        
     case eHTMLTag_newline:    
     case eHTMLTag_whitespace:
 
@@ -1521,10 +1522,22 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
       } //switch
       break;
 
+      //It turns out that a <Hn> can be closed by any other <H?>
+      //This code makes them all seem compatible.
+    case eHTMLTag_h1:           case eHTMLTag_h2:
+    case eHTMLTag_h3:           case eHTMLTag_h4:
+    case eHTMLTag_h5:           case eHTMLTag_h6:
+      if(0!=strchr(gHeadingTags,aParent)) {
+        result=PR_FALSE;
+        break;
+      }
+      //Otherwise, IT's OK TO FALL THROUGH HERE...
+
+
     default:
       if(IsGatedFromClosing(aChild))
         result=PR_TRUE;
-      else if(IsCompatibleStyleTag(aChild,GetTopNode()))
+      else if(IsCompatibleTag(aChild,GetTopNode()))
         result=PR_FALSE;
       else result=(!HasOpenContainer(aChild));
       break;
@@ -1883,7 +1896,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
         eHTMLTags theTag=mStyleStack.mTags[pos]; 
         if(PR_FALSE==HasOpenContainer(theTag)) {
 
-          CStartToken   token(GetTagName(theTag));
+          CStartToken   token(theTag);
           nsCParserNode theNode(&token);
 
           switch(theTag) {
@@ -2304,7 +2317,7 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
   }
 
   eHTMLTags theTopTag=GetTopNode();
-  if(IsCompatibleStyleTag(aTag,theTopTag)) {
+  if(IsCompatibleTag(aTag,theTopTag)) {
     //if you're here, it's because we're trying to close one style tag,
     //but a different one is actually open. Because this is NAV4x
     //compatibililty mode, we must close the one that's really open.
@@ -2570,7 +2583,6 @@ CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
 nsresult
 CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
-  nsAutoString empty("");
   nsresult result=aScanner.GetChar(aChar);
 
   if(NS_OK==result) {
@@ -2581,12 +2593,12 @@ CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
         result=aScanner.Peek(ch);
         if(NS_OK==result) {
           if(nsString::IsAlpha(ch))
-            aToken=new CEndToken(empty);
-          else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
+            aToken=new CEndToken(eHTMLTag_unknown);
+          else aToken=new CCommentToken(); //Special case: </ ...> is treated as a comment
         }//if
         break;
       case kExclamation:
-        aToken=new CCommentToken(empty);
+        aToken=new CCommentToken();
         break;
       default:
         if(nsString::IsAlpha(aChar))
@@ -2621,11 +2633,10 @@ nsresult
 CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
   PRBool done=PR_FALSE;
   nsresult result=NS_OK;
-  nsAutoString as("");
   PRInt16 theAttrCount=0;
 
   while((!done) && (result==NS_OK)) {
-    CAttributeToken* theToken= new CAttributeToken(as);
+    CAttributeToken* theToken= new CAttributeToken();
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
 
@@ -2635,7 +2646,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
       //and a textkey of "/". We should destroy it, and tell the 
       //start token it was empty.
       nsString& key=theToken->GetKey();
-      nsString& text=theToken->GetText();
+      nsString& text=theToken->GetStringValueXXX();
       if((key[0]==kForwardSlash) && (0==text.Length())){
         //tada! our special case! Treat it like an empty start tag...
         aToken->SetEmpty(PR_TRUE);
@@ -2696,12 +2707,15 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
+
+static char gSpecialTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea, 0};
+
 nsresult
 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   PRInt32 theDequeSize=mTokenDeque.GetSize();
   nsresult result=NS_OK;
 
-  aToken=new CStartToken(nsAutoString(""));
+  aToken=new CStartToken(eHTMLTag_unknown);
   
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
@@ -2713,19 +2727,20 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
       //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
       //consume all the content itself.
       if(NS_OK==result) {
-        nsString& str=aToken->GetText();
-        CToken*   skippedToken=0;
-        if(str.EqualsIgnoreCase("SCRIPT") ||
-           str.EqualsIgnoreCase("STYLE")  ||
-           str.EqualsIgnoreCase("TITLE")  ||
-           str.EqualsIgnoreCase("TEXTAREA")) {
 
+        eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
+
+        if(0!=strchr(gSpecialTags,theTag)){
+
+            //Do special case handling for <script>, <style>, <title> or <textarea>...
+          CToken*   skippedToken=0;
+          nsString& str=aToken->GetStringValueXXX();
           result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
     
           if((NS_OK==result) && skippedToken){
               //now we strip the ending sequence from our new SkippedContent token...
             PRInt32 slen=str.Length()+3;
-            nsString& skippedText=skippedToken->GetText();
+            nsString& skippedText=skippedToken->GetStringValueXXX();
     
             skippedText.Cut(skippedText.Length()-slen,slen);
             mTokenDeque.Push(skippedToken);
@@ -2733,7 +2748,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
             //In the case that we just read a given tag, we should go and
             //consume all the tag content itself (and throw it all away).
 
-            CEndToken* endtoken=new CEndToken(str);
+            CEndToken* endtoken=new CEndToken(theTag);
             mTokenDeque.Push(endtoken);
           } //if
         } //if
@@ -2774,11 +2789,11 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
    if(NS_OK==result) {
      if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-       aToken = new CEntityToken(nsAutoString(""));
+       aToken = new CEntityToken();
        result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
      }
      else if(kHashsign==ch) {
-       aToken = new CEntityToken(nsAutoString(""));
+       aToken = new CEntityToken();
        result=aToken->Consume(0,aScanner);
      }
      else {
@@ -2805,7 +2820,7 @@ nsresult
 CNavDTD::ConsumeWhitespace(PRUnichar aChar,
                            CScanner& aScanner,
                            CToken*& aToken) {
-  aToken = new CWhitespaceToken(nsAutoString(""));
+  aToken = new CWhitespaceToken();
   nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
@@ -2825,7 +2840,7 @@ CNavDTD::ConsumeWhitespace(PRUnichar aChar,
  */
 nsresult
 CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken = new CCommentToken(nsAutoString(""));
+  aToken = new CCommentToken();
   nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
@@ -2868,7 +2883,7 @@ nsresult
 CNavDTD::ConsumeNewline(PRUnichar aChar,
                         CScanner& aScanner,
                         CToken*& aToken){
-  aToken=new CNewlineToken(nsAutoString(""));
+  aToken=new CNewlineToken();
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);

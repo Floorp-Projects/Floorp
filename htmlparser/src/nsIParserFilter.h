@@ -20,6 +20,10 @@
  * MODULE NOTES:
  * @update  jevering 6/17/98
  * 
+ * This interface is not yet used; it was intended to allow an observer object
+ * to "look at" the i/o stream coming into the parser before, during and after
+ * the parser saw it. The intention of this was to allow an observer to modify
+ * the stream at various stages.
  */
 
 #ifndef  IPARSERFILTER

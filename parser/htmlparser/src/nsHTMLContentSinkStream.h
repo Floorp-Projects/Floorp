@@ -19,18 +19,21 @@
 /**
  * MODULE NOTES:
  * @update  gpk 7/12/98
+ * @update  gess 7/20/98
  * 
- * This file declares the concrete HTMLContentSink class.
- * This class is used during the parsing process as the
- * primary interface between the parser and the content
- * model.
- * This content sink writes to a stream. If no stream
-   is declared in the constructor then all output goes
-   to cout.
-   The file is pretty printed according to the pretty
-   printing interface. subclasses may choose to override
-   this behavior or set runtime flags for desired
-   resutls.
+ * If you've been paying attention to our many content sink classes, you may be
+ * asking yourself, "why do we need yet another one?" The answer is that this 
+ * implementation, unlike all the others, really sends its output a given stream
+ * rather than to an actual content sink (as defined in our HTML document system).
+ *
+ * We use this class for a number of purposes: 
+ *	 1) For actual document i/o using XIF (xml interchange format)
+ *   2) For document conversions
+ *   3) For debug purposes (to cause output to go to cout or a file)
+ *
+ * If no stream is declared in the constructor then all output goes to cout. 
+ * The file is pretty printed according to the pretty printing interface. subclasses 
+ * may choose to override this behavior or set runtime flags for desired results.
  */
 
 #ifndef  NS_HTMLCONTENTSINK_STREAM
@@ -54,33 +57,34 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
 
   /**
-   * 
+   * Standard constructor
    * @update	gess7/7/98
-   * @param 
-   * @return
    */
   nsHTMLContentSinkStream(); 
 
   /**
-   * 
+   * Constructor with associated stream. If you use this, it means that you want
+   * this class to emits its output to the stream you provide.
    * @update	gess7/7/98
-   * @param 
-   * @return
+   * @param		aStream -- ref to stream where you want output sent
    */
   nsHTMLContentSinkStream(ostream& aStream); 
 
   /**
-   * 
+   * virtual destructor
    * @update	gess7/7/98
-   * @param 
-   * @return
    */
   virtual ~nsHTMLContentSinkStream();
+
+  void SetOutputStream(ostream& aStream);
 
   // nsISupports
   NS_DECL_ISUPPORTS
  
-  // nsIContentSink
+  /*******************************************************************
+   * The following methods are inherited from nsIContentSink.
+   * Please see that file for details.
+   *******************************************************************/
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
   NS_IMETHOD WillInterrupt(void);
@@ -89,7 +93,10 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
 
-  // nsIHTMLContentSink
+  /*******************************************************************
+   * The following methods are inherited from nsIHTMLContentSink.
+   * Please see that file for details.
+   *******************************************************************/
   NS_IMETHOD PushMark();
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
@@ -105,13 +112,6 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
 
-  /**
-   * 
-   * @update	gess7/7/98
-   * @param 
-   * @return
-   */
-  void SetOutputStream(ostream& aStream);
 
 public:
   void SetLowerCaseTags(PRBool aDoLowerCase) { mLowerCaseTags = aDoLowerCase; }

@@ -22,11 +22,25 @@
 /**
  *  Default constructor
  *  
+ *  @update gess 7/21/98
+ */
+CToken::CToken(PRInt32 aTag) : mTextValue() {
+  mTypeID=aTag;
+  mStringInit=PR_FALSE;
+  mUnused=PR_FALSE;
+  mAttrCount=0;
+}
+
+/**
+ *  Constructor with string for tagname assignment
+ *  
  *  @update gess 3/25/98
  *  @param  nsString--name of token
  */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mTypeID=0;
+  mStringInit=PR_TRUE;
+  mUnused=PR_FALSE;
   mAttrCount=0;
 }
 
@@ -38,6 +52,8 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
  */
 CToken::CToken(const char* aName) : mTextValue(aName) {
   mTypeID=0;
+  mStringInit=PR_TRUE;
+  mUnused=PR_FALSE;
   mAttrCount=0;
 }
  
@@ -64,15 +80,6 @@ nsresult CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
   return result;
 }
 
-/**
- *  Method used to set the string value of this token
- *  
- *  @update gess 3/25/98
- *  @param  aValue -- char* containing new value
- */
-void CToken::SetStringValue(const char* aValue) {
-  mTextValue=aValue;
-}
 
 /**
  *  This debug method causes the token to dump its content
@@ -103,13 +110,12 @@ void CToken::DebugDumpSource(ostream& anOutputStream) {
 }
 
 /**
- *  This method retrieves the value of this internal string. 
- *  
- *  @update gess 3/25/98
- *  @return nsString reference to internal string value
+ * Setter method that changes the string value of this token
+ * @update	gess5/11/98
+ * @param   name is a char* value containing new string value
  */
-nsString& CToken::GetStringValue(void) {
-  return mTextValue;
+void CToken::SetStringValue(const char* name){
+  mTextValue=name;
 }
 
 /**
@@ -118,8 +124,20 @@ nsString& CToken::GetStringValue(void) {
  *  @update gess 3/25/98
  *  @return nsString reference to internal string value
  */
-nsString& CToken::GetText(void) {
+nsString& CToken::GetStringValueXXX(void) {
   return mTextValue;
+}
+
+/**
+ *  This method retrieves the value of this internal string
+ *  as a cstring.
+ *  
+ *  @update gess 3/25/98
+ *  @return char* rep of internal string value
+ */
+char* CToken::GetCStringValue(char* aBuffer, PRInt32 aMaxLen) {
+  strcpy(aBuffer,"string");
+  return aBuffer;
 }
 
 /**

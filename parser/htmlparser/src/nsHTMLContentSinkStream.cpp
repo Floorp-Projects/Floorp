@@ -143,11 +143,11 @@ nsHTMLContentSinkStream::~nsHTMLContentSinkStream() {
 
 /**
  * 
- * @update	gess7/7/98
+ * @update	gess7/22/98
  * @param 
  * @return
  */
-void nsHTMLContentSinkStream::SetOutputStream(ostream& aStream) {
+void nsHTMLContentSinkStream::SetOutputStream(ostream& aStream){
   mOutput=&aStream;
 }
 

@@ -19,6 +19,16 @@
 #define NS_IPARSER___
 
 
+/**
+ * MODULE NOTES:
+ * @update  gess 4/1/98
+ *  
+ *  This class defines the iparser interface. This XPCOM
+ *  inteface is all that parser clients ever need to see.
+ *
+ **/
+
+
 #include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
@@ -48,10 +58,34 @@ class nsIDTDDebug;
 class nsIParser : public nsISupports {
   public:
 
+    /**
+     *  Call this method if you have a DTD that you want to share with the parser.
+	   *  Registered DTD's get remembered until the system shuts down.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aDTD -- ptr DTD that you're publishing the services of
+     */
     virtual void RegisterDTD(nsIDTD* aDTD)=0;
 
+    /**
+     *  Call this method once you've created a parser, and want to instruct it
+	   *  where to send its output.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aContentSink -- ptr to content sink that will receive output
+     *  @return	 ptr to previously set contentsink (usually null)  
+     */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
+    /**
+     *  This internal method is used when the parser needs to determine the
+	   *  type of content it's being asked to parse.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aBuffer -- contains data to be tested (autodetected) for type
+	   *  @param	 aType -- string where you store the detected type (if any)
+     *  @return  autodetect enum (valid, invalid, unknown)
+     */
     virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
 
     /**
@@ -64,21 +98,21 @@ class nsIParser : public nsISupports {
      */
     virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
 
+
     /******************************************************************************************
      *  Parse methods always begin with an input source, and perform conversions 
-     *  until you wind up with HTML in your actual content model.
+     *  until you wind up being emitted to the given contentsink (which may or may not
+	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
     virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,nsIDTDDebug * aDTDDebug = 0) = 0;
-    virtual PRInt32 Parse(nsIInputStream* pIStream,nsIStreamObserver* aListener,nsIDTDDebug* aDTDDebug = 0)=0;
-    virtual PRInt32 Parse(nsString& aFilename)=0;
     virtual PRInt32 Parse(fstream& aStream)=0;
-    virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
+    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString)=0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
      * to build the model via the content sink.
      * @update	gess5/11/98
-     * @return  YES if model building went well -- NO otherwise.
+     * @return  error code -- 0 if model building went well .
      */
     virtual PRInt32 BuildModel(void)=0;
 

@@ -107,7 +107,7 @@ const nsString& nsCParserNode::GetName() const {
  *  @return  string ref of text from internal token
  */
 const nsString& nsCParserNode::GetText() const {
-  return mToken->GetText();
+  return mToken->GetStringValueXXX();
 }
 
 /**
@@ -123,7 +123,7 @@ const nsString& nsCParserNode::GetSkippedContent() const {
     if(mAttributes[mAttributeCount-1]) {
       CSkippedContentToken* sc=(CSkippedContentToken*)(mAttributes[mAttributeCount-1]);
       if(sc) {
-        return sc->GetText();
+        return sc->GetStringValueXXX();
       }
     }
   }
@@ -191,7 +191,7 @@ const nsString& nsCParserNode::GetKeyAt(PRInt32 anIndex) const {
  */
 const nsString& nsCParserNode::GetValueAt(PRInt32 anIndex) const {
   NS_PRECONDITION(anIndex<mAttributeCount, "Bad attr index");
-  return (mAttributes[anIndex])->GetText();
+  return (mAttributes[anIndex])->GetStringValueXXX();
 }
 
 
