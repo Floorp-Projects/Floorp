@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.6 1999/04/22 22:38:12 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.7 1999/05/27 22:33:14 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -36,19 +36,12 @@
 #include "prtime.h"
 #include "prlong.h"
 
-#ifdef STANDALONE_IMAGE_LIB
 #include "xpcompat.h"
-#else
-#include "xp_mcom.h"            /* XP definitions and types. */
-#endif /* STANDALONE_IMAGE_LIB */
 
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures */
 
-#ifndef STANDALONE_IMAGE_LIB
-#include "net.h"
-#include "nsIImgDecoder.h"
-#endif /* STANDALONE_IMAGE_LIB */
+//#include "nsIImgDecoder.h"
 
 typedef struct _IL_GroupContext IL_GroupContext;
 typedef struct _IL_ImageReq IL_ImageReq;
@@ -63,23 +56,9 @@ typedef struct il_container_struct il_container;
 #include "ilINetContext.h"
 #include "ilIURL.h"
 #include "ilINetReader.h"
-#ifdef STANDALONE_IMAGE_LIB
 #include "ilIImageRenderer.h"
 //#include "nsIImgDecCB.h"
-#endif /* STANDALONE_IMAGE_LIB */
 
-/***************************** also in xpcompat.h ***********************/
-#ifndef STANDALONE_IMAGE_LIB
-PR_BEGIN_EXTERN_C
-typedef void
-(*TimeoutCallbackFunction) (void * closure);
-extern void * 
-IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
-extern void
-IL_ClearTimeout(void *timer_id);
-PR_END_EXTERN_C
-#endif
-/********************************* in xpcompat.h *************************************/
 
 #include "il.h"
 
@@ -270,11 +249,7 @@ struct il_container_struct {
                                    Used during image decoding only. */
     IL_DisplayType display_type; /* Type of display for which the container
                                     is created. */
-#ifdef STANDALONE_IMAGE_LIB
     ilIImageRenderer *img_cb;
-#else
-    IMGCBIF *img_cb;            /* JMC callback interface. */
-#endif /* STANDALONE_IMAGE_LIB */
     ilINetContext *net_cx;      /* Context which initiated this transfer. */
 
     IL_ImageReq *clients;       /* List of clients of this container. */
@@ -310,11 +285,7 @@ typedef enum il_draw_mode
 
 /* A context for a group of images. */
 struct _IL_GroupContext {
-#ifdef STANDALONE_IMAGE_LIB
     ilIImageRenderer *img_cb;
-#else
-    IMGCBIF *img_cb;            /* JMC callback interface to front ends. */
-#endif /* STANDALONE_IMAGE_LIB */
     void *dpy_cx;               /* An opaque pointer passed back to all
                                    callbacks in the interface vtable. */
 
@@ -481,11 +452,7 @@ extern il_container
 
 /* Destroy an IL_Pixmap. */
 extern void
-#ifdef STANDALONE_IMAGE_LIB
 il_destroy_pixmap(ilIImageRenderer *img_cb, IL_Pixmap *pixmap);
-#else
-il_destroy_pixmap(IMGCBIF *img_cb, IL_Pixmap *pixmap);
-#endif /* STANDALONE_IMAGE_LIB */
 
 extern uint32 il_hash(const char *ubuf);
 
