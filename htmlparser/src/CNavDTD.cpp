@@ -508,6 +508,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   mSink = 0;
   mDTDDebug=0;
   mLineNumber=1;
+  mHasOpenBody=PR_FALSE;
   mParseMode=eParseMode_navigator;
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
@@ -630,10 +631,12 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
-
   if((aNotifySink) && (mSink)) {
+    mHasOpenBody=PR_FALSE;
     mLineNumber=1;
     result = mSink->WillBuildModel();
+    //CStartToken theToken(eHTMLTag_body);  //open the body container...
+    //result=HandleStartToken(&theToken);
   }
 
   return result;
@@ -647,6 +650,12 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
  */
 nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   nsresult result= NS_OK;
+
+/*  if((kNoError==anErrorCode) && (!mHasOpenBody)) {
+    CStartToken theToken(eHTMLTag_body);  //open the body container...
+    result=HandleStartToken(&theToken);
+  }
+*/
 
   if((kNoError==anErrorCode) && (mBodyContext->mElements.mCount>0)) {
     result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
@@ -727,43 +736,45 @@ PRInt32 CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
   PRInt32 result=kNoError;
   CToken* theNextToken=mParser->PeekToken();
 
-  switch(aChildTag){
-    case eHTMLTag_pre:
-    case eHTMLTag_listing:
-      {
-        if(theNextToken)  {
-          eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-          if(eToken_newline==theType){
+  if(theNextToken){
+    switch(aChildTag){
+      case eHTMLTag_pre:
+      case eHTMLTag_listing:
+        {
+          if(theNextToken)  {
+            eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+            if(eToken_newline==theType){
 
-            switch(aChildTag){
-              case eHTMLTag_pre:
-              case eHTMLTag_listing:
-                  //we skip the first newline token inside PRE and LISTING
-                mParser->PopToken();
-                break;
-              default:
-                break;
-            }//switch
+              switch(aChildTag){
+                case eHTMLTag_pre:
+                case eHTMLTag_listing:
+                    //we skip the first newline token inside PRE and LISTING
+                  mParser->PopToken();
+                  break;
+                default:
+                  break;
+              }//switch
 
+            }//if
           }//if
-        }//if
-      }
-      break;
-
-    case eHTMLTag_plaintext:
-    case eHTMLTag_xmp:
-      //grab the skipped content and dump it out as text...
-      if(theNextToken){
-        eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-        if(eToken_skippedcontent==theType){
-          nsString& theText=((CAttributeToken*)theNextToken)->GetKey();
-          CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE);
         }
-      }
-      break;
-    default:
-      break;
-  }//switch
+        break;
+
+      case eHTMLTag_plaintext:
+      case eHTMLTag_xmp:
+        //grab the skipped content and dump it out as text...
+        if(theNextToken){
+          eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+          if(eToken_skippedcontent==theType){
+            nsString& theText=((CAttributeToken*)theNextToken)->GetKey();
+            CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE);
+          }
+        }
+        break;
+      default:
+        break;
+    }//switch
+  }
   return result;
 }
 
@@ -1320,7 +1331,7 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
   PRBool result=PR_FALSE;
-  if(!IsContainer(aParent))
+  if((!IsContainer(aParent)) && (eHTMLTag_unknown!=aParent))
     return result;
 
  
@@ -2042,7 +2053,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
 
     case eHTMLTag_html:
     case eHTMLTag_body:
-      result=HasOpenContainer(aChild); //don't bother if they're already open...
+      result=PR_TRUE;
       break;
       
     case eHTMLTag_newline:    
@@ -2747,6 +2758,7 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
       result=OpenHTML(aNode); break;
 
     case eHTMLTag_body:
+      mHasOpenBody=PR_TRUE;
       result=OpenBody(aNode); break;
 
     case eHTMLTag_style:
