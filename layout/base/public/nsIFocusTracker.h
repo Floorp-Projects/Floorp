@@ -35,13 +35,13 @@ public:
    *  @param aFrame will be the focus frame
    *  @param aAnchorFrame will be the anchor frame
    */
-  virtual nsresult SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame) = 0;
+  NS_IMETHOD SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame) = 0;
 
   /** GetFocus give the frame and the anchor frame.
    *  @param aFrame will be the focus frame
    *  @param aAnchorFrame will be the anchor frame
    */
-  virtual nsresult GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame) = 0;
+  NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame) = 0;
 };
 
 
