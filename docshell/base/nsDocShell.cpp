@@ -942,6 +942,24 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         // If all went well, indicate that a new window has been created.
         if (*aResult) {
             *aIsNewWindow = PR_TRUE;
+
+            // if we just open a new window for this link, charset from current docshell 
+            // should be kept, as what we did in js openNewWindowWith(url)
+            nsCOMPtr<nsIMarkupDocumentViewer> muCV, target_muCV;
+            nsCOMPtr<nsIContentViewer> cv, target_cv;
+            this->GetContentViewer(getter_AddRefs(cv));
+            (*aResult)->GetContentViewer(getter_AddRefs(target_cv));
+            if (cv && target_cv) {
+              muCV = do_QueryInterface(cv);            
+              target_muCV = do_QueryInterface(target_cv);            
+              if (muCV && target_muCV) {
+                nsXPIDLString defaultCharset;
+                rv = muCV->GetDefaultCharacterSet(getter_Copies(defaultCharset));
+                if(NS_SUCCEEDED(rv)) {
+                  target_muCV->SetDefaultCharacterSet(defaultCharset);
+                }
+              }
+            } 
         }
 
         return rv;
