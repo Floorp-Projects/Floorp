@@ -4188,7 +4188,7 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromPane(CWnd* pParent, int xPos
 	int width, int height, HT_Pane thePane, CCreateContext* pContext)
 {
 	// Create the windows
-	CRect rClient(xPos, yPos, width, height);
+	CRect rClient(xPos, yPos, xPos+width, yPos+height);
 	
 	CRDFContentView* newView = new CRDFContentView();
 
