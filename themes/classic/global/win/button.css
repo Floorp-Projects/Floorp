@@ -19,8 +19,8 @@
   button[disabled="true"][default],
   button[disabled="true"]:hover:active
     {
-      border-left         : 1px solid ThreeDLightShadow;
-      border-top          : 1px solid ThreeDLightShadow;
+      border-left         : 1px solid ThreeDHighlight;
+      border-top          : 1px solid ThreeDHighlight;
       border-right        : 1px solid ThreeDDarkShadow;
       border-bottom       : 1px solid ThreeDDarkShadow;
     }
@@ -29,8 +29,8 @@
   button[disabled="true"][default] > .button-box-1,
   button[disabled="true"]:hover:active > .button-box-1
     {
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
+      border-left         : 1px solid ThreeDLightShadow;
+      border-top          : 1px solid ThreeDLightShadow;
       border-right        : 1px solid ThreeDShadow;
       border-bottom       : 1px solid ThreeDShadow;
       -moz-user-focus     : none;
