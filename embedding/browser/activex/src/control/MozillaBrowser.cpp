@@ -1771,7 +1771,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
     // Check for a view-source op - this is a bit kludgy
     // TODO
-    if (sUrl.CompareWithConversion(L"view-source:", PR_TRUE, 12) == 0)
+    if (NS_LossyConvertUCS2toASCII(sUrl).Compare("view-source:", PR_TRUE, 12) == 0)
      {
         // Broken code - appears to want to replace view-source: with view: to 
         // get Mozilla to respond to the IE view-source: protocol.
