@@ -78,6 +78,7 @@ LLIBS=$(LLIBS)				\
 LINCS=$(LINCS)  -I. \
                 -I$(PUBLIC)\raptor   \
                 -I$(PUBLIC)\netlib   \
+		-I$(PUBLIC)\pref     \
                 -I$(PUBLIC)\xpcom
 
 # clobber and clobber_all will remove the following garbage:
