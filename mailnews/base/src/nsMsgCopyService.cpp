@@ -596,10 +596,24 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
 {
   nsresult rv;
   rv = DoNextCopy();
-  nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
+  nsCopyRequest* copyRequest = nsnull;
+  do
+  {
+    // loop for copy requests, because if we do a cross server folder copy,
+    // we'll have a copy request for the folder copy, which will in turn
+    // generate a copy request for the messages in the folder, which
+    // will have the same src support.
+    copyRequest = FindRequest(aSupport, dstFolder);
 
-  if (copyRequest && copyRequest->m_processed) 
-    ClearRequest(copyRequest, result);
+    if (copyRequest)
+    {
+      if (copyRequest->m_processed) 
+        ClearRequest(copyRequest, result);
+      else
+        break;
+    }
+  }
+  while (copyRequest);
 
   return rv;
 }
