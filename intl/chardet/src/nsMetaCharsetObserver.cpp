@@ -245,13 +245,18 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       }
       static nsAutoString contenttype = NS_ConvertToString("Content-Type");
       static nsAutoString texthtml = NS_ConvertToString("text/html");
+
+      PRInt32 lastIdx =0;
+      if(nsnull != httpEquivValue)
+         lastIdx = nsCRT::strlen(httpEquivValue)-1;
+
       if((nsnull != httpEquivValue) && 
          (nsnull != contentValue) && 
          ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.GetUnicode())) ||
           ((((httpEquivValue[0]=='\'') &&
-             (httpEquivValue[contenttype.Length()+1]=='\'')) ||
+             (httpEquivValue[lastIdx]=='\'')) ||
             ((httpEquivValue[0]=='\"') &&
-             (httpEquivValue[contenttype.Length()+1]=='\"'))) && 
+             (httpEquivValue[lastIdx]=='\"'))) && 
            (0==nsCRT::strncasecmp(httpEquivValue+1,
                       contenttype.GetUnicode(),
                       contenttype.Length()))
