@@ -35,7 +35,7 @@
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
 #include "nsIScriptNameSetRegistry.h"
-#include "nsAppShellNameset.h"
+#include "nsAppShellNameSet.h"
 
 #include "nsWidgetsCID.h"
 #include "nsIStreamObserver.h"
