@@ -35,8 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgMailSession.h"
-#include "nsILocaleFactory.h"
-#include "nsLocaleCID.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMessageView.h"
@@ -48,7 +46,6 @@
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
-static NS_DEFINE_CID(kLocaleFactoryCID,			NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,		NS_DATETIMEFORMAT_CID);
 
 nsIRDFResource* nsMsgMessageDataSource::kNC_Subject = nsnull;
