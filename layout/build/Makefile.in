@@ -66,11 +66,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkxulgrid_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-ifdef MOZ_GRID2
-SHARED_LIBRARY_LIBS += $(DIST)/lib/libgkxulgrid_s.$(LIB_SUFFIX) \
-        $(NULL)
-endif
-
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
