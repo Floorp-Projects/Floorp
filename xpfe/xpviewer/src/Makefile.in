@@ -129,7 +129,6 @@ EX_LIBS = \
 	-lutil \
 	-lxp \
 	-lxpcom \
-      -lender \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
 	$(NULL)
