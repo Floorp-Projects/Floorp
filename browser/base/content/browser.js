@@ -27,6 +27,7 @@
  *   Ben Goodger <ben@netscape.com> 
  *   Pierre Chanial <pierrechanial@netscape.net>
  *   Jason Eager <jce2@po.cwru.edu>
+ *   Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -3459,3 +3460,58 @@ function BrowserCustomizeToolbar()
 {
   window.openDialog("chrome://browser/content/customizeToolbar.xul", "Customize Toolbar", "modal,chrome,resizable=yes");
 }
+
+var FullScreen = 
+{
+  toggle: function()
+  {
+    // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
+    this.showXULChrome("menubar", window.fullScreen);
+    this.showXULChrome("toolbar", window.fullScreen);
+    this.showXULChrome("statusbar", window.fullScreen);
+  },
+  
+  showXULChrome: function(aTag, aShow)
+  {
+    var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    var els = document.getElementsByTagNameNS(XULNS, aTag);
+    
+    var i;
+    for (i = 0; i < els.length; ++i) {
+      // XXX don't interfere with previously collapsed toolbars
+      if (els[i].getAttribute("fullscreentoolbar") == "true") {
+        this.setToolbarButtonMode(els[i], aShow ? "" : "small");
+      } else {
+        // use moz-collapsed so it doesn't persist hidden/collapsed,
+        // so that new windows don't have missing toolbars
+        if (aShow)
+          els[i].removeAttribute("moz-collapsed");
+        else
+          els[i].setAttribute("moz-collapsed", "true");
+      }
+    }
+    
+    var controls = document.getElementsByAttribute("fullscreencontrol", "true");
+    for (i = 0; i < controls.length; ++i)
+      controls[i].hidden = aShow;
+  },
+  
+  setToolbarButtonMode: function(aToolbar, aMode)
+  {
+    aToolbar.setAttribute("toolbarmode", aMode);
+    this.setToolbarButtonModeFor(aToolbar, "toolbarbutton", aMode);
+    this.setToolbarButtonModeFor(aToolbar, "button", aMode);
+    this.setToolbarButtonModeFor(aToolbar, "textbox", aMode);
+  },
+  
+  setToolbarButtonModeFor: function(aToolbar, aTag, aMode)
+  {
+    var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    var els = aToolbar.getElementsByTagNameNS(XULNS, aTag);
+
+    for (var i = 0; i < els.length; ++i) {
+      els[i].setAttribute("toolbarmode", aMode);
+    }
+  }
+  
+};
