@@ -20,9 +20,6 @@
 <!ENTITY enbJsCheckMailNews.label     "Enable JavaScript for Mail and News">
 <!ENTITY enbJsCheckMailNews.accesskey "m">
 
-<!ENTITY enbCssCheck.label            "Enable style sheets for web pages">
-<!ENTITY enbCssCheck.accesskey        "s">
-
 <!ENTITY sendAddFtpCheck.label        "Send email address as anonymous FTP password">
 <!ENTITY sendAddFtpCheck.accesskey    "e">
 

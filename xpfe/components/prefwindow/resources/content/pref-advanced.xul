@@ -69,9 +69,6 @@
               prefattribute="checked"/>
     <!-- XXX -->              
               
-    <checkbox id="CSSAllow" value="&enbCssCheck.label;" accesskey="&enbCssCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="css.allow"
-              prefattribute="checked"/>
     <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
               pref="true" preftype="bool" prefstring="advanced.mailftp"
               prefattribute="checked"/>
