@@ -62,19 +62,19 @@ $(OBJ) :
 
 $(OBJ)\js32.dll :
     @cd ..\..\src
-    @nmake -f js.mak CFG="js - Win32 Debug"
+    @nmake -f js.mak CFG="js - Win32 $(OBJ)"
     @cd ..\jsd\jsdb
     @echo Copying dll from js/src
     @copy $(JSSRC)\$(OBJ)\js32.dll  $(OBJ)  >NUL
-    @copy $(JSSRC)\$(OBJ)\js32.pdb  $(OBJ)  >NUL
+    @if "$(OBJ)" == "Debug" copy $(JSSRC)\$(OBJ)\js32.pdb  $(OBJ)  >NUL
 
 $(OBJ)\jsd.dll :
     @cd ..
-    @nmake -f jsd.mak JSD_THREADSAFE=1
+    @nmake -f jsd.mak JSD_THREADSAFE=1 BUILD_OPT=$(BUILD_OPT)
     @cd jsdb
     @echo Copying dll from js/jsd
     @copy $(JSD)\$(OBJ)\jsd.dll  $(OBJ)  >NUL
-    @copy $(JSD)\$(OBJ)\jsd.pdb  $(OBJ)  >NUL
+    @if "$(OBJ)" == "Debug" copy $(JSD)\$(OBJ)\jsd.pdb  $(OBJ)  >NUL
 
 dlls : $(OBJ)\js32.dll $(OBJ)\jsd.dll
 
@@ -95,8 +95,8 @@ clean:
 
 deep_clean: clean
     @cd ..\..\src
-    @nmake -f js.mak CFG="js - Win32 Debug" clean
+    @nmake -f js.mak CFG="js - Win32 $(OBJ)" clean
     @cd ..\jsd\jsdb
     @cd ..
-    @nmake -f jsd.mak clean
+    @nmake -f jsd.mak clean BUILD_OPT=$(BUILD_OPT)
     @cd jsdb
