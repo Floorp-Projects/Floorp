@@ -42,6 +42,8 @@
 #include "prio.h"
 #include "rdf.h"
 
+#include "nsEscape.h"
+
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIEventQueueService.h"
@@ -371,11 +373,12 @@ FTPDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 NS_METHOD
 FTPDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 {
-	nsresult rv;
+	nsresult	rv = NS_OK;
 
 	nsXPIDLCString uri;
 	rv = source->GetValue( getter_Copies(uri) );
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv))
+		return(rv);
 
 	nsAutoString	url(uri);
 
@@ -388,6 +391,7 @@ FTPDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 			url.Cut(len-1, 1);
 		}
 	}
+
 	// get basename
 	PRInt32		slash = url.RFind('/');
 	if (slash > 0)
@@ -395,14 +399,26 @@ FTPDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 		url.Cut(0, slash+1);
 	}
 
-	// XXX To Do: unescape basename
-	
-	nsIRDFLiteral	*literal;
-	rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
-	if (NS_FAILED(rv)) return rv;
+	// unescape basename
+	rv = NS_ERROR_NULL_POINTER;
+	char	*basename = url.ToNewCString();
+	if (basename)
+	{
+		basename = nsUnescape(basename);
+		if (basename)
+		{
+			url = basename;
+			delete [] basename;
+			basename = nsnull;
 
-	*aResult = literal;
-	return NS_OK;
+			nsIRDFLiteral	*literal;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(url.GetUnicode(), &literal)))
+			{
+				*aResult = literal;
+			}
+		}
+	}
+	return(rv);
 }
 
 
