@@ -67,6 +67,10 @@
               <splitter class="tree-splitter"/>
               <treecol id="userCol" label="&treehead.username.label;" flex="2"
                            onclick="SignonColumnSort('user');" persist="width"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="passwordCol" label="&treehead.password.label;" flex="2"
+                           onclick="SignonColumnSort('password');" persist="width"
+                           hidden="true"/>
             </treecols>
             <treechildren/>
           </tree>
@@ -77,6 +81,9 @@
             <button id="removeAllSignons"
                           label="&removeall.label;"
                           oncommand="DeleteAllSignons();"/>
+            <spacer flex="1"/>
+            <button id="togglePasswords"
+                          oncommand="TogglePasswordVisible();"/>
           </hbox>
       </vbox>
       <!-- rejected signon sites -->
