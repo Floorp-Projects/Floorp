@@ -50,4 +50,3 @@ ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(EXPORT_HEADERS) $(MOZ_INCL)
 endif
 
-install:: export

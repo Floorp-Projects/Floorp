@@ -360,4 +360,3 @@ endif
 endif
 endif
 endif #!USE_AUTOCONF
-install:: export

@@ -192,16 +192,14 @@ endif
 
 ################################################################################
 
-all:: export libs install
+all:: export
 
 export::
 	+$(LOOP_OVER_DIRS)
 
-libs::
-	+$(LOOP_OVER_DIRS)
+libs:: export
 
-install::
-	+$(LOOP_OVER_DIRS)
+install:: export
 
 clean::
 	rm -rf $(OBJS) so_locations $(NOSUCHFILE) $(GARBAGE)

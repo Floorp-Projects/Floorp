@@ -188,5 +188,4 @@ ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/bin
 endif
 
-install:: export
 

@@ -212,4 +212,3 @@ ifdef SHARED_LIBRARY
 endif
 endif
 
-install:: export

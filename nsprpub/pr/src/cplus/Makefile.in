@@ -69,4 +69,3 @@ HEADERS = $(srcdir)/*.h
 
 export:: $(TARGETS)
 
-install:: export
