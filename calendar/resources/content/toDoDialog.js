@@ -1172,7 +1172,8 @@ function addException( dateToAdd )
    var DateLabel = formatDate( dateToAdd );
 
    //add a row to the listbox
-   document.getElementById( "exception-dates-listbox" ).appendItem( DateLabel, dateToAdd.getTime() );
+   var listbox = document.getElementById( "exception-dates-listbox" );
+   listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
 
    sizeToContent();
 }

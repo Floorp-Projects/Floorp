@@ -429,8 +429,6 @@ function onOKCommand()
    var i;
    for( i = 0; i < listbox.childNodes.length; i++ )
    {
-      debug( "\n exception added for "+listbox.childNodes[i].value );
-
       var dateObj = new Date( );
 
       dateObj.setTime( listbox.childNodes[i].value );
@@ -1194,8 +1192,9 @@ function addException( dateToAdd )
 
    var DateLabel = formatDate( dateToAdd );
 
-   //add a row to the listbox
-   document.getElementById( "exception-dates-listbox" ).appendItem( DateLabel, dateToAdd.getTime() );
+   //add a row to the listbox.
+   var listbox = document.getElementById( "exception-dates-listbox" );
+   listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
 
    sizeToContent();
 }
