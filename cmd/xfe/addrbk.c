@@ -75,39 +75,43 @@ void FE_InitAddrBook()
 {
 
 	static XP_List *directories = NULL;
-	char     oldFile[1024];
+	char     *oldFile;
 	XP_File  oldFp = 0;
 
   	char     tmp[1024];
+	char	*tmp2;
   	char    *home = getenv("HOME");
   	/*DIR_Server *dir;*/
 
   	if (!home) home = "";
 
-	PR_snprintf(oldFile, sizeof (oldFile), "%.900s/.netscape/addrbook.db", home); 
-	oldFp = XP_FileOpen(oldFile, xpAddrBook, "r");
-	if (oldFp) {
-		char    newFile[256];
-		XP_File newFp = 0;
+	oldFile = fe_GetConfigDirFilename("addrbook.db"); 
+	if (oldFile) {
+		oldFp = XP_FileOpen(oldFile, xpAddrBook, "r");
+		if (oldFp) {
+			char    newFile[256];
+			XP_File newFp = 0;
 
-		/* extern int XP_FileClose(XP_File file);
-		 */
-		XP_FileClose(oldFp);
-
-		PR_snprintf(newFile, sizeof (newFile), "%s", "abook.nab");
-		newFp = XP_FileOpen(newFile, xpAddrBookNew, "r");
-		if (!newFp) {
-			/* Rename file for backward compatibility reason
-			 *   extern int XP_FileRename(const char * from, XP_FileType fromtype,
-			 *     const char * to,   XP_FileType totype);
+			/* extern int XP_FileClose(XP_File file);
 			 */
-			XP_FileRename(oldFile, xpAddrBook,
-						  newFile, xpAddrBookNew);
-		}/* !newFp */
-		else
-			XP_FileClose(newFp);
+			XP_FileClose(oldFp);
+
+			PR_snprintf(newFile, sizeof (newFile), "%s", "abook.nab");
+			newFp = XP_FileOpen(newFile, xpAddrBookNew, "r");
+			if (!newFp) {
+				/* Rename file for backward compatibility reason
+				 *   extern int XP_FileRename(const char * from, XP_FileType fromtype,
+				 *     const char * to,   XP_FileType totype);
+				 */
+				XP_FileRename(oldFile, xpAddrBook,
+							  newFile, xpAddrBookNew);
+			}/* !newFp */
+			else
+				XP_FileClose(newFp);
 	
-	}/* if */
+		}/* if */
+		free(oldFile);
+	}
 
 	/* all right, lets do the list of directories and stuff */
 	directories = XP_ListNew();
@@ -117,14 +121,17 @@ void FE_InitAddrBook()
 	PR_snprintf(tmp, sizeof (tmp), "abook.nab"); 
 
 	DIR_GetServerPreferences (&directories, tmp);
-	PR_snprintf(tmp, sizeof (tmp), 
-				"%.900s/.netscape/address-book.html", home); 
+	tmp2 = fe_GetConfigDirFilename("address-book.html");
+	if (tmp2)
 	{
+		{
 #ifndef MOZ_NEWADDR
-		DIR_Server *pabDir = NULL;
-		DIR_GetPersonalAddressBook(directories, &pabDir);
-		AB_InitializeAddressBook(pabDir, &AddrBook, tmp);
+			DIR_Server *pabDir = NULL;
+			DIR_GetPersonalAddressBook(directories, &pabDir);
+			AB_InitializeAddressBook(pabDir, &AddrBook, tmp);
 #endif
+		}
+		free (tmp2);
 	}
 }
 

@@ -386,6 +386,10 @@ static XrmOptionDescRec options [] = {
   { "-no-irix-session-management",	".irixSessionManagement",	XrmoptionNoArg, "False" },
 
   { "-dont-force-window-stacking",	".dontForceWindowStacking",	XrmoptionNoArg, "True" },
+
+
+  /* The location of the config dir ($HOME/.netscape by default) */
+  { "-config-dir",					".configDir",				XrmoptionSepArg, NULL },
 };
 
 extern char *fe_fallbackResources[];
@@ -860,8 +864,13 @@ XtResource fe_GlobalResources [] =
 #if (defined(IRIX) && !defined(IRIX6_2) && !defined(IRIX6_3))
     (XtPointer) False },
 #else
-    (XtPointer) True }
+    (XtPointer) True },
 #endif
+
+  /* The location of the config dir ($HOME/.netscape by default) */
+  { "configDir", XtCString, XtRString, sizeof (String),
+    XtOffset (fe_GlobalData *, config_dir), XtRString,
+    ".netscape" },
 
 # undef RES_ERROR
 };
@@ -888,6 +897,36 @@ usage (void)
 #endif
 
   fprintf (stderr, XP_GetString( XFE_USAGE_MSG5 ) );
+}
+
+char *fe_GetConfigDirFilename(char *filename)
+{
+  return fe_GetConfigDirFilenameWithPrefix("", filename);
+}
+
+char *fe_GetConfigDirFilenameWithPrefix(char *prefix, char *filename)
+{
+  return PR_smprintf("%s%s/%s", prefix, fe_GetConfigDir(), filename);
+}
+
+char *fe_GetConfigDir(void)
+{
+  char *result, *home;
+  
+  home = getenv("HOME");
+  if(!home) {
+    struct passwd *pw = getpwuid(getuid());
+
+    home = pw ? pw->pw_dir : "/";
+  }
+
+  if(fe_globalData.config_dir) {
+    result = PR_smprintf("%s/%s", home, fe_globalData.config_dir);
+  } else {
+    result = PR_smprintf("%s/.netscape", home);
+  }
+
+  return result;
 }
 
 /*******************
@@ -1839,7 +1878,7 @@ Display *fe_dpy_kludge;
 Screen *fe_screen_kludge;
 
 static char *fe_home_dir;
-static char *fe_config_dir;
+static char *fe_config_dir = 0;
 
 /*
  * build_simple_user_agent_string
@@ -2404,21 +2443,28 @@ main
       while ((slash = strrchr(fe_home_dir, '/')) && slash[1] == '\0')
 	*slash = '\0';
     }
+    
+    toplevel = XtAppInitialize (&fe_XtAppContext, (char *) fe_progclass, options,
+                                sizeof (options) / sizeof (options [0]),
+                                &argc, argv, fe_fallbackResources, 0, 0);
+
+    fe_InitializeGlobalResources(toplevel);
+    fe_ensure_config_dir_exists(toplevel);
+
 {
-    char buf [1024];
+	char buf [1024];
     int32 profile_age;
     XP_StatStruct statPrefs;
     int status;
     
-    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir,
 #ifdef OLD_UNIX_FILES
-        ".netscape-preferences"
-#else
-        ".netscape/preferences.js"
-#endif
-		);
-
+    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, ".netscape-preferences");
     fe_globalData.user_prefs_file = strdup (buf);
+#else
+    fe_globalData.user_prefs_file = fe_GetConfigDirFilename("preferences.js");
+    PR_snprintf (buf, sizeof (buf), "%s", fe_globalData.user_prefs_file);
+#endif
+
     /* check if preferences previously existed */
     status=XP_Stat(buf, &statPrefs, xpUserPrefs);
     
@@ -2457,12 +2503,6 @@ main
 #endif /* MOZ_FULLCIRCLE */
   
   
-  toplevel = XtAppInitialize (&fe_XtAppContext, (char *) fe_progclass, options,
-			      sizeof (options) / sizeof (options [0]),
-			      &argc, argv, fe_fallbackResources, 0, 0);
-
-
-
   FE_SetToplevelWidget(toplevel);
 
   /* we need to set the drag/drop protocol style to dynamic
@@ -2690,7 +2730,7 @@ main
       unsigned long addr;
       pid_t pid;
 
-      name = PR_smprintf ("%s/lock", fe_config_dir);
+      name = fe_GetConfigDirFilename("lock");
       addr = 0;
       pid = 0;
       if (name == NULL)
@@ -2707,6 +2747,10 @@ main
       else 
 	{
 	  char *fmt = NULL;
+          /* the hardcoded value below is only used if memory couldn't be */
+          /* allocated for the real filename.  extremely unlikely, and    */
+          /* if it happens, the program should probably just crash anyway */
+          /* because it's not going to be able to do much else.           */
 	  char *lock = name ? name : ".netscape/lock";
 
 	  fmt = PR_sprintf_append(fmt, XP_GetString(XFE_APP_HAS_DETECTED_LOCK),
@@ -2775,7 +2819,11 @@ main
     sigfillset(&act.sa_mask);
     sigaction (SIGCHLD, &act, NULL);
 
-    fe_InitializeGlobalResources (toplevel);
+    /* Add a timer to periodically flush out the global history and bookmark. */
+    fe_save_history_timer ((XtPointer) ((int) True), 0);
+
+    /* #### move to prefs */
+    LO_SetUserOverride (!fe_globalData.document_beats_user_p);
 
 #ifndef OLD_UNIX_FILES
 
@@ -2821,11 +2869,14 @@ main
 	}
 
 {
-    char buf [1024];
-    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, ".netscape/user.js");
-    PREF_ReadUserJSFile(buf);
-    PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir, ".netscape/hook.js");
-    HK_ReadHookFile(buf);
+  char *buf;
+  buf = fe_GetConfigDirFilename("user.js");
+  PREF_ReadUserJSFile(buf);
+  free(buf);
+
+  buf = fe_GetConfigDirFilename("hooks.js");
+  HK_ReadHookFile(buf);
+  free(buf);
 }
 
     fe_startDisplayFactory(toplevel);
@@ -3576,7 +3627,10 @@ fe_ensure_config_dir_exists (Widget toplevel)
   struct stat st;
   XP_Bool exists;
 
-  dir = PR_smprintf ("%s/.netscape", fe_home_dir);
+  if(fe_config_dir)
+    return TRUE;
+
+  dir = fe_GetConfigDir();
   if (!dir)
     return FALSE;
 
@@ -3838,43 +3892,62 @@ fe_copy_init_files (Widget toplevel)
     return;
 
   PR_snprintf (file1, sizeof (file1), "%s/", fe_home_dir);
-  strcpy (file2, file1);
+  PR_snprintf (file2, sizeof (file2), "%s/%s/", fe_home_dir, fe_globalData.config_dir);
   s1 = file1 + strlen (file1);
   s2 = file2 + strlen (file2);
 
-#define FROB(OLD1, OLD2, NEW, PERMS)			\
-  strcpy (s1, OLD1);					\
-  strcpy (s2, NEW);					\
-  if (!stat (file2, &st2))				\
-    ;    /* new exists - leave it alone */		\
-  else if (!stat (file1, &st1))				\
-    {							\
-      fe_copied_init_files = TRUE;			\
-      fe_copy_file (toplevel, file1, file2, 0);		\
-    }							\
-  else							\
-    {							\
-      strcpy (s1, OLD2);				\
-      if (!stat (file1, &st1))				\
-	{						\
-          fe_copied_init_files = TRUE;			\
-	  fe_copy_file (toplevel, file1, file2, 0);	\
-        }						\
+#define FROB(NEW, OLD1, OLD2, OLD3, PERMS)			\
+  strcpy (s1, OLD1);						\
+  strcpy (s2, NEW);						\
+  if (!stat (file2, &st2))					\
+    ;    /* new exists - leave it alone */			\
+  else if (!stat (file1, &st1))					\
+    {								\
+      fe_copied_init_files = TRUE;				\
+      fe_copy_file (toplevel, file1, file2, PERMS);		\
+    }								\
+  else if (OLD2!=NULL)						\
+    {								\
+      strcpy (s1, OLD2);					\
+      if (!stat (file1, &st1))					\
+	{							\
+          fe_copied_init_files = TRUE;				\
+	  fe_copy_file (toplevel, file1, file2, PERMS);		\
+        }							\
+      else if (OLD3!=NULL)					\
+        {							\
+          strcpy (s1, OLD3);					\
+          if (!stat (file1, &st1))				\
+            {							\
+              fe_copied_init_files = TRUE;			\
+              fe_copy_file (toplevel, file1, file2, PERMS);	\
+            }							\
+        }							\
     }
 
-  FROB(".netscape-preferences",
+  FROB("preferences",
+       "./netscape/preferences",
+       ".netscape-preferences",
        ".MCOM-preferences",
-       ".netscape/preferences",
-       0)
-  FROB(".netscape-bookmarks.html",
-       ".MCOM-bookmarks.html",
-       ".netscape/bookmarks.html",
-       0)
-
-  FROB(".netscape-cookies",
-       ".MCOM-HTTP-cookie-file",
-       ".netscape/cookies",
        (S_IRUSR | S_IWUSR))		/* rw only by owner */
+
+  FROB("bookmarks.html",
+       ".netscape/bookmarks.html",
+       ".netscape-bookmarks.html",
+       ".MCOM-bookmarks.html",
+       (S_IRUSR | S_IWUSR))
+  
+  FROB("cookies",
+       ".netscape/cookies",
+       ".netscape-cookies",
+       ".MCOM-HTTP-cookie-file",
+       (S_IRUSR | S_IWUSR))
+
+  FROB("preferences.js",
+       ".netscape/preferences.js",
+       NULL,
+       NULL,
+       (S_IRUSR | S_IWUSR))
 
 #undef FROB
 }
@@ -3910,8 +3983,7 @@ fe_clean_old_init_files (Widget toplevel)
   /* spider begin */
   /* TODO: where does this string get free'd? */
   if (fe_globalPrefs.sar_cache_dir) free (fe_globalPrefs.sar_cache_dir);
-  PR_snprintf (buf, sizeof (buf), "%s/.netscape/archive/", fe_home_dir);
-  fe_globalPrefs.sar_cache_dir = strdup (buf);
+  fe_globalPrefs.sar_cache_dir = fe_GetConfigDirFilename("archive/");
   /* spider end */
 
   if (!fe_copied_init_files)
@@ -3920,12 +3992,10 @@ fe_clean_old_init_files (Widget toplevel)
   /* History and cache always go in the new place by default,
      no matter what they were set to before. */
   if (fe_globalPrefs.history_file) free (fe_globalPrefs.history_file);
-  PR_snprintf (buf, sizeof (buf), "%s/.netscape/history.db", fe_home_dir);
-  fe_globalPrefs.history_file = strdup (buf);
+  fe_globalPrefs.history_file = fe_GetConfigDirFilename("history.db");
 
   if (fe_globalPrefs.cache_dir) free (fe_globalPrefs.cache_dir);
-  PR_snprintf (buf, sizeof (buf), "%s/.netscape/cache/", fe_home_dir);
-  fe_globalPrefs.cache_dir = strdup (buf);
+  fe_globalPrefs.cache_dir = fe_GetConfigDirFilename("cache/");
 
   /* If they were already keeping their bookmarks file in a different
      place, don't change that preferences setting. */
@@ -3934,9 +4004,7 @@ fe_clean_old_init_files (Widget toplevel)
       !XP_STRCMP (fe_globalPrefs.bookmark_file, buf))
     {
       if (fe_globalPrefs.bookmark_file) free (fe_globalPrefs.bookmark_file);
-      PR_snprintf (buf, sizeof (buf), "%s/.netscape/bookmarks.html",
-		   fe_home_dir);
-      fe_globalPrefs.bookmark_file = strdup (buf);
+      fe_globalPrefs.bookmark_file = fe_GetConfigDirFilename("bookmarks.html");
     }
 
   /* If their home page was set to their bookmarks file (and that was
@@ -3947,9 +4015,9 @@ fe_clean_old_init_files (Widget toplevel)
       !XP_STRCMP (fe_globalPrefs.home_document, buf))
     {
       if (fe_globalPrefs.home_document) free (fe_globalPrefs.home_document);
-      PR_snprintf (buf, sizeof (buf), "file:%s/.netscape/bookmarks.html",
-		   fe_home_dir);
-      fe_globalPrefs.home_document = strdup (buf);
+      fe_globalPrefs.home_document = 
+        fe_GetConfigDirFilenameWithPrefix("file:",  /* or "file://"? */
+                                          "bookmarks.html");
     }
 
   fe_copied_init_files = FALSE;

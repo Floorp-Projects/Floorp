@@ -640,6 +640,12 @@ void fe_WidgetAddDocumentString(MWContext *context, Widget widget);
 
 extern void fe_PrimarySelectionFetchURL(MWContext *context);
 
+/* return the name of the config directory (e.g. ~/.netscape) 
+   or files therein. */
+extern char *fe_GetConfigDir(void);
+extern char *fe_GetConfigDirFilename(char *filename);
+extern char *fe_GetConfigDirFilenameWithPrefix(char *prefix, char *filename);
+
 /*
  * Search Callback
  */
@@ -1474,6 +1480,9 @@ typedef struct
   Boolean all_databases_locked;
 
   Cardinal editor_update_delay;
+
+  /* The location of the config dir (~/.netscape by default) */
+  String config_dir;
 } fe_GlobalData;
 
 extern fe_GlobalData   fe_globalData;

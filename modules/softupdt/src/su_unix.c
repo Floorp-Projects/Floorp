@@ -52,6 +52,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 					fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
 
 				XP_STRCAT(Path, "plugins/");
+				directory = XP_STRDUP( Path );
 			}
 			else
 			{ 	/* Use local plugins path: $HOME/.netscape/plugins/ */
@@ -61,9 +62,8 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 					Home = "";
 				else if (!strcmp (Home, "/"))
 					Home = "";
-    				PR_snprintf(Path, MAXPATHLEN, "%.900s/.netscape/plugins/", Home);
+				directory = fe_GetConfigDirFilename("plugins/");
 			}
-			directory = XP_STRDUP( Path );
 		}
 		break;
 
@@ -131,6 +131,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 					fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
 
 				XP_STRCAT(Path, "java/download/");
+				directory = XP_STRDUP( Path );
 			}
 			else
 			{
@@ -141,7 +142,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 				else if (!strcmp (Home, "/"))
 					Home = "";
 			
-   				PR_snprintf(Path, MAXPATHLEN, "%.900s/.netscape/java/download/", Home);
+   				directory = fe_GetConfigDirFilename("/java/download/");
 			}
 			directory = XP_STRDUP( Path );
 		}

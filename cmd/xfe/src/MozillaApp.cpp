@@ -1071,38 +1071,6 @@ xfeUndefinedKeyAction(Widget w,
 	XBell(XtDisplay(w), 0);
 }
 
-// Stole this from xp_file.c
-static const char *
-fe_config_directory(char* buf)
-{
-  static XP_Bool initted = FALSE;
-  const char *dir = ".netscape";
-  char *home;
-  if (initted)
-	return buf;
-
-  home = getenv ("HOME");
-  if (!home)
-	home = "";
-
-#ifdef OLD_UNIX_FILES
-
-  sprintf (buf, "%.900s", home);
-  if (buf[strlen(buf)-1] == '/')
-	buf[strlen(buf)-1] = 0;
-
-#else  /* !OLD_UNIX_FILES */
-
-  if (*home && home[strlen(home)-1] == '/')
-	sprintf (buf, "%.900s%s", home, dir);
-  else
-	sprintf (buf, "%.900s/%s", home, dir);
-
-#endif /* !OLD_UNIX_FILES */
-
-  return buf;
-}
-
 typedef enum {
   XFE_STAT_ISDIR,
   XFE_STAT_ISREG
@@ -1210,8 +1178,7 @@ char * FE_GetNetHelpDir()
 #endif
   int  filePrefixLen;
   char *nethelpSuffix = "nethelp/";
-  static char  configBuf[1024];
-  const char *conf_dir = fe_config_directory(configBuf);
+  char *conf_dir = fe_GetConfigDir();
   char *helpPath = getenv("NS_NETHELP_PATH");
   char *mozHome  = getenv("MOZILLA_HOME");
   char *lang     = getenv("LANG");
@@ -1238,6 +1205,7 @@ char * FE_GetNetHelpDir()
       // Found it - result already copied into nethelpDir
       ;
     }
+  free(conf_dir);
 
   // Found it or not, we return a valid URL
   return XP_STRDUP(nethelpDir);

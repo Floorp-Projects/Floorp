@@ -141,7 +141,7 @@ struct fe_MWContext_cons *fe_all_MWContexts = 0;
 
 void fe_delete_cb (Widget, XtPointer, XtPointer);
 
-static void fe_save_history_timer (XtPointer closure, XtIntervalId *id);
+void fe_save_history_timer (XtPointer closure, XtIntervalId *id);
 extern void fe_MakeAddressBookWidgets(Widget shell, MWContext *context);
 
 extern void fe_ab_destroy_cb (Widget, XtPointer, XtPointer);
@@ -1986,12 +1986,6 @@ fe_InitializeGlobalResources (Widget toplevel)
       else
 	  fe_globalData.wm_icon_policy = "color";
   }
-    
-  /* Add a timer to periodically flush out the global history and bookmark. */
-  fe_save_history_timer ((XtPointer) ((int) True), 0);
-
-  /* #### move to prefs */
-  LO_SetUserOverride (!fe_globalData.document_beats_user_p);
 }
 
 
@@ -2111,7 +2105,7 @@ fe_set_scrolled_default_size(MWContext *context)
 }
 
 
-static void
+void
 fe_save_history_timer (XtPointer closure, XtIntervalId *id)
 {
   Boolean init_only_p = (Boolean) ((int) closure);
@@ -3382,10 +3376,17 @@ PRBool FE_HandleEmbedEvent(MWContext *context, LO_EmbedStruct *embed,
 char* fe_GetLDAPTmpFile(char *name) {
 	char* home = getenv("HOME");
 	static char tmp[1024];
+	char *configdir;
+
 	if (!home) home = "";
 	if (!name) return NULL;
 
-	PR_snprintf(tmp, sizeof(tmp), "%.900s/.netscape/", home);
+	configdir = fe_GetConfigDirFilename("");
+	if (configdir) 
+	{
+        	strncpy(tmp, configdir, sizeof(tmp));
+		free(configdir);
+	} else snprintf(tmp, sizeof(tmp), "%.900s/.netscape/", home);
 
 #ifdef _XP_TMP_FILENAME_FOR_LDAP_
 	/* we need to write this */

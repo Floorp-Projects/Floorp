@@ -412,25 +412,17 @@ XFE_SpellHandler::nukeSpellChecker()
 char *
 XFE_SpellHandler::getSpellCheckerDir()
 {
-	char *home = NULL;
+    char *configdir_spelldir;
 	char *mozilla_home = NULL;
 	char buf[MAXPATHLEN];
 
-
-	if (home = getenv("HOME")) {
-		XP_MEMSET(buf, '\0', sizeof(buf));
-
-		// Form "$HOME/.netscape/spell/" into buf...
-		//
-		XP_STRNCPY_SAFE(buf, home, sizeof(buf)-1);
-		XP_STRNCAT_SAFE(buf, "/.netscape/spell/",
-						sizeof(buf)-1 - XP_STRLEN(buf));
-		buf[sizeof(buf)-1] = '\0';
-		
-		if (fe_isDir(buf)) {
-			return XP_STRDUP(buf);
-		}
-	}
+    // check the "$HOME/.netscape"-type directory
+    configdir_spelldir = fe_GetConfigDirFilename("spell/");
+    if(configdir_spelldir) {
+      if(fe_isDir(configdir_spelldir))
+        return configdir_spelldir;
+      free(configdir_spelldir);
+    }
 
 	if (mozilla_home = getenv("MOZILLA_HOME")) {
 		XP_MEMSET(buf, '\0', sizeof(buf));
@@ -478,19 +470,7 @@ XFE_SpellHandler::getSpellCheckerDir()
 char *
 XFE_SpellHandler::getPersonalDicPath()
 {
-	char buf[MAXPATHLEN];
-	char *home = NULL;
-
-	if (home = getenv("HOME"))
-	{
-		/* Form "$HOME/.netscape/custom.dic" into buf */
-		XP_STRNCPY_SAFE(buf, home, sizeof(buf)-1);
-		XP_STRNCAT_SAFE(buf, "/.netscape/custom.dic",
-						sizeof(buf)-1 - XP_STRLEN(buf));
-		buf[sizeof(buf)-1] = '\0';
-	}
-
-	return XP_STRDUP(buf);
+    return fe_GetConfigDirFilename("custom.dic");
 }
 
 XP_Bool

@@ -771,14 +771,15 @@ static void dumpPluginInfo(NPX_PlugIn *info)
 void FE_RegisterPlugins()
 {
 #ifdef X_PLUGINS
-    char filename[MAXPATHLEN];
-    char newFilename[MAXPATHLEN];
-    char oldFilename[MAXPATHLEN];
+    char *filename;
+    char *newFilename;
+    char *oldFilename;
     char *npxPluginPath  = getenv("NPX_PLUGIN_PATH");
     char *mozHome        = getenv("MOZILLA_HOME");
 	char *pluginPath     = NULL;
     char *home = getenv ("HOME");
-    
+    char *configdir_pluginsdir = fe_GetConfigDirFilename("plugins");
+
     if (!home)
 		home = "";
     else if (!strcmp (home, "/"))
@@ -798,10 +799,10 @@ void FE_RegisterPlugins()
 	} else {
 		/* Stuff in $MOZILLA_HOME if it's defined. */
 		if(mozHome) {
-			pluginPath = PR_smprintf("%s:%s/plugins:%.900s/.netscape/plugins",
-									 DEFAULT_LEGACY_PLUGIN_PATH,
-									 mozHome,
-									 home);
+			pluginPath = PR_smprintf("%s:%s/plugins:%s",
+                                                 DEFAULT_LEGACY_PLUGIN_PATH,
+                                                 mozHome,
+                                                 configdir_pluginsdir);
 		} else {
 			/* Try to stuff argv[0] into the path */
 			char buf[MAXPATHLEN];
@@ -811,16 +812,17 @@ void FE_RegisterPlugins()
 			strncat(buf, "plugins", sizeof(buf)-1 - strlen(buf));
 			buf[sizeof(buf)-1] = '\0';
 
-			pluginPath = PR_smprintf("%s:%s:%.900s/.netscape/plugins",
-									 DEFAULT_LEGACY_PLUGIN_PATH,
-									 buf,
-									 home);			
+			pluginPath = PR_smprintf("%s:%s:%s",
+                                                 DEFAULT_LEGACY_PLUGIN_PATH,
+                                                 buf,
+                                                 configdir_pluginsdir);			
 		}
     }
+    free(configdir_pluginsdir);
 
-    PR_snprintf(filename, sizeof(filename), "%.900s/.netscape/plugin-list", home);
-    PR_snprintf(newFilename, sizeof(newFilename), "%.900s/.netscape/plugin-list.new", home);
-    PR_snprintf(oldFilename, sizeof(oldFilename), "%.900s/.netscape/plugin-list.BAK", home);
+    filename = fe_GetConfigDirFilename("plugin-list");
+    newFilename = fe_GetConfigDirFilename("plugin-list.new");
+    oldFilename = fe_GetConfigDirFilename("plugin-list.BAK");
 
     if (pluginList == NULL) {
         pluginList = getPluginList(32);
@@ -833,7 +835,11 @@ void FE_RegisterPlugins()
         rename(filename, oldFilename);
         rename(newFilename, filename);
     }
-    
+
+    free(filename);
+    free(newFilename);
+    free(oldFilename);
+
     if (!npxPluginPath) 
 		XP_FREE(pluginPath);  /* Free if we used PR_smprintf(). */
 

@@ -154,6 +154,7 @@ xfe_netcaster_path(void)
  *	Netcaster by checking
  *	the following locations in order:
  *		$HOME/.netscape/netcast/tab.htm
+ *         (now <configdir>/netcast/tab.htm)
  *		$MOZILLA_HOME/netcast/tab.htm
  *		Version Registry via VR_GetPath()
  *		fe_GetProgramDirectory()/netcast/tab.htm
@@ -192,16 +193,7 @@ xfe_netcaster_path(void)
   char * home;
   REGERR code;
 
-  if (!private_xfe_netcaster_path)
-	{
-	  private_xfe_netcaster_path = (char*)XP_ALLOC(MAXPATHLEN);
-	  if (private_xfe_netcaster_path)
-		private_xfe_netcaster_path[0] = '\0';
-	  else
-		return result;
-	}
-
-  if (private_xfe_netcaster_path[0])
+  if (private_xfe_netcaster_path && private_xfe_netcaster_path[0])
 	{
 	  result = private_xfe_netcaster_path;
 #ifdef DEBUG_rodt
@@ -210,28 +202,29 @@ xfe_netcaster_path(void)
 	  return result;
 	}
 
+  /* who knows what was here before */
+  if (private_xfe_netcaster_path)
+    XP_FREE(private_xfe_netcaster_path);
 
   //
   // CHECK $HOME/.netscape
   //
-  home = getenv("HOME");
-  if (home)
-	{
-	  XP_STRCPY(private_xfe_netcaster_path, home);
-	  if (xfe_last_character(private_xfe_netcaster_path) != '/')
-		XP_STRCAT(private_xfe_netcaster_path,"/");
-	  XP_STRCAT(private_xfe_netcaster_path,".netscape/");
-	  XP_STRCAT(private_xfe_netcaster_path,netcasterTabHtmlPath);
-	  if (xfe_path_exists(private_xfe_netcaster_path))
-		{
-		  result = private_xfe_netcaster_path;
+  private_xfe_netcaster_path = fe_GetConfigDirFilename(netcasterTabHtmlPath);
+  if (private_xfe_netcaster_path && 
+      xfe_path_exists(private_xfe_netcaster_path))
+    {
+      result = private_xfe_netcaster_path;
 #ifdef DEBUG_rodt
-		  printf("DEBUG_rodt: Netcaster path b %s\n",result);
+      printf("DEBUG_rodt: Netcaster path b %s\n",result);
 #endif
-		  return result;
-		}
-	}
+      return result;
+    }
 
+  private_xfe_netcaster_path = (char*)XP_ALLOC(MAXPATHLEN);
+  if (private_xfe_netcaster_path)
+    private_xfe_netcaster_path[0] = '\0';
+  else
+    return result;
 
   //
   // CHECK $MOZILLA_HOME

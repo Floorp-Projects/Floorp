@@ -499,33 +499,20 @@ PUBLIC char *FE_SARCacheDir = 0;
 PUBLIC char *FE_GlobalHist = 0;
 
 
+/* these should probably be promoted to FE_* exported functions */
+/* but then other front-ends would (kind of) be required to     */
+/* implement them.  Unix front ends will already have to        */
+/* this or they will break--other front ends wouldn't have to   */
+/* necessarily implement the FE_* versions because they'll      */
+/* never be called.                                             */
+extern char *fe_GetConfigDir(void);
+
 static const char *
 xp_unix_config_directory(char* buf)
 {
-  static XP_Bool initted = FALSE;
-  const char *dir = ".netscape";
-  char *home;
-  if (initted)
-	return buf;
-
-  home = getenv ("HOME");
-  if (!home)
-	home = "";
-
-#ifdef OLD_UNIX_FILES
-
-  sprintf (buf, "%.900s", home);
-  if (buf[strlen(buf)-1] == '/')
-	buf[strlen(buf)-1] = 0;
-
-#else  /* !OLD_UNIX_FILES */
-
-  if (*home && home[strlen(home)-1] == '/')
-	sprintf (buf, "%.900s%s", home, dir);
-  else
-	sprintf (buf, "%.900s/%s", home, dir);
-
-#endif /* !OLD_UNIX_FILES */
+  char *configdir = fe_GetConfigDir();
+  strcpy(buf, configdir);
+  free(configdir);
 
   return buf;
 }
@@ -1136,7 +1123,6 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
          char *policyFN = "moz40p3";
          char *mozHome  = getenv("MOZILLA_HOME");
          char *lang     = getenv("LANG");
-         int   result;
          char  dirName[1024];
 
          name = buf;
