@@ -924,8 +924,9 @@ nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
         return mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) aOwnerDocument);
     }
     else {
-        *aOwnerDocument = nsnull;
-        return NS_OK;
+        nsCOMPtr<nsIDocument> doc;
+        NodeInfo()->GetDocument(*getter_AddRefs(doc));
+        return CallQueryInterface(doc, aOwnerDocument);
     }
 }
 

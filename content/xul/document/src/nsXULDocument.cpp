@@ -1937,9 +1937,16 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                                        nsIDOMElement* aListener,
                                        const nsAString& aAttr)
 {
-    if (!nsContentUtils::CanCallerAccess(aBroadcaster) ||
-        !nsContentUtils::CanCallerAccess(aListener)) {
-        return NS_ERROR_DOM_SECURITY_ERR;
+    nsresult rv = nsContentUtils::CheckSameOrigin(this, aBroadcaster);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = nsContentUtils::CheckSameOrigin(this, aListener);
+
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     static PLDHashTableOps gOps = {

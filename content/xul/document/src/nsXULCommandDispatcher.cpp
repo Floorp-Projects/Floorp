@@ -217,8 +217,12 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
   if (! aElement)
     return NS_ERROR_NULL_POINTER;
 
-  if (!nsContentUtils::CanCallerAccess(aElement)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(mDocument));
+
+  nsresult rv = nsContentUtils::CheckSameOrigin(doc, aElement);
+
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   Updater* updater = mUpdaters;
