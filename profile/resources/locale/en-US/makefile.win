@@ -36,6 +36,7 @@ FILES=\
 	migration.properties		\
 	profileSelection.dtd		\
 	confirmMigration.dtd		\
+        activation.dtd                  \
         $(NULL)
 
 install::

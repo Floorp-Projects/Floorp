@@ -102,6 +102,10 @@
 #define ACTIVATION_EMAIL_SERVER_NAME	 "browser.registration.mailservername"
 #define ACTIVATION_EMAIL_SERVER_TYPE	 "browser.registration.mailservertype"
 
+#define ACTIVATION_WINDOW_WIDTH	         480 
+#define ACTIVATION_WINDOW_HEIGHT	 480 
+
+#define ACTIVATION_FRAME_URL "chrome://profile/content/activation.xul"
 #define PROFILE_SELECTION_URL "chrome://profile/content/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
 #define PROFILE_MANAGER_URL "chrome://profile/content/profileSelection.xul?manage=true"
@@ -1708,8 +1712,6 @@ nsProfile::TriggerActivation(const char *profileName)
         NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-		char* pregURL = nsnull;
-		rv = prefs->CopyCharPref(PREG_URL_PREF, &pregURL);
 
 		// Check if the javascript is enabled....
 		PRBool javascriptEnabled = PR_TRUE;
@@ -1734,14 +1736,14 @@ nsProfile::TriggerActivation(const char *profileName)
 			if (NS_FAILED(rv)) return rv;
 			
 			nsCOMPtr<nsIURI> registrationURL;
-			rv = NS_NewURI(getter_AddRefs(registrationURL), pregURL);
+			rv = NS_NewURI(getter_AddRefs(registrationURL), ACTIVATION_FRAME_URL);
 
 			if (NS_FAILED(rv)) return rv;
 
 			rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL,
 													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-							            NS_SIZETOCONTENT,           // width 
-							            NS_SIZETOCONTENT,           // height
+							            ACTIVATION_WINDOW_WIDTH,           // width 
+							            ACTIVATION_WINDOW_HEIGHT,           // height
 													getter_AddRefs(mPregWindow));
 
 			if (NS_FAILED(rv)) return rv;
@@ -1762,7 +1764,6 @@ nsProfile::TriggerActivation(const char *profileName)
 
 		ProcessPRegCookie();
 
-		CRTFREEIF(pregURL);      
 	}
 	CRTFREEIF(isPregInfoSet);    
 	

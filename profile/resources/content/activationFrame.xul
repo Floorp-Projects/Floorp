@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+-->
+
+<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
+<!DOCTYPE window>
+
+
+<window title="Activation : Frame" xmlns:html="http://www.w3.org/TR/REC-html40" 
+      class="dialog"
+      onload="LoadURL();"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+<![CDATA[
+function LoadURL()
+{
+    var pref = null;
+    var actvURL = null;
+
+    try 
+    {
+        pref = Components.classes['component://netscape/preferences'];
+        pref = pref.getService();
+        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    }
+    catch (ex) {
+        dump("failed to get prefs service!\n");
+        pref = null;
+        top.close();
+    }
+
+    actvURL = pref.CopyCharPref("browser.registration.url");
+    this.location.href = actvURL; 
+}
+]]>
+</html:script>
+</window>
