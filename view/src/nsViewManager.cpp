@@ -658,6 +658,14 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 {
 #ifdef NEW_COMPOSITOR
 
+	PRBool isFloatingView = PR_FALSE;
+	if (NS_SUCCEEDED(aRootView->GetFloating(isFloatingView)) && isFloatingView) {
+		// floating views are rendered locally (and act globally).
+		// Paint the view. The clipping rect was set above set don't clip again.
+		aRootView->Paint(aRC, aRect, NS_VIEW_FLAG_CLIP_SET, aResult);
+		return;
+	}
+
 #define SET_STATE(x)  { prevstate = state; state = (x); }
 
   PRInt32           flatlen = 0, cnt;
@@ -1770,6 +1778,11 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
 
     UpdateTransCnt(nsnull, child);
 
+    // if the parent view is marked as "floating", make the newly added view float as well.
+    PRBool isFloating = PR_FALSE;
+    parent->GetFloating(isFloating);
+   	child->SetFloating(isFloating);
+
     //and mark this area as dirty if the view is visible...
 
     nsViewVisibility  visibility;
@@ -1817,9 +1830,13 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
 
     UpdateTransCnt(nsnull, child);
 
+    // if the parent view is marked as "floating", make the newly added view float as well.
+    PRBool isFloating = PR_FALSE;
+    parent->GetFloating(isFloating);
+   	child->SetFloating(isFloating);
+
     //and mark this area as dirty if the view is visible...
     nsViewVisibility  visibility;
-
     child->GetVisibility(visibility);
 
     if (nsViewVisibility_kHide != visibility)

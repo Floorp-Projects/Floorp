@@ -267,495 +267,451 @@ NS_IMETHODIMP nsView :: GetViewManager(nsIViewManager *&aViewMgr) const
 NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                               PRUint32 aPaintFlags, PRBool &aResult)
 {
-  if (aPaintFlags & NS_VIEW_FLAG_JUST_PAINT)
-  {
-    //new compositor
-
-    if (nsnull != mClientData)
-    {
-      nsIViewObserver *obs;
-
-      if (NS_OK == mViewManager->GetViewObserver(obs))
-      {
-        if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
-        {
-          nsRect  crect;
-
-          crect.x = mClip.mLeft;
-          crect.y = mClip.mTop;
-          crect.width = mClip.mRight - mClip.mLeft;
-          crect.height = mClip.mBottom - mClip.mTop;
-
-          rc.SetClipRect(crect, nsClipCombine_kIntersect, aResult);
-        }
-
-        obs->Paint((nsIView *)this, rc, rect);
-        NS_RELEASE(obs);
-      }
-    }
-  }
-  else
-  {
-    nsIView *pRoot;
-    PRBool  clipres = PR_FALSE;
-    PRBool  clipwasset = PR_FALSE;
-    float   opacity;
-
-    mViewManager->GetRootView(pRoot);
-
-    rc.PushState();
-
-    GetOpacity(opacity);
-
-    if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
-    {
-      clipwasset = PR_TRUE;
-      aPaintFlags &= ~NS_VIEW_FLAG_CLIP_SET;
-    }
-    else if (mVis == nsViewVisibility_kShow)
-    {
-      if (opacity == 1.0f)
-      {
-        nsRect brect;
-
-        GetBounds(brect);
-
-        if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom) &&
-            (this != pRoot))
-        {
-          rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
-        }
-      }
-    }
-
-    if (clipres == PR_FALSE)
-    {
-      nscoord posx, posy;
-
-      if (nsnull == mWindow)
-      {
-        GetPosition(&posx, &posy);
-        rc.Translate(posx, posy);
-      }
-
-      if (nsnull != mXForm)
-      {
-        nsTransform2D *pXForm;
-        rc.GetCurrentTransform(pXForm);
-        pXForm->Concatenate(mXForm);
-      }
-
-      //if we are not doing a two pass render,
-      //render the kids...
-
-      if (!(aPaintFlags & (NS_VIEW_FLAG_FRONT_TO_BACK | NS_VIEW_FLAG_BACK_TO_FRONT)))
-      {
-        PRInt32 numkids;
-
-        GetChildCount(numkids);
-
-        for (PRInt32 cnt = 0; cnt < numkids; cnt++)
-        {
-          nsIView *kid;
-
-          GetChild(cnt, kid);
-
-          if (nsnull != kid)
-          {
-            // Don't paint child views that have widgets. They'll get their own
-            // native paint requests
-            nsIWidget *widget;
-            PRBool     hasWidget;
-
-            kid->GetWidget(widget);
-            hasWidget = (widget != nsnull);
-            if (nsnull != widget)
-            {
-              void *thing;
-              thing = widget->GetNativeData(NS_NATIVE_WIDGET);
-              NS_RELEASE(widget);
-
-              if (nsnull == thing)
-                hasWidget = PR_FALSE;
-            }
-            if (!hasWidget)
-            {
-              nsRect kidRect;
-              kid->GetBounds(kidRect);
-              nsRect damageArea;
-              PRBool overlap = damageArea.IntersectRect(rect, kidRect);
-  
-              if (overlap == PR_TRUE)
-              {
-                // Translate damage area into kid's coordinate system
-                nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                                     damageArea.width, damageArea.height);
-                kid->Paint(rc, kidDamageArea, aPaintFlags, clipres);
-  
-                if (clipres == PR_TRUE)
-                  break;
-              }
-            }
-          }
-        }
-      }
-
-      if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow))
-      {
-        //don't render things that can't be seen...
-
-        if ((opacity > 0.0f) && (mBounds.width > 1) && (mBounds.height > 1))
-        {
-          nsIRenderingContext *localcx = nsnull;
-          nsDrawingSurface    surf = nsnull;
-          nsDrawingSurface    redsurf = nsnull;
-          PRBool              hasTransparency;
-          PRBool              clipState;      //for when we want to throw away the clip state
-
-          rc.PushState();
-
-          HasTransparency(hasTransparency);
-
-          if (opacity < 1.0f)
-          {
-            nsIDeviceContext  *dx = nsnull;
-            nsIView           *rootview = nsnull;
-
-            //create offscreen bitmap to render view into
-
-            mViewManager->GetDeviceContext(dx);
-            mViewManager->GetRootView(rootview);
-
-            if ((nsnull != dx) && (nsnull != rootview))
-            {
-              dx->CreateRenderingContext(rootview, localcx);
-
-              if (nsnull != localcx)
-              {
-                float   t2p;
-                nscoord width, height;
-
-                //create offscreen buffer for blending...
-
-                dx->GetAppUnitsToDevUnits(t2p);
-
-                width = NSToCoordRound(mBounds.width * t2p);
-                height = NSToCoordRound(mBounds.height * t2p);
-
-                nsRect bitrect = nsRect(0, 0, width, height);
-
-                localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, surf);
-                localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, redsurf);
-
-                if (nsnull != surf)
-                  localcx->SelectOffScreenDrawingSurface(surf);
-              }
-
-              NS_RELEASE(dx);
-            }
-          }
-
-          if (nsnull == localcx)
-            localcx = &rc;
-
-          if (hasTransparency || (opacity < 1.0f))
-          {
-            //overview of algorithm:
-            //1. clip is set to intersection of this view and whatever is
-            //   left of the damage region in the rc.
-            //2. walk tree from this point down through the view list,
-            //   rendering and clipping out opaque views encountered until
-            //   there is nothing left in the clip area or the bottommost
-            //   view is reached.
-            //3. walk back up through view list restoring clips and painting
-            //   or blending any non-opaque views encountered until we reach the
-            //   view that started the whole process
-
-            //walk down rendering only views within this clip
-            //clip is already set to this view in rendering context...
-
-            nsIView     *curview, *preview = this;
-            nsVoidArray *views = (nsVoidArray *)new nsVoidArray();
-            nsVoidArray *rects = (nsVoidArray *)new nsVoidArray();
-            // nscoord     posx, posy;
-            nsRect      damRect = rect;
-
-            localcx->PushState();
-
-            GetPosition(&posx, &posy);
-
-            //we need to go back to the coordinate system that was there
-            //before we came along... XXX xform not accounted for. MMP
-            damRect.x += posx;
-            damRect.y += posy;
-
-            localcx->Translate(-posx, -posy);
-
-            GetNextSibling(curview);
-
-            if (nsnull == curview)
-            {
-              preview->GetParent(curview);
-
-              if (nsnull != curview)
-              {
-                nsRect  prect;
-
-                curview->GetBounds(prect);
-
-                damRect.x += prect.x;
-                damRect.y += prect.y;
-
-                localcx->Translate(-prect.x, -prect.y);
-              }
-            }
-
-            while (nsnull != curview)
-            {
-              nsRect kidRect;
-              curview->GetBounds(kidRect);
-              nsRect damageArea;
-              PRBool overlap = damageArea.IntersectRect(damRect, kidRect);
-
-              if (overlap == PR_TRUE)
-              {
-                // Translate damage area into kid's coordinate system
-  //              nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-  //                                   damageArea.width, damageArea.height);
-                nsRect kidDamageArea(damRect.x - kidRect.x, damRect.y - kidRect.y,
-                                     damRect.width, damRect.height);
-
-                //we will pop the states on the back to front pass...
-                localcx->PushState();
-
-                if (nsnull != views)
-                  views->AppendElement(curview);
-
-                rects->AppendElement(new nsRect(kidDamageArea));
-
-                curview->Paint(*localcx, kidDamageArea, aPaintFlags | NS_VIEW_FLAG_FRONT_TO_BACK, clipres);
-              }
-
-              if (clipres == PR_TRUE)
-                break;
-
-              preview = curview;
-
-              curview->GetNextSibling(curview);
-
-              if (nsnull == curview)
-              {
-                preview->GetParent(curview);
-
-                if (nsnull != curview)
-                {
-                  nsRect  prect;
-
-                  curview->GetBounds(prect);
-
-                  damRect.x += prect.x;
-                  damRect.y += prect.y;
-
-                  localcx->Translate(-prect.x, -prect.y);
-                }
-              }
-            }
-
-            //walk backwards, rendering views
-
-            if (nsnull != views)
-            {
-              PRInt32 idx = views->Count();
-              PRBool  isfirst = PR_TRUE;
-
-              while (idx > 0)
-              {
-                if (PR_TRUE == isfirst)
-                {
-                  //we just rendered the last view at the
-                  //end of the first pass, so there is no need
-                  //to do so again.
-
-                  nsRect *trect = (nsRect *)rects->ElementAt(--idx);
-                  delete trect;
-
-                  localcx->PopState(clipState);
-                  isfirst = PR_FALSE;
-                }
-                else
-                {
-                  curview = (nsIView *)views->ElementAt(--idx);
-                  nsRect *trect = (nsRect *)rects->ElementAt(idx);
+	if (aPaintFlags & NS_VIEW_FLAG_JUST_PAINT)
+	{
+		//new compositor
+
+		if (nsnull != mClientData) {
+			nsCOMPtr<nsIViewObserver> observer;
+			if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
+				if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom)) {
+					nsRect  crect;
+					crect.x = mClip.mLeft;
+					crect.y = mClip.mTop;
+					crect.width = mClip.mRight - mClip.mLeft;
+					crect.height = mClip.mBottom - mClip.mTop;
+					rc.SetClipRect(crect, nsClipCombine_kIntersect, aResult);
+				}
+				observer->Paint((nsIView *)this, rc, rect);
+			}
+		}
+	} else {
+		nsIView *pRoot;
+		PRBool  clipres = PR_FALSE;
+		PRBool  clipwasset = PR_FALSE;
+		float   opacity;
+
+		mViewManager->GetRootView(pRoot);
+
+		rc.PushState();
+
+		GetOpacity(opacity);
+
+		if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
+		{
+			clipwasset = PR_TRUE;
+			aPaintFlags &= ~NS_VIEW_FLAG_CLIP_SET;
+		} else if (mVis == nsViewVisibility_kShow) {
+			if (opacity == 1.0f)
+			{
+				nsRect brect;
+				GetBounds(brect);
+
+				// what does this test mean?
+				if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom) && (this != pRoot)) {
+					rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
+				}
+			}
+		}
+
+		if (clipres == PR_FALSE)
+		{
+			nscoord posx, posy;
+
+			if (nsnull == mWindow)
+			{
+				GetPosition(&posx, &posy);
+				rc.Translate(posx, posy);
+			}
+
+			if (nsnull != mXForm)
+			{
+				nsTransform2D *pXForm;
+				rc.GetCurrentTransform(pXForm);
+				pXForm->Concatenate(mXForm);
+			}
+
+			//if we are not doing a two pass render,
+			//render the kids...
+
+			if (!(aPaintFlags & (NS_VIEW_FLAG_FRONT_TO_BACK | NS_VIEW_FLAG_BACK_TO_FRONT))) {
+				PRInt32 numkids;
+				GetChildCount(numkids);
+				for (PRInt32 cnt = 0; cnt < numkids; cnt++) {
+					nsIView *kid;
+					GetChild(cnt, kid);
+					if (nsnull != kid) {
+						// Don't paint child views that have widgets. They'll get their own
+						// native paint requests
+						nsIWidget *widget;
+						PRBool     hasWidget;
+
+						kid->GetWidget(widget);
+						hasWidget = (widget != nsnull);
+						if (nsnull != widget) {
+							void *thing;
+							thing = widget->GetNativeData(NS_NATIVE_WIDGET);
+							NS_RELEASE(widget);
+
+							if (nsnull == thing)
+							hasWidget = PR_FALSE;
+						}
+						if (!hasWidget) {
+							nsRect kidRect;
+							kid->GetBounds(kidRect);
+							nsRect damageArea;
+							PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+
+							if (overlap == PR_TRUE) {
+								// Translate damage area into kid's coordinate system
+								nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+								         damageArea.width, damageArea.height);
+								kid->Paint(rc, kidDamageArea, aPaintFlags, clipres);
+
+								if (clipres == PR_TRUE)
+									break;
+								}
+						}
+					}
+				}
+			}
 
-                  curview->Paint(*localcx, *trect, aPaintFlags | NS_VIEW_FLAG_BACK_TO_FRONT, clipres);
-
-                  delete trect;
+			if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow)) {
+				//don't render things that can't be seen...
 
-                  //pop the state pushed on the front to back pass...
-                  localcx->PopState(clipState);
-                }
-              }
+				if ((opacity > 0.0f) && (mBounds.width > 1) && (mBounds.height > 1)) {
+					nsCOMPtr<nsIRenderingContext> localcx;
+					nsDrawingSurface    surf = nsnull;
+					nsDrawingSurface    redsurf = nsnull;
+					PRBool              hasTransparency;
+					PRBool              clipState;      //for when we want to throw away the clip state
 
-              delete rects;
-              delete views;
-            }
-
-            localcx->PopState(clipState);
-          }
-
-          if (nsnull != redsurf)
-            localcx->SelectOffScreenDrawingSurface(redsurf);
-
-          //now draw ourself...
-
-          if (nsnull != mClientData)
-          {
-            nsIViewObserver *obs;
-
-            if (NS_OK == mViewManager->GetViewObserver(obs))
-            {
-              if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
-              {
-                nsRect  crect, brect;
-
-                GetBounds(brect);
-
-                crect.x = mClip.mLeft + brect.x;
-                crect.y = mClip.mTop + brect.y;
-                crect.width = mClip.mRight - mClip.mLeft;
-                crect.height = mClip.mBottom - mClip.mTop;
-
-                localcx->SetClipRect(crect, nsClipCombine_kIntersect, clipres);
-              }
-
-              obs->Paint((nsIView *)this, *localcx, rect);
-              NS_RELEASE(obs);
-            }
-          }
-
-          if (localcx != &rc)
-          {
-  //          localcx->SelectOffScreenDrawingSurface(nsnull);
-            NS_RELEASE(localcx);
-          }
-          else
-            localcx = nsnull;
-
-          //kill offscreen buffer
-
-          if ((nsnull != surf) && (nsnull != redsurf))
-          {
-            nsRect brect;
-
-            brect.x = brect.y = 0;
-            brect.width = mBounds.width;
-            brect.height = mBounds.height;
-
-            static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
-            static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
-
-            nsIBlender  *blender = nsnull;
-            nsresult rv;
-
-            rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
-
-            if (NS_OK == rv)
-            {
-              nsIDeviceContext  *dx;
-
-              mViewManager->GetDeviceContext(dx);
-
-              float   t2p;
-              nscoord width, height;
-
-              dx->GetAppUnitsToDevUnits(t2p);
-
-              width = NSToCoordRound(mBounds.width * t2p);
-              height = NSToCoordRound(mBounds.height * t2p);
-
-              blender->Init(dx);
-              blender->Blend(0, 0, width, height,redsurf,surf, 0, 0, opacity);
-
-              NS_RELEASE(blender);
-              NS_RELEASE(dx);
-
-              rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES);
-            }
-
-            rc.DestroyDrawingSurface(surf);
-            rc.DestroyDrawingSurface(redsurf);
-
-            surf = nsnull;
-            redsurf = nsnull;
-          }
-
-  #ifdef SHOW_VIEW_BORDERS
-          {
-            nscoord x, y, w, h;
-
-            if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
-            {
-              x = mClip.mLeft;
-              y = mClip.mTop;
-              w = mClip.mRight - mClip.mLeft;
-              h = mClip.mBottom - mClip.mTop;
-
-              rc.SetColor(NS_RGB(255, 255, 0));
-            }
-            else
-            {
-              x = y = 0;
-
-              GetDimensions(&w, &h);
-
-              if (nsnull != mWindow)
-                rc.SetColor(NS_RGB(0, 255, 0));
-              else
-                rc.SetColor(NS_RGB(0, 0, 255));
-            }
-
-            rc.DrawRect(x, y, w, h);
-          }
-  #endif
-
-          rc.PopState(clipState);
-        }
-      }
-    }
-
-    rc.PopState(clipres);
-
-    //now we need to exclude this view from the rest of the
-    //paint process. only do this if this view is actually
-    //visible and if there is no widget (like a scrollbar) here.
-
-    if (!clipwasset && (clipres == PR_FALSE) &&
-        (mVis == nsViewVisibility_kShow) && (nsnull == mWindow) &&
-        (opacity > 0.0f))
-    {
-      nsRect  brect;
-
-      GetBounds(brect);
-
-      if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
-      {
-        nsRect  crect;
-
-        crect.x = mClip.mLeft + brect.x;
-        crect.y = mClip.mTop + brect.y;
-        crect.width = mClip.mRight - mClip.mLeft;
-        crect.height = mClip.mBottom - mClip.mTop;
-
-        rc.SetClipRect(crect, nsClipCombine_kSubtract, clipres);
-      }
-      else if (this != pRoot)
-        rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
-    }
-
-    aResult = clipres;
-  }
-
-  return NS_OK;
+					rc.PushState();
+
+					HasTransparency(hasTransparency);
+
+					if (opacity < 1.0f)
+					{
+						nsIDeviceContext  *dx = nsnull;
+						nsIView           *rootview = nsnull;
+
+						//create offscreen bitmap to render view into
+
+						mViewManager->GetDeviceContext(dx);
+						mViewManager->GetRootView(rootview);
+
+						if ((nsnull != dx) && (nsnull != rootview))
+						{
+							dx->CreateRenderingContext(rootview, *getter_AddRefs(localcx));
+
+							if (nsnull != localcx) {
+								float   t2p;
+								nscoord width, height;
+
+								//create offscreen buffer for blending...
+
+								dx->GetAppUnitsToDevUnits(t2p);
+
+								width = NSToCoordRound(mBounds.width * t2p);
+								height = NSToCoordRound(mBounds.height * t2p);
+
+								nsRect bitrect = nsRect(0, 0, width, height);
+
+								localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, surf);
+								localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, redsurf);
+
+								if (nsnull != surf)
+									localcx->SelectOffScreenDrawingSurface(surf);
+							}
+
+							NS_RELEASE(dx);
+						}
+					}
+
+					if (nsnull == localcx)
+						localcx = &rc;
+
+					if (hasTransparency || (opacity < 1.0f)) {
+						//overview of algorithm:
+						//1. clip is set to intersection of this view and whatever is
+						//   left of the damage region in the rc.
+						//2. walk tree from this point down through the view list,
+						//   rendering and clipping out opaque views encountered until
+						//   there is nothing left in the clip area or the bottommost
+						//   view is reached.
+						//3. walk back up through view list restoring clips and painting
+						//   or blending any non-opaque views encountered until we reach the
+						//   view that started the whole process
+
+						//walk down rendering only views within this clip
+						//clip is already set to this view in rendering context...
+
+						nsIView     *curview, *preview = this;
+						nsVoidArray *views = (nsVoidArray *)new nsVoidArray();
+						nsVoidArray *rects = (nsVoidArray *)new nsVoidArray();
+						// nscoord     posx, posy;
+						nsRect      damRect = rect;
+
+						localcx->PushState();
+
+						GetPosition(&posx, &posy);
+
+						//we need to go back to the coordinate system that was there
+						//before we came along... XXX xform not accounted for. MMP
+						damRect.x += posx;
+						damRect.y += posy;
+
+						localcx->Translate(-posx, -posy);
+
+						GetNextSibling(curview);
+
+						if (nsnull == curview)
+						{
+							preview->GetParent(curview);
+
+							if (nsnull != curview)
+							{
+								nsRect  prect;
+
+								curview->GetBounds(prect);
+
+								damRect.x += prect.x;
+								damRect.y += prect.y;
+
+								localcx->Translate(-prect.x, -prect.y);
+							}
+						}
+
+						while (nsnull != curview)
+						{
+							nsRect kidRect;
+							curview->GetBounds(kidRect);
+							nsRect damageArea;
+							PRBool overlap = damageArea.IntersectRect(damRect, kidRect);
+
+							if (overlap == PR_TRUE)
+							{
+								// Translate damage area into kid's coordinate system
+								//              nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+								//                                   damageArea.width, damageArea.height);
+								nsRect kidDamageArea(damRect.x - kidRect.x, damRect.y - kidRect.y,
+								         damRect.width, damRect.height);
+
+								//we will pop the states on the back to front pass...
+								localcx->PushState();
+
+								if (nsnull != views)
+								views->AppendElement(curview);
+
+								rects->AppendElement(new nsRect(kidDamageArea));
+
+								curview->Paint(*localcx, kidDamageArea, aPaintFlags | NS_VIEW_FLAG_FRONT_TO_BACK, clipres);
+							}
+
+							if (clipres == PR_TRUE)
+								break;
+
+							preview = curview;
+
+							curview->GetNextSibling(curview);
+
+							if (nsnull == curview)
+							{
+								preview->GetParent(curview);
+
+								if (nsnull != curview)
+								{
+									nsRect  prect;
+
+									curview->GetBounds(prect);
+
+									damRect.x += prect.x;
+									damRect.y += prect.y;
+
+									localcx->Translate(-prect.x, -prect.y);
+								}
+							}
+						}
+
+						//walk backwards, rendering views
+
+						if (nsnull != views) {
+							PRInt32 idx = views->Count();
+							PRBool  isfirst = PR_TRUE;
+
+							while (idx > 0) {
+								if (PR_TRUE == isfirst) {
+									//we just rendered the last view at the
+									//end of the first pass, so there is no need
+									//to do so again.
+
+									nsRect *trect = (nsRect *)rects->ElementAt(--idx);
+									delete trect;
+
+									localcx->PopState(clipState);
+									isfirst = PR_FALSE;
+								} else {
+									curview = (nsIView *)views->ElementAt(--idx);
+									nsRect *trect = (nsRect *)rects->ElementAt(idx);
+
+									curview->Paint(*localcx, *trect, aPaintFlags | NS_VIEW_FLAG_BACK_TO_FRONT, clipres);
+
+									delete trect;
+
+									//pop the state pushed on the front to back pass...
+									localcx->PopState(clipState);
+								}
+							}
+
+							delete rects;
+							delete views;
+						}
+
+						localcx->PopState(clipState);
+					}
+
+					if (nsnull != redsurf)
+						localcx->SelectOffScreenDrawingSurface(redsurf);
+
+					//now draw ourself...
+
+					if (nsnull != mClientData) {
+						nsCOMPtr<nsIViewObserver> observer;
+						if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
+							if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom)) {
+								nsRect  crect(mClip.mLeft, mClip.mTop,
+								              mClip.mRight - mClip.mLeft,
+								              mClip.mBottom - mClip.mTop);
+								localcx->SetClipRect(crect, nsClipCombine_kIntersect, clipres);
+							}
+							observer->Paint((nsIView *)this, *localcx, rect);
+						}
+					}
+
+#if 1
+					// release whatever hold we had on the context.
+					localcx = nsnull;
+#else
+					if (localcx != &rc) {
+						//          localcx->SelectOffScreenDrawingSurface(nsnull);
+						NS_RELEASE(localcx);
+					} else
+						localcx = nsnull;
+#endif
+
+					//kill offscreen buffer
+
+					if ((nsnull != surf) && (nsnull != redsurf))
+					{
+						nsRect brect;
+
+						brect.x = brect.y = 0;
+						brect.width = mBounds.width;
+						brect.height = mBounds.height;
+
+						static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
+						static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
+
+						nsIBlender  *blender = nsnull;
+						nsresult rv;
+
+						rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
+
+						if (NS_OK == rv)
+						{
+							nsIDeviceContext  *dx;
+
+							mViewManager->GetDeviceContext(dx);
+
+							float   t2p;
+							nscoord width, height;
+
+							dx->GetAppUnitsToDevUnits(t2p);
+
+							width = NSToCoordRound(mBounds.width * t2p);
+							height = NSToCoordRound(mBounds.height * t2p);
+
+							blender->Init(dx);
+							blender->Blend(0, 0, width, height,redsurf,surf, 0, 0, opacity);
+
+							NS_RELEASE(blender);
+							NS_RELEASE(dx);
+
+							rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES);
+						}
+
+						rc.DestroyDrawingSurface(surf);
+						rc.DestroyDrawingSurface(redsurf);
+
+						surf = nsnull;
+						redsurf = nsnull;
+					}
+
+					#ifdef SHOW_VIEW_BORDERS
+					{
+						nscoord x, y, w, h;
+
+						if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+						{
+							x = mClip.mLeft;
+							y = mClip.mTop;
+							w = mClip.mRight - mClip.mLeft;
+							h = mClip.mBottom - mClip.mTop;
+
+							rc.SetColor(NS_RGB(255, 255, 0));
+						}
+						else
+						{
+							x = y = 0;
+
+							GetDimensions(&w, &h);
+
+							if (nsnull != mWindow)
+								rc.SetColor(NS_RGB(0, 255, 0));
+							else
+								rc.SetColor(NS_RGB(0, 0, 255));
+						}
+
+						rc.DrawRect(x, y, w, h);
+					}
+					#endif
+
+					rc.PopState(clipState);
+				}
+			}
+		}
+
+		rc.PopState(clipres);
+
+		//now we need to exclude this view from the rest of the
+		//paint process. only do this if this view is actually
+		//visible and if there is no widget (like a scrollbar) here.
+
+		if (!clipwasset && (clipres == PR_FALSE) &&
+		(mVis == nsViewVisibility_kShow) && (nsnull == mWindow) &&
+		(opacity > 0.0f))
+		{
+			nsRect  brect;
+			GetBounds(brect);
+
+			if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+			{
+				nsRect  crect;
+
+				crect.x = mClip.mLeft + brect.x;
+				crect.y = mClip.mTop + brect.y;
+				crect.width = mClip.mRight - mClip.mLeft;
+				crect.height = mClip.mBottom - mClip.mTop;
+
+				rc.SetClipRect(crect, nsClipCombine_kSubtract, clipres);
+			} else if (this != pRoot)
+				rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
+		}
+
+		aResult = clipres;
+	}
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region,
@@ -1080,6 +1036,32 @@ NS_IMETHODIMP nsView::SetAutoZIndex(PRBool aAutoZIndex)
 NS_IMETHODIMP nsView::GetAutoZIndex(PRBool &aAutoZIndex) const
 {
 	aAutoZIndex = ((mVFlags & NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX) != 0);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
+{
+	if (aFloatingView)
+		mVFlags |= NS_VIEW_PUBLIC_FLAG_FLOATING;
+	else
+		mVFlags &= ~NS_VIEW_PUBLIC_FLAG_FLOATING;
+
+#if 0
+	// recursively make all sub-views "floating" grr.
+	nsIView *child = mFirstChild;
+	while (nsnull != child) {
+		child->SetFloating(aFloatingView);
+		child->GetNextSibling(child);
+	}
+#endif
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsView::GetFloating(PRBool &aFloatingView) const
+{
+	aFloatingView = ((mVFlags & NS_VIEW_PUBLIC_FLAG_FLOATING) != 0);
 	return NS_OK;
 }
 

@@ -72,6 +72,11 @@ nsresult nsScrollPortView::QueryInterface(const nsIID& aIID, void** aInstancePtr
     return NS_OK;
   }
 
+  if (aIID.Equals(NS_GET_IID(nsIClipView))) {
+    *aInstancePtr = (void*)(nsIClipView*)this;
+    return NS_OK;
+  }
+
   return nsView::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -531,6 +536,15 @@ void nsScrollPortView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, 
 NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rect,
                                   PRUint32 aPaintFlags, PRBool &aResult)
 {
+	PRBool clipEmpty;
+	rc.PushState();
+	nsRect bounds = mBounds;
+	bounds.x = bounds.y = 0;
+	rc.SetClipRect(bounds, nsClipCombine_kIntersect, clipEmpty);
+
     nsresult rv = nsView::Paint(rc, rect, aPaintFlags, aResult);
+
+	rc.PopState(clipEmpty);
+    
     return rv;
 }

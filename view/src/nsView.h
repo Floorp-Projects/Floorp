@@ -74,6 +74,8 @@ public:
   NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const;
   NS_IMETHOD  SetAutoZIndex(PRBool aAutoZIndex);
   NS_IMETHOD  GetAutoZIndex(PRBool &aAutoZIndex) const;
+  NS_IMETHOD  SetFloating(PRBool aFloatingView);
+  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
   NS_IMETHOD  SetParent(nsIView *aParent);
   NS_IMETHOD  GetParent(nsIView *&aParent) const;
   NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
