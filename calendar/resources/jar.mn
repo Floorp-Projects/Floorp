@@ -1,9 +1,7 @@
 calendar.jar:
     content/calendar/about.html (content/about.html)
     content/calendar/about.xul (content/about.xul)
-    content/calendar/aboutDialog.xul (content/aboutDialog.xul)
     content/calendar/applicationUtil.js (content/applicationUtil.js)
-    content/calendar/sunbird.png (content/sunbird.png)
     content/calendar/sunbird_small.png (content/sunbird_small.png)
     content/calendar/alertDialog.js (content/alertDialog.js)
     content/calendar/alertDialog.xul (content/alertDialog.xul)
