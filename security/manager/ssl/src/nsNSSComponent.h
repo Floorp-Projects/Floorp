@@ -76,6 +76,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   // values in the preferences.
   NS_IMETHOD EnableOCSP() = 0;
 
+  NS_IMETHOD RememberCert(CERTCertificate *cert) = 0;
 };
 
 
@@ -111,6 +112,7 @@ public:
   NS_IMETHOD DisableOCSP();
   NS_IMETHOD EnableOCSP();
   nsresult InitializeNSS();
+  NS_IMETHOD RememberCert(CERTCertificate *cert);
 
 private:
 
@@ -128,6 +130,7 @@ private:
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPref> mPref;
   static PRBool mNSSInitialized;
+  PLHashTable *hashTableCerts;
 };
 
 //--------------------------------------------

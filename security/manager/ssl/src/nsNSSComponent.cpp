@@ -100,9 +100,81 @@ extern char * pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 
 
+static PLHashNumber PR_CALLBACK certHashtable_keyHash(const void *key)
+{
+  if (!key)
+    return 0;
+  
+  SECItem *certKey = (SECItem*)key;
+  
+  // lazy hash function, sum up all char values of SECItem
+  
+  PLHashNumber hash = 0;
+  unsigned int i = 0;
+  unsigned char *c = certKey->data;
+  
+  for (i = 0; i < certKey->len; ++i, ++c) {
+    hash += *c;
+  }
+  
+  return hash;
+}
+
+static PRIntn PR_CALLBACK certHashtable_keyCompare(const void *k1, const void *k2)
+{
+  // return type is a bool, answering the question "are the keys equal?"
+
+  if (!k1 || !k2)
+    return PR_FALSE;
+  
+  SECItem *certKey1 = (SECItem*)k1;
+  SECItem *certKey2 = (SECItem*)k2;
+  
+  if (certKey1->len != certKey2->len) {
+    return PR_FALSE;
+  }
+  
+  unsigned int i = 0;
+  unsigned char *c1 = certKey1->data;
+  unsigned char *c2 = certKey2->data;
+  
+  for (i = 0; i < certKey1->len; ++i, ++c1, ++c2) {
+    if (*c1 != *c2) {
+      return PR_FALSE;
+    }
+  }
+  
+  return PR_TRUE;
+}
+
+static PRIntn PR_CALLBACK certHashtable_valueCompare(const void *v1, const void *v2)
+{
+  // two values are identical if their keys are identical
+  
+  if (!v1 || !v2)
+    return PR_FALSE;
+  
+  CERTCertificate *cert1 = (CERTCertificate*)v1;
+  CERTCertificate *cert2 = (CERTCertificate*)v2;
+  
+  return certHashtable_keyCompare(&cert1->certKey, &cert2->certKey);
+}
+
+static PRIntn PR_CALLBACK certHashtable_clearEntry(PLHashEntry *he, PRIntn /*index*/, void * /*userdata*/)
+{
+  if (he && he->value) {
+    CERT_DestroyCertificate((CERTCertificate*)he->value);
+  }
+  
+  return HT_ENUMERATE_NEXT;
+}
+
 nsNSSComponent::nsNSSComponent()
 {
   NS_INIT_ISUPPORTS();
+
+  hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare, 
+    certHashtable_valueCompare, 0, 0 );
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -118,6 +190,12 @@ nsNSSComponent::~nsNSSComponent()
   if (mPref)
     mPref->UnregisterCallback("security.", nsNSSComponent::PrefChangedCallback,
                               (void*) this);
+
+  if (hashTableCerts) {
+    PL_HashTableEnumerateEntries(hashTableCerts, certHashtable_clearEntry, 0);
+    PL_HashTableDestroy(hashTableCerts);
+    hashTableCerts = 0;
+  }
 
   if (mNSSInitialized)
     NSS_Shutdown();  
@@ -805,6 +883,35 @@ nsNSSComponent::RegisterProfileChangeObserver()
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNSSComponent::RememberCert(CERTCertificate *cert)
+{
+  if (!hashTableCerts || !cert)
+    return NS_OK;
+  
+  void *found = PL_HashTableLookup(hashTableCerts, (void*)&cert->certKey);
+  
+  if (found) {
+    // we remember that cert already
+    return NS_OK;
+  }
+  
+  CERTCertificate *myDupCert = CERT_DupCertificate(cert);
+  
+  if (!myDupCert)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  if (!PL_HashTableAdd(hashTableCerts, (void*)&myDupCert->certKey, myDupCert)) {
+    CERT_DestroyCertificate(myDupCert);
+  }
+  
+  return NS_OK;
+}
+
+
+
+
 
 NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)
 
