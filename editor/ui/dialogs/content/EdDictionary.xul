@@ -1,26 +1,37 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
-<!-- dialog containing a control requiring initial setup -->
-<!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
-<xul:window class="dialog" title="Personal Dictionary"
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+<!DOCTYPE window
+[
+<!-- These entity declarations will go into a separate, locale file at some point -->
+<!-- Window title -->
+<!ENTITY windowTitle.label "Personal Dictionary">
+<!ENTITY wordEditField.label "New word:">
+<!ENTITY AddButton.label "Add">
+<!ENTITY DictionaryList.label "Words in dictionary:">
+<!ENTITY ReplaceButton.label "Replace">
+<!ENTITY RemoveButton.label "Remove">
+
+<!ENTITY CloseButton.label "Close">
+]>
+
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
   </script>
-  <script language="JavaScript" src="chrome://editordlgs/content/EdDictionary.js">
+  <script language="JavaScript" src="chrome://editor/content/EdDictionary.js">
   </script>
 
   <xul:broadcaster id="args" value=""/>
   <table>
     <tr>
       <td colspan="2">
-        New word:<br/>
+        &wordEditField.label;<br/>
       </td>
     </tr>
     <tr>
@@ -28,12 +39,12 @@
         <input type="text" class="SpellCheckWord" id="WordInput" size="10"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="AddWord" onclick="AddWord()" value="Add"/>
+        <xul:titledbutton class="SizeToCell"  id="AddWord" onclick="AddWord()" value="&AddButton.label;"/>
       </td>
     </tr>
     <tr>
       <td colspan="2">
-        Words in dictionary:
+        &DictionaryList.label;
       </td>
     </tr>
     <tr>
@@ -42,12 +53,12 @@
         </select>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="ReplaceWord" onclick="ReplaceWord()" value="Replace"/>
+        <xul:titledbutton class="SizeToCell"  id="ReplaceWord" onclick="ReplaceWord()" value="&ReplaceButton.label;"/>
         <br/>
-        <xul:titledbutton class="SizeToCell"  id="RemoveWord" onclick="RemoveWord()" value="Remove"/>
+        <xul:titledbutton class="SizeToCell"  id="RemoveWord" onclick="RemoveWord()" value="&RemoveButton.label;"/>
         <br/>
         <!-- This simply closes the window -->
-        <xul:titledbutton class="CloseButton"  id="Close" onclick="onCancel()" value="Close"/>
+        <xul:titledbutton class="CloseButton"  id="Close" onclick="onCancel()" value="&CloseButton.label;"/>
       </td>
     </tr>
   </table>

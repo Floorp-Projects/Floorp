@@ -133,7 +133,7 @@ function AddToDictionary()
 
 function EditDictionary()
 {
-  window.openDialog("chrome://editordlgs/content/EdDictionary.xul", "Dictionary", "chrome", "", misspelledWord);
+  window.openDialog("chrome://editor/content/EdDictionary.xul", "Dictionary", "chrome", "", misspelledWord);
 }
 
 function SelectLanguage()

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!-- Eventually we'll move to this...
-<!DOCTYPE window SYSTEM "chrome://editordlgs/en-US/EditorLinkProperties.dtd">
+<!DOCTYPE window SYSTEM "chrome://editor/en-US/EditorLinkProperties.dtd">
 -->
 
 <!DOCTYPE window
@@ -15,10 +15,10 @@
 
 <!ENTITY OKButton.label "OK">
 <!ENTITY CancelButton.label "Cancel">
+<!ENTITY MoreAttributesButton.label "More Attributes...">
 
 <!-- This button is for the progressive disclosure of additional editing functionality -->
 <!ENTITY AdditionalEditingButton.label "Advanced">
-
 
 <!-- These strings are for use specifically in the editor's link dialog. -->
 <!-- Window title -->
@@ -43,9 +43,9 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
   </script>
-  <script language="JavaScript" src="chrome://editordlgs/content/EdLinkProps.js">
+  <script language="JavaScript" src="chrome://editor/content/EdLinkProps.js">
   </script>
   <xul:broadcaster id="args" value=""/>
 
@@ -71,7 +71,7 @@
  </fieldset>
 
   <xul:box>
-    <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="More Attributes..."/>
+    <xul:titledbutton class="spaced" id="MoreAttributes" onclick="onMoreAttributes()" value="&MoreAttributesButton.label;"/>
     <xul:spring flex="100%"/>    
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>

@@ -20,9 +20,9 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) EditorImageProperties.dtd     $(DIST)\bin\chrome\editor\dialogs\locale\en-US
-	$(MAKE_INSTALL) EditorLinkProperties.dtd      $(DIST)\bin\chrome\editor\dialogs\locale\en-US
+	$(MAKE_INSTALL) EditorImageProperties.dtd     $(DIST)\bin\chrome\editor\locale\en-US
+	$(MAKE_INSTALL) EditorLinkProperties.dtd      $(DIST)\bin\chrome\editor\locale\en-US
 
 clobber::
-  rm -f $(DIST)\bin\chrome\editor\dialogs\locale\en-US\EditorImageProperties.dtd
-  rm -f $(DIST)\bin\chrome\editor\dialogs\locale\en-US\EditorLinkProperties.dtd 
+  rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorImageProperties.dtd
+  rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorLinkProperties.dtd 

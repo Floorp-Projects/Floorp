@@ -66,5 +66,5 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(NULL)
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/composer/skin/default
-	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/chrome/editor/composer/skin/default/images
+	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin/default
+	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/chrome/editor/skin/default/images
