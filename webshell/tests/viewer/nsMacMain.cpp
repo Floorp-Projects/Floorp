@@ -292,10 +292,8 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 int main(int argc, char **argv)
 {
 
-#if DEBUG
-	// Set up the console
-	InitializeSIOUX(false);
-#endif	// DEBUG
+  // Set up the toolbox and (if DEBUG) the console
+  InitializeMacToolbox();
 
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
   nsIImageManager *manager;

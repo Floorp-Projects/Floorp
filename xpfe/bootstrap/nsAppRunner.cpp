@@ -26,6 +26,13 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 
+#if defined(XP_MAC)
+#include "macstdlibextras.h"
+  // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
+  // to make it as unlikely as possible that somebody calls printf() before we get initialized.
+static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gInitializer;
+#endif // XP_MAC
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
@@ -50,7 +57,7 @@ static int TranslateReturnValue(nsresult aResult)
 
 extern "C" void NS_SetupRegistry_1();
 
-void
+static void
 PrintUsage(void)
 {
    fprintf(stderr, "Usage: apprunner <url>\n");
@@ -181,14 +188,14 @@ int main(int argc, char* argv[])
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
   appShell->CreateTopLevelWindow(url, controllerCID, newWindow);
   NS_RELEASE(url);
+  
+   /*
+    * Start up the main event loop...
+    */
+   rv = appShell->Run();
 
   /*
-   * Start up the main event loop...
-   */
-  rv = appShell->Run();
-
-  /*
-   * Shutdown the Shell instance...  This is done even if the Run(...)
+   * Shut down the Shell instance...  This is done even if the Run(...)
    * method returned an error.
    */
   (void) appShell->Shutdown();
