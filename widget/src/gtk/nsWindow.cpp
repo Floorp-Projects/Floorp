@@ -46,6 +46,18 @@
 
 #include "stdio.h"
 
+//#define USE_GTK_FIXED
+
+gint handle_toplevel_focus_in(
+    GtkWidget *      aWidget, 
+    GdkEventFocus *  aGdkFocusEvent, 
+    gpointer         aData);
+    
+gint handle_toplevel_focus_out(
+    GtkWidget *      aWidget, 
+    GdkEventFocus *  aGdkFocusEvent, 
+    gpointer         aData);
+    
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -171,7 +183,86 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
   return TRUE;
 }
 
+gint handle_toplevel_focus_in(
+  GtkWidget *      aWidget, 
+  GdkEventFocus *  aGdkFocusEvent, 
+  gpointer         aData)
+{
+  if(!aWidget) {
+    return PR_TRUE;
+  }
 
+  if(!aGdkFocusEvent) {
+    return PR_TRUE;
+  }
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  if(!widget) {
+    return PR_TRUE;
+  }
+
+  nsGUIEvent event;
+  
+  event.message = NS_ACTIVATE;
+  event.widget  = widget;
+
+  event.eventStructType = NS_GUI_EVENT;
+
+  event.time = 0;
+  event.point.x = 0;
+  event.point.y = 0;
+
+  NS_ADDREF(widget);
+
+  nsEventStatus status;
+  widget->DispatchEvent(&event, status);
+  
+  NS_RELEASE(widget);
+  
+  return PR_TRUE;
+}
+
+gint handle_toplevel_focus_out(
+  GtkWidget *      aWidget, 
+  GdkEventFocus *  aGdkFocusEvent, 
+  gpointer         aData)
+{
+  if(!aWidget) {
+    return PR_TRUE;
+  }
+  
+  if(!aGdkFocusEvent) {
+    return PR_TRUE;
+  }
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  if(!widget) {
+    return PR_TRUE;
+  }
+
+  // Dispatch NS_DEACTIVATE
+    nsGUIEvent event;
+  
+  event.message = NS_DEACTIVATE;
+  event.widget  = widget;
+
+  event.eventStructType = NS_GUI_EVENT;
+
+  event.time = 0;
+  event.point.x = 0;
+  event.point.y = 0;
+
+  NS_ADDREF(widget);
+
+  nsEventStatus status;
+  widget->DispatchEvent(&event, status);
+  
+  NS_RELEASE(widget);
+  
+  return PR_TRUE;
+}
 
 NS_IMETHODIMP nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
@@ -279,6 +370,14 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     gtk_signal_connect_after(GTK_OBJECT(mShell),
                              "size_allocate",
                              GTK_SIGNAL_FUNC(handle_size_allocate),
+                             this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                             "focus_in_event",
+                             GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
+                             this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                             "focus_out_event",
+                             GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
                              this);
     break;
 
