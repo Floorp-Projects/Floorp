@@ -439,7 +439,7 @@ nsHistoryDataSource::ReadHistory(void)
 		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
 		nsFilePath		filePath(nativeSpec);
 		nsFileSpec		fileSpec(filePath);
-		char			*fileURL = filePath;
+		const char		*fileURL = filePath;
 		if (fileURL)
 		{
 			if (endsWith(".hst", fileURL))
