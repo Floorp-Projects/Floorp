@@ -86,6 +86,7 @@
 #include "nsIProxyInfo.h"
 
 #include "nsPluginLogging.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 // Friggin' X11 has to "#define None". Lame!
@@ -120,7 +121,6 @@
 #include "winbase.h"
 #endif
 
-#include "nsSpecialSystemDirectory.h"
 #include "nsFileSpec.h"
 
 #include "nsPluginDocLoaderFactory.h"
@@ -139,6 +139,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
+#include "nsPluginDirServiceProvider.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -200,6 +201,7 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -3142,6 +3144,14 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
   pluginTmp->Remove(PR_TRUE);
 
+  if (mPrivateDirServiceProvider)
+  {
+    nsCOMPtr<nsIDirectoryService> dirService(do_GetService(kDirectoryServiceContractID, &rv));
+    if (NS_SUCCEEDED(rv))
+      dirService->UnregisterProvider(mPrivateDirServiceProvider);
+    mPrivateDirServiceProvider = nsnull;
+  }
+
   return NS_OK;
 }
 
@@ -4023,7 +4033,11 @@ public:
 
   NS_METHOD GetFilename(nsAWritableString& aFilename)
   {
+#ifdef XP_MAC
+    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFullPath, aFilename);
+#else        
     return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFileName, aFilename);
+#endif
   }
 
   NS_METHOD GetName(nsAWritableString& aName)
@@ -4292,6 +4306,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
         if (NS_FAILED(rv))
           rv = ns4xPlugin::CreatePlugin(serviceManager,
                                         pluginTag->mFileName,
+                                        pluginTag->mFullPath,
                                         pluginTag->mLibrary,
                                         &pluginTag->mEntryPoint);
 
@@ -4381,29 +4396,53 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir, 
+nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir, 
                                                 nsIComponentManager * compManager, 
                                                 nsIFile * layoutPath,
                                                 PRBool checkForUnwantedPlugins)
 {
+  nsresult rv;
+  
+#ifdef PLUGIN_LOGGING
+  nsXPIDLCString dirPath;
+  pluginsDir->GetPath(getter_Copies(dirPath));
   PLUGIN_LOG(PLUGIN_LOG_BASIC,
-  ("nsPluginHostImpl::ScanPluginsDirectory dir=%s\n", pluginsDir.GetCString()));
+  ("nsPluginHostImpl::ScanPluginsDirectory dir=%s\n", dirPath.get()));
+#endif
 
-  for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) 
+  nsCOMPtr<nsISimpleEnumerator> iter;
+  rv = pluginsDir->GetDirectoryEntries(getter_AddRefs(iter));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  PRBool hasMore;
+  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore)  
   {
-    nsFileSpec file = iter;
-    if (pluginsDir.IsPluginFile(file)) 
+    nsCOMPtr<nsISupports> supports;
+    rv = iter->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv))
+      continue;
+    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
+    if (NS_FAILED(rv))
+      continue;
+    nsXPIDLCString filePath;
+    rv = dirEntry->GetPath(getter_Copies(filePath));
+    if (NS_FAILED(rv))
+      continue;
+    
+    nsFileSpec file(filePath);
+    PRBool wasSymlink;  
+    file.ResolveSymlink(wasSymlink);
+
+    if (nsPluginsDir::IsPluginFile(file))
     {
       // Look for it in our cache
       nsPluginTag *pluginTag = RemoveCachedPluginsInfo(file.GetCString());
 
       // Get file mod time
-      // XXX if we use nsIFile we will get a 64 bit timestamp.
-      // XXX filespec does only 32 bit. Grrr...
-      PRUint32 shortFileModTime = 0;
-      file.GetModDate(shortFileModTime);
       PRInt64 fileModTime;
-      LL_UI2L(fileModTime, shortFileModTime);
+      LL_I2L(fileModTime, 0);
+      dirEntry->GetLastModificationTime(&fileModTime);
 
       if (pluginTag) {
         PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
@@ -4419,7 +4458,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
       }
       else {
         PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-               ("ScanPluginsDirectory : Plugin NOT found in cache : %s\n", file.GetCString()));
+               ("ScanPluginsDirectory : Plugin NOT found in cache : %s\n", filePath.get()));
       }
 
 
@@ -4515,6 +4554,25 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
   return NS_OK;
 }
 
+nsresult nsPluginHostImpl::ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnum,
+                                                    nsIComponentManager * compManager, 
+                                                    nsIFile * layoutPath,
+                                                    PRBool checkForUnwantedPlugins)
+{
+    PRBool hasMore;
+    while (NS_SUCCEEDED(dirEnum->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> supports;
+      nsresult rv = dirEnum->GetNext(getter_AddRefs(supports));
+      if (NS_FAILED(rv))
+        continue;
+      nsCOMPtr<nsIFile> nextDir(do_QueryInterface(supports, &rv));
+      if (NS_FAILED(rv))
+        continue;
+      
+      ScanPluginsDirectory(nextDir, compManager, layoutPath, checkForUnwantedPlugins);
+    }
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 #include "nsITimelineService.h"
@@ -4532,11 +4590,12 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   NS_INIT_PLUGIN_SAFE_CALLS;
 #endif
 
+  nsresult rv;
+  
   // If the create instance failed, then it automatically disables all
   // our caching functions and we will just end up loading the plugins
   // on startup.
   nsCOMPtr<nsIRegistry> registry = do_CreateInstance(kRegistryCID);
-  nsresult rv;
   if (registry) {
     rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);
     if (NS_FAILED(rv)) {
@@ -4548,191 +4607,70 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   LoadCachedPluginsInfo(registry);
 
   // retrieve a path for layout module. Needed for plugin mime types registration
-  nsCOMPtr<nsIFile> path;
-  PRBool isLayoutPath = PR_FALSE;
+  nsCOMPtr<nsIFile> layoutPath;
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
   if (NS_SUCCEEDED(rv) && compManager) 
   {
-    isLayoutPath = NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path)));
-    rv = LoadXPCOMPlugins(compManager, path);
+    PRBool gotLayoutPath = NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(layoutPath)));
+    rv = LoadXPCOMPlugins(compManager, layoutPath);
+    if (!gotLayoutPath)
+        layoutPath = nsnull;
   }
-
   
-  nsCOMPtr<nsIPref> theprefs = do_GetService(NS_PREF_CONTRACTID);
-  // scan the 4x plugins directory for eligible legacy plugin libraries
+  // Failure here is not a show-stopper so just warn.  
+  rv = EnsurePrivateDirServiceProvider();
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to register dir service provider.");
+  
+  nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsISimpleEnumerator> dirList;
+  
+  // 1. Scan the app-defined list of plugin dirs.
+  rv = dirService->Get(NS_APP_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
+  if (NS_SUCCEEDED(rv))
+    ScanPluginsDirectoryList(dirList, compManager, layoutPath);
+    
+  // 2. Scan the system-defined list of plugin dirs
+  rv = dirService->Get(NS_OS_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
+  if (NS_SUCCEEDED(rv))
+    ScanPluginsDirectoryList(dirList, compManager, layoutPath);
 
-#if !defined(XP_WIN) && !defined (XP_MAC) // old plugin finding logic
+  mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
+                            // the rest is optional
+    
+#if defined (XP_WIN)
+  nsCOMPtr<nsIFile> dirToScan;
 
-  // scan Mozilla plugins dir
-  nsPluginsDir pluginsDir;
-
-  if (pluginsDir.Valid())
-  {
-    nsCOMPtr<nsIFile> lpath = nsnull;
-    if(isLayoutPath)
-      lpath = path;
-
-    ScanPluginsDirectory(pluginsDir, compManager, lpath);
-  }
-#endif
-
-#if defined (XP_MAC)
-  // try to scan plugins dir ("Plug-ins") for Mac
-  // should we check for duplicate plugins here? We probably should.
-  nsPluginsDir pluginsDirMac(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
-
-  // on Mac there is a common folder for storing plugins. Go and look there next
-  nsPluginsDir pluginsDirMacSystem(PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER);
-
-  if (pluginsDirMacSystem.Valid())
-  {
-    PRBool skipSystem = PR_FALSE;    
-    if (theprefs)
-      theprefs->GetBoolPref("browser.plugins.skipSystemInternetFolder",&skipSystem);
-
-    // now do the "Internet plug-ins"
-    if (!skipSystem)
-    {
-      nsCOMPtr<nsIFile> lpath = nsnull;
-      if(isLayoutPath)
-        lpath = path;
-
-      ScanPluginsDirectory(pluginsDirMacSystem, 
-                           compManager, 
-                           lpath, 
-                           PR_FALSE); // don't check for specific plugins
-    }
-  }
-
-  if (pluginsDirMac.Valid())
-  {
-    nsCOMPtr<nsIFile> lpath = nsnull;
-    if(isLayoutPath)
-      lpath = path;
-
-    ScanPluginsDirectory(pluginsDirMac, 
-                         compManager, 
-                         lpath, 
-                         PR_FALSE); // don't check for specific plugins
-  }
-#endif // XP_MAC
-
-#if defined (XP_WIN) //  XP_WIN go for new plugin finding logic on Windows
-
-  // currently we decided to look in both local plugins dir and 
-  // that of the previous 4.x installation combining plugins from both places.
-  // See bug #21938
-  // As of 1.27.00 this selective mechanism is natively supported in Windows 
-  // native implementation of nsPluginsDir.
-
-  // first, make a list from MOZ_LOCAL installation
-  nsPluginsDir pluginsDirMoz(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
-
-  if (pluginsDirMoz.Valid())
-  {
-    nsCOMPtr<nsIFile> lpath = nsnull;
-    if(isLayoutPath)
-      lpath = path;
-
-    ScanPluginsDirectory(pluginsDirMoz, compManager, lpath);
-  }
-
-  // now check the 4.x plugins dir and add new files
-  // Specifying the last two params as PR_TRUE we make sure that:
+  // Scan 4.x plugins location.
+  // Specifying PR_TRUE for the last param to ScanPluginsDirectory, we make sure that:
   //   1. we search for a match in the list of MOZ_LOCAL plugins, ignore if found, 
   //      add if not found (check for dups)
   //   2. we ignore 4.x Java plugins no matter what and other 
   //      unwanted plugins as per temporary decision described in bug #23856
-  nsPluginsDir pluginsDir4x(PLUGINS_DIR_LOCATION_4DOTX);
-  if (pluginsDir4x.Valid())
-  {
-    nsCOMPtr<nsIFile> lpath = nsnull;
-    if(isLayoutPath)
-      lpath = path;
-
-    ScanPluginsDirectory(pluginsDir4x, 
-                         compManager, 
-                         lpath, 
-                         PR_TRUE);  // check for specific plugins
-  }
-#endif
-
-  mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
-                            // the rest is optional
- 
-#ifdef XP_WIN
-  // Checks the installation path of Sun's JRE in scanning for plugins if the prefs are enabled
-
-  if (theprefs)     // we got the pref service
+  rv = dirService->Get("NS_4DOTX_PLUGINS_DIR", NS_GET_IID(nsIFile), getter_AddRefs(dirToScan));
+  if (NS_SUCCEEDED(rv))
+    ScanPluginsDirectory(dirToScan, compManager, layoutPath, PR_TRUE);
+  
+  // Scan the installation path of Sun's JRE if the prefs are enabled
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+  if (prefService)     // we got the pref service
   {
     PRBool javaEnabled = PR_FALSE;         // don't bother the scan if java is OFF
     PRBool doJREPluginScan = PR_FALSE;
     
-    if (NS_SUCCEEDED(theprefs->GetBoolPref("security.enable_java",&javaEnabled)) &&
-        NS_SUCCEEDED(theprefs->GetBoolPref("plugin.do_JRE_Plugin_Scan",&doJREPluginScan)) &&
+    if (NS_SUCCEEDED(prefService->GetBoolPref("security.enable_java",&javaEnabled)) &&
+        NS_SUCCEEDED(prefService->GetBoolPref("plugin.do_JRE_Plugin_Scan",&doJREPluginScan)) &&
         javaEnabled && doJREPluginScan)
     {
-      nsPluginsDir pluginsDirJavaJRE(PLUGINS_DIR_LOCATION_JAVA_JRE);
-
-      if (pluginsDirJavaJRE.Valid())
-      {
-        nsCOMPtr<nsIFile> lpath = nsnull;
-        if(isLayoutPath)
-          lpath = path;
-        ScanPluginsDirectory(pluginsDirJavaJRE, compManager, lpath);
-      }
-    }
-  
-  
-    // Check the windows registry for extra paths to scan for plugins
-    //
-    // We are going to get this registry key location from the pref:
-    //    browser.plugins.registry_plugins_folder_key_location
-    // The key name is "Plugins Folders"
-    //
-    // So, for example, in winprefs.js put in this line:
-    // pref ("browser.plugins.registry_plugins_folder_key_location","Software\\Mozilla\\Common");
-    // Then, in HKEY_LOCAL_MACHINE\Software\Mozilla\Common
-    // Make a string key "Plugins Folder" who's value is a list of paths sperated by semi-colons
-    
-    char * regkey;
-    rv = theprefs->CopyCharPref(_NS_PREF_COMMON_PLUGIN_REG_KEY_,&regkey);
-    if (NS_SUCCEEDED(rv) && regkey) {
-      unsigned char valbuf[_MAXKEYVALUE_];
-      char* pluginPath;
-      HKEY  newkey;
-      LONG  result;
-      DWORD type   = REG_SZ;
-      DWORD length = _MAXKEYVALUE_;
-      
-      // set up layout path (if not done above)
-      nsCOMPtr<nsIFile> lpath = nsnull;
-      if(isLayoutPath)
-        lpath = path;
-
-      result = RegOpenKeyEx( HKEY_LOCAL_MACHINE, regkey, NULL, KEY_QUERY_VALUE, &newkey );
-      
-      if ( ERROR_SUCCESS == result ) {
-        result = RegQueryValueEx( newkey, _NS_COMMON_PLUGIN_KEY_NAME_, nsnull, &type, valbuf, &length );
-        RegCloseKey( newkey );
-        if ( ERROR_SUCCESS == result ) {
-          // tokenize reg key value by semi-colons
-          for ( pluginPath = strtok((char *)&valbuf, ";"); pluginPath; pluginPath = strtok(NULL, ";") ) {
-            nsFileSpec winRegPluginPath (pluginPath);
-            if (winRegPluginPath.Exists()) {     // check for validity of path first
-#ifdef DEBUG
-              printf("found some more plugins at: %s\n", pluginPath);
-#endif
-              ScanPluginsDirectory( (nsPluginsDir)winRegPluginPath, compManager, lpath, PR_FALSE);  // check for even unwanted plugins                                                  
-            }
-          }  
-        }      
-      }
-      free (regkey);  // clean up
+      rv = dirService->Get("NS_WIN_JAVA_JRE_DIR", NS_GET_IID(nsIFile), getter_AddRefs(dirToScan));
+      if (NS_SUCCEEDED(rv))
+        ScanPluginsDirectory(dirToScan, compManager, layoutPath);
     }
   }
-#endif // !XP_WIN
-
+#endif
+   
   // Update the plugins info cache
   if (mSyncCachedPlugins) {
     mSyncCachedPlugins = PR_FALSE;
@@ -5195,6 +5133,26 @@ nsPluginHostImpl::RemoveCachedPluginsInfo(const char *filename)
   return nsnull;
 }
 
+nsresult
+nsPluginHostImpl::EnsurePrivateDirServiceProvider()
+{
+  if (!mPrivateDirServiceProvider)
+  {
+    nsresult rv;
+    nsCOMPtr<nsIDirectoryServiceProvider> provider = new nsPluginDirServiceProvider;
+    if (!provider)
+      return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIDirectoryService> dirService(do_GetService(kDirectoryServiceContractID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    rv = dirService->RegisterProvider(provider);
+    if (NS_FAILED(rv))
+      return rv;
+    mPrivateDirServiceProvider = provider;
+  }
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 /* Called by GetURL and PostURL */
 NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
@@ -5625,18 +5583,44 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::GetProgramPath(const char* *result)
 {
-  static nsSpecialSystemDirectory programDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  *result = programDir;
-  return NS_OK;
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsnull;
+  
+  nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIFile> programDir;
+  rv = dirService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(programDir));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  char *temp;
+  rv = programDir->GetPath(&temp);
+  *result = temp;
+  return rv;
 }
 
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::GetTempDirPath(const char* *result)
 {
-  static nsSpecialSystemDirectory tempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  *result = tempDir;
-  return NS_OK;
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsnull;
+  
+  nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIFile> tempDir;
+  rv = dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(tempDir));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  char *temp;
+  rv = tempDir->GetPath(&temp);
+  *result = temp;
+  return rv;
 }
 
 

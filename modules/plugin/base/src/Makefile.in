@@ -67,6 +67,7 @@ CPPSRCS		= \
 		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \
 		nsPluginViewer.cpp \
+		nsPluginDirServiceProvider.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH), BeOS)

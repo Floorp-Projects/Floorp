@@ -45,7 +45,6 @@
 
 #include "nsPluginsDir.h"
 #include "prlink.h"
-#include "nsSpecialSystemDirectory.h"
 
 #include <Processes.h>
 #include <Folders.h>
@@ -117,36 +116,6 @@ static nsresult getApplicationSpec(FSSpec& outAppSpec)
   OSErr result = GetProcessInformation(&psn, &info);
   return (result == noErr ? NS_OK : NS_ERROR_FAILURE);
 }
-
-nsPluginsDir::nsPluginsDir(PRUint16 location)
-{
-  PRBool wasAliased;
-
-  switch (location)
-  {
-    case PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER:
-      // The system's shared "Plugin-ins" folder
-#if TARGET_CARBON  // on OS X, we must try kLocalDomain first
-      mError = ::FindFolder(kLocalDomain, kInternetPlugInFolderType, kDontCreateFolder, & mSpec.vRefNum, &mSpec.parID);
-      if (mError)
-#endif
-        mError = ::FindFolder(kOnAppropriateDisk, kInternetPlugInFolderType, kDontCreateFolder, & mSpec.vRefNum, &mSpec.parID);
-      if (!mError)
-        mError = ::FSMakeFSSpec(mSpec.vRefNum, mSpec.parID, "\p", &mSpec);
-      break;
-    case PLUGINS_DIR_LOCATION_MOZ_LOCAL:
-    default:    
-      // The "Plug-ins" folder in the application's directory is where plugins are loaded from.    
-      // Use the Moz_BinDirectory
-      nsSpecialSystemDirectory plugDir(nsSpecialSystemDirectory::Moz_BinDirectory);
-      *(nsFileSpec*)this = plugDir + "Plug-ins";
-      break;
-  }   
-    if (IsSymlink())
-      ResolveSymlink(wasAliased);
-}
-
-nsPluginsDir::~nsPluginsDir() {}
 
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
