@@ -218,13 +218,13 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWindow*)new nsLabel();
     }
     else if (mClassID.Equals(kCMenuBar)) {
-        inst = (nsISupports*)new nsMenuBar();
+        inst = (nsISupports*)(nsIMenuBar*) new nsMenuBar();
     }
     else if (mClassID.Equals(kCMenu)) {
-        inst = (nsISupports*)new nsMenu();
+        inst = (nsISupports*)(nsIMenu*) new nsMenu();
     }
     else if (mClassID.Equals(kCMenuItem)) {
-        inst = (nsISupports*)new nsMenuItem();
+        inst = (nsISupports*)(nsIMenuItem*) new nsMenuItem();
     }
     else if (mClassID.Equals(kCImageButton)) {
         inst = (nsISupports*)(nsWindow*)new nsImageButton();
