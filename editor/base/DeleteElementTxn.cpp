@@ -59,7 +59,7 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
     return result;
   }
   if (!mParent) {
-    return NS_ERROR_NULL_POINTER;
+    return NS_OK;   // this is a no-op, there's no parent to delete mElement from
   }
 
 #ifdef NS_DEBUG
@@ -98,8 +98,8 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
 NS_IMETHODIMP DeleteElementTxn::Undo(void)
 {
   if (gNoisy) { printf("%p Undo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
-  if (!mParent  ||  !mElement)
-    return NS_ERROR_NULL_POINTER;
+  if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
+  if (!mElement) { return NS_ERROR_NULL_POINTER; }
 
 #ifdef NS_DEBUG
   // begin debug output
@@ -134,8 +134,8 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
 NS_IMETHODIMP DeleteElementTxn::Redo(void)
 {
   if (gNoisy) { printf("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
-  if (!mParent  ||  !mElement)
-    return NS_ERROR_NULL_POINTER;
+  if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
+  if (!mElement) { return NS_ERROR_NULL_POINTER; }
 
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
