@@ -32,6 +32,7 @@ sub globals_pl_sillyness {
     $zz = @main::chooseone;
     $zz = @main::db_errstr;
     $zz = @main::default_column_list;
+    $zz = $main::defaultqueryname;
     $zz = @main::dontchange;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
@@ -48,6 +49,18 @@ sub globals_pl_sillyness {
     $zz = @main::prodmaxvotes;
 }
 
+#
+# Here are the --LOCAL-- variables defined in 'localconfig' that we'll use
+# here
+# 
+
+my $db_host = "localhost";
+my $db_name = "bugs";
+my $db_user = "bugs";
+my $db_pass = "";
+
+do 'localconfig';
+
 use Mysql;
 
 use Date::Format;               # For time2str().
@@ -63,7 +76,7 @@ $::defaultqueryname = "(Default query)";
 
 sub ConnectToDatabase {
     if (!defined $::db) {
-	$::db = Mysql->Connect("localhost", "bugs", "bugs", "")
+	$::db = Mysql->Connect($db_host, $db_name, $db_user, $db_pass)
             || die "Can't connect to database server.";
     }
 }
