@@ -1,0 +1,9 @@
+<!ENTITY  plugins.title                 "Plug-Ins">
+<!ENTITY  pluginInfo.label              "Plug-Ins are currently available for the following file types:">
+
+<!ENTITY  pluginInfo2.label             "Disabling Plug-Ins for a file type will cause files of that type to be downloaded instead of being viewed in the Plug-In.">
+
+<!ENTITY  typeHeader.label              "File Type">
+<!ENTITY  enabledHeader.label           "Enabled">
+<!ENTITY  extensionsHeader.label        "Extension"> 
+

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/plugins.dtd">
+
+<dialog id="plugins" title="&plugins.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init();" ondialogaccept="onAccept();" style="width: 30em;"
+        persist="screenX screenY">
+
+  <script type="application/x-javascript" src="chrome://browser/content/pref/plugins.js"/>
+
+  <description>&pluginInfo.label;</description>
+  <separator class="thin"/>
+  <tree id="pluginTypesList" flex="1" hidecolumnpicker="true" rows="10" seltype="single">
+    <treecols>
+      <treecol id="fileExtension"
+               class="sortDirectionIndicator pluginsList" persist="width"
+               label="&extensionsHeader.label;" />
+      <treecol id="fileType" flex="1"
+               class="sortDirectionIndicator" persist="width"
+               label="&typeHeader.label;"/>
+      <splitter class="tree-splitter" />
+      <treecol id="pluginEnabled" cycler="true"
+               class="sortDirectionIndicator" persist="width"
+               label="&enabledHeader.label;"/>
+    </treecols>
+    
+    <treechildren class="pluginTypesChildren"/>
+  </tree>
+  <separator class="thin"/>
+  <description>&pluginInfo2.label;</description>
+
+  <separator/>
+  
+</dialog>
+
+        
