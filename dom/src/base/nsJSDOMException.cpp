@@ -57,7 +57,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDOMException *a = (nsIDOMDOMException*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -79,6 +78,7 @@ GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
+        nsresult result = NS_OK;
         result = a->GetCode(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -96,6 +96,7 @@ GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
+        nsresult result = NS_OK;
         result = a->GetResult(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -113,6 +114,7 @@ GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetMessage(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -130,6 +132,7 @@ GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetName(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -158,7 +161,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDOMException *a = (nsIDOMDOMException*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

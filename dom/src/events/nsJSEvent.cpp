@@ -60,7 +60,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMEvent *a = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -82,6 +81,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetType(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -99,6 +99,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetTarget(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -117,6 +118,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetCurrentNode(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -135,6 +137,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint16 prop;
+        nsresult result = NS_OK;
         result = a->GetEventPhase(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -163,7 +166,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMEvent *a = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -60,7 +60,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMMimeType *a = (nsIDOMMimeType*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -82,6 +81,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetDescription(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -99,6 +99,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMPlugin* prop;
+        nsresult result = NS_OK;
         result = a->GetEnabledPlugin(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -117,6 +118,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetSuffixes(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -134,6 +136,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetType(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -162,7 +165,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMMimeType *a = (nsIDOMMimeType*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -56,7 +56,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLBaseFontElement *a = (nsIDOMHTMLBaseFontElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -78,6 +77,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetColor(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -95,6 +95,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetFace(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -112,6 +113,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetSize(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -140,7 +142,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLBaseFontElement *a = (nsIDOMHTMLBaseFontElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

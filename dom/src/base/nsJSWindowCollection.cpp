@@ -57,7 +57,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindowCollection *a = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -81,6 +80,7 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
+        nsresult result = NS_OK;
         result = a->GetLength(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -92,6 +92,7 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
+        nsresult result = NS_OK;
         nsIDOMWindow* prop;
         result = a->Item(JSVAL_TO_INT(id), &prop);
         if (NS_SUCCEEDED(result)) {
@@ -108,6 +109,7 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (checkNamedItem) {
     nsIDOMWindow* prop;
     nsAutoString name;
+    nsresult result = NS_OK;
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
@@ -146,7 +148,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindowCollection *a = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -68,7 +68,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMRange *a = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -90,6 +89,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetStartParent(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -108,6 +108,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetStartOffset(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -125,6 +126,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetEndParent(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -143,6 +145,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetEndOffset(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -160,6 +163,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
+        nsresult result = NS_OK;
         result = a->GetIsCollapsed(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -177,6 +181,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetCommonParent(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -206,7 +211,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMRange *a = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

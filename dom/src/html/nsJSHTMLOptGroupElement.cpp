@@ -55,7 +55,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLOptGroupElement *a = (nsIDOMHTMLOptGroupElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -77,6 +76,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
+        nsresult result = NS_OK;
         result = a->GetDisabled(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -94,6 +94,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetLabel(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -122,7 +123,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLOptGroupElement *a = (nsIDOMHTMLOptGroupElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

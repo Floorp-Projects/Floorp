@@ -57,7 +57,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNamedNodeMap *a = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -79,6 +78,7 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
+        nsresult result = NS_OK;
         result = a->GetLength(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -90,6 +90,7 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
+        nsresult result = NS_OK;
         nsIDOMNode* prop;
         result = a->Item(JSVAL_TO_INT(id), &prop);
         if (NS_SUCCEEDED(result)) {
@@ -117,7 +118,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNamedNodeMap *a = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -59,7 +59,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocumentType *a = (nsIDOMDocumentType*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -81,6 +80,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetName(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -98,6 +98,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNamedNodeMap* prop;
+        nsresult result = NS_OK;
         result = a->GetEntities(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -116,6 +117,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNamedNodeMap* prop;
+        nsresult result = NS_OK;
         result = a->GetNotations(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -145,7 +147,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocumentType *a = (nsIDOMDocumentType*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -79,7 +79,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNode *a = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,6 +100,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetNodeName(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -118,6 +118,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetNodeValue(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -135,6 +136,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint16 prop;
+        nsresult result = NS_OK;
         result = a->GetNodeType(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -152,6 +154,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetParentNode(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -170,6 +173,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNodeList* prop;
+        nsresult result = NS_OK;
         result = a->GetChildNodes(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -188,6 +192,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetFirstChild(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -206,6 +211,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetLastChild(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -224,6 +230,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetPreviousSibling(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -242,6 +249,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
+        nsresult result = NS_OK;
         result = a->GetNextSibling(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -260,6 +268,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNamedNodeMap* prop;
+        nsresult result = NS_OK;
         result = a->GetAttributes(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -278,6 +287,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDocument* prop;
+        nsresult result = NS_OK;
         result = a->GetOwnerDocument(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -307,7 +317,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNode *a = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
