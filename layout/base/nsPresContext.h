@@ -267,6 +267,12 @@ public:
   NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat) = 0;
   NS_IMETHOD GetDefaultLinkColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor) = 0;
+  NS_IMETHOD GetFocusBackgroundColor(nscolor* aColor) = 0;
+  NS_IMETHOD GetFocusTextColor(nscolor* aColor) = 0; 
+  NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors) = 0;
+  NS_IMETHOD GetFocusRingWidth(PRUint8 *focusRingWidth) = 0;
+  NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything) = 0;
+ 
 
   NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;

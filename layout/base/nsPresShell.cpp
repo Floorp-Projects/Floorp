@@ -1091,6 +1091,7 @@ protected:
   nsresult CreatePreferenceStyleSheet(void);
   nsresult SetPrefColorRules(void);
   nsresult SetPrefLinkRules(void);
+  nsresult SetPrefFocusRules(void);
 
   nsresult SelectContent(nsIContent *aContent);
 
@@ -1853,6 +1854,10 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       if (NS_SUCCEEDED(result)) {
         result = SetPrefLinkRules();
       }
+      if (NS_SUCCEEDED(result)) {
+        result = SetPrefFocusRules();
+      }
+ 
 
       // update the styleset now that we are done inserting our rules
       if (NS_SUCCEEDED(result)) {
@@ -2132,6 +2137,78 @@ nsresult PresShell::SetPrefLinkRules(void)
     return NS_ERROR_FAILURE;
   }
 }
+
+nsresult PresShell::SetPrefFocusRules(void)
+{
+  NS_ASSERTION(mPresContext,"null prescontext not allowed");
+  nsresult result = NS_OK;
+
+  if (!mPresContext)
+    result = NS_ERROR_FAILURE;
+
+  if (NS_SUCCEEDED(result) && !mPrefStyleSheet)
+    result = CreatePreferenceStyleSheet();
+
+  if (NS_SUCCEEDED(result)) {
+    NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+
+    // get the DOM interface to the stylesheet
+    nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
+    if (NS_SUCCEEDED(result)) {
+      PRBool useFocusColors;
+      mPresContext->GetUseFocusColors(useFocusColors);
+      nscolor focusBackground, focusText;
+      result = mPresContext->GetFocusBackgroundColor(&focusBackground);
+      nsresult result2 = mPresContext->GetFocusTextColor(&focusText);
+      if (useFocusColors && NS_SUCCEEDED(result) && NS_SUCCEEDED(result2)) {
+        // insert a rule to make focus the preferred color
+        PRUint32 index = 0;
+        nsAutoString strRule, strColor;
+
+        ///////////////////////////////////////////////////////////////
+        // - focus: '*:focus
+        ColorToString(focusText,strColor);
+        strRule.Append(NS_LITERAL_STRING("*:focus,*:focus>font {color: "));
+        strRule.Append(strColor);
+        strRule.Append(NS_LITERAL_STRING(" !important; background-color: "));
+        ColorToString(focusBackground,strColor);
+        strRule.Append(strColor);
+        strRule.Append(NS_LITERAL_STRING(" !important; } "));
+        // insert the rules
+        result = sheet->InsertRule(strRule,0,&index);
+      }
+      PRUint8 focusRingWidth = 1;
+      result = mPresContext->GetFocusRingWidth(&focusRingWidth);
+      PRBool focusRingOnAnything;
+      mPresContext->GetFocusRingOnAnything(focusRingOnAnything);
+
+      if ((NS_SUCCEEDED(result) && focusRingWidth != 1 && focusRingWidth <= 4 ) || focusRingOnAnything) {
+        PRUint32 index = 0;
+        nsAutoString strRule;
+        if (!focusRingOnAnything)
+          strRule.Append(NS_LITERAL_STRING(":link:focus, :visited"));    // If we only want focus rings on the normal things like links
+        strRule.Append(NS_LITERAL_STRING(":focus {-moz-outline: "));     // For example 3px dotted WindowText (maximum 4)
+        strRule.AppendInt(focusRingWidth);
+        strRule.Append(NS_LITERAL_STRING("px dotted WindowText !important; } "));     // For example 3px dotted WindowText
+        // insert the rules
+        if (focusRingWidth != 1) {
+          // If the focus ring width is different from the default, fix buttons with rings
+          strRule.Append(NS_LITERAL_STRING("button:-moz-focus-inner, input[type=\"reset\"]:-moz-focus-inner,"));
+          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:-moz-focus-inner, "));
+          strRule.Append(NS_LITERAL_STRING("input[type=\"submit\"]:-moz-focus-inner { padding: 1px 2px 1px 2px; border: "));
+          strRule.AppendInt(focusRingWidth);
+          strRule.Append(NS_LITERAL_STRING("px dotted transparent !important; } "));
+          strRule.Append(NS_LITERAL_STRING("button:focus:-moz-focus-inner, input[type=\"reset\"]:focus:-moz-focus-inner,"));
+          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:focus:-moz-focus-inner, input[type=\"submit\"]:focus:-moz-focus-inner {"));
+          strRule.Append(NS_LITERAL_STRING("border-color: ButtonText !important; }"));
+          }
+        result     = sheet->InsertRule(strRule,0,&index);
+      }
+    }
+  }
+  return result;
+}
+
 
 NS_IMETHODIMP
 PresShell::SetDisplaySelection(PRInt16 aToggle)

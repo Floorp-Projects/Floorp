@@ -133,6 +133,12 @@ nsPresContext::nsPresContext()
   mVisitedLinkColor = NS_RGB(0x66, 0x00, 0xCC);
   mUnderlineLinks = PR_TRUE;
 
+  mUseFocusColors = PR_FALSE;
+  mFocusTextColor = mDefaultColor;
+  mFocusBackgroundColor = mDefaultBackgroundColor;
+  mFocusRingWidth = 1;
+  mFocusRingOnAnything = PR_FALSE;
+
   mDefaultBackgroundImageAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mDefaultBackgroundImageRepeat = NS_STYLE_BG_REPEAT_XY;
   mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
@@ -251,11 +257,11 @@ nsPresContext::GetUserPreferences()
 {
   PRInt32 prefInt;
 
-  if (NS_OK == mPrefs->GetIntPref("browser.display.base_font_scaler", &prefInt)) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.base_font_scaler", &prefInt))) {
     mFontScaler = prefInt;
   }
 
-  if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt))) {
     // XXX this should really be a state on the webshell instead of using prefs
     switch (prefInt) {
       case 1: 
@@ -276,7 +282,7 @@ nsPresContext::GetUserPreferences()
     mCompatibilityLocked = PR_FALSE;  // auto
   }
 
-  if (NS_OK == mPrefs->GetIntPref("nglayout.widget.mode", &prefInt)) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("nglayout.widget.mode", &prefInt))) {
     mWidgetRenderingMode = (enum nsWidgetRendering)prefInt;  // bad cast
   }
 
@@ -284,14 +290,14 @@ nsPresContext::GetUserPreferences()
   PRBool usePrefColors = PR_TRUE;
   PRUint32  colorPref;
   PRBool boolPref;
-  if (NS_OK == mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref)) {
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref))) {
     usePrefColors = !boolPref;
   }
   if (usePrefColors) {
-    if (NS_OK == mPrefs->GetColorPrefDWord("browser.display.foreground_color", &colorPref)) {
+    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.foreground_color", &colorPref))) {
       mDefaultColor = (nscolor)colorPref;
     }
-    if (NS_OK == mPrefs->GetColorPrefDWord("browser.display.background_color", &colorPref)) {
+    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.background_color", &colorPref))) {
       mDefaultBackgroundColor = (nscolor)colorPref;
     }
   }
@@ -307,26 +313,47 @@ nsPresContext::GetUserPreferences()
     }
   }
 
-  if (NS_OK == mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref)) {
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref))) {
     mUseDocumentColors = boolPref;
   }
   // * link colors
-  if (NS_OK == mPrefs->GetBoolPref("browser.underline_anchors", &boolPref)) {
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.underline_anchors", &boolPref))) {
     mUnderlineLinks = boolPref;
   }
-  if (NS_OK == mPrefs->GetColorPrefDWord("browser.anchor_color", &colorPref)) {
+  if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.anchor_color", &colorPref))) {
     mLinkColor = (nscolor)colorPref;
   }
-  if (NS_OK == mPrefs->GetColorPrefDWord("browser.visited_color", &colorPref)) {
+  if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.visited_color", &colorPref))) {
     mVisitedLinkColor = (nscolor)colorPref;
   }
 
+
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_focus_colors", &boolPref))) {
+    mUseFocusColors = boolPref;
+    mFocusTextColor = mDefaultColor;
+    mFocusBackgroundColor = mDefaultBackgroundColor;
+    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.focus_text_color", &colorPref))) {
+      mFocusTextColor = (nscolor)colorPref;
+    }
+    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.focus_background_color", &colorPref))) {
+      mFocusBackgroundColor = (nscolor)colorPref;
+    }
+  }
+
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.focus_ring_width", &prefInt))) {
+    mFocusRingWidth = prefInt;
+  }
+
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.focus_ring_on_anything", &boolPref))) {
+    mFocusRingOnAnything = boolPref;
+  }
+
   // * use fonts?
-  if (NS_OK == mPrefs->GetIntPref("browser.display.use_document_fonts", &prefInt)) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.use_document_fonts", &prefInt))) {
     mUseDocumentFonts = prefInt == 0 ? PR_FALSE : PR_TRUE;
   }
   // * direction
-  if (NS_OK == mPrefs->GetIntPref("browser.display.direction", &prefInt)) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.direction", &prefInt))) {
     mDefaultDirection = prefInt;
   }
   
@@ -919,6 +946,58 @@ nsPresContext::GetDefaultVisitedLinkColor(nscolor* aColor)
   }
   return NS_ERROR_NULL_POINTER;
 }
+
+
+NS_IMETHODIMP
+nsPresContext::GetFocusRingOnAnything(PRBool& aFocusRingOnAnything)
+{
+  aFocusRingOnAnything = mFocusRingOnAnything;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsPresContext::GetUseFocusColors(PRBool& aUseFocusColors)
+{
+  aUseFocusColors = mUseFocusColors;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsPresContext::GetFocusTextColor(nscolor* aColor)
+{
+  NS_PRECONDITION(nsnull != aColor, "null argument");
+  if (aColor) {
+    *aColor = mFocusTextColor;
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+
+NS_IMETHODIMP
+nsPresContext::GetFocusBackgroundColor(nscolor* aColor)
+{
+  NS_PRECONDITION(nsnull != aColor, "null argument");
+  if (aColor) {
+    *aColor = mFocusBackgroundColor;
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetFocusRingWidth(PRUint8 *aFocusRingWidth)
+{
+  NS_PRECONDITION(nsnull != aFocusRingWidth, "null argument");
+  if (aFocusRingWidth) {
+    *aFocusRingWidth = mFocusRingWidth;
+    return NS_OK;
+    }
+  return NS_ERROR_NULL_POINTER;
+}
+
 
 NS_IMETHODIMP
 nsPresContext::SetDefaultColor(nscolor aColor)
