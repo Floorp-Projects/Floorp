@@ -936,6 +936,25 @@ nsEditor::BeginTransaction()
 
   BeginUpdateViewBatch();
 
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+  }
+
+  if (nsnull!=mViewManager)
+  {
+    if (0==mUpdateCount)
+    {
+#ifdef HACK_FORCE_REDRAW
+      mViewManager->DisableRefresh();
+#else
+      mViewManager->BeginUpdateViewBatch();
+#endif
+    }
+    mUpdateCount++;
+  }
+
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->BeginBatch();
@@ -958,6 +977,20 @@ nsEditor::EndTransaction()
   {
     mTxnMgr->EndBatch();
   }
+
+  if (nsnull!=mViewManager)
+  {
+    mUpdateCount--;
+    if (0==mUpdateCount)
+    {
+#ifdef HACK_FORCE_REDRAW
+      mViewManager->EnableRefresh();
+      HACKForceRedraw();
+#else
+      mViewManager->EndUpdateViewBatch();
+#endif
+    }
+  }  
 
   EndUpdateViewBatch();
 
@@ -2364,6 +2397,22 @@ nsEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffs
   return result;
 }
 
+nsresult 
+nsEditor::GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset)
+{
+  NS_ASSERTION((inChild && outParent && outOffset), "bad args");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (inChild && outParent && outOffset)
+  {
+    result = inChild->GetParentNode(getter_AddRefs(*outParent));
+    if ((NS_SUCCEEDED(result)) && (*outParent))
+    {
+      result = GetChildOffset(inChild, *outParent, *outOffset);
+    }
+  }
+  return result;
+}
+
 // returns the number of things inside aNode.  
 // If aNode is text, returns number of characters. If not, returns number of children nodes.
 nsresult
@@ -2883,7 +2932,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       PRUint32 i;
       for (i=0; i<length; i++)
       {
-        if ('\n'!=data.CharAt(0)) {
+        if ('\n'!=data.CharAt(i)) {
           return PR_TRUE;
         }
       }

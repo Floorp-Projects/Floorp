@@ -31,6 +31,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
+#include "nsISupportsArray.h"
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
@@ -42,7 +43,16 @@ class nsIFrame;
 const unsigned char nbsp = 160;
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+// static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
+
+enum
+{
+  kLonely = 0,
+  kPrevSib = 1,
+  kNextSib = 2,
+  kBothSibs = 3
+};
 
 /********************************************************
  *  Constructor/Destructor 
@@ -88,13 +98,13 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
     case kMakeList:
-      return WillMakeList(aSelection, aCancel);
+      return WillMakeList(aSelection, info->bOrdered, aCancel);
     case kIndent:
       return WillIndent(aSelection, aCancel);
     case kOutdent:
       return WillOutdent(aSelection, aCancel);
     case kAlign:
-      return WillAlign(aSelection, aCancel);
+      return WillAlign(aSelection, info->alignType, aCancel);
     case kMakeHeader:
       return WillMakeHeader(aSelection, aCancel);
     case kMakeAddress:
@@ -274,38 +284,38 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
           return res;
         }
         
-        // block parents the same?  use defaul deletion
+        // block parents the same?  use default deletion
         if (mEditor->HasSameBlockNodeParent(node, priorNode)) return NS_OK;
-		
-		// deleting across blocks
-		// are the blocks of same type?
-		nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(priorNode);
-		nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(node);
-		nsCOMPtr<nsIAtom> leftAtom = mEditor->GetTag(leftParent);
-		nsCOMPtr<nsIAtom> rightAtom = mEditor->GetTag(rightParent);
-		
-		if (leftAtom.get() == rightAtom.get())
-		{
-		  nsCOMPtr<nsIDOMNode> topParent;
-		  leftParent->GetParentNode(getter_AddRefs(topParent));
-		  
-		  if (IsParagraph(leftParent))
-		  {
-		    // join para's, insert break
+        
+        // deleting across blocks
+        // are the blocks of same type?
+        nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(priorNode);
+        nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(node);
+        nsCOMPtr<nsIAtom> leftAtom = mEditor->GetTag(leftParent);
+        nsCOMPtr<nsIAtom> rightAtom = mEditor->GetTag(rightParent);
+        
+        if (leftAtom.get() == rightAtom.get())
+        {
+          nsCOMPtr<nsIDOMNode> topParent;
+          leftParent->GetParentNode(getter_AddRefs(topParent));
+          
+          if (IsParagraph(leftParent))
+          {
+            // join para's, insert break
             *aCancel = PR_TRUE;
             res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
             if (NS_FAILED(res)) return res;
             res = mEditor->InsertBreak();
             return res;
-		  }
-		  if (IsListItem(leftParent) || IsHeader(leftParent))
-		  {
-		    // join blocks
+          }
+          if (IsListItem(leftParent) || IsHeader(leftParent))
+          {
+            // join blocks
             *aCancel = PR_TRUE;
             res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
             return res;
-		  }
-		}
+          }
+        }
         
         // else blocks not same type, bail to default
         return NS_OK;
@@ -326,38 +336,38 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
           return res;
         }
        
-        // block parents the same?  use defaul deletion
+        // block parents the same?  use default deletion
         if (mEditor->HasSameBlockNodeParent(node, nextNode)) return NS_OK;
-		
-		// deleting across blocks
-		// are the blocks of same type?
-		nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(node);
-		nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(nextNode);
-		nsCOMPtr<nsIAtom> leftAtom = mEditor->GetTag(leftParent);
-		nsCOMPtr<nsIAtom> rightAtom = mEditor->GetTag(rightParent);
-		
-		if (leftAtom.get() == rightAtom.get())
-		{
-		  nsCOMPtr<nsIDOMNode> topParent;
-		  leftParent->GetParentNode(getter_AddRefs(topParent));
-		  
-		  if (IsParagraph(leftParent))
-		  {
-		    // join para's, insert break
+        
+        // deleting across blocks
+        // are the blocks of same type?
+        nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(node);
+        nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(nextNode);
+        nsCOMPtr<nsIAtom> leftAtom = mEditor->GetTag(leftParent);
+        nsCOMPtr<nsIAtom> rightAtom = mEditor->GetTag(rightParent);
+        
+        if (leftAtom.get() == rightAtom.get())
+        {
+          nsCOMPtr<nsIDOMNode> topParent;
+          leftParent->GetParentNode(getter_AddRefs(topParent));
+          
+          if (IsParagraph(leftParent))
+          {
+            // join para's, insert break
             *aCancel = PR_TRUE;
             res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
             if (NS_FAILED(res)) return res;
             res = mEditor->InsertBreak();
             return res;
-		  }
-		  if (IsListItem(leftParent) || IsHeader(leftParent))
-		  {
-		    // join blocks
+          }
+          if (IsListItem(leftParent) || IsHeader(leftParent))
+          {
+            // join blocks
             *aCancel = PR_TRUE;
             res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
             return res;
-		  }
-		}
+          }
+        }
         
         // else blocks not same type, bail to default
         return NS_OK;
@@ -376,54 +386,54 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
   res = mEditor->GetEndNodeAndOffset(aSelection, &endNode, &endOffset);
   if (endNode.get() != node.get())
   {
-    // block parents the same?  use defaul deletion
+    // block parents the same?  use default deletion
     if (mEditor->HasSameBlockNodeParent(node, endNode)) return NS_OK;
-	
-	// deleting across blocks
-	// are the blocks of same type?
-	nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(node);
-	nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(endNode);
-	
-	// are the blocks siblings?
-	nsCOMPtr<nsIDOMNode> leftBlockParent;
-	nsCOMPtr<nsIDOMNode> rightBlockParent;
-	leftParent->GetParentNode(getter_AddRefs(leftBlockParent));
-	rightParent->GetParentNode(getter_AddRefs(rightBlockParent));
-	// bail to default if blocks aren't siblings
-	if (leftBlockParent.get() != rightBlockParent.get()) return NS_OK;
+    
+    // deleting across blocks
+    // are the blocks of same type?
+    nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(node);
+    nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(endNode);
+    
+    // are the blocks siblings?
+    nsCOMPtr<nsIDOMNode> leftBlockParent;
+    nsCOMPtr<nsIDOMNode> rightBlockParent;
+    leftParent->GetParentNode(getter_AddRefs(leftBlockParent));
+    rightParent->GetParentNode(getter_AddRefs(rightBlockParent));
+    // bail to default if blocks aren't siblings
+    if (leftBlockParent.get() != rightBlockParent.get()) return NS_OK;
 
-	nsCOMPtr<nsIAtom> leftAtom = mEditor->GetTag(leftParent);
-	nsCOMPtr<nsIAtom> rightAtom = mEditor->GetTag(rightParent);
+    nsCOMPtr<nsIAtom> leftAtom = mEditor->GetTag(leftParent);
+    nsCOMPtr<nsIAtom> rightAtom = mEditor->GetTag(rightParent);
 
-	if (leftAtom.get() == rightAtom.get())
-	{
-	  nsCOMPtr<nsIDOMNode> topParent;
-	  leftParent->GetParentNode(getter_AddRefs(topParent));
-	  
-	  if (IsParagraph(leftParent))
-	  {
-	    // first delete the selection
+    if (leftAtom.get() == rightAtom.get())
+    {
+      nsCOMPtr<nsIDOMNode> topParent;
+      leftParent->GetParentNode(getter_AddRefs(topParent));
+      
+      if (IsParagraph(leftParent))
+      {
+        // first delete the selection
         *aCancel = PR_TRUE;
         res = mEditor->nsEditor::DeleteSelection(aAction);
         if (NS_FAILED(res)) return res;
-	    // then join para's, insert break
+        // then join para's, insert break
         res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
         if (NS_FAILED(res)) return res;
         //res = mEditor->InsertBreak();
         // uhh, no, we don't want to have the <br> on a deleted selction across para's
         return res;
-	  }
-	  if (IsListItem(leftParent) || IsHeader(leftParent))
-	  {
-	    // first delete the selection
+      }
+      if (IsListItem(leftParent) || IsHeader(leftParent))
+      {
+        // first delete the selection
         *aCancel = PR_TRUE;
         res = mEditor->nsEditor::DeleteSelection(aAction);
         if (NS_FAILED(res)) return res;
-	    // join blocks
+        // join blocks
         res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
         return res;
-	  }
-	}
+      }
+    }
     
     // else blocks not same type, bail to default
     return NS_OK;
@@ -434,14 +444,235 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
 
 
 nsresult
-nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
-  *aCancel = PR_FALSE;
+  *aCancel = PR_TRUE;
   
+  nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
   
+  // get selection range - XXX generalize to collection of ranges
+  // gather up factoids about the range
+  nsCOMPtr<nsIDOMRange> selectionRange;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  nsCOMPtr<nsIDOMNode> commonParent;
+  PRInt32 startOffset, endOffset;
+  
+  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+//  res = selectionRange->GetCommonParent(getter_AddRefs(commonParent));
+//  if (NS_FAILED(res)) return res;
+  
+  // make a new adjusted range to represent the appropriate block content
+  // this is tricky.  the basic idea is to push out the range endpoints
+  // to truly enclose the blocks that we will affect
+  
+  nsCOMPtr<nsIDOMNode> listStartNode;
+  nsCOMPtr<nsIDOMNode> listEndNode;
+  PRInt32 listStartOffset, listEndOffset;
+  nsCOMPtr<nsIDOMRange> opRange;
+  
+  res = GetPromotedPoint( kStart, startNode, startOffset, kMakeList, &listStartNode, &listStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetPromotedPoint( kEnd, endNode, endOffset, kMakeList, &listEndNode, &listEndOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->Clone(getter_AddRefs(opRange));
+  if (NS_FAILED(res)) return res;
+  opRange->SetStart(listStartNode, listStartOffset);
+  if (NS_FAILED(res)) return res;
+  opRange->SetEnd(listEndNode, listEndOffset);
+  if (NS_FAILED(res)) return res;
+
+  // use subtree iterator to boogie over the snazzy new range
+  // we wil gather the top level nodes to process into a list
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
+                                        nsnull,
+                                        nsIContentIterator::GetIID(), 
+                                        getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(opRange);
+  if (NS_FAILED(res)) return res;
+    
+  nsCOMPtr<nsISupportsArray> list;
+  res = NS_NewISupportsArray(getter_AddRefs(list));
+
+  while (NS_COMFALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    node = do_QueryInterface(content);
+    if ((NS_SUCCEEDED(res)) && node)
+    {
+      // can't manipulate tree while using subtree iterator, or we will 
+      // confuse it's little mind
+      // instead chuck the results into an array.
+      list->AppendElement(node);
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // Next we remove all the <br>'s in the array.  This won't prevent <br>'s 
+  // inside of <p>'s from being significant - those <br>'s are not hit by 
+  // the subtree iterator, since they are enclosed in a <p>.
+  
+  // We also remove all non-editable nodes.  Leave them be.
+  
+  PRUint32 listCount;
+  PRInt32 i;
+  list->Count(&listCount);
+  for (i=listCount-1; i>=0; i--)
+  {
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(thingy) );
+    if (IsBreak(testNode))
+    {
+      list->RemoveElementAt(i);
+    }
+    else if (!nsEditor::IsEditable(testNode))
+    {
+      list->RemoveElementAt(i);
+    }
+  }
+  
+  
+  // Next we detect all the transitions in the array, where a transition
+  // means that adjacent nodes in the array don't have the same parent.
+  
+  list->Count(&listCount);
+  nsVoidArray transitionList;
+  nsCOMPtr<nsIDOMNode> prevElementParent;
+  nsCOMPtr<nsIDOMNode> curElementParent;
+  
+  for (i=0; i<listCount; i++)
+  {
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
+    transNode->GetParentNode(getter_AddRefs(curElementParent));
+    if (curElementParent != prevElementParent)
+    {
+      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
+    }
+    else
+    {
+      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
+    }
+    prevElementParent = curElementParent;
+  }
+  
+  
+  // Ok, now go through all the lodes and put then in the list, 
+  // or whatever is approriate.  Wohoo!
+  
+  nsCOMPtr<nsIDOMNode> curParent;
+  nsCOMPtr<nsIDOMNode> curList;
+  for (i=0; i<listCount; i++)
+  {
+    // here's where we actually figure out what to do
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
+    if (NS_FAILED(res)) return res;
+    
+    if (transitionList[i] && ((i+1)<listCount) && transitionList[i+1])
+    {
+      // the parent of this node has no other children on the 
+      // list of nodes to make a list out of.  So if this node
+      // is a list, change it's list type if needed instead of 
+      // reparenting it 
+      nsCOMPtr<nsIDOMNode> newBlock;
+      if (IsUnorderedList(curNode))
+      {
+        if (aOrdered)
+        {
+          // make a new ordered list, insert it where the current unordered list is,
+          // and move all the children to the new list, and remove the old list
+          nsAutoString blockType("ol");
+          res = ReplaceContainer(curNode,&newBlock,blockType);
+          if (NS_FAILED(res)) return res;
+          curList = newBlock;
+          continue;
+        }
+        else
+        {
+          // do nothing, we are already the right kind of list
+          curList = newBlock;
+          continue;
+        }
+      }
+      else if (IsOrderedList(curNode))
+      {
+        if (!aOrdered)
+        {
+          // make a new unordered list, insert it where the current ordered list is,
+          // and move all the children to the new list, and remove the old list
+          nsAutoString blockType("ul");
+          ReplaceContainer(curNode,&newBlock,blockType);
+          if (NS_FAILED(res)) return res;
+          curList = newBlock;
+          continue;
+        }
+        else
+        {
+          // do nothing, we are already the right kind of list
+          curList = newBlock;
+          continue;
+        }
+      }
+    }  // lonely node
+    
+    // need to make a list to put things in if we haven't already,
+    // or if this node doesn't go in list we used earlier.
+    if (!curList || transitionList[i])
+    {
+      nsAutoString listType;
+      if (aOrdered) listType = "ol";
+      else listType = "ul";
+      res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
+      if (NS_FAILED(res)) return res;
+      // curList is now the correct thing to put curNode in
+    }
+    
+    // if curNode isn't a list item, we must wrap it in one
+    nsCOMPtr<nsIDOMNode> listItem;
+    if (!IsListItem(curNode))
+    {
+      nsAutoString listItemType = "li";
+      res = InsertContainer(curNode, &listItem, listItemType);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      listItem = curNode;
+    }
+    
+    // tuck the listItem into the end of the active list
+    PRUint32 listLen;
+    res = mEditor->GetLengthOfDOMNode(curList, listLen);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->DeleteNode(listItem);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->InsertNode(listItem, curList, listLen);
+    if (NS_FAILED(res)) return res;
+  }
+
   return res;
 }
 
@@ -451,10 +682,143 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
-  *aCancel = PR_FALSE;
+  *aCancel = PR_TRUE;
   
+  nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
   
+  // get selection range - XXX generalize to collection of ranges
+  // gather up factoids about the range
+  nsCOMPtr<nsIDOMRange> selectionRange;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset, endOffset;
+  
+  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // make a new adjusted range to represent the appropriate block content
+  // this is tricky.  the basic idea is to push out the range endpoints
+  // to truly enclose the blocks that we will affect
+  
+  nsCOMPtr<nsIDOMNode> quoteStartNode;
+  nsCOMPtr<nsIDOMNode> quoteEndNode;
+  PRInt32 quoteStartOffset, quoteEndOffset;
+  nsCOMPtr<nsIDOMRange> opRange;
+  
+  res = GetPromotedPoint( kStart, startNode, startOffset, kIndent, &quoteStartNode, &quoteStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetPromotedPoint( kEnd, endNode, endOffset, kIndent, &quoteEndNode, &quoteEndOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->Clone(getter_AddRefs(opRange));
+  if (NS_FAILED(res)) return res;
+  opRange->SetStart(quoteStartNode, quoteStartOffset);
+  if (NS_FAILED(res)) return res;
+  opRange->SetEnd(quoteEndNode, quoteEndOffset);
+  if (NS_FAILED(res)) return res;
+
+  // use subtree iterator to boogie over the snazzy new range
+  // we wil gather the top level nodes to process into an array
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
+                                        nsnull,
+                                        nsIContentIterator::GetIID(), 
+                                        getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(opRange);
+  if (NS_FAILED(res)) return res;
+    
+  nsCOMPtr<nsISupportsArray> list;
+  res = NS_NewISupportsArray(getter_AddRefs(list));
+
+  while (NS_COMFALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    node = do_QueryInterface(content);
+    if ((NS_SUCCEEDED(res)) && node)
+    {
+      // can't manipulate tree while using subtree iterator, or we will 
+      // confuse it's little mind
+      // instead chuck the results into an array.
+      list->AppendElement(node);
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // Next we detect all the transitions in the array, where a transition
+  // means that adjacent nodes in the array don't have the same parent.
+  
+  PRUint32 listCount;
+  PRInt32 i;
+  list->Count(&listCount);
+  nsVoidArray transitionList;
+  nsCOMPtr<nsIDOMNode> prevElementParent;
+  nsCOMPtr<nsIDOMNode> curElementParent;
+  
+  for (i=0; i<listCount; i++)
+  {
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
+    transNode->GetParentNode(getter_AddRefs(curElementParent));
+    if (curElementParent != prevElementParent)
+    {
+      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
+    }
+    else
+    {
+      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
+    }
+    prevElementParent = curElementParent;
+  }
+  
+  
+  // Ok, now go through all the lodes and put them in a blockquote, 
+  // or whatever is appropriate.  Wohoo!
+  
+  nsCOMPtr<nsIDOMNode> curParent;
+  nsCOMPtr<nsIDOMNode> curQuote;
+  for (i=0; i<listCount; i++)
+  {
+    // here's where we actually figure out what to do
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
+    if (NS_FAILED(res)) return res;
+    
+    // need to make a blockquote to put things in if we haven't already,
+    // or if this node doesn't go in list we used earlier.
+    if (!curQuote || transitionList[i])
+    {
+      nsAutoString quoteType("blockquote");
+      res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
+      if (NS_FAILED(res)) return res;
+      // curQuote is now the correct thing to put curNode in
+    }
+        
+    // tuck the node into the end of the active blockquote
+    PRUint32 listLen;
+    res = mEditor->GetLengthOfDOMNode(curQuote, listLen);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->DeleteNode(curNode);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->InsertNode(curNode, curQuote, listLen);
+    if (NS_FAILED(res)) return res;
+  }
+
   return res;
 }
 
@@ -464,23 +828,293 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
-  *aCancel = PR_FALSE;
+  *aCancel = PR_TRUE;
   
+  nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
   
+  // get selection range - XXX generalize to collection of ranges
+  // gather up factoids about the range
+  nsCOMPtr<nsIDOMRange> selectionRange;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset, endOffset;
+  
+  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // make a new adjusted range to represent the appropriate block content
+  // this is tricky.  the basic idea is to push out the range endpoints
+  // to truly enclose the blocks that we will affect
+  
+  nsCOMPtr<nsIDOMNode> quoteStartNode;
+  nsCOMPtr<nsIDOMNode> quoteEndNode;
+  PRInt32 quoteStartOffset, quoteEndOffset;
+  nsCOMPtr<nsIDOMRange> opRange;
+  
+  res = GetPromotedPoint( kStart, startNode, startOffset, kIndent, &quoteStartNode, &quoteStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetPromotedPoint( kEnd, endNode, endOffset, kIndent, &quoteEndNode, &quoteEndOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->Clone(getter_AddRefs(opRange));
+  if (NS_FAILED(res)) return res;
+  opRange->SetStart(quoteStartNode, quoteStartOffset);
+  if (NS_FAILED(res)) return res;
+  opRange->SetEnd(quoteEndNode, quoteEndOffset);
+  if (NS_FAILED(res)) return res;
+
+  // use subtree iterator to boogie over the snazzy new range
+  // we wil gather the top level nodes to process into an array
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
+                                        nsnull,
+                                        nsIContentIterator::GetIID(), 
+                                        getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(opRange);
+  if (NS_FAILED(res)) return res;
+    
+  nsCOMPtr<nsISupportsArray> list;
+  res = NS_NewISupportsArray(getter_AddRefs(list));
+
+  while (NS_COMFALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    node = do_QueryInterface(content);
+    if ((NS_SUCCEEDED(res)) && node)
+    {
+      // can't manipulate tree while using subtree iterator, or we will 
+      // confuse it's little mind
+      // instead chuck the results into an array.
+      list->AppendElement(node);
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // Next we detect all the transitions in the array, where a transition
+  // means that adjacent nodes in the array don't have the same parent.
+  
+  PRUint32 listCount;
+  PRInt32 i;
+  list->Count(&listCount);
+  nsVoidArray transitionList;
+  nsCOMPtr<nsIDOMNode> prevElementParent;
+  nsCOMPtr<nsIDOMNode> curElementParent;
+  
+  for (i=0; i<listCount; i++)
+  {
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
+    transNode->GetParentNode(getter_AddRefs(curElementParent));
+    if (curElementParent != prevElementParent)
+    {
+      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
+    }
+    else
+    {
+      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
+    }
+    prevElementParent = curElementParent;
+  }
+  
+  
+  // Ok, now go through all the lodes and remove a level of blockquoting, 
+  // or whatever is appropriate.  Wohoo!
+  
+  nsCOMPtr<nsIDOMNode> curParent;
+  for (i=0; i<listCount; i++)
+  {
+    // here's where we actually figure out what to do
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
+    if (NS_FAILED(res)) return res;
+    
+    if (transitionList[i])
+    {
+      // look for a blockquote somewhere above us and make it a div
+      // this is a hack until i think about outdent for real.
+      nsCOMPtr<nsIDOMNode> n = curNode;
+      nsCOMPtr<nsIDOMNode> tmp;
+      while (!IsBody(n))
+      {
+        if (IsBlockquote(n))
+        {
+          nsAutoString divType("div");
+          ReplaceContainer(n,&tmp,divType);
+          break;
+        }
+        n->GetParentNode(getter_AddRefs(tmp));
+        n = tmp;
+      }
+    }
+  }
+
   return res;
 }
 
 
 nsresult
-nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
-  *aCancel = PR_FALSE;
+  *aCancel = PR_TRUE;
   
+  nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
   
+  // get selection range - XXX generalize to collection of ranges
+  // gather up factoids about the range
+  nsCOMPtr<nsIDOMRange> selectionRange;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset, endOffset;
+  
+  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // make a new adjusted range to represent the appropriate block content
+  // this is tricky.  the basic idea is to push out the range endpoints
+  // to truly enclose the blocks that we will affect
+  
+  nsCOMPtr<nsIDOMNode> quoteStartNode;
+  nsCOMPtr<nsIDOMNode> quoteEndNode;
+  PRInt32 quoteStartOffset, quoteEndOffset;
+  nsCOMPtr<nsIDOMRange> opRange;
+  
+  res = GetPromotedPoint( kStart, startNode, startOffset, kIndent, &quoteStartNode, &quoteStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetPromotedPoint( kEnd, endNode, endOffset, kIndent, &quoteEndNode, &quoteEndOffset);
+  if (NS_FAILED(res)) return res;
+  res = selectionRange->Clone(getter_AddRefs(opRange));
+  if (NS_FAILED(res)) return res;
+  opRange->SetStart(quoteStartNode, quoteStartOffset);
+  if (NS_FAILED(res)) return res;
+  opRange->SetEnd(quoteEndNode, quoteEndOffset);
+  if (NS_FAILED(res)) return res;
+
+  // use subtree iterator to boogie over the snazzy new range
+  // we wil gather the top level nodes to process into an array
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
+                                        nsnull,
+                                        nsIContentIterator::GetIID(), 
+                                        getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(opRange);
+  if (NS_FAILED(res)) return res;
+    
+  nsCOMPtr<nsISupportsArray> list;
+  res = NS_NewISupportsArray(getter_AddRefs(list));
+
+  while (NS_COMFALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    node = do_QueryInterface(content);
+    if ((NS_SUCCEEDED(res)) && node)
+    {
+      // can't manipulate tree while using subtree iterator, or we will 
+      // confuse it's little mind
+      // instead chuck the results into an array.
+      list->AppendElement(node);
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // Next we detect all the transitions in the array, where a transition
+  // means that adjacent nodes in the array don't have the same parent.
+  
+  PRUint32 listCount;
+  PRInt32 i;
+  list->Count(&listCount);
+  nsVoidArray transitionList;
+  nsCOMPtr<nsIDOMNode> prevElementParent;
+  nsCOMPtr<nsIDOMNode> curElementParent;
+  
+  for (i=0; i<listCount; i++)
+  {
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
+    transNode->GetParentNode(getter_AddRefs(curElementParent));
+    if (curElementParent != prevElementParent)
+    {
+      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
+    }
+    else
+    {
+      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
+    }
+    prevElementParent = curElementParent;
+  }
+  
+  
+  // Ok, now go through all the lodes and give them an align attrib or put them in a div, 
+  // or whatever is appropriate.  Wohoo!
+  
+  nsCOMPtr<nsIDOMNode> curParent;
+  nsCOMPtr<nsIDOMNode> curDiv;
+  for (i=0; i<listCount; i++)
+  {
+    // here's where we actually figure out what to do
+    nsISupports *thingy;
+    thingy = list->ElementAt(i);
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
+    if (NS_FAILED(res)) return res;
+    
+    // need to make a div to put things in if we haven't already,
+    // or if this node doesn't go in div we used earlier.
+    if (!curDiv || transitionList[i])
+    {
+      nsAutoString divType("div");
+      res = mEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
+      if (NS_FAILED(res)) return res;
+      // set up the alignment on the div
+      nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curDiv);
+      nsAutoString attr("align");
+      res = mEditor->SetAttribute(divElem, attr, *alignType);
+      if (NS_FAILED(res)) return res;
+      // curDiv is now the correct thing to put curNode in
+    }
+        
+    // tuck the node into the end of the active div
+    PRUint32 listLen;
+    res = mEditor->GetLengthOfDOMNode(curDiv, listLen);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->DeleteNode(curNode);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->InsertNode(curNode, curDiv, listLen);
+    if (NS_FAILED(res)) return res;
+  }
+
   return res;
 }
 
@@ -585,6 +1219,40 @@ nsHTMLEditRules::IsListItem(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsOrderedList: true if node an html orderd list
+//                  
+PRBool 
+nsHTMLEditRules::IsOrderedList(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditRules::IsOrderedList");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "ol")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsUnorderedList: true if node an html orderd list
+//                  
+PRBool 
+nsHTMLEditRules::IsUnorderedList(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditRules::IsUnorderedList");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "ul")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // IsBreak: true if node an html break node
 //                  
 PRBool 
@@ -594,6 +1262,40 @@ nsHTMLEditRules::IsBreak(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   if (tag == "br")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsBody: true if node an html body node
+//                  
+PRBool 
+nsHTMLEditRules::IsBody(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditRules::IsBody");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "body")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsBlockquote: true if node an html blockquote node
+//                  
+PRBool 
+nsHTMLEditRules::IsBlockquote(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditRules::IsBlockquote");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "blockquote")
   {
     return PR_TRUE;
   }
@@ -627,9 +1329,202 @@ nsHTMLEditRules::GetTabAsNBSPsAndSpace(nsString *outString)
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// IsFirstNode: Are we the first edittable node in our parent?
+//                  
+PRBool
+nsHTMLEditRules::IsFirstNode(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset, j=0;
+  nsEditor::GetNodeLocation(aNode, &parent, &offset);
+  if (!offset)  // easy case, we are first dom child
+    return PR_TRUE;
+  
+  // ok, so there are earlier children.  But are they editable???
+  nsCOMPtr<nsIDOMNodeList>childList;
+  nsCOMPtr<nsIDOMNode> child;
+  parent->GetChildNodes(getter_AddRefs(childList));
+  while (j < offset)
+  {
+    childList->Item(j, getter_AddRefs(child));
+    if (nsEditor::IsEditable(child)) 
+      return PR_FALSE;
+    j++;
+  }
+  return PR_TRUE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsLastNode: Are we the first edittable node in our parent?
+//                  
+PRBool
+nsHTMLEditRules::IsLastNode(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset, j;
+  PRUint32 numChildren;
+  nsEditor::GetNodeLocation(aNode, &parent, &offset);
+  nsEditor::GetLengthOfDOMNode(parent, numChildren); 
+  if (offset+1 == numChildren) // easy case, we are last dom child
+    return PR_TRUE;
+  
+  // ok, so there are later children.  But are they editable???
+  j = offset+1;
+  nsCOMPtr<nsIDOMNodeList>childList;
+  nsCOMPtr<nsIDOMNode> child;
+  parent->GetChildNodes(getter_AddRefs(childList));
+  while (j < numChildren)
+  {
+    childList->Item(j, getter_AddRefs(child));
+    if (nsEditor::IsEditable(child)) 
+      return PR_FALSE;
+    j++;
+  }
+  return PR_TRUE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetPromotedPoint: figure out where a start or end point for a block
+//                   operation really is
+nsresult
+nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
+                                  PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset)
+{
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> node = aNode;
+  nsCOMPtr<nsIDOMNode> parent = aNode;
+  PRInt32 offset = aOffset;
+  
+  if (aWhere == kStart)
+  {
+    // some special casing for text nodes
+    if (nsEditor::IsTextNode(aNode))  
+    {
+      nsEditor::GetNodeLocation(aNode, &parent, &offset);
+    }
+    else
+    {
+      node = nsEditor::GetChildAt(parent,offset);
+    }
+    
+    // finding the real start for this point.  look up the tree for as long as we are the 
+    // first node in the container, and as long as we haven't hit the body node.
+    while ((IsFirstNode(node)) && (!IsBody(parent)))
+    {
+      node = parent;
+      res = nsEditor::GetNodeLocation(node, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+    } 
+    *outNode = parent;
+    *outOffset = offset;
+    return res;
+  }
+  
+  if (aWhere == kEnd)
+  {
+    // some special casing for text nodes
+    if (nsEditor::IsTextNode(aNode))  
+    {
+      nsEditor::GetNodeLocation(aNode, &parent, &offset);
+    }
+    else
+    {
+      node = nsEditor::GetChildAt(parent,offset);
+    }
+    offset++;  // since this is going to be used for a range _endpoint_, we want to be after the node
+    
+    // finding the real end for this point.  look up the tree for as long as we are the 
+    // last node in the container, and as long as we haven't hit the body node.
+    while ((IsLastNode(node)) && (!IsBody(parent)))
+    {
+      node = parent;
+      res = nsEditor::GetNodeLocation(node, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+      offset++;
+    } 
+    *outNode = parent;
+    *outOffset = offset;
+    return res;
+  }
+  
+  return res;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// ReplaceContainer: replace inNode with a new node (outNode) which is contructed 
+//                   to be of type aNodeType.  Put inNodes children into outNode.
+//                   Callers responsibility to make sure inNode's children can 
+//                   go in outNode.
+nsresult
+nsHTMLEditRules::ReplaceContainer(nsIDOMNode *inNode, 
+                                  nsCOMPtr<nsIDOMNode> *outNode, 
+                                  nsString &aNodeType)
+{
+  if (!inNode || !outNode)
+    return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  res = mEditor->CreateNode(aNodeType, parent, offset, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  PRBool bHasMoreChildren;
+  inNode->HasChildNodes(&bHasMoreChildren);
+  nsCOMPtr<nsIDOMNode> child;
+  offset = 0;
+  while (bHasMoreChildren)
+  {
+    inNode->GetFirstChild(getter_AddRefs(child));
+    res = mEditor->DeleteNode(child);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->InsertNode(child, *outNode, offset);
+    if (NS_FAILED(res)) return res;
+    inNode->HasChildNodes(&bHasMoreChildren);
+    offset++;
+  }
+  return NS_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// InsertContainer:  insert a new parent for inNode, returned in outNode,
+//                   which is contructed to be of type aNodeType.  outNode becomes
+//                   a child of inNode's earlier parent.
+//                   Callers responsibility to make sure inNode's can be child
+//                   of outNode, and outNode can be child of old parent.
+nsresult
+nsHTMLEditRules::InsertContainer(nsIDOMNode *inNode, 
+                                  nsCOMPtr<nsIDOMNode> *outNode, 
+                                  nsString &aNodeType)
+{
+  if (!inNode || !outNode)
+    return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  
+  // make new parent, outNode
+  res = mEditor->CreateNode(aNodeType, parent, offset, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+
+  // put inNode in new parent, outNode
+  res = mEditor->DeleteNode(inNode);
+  if (NS_FAILED(res)) return res;
+  res = mEditor->InsertNode(inNode, *outNode, 0);
+  if (NS_FAILED(res)) return res;
+
+  return NS_OK;
+}
+
 
 /********************************************************
- *  main implemntation methods 
+ *  main implementation methods 
  ********************************************************/
  
 ///////////////////////////////////////////////////////////////////////////
