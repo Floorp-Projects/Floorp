@@ -7901,11 +7901,11 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
         if (nsLayoutAtoms::areaFrame == frameType ||
             nsLayoutAtoms::blockFrame == frameType ||
             nsLayoutAtoms::positionedInlineFrame == frameType) {
-          containingBlock = frame;
+          containingBlock = wrappedFrame;
         } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
           // If the positioned frame is a fieldset, use the area frame inside it.
           // We don't use GetContentInsertionFrame for fieldsets yet.
-          containingBlock = frame->GetFirstChild(nsnull);
+          containingBlock = wrappedFrame->GetFirstChild(nsnull);
         }
       }
 
