@@ -85,15 +85,15 @@ pref("font.name.monospace.x-cyrillic", "Courier");
 
 /* The unicode fonts must ALWAYS have a list with one valid font */
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.serif.x-unicode", "Times New Roman MT 30, Tms Rmn");
+pref("font.name-list.serif.x-unicode", "Times New Roman MT 30, Times New Roman WT J, Times New Roman WT SC, Times New Roman WT TC, Times New Roman WT K, Tms Rmn");
 pref("font.name.sans-serif.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.sans-serif.x-unicode", "Times New Roman MT 30, Helv");
+pref("font.name-list.sans-serif.x-unicode", "Times New Roman MT 30, Times New Roman WT J, Times New Roman WT SC, Times New Roman WT TC, Times New Roman WT K, Helv");
 pref("font.name.monospace.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.monospace.x-unicode", "Times New Roman MT 30, Courier");
+pref("font.name-list.monospace.x-unicode", "Times New Roman MT 30, Times New Roman WT J, Times New Roman WT SC, Times New Roman WT TC, Times New Roman WT K, Courier");
 pref("font.name.fantasy.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.fantasy.x-unicode", "Times New Roman MT 30, Helv");
+pref("font.name-list.fantasy.x-unicode", "Times New Roman MT 30, Times New Roman WT J, Times New Roman WT SC, Times New Roman WT TC, Times New Roman WT K, Helv");
 pref("font.name.cursive.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.cursive.x-unicode", "Times New Roman MT 30, Helv");
+pref("font.name-list.cursive.x-unicode", "Times New Roman MT 30, Times New Roman WT J, Times New Roman WT SC, Times New Roman WT TC, Times New Roman WT K, Helv");
 
 pref("font.name.serif.x-western", "Tms Rmn");
 pref("font.name.sans-serif.x-western", "Helv");
