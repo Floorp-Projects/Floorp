@@ -1568,7 +1568,7 @@ nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStat
 {
   if (nsnull != mContainer) {
     // XXX: do not propagate this notification up from any frames...
-//  return mContainer->EndLoadURL(aShell, aURL, aStatus);
+    return mContainer->EndLoadURL(aShell, aURL, aStatus);
   }
   return NS_OK;
 }
