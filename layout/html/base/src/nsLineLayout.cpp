@@ -1124,15 +1124,13 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 #endif
 
-  if (NS_FRAME_OUTSIDE_CHILDREN & aFrame->GetStateBits()) {
-    pfd->mCombinedArea = metrics.mOverflowArea;
-  }
-  else {
-    pfd->mCombinedArea.x = 0;
-    pfd->mCombinedArea.y = 0;
-    pfd->mCombinedArea.width = metrics.width;
-    pfd->mCombinedArea.height = metrics.height;
-  }
+  // Unlike with non-inline reflow, the overflow area here does *not*
+  // include the accumulation of the frame's bounds and its inline
+  // descendants' bounds. Nor does it include the outline area; it's
+  // just the union of the bounds of any absolute children. That is
+  // added in later by nsLineLayout::ReflowInlineFrames.
+  pfd->mCombinedArea = metrics.mOverflowArea;
+
   pfd->mBounds.width = metrics.width;
   pfd->mBounds.height = metrics.height;
   if (mComputeMaxElementWidth) {
@@ -1741,11 +1739,10 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
         if (!strictMode && inUnconstrainedTable ) {
 
           nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame);
-          // XXXldb We should NOT be using mCombinedArea here!
           PRBool curFrameAccumulates = (imgSizes > 0) || 
-                                       (pfd->mMaxElementWidth == pfd->mCombinedArea.width &&
+                                       (pfd->mMaxElementWidth == pfd->mBounds.width &&
                                         pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME));
-            // NOTE: we check for the maxElementWidth == the CombinedAreaWidth to detect when
+            // NOTE: we check for the maxElementWidth == the boundsWidth to detect when
             //       a textframe has whitespace in it and thus should not be used as the basis
             //       for accumulating the image width
             // - this is to handle images in a text run
@@ -2628,7 +2625,6 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         }
 
         pfd->mBounds.width -= deltaWidth;
-        pfd->mCombinedArea.width -= deltaWidth;
         if (0 == pfd->mBounds.width) {
           pfd->mMaxElementWidth = 0;
         }
@@ -2754,17 +2750,6 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
       }
       
       pfd->mBounds.width += dw;
-      // Make sure mCombinedArea includes the new bounds.
-      // Don't just set it to the new bounds because it could include
-      // the overflow of some children of the frame... (e.g., rel pos children).
-      pfd->mCombinedArea.UnionRect(pfd->mCombinedArea,
-        nsRect(0, 0, pfd->mBounds.width, pfd->mBounds.height));
-
-      // Ah, but what if this frame is actually a span with a child
-      // that overflows and the child is moved by justification? How
-      // do we ensure that mCombinedArea includes that child? NO
-      // PROBLEM! RelativePositionFrames gets called later, and it
-      // unions all child frame bounds back into our combinedArea.
 
       deltaX += dw;
       pfd->mFrame->SetRect(pfd->mBounds);
@@ -2934,12 +2919,16 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 {
   nsRect combinedAreaResult;
   if (nsnull != psd->mFrame) {
-    // The minimum combined area for the frames in a span covers the
-    // entire span frame's overflow area. The span frame might have
-    // overflowing additional non-inline frames (e.g. absolute children
-    // of a relatively positioned span) and we need to make sure their 
-    // overflow area, if any, makes it into our final combined area.
-    combinedAreaResult = psd->mFrame->mCombinedArea;
+    // The span's overflow area comes in three parts:
+    // -- this frame's width and height
+    // -- the pfd->mCombinedArea, which is the area of a bullet or the union
+    // of a relatively positioned frame's absolute children
+    // -- the bounds of all inline descendants
+    // The former two parts are computed right here, we gather the descendants
+    // below.
+    nsRect adjustedBounds(0, 0, psd->mFrame->mBounds.width,
+                          psd->mFrame->mBounds.height);
+    combinedAreaResult.UnionRect(psd->mFrame->mCombinedArea, adjustedBounds);
   }
   else {
     // The minimum combined area for the frames that are direct
@@ -2980,14 +2969,18 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // system. We adjust the childs combined area into our coordinate
     // system before computing the aggregated value by adding in
     // <b>x</b> and <b>y</b> which were computed above.
-    nsRect spanCombinedArea;
-    nsRect* r = &pfd->mCombinedArea;
+    nsRect r;
     if (pfd->mSpan) {
       // Compute a new combined area for the child span before
       // aggregating it into our combined area.
-      r = &spanCombinedArea;
-      RelativePositionFrames(pfd->mSpan, spanCombinedArea);
+      RelativePositionFrames(pfd->mSpan, r);
     } else {
+      // For simple text frames we take the union of the combined area
+      // and the width/height. I think the combined area should always
+      // equal the bounds in this case, but this is safe.
+      nsRect adjustedBounds(0, 0, pfd->mBounds.width, pfd->mBounds.height);
+      r.UnionRect(pfd->mCombinedArea, adjustedBounds);
+
       // If we have something that's not an inline but with a complex frame
       // hierarchy inside that contains views, they need to be
       // positioned.
@@ -3003,10 +2996,10 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // about the root span, since it doesn't have a frame.
     if (frame->HasView())
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
-                                                 frame->GetView(), r,
+                                                 frame->GetView(), &r,
                                                  NS_FRAME_NO_MOVE_VIEW);
 
-    combinedAreaResult.UnionRect(combinedAreaResult, *r + origin);
+    combinedAreaResult.UnionRect(combinedAreaResult, r + origin);
   }
 
   // If we just computed a spans combined area, we need to update its

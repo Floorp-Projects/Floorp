@@ -650,10 +650,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
   // For now our overflow area is zero. The real value will be
   // computed during vertical alignment of the line we are on.
-  aMetrics.mOverflowArea.x = 0;
-  aMetrics.mOverflowArea.y = 0;
-  aMetrics.mOverflowArea.width = aMetrics.width;
-  aMetrics.mOverflowArea.height = aMetrics.height;
+  aMetrics.mOverflowArea.SetRect(0, 0, 0, 0);
 
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
@@ -1073,8 +1070,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
 
   rv = ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
 
-  // Note: the line layout code will properly compute our
-  // NS_FRAME_OUTSIDE_CHILDREN state for us.
+  // Note: the line layout code will properly compute our overflow state for us
 
   return rv;
 }
@@ -1252,11 +1248,10 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
       rv = nsInlineFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
 
       // Factor the absolutely positioned child bounds into the overflow area
-      nsRect childBounds;
-      mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
-      aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
-
-      FinishAndStoreOverflow(&aDesiredSize);
+      // Don't include this frame's bounds, nor its inline descendants' bounds,
+      // and don't store the overflow property.
+      // That will all be done by nsLineLayout::RelativePositionFrames.
+      mAbsoluteContainer.CalculateChildBounds(aPresContext, aDesiredSize.mOverflowArea);
       return rv;
     }
   }
@@ -1285,16 +1280,14 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
     nscoord containingBlockHeight = aDesiredSize.height -
       (aReflowState.mComputedBorderPadding.top +
        aReflowState.mComputedBorderPadding.bottom);
-    nsRect  childBounds;
 
+    // Factor the absolutely positioned child bounds into the overflow area
+    // Don't include this frame's bounds, nor its inline descendants' bounds,
+    // and don't store the overflow property.
+    // That will all be done by nsLineLayout::RelativePositionFrames.
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
                                    containingBlockWidth, containingBlockHeight,
-                                   &childBounds);
-    
-    // Factor the absolutely positioned child bounds into the overflow area
-    aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
-
-    FinishAndStoreOverflow(&aDesiredSize);
+                                   &aDesiredSize.mOverflowArea);
   }
 
   return rv;
