@@ -20,11 +20,19 @@
  */
 
 #include "GtkMozEmbedChrome.h"
+#include "GtkMozEmbedStream.h"
 #include "nsCWebBrowser.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsCRT.h"
 #include "prlog.h"
+#include "prprf.h"
+#include "nsIDocumentLoaderFactory.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIDocShell.h"
+
+static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 
 // this is a define to make sure that we don't call certain function
 // before the object has been properly initialized
@@ -73,6 +81,8 @@ GtkMozEmbedChrome::GtkMozEmbedChrome()
   mLocation         = NULL;
   mTitle            = NULL;
   mChromeMask       = 0;
+  mOffset           = 0;
+  mDoingStream      = PR_FALSE;
   if (!mozEmbedLm)
     mozEmbedLm = PR_NewLogModule("GtkMozEmbedChrome");
   if (!sBrowsers)
@@ -220,6 +230,157 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetTitleChar (char **retval)
   *retval = NULL;
   if (mTitle)
     *retval = nsCRT::strdup(mTitle);
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::OpenStream (const char *aBaseURI, const char *aContentType)
+{
+  NS_ENSURE_ARG_POINTER(aBaseURI);
+  NS_ENSURE_ARG_POINTER(aContentType);
+
+  nsresult rv = NS_OK;
+  GtkMozEmbedStream *newStream = nsnull;
+
+  nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory;
+  nsCOMPtr<nsIDocShell> docShell;
+  nsCOMPtr<nsIContentViewerContainer> viewerContainer;
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  nsCOMPtr<nsIURI> uri;
+  nsCAutoString docLoaderProgID;
+  nsCAutoString spec(aBaseURI);
+  
+  // check to see if we need to close the current stream
+  if (mDoingStream)
+    CloseStream();
+  mDoingStream = PR_TRUE;
+  // create our new stream object
+  newStream = new GtkMozEmbedStream();
+  if (!newStream)
+    return NS_ERROR_OUT_OF_MEMORY;
+  // we own this
+  NS_ADDREF(newStream);
+  // QI it to the right interface
+  mStream = do_QueryInterface(newStream);
+  if (!mStream)
+    return NS_ERROR_FAILURE;
+  // ok, now we're just using it for an nsIInputStream interface so
+  // release our second reference to it.
+  NS_RELEASE(newStream);
+  
+  // get our hands on the docShell
+  mWebBrowser->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+
+  // QI that to a content viewer container
+  viewerContainer = do_QueryInterface(docShell);
+  if (!viewerContainer)
+    return NS_ERROR_FAILURE;
+
+  // create a new uri object
+  uri = do_CreateInstance(kSimpleURICID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = uri->SetSpec(spec.GetBuffer());
+  if (NS_FAILED(rv))
+    return rv;
+
+  // create a new load group
+  rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  // create a new input stream channel
+  rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri, mStream, aContentType,
+				1024 /* len */);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // set the channel's load group
+  rv = mChannel->SetLoadGroup(mLoadGroup);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // find a document loader for this command plus content type
+  // combination
+
+  docLoaderProgID  = NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX;
+  docLoaderProgID += "view";
+  docLoaderProgID += "/";
+  docLoaderProgID += aContentType;
+
+  docLoaderFactory = do_CreateInstance(docLoaderProgID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // ok, create an instance of the content viewer for that command and
+  // mime type
+  rv = docLoaderFactory->CreateInstance("view",
+					mChannel,
+					mLoadGroup,
+					aContentType,
+					viewerContainer,
+					nsnull,
+					getter_AddRefs(mStreamListener),
+					getter_AddRefs(contentViewer));
+					
+  if (NS_FAILED(rv))
+    return rv;
+
+  // set the container viewer container for this content view
+  rv = contentViewer->SetContainer(viewerContainer);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // embed this sucker.
+  rv = viewerContainer->Embed(contentViewer, "view", nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // start our request
+  rv = mStreamListener->OnStartRequest(mChannel, NULL);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::AppendToStream (const char *aData, gint32 aLen)
+{
+  GtkMozEmbedStream *embedStream = (GtkMozEmbedStream *)mStream.get();
+  nsresult rv;
+  NS_ENSURE_STATE(mDoingStream);
+  rv = embedStream->Append(aData, aLen);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = mStreamListener->OnDataAvailable(mChannel,
+					NULL,
+					mStream,
+					mOffset, /* offset */
+					aLen); /* len */
+  mOffset += aLen;
+  if (NS_FAILED(rv))
+    return rv;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::CloseStream (void)
+{
+  nsresult rv;
+  NS_ENSURE_STATE(mDoingStream);
+  mDoingStream = PR_FALSE;
+  rv = mStreamListener->OnStopRequest(mChannel,
+				      NULL,
+				      NS_OK,
+				      NULL);
+  if (NS_FAILED(rv))
+    return rv;
+  mStream = nsnull;
+  mLoadGroup = nsnull;
+  mChannel = nsnull;
+  mStreamListener = nsnull;
+  mContentViewer = nsnull;
+  mOffset = 0;
   return NS_OK;
 }
 

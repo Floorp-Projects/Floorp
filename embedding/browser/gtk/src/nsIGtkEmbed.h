@@ -62,6 +62,9 @@ public:
   NS_IMETHOD GetJSStatus                  (char **retval) = 0;
   NS_IMETHOD GetLocation                  (char **retval) = 0;
   NS_IMETHOD GetTitleChar                 (char **retval) = 0;
+  NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType) = 0;
+  NS_IMETHOD AppendToStream               (const char *aData, gint32 aLen) = 0;
+  NS_IMETHOD CloseStream                  (void) = 0;
 };
 
 #endif /* __nsIGtkEmbed_h__ */

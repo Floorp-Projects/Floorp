@@ -32,6 +32,7 @@ typedef struct _TestGtkBrowser {
   GtkWidget  *stopButton;
   GtkWidget  *forwardButton;
   GtkWidget  *reloadButton;
+  GtkWidget  *streamButton;
   GtkWidget  *urlEntry;
   GtkWidget  *mozEmbed;
   GtkWidget  *progressAreaHBox;
@@ -53,6 +54,7 @@ static void     back_clicked_cb    (GtkButton   *button, TestGtkBrowser *browser
 static void     stop_clicked_cb    (GtkButton   *button, TestGtkBrowser *browser);
 static void     forward_clicked_cb (GtkButton   *button, TestGtkBrowser *browser);
 static void     reload_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser);
+static void     stream_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser);
 static void     url_activate_cb    (GtkEditable *widget, TestGtkBrowser *browser);
 static gboolean delete_cb          (GtkWidget *widget,   GdkEventAny *event,
 				    TestGtkBrowser *browser);
@@ -157,6 +159,14 @@ new_gtk_browser(guint32 chromeMask)
 						  "Reload",
 						  0, // XXX replace with icon
 						  GTK_SIGNAL_FUNC(reload_clicked_cb),
+						  browser);
+  // new stream button
+  browser->streamButton = gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
+						  "Stream",
+						  "Stream",
+						  "Stream",
+						  0, // XXX replace with icon
+						  GTK_SIGNAL_FUNC(stream_clicked_cb),
 						  browser);
   // create the url text entry
   browser->urlEntry = gtk_entry_new();
@@ -263,13 +273,29 @@ stop_clicked_cb (GtkButton *button, TestGtkBrowser *browser)
 void
 forward_clicked_cb (GtkButton *button, TestGtkBrowser *browser)
 {
+  g_print("forward_clicked_cb\n");
   gtk_moz_embed_go_forward(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
 void
 reload_clicked_cb  (GtkButton *button, TestGtkBrowser *browser)
 {
+  g_print("reload_clicked_cb\n");
   gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed), gtk_moz_embed_flag_reloadNormal);
+}
+
+void 
+stream_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser)
+{
+  char *data;
+  char *data2;
+  data = "<html>Hi";
+  data2 = " there</html>\n";
+  g_print("stream_clicked_cb\n");
+  gtk_moz_embed_open_stream(GTK_MOZ_EMBED(browser->mozEmbed), "file://", "text/html");
+  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed), data, strlen(data));
+  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed), data2, strlen(data2));
+  gtk_moz_embed_close_stream(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
 void
