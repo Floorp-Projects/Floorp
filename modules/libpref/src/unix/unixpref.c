@@ -28,10 +28,7 @@
 #include "jsapi.h"
 #include "jsbuffer.h"
 #include "xpassert.h"
-#include "fe_proto.h"
 
-
-static struct fe_icon_type* splash_screen = NULL;
 
 /*
  * pref_InitInitialObjects
