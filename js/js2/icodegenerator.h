@@ -85,13 +85,19 @@ namespace ICG {
 
     class ICodeModule {
     public:
-        ICodeModule(InstructionStream *iCode, uint32 maxRegister) :
-            its_iCode(iCode), itsMaxRegister(maxRegister) { }
+        ICodeModule(InstructionStream *iCode,
+                        VariableList *variables,
+                        uint32 maxRegister, 
+                        uint32 maxParameter) :
+            its_iCode(iCode), 
+            itsVariables(variables),
+            itsParameterCount(maxParameter),
+            itsMaxRegister(maxRegister) { }
         
         InstructionStream *its_iCode;
         VariableList *itsVariables;
-        uint32  itsParameterCount;
         uint32  itsMaxRegister;
+        uint32  itsParameterCount;
     };
     
     /****************************************************************/
@@ -165,11 +171,11 @@ namespace ICG {
         
         ICodeModule *complete();
 
-        Register allocateVariable(StringAtom& name) 
+        Register allocateVariable(const StringAtom& name) 
         { Register result = getRegister(); (*variableList)[name] = result; 
             registerBase = topRegister; return result; }
 
-        Register allocateParameter(StringAtom& name) 
+        Register allocateParameter(const StringAtom& name) 
         { parameterCount++; return allocateVariable(name); }
         
         Formatter& print(Formatter& f);
@@ -188,11 +194,11 @@ namespace ICG {
         Register newObject();
         Register newArray();
         
-        Register loadName(StringAtom &name);
-        void saveName(StringAtom &name, Register value);
+        Register loadName(const StringAtom &name);
+        void saveName(const StringAtom &name, Register value);
         
-        Register getProperty(Register base, StringAtom &name);
-        void setProperty(Register base, StringAtom &name, Register value);
+        Register getProperty(Register base, const StringAtom &name);
+        void setProperty(Register base, const StringAtom &name, Register value);
         
         Register getElement(Register base, Register index);
         void setElement(Register base, Register index, Register value);
