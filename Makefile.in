@@ -281,7 +281,7 @@ endif
 GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
-   unallmakefiles \
+   unallmakefiles mozilla-config.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
 ifeq ($(BUILD_MODULES),all)
@@ -306,6 +306,8 @@ ifdef MOZ_LDAP_XPCOM
 endif
 
 endif
+
+EXPORTS	= mozilla-config.h
 
 include $(topsrcdir)/config/rules.mk
 
