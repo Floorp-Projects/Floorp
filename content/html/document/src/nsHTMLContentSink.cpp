@@ -23,6 +23,7 @@
 #include "nsHTMLDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIViewManager.h"
 #include "nsHTMLTokens.h" 
 #include "nsCRT.h"
 #include "prtime.h"
@@ -132,7 +133,7 @@ public:
   virtual PRBool AddLeaf(const nsIParserNode& aNode);
 
   virtual void WillBuildModel(void);
-  virtual void DidBuildModel(void);
+  virtual void DidBuildModel(PRInt32 aQualityLevel);
   virtual void WillInterrupt(void);
   virtual void WillResume(void);
 
@@ -1367,16 +1368,31 @@ HTMLContentSink::WillBuildModel(void)
   StartLayout();
 }
 
+
 /**
  * This method gets called when the parser concludes the process
  * of building the content model via the content sink.
  *
- * @update 5/7/98 gess
+ * @param  aQualityLevel describes how well formed the doc was.
+ *         0=GOOD; 1=FAIR; 2=POOR;
+ * @update 6/21/98 gess
  */     
-void
-HTMLContentSink::DidBuildModel(void)
-{
+void HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel) {
   PR_LogPrint("DidBuildModel");
+
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell* shell = mDocument->GetShellAt(i);
+    if (nsnull != shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if(vm) {
+        vm->SetQuality(nsContentQuality(aQualityLevel));
+      }
+      NS_RELEASE(vm);
+      NS_RELEASE(shell);
+    }
+  }
+
   ReflowNewContent();
   mDocument->EndLoad();
 }
@@ -1403,6 +1419,7 @@ void
 HTMLContentSink::WillResume(void)
 {
 }
+
 
 //----------------------------------------------------------------------
 
