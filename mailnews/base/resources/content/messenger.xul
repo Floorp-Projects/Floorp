@@ -72,6 +72,7 @@ Rights Reserved.
 <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
 <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 <commands id="commands">
