@@ -454,6 +454,8 @@ sub BuildStubs()
 	#//
 	BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 	BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",				"Stubs");
+
+	print("--- Stubs projects complete ----\n")
 }
 
 
