@@ -632,13 +632,44 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
   heightOfARow -= (scrollBorderPadding.top + scrollBorderPadding.bottom);
 
-  // Check to see if we have zero item and
-  // whether we have no width and height
-  // The following code measures the width and height 
-  // of a bogus string so the list actually displays
+  // Check to see if we have zero items
   PRInt32 length = 0;
   GetNumberOfOptions(&length);
 
+  // If there is only one option and that option's content is empty
+  // then heightOfARow is zero, so we need to go measure 
+  // the height of the option as if it had some text.
+  if (heightOfARow == 0 && length > 0) {
+    nsIContent * option = GetOptionContent(0);
+    if (option != nsnull) {
+      nsIFrame * optFrame;
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
+      nsresult result = presShell->GetPrimaryFrameFor(option, &optFrame);
+      if (NS_SUCCEEDED(result) && optFrame != nsnull) {
+        nsCOMPtr<nsIStyleContext> optStyle;
+        optFrame->GetStyleContext(getter_AddRefs(optStyle));
+        if (optStyle) {
+          const nsStyleFont* styleFont = (const nsStyleFont*)optStyle->GetStyleData(eStyleStruct_Font);
+          nsCOMPtr<nsIDeviceContext> deviceContext;
+          aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+          NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
+          nsIFontMetrics * fontMet;
+          result = deviceContext->GetMetricsFor(styleFont->mFont, fontMet);
+          if (NS_SUCCEEDED(result) && fontMet != nsnull) {
+            if (fontMet) {
+              fontMet->GetHeight(heightOfARow);
+            }
+            NS_RELEASE(fontMet);
+          }
+        }
+      }
+    }
+  }
+
+  // Check to see if we have no width and height
+  // The following code measures the width and height 
+  // of a bogus string so the list actually displays  
   nscoord visibleHeight = 0;
   if (isInDropDownMode) {
     // Compute the visible height of the drop-down list
@@ -1585,9 +1616,19 @@ NS_IMETHODIMP
 nsGfxListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
 
+  nsIFrame * firstChildFrame = nsnull;
+  FirstChild(mPresContext, nsnull, &firstChildFrame);
+  if (firstChildFrame == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  nsIFrame * portFrame = nsnull;
+  firstChildFrame->FirstChild(mPresContext, nsnull, &portFrame);
+  if (portFrame == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
     // get its view
   nsIView* view = nsnull;
-  GetView(aPresContext, &view);
+  portFrame->GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
@@ -1602,15 +1643,16 @@ nsGfxListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool a
         mIsCapturingMouseEvents = PR_FALSE;
       }
       // XXX this is temp code
-#if 0
-      if (!mIsScrollbarVisible) {
+#if 1
+      //if (!mIsScrollbarVisible) {
         nsIWidget * widget;
         view->GetWidget(widget);
         if (nsnull != widget) {
+          printf("}}}}}}}}}}}}}}}}}}}} Caputing is %s\n", aGrabMouseEvents?"On":"Off");
           widget->CaptureMouse(aGrabMouseEvents);
           NS_RELEASE(widget);
         }
-      }
+      //}
 #endif
     }
   }
@@ -3315,6 +3357,9 @@ nsGfxListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  mouseEvent->GetScreenY(&mLastDragCoordY);
+
   PRInt32 oldIndex;
   PRInt32 curIndex = mSelectedIndex;
 
@@ -3448,49 +3493,83 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
     PRBool multipleSelections = PR_FALSE;
     GetMultiple(&multipleSelections);
     if (multipleSelections) {
-      // get the currently moused over item
-      PRInt32 oldIndex;
-      PRInt32 curIndex = mSelectedIndex;
-      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-        if (curIndex != oldIndex) {
-          // select down the list
-          if (curIndex > oldIndex) {
-            PRInt32 startInx = oldIndex > mStartExtendedIndex?oldIndex+1:oldIndex;
-            PRInt32 endInx   = curIndex > mStartExtendedIndex?curIndex+1:curIndex;
-            PRInt32 i;
-            for (i=startInx;i<endInx;i++) {
-              if (i != mStartExtendedIndex) { // skip the starting clicked on node
-                PRBool optionIsDisabled;
-                if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-                  if (!optionIsDisabled) {
-                    mSelectedIndex = i;
-                    SetContentSelected(mSelectedIndex, i > mStartExtendedIndex);
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+      PRInt32 scrX;
+      PRInt32 scrY;
+      mouseEvent->GetScreenX(&scrX);
+      mouseEvent->GetScreenY(&scrY);
+
+      nsRect absPixelRect;
+      nsRect absTwipsRect;
+      nsresult rv = nsFormControlFrame::GetAbsoluteFramePosition(mPresContext, this,  absTwipsRect, absPixelRect);
+
+      PRBool isInside = absPixelRect.Contains(scrX, scrY);
+      if (scrY > mLastDragCoordY) { // down direction
+        if (scrY > absPixelRect.y + absPixelRect.height) {
+          mIsDragScrollingDown = PR_TRUE;
+        } else if (scrY < absPixelRect.y) {
+          return NS_OK;
+        }
+      } else if (scrY < mLastDragCoordY) { // up direction
+        if (scrY < absPixelRect.y) {
+          mIsDragScrollingDown = PR_FALSE;
+        } else if (scrY > absPixelRect.y + absPixelRect.height) {
+          return NS_OK;
+        }
+      }
+      mLastDragCoordY = scrY;
+      //printf("%d %d  %d %d %d %d isInside: %d mIsDragScrollingDown: %d\n", scrX, scrY, 
+      //        absPixelRect.x, absPixelRect.y, absPixelRect.width, absPixelRect.height, isInside, mIsDragScrollingDown);
+
+      if (!isInside) {
+        StopAutoScrollTimer();
+        nsPoint pnt(scrX, scrY);
+        StartAutoScrollTimer(mPresContext, this, pnt, 30);
+      } else {
+        // get the currently moused over item
+        PRInt32 oldIndex;
+        PRInt32 curIndex = mSelectedIndex;
+        if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
+          if (curIndex != oldIndex) {
+            // select down the list
+            if (curIndex > oldIndex) {
+              PRInt32 startInx = oldIndex > mStartExtendedIndex?oldIndex+1:oldIndex;
+              PRInt32 endInx   = curIndex > mStartExtendedIndex?curIndex+1:curIndex;
+              PRInt32 i;
+              for (i=startInx;i<endInx;i++) {
+                if (i != mStartExtendedIndex) { // skip the starting clicked on node
+                  PRBool optionIsDisabled;
+                  if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+                    if (!optionIsDisabled) {
+                      mSelectedIndex = i;
+                      SetContentSelected(mSelectedIndex, i > mStartExtendedIndex);
+                    }
                   }
                 }
               }
+              mSelectedIndex = curIndex;
+            } else {
+              // select up the list
+              PRInt32 startInx = oldIndex >= mStartExtendedIndex?oldIndex:oldIndex-1;
+              PRInt32 endInx   = curIndex >= mStartExtendedIndex?curIndex:curIndex-1;
+              PRInt32 i;
+              for (i=startInx;i>endInx;i--) {
+                if (i != mStartExtendedIndex) { // skip the starting clicked on node
+                  PRBool optionIsDisabled;
+                  if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+                    if (!optionIsDisabled) {
+                      mSelectedIndex = i;
+                      SetContentSelected(mSelectedIndex, i < mStartExtendedIndex);
+                    }
+                  }
+                }
+              }
+              mSelectedIndex = curIndex;
             }
-            mSelectedIndex = curIndex;
           } else {
-            // select up the list
-            PRInt32 startInx = oldIndex >= mStartExtendedIndex?oldIndex:oldIndex-1;
-            PRInt32 endInx   = curIndex >= mStartExtendedIndex?curIndex:curIndex-1;
-            PRInt32 i;
-            for (i=startInx;i>endInx;i--) {
-              if (i != mStartExtendedIndex) { // skip the starting clicked on node
-                PRBool optionIsDisabled;
-                if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-                  if (!optionIsDisabled) {
-                    mSelectedIndex = i;
-                    SetContentSelected(mSelectedIndex, i < mStartExtendedIndex);
-                  }
-                }
-              }
-            }
-            mSelectedIndex = curIndex;
+            //mOldSelectedIndex = oldIndex;
+            mSelectedIndex    = curIndex;
           }
-        } else {
-          //mOldSelectedIndex = oldIndex;
-          mSelectedIndex    = curIndex;
         }
       }
     }
@@ -4043,19 +4122,19 @@ nsGfxListEventListener::DragMove(nsIDOMEvent* aMouseEvent)
 //---------------------------------------------------
 //-- DragTimer Stuff
 //---------------------------------------------------
-class nsAutoScrollTimer : public nsITimerCallback
+class nsSelectAutoScrollTimer : public nsITimerCallback
 {
 public:
 
   NS_DECL_ISUPPORTS
 
-  nsAutoScrollTimer()
+  nsSelectAutoScrollTimer()
       : mTimer(0), mFrame(0), mPresContext(0), mPoint(0,0), mDelay(30)
   {
     NS_INIT_ISUPPORTS();
   }
 
-  virtual ~nsAutoScrollTimer()
+  virtual ~nsSelectAutoScrollTimer()
   {
     if (mTimer)
     {
@@ -4124,16 +4203,16 @@ private:
   PRUint32        mDelay;
 };
 
-NS_IMPL_ADDREF(nsAutoScrollTimer)
-NS_IMPL_RELEASE(nsAutoScrollTimer)
-NS_IMPL_QUERY_INTERFACE1(nsAutoScrollTimer, nsITimerCallback)
+NS_IMPL_ADDREF(nsSelectAutoScrollTimer)
+NS_IMPL_RELEASE(nsSelectAutoScrollTimer)
+NS_IMPL_QUERY_INTERFACE1(nsSelectAutoScrollTimer, nsITimerCallback)
 
-nsresult NS_NewAutoScrollTimer(nsAutoScrollTimer **aResult)
+nsresult NS_NewAutoScrollTimer(nsSelectAutoScrollTimer **aResult)
 {
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
-  *aResult = (nsAutoScrollTimer*) new nsAutoScrollTimer;
+  *aResult = (nsSelectAutoScrollTimer*) new nsSelectAutoScrollTimer;
 
   if (!aResult)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -4196,187 +4275,56 @@ nsGfxListControlFrame::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFra
 
   result = aPresContext->GetShell(getter_AddRefs(presShell));
 
-  //
-  // Get a hold of the root scrollable view for presShell.
-  //
-
-  nsCOMPtr<nsIViewManager> viewManager;
-
-  result = presShell->GetViewManager(getter_AddRefs(viewManager));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!viewManager)
-    return NS_ERROR_NULL_POINTER;
-
-  nsIScrollableView *scrollableView = 0;
-
-  result = viewManager->GetRootScrollableView(&scrollableView);
-
-  if (NS_SUCCEEDED(result) && scrollableView)
-  {
-    //
-    // Get a hold of the scrollable view's clip view.
-    //
-
-    const nsIView *cView = 0;
-
-    result = scrollableView->GetClipView(&cView);
-
-    if (NS_SUCCEEDED(result) && cView)
-    {
-      //
-      // Find out if this frame's view is in the parent hierarchy of the clip view.
-      // If it is, then we know the drag is happening outside of the clip view,
-      // so we may need to auto scroll.
-      //
-
-      // Get the frame's parent view.
-
-      nsPoint viewOffset(0,0);
-
-      nsIView *frameView = 0;
-
-      nsIFrame *parentFrame = aFrame;
-
-      while (NS_SUCCEEDED(result) && parentFrame && !frameView)
-      {
-        result = parentFrame->GetView(aPresContext, &frameView);
-        if (NS_SUCCEEDED(result) && !frameView)
-          result = parentFrame->GetParent(&parentFrame);
-      }
-
-      if (NS_SUCCEEDED(result) && frameView)
-      {
-        //
-        // Now make sure that the frame's view is in the
-        // scrollable view's parent hierarchy.
-        //
-
-        nsIView *view = (nsIView*)cView;
-        nscoord x, y;
-
-        while (view && view != frameView)
-        {
-          result = view->GetParent(view);
-
-          if (NS_FAILED(result))
-            view = 0;
-          else if (view)
-          {
-            result = view->GetPosition(&x, &y);
-
-            if (NS_FAILED(result))
-              view = 0;
-            else
-            {
-              //
-              // Keep track of the view offsets so we can
-              // translate aPoint into the scrollable view's
-              // coordinate system.
-              //
-
-              viewOffset.x += x;
-              viewOffset.y += y;
-            }
-          }
-        }
-
-        if (view)
-        {
-          //
-          // See if aPoint is outside the clip view's boundaries.
-          // If it is, scroll the view till it is inside the visible area!
-          //
-
-          nsRect bounds;
-
-          result = cView->GetBounds(bounds);
-
-          if (NS_SUCCEEDED(result))
-          {
-            //
-            // Calculate the amount we would have to scroll in
-            // the vertical and horizontal directions to get the point
-            // within the clip area.
-            //
-
-            nscoord dx = 0, dy = 0;
-            nsPoint ePoint = aPoint;
-
-            ePoint.x -= viewOffset.x;
-            ePoint.y -= viewOffset.y;
-            
-            nscoord x1 = bounds.x;
-            nscoord x2 = bounds.x + bounds.width;
-            nscoord y1 = bounds.y;
-            nscoord y2 = bounds.y + bounds.height;
-
-            if (ePoint.x < x1)
-              dx = ePoint.x - x1;
-            else if (ePoint.x > x2)
-              dx = ePoint.x - x2;
-                
-            if (ePoint.y < y1)
-              dy = ePoint.y - y1;
-            else if (ePoint.y > y2)
-              dy = ePoint.y - y2;
-
-            //
-            // Now clip the scroll amounts so that we don't scroll
-            // beyond the ends of the document.
-            //
-
-            nscoord scrollX = 0, scrollY = 0;
-            nscoord docWidth = 0, docHeight = 0;
-
-            result = scrollableView->GetScrollPosition(scrollX, scrollY);
-
-            if (NS_SUCCEEDED(result))
-              result = scrollableView->GetContainerSize(&docWidth, &docHeight);
-
-            if (NS_SUCCEEDED(result))
-            {
-              if (dx < 0 && scrollX == 0)
-                dx = 0;
-              else if (dx > 0)
-              {
-                x1 = scrollX + dx + bounds.width;
-
-                if (x1 > docWidth)
-                  dx -= x1 - docWidth;
-              }
-
-
-              if (dy < 0 && scrollY == 0)
-                dy = 0;
-              else if (dy > 0)
-              {
-                y1 = scrollY + dy + bounds.height;
-
-                if (y1 > docHeight)
-                  dy -= y1 - docHeight;
-              }
-
-              //
-              // Now scroll the view if neccessary.
-              //
-
-              if (dx != 0 || dy != 0)
-              {
-// make sure latest bits are available before we scroll them.
-                viewManager->Composite();
-                result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
-                if (mAutoScrollTimer)
-                  result = mAutoScrollTimer->Start(aPresContext, aFrame, aPoint);
-              }
-            }
-          }
-        }
+  // get the currently moused over item
+  PRBool bail = PR_FALSE;
+  PRInt32 curIndex = mSelectedIndex + (mIsDragScrollingDown?1:-1);
+  if (curIndex < 0) {
+    bail = PR_TRUE;
+  } else {
+    nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+    if (options) {
+      PRUint32 numOptions;
+      options->GetLength(&numOptions);
+      printf("Cur: %d  Num: %d\n", curIndex, numOptions);
+      if (curIndex >= (PRInt32)numOptions) {
+        bail = PR_TRUE;
       }
     }
   }
+  if (bail) {
+    if (mAutoScrollTimer) {
+      result = mAutoScrollTimer->Start(aPresContext, aFrame, aPoint);
+    }
+    return NS_OK;
+  }
+
+  //PRBool optionIsDisabled;
+  //if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+  //  if (!optionIsDisabled) {
+  //    mSelectedIndex = i;
+  //    SetContentSelected(mSelectedIndex, i > mStartExtendedIndex);
+  //  }
+  //}
+  if (!mIsDragScrollingDown) {
+    if (mSelectedIndex != mStartExtendedIndex) {
+      printf("%s Toggling Index %d\n", mIsDragScrollingDown?"DN":"UP", mSelectedIndex);
+      ToggleSelected(mSelectedIndex);
+    }
+  }
+  mSelectedIndex = curIndex;
+  //SetContentSelected(mSelectedIndex, PR_TRUE);
+  if (mSelectedIndex != mStartExtendedIndex) {
+    printf("%s Toggling Index %d\n", mIsDragScrollingDown?"DN":"UP", curIndex);
+    ToggleSelected(mSelectedIndex);
+  }
+
+  nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+  if (content) {
+    ScrollToFrame(content);
+  }
+
+  if (mAutoScrollTimer)
+    result = mAutoScrollTimer->Start(aPresContext, aFrame, aPoint);
 
   return result;
 }
