@@ -1631,7 +1631,13 @@ InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     //  public int InstallAlert (String aComment);
 
     ConvertJSValToStr(b0, cx, argv[0]);
+
+    jsrefcount saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+
     nativeThis->Alert(b0);
+
+    JS_ResumeRequest(cx, saveDepth);
+
   }
   else
   {
@@ -1665,8 +1671,13 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     //  public int InstallConfirm (String aComment);
 
     ConvertJSValToStr(b0, cx, argv[0]);
+
+    jsrefcount saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+
     nativeThis->Confirm(b0, &nativeRet);
   
+    JS_ResumeRequest(cx, saveDepth);
+
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else
