@@ -984,7 +984,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetHostname(char** hostName)
 	if(NS_SUCCEEDED(rv) && host)
 	{
         *hostName = PL_strdup(host);
-		delete[] host;
+		PL_strfree(host);
 		if(!*hostName)
 			return NS_ERROR_OUT_OF_MEMORY;
 	}
