@@ -30,6 +30,7 @@ interface nsIStreamListener;
 interface nsILoadGroup;
 interface nsIInterfaceRequestor;
 interface nsIFile;
+interface nsIStreamIO;
 
 typedef unsigned long nsLoadFlags;
 
@@ -338,30 +339,30 @@ interface nsIChannel : nsIRequest
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIStreamIOChannel
 
 /**
- * nsIInputStreamChannel is an interface that allows for the initialization
- * of a simple nsIChannel that is constructed from a single input stream and
- * associated content type. Input stream channels only allow the input stream
- * to be accessed, not the output stream.
+ * nsIStreamIOChannel specializes nsIChannel to allow a simple channel to be
+ * constructed from an nsIStreamIO object and a URL.
  */
-[scriptable, uuid(43070d6a-f947-11d3-8cda-0060b0fc14a3)]
-interface nsIInputStreamChannel : nsIChannel
+[scriptable, uuid(308362ce-0d06-11d4-986e-00c04fa0cf4a)]
+interface nsIStreamIOChannel : nsIChannel
 {
     void init(in nsIURI uri,
-              in nsIInputStream inStr,
-              in string contentType, 
-              in long contentLength);
+              in nsIStreamIO io);
 };
 
 %{C++
 
-#define NS_INPUTSTREAMCHANNEL_CID                    \
-{ /* 54d0d8e6-f947-11d3-8cda-0060b0fc14a3 */         \
-    0x54d0d8e6,                                      \
-    0xf947,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+#define NS_STREAMIOCHANNEL_CLASSNAME "Stream I/O Channel"
+#define NS_STREAMIOCHANNEL_PROGID    "component://netscape/network/stream-io-channel"
+
+#define NS_STREAMIOCHANNEL_CID                       \
+{ /* 6ddb050c-0d04-11d4-986e-00c04fa0cf4a */         \
+    0x6ddb050c,                                      \
+    0x0d04,                                          \
+    0x11d4,                                          \
+    {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
 }
 
 %}

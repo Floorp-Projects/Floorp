@@ -37,6 +37,8 @@
 #include "nsCOMPtr.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIStreamLoader.h"
+#include "nsIStreamIO.h"
+#include "nsXPIDLString.h"
 #include "prio.h"       // for read/write flags, permissions, etc.
 
 inline nsresult
@@ -275,6 +277,27 @@ NS_NewPostDataStream(nsIInputStream **result,
 }
 
 inline nsresult
+NS_NewStreamIOChannel(nsIStreamIOChannel **result,
+                      nsIURI* uri,
+                      nsIStreamIO* io)
+{
+    nsresult rv;
+    nsCOMPtr<nsIStreamIOChannel> channel;
+    static NS_DEFINE_CID(kStreamIOChannelCID, NS_STREAMIOCHANNEL_CID);
+    rv = nsComponentManager::CreateInstance(kStreamIOChannelCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIStreamIOChannel),
+                                            getter_AddRefs(channel));
+    if (NS_FAILED(rv)) return rv;
+    rv = channel->Init(uri, io);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = channel;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+inline nsresult
 NS_NewInputStreamChannel(nsIChannel **result,
                          nsIURI* uri,
                          nsIInputStream* inStr,
@@ -282,14 +305,17 @@ NS_NewInputStreamChannel(nsIChannel **result,
                          PRInt32 contentLength)
 {
     nsresult rv;
-    nsCOMPtr<nsIInputStreamChannel> channel;
-    static NS_DEFINE_CID(kInputStreamChannelCID, NS_INPUTSTREAMCHANNEL_CID);
-    rv = nsComponentManager::CreateInstance(kInputStreamChannelCID,
-                                            nsnull, 
-                                            NS_GET_IID(nsIInputStreamChannel),
-                                            getter_AddRefs(channel));
+    nsXPIDLCString spec;
+    rv = uri->GetSpec(getter_Copies(spec));
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, inStr, contentType, contentLength);
+
+    nsCOMPtr<nsIInputStreamIO> io;
+    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr, 
+                             contentType, contentLength);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStreamIOChannel> channel;
+    rv = NS_NewStreamIOChannel(getter_AddRefs(channel), uri, io);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

@@ -27,49 +27,53 @@
 #include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
 #include "netCore.h"
-#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsInputStreamChannel methods:
+// nsInputStreamIO methods:
 
-nsInputStreamChannel::nsInputStreamChannel()
-    : mContentType(nsnull), mContentLength(-1), mLoadAttributes(LOAD_NORMAL),
-      mBufferSegmentSize(0), mBufferMaxSize(0), mStatus(NS_OK)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsInputStreamIO,
+                              nsIInputStreamIO,
+                              nsIStreamIO)
+
+nsInputStreamIO::nsInputStreamIO()
+    : mName(nsnull), mContentType(nsnull), mContentLength(-1), mStatus(NS_OK)
 {
-    NS_INIT_REFCNT(); 
+    NS_INIT_REFCNT();
 }
 
-nsInputStreamChannel::~nsInputStreamChannel()
+nsInputStreamIO::~nsInputStreamIO()
 {
+    (void)Close(NS_OK);
+    if (mName) nsCRT::free(mName);
     if (mContentType) nsCRT::free(mContentType);
 }
 
 NS_METHOD
-nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
-                             void **aResult)
+nsInputStreamIO::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsInputStreamChannel* channel = new nsInputStreamChannel();
-    if (channel == nsnull)
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsInputStreamIO* io = new nsInputStreamIO();
+    if (io == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(channel);
-    nsresult rv = channel->QueryInterface(aIID, aResult);
-    NS_RELEASE(channel);
+    NS_ADDREF(io);
+    nsresult rv = io->QueryInterface(aIID, aResult);
+    NS_RELEASE(io);
     return rv;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::Init(nsIURI* uri, 
-                           nsIInputStream* in,
-                           const char* contentType,
-                           PRInt32 contentLength)
+nsInputStreamIO::Init(const char* name, nsIInputStream* input,
+                      const char* contentType, PRInt32 contentLength)
 {
-    mURI = uri;
-    mContentLength = contentLength;
-
+    mName = nsCRT::strdup(name);
+    if (mName == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    mInputStream = input;
     if (contentType) { 
         mContentType = nsCRT::strdup(contentType);
         const char *constContentType = mContentType;
@@ -81,12 +85,93 @@ nsInputStreamChannel::Init(nsIURI* uri,
                            semicolon ? (semicolon-constContentType) : PL_strlen(constContentType)); 
         nsCAutoString(cbd).ToLowerCase(); 
     } 
-    mInputStream = in;
+    mContentLength = contentLength;
     return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsInputStreamChannel, 
-                              nsIInputStreamChannel,
+NS_IMETHODIMP
+nsInputStreamIO::Open(char **contentType, PRInt32 *contentLength)
+{
+    *contentType = nsCRT::strdup(mContentType);
+    if (*contentType == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *contentLength = mContentLength;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamIO::Close(nsresult status)
+{
+    mStatus = status;
+    if (mInputStream)
+        return mInputStream->Close();
+    else
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamIO::GetInputStream(nsIInputStream * *aInputStream)
+{
+    *aInputStream = mInputStream;
+    NS_ADDREF(*aInputStream);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamIO::GetOutputStream(nsIOutputStream * *aOutputStream)
+{
+    // this method should never be called
+    NS_NOTREACHED("nsInputStreamIO::GetOutputStream");
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsInputStreamIO::GetName(char* *aName)
+{
+    *aName = nsCRT::strdup(mName);
+    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsStreamIOChannel methods:
+
+nsStreamIOChannel::nsStreamIOChannel()
+    : mContentType(nsnull), mContentLength(-1), mLoadAttributes(LOAD_NORMAL),
+      mBufferSegmentSize(0), mBufferMaxSize(0), mStatus(NS_OK)
+{
+    NS_INIT_REFCNT(); 
+}
+
+nsStreamIOChannel::~nsStreamIOChannel()
+{
+    if (mContentType) nsCRT::free(mContentType);
+}
+
+NS_METHOD
+nsStreamIOChannel::Create(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsStreamIOChannel* channel = new nsStreamIOChannel();
+    if (channel == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(channel);
+    nsresult rv = channel->QueryInterface(aIID, aResult);
+    NS_RELEASE(channel);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsStreamIOChannel::Init(nsIURI* uri, nsIStreamIO* io)
+{
+    mURI = uri;
+    mStreamIO = io;
+    return NS_OK;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsStreamIOChannel, 
+                              nsIStreamIOChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIStreamObserver,
@@ -96,7 +181,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsInputStreamChannel,
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsInputStreamChannel::IsPending(PRBool *result)
+nsStreamIOChannel::IsPending(PRBool *result)
 {
     if (mFileTransport)
         return mFileTransport->IsPending(result);
@@ -105,14 +190,14 @@ nsInputStreamChannel::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetStatus(nsresult *status)
+nsStreamIOChannel::GetStatus(nsresult *status)
 {
     *status = mStatus;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::Cancel(nsresult status)
+nsStreamIOChannel::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     mStatus = status;
@@ -122,7 +207,7 @@ nsInputStreamChannel::Cancel(nsresult status)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::Suspend(void)
+nsStreamIOChannel::Suspend(void)
 {
     if (mFileTransport)
         return mFileTransport->Suspend();
@@ -130,7 +215,7 @@ nsInputStreamChannel::Suspend(void)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::Resume(void)
+nsStreamIOChannel::Resume(void)
 {
     if (mFileTransport)
         return mFileTransport->Resume();
@@ -141,7 +226,7 @@ nsInputStreamChannel::Resume(void)
 // nsIChannel methods:
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetOriginalURI(nsIURI* *aURI)
+nsStreamIOChannel::GetOriginalURI(nsIURI* *aURI)
 {
     *aURI = mOriginalURI ? mOriginalURI : mURI;
     NS_IF_ADDREF(*aURI);
@@ -149,14 +234,14 @@ nsInputStreamChannel::GetOriginalURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetOriginalURI(nsIURI* aURI)
+nsStreamIOChannel::SetOriginalURI(nsIURI* aURI)
 {
     mOriginalURI = aURI;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetURI(nsIURI* *aURI)
+nsStreamIOChannel::GetURI(nsIURI* *aURI)
 {
     *aURI = mURI;
     NS_IF_ADDREF(*aURI);
@@ -164,14 +249,14 @@ nsInputStreamChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetURI(nsIURI* aURI)
+nsStreamIOChannel::SetURI(nsIURI* aURI)
 {
     mURI = aURI;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+nsStreamIOChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS;
@@ -180,11 +265,7 @@ nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    rv = mURI->GetSpec(getter_Copies(spec));
-    if (NS_FAILED(rv)) return rv;
-    rv = fts->CreateTransportFromStream(mInputStream, spec, mContentType, mContentLength,
-                                        getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransportFromStreamIO(mStreamIO, getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
     if (mBufferSegmentSize > 0) {
         rv = mFileTransport->SetBufferSegmentSize(mBufferSegmentSize);
@@ -199,27 +280,24 @@ nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::OpenInputStream(nsIInputStream **result)
+nsStreamIOChannel::OpenInputStream(nsIInputStream **result)
 {
-    *result = mInputStream;
-    NS_ADDREF(*result);
-    return NS_OK;
+    return mStreamIO->GetInputStream(result);
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::OpenOutputStream(nsIOutputStream **_retval)
+nsStreamIOChannel::OpenOutputStream(nsIOutputStream **result)
 {
-    // we don't do output
-    return NS_ERROR_FAILURE;
+    return mStreamIO->GetOutputStream(result);
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+nsStreamIOChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
 
     NS_ASSERTION(listener, "no listener");
-    mRealListener = listener;
+    SetListener(listener);
 
     if (mLoadGroup) {
         nsCOMPtr<nsILoadGroupListenerFactory> factory;
@@ -229,9 +307,9 @@ nsInputStreamChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
         if (factory) {
             nsIStreamListener *newListener;
-            rv = factory->CreateLoadGroupListener(mRealListener, &newListener);
+            rv = factory->CreateLoadGroupListener(GetListener(), &newListener);
             if (NS_SUCCEEDED(rv)) {
-                mRealListener = newListener;
+                mUserObserver = newListener;
                 NS_RELEASE(newListener);
             }
         }
@@ -242,52 +320,118 @@ nsInputStreamChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
     if (mFileTransport == nsnull) {
         NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) goto done;
 
-        nsXPIDLCString spec;
-        rv = mURI->GetSpec(getter_Copies(spec));
-        if (NS_FAILED(rv)) return rv;
-        rv = fts->CreateTransportFromStream(mInputStream, spec, mContentType, mContentLength,
-                                            getter_AddRefs(mFileTransport));
-        if (NS_FAILED(rv)) return rv;
+        rv = fts->CreateTransportFromStreamIO(mStreamIO, getter_AddRefs(mFileTransport));
+        if (NS_FAILED(rv)) goto done;
         if (mBufferSegmentSize > 0) {
             rv = mFileTransport->SetBufferSegmentSize(mBufferSegmentSize);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) goto done;
         }
         if (mBufferMaxSize > 0) {
             rv = mFileTransport->SetBufferMaxSize(mBufferMaxSize);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) goto done;
         }
     }
 
-    return mFileTransport->AsyncRead(this, ctxt);
+    if (mContentType == nsnull) {
+        rv = mStreamIO->Open(&mContentType, &mContentLength);
+        if (NS_FAILED(rv)) goto done;
+    }
+    rv = mFileTransport->AsyncRead(this, ctxt);
+
+  done:
+    if (NS_FAILED(rv)) {
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
+        // release the transport so that we don't think we're in progress
+        mFileTransport = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::AsyncWrite(nsIInputStream *fromStream, 
-                                 nsIStreamObserver *observer, nsISupports *ctxt)
+nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream, 
+                              nsIStreamObserver *observer, nsISupports *ctxt)
 {
-    // we don't do output
-    return NS_ERROR_FAILURE;
+    nsresult rv;
+
+    NS_ASSERTION(observer, "no observer");
+    mUserObserver = observer;
+
+    if (mLoadGroup) {
+        nsCOMPtr<nsILoadGroupListenerFactory> factory;
+        //
+        // Create a load group "proxy" listener...
+        //
+        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+        if (factory) {
+            nsIStreamListener *newListener;
+            rv = factory->CreateLoadGroupListener(GetListener(), &newListener);
+            if (NS_SUCCEEDED(rv)) {
+                mUserObserver = newListener;
+                NS_RELEASE(newListener);
+            }
+        }
+
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mFileTransport == nsnull) {
+        NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+        if (NS_FAILED(rv)) goto done;
+
+        rv = fts->CreateTransportFromStreamIO(mStreamIO, getter_AddRefs(mFileTransport));
+        if (NS_FAILED(rv)) goto done;
+        if (mBufferSegmentSize > 0) {
+            rv = mFileTransport->SetBufferSegmentSize(mBufferSegmentSize);
+            if (NS_FAILED(rv)) goto done;
+        }
+        if (mBufferMaxSize > 0) {
+            rv = mFileTransport->SetBufferMaxSize(mBufferMaxSize);
+            if (NS_FAILED(rv)) goto done;
+        }
+    }
+
+    if (mContentType == nsnull) {
+        rv = mStreamIO->Open(&mContentType, &mContentLength);
+        if (NS_FAILED(rv)) goto done;
+    }
+    rv = mFileTransport->AsyncWrite(fromStream, this, ctxt);
+
+  done:
+    if (NS_FAILED(rv)) {
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
+        // release the transport so that we don't think we're in progress
+        mFileTransport = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+nsStreamIOChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
     *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+nsStreamIOChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
     mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetContentType(char * *aContentType)
+nsStreamIOChannel::GetContentType(char * *aContentType)
 {
+    nsresult rv;
+    if (mContentType == nsnull) {
+        rv = mStreamIO->Open(&mContentType, &mContentLength);
+        if (NS_FAILED(rv)) return rv;
+    }
     *aContentType = nsCRT::strdup(mContentType);
     if (*aContentType == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -296,111 +440,113 @@ nsInputStreamChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetContentType(const char *aContentType)
+nsStreamIOChannel::SetContentType(const char *aContentType)
 {
-    if (mContentType) {
-        nsCRT::free(mContentType);
-    }
     mContentType = nsCRT::strdup(aContentType);
-    if (aContentType == nsnull) {
+    if (*aContentType == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetContentLength(PRInt32 *aContentLength)
+nsStreamIOChannel::GetContentLength(PRInt32 *aContentLength)
 {
+    nsresult rv;
+    if (mContentType == nsnull) {
+        rv = mStreamIO->Open(&mContentType, &mContentLength);
+        if (NS_FAILED(rv)) return rv;
+    }
     *aContentLength = mContentLength;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetContentLength(PRInt32 aContentLength)
+nsStreamIOChannel::SetContentLength(PRInt32 aContentLength)
 {
-    NS_NOTREACHED("SetContentLength");
+    mContentLength = aContentLength;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamIOChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("nsStreamIOChannel::GetTransferOffset");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+nsStreamIOChannel::SetTransferOffset(PRUint32 aTransferOffset)
 {
-    NS_NOTREACHED("GetTransferOffset");
+    NS_NOTREACHED("nsStreamIOChannel::SetTransferOffset");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetTransferOffset(PRUint32 aTransferOffset)
+nsStreamIOChannel::GetTransferCount(PRInt32 *aTransferCount)
 {
-    NS_NOTREACHED("SetTransferOffset");
+    NS_NOTREACHED("nsStreamIOChannel::GetTransferCount");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetTransferCount(PRInt32 *aTransferCount)
+nsStreamIOChannel::SetTransferCount(PRInt32 aTransferCount)
 {
-    NS_NOTREACHED("GetTransferCount");
+    NS_NOTREACHED("nsStreamIOChannel::SetTransferCount");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-    NS_NOTREACHED("SetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsInputStreamChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+nsStreamIOChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
 {
     *aBufferSegmentSize = mBufferSegmentSize;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+nsStreamIOChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
 {
     mBufferSegmentSize = aBufferSegmentSize;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+nsStreamIOChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
 {
     *aBufferMaxSize = mBufferMaxSize;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+nsStreamIOChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 {
     mBufferMaxSize = aBufferMaxSize;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetShouldCache(PRBool *aShouldCache)
+nsStreamIOChannel::GetShouldCache(PRBool *aShouldCache)
 {
     *aShouldCache = PR_FALSE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+nsStreamIOChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
 {
     *aPipeliningAllowed = PR_FALSE;
     return NS_OK;
 }
  
 NS_IMETHODIMP
-nsInputStreamChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+nsStreamIOChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 {
-    NS_NOTREACHED("SetPipeliningAllowed");
+    NS_NOTREACHED("nsStreamIOChannel::SetPipeliningAllowed");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
+nsStreamIOChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup.get();
     NS_IF_ADDREF(*aLoadGroup);
@@ -408,14 +554,14 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+nsStreamIOChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     mLoadGroup = aLoadGroup;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetOwner(nsISupports* *aOwner)
+nsStreamIOChannel::GetOwner(nsISupports* *aOwner)
 {
     *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
@@ -423,14 +569,14 @@ nsInputStreamChannel::GetOwner(nsISupports* *aOwner)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetOwner(nsISupports* aOwner)
+nsStreamIOChannel::SetOwner(nsISupports* aOwner)
 {
     mOwner = aOwner;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
+nsStreamIOChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
   *aNotificationCallbacks = mCallbacks.get();
   NS_IF_ADDREF(*aNotificationCallbacks);
@@ -438,7 +584,7 @@ nsInputStreamChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotifica
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
+nsStreamIOChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
   return NS_OK;
@@ -446,7 +592,7 @@ nsInputStreamChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificat
 
 
 NS_IMETHODIMP 
-nsInputStreamChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+nsStreamIOChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     *aSecurityInfo = nsnull;
     return NS_OK;
@@ -457,19 +603,19 @@ nsInputStreamChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsInputStreamChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
+nsStreamIOChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
 {
-    NS_ASSERTION(mRealListener, "No listener...");
-    return mRealListener->OnStartRequest(this, context);
+    NS_ASSERTION(mUserObserver, "No listener...");
+    return mUserObserver->OnStartRequest(this, context);
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
-                                    nsresult aStatus, const PRUnichar* aMsg)
+nsStreamIOChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
+                                 nsresult aStatus, const PRUnichar* aMsg)
 {
     nsresult rv;
 
-    rv = mRealListener->OnStopRequest(this, context, aStatus, aMsg);
+    rv = mUserObserver->OnStopRequest(this, context, aStatus, aMsg);
 
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
@@ -478,17 +624,17 @@ nsInputStreamChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* c
     }
 
     // Release the reference to the consumer stream listener...
-    mRealListener = null_nsCOMPtr();
+    mUserObserver = null_nsCOMPtr();
     mFileTransport = null_nsCOMPtr();
-    return rv;
+    return mStreamIO->Close(aStatus);
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* context,
-                                      nsIInputStream *aIStream, PRUint32 aSourceOffset,
-                                      PRUint32 aLength)
+nsStreamIOChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* context,
+                                   nsIInputStream *aIStream, PRUint32 aSourceOffset,
+                                   PRUint32 aLength)
 {
-    return mRealListener->OnDataAvailable(this, context, aIStream,
+    return GetListener()->OnDataAvailable(this, context, aIStream,
                                           aSourceOffset, aLength);
 }
 
