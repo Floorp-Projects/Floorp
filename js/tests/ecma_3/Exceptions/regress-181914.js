@@ -58,9 +58,8 @@ function _Error(msg)
 {
   this.message = msg;
 }
+_Error.prototype = new Error();
 _Error.prototype.name = '_Error';
-_Error.prototype.message = '';
-_Error.prototype.toString = function() {return this.name + ': ' + this.message;};
 
 
 // derive MyApplyError from _Error
@@ -132,6 +131,21 @@ addThis();
 status = inSection(7);
 var err7 = eval("MyApplyError('msg7')");
 actual = examineThis(err7, 'msg7');
+expect = EXPECTED_FORMAT;
+addThis();
+
+status = inSection(8);
+var err8;
+try
+{
+  throw MyApplyError('msg8');
+}
+catch(e)
+{
+  if(e instanceof Error)
+    err8 = e;
+}
+actual = examineThis(err8, 'msg8');
 expect = EXPECTED_FORMAT;
 addThis();
 
