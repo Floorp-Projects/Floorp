@@ -59,6 +59,6 @@ INSTALLER_NAME = firefox-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)-installer
 endif
 
 installer.cfg: installer.cfg.in
-	sed -e "s/@INSTALLER_NAME@/$(INSTALLER_NAME)/" $^ > $@
+	sed -e 's/\$$INSTALLER_NAME\$$/$(INSTALLER_NAME)/' $^ > $@
 
 include $(topsrcdir)/config/rules.mk
