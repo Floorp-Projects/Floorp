@@ -65,6 +65,12 @@ enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2};  // Used in si
 class nsAccessible : public nsGenericAccessible
 {
 public:
+
+  // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
+  enum { eAction_Switch=0, eAction_Jump=0, eAction_Click=0 };
+  // how many actions
+  enum { eNo_Action=0, eSingle_Action=1 };
+
   NS_IMETHOD GetAccName(nsAWritableString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
@@ -115,6 +121,12 @@ public:
 
     // helper method to verify frames
     static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+
+protected:
+  NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
+  NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
+  NS_IMETHOD GetHTMLAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetXULAccName(nsAWritableString& _retval); 
 
 protected:
   virtual nsIFrame* GetFrame();

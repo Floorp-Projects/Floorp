@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: John Gaunt (jgaunt@netscape.com)
+ * Author: Eric D Vaughan (evaughan@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,37 +36,58 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef __nsHTMLListboxAccessible_h__
-#define __nsHTMLListboxAccessible_h__
 
-#include "nsAccessible.h"
-#include "nsIAccessibleSelectable.h"
+#ifndef _nsFormControlAccessible_H_
+#define _nsFormControlAccessible_H_
 
-#include "nsCOMPtr.h"
-#include "nsHTMLSelectListAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
-/*
- * A class the represents the HTML Combobox widget.
- */
-class nsHTMLListboxAccessible : public nsAccessible,
-                                public nsIAccessibleSelectable  
+/**
+  * This supports name and state information for both XUL and HTML
+  *   widgets. Designed to be a base class for the impls of XUL
+  *   and HTML form widget Accessibles
+  */
+class nsFormControlAccessible : public nsAccessible
 {
 public:
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLESELECTABLE
-  
-  nsHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLListboxAccessible() {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+  nsFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
 
 };
 
+/**
+  *
+  */
+class nsRadioButtonAccessible : public nsFormControlAccessible
+{
+
+public:
+  nsRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+};
+
+/**
+  * Text nodes have no children, but since double inheritance
+  *  no-worky we have to re-impl the LeafAccessiblity blocks 
+  *  this way.
+  */
+class nsTextAccessible : public nsLinkableAccessible
+{
+
+public:
+  nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+};
+
+
 #endif
+

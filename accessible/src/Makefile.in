@@ -52,21 +52,21 @@ REQUIRES	= xpcom \
 CPPSRCS   = \
     nsAccessible.cpp \
     nsAccessibilityService.cpp \
-    nsRootAccessible.cpp \
-    nsHTMLIFrameRootAccessible.cpp \
-    nsHTMLFormControlAccessible.cpp \
-    nsHTMLTextAccessible.cpp \
-    nsHTMLTableAccessible.cpp \
-    nsHTMLImageAccessible.cpp \
-    nsHTMLAreaAccessible.cpp \
-    nsHTMLLinkAccessible.cpp \
-    nsHTMLSelectListAccessible.cpp \
-    nsHTMLComboboxAccessible.cpp \
-    nsHTMLListboxAccessible.cpp \
+    nsBaseWidgetAccessible.cpp \
+    nsFormControlAccessible.cpp \
     nsGenericAccessible.cpp \
+    nsHTMLAreaAccessible.cpp \
+    nsHTMLFormControlAccessible.cpp \
+    nsHTMLIFrameRootAccessible.cpp \
+    nsHTMLImageAccessible.cpp \
+    nsHTMLLinkAccessible.cpp \
+    nsHTMLSelectAccessible.cpp \
+    nsHTMLTableAccessible.cpp \
+    nsHTMLTextAccessible.cpp \
+    nsRootAccessible.cpp \
+    nsSelectAccessible.cpp \
     nsXULFormControlAccessible.cpp \
     nsXULTextAccessible.cpp \
-    nsBaseWidgetAccessible.cpp \
     $(NULL)
 
 EXPORTS = \

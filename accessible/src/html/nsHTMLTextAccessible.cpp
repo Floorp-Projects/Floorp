@@ -38,16 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTextAccessible.h"
-#include "nsWeakReference.h"
-#include "nsIFrame.h"
-#include "nsILink.h"
-#include "nsILinkHandler.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
-#include "nsIPresContext.h"
-#include "nsReadableUtils.h"
-#include "nsIDOMXULDescriptionElement.h"
-#include "nsIDOMXULLabelElement.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsTextAccessible(aDomNode, aShell)

@@ -43,6 +43,7 @@
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
 #include "nsIPresContext.h"
@@ -112,6 +113,53 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
   *_retval = nsnull;
   return NS_OK;
 }
+
+/**
+  * nsContainerAccessible
+  */
+nsContainerAccessible::nsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsAccessible(aNode, aShell)
+{
+}
+
+/** no actions */
+NS_IMETHODIMP nsContainerAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  *_retval = eNo_Action;
+  return NS_OK;
+}
+
+/** no actions */
+NS_IMETHODIMP nsContainerAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+{
+  return NS_OK;
+}
+
+/** no actions */
+NS_IMETHODIMP nsContainerAccessible::AccDoAction(PRUint8 index)
+{
+  return NS_OK;
+}
+
+/** no state -- normal */
+NS_IMETHODIMP nsContainerAccessible::GetAccState(PRUint32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+/** no value */
+NS_IMETHODIMP nsContainerAccessible::GetAccValue(nsAWritableString& _retval)
+{
+  return NS_OK;
+}
+
+/** no name*/
+NS_IMETHODIMP nsContainerAccessible::GetAccName(nsAWritableString& _retval)
+{
+  return NS_OK;
+}
+
 
 //-------------
 // nsLeafFrameAccessible
@@ -209,7 +257,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAWritableString& _retval)
 /* PRUint8 getAccNumActions (); */
 NS_IMETHODIMP nsLinkableAccessible::GetAccNumActions(PRUint8 *_retval)
 {
-  *_retval = 1;
+  *_retval = eSingle_Action;
   return NS_OK;
 }
 
@@ -217,7 +265,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
   // Action 0 (default action): Jump to link
-  if (index == 0) {   
+  if (index == eAction_Jump) {   
     if (IsALink()) {
       _retval = NS_LITERAL_STRING("jump"); 
       return NS_OK;
@@ -292,39 +340,71 @@ PRBool nsLinkableAccessible::IsALink()
 }
 
 // ------------
-// Text Accessibles
+// nsMenuListenerAccessible
 // ------------
 
-nsTextAccessible::nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsLinkableAccessible(aDomNode, aShell)
+NS_IMPL_ISUPPORTS_INHERITED1(nsMenuListenerAccessible, nsAccessible, nsIDOMXULListener)
+
+nsMenuListenerAccessible::nsMenuListenerAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
+nsAccessible(aDOMNode, aShell)
+{
+  mRegistered = PR_FALSE;
+  mOpen = PR_FALSE;
+}
+
+nsMenuListenerAccessible::~nsMenuListenerAccessible()
+{
+  if (mRegistered) {
+     nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
+     if (eventReceiver) 
+       eventReceiver->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE);   
+  }
+}
+
+NS_IMETHODIMP nsMenuListenerAccessible::PopupShowing(nsIDOMEvent* aEvent)
 { 
+  mOpen = PR_TRUE;
+
+  /* TBD send state change event */ 
+
+  return NS_OK; 
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsTextAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsMenuListenerAccessible::PopupHiding(nsIDOMEvent* aEvent)
+{ 
+  mOpen = PR_FALSE;
+
+  /* TBD send state change event */ 
+
+  return NS_OK; 
+}
+
+NS_IMETHODIMP nsMenuListenerAccessible::Close(nsIDOMEvent* aEvent)
+{ 
+  mOpen = PR_FALSE;
+
+  /* TBD send state change event */ 
+
+  return NS_OK; 
+}
+
+void
+nsMenuListenerAccessible::SetupMenuListener()
 {
-  *_retval = ROLE_TEXT;
+  // if not already one, register ourselves as a popup listener
+  if (!mRegistered) {
+     nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
+     if (!eventReceiver) {
+       return;
+     }
 
-  return NS_OK;
+     nsresult rv = eventReceiver->AddEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE);   
+
+     if (NS_FAILED(rv)) {
+       return;
+     }
+
+     mRegistered = PR_TRUE;
+  }
 }
 
-/* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsTextAccessible::GetAccLastChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsTextAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}

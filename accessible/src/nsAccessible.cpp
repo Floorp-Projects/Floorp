@@ -80,6 +80,20 @@
 #include "nsReadableUtils.h"
 #include "nsIBindingManager.h"
 
+#include "nsFormControlAccessible.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULButtonElement.h"
+#include "nsIDOMXULCheckboxElement.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDOMXULLabelElement.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsString.h"
+
 // IFrame Helpers
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
@@ -1322,5 +1336,196 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, ns
     aContent->ChildAt(index, contentWalker);
     AppendFlatStringFromSubtree(contentWalker, aFlatString);
   }
+  return NS_OK;
+}
+
+/**
+  * Called for XUL work only
+  * Checks the label's value first then makes a call to get the 
+  *  text from the children if the value is not set.
+  */
+NS_IMETHODIMP nsAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval)
+{
+  NS_ASSERTION(aLabelNode, "Label Node passed in is null");
+  nsCOMPtr<nsIDOMXULLabelElement> labelNode(do_QueryInterface(aLabelNode));
+  // label's value="foo" is set
+  if ( labelNode && NS_SUCCEEDED(labelNode->GetValue(_retval))) {
+    if (_retval.IsEmpty()) {
+      // label contains children who define it's text -- possibly HTML
+      nsCOMPtr<nsIContent> content(do_QueryInterface(labelNode));
+      if (content)
+        return AppendFlatStringFromSubtree(content, &_retval);
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/**
+  * Called for HTML work only
+  */
+NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel)
+{
+  PRInt32 numChildren = 0;
+
+  nsCOMPtr<nsIDOMHTMLLabelElement> labelElement(do_QueryInterface(aLookNode));
+  if (labelElement) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aLookNode));
+    nsresult rv = NS_OK;
+
+    if (elt) {
+      nsAutoString labelIsFor;
+      elt->GetAttribute(NS_LITERAL_STRING("for"),labelIsFor);
+      if (labelIsFor.Equals(*aId))
+        rv = AppendFlatStringFromSubtree(aLookNode, aLabel);
+    }
+    return rv;
+  }
+
+  aLookNode->ChildCount(numChildren);
+  nsIContent *contentWalker;
+  PRInt32 index;
+  for (index = 0; index < numChildren; index++) {
+    aLookNode->ChildAt(index, contentWalker);
+    if (contentWalker)
+      AppendLabelFor(contentWalker, aId, aLabel);
+  }
+  return NS_OK;
+}
+
+/**
+  * Only called if the element is not a nsIDOMXULControlElement. Initially walks up
+  *   the DOM tree to the form, concatonating label elements as it goes. Then checks for
+  *   labels with the for="controlID" property.
+  */
+NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAWritableString& _retval)
+{
+  nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMHTMLLabelElement> labelElement;
+  nsCOMPtr<nsIDOMHTMLFormElement> formElement;
+  nsresult rv = NS_OK;
+
+  nsAutoString label;
+  // go up tree get name of ancestor label if there is one. Don't go up farther than form element
+  while (walkUpContent && label.IsEmpty() && !formElement) {
+    labelElement = do_QueryInterface(walkUpContent);
+    if (labelElement) 
+      rv = AppendFlatStringFromSubtree(walkUpContent, &label);
+    formElement = do_QueryInterface(walkUpContent); // reached top ancestor in form
+    nsCOMPtr<nsIContent> nextParent;
+    walkUpContent->GetParent(*getter_AddRefs(nextParent));
+    walkUpContent = nextParent;
+  }
+  
+
+  // There can be a label targeted at this control using the for="control_id" attribute
+  // To save computing time, only look for those inside of a form element
+  walkUpContent = do_QueryInterface(formElement);
+  
+  if (walkUpContent) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+    nsAutoString forId;
+    elt->GetAttribute(NS_LITERAL_STRING("id"), forId);
+    // Actually we'll be walking down the content this time, with a depth first search
+    if (!forId.IsEmpty())
+      AppendLabelFor(walkUpContent,&forId,&label); 
+  } 
+  
+  label.CompressWhitespace();
+  if (label.IsEmpty())
+    return nsAccessible::GetAccName(_retval);
+
+  _retval.Assign(label);
+  
+  return NS_OK;
+}
+
+/**
+  * 3 main cases for XUL Controls to be labeled
+  *   1 - control contains label="foo"
+  *   2 - control has, as a child, a label element
+  *        - label has either value="foo" or children
+  *   3 - non-child label contains control="controlID"
+  *        - label has either value="foo" or children
+  * Once a label is found, the search is discontinued, so a control
+  *  that has a label child as well as having a label external to
+  *  the control that uses the control="controlID" syntax will use
+  *  the child label for its Name.
+  */
+/* wstring getAccName (); */
+NS_IMETHODIMP nsAccessible::GetXULAccName(nsAWritableString& _retval)
+{
+  nsresult rv;
+  nsAutoString label;
+
+  // CASE #1 -- great majority of the cases
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
+  rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), label) ;
+
+  if (NS_FAILED(rv) || label.IsEmpty() ) {
+
+    // CASE #2 ------ label as a child
+    nsCOMPtr<nsIDOMNodeList>labelChildren;
+    NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
+    if (NS_SUCCEEDED(rv = domElement->GetElementsByTagName(NS_LITERAL_STRING("label"), getter_AddRefs(labelChildren)))) {
+      PRUint32 length = 0;
+      if (NS_SUCCEEDED(rv = labelChildren->GetLength(&length)) && length > 0) {
+        for (PRUint32 i = 0; i < length; ++i) {
+          nsCOMPtr<nsIDOMNode> child;
+          if (NS_SUCCEEDED(rv = labelChildren->Item(i, getter_AddRefs(child) ))) {
+            rv = AppendLabelText(child, label);
+          }
+        }
+      }
+    }
+    
+    if (NS_FAILED(rv) || label.IsEmpty()) {
+
+      // CASE #3 ----- non-child label pointing to control
+      //  XXX jgaunt
+      //   decided to search the parent's children for labels linked to
+      //   this control via the control="controlID" syntax, instead of searching
+      //   the entire document with:
+      //
+      //      nsCOMPtr<nsIDocument> doc;
+      //      nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+      //      content->GetDocument(*getter_AddRefs(doc));
+      //      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
+      //      if (xulDoc) {
+      //        nsCOMPtr<nsIDOMNodeList>labelList;
+      //        if (NS_SUCCEEDED(rv = xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
+      //
+      //   This should keep search times down and still get the relevant
+      //   labels.
+      nsCOMPtr<nsIDOMNode> parent;
+      if (NS_SUCCEEDED(rv = mDOMNode->GetParentNode(getter_AddRefs(parent)))) {
+        nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(parent));
+        NS_ASSERTION(xulElement, "No xulElement for parent DOM Node!");
+        if (xulElement) {
+          nsAutoString controlID;
+          nsCOMPtr<nsIDOMNodeList>labelList;
+          if (NS_SUCCEEDED(rv = xulElement->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
+          {
+            PRUint32 length = 0;
+            if (NS_SUCCEEDED(rv = labelList->GetLength(&length)) && length > 0) {
+              for (PRUint32 i = 0; i < length; ++i) {
+                nsCOMPtr<nsIDOMNode> child;
+                if (NS_SUCCEEDED(rv = labelList->Item(i, getter_AddRefs(child) ))) {
+                  rv = AppendLabelText(child, label);
+                }
+              }
+            }
+          }
+        }
+      }  // End of CASE #3
+    }  // END of CASE #2
+  }  // END of CASE #1
+
+  label.CompressWhitespace();
+  if (label.IsEmpty())
+    return nsAccessible::GetAccName(_retval);
+  
+  _retval.Assign(label);
   return NS_OK;
 }
