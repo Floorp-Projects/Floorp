@@ -1017,7 +1017,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 					nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
 					{
-						rv = rdf_Assert(mInner, ieFolder, kURINC_Name, ieTitleLiteral);
+						rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 					}
 					if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mInner, kNC_BookmarksRoot, ieFolder)))
 					{
