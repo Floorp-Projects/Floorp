@@ -515,7 +515,7 @@ var defaultController =
       case "cmd_selectAddress":
         return !gWindowLocked;
       case "cmd_spelling":
-        return !focusedElement;
+        return (focusedElement == GetMsgBodyFrame());
       case "cmd_outputFormat":
         return composeHTML;
       case "cmd_quoteMessage":
@@ -2547,6 +2547,11 @@ function LoadIdentity(startup)
 
       AddDirectoryServerObserver(false);
       if (!startup) {
+          if (!gAutocompleteSession)
+            gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
+          if (gAutocompleteSession)
+            setDomainName();
+
           try {
               setupLdapAutocompleteSession();
           } catch (ex) {
@@ -2557,15 +2562,20 @@ function LoadIdentity(startup)
     }
 }
 
+function setDomainName()
+{
+  var emailAddr = gCurrentIdentity.email;
+  var start = emailAddr.lastIndexOf("@");
+  gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+}
+
 function setupAutocomplete()
 {
   //Setup autocomplete session if we haven't done so already
   if (!gAutocompleteSession) {
     gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
     if (gAutocompleteSession) {
-      var emailAddr = gCurrentIdentity.email;
-      var start = emailAddr.lastIndexOf("@");
-      gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+      setDomainName();
 
       // if the pref is set to turn on the comment column, honor it here.
       // this element then gets cloned for subsequent rows, so they should 
@@ -2722,7 +2732,7 @@ function DisplaySaveFolderDlg(folderURI)
     var SaveDlgTitle = sComposeMsgsBundle.getString("SaveDialogTitle");
     var dlgMsg = sComposeMsgsBundle.getFormattedString("SaveDialogMsg",
                                                        [msgfolder.name,
-                                                        msgfolder.hostname]);
+                                                        msgfolder.server.prettyName]);
 
     var CheckMsg = sComposeMsgsBundle.getString("CheckMsg");
     if (gPromptService)

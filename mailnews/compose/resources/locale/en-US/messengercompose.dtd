@@ -84,6 +84,28 @@
 <!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
 <!ENTITY dcharDEFAULT.label "Set Default Mail Send Character Set">
 
+<!-- Insert menu items -->
+<!ENTITY insertSmiley.label "Smiley">
+<!ENTITY insertSmiley.accesskey "S">
+
+<!-- Insert Smiley Menu items -->
+<!ENTITY smiley1Cmd.label "Smile">
+<!ENTITY smiley1Cmd.accesskey "S">
+<!ENTITY smiley2Cmd.label "Frown">
+<!ENTITY smiley2Cmd.accesskey "F">
+<!ENTITY smiley3Cmd.label "Wink">
+<!ENTITY smiley3Cmd.accesskey "W">
+<!ENTITY smiley4Cmd.label "Tongue-out">
+<!ENTITY smiley4Cmd.accesskey "T">
+<!ENTITY smiley5Cmd.label "Laughing">
+<!ENTITY smiley5Cmd.accesskey "L">
+<!ENTITY smiley6Cmd.label "Embarrassed">
+<!ENTITY smiley6Cmd.accesskey "E">
+<!ENTITY smiley7Cmd.label "Undecided">
+<!ENTITY smiley7Cmd.accesskey "U">
+<!ENTITY SmileButton.tooltip "Insert a smiley face">
+
+
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
 <!ENTITY formatMenu.accesskey "o">
