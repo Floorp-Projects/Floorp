@@ -63,7 +63,7 @@ if( $form{"allchanges"} ){
 }
 else {
     while( my ($k, $v) = each( %form ) ){
-        push( @revs, sanitize_revision($k) );
+        push( @revs, &SanitizeRevision($k) );
     }
 }
 

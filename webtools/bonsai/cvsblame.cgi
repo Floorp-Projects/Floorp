@@ -96,7 +96,7 @@ my $url_file_tail = url_quote($file_tail);
 # Handle the "rev" argument
 #
 $::opt_rev = '';
-$::opt_rev = sanitize_revision($::FORM{rev}) if 
+$::opt_rev = &SanitizeRevision($::FORM{rev}) if 
     defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
 my $revstr = '';
 $revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';

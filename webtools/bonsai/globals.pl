@@ -25,6 +25,7 @@ $::TreeID = "default";
 
 use strict;
 use DBI;
+use File::Basename;
 use File::Path;
 
 use Date::Format;               # For time2str().
@@ -1052,10 +1053,26 @@ sub validateRepository {
     }
 
     my $escaped_root = html_quote($root);
+    print "\n";
     print "Invalid repository `$escaped_root' selected.\n";
     print ConstructMailTo(Param('maintainer'), "Invalid Repository '$root'");
     print " if you think this should have worked.\n";
     exit;
+}
+
+# Verify that the current script is being called from a specific other script
+sub validateReferer {
+    my (@scripts) = @_;
+    my $script;
+    my $found = 0;
+    my $script_path = dirname("$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}");
+    my $referer = $ENV{'HTTP_REFERER'} || "";
+
+    foreach $script (@scripts) {
+        $found++ if
+            ($referer =~ m@^http(s)?://(\w+(:\w+)?\@)?$script_path/$script(\?|$)@i);
+    }
+    die "This script cannot be called directly.\n" if (!$found);
 }
 
 sub formatSqlTime {
@@ -1068,6 +1085,23 @@ sub formatSqlTime {
     return $time;
 }
 
+##
+##  Miscelaneous routines from lloydcgi.pl
+##
+
+my @weekdays = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+my @months = ('Jan','Feb','Mar','Apr','May','Jun',
+           'Jul','Aug','Sep','Oct','Nov','Dec');
+
+sub toGMTString {
+    my ($seconds) = $_[0];
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)
+        = gmtime($seconds);
+    $year += 1900;
+
+    sprintf('%s, %02d-%s-%d %02d:%02d:%02d GMT',
+            $weekdays[$wday],$mday,$months[$mon],$year,$hour,$min,$sec);
+}
 
 # Returns true if the given directory or filename is one of the hidden ones
 # that we don't want to show users.
@@ -1117,6 +1151,8 @@ sub MarkUpText {
      my $bugsrpl = Param('bugsystemexpr');
      my $bugsmatch = Param('bugsmatch');
      my %substs = ();
+
+     return $text if (!$bugsrpl);
 
      $substs{'bug_id'} = '$1';
      $bugsrpl = PerformSubsts($bugsrpl, \%substs);
@@ -1251,8 +1287,160 @@ sub Fix_BonsaiLink {
 # Quotify a string, suitable for invoking a shell process
 sub shell_escape {
     my ($file) = @_;
+    $file =~ s/\000/_NULL_/g;
     $file =~ s/([ \"\'\`\~\^\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
     return $file;
+}
+
+#
+# Routines to enforce certain input restrictions
+#
+sub ExpectCheckinId {
+    my ($id) = @_;
+    die("Invalid checkin id.\n") unless ($id =~ m/^::checkin_\d+_\d+$/);
+    return $id;
+}
+
+sub ExpectDate {
+    my ($date) = @_;
+    my $res;
+
+    return $date if ($date =~ m/^\d+$/);
+    $res = &str2time($date);
+    return $res if (defined($res));
+    die "Invalid date format.\n";
+}
+
+sub ExpectDigit {
+    my ($var, $str) = @_;
+
+    if (!defined($str) || $str !~ m/^\d+$/) {
+        print STDERR "Expecting digit for $var. Got \"" . 
+            shell_escape($str) . "\" instead.\n";
+        die "Invalid format for $var.\n";
+    }
+    return $str;
+}
+
+# match types: match, regexp or notregexp
+sub ExpectMatchtype {
+    my ($matchtype) = @_;
+
+    return $matchtype if (!defined($matchtype) || $matchtype eq '' || 
+                          $matchtype eq 'match' || $matchtype eq 'regexp' || 
+                          $matchtype eq 'notregexp');
+    die "Invalid matchtype.\n";
+}
+
+sub ExpectOnOff {
+    my ($var, $str) = @_;
+    
+    if (!defined($str) || $str !~ m/^(on|off)/) {
+        print STDERR "Expecting on/off value for $var. Got \"" .
+            shell_escape($str) . "\" instead.\n";
+        die "Invalid format for $var.\n";
+    }
+    return $str;
+}
+
+# The mark argument expects a specific format
+# digit or (d1)-(d2)
+# where digit is the line number to mark
+#    and d1 & d2 are the optional beginning & ending of a range.
+#    If d1 & d2 are omitted, the entire file is marked
+sub SanitizeMark {
+    my ($mark_arg) = @_;
+    my ($newmark) = "";
+
+    return "" if (!defined($mark_arg));
+    foreach my $mark (split ',', $mark_arg) {
+        if ($mark =~ m/^(\d*)-(\d*)$/) {
+            $newmark .= ",$1-$2";
+        } elsif ($mark =~ m/^\d+$/) {
+            $newmark .= ",$mark";
+        } else {
+            # Ignore invalid input
+            next;
+        }
+    }
+    $newmark =~ s/^,//;
+    return $newmark;
+}
+
+# Strip garbage from module name
+# For now, assume: alphanumeric - . +
+sub SanitizeModule {
+    my ($module) = @_;
+
+    return "" if (!defined($module));
+    $module =~ s/\000/_NULL_/g;
+    $module =~ s/([A-Za-z])([\w\-\.\+]*).*/$1$2/;
+    return $module;
+}
+
+# Make sure CVS revisions are in a specific format
+sub SanitizeRevision {
+    my ($rev) = @_;
+
+    return "" if (!defined($rev) || $rev eq "");
+    if ($rev =~ /^[A-Za-z]+/) {
+        $rev =~ s/^([\w-]+).*/$1/;
+    } elsif ($rev =~ /^\d+\.\d+/) {
+        $rev =~ s/^(\d+[\.\d+]+).*/$1/;
+    } else {
+        die "Invalid revision format.\n";
+    }
+    return $rev;
+}
+
+# Allow alphanumeric usernames that start with alphas
+# Also allow: % . - +
+# Use 'nobody' if username doesn't match the modified format
+sub SanitizeUsernames {
+    my ($users) = @_;
+    my $userlist = '';
+
+    return "" if (!defined($users));
+    foreach my $user (split(/,/, $users)) {
+        $user =~ s/\000/_NULL_/;
+        $user =~ s/([A-Za-z])([\w\%\.\-\+]*).*/$1$2/;
+        $userlist .= ",$user";
+    }
+    $userlist =~ s/^,//;
+    return $userlist;
+}
+
+
+#
+# We should use the routine from File::Spec but perl 5.004 doesn't have it
+#
+sub canonpath {
+    my ($path) = @_;
+    my (@list);
+
+    return "" if (!defined($path) || $path eq "");
+    foreach my $dir (split('/', $path)) {
+        if ($dir eq "\.\.") {
+            pop @list;
+        } else {
+            push @list, $dir;
+        }
+    }
+    $path = join("/",@list);
+    $path =~ s@//+@/@g;
+    return $path;
+}
+
+# Do not allow access to files outside of cvsroot
+sub ChrootFilename {
+    my ($root, $path) = @_;
+    my $cpath = canonpath($path);
+    #print STDERR "ChrootFilename($root, $path, $cpath)\n";
+    CheckHidden($path);
+    die "Browsing outside of cvsroot not allowed.\n" 
+        unless ($cpath =~ m@^$root/@ || $cpath eq $root);
+    die "\nFiles in the CVSROOT are not accessible.\n" if 
+        ($cpath =~ m@$root/CVSROOT@);
 }
 
 1;

@@ -119,7 +119,7 @@ print "</td></tr>";
 # Branch
 #
 if( defined $::FORM{branch} ){
-    $b = sanitize_revision($::FORM{branch});
+    $b = &SanitizeRevision($::FORM{branch});
 } else {
     $b = "HEAD";
 }

@@ -62,7 +62,7 @@ $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
 my $rev = '';
-$rev = sanitize_revision($::FORM{"rev"}) if defined($::FORM{"rev"});
+$rev = &SanitizeRevision($::FORM{"rev"}) if defined($::FORM{"rev"});
 
 print "Content-type: text/html\n\n";
 

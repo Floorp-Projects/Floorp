@@ -49,6 +49,8 @@ sub url_quote {
 # Quotify a string, suitable for output as form values
 sub value_quote {
     my ($var) = (@_);
+
+    return "" if (!defined($var));
     $var =~ s/\&/\&amp;/g;
     $var =~ s/</\&lt;/g;
     $var =~ s/>/\&gt;/g;
@@ -73,19 +75,6 @@ sub url_encode2 {
     $s =~ s/\&/\%26/g;
     $s =~ s/\+/\%2b/g;
     return $s;
-}
-
-# Make sure CVS revisions are in a specific format
-sub sanitize_revision {
-    my ($rev) = @_;
-    if ($rev =~ /^[A-Za-z]+/) {
-        $rev =~ s/^([\w-]+).*/$1/;
-    } elsif ($rev =~ /^\d+\.\d+/) {
-        $rev =~ s/^(\d+[\.\d+]+).*/$1/;
-    } elsif (defined($rev) && $rev ne "") {
-        $rev = "1.1";
-    }
-    return $rev;
 }
 
 ##
