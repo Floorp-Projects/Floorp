@@ -1659,6 +1659,11 @@ sub BuildMozilla()
         BuildOneProject(":mozilla:xpcom:tools:registry:macbuild:RegXPCOM.mcp", "RegXPCOM", 0, 0, 1);
     }
     
+    # build XPCShell to test the cache in debugging builds only.
+    if ($main::DEBUG && $main::options{cache}) {
+        BuildOneProject(":mozilla:js:macbuild:XPCShell.mcp", "XPCShellDebug", 0, 0, 1);
+    }
+    
     # copy command line documents into the Apprunner folder and set correctly the signature
     my($dist_dir) = GetBinDirectory();
     my($cmd_file_path) = ":mozilla:xpfe:bootstrap:";
