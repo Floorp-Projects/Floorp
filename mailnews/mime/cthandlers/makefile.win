@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 
 
-DIRS=	vcard \
+DIRS=	glue vcard \
 	resources \
 !if !defined(BUILD_SMIME)
 	smimestub \
