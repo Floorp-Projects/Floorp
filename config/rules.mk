@@ -537,7 +537,7 @@ ifneq ($(OS_ARCH),OS2)
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifeq ($(OS_ARCH),NTO)
+ifeq ($(OS_TARGET),NTO)
 AR_LIST		:= ar.elf t
 AR_EXTRACT	:= ar.elf x
 else
