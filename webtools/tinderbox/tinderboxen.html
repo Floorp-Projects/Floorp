@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Tinderboxen Big Picture</title>
+  </head>
+
+  <body>
+	<center>
+    <h1>Tinderboxen Big Picture</h1>
+</center>
+
+<script>
+
+  // For 3.0?
+  var noDHTML = false;
+  if (parseInt(navigator.appVersion) < 4) {
+    window.event = 0;
+    noDHTML = true;
+  } else if (navigator.userAgent.indexOf("MSIE") > 0 ) {
+    noDHTML = true;
+  }
+
+  // Add trees here.
+  var $tree1 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey&express=1";
+  var $tree2 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Branch&express=1";
+
+  // Print out using layers for 4.x
+  function printLayer(tree) {
+	  document.write("<ilayer src=\"");
+      document.write(tree);
+      document.write("\"></ilayer>");
+  }
+
+  // Print out using iframes for mozilla, ie.
+  function printIFrame(tree) {
+	  document.write("<iframe frameborder=0 height=100 width=100% src=\"");
+      document.write(tree);
+      document.write("\"></iframe>");
+  }
+
+
+  if(document.layers) {
+      // 4.x 
+	  document.write("<h2>Trunk</h2>");
+
+      printLayer($tree1);
+
+      document.write("<hr>");
+	  document.write("<h2>Branch</h2>");
+
+      printLayer($tree2);
+
+
+  } else {
+      // Mozilla or IE
+	  document.write("<h2>Trunk</h2>");
+
+      printIFrame($tree1);
+
+      document.write("<hr>");
+	  document.write("<h2>Branch</h2>");
+
+      printIFrame($tree2);
+  }
+	  
+</script>
+
+  </body>
+</html>
