@@ -14,7 +14,7 @@
       <title>General Questions</title>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-information">
 	  <para>
 	    Where can I find information about Bugzilla?</para>
 	</question>
@@ -28,7 +28,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-license">
 	  <para>
 	    What license is Bugzilla distributed under?
 	  </para>
@@ -43,7 +43,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-support">
 	  <para>
 	    How do I get commercial support for Bugzilla?
 	  </para>
@@ -70,7 +70,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-companies">
 	  <para>
 	    What major companies or projects are currently using Bugzilla
 	    for bug-tracking?
@@ -107,7 +107,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-maintainers">
 	  <para>
 	    Who maintains Bugzilla?
 	  </para>
@@ -122,7 +122,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-compare">
 	  <para>
 	    How does Bugzilla stack up against other bug-tracking databases?
 	  </para>
@@ -149,7 +149,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-bzmissing">
 	  <para>
 	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
@@ -174,7 +174,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-mysql">
 	  <para>
 	    Why MySQL?  I'm interested in seeing Bugzilla run on
 	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
@@ -202,7 +202,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-general-bonsaitools">
 	  <para>
 	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
 	    "/usr/bin/perl" or something else?
@@ -225,7 +225,7 @@
 
 
       <qandaentry>
-	<question>
+	<question id="faq-general-cookie">
 	  <para>
 	    Is there an easy way to change the Bugzilla cookie name?
 	  </para>
@@ -250,7 +250,7 @@
       </para>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-client">
 	  <para>
 	    Is Bugzilla web-based, or do you have to have specific software or
 	    a specific operating system on your machine?
@@ -265,7 +265,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-integration">
 	  <para>
 	    Can Bugzilla integrate with
 	    Perforce (SCM software)?
@@ -280,7 +280,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-projects">
 	  <para>
 	    Does Bugzilla allow the user to track multiple projects?
 	  </para>
@@ -294,7 +294,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-sorting">
 	  <para>
 	    If I am on many projects, and search for all bugs assigned to me, will
 	    Bugzilla list them for me and allow me to sort by project, severity etc?
@@ -308,7 +308,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-attachments">
 	  <para>
 	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
 	    are there any that are NOT allowed?
@@ -326,7 +326,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-priorities">
 	  <para>
 	    Does Bugzilla allow us to define our own priorities and levels? Do we
 	    have complete freedom to change the labels of fields and format of them, and
@@ -349,7 +349,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-reporting">
 	  <para>
 	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
 	    know, the type of stuff that management likes to see. :)
@@ -373,7 +373,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-email">
 	  <para>
 	    Is there email notification and if so, what do you see when you get an
 	    email?
@@ -389,7 +389,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-cclist">
 	  <para>
 	    Can email notification be set up to send to multiple
 	    people, some on the To List, CC List, BCC List etc?
@@ -403,7 +403,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-emailapp">
 	  <para>
 	    Do users have to have any particular
 	    type of email application?
@@ -428,7 +428,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-data">
 	  <para>
 	    Does Bugzilla allow data to be imported and exported? If I had outsiders
 	    write up a bug report using a MS Word bug template, could that template be
@@ -467,7 +467,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-l10n">
 	  <para>
 	    Has anyone converted Bugzilla to another language to be used in other
 	    countries? Is it localizable?
@@ -488,7 +488,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-reports">
 	  <para>
 	    Can a user create and save reports? Can they do this in Word format?
 	    Excel format?
@@ -502,7 +502,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-searching">
 	  <para>
 	    Does Bugzilla have the ability to search by word, phrase, compound
 	    search?
@@ -517,7 +517,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-midair">
 	  <para>
 	     Does Bugzilla provide record locking when there is simultaneous access
 	    to the same bug? Does the second person get a notice that the bug is in use
@@ -533,7 +533,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-backup">
 	  <para>
 	    Are there any backup features provided?
 	  </para>
@@ -549,7 +549,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-livebackup">
 	  <para>
 	    Can users be on the system while a backup is in progress?
 	  </para>
@@ -564,7 +564,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-maintenance">
 	  <para>
 	    What type of human resources are needed to be on staff to install and
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
@@ -588,7 +588,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-installtime">
 	  <para>
 	    What time frame are we looking at if we decide to hire people to install
 	    and maintain the Bugzilla? Is this something that takes hours or weeks to
@@ -610,7 +610,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-phb-cost">
 	  <para>
 	    Is there any licensing fee or other fees for using Bugzilla? Any
 	    out-of-pocket cost other than the bodies needed as identified above?
@@ -629,7 +629,7 @@
       <title>Bugzilla Security</title>
 
       <qandaentry>
-	<question>
+	<question id="faq-security-mysql">
 	  <para>
 	    How do I completely disable MySQL security if it's giving me problems
 	    (I've followed the instructions in the installation section of this guide)?
@@ -645,7 +645,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-security-knownproblems">
 	  <para>
 	    Are there any security problems with Bugzilla?
 	  </para>
@@ -663,7 +663,7 @@
 
 
       <qandaentry>
-	<question>
+	<question id="faq-security-mysqluser">
 	  <para>
 	    I've implemented the security fixes mentioned in Chris Yeh's security
 	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
@@ -684,7 +684,7 @@
       <title>Bugzilla Email</title>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-nomail">
 	  <para>
 	    I have a user who doesn't want to receive any more email from Bugzilla.
 	    How do I stop it entirely for this user?
@@ -700,7 +700,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-testing">
 	  <para>
 	    I'm evaluating/testing Bugzilla, and don't want it to send email to
 	    anyone but me. How do I do it?
@@ -715,7 +715,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-whine">
 	  <para>
 	    I want whineatnews.pl to whine at something more, or other than, only new
 	    bugs. How do I do it?
@@ -733,7 +733,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-procmail">
 	  <para>
 	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
 	    What alternatives do I have?
@@ -756,7 +756,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-mailif">
 	  <para>
 	    How do I set up the email interface to submit/change bugs via email?
 	  </para>
@@ -770,7 +770,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-sendmailnow">
 	  <para>
 	    Email takes FOREVER to reach me from Bugzilla -- it's extremely slow.
 	    What gives?
@@ -791,7 +791,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-email-nonreceived">
 	  <para>
 	     How come email from Bugzilla changes never reaches me?
 	  </para>
@@ -816,7 +816,7 @@
       <title>Bugzilla Database</title>
 
       <qandaentry>
-	<question>
+	<question id="faq-db-oracle">
 	  <para>
 	    I've heard Bugzilla can be used with Oracle?
 	  </para>
@@ -833,7 +833,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-db-corrupted">
 	  <para>
 	    I think my database might be corrupted, or contain invalid entries. What
 	    do I do?
@@ -861,7 +861,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-db-manualedit">
 	  <para>
 	    I want to manually edit some entries in my database. How?
 	  </para>
@@ -882,7 +882,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-db-permissions">
 	  <para>
 	    I think I've set up MySQL permissions correctly, but Bugzilla still can't
 	    connect.
@@ -907,7 +907,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-db-synchronize">
 	  <para>
 	    How do I synchronize bug information among multiple different Bugzilla
 	    databases?
@@ -938,7 +938,7 @@
       <title>Bugzilla and Win32</title>
 
       <qandaentry>
-	<question>
+	<question id="faq-nt-easiest">
 	  <para>
 	    What is the easiest way to run Bugzilla on Win32 (Win98+/NT/2K)?
 	  </para>
@@ -952,7 +952,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-nt-bundle">
 	  <para>
 	    Is there a "Bundle::Bugzilla" equivalent for Win32?
 	  </para>
@@ -967,7 +967,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-nt-mappings">
 	  <para>
 	    CGI's are failing with a "something.cgi is not a valid Windows NT
 	    application" error. Why?
@@ -999,7 +999,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-nt-dbi">
 	  <para>
 	    I'm having trouble with the perl modules for NT not being able to talk to
 	    to the database.
@@ -1049,7 +1049,7 @@
       <title>Bugzilla Usage</title>
 
       <qandaentry>
-	<question>
+	<question id="faq-use-changeaddress">
 	  <para>
 	    How do I change my user name (email address) in Bugzilla?
 	  </para>
@@ -1063,7 +1063,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-use-query">
 	  <para>
 	    The query page is very confusing.  Isn't there a simpler way to query?
 	  </para>
@@ -1078,7 +1078,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-use-accept">
 	  <para>
 	    I'm confused by the behavior of the "accept" button in the Show Bug form.
 	    Why doesn't it assign the bug to me when I accept it?
@@ -1102,7 +1102,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-use-attachment">
 	  <para>
 	    I can't upload anything into the database via the "Create Attachment"
 	    link.  What am I doing wrong?
@@ -1118,7 +1118,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-use-keyword">
 	  <para>
 	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </para>
@@ -1138,7 +1138,7 @@
       <title>Bugzilla Hacking</title>
 
       <qandaentry>
-        <question>
+        <question id="faq-hacking-templatestyle">
 	  <para>
 	    What kind of style should I use for templatization?
 	  </para>
@@ -1173,7 +1173,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-hacking-bugzillabugs">
 	  <para>
 	    What bugs are in Bugzilla right now?
 	  </para>
@@ -1198,7 +1198,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-hacking-priority">
 	  <para>
 	    How can I change the default priority to a null value?  For instance, have the default
 	    priority be "---" instead of "P2"?
@@ -1216,7 +1216,7 @@
       </qandaentry>
 
       <qandaentry>
-	<question>
+	<question id="faq-hacking-patches">
 	  <para>
 	    What's the best way to submit patches?  What guidelines should I follow?
 	  </para>
