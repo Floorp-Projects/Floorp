@@ -1,3 +1,4 @@
 nsIRDFContent.h
 nsIRDFContentModelBuilder.h
 nsIRDFDocument.h
+nsIDOMXULNode.h
