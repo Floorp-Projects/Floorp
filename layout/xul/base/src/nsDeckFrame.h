@@ -52,16 +52,16 @@ class nsDeckFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager);
-
- 
+  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell,
+                                  nsIFrame** aNewFrame,
+                                  nsIBoxLayout* aLayoutManager);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aModType, 
-                              PRInt32 aHint);
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType, 
+                              PRInt32         aHint);
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
@@ -72,31 +72,16 @@ public:
                    PRUint32             aFlags = 0);
 
  
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint,
+  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+                              const nsPoint&    aPoint,
                               nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**     aFrame);
-
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
-
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                              nsIFrame**        aFrame);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                nsIContent*      aContent,
-                nsIFrame*        aParent,
-                nsStyleContext*  aContext,
-                nsIFrame*        aPrevInFlow);
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
 
@@ -118,16 +103,12 @@ protected:
   virtual PRInt32 GetSelectedIndex();
   virtual void HideBox(nsIPresContext* aPresContext, nsIBox* aBox);
   virtual void ShowBox(nsIPresContext* aPresContext, nsIBox* aBox);
-  virtual nsresult CreateWidget(nsIPresContext* aPresContext, nsIBox* aBox);
-  virtual nsresult CreateWidgets(nsIPresContext* aPresContext);
 
 private:
 
   PRInt32 mIndex;
 
 }; // class nsDeckFrame
-
-
 
 #endif
 
