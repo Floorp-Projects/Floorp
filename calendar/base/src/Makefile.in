@@ -69,6 +69,7 @@ CPPSRCS = calDateTime.cpp \
 
 
 EXTRA_COMPONENTS = \
+	calAttachment.js \
 	calAttendee.js \
 	calEvent.js \
 	calItemBase.js \

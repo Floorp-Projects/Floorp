@@ -715,6 +715,17 @@ function createAttendee()
     return Components.classes["@mozilla.org/calendar/attendee;1"].createInstance(Components.interfaces.calIAttendee);
 }
 
+function createAttachment()
+{
+    return Components.classes["@mozilla.org/calendar/attachment;1"].createInstance(Components.interfaces.calIAttachment);
+}
+
+function makeURL(uriString)
+{
+    var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    return ioservice.newURI(uriString, null, null);
+}
+
 function createCalendar()
 {
     var prefobj = prefService.getBranch("calendar.");
@@ -722,17 +733,16 @@ function createCalendar()
     var calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=" + caltype].getService(Components.interfaces.calICalendar);
     if (calendar.uri || caltype == "memory")
         return calendar;
-        
-    var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 
     var uri = null;
     if (caltype == "caldav") {
         var uriString = getCharPref(prefobj, "default-calendar.uri", null);
-        uri = ioservice.newURI(uriString, null, null);
+        uri = makeURL(uriString);
     } else if (caltype == "storage") {
         var pathString = getCharPref(prefobj, "default-calendar.path", null);
         var dbFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
         dbFile.initWithPath(pathString);
+        var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
         uri = ioservice.newFileURI(dbFile);
     }
 

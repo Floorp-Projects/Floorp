@@ -64,8 +64,14 @@ const componentData =
     {cid: Components.ID("{5c8dcaa3-170c-4a73-8142-d531156f664d}"),
      contractid: "@mozilla.org/calendar/attendee;1",
      script: "calAttendee.js",
-     constructor: "calAttendee"}];
-    
+     constructor: "calAttendee"},
+
+    {cid: Components.ID("{5f76b352-ab75-4c2b-82c9-9206dbbf8571}"),
+     contractid: "@mozilla.org/calendar/attachment;1",
+     script: "calAttachment.js",
+     constructor: "calAttachment"}
+    ];
+
 var calItemModule = {
     mScriptsLoaded: false,
     loadScripts: function () {

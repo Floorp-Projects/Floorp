@@ -224,11 +224,10 @@ function loadCalendarEventDialog()
     /* XXX this could will work when attachments are supported by calItemBase
     var count = event.attachments.length;
     for(var i = 0; i < count; i++) {
-        var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.nsIMsgAttachment);
+        var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.calIAttachment);
         addAttachment(thisAttachment);
     }
     */
-
     document.getElementById("exceptions-date-picker").value = gStartDate;
 
     dump("event: "+event+"\n");
@@ -500,13 +499,14 @@ function onOKCommand()
 
     /* File attachments */
     /* XXX this could will work when attachments are supported by calItemBase
-    var attachmentListbox = documentgetElementById("attachmenxtBucket");
+    var attachmentListbox = documentgetElementById("attachmentBucket");
+
     var attachments = event.attachments.QueryInterface(Components.interfaces.nsIMutableArray);
 
     attachments.clear();
     for (i = 0; i < attachmentListbox.childNodes.length; i++) {
-        attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
-        attachment.url = attachmentListbox.childNodes[i].getAttribute("label");
+        attachment = Components.classes["@mozilla.org/calendar/attachment;1"].createInstance(Components.interfaces.calIAttachment);
+        attachment.url = makeURL(attachmentListbox.childNodes[i].getAttribute("label"));
         attachments.appendElement(attachment);
     }
     */

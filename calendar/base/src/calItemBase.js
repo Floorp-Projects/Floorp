@@ -95,6 +95,9 @@ calItemBase.prototype = {
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
 
+        this.mAttachments = Components.classes["@mozilla.org/array;1"].
+                            createInstance(Components.interfaces.nsIArray);
+
         this.mAttendees = [];
 
         this.mRecurrenceInfo = null;
