@@ -491,13 +491,13 @@ nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 }
 
 //----------------------------------------------------------------------------------------
-ostream& operator << (ostream& s, const nsNativeFileSpec& spec)
+nsOutputFileStream& operator << (nsOutputFileStream& s, const nsNativeFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
 	s << spec.mSpec.vRefNum << ", " << spec.mSpec.parID << ", \"";
 	s.write((const char*)&spec.mSpec.name[1], spec.mSpec.name[0]);
 	return s << "\"";	
-} // ostream& operator << (ostream&, const nsNativeFileSpec&)
+} // nsOutputFileStream& operator << (nsOutputFileStream&, const nsNativeFileSpec&)
 
 //----------------------------------------------------------------------------------------
 void nsNativeFileSpec::operator = (const char* inString)

@@ -18,9 +18,11 @@
  
 #include "nsFileSpec.h"
 
+#include "nsFileStream.h"
+
 #include "prtypes.h"
 
-#ifdef NS_USING_NAMESPACE
+#ifdef NS_USING_STL
 
 #include <strstream>
 
@@ -257,7 +259,7 @@ void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 } // nsFileURL::operator =
 
 //----------------------------------------------------------------------------------------
-ostream& operator << (ostream& s, const nsFileURL& url)
+nsOutputFileStream& operator << (nsOutputFileStream& s, const nsFileURL& url)
 //----------------------------------------------------------------------------------------
 {
     return (s << url.mURL);
@@ -479,7 +481,7 @@ void nsNativeFileSpec::operator = (const char* inString)
 
 #if (defined(XP_UNIX) || defined(XP_PC))
 //----------------------------------------------------------------------------------------
-ostream& operator << (ostream& s, const nsNativeFileSpec& spec)
+nsOutputFileStream& operator << (nsOutputFileStream& s, const nsNativeFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
     return (s << (const char*)spec.mPath);
