@@ -1715,7 +1715,7 @@ sub BuildMozilla()
 	_copy( $cmd_file_path . "Mozilla_Profile_Manager", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
-	$cmd_file = "Mozilla Installer";
+	$cmd_file = "Mozilla Profile Migration";
 	_copy( $cmd_file_path . "Mozilla_Installer", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
