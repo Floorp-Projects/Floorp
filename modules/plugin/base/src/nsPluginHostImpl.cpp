@@ -1023,6 +1023,25 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
 
 
 ////////////////////////////////////////////////////////////////////////
+PRBool nsPluginTag::Equals(nsPluginTag *aPluginTag)
+{
+  NS_ENSURE_TRUE(aPluginTag, PR_FALSE);
+
+  if ( (PL_strcmp(mName, aPluginTag->mName) != 0) ||
+       (PL_strcmp(mDescription, aPluginTag->mDescription) != 0) ||
+       (mVariants != aPluginTag->mVariants) )
+    return PR_FALSE;
+
+  if (0 != mVariants && mMimeTypeArray && aPluginTag->mMimeTypeArray)
+    for (PRInt32 i = 0; i < mVariants; i++)
+      if (PL_strcmp(mMimeTypeArray[i], aPluginTag->mMimeTypeArray[i]) != 0)
+        return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////
 class nsPluginStreamListenerPeer;
 
 class nsPluginStreamInfo : public nsIPluginStreamInfo
@@ -4333,38 +4352,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
 
 ////////////////////////////////////////////////////////////////////////
-static PRBool areTheSameFileNames(char * aPath1, char * aPath2)
-{
-  if((aPath1 == nsnull) || (aPath2 == nsnull))
-    return PR_FALSE;
-
-  nsresult rv = NS_OK;
-
-  nsXPIDLCString filename1;
-  nsXPIDLCString filename2;
-
-  nsCOMPtr<nsILocalFile> file1;
-  nsCOMPtr<nsILocalFile> file2;
-
-  if (NS_SUCCEEDED(NS_NewLocalFile(aPath1, PR_FALSE, getter_AddRefs(file1))))
-    file1->GetLeafName(getter_Copies(filename1));
-  else //XXX if we couldn't create an nsILocalFile, try comparing raw string anyway
-    filename1.Adopt(PL_strdup(aPath1));
-
-  if (NS_SUCCEEDED(NS_NewLocalFile(aPath2, PR_FALSE, getter_AddRefs(file2))))
-    file2->GetLeafName(getter_Copies(filename2));
-  else  //XXX workaround for Mac that sometimes passes in just a leaf name
-    filename2.Adopt(PL_strdup(aPath2));
-  
-  if(PL_strlen(filename1.get()) != PL_strlen(filename2.get()))
-    return PR_FALSE;
-
-  // XXX this one MUST be case insensitive for Windows and MUST be case 
-  // sensitive for Unix. How about Win2000?
-  return (nsnull == PL_strncasecmp(filename1.get(), filename2.get(), PL_strlen(filename1.get())));
-}
-
-////////////////////////////////////////////////////////////////////////
 // currently 'unwanted' plugins are Java, and all other plugins except
 // RealPlayer, Acrobat, Flash
 static PRBool isUnwantedPlugin(nsPluginTag * tag)
@@ -4523,7 +4510,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       {
         for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
         {
-          if(areTheSameFileNames(tag->mFileName, pluginTag->mFileName))
+          if(tag->Equals(pluginTag))
           {
             bAddIt = PR_FALSE;
             break;
@@ -4965,7 +4952,7 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
     PRBool bAddIt = PR_TRUE;
     for(nsPluginTag* existingtag = mPlugins; existingtag != nsnull; existingtag = existingtag->mNext)
     {
-      if(areTheSameFileNames(tag->mFileName, existingtag->mFileName))
+      if(tag->Equals(existingtag))
       {
         bAddIt = PR_FALSE;
         break;

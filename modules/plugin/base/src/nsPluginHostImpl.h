@@ -87,6 +87,8 @@ public:
 
   void TryUnloadPlugin(PRBool aForceShutdown = PR_FALSE);
   void Mark(PRUint32 mask) { mFlags |= mask; }
+  PRBool Equals(nsPluginTag* aPluginTag);
+  
 
   nsPluginTag   *mNext;
   char          *mName;
