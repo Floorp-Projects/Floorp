@@ -510,8 +510,8 @@ void nsDocLoaderImpl::LoadURLComplete(nsISupports* aBindInfo)
     if (PR_TRUE != rv) {
         nsDocumentBindInfo* docInfo;
 
-        docInfo->QueryInterface(kDocumentBindInfoIID, (void**)&docInfo);
-        NS_ASSERTION((docInfo->GetStatus() == NS_BINDING_ABORTED), 
+        rv = aBindInfo->QueryInterface(kDocumentBindInfoIID, (void**)&docInfo);
+        NS_ASSERTION(((NS_OK == rv) && (docInfo->GetStatus() == NS_BINDING_ABORTED)), 
                      "Entry was not Aborted!");
     }
 #endif /* NS_DEBUG */
