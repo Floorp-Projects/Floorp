@@ -925,82 +925,79 @@ nsresult nsHTMLImageElement::ImageLibCallBack(nsIPresContext* aPresContext,
 
 
 nsresult
-nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc)
+nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
+                                const nsAReadableString& aSrc)
 {
   nsresult result = NS_OK;
 
-  if (nsnull != mOwnerDocument) {
-    PRInt32 i, count = mOwnerDocument->GetNumberOfShells();
+  result = mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc,
+                               PR_TRUE);
+
+  if (NS_SUCCEEDED(result) && mOwnerDocument) {
     nsIPresShell* shell;
 
-    for (i = 0; i < count; i++) {
-      shell = mOwnerDocument->GetShellAt(i);
-      if (nsnull != shell) {
-        nsIPresContext* context;
-        
-        result = shell->GetPresContext(&context);
-        if (NS_SUCCEEDED(result)) {
-          nsSize size;
-          nsHTMLValue val;
-          float p2t;
-          
-          context->GetScaledPixelsToTwips(&p2t);
-          result = mInner.GetHTMLAttribute(nsHTMLAtoms::width, val);
-          if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-            size.width = NSIntPixelsToTwips(val.GetIntValue(), p2t);
-          }
-          else {
-            size.width = 0;
-          }
-          result = mInner.GetHTMLAttribute(nsHTMLAtoms::height, val);
-          if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-            size.height = NSIntPixelsToTwips(val.GetIntValue(), p2t);
-          }
-          else {
-            size.height = 0;
-          }
+    shell = mOwnerDocument->GetShellAt(0);
+    if (nsnull != shell) {
+      nsIPresContext* context;
 
-          nsAutoString url;
-          if (nsnull != aBaseURL) {
-            result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
-            if (NS_FAILED(result)) {
-              url.Assign(aSrc);
-            }
-          }
-          else {
+      result = shell->GetPresContext(&context);
+      if (NS_SUCCEEDED(result)) {
+        nsSize size;
+        nsHTMLValue val;
+        float p2t;
+
+        context->GetScaledPixelsToTwips(&p2t);
+        result = mInner.GetHTMLAttribute(nsHTMLAtoms::width, val);
+        if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+          size.width = NSIntPixelsToTwips(val.GetIntValue(), p2t);
+        }
+        else {
+          size.width = 0;
+        }
+        result = mInner.GetHTMLAttribute(nsHTMLAtoms::height, val);
+        if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+          size.height = NSIntPixelsToTwips(val.GetIntValue(), p2t);
+        }
+        else {
+          size.height = 0;
+        }
+
+        nsAutoString url;
+        if (nsnull != aBaseURL) {
+          result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
+          if (NS_FAILED(result)) {
             url.Assign(aSrc);
           }
-
-          nsSize* specifiedSize = nsnull;
-          if ((size.width > 0) || (size.height > 0)) {
-            specifiedSize = &size;
-          }
-
-          // If we have a loader we're in the middle of loading a image,
-          // we'll cancel that load and start a new one.
-          if (mLoader) {
-            mLoader->RemoveFrame(this);
-          }
-
-          // Start the image loading.
-          result = context->StartLoadImage(url, nsnull, specifiedSize,
-                                           nsnull, ImageLibCallBack, this,
-                                           this, getter_AddRefs(mLoader));
-
-          NS_RELEASE(context);
         }
-        
-        NS_RELEASE(shell);
+        else {
+          url.Assign(aSrc);
+        }
+
+        nsSize* specifiedSize = nsnull;
+        if ((size.width > 0) || (size.height > 0)) {
+          specifiedSize = &size;
+        }
+
+        // If we have a loader we're in the middle of loading a image,
+        // we'll cancel that load and start a new one.
+        if (mLoader) {
+          mLoader->RemoveFrame(this);
+        }
+
+        // Start the image loading.
+        result = context->StartLoadImage(url, nsnull, specifiedSize,
+                                         nsnull, ImageLibCallBack, this,
+                                         this, getter_AddRefs(mLoader));
+
+        NS_RELEASE(context);
       }
+
+      NS_RELEASE(shell);
     }
 
     // Only do this the first time since it's only there for
     // backwards compatability
     NS_RELEASE(mOwnerDocument);
-  }
-
-  if (NS_SUCCEEDED(result)) {
-    result = mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc, PR_TRUE);
   }
 
   return result;
