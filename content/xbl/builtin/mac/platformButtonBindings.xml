@@ -7,32 +7,32 @@
   <binding id="button" extends="xul:button">
     <content>
       <xul:spring class="button-image-left" inherits="disabled"/>
-    	<xul:box flex="1" class="button-image-middle" inherits="disabled" orient="vertical" align="center">
-    	  <xul:spring flex="1" class="button-top-spring"/>
-    	  <xul:box flex="1">
-    	  	<xul:html class="button-text-box" flex="1">
-		        <children/>
-    	    </xul:html>
-    	  </xul:box>
-    	  <xul:spring flex="1" class="button-bottom-spring"/>
-    	</xul:box>
-    	<xul:spring class="button-image-right" inherits="disabled"/>
+      <xul:vbox flex="1" class="button-image-middle" inherits="disabled" align="center">
+        <xul:spring flex="1" class="button-top-spring"/>
+        <xul:box flex="1">
+          <xul:html class="button-text-box" flex="1">
+            <children/>
+          </xul:html>
+        </xul:box>
+        <xul:spring flex="1" class="button-bottom-spring"/>
+      </xul:vbox>
+      <xul:spring class="button-image-right" inherits="disabled"/>
     </content>
   </binding>
   
   <binding id="inputButton" extends="xul:button">
     <content>
       <xul:spring class="button-image-left" inherits="disabled"/>
-    	<xul:box flex="1" class="button-image-middle" inherits="disabled" orient="vertical" align="center">
-    	  <xul:spring flex="1" class="button-top-spring"/>
-    	  <xul:box flex="1">
-    	  	<xul:box class="button-text-box" flex="1">
-		        <xul:text inherits="disabled,value,crop,accesskey"/>
-    	    </xul:box>
-    	  </xul:box>
-    	  <xul:spring flex="1" class="button-bottom-spring"/>
-    	</xul:box>
-    	<xul:spring class="button-image-right" inherits="disabled"/>
+      <xul:vbox flex="1" class="button-image-middle" inherits="disabled" align="center">
+        <xul:spring flex="1" class="button-top-spring"/>
+        <xul:box flex="1">
+          <xul:box class="button-text-box" flex="1">
+            <xul:text inherits="disabled,value,crop,accesskey"/>
+          </xul:box>
+        </xul:box>
+        <xul:spring flex="1" class="button-bottom-spring"/>
+      </xul:vbox>
+      <xul:spring class="button-image-right" inherits="disabled"/>
     </content>
   </binding>
   
