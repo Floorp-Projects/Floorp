@@ -487,6 +487,10 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
   NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::Reset() - Wyciwyg Channel  still exists!");
   mWyciwygChannel = nsnull;
 
+  if (mBaseTarget) {
+    mBaseTarget->Truncate();
+  }
+
   return result;
 }
 
