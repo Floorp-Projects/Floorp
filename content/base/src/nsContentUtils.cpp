@@ -1015,12 +1015,14 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(aOffset));
 
   // insert all the ancestors
-  nsIContent* ancestor = content->GetParent();
-  while (ancestor) {
-    ancestor->IndexOf(content, offset);
-    aAncestorNodes->AppendElement(ancestor);
+  nsIContent* child = content;
+  nsIContent* parent = child->GetParent();
+  while (parent) {
+    parent->IndexOf(child, offset);
+    aAncestorNodes->AppendElement(parent);
     aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
-    ancestor = ancestor->GetParent();
+    child = parent;
+    parent = parent->GetParent();
   }
 
   return NS_OK;
