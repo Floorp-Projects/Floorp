@@ -72,6 +72,10 @@ CPPSRCS = 				\
 
 REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2 pippki xpconnect jar
 
+EXTRA_LIBS = $(NSS_LIBS)
+
+EXTRA_DEPS = $(EXTRA_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+=	\
@@ -83,23 +87,3 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
-
-EXTRA_LIBS	+= \
-	$(DIST)/lib/libcrmf.$(LIB_SUFFIX) \
-        $(DIST)/lib/libssl.$(LIB_SUFFIX) \
-        $(DIST)/lib/libnss.$(LIB_SUFFIX) \
-        $(DIST)/lib/libssl.$(LIB_SUFFIX) \
-        $(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
-        $(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
-        $(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-        $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-        $(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-        $(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-        $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-        $(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
-        $(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-        $(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
-        $(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-        $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
-        $(NULL)
-
