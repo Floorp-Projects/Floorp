@@ -40,7 +40,6 @@
 #undef DARWIN
 #import <Cocoa/Cocoa.h>
 
-#include "nsIEventSink.h"
 
 //#include <memory>	// for auto_ptr
 #include <Controls.h>
@@ -71,7 +70,7 @@ class nsCocoaWindow;
 //-------------------------------------------------------------------------
 //	Cocoa native window
 
-class nsCocoaWindow : public nsBaseWidget, public nsIEventSink
+class nsCocoaWindow : public nsBaseWidget
 {
 private:
 	typedef nsBaseWidget Inherited;
@@ -84,7 +83,6 @@ public:
     virtual ~nsCocoaWindow();
 
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIEVENTSINK 
       
     NS_IMETHOD              Create(nsNativeWidget aParent,
                                      const nsRect &aRect,

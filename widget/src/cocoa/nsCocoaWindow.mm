@@ -281,7 +281,7 @@ nsCocoaWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 #endif
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsIEventSink);
+NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited);
 
 
 //-------------------------------------------------------------------------
@@ -1521,6 +1521,8 @@ OnMacOSX()
 }
 
 
+#if 0
+
 //
 // DispatchEvent
 //
@@ -1598,6 +1600,8 @@ nsCocoaWindow::DispatchEvent ( void* anEvent, void* aView, PRBool *_retval )
 
   return NS_OK;
 }
+
+#endif
 
 
 //-------------------------------------------------------------------------
