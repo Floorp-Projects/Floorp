@@ -851,7 +851,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gOptgroupParents,&gContainsOpts,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_option,
-    /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
+    /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
@@ -931,7 +931,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script},
 
   { /*tag*/                             eHTMLTag_select,
-    /*requiredAncestor*/                eHTMLTag_form, eHTMLTag_unknown,
+    /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity,	
