@@ -129,7 +129,7 @@
 } 
 
 #button-delete:hover:active {
-  -moz-image-region: rect(408px 199px 441px 150px);
+  -moz-image-region: rect(408px 149px 441px 100px);
 }
 
 #button-delete[disabled] {
