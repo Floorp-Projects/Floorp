@@ -449,6 +449,11 @@ enum nsDragDropEventStatus {
 // Indicates a theme change has occurred
 #define NS_THEMECHANGED                 (NS_WINDOW_START + 41)
 
+// Indicates a System color has changed. It is the platform
+// toolkits responsibility to invalidate the window to 
+// ensure that it is drawn using the current system colors.
+#define NS_SYSCOLORCHANGED              (NS_WINDOW_START + 42)
+
 // Indicates a script error has occurred
 #define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
 

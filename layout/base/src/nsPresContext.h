@@ -199,6 +199,7 @@ public:
 
   NS_IMETHOD GetTheme(nsITheme** aResult);
   NS_IMETHOD ThemeChanged();
+  NS_IMETHOD SysColorChanged();
 
 protected:
   nsPresContext();

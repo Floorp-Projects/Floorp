@@ -561,6 +561,11 @@ protected:
     IAccessible* mRootAccessible;
     static BOOL gIsAccessibilityOn;
 #endif
+
+   static BOOL CALLBACK BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg);
+   static BOOL CALLBACK BroadcastMsg(HWND aTopWindow, LPARAM aMsg);
+public:
+   static void GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
 //

@@ -370,6 +370,21 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
             MethodInfo *info = (MethodInfo *)lParam;
             return info->Invoke();
         }
+
+        case WM_SYSCOLORCHANGE:
+        {
+          // WM_SYSCOLORCHANGE messages are only dispatched to top
+          // level windows but NS_SYSCOLORCHANGE messages must be dispatched
+          // to all windows including child windows. We dispatch these messages 
+          // from the nsToolkit because if we are running embedded we may not 
+          // have a top-level nsIWidget window.
+          
+          // On WIN32 all windows are automatically invalidated after the 
+          // WM_SYSCOLORCHANGE is dispatched so the window is drawn using
+          // the current system colors.
+          nsWindow::GlobalMsgWindowProc(hWnd, msg, wParam, lParam);
+        }
+
     }
 
 #ifdef MOZ_AIMM

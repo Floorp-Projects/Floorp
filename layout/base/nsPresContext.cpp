@@ -1775,6 +1775,28 @@ nsPresContext::ThemeChanged()
   return mShell->ReconstructStyleData(PR_FALSE);
 }
 
+NS_IMETHODIMP
+nsPresContext::SysColorChanged()
+{
+  if (mLookAndFeel) {
+     // Don't use the cached values for the system colors
+    mLookAndFeel->LookAndFeelChanged();
+  }
+   
+  // Reset default background and foreground colors for the document since
+  // they may be using system colors
+  GetDocumentColorPreferences();
+
+  // Clear out all of the style data since it may contain RGB values
+  // which originated from system colors.
+  if (mShell) {
+    // Clear out all our style data.
+    nsCOMPtr<nsIStyleSet> set;
+    mShell->GetStyleSet(getter_AddRefs(set));
+    set->ClearStyleData(this, nsnull, nsnull);
+  }
+  return NS_OK;
+}
 
 #ifdef MOZ_REFLOW_PERF
 NS_IMETHODIMP
