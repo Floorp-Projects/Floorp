@@ -559,13 +559,16 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
 #endif
   // Standards mode background painting removed.  See bug 4510
 
+  PRUint8 overflow = GetStyleDisplay()->mOverflow;
+  PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
+                overflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
   const nsStyleDisplay* disp = GetStyleDisplay();
-  if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+  if (clip) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
   }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-  if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+  if (clip) {
     PRBool clipState;
     aRenderingContext.PopState(clipState);
   }

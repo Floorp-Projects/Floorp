@@ -337,14 +337,16 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
   // the remaining code was copied from nsContainerFrame::PaintChildren since
   // it only paints the primary child list
 
-  const nsStyleDisplay* disp = GetStyleDisplay();
 
   // Child elements have the opportunity to override the visibility property
   // of their parent and display even if the parent is hidden
   
   // If overflow is hidden then set the clip rect so that children
   // don't leak out of us
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+  PRUint8 overflow = GetStyleDisplay()->mOverflow;
+  PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
+                overflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
+  if (clip) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
   }
@@ -356,7 +358,7 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
     PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
   }
 
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+  if (clip) {
     PRBool clipState;
     aRenderingContext.PopState(clipState);
   }
@@ -1602,8 +1604,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
     nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
     PRBool innerMoved = (innerRect.x != innerOrigin.x) ||
                          (innerRect.y != innerOrigin.y);
-    nsSize desSize = nsSize(aDesiredSize.width,
-                     aDesiredSize.height);
+    nsSize desSize(aDesiredSize.width, aDesiredSize.height);
     InvalidateDamage(aPresContext, (PRUint8) NO_SIDE, desSize, innerMoved, PR_FALSE,
                      oldOverflowArea);
   }
