@@ -47,7 +47,7 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(nsresult aErrorResult);
+  NS_IMETHOD NotifyError(const nsParserError* aError);
 
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
@@ -578,7 +578,7 @@ nsHTMLNullSink::SetParser(nsIParser* aParser)
 }
 
 NS_IMETHODIMP
-nsHTMLNullSink::NotifyError(nsresult aErrorResult)
+nsHTMLNullSink::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
 }
