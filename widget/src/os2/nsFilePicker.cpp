@@ -37,6 +37,7 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
+#include "nsModule.h"
 
 /* Item structure */
 typedef struct _MyData
@@ -160,7 +161,16 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     for (i = 0; i < mTitles.Count(); i++)
     {
       const nsString& typeWide = *mTitles[i];
-      apszTypeList[i] = ToNewCString(typeWide);
+      PRInt32 l = (typeWide.Length()+2)*2;
+      char *filterBuffer = (char*) nsMemory::Alloc(l);
+      int len = gWidgetModuleData->WideCharToMultiByte(0,
+                                    typeWide.get(),
+                                    typeWide.Length(),
+                                    filterBuffer,
+                                    l);
+      filterBuffer[len] = NULL;
+      filterBuffer[len+1] = NULL;
+      apszTypeList[i] = filterBuffer;
     }
     apszTypeList[i] = 0;
     filedlg.papszITypeList = (PAPSZ)apszTypeList;
