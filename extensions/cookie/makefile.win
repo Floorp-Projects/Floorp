@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  windowwatcher \
 		  content \
+		  docshell \
 		  $(NULL)
 
 EXPORTS =       nsCookieHTTPNotify.h    \

@@ -43,6 +43,7 @@
 
 extern nsresult IMAGE_CheckForPermission
   (const char * hostname, const char * firstHostname, PRBool *permission);
+extern PRBool IMAGE_BlockedInMail(void);
 extern nsresult IMAGE_Block(const char * imageURL, nsIIOService *ioService);
 extern void IMAGE_RegisterPrefCallbacks(void);
 

@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  uriloader \
 		  windowwatcher \
+		  docshell \
 		  $(NULL)
 
 ifdef ENABLE_TESTS

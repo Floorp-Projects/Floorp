@@ -49,6 +49,7 @@
 #define image_behaviorPref "network.image.imageBehavior"
 #define image_warningPref "network.image.warnAboutImages"
 #define image_blockerPref "imageblocker.enabled"
+#define image_blockImageInMailPref "mailnews.message_display.disable_remote_image"
 
 typedef struct _permission_HostStruct {
   char * host;
@@ -63,10 +64,13 @@ typedef struct _permission_TypeStruct {
 #define kBehaviorPrefDefault PERMISSION_Accept
 #define kWarningPrefDefault PR_FALSE
 #define kBlockerPrefDefault PR_FALSE
+#define kBlockImageInMailPrefDefault PR_FALSE
 
 static PERMISSION_BehaviorEnum gBehaviorPref = kBehaviorPrefDefault;
 static PRBool gWarningPref = kWarningPrefDefault;
 static PRBool gBlockerPref = kBlockerPrefDefault;
+static PRBool gBlockImageInMailNewsPref = kBlockImageInMailPrefDefault;
+
 
 PR_STATIC_CALLBACK(int)
 image_BehaviorPrefChanged(const char * newpref, void * data) {
@@ -102,10 +106,19 @@ image_BlockerPrefChanged(const char * newpref, void * data) {
   return 0;
 }
 
+PR_STATIC_CALLBACK(int)
+image_BlockedInMailPrefChanged(const char * newpref, void * data) {
+  PRBool x;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(image_blockImageInMailPref, &x))) {
+    x = kBlockImageInMailPrefDefault;
+  }
+  gBlockImageInMailNewsPref = x;
+  return 0;
+}
+
 PUBLIC void
 IMAGE_RegisterPrefCallbacks(void) {
-  PRInt32 n;
-  PRBool x;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (!prefs) {
     NS_NOTREACHED("couldn't get prefs");
@@ -115,25 +128,20 @@ IMAGE_RegisterPrefCallbacks(void) {
   }
 
   // Initialize for image_behaviorPref
-  if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
-    n = kBehaviorPrefDefault;
-  }
-  gBehaviorPref = (PERMISSION_BehaviorEnum)n;
+  image_BehaviorPrefChanged(image_behaviorPref, NULL);
   prefs->RegisterCallback(image_behaviorPref, image_BehaviorPrefChanged, NULL);
 
   // Initialize for image_warningPref
-  if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
-    x = kWarningPrefDefault;
-  }
-  gWarningPref = x;
+  image_WarningPrefChanged(image_warningPref, NULL);
   prefs->RegisterCallback(image_warningPref, image_WarningPrefChanged, NULL);
 
   // Initialize for image_blockerPref
-  if (NS_FAILED(prefs->GetBoolPref(image_blockerPref, &x))) {
-    x = kBlockerPrefDefault;
-  }
-  gBlockerPref = x;
+  image_BlockerPrefChanged(image_blockerPref, NULL);
   prefs->RegisterCallback(image_blockerPref, image_BlockerPrefChanged, NULL);
+
+  //Initialize for image_blockImageInMailPref
+  image_BlockedInMailPrefChanged(image_blockImageInMailPref, NULL);
+  prefs->RegisterCallback(image_blockImageInMailPref, image_BlockedInMailPrefChanged, NULL);
 }
 
 PUBLIC nsresult
@@ -193,6 +201,12 @@ IMAGE_CheckForPermission
     *permission = PR_TRUE;
   }
   return NS_OK;
+}
+
+PUBLIC PRBool
+IMAGE_BlockedInMail()
+{
+  return gBlockImageInMailNewsPref;
 }
 
 PUBLIC nsresult

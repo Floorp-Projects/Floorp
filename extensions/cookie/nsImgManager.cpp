@@ -45,8 +45,24 @@
 #include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsIServiceManager.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
+#include "nsIDocShellTreeItem.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
+static PRBool ShouldBlockImageByScheme(nsIURI * aURI)
+{
+    nsCAutoString scheme;
+
+    if (NS_FAILED(aURI->GetScheme(scheme)))
+      return PR_FALSE;
+
+    return scheme.Equals(NS_LITERAL_CSTRING("http")) || scheme.Equals(NS_LITERAL_CSTRING("https")) ||
+           scheme.Equals(NS_LITERAL_CSTRING("imap")) || scheme.Equals(NS_LITERAL_CSTRING("mailbox")) ||
+           scheme.Equals(NS_LITERAL_CSTRING("news")) || scheme.Equals(NS_LITERAL_CSTRING("snews"));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +98,7 @@ NS_IMETHODIMP nsImgManager::Block(const char * imageURL)
     return NS_OK;
 }
 
+
 // nsIContentPolicy Implementation
 NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType, 
                                        nsIURI *aContentLoc,
@@ -98,6 +115,16 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
     switch (aContentType) {
         case nsIContentPolicy::IMAGE:   
         {
+            // First, let be sure we are processing an HTTP or HTTPS images.
+            // We should not waste time with chrome url...
+            PRBool httpType;
+            rv = aContentLoc->SchemeIs("http", &httpType);
+            if (NS_FAILED(rv) || !httpType) {
+                // check HTTPS as well
+                rv = aContentLoc->SchemeIs("https", &httpType);
+                if (NS_FAILED(rv) || !httpType) return rv;
+            }
+
             nsCOMPtr<nsIURI> baseURI;
             nsCOMPtr<nsIDocument> doc;
             nsCOMPtr<nsIContent> content(do_QueryInterface(aContext));
@@ -109,20 +136,22 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
                 rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
                 if (NS_FAILED(rv) || !baseURI) return rv;
 
-                // we only care about HTTP images
-                PRBool httpType = PR_TRUE;
-                rv = baseURI->SchemeIs("http", &httpType);
-                if (NS_FAILED(rv) || !httpType) {
-                    // check HTTPS as well
-                    rv = baseURI->SchemeIs("https", &httpType);
-                    if (NS_FAILED(rv) || !httpType) return rv;                    
-                }
+                if (!ShouldBlockImageByScheme(baseURI)) //JFD: Why do we care about the base url anyway?
+                  return NS_OK;
 
-                rv = aContentLoc->SchemeIs("http", &httpType);
-                if (NS_FAILED(rv) || !httpType) {
-                    // check HTTPS as well
-                    rv = aContentLoc->SchemeIs("https", &httpType);
-                    if (NS_FAILED(rv) || !httpType) return rv;                    
+                // Let check if we are running a mail window, doesn't matter if mail images are allowed
+                if (IMAGE_BlockedInMail()) {
+                    nsCOMPtr<nsIDocShell> docshell;
+                    rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
+                    if (docshell) {
+                        PRUint32 appType;
+                        rv = docshell->GetAppType(&appType);
+                        if (NS_SUCCEEDED(rv) && appType == nsIDocShell::APP_TYPE_MAIL) {
+                            //we are dealing with an mail or newsgroup window, let's block the image
+                            *_retval = PR_FALSE;
+                            return NS_OK;
+                        }
+                    }
                 }
 
                 nsCAutoString baseHost;
@@ -148,4 +177,30 @@ NS_IMETHODIMP nsImgManager::ShouldProcess(PRInt32 aContentType,
                                           nsIDOMWindow *aWindow,
                                           PRBool *_retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImgManager::GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+  aWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), getter_AddRefs(globalObj));
+  if (!globalObj)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docshell;
+  rv = globalObj->GetDocShell(getter_AddRefs(docshell));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(docshell, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return rootItem->QueryInterface(NS_GET_IID(nsIDocShell), (void **)result);
 }
