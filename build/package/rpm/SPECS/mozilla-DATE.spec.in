@@ -31,6 +31,7 @@ Provides:    webclient
 BuildPrereq: libpng-devel, libjpeg-devel, zlib-devel, zip, perl, autoconf, indexhtml, ORBit-devel, glib-devel, gtk+-devel
 ExcludeArch: ia64
 Prereq:      fileutils
+Requires:    perl
 
 %description
 Mozilla is an open-source web browser, designed for standards
@@ -152,7 +153,7 @@ BUILD_OFFICIAL=1 make -s
     --source $RPM_BUILD_DIR/mozilla/dist
 %{SOURCE7} --package deflenus --output-file /tmp/mozilla.list.shared \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --source $RPM_BUILD_DIR/mozilla/dist
+    --source $RPM_BUILD_DIR/mozilla/dist --shared
 
 %{SOURCE7} --package xpcom --output-file /tmp/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
@@ -417,6 +418,12 @@ fi
 
 
 %changelog
+* Sun Jul 08 2001 Christopher Blizzard <blizzard@redhat.com>
+- add --shared to the deflenus package section so that things don't
+  end up in /usr/lib/defaults
+- We now require perl so that we can figure out what java version is
+  installed on the machine.
+
 * Mon Jun 04 2001 Christopher Blizzard <blizzard@redhat.com>
 - Fix problems with the default SSL CA list not being loaded.  This
   would cause certificate warnings on sites that would normally have a
