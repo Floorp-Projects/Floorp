@@ -56,7 +56,7 @@ nsScanner::nsScanner(nsString& anHTMLString) :
   mMarkPos=-1;
   mFileStream=0;
   nsAutoString defaultCharset(DEFAULTCHARSET);
-  mUnicodeDecoder = nsnull;
+  mUnicodeDecoder = 0;
   SetDocumentCharset(defaultCharset);
 }
 
@@ -90,7 +90,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) :
       mFileStream=new fstream(buffer,ios::in);
     #endif
   } //if
-  mUnicodeDecoder = nsnull;
+  mUnicodeDecoder = 0;
   nsAutoString defaultCharset(DEFAULTCHARSET);
   SetDocumentCharset(defaultCharset);
 
@@ -114,7 +114,7 @@ nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership
   mTotalRead=0;
   mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
-  mUnicodeDecoder = nsnull;
+  mUnicodeDecoder = 0;
   nsAutoString defaultCharset(DEFAULTCHARSET);
   SetDocumentCharset(defaultCharset);
 }
@@ -220,19 +220,21 @@ PRBool nsScanner::Append(nsString& aBuffer) {
  */
 PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
  
-  PRInt32 unicharLength = 0;
-  PRInt32 srcLength = aLen;
-  mUnicodeDecoder->Length(aBuffer, 0, aLen, &unicharLength);
-  PRUnichar *unichars = new PRUnichar [ unicharLength ];
-  
-  nsresult res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,
-                                          aBuffer, 0, &srcLength );
-  mBuffer.Append(unichars, unicharLength);
-  delete unichars;
-  mTotalRead += unicharLength;
-
-  // mBuffer.Append(aBuffer,aLen);
-  // mTotalRead+=aLen;
+  if(mUnicodeDecoder) {
+   PRInt32 unicharLength = 0;
+    PRInt32 srcLength = aLen;
+    mUnicodeDecoder->Length(aBuffer, 0, aLen, &unicharLength);
+    PRUnichar *unichars = new PRUnichar [ unicharLength ];
+    nsresult res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
+    mBuffer.Append(unichars, unicharLength);
+    delete unichars;
+    mTotalRead += unicharLength;
+  }
+  else {
+    
+    mBuffer.Append(aBuffer,aLen);
+    mTotalRead+=aLen;
+  }
 
   return PR_TRUE;
 }

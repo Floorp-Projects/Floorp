@@ -148,7 +148,7 @@ static void CheckCaseConversion()
     if(NULL == gCaseConv )
       StartUpCaseConversion();
 
-    NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
+    // NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
    
 }
 
@@ -489,9 +489,11 @@ void nsString::ToLowerCase()
 {
   // I18N code begin
   CheckCaseConversion();
-  nsresult err = gCaseConv->ToLower(mStr, mStr, mLength);
-  if( NS_SUCCEEDED(err))
-    return;
+  if(gCaseConv) {
+    nsresult err = gCaseConv->ToLower(mStr, mStr, mLength);
+    if( NS_SUCCEEDED(err))
+      return;
+  }
   // I18N code end
 
   // somehow UnicharUtil return failed, fallback to the old ascii only code
@@ -514,9 +516,11 @@ void nsString::ToUpperCase()
 {
   // I18N code begin
   CheckCaseConversion();
-  nsresult err = gCaseConv->ToUpper(mStr, mStr, mLength);
-  if( NS_SUCCEEDED(err))
-    return;
+  if(gCaseConv) {
+    nsresult err = gCaseConv->ToUpper(mStr, mStr, mLength);
+    if( NS_SUCCEEDED(err))
+      return;
+  }
   // I18N code end
 
   // somehow UnicharUtil return failed, fallback to the old ascii only code
@@ -562,10 +566,12 @@ void nsString::ToLowerCase(nsString& aOut) const
 
   // I18N code begin
   CheckCaseConversion();
-  nsresult err = gCaseConv->ToLower(mStr, aOut.mStr, mLength);
-  (*(aOut.mStr+mLength)) = 0;
-  if( NS_SUCCEEDED(err))
-    return;
+  if(gCaseConv) {
+    nsresult err = gCaseConv->ToLower(mStr, aOut.mStr, mLength);
+    (*(aOut.mStr+mLength)) = 0;
+    if( NS_SUCCEEDED(err))
+      return;
+  }
   // I18N code end
 
   // somehow UnicharUtil return failed, fallback to the old ascii only code
@@ -596,10 +602,12 @@ void nsString::ToUpperCase(nsString& aOut) const
 
   // I18N code begin
   CheckCaseConversion();
-  nsresult err = gCaseConv->ToUpper(mStr, aOut.mStr, mLength);
-  (*(aOut.mStr+mLength)) = 0;
-  if( NS_SUCCEEDED(err))
-    return;
+  if(gCaseConv) {
+    nsresult err = gCaseConv->ToUpper(mStr, aOut.mStr, mLength);
+    (*(aOut.mStr+mLength)) = 0;
+    if( NS_SUCCEEDED(err))
+      return;
+  }
   // I18N code end
 
   // somehow UnicharUtil return failed, fallback to the old ascii only code
