@@ -41,7 +41,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIDOMLoadListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIScrollPositionListener.h"
 #include "nsISelectionListener.h"
@@ -70,7 +69,6 @@ enum { eRepeatingNone, eRepeatingChar, eRepeatingForward, eRepeatingReverse};
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIDOMFocusListener,
                         public nsIDOMKeyListener,
-                        public nsIDOMLoadListener,
                         public nsIWebProgressListener,
                         public nsIScrollPositionListener,
                         public nsISelectionListener,
@@ -99,12 +97,6 @@ public:
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
-  // ----- nsIDOMLoadListener ----------------------------
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
   // ----- nsIScrollPositionListener --------------------
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, 
                                       nscoord aX, nscoord aY);
@@ -125,7 +117,8 @@ protected:
   static int PR_CALLBACK PrefsReset(const char* aPrefName, void* instance);
 
   // Helper methods
-  nsresult HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget);
+  nsresult Init();
+  nsresult UseInWindow(nsIDOMWindow *aDomWin);
   void SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled);
   void AttachNewSelectionListener();
   void RemoveCurrentSelectionListener();

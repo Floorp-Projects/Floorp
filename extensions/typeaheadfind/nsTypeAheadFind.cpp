@@ -110,7 +110,6 @@ NS_INTERFACE_MAP_BEGIN(nsTypeAheadFind)
   NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMKeyListener)
 NS_INTERFACE_MAP_END
 
@@ -132,8 +131,7 @@ nsTypeAheadFind::nsTypeAheadFind():
   mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), 
   mIsTypeAheadOn(PR_FALSE), mCaretBrowsingOn(PR_FALSE), 
   mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE), 
-  mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
-  mFindService(do_GetService("@mozilla.org/find/find_service;1"))
+  mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
 {
   NS_INIT_REFCNT();
 
@@ -144,39 +142,6 @@ nsTypeAheadFind::nsTypeAheadFind():
   NS_ASSERTION(gInstanceCount == 1, 
     "There should be only 1 instance of nsTypeAheadFind!");
 #endif
-
-  if (!mFindService || 
-      NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mManualFindWindows))))
-    return;
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  mSearchRange = do_CreateInstance(kRangeCID);
-  mStartPointRange = do_CreateInstance(kRangeCID);
-  mEndPointRange = do_CreateInstance(kRangeCID);
-  if (!prefs || !mSearchRange || !mStartPointRange || !mEndPointRange)
-    return;
-  
-  mFind = do_CreateInstance(NS_FIND_CONTRACTID);
-  if (!mFind)
-    return;  // mFind is always null when we are not correctly initialized
-  
-  // ----------- Set search options ---------------
-  mFind->SetCaseSensitive(PR_FALSE);
-  mFind->SetWordBreaker(nsnull);
-
-  // ----------- Get initial preferences ----------
-  PrefsReset("", NS_STATIC_CAST(void*, this));
-
-  // ----------- Listen to prefs ------------------
-  prefs->RegisterCallback("accessibility.typeaheadfind",
-                          (PrefChangedFunc)nsTypeAheadFind::PrefsReset,
-                          NS_STATIC_CAST(void*, this));
-  prefs->RegisterCallback("accessibility.browsewithcaret",
-                          (PrefChangedFunc)nsTypeAheadFind::PrefsReset,
-                          NS_STATIC_CAST(void*, this));
-
-  // ----------- Get accel key --------------------
-  prefs->GetIntPref("ui.key.accelKey", &gAccelKey);
 }
 
 
@@ -198,19 +163,66 @@ nsTypeAheadFind::~nsTypeAheadFind()
   }
 }
 
+nsresult nsTypeAheadFind::Init()
+{
+  mFindService = do_GetService("@mozilla.org/find/find_service;1");
+  NS_NewISupportsArray(getter_AddRefs(mManualFindWindows));
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  mSearchRange = do_CreateInstance(kRangeCID);
+  mStartPointRange = do_CreateInstance(kRangeCID);
+  mEndPointRange = do_CreateInstance(kRangeCID);
+  mFind = do_CreateInstance(NS_FIND_CONTRACTID);
+  if (!prefs || !mSearchRange || !mStartPointRange || !mEndPointRange || !mFind)
+    return NS_ERROR_FAILURE;
+
+  // ----------- Listen to prefs ------------------
+  nsresult rv = prefs->RegisterCallback("accessibility.typeaheadfind",
+                                        (PrefChangedFunc)nsTypeAheadFind::PrefsReset,
+                                        NS_STATIC_CAST(void*, this));
+  if (NS_SUCCEEDED(rv))
+    rv = prefs->RegisterCallback("accessibility.browsewithcaret",
+                                 (PrefChangedFunc)nsTypeAheadFind::PrefsReset,
+                                 NS_STATIC_CAST(void*, this));
+
+  // ----------- Get accel key --------------------
+  if (NS_SUCCEEDED(rv))
+    rv = prefs->GetIntPref("ui.key.accelKey", &gAccelKey);
+
+  if (NS_SUCCEEDED(rv)) {
+  // ----------- Get initial preferences ----------
+    PrefsReset("", NS_STATIC_CAST(void*, this));
+
+    // ----------- Set search options ---------------
+    mFind->SetCaseSensitive(PR_FALSE);
+    mFind->SetWordBreaker(nsnull);
+  }
+
+  return rv;
+}
+
 nsTypeAheadFind *nsTypeAheadFind::GetInstance()
 {
-  if (!mInstance)
+  if (!mInstance) {
     mInstance = new nsTypeAheadFind();
-  // Will be released in the module destructor
-  NS_IF_ADDREF(mInstance);
+    if (!mInstance)
+      return nsnull;
+    NS_ADDREF(mInstance);  // addref for mInstance global
+    if (NS_FAILED(mInstance->Init())) {
+      delete mInstance;
+      NS_RELEASE(mInstance);
+      mInstance = nsnull;
+    }  
+  }
+  NS_IF_ADDREF(mInstance);   // addref for the getter
   return mInstance;
 }
 
 
 void nsTypeAheadFind::ReleaseInstance()
 {
-  NS_IF_RELEASE(nsTypeAheadFind::mInstance);
+  NS_IF_RELEASE(mInstance);
+  mInstance = nsnull;
 }
 
 
@@ -287,7 +299,7 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
  * STATE_IS_WINDOW=0x8000
  */
 
-  if (!(aStateFlags & STATE_TRANSFERRING) || !mFind)
+  if (!(aStateFlags & (STATE_TRANSFERRING|STATE_STOP)))
     return NS_OK;
 
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -361,6 +373,23 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(domWindow));
   if (eventTarget)
     AttachNewWindowFocusListener(eventTarget);
+  
+  // Some time when a new doc is loaded, SetNewDocument is called which
+  // will call RemoveAllListeners. We don't know exactly when that will happen,
+  // so we continually add a focus listener to ourselves as the web progress
+  // state changes through STATE_START, STATE_TRANSFERRING, STATE_STOP.
+  // However, it's possible that the focus event was fired right after our 
+  // listener was removed. Therefore, we need to call our focus handler manually
+  // if we're currently focused on the new window that just loaded
+  nsCOMPtr<nsIFocusController> focusController;
+  doc->GetFocusController(getter_AddRefs(focusController));
+  if (focusController) {
+    nsCOMPtr<nsIDOMWindowInternal> focusedWindowInternal;
+    focusController->GetFocusedWindow(getter_AddRefs(focusedWindowInternal));
+    nsCOMPtr<nsIDOMWindow> focusedWindow(do_QueryInterface(focusedWindowInternal));
+    if (focusedWindow == domWindow || !focusedWindow)
+      UseInWindow(domWindow);
+  }
   return NS_OK;
 }
 
@@ -409,48 +438,52 @@ NS_IMETHODIMP nsTypeAheadFind::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> domEventTarget;
   aEvent->GetTarget(getter_AddRefs(domEventTarget));
-  return HandleFocusInternal(domEventTarget);
+
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(domEventTarget));
+  if (!domWin) {
+    // Focus events on documents are important
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domEventTarget));
+    if (!doc)   // If focus not on window or doc, return
+      return NS_OK;
+    nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+    doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+    domWin = do_QueryInterface(ourGlobal);
+  }
+
+  return UseInWindow(domWin);
 }
 
 
-nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aTarget)
+nsresult nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDomWin)
 {
-  printf("\n*** In focus handler *** \n");
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aTarget));
-  if (!domNode)
-    return NS_OK;
-
+  // Focus events on windows are important
   nsCOMPtr<nsIDOMDocument> domDoc;
-  domNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  if (!domDoc)
-    domDoc = do_QueryInterface(domNode);
+  aDomWin->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+
   if (!doc)
     return NS_OK;
-  nsCOMPtr<nsIDOMEventTarget> docTarget(do_QueryInterface(domDoc));
-
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
-
-  if (domWin != mFocusedWindow)
-    CancelFind();
-
-  nsCOMPtr<nsIDOMEventTarget> rootTarget(do_QueryInterface(domWin));
-  if (!rootTarget || (domWin == mFocusedWindow && docTarget != aTarget))
-    return NS_OK;  // Return early for elts focused in currently focused doc
 
   // Focus event in a new doc -- trigger keypress event listening
   nsCOMPtr<nsIPresShell> presShell;
   doc->GetShellAt(0, getter_AddRefs(presShell));
+
   if (!presShell)
     return NS_OK;
+
+  nsCOMPtr<nsIPresShell> oldPresShell(do_QueryReferent(mFocusedWeakShell));
+  if (!oldPresShell || oldPresShell != presShell)
+    CancelFind();
 
   RemoveCurrentSelectionListener();
   RemoveCurrentScrollPositionListener();
   RemoveCurrentKeypressListener();
 
-  mFocusedWindow = domWin;
+  nsCOMPtr<nsIDOMEventTarget> winTarget(do_QueryInterface(aDomWin));
+  if (!winTarget)
+    return NS_OK;
+
+  mFocusedWindow = aDomWin;
   mFocusedWeakShell = do_GetWeakReference(presShell);
 
   // Add scroll position and selection listeners, so we can cancel 
@@ -462,7 +495,7 @@ nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aTarget)
 
   // If focusing on new window, add keypress listener to new window and 
   // remove old keypress listener
-  AttachNewKeypressListener(rootTarget);
+  AttachNewKeypressListener(winTarget);
 
   return NS_OK;
 }
@@ -480,54 +513,6 @@ NS_IMETHODIMP nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK; 
 }
-
-
-// ------- nsIDOMLoadListener Methods (4) ---------------
-
-NS_IMETHODIMP nsTypeAheadFind::Load(nsIDOMEvent* aEvent) { return NS_OK; } 
-
-NS_IMETHODIMP nsTypeAheadFind::Unload(nsIDOMEvent* aEvent) 
-{
-  // Remove focus listener, if there was one, and unload listener.
-  // These are the two listeners we need to remove here.
-  // If the current window was focused, then the blur event
-  // is used to remove the keypress, selection and scroll position listeners,
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  aEvent->GetTarget(getter_AddRefs(eventTarget));
-
-  if (eventTarget) {
-    eventTarget->RemoveEventListener(NS_LITERAL_STRING("focus"), 
-                                     NS_STATIC_CAST(nsIDOMFocusListener*, this), 
-                                     PR_FALSE);
-    eventTarget->RemoveEventListener(NS_LITERAL_STRING("unload"), 
-                                     NS_STATIC_CAST(nsIDOMLoadListener*, this), 
-                                     PR_FALSE);
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(eventTarget));
-    if (doc) {
-      nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-      doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
-
-      if (domWin) {
-        // Remove from list of manual find windows, 
-        // because window pointer is no longer valid
-        SetAutoStart(domWin, PR_TRUE); 
-        if (mFocusedWindow == domWin) {
-          RemoveCurrentKeypressListener();
-          RemoveCurrentScrollPositionListener();
-          CancelFind();
-          mFocusedWindow = nsnull;
-        }
-      }
-    }
-  }
-
-  return NS_OK; 
-}
-
-NS_IMETHODIMP nsTypeAheadFind::Abort(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsTypeAheadFind::Error(nsIDOMEvent* aEvent) { return NS_OK; }
 
 
 // ------- nsIDOMKeyListener Methods (3) ---------------
@@ -1180,14 +1165,9 @@ NS_IMETHODIMP nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow,
 
   windowInternal->Focus();  
   if (mFocusedWindow != aWindow) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aWindow->GetDocument(getter_AddRefs(domDoc));
-    eventTarget = do_QueryInterface(domDoc);
     CancelFind();
-    if (eventTarget) {
-      // This routine will set up the keypress listener
-      HandleFocusInternal(eventTarget);
-    }
+    // This routine will set up the keypress and other listeners
+    UseInWindow(aWindow);
   }
   mLinksOnly = aLinksOnly;
 
@@ -1358,11 +1338,13 @@ void nsTypeAheadFind::AttachNewSelectionListener()
 
 void nsTypeAheadFind::RemoveCurrentKeypressListener()
 {
+  /*
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mFocusedWindow));
   if (target)
     target->RemoveEventListener(NS_LITERAL_STRING("keypress"), 
                                 NS_STATIC_CAST(nsIDOMKeyListener*, this),
                                 PR_TRUE);
+                                */
 }
 
 
@@ -1375,30 +1357,21 @@ void nsTypeAheadFind::AttachNewKeypressListener(nsIDOMEventTarget *aTarget)
 
 void nsTypeAheadFind::RemoveCurrentWindowFocusListener()
 {
-  // Remove focus listener, and unload listener as well,
-  // since it's sole purpose was to remove focus listener
+  // Remove focus listener
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mFocusedWindow));
-  if (target) {
+  if (target)
     target->RemoveEventListener(NS_LITERAL_STRING("focus"),
                                 NS_STATIC_CAST(nsIDOMFocusListener*, this), 
                                 PR_FALSE);
-    target->RemoveEventListener(NS_LITERAL_STRING("unload"), 
-                                NS_STATIC_CAST(nsIDOMLoadListener*, this), 
-                                PR_FALSE);
-  }
   mFocusedWindow = nsnull;
 }
 
 
 void nsTypeAheadFind::AttachNewWindowFocusListener(nsIDOMEventTarget *aTarget)
 {
-  // Add focus listener, and unload listener, which will
-  // remove focus listener when the window's life ends
+  // Add focus listener
   aTarget->AddEventListener(NS_LITERAL_STRING("focus"),
                             NS_STATIC_CAST(nsIDOMFocusListener*, this),
-                            PR_FALSE);
-  aTarget->AddEventListener(NS_LITERAL_STRING("unload"),
-                            NS_STATIC_CAST(nsIDOMLoadListener*, this),
                             PR_FALSE);
 }
 
