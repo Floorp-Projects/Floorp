@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: softoken.h,v 1.1 2000/03/31 19:31:02 relyea%netscape.com Exp $
+ * $Id: softoken.h,v 1.2 2000/09/23 00:04:34 relyea%netscape.com Exp $
  */
 
 #ifndef _SOFTOKEN_H_
@@ -129,15 +129,6 @@ SECStatus RSA_DecryptRaw(SECKEYLowPrivateKey *key, unsigned char *output,
 			     unsigned int *output_len,
     			     unsigned int max_output_len,
 			     unsigned char *input, unsigned int input_len);
-
-
-/* 
-** Functions called directly by applications to configure the FIPS token.
-*/
-extern void PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, 
-		char *ptokdes, char *slotdes, char *pslotdes, char *fslotdes, 
-		char *fpslotdes, int minPwd, int pwdRequired);
-extern void PK11_ConfigureFIPS(char *slotdes, char *pslotdes);
 
 /*
 ** Prepare a buffer for DES encryption, growing to the appropriate boundary,
