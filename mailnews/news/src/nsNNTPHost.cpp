@@ -974,7 +974,7 @@ nsNNTPHost::AddGroup(const char *name,
 	printf("nsNNTPHost::AddGroup(%s)\n",name);
 #endif
 	nsINNTPNewsgroup *newsInfo = nsnull;
-	nsINNTPCategoryContainer *categoryContainer = nsnull;
+	nsCOMPtr <nsINNTPCategoryContainer> categoryContainer;
 	char* containerName = nsnull;
 	PRBool needpaneupdate = PR_FALSE;
     PRBool isSubscribed=FALSE;
@@ -993,7 +993,7 @@ nsNNTPHost::AddGroup(const char *name,
         
 		if (NS_SUCCEEDED(rv)) {
             rv = newsInfo->QueryInterface(nsINNTPCategoryContainer::GetIID(),
-                                          (void **)&categoryContainer);
+                                          getter_AddRefs(categoryContainer));
             
             // if we're not subscribed to container, do that instead.
             if (NS_SUCCEEDED(rv))
@@ -1149,7 +1149,6 @@ nsNNTPHost::AddGroup(const char *name,
 
 DONE:
 
-    NS_IF_RELEASE(categoryContainer);
 
 	if (containerName) delete [] containerName;
     if (_retval) *_retval = newsInfo;

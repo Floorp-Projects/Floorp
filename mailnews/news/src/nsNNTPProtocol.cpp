@@ -1888,10 +1888,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         char outputBuffer[OUTPUT_BUFFER_SIZE];
 
         m_tempErrorFile.Delete(PR_FALSE);
-        nsISupports * supports;
-        NS_NewIOFileStream(&supports, m_tempErrorFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+        nsCOMPtr <nsISupports> supports;
+        NS_NewIOFileStream(getter_AddRefs(supports), m_tempErrorFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
         m_tempErrorStream = do_QueryInterface(supports);
-        NS_IF_RELEASE(supports);
         
         if (m_newsgroup) {
             rv = m_newsgroup->GetName(&group_name);
@@ -2062,10 +2061,9 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 
   // we are about to display an article so open up a temp file on the article...
   m_tempArticleFile.Delete(PR_FALSE);
-  nsISupports * supports;
-  NS_NewIOFileStream(&supports, m_tempArticleFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+  nsCOMPtr <nsISupports> supports;
+  NS_NewIOFileStream(getter_AddRefs(supports), m_tempArticleFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
   m_tempArticleStream = do_QueryInterface(supports);
-  NS_IF_RELEASE(supports);
   m_nextState = NNTP_READ_ARTICLE;
 
   return 0;
@@ -3931,7 +3929,7 @@ PRInt32 nsNNTPProtocol::Cancel()
     rv = m_runningURL->GetNewsgroupName(&newsgroupname);
     NS_ASSERTION(NS_SUCCEEDED(rv) && newsgroupname && (key != nsMsgKey_None), "need more to remove this message from the db");
     if ((key != nsMsgKey_None) && (newsgroupname)) {
-	printf("delete %lu from %s\n",key,newsgroupname);
+	printf("delete %u from %s\n",key,newsgroupname);
     }
 #endif
   }
