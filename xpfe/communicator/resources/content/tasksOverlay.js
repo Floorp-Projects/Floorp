@@ -385,7 +385,8 @@ function WalletDialog( which )
       break;
     case "tutorial":
       server = this.pref.getLocalizedUnicharPref("wallet.Samples");
-      window._content.location.href = server + 'privacy.html';
+      window._content.location.href = 'http://www.mozilla.org/wallet/samples/privacy.html';
+//      window._content.location.href = server + 'privacy.html';
       break;
     case "wallet":
     default:
