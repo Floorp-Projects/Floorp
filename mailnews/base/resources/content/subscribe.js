@@ -340,7 +340,9 @@ function SubscribeOnClick(event)
 		}
 		else {
 			var name = event.target.parentNode.parentNode.getAttribute('name');
-			gNameField.setAttribute('value',name);
+			if (name && (name.length > 0)) {
+				gNameField.setAttribute('value',name);
+			}
 		}
 	}
 }
