@@ -2871,6 +2871,12 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     pn2->pn_type = TOK_LB;
                     pn2->pn_op = JSOP_GETELEM;
                 } else if (tt == TOK_RP) {
+                    JSParseNode *group = pn3;
+
+                    /* Recycle the useless TOK_RP/JSOP_GROUP node. */
+                    pn3 = group->pn_kid;
+                    group->pn_kid = NULL;
+                    RecycleTree(group, tc);
                     pn2->pn_type = TOK_FILTER;
                     pn2->pn_op = JSOP_FILTER;
                 } else {

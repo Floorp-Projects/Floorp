@@ -210,6 +210,8 @@ struct JSAtomState {
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
+        JSAtom          *AnyNameAtom;
+        JSAtom          *AttributeNameAtom;
         JSAtom          *EvalErrorAtom;
         JSAtom          *InfinityAtom;
         JSAtom          *InternalErrorAtom;

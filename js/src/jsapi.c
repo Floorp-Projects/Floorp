@@ -1305,6 +1305,8 @@ static JSStdName standard_class_names[] = {
     {js_InitXMLClass,           LAZILY_PINNED_ATOM(isXMLName)},
     {js_InitNamespaceClass,     LAZILY_PINNED_ATOM(Namespace)},
     {js_InitQNameClass,         LAZILY_PINNED_ATOM(QName)},
+    {js_InitQNameClass,         LAZILY_PINNED_ATOM(AnyName)},
+    {js_InitQNameClass,         LAZILY_PINNED_ATOM(AttributeName)},
     {js_InitXMLClass,           LAZILY_PINNED_ATOM(XML)},
     {js_InitXMLClass,           LAZILY_PINNED_ATOM(XMLList)},
 #endif
