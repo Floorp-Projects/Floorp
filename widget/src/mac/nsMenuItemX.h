@@ -29,10 +29,9 @@
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
-
+#include "nsIWidget.h"
 
 class nsIMenu;
-class nsIWidget;
 
 /**
  * Native Motif MenuItem wrapper
