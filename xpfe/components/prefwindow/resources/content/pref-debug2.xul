@@ -31,7 +31,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["browserEnableKeepAlive", "browserEnablePipelining",
-                       "dirGenerateHtml", "httpVersionString", "acceptEncodingString",
+                       "dirFormat", "httpVersionString", "acceptEncodingString",
                        "nglayoutDebugDisableXULCache", "browserEnableCache", "browserEnableDiskCache", ];
   ]]>
   </script>
@@ -46,8 +46,18 @@
                 prefstring="network.http.keep-alive"/>
       <checkbox id="browserEnablePipelining" label="&debugEnablePipelining.label;"
                 prefstring="network.http.pipelining"/>
-      <checkbox id="dirGenerateHtml" label="&debugEnableHTML.label;"
-                prefstring="network.dir.generate_html"/>
+      <description>&dirFormat;</description>
+      <vbox align="start" class="indent">
+        <radiogroup id="dirFormat"
+                    prefstring="network.dir.format">
+          <radio value="1" label="&raw.label;"/>
+          <radio value="2" label="&html.label;"/>
+          <!-- OK, this is application/http-index-format, not XUL. But the
+               result is that the XUL viwer is used. Anyway, this is only a
+               debug panel, so lets not get worked up about it -->
+          <radio value="3" label="&xul.label;"/>
+        </radiogroup>
+      </vbox>         
     </vbox>
     <label value="&httpVersion.label;"  control="httpVersionString"/>
     <textbox id="httpVersionString" maxlength="3"

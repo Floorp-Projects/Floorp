@@ -440,7 +440,9 @@ pref("network.http.proxy.ssl.connect",true);
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 
-pref("network.dir.generate_html", true);
+// directory listing format - constants are defined in nsIDirectoryListing.idl
+// Do not set this to 0...
+pref("network.dir.format", 2);
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only

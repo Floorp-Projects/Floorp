@@ -39,6 +39,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -54,6 +55,7 @@ extern PRLogModuleInfo* gGopherLog;
 nsGopherChannel::nsGopherChannel()
     : mContentLength(-1),
       mActAsObserver(PR_TRUE),
+      mListFormat(FORMAT_HTML),
       mType(-1),
       mStatus(NS_OK)
 {
@@ -69,11 +71,12 @@ nsGopherChannel::~nsGopherChannel()
 #endif
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsGopherChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsGopherChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIStreamListener,
-                              nsIRequestObserver);
+                              nsIRequestObserver,
+                              nsIDirectoryListing);
 
 nsresult
 nsGopherChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
@@ -326,7 +329,20 @@ nsGopherChannel::GetContentType(char* *aContentType)
         *aContentType = nsCRT::strdup(TEXT_HTML);
         break;
     case '1':
-        *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
+        switch (mListFormat) {
+        case nsIDirectoryListing::FORMAT_RAW:
+            *aContentType = strdup("text/gopher-dir");
+            break;
+        default:
+            NS_WARNING("Unknown directory type");
+            // fall through
+        case nsIDirectoryListing::FORMAT_HTML:
+            *aContentType = strdup(TEXT_HTML);
+            break;
+        case nsIDirectoryListing::FORMAT_HTTP_INDEX:
+            *aContentType = strdup(APPLICATION_HTTP_INDEX_FORMAT);
+            break;
+        }
         break;
     case '2': // CSO search - unhandled, should not be selectable
         *aContentType = nsCRT::strdup(TEXT_HTML);
@@ -511,11 +527,39 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
         // What we now do depends on what type of file we have
         if (mType=='1' || mType=='7') {
             // Send the directory format back for a directory
-            rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(),
-                                                     NS_LITERAL_STRING("application/http-index-format").get(),
-                                                     this,
-                                                     mUrl,
-                                                     getter_AddRefs(converterListener));
+            switch (mListFormat) {
+            case nsIDirectoryListing::FORMAT_RAW:
+                converterListener = this;
+                break;
+            default:
+                // fall through
+            case nsIDirectoryListing::FORMAT_HTML:
+                // XXX - work arround bug 126417. We have to do the chaining
+                // manually so that we don't crash
+                {
+                    nsCOMPtr<nsIStreamListener> tmpListener;
+                    rv = StreamConvService->AsyncConvertData(
+                           NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                           NS_LITERAL_STRING(TEXT_HTML).get(),
+                           this,
+                           mUrl, 
+                           getter_AddRefs(tmpListener));
+                    if (NS_FAILED(rv)) break;
+                    rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(),
+                           NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                           tmpListener,
+                           mUrl,
+                           getter_AddRefs(converterListener));
+                }
+            break;
+            case nsIDirectoryListing::FORMAT_HTTP_INDEX:
+                rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(), 
+                       NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                       this,
+                       mUrl,
+                       getter_AddRefs(converterListener));
+                break;
+            }
             if (NS_FAILED(rv)) return rv;
         } else if (mType=='0') {
             // Convert general file
@@ -646,5 +690,42 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
                                  0, mRequest.Length(), 0,
                                  this, nsnull);
     return rv;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::SetListFormat(PRUint32 format) {
+    if (format != FORMAT_PREF &&
+        format != FORMAT_RAW &&
+        format != FORMAT_HTML &&
+        format != FORMAT_HTTP_INDEX) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Convert the pref value
+    if (format == FORMAT_PREF) {
+        nsresult rv;
+        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        PRInt32 sFormat;
+        rv = prefs->GetIntPref("network.dir.format", &sFormat);
+        if (NS_FAILED(rv))
+            format = FORMAT_HTML; // default
+        else
+            format = sFormat;
+
+        if (format == FORMAT_PREF) {
+            NS_WARNING("Who set the directory format pref to 'read from prefs'??");
+            return NS_ERROR_FAILURE;
+        }
+    }
+    
+    mListFormat = format;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::GetListFormat(PRUint32 *format) {
+    *format = mListFormat;
+    return NS_OK;
 }
 

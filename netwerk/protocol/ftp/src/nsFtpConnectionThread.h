@@ -221,10 +221,10 @@ private:
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRPackedBool           mFireCallbacks; // Fire the listener callback.
     PRPackedBool           mIPv6Checked;
-    PRBool                 mGenerateRawContent;
     nsCOMPtr<nsIPrompt>    mPrompter;
     nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
     nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
+    PRUint32               mListFormat;
     
     static PRUint32         mSessionStartTime;
 
