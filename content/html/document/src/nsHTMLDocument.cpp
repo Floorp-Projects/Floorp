@@ -32,6 +32,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h" 
+#include "nsIDOMWindow.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
@@ -1175,6 +1176,46 @@ nsHTMLDocument::SetCookie(const nsString& aCookie)
   return res;
 }
 
+nsresult
+nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
+                                     nsIURL** sourceURL)
+{
+  // XXX Tom said this reminded him of the "Six Degrees of
+  // Kevin Bacon" game. We try to get from here to there using
+  // whatever connections possible. The problem is that this
+  // could break if any of the connections along the way change.
+  // I wish there were a better way.
+  nsresult result = NS_OK;
+  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  
+  if (nsnull != context) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+
+    global = dont_AddRef(context->GetGlobalObject());
+    if (global) {
+      nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(global));
+
+      if (window) {
+        nsCOMPtr<nsIDOMDocument> document;
+        
+        result = window->GetDocument(getter_AddRefs(document));
+        if (NS_SUCCEEDED(result)) {
+          nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document));
+          if (htmlDocument) {
+            nsAutoString url;
+            
+            htmlDocument->GetURL(url);
+            
+            result = NS_NewURL(sourceURL, url);
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP    
 nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 {
@@ -1182,13 +1223,18 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
-    nsIURL* blankURL;
-    
-    // XXX Bogus URL since we don't have a real one
-    result = NS_NewURL(&blankURL, "about:blank");
-    
-    if (NS_OK == result) {
-      result = Reset(blankURL);
+    nsIURL* sourceURL;
+
+    // XXX The URL of the newly created document will match
+    // that of the source document. Is this right?
+    result = GetSourceDocumentURL(cx, &sourceURL);
+    // Recover if we had a problem obtaining the source URL
+    if (nsnull == sourceURL) {
+      result = NS_NewURL(&sourceURL, "about:blank");
+    }
+
+    if (NS_SUCCEEDED(result)) {
+      result = Reset(sourceURL);
       if (NS_OK == result) {
         static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
         static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -1216,7 +1262,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
             }
           }
 
-          result = NS_NewHTMLContentSink(&sink, this, blankURL, webShell);
+          result = NS_NewHTMLContentSink(&sink, this, sourceURL, webShell);
           NS_IF_RELEASE(webShell);
 
           if (NS_OK == result) {
@@ -1228,7 +1274,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
           }
         }
       }
-      NS_RELEASE(blankURL);
+      NS_RELEASE(sourceURL);
     }
   }
   return result;
