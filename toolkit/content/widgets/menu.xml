@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+
+<bindings id="menuitemBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="menuitem-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/menu.css"/>
+    </resources>
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            if (this.localName == "menuseparator")
+              return accService.createXULMenuSeparatorAccessible(this);
+            if (this.parentNode && this.parentNode.parentNode &&
+                this.parentNode.localName == "menupopup" && this.parentNode.parentNode.localName == "menulist")
+              return accService.createXULSelectOptionAccessible(this);
+            return accService.createXULMenuitemAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="menu" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+    <content>
+      <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
+      <xul:hbox align="center" class="menu-right" xbl:inherits="_moz-menuactive,disabled">
+        <xul:image/>
+      </xul:hbox>
+      <children includes="menupopup"/>
+    </content>
+    
+    <implementation>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
+    </implementation>  
+  </binding>
+
+  <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+    <content>
+      <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
+    </content>
+    
+    <implementation>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
+      <property name="label" onget="return this.getAttribute('label');"
+                             onset="this.setAttribute('label', val); return val;"/>
+    </implementation>  
+  </binding>
+
+  <binding id="menu-menubar" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+    <content>
+      <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="menu-menubar-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+    <content>
+      <xul:image class="menubar-left" xbl:inherits="image=src"/>
+      <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem">
+    <content>
+      <xul:hbox class="menu-iconic-left" align="center" pack="center"
+                xbl:inherits="selected,_moz-menuactive,disabled,checked">
+        <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
+      </xul:hbox>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+    </content>
+  </binding>
+
+  <binding id="menuitem-iconic-noaccel" extends="chrome://global/content/bindings/menu.xml#menuitem">
+    <content>
+      <xul:hbox class="menu-iconic-left" align="center" pack="center"
+                xbl:inherits="selected,disabled,checked">
+        <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
+      </xul:hbox>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="menu-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+    <content>
+      <xul:hbox class="menu-iconic-left" align="center" pack="center">
+        <xul:image xbl:inherits="src=image"/>
+      </xul:hbox>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+      <xul:hbox class="menu-right" xbl:inherits="_moz-menuactive,disabled" align="center" pack="center">
+        <xul:image/>
+      </xul:hbox>
+      <children includes="menupopup|template"/>
+    </content>
+    
+    <implementation>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
+    </implementation>  
+  </binding>
+  
+  <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+    <content>
+      <xul:label class="menubutton-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <children includes="menupopup"/>
+    </content>
+  </binding>  
+  
+  <binding id="menuseparator" extends="chrome://global/content/bindings/menu.xml#menuitem-base"/>
+
+</bindings>

@@ -1,0 +1,650 @@
+<?xml version="1.0"?>
+
+<bindings id="popupBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="popup-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/popup.css"/>
+    </resources>
+  </binding>
+
+  <binding id="popup" extends="chrome://global/content/bindings/popup.xml#popup-base">
+    <content>
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+        <children/>
+      </xul:arrowscrollbox>
+    </content>
+
+    <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            if (this.localName == "popup" || this.localName == "menupopup") {
+              var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+              return (this.parentNode.localName == "menulist")? accService.createXULSelectListAccessible(this): accService.createXULMenupopupAccessible(this);
+            }
+            return null;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="position" onget="return this.getAttribute('position');"
+                                onset="this.setAttribute('position', val); return val;"/>
+      <property name="popupBoxObject">
+        <getter>
+          return this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+        </getter>
+      </property>
+      
+      <method name="showPopup">
+        <parameter name="element"/>
+        <parameter name="xpos"/>
+        <parameter name="ypos"/>
+        <parameter name="popuptype"/>
+        <parameter name="anchoralignment"/>
+        <parameter name="popupalignment"/>
+        <body>
+        <![CDATA[
+          var popupBox = null;
+          var menuBox = null;
+          try {
+            popupBox = this.popupBoxObject;
+          } catch(e) {}
+          try {
+            menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+          } catch(e) {}
+          if (menuBox)
+            menuBox.openMenu(true);
+          else if (popupBox)
+            popupBox.showPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="hidePopup">
+        <body>
+        <![CDATA[
+          var popupBox = null;
+          var menuBox = null;
+          try {
+            popupBox = this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+          } catch(e) {}
+          try {
+            menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+          } catch(e) {}
+          if (menuBox)
+            menuBox.openMenu(false);
+          else if (popupBox)
+            popupBox.hidePopup();
+        ]]>
+        </body>
+      </method>
+
+      <property name="autoPosition">
+        <getter>
+        <![CDATA[
+          return this.popupBoxObject.autoPosition;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          return this.popupBoxObject.autoPosition = val;
+        ]]>
+        </setter>
+      </property>
+      
+      <method name="enableKeyboardNavigator">
+        <parameter name="aEnableKeyboardNavigator"/>
+        <body>
+        <![CDATA[
+          this.popupBoxObject.enableKeyboardNavigator(aEnableKeyboardNavigator);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="enableRollup">
+        <parameter name="aEnableRollup"/>
+        <body>
+        <![CDATA[
+          this.popupBoxObject.enableRollup(aEnableRollup);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="sizeTo">
+        <parameter name="aWidth"/>
+        <parameter name="aHeight"/>
+        <body>
+        <![CDATA[
+          this.popupBoxObject.sizeTo(aWidth, aHeight);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="moveTo">
+        <parameter name="aLeft"/>
+        <parameter name="aTop"/>
+        <body>
+        <![CDATA[
+          this.popupBoxObject.moveTo(aLeft, aTop);
+        ]]>
+        </body>
+      </method>
+    </implementation>     
+
+    <handlers>
+      <handler event="contextmenu" action="event.preventDefault();"/>
+    </handlers>
+  </binding>
+
+  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <children>
+        <xul:label class="tooltip-label" xbl:inherits="value=label,crop" crop="right" flex="1"/>
+      </children>
+    </content>
+    
+    <implementation>
+      <field name="_mouseOutCount">0</field>
+      <field name="_isMouseOver">false</field>
+      
+      <property name="label"
+                onget="return this.getAttribute('label');"
+                onset="this.setAttribute('label', val); return val;"/>
+    </implementation>
+
+    <handlers>
+      <handler event="mouseover"><![CDATA[
+        var rel = event.relatedTarget;
+        //dump("ENTERING " + (rel ? rel.localName : "null") + "\n");
+        if (!rel)
+          return;
+          
+        // find out if the node we entered from is one of our anonymous children
+        while (rel) {
+          if (rel == this)
+            break;
+          rel = rel.parentNode;
+        }
+
+        // if the exited node is not a descendant of ours, we are entering for the first time
+        if (rel != this)
+          this._isMouseOver = true;
+      ]]></handler>
+
+      <handler event="mouseout"><![CDATA[
+        var rel = event.relatedTarget;
+        //dump("LEAVING " + (rel ? rel.localName : "null") + "\n");
+
+        // relatedTarget is null when the titletip is first shown: a mouseout event fires
+        // because the mouse is exiting the main window and entering the titletip "window".
+        // relatedTarget is also null when the mouse exits the main window completely,
+        // so count how many times relatedTarget was null after titletip is first shown 
+        // and hide popup the 2nd time
+        if (!rel) {
+          ++this._mouseOutCount;
+          if (this._mouseOutCount > 1)
+            this.hidePopup();
+          return;
+        }
+          
+        // find out if the node we are entering is one of our anonymous children
+        while (rel) {
+          if (rel == this)
+            break;
+          rel = rel.parentNode;
+        }
+        
+        // if the entered node is not a descendant of ours, hide the tooltip
+        if (rel != this && this._isMouseOver) {
+          this.hidePopup();
+        }        
+      ]]></handler>
+
+      <handler event="popupshowing">
+      <![CDATA[
+        // fill in the label automatically for the default tooltip
+        if (this.getAttribute("default") == "true") {
+          var label = "";
+          var ttNode = document.tooltipNode;
+          if (ttNode && ttNode.hasAttribute("tooltiptext"))
+            this.label = ttNode.getAttribute("tooltiptext");
+        }
+
+        // This is a special consideration for tree titletips. There is a
+        // case where the user moves the mouse from over the treebody to
+        // completely outside of the window, while passing over a cell that
+        // displays a titletip.  This causes the titletip to show, even though
+        // the mouse is not over the corresponding cell, so we need to check
+        // if the titletip was entered by the mouse, and if not, hide it.
+        // XXX commenting this out for now because it doesn't work on Mac 
+        //     become mouseover isn't fired when the tooltip appears with the mouse over it
+        //if (this.hasAttribute("titletip"))
+        //  window.setTimeout(function(me) { if (!me._isMouseOver) me.hidePopup(); }, 100, this);
+      ]]>
+      </handler>
+
+      <handler event="popuphiding"><![CDATA[
+        this._isMouseOver = false;
+        this._mouseOutCount = 0;
+      ]]></handler>
+    </handlers>
+  </binding>
+  
+  <!-- XXXben this binding is not currently used -->
+  <binding id="resizerbase" extends="xul:box">
+    <implementation>
+      <property name="popup">
+        <getter>
+        <![CDATA[
+          var currNode = this.parentNode;
+          while (currNode) {
+            try {
+              var bo = currNode.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+              if (bo)
+                return currNode;
+            }
+            catch (e) {
+            }
+            currNode = currNode.parentNode;
+          }
+          return null;
+        ]]>
+        </getter>
+      </property>
+      
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        ]]>
+        </body>
+      </method> 
+      
+      <field name="screenLeft">0</field>
+      <field name="screenTop">0</field>
+      <field name="resizerDirection">0</field>
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown" phase="capturing"> 
+      <![CDATA[
+        var popup = event.target.popup;
+        var boxObject = popup.boxObject;
+        boxObject.captureMouseEvents = true;
+        event.target.screenLeft = event.screenX;
+        event.target.screenTop = event.screenY;
+        event.target.setMode();
+        event.preventDefault();
+      ]]>
+      </handler>
+      <handler event="mouseup" phase="capturing">
+      <![CDATA[
+        var popup = event.target.popup;
+        var boxObject = popup.boxObject;
+        boxObject.captureMouseEvents = false;
+        event.target.screenLeft = event.screenX;
+        event.target.screenTop = event.screenY;
+        event.target.direction = 0;
+        event.preventDefault();
+      ]]>
+      </handler>
+      <handler event="mousemove" phase="capturing">
+      <![CDATA[
+        event.target.handleMouseMove(event);
+        event.preventDefault();
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+  <!-- East-West resizer -->
+  <binding id="ew-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
+    <content>
+      <xul:hbox class="ew-resizer-box" flex="1"/>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var boxObject = aEvent.target.boxObject;
+          if (boxObject.captureMouseEvents && this.resizerDirection == "right") {
+            var delta = aEvent.screenX - this.screenLeft;
+            this.screenLeft = aEvent.screenX;
+            
+            // We can set this directly as we're only modifying one dimension
+            aEvent.target.width += delta;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.resizerDirection = "right";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>
+  
+  <!-- North-South resizer -->
+  <binding id="ns-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
+    <content>
+      <xul:hbox class="ns-resizer-box" flex="1"/>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var boxObject = aEvent.target.boxObject;
+          if (boxObject.captureMouseEvents && this.resizerDirection == "bottom") {
+            var delta = aEvent.screenY - this.screenTop;
+            this.screenTop = aEvent.screenY;
+            var currWidth = aEvent.target.boxObject.width;
+            
+            // We can set this directly as we're only modifying one dimension
+            aEvent.target.height += delta;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.resizerDirection = "bottom";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>
+  
+  <!-- Diagonal resizer -->
+  <binding id="diag-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
+    <content>
+      <xul:hbox class="diag-resizer-box" align="center" flex="1">
+        <xul:image class="diag-resizer-image"/>
+      </xul:hbox>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var boxObject = aEvent.target.boxObject;
+          if (boxObject.captureMouseEvents && this.resizerDirection == "bottomright") {
+            if (!this.screenLeft || !this.screenTop) {
+              this.screenLeft = aEvent.screenX; 
+              this.screenTop = aEvent.screenY;
+            }
+            var deltaX = aEvent.screenX - this.screenLeft;
+            var deltaY = aEvent.screenY - this.screenTop;
+            this.screenLeft = aEvent.screenX;
+            this.screenTop = aEvent.screenY;
+            var currWidth = aEvent.target.boxObject.width;
+            var currHeight = aEvent.target.boxObject.height;
+            aEvent.target.sizeTo(currWidth + deltaX, currHeight + deltaY);
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.resizerDirection = "bottomright";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>
+  
+  <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
+    <content>
+      <xul:hbox class="titlebar-box" flex="1">
+        <xul:hbox class="titlebar-title-box" flex="1" tooltiptext="Click and drag to float">
+          <xul:label class="titlebar-title" xbl:inherits="value=title" flex="1" crop="right"/>
+        </xul:hbox>
+        <xul:button class="popupClose" tooltiptext="Close"/>
+      </xul:hbox>
+    </content>
+    <!--
+    <implementation>
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!this.popup) this.popup = aEvent.target.popup;
+          var boxObject = this.popup.boxObject;
+          if (boxObject.captureMouseEvents && this.direction == "titlebar") {
+            if (!this.screenLeft || !this.screenTop) {
+              this.screenLeft = aEvent.screenX; 
+              this.screenTop = aEvent.screenY;
+            }
+            var deltaX = aEvent.screenX - this.screenLeft;
+            var deltaY = aEvent.screenY - this.screenTop;
+            this.screenLeft = aEvent.screenX;
+            this.screenTop = aEvent.screenY;
+            var currX = aEvent.target.boxObject.screenX;
+            var currY = aEvent.target.boxObject.screenY;
+            aEvent.target.moveTo(currX + deltaX, currY + deltaY);
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <body>
+        <![CDATA[
+          this.direction = "titlebar";
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    -->
+  </binding>          
+
+  <binding id="floater-base" display="xul:popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <implementation>
+      
+      <!-- Popup Manipulation Constants -->
+      <field name="MANIPULATE_NONE"      readonly="true">0</field>
+      <field name="MANIPULATE_MOVE"      readonly="true">1</field>
+      <field name="MANIPULATE_SIZE_EW"   readonly="true">2</field>
+      <field name="MANIPULATE_SIZE_NS"   readonly="true">3</field>
+      <field name="MANIPULATE_SIZE_DIAG" readonly="true">4</field>
+      
+      <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var boxObject = this.boxObject;
+          if (boxObject.captureMouseEvents) {
+            var dX, dY;
+            var eScreenX = aEvent.screenX; 
+            var eScreenY = aEvent.screenY;
+            switch (this.manipulateMode) {
+              case this.MANIPULATE_SIZE_EW:
+                var width = boxObject.width;
+                dX = eScreenX - this.screenLeft;
+                this.sizeTo(width + dX, this.height);
+                break;
+              case this.MANIPULATE_SIZE_NS:
+                var height = boxObject.height;
+                dY = eScreenY - this.screenTop;
+                this.sizeTo(this.width, height + dY);
+                break;
+              case this.MANIPULATE_SIZE_DIAG:
+                dX = eScreenX - this.screenLeft;
+                dY = eScreenY - this.screenTop;
+                this.sizeTo(this.width + dX, this.height + dY);
+                break;
+              case this.MANIPULATE_MOVE:
+                // XXXben this may not yet be complete. When we drag away from the 
+                //        owner, we set some properties to ensure that we aren't
+                //        positioned as a menu, automatically closed or steal
+                //        keyboard navigation in an inappropriate way. 
+                this.autoPosition = false;
+                this.enableRollup(false);
+                this.enableKeyboardNavigator(false);
+                dX = eScreenX - this.screenLeft;
+                dY = eScreenY - this.screenTop;
+                this.moveTo(this.left + dX, this.top + dY);
+                break;
+              default:
+                break;                      
+            }
+            this.screenLeft = eScreenX;
+            this.screenTop = eScreenY;
+          }
+        ]]>
+        </body>
+      </method> 
+      <method name="findParentByLocalName">
+        <parameter name="aNode"/>
+        <parameter name="aLocalName"/>
+        <body>
+        <![CDATA[
+          var parent = aNode;
+          var names = [].concat(aLocalName);
+          while (parent) {
+            for (var i = 0; i < names.length; ++i) {
+              if (parent.localName == names[i])
+                return parent;
+            }
+            parent = parent.parentNode;
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+      <method name="setMode">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var widget = this.findParentByLocalName(aEvent.originalTarget, ["resizer", "titlebar"]);
+          if (widget) {
+            if (widget.localName == "titlebar")
+              this.manipulateMode = this.MANIPULATE_MOVE;
+            else 
+              this.sizeDirection = widget.getAttribute("direction");
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="cleanUp">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.boxObject.captureMouseEvents = false;
+          this.screenLeft = aEvent.screenX;
+          this.screenTop = aEvent.screenY;
+          this.manipulateMode = this.MANIPULATE_NONE;
+          aEvent.preventDefault();
+        ]]>
+        </body>
+      </method>
+      <field name="screenLeft">0</field>
+      <field name="screenTop">0</field>
+      <field name="manipulateMode">0</field>
+    </implementation>
+    <handlers>
+      <handler event="mousedown" phase="capturing"> 
+      <![CDATA[
+        this.boxObject.captureMouseEvents = true;
+        this.screenLeft = event.screenX;
+        this.screenTop = event.screenY;
+        this.setMode(event);
+      ]]>
+      </handler>
+      <handler event="mouseup" phase="capturing">
+      <![CDATA[
+        this.cleanUp(event);
+      ]]>
+      </handler>
+      <handler event="mousemove" phase="capturing">
+      <![CDATA[
+        this.handleMouseMove(event);
+        event.preventDefault();
+      ]]>
+      </handler>
+      <!-- clean up, release the mouse, etc -->
+      <handler event="popuphiding">
+      <![CDATA[
+        this.cleanUp(event);
+      ]]>
+      </handler>
+      <handler event="click">
+      <![CDATA[
+        // Hide the popup if the [X] box is clicked. 
+        // XXXben this may not really belong here, but rather in a derived binding. 
+        if (event.originalTarget.className.indexOf("popupClose") != -1)
+          this.popupBoxObject.hidePopup();
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="popup-scrollbars" extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:hbox class="popup-internal-box" flex="1" orient="vertical" style="overflow: auto;">
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="floater-normal" extends="chrome://global/content/bindings/popup.xml#floater-base">
+    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
+      <vbox class="floater-box" flex="1">
+        <box class="floater-box-top">
+          <titlebar flex="1" xbl:inherits="title" style="border: 1px outset grey; background-color: grey;"/>
+        </box>
+        <box class="floater-box-center" flex="1">
+          <box class="floater-children" flex="1"> 
+            <children/>
+          </box>
+        </box>
+        <box class="floater-box-bottom">
+          <resizer direction="bottom" flex="1"/>
+          <resizer direction="bottomright" tooltiptext="Click and drag to resize"/>
+        </box>
+      </vbox>
+    </content>
+  </binding>
+
+  <binding id="floater-dock-left" extends="chrome://global/content/bindings/popup.xml#floater-base">
+    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
+      <vbox class="floater-box" flex="1">
+        <box class="floater-box-top">
+          <titlebar flex="1" xbl:inherits="title"/>
+        </box>
+        <box class="floater-box-center" flex="1">
+          <box class="floater-children" flex="1"> 
+            <children/>
+          </box>
+          <resizer direction="right" tooltiptext="Click and drag to resize"/>
+        </box>
+      </vbox>
+    </content>
+  </binding>  
+  
+  <binding id="close-button" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content>
+      <xul:hbox align="center" flex="1">
+        <xul:image class="close-button-x"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+</bindings>
+

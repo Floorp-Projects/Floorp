@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<bindings id="textBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <!-- bound to <description>s -->
+  <binding id="text-base">
+    <implementation implements="nsIDOMXULDescriptionElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTextAccessible(this);
+          ]]>
+        </getter>
+      </property>
+      <property name="disabled" onget="return this.hasAttribute('disabled');"
+                                onset="if (val) this.setAttribute('disabled', 'true');
+                                       else this.removeAttribute('disabled'); 
+                                       return val;"/>
+      <property name="value" onget="return this.getAttribute('value');"
+                             onset="this.setAttribute('value', val); return val;"/>
+      <property name="crop" onget="return this.getAttribute('crop');"
+                            onset="this.setAttribute('crop', val); return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
+    <implementation implements="nsIDOMXULLabelElement">
+      <property name="accessKey" onget="return this.getAttribute('accesskey');"
+                                 onset="this.setAttribute('accesskey', val); return val;"/>
+      <property name="control" onget="return this.getAttribute('control');"
+                               onset="this.setAttribute('control', val); return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
+    <handlers>
+      <handler event="click" action="if (this.disabled) return;
+                                     var controlElementID = this.getAttribute('control');
+                                     var controlElement;
+                                     if (controlElementID)
+                                       controlElement = document.getElementById(controlElementID);
+                                     if(controlElement)
+                                       controlElementID.focus();
+                                    "/>
+    </handlers>
+  </binding>  
+
+  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
+    <handlers>
+     <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
+     <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
+    </handlers>
+  </binding>
+
+</bindings>
+

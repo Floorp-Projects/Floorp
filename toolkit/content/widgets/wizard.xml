@@ -1,0 +1,505 @@
+<?xml version="1.0"?>
+
+<bindings id="wizardBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="wizard-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/wizard.css"/>
+    </resources>
+  </binding>
+  
+  <binding id="wizard" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content width="500" height="380" persist="x y width height">
+      <xul:hbox class="wizard-header" anonid="Header"/>
+      
+      <xul:deck class="wizard-page-box" flex="1" anonid="Deck">
+        <children includes="wizardpage"/>
+      </xul:deck>
+      <children/>
+      
+      <xul:hbox class="wizard-buttons" anonid="Buttons" xbl:inherits="pagestep,firstpage,lastpage"/>
+    </content>
+    
+    <implementation>
+      <property name="title" onget="return this.getAttribute('title')"
+                             onset="this.setAttribute('title', val);"/>
+
+      <property name="canAdvance" onget="return this._canAdvance;"
+                                  onset="this._canAdvance=val; this._nextButton.setAttribute('disabled', !val);"/>
+      <property name="canRewind" onget="return this._canRewind;"
+                                 onset="this._canRewind=val; this._backButton.setAttribute('disabled', !val);"/>
+
+      <property name="pageStep" onget="return this._pageStack.length"/>
+
+      <field name="pageCount">0</field>
+      
+      <field name="_accessMethod">null</field>
+      <field name="_pageStack">null</field>
+      <field name="_currentPage">null</field>
+
+      <property name="wizardPages">
+        <getter>
+        <![CDATA[
+          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          return this.getElementsByTagNameNS(xulns, "wizardpage");
+        ]]>
+        </getter>
+      </property>
+
+      <property name="currentPage" onget="return this._currentPage">
+        <setter>
+        <![CDATA[
+          if (!val)
+            return val;
+            
+          this._currentPage = val;
+
+          // Setting this attribute allows wizard's clients to dynamically
+          // change the styles of each page based on purpose of the page. 
+          this.setAttribute("currentpageid", val.pageid);
+                    
+          if (this.onFirstPage) {
+            this.canRewind = false;
+            this.setAttribute("firstpage", "true");
+          } else {
+            this.canRewind = true;
+            this.setAttribute("firstpage", "false");
+          }
+                    
+          if (this.onLastPage) {
+            this.canAdvance = true;
+            this.setAttribute("lastpage", "true");
+          } else {
+            this.setAttribute("lastpage", "false");
+          }
+
+          this._deck.setAttribute("selectedIndex", val.pageIndex);
+          this._advanceFocusToPage(val);
+
+          this._adjustWizardHeader();
+          this._wizardButtons.onPageChange();
+
+          this._fireEvent(val, "pageshow");
+          
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="pageIndex" onget="return this._pageIndex;">
+        <setter>
+        <![CDATA[
+          if (val < 0 || val >= this.pageCount)
+            return this._pageIndex;
+
+          this.currentPage = this.wizardPages[val];
+        ]]>
+        </setter>
+      </property>
+
+      <property name="onFirstPage"
+                onget="return this._pageStack.length == 1;"/>
+
+      <property name="onLastPage">
+        <getter><![CDATA[
+          var cp = this.currentPage;
+          return cp && ((this._accessMethod == "sequential" && cp.pageIndex == this.pageCount-1) ||
+                       (this._accessMethod == "random" && cp.next == ""));
+         ]]></getter>
+      </property>
+
+      <method name="getButton">
+        <parameter name="aDlgType"/>
+        <body>
+        <![CDATA[
+          var btns = this.getElementsByAttribute("dlgtype", aDlgType);
+          return btns.length > 0 ? btns[0] : document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aDlgType);
+        ]]>
+        </body>
+      </method>
+
+      <field name="_canAdvance"/>
+      <field name="_canRewind"/>
+      <field name="_wizardHeader"/>
+      <field name="_wizardButtons"/>
+      <field name="_deck"/>
+      <field name="_backButton"/>
+      <field name="_nextButton"/>
+      <field name="_cancelButton"/>
+
+      <!-- functions to be added as oncommand listeners to the wizard buttons -->
+      <field name="_backFunc">(function() { document.documentElement.rewind(); })</field>
+      <field name="_nextFunc">(function() { document.documentElement.advance(); })</field>
+      <field name="_finishFunc">(function() { document.documentElement.advance(); })</field>
+      <field name="_cancelFunc">(function() { document.documentElement.cancel(); })</field>
+
+      <field name="_closeHandler">(function(event) {
+        if (document.documentElement.cancel())
+          event.preventDefault();
+      })</field>
+       
+      <constructor><![CDATA[
+        this._canAdvance = true;
+        this._canRewind = false;
+        this._hasLoaded = false;
+        
+        this._pageStack = [];
+        
+        // need to create string bundle manually instead of using <xul:stringbundle/>
+        // see bug 63370 for details
+        var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                              .getService(Components.interfaces.nsILocaleService);
+        var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+        var bundleURL = "chrome://global-platform/locale/wizard.properties";
+        this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
+        
+        // get anonymous content references
+        this._wizardHeader = document.getAnonymousElementByAttribute(this, "anonid", "Header");
+        this._wizardButtons = document.getAnonymousElementByAttribute(this, "anonid", "Buttons");
+        this._deck = document.getAnonymousElementByAttribute(this, "anonid", "Deck");
+        
+        this._initWizardButton("back");
+        this._initWizardButton("next");
+        this._initWizardButton("finish");
+        this._initWizardButton("cancel");
+        
+        this._initPages();
+        
+        window.addEventListener("close", this._closeHandler, false);
+        
+        // start off on the first page
+        this.pageCount = this.wizardPages.length;
+        this.advance();
+        
+        // give focus to the first focusable element in the dialog
+        window.addEventListener("load", this._setInitialFocus, false);
+      ]]></constructor>
+
+      <method name="getPageById">
+        <parameter name="aPageId"/>
+        <body><![CDATA[
+          var els = this.getElementsByAttribute("pageid", aPageId);
+          return els.length > 0 ? els[0] : null;
+        ]]></body>
+      </method>
+
+      <method name="rewind">
+        <body><![CDATA[
+          if (!this.canRewind)
+            return;
+
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+            return;
+
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagerewound"))
+            return;
+
+          if (!this._fireEvent(this, "wizardback"))
+            return;
+            
+            
+          this._pageStack.pop();
+          this.currentPage = this._pageStack[this._pageStack.length-1];
+          this.setAttribute("pagestep", this._pageStack.length);
+        ]]></body>
+      </method>
+
+      <method name="advance">
+        <parameter name="aPageId"/>
+        <body><![CDATA[
+          if (!this.canAdvance)
+            return; 
+            
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+            return;
+            
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pageadvanced"))
+            return;
+
+          if (this.onLastPage) {
+            if (this._fireEvent(this, "wizardfinish"))
+              window.setTimeout(function() {window.close();}, 1);
+          } else {
+            if (!this._fireEvent(this, "wizardnext"))
+              return; 
+            
+            var page;
+            if (aPageId)
+              page = this.getPageById(aPageId);
+            else {
+              if (this.currentPage) {
+                if (this._accessMethod == "random")
+                  page = this.getPageById(this.currentPage.next);
+                else
+                  page = this.wizardPages[this.currentPage.pageIndex+1];
+              } else
+                page = this.wizardPages[0];
+            }
+
+            if (page) {
+              this._pageStack.push(page);
+              this.setAttribute("pagestep", this._pageStack.length);
+  
+              this.currentPage = page;
+            }
+          }
+        ]]></body>
+      </method>
+      
+      <method name="goTo">
+        <parameter name="aPageId"/>
+        <body><![CDATA[
+          var page = this.getPageById(aPageId);
+          if (page) {
+            this._pageStack[this._pageStack.length-1] = page;
+            this.currentPage = page;
+          }
+        ]]></body>
+      </method>
+              
+      <method name="cancel">
+        <body><![CDATA[
+          if (!this._fireEvent(this, "wizardcancel"))
+            return true;
+
+          window.close();
+          window.setTimeout(function() {window.close();}, 1);
+        ]]></body>
+      </method>
+      
+      <method name="_setInitialFocus">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          document.documentElement._hasLoaded = true;
+          var focusInit = 
+            function() {
+              // give focus to the first focusable element in the dialog
+              if (!document.commandDispatcher.focusedElement)
+                document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+            };
+
+          // Give focus after onload completes, see bug 103197.
+          setTimeout(focusInit, 0);
+        ]]>
+        </body>
+      </method>                
+
+      <method name="_advanceFocusToPage">
+        <parameter name="aPage"/>
+        <body>
+        <![CDATA[
+          if (!this._hasLoaded)
+            return;
+            
+          document.commandDispatcher.advanceFocusIntoSubtree(aPage);
+          
+          // if advanceFocusIntoSubtree tries to focus one of our
+          // dialog buttons, then remove it and put it on the root
+          var focused = document.commandDispatcher.focusedElement;
+          if (focused && focused.hasAttribute("dlgtype"))
+            this.focus();
+        ]]>
+        </body>
+      </method>                
+
+      <method name="_initPages">
+        <body><![CDATA[
+          var meth = "sequential";
+          var pages = this.wizardPages;
+          for (var i = 0; i < pages.length; ++i) {
+            var page = pages[i];
+            page.pageIndex = i;
+            if (page.next != "")
+              meth = "random";
+          }
+          this._accessMethod = meth;
+        ]]></body>
+      </method>
+
+      <method name="_initWizardButton">
+        <parameter name="aName"/>
+        <body><![CDATA[
+         var btn = document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aName);
+         if (btn) {
+           btn.addEventListener("command", this["_"+aName+"Func"], false);
+           btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
+           this["_"+aName+"Button"] = btn;
+         }
+         return btn;
+        ]]></body>
+      </method>
+
+      <method name="_adjustWizardHeader">
+        <body><![CDATA[
+          var label = this.currentPage.getAttribute("label");
+          if (!label && this.onFirstPage)
+            label = this._bundle.formatStringFromName("default-first-title", [this.title], 1);
+          else if (!label && this.onLastPage)
+            label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
+          this._wizardHeader.setAttribute("label", label);
+          this._wizardHeader.setAttribute("description", this.currentPage.getAttribute("description"));
+        ]]></body>
+      </method>
+
+      <method name="_hitEnter">
+        <body>
+        <![CDATA[
+          // if a button is focused, dispatch its command instead 
+          // of advancing the wizard
+          var focused = document.commandDispatcher.focusedElement;
+          if (!(focused && focused.localName == "button" && focused.hasAttribute("dlgtype")))
+            this.advance();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_fireEvent">
+        <parameter name="aTarget"/>
+        <parameter name="aType"/>
+        <body>
+        <![CDATA[
+          var event = document.createEvent("Events");
+          event.initEvent(aType, false, true);
+          
+          // handle dom event handlers
+          var noCancel = aTarget.dispatchEvent(event);
+          
+          // handle any xml attribute event handlers
+          var handler = aTarget.getAttribute("on"+aType);
+          if (handler != "") {
+            var fn = new Function("event", handler);
+            var returned = fn.apply(aTarget, [event]);
+            if (returned == false)
+              noCancel = false;
+          }
+
+          return noCancel;
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter()"/>
+      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter()"/>
+      <handler event="keypress" keycode="VK_ESCAPE" action="this.cancel();"/>
+    </handlers>
+  </binding>
+
+  <binding id="wizardpage" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <implementation>
+      <field name="pageIndex">null</field>
+      
+      <property name="pageid" onget="return this.getAttribute('pageid');"
+                              onset="this.setAttribute('pageid', val);"/>
+
+      <property name="next"   onget="return this.getAttribute('next');"
+                              onset="this.setAttribute('next', val);
+                                     this.parentNode._accessMethod = 'random';
+                                     return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="wizard-header" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content>
+      <xul:hbox class="wizard-header-box-1" flex="1">
+        <xul:vbox class="wizard-header-box-text" flex="1">
+          <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
+          <xul:label class="wizard-header-description" xbl:inherits="value=description"/>
+        </xul:vbox>
+        <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
+      </xul:hbox>
+    </content>
+  </binding>
+  
+  <binding id="wizard-buttons" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content>
+      <xul:vbox class="wizard-buttons-box-1" flex="1">
+        <xul:separator class="wizard-buttons-separator groove"/>
+        <xul:hbox class="wizard-buttons-box-2">
+          <xul:spacer flex="1"/>
+          <xul:button class="wizard-button" dlgtype="back"/>
+          <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
+            <xul:hbox>
+              <xul:button class="wizard-button" dlgtype="finish" default="true" flex="1"/> 
+            </xul:hbox>
+            <xul:hbox>
+              <xul:button class="wizard-button" dlgtype="next" default="true" flex="1"/> 
+            </xul:hbox>
+          </xul:deck>
+          <xul:button class="wizard-button" dlgtype="cancel"/> 
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    
+    <implementation>
+      <constructor>
+         this._wizardButtonDeck = document.getAnonymousElementByAttribute(this, "anonid", "WizardButtonDeck");
+      </constructor>
+      
+      <method name="onPageChange">
+        <body><![CDATA[
+          if (this.getAttribute("lastpage") == "true") {
+            this._wizardButtonDeck.setAttribute("selectedIndex", 0);
+          } else {
+            this._wizardButtonDeck.setAttribute("selectedIndex", 1);
+          }
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="wizard-header-mac" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content>
+      <xul:stack class="wizard-header-stack" flex="1">
+        <xul:vbox class="wizard-header-box-1">
+          <xul:vbox class="wizard-header-box-2">
+            <xul:vbox class="wizard-header-box-text">
+              <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
+            </xul:vbox>
+          </xul:vbox>
+        </xul:vbox>
+        <xul:hbox class="wizard-header-box-icon">
+          <xul:spacer flex="1"/>
+          <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+  </binding>
+  
+  <binding id="wizard-buttons-mac" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+    <content>
+      <xul:vbox flex="1">
+        <xul:hbox class="wizard-buttons-top" xbl:inherits="hidden=hidetoprow">
+          <xul:spacer flex="1"/>
+          <xul:button class="wizard-button" dlgtype="cancel"/> 
+          <xul:button class="wizard-button" dlgtype="finish" default="true"/> 
+        </xul:hbox>
+        <xul:separator class="wizard-buttons-separator groove"/>
+        <xul:hbox class="wizard-buttons-btm">
+          <xul:spacer flex="1"/>
+          <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
+          <xul:hbox class="wizard-label-box" align="center">
+            <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
+          </xul:hbox>
+          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="disabled=lastpage"/> 
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <method name="onPageChange">
+        <body><![CDATA[
+          this.setAttribute("hidetoprow", !(this.getAttribute("lastpage") == "true"));
+        ]]></body>
+      </method>
+    </implementation>
+
+  </binding>
+
+</bindings>
