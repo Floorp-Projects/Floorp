@@ -40,8 +40,8 @@ NS_BASE nsresult WriteDescriptor(
 NS_BASE nsInputStream& operator >> (
     nsInputStream&,
     nsPersistentFileDescriptor&);
-        // reads the data from a file
+        // reads the data from a stream (file or string)
 NS_BASE nsOutputStream& operator << (
     nsOutputStream&,
     const nsPersistentFileDescriptor&);
-    	// writes the data to a file
+    	// writes the data to a  stream (file or string)
