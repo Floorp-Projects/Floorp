@@ -1063,6 +1063,14 @@ void nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_ARROW);
       break;
 
+    case eCursor_sizeWE:
+      newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
+      break;
+
+    case eCursor_sizeNS:
+      newCursor = ::LoadCursor(NULL, IDC_SIZENS);
+      break;
+
     default:
       NS_ASSERTION(0, "Invalid cursor type");
       break;

@@ -518,7 +518,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   float t2p = aPresContext.GetTwipsToPixels();
   nsIPresShell *presShell = aPresContext.GetShell();     
-  NS_RELEASE(presShell);
 
   // create, init, set the parent of the view
   nsIView* view;
@@ -535,6 +534,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
   nsIViewManager* viewMan = presShell->GetViewManager();  
+  NS_RELEASE(presShell);
   rv = view->Init(viewMan, viewBounds, parView, &kCChildCID);
   viewMan->InsertChild(parView, view, 0);
   NS_RELEASE(viewMan);
