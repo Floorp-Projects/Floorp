@@ -17,7 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Igor Kushnirskiy <idk@eng.sun.com>
+ * Sergey Lunegov <lsv@sparc.spb.su>
  */
 #ifndef _urpComponentLoader_h
 #define _urpComponentLoader_h

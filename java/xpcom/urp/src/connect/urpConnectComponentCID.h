@@ -19,21 +19,17 @@
  * Contributor(s):
  * Sergey Lunegov <lsv@sparc.spb.su>
  */
-#ifndef __urpComponentFactory_h
-#define __urpComponentFactory_h
-#include "nsIFactory.h"
 
-class urpComponentFactory : public nsIFactory {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-    urpComponentFactory(const char *location, const nsCID &aCID);
-    virtual ~urpComponentFactory();
-private:
-    char *location;
-    nsCID aClass;    
-};
+#ifndef __urpConnectComponentCID_h__
+#define __urpConnectComponentCID_h__
+
+#define URP_CONNECTCOMPONENT_ContractID "@mozilla.org/blackwood/urpconnect/connectcomponent;1"
+
+/*66c1700d-b509-4c2f-aba2-8c18a6aac4cc*/
+#define URP_CONNECTCOMPONENT_CID \
+   { 0x66c1700d, 0xb509, 0x4c2f, \
+     {0xab, 0xa2, 0x8c, 0x18, 0xa6, 0xaa, 0xc4, 0xcc }}
+
 
 #endif
-
 

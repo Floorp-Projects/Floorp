@@ -19,21 +19,21 @@
  * Contributor(s):
  * Sergey Lunegov <lsv@sparc.spb.su>
  */
-#ifndef __urpComponentFactory_h
-#define __urpComponentFactory_h
-#include "nsIFactory.h"
 
-class urpComponentFactory : public nsIFactory {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-    urpComponentFactory(const char *location, const nsCID &aCID);
-    virtual ~urpComponentFactory();
-private:
-    char *location;
-    nsCID aClass;    
+#ifndef __urpIConnectComponent_h__
+#define __urpIConnectComponent_h_
+#include "nsISupports.h"
+#include "urpTransport.h"
+
+/*b7f595cb-dd93-4d70-868b-9f9ae35e6181*/
+#define URP_CONNECTCOMPONENT_IID \
+   { 0xb7f595cb, 0xdd93, 0x4d70, \
+    {0x86, 0x8b, 0x9f, 0x9a, 0xe3, 0x5e, 0x61, 0x81}}
+
+class urpIConnectComponent : public nsISupports {
+ public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(URP_CONNECTCOMPONENT_IID) 
+    NS_IMETHOD GetCompMan(char* cntStr, nsISupports** man) = 0;
+    NS_IMETHOD GetTransport(char* cntStr, urpTransport** trans) = 0;
 };
-
 #endif
-
-

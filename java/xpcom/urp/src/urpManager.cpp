@@ -93,8 +93,11 @@ struct sendThreadArg {
 };
 
 struct monitCall {
+    PRCList* stack;
+/*
     PRMonitor *mon;
     bcICall* call;
+*/
     urpPacket* mess;
     char header;
     bcIID iid;
@@ -102,9 +105,8 @@ struct monitCall {
     bcTID tid;
     bcMID mid;
     int request;
-    monitCall(PRMonitor *m, bcICall* c, urpPacket* mes, char h) {
-	this->mon = m;
-	this->call = c;
+    monitCall(PRCList* stack, urpPacket* mes, char h) {
+	this->stack = stack;
 	this->mess = mes;
 	this->header = h;
 	this->request = 0;
@@ -248,9 +250,11 @@ urpManager::ReadReply(urpPacket* message, char header,
 		    urpConnection* conn) {
 	nsresult rv = NS_OK;
         printf("this is method readReply\n");
-	urpMarshalToolkit* mt = new urpMarshalToolkit(PR_TRUE); 
-	rv = mt->ReadParams(paramCount, info, message, interfaceInfo, methodIndex, call, broker, this, conn);
-	delete mt;
+	if(methodIndex != 1 && methodIndex != 2) {
+	   urpMarshalToolkit* mt = new urpMarshalToolkit(PR_TRUE); 
+	   rv = mt->ReadParams(paramCount, info, message, interfaceInfo, methodIndex, call, broker, this, conn);
+	   delete mt;
+	}
 	return rv;
 }
 
@@ -296,9 +300,10 @@ urpManager::ReadMessage(urpConnection* conn, PRBool isClient) {
 		      mc->tid = tid;
 		      mc->mid = methodId;
 		      mc->request = 1;
-		      PR_EnterMonitor(mc->mon);
-                      PR_Notify(mc->mon);
-                      PR_ExitMonitor(mc->mon);
+		      PRMonitor* mon = (PRMonitor*)PR_LIST_HEAD(mc->stack);
+		      PR_EnterMonitor(mon);
+                      PR_Notify(mon);
+                      PR_ExitMonitor(mon);
 		   } else {
 		      arg->man = this;
 		      arg->header = header;
@@ -358,9 +363,10 @@ urpManager::ReadMessage(urpConnection* conn, PRBool isClient) {
                    ReadReply(message, header, mc->call, paramCount, 
 			info, interfaceInfo, mid, conn);
 */
-		   PR_EnterMonitor(mc->mon);
-		   PR_Notify(mc->mon);
-		   PR_ExitMonitor(mc->mon);
+		   PRMonitor* mon = (PRMonitor*)PR_LIST_HEAD(mc->stack);
+		   PR_EnterMonitor(mon);
+		   PR_Notify(mon);
+		   PR_ExitMonitor(mon);
 		}
            }
            else { // only a short request header
@@ -392,8 +398,8 @@ urpManager::SendReply(bcTID tid, bcICall* call, PRUint32 paramCount,
 	message->WriteByte(header);
 	urpMarshalToolkit* mt = new urpMarshalToolkit(PR_FALSE);
 	mt->WriteThreadID(tid, message);
-	rv = mt->WriteParams(call, paramCount, info, interfaceInfo, message,
-			methodIndex);
+	if(methodIndex != 1 && methodIndex != 2)
+	   rv = mt->WriteParams(call, paramCount, info, interfaceInfo, message, methodIndex);
 	delete mt;
 	if(NS_FAILED(rv)) return rv;
 	connection->Write(message);
@@ -465,16 +471,23 @@ char* name;
 	rv = SendReply(tid, call, paramCount, info, interfaceInfo, 
 			methodId, conn);
 //	delete call;
-	NS_RELEASE(interfaceInfo);
+//	NS_RELEASE(interfaceInfo);
 	return rv;
 }
 
 nsresult 
 urpManager::SetCall(bcICall* call, PRMonitor *m, bcTID thrID) {
-	monitCall* mc = new monitCall(m, call, nsnull, 0);
+	monitCall* mc;
+// = new monitCall(m, call, nsnull, 0);
 printf("method SetCall %p %p %p %ld\n",call, m, this, thrID);
         threadHashKey thrHK(thrID);
-        monitTable->Put(&thrHK, mc);
+	if(!(mc = (monitCall*)monitTable->Get(&thrHK))) {
+	   PR_INIT_CLIST((PRCList*)m);
+	   mc = new monitCall((PRCList*)m, nsnull, 0);
+	   monitTable->Put(&thrHK, mc);
+	} else {
+	   PR_INSERT_LINK((PRCList*)m, mc->stack);
+	}
 	return NS_OK;
 }
 
@@ -486,8 +499,14 @@ printf("method RemoveCall\n");
 	fR->mess= mc->mess;
 	fR->header = mc->header;
 	if(!mc->request) {
-	   mc = (monitCall*)monitTable->Remove(&thrHK);
-	   delete mc;
+	   mc = (monitCall*)monitTable->Get(&thrHK);
+	   PR_REMOVE_LINK(mc->stack);
+	   if(PR_CLIST_IS_EMPTY(mc->stack)) {
+	      mc = (monitCall*)monitTable->Remove(&thrHK);
+	      delete mc;
+	   } else {
+	      printf("It is not error\n");
+	   }
 	} else {
 	   fR->iid = mc->iid;
 	   fR->oid = mc->oid;

@@ -34,7 +34,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = transport test loader
+DIRS = transport test loader connect
 
 CXXFLAGS        +=  -I$(CONNECT_SRC)/public -I$(topsrcdir)/java/xpcom/xpcom -Itransport 
 CPPSRCS =  \

@@ -17,27 +17,28 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Igor Kushnirskiy <idk@eng.sun.com>
+ * Sergey Lunegov <lsv@sparc.spb.su>
  */
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 #include "urpComponentFactory.h"
 
+#include "urpIConnectComponent.h"
+#include "urpConnectComponentCID.h"
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(urpComponentFactory, nsIFactory)
 
-//static nsISupports* compM = nsnull;
-//nsCOMPtr<nsIComponentManager> compM = nsnull;
+static NS_DEFINE_CID(kConnectComponent,URP_CONNECTCOMPONENT_CID);
 
-urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCID, nsISupports* m) {
+
+urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCID) {
     NS_INIT_ISUPPORTS();
     location = nsCRT::strdup(_location);
     aClass = aCID;
-    compM = (nsIComponentManager*)m;
 }
 
 urpComponentFactory::~urpComponentFactory() {
     printf("destructor or urpComponentFactory\n");
-    NS_RELEASE(compM);
     nsCRT::free((char*)location);
 }
 
@@ -47,7 +48,14 @@ NS_IMETHODIMP urpComponentFactory::CreateInstance(nsISupports *aOuter, const nsI
     printf("--urpComponentFactory::CreateInstance\n");
     nsresult r;
     nsIFactory* factory;
-    ((nsIComponentManager*)(compM))->FindFactory(aClass, &factory);
+    NS_WITH_SERVICE(urpIConnectComponent, conn, kConnectComponent, &r);
+    if(NS_FAILED(r)) {
+	printf("Error in loading urpIConnectComponent\n");
+	exit(-1);
+    }
+    nsIComponentManager* compM;
+    conn->GetCompMan("socket,host=indra,port=20009", (nsISupports**)&compM);
+    compM->FindFactory(aClass, &factory);
     factory->CreateInstance(aOuter, iid, result);
     NS_RELEASE(factory);
     printf("--urpComponentFactory::CreateInstance end\n");

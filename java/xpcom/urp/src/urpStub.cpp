@@ -44,10 +44,6 @@ printf("destructor of urpStub\n");
 }
 
 void urpStub::Dispatch(bcICall *call) {
-if (_mOwningThread == PR_CurrentThread())
-printf("RavnYYYYYYYYY\n");
-else
-printf("NEEEEE RAAAAVVVNNNYYY\n");
     
   printf("this is method Dispatch of urpStub\n");
   bcIID iid; bcOID oid; bcMID mid;

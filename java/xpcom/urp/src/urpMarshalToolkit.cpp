@@ -227,10 +227,13 @@ urpMarshalToolkit::WriteParams(bcICall *call, PRUint32 paramCount, const nsXPTMe
 	if(!isClient) {
 	   nsresult result;
 	   um->ReadSimple(&result, bc_T_U32);
+	   message->WriteInt(result);
 	   if(!NS_SUCCEEDED(result)) {
 	      printf("Returned result is error on server side\n");
+	      delete allocator;
+	      delete um;
+	      return rv;
 	   }
-	   message->WriteInt(result);
 	}
 	for(i=0;i<paramCount;i++) {
 	    short cache_index;
@@ -404,6 +407,9 @@ urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, 
 	   m->WriteSimple(&result, bc_T_U32);
 	   if (!NS_SUCCEEDED(result)) {
 		printf("Returned result is error on client side\n");
+		delete allocator;
+		delete m;
+		return rv;
 	   }
 	}
 	for(i=0;i<paramCount;i++) {
