@@ -23,7 +23,6 @@
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
 #include "nsITextContent.h"
-#include "nsIUnicharInputStream.h"
 #include "nsString.h"
 #include "nsIDocument.h"
 #include "nsISupportsArray.h"
@@ -192,30 +191,21 @@ MyDocument::~MyDocument()
 
 int main(int argc, char** argv)
 {
-  // Create Byte2Unicode converter
-  nsresult rv;
-  nsIB2UConverter *converter;
-  rv = NS_NewB2UConverter(&converter,NULL);
-  if (NS_OK != rv) {
-    printf("Could not create converter.\n");
-    return -1;
-  }
+  /* Create Byte2Unicode converter? Not anymore. The converters are not tested
+  here, they have their own test code. And if you just want to use them, you 
+  need a properly intialized xpcom system. This simple test program doesn't do
+  that. */
 
   // Create a unicode string
   static const char* srcStr = "This is some meaningless text about nothing at all";
-  PRInt32 rv2;
+  nsresult rv;
   PRUint32 origSrcLen = nsCRT::strlen((char *)srcStr);
   const int BUFFER_LENGTH = 100;
   PRUnichar destStr[BUFFER_LENGTH];
   PRUint32 srcLen = origSrcLen;
   PRUint32 destLen = BUFFER_LENGTH;
-  rv2 = converter->Convert(destStr,0,destLen,srcStr,0,srcLen);
-  if ((NS_OK != rv2) || (srcLen < origSrcLen)) {
-    printf("Failed to convert all characters to unicode.\n");
-    return -1;
-  }
-
-  delete converter;
+  // hacky Ascii conversion to unicode, because we don't have a real Converter.
+  for (PRUint32 i=0; i<srcLen; i++) destStr[i] = ((PRUint8)srcStr[i]);
 
   // Create test document.
   MyDocument *myDoc = new MyDocument();

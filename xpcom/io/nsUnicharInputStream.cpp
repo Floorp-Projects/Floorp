@@ -15,9 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#define NS_IMPL_IDS
 #include "nsIUnicharInputStream.h"
 #include "nsIByteBuffer.h"
 #include "nsIUnicharBuffer.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include <fcntl.h>
@@ -115,66 +120,34 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
 
 //----------------------------------------------------------------------
 
-class IsoLatin1Converter : public nsIB2UConverter {
-public:
-  IsoLatin1Converter();
-
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD Convert(PRUnichar* aDst,
-                     PRUint32 aDstOffset,
-                     PRUint32& aDstLen,
-                     const char* aSrc,
-                     PRUint32 aSrcOffset,
-                     PRUint32& aSrcLen);
-};
-
-IsoLatin1Converter::IsoLatin1Converter()
-{
-  NS_INIT_REFCNT();
-}
-
-NS_DEFINE_IID(kIB2UConverterIID, NS_IB2UCONVERTER_IID);
-NS_IMPL_ISUPPORTS(IsoLatin1Converter,kIB2UConverterIID);
-
-nsresult IsoLatin1Converter::Convert(PRUnichar* aDst,
-                                    PRUint32 aDstOffset,
-                                    PRUint32& aDstLen,
-                                    const char* aSrc,
-                                    PRUint32 aSrcOffset,
-                                    PRUint32& aSrcLen)
-{
-  PRUint32 amount = aSrcLen;
-  if (aSrcLen > aDstLen) {
-    amount = aDstLen;
-  }
-  const char* end = aSrc + amount;
-  while (aSrc < end) {
-    PRUint8 isoLatin1 = PRUint8(*aSrc++);
-    /* XXX insert table based lookup converter here */
-    *aDst++ = isoLatin1;
-  }
-  aDstLen = amount;
-  aSrcLen = amount;
-  return NS_OK;
-}
-
-NS_BASE nsresult
-NS_NewB2UConverter(nsIB2UConverter** aInstancePtrResult,
+/**
+ * This function used to be public, with the NS_BASE declaration. I am 
+ * changing it right now into a module private visibility because there are
+ * better and more xpcom-like ways to get a Converter.
+ */
+nsresult
+NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
                    nsISupports* aOuter,
                    nsString* aCharSet)
 {
   if (nsnull != aOuter) {
     return NS_ERROR_NO_AGGREGATION;
   }
-  // We cannot use enum to pass charset id
-  if ((nsnull != aCharSet) && (! aCharSet->EqualsIgnoreCase( "iso-8859-1" ))){
-      return NS_BASE_STREAM_NO_CONVERTER;
-  }
-  IsoLatin1Converter* it = new IsoLatin1Converter();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIB2UConverterIID, (void**)aInstancePtrResult);
+
+  // Create converter
+  nsresult res;
+  nsICharsetConverterManager * ccm;
+  nsAutoString defaultCharset("ISO-8859-1");
+
+  if (aCharSet == nsnull) aCharSet = &defaultCharset;
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+      kICharsetConverterManagerIID, (nsISupports**)&ccm);
+  if (NS_FAILED(res)) return res;
+
+  res = ccm->GetUnicodeDecoder(aCharSet, aInstancePtrResult);
+  nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+
+  return res;
 }
 
 //----------------------------------------------------------------------
@@ -182,7 +155,7 @@ NS_NewB2UConverter(nsIB2UConverter** aInstancePtrResult,
 class ConverterInputStream : public nsIUnicharInputStream {
 public:
   ConverterInputStream(nsIInputStream* aStream,
-                       nsIB2UConverter* aConverter,
+                       nsIUnicodeDecoder* aConverter,
                        PRUint32 aBufSize);
   ~ConverterInputStream();
 
@@ -197,7 +170,7 @@ protected:
   PRInt32 Fill(nsresult * aErrorCode);
 
   nsIInputStream* mInput;
-  nsIB2UConverter* mConverter;
+  nsIUnicodeDecoder* mConverter;
   nsIByteBuffer* mByteData;
   PRUint32 mByteDataOffset;
   nsIUnicharBuffer* mUnicharData;
@@ -206,7 +179,7 @@ protected:
 };
 
 ConverterInputStream::ConverterInputStream(nsIInputStream* aStream,
-                                           nsIB2UConverter* aConverter,
+                                           nsIUnicodeDecoder* aConverter,
                                            PRUint32 aBufferSize)
 {
   NS_INIT_REFCNT();
@@ -300,10 +273,10 @@ PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
   NS_ASSERTION(remainder + nb == mByteData->GetLength(), "bad nb");
 
   // Now convert as much of the byte buffer to unicode as possible
-  PRUint32 dstLen = mUnicharData->GetBufferSize();
-  PRUint32 srcLen = remainder + nb;
-  *aErrorCode = mConverter->Convert(mUnicharData->GetBuffer(), 0, dstLen,
-                                    mByteData->GetBuffer(), 0, srcLen);
+  PRInt32 dstLen = mUnicharData->GetBufferSize();
+  PRInt32 srcLen = remainder + nb;
+  *aErrorCode = mConverter->Convert(mUnicharData->GetBuffer(), 0, &dstLen,
+                                    mByteData->GetBuffer(), 0, &srcLen);
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;
   mByteDataOffset += srcLen;
@@ -323,7 +296,7 @@ NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
   }
 
   // Create converter
-  nsIB2UConverter* converter;
+  nsIUnicodeDecoder* converter;
   nsresult rv = NS_NewB2UConverter(&converter, nsnull, aCharSet);
   if (NS_OK != rv) {
     return rv;
@@ -332,7 +305,7 @@ NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
   // Create converter input stream
   ConverterInputStream* it =
     new ConverterInputStream(aStreamToWrap, converter, aBufferSize);
-  converter->Release();
+  NS_RELEASE(converter);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
