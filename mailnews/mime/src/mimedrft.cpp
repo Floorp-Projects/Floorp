@@ -1465,6 +1465,15 @@ mime_parse_stream_complete (nsMIMESession *stream)
           {
             if (body && composeFormat == nsIMsgCompFormat::PlainText)
             {
+              //We need to convert the plain/text to HTML in order to escape any HTML markup
+              char *escapedBody = nsEscapeHTML(body);
+              if (escapedBody)
+              {
+                PR_Free(body);
+                body = escapedBody;
+                bodyLen = strlen(body);
+              }
+
               char* newbody = (char *)PR_MALLOC (bodyLen + 12); //+11 chars for <pre> & </pre> tags
               if (newbody)
               {
