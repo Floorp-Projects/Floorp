@@ -72,6 +72,12 @@ nsNativeAppSupportBase::Quit() {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNativeAppSupportBase::ReOpen()
+{
+  return NS_OK;
+}
+
 // Show splash screen if implementation has one.
 NS_IMETHODIMP
 nsNativeAppSupportBase::ShowSplashScreen() {
