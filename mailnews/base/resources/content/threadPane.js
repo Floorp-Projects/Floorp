@@ -21,14 +21,22 @@
 var gOldNumSelected = 0;
 function ThreadPaneOnClick(event)
 {
-  var t = event.originalTarget;
+    var t = event.originalTarget;
 
     if (t.localName != "treecell" &&
         t.localName != "treeitem" &&
         t.localName != "image")
         return;
 
-  var targetclass = "";
+    // fix for #48424.  bail out of here when the user is 
+    // clicking on the column headers
+    if (t.localName == "treecell") {
+        if (t.parentNode && (t.parentNode.getAttribute("id") == "headRow")) {
+            return;
+        }
+    }
+   
+    var targetclass = "";
 
     if (t.localName == "image" && (t.getAttribute('twisty') != 'true'))
       targetclass = t.parentNode.getAttribute('class');
