@@ -2540,7 +2540,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	// first look for "search/queryCharset"... if that isn't specified,
 	// then fall back to looking for "search/queryEncoding" (a decimal)
 	GetData(dataUni, "search", 0, "queryCharset", queryEncodingStr);
-	if (queryEncodingStr.Length() < 1)
+       if (queryEncodingStr.IsEmpty())
 	{
 		GetData(dataUni, "search", 0, "queryEncoding", encodingStr);		// decimal string values
 		MapEncoding(encodingStr, queryEncodingStr);
@@ -3541,20 +3541,30 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 		{	nsnull, nsnull		}
 	};
 
-	// make "ISO-8859-1" as the default (not "UTF-8")
-	stringEncoding = NS_LITERAL_STRING("ISO-8859-1");
+  if (!numericEncoding.IsEmpty())	{
+    for (PRUint32 i = 0; encodingList[i].numericEncoding != nsnull; i++)
+    {
+      if (numericEncoding.EqualsWithConversion(encodingList[i].numericEncoding)) 
+      {
+        stringEncoding.AssignWithConversion(encodingList[i].stringEncoding);
+        return(NS_OK);
+      }
+    }
+  }
 
-	PRUint32	loop = 0;
-	while (encodingList[loop].numericEncoding != nsnull)
-	{
-		if (numericEncoding.EqualsWithConversion(encodingList[loop].numericEncoding))
-		{
-			stringEncoding.AssignWithConversion(encodingList[loop].stringEncoding);
-			break;
-		}
-		++loop;
-	}
-	return(NS_OK);
+  // Still no encoding, fall back to default charset if possible
+  nsXPIDLString defCharset;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)
+    prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
+
+  if (!defCharset.IsEmpty())
+    stringEncoding.Assign(defCharset);
+  else
+    // make "ISO-8859-1" as the default (not "UTF-8")
+    stringEncoding.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+
+  return(NS_OK);
 }
 
 struct scripts
@@ -5141,7 +5151,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 #else
 	now = PR_Now();
 #endif
-	printf("\nStart processing search results:   %lu bytes \n", htmlPageSize); 
+       printf("\nStart processing search results:   %u bytes \n", htmlPageSize); 
 #endif
 
 	// need to handle multiple <interpret> sections, per spec
