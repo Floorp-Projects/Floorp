@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msglocal
 LIBRARY_NAME	= msglocal_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string msgbase msgbaseutil mailnews pref js necko msgdb rdf intl locale mime dom rdfutil txmgr widget layout docshell uriloader msgimap chrome appshell nkcache xuldoc gfx2
+REQUIRES	= xpcom string msgbase msgbaseutil mailnews pref necko msgdb rdf intl mime dom rdfutil txmgr docshell msgimap chrome nkcache
 
 CPPSRCS		= \
 		nsPop3Protocol.cpp \

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconxbl_s
-REQUIRES	= xpcom string js dom widget caps locale htmlparser necko xpconnect pref docshell uriloader chrome lwbrk xul xuldoc gfx2 imglib2
+REQUIRES	= xpcom string js dom widget caps htmlparser necko xpconnect pref docshell chrome lwbrk xul xuldoc gfx2 imglib2
 
 CPPSRCS		= \
     nsXBLBinding.cpp \

@@ -34,7 +34,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXprintModule
 
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko imglib2 intl
+REQUIRES	= xpcom string widget view img util pref locale uconv unicharutil gfx2 imglib2 intl
 
 CSRCS		= \
 		../xlibrgb/xlibrgb.c \

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= nkftp_s
-REQUIRES	= xpcom string exthandler mimetype wallet dom layout widget pref intl
+REQUIRES	= xpcom string exthandler mimetype wallet pref intl
 
 CPPSRCS		= \
 		nsFtpProtocolHandler.cpp \

@@ -31,7 +31,7 @@ LIBRARY_NAME	= gkview
 EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
 MODULE_NAME	= nsViewModule
-REQUIRES	= xpcom string layout widget dom locale timer pref gfx2
+REQUIRES	= xpcom string layout widget dom locale timer pref
 
 EXTRA_DSO_LIBS = gkgfx
 

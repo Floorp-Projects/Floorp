@@ -31,7 +31,7 @@ LIBRARY_NAME	= msgbaseutil
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= msgbsutl
-REQUIRES	= xpcom string msgbase rdf necko msgdb intl mork mailnews locale pref rdfutil rdfutil mime msgcompose docshell webshell wallet dom widget layout uriloader appshell msgimap msglocal msgnews txmgr uconv unicharutil nkcache mimetype gfx2 windowwatcher js
+REQUIRES	= xpcom string msgbase rdf necko msgdb intl mork mailnews locale pref rdfutil rdfutil mime msgcompose docshell webshell wallet dom uriloader appshell msgimap msglocal msgnews txmgr uconv unicharutil nkcache mimetype windowwatcher
 
 CPPSRCS		= \
 		nsMsgGroupRecord.cpp \

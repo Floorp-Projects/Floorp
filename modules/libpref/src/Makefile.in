@@ -31,7 +31,7 @@ LIBRARY_NAME	= pref
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPrefModule
-REQUIRES	= xpcom string js xpconnect caps dom intl locale timer necko embedcomponents profile
+REQUIRES	= xpcom string js xpconnect caps intl timer necko embedcomponents profile
 
 include $(topsrcdir)/config/config.mk
 

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconxulcon_s
-REQUIRES	= xpcom string widget htmlparser necko dom js caps rdf xpconnect locale timer lwbrk pref xul xuldoc xultmpl gfx2 webshell
+REQUIRES	= xpcom string widget htmlparser necko dom js caps rdf xpconnect locale timer lwbrk pref xul xuldoc xultmpl webshell
 
 CPPSRCS		= \
 		nsRDFDOMNodeList.cpp \

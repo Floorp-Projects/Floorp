@@ -45,7 +45,7 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= xpconect
 IS_COMPONENT	= 1
 MODULE_NAME	= xpconnect
-REQUIRES	= xpcom string js dom widget layout caps
+REQUIRES	= xpcom string js dom caps
 
 CPPSRCS		= \
 		nsScriptError.cpp \

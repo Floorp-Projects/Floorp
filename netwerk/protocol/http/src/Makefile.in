@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME = nkhttp_s
-REQUIRES	= xpcom string pref js nkcache exthandler mimetype wallet dom layout widget caps xpconnect intl
+REQUIRES	= xpcom string pref nkcache mimetype intl
 
 CPPSRCS		= \
 		nsHttp.cpp \

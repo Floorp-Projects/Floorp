@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mimetype
 LIBRARY_NAME	= nkmime_s
-REQUIRES	= xpcom string necko appshell pref
+REQUIRES	= xpcom string necko pref
 
 CPPSRCS		= \
 		nsMIMEInfoImpl.cpp \

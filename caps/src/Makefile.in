@@ -32,7 +32,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsSecurityManagerModule
 
-REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl locale layout docshell uriloader gfx2 windowwatcher unicharutil
+REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl docshell windowwatcher
 
 CPPSRCS		= \
 		nsBasePrincipal.cpp \

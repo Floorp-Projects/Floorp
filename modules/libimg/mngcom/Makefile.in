@@ -30,7 +30,7 @@ LIBRARY_NAME	= nsmng
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMNGModule
-REQUIRES	= xpcom string img layout util locale mng jpeg unicharutil
+REQUIRES	= xpcom string img layout util mng
 
 CPPSRCS		= \
 		nsMNGDecoder.cpp \

@@ -31,7 +31,7 @@ LIBRARY_NAME	= profile
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsProfileModule
-REQUIRES	= xpcom string chrome docshell webbrwsr dom js layout widget necko uriloader locale cookie intl pref prefmigr appshell rdf uconv appcomps gfx2 windowwatcher
+REQUIRES	= xpcom string chrome docshell webbrwsr dom widget necko uriloader cookie intl pref prefmigr appshell rdf uconv appcomps windowwatcher
 
 CPPSRCS		= 	nsProfile.cpp	\
 			nsProfileFactory.cpp	\

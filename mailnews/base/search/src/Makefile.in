@@ -30,7 +30,7 @@ MODULE		= msgbase
 XPIDL_MODULE	= msgsearch
 LIBRARY_NAME	= msgsearch_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime appshell msgimap rdf msglocal intl locale pref timer msgnews txmgr
+REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime msgimap rdf msglocal intl pref timer msgnews txmgr
 
 CPPSRCS		= \
 		nsMsgFilterService.cpp \

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= StringBundleTest.cpp
-REQUIRES	= xpcom string locale necko intl appshell
+REQUIRES	= xpcom string locale necko intl
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 

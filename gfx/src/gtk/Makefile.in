@@ -31,7 +31,7 @@ LIBRARY_NAME	= gfx_gtk
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxGTKModule
-REQUIRES	= xpcom string img widget view util dom pref js uconv necko unicharutil gfx2 mozcomps windowwatcher locale intl
+REQUIRES	= xpcom string img widget view util dom pref uconv unicharutil windowwatcher locale intl
 
 CSRCS		= nsPrintdGTK.c
 
