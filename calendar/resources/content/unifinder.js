@@ -133,11 +133,11 @@ function selectSelectedEventsInTree( EventsToSelect )
 *   display up to date when the calendar event data is changed
 */
 
-function unifinderObserver() {
-}
+/*function unifinderObserver() {
+}*/
 
 
-unifinderObserver.prototype = {
+var unifinderObserver = {
     mInBatch: false,
 
     onStartBatch: function() {
@@ -186,7 +186,10 @@ function prepareCalendarUnifinder( )
    gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
    
    // set up our calendar event observer
-   //gICalLib.addObserver( unifinderEventDataSourceObserver );
+   
+   var ccalendar=getCalendar();
+   ccalendar.addObserver(unifinderObserver,ccalendar.ITEM_FILTER_TYPE_EVENT);
+   refreshEventTree(); //Display something upon first load. onLoad doesn't work properly for observers
 }
 
 /**
@@ -196,6 +199,8 @@ function prepareCalendarUnifinder( )
 function finishCalendarUnifinder( )
 {
   //gICalLib.removeObserver( unifinderEventDataSourceObserver  );
+   var ccalendar=getCalendar();
+   ccalendar.removeObserver(unifinderObserver);
 }
 
 /**
@@ -593,7 +598,6 @@ function refreshEventTree( eventArray )
    var filter = 0;
 
    filter |= calendar.ITEM_FILTER_TYPE_EVENT;
-
 
    switch( document.getElementById( "event-filter-menulist" ).selectedItem.value )
    {
