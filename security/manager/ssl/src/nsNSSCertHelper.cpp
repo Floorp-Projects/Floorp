@@ -545,10 +545,14 @@ getCertType(CERTCertificate *cert)
   nsNSSCertTrust trust(cert->trust);
   if (cert->nickname && trust.HasAnyUser())
     return nsIX509Cert::USER_CERT;
-  if (trust.HasAnyCA() || CERT_IsCACert(cert,NULL))
+  if (trust.HasAnyCA())
     return nsIX509Cert::CA_CERT;
   if (trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE))
     return nsIX509Cert::SERVER_CERT;
+  if (trust.HasPeer(PR_FALSE, PR_TRUE, PR_FALSE) && cert->emailAddr)
+    return nsIX509Cert::EMAIL_CERT;
+  if (CERT_IsCACert(cert,NULL))
+    return nsIX509Cert::CA_CERT;
   if (cert->emailAddr)
     return nsIX509Cert::EMAIL_CERT;
   return nsIX509Cert::SERVER_CERT;
