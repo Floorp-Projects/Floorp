@@ -1064,24 +1064,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       case eHTMLTag_img:
       case eHTMLTag_frame:
       case eHTMLTag_input:
-        mSink->AddBaseTagInfo(content);
-
-        if (nodeType == eHTMLTag_input) {
-          // HTML defines the checked attribute to mean default checked.
-          // The DOM defines checked to be the current state and a separate 
-          // defaultchecked attribute is used to hold the defaultchecked setting.
-          //
-          // The following code sets the initial value of default checked to be the same 
-          // as the checked attribute.
-
-          nsHTMLValue val;        
-          nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::checked, val);
-          if (NS_CONTENT_ATTR_NOT_THERE != rv) {
-            nsHTMLValue empty(eHTMLUnit_Empty);
-            content->SetHTMLAttribute(nsHTMLAtoms::defaultchecked, empty, PR_FALSE);
-          }
-        }
-     
+        mSink->AddBaseTagInfo(content);     
         break;
       }
 
