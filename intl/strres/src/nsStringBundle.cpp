@@ -322,9 +322,11 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& c
     return NS_ERROR_FAILURE;
   }
 
+  const PRUnichar *lc_name_unichar;
   nsString	  lc_name;
   nsString  	catagory("NSILOCALE_MESSAGES");
-  nsresult	  result	 = aLocale->GetCategory(&catagory, &lc_name);
+  nsresult	  result	 = aLocale->GetCategory(catagory.GetUnicode(), &lc_name_unichar);
+  lc_name.SetString(lc_name_unichar);
 
   NS_ASSERTION(result==NS_OK,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
   NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
