@@ -124,14 +124,14 @@ mozilla-pws.dat: mozilla.dat
 
 # Run programs to collect data
 winEmbed.dat: wm.exe
-	cmd /c "start $(PROGRAM_PATH)\\$(WINEMBED_PROGRAM) $(BUSTER_URL) && .\\wm $(PROGRAM) > $@"
+	cmd /c "start $(PROGRAM_PATH)\\$(WINEMBED_PROGRAM) $(BUSTER_URL) && .\\wm $(WINEMBED_PROGRAM) > $@"
 
 mozilla.dat: wm.exe
-	cmd /c "start $(PROGRAM_PATH)\\$(MOZILLA_PROGRAM) $(BUSTER_URL) && .\\wm $(PROGRAM) > $@"
+	cmd /c "start $(PROGRAM_PATH)\\$(MOZILLA_PROGRAM) $(BUSTER_URL) && .\\wm $(MOZILLA_PROGRAM) > $@"
 
 # Build ``wm.exe'', the memory spy
 wm.exe: wm.cpp
-	cl wm.cpp advapi32.lib
+	cl -Od -Zi wm.cpp advapi32.lib
 
 # Clean up the mess.
 clean:
