@@ -50,6 +50,7 @@ inline CHTMLView* ExtractHyperView(const MWContext* inContext)
 enum {
 		// These messages notify thge clients about the layout state.		
 	msg_NSCDocTitleChanged				=	'DTCG',					// cstring* theNewTitle
+	msg_NSCInternetKeywordChanged		= 	'IKEY',					// char* keyword
 	msg_NSCLayoutNewDocument			=	'LOND',					// URL_Struct* theURL
 	msg_NSCFinishedLayout				=	'FNLO',					// < none >
 

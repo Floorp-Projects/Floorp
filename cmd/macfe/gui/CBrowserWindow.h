@@ -97,7 +97,10 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 								// This allows some parameters to be set once and locked (eg. size of non-resizable window).
 		virtual void			SetChromeInfo(Chrome* theChrome, Boolean inNotifyMenuBarModeChanged = false, Boolean inFirstTime = false);
 		virtual void			GetChromeInfo(Chrome* theChrome);
-		
+
+								// pinkerton 98-06-04 for internet keywords
+		const LStr255 &			GetInternetKeyword ( ) const { return mCurrentKeyword; }
+				
 		static CBrowserWindow*	MakeNewBrowserWindow(Boolean inShow = kShow, Boolean inSelect = kSelect);
 
 		// FindAndShow returns an empty new CBrowserWindow without putting
@@ -194,6 +197,7 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		virtual void			HandleNetSearchCommand();
 
 		virtual	void			NoteDocTitleChanged(const char* inTitle);
+		virtual	void			NoteInternetKeywordChanged(const char* inTitle);
 		virtual void			NoteBeginLayout(void);
 		virtual	void			NoteFinishedLayout(void);
 		virtual void			NoteAllConnectionsComplete(void);
@@ -234,4 +238,6 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 	private:
 		CRDFCoordinator*		mNavCenterParent;			// top level of navcenter hierarchy
 		CHTMLView*				mHTMLView;
+
+		LStr255					mCurrentKeyword;			// holds current internet keyword string
 };

@@ -51,6 +51,10 @@
 #include "intl_csi.h"
 #include "uintl.h"
 
+extern "C" {
+	#include "httpurl.h"		// for NET_getInternetKeyword
+}
+
 // FIX ME -- write a CopyAlloc like function that takes a CString
 #include "macutil.h"
 #include "CAutoPtrXP.h"
@@ -1102,6 +1106,21 @@ void CBrowserContext::AllConnectionsComplete(void)
 	}
 		
 }
+
+
+void CBrowserContext :: CompleteLoad ( URL_Struct* inURL, int inStatus )
+{
+	CNSContext :: CompleteLoad ( inURL, inStatus );
+
+	const short kKeywordLength = 50;
+	char keyword[kKeywordLength + 1];
+	NET_getInternetKeyword(inURL, keyword, kKeywordLength);
+		// we are guaranteed |keyword| will at least be a 0-length string
+	
+	BroadcastMessage(msg_NSCInternetKeywordChanged, (void*)keyword);
+
+}
+
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	

@@ -88,7 +88,9 @@ class CBrowserContext : public CNSContext
 		
 		virtual Boolean				SupportsPageServices();
 		
-		void						SetCloseCallback ( void (* close_callback)(void *close_arg), void* close_arg );
+		virtual void				SetCloseCallback ( void (* close_callback)(void *close_arg), void* close_arg );
+
+		virtual void				CompleteLoad ( URL_Struct* inURL, int inStatus ) ;
 
 // FIX ME!!! ACCESSOR for unique ID
 

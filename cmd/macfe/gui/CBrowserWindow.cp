@@ -850,6 +850,10 @@ void CBrowserWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 			NoteDocTitleChanged((const char*)ioParam);
 			break;
 		
+		case msg_NSCInternetKeywordChanged:
+			NoteInternetKeywordChanged((const char*)ioParam);
+			break;
+
 		case msg_NSCLayoutNewDocument:
 			NoteBeginLayout();
 			break;
@@ -1633,6 +1637,17 @@ void CBrowserWindow::NoteDocTitleChanged(const char* inNewTitle)
 	netscapeTitle += inNewTitle;
 	SetDescriptor( netscapeTitle );
 }
+
+
+void CBrowserWindow :: NoteInternetKeywordChanged(const char* inTitle)
+{
+	if ( inTitle )
+		mCurrentKeyword = inTitle;
+	else
+		mCurrentKeyword = "\p";
+		
+} // NoteInternetKeywordChanged
+
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
