@@ -27,11 +27,11 @@
   BOOL gotPref = NO;
     
   // Set initial value on Java/JavaScript checkboxes
-  BOOL jsEnabled = [self getStringPref:"javascript.enabled" withSuccess:&gotPref] && gotPref;
+  BOOL jsEnabled = [self getBooleanPref:"javascript.enabled" withSuccess:&gotPref] && gotPref;
   [mEnableJS setState:jsEnabled];
-  BOOL javaEnabled = [self getStringPref:"security.enable_java" withSuccess:&gotPref] && gotPref;
+  BOOL javaEnabled = [self getBooleanPref:"security.enable_java" withSuccess:&gotPref] && gotPref;
   [mEnableJava setState:javaEnabled];
-  BOOL pluginsEnabled = [self getStringPref:"chimera.enable_plugins" withSuccess:&gotPref] && gotPref;
+  BOOL pluginsEnabled = [self getBooleanPref:"chimera.enable_plugins" withSuccess:&gotPref] && gotPref;
   [mEnablePlugins setState:pluginsEnabled];
 
   // set initial value on popup blocking checkbox and disable the whitelist
