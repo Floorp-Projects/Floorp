@@ -67,7 +67,7 @@ insert into components (value, program, initialowner) values ("NetLib", "Mozilla
 insert into components (value, program, initialowner) values ("NSPR", "Mozilla", "wtc@netscape.com");
 insert into components (value, program, initialowner) values ("Password Cache", "Mozilla", "montulli@netscape.com");
 insert into components (value, program, initialowner) values ("PICS", "Mozilla", "montulli@netscape.com");
-insert into components (value, program, initialowner) values ("Plugins", "Mozilla", "byrd@netscape.com");
+insert into components (value, program, initialowner) values ("Plugins", "Mozilla", "amusil@netscape.com");
 insert into components (value, program, initialowner) values ("Preferences", "Mozilla", "aoki@netscape.com");
 insert into components (value, program, initialowner) values ("Progress Window", "Mozilla", "atotic@netscape.com");
 insert into components (value, program, initialowner) values ("Registry", "Mozilla", "dveditz@netscape.com");
