@@ -800,6 +800,9 @@ applet {
 area {
   display: none;
 }
+map {
+  display: block;
+}
 base {
   display: none;
 }
