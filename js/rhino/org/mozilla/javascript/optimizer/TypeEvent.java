@@ -50,11 +50,6 @@ public class TypeEvent {
         itsEvent = theEvent;
     }
 
-    public TypeEvent()
-    {
-        itsEvent = NoType;
-    }
-
     public boolean add(int anOther)
     {
         return ((itsEvent |= anOther) != anOther);
