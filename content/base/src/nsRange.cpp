@@ -334,75 +334,9 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
   }
   
   // ok, do it the hard way
-  nsVoidArray *pointAncestors = new nsVoidArray();
-  nsVoidArray *pointAncestorOffsets = new nsVoidArray();
-  PRInt32     numPointAncestors = 0;
-  PRInt32     numStartAncestors = 0;
-  PRInt32     numEndAncestors = 0;
-  PRInt32     commonNodeStartOffset = 0;
-  PRInt32     commonNodeEndOffset = 0;
-  
-  if (!pointAncestors || !pointAncestorOffsets)
-  {
-    NS_NOTREACHED("nsRange::ComparePointToRange");
-    delete pointAncestors;
-    delete pointAncestorOffsets;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  // refresh ancestor data
-  mStartAncestors->Clear();
-  mStartAncestorOffsets->Clear();
-  mEndAncestors->Clear();
-  mEndAncestorOffsets->Clear();
-
-  numStartAncestors = GetAncestorsAndOffsets(mStartParent,mStartOffset,mStartAncestors,mStartAncestorOffsets);
-  numEndAncestors   = GetAncestorsAndOffsets(mEndParent,mEndOffset,mEndAncestors,mEndAncestorOffsets);
-  numPointAncestors = GetAncestorsAndOffsets(aParent,aOffset,pointAncestors,pointAncestorOffsets);
-  
-  // walk down the arrays until we either find that the point is outside, or we hit the
-  // end of one of the range endpoint arrays, in which case the point is inside.  If we
-  // hit the end of the point array and NOT of the range endopint arrays, then the point
-  // is before the range (a bit of a special case, that)
-  
-  --numStartAncestors; // adjusting for 0-based counting 
-  --numEndAncestors; 
-  --numPointAncestors;
-  // back through the ancestors, starting from the root
-  while (mStartAncestors->ElementAt(numStartAncestors) == pointAncestors->ElementAt(numEndAncestors))
-  {
-    if ((PRInt32)pointAncestorOffsets->ElementAt(numPointAncestors) < 
-           (PRInt32)mStartAncestorOffsets->ElementAt(numStartAncestors))
-    {
-      *aResult = -1;
-      break;
-    }
-    if ((PRInt32)pointAncestorOffsets->ElementAt(numPointAncestors) > 
-           (PRInt32)mEndAncestorOffsets->ElementAt(numEndAncestors))
-    {
-      *aResult = 1;
-      break;
-    }
-    
-    --numStartAncestors;
-    --numEndAncestors;
-    --numPointAncestors;
-    
-    if ((numStartAncestors < 0) || (numEndAncestors < 0))
-    {
-      *aResult = 0;
-      break;
-    }
-    if (numPointAncestors < 0)
-    {
-      *aResult = -1;
-      break;
-    }
-  }
-
-  // clean up
-  delete pointAncestors;
-  delete pointAncestorOffsets;
+  if (IsIncreasing(aParent,aOffset,mStartParent,mStartOffset)) *aResult = -1;
+  else if (IsIncreasing(mEndParent,mEndOffset,aParent,aOffset)) *aResult = 1;
+  else *aResult = 0;
   
   return NS_OK;
 }
@@ -854,7 +788,7 @@ nsresult nsRange::DeleteContents()
     if (hasChildren)
     {
       PRInt32 i;  
-      for (i=mEndOffset; --i; i>=mStartOffset)
+      for (i=mEndOffset; i>=mStartOffset; --i)
       {
         res = cStart->RemoveChildAt(i, PR_TRUE);
         if (!NS_SUCCEEDED(res)) 
