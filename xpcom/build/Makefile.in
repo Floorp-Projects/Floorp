@@ -40,7 +40,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libxptinfo.a \
 		$(DIST)/lib/libxpt.a \
 		$(DIST)/lib/libxptcmd.a \
-		$(DIST)/lib/libmozreg.a \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -56,6 +55,8 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/lib \
+		-lmozreg_s \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

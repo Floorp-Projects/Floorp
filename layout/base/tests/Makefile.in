@@ -28,7 +28,6 @@ CPPSRCS		= TestSpaceManager.cpp
 
 LOCAL_INCLUDES	= -I$(srcdir)/../src
 
-include $(topsrcdir)/config/rules.mk
 
 LIBS		+= \
 		-lnetlib \
@@ -53,7 +52,6 @@ LIBS		+= \
 		-lmozjs \
 		$(TIMER_LIBS) \
 		-lxpcom \
-		-lmozreg \
 		-lxp \
 		-ljsurl \
 		-ljsdom \
@@ -62,3 +60,4 @@ LIBS		+= \
 		$(TK_LIBS) \
 		$(NULL)
 
+include $(topsrcdir)/config/rules.mk

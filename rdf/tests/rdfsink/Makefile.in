@@ -27,7 +27,6 @@ CPPSRCS		= rdfsink.cpp
 
 LIBS		= \
 		-lxpcom \
-		-lmozreg \
 		$(NSPR_LIBS) \
 		$(NULL)
 

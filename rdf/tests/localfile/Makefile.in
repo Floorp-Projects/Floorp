@@ -27,7 +27,6 @@ CPPSRCS		= localfile.cpp
 
 LIBS		= \
 		-lxpcom \
-		-lmozreg \
 		$(NSPR_LIBS) \
 		$(NULL)
 

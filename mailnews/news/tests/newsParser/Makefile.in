@@ -38,7 +38,6 @@ LIBS		= \
 		-lnetcnvts \
 		-lnetwork \
 		-lnetlib \
-		-lmozreg \
 		-lpwcac \
 		-lmozdbm \
 		-lxp \

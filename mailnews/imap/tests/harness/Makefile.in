@@ -30,7 +30,6 @@ CPPSRCS		= imapProtocolTest.cpp
 LIBS =	\
 		-L$(DIST)/lib			\
 		-L$(DIST)/bin			\
-		-lmozreg				\
 		-lxpcom \
 		-lmozdbm \
 		-lxp \

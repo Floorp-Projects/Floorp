@@ -32,7 +32,6 @@ LIBS		= \
 		-L$(DIST)/lib \
 		-lmozjs \
 		-lxpcom \
-		-lmozreg \
 		-lmozutil \
 		$(NSPR_LIBS) \
 		$(NULL)

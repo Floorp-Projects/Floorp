@@ -29,7 +29,6 @@ LIBS		= \
 		-L$(DIST)/lib \
 		-L$(DIST)/bin \
 		-lxpcom \
-		-lmozreg \
 		-lmozjs \
 		$(TIMER_LIBS) \
 		$(NSPR_LIBS) \

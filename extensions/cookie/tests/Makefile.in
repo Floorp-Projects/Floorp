@@ -29,11 +29,8 @@ REQUIRES	= js cookie pref xpcom include
 
 LIBS		= \
 		-lxpcom \
-		-lmozreg \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-include $(topsrcdir)/config/config.mk
 
 # hack until necko lands
 ifndef NECKO

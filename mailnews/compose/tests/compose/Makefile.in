@@ -28,7 +28,6 @@ CPPSRCS		= test.cpp
 
 LIBS = \
 		-lmsgbaseutil \
-        -lmozreg   \
         -lxpcom \
         -lmozdbm        \
         -lxp    \

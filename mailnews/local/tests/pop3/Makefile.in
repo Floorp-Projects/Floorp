@@ -28,7 +28,6 @@ CPPSRCS		= pop3Test.cpp
 
 LIBS = \
 	-lmsgbaseutil \
-	-lmozreg	\
 	-lxpcom	\
 	-lmozdbm	\
 	-lxp	\

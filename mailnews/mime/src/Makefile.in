@@ -98,7 +98,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lmozjs \
 		-lxpcom \
-		-lmozreg \
 		$(NSPR_LIBS) \
 		$(NULL)
 

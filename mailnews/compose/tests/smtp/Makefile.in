@@ -36,7 +36,6 @@ LIBS = \
 	-limg	\
 	-lxp	\
 	-lmozutil \
-	-lmozreg \
 	$(TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \

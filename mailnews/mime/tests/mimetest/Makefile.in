@@ -26,7 +26,6 @@ PROGRAM		= mimetest
 CPPSRCS		= mimetest.cpp
 
 BASE_LIBS	= \
-		-lmozreg \
 		-lmozjs \
 		-lxpcom \
 		-lmozutil \

@@ -26,7 +26,6 @@ PROGRAM		= nntpTest
 CPPSRCS		= nntpTest.cpp
 
 LIBS = \
-	-lmozreg	\
 	-lxpcom	\
 	-lmozdbm	\
 	-lxp	\

@@ -29,7 +29,6 @@ CPPSRCS		= logparse.cpp
 LIBS		= \
 		-lraptorhtmlpars \
 		-lxpcom \
-		-lmozreg \
 		$(NSPR_LIBS) \
 		$(NULL)
 

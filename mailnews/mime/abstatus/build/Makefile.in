@@ -40,7 +40,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lxpcom \
 		-labstat_s \
-		-lmozreg \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

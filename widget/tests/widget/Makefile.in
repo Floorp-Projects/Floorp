@@ -55,7 +55,6 @@ LIBS		= \
 		-lmozutil \
 		-limg \
 		-lxpcom \
-		-lmozreg \
 		-lmozjs \
 		-lwidgetsupport_s \
 		-lraptorgfx \

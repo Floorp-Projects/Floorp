@@ -39,7 +39,6 @@ LIBS		= \
 		-lnetcnvts \
 		-lnetwork \
 		-lnetlib \
-		-lmozreg \
 		$(TIMER_LIBS) \
 		-lxpcom \
 		-lpwcac \

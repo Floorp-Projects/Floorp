@@ -30,7 +30,6 @@ CPPSRCS		= \
 		$(NULL)
 
 BASE_LIBS	= \
-		-lmozreg \
 		-lmozjs \
 		-lxpcom \
 		-lmozutil \

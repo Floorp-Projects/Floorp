@@ -47,6 +47,5 @@ include $(topsrcdir)/config/rules.mk
 LIBS		+= \
 		$(NSPR_LIBS) \
 		-lxpcom \
-		-lmozreg \
 		$(NULL)
 
