@@ -378,7 +378,9 @@ NS_IMETHODIMP ns4xPluginInstance :: QueryInterface(const nsIID& iid,
 
 NS_IMETHODIMP ns4xPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
+#ifdef XP_UNIX
   xtbin = nsnull;
+#endif
   return InitializePlugin(peer);
 }
 
@@ -489,8 +491,10 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
+#ifdef XP_UNIX 
   GdkSuperWin               *superwin;
   NPSetWindowCallbackStruct *ws;
+#endif
 
   // XXX 4.x plugins don't want a SetWindow(NULL).
 
