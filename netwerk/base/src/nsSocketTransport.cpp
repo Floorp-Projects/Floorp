@@ -1782,7 +1782,7 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
 
 
 //TODO l10n and i18n stuff here!
-NS_IMETHODIMP
+nsresult
 nsSocketTransport::GetSocketErrorString(PRUint32 iCode, 
         PRUnichar** oString) const
 {
