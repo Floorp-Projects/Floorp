@@ -2200,7 +2200,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
             // We've just found the first selected cell in this row
             firstColInRow = colIndex;
 
-          if(rowIndex > firstRowIndex && firstColInRow != firstColIndex)
+          if (rowIndex > firstRowIndex && firstColInRow != firstColIndex)
           {
             // We're in at least the second row,
             // but left boundary is "ragged" (not the same as 1st row's start)
@@ -2218,11 +2218,12 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
         }
         else if (cellFoundInRow)
         {
-          // No cell or not selected, but at least one in row was found
-          if (colIndex <= lastColIndex)
+          // No cell or not selected, but at least one cell in row was found
+          
+          if (rowIndex > (firstRowIndex+1) && colIndex <= lastColIndex)
           {
-            // Cell is in a column less than current right border,
-            //  so stop block at the previous row
+            // Cell is in a column less than current right border in 
+            //  the third or higher selected row, so stop block at the previous row
             lastRowIndex = PR_MAX(0,rowIndex - 1);
             lastRowIsSet = PR_TRUE;
           }
@@ -2254,10 +2255,10 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
           {
             // Go on to examine next row
             lastRowIndex = rowIndex+1;
-            // Use the minimun col we found so far for right boundary
-            lastColIndex = PR_MIN(lastColIndex, lastColInRow);
           }
         }
+        // Use the minimum col we found so far for right boundary
+        lastColIndex = PR_MIN(lastColIndex, lastColInRow);
       }
       else
       {
@@ -2283,7 +2284,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
         // If this is 0, we are past last cell in row, so exit the loop
         if (actualColSpan2 == 0)
           break;
-          
+
         // Merge only selected cells (skip cell we're merging into, of course)
         if (isSelected2 && cell2 != firstCell)
         {
@@ -2296,19 +2297,22 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
             //  Instead, build a list of cells to delete and do it later
             NS_ASSERTION(startRowIndex2 == rowIndex, "JoinTableCells: StartRowIndex is in row above");
 
-            //Check if cell "hangs" off the boundary because of colspan or rowspan > 1
-            //  Use split methods to chop off excess
-            PRInt32 extraColSpan = lastColIndex - (startColIndex2 + actualColSpan2);
-            if ( extraColSpan > 0)
+            if (actualColSpan2 > 1)
             {
-              res = SplitCellIntoColumns(table, startRowIndex2, startColIndex2, 
-                                         actualColSpan2-extraColSpan, extraColSpan, nsnull);
-              if (NS_FAILED(res)) return res;
+              //Check if cell "hangs" off the boundary because of colspan > 1
+              //  Use split methods to chop off excess
+              PRInt32 extraColSpan = (startColIndex2 + actualColSpan2) - (lastColIndex+1);
+              if ( extraColSpan > 0)
+              {
+                res = SplitCellIntoColumns(table, startRowIndex2, startColIndex2, 
+                                           actualColSpan2-extraColSpan, extraColSpan, nsnull);
+                if (NS_FAILED(res)) return res;
+              }
             }
+
             res = MergeCells(firstCell, cell2, PR_FALSE);
             if (NS_FAILED(res)) return res;
             
-
             // Add cell to list to delete
             deleteList.AppendElement((void *)cell2.get());
           }
@@ -2376,10 +2380,8 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
     if (NS_FAILED(res)) return res;
     
     
-    // But check if we merged multiple rows - rowspan shouldn't be > 1
-    PRInt32 newRowCount;
-    res = FixBadRowSpan(table, firstRowIndex, newRowCount);
-    if (NS_FAILED(res)) return res;
+    // Fixup disturbances in table layout
+    NormalizeTable(table);
   }
   else
   {
