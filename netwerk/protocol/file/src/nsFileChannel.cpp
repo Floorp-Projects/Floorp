@@ -599,43 +599,11 @@ nsFileChannel::GetContentType(char * *aContentType)
 	}
 #endif
 
-	// we need to try to get the file name from a nsIURL in order to lose the query and ref stuff
-	// that may be tacked on....I left the old code which incorrectly did this under a #if 0 in
-	// case we need to add it back in later...
-	nsXPIDLCString fileName;
-	nsCOMPtr<nsIURL> urlForm = do_QueryInterface(mURI, &rv);
-	NS_ASSERTION(urlForm, "bad assumption here....");
-	urlForm->GetFileName(getter_Copies(fileName));
+    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-#if 0
-    char *cStrSpec= nsnull;
-    rv = mURI->GetSpec(&cStrSpec);
-    if (!cStrSpec)
-        return NS_ERROR_OUT_OF_MEMORY;
-    // find the file extension
-    nsString2 specStr(cStrSpec);
-#endif
-	nsString2 specStr(fileName);
-    nsString2 extStr;
-    PRInt32 extLoc = specStr.RFindChar('.');
-    if (-1 != extLoc) {
-        specStr.Right(extStr, specStr.Length() - extLoc - 1);
-        char *ext = extStr.ToNewCString();
-
-        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIMIMEInfo *MIMEInfo = nsnull;
-        rv = MIMEService->GetFromExtension(ext, &MIMEInfo);
-        nsAllocator::Free(ext);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = MIMEInfo->GetMIMEType(aContentType);
-
-        NS_RELEASE(MIMEInfo);
-        return rv;
-        // we should probably set the content-type for this response at this stage too.
-    }
+    rv = MIMEService->GetTypeFromURI(mURI, aContentType);
+    if (NS_SUCCEEDED(rv)) return rv;
 
     // if all else fails treat it as text/html?
     *aContentType = nsCRT::strdup(DUMMY_TYPE);
