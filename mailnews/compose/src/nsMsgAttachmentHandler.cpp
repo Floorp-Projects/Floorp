@@ -335,14 +335,14 @@ JFD */
 	  else if (width < 10) width = 10;
 	  else if (width > 30000) width = 30000;
 
+/*JFD
 	  if (m_mime_delivery_state->m_pane->GetPaneType() == MSG_COMPOSITIONPANE)
 	  {
-		  int lineWidth = ((nsMsgCompose *) m_mime_delivery_state->m_pane)
-			  ->GetLineWidth();
+		  int lineWidth = ((nsMsgCompose *) m_mime_delivery_state->m_pane)->GetLineWidth();
+
 		  if (lineWidth > width)
 			  width = lineWidth;
 	  }
-/*JFD
 	  m_print_setup.width = width;
 
 	  m_url->savedData.FormList = 0;
