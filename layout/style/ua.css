@@ -26,9 +26,11 @@ BODY {
   display: block;
   line-height: normal;
 
-//XXX Note: see the code in nsHTMLBodyElement that hacks away at the padding
-//XXX when body margin attributes are used
-//XXX not yet...  margin: 8px;
+/*
+ * XXX Note: see the code in nsHTMLBodyElement that hacks away at the padding
+ * when body margin attributes are used
+ * XXX not yet... margin: 8px;
+ */
   padding: 8px;
 
   overflow: auto;
@@ -38,7 +40,7 @@ FRAMESET {
   overflow: hidden;
 }
 
-// Blocks
+/* Blocks */
 
 P {
   display: block;
@@ -136,11 +138,11 @@ MULTICOL {
   margin-top: auto;
 }
 
-// Tables
+/* Tables */
 
 TABLE {
   display: table;
-//  border-style: outset;
+/* border-style: outset; */
   border-color: #C0C0C0;
   cell-spacing: 2px;
   cell-padding: 2px;
@@ -152,7 +154,7 @@ TD, TH {
   vertical-align: inherit;
   background: inherit;
   text-align: left;
-//  border-style: inset;
+/* border-style: inset; */
   border-color: #C0C0C0;
   display: table-cell;
 }
@@ -191,7 +193,7 @@ COLGROUP {
   display: table-column-group;
 }
 
-// Spans
+/* Spans */
 
 A:link {
   display: inline;
@@ -315,7 +317,7 @@ FIELDSET {
 	margin-right: 2px;
 }
 
-// Lists
+/* Lists */
 
 :BULLET {
   display: inline;
@@ -349,7 +351,7 @@ UL LI, OL LI, MENU LI, DIR LI {
   list-style-position: outside;
 }
 
-// Nested lists have no top/bottom margins
+/* Nested lists have no top/bottom margins */
 UL UL,   UL OL,   UL MENU,   UL DIR,
 MENU UL, MENU OL, MENU MENU, MENU DIR,
 DIR UL,  DIR OL,  DIR MENU,  DIR DIR,
@@ -359,7 +361,7 @@ OL UL,   OL OL,   OL MENU,   OL DIR
   margin-bottom: 0;
 }
 
-// 2 deep unordered lists use a circle
+/* 2 deep unordered lists use a circle */
 OL UL,   UL UL,   MENU UL,   DIR UL,
 OL MENU, UL MENU, MENU MENU, DIR MENU,
 OL DIR,  UL DIR,  MENU DIR,  DIR DIR
@@ -367,7 +369,7 @@ OL DIR,  UL DIR,  MENU DIR,  DIR DIR
   list-style-type: circle;
 }
 
-// 3 deep (or more) unordered lists use a square
+/* 3 deep (or more) unordered lists use a square */
 OL OL UL,   OL UL UL,   OL MENU UL,   OL DIR UL,
 OL OL MENU, OL UL MENU, OL MENU MENU, OL DIR MENU,
 OL OL DIR,  OL UL DIR,  OL MENU DIR,  OL DIR DIR,
@@ -400,7 +402,7 @@ DD {
   margin-left: 40px;
 }
 
-// Leafs
+/* Leafs */
 
 EMBED {
   display: inline;
@@ -457,7 +459,7 @@ TEXTAREA {
   vertical-align: bottom;
 }
 
-// Misc
+/* Misc */
 
 APPLET {
   display: inline;
@@ -496,7 +498,7 @@ NOFRAMES {
   display: none;
 }
 
-// Pseudo-element style
+/* Pseudo-element style */
 
 :SCROLLED-CONTENT {
   background: inherit;
