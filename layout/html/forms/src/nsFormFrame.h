@@ -65,7 +65,11 @@ public:
 
   // other methods 
 
-  void OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
+  //--------------------------------------------------------
+  // returns NS_ERROR_FAILURE if the radiobtn doesn't have a group
+  // returns NS_OK is it did have a radio group 
+  //--------------------------------------------------------
+  nsresult OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
     
   void AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame);
   static void AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aFrame);
