@@ -286,7 +286,7 @@ nsBrowserAppCore::NewWindow()
 
   // Default URL if one was not provided in the cmdline
   if (nsnull == urlstr)
-      urlstr = "resource:/res/samples/appshell.html";
+      urlstr = "resource:/res/samples/navigator.xul";
   else
       fprintf(stderr, "URL to load is %s\n", urlstr);
 
