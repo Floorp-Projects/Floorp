@@ -21,7 +21,7 @@
 # 
 
 #
-# genstats.cgi ( $Id: genstats.cgi,v 1.1 1999/08/26 03:43:16 dmose%mozilla.org Exp $ )
+# $Id: genstats.cgi,v 1.2 1999/08/26 03:44:00 dmose%mozilla.org Exp $ 
 #
 # generate various statistics related to external participation in mozilla.org
 #
