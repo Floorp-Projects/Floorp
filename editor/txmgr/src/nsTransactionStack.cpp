@@ -66,7 +66,7 @@ nsTransactionStack::PopBottom(nsTransactionItem **aTransaction)
   /* nsDeque is a FIFO, so the bottom of our stack is actually
    * the front of the deque.
    */
-  *aTransaction = (nsTransactionItem *)mQue.Pop();
+  *aTransaction = (nsTransactionItem *)mQue.PopFront();
 
   return NS_OK;
 }
