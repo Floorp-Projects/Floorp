@@ -579,8 +579,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
       }
       else
       {
-        theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)&newBidiLevel, sizeof(newBidiLevel) );
+        newBidiLevel = NS_GET_EMBEDDING_LEVEL(theFrame);
         presShell->SetCaretBidiLevel(newBidiLevel);
         bidiLevel = newBidiLevel;
       }
@@ -625,16 +624,13 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
                 // Exception: when the first frame on the line has a different Bidi level from the paragraph level, there is no
                 // real frame for the caret to be in. We have to find the first frame whose level is the same as the
                 // paragraph level, and put the caret at the end of the frame before that.
-                PRUint8 baseLevel;
-                frameAfter->GetBidiProperty(presContext, nsLayoutAtoms::baseLevel,
-                                            (void**)&baseLevel, sizeof(baseLevel) );
+                PRUint8 baseLevel = NS_GET_BASE_LEVEL(frameAfter);
                 if (baseLevel != levelAfter)
                 {
                   if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, baseLevel, &theFrame)))
                   {
                     theFrame->GetOffsets(start, end);
-                    theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                              (void**)&levelAfter, sizeof(levelAfter) );
+                    levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
                     if (baseLevel & 1) // RTL paragraph: caret to the right of the rightmost character
                       theFrameOffset = (levelAfter & 1) ? start : end;
                     else               // LTR paragraph: caret to the left of the leftmost character
@@ -666,16 +662,14 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
                 // Exception: when the last frame on the line has a different Bidi level from the paragraph level, there is no
                 // real frame for the caret to be in. We have to find the last frame whose level is the same as the
                 // paragraph level, and put the caret at the end of the frame after that.
-                PRUint8 baseLevel;
-                frameBefore->GetBidiProperty(presContext, nsLayoutAtoms::baseLevel,
-                                             (void**)&baseLevel, sizeof(baseLevel) );
+
+                PRUint8 baseLevel = NS_GET_BASE_LEVEL(frameBefore);
                 if (baseLevel != levelBefore)
                 {
                   if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, baseLevel, &theFrame)))
                   {
                     theFrame->GetOffsets(start, end);
-                    theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                              (void**)&levelBefore, sizeof(levelBefore) );
+                    levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
                     if (baseLevel & 1) // RTL paragraph: caret to the left of the leftmost character
                       theFrameOffset = (levelBefore & 1) ? end : start;
                     else               // RTL paragraph: caret to the right of the rightmost character
@@ -692,8 +686,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
             if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, bidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
-              theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                        (void**)&levelAfter, sizeof(levelAfter) );
+              levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
               if (bidiLevel & 1) // c8: caret to the right of the rightmost character
                 theFrameOffset = (levelAfter & 1) ? start : end;
               else               // c7: caret to the left of the leftmost character
@@ -707,8 +700,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
             if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, bidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
-              theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                        (void**)&levelBefore, sizeof(levelBefore) );
+              levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
               if (bidiLevel & 1) // c12: caret to the left of the leftmost character
                 theFrameOffset = (levelBefore & 1) ? end : start;
               else               // c11: caret to the right of the rightmost character

@@ -541,25 +541,24 @@ protected:
 
   //----------------------------------------
 
-  nsLineList* GetOverflowLines(nsIPresContext* aPresContext,
-                               PRBool          aRemoveProperty) const;
-  nsresult SetOverflowLines(nsIPresContext* aPresContext,
-                            nsLineList*     aOverflowLines);
+  nsLineList* GetOverflowLines() const;
+  nsLineList* RemoveOverflowLines() const;
+  nsresult SetOverflowLines(nsLineList* aOverflowLines);
 
-  nsFrameList* GetOverflowPlaceholders(nsIPresContext* aPresContext,
-                                       PRBool          aRemoveProperty) const;
-  nsresult SetOverflowPlaceholders(nsIPresContext* aPresContext,
-                                   nsFrameList*    aOverflowPlaceholders);
+  nsFrameList* GetOverflowPlaceholders() const;
+  nsFrameList* RemoveOverflowPlaceholders() const;
+  nsresult SetOverflowPlaceholders(nsFrameList* aOverflowPlaceholders);
 
-  nsFrameList* GetOverflowOutOfFlows(PRBool aRemoveProperty) const;
+  nsFrameList* GetOverflowOutOfFlows() const;
+  nsFrameList* RemoveOverflowOutOfFlows() const;
   nsresult SetOverflowOutOfFlows(nsFrameList* aFloaters);
 
   nsIFrame* LastChild();
 
 #ifdef NS_DEBUG
-  PRBool IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  PRBool IsChild(nsIFrame* aFrame);
   void VerifyLines(PRBool aFinalCheckOK);
-  void VerifyOverflowSituation(nsIPresContext* aPresContext);
+  void VerifyOverflowSituation();
   PRInt32 GetDepth() const;
 #endif
 

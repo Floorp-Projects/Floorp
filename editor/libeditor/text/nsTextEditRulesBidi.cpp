@@ -92,13 +92,11 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     return NS_ERROR_NULL_POINTER;
   
   PRUint8 levelAfter;
-  PRUint8 levelBefore;
   nsCOMPtr<nsIAtom> embeddingLevel = do_GetAtom("EmbeddingLevel");
 
   // Get the bidi level of the frame before the caret
-  res = frameBefore->GetBidiProperty(context, embeddingLevel, (void**)&levelBefore,sizeof(PRUint8));
-  if (NS_FAILED(res))
-    return res;
+  PRUint8 levelBefore =
+    NS_PTR_TO_INT32(frameBefore->GetPropertyExternal(embeddingLevel, nsnull));
 
   // If the caret is at the end of the frame, get the bidi level of the
   // frame after the caret
@@ -118,15 +116,13 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
       // there was no frameAfter, i.e. the caret is at the end of the
       // document -- use the base paragraph level
       nsCOMPtr<nsIAtom> baseLevel = do_GetAtom("BaseLevel");
-      res = frameBefore->GetBidiProperty(context, baseLevel, (void**)&levelAfter,sizeof(PRUint8));
-      if (NS_FAILED(res))
-        return res;
+      levelAfter =
+        NS_PTR_TO_INT32(frameBefore->GetPropertyExternal(baseLevel, nsnull));
     }
     else
     {
-      res = frameAfter->GetBidiProperty(context, embeddingLevel, (void**)&levelAfter,sizeof(PRUint8));
-      if (NS_FAILED(res))
-        return res;
+      levelAfter =
+        NS_PTR_TO_INT32(frameAfter->GetPropertyExternal(embeddingLevel, nsnull));
     }
   }
   else

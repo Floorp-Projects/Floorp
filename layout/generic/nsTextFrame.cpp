@@ -877,20 +877,17 @@ nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
       PRInt32 start, end;
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
-      void* value;
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, &value,sizeof(value));
-      SetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, value);
+      SetProperty(nsLayoutAtoms::embeddingLevel,
+                  aPrevInFlow->GetProperty(nsLayoutAtoms::embeddingLevel));
+      SetProperty(nsLayoutAtoms::baseLevel,
+                  aPrevInFlow->GetProperty(nsLayoutAtoms::baseLevel));
+      SetProperty(nsLayoutAtoms::charType,
+                  aPrevInFlow->GetProperty(nsLayoutAtoms::charType));
 
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, &value,sizeof(value));
-      SetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, value);
-
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::charType, &value,sizeof(value));
-      SetBidiProperty(aPresContext, nsLayoutAtoms::charType, value);
-
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, &value,sizeof(value));
+      void* value = aPrevInFlow->GetProperty(nsLayoutAtoms::nextBidi);
       if (value) {  // nextBidi
         // aPrevInFlow and this frame will point to the same next bidi frame.
-        SetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, value);
+        SetProperty(nsLayoutAtoms::nextBidi, value);
 
         ( (nsIFrame*) value)->GetOffsets(start, end);
         mContentLength = PR_MAX(1, start - mContentOffset);
@@ -1384,13 +1381,13 @@ nsTextFrame::CharacterDataChanged(nsIPresContext* aPresContext,
     while (textFrame) {
       textFrame->mState |= NS_FRAME_IS_DIRTY;
 #ifdef IBMBIDI
-      nsIFrame* nextBidi;
-      textFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextBidi,sizeof(nextBidi));
-      if (nextBidi)
-        textFrame = (nsTextFrame*)nextBidi;
+      void* nextBidiFrame;
+      if ((textFrame->mState & NS_FRAME_IS_BIDI) &&
+          (nextBidiFrame = textFrame->GetProperty(nsLayoutAtoms::nextBidi)))
+        textFrame = (nsTextFrame*)nextBidiFrame;
       else
 #endif
-      textFrame = (nsTextFrame*)textFrame->mNextInFlow;
+        textFrame = (nsTextFrame*)textFrame->mNextInFlow;
     }
   }
 
@@ -2187,7 +2184,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
 #ifdef IBMBIDI
-  PRUint8 level = 0;
+  PRBool  isOddLevel = PR_FALSE;
 #endif
 
 
@@ -2240,8 +2237,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     if (aPresContext->BidiEnabled()) {
       isBidiSystem = aPresContext->IsBidiSystem();
-      GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
-      GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
+      isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
+      charType = (nsCharType)NS_PTR_TO_INT32(GetProperty(nsLayoutAtoms::charType));
 
       isRightToLeftOnBidiPlatform = (isBidiSystem &&
                                      (eCharType_RightToLeft == charType ||
@@ -2259,7 +2256,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         PRInt32 rememberTextLength = textLength;
 #endif
         bidiUtils->ReorderUnicodeText(text, textLength,
-                                      charType, level & 1, isBidiSystem);
+                                      charType, isOddLevel, isBidiSystem);
         NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }
@@ -2336,7 +2333,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         }
 #endif /* SUNCTL */
 #ifdef IBMBIDI
-        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), level & 1, isBidiSystem);
+        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), isOddLevel, isBidiSystem);
 #endif
         sdptr = sdptr->mNext;
       }
@@ -2504,9 +2501,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   }
 
 #ifdef IBMBIDI // Simon -- reverse RTL text here
-  PRUint8 level;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
-  PRBool isOddLevel = (level & 1);
+  PRBool isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
   if (isOddLevel) {
     PRUnichar *tStart, *tEnd;
     PRUnichar tSwap;
@@ -2931,7 +2926,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 
   if (0 != textLength) {
 #ifdef IBMBIDI
-    PRUint8 level = 0;
+    PRBool isOddLevel = PR_FALSE;
     nsCharType charType = eCharType_LeftToRight;
 
     if (aPresContext->BidiEnabled()) {
@@ -2939,16 +2934,14 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       aPresContext->GetBidiUtils(&bidiUtils);
 
       if (bidiUtils) {
-        GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                        (void**) &level,sizeof(level));
-        GetBidiProperty(aPresContext, nsLayoutAtoms::charType, 
-                        (void**) &charType,sizeof(charType));
+        isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
+        charType = (nsCharType)NS_PTR_TO_INT32(GetProperty(nsLayoutAtoms::charType));
 #ifdef DEBUG
         PRInt32 rememberTextLength = textLength;
 #endif
         // Since we paint char by char, handle the text like on non-bidi platform
         bidiUtils->ReorderUnicodeText(text, textLength, charType,
-                                      level & 1, PR_FALSE);
+                                      isOddLevel, PR_FALSE);
         NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }
@@ -2990,7 +2983,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr->mStart = ip[sdptr->mStart] - mContentOffset;
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
 #ifdef IBMBIDI
-        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), level & 1, PR_FALSE);
+        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), isOddLevel, PR_FALSE);
 #endif
         sdptr = sdptr->mNext;
       }
@@ -3428,10 +3421,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
         PRUnichar* text = paintBuffer.mBuffer;
 
 #ifdef IBMBIDI
-        PRBool getReversedPos = PR_FALSE;
-        PRUint8 level  = 0;
-        GetBidiProperty(aCX, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
-        getReversedPos = level & 1;
+        PRBool getReversedPos = NS_GET_EMBEDDING_LEVEL(this) & 1;
         nscoord posX = (getReversedPos) ?
                        (mRect.width + origin.x) - (aPoint.x - origin.x) : aPoint.x;
 
@@ -3673,8 +3663,9 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
         break;
     }
 #ifdef IBMBIDI
-    GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &frame,sizeof(frame));
-    if (frame) {
+    if ((mState & NS_FRAME_IS_BIDI) &&
+        (frame = NS_STATIC_CAST(nsIFrame*,
+                                GetProperty(nsLayoutAtoms::nextBidi)))) {
       frame->SetSelected(aPresContext, aRange, aSelected, aSpread);
     }
 #endif // IBMBIDI
@@ -3776,10 +3767,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
     }
   }
 #ifdef IBMBIDI
-  PRUint8 level;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
-
-  if (level & 1) {
+  if (NS_GET_EMBEDDING_LEVEL(this) & 1) {
     outPoint->x = mRect.width - width;
   }
   else
@@ -3865,10 +3853,7 @@ NS_IMETHODIMP
 nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) 
 {
 #ifdef IBMBIDI
-  PRUint8 level, baseLevel;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
-  GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel,sizeof(baseLevel));
-  PRBool isOddLevel = (level & 1);
+  PRBool isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
 
   if ((eSelectCharacter == aPos->mAmount)
       || (eSelectWord == aPos->mAmount))
@@ -3886,7 +3871,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     nsIFrame *nextInFlow;
 #ifdef IBMBIDI
     if (isOddLevel) {
-      GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextInFlow,sizeof(nextInFlow));
+      nextInFlow = NS_STATIC_CAST(nsIFrame*,
+                                  GetProperty(nsLayoutAtoms::nextBidi));
     }
     else
 #endif
@@ -4547,7 +4533,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRInt32      start = -1, end;
 
   if (mState & NS_FRAME_IS_BIDI) {
-    GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextBidi,sizeof(nextBidi));
+    nextBidi = NS_STATIC_CAST(nsTextFrame*,
+                              GetProperty(nsLayoutAtoms::nextBidi));
 
     if (nextBidi) {
       if (mContentLength < 1) {
@@ -5187,7 +5174,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     PRUint32 hints = 0;
     aReflowState.rendContext->GetHints(hints);
-    GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**)&charType, sizeof(charType));
+    charType = (nsCharType)NS_PTR_TO_INT32(GetProperty(nsLayoutAtoms::charType));
     if ((eCharType_RightToLeftArabic == charType &&
         (hints & NS_RENDERING_HINT_ARABIC_SHAPING) == NS_RENDERING_HINT_ARABIC_SHAPING) ||
         (eCharType_RightToLeft == charType &&
