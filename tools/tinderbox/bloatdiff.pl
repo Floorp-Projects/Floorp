@@ -139,8 +139,8 @@ if (!$needsHeading) {
 
 # FIXED LEAKS
 @keys = sort { $newMap{$b}{leakPercent} <=> $newMap{$a}{leakPercent} } keys %newMap;
-my $needsHeading = 1;
-my $total = 0;
+$needsHeading = 1;
+$total = 0;
 foreach $key (@keys) {
     my $percentLeaks = $newMap{$key}{leakPercent};
     my $leaks = $newMap{$key}{leaked};
@@ -159,8 +159,8 @@ if (!$needsHeading) {
 
 # NEW BLOAT
 @keys = sort { $newMap{$b}{bloatPercent} <=> $newMap{$a}{bloatPercent} } keys %newMap;
-my $needsHeading = 1;
-my $total = 0;
+$needsHeading = 1;
+$total = 0;
 foreach $key (@keys) {
     my $percentBloat = $newMap{$key}{bloatPercent};
     my $bloat = $newMap{$key}{bloat};
@@ -179,8 +179,8 @@ if (!$needsHeading) {
 
 # ALL LEAKS
 @keys = sort { $newMap{$b}{leaked} <=> $newMap{$a}{leaked} } keys %newMap;
-my $needsHeading = 1;
-my $total = 0;
+$needsHeading = 1;
+$total = 0;
 foreach $key (@keys) {
     my $leaks = $newMap{$key}{leaked};
     my $percentLeaks = $newMap{$key}{leakPercent};
@@ -201,8 +201,8 @@ if (!$needsHeading) {
 
 # ALL BLOAT
 @keys = sort { $newMap{$b}{bloat} <=> $newMap{$a}{bloat} } keys %newMap;
-my $needsHeading = 1;
-my $total = 0;
+$needsHeading = 1;
+$total = 0;
 foreach $key (@keys) {
     my $bloat = $newMap{$key}{bloat};
     my $percentBloat = $newMap{$key}{bloatPercent};
