@@ -21,8 +21,8 @@
 // these data sources is exposed to the external world via its CID in
 // ../include/nsRDFCID.h.
 
-#ifndef nsBuiltinDataSources_h__
-#define nsBuiltinDataSources_h__
+#ifndef nsBaseDataSources_h__
+#define nsBaseDataSources_h__
 
 #include "nsError.h"
 
@@ -35,6 +35,6 @@ nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
 // in nsSimpleDataBase.cpp
 nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);
 
-#endif // nsBuiltinDataSources_h__
+#endif // nsBaseDataSources_h__
 
 
