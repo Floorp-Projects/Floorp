@@ -30,6 +30,13 @@
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
 
 nsScriptError::nsScriptError() 
+    :  mMessage(nsnull),
+       mSourceName(nsnull),
+       mLineNumber(0),
+       mSourceLine(nsnull),
+       mColumnNumber(0),
+       mFlags(0),
+       mCategory(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -98,4 +105,69 @@ nsScriptError::Init(const PRUnichar *message,
     mCategory.Assign(category);
   
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptError::ToString(char **_retval)
+{
+    static const char format0[] =
+        "[%s: \"%s\" {file: \"%s\" line: %d column: %d source: \"%s\"}]";
+    static const char format1[] =
+        "[%s: \"%s\" {file: \"%s\" line: %d}]";
+    static const char format2[] =
+        "[%s: \"%s\"]";
+
+    static const char error[]   = "JavaScript Error";
+    static const char warning[] = "JavaScript Warning";
+
+    const char* severity = !(mFlags & JSREPORT_WARNING) ? error : warning;
+
+    char* temp;
+    char* tempMessage = nsnull;
+    char* tempSourceName = nsnull;
+    char* tempSourceLine = nsnull;
+
+    if(nsnull != mMessage)
+        tempMessage = mMessage.ToNewCString();
+    if(nsnull != mSourceName)
+        tempSourceName = mSourceName.ToNewCString();
+    if(nsnull != mSourceLine)
+        tempSourceLine = mSourceLine.ToNewCString();
+
+    if(nsnull != tempSourceName && nsnull != tempSourceLine)
+        temp = JS_smprintf(format0,
+                           severity,
+                           tempMessage,
+                           tempSourceName,
+                           mLineNumber,
+                           mColumnNumber,
+                           tempSourceLine);
+    else if(nsnull != mSourceName)
+        temp = JS_smprintf(format1,
+                           severity,
+                           tempMessage,
+                           tempSourceName,
+                           mLineNumber);
+    else
+        temp = JS_smprintf(format2,
+                           severity,
+                           tempMessage);
+
+    if(nsnull != tempMessage)
+        nsMemory::Free(tempMessage);
+    if(nsnull != tempSourceName)
+        nsMemory::Free(tempSourceName);
+    if(nsnull != tempSourceLine)
+        nsMemory::Free(tempSourceLine);
+
+    char* final = nsnull;
+    if(temp)
+    {
+        final = (char*) nsMemory::Clone(temp,
+                                        sizeof(char)*(strlen(temp)+1));
+        JS_smprintf_free(temp);
+    }
+
+    *_retval = final;
+    return final ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

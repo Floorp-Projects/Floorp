@@ -65,6 +65,8 @@ interface nsIScriptError : nsIConsoleMessage
               in PRUint32 columnNumber,
               in PRUint32 flags,
               in string category);
+
+    string toString();
 };
 
 %{ C++

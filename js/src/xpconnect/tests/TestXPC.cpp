@@ -44,6 +44,7 @@
 #include <stdio.h>
 
 #include "nsIXPConnect.h"
+#include "nsIScriptError.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIJSContextStack.h"
@@ -626,7 +627,7 @@ static void ShowXPCException()
                     e->GetData(getter_AddRefs(data));
                     if(data)
                     {
-                        nsCOMPtr<nsIJSErrorReport> report = do_QueryInterface(data);
+                        nsCOMPtr<nsIScriptError> report = do_QueryInterface(data);
                         if(report)
                         {
                             char* str2;
