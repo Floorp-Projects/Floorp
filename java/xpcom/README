@@ -30,8 +30,8 @@ Currently only UNIX/Linux builds are supported (mainly because it's my
 platform of choice).  Windows builds should not be too much more
 difficult, and 
 
-1. Make sure MOZILLA_FIVE_HOME is set correctly, and that JDKHOME indicates 
-   a valid JDK 1.2 installation.
+1. Make sure MOZILLA_FIVE_HOME is set to <mozilla-source-dir>/dist/bin, 
+   and that JDKHOME indicates a valid JDK 1.2 installation.
 
    *IMPORTANT*: remove the jni.h, jni_md.h, and jri.h in mozilla/dist/bin,
                 before compiling native code.  Otherwise, the header 

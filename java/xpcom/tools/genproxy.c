@@ -28,6 +28,9 @@
 #include <sys/stat.h>
 #endif
 #include <stdlib.h>
+#ifdef HAVE_GETOPT_H
+# include <getopt.h> 
+#endif
 #include <string.h>
 #include "prprf.h"
 
@@ -72,12 +75,6 @@ PRBool
 GenproxyGetStringForRefType(XPTHeader *header, XPTTypeDescriptor *td,
                             char **type_string);
 
-static void
-genproxy_usage(char *argv[]) {
-    fprintf(stdout, "Usage: %s [-v] [-i] <filename.xpt>\n"
-            "       -v verbose mode\n", argv[0]);
-}
-
 #ifdef XP_MAC
 
 static int mac_get_args(char*** argv)
@@ -106,8 +103,8 @@ static int mac_get_args(char*** argv)
 }
 
 #ifdef XPIDL_PLUGIN
-#define main xptdump_main
-int xptdump_main(int argc, char *argv[]);
+#define main genproxy_main
+int genproxy_main(int argc, char *argv[]);
 #endif
 
 #endif 
@@ -131,6 +128,7 @@ static size_t get_file_length(const char* filename)
 }
 
 #endif /* !(XP_MAC && XPIDL_PLUGIN) */
+
 
 int 
 main(int argc, char **argv)
@@ -170,7 +168,13 @@ main(int argc, char **argv)
             dirname = optarg;
             break;
         case '?':
-            genproxy_usage(argv);
+            fprintf(stdout, 
+                    "Usage: %s [-biv] [-d dirname] <filename.xpt>\n"
+                    "       -b generate bytecodes, not Java source\n" 
+                    "       -d write output to <dirname>\n" 
+                    "       -i generate interface, not proxy implementation\n" 
+                    "       -v verbose mode\n", 
+                    argv[0]);
             return 1;
         }
     }
@@ -349,7 +353,7 @@ GenproxyClass(FILE *out,
         if (parent_ide) {
             fprintf(out, " extends %s", parent_ide->name);
         }
-        fprintf(out,  " {\n", ide->name);
+        fprintf(out,  " {\n");
 
         fprintf(out, 
                 "\n    public static final String %s_STRING = \"", iidName);

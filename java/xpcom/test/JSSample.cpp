@@ -190,7 +190,7 @@ NS_IMETHODIMP JSSample::GetSomeName(char * *aSomeName) {
   return NS_OK;
 }
 
-NS_IMETHODIMP JSSample::SetSomeName(char * aSomeName) {
+NS_IMETHODIMP JSSample::SetSomeName(const char * aSomeName) {
   cout << "--> JSSample::SetSomeName('" << aSomeName << "')" << endl;
   if (aSomeName != someName_) {
     delete someName_;

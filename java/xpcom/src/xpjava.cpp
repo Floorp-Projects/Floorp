@@ -380,11 +380,11 @@ static jboolean JObjectToVariant(JNIEnv *env,
 static nsresult JArrayToVariant(JNIEnv *env, 
 				int paramcount,
 				nsXPTCVariant *params, 
-				const jobjectArray jarray) {
+				const jobjectArray theJarray) {
     nsXPTCVariant *current = params;
 
     for (jsize i = 0; i < paramcount; i++, current++) {
-        jobject elem = env->GetObjectArrayElement(jarray, i);
+        jobject elem = env->GetObjectArrayElement(theJarray, i);
 	nsIID iid = NS_GET_IID(nsISupports);
 	// PENDING: get the iid of the object
 
@@ -503,13 +503,13 @@ static jobject VariantToJObject(JNIEnv *env, const nsXPTCVariant *current) {
 
 
 static nsresult VariantToJArray(JNIEnv *env, 
-				jobjectArray jarray,
+				jobjectArray theJarray,
 				int paramcount,
 				nsXPTCVariant *params) {
     nsXPTCVariant *current = params;
 
     for (jsize i = 0; i < paramcount; i++, current++) {
-        jobject elem = NULL; // env->GetObjectArrayElement(jarray, i);
+        jobject elem = NULL; // env->GetObjectArrayElement(theJarray, i);
         jboolean isequal = JNI_FALSE;
         nsXPTCVariant currValue;
 
@@ -535,7 +535,7 @@ static nsresult VariantToJArray(JNIEnv *env,
 
         elem = VariantToJObject(env, current);
 
-        env->SetObjectArrayElement(jarray, i, elem);
+        env->SetObjectArrayElement(theJarray, i, elem);
 
         if (current->flags & nsXPTCVariant::VAL_IS_IFACE) {
             xpjp_SafeRelease((nsISupports*)current->val.p);
@@ -745,8 +745,9 @@ jboolean xpjd_GetInterfaceInfoNative(REFNSIID iid,
 
     if (NS_FAILED(res)) {
         cerr << "Failed to find info for " << iid.ToString() << endl;
-        return res;
+	return JNI_FALSE;
     }
+    return JNI_TRUE;
 }
 
 void xpjd_InvokeMethod(JNIEnv *env, 
