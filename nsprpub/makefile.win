@@ -81,12 +81,12 @@ export libs install clobber clobber_all clean::
 
 !if "$(MOZ_BITS)" != "16"
 export::
-	for %f in ($(XPDIST)\$(PR_OBJDIR)\include\*.h) do $(MAKE_INSTALL) %f $(DIST)\include
-        for %f in ($(XPDIST)\$(PR_OBJDIR)\include\md\*.h) do $(MAKE_INSTALL) %f $(DIST)\include\md
-        for %f in ($(XPDIST)\$(PR_OBJDIR)\include\obsolete\*.h) do $(MAKE_INSTALL) %f $(DIST)\include\obsolete
-        for %f in ($(XPDIST)\$(PR_OBJDIR)\include\private\*.h) do $(MAKE_INSTALL) %f $(DIST)\include\private
-        for %f in ($(XPDIST)\$(PR_OBJDIR)\lib\*.lib) do $(MAKE_INSTALL) %f $(DIST)\lib
-        for %f in ($(XPDIST)\$(PR_OBJDIR)\lib\*.dll) do $(MAKE_INSTALL) %f $(DIST)\bin
+	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\*.h $(DIST)\include
+	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\md\*.h $(DIST)\include\md
+	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\obsolete\*.h $(DIST)\include\obsolete
+	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\private\*.h $(DIST)\include\private
+	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\lib\*.lib $(DIST)\lib
+	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\lib\*.dll $(DIST)\bin
 !endif
 
 depend::
