@@ -527,28 +527,38 @@ function addNewToolbar()
   var stringBundle = document.getElementById("stringBundle");
   var message = stringBundle.getString("enterToolbarName");
   var title = stringBundle.getString("enterToolbarTitle");
-  
+
   var name = {};
+
   while (true) {
+
     if (!promptService.prompt(window, title, message, name, null, {}))
       return;
-      
+    
+    if (!name.value) {
+      message = stringBundle.getFormattedString("enterToolbarBlank", [name.value]);
+      continue;
+    }
+
     var dupeFound = false;
-     
+
      // Check for an existing toolbar with the same display name
     for (i = 0; i < gToolbox.childNodes.length; ++i) {
       var toolbar = gToolbox.childNodes[i];
       var toolbarName = toolbar.getAttribute("toolbarname");
-      if (toolbarName == name.value && toolbar.getAttribute("type") != "menubar") {
+
+      if (toolbarName == name.value &&
+          toolbar.getAttribute("type") != "menubar" &&
+          toolbar.nodeName == 'toolbar') {
         dupeFound = true;
         break;
       }
-    }          
+    }
 
     if (!dupeFound)
       break;
-     
-    message = stringBundle.getFormattedString("enterToolbarDup", [name.value]);      
+
+    message = stringBundle.getFormattedString("enterToolbarDup", [name.value]);
   }
     
   gToolbox.appendCustomToolbar(name.value, "");
