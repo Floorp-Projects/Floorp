@@ -298,6 +298,16 @@ NS_IMETHODIMP nsChromeTreeOwner::SetVisibility(PRBool aVisibility)
    return mXULWindow->SetVisibility(aVisibility);
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::GetEnabled(PRBool *aEnabled)
+{
+   return mXULWindow->GetEnabled(aEnabled);
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::SetEnabled(PRBool aEnable)
+{
+   return mXULWindow->SetEnabled(aEnable);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);

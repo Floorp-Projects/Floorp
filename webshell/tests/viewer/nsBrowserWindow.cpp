@@ -380,6 +380,22 @@ NS_IMETHODIMP nsBrowserWindow::SetVisibility(PRBool aVisibility)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsBrowserWindow::GetEnabled(PRBool *aEnabled)
+{
+  NS_ENSURE_ARG_POINTER(aEnabled);
+  *aEnabled = PR_TRUE;
+  if (mWindow)
+    mWindow->IsEnabled(aEnabled);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetEnabled(PRBool aEnabled)
+{
+  if (mWindow)
+    mWindow->Enable(aEnabled);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsBrowserWindow::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);

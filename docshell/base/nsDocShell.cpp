@@ -2778,6 +2778,20 @@ nsDocShell::SetVisibility(PRBool aVisibility)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetEnabled(PRBool *aEnabled)
+{
+  NS_ENSURE_ARG_POINTER(aEnabled);
+  *aEnabled = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetEnabled(PRBool aEnabled)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetMainWidget(nsIWidget ** aMainWidget)
 {
     // We don't create our own widget, so simply return the parent one. 
