@@ -236,7 +236,7 @@ public:
 
     NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-    virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection);
+    virtual void CreateXIF(nsString & aBuffer, nsISelection* aSelection);
 
     virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
@@ -250,7 +250,7 @@ public:
 
     virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
 
-    virtual PRBool IsInSelection(const nsIContent *aContent) const;
+    virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
 
     virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
 
@@ -1231,7 +1231,7 @@ RDFDocumentImpl::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool 
 }
 
 void 
-RDFDocumentImpl::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
+RDFDocumentImpl::CreateXIF(nsString & aBuffer, nsISelection* aSelection)
 {
     PR_ASSERT(0);
 }
@@ -1295,7 +1295,7 @@ RDFDocumentImpl::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurr
 }
 
 PRBool 
-RDFDocumentImpl::IsInSelection(const nsIContent *aContent) const
+RDFDocumentImpl::IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const
 {
     PRBool  result = PR_FALSE;
 
