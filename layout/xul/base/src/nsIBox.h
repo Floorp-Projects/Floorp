@@ -104,11 +104,6 @@ public:
   NS_IMETHOD MarkChildrenStyleChange()=0;
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
 
-  // XXX Eventually these will move into nsIFrame.
-  // These methods are used for XBL <children>.
-  NS_IMETHOD GetInsertionPoint(nsIFrame** aFrame)=0;
-  NS_IMETHOD SetInsertionPoint(nsIFrame* aFrame)=0;
-
   static PRBool AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
   static PRBool AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
   static PRBool AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);

@@ -80,11 +80,6 @@ public:
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
 
-  // XXX Eventually these will move into nsIFrame.
-  // These methods are used for XBL <children>.
-  NS_IMETHOD GetInsertionPoint(nsIFrame** aFrame) { return NS_OK; };
-  NS_IMETHOD SetInsertionPoint(nsIFrame* aFrame) { return NS_OK; };
-
   nsBox(nsIPresShell* aShell);
 
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
