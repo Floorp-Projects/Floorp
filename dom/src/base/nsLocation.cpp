@@ -31,6 +31,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptContextOwner.h"
 #include "nsIJSContextStack.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -102,9 +103,13 @@ LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   NS_PRECONDITION(nsnull != aScriptObject, "null arg");
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+    nsCOMPtr<nsIScriptContextOwner> owner = do_QueryInterface(mWebShell);
+    if (!owner) 
+      return NS_ERROR_NO_INTERFACE;
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    if (NS_FAILED(res = owner->GetScriptGlobalObject(getter_AddRefs(global))))
+      return res;
     res = NS_NewScriptLocation(aContext, (nsISupports *)(nsIDOMLocation *)this, global, &mScriptObject);
-    NS_IF_RELEASE(global);
   }
   
   *aScriptObject = mScriptObject;

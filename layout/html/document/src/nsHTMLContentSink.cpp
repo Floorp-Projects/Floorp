@@ -64,6 +64,7 @@
 #include "nsIRefreshURI.h"
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIPrincipal.h"
 #include "nsHTMLIIDs.h"
 #include "nsTextFragment.h"
 
@@ -3251,6 +3252,10 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
         NS_RELEASE(owner);
         return rv;
       }
+
+      nsCOMPtr<nsIPrincipal> principal;
+      principal = getter_AddRefs(mDocument->GetDocumentPrincipal());
+      NS_ASSERTION(principal, "principal expected for document");
       
       nsAutoString ret;
       nsIURI* docURL = mDocument->GetDocumentURL();
@@ -3261,8 +3266,8 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       }
   
       PRBool isUndefined;
-      context->EvaluateString(aScript, url, aLineNo, 
-                              ret, &isUndefined);
+      context->EvaluateString(aScript, nsnull, principal, url, 
+                              aLineNo, ret, &isUndefined);
       
       if (docURL) {
         NS_RELEASE(docURL);
