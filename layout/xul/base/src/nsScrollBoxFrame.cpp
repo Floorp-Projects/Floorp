@@ -497,7 +497,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
           // if our position is greater than the scroll position scroll.
           // remember we could be incrementally loading so we may enter and
           // scroll many times.
-          if (y > cy)
+          if (y > cy || x > cx)
             scrollingView->ScrollTo(x,y,0);
           else // if we reached the position then stop
             mRestoreRect.y = -1;
@@ -667,6 +667,8 @@ NS_IMETHODIMP
 nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
                               nsIPresState** aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
+
   nsCOMPtr<nsIScrollbarMediator> mediator;
   nsIFrame* first = mFrames.FirstChild();
   mediator = do_QueryInterface(first);
@@ -675,64 +677,69 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPresState> state;
   nsresult res = NS_OK;
+
+  nsIView* view;
+  GetView(aPresContext, &view);
+  NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+
   PRInt32 x,y;
   nsIScrollableView* scrollingView;
-  nsIView*           view;
-  GetView(aPresContext, &view);
-  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
-    scrollingView->GetScrollPosition(x,y);
-  }
-  nsIView* child = nsnull;
-  nsRect childRect(0,0,0,0);
-  if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
-    child->GetBounds(childRect);
-  }
+  res = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+  NS_ENSURE_SUCCESS(res, res);
+  scrollingView->GetScrollPosition(x,y);
 
-  res = NS_NewPresState(aState);
-  nsCOMPtr<nsISupportsPRInt32> xoffset;
-  if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(xoffset));
-    if (NS_SUCCEEDED(res) && xoffset) {
+  // Don't save scroll position if we are at (0,0)
+  if (x || y) {
+
+    nsIView* child = nsnull;
+    scrollingView->GetScrolledView(child);
+    NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
+
+    nsRect childRect(0,0,0,0);
+    child->GetBounds(childRect);
+
+    res = NS_NewPresState(getter_AddRefs(state));
+    NS_ENSURE_SUCCESS(res, res);
+
+    nsCOMPtr<nsISupportsPRInt32> xoffset;
+    nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+      nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(xoffset));
+    if (xoffset) {
       res = xoffset->SetData(x);
-      if (NS_SUCCEEDED(res)) {
-        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("x-offset"), xoffset);
-      }
+      NS_ENSURE_SUCCESS(res, res);
+      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("x-offset"), xoffset);
     }
-  }
-  nsCOMPtr<nsISupportsPRInt32> yoffset;
-  if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(yoffset));
-    if (NS_SUCCEEDED(res) && yoffset) {
+
+    nsCOMPtr<nsISupportsPRInt32> yoffset;
+    nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+      nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(yoffset));
+    if (yoffset) {
       res = yoffset->SetData(y);
-      if (NS_SUCCEEDED(res)) {
-        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("y-offset"), yoffset);
-      }
+      NS_ENSURE_SUCCESS(res, res);
+      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("y-offset"), yoffset);
     }
-  }
-  nsCOMPtr<nsISupportsPRInt32> width;
-  if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(width));
-    if (NS_SUCCEEDED(res) && width) {
+
+    nsCOMPtr<nsISupportsPRInt32> width;
+    nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+      nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(width));
+    if (width) {
       res = width->SetData(childRect.width);
-      if (NS_SUCCEEDED(res)) {
-        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("width"), width);
-      }
+      NS_ENSURE_SUCCESS(res, res);
+      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("width"), width);
     }
-  }
-  nsCOMPtr<nsISupportsPRInt32> height;
-  if (NS_SUCCEEDED(res)) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(height));
-    if (NS_SUCCEEDED(res) && height) {
+
+    nsCOMPtr<nsISupportsPRInt32> height;
+    nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+      nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(height));
+    if (height) {
       res = height->SetData(childRect.height);
-      if (NS_SUCCEEDED(res)) {
-        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("height"), height);
-      }
+      NS_ENSURE_SUCCESS(res, res);
+      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("height"), height);
     }
+    *aState = state;
+    NS_ADDREF(*aState);
   }
   return res;
 }
@@ -742,6 +749,8 @@ NS_IMETHODIMP
 nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
                                  nsIPresState* aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
+
   nsCOMPtr<nsISupportsPRInt32> xoffset;
   nsCOMPtr<nsISupportsPRInt32> yoffset;
   nsCOMPtr<nsISupportsPRInt32> width;

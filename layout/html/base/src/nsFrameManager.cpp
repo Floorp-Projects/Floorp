@@ -2034,7 +2034,7 @@ FrameManager::CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFram
         // Get the state
         nsCOMPtr<nsIPresState> frameState;
         rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv) && frameState) {
 
           // add an association between (ID, type) and (state) to the
           // history state storage object, aState.
