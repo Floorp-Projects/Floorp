@@ -21,8 +21,8 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef NSSIZE_H
-#define NSSIZE_H
+#ifndef NSSIZE2_H
+#define NSSIZE2_H
 
 #include "gfxtypes.h"
 
@@ -71,4 +71,4 @@ struct nsSize2 {
                                            return *this;}
 };
 
-#endif /* NSSIZE_H */
+#endif /* NSSIZE2_H */

@@ -25,33 +25,27 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
 MODULE		= gfx2
-LIBRARY_NAME	= gfx2
+LIBRARY_NAME= gfx2 #_s
+DLL		    = $(OBJDIR)\$(LIBRARY_NAME).dll
 MAKE_OBJ_TYPE = DLL
 
 OBJS	= \
-		.\$(OBJDIR)\nsDrawable.obj \
-		.\$(OBJDIR)\nsPixmap.obj \
-		.\$(OBJDIR)\nsRegion.obj \
-		.\$(OBJDIR)\nsWindow.obj \
-		.\$(OBJDIR)\nsChildWindow.obj \
-		.\$(OBJDIR)\nsPopupWindow.obj \
-		.\$(OBJDIR)\nsTopLevelWindow.obj \
+		.\$(OBJDIR)\nsRect.obj \
+		.\$(OBJDIR)\nsImage.obj \
 		.\$(OBJDIR)\nsGfxFactory.obj \
-		.\$(OBJDIR)\nsRunAppRun.obj \
 		$(NULL)
 
-
-LLIBS=				\
- $(LLIBS)			\
- $(DIST)\lib\gfx_base.lib \
- $(NULL)
+LLIBS	= \
+ 	$(DIST)\lib\xpcom.lib \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+
+#install:: $(LIBRARY)
+#	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(LIBRARY_NAME).dll
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
