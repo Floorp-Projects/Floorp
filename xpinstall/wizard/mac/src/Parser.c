@@ -412,6 +412,10 @@ PopulateCompWinKeys(char *cfgText)
 		DisposeHandle(sizeH);
 		DisposePtr(currKey);
 		
+		// set the dirty flag to indicate the CRC has not passed
+		
+		gControls->cfg->comp[i].dirty = true;
+		
 		/* random install percentage */
 		GetIndString(pkey, rParseKeys, sRandomInstall);
 		currKey = PascalToC(pkey);

@@ -39,6 +39,8 @@ Boolean     gInstallStarted = false;
  *   Application Setup
  *-----------------------------------------------------------*/
 
+int gState;
+
 void main(void)
 {	
 	OSErr err = noErr;
@@ -375,33 +377,59 @@ void MakeMenus(void)
 	DrawMenuBar();
 }
 
+static 	RgnHandle gMouseRgn;
+
 void MainEventLoop(void)
 {
-	EventRecord evt;
-	Boolean		notHandled = true;
-	RgnHandle   mouseRgn;
-
-	mouseRgn = NewRgn();
+	gMouseRgn = NewRgn();
 	
 	while (!gDone) 
-	{		
-		YieldToAnyThread();  /* download thread */
-		
-		if (!gDone)	 /* after cx switch back ensure not done */
-		{
-			if(WaitNextEvent(everyEvent, &evt, 1, mouseRgn))
-			{
-				if (mouseRgn)
-					SetRectRgn(mouseRgn, evt.where.h, evt.where.v, evt.where.h + 1, evt.where.v + 1);
-					
-				HandleNextEvent(&evt);
-			}
-		}
+	{	
+        YieldToAnyThread();  /* download thread */
+	    MainEventLoopPass();	
 	}
 	
-	if (mouseRgn)
-		DisposeRgn(mouseRgn);
+	if (gMouseRgn)
+		DisposeRgn(gMouseRgn);
+	gMouseRgn = (RgnHandle) 0;
 	Shutdown();
+}
+ 
+// following needs to return int so it can be used as a libXPnet callback
+
+int BreathFunc()
+{
+    static int ticks = 0;
+    
+    ticks++;
+    if ( ( ticks % 4 ) == 0 ) {
+        ticks = 0;
+        MainEventLoopPass();
+        if ( gDone == true ) {     // this is likely because user selected Quit from the file menu
+            if (gMouseRgn)
+		        DisposeRgn(gMouseRgn);
+	        gMouseRgn = (RgnHandle) 0;
+	        Shutdown();
+	    } 
+    }
+    return 1;
+}
+
+void  MainEventLoopPass()
+{
+    EventRecord evt;
+	Boolean		notHandled = true;
+
+    if (!gDone)	 /* after cx switch back ensure not done */
+    {
+		if(WaitNextEvent(everyEvent, &evt, 1, gMouseRgn))
+		{
+			if (gMouseRgn)
+				SetRectRgn(gMouseRgn, evt.where.h, evt.where.v, evt.where.h + 1, evt.where.v + 1);
+					
+			HandleNextEvent(&evt);
+		}
+	}
 }
  
 void ErrorHandler(short errCode)
@@ -570,6 +598,7 @@ void Shutdown(void)
 		HideWindow(gWPtr);
 		DisposeWindow(gWPtr);
 	}
+	ExitToShell();
 }
 
 //set new menu groups and items from install.ini

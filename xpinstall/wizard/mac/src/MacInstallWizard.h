@@ -369,8 +369,9 @@ if (err) 								\
 #define sSpaceMsg3		45
 #define sPauseBtn       46
 #define sResumeBtn      47
+#define sValidating     48
 
-#define instKeysNum		47	/* number of installer.ini keys */
+#define instKeysNum		48	/* number of installer.ini keys */
 
 #define rInstMenuList	146
 #define sMenuGeneral	1
@@ -426,6 +427,8 @@ typedef struct InstComp {
 	
 	/* UI highlighting */
 	Boolean highlighted;
+	
+	Boolean dirty;    // dload has not been attempted, or, it failed CRC
 
 } InstComp; 
 
@@ -664,6 +667,8 @@ void        CleanTemp(void);
 pascal void CheckIfXPI(const CInfoPBRec * const, Boolean *, void *);
 void		MakeMenus(void);
 void 		MainEventLoop(void);
+void        MainEventLoopPass();
+int         BreathFunc();
 void		ErrorHandler(short);
 void		Shutdown(void);
 
@@ -825,15 +830,31 @@ void		DisableTerminalWin(void);
 void        SetupPauseResumeButtons(void);
 void        SetPausedState(void);
 void        SetResumedState(void);
+void        DisablePauseAndResume();
 
 
 /*-----------------------------------------------------------*
  *   InstAction
  *-----------------------------------------------------------*/
+ 
+ 
+#define TYPE_UNDEF 0
+#define TYPE_PROXY 1
+#define TYPE_HTTP 2
+#define TYPE_FTP 3
+
+typedef struct _conn
+{
+	unsigned char type;	// TYPE_UNDEF, etc.
+	char *URL;			// URL this connection is for
+	void *conn;			// pointer to open connection
+} CONN;
+
+
 pascal void *Install(void*);
 long        ComputeTotalDLSize(void);
 short       DownloadXPIs(short, long);
-short       DownloadFile(Handle, long, Handle, int, int);
+short       DownloadFile(Handle, long, Handle, int, int, CONN *);
 OSErr       DLMarkerSetCurrent(char *);
 OSErr       DLMarkerGetCurrent(int *, int*);
 OSErr       DLMarkerDelete(void);
@@ -848,13 +869,16 @@ void		IfRemoveOldCore(short, long);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
 Boolean		ExistArchives(short, long);
+Boolean		CheckConn(char *URL, int type, CONN *myConn, Boolean force);
 OSErr       ExistsXPI(int);
 void		LaunchApps(short, long);
 void		RunApps(void);
 void		DeleteXPIs(short, long);
-void        InitDLProgControls(void);
-void        ClearDLProgControls(void);
+void        InitDLProgControls(Boolean onlyLabels);
+void        ClearDLProgControls(Boolean onlyLabels);
 void		InitProgressBar(void);
+Boolean     CRCCheckDownloadedArchives(Handle dlPath, short dlPathLen);
+
 
 /*-----------------------------------------------------------*
  *   Inflation
@@ -885,5 +909,7 @@ void 			SetFrameGreyButtonColor( short color );
 #ifdef __cplusplus
 }
 #endif
+
+#define kNumDLFields 4
 
 #endif /* _MIW_H_ */

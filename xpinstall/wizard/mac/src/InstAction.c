@@ -25,6 +25,11 @@
 #include "nsFTPConn.h"
 #include "nsHTTPConn.h"
 
+#define STANDALONE 1
+#define XP_MAC 1
+#include "zipstub.h"
+#include "zipfile.h"
+
 /*-----------------------------------------------------------*
  *   Install Action
  *-----------------------------------------------------------*/
@@ -124,7 +129,7 @@ pascal void* Install(void* unused)
 	    }
         
         if (gControls->state != eResuming)
-            InitDLProgControls();
+            InitDLProgControls(false);
         dlErr = DownloadXPIs(srcVRefNum, srcDirID);
         if (dlErr == nsFTPConn::E_USER_CANCEL)
         {
@@ -135,7 +140,7 @@ pascal void* Install(void* unused)
 		    ErrorHandler(dlErr);
 			return (void*) nil;
 		}
-        ClearDLProgControls();
+        ClearDLProgControls(false);
         DisableNavButtons();
         
 		SetPort(oldPort);
@@ -147,7 +152,7 @@ pascal void* Install(void* unused)
 			SetPort(gWPtr);
 			BeginUpdate(gWPtr);
 			DrawControls(gWPtr);
-			ShowLogo(true);
+			ShowLogo(false);
 			UpdateTerminalWin();
 			EndUpdate(gWPtr);
 		
@@ -251,6 +256,8 @@ ComputeTotalDLSize(void)
     return totalDLSize;
 }
 
+#define MAXCRC 4
+
 short
 DownloadXPIs(short destVRefNum, long destDirID)
 {
@@ -259,19 +266,30 @@ DownloadXPIs(short destVRefNum, long destDirID)
     short dlPathLen = 0;
     int i, compsDone = 0, instChoice = gControls->opt->instChoice-1, resPos = 0;
     Boolean bResuming = false;
+    Boolean bDone = false;
     int markedIndex = 0, currGlobalURLIndex = 0;
+    CONN myConn;
+    int crcPass;
     
     GetFullPath(destVRefNum, destDirID, "\p", &dlPathLen, &dlPath);
 	DLMarkerGetCurrent(&markedIndex, &compsDone);
 	if (markedIndex >= 0)
 	    resPos = GetResPos(&gControls->cfg->comp[markedIndex]);
-    
-	// loop through 0 to kMaxComponents
+    	
+	myConn.URL = (char *) NULL;
+	myConn.type = TYPE_UNDEF;
+	
+	crcPass = 1;
+	while ( bDone == false && crcPass <= MAXCRC ) {
+    for ( i = 0; i < kNumDLFields; i++ ) {
+        ShowControl( gControls->tw->dlLabels[i] );
+    }
 	for(i = 0; i < kMaxComponents; i++)
 	{
 		// general test: if component in setup type
 		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
-			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+			 (compsDone < gControls->cfg->st[instChoice].numComps) && 
+			 gControls->cfg->comp[i].dirty == true)
 		{ 
 			// if custom and selected -or- not custom setup type
 			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
@@ -299,7 +317,7 @@ DownloadXPIs(short destVRefNum, long destDirID)
                     gControls->state = eResuming;
                 }
 TRY_DOWNLOAD:
-                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive, resPos, currGlobalURLIndex);
+                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive, resPos, currGlobalURLIndex, &myConn);
                 if (rv == nsFTPConn::E_USER_CANCEL)
                 {
                     break;
@@ -319,6 +337,26 @@ TRY_DOWNLOAD:
         }
 		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
 			break;  
+    } // end for
+    
+        if ( rv != nsFTPConn::E_USER_CANCEL ) {   // XXX cancel is also paused :-)
+    	    bDone = CRCCheckDownloadedArchives(dlPath, dlPathLen); 
+    	    if ( bDone == false ) {
+    	        compsDone = 0;
+    	        crcPass++;   
+    	    }
+        } else {
+            break;  // cancel really happened, or we paused
+        }
+    } // end while
+ 
+ 	// clean up the Conn struct
+ 	
+ 	CheckConn( "", TYPE_UNDEF, &myConn, true );  
+ 	     	 
+    if ( crcPass >= MAXCRC ) {
+        ErrorHandler( eDownload );  // XXX need a better error message here
+        rv = eDownload;
     }
     
     if (rv == 0)
@@ -331,13 +369,14 @@ const char kHTTP[8] = "http://";
 const char kFTP[7] = "ftp://";
 
 short
-DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, int urlIndex)
+DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, int urlIndex, CONN *myConn)
 {
     short rv = 0;
     char *URL = 0, *proxyServerURL = 0, *destFile = 0, *destFolderCopy = 0;
     int globalURLLen, archiveLen, proxyServerURLLen;
     char *ftpHost = 0, *ftpPath = 0;
     Boolean bGetTried = false;
+    Boolean isNewConn;
     
     // make URL using globalURL
     HLock(archive);
@@ -367,45 +406,86 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, 
     destFile = (char *) malloc(destFolderLen + archiveLen + 1);
     sprintf(destFile, "%s%s", destFolderCopy, *archive);
     HUnlock(archive);
-        
+     
+    UpdateControls( gWPtr, gWPtr->visRgn ); 
+    ShowLogo( false );  
     // was proxy info specified?
     if (gControls->opt->proxyHost && gControls->opt->proxyPort)
     {
+        nsHTTPConn *conn;
+        
         // make HTTP URL with "http://proxyHost:proxyPort"
         proxyServerURLLen = strlen(kHTTP) + strlen(gControls->opt->proxyHost) + 1 + 
                             strlen(gControls->opt->proxyPort) + 1;
-        proxyServerURL = (char *) malloc(proxyServerURLLen);
+        proxyServerURL = (char *) calloc(proxyServerURLLen, sizeof( char ) );
         sprintf(proxyServerURL, "%s%s:%s", kHTTP, gControls->opt->proxyHost, gControls->opt->proxyPort);
+         
+        isNewConn = CheckConn( proxyServerURL, TYPE_PROXY, myConn, false ); // closes the old connection if any
         
-        nsHTTPConn *conn = new nsHTTPConn(proxyServerURL);
+        if ( isNewConn == true ) {
         
-        // set proxy info: proxied URL, username, password
-        conn->SetProxyInfo(URL, gControls->opt->proxyUsername, gControls->opt->proxyPassword);
+        	conn = new nsHTTPConn(proxyServerURL, BreathFunc);
         
-        // open an HTTP connection
-        rv = conn->Open();
-        if (rv == nsHTTPConn::OK)
+        	// set proxy info: proxied URL, username, password
+
+        	conn->SetProxyInfo(URL, gControls->opt->proxyUsername, gControls->opt->proxyPassword);
+        
+        	myConn->conn = (void *) conn;
+        	
+        	// open an HTTP connection
+        	rv = conn->Open();
+            if ( rv == nsHTTPConn::OK ) {
+            	myConn->conn = (void *) conn;
+            	myConn->type = TYPE_PROXY;
+            	myConn->URL = (char *) calloc( strlen( proxyServerURL ) + 1, sizeof( char ) );
+            	if ( myConn->URL != (char *) NULL )
+            		strcpy( myConn->URL, proxyServerURL );
+           }
+        } else {
+        	conn = (nsHTTPConn *) myConn->conn;
+        }
+        
+        if (isNewConn ==false || rv == nsHTTPConn::OK)
         {
             sCurrStartTime = time(NULL);
             bGetTried = true;
             rv = conn->Get(DLProgressCB, destFile, resPos);
-            conn->Close();
         }
     }
         
     // else do we have an HTTP URL? 
     else if (strncmp(URL, kHTTP, strlen(kHTTP)) == 0)
     {
-        // open an HTTP connection
-        nsHTTPConn *conn = new nsHTTPConn(URL);
+    	nsHTTPConn *conn;
+
+        // XXX for now, the URL is always different, so we always create a new
+        // connection here
         
-        rv = conn->Open();
-        if (rv == nsHTTPConn::OK)
+        isNewConn = CheckConn( URL, TYPE_HTTP, myConn, false ); // closes the old connection if any
+        
+        if ( isNewConn == true ) {
+        	// open an HTTP connection
+        	
+        	conn = new nsHTTPConn(URL, BreathFunc);
+        
+        	myConn->conn = (void *) conn;
+        
+        	rv = conn->Open();
+            if ( rv == nsHTTPConn::OK ) {
+            	myConn->conn = (void *) conn;
+            	myConn->type = TYPE_HTTP;
+            	myConn->URL = (char *) calloc( strlen( URL ) + 1, sizeof( char ) );
+            	if ( myConn->URL != (char *) NULL )
+            		strcpy( myConn->URL, URL );
+           }
+        } else
+        	conn = (nsHTTPConn *) myConn->conn;
+        
+        if (isNewConn == false || rv == nsHTTPConn::OK)
         {
             sCurrStartTime = time(NULL);
             bGetTried = true;
             rv = conn->Get(DLProgressCB, destFile, resPos);
-            conn->Close();
         }
     }
     
@@ -419,16 +499,31 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, 
         }
         else
         {
-            // open an FTP connection
-            nsFTPConn *conn = new nsFTPConn(ftpHost);
+            nsFTPConn *conn;
             
-            rv = conn->Open();
-            if (rv == nsFTPConn::OK)
+            // open an FTP connection
+        	isNewConn = CheckConn( ftpHost, TYPE_FTP, myConn, false ); // closes the old connection if any
+        
+        	if ( isNewConn == true ) {
+        	
+            	conn = new nsFTPConn(ftpHost, BreathFunc);
+            
+            	rv = conn->Open();
+            	if ( rv == nsFTPConn::OK ) {
+            		myConn->conn = (void *) conn;
+            		myConn->type = TYPE_FTP;
+            		myConn->URL = (char *) calloc( strlen( ftpHost ) + 1, sizeof( char ) );
+            		if ( myConn->URL != (char *) NULL )
+            			strcpy( myConn->URL, ftpHost );
+            	}
+            } else 
+            	conn = (nsFTPConn *) myConn->conn;
+            	
+            if (isNewConn == false || rv == nsFTPConn::OK)
             {
                 sCurrStartTime = time(NULL);
                 bGetTried = true;
                 rv = conn->Get(ftpPath, destFile, nsFTPConn::BINARY, resPos, 1, DLProgressCB);
-                conn->Close();
             }
         }
         if (ftpHost)
@@ -452,6 +547,62 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, 
     }
     
     return rv;
+}
+
+/* 
+ * Name: CheckConn
+ *
+ * Arguments: 
+ *
+ * char *URL;     -- URL of connection we need to have established
+ * int type;	  -- connection type (TYPE_HTTP, etc.)
+ * CONN *myConn;  -- connection state (info about currently established connection)
+ * Boolean force; -- force closing of connection
+ *
+ * Description:
+ *
+ * This function determines if the caller should open a connection based upon the current
+ * connection that is open (if any), and the type of connection desired.
+ * If no previous connection was established, the function returns true. If the connection
+ * is for a different protocol, then true is also returned (and the previous connection is
+ * closed). If the connection is for the same protocol and the URL is different, the previous
+ * connection is closed and true is returned. Otherwise, the connection has already been
+ * established, and false is returned.
+ *
+ * Return Value: If a new connection needs to be opened, true. Otherwise, false is returned.
+ *
+ * Original Code: Syd Logan (syd@netscape.com) 6/24/2001
+ *
+*/
+
+Boolean
+CheckConn( char *URL, int type, CONN *myConn, Boolean force )
+{
+	nsFTPConn *fconn;
+	nsHTTPConn *hconn;
+	Boolean retval = false;
+
+	if ( myConn->type == TYPE_UNDEF )
+		retval = true;					// first time
+	else if ( ( myConn->type != type || strcmp( URL, myConn->URL ) || force == true ) && gControls->state != ePaused) {
+		retval = true;
+		switch ( myConn->type ) {
+		case TYPE_HTTP:
+		case TYPE_PROXY:
+			hconn = (nsHTTPConn *) myConn->conn;
+			hconn->Close();
+			break;
+		case TYPE_FTP:
+			fconn = (nsFTPConn *) myConn->conn;
+			fconn->Close();
+			break;
+		}
+	}
+	
+	if ( retval == true && myConn->URL != (char *) NULL )
+    	free( myConn->URL );
+
+	return retval;
 }
 
 OSErr 
@@ -816,8 +967,9 @@ DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
             {
                 HLock((Handle)gControls->tw->dlProgressMsgs[0]);
                 teRect = (**(gControls->tw->dlProgressMsgs[0])).viewRect;
+                EraseRect(&teRect);
                 HUnlock((Handle)gControls->tw->dlProgressMsgs[0]);                
-                
+ 
                 len = strlen(*(gControls->cfg->comp[sCurrComp].shortDesc));
                 TESetText(*(gControls->cfg->comp[sCurrComp].shortDesc), len, 
                     gControls->tw->dlProgressMsgs[0]);
@@ -1357,10 +1509,8 @@ DeleteXPIs(short vRefNum, long dirID)
 	}
 }
 
-const int kNumDLFields = 4;
-
 void
-InitDLProgControls(void)
+InitDLProgControls(Boolean onlyLabels)
 {
 	Boolean	indeterminateFlag = false;
 	Rect r;
@@ -1372,27 +1522,29 @@ InitDLProgControls(void)
 	{
 	    SetPort(gWPtr);
 	    
-	    gControls->tw->dlProgressBar = GetNewControl(rDLProgBar, gWPtr);
-	    if (gControls->tw->dlProgressBar)
-	    {
-	        SetControlData(gControls->tw->dlProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag, 
-	            sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
-            Draw1Control(gControls->tw->dlProgressBar);
-            
-            // draw labels
-            Str255 labelStr;
-            for (i = 0; i < kNumDLFields; ++i)
-            {
-                gControls->tw->dlLabels[i] = GetNewControl(rLabDloading + i, gWPtr);
-                if (gControls->tw->dlLabels[i])
-                {
-                    GetResourcedString(labelStr, rInstList, sLabDloading + i);
-                    SetControlData(gControls->tw->dlLabels[i], kControlNoPart, 
-                                kControlStaticTextTextTag, labelStr[0], (Ptr)&labelStr[1]); 
-                    ShowControl(gControls->tw->dlLabels[i]);
-                }
+	    if ( onlyLabels == false ) {
+	        gControls->tw->dlProgressBar = GetNewControl(rDLProgBar, gWPtr);
+	        if (gControls->tw->dlProgressBar)
+	        {
+	            SetControlData(gControls->tw->dlProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag, 
+	                sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
+                Draw1Control(gControls->tw->dlProgressBar);
             }
-            
+        }
+            // draw labels
+        Str255 labelStr;
+        for (i = 0; i < kNumDLFields; ++i)
+        {
+            gControls->tw->dlLabels[i] = GetNewControl(rLabDloading + i, gWPtr);
+            if (gControls->tw->dlLabels[i])
+            {
+                GetResourcedString(labelStr, rInstList, sLabDloading + i);
+                SetControlData(gControls->tw->dlLabels[i], kControlNoPart, 
+                    kControlStaticTextTextTag, labelStr[0], (Ptr)&labelStr[1]); 
+                ShowControl(gControls->tw->dlLabels[i]);
+            }
+        }
+        if ( onlyLabels == false ) {    
             TextFace(normal);
             TextSize(9);
             TextFont(applFont);
@@ -1415,7 +1567,7 @@ InitDLProgControls(void)
 }
 
 void
-ClearDLProgControls(void)
+ClearDLProgControls(Boolean onlyLabels)
 {
     Rect teRect;
     GrafPtr oldPort;
@@ -1427,7 +1579,7 @@ ClearDLProgControls(void)
     {
         if (gControls->tw->dlLabels[i])
             DisposeControl(gControls->tw->dlLabels[i]);
-        if (gControls->tw->dlProgressMsgs[i])
+        if (gControls->tw->dlProgressMsgs[i] && onlyLabels == false)
         {
             HLock((Handle)gControls->tw->dlProgressMsgs[i]);
             teRect = (**(gControls->tw->dlProgressMsgs[i])).viewRect;
@@ -1438,7 +1590,7 @@ ClearDLProgControls(void)
         }
     }
     
-    if (gControls->tw->dlProgressBar)
+    if (gControls->tw->dlProgressBar && onlyLabels == false)
     {
         DisposeControl(gControls->tw->dlProgressBar);
         gControls->tw->dlProgressBar = NULL;
@@ -1451,9 +1603,12 @@ void
 InitProgressBar(void)
 {
 	Boolean	indeterminateFlag = true;
-	Rect	r;
+	Rect	r, r2;
 	Str255	extractingStr;
 	GrafPtr	oldPort;
+	Handle rectH;
+	OSErr reserr;
+	
 	GetPort(&oldPort);
 	
 	if (gWPtr)
@@ -1512,6 +1667,21 @@ InitProgressBar(void)
 		}
 	}
 	
+    rectH = GetResource('RECT', 165);
+	reserr = ResError();
+	if (reserr == noErr && rectH)
+	{
+	    HLock(rectH);
+		r = (Rect) **((Rect**)rectH);
+		SetRect(&r2, r.left, r.top, r.right, r.bottom);
+		HUnlock(rectH);
+		reserr = ResError();
+		if (reserr == noErr)
+		{
+		    EraseRect(&r2);
+		}
+	}
+
 	SetPort(oldPort);
 }
 
@@ -1533,3 +1703,142 @@ void strtran(char* str, const char* srch, const char* repl)
 	strcat(str, p);
 	
 }
+
+/* 
+ * Name: VerifyArchive
+ *
+ * Arguments: 
+ *
+ * char *szArchive;     -- path of archive to verify
+ *
+ * Description:
+ *
+ * This function verifies that the specified path exists, that it is a XPI file, and
+ * that it has a valid checksum.
+ *
+ * Return Value: If all tests pass, ZIP_OK. Otherwise, !ZIP_OK
+ *
+ * Original Code: Syd Logan (syd@netscape.com) 6/25/2001
+ *
+*/
+
+int 
+VerifyArchive(char *szArchive)
+{
+  void *vZip;
+  int  iTestRv;
+  OSErr err;
+  FSSpec spec;
+
+  err = FSpLocationFromFullPath( strlen( szArchive ), szArchive, &spec );
+									
+  /* Check for the existance of the from (source) file */
+  if(err != noErr)
+    return(!ZIP_OK);
+
+  
+  if((iTestRv = ZIP_OpenArchive(szArchive, &vZip)) == ZIP_OK)
+  {
+    BreathFunc();
+    /* 1st parameter should be NULL or it will fail */
+    /* It indicates extract the entire archive */
+    iTestRv = ZIP_TestArchive(vZip);
+    ZIP_CloseArchive(&vZip);
+  } 
+  if ( iTestRv != ZIP_OK )
+    err = FSpDelete( &spec );      // nuke it
+  return(iTestRv);
+}
+
+/* 
+ * Name: CRCCheckDownloadedArchives
+ *
+ * Arguments: 
+ *
+ * Handle dlPath;     -- a handle to the location of the XPI files on disk
+ * short dlPathlen;	  -- length, in bytes, of dlPath
+ *
+ * Description:
+ *
+ * This function iterates the XPI files and calls VerifyArchive() on each to determine
+ * which archives pass checksum checks. If a file passes, its dirty flag is set to false,
+ * so that it is not re-read the next time we dload archives if any of the files come up
+ * with an invalid CRC. 
+ *
+ * Return Value: if all archives pass, true. Otherwise, false.
+ *
+ * Original Code: Syd Logan (syd@netscape.com) 6/24/2001
+ *
+*/
+
+Boolean 
+CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen)
+{
+    int i, len;
+    Rect teRect;
+    Boolean isClean;
+    char buf[ 1024 ];
+    char validatingBuf[ 128 ];
+    Boolean indeterminateFlag = true;
+	Str255	validatingStr;
+
+    isClean = true;
+
+    ClearDLProgControls(true); 
+    DisablePauseAndResume();      
+        
+    for ( i = 1; i < kNumDLFields; i++ ) {
+        HLock( (Handle) gControls->tw->dlProgressMsgs[i] );
+        teRect = (**(gControls->tw->dlProgressMsgs[i])).viewRect;
+        EraseRect(&teRect);
+        HUnlock( (Handle) gControls->tw->dlProgressMsgs[i] );
+    }
+    if ( gControls->tw->dlProgressBar) {
+        SetControlValue(gControls->tw->dlProgressBar, 0);
+        SetControlMaximum(gControls->tw->dlProgressBar, kMaxComponents);
+    } 
+
+    GetResourcedString(validatingStr, rInstList, sValidating);
+    strncpy( validatingBuf, (const char *) &validatingStr[1], (unsigned char) validatingStr[0] ); 
+	for(i = 0; i < kMaxComponents; i++) {
+	    BreathFunc();
+        if (gControls->cfg->comp[i].shortDesc)
+        {
+            HLock(gControls->cfg->comp[i].shortDesc);
+            if (*(gControls->cfg->comp[i].shortDesc) && gControls->tw->dlProgressMsgs[0])
+            {
+                HLock((Handle)gControls->tw->dlProgressMsgs[0]);
+                teRect = (**(gControls->tw->dlProgressMsgs[0])).viewRect;
+                HUnlock((Handle)gControls->tw->dlProgressMsgs[0]);                
+                sprintf( buf, validatingBuf, *(gControls->cfg->comp[i].shortDesc));
+                len = strlen( buf );
+                TESetText(buf, len, 
+                    gControls->tw->dlProgressMsgs[0]);
+                TEUpdate(&teRect, gControls->tw->dlProgressMsgs[0]);
+            }
+            HUnlock(gControls->cfg->comp[sCurrComp].shortDesc);
+        }
+	    if ( gControls->cfg->comp[i].dirty == true ) {
+	        HLock(dlPath);
+            HLock(gControls->cfg->comp[i].archive);
+            strncpy( buf, *dlPath, dlPathlen );
+            buf[ dlPathlen ] = '\0';
+            strcat( buf, *(gControls->cfg->comp[i].archive) );
+	        HUnlock(dlPath);
+            HUnlock(gControls->cfg->comp[i].archive);
+            if (VerifyArchive( buf ) == ZIP_OK) 
+                gControls->cfg->comp[i].dirty = false;
+            else
+                isClean = false;
+        }
+        if ( gControls->tw->dlProgressBar) {
+            SetControlValue(gControls->tw->dlProgressBar, 
+                GetControlValue(gControls->tw->dlProgressBar) + 1);
+        }    
+    }
+    
+    InitDLProgControls( true );
+    return isClean;
+}
+
+

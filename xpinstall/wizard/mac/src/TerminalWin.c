@@ -242,6 +242,7 @@ void
 UpdateTerminalWin(void)
 {
 	GrafPtr	oldPort;
+	int i;
 	Rect	instMsgRect;
 	GetPort(&oldPort);
 	SetPort(gWPtr);
@@ -251,6 +252,14 @@ UpdateTerminalWin(void)
 
     if (gControls->tw->dlProgressBar)
     {
+        for (i = 0; i < kNumDLFields; ++i)
+        {
+            if (gControls->tw->dlLabels[i])
+            {
+                ShowControl(gControls->tw->dlLabels[i]);
+            }
+        }
+
         // XXX   TO DO
         // update the dl TEs
     }
@@ -764,4 +773,17 @@ SetResumedState(void)
         HiliteControl(gControls->backB, kEnableControl);
         
     gControls->state = eResuming;
+}
+
+void
+DisablePauseAndResume()
+{
+    /* disable pause button  */
+    if (gControls->nextB)
+        HiliteControl(gControls->nextB, kDisableControl);   
+    
+    /* disable resume button */
+    if (gControls->backB)
+        HiliteControl(gControls->backB, kDisableControl);
+
 }
