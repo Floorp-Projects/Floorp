@@ -77,7 +77,9 @@ const char * kSelectedFocus = "SELECTEDFOCUS";
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 
+#ifdef PLUGGABLE_EVENTS
 static NS_DEFINE_IID(kIPluggableEventListenerIID, NS_IPLUGGABLEEVENTLISTENER_IID);
+#endif
 static NS_DEFINE_IID(kIListControlFrameIID, NS_ILISTCONTROLFRAME_IID);
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID,   NS_IDOMHTMLSELECTELEMENT_IID);
@@ -147,11 +149,13 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void *)((nsIListControlFrame*)this);
     return NS_OK;
   }
+#ifdef PLUGGABLE_EVENTS
   if (aIID.Equals(kIPluggableEventListenerIID)) {
     NS_ADDREF_THIS(); // Increase reference count for caller
     *aInstancePtr = (void *)((nsIPluggableEventListener*)this);
     return NS_OK;
   }
+#endif
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -710,8 +714,9 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIFrame*       aChildList)
 {
   mContentFrame = aChildList;
+#ifdef PLUGGABLE_EVENTS
   mContentFrame->SetPluggableEventListener(this);
-
+#endif
   if (!mInDropDownMode) {
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
   }

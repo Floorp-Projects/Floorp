@@ -68,7 +68,9 @@ static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID,   NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID,   NS_IDOMHTMLOPTIONELEMENT_IID);
+#ifdef PLUGGABLE_EVENTS
 static NS_DEFINE_IID(kIPluggableEventListenerIID, NS_IPLUGGABLEEVENTLISTENER_IID);
+#endif
 static NS_DEFINE_IID(kIListControlFrameIID,       NS_ILISTCONTROLFRAME_IID);
 static NS_DEFINE_IID(kITextContentIID,            NS_ITEXT_CONTENT_IID);
 
@@ -133,11 +135,13 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   }
+#ifdef PLUGGABLE_EVENTS
   if (aIID.Equals(kIPluggableEventListenerIID)) {
     NS_ADDREF_THIS(); // Increase reference count for caller
     *aInstancePtr = (void *)((nsIPluggableEventListener*)this);
     return NS_OK;
   }
+#endif
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 

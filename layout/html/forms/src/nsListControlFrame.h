@@ -24,7 +24,9 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIPresContext.h"
 #include "nsIFormControlFrame.h"
+#ifdef PLUGGABLE_EVENTS
 #include "nsIPluggableEventListener.h"
+#endif
 #include "nsIListControlFrame.h"
 
 class nsIDOMHTMLSelectElement;
@@ -71,8 +73,10 @@ struct nsInputDimSpec
  */
 class nsListControlFrame : public nsScrollFrame, 
                             public nsIFormControlFrame, 
-                            public nsIPluggableEventListener,
                             public nsIListControlFrame
+#ifdef PLUGGABLE_EVENTS
+                            public nsIPluggableEventListener
+#endif
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIFrame*& aNewFrame);
