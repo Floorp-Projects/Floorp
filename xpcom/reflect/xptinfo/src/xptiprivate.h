@@ -40,7 +40,10 @@
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsIDirectoryService.h"
+
+#include "nsCRT.h"
+#include "nsIAllocator.h"
 
 #include "nsISupportsArray.h"
 #include "nsInt64.h"
@@ -52,6 +55,7 @@
 
 #include "nsAutoLock.h"
 
+#include "plhash.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "prio.h"
