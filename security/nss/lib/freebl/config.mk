@@ -31,14 +31,69 @@
 # GPL.
 #
 
-#
-#  Override TARGETS variable so that only static libraries
-#  are specifed as dependencies within rules.mk.
-#
+# only do this in the outermost freebl build.
+ifndef FREEBL_RECURSIVE_BUILD
+# we only do this stuff for some of the 32-bit builds, no 64-bit builds
+ifndef USE_64
 
-TARGETS        = $(LIBRARY)
-SHARED_LIBRARY =
-IMPORT_LIBRARY =
-PURE_LIBRARY   =
-PROGRAM        =
+ifeq ($(OS_ARCH), HP-UX)
+  FREEBL_EXTENDED_BUILD = 1
+endif
 
+ifeq ($(OS_TARGET),SunOS)
+  ifeq ($(CPU_ARCH),sparc)
+    FREEBL_EXTENDED_BUILD = 1
+  endif
+endif
+
+ifdef FREEBL_EXTENDED_BUILD
+# We're going to change this build so that it builds libfreebl.a with
+# just loader.c.  Then we have to build this directory twice again to 
+# build the two DSOs.
+# To build libfreebl.a with just loader.c, we must now override many
+# of the make variables setup by the prior inclusion of CORECONF's config.mk
+
+CSRCS		= loader.c
+SIMPLE_OBJS 	= $(CSRCS:.c=$(OBJ_SUFFIX))
+OBJS 		= $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS))
+ALL_TRASH :=    $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
+                $(NOSUCHFILE) so_locations 
+endif
+
+#end of 32-bit only stuff.
+endif
+
+# Override the values defined in coreconf's ruleset.mk.
+#
+# - (1) LIBRARY: a static (archival) library
+# - (2) SHARED_LIBRARY: a shared (dynamic link) library
+# - (3) IMPORT_LIBRARY: an import library, used only on Windows
+# - (4) PURE_LIBRARY: a library for Purify
+# - (5) PROGRAM: an executable binary
+#
+# override these variables to prevent building a DSO/DLL.
+  TARGETS        = $(LIBRARY)
+  SHARED_LIBRARY =
+  IMPORT_LIBRARY =
+  PURE_LIBRARY   =
+  PROGRAM        =
+
+else
+# This is a recursive build.  
+
+#ifeq ($(OS_ARCH), HP-UX)
+  EXTRA_LIBS        += \
+	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(NULL)
+
+# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
+# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+  EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	-lc
+#endif
+
+endif

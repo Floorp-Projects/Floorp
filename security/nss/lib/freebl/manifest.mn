@@ -34,7 +34,19 @@ CORE_DEPTH = ../../..
 
 MODULE = security
 
-LIBRARY_NAME = freebl
+ifndef FREEBL_RECURSIVE_BUILD
+  LIBRARY_NAME = freebl
+else
+  ifdef USE_PURE_32
+    CORE_DEPTH = ../../../..
+    LIBRARY_NAME = freebl_pure32
+  else
+    LIBRARY_NAME = freebl_hybrid
+  endif
+endif
+
+# same version as rest of freebl
+LIBRARY_VERSION = _3
 
 REQUIRES = 
 
@@ -62,19 +74,36 @@ CSRCS = \
 	$(NULL)
 else
 CSRCS = \
+	ldvector.c \
 	prng_fips1861.c \
 	sha_fast.c \
 	md2.c \
 	md5.c \
 	alg2268.c \
 	arcfour.c \
+	arcfive.c \
 	desblapi.c \
 	des.c \
+	rijndael.c \
 	dh.c \
 	pqg.c \
 	dsa.c \
 	rsa.c \
 	$(MPI_SRCS) \
-	rijndael.c \
 	$(NULL)
 endif
+
+ALL_CSRCS := $(CSRCS)
+
+ALL_HDRS =  \
+	blapi.h \
+	blapit.h \
+	des.h \
+	loader.h \
+	rijndael.h \
+	secmpi.h \
+	sha.h \
+	sha_fast.h \
+	vis_proto.h \
+	$(NULL)
+
