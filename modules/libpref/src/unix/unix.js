@@ -213,8 +213,8 @@ pref("font.scale.bitmap.oversize.zh-TW",  120);
 
 // minimum font sizes
 
-pref("font.min-size.variable.ja", 10);
-pref("font.min-size.fixed.ja", 10);
+pref("font.min-size.variable.ja", 16);
+pref("font.min-size.fixed.ja", 16);
 
 pref("font.min-size.variable.ko", 10);
 pref("font.min-size.fixed.ko", 10);
