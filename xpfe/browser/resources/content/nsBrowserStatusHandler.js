@@ -149,16 +149,12 @@ nsBrowserStatusHandler.prototype =
       return;
 
     if (aMaxTotalProgress > 0) {
-      this.statusMeter.mode = "normal";
-
       // This is highly optimized.  Don't touch this code unless
       // you are intimately familiar with the cost of setting
       // attrs on XUL elements. -- hyatt
       var percentage = (aCurTotalProgress * 100) / aMaxTotalProgress;
       this.statusMeter.value = percentage;
-    } else {
-      this.statusMeter.mode = "undetermined";
-    }
+    } 
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -179,8 +175,7 @@ nsBrowserStatusHandler.prototype =
         if (aRequest && domWindow == _content)
           this.startDocumentLoad(aRequest);
 
-        // Turn progress meter on.
-        this.statusMeter.mode = "undetermined";
+        // Turn the throbber on.
         this.throbberElement.setAttribute("busy", true);
 
         // XXX: These need to be based on window activity...
@@ -222,8 +217,7 @@ nsBrowserStatusHandler.prototype =
           this.setDefaultStatus(msg);
         }
 
-        // Turn progress meter off.
-        this.statusMeter.mode = "normal";
+        // Turn the progress meter and throbber off.
         this.statusMeter.value = 0;  // be sure to clear the progress bar
         this.throbberElement.removeAttribute("busy");
 
@@ -241,8 +235,6 @@ nsBrowserStatusHandler.prototype =
 
         if (ctype != "text/html")
           this.useRealProgressFlag = true;
-
-        this.statusMeter.mode = "normal";
       }
 
       if (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST) {
