@@ -353,3 +353,22 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   }
 #endif
 }
+
+nsresult
+NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
+            PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
+{
+    nsTimerImpl* timer = new nsTimerImpl();
+    if (timer == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(timer);
+
+    nsresult rv = timer->Init(aCallback, aClosure, aDelay, aPriority, aType);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(timer);
+        return rv;
+    }
+
+    *aResult = timer;
+    return NS_OK;
+}

@@ -152,4 +152,7 @@ public:
   NS_IMETHOD_(void*) GetClosure()  = 0;
 };
 
+extern NS_COM nsresult
+NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
+            PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType);
 #endif // nsITimer_h___
