@@ -63,6 +63,7 @@
 #include "nsIChromeRegistry.h" // chromeReg
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
+#include "nsHashtable.h"
 
 // Interfaces Needed
 #include "nsIDocShell.h"
@@ -99,6 +100,7 @@
 #define INSTALLER_CMD_LINE_ARG         "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG    "-CreateProfile"
 #define PROFILE_CMD_LINE_ARG "-P"   
+#define LANG_CMD_LINE_ARG "-lang"   
 
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
 #define SHRIMP_PREF                    "shrimp.startup.enable"
@@ -123,6 +125,10 @@
 // destructor at the right time (count == 0)
 static nsProfileAccess*    gProfileDataAccess = nsnull;
 static PRInt32          gInstanceCount = 0;
+
+// Profile database to remember which profile has been
+// created with UI lang on profileManager
+static nsHashtable *gLangProfiles = nsnull;
 
 // Atoms for file locations
 static nsIAtom* sApp_PrefsDirectory50         = nsnull;
@@ -236,9 +242,13 @@ nsProfile::nsProfile()
     mDiskSpaceErrorQuitCalled = PR_FALSE;
     mCurrentProfileAvailable = PR_FALSE;
 
+    mIsLangSpecified = PR_FALSE;
+
     if (gInstanceCount++ == 0) {
         
         gProfileDataAccess = new nsProfileAccess();
+
+        gLangProfiles = new nsHashtable();
         
        // Make our directory atoms
         
@@ -286,6 +296,8 @@ nsProfile::~nsProfile()
    if (--gInstanceCount == 0) {
         
       delete gProfileDataAccess;
+
+      delete gLangProfiles;
 
       NS_IF_RELEASE(sApp_PrefsDirectory50);
       NS_IF_RELEASE(sApp_PreferencesFile50);
@@ -367,6 +379,47 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
         rv = LoadDefaultProfileDir(profileURLStr);
 
         if (NS_FAILED(rv)) return rv;
+    }
+
+    // check UI language is specified on profileManager, otherwise,
+    // when -lang option is specified, install the ui language
+
+    // -lang is not specified
+    if (mIsLangSpecified == PR_FALSE) return NS_OK;
+
+    nsCOMPtr<nsIFile> profileDir;
+    PRBool alreadyset;
+
+    rv = GetCurrentProfileDir(getter_AddRefs(profileDir));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString  pathBuf;
+    rv = profileDir->GetPath(getter_Copies(pathBuf));
+    if (NS_FAILED(rv)) return rv;
+
+    // -lang has been specified, but
+    // user has selected UI language and region for this profile
+    // on profileManager
+    // We should use the language
+    nsCStringKey key((const char *)pathBuf);
+    if ((int)gLangProfiles->Get(&key) == PR_TRUE) {
+        return NS_OK;
+    }
+    gLangProfiles->Remove(&key);
+
+    // Install UI language to the profile
+    const PRUnichar* langcode = mLangName.GetUnicode() ;
+    if (langcode && nsCRT::strlen(langcode) != 0) {
+        nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID,
+ &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsFileSpec fileSpec((const char *)pathBuf);
+            nsFileURL  fileURL(fileSpec);
+            const char* fileStr = fileURL.GetURLString();
+            rv = chromeRegistry->SelectLocaleForProfile(langcode,
+				NS_ConvertUTF8toUCS2(fileStr).get());
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
 #ifdef DEBUG_profile_verbose
@@ -552,7 +605,26 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif
  
     // check for command line arguments for profile manager
-    //    
+    // -lang command
+    rv = cmdLineArgs->GetCmdLineValue(LANG_CMD_LINE_ARG, getter_Copies(cmdResult));
+    if (NS_SUCCEEDED(rv))
+    {
+        if (cmdResult) {
+	    mIsLangSpecified = PR_TRUE;
+            mLangName.AssignWithConversion(cmdResult);
+
+            // update global locale if possible
+            // (in case when user-*.rdf can be updated)
+            // profilemanager will be invoked in the UI language
+            nsresult rv = NS_OK;
+            nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+                do_GetService(kChromeRegistryCID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+                rv = chromeRegistry->SelectLocale(mLangName.GetUnicode(), PR_FALSE);
+            }
+        }
+    }
+
     // -P command line option works this way:
     // apprunner -P profilename 
     // runs the app using the profile <profilename> 
@@ -1310,6 +1382,10 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
             const char* fileStr = fileURL.GetURLString();
             rv = chromeRegistry->SelectLocaleForProfile(langcode, 
                                                         NS_ConvertUTF8toUCS2(fileStr).get());
+            // Remeber which profile has been created with UI language
+            // didn't use gProfileDataAccess because just needed one time
+            nsCStringKey key((const char *)pathBuf);
+            gLangProfiles->Put(&key, (void*)PR_TRUE);
         }
     }
     // Copy contents from defaults folder.

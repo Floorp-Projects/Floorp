@@ -73,6 +73,9 @@ private:
     PRBool mProfileChangeVetoed;
 
     PRBool mCurrentProfileAvailable;
+
+    PRBool mIsLangSpecified;
+    nsAutoString mLangName;
     
 public:
     nsProfile();
