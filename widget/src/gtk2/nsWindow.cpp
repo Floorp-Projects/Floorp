@@ -180,24 +180,23 @@ nsWeakPtr                     gRollupWindow;
 
 #ifdef USE_XIM
 
-struct nsXICLookupEntry {
-    PLDHashEntryHdr mKeyHash;
-    nsWindow*   mShellWindow;
-    GtkIMContext* mXIC;
-};
+static nsWindow    *gIMEFocusWindow = NULL;
+static GdkEventKey *gKeyEvent = NULL;
+static PRBool       gKeyEventCommitted = PR_FALSE;
+static PRBool       gKeyEventChanged = PR_FALSE;
 
-PLDHashTable nsWindow::gXICLookupTable;
-
-static void IM_commit_cb              (GtkIMContext *context,
-                                       const gchar *str,
-                                       nsWindow *window);
-static void IM_preedit_changed_cb     (GtkIMContext *context,
-                                       nsWindow *window);
-static void IMSetTextRange            (const PRInt32 aLen,
+static void IM_commit_cb              (GtkIMContext *aContext,
+                                       const gchar *aString,
+                                       nsWindow *aWindow);
+static void IM_preedit_changed_cb     (GtkIMContext *aContext,
+                                       nsWindow *aWindow);
+static void IM_set_text_range         (const PRInt32 aLen,
                                        const gchar *aPreeditString,
                                        const PangoAttrList *aFeedback,
                                        PRUint32 *aTextRangeListLengthResult,
                                        nsTextRangeArray *aTextRangeListResult);
+
+static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
 
 // If after selecting profile window, the startup fail, please refer to
 // http://bugzilla.gnome.org/show_bug.cgi?id=88940
@@ -245,72 +244,14 @@ nsWindow::nsWindow()
     mDragMotionTimerID = 0;
 
 #ifdef USE_XIM
-    if (gXICLookupTable.ops == NULL) {
-        PL_DHashTableInit(&gXICLookupTable, PL_DHashGetStubOps(), nsnull,
-            sizeof(nsXICLookupEntry), PL_DHASH_MIN_SIZE);
-    }
-    mIMEShellWindow = nsnull;
+    mIMContext = nsnull;
+    mComposingText = PR_FALSE;
 #endif
 
 #ifdef ACCESSIBILITY
     mTopLevelAccessible  = nsnull;
 #endif
 }
-
-#ifdef USE_XIM
-void
-nsWindow::IMEGetShellWindow(void)
-{
-    GtkWidget* top_window = nsnull;
-    GetToplevelWidget(&top_window);
-    if (top_window) {
-        mIMEShellWindow = get_window_for_gtk_widget(top_window);
-    }
-}
-
-GtkIMContext*
-nsWindow::IMEGetContext()
-{
-    if (!mIMEShellWindow) {
-        return NULL;
-    }
-    PLDHashEntryHdr* hash_entry;
-    nsXICLookupEntry* entry;
-
-    hash_entry = PL_DHashTableOperate(&gXICLookupTable,
-                                      mIMEShellWindow, PL_DHASH_LOOKUP);
-
-    if (hash_entry) {
-        entry = NS_REINTERPRET_CAST(nsXICLookupEntry *, hash_entry);
-        if (entry->mXIC) {
-            return entry->mXIC;
-        }
-    }
-    return NULL;
-}
-
-void
-nsWindow::IMECreateContext(GdkWindow* aGdkWindow)
-{
-    PLDHashEntryHdr* hash_entry;
-    nsXICLookupEntry* entry;
-    GtkIMContext *im = gtk_im_multicontext_new();
-    if (im) {
-        hash_entry = PL_DHashTableOperate(&gXICLookupTable, this, PL_DHASH_ADD);
-        if (hash_entry) {
-            entry = NS_REINTERPRET_CAST(nsXICLookupEntry *, hash_entry);
-            entry->mShellWindow = this;
-            entry->mXIC = im;
-        }
-        gtk_im_context_set_client_window(im, aGdkWindow);
-        g_signal_connect(G_OBJECT(im), "commit",
-                         G_CALLBACK(IM_commit_cb), this);
-        g_signal_connect(G_OBJECT(im), "preedit_changed",
-                         G_CALLBACK(IM_preedit_changed_cb), this);
-        this->mIMEShellWindow = this;
-    }
-}
-#endif
 
 nsWindow::~nsWindow()
 {
@@ -397,22 +338,7 @@ nsWindow::Destroy(void)
     }
 
 #ifdef USE_XIM
-    GtkIMContext *im = IMEGetContext();
-    // If this is the focus window and we have an IM context we need
-    // to unset the focus on this window before we destroy the window.
-    if (im && gFocusWindow == this) {
-        LOGFOCUS(("  gtk_im_context_focus_out() from Destroy()\n"));
-        gtk_im_context_focus_out(im);
-    }
-
-    // if shell, delete GtkIMContext
-    if (im && mShell) {
-        gtk_im_context_reset(im);
-        PL_DHashTableOperate(&gXICLookupTable, this, PL_DHASH_REMOVE);
-        g_object_unref(G_OBJECT(im));
-    }
-
-    mIMEShellWindow = nsnull;
+    IMEDestroyContext();
 #endif
 
     // make sure that we remove ourself as the focus window
@@ -656,21 +582,26 @@ nsWindow::SetFocus(PRBool aRaise)
         return NS_OK;
     }
 
-    // If there is already a focued child window, dispatch a LOSTFOCUS
+    // If there is already a focused child window, dispatch a LOSTFOCUS
     // event from that widget and unset its got focus flag.
-    if (gFocusWindow)
+    if (gFocusWindow) {
+#ifdef USE_XIM
+        // If the focus window and this window share the same input
+        // context we don't have to change the focus of the IME
+        // context
+        if (IM_get_input_context(this->mDrawingarea) !=
+            IM_get_input_context(gFocusWindow->mDrawingarea))
+            gFocusWindow->IMELoseFocus();
+#endif
         gFocusWindow->LoseFocus();
+    }
 
     // Set this window to be the focused child window, update our has
     // focus flag and dispatch a GOTFOCUS event.
     gFocusWindow = this;
 
 #ifdef USE_XIM
-    GtkIMContext *im = IMEGetContext();
-    if (im && !mIsTopLevel) {
-        LOGFOCUS(("  gtk_im_context_focus_in()\n"));
-        gtk_im_context_focus_in(im);
-    }
+    IMESetFocus();
 #endif
 
     LOGFOCUS(("  widget now has focus - dispatching events [%p]\n", 
@@ -1165,18 +1096,6 @@ nsWindow::GetAttention()
 void
 nsWindow::LoseFocus(void)
 {
-#ifdef USE_XIM
-    GtkIMContext *im = IMEGetContext();
-    if (im && !mIsTopLevel) {
-        LOGFOCUS(("  gtk_im_context_focus_out()\n"));
-        gtk_im_context_focus_out(im);
-        IMEComposeStart();
-        IMEComposeText(NULL, 0, NULL, NULL);
-        IMEComposeEnd();
-        LOG(("gtk_im_context_focus_out\n"));
-    }
-#endif
-
     // make sure that we reset our repeat counter so the next keypress
     // for this widget will get the down event
     mInKeyRepeat = PR_FALSE;
@@ -1516,6 +1435,10 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 
  foundit:
 
+#ifdef USE_XIM
+    gFocusWindow->IMELoseFocus();
+#endif
+
     gFocusWindow->LoseFocus();
 
     // We only dispatch a deactivate event if we are a toplevel
@@ -1534,21 +1457,25 @@ gboolean
 nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
+
 #ifdef USE_XIM
-    GtkIMContext *im = IMEGetContext();
-    if (im) {
-        if (gtk_im_context_filter_keypress(im, aEvent)) {
-            LOGFOCUS(("  keypress filtered by XIM\n"));
-            return TRUE;
-        }
-    }
+    // if we are in the middle of composing text, XIM gets to see it
+    // before mozilla does.
+   LOGIM(("key press [%p]: composing %d val %d\n",
+           (void *)this, mComposingText, aEvent->keyval));
+   if (IMEFilterEvent(aEvent))
+       return TRUE;
+   LOGIM(("sending as regular key press event\n"));
 #endif
-    
+
+    nsKeyEvent event;
+    nsEventStatus status;
+
     // work around for annoying things.
-    if (aEvent->keyval == GDK_Tab)
-        if (aEvent->state & GDK_CONTROL_MASK)
-            if (aEvent->state & GDK_MOD1_MASK)
-                return FALSE;
+    if (aEvent->keyval == GDK_Tab && aEvent->state & GDK_CONTROL_MASK &&
+        aEvent->state & GDK_MOD1_MASK) {
+        return TRUE;
+    }
 
     // Don't pass shift, control and alt as key press events
     if (aEvent->keyval == GDK_Shift_L
@@ -1556,9 +1483,9 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         || aEvent->keyval == GDK_Control_L
         || aEvent->keyval == GDK_Control_R
         || aEvent->keyval == GDK_Alt_L
-        || aEvent->keyval == GDK_Alt_R)
+        || aEvent->keyval == GDK_Alt_R) {
         return TRUE;
-
+    }
 
     // If the key repeat flag isn't set then set it so we don't send
     // another key down event on the next key press -- DOM events are
@@ -1568,15 +1495,12 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     if (!mInKeyRepeat) {
         mInKeyRepeat = PR_TRUE;
+
         // send the key down event
-        nsEventStatus status;
-        nsKeyEvent event;
         InitKeyEvent(event, aEvent, NS_KEY_DOWN);
         DispatchEvent(&event, status);
     }
 
-    nsEventStatus status;
-    nsKeyEvent event;
     InitKeyEvent(event, aEvent, NS_KEY_PRESS);
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
@@ -1608,25 +1532,33 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         key_event_to_context_menu_event(&event, &contextMenuEvent);
         DispatchEvent(&contextMenuEvent, status);
     }
-    else
+    else {
         // send the key press event
         DispatchEvent(&event, status);
-    return TRUE;
+    }
+
+    // If the event was consumed, return.
+    LOGIM(("status %d\n", status));
+    if (status == nsEventStatus_eConsumeNoDefault) {
+        LOGIM(("key press consumed\n"));
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 gboolean
 nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
+
 #ifdef USE_XIM
-    GtkIMContext *im = IMEGetContext();
-    if (im) {
-        if (gtk_im_context_filter_keypress(im, aEvent)) {
-            LOGFOCUS(("  keypress filtered by XIM\n"));
-            return TRUE;
-        }
-    }
+    if (IMEFilterEvent(aEvent))
+        return TRUE;
 #endif
+
+    nsKeyEvent event;
+    nsEventStatus status;
     
     // unset the repeat flag
     mInKeyRepeat = PR_FALSE;
@@ -1638,16 +1570,21 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         || aEvent->keyval == GDK_Control_L
         || aEvent->keyval == GDK_Control_R
         || aEvent->keyval == GDK_Alt_L
-        || aEvent->keyval == GDK_Alt_R)
+        || aEvent->keyval == GDK_Alt_R) {
         return TRUE;
+    }
 
-    nsKeyEvent event;
     InitKeyEvent(event, aEvent, NS_KEY_UP);
 
-    nsEventStatus status;
     DispatchEvent(&event, status);
 
-    return TRUE;
+    // If the event was consumed, return.
+    if (status == nsEventStatus_eConsumeNoDefault) {
+        LOGIM(("key release consumed\n"));
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 void
@@ -1659,7 +1596,6 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
     // check to see if we should rollup
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
                          PR_TRUE)) {
-        printf("ignoring event\n");
         return;
     }
 
@@ -2134,8 +2070,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         else { // must be eWindowType_toplevel
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             SetDefaultIcon();
+
             // each toplevel window gets its own window group
             mWindowGroup = gtk_window_group_new();
+
             // and add ourselves to the window group
             LOG(("adding window %p to new group %p\n",
                  (void *)mShell, (void *)mWindowGroup));
@@ -2165,10 +2103,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
             mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
         }
-#ifdef USE_XIM
-        // get mIMEShellWindow and keep it
-        IMEGetShellWindow();
-#endif
     }
         break;
     default:
@@ -2213,13 +2147,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                          G_CALLBACK(property_notify_event_cb), NULL);
     }
 
-#ifdef USE_XIM
-    if (mShell) {
-        // init GtkIMContext for shell
-        IMECreateContext(mShell->window);
-    }
-#endif
-
     if (mContainer) {
         g_signal_connect_after(G_OBJECT(mContainer), "size_allocate",
                                G_CALLBACK(size_allocate_cb), NULL);
@@ -2262,6 +2189,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                          G_CALLBACK(drag_drop_event_cb), NULL);
         g_signal_connect(G_OBJECT(mContainer), "drag_data_received",
                          G_CALLBACK(drag_data_received_event_cb), NULL);
+
+#ifdef USE_XIM
+        // We create input contexts for all containers, except for
+        // toplevel popup windows
+        if (mWindowType != eWindowType_popup)
+            IMECreateContext();
+#endif
     }
 
     LOG(("nsWindow [%p]\n", (void *)this));
@@ -3666,8 +3600,59 @@ nsChildWindow::~nsChildWindow()
 #ifdef USE_XIM
 
 void
+nsWindow::IMEDestroyContext(void)
+{
+    // If this is the focus window and we have an IM context we need
+    // to unset the focus on this window before we destroy the window.
+    if (gIMEFocusWindow == this) {
+        gIMEFocusWindow->IMELoseFocus();
+        gIMEFocusWindow = nsnull;
+    }
+
+    if (!mIMContext)
+        return;
+
+    gtk_im_context_set_client_window(mIMContext, NULL);
+    g_object_unref(G_OBJECT(mIMContext));
+    mIMContext = nsnull;
+}
+
+
+void
+nsWindow::IMESetFocus(void)
+{
+    LOGIM(("IMESetFocus %p\n", (void *)this));
+    GtkIMContext *im = IMEGetContext();
+    if (!im)
+        return;
+
+    gtk_im_context_focus_in(im);
+    gIMEFocusWindow = this;
+}
+
+void
+nsWindow::IMELoseFocus(void)
+{
+    LOGIM(("IMELoseFocus %p\n", (void *)this));
+    GtkIMContext *im = IMEGetContext();
+    if (!im)
+        return;
+
+    gtk_im_context_focus_out(im);
+}
+
+void
 nsWindow::IMEComposeStart(void)
 {
+    LOGIM(("IMEComposeStart [%p]\n", (void *)this));
+
+    if (mComposingText) {
+        NS_WARNING("tried to re-start text composition\n");
+        return;
+    }
+
+    mComposingText = PR_TRUE;
+
     nsCompositionEvent compEvent;
 
     compEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
@@ -3686,6 +3671,11 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
                           const gchar *aPreeditString,
                           const PangoAttrList *aFeedback)
 {
+    // Send our start composition event if we need to
+    if (!mComposingText)
+        IMEComposeStart();
+
+    LOGIM(("IMEComposeText\n"));
     nsTextEvent textEvent;
 
     textEvent.time = 0;
@@ -3706,9 +3696,9 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
         textEvent.rangeArray = nsnull;
 
         if (aPreeditString && aFeedback && (aLen > 0)) {
-            IMSetTextRange(aLen, aPreeditString, aFeedback,
-                           &(textEvent.rangeCount),
-                           &(textEvent.rangeArray));
+            IM_set_text_range(aLen, aPreeditString, aFeedback,
+                              &(textEvent.rangeCount),
+                              &(textEvent.rangeArray));
         }
     }
 
@@ -3723,6 +3713,15 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
 void
 nsWindow::IMEComposeEnd(void)
 {
+    LOGIM(("IMEComposeEnd [%p]\n", (void *)this));
+
+    if (!mComposingText) {
+        NS_WARNING("tried to end text composition before it was started");
+        return;
+    }
+
+    mComposingText = PR_FALSE;
+
     nsCompositionEvent compEvent;
     compEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
     compEvent.point.x = compEvent.point.y = 0;
@@ -3734,31 +3733,90 @@ nsWindow::IMEComposeEnd(void)
     DispatchEvent(&compEvent, status);
 }
 
+GtkIMContext*
+nsWindow::IMEGetContext()
+{
+    return IM_get_input_context(this->mDrawingarea);
+}
+
+void
+nsWindow::IMECreateContext(void)
+{
+    GtkIMContext *im = gtk_im_multicontext_new();
+    if (!im)
+        return;
+
+    gtk_im_context_set_client_window(im, GTK_WIDGET(mContainer)->window);
+
+    g_signal_connect(G_OBJECT(im), "preedit_changed",
+                     G_CALLBACK(IM_preedit_changed_cb), this);
+    g_signal_connect(G_OBJECT(im), "commit",
+                     G_CALLBACK(IM_commit_cb), this);
+
+    mIMContext = im;
+}
+
+PRBool
+nsWindow::IMEFilterEvent(GdkEventKey *aEvent) 
+{
+    GtkIMContext *im = IMEGetContext();
+    if (!im)
+        return FALSE;
+
+    gKeyEvent = aEvent;
+    gboolean filtered = gtk_im_context_filter_keypress(im, aEvent);
+    gKeyEvent = NULL;
+
+    LOGIM(("key filtered: %d committed: %d changed: %d\n",
+           filtered, gKeyEventCommitted, gKeyEventChanged));
+
+    // We filter the key event if the event was not committed (because
+    // it's probably part of a composition) or if the key event was
+    // committed _and_ changed.  This way we still let key press
+    // events go through as simple key press events instead of
+    // composed characters.
+
+    PRBool retval = PR_FALSE;
+    if (filtered &&
+        (!gKeyEventCommitted || (gKeyEventCommitted && gKeyEventChanged)))
+        retval = PR_TRUE;
+
+    gKeyEventChanged = PR_FALSE;
+    gKeyEventCommitted = PR_FALSE;
+    gKeyEventChanged = PR_FALSE;
+
+    return retval;
+}
+
 /* static */
 void
-IM_preedit_changed_cb(GtkIMContext *context,
-                      nsWindow     *awindow)
+IM_preedit_changed_cb(GtkIMContext *aContext,
+                      nsWindow     *aWindow)
 {
     gchar *preedit_string;
     gint cursor_pos;
     PangoAttrList *feedback_list;
 
-    // call for focused window
-    nsWindow *window = gFocusWindow;
-    if (!window) return;
+    // if gFocusWindow is null, use the last focused gIMEFocusWindow
+    nsWindow *window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
+    if (!window)
+        return;
   
     // Should use cursor_pos ?
-    gtk_im_context_get_preedit_string(context, &preedit_string,
+    gtk_im_context_get_preedit_string(aContext, &preedit_string,
                                       &feedback_list, &cursor_pos);
   
     LOGIM(("preedit string is: %s   length is: %d\n",
            preedit_string, strlen(preedit_string)));
 
     if (!preedit_string || !*preedit_string) {
-        window->IMEComposeStart();
+        LOGIM(("preedit ended\n"));
         window->IMEComposeText(NULL, 0, NULL, NULL);
+        window->IMEComposeEnd();
         return;
     }
+
+    LOGIM(("preedit len %d\n", strlen(preedit_string)));
 
     gunichar2 * uniStr;
     glong uniStrLen;
@@ -3775,47 +3833,68 @@ IM_preedit_changed_cb(GtkIMContext *context,
         return;
     }
 
-    if (window && (uniStrLen > 0)) {
-        window->IMEComposeStart();
+    if (uniStrLen) {
         window->IMEComposeText(NS_STATIC_CAST(const PRUnichar *, uniStr),
                                uniStrLen, preedit_string, feedback_list);
     }
 
     g_free(preedit_string);
     g_free(uniStr);
+
     if (feedback_list)
         pango_attr_list_unref(feedback_list);
 }
 
 /* static */
 void
-IM_commit_cb (GtkIMContext *context,
-              const gchar  *utf8_str,
-              nsWindow   *awindow)
+IM_commit_cb (GtkIMContext *aContext,
+              const gchar  *aUtf8_str,
+              nsWindow     *aWindow)
 {
-    gunichar2 * uniStr;
+    gunichar2 *uniStr;
     glong uniStrLen;
 
-    // call for focused window
-    nsWindow *window = gFocusWindow;
-    if (!window) return;
+    LOGIM(("IM_commit_cb\n"));
+
+    gKeyEventCommitted = PR_TRUE;
+
+    // if gFocusWindow is null, use the last focused gIMEFocusWindow
+    nsWindow *window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
+
+    if (!window)
+        return;
+
+    /* If IME doesn't change they keyevent that generated this commit,
+       don't send it through XIM - just send it as a normal key press
+       event. */
+
+    if (gKeyEvent) {
+        char keyval_utf8[8]; /* should have at least 6 bytes of space */
+        gint keyval_utf8_len;
+        guint32 keyval_unicode;
+
+        keyval_unicode = gdk_keyval_to_unicode(gKeyEvent->keyval);
+        keyval_utf8_len = g_unichar_to_utf8(keyval_unicode, keyval_utf8);
+        keyval_utf8[keyval_utf8_len] = '\0';
+
+        if (!strcmp(aUtf8_str, keyval_utf8)) {
+            gKeyEventChanged = PR_FALSE;
+            return;
+        }
+    }
+
+    gKeyEventChanged = PR_TRUE;
 
     uniStr = NULL;
     uniStrLen = 0;
-    uniStr = g_utf8_to_utf16(utf8_str, -1, NULL, &uniStrLen, NULL);
-
-    // Will free it in call function, don't need
-    // g_free((void *)utf8_str));
-
-    LOGIM(("IM_commit_cb\n"));
+    uniStr = g_utf8_to_utf16(aUtf8_str, -1, NULL, &uniStrLen, NULL);
 
     if (!uniStr) {
         LOGIM(("utf80utf16 string tranfer failed!\n"));
         return;
     }
 
-    if (window && (uniStrLen > 0)) {
-        window->IMEComposeStart();
+    if (uniStrLen) {
         window->IMEComposeText((const PRUnichar *)uniStr,
                                (PRInt32)uniStrLen, NULL, NULL);
         window->IMEComposeEnd();
@@ -3834,11 +3913,11 @@ IM_commit_cb (GtkIMContext *context,
 
 /* static */
 void
-IMSetTextRange (const PRInt32 aLen,
-                const gchar *aPreeditString,
-                const PangoAttrList *aFeedback,
-                PRUint32 *aTextRangeListLengthResult,
-                nsTextRangeArray *aTextRangeListResult)
+IM_set_text_range(const PRInt32 aLen,
+                  const gchar *aPreeditString,
+                  const PangoAttrList *aFeedback,
+                  PRUint32 *aTextRangeListLengthResult,
+                  nsTextRangeArray *aTextRangeListResult)
 {
     if (aLen == 0) {
         aTextRangeListLengthResult = 0;
@@ -3941,6 +4020,18 @@ IMSetTextRange (const PRInt32 aLen,
    *aTextRangeListLengthResult = count + 1;
 
    pango_attr_iterator_destroy(aFeedbackIterator);
+}
+
+/* static */
+GtkIMContext *
+IM_get_input_context(MozDrawingarea *aArea)
+{
+    GtkWidget *owningWidget =
+        get_gtk_widget_for_gdk_window(aArea->inner_window);
+
+    nsWindow *owningWindow = get_window_for_gtk_widget(owningWidget);
+
+    return owningWindow->mIMContext;
 }
 
 #endif
