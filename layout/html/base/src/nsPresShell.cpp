@@ -5774,8 +5774,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     }
     mIsReflowing = PR_FALSE;
 
-    DoneRemovingReflowCommands();
-
     if (aInterruptible) {
       // process the timeout reflow commands completely
       // printf("timeout reflows=%d \n", mTimeoutReflowCommands.Count());
@@ -5829,6 +5827,10 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       }
     }
 #endif
+
+    // If there are no more reflow commands in the queue, we'll want
+    // to remove the ``dummy request''.
+    DoneRemovingReflowCommands();
   }
   
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
@@ -5959,9 +5961,11 @@ PresShell::ReflowCommandAdded(nsIReflowCommand* aRC)
 
         nsCOMPtr<nsIAtom> type;
         target->GetFrameType(getter_AddRefs(type));
+        NS_ASSERTION(type, "frame didn't override GetFrameType()");
 
-        nsAutoString typeStr;
-        type->ToString(typeStr);
+        nsAutoString typeStr(NS_LITERAL_STRING("unknown"));
+        if (type)
+          type->ToString(typeStr);
 
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("presshell=%p, ReflowCommandAdded(%p) target=%p[%s] mRCCreatedDuringLoad=%d\n",
