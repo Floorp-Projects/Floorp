@@ -353,7 +353,7 @@ void
 CRDFPushButton :: FindTooltipForMouseLocation ( const EventRecord& inMacEvent, StringPtr outTip )
 {
 	char* tipText = NULL;
-	PRBool success = HT_GetTemplateData ( HTNode(), gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &tipText );
+	PRBool success = HT_GetNodeData ( HTNode(), gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &tipText );
 	if ( success && tipText ) {
 		outTip[0] = strlen(tipText);
 		strcpy ( (char*) &outTip[1], tipText );

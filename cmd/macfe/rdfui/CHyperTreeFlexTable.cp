@@ -162,7 +162,7 @@ CHyperTreeFlexTable :: GetMainRowText( TableIndexT inRow, char* outText, UInt16 
 	Assert_(header != NULL);
 	CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(FindTitleColumnID()-1);	// GCI() is 0-based
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inRow) );
-	if ( node && HT_GetTemplateData(node, info.token, info.tokenType, &data) ) {
+	if ( node && HT_GetNodeData(node, info.token, info.tokenType, &data) ) {
 		char* title = static_cast<char*>(data);
 		strcpy ( outText, title );
 	}
@@ -403,7 +403,7 @@ CHyperTreeFlexTable :: DrawIconsSelf( const STableCell& inCell, IconTransformTyp
 
 	// draw the gif if specified, otherwise draw the normal way.
 	char* url = NULL;
-	PRBool success = HT_GetTemplateData ( cellNode, gNavCenter->RDF_smallIcon, HT_COLUMN_STRING, &url );
+	PRBool success = HT_GetNodeData ( cellNode, gNavCenter->RDF_smallIcon, HT_COLUMN_STRING, &url );
 	if ( success && url ) {
 		
 		// extract the image drawing class out of the HT node. If one is not there yet,
@@ -454,7 +454,7 @@ CHyperTreeFlexTable :: DrawSelf ( )
 	size_t viewHeight = max(mImageSize.height, static_cast<Int32>(mFrameSize.height));
 	if ( topNode ) {
 		char* url = NULL;
-		PRBool success = HT_GetTemplateData ( topNode, gNavCenter->viewBGURL, HT_COLUMN_STRING, &url );
+		PRBool success = HT_GetNodeData ( topNode, gNavCenter->viewBGURL, HT_COLUMN_STRING, &url );
 		if ( success && url ) {
 			// draw the background image tiled to fill the whole pane
 			mHasBackgroundImage = true;
@@ -574,7 +574,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 			void* data;
 			char* str;
 			Rect localRect = inLocalRect;
-			if (HT_GetTemplateData(node, info.token, info.tokenType, &data) && data)
+			if (HT_GetNodeData(node, info.token, info.tokenType, &data) && data)
 			{
 				switch (info.tokenType) {
 					case HT_COLUMN_STRING:
@@ -1515,7 +1515,7 @@ CHyperTreeFlexTable :: CalcToolTipText( const STableCell& inCell,
 		
 		HT_Resource node = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
 		void* data;
-		if ( HT_GetTemplateData(node, info.token, info.tokenType, &data) && data ) {
+		if ( HT_GetNodeData(node, info.token, info.tokenType, &data) && data ) {
 			switch (info.tokenType) {
 				case HT_COLUMN_STRING:
 					if ( ! HT_IsSeparator(node) ) {
