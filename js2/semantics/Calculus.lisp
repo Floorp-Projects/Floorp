@@ -66,8 +66,30 @@
 #+mcl (dolist (indent-spec '((? . 1) (/*/ . 1) (lisp-call . 3) (throw-error . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (assert . 1) (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
-                             (new . 1) (set-field . 1) (list-set-of . 1) (:narrow . 1) (:select . 1)))
+                             (new . 1) (set-field . 1) (list-set-of . 1) (%list-set-of . 1) (:narrow . 1) (:select . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
+
+
+; Return x/y, ensuring that it is an integer.
+(defun int/ (x y)
+  (let ((q (/ x y)))
+    (if (integerp q)
+      q
+      (error "int/ must produce an integer"))))
+
+
+; Return the floor of log10 of rational value r
+(defun floor-log10 (r)
+  (cond
+   ((or (not (rationalp r)) (<= r 0)) (error "Bad argument ~S to floor-log10" r))
+   ((>= r 1)
+    (do ((result 0 (1+ result)))
+        ((< r 10) result)
+      (setq r (floor r 10))))
+   (t
+    (do ((result 0 (1- result)))
+        ((>= r 1) result)
+      (setq r (* r 10))))))
 
 
 ; Return the boolean exclusive or of the arguments.
@@ -354,19 +376,20 @@
     (* sign n)))
 
 
-; The number x should not be a non-zero floating-point number that uses the given exponent-char when
+; The number x should be a positive floating-point number that uses the given exponent-char when
 ; printed in exponential notation.
-; Return three values:
-;   A sign, which is either nil or "-";
+; Return two values:
 ;   A significand s, expressed as a string of decimal digits, the last of which is nonzero;
-;   An exponent n, such that s*10^(n-length(s)) is the absolute value of the original number.
+;   An exponent e, such that s*10^(e+1-length(s)), when converted to x's type, is the original number x.
 ;
 ; ***** Assumes that Common Lisp implements proper rounding and round-tripping when formatting a floating-point number.
-(defun decompose-float (x exponent-char)
-  (let ((sign nil))
-    (when (minusp x)
-      (setq sign "-")
-      (setq x (- x)))
+(defun decompose-positive-float (x exponent-char)
+  (unless (> x 0)
+    (error "decompose-positive-float can only be called on a positive number"))
+  (cond
+   ((eql x 5e-324) (values "5" -324))
+   ((eql x #+mcl 1s-45 #-mcl 1f-45) (values "1" -45))
+   (t
     (let* ((str (format nil "~E" x))
            (p (position exponent-char str)))
       (unless (and p (eql (char str 1) #\.))
@@ -374,64 +397,45 @@
       (let ((s-first (subseq str 0 1))
             (s-rest (subseq str 2 p)))
         (values
-         sign
          (if (string= s-rest "0") s-first (concatenate 'string s-first s-rest))
-         (1+ (string-to-integer (subseq str (1+ p)))))))))
+         (string-to-integer (subseq str (1+ p)))))))))
 
 
-; The number x should not be a non-zero floating-point number that uses the given exponent-char when
+; The number x should be a positive floating-point number that uses the given exponent-char when
 ; printed in exponential notation.
-; Return three values:
-;   A sign, which is either nil or "-";
+; Return two values:
 ;   A significand s, expressed as a string of decimal digits possibly containing a decimal point;
 ;   An exponent e, such that s*10^e is the absolute value of the original number.  e is nil if it would be zero.
-; The number is expressed with e being nil if its absolute value is between 1e-6 inclusive and 1e21 exclusive.
-; If always-show-point is true, then s always contains a decimal point with at least one digit after it.
-; The smallest denormalized numbers are special-cased not to show a decimal point.
-(defun float-to-string-components (x exponent-char always-show-point)
-  (cond
-   ((eql x 5e-324) (values nil "5" -324))
-   ((eql x -5e-324) (values "-" "5" -324))
-   ((eql x #+mcl 1s-45 #-mcl 1f-45) (values nil "1" -45))
-   ((eql x #+mcl -1s-45 #-mcl -1f-45) (values "-" "1" -45))
-   (t
-    (multiple-value-bind (sign s n) (decompose-float x exponent-char)
-      (let ((k (length s))
-            (e nil))
-        (cond
-         ((<= k n 21)
-          (setq s (concatenate 'string s (make-string (- n k) :initial-element #\0)))
-          (when always-show-point
-            (setq s (concatenate 'string s ".0"))))
-         ((<= 1 n 21)
-          (setq s (concatenate 'string (subseq s 0 n) "." (subseq s n))))
-         ((<= -5 n 0)
-          (setq s (concatenate 'string "0." (make-string (- n) :initial-element #\0) s)))
-         ((= k 1)
-          (setq e (1- n))
-          (when always-show-point
-            (setq s (concatenate 'string s ".0"))))
-         (t
-          (setq e (1- n))
-          (setq s (concatenate 'string (subseq s 0 1) "." (subseq s 1)))))
-        (values sign s e))))))
+; The number is expressed with e being nil if its absolute value is between 1e-6 inclusive and 1e21 exclusive
+; unless always-show-exponent is true.
+; If always-show-point is true, then s always contains either an exponent or a decimal point with at least one digit after it.
+(defun positive-float-to-string-components (x exponent-char always-show-point always-show-exponent)
+  (multiple-value-bind (s e) (decompose-positive-float x exponent-char)
+    (let ((k (length s)))
+      (cond
+       ((and (<= k (1+ e) 21) (not always-show-exponent))
+        (setq s (concatenate 'string s (make-string (- (1+ e) k) :initial-element #\0)))
+        (when always-show-point
+          (setq s (concatenate 'string s ".0")))
+        (setq e nil))
+       ((and (<= 0 e 20) (not always-show-exponent))
+        (setq s (concatenate 'string (subseq s 0 (1+ e)) "." (subseq s (1+ e))))
+        (setq e nil))
+       ((and (<= -6 e -1) (not always-show-exponent))
+        (setq s (concatenate 'string "0." (make-string (- (1+ e)) :initial-element #\0) s))
+        (setq e nil))
+       ((= k 1))
+       (t (setq s (concatenate 'string (subseq s 0 1) "." (subseq s 1)))))
+      (values s e))))
 
 
-; Return x converted to a string using ECMAScript's ToString rules.
-(defun float64-to-string (x)
-  (case x
-    (:nan64 "NaN")
-    (:+infinity64 "Infinity")
-    (:-infinity64 "-Infinity")
-    ((:+zero64 :-zero64) "0")
-    (t (assert (finite64? x))
-       (with-standard-io-syntax
-         (multiple-value-bind (sign s e) (float-to-string-components x *float64-exponent-char* nil)
-           (when sign
-             (setq s (concatenate 'string "-" s)))
-           (when e
-             (setq s (concatenate 'string s (format nil "e~@D" e))))
-           s)))))
+; The number x should be a positive finite64.
+; Return two values:
+;   A significand s, expressed as a string of decimal digits, the last of which is nonzero;
+;   An exponent e, such that s*10^(e+1-length(s)), when converted to a float64, is the original number x.
+(defun decompose-positive-float64 (x)
+  (decompose-positive-float x *float64-exponent-char*))
+
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -639,21 +643,45 @@
     (* sign n)))
 
 
-; Return x converted to a string using ECMAScript's ToString rules.
-(defun float32-to-string (x)
-  (case x
-    (:nan32 "NaN")
-    (:+infinity32 "Infinity")
-    (:-infinity32 "-Infinity")
-    ((:+zero32 :-zero32) "0")
-    (t (assert (finite32? x))
-       (with-standard-io-syntax
-         (multiple-value-bind (sign s e) (float-to-string-components x *float32-exponent-char* nil)
-           (when sign
-             (setq s (concatenate 'string "-" s)))
-           (when e
-             (setq s (concatenate 'string s (format nil "e~@D" e))))
-           s)))))
+; The number x should be a positive finite32.
+; Return two values:
+;   A significand s, expressed as a string of decimal digits, the last of which is nonzero;
+;   An exponent e, such that s*10^(e+1-length(s)), when converted to a float32, is the original number x.
+(defun decompose-positive-float32 (x)
+  (decompose-positive-float x *float32-exponent-char*))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; CHARACTER UTILITIES
+
+(defun integer-to-supplementary-char (code-point)
+  (unless (<= #x10000 code-point #x10FFFF)
+    (error "Bad Unicode supplementary-char code point ~S" code-point))
+  (cons :supplementary-char code-point))
+
+(defun integer-to-char21 (code-point)
+  (unless (<= 0 code-point #x10FFFF)
+    (error "Bad Unicode code point ~S" code-point))
+  (if (<= code-point #xFFFF)
+    (code-char code-point)
+    (cons :supplementary-char code-point)))
+
+(defun char21-to-integer (ch)
+  (cond
+   ((characterp ch) (char-code ch))
+   ((eq (car ch) :supplementary-char) (cdr ch))))
+
+(defun char21< (a b)
+  (< (char21-to-integer a) (char21-to-integer b)))
+
+(defun char21<= (a b)
+  (<= (char21-to-integer a) (char21-to-integer b)))
+
+(defun char21> (a b)
+  (> (char21-to-integer a) (char21-to-integer b)))
+
+(defun char21>= (a b)
+  (>= (char21-to-integer a) (char21-to-integer b)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1013,7 +1041,9 @@
   (rational-type nil :type (or null type))           ;Type used for rational numbers
   (finite32-type nil :type (or null type))           ;Type used for nonzero finite single-precision floating-point numbers
   (finite64-type nil :type (or null type))           ;Type used for nonzero finite double-precision floating-point numbers
-  (char16-type nil :type (or null type))             ;Type used for characters
+  (char16-type nil :type (or null type))             ;Type used for Unicode code units and BMP code points
+  (supplementary-char-type nil :type (or null type)) ;Type used for Unicode supplementary code points
+  (char21-type nil :type (or null type))             ;Type used for Unicode code points
   (string-type nil :type (or null type))             ;Type used for strings (vectors of char16s)
   (denormalized-false-type nil :type (or null type)) ;Type (denormalized-tag false)
   (denormalized-true-type nil :type (or null type))  ;Type (denormalized-tag true)
@@ -1459,6 +1489,7 @@
            :finite32         ;nil            ;nil    ;All non-zero finite 32-bit single-precision floating-point numbers
            :finite64         ;nil            ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
            :char16           ;nil            ;nil
+           :supplementary-char ;nil          ;nil
            :->               ;nil            ;(result-type arg1-type arg2-type ... argn-type)
            :string           ;nil            ;(char16)
            :vector           ;nil            ;(element-type)
@@ -1478,7 +1509,7 @@
 ;
 ;A union type must have:
 ;  at least two types
-;  only types with kinds :integer, :rational, :finite32, :finite64, :char16, :->, :string, :vector, :list-set, or :tag
+;  only types with kinds :integer, :rational, :finite32, :finite64, :char16, :supplementary-char, :->, :string, :vector, :list-set, or :tag
 ;  no type that is a duplicate or subtype of another type in the union
 ;  at most one type each with kind :->
 ;  at most one type each with kind :vector or :list-set; furthermore, if such a type is present, then only keyword :tag types may be present
@@ -1496,7 +1527,10 @@
   ;                                                ;  set of included subsets represented as a sorted list of integers for restricted-set
   (parameters nil :type list :read-only t)         ;List of parameter types (either types or symbols if forward-referenced) describing a compound type
   (=-name nil :type symbol)                        ;Lazily computed name of a function that compares two values of this type for equality; nil if not known yet
-  (/=-name nil :type symbol))                      ;Name of a function that complements = or nil if none
+  (/=-name nil :type symbol)                       ;Name of a function that complements = or nil if none
+  (order-alist nil)                                ;Either nil or an association list ((< . t<) (> . t>) (<= . t<=) (>= . t>=)) where the t's are order functions for this type
+  (range-set-encode nil :type symbol)              ;Either nil or the name of a function that converts an instance of this type to an integer for storage in a range-set
+  (range-set-decode nil :type symbol))             ;Either nil or the name of a function that reverses the range-set-encode conversion
 
 
 (declaim (inline make-->-type))
@@ -1716,7 +1750,7 @@
                   (if (or (member type supertype-types) (member (world-rational-type world) supertype-types))
                     code
                     (type-mismatch)))
-                 ((:rational :finite32 :finite64 :char16 :-> :string :tag)
+                 ((:rational :finite32 :finite64 :char16 :supplementary-char :-> :string :tag)
                   (if (member type supertype-types)
                     code
                     (type-mismatch)))
@@ -1729,7 +1763,7 @@
                   (dolist (type-type (type-parameters type))
                     (unless (case (type-kind type-type)
                               (:integer (or (member type-type supertype-types) (member (world-rational-type world) supertype-types)))
-                              ((:rational :finite32 :finite64 :char16 :-> :string :tag :vector :list-set) (member type-type supertype-types)))
+                              ((:rational :finite32 :finite64 :char16 :supplementary-char :-> :string :tag :vector :list-set) (member type-type supertype-types)))
                       (type-mismatch)))
                   code)
                  (t (type-mismatch)))))
@@ -1770,7 +1804,7 @@
 (defun type-to-union (world type)
   (ecase (type-kind type)
     (:boolean (type-parameters (world-boxed-boolean-type world)))
-    ((:integer :rational :finite32 :finite64 :char16 :-> :string :vector :list-set :tag) (list type))
+    ((:integer :rational :finite32 :finite64 :char16 :supplementary-char :-> :string :vector :list-set :tag) (list type))
     (:denormalized-tag (make-tag-type world (type-tag type)))
     (:union (type-parameters type))))
 
@@ -1821,7 +1855,7 @@
 
 
 (defun coercable-to-union-kind (kind)
-  (member kind '(:boolean :integer :rational :finite32 :finite64 :char16 :-> :string :vector :list-set :tag :denormalized-tag :union)))
+  (member kind '(:boolean :integer :rational :finite32 :finite64 :char16 :supplementary-char :-> :string :vector :list-set :tag :denormalized-tag :union)))
 
 
 ; types is a list of distinct, non-overlapping types appropriate for inclusion in a union and
@@ -1998,7 +2032,8 @@
                      (keyword (tag-keyword tag)))
                 (if keyword
                   (push keyword keywords)
-                  (push (tag-name tag) list-tag-names))))))
+                  (push (tag-name tag) list-tag-names))))
+        (:supplementary-char (push :supplementary-char list-tag-names))))
     (when (and has-listp list-tag-names)
       (error "Unable to discriminate among the constituents in the union ~S" types))
     (values
@@ -2065,6 +2100,7 @@
       (:finite32 (write-string "finite32" stream))
       (:finite64 (write-string "finite64" stream))
       (:char16 (write-string "char16" stream))
+      (:supplementary-char (write-string "supplementary-char" stream))
       (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
              (format stream "-> ~@_")
              (pprint-indent :current 0 stream)
@@ -2588,11 +2624,7 @@
     (= (get-type-=-name world type))
     (/= (type-/=-name type))
     ((< > <= >=)
-     (or (cdr (assoc order
-                     (case (type-kind type)
-                       ((:integer :rational) '((< . <) (> . >) (<= . <=) (>= . >=)))
-                       (:char16 '((< . char<) (> . char>) (<= . char<=) (>= . char>=)))
-                       (:string '((< . string<) (> . string>) (<= . string<=) (>= . string>=))))))
+     (or (cdr (assoc order (type-order-alist type)))
          (error "Can't apply ~A to instances of type ~A" order (print-type-to-string type))))))
 
 
@@ -2992,6 +3024,7 @@
     (:finite32 (and (finite32? value) (not (zerop value))))
     (:finite64 (and (finite64? value) (not (zerop value))))
     (:char16 (characterp value))
+    (:supplementary-char (and (consp value) (eq (car value) :supplementary-char) (integerp (cdr value)) (<= #x10000 (cdr value) #x10FFFF)))
     (:-> (functionp value))
     (:string (stringp value))
     (:vector (value-list-has-type value (vector-element-type type) shallow))
@@ -3038,7 +3071,7 @@
     (:void (assert-true (null value))
            (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
-    ((:integer :rational :char16 :->) (write value :stream stream))
+    ((:integer :rational :char16 :supplementary-char :->) (write value :stream stream))
     ((:finite32 :finite64) (write value :stream stream))
     (:string (prin1 value stream))
     (:vector (let ((element-type (vector-element-type type)))
@@ -3049,7 +3082,7 @@
                    (pprint-exit-if-list-exhausted)
                    (format stream " ~:_")))))
     (:list-set (print-set-of-values value (set-element-type type) stream))
-    (:range-set (let ((converter (range-set-out-converter (set-element-type type))))
+    (:range-set (let ((converter (range-set-decode-function (set-element-type type))))
                   (pprint-logical-block (stream value :prefix "{" :suffix "}")
                     (pprint-exit-if-list-exhausted)
                     (loop
@@ -3538,6 +3571,18 @@
      (list 'expr-annotation:constant f32))))
 
 
+; (supplementary-char <integer>)
+; <integer> must be between #x10000 and #x10FFFF.
+(defun scan-supplementary-char (world type-env special-form code-point)
+  (declare (ignore type-env))
+  (unless (and (integerp code-point) (<= #x10000 code-point #x10FFFF))
+    (error "Bad supplementary-char constant ~S" code-point))
+  (values
+   (list 'quote (cons :supplementary-char code-point))
+   (world-supplementary-char-type world)
+   (list 'expr-annotation:special-form special-form code-point)))
+
+
 ;;; Expressions
 
 
@@ -3553,6 +3598,22 @@
        code
        type
        (list* 'expr-annotation:special-form special-form text2)))))
+
+
+; (/*/ <value-expr> . <styled-text>)
+; Evaluate <value-expr>, but depict <styled-text>.
+(defun scan-/*/-condition (world type-env special-form value-expr &rest text)
+  (multiple-value-bind (code annotated-expr true-type-env false-type-env)
+                       (scan-condition world type-env value-expr)
+    (declare (ignore annotated-expr))
+    (when (endp text)
+      (error "/*/ needs a text comment"))
+    (let ((text2 (scan-expressions-in-comment world type-env text)))
+      (values
+       code
+       (list* 'expr-annotation:special-form special-form text2)
+       true-type-env
+       false-type-env))))
 
 
 ; (lisp-call <lisp-function> <arg-exprs> <result-type-expr> . <styled-text>)
@@ -4069,25 +4130,27 @@
 ; expr is the source code of an expression that generates a value of the given element-type.  Return
 ; the source code of an expression that generates the corresponding integer for storage in a range-set of
 ; the given element-type.
-(defun range-set-in-converter-expr (element-type expr)
-  (ecase (type-kind element-type)
-    (:integer expr)
-    (:char16 (list 'char-code expr))))
+(defun range-set-encode-expr (element-type expr)
+  (let ((encode (type-range-set-encode element-type)))
+    (cond
+     ((null encode) (error "Values of type ~S cannot be stored in range-sets" element-type))
+     ((eq encode 'identity) expr)
+     (t (list encode expr)))))
 
 
 ; expr is the source code of an expression that generates an integer.  Return the source code that undoes
-; the transformation done by range-set-in-converter-expr.
-(defun range-set-out-converter-expr (element-type expr)
-  (ecase (type-kind element-type)
-    (:integer expr)
-    (:char16 (list 'code-char expr))))
+; the transformation done by range-set-encode-expr.
+(defun range-set-decode-expr (element-type expr)
+  (let ((decode (type-range-set-decode element-type)))
+    (cond
+     ((null decode) (error "Values of type ~S cannot be stored in range-sets" element-type))
+     ((eq decode 'identity) expr)
+     (t (list decode expr)))))
 
 
 ; Return a function that converts integers to values of the given element-type for retrieval from a range-set.
-(defun range-set-out-converter (element-type)
-  (ecase (type-kind element-type)
-    (:integer #'identity)
-    (:char16 #'code-char)))
+(defun range-set-decode-function (element-type)
+  (symbol-function (type-range-set-decode element-type)))
 
 
 ; (range-set-of <element-type> <element-expr> ... <element-expr>)  ==>
@@ -4113,7 +4176,7 @@
                                    (values nil nil)
                                    (multiple-value-bind (element-code element-annotated-expr)
                                                         (scan-typed-value world type-env element-expr element-type)
-                                     (values (range-set-in-converter-expr element-type element-code)
+                                     (values (range-set-encode-expr element-type element-code)
                                              element-annotated-expr))))
                              (element-exprs)
       (unless high
@@ -4182,7 +4245,7 @@
         (values
          (ecase (type-kind set-type)
            (:list-set (list* 'member elt-code set-code (element-test world elt-type)))
-           (:range-set (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code))
+           (:range-set (list 'intset-member? (range-set-encode-expr elt-type elt-code) set-code))
            ((:bit-set :restricted-set) (list 'logbitp (bit-set-index-code set-type elt-code) set-code)))
          (world-boolean-type world)
          (list 'expr-annotation:special-form special-form :member-10 elt-annotated-expr set-annotated-expr))))))
@@ -4197,7 +4260,7 @@
         (values
          (ecase (type-kind set-type)
            (:list-set (list 'not (list* 'member elt-code set-code (element-test world elt-type))))
-           (:range-set (list 'not (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code)))
+           (:range-set (list 'not (list 'intset-member? (range-set-encode-expr elt-type elt-code) set-code)))
            ((:bit-set :restricted-set) (list 'not (list 'logbitp (bit-set-index-code set-type elt-code) set-code))))
          (world-boolean-type world)
          (list 'expr-annotation:special-form special-form :not-member-10 elt-annotated-expr set-annotated-expr))))))
@@ -4227,7 +4290,7 @@
       (values
        (ecase (type-kind set-type)
          (:list-set (list 'elt-of set-code))
-         (:range-set (range-set-out-converter-expr elt-type (list 'range-set-elt-of set-code)))
+         (:range-set (range-set-decode-expr elt-type (list 'range-set-elt-of set-code)))
          ((:bit-set :restricted-set) (list 'bit-set-elt-of set-code (list 'quote (set-type-keywords set-type)))))
        elt-type
        (list 'expr-annotation:special-form special-form set-annotated-expr)))))
@@ -4268,7 +4331,7 @@
         (values
          (ecase (type-kind set-type)
            (:list-set (list 'unique-elt-of set-code))
-           (:range-set (range-set-out-converter-expr elt-type (list 'range-set-unique-elt-of set-code)))
+           (:range-set (range-set-decode-expr elt-type (list 'range-set-unique-elt-of set-code)))
            ((:bit-set :restricted-set) (list 'bit-set-unique-elt-of set-code (list 'quote (set-type-keywords set-type)))))
          elt-type
          (list 'expr-annotation:special-form special-form set-annotated-expr))))))
@@ -4921,6 +4984,8 @@
 ;     becomes converted to (:annotated-expr <annotated-expr>)
 ;   (:def-const <name> <type>)
 ;     augments the environment for the rest of the comment with a local variable named <name> with type <type>.
+;   (:initialize <name>)
+;     augments the environment for the rest of the comment by initializing the local variable named <name>.
 (defun scan-expressions-in-comment (world type-env text)
   (mapcan #'(lambda (item)
               (if (consp item)
@@ -4940,6 +5005,12 @@
                              (type (scan-type world (third item))))
                         (setq type-env (type-env-add-binding type-env symbol type :const)))
                       nil)
+                    (:initialize
+                     (unless (= (length item) 2)
+                       (error "Bad :expr ~S" item))
+                     (let ((symbol (scan-name world (second item))))
+                       (setq type-env (type-env-initialize-var type-env symbol)))
+                     nil)
                     (t (list item))))
                 (list item)))
           text))
@@ -5087,6 +5158,36 @@
            (list `(let (,symbol) ,@rest-codes))
            rest-live
            (cons (list special-form name type-expr) rest-annotated-stmts)))))))
+
+
+; (multiple-value-bind ((<name> <type>) ...) <lisp-function> <arg-exprs>)
+; Evaluate <lisp-function> applied to the results of evaluating <arg-exprs>.  The function should return multiple values,
+; which are assigned to new variables with the given names and types.
+(defun scan-multiple-value-bind (world type-env rest-statements last special-form names-and-types lisp-function arg-exprs)
+  (unless (structured-type? names-and-types '(list (tuple t t)))
+    (error "Bad definitions for scan-multiple-value-bind"))
+  (let ((arg-values nil))
+    (dolist (arg-expr arg-exprs)
+      (multiple-value-bind (arg-value arg-type arg-annotated-expr) (scan-value world type-env arg-expr)
+        (declare (ignore arg-type arg-annotated-expr))
+        (push arg-value arg-values)))
+    (let ((arg-values (nreverse arg-values))
+          (symbols nil))
+      (dolist (name-and-type names-and-types)
+        (let* ((symbol (scan-name world (first name-and-type)))
+               (type (scan-type world (second name-and-type))))
+          (setq type-env (type-env-add-binding type-env symbol type :var))
+          (push symbol symbols)))
+      (setq symbols (nreverse symbols))
+      (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                           (scan-statements world type-env rest-statements last)
+        (unless (eq rest-live :dead)
+          (dolist (symbol symbols)
+            (setq rest-live (remove symbol rest-live :test #'eq))))
+        (values
+         (list `(multiple-value-bind ,symbols (,lisp-function ,@arg-values) ,@rest-codes))
+         rest-live
+         (cons (list special-form names-and-types lisp-function arg-exprs) rest-annotated-stmts))))))
 
 
 ; (reserve <name>)
@@ -5586,6 +5687,7 @@
 
 ; (%highlight <highlight> <command> ... <command>)
 ; Evaluate the given commands.  <highlight> is a hint for printing.
+; If <highlight> is :hide, then the commands are evaluated but not printed.
 (defun scan-%highlight (world grammar-info-var highlight &rest commands)
   (declare (ignore highlight))
   (scan-commands world grammar-info-var commands))
@@ -5818,6 +5920,7 @@
      (exec scan-exec depict-exec)
      (const scan-const depict-var)
      (var scan-var depict-var)
+     (multiple-value-bind scan-multiple-value-bind depict-multiple-value-bind)
      (reserve scan-reserve nil)
      (function scan-function depict-function)
      (<- scan-<- depict-<-)
@@ -5842,6 +5945,7 @@
      (bottom scan-bottom-expr depict-bottom-expr)
      (hex scan-hex depict-hex)
      (float32 scan-float32 nil)
+     (supplementary-char scan-supplementary-char depict-supplementary-char)
      
      ;;Expressions
      (/*/ scan-/*/ depict-/*/)
@@ -5914,6 +6018,7 @@
      (delay-of scan-delay-of-expr nil))
     
     (:condition
+     (/*/ scan-/*/-condition)
      (not scan-not-condition)
      (and scan-and-condition)
      (or scan-or-condition)
@@ -5943,6 +6048,7 @@
   '((neg (-> (integer) integer) #'- :unary :minus nil %prefix% %prefix%)
     (abs (-> (integer) integer) #'abs :unary "|" "|" %primary% %expr%)
     (* (-> (integer integer) integer) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
+    (int/ (-> (integer integer) integer) #'int/ :infix "/" nil %factor% %factor% %prefix%)
     (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %prefix%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
@@ -5956,6 +6062,7 @@
     (rat- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
     (floor (-> (rational) integer) #'floor :unary :left-floor-10 :right-floor-10 %primary% %expr%)
     (ceiling (-> (rational) integer) #'ceiling :unary :left-ceiling-10 :right-ceiling-10 %primary% %expr%)
+    (floor-log10 (-> (rational) integer) #'floor-log10 :unary (:left-floor-10 "log" (:subscript "10") "(") (")" :right-floor-10) %primary% %expr%)
     
     (not (-> (boolean) boolean) #'not :unary ((:semantic-keyword "not") " ") nil %not% %not%)
     
@@ -5964,7 +6071,7 @@
     (bitwise-xor (-> (integer integer) integer) #'logxor)
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
-    (real-to-float32 (-> (rational) float32) #'rational-to-float32)
+    (real-to-float32 (-> (rational) float32) #'rational-to-float32 :unary nil ((:subscript "f32")) %term% %primary%)
     (truncate-finite-float32 (-> (finite-float32) integer) #'truncate-finite-float32)
     
     ;(float32-compare (-> (float32 float32) order) #'float32-compare)
@@ -5976,7 +6083,7 @@
     (float32-divide (-> (float32 float32) float32) #'float32-divide)
     (float32-remainder (-> (float32 float32) float32) #'float32-remainder)
     
-    (real-to-float64 (-> (rational) float64) #'rational-to-float64)
+    (real-to-float64 (-> (rational) float64) #'rational-to-float64 :unary nil ((:subscript "f64")) %term% %primary%)
     (float32-to-float64 (-> (float32) float64) #'float32-to-float64)
     (truncate-finite-float64 (-> (finite-float64) integer) #'truncate-finite-float64)
     
@@ -5991,6 +6098,9 @@
     
     (integer-to-char16 (-> (integer) char16) #'code-char)
     (char16-to-integer (-> (char16) integer) #'char-code)
+    (integer-to-supplementary-char (-> (integer) supplementary-char) #'integer-to-supplementary-char)
+    (integer-to-char21 (-> (integer) char21) #'integer-to-char21)
+    (char21-to-integer (-> (char21) integer) #'char21-to-integer)
     
     ;(integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
     ;(integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
@@ -5998,6 +6108,10 @@
     ;(char16-set-max (-> (char16-set) char16) #'char16-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
     
     (digit-value (-> (char16) integer) #'digit-char-36)))
+
+
+; \#boolean is a boxed version of boolean.  Use it as a return type of a function that returns boolean if the entire function type
+; will be coerced to the type of a function that returns a union including boolean.
 
 
 ;;; Partial order of primitives for deciding when to depict parentheses.
@@ -6038,7 +6152,7 @@
           (assert-true (null args))
           (list :level %primary%)))))
     (let ((name (symbol-lower-mixed-case-name name)))
-      `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level ,%primary%))))
+      `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level ,%suffix%))))
 
 
 ; Create a world with the given name and set up the built-in properties of its symbols.
@@ -6085,6 +6199,7 @@
     (assert-true (< (type-serial-number (world-false-type world)) (type-serial-number (world-true-type world))))
     (setf (world-boxed-boolean-type world)
           (make-type world :union nil (list (world-false-type world) (world-true-type world)) 'eq nil))
+    (add-type-name world (world-boxed-boolean-type world) (world-intern world '\#boolean) nil)
     (flet ((make-simple-type (name kind =-name /=-name)
              (let ((type (make-type world kind nil nil =-name /=-name)))
                (add-type-name world type (world-intern world name) nil)
@@ -6092,18 +6207,45 @@
       (setf (world-bottom-type world) (make-simple-type 'bottom-type :bottom nil nil))
       (setf (world-void-type world) (make-simple-type 'void :void nil nil))
       (setf (world-boolean-type world) (make-simple-type 'boolean :boolean 'boolean= nil))
-      (setf (world-integer-type world) (make-simple-type 'integer :integer '= '/=))
-      (setf (world-rational-type world) (make-simple-type 'rational :rational '= '/=))
+      
+      (let ((integer-type (make-simple-type 'integer :integer '= '/=)))
+        (setf (world-integer-type world) integer-type)
+        (setf (type-order-alist integer-type) '((< . <) (> . >) (<= . <=) (>= . >=)))
+        (setf (type-range-set-encode integer-type) 'identity)
+        (setf (type-range-set-decode integer-type) 'identity))
+      (let ((rational-type (make-simple-type 'rational :rational '= '/=)))
+        (setf (world-rational-type world) rational-type)
+        (setf (type-order-alist rational-type) '((< . <) (> . >) (<= . <=) (>= . >=))))
       (setf (world-finite32-type world) (make-simple-type 'nonzero-finite-float32 :finite32 '= '/=))
       (setf (world-finite64-type world) (make-simple-type 'nonzero-finite-float64 :finite64 '= '/=))
       (setf (world-finite32-tag world) (make-tag :finite32 nil nil (list (make-field 'value (world-rational-type world) nil nil)) '= nil -1))
       (setf (world-finite64-tag world) (make-tag :finite64 nil nil (list (make-field 'value (world-rational-type world) nil nil)) '= nil -1))
-      (setf (world-char16-type world) (make-simple-type 'char16 :char16 'char= 'char/=))
+      
+      (let* ((char16-type (make-simple-type 'char16 :char16 'char= 'char/=))
+             (supplementary-char-type (make-simple-type 'supplementary-char :supplementary-char 'equal nil))
+             (char21-type (make-union-type world char16-type supplementary-char-type)))
+        (setf (type-order-alist char16-type) '((< . char<) (> . char>) (<= . char<=) (>= . char>=)))
+        (setf (type-range-set-encode char16-type) 'char-code)
+        (setf (type-range-set-decode char16-type) 'code-char)
+        (setf (type-order-alist supplementary-char-type) '((< . char21<) (> . char21>) (<= . char21<=) (>= . char21>=)))
+        (setf (type-range-set-encode supplementary-char-type) 'char21-to-integer)
+        (setf (type-range-set-decode supplementary-char-type) 'integer-to-char21)
+        (setf (type-order-alist char21-type) '((< . char21<) (> . char21>) (<= . char21<=) (>= . char21>=)))
+        (setf (type-=-name char21-type) 'equal)
+        (setf (type-range-set-encode char21-type) 'char21-to-integer)
+        (setf (type-range-set-decode char21-type) 'integer-to-char21)
+        (add-type-name world char21-type (world-intern world 'char21) nil)
+        (setf (world-char16-type world) char16-type)
+        (setf (world-supplementary-char-type world) supplementary-char-type)
+        (setf (world-char21-type world) char21-type))
       (let ((string-type (make-type world :string nil (list (world-char16-type world)) 'string= 'string/=)))
+        (setf (type-order-alist string-type) '((< . string<) (> . string>) (<= . string<=) (>= . string>=)))
         (add-type-name world string-type (world-intern world 'string) nil)
         (setf (world-string-type world) string-type)))
+    
     (add-type-name world (make-range-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
     (add-type-name world (make-range-set-type world (world-char16-type world)) (world-intern world 'char16-set) nil)
+    (add-type-name world (make-range-set-type world (world-char21-type world)) (world-intern world 'char21-set) nil)
     
     ;Define order, floating-point, and long integer types
     (let (;(order-types (mapcar
@@ -6695,6 +6837,11 @@
 ; <body-z-y> must also be :forward in every other production.  This action expands into a function that calls
 ; actions with the same name in every nonterminal on the right side of the grammar production, passing them the
 ; same parameters as the action received.
+;
+; If one of the <body-x-y> is :forward-result, then the action must be a function action and the corresponding action's
+; <body-z-y> must also be :forward-result in every other production.  This action expands into a function that calls
+; actions with the same name in every nonterminal on the right side of the grammar production, passing them the
+; same parameters as the action received and returns the result.  Each production must have exactly one nonterminal.
 (defun preprocess-rule (preprocessor-state command general-grammar-symbol action-declarations &rest productions)
   (declare (ignore command))
   (assert-type action-declarations (list (tuple symbol t)))
@@ -6725,8 +6872,11 @@
                                                       arg))
                                                 (rest action-name)))
                    (setq action-name (first action-name))
-                   (when (equal action-body '(:forward))
-                     (setq parameter-list (cons :forward parameter-list))))
+                   (cond
+                    ((equal action-body '(:forward))
+                     (setq parameter-list (cons :forward parameter-list)))
+                    ((equal action-body '(:forward-result))
+                     (setq parameter-list (cons :forward-result parameter-list)))))
                  (when (eq (first parameter-lists) t)
                    (setf (first parameter-lists) parameter-list))
                  (and (eq declared-action-name action-name)
@@ -6759,35 +6909,43 @@
           (let* ((action-name (first action-declaration))
                  (parameter-list (pop parameter-lists))
                  (writable (writable-action action-declaration))
+                 (forward-mode (if (and (consp parameter-list) (member (first parameter-list) '(:forward :forward-result)))
+                                 (first parameter-list)
+                                 nil))
                  (declare-mode (cond
                                 (writable :writable)
-                                ((and (consp parameter-list) (eq (first parameter-list) :forward))
-                                 (setq parameter-list (cdr parameter-list))
-                                 :forward)
+                                (forward-mode :forward)
                                 ((= n-productions 1) :singleton)
                                 ((eq parameter-list :value) :action)
                                 (t (assert-true (listp parameter-list)) :actfun)))
                  (j 0))
+            (when forward-mode
+              (setq parameter-list (cdr parameter-list)))
             (push (list*
                    'declare-action action-name general-grammar-symbol (second action-declaration) declare-mode parameter-list
                    (each-preprocessed-command
                     #'(lambda (production highlight)
                         (declare (ignore highlight))
                         (let* ((name (fourth production))
-                              (action (cond
-                                       (writable
-                                        (list action-name (list 'writable-cell-of (second (second action-declaration)))))
-                                       ((eq declare-mode :forward)
-                                        (let ((forwarded-calls (generate-forwarded-calls action-name (third production) parameter-list)))
-                                          (if forwarded-calls
-                                            (cons (cons action-name parameter-list) forwarded-calls)
-                                            (list (cons action-name (mapcar #'(lambda (parameter) (list parameter :unused)) parameter-list))))))
-                                       (t (nth i production))))
-                              (mode (cond
-                                     ((= n-productions 1) :singleton)
-                                     ((= j 0) :first)
-                                     ((= j (1- n-productions)) :last)
-                                     (t :middle))))
+                               (action (cond
+                                        (writable
+                                         (list action-name (list 'writable-cell-of (second (second action-declaration)))))
+                                        ((eq forward-mode :forward)
+                                         (let ((forwarded-calls (generate-forwarded-calls action-name (third production) parameter-list)))
+                                           (if forwarded-calls
+                                             (cons (cons action-name parameter-list) forwarded-calls)
+                                             (list (cons action-name (mapcar #'(lambda (parameter) (list parameter :unused)) parameter-list))))))
+                                        ((eq forward-mode :forward-result)
+                                         (let ((forwarded-calls (generate-forwarded-calls action-name (third production) parameter-list)))
+                                           (unless (= (length forwarded-calls) 1)
+                                             (error ":forward-result productions must have exactly one nonterminal"))
+                                           (list (cons action-name parameter-list) (cons 'return forwarded-calls))))
+                                        (t (nth i production))))
+                               (mode (cond
+                                      ((= n-productions 1) :singleton)
+                                      ((= j 0) :first)
+                                      ((= j (1- n-productions)) :last)
+                                      (t :middle))))
                           (incf j)
                           (list (list* 'action (first action) name (second action-declaration) mode (rest action)))))
                     preprocessor-state
