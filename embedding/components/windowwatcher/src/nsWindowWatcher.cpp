@@ -225,6 +225,94 @@ void nsWindowEnumerator::WindowRemoved(WindowInfo *inInfo) {
 }
 
 /****************************************************************
+ ********************* EventQueueAutoPopper *********************
+ ****************************************************************/
+
+class EventQueueAutoPopper {
+public:
+  EventQueueAutoPopper();
+  ~EventQueueAutoPopper();
+
+  nsresult Push();
+
+protected:
+  nsCOMPtr<nsIEventQueueService> mService;
+  nsCOMPtr<nsIEventQueue>        mQueue;
+};
+
+EventQueueAutoPopper::EventQueueAutoPopper() : mQueue(nsnull)
+{
+}
+
+EventQueueAutoPopper::~EventQueueAutoPopper()
+{
+  if(mQueue)
+    mService->PopThreadEventQueue(mQueue);
+}
+
+nsresult EventQueueAutoPopper::Push()
+{
+  if (mQueue) // only once
+    return NS_ERROR_FAILURE;
+
+  mService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+  if(mService)
+    mService->PushThreadEventQueue(getter_AddRefs(mQueue));
+  return mQueue ? NS_OK : NS_ERROR_FAILURE; 
+}
+
+/****************************************************************
+ ********************** JSContextAutoPopper *********************
+ ****************************************************************/
+
+class JSContextAutoPopper {
+public:
+  JSContextAutoPopper();
+  ~JSContextAutoPopper();
+
+  nsresult   Push();
+  JSContext *get() { return mContext; }
+
+protected:
+  nsCOMPtr<nsIThreadJSContextStack>  mService;
+  JSContext                         *mContext;
+};
+
+JSContextAutoPopper::JSContextAutoPopper() : mContext(nsnull)
+{
+}
+
+JSContextAutoPopper::~JSContextAutoPopper()
+{
+  JSContext *cx;
+  nsresult   rv;
+
+  if(mContext) {
+    rv = mService->Pop(&cx);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext, "JSContext push/pop mismatch");
+  }
+}
+
+nsresult JSContextAutoPopper::Push()
+{
+  nsresult rv;
+
+  if (mContext) // only once
+    return NS_ERROR_FAILURE;
+
+  mService = do_GetService(sJSStackContractID);
+  if(mService) {
+    rv = mService->GetSafeJSContext(&mContext);
+    if (NS_SUCCEEDED(rv) && mContext) {
+      rv = mService->Push(mContext);
+      if (NS_FAILED(rv))
+        mContext = 0;
+    }
+  }
+  return mContext ? NS_OK : NS_ERROR_FAILURE; 
+}
+
+/****************************************************************
  *********************** nsWindowWatcher ************************
  ****************************************************************/
 
@@ -281,25 +369,24 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
                             nsIDOMWindow **_retval)
 {
   nsresult                        rv = NS_OK;
-  JSContext                      *cx;
   PRBool                          nameSpecified,
-                                  featuresSpecified;
+                                  featuresSpecified,
+                                  windowIsNew = PR_FALSE,
+                                  windowIsModal = PR_FALSE;
   PRUint32                        chromeFlags;
   nsAutoString                    name;             // string version of aName
   nsCString                       features;         // string version of aFeatures
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
+  EventQueueAutoPopper            queueGuard;
+  JSContextAutoPopper             contextGuard;
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
 
   if (aParent)
     GetWindowTreeOwner(aParent, getter_AddRefs(parentTreeOwner));
-
-  cx = GetJSContext(aParent);
-  if (!cx)
-    return NS_ERROR_FAILURE;
 
   if (aUrl)
     rv = URIfromURL(aUrl, aParent, getter_AddRefs(uriToLoad));
@@ -344,12 +431,6 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       FindItemWithName(name.GetUnicode(), getter_AddRefs(newDocShellItem));
   }
 
-  nsCOMPtr<nsIEventQueue> modalEventQueue;   // This has an odd ownership model
-  nsCOMPtr<nsIEventQueueService> eventQService;
-
-  PRBool windowIsNew = PR_FALSE;
-  PRBool windowIsModal = PR_FALSE;
-
   // no extant window? make a new one.
   if (!newDocShellItem) {
     windowIsNew = PR_TRUE;
@@ -357,13 +438,12 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     if (parentTreeOwner)
       parentTreeOwner->IsModal(&weAreModal);
     if (weAreModal || (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)) {
-      eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-      if (eventQService &&
-          NS_SUCCEEDED(eventQService->
-                       PushThreadEventQueue(getter_AddRefs(modalEventQueue))))
-          windowIsModal = PR_TRUE;
-          // in case we added this because weAreModal
-          chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT;
+      rv = queueGuard.Push();
+      if (NS_SUCCEEDED(rv)) {
+        windowIsModal = PR_TRUE;
+        // in case we added this because weAreModal
+        chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT;
+      }
     }
     if (parentTreeOwner)
       parentTreeOwner->GetNewWindow(chromeFlags, getter_AddRefs(newDocShellItem));
@@ -371,12 +451,18 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
       mWindowCreator->CreateWindow(0, chromeFlags, getter_AddRefs(newChrome));
       if (newChrome) {
-        nsCOMPtr<nsIWebBrowser> newBrowser;
-        newChrome->GetWebBrowser(getter_AddRefs(newBrowser));
-        if (newBrowser) {
+        nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newChrome));
+        if (thing) {
+          /* It might be a chrome nsXULWindow, in which case it won't have
+             an nsIDOMWindow (primary content shell). But in that case, it'll
+             be able to hand over an nsIDocShellTreeItem directly. */
+          // XXX got the order right?
           nsCOMPtr<nsIDOMWindow> newWindow;
-          newBrowser->GetContentDOMWindow(getter_AddRefs(newWindow));
-          GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+          thing->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(newWindow));
+          if (newWindow)
+            GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+          if (!newDocShellItem)
+            thing->GetInterface(NS_GET_IID(nsIDocShellTreeItem), getter_AddRefs(newDocShellItem));
         }
       }
     }
@@ -410,8 +496,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     }
   }
 
-  if (aDialog && argc > 3)
-    AttachArguments(*_retval, argc-3, argv+3);
+  if (aDialog && argc > 0)
+    AttachArguments(*_retval, argc, argv);
 
   nsCOMPtr<nsIScriptSecurityManager> secMan;
 
@@ -420,17 +506,21 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
        Don't call CheckLoadURI for dialogs - see bug 56851
        The security of this function depends on window.openDialog being 
        inaccessible from web scripts */
-    nsCOMPtr<nsIScriptContext> scriptCX;
+    JSContext                  *cx;
+    nsCOMPtr<nsIScriptContext>  scriptCX;
+    cx = GetExtantJSContext(aParent);
+    if (!cx) {
+      rv = contextGuard.Push();
+      if (NS_FAILED(rv))
+        return rv;
+      cx = contextGuard.get();
+    }
 #if 0
+    // better than trying so hard to find a script object? or just wrong?
     nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
 #else
-    JSContext *tempCX;
-    JSObject *scriptObject;
-    if (aParent)
-      GetWindowScriptContextAndObject(aParent, &tempCX, &scriptObject);
-    else
-      GetWindowScriptContextAndObject(*_retval, &tempCX, &scriptObject);
-    nsWWJSUtils::nsGetStaticScriptContext(tempCX, scriptObject,
+    JSObject *scriptObject = GetWindowScriptObject(aParent ? aParent : *_retval);
+    nsWWJSUtils::nsGetStaticScriptContext(cx, scriptObject,
                                           getter_AddRefs(scriptCX));
 #endif
     if (!scriptCX ||
@@ -507,8 +597,6 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
     if (newTreeOwner)
       newTreeOwner->ShowModal();
-
-    eventQService->PopThreadEventQueue(modalEventQueue);
   }
 
   return NS_OK;
@@ -710,39 +798,6 @@ nsWindowWatcher::RemoveEnumerator(nsWindowEnumerator* inEnumerator)
 {
   // (requires a lock; assumes it's called by someone holding the lock)
   return mEnumeratorList.RemoveElement(inEnumerator);
-}
-
-JSContext *
-nsWindowWatcher::GetJSContext(nsIDOMWindow *aWindow)
-{
-  JSContext *cx;
-
-  // given a window, we'll use its
-  cx = 0;
-  if (aWindow) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-    if (sgo) {
-      nsCOMPtr<nsIScriptContext> scx;
-      sgo->GetContext(getter_AddRefs(scx));
-      if (scx)
-        cx = (JSContext *) scx->GetNativeContext(); // from iffy to skank. is this guaranteed?
-    }
-    /* apparently, if it comes to it, the nsIScriptContext can be retrieved by
-    nsCOMPtr<nsIScriptContext> scx;
-    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scx));
-    */
-  }
-
-  // still no JSContext? try pulling one from the stack.
-  if (!cx) {
-    nsCOMPtr<nsIThreadJSContextStack> cxStack(do_GetService(sJSStackContractID));
-    if (cxStack)
-      cxStack->Peek(&cx);
-  }
-
-  // better have one by now
-  NS_ASSERTION(cx, "no available JSContext");
-  return cx;
 }
 
 // stolen from GlobalWindowImpl
@@ -1347,10 +1402,10 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
   if (argc == 0)
     return;
 
-  JSContext *cx;
-  JSObject  *object;
-
-  GetWindowScriptContextAndObject(aWindow, &cx, &object);
+  JSContext *cx = GetExtantJSContext(aWindow);
+  NS_ASSERTION(cx, "window missing JSContext");
+  if (!cx)
+    return;
 
   // copy the extra parameters into a JS Array and attach it
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(aWindow));
@@ -1404,22 +1459,55 @@ nsWindowWatcher::GetWindowTreeOwner(nsIDOMWindow *inWindow,
     treeItem->GetTreeOwner(outTreeOwner);
 }
 
-void nsWindowWatcher::GetWindowScriptContextAndObject(nsIDOMWindow *inWindow,
-                                                      JSContext **cx,
-                                                      JSObject **outObject)
+JSContext *
+nsWindowWatcher::GetExtantJSContext(nsIDOMWindow *aWindow)
 {
-  *cx = 0;
-  *outObject = 0;
+  JSContext *cx;
+
+  // given a window, we'll use its
+  cx = 0;
+  if (aWindow) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
+    if (sgo) {
+      nsCOMPtr<nsIScriptContext> scx;
+      sgo->GetContext(getter_AddRefs(scx));
+      if (scx)
+        cx = (JSContext *) scx->GetNativeContext();
+    }
+    /* (off-topic note:) the nsIScriptContext can be retrieved by
+    nsCOMPtr<nsIScriptContext> scx;
+    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scx));
+    */
+  }
+
+  // still no JSContext? try pulling one from the stack.
+  if (!cx) {
+    nsCOMPtr<nsIThreadJSContextStack> cxStack(do_GetService(sJSStackContractID));
+    if (cxStack)
+      cxStack->Peek(&cx);
+    /* We explicitly do not use GetSafeJSContext to force one if Peek
+       finds nothing. That's done, if necessary, by a helper class which
+       knows how to clean up after itself.
+    */
+  }
+
+  return cx;
+}
+
+JSObject *
+nsWindowWatcher::GetWindowScriptObject(nsIDOMWindow *inWindow)
+{
+  JSObject *object = 0;
+
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(inWindow));
   if (scriptGlobal) {
     nsCOMPtr<nsIScriptContext> scriptContext;
     scriptGlobal->GetContext(getter_AddRefs(scriptContext));
-    if (scriptContext) {
-      *cx = (JSContext *) scriptContext->GetNativeContext();
 
-      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(inWindow));
-      if (owner)
-        owner->GetScriptObject(scriptContext, (void **) outObject);
-    }
+    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(inWindow));
+    if (owner)
+      owner->GetScriptObject(scriptContext, (void **) &object);
   }
+  return object;
 }
+
