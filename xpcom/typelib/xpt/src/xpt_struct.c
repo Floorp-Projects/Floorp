@@ -240,16 +240,60 @@ XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
 }
 
 uint32
+XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td)
+{
+    uint32 size = 1; /* prefix */
+    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE)
+        size += 2; /* interface_index */
+    else if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE)
+        size += 1; /* arg_num */
+    return size;
+}
+
+uint32
 XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md)
 {
-    return 1 /* flags */ + 4 /* name */ + 1 /* num_args */
-        + ((md->num_args + 1) * XPT_PARAMDESCRIPTOR_SIZE);
+    uint32 i, size =  1 /* flags */ + 4 /* name */ + 1 /* num_args */;
+
+    for (i = 0; i < md->num_args; i++) 
+        size += 1 + XPT_SizeOfTypeDescriptor(&md->params[i].type);
+
+    size += 1 + XPT_SizeOfTypeDescriptor(&md->result->type);
+    return size;
 }
 
 uint32
 XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd)
 {
-    return 0;
+    uint32 size = 4 /* name */ + XPT_SizeOfTypeDescriptor(&cd->type);
+
+    switch (XPT_TDP_TAG(cd->type.prefix)) {
+      case TD_INT8:
+      case TD_UINT8:
+      case TD_CHAR:
+        size ++;
+        break;
+      case TD_INT16:
+      case TD_UINT16:
+      case TD_WCHAR:
+        size += 2;
+        break;
+      case TD_INT32:
+      case TD_UINT32:
+      case TD_PBSTR:            /* XXX check for pointer! */
+        size += 4;
+        break;
+      case TD_INT64:
+      case TD_UINT64:
+        size += 8;
+        break;
+      default:
+        fprintf(stderr, "libxpt: illegal type in ConstDescriptor: 0x%02x\n",
+                XPT_TDP_TAG(cd->type.prefix));
+        return 0;
+    }
+
+    return size;
 }
 
 uint32
@@ -310,7 +354,7 @@ XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
                                           sizeof(XPTConstDescriptor));
     
     for (i = 0; i < id->num_constants; i++) {
-        if (!XPT_DoConstDescriptor(&cursor, &id->const_descriptors[i])) {
+        if (!XPT_DoConstDescriptor(cursor, &id->const_descriptors[i])) {
             goto error;
         }
     }
@@ -336,57 +380,58 @@ PRBool
 XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd)
 {
     XPTMode mode = cursor->state->mode;
+    PRBool ok = PR_FALSE;
 
-    if (!XPT_DoCString(&cursor, &cd->name) ||
-        !XPT_DoTypeDescriptor(&cursor, &cd->type)) {
+    if (!XPT_DoCString(cursor, &cd->name) ||
+        !XPT_DoTypeDescriptor(cursor, &cd->type)) {
 
-        goto error;
+        return PR_FALSE;
     }
 
     switch(XPT_TDP_TAG(cd->type.prefix)) {
       case TD_INT8:
-        XPT_Do8(cursor, &cd->value.i8);
+        ok = XPT_Do8(cursor, &cd->value.i8);
         break;
       case TD_INT16:
-        XPT_Do16(cursor, &cd->value.i16);
+        ok = XPT_Do16(cursor, &cd->value.i16);
         break;
       case TD_INT32:
-        XPT_Do32(cursor, &cd->value.i32);
+        ok = XPT_Do32(cursor, &cd->value.i32);
         break;
       case TD_INT64:
-        XPT_Do64(cursor, &cd->value.i64);
+        ok = XPT_Do64(cursor, &cd->value.i64);
         break;
       case TD_UINT8:
-        XPT_Do8(cursor, &cd->value.ui8);
+        ok = XPT_Do8(cursor, &cd->value.ui8);
         break;
       case TD_UINT16:
-        XPT_Do16(cursor, &cd->value.ui16);
+        ok = XPT_Do16(cursor, &cd->value.ui16);
         break;
       case TD_UINT32:
-        XPT_Do32(cursor, &cd->value.ui32);
+        ok = XPT_Do32(cursor, &cd->value.ui32);
         break;
       case TD_UINT64:
-        XPT_Do64(cursor, &cd->value.ui64);
+        ok = XPT_Do64(cursor, &cd->value.ui64);
         break;
       case TD_CHAR:
-        XPT_Do8(cursor, &cd->value.ch);
+        ok = XPT_Do8(cursor, &cd->value.ch);
         break;
       case TD_WCHAR:
-        XPT_Do16(cursor, &cd->value.wch);
+        ok = XPT_Do16(cursor, &cd->value.wch);
         break;
       case TD_PBSTR:
         if (cd->type.prefix.flags & XPT_TDP_POINTER) {
-            XPT_DoString(cursor, &cd->value.string);
+            ok = XPT_DoString(cursor, &cd->value.string);
             break;
         }
+        /* fall-through */
       default:
         fprintf(stderr, "illegal type!\n");
-        goto error;
+        break;
     }
 
-    return PR_TRUE;
+    return ok;
 
-    XPT_ERROR_HANDLE(cd);    
 }
 
 PRBool
@@ -423,12 +468,6 @@ XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
     XPTMode mode = cursor->state->mode;
     uintn scratch;
     int i;
-
-#ifdef DEBUG_shaver_method
-    if (mode == XPT_ENCODE)
-        fprintf(stderr, "wrote method \"%s\" at offset %x\n",
-                md->name, CURS_POOL_OFFSET(cursor));
-#endif
 
     if (!XPT_Do8(cursor, &md->flags) ||
         !XPT_DoCString(cursor, &md->name) ||
@@ -470,12 +509,6 @@ XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd)
     XPTMode mode = cursor->state->mode;
     uintn scratch;
 
-#ifdef DEBUG_shaver_param
-    if (mode == XPT_ENCODE)
-        fprintf(stderr, "wrote param %02x%02x at offset %x\n",
-                pd->flags, pd->type.prefix.flags, CURS_POOL_OFFSET(cursor));
-#endif
-    
     if (!XPT_Do8(cursor, &pd->flags) ||
         !XPT_DoTypeDescriptor(cursor, &pd->type))
         return PR_FALSE;
