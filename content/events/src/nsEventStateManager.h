@@ -74,10 +74,9 @@ class nsEventStateManager : public nsSupportsWeakReference,
   // Tab focus model bit field:
   enum nsTabFocusModel {
     eTabFocus_unset = 0,                  // unset, check preferences
-  //eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
+    eTabFocus_textControlsMask = (1<<0),  // text elements
     eTabFocus_formElementsMask = (1<<1),  // non-text form elements
-    eTabFocus_linksMask = (1<<2),         // links
-    eTabFocus_any = 1 | (1<<1) | (1<<2),  // everything that can be focused
+    eTabFocus_linksMask = (1<<2)          // links
   };
 
   enum nsTextfieldSelectModel {
@@ -213,7 +212,6 @@ protected:
                          PRBool scrollPage, PRBool aUseTargetFrame);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefBranch();
-  void ResetObservedPrefs();
   nsresult ChangeTextSize(PRInt32 change);
   // end mousewheel functions
 
