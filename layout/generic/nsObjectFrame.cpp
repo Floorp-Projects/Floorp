@@ -1796,8 +1796,6 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                     PRBool eventHandled = PR_FALSE;
 
                     inst->HandleEvent(&pluginEvent, &eventHandled);
-                    
-                    mInstanceOwner->ReleasePluginPort((nsPluginPort *)winpos.hwnd);
                   }
                 }
               }
