@@ -223,14 +223,16 @@ public:
                      PRBool aModifyHistory=PR_TRUE,
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                      const PRUint32 localIP = 0,
-                     nsISupports * aHistoryState = nsnull);
+                     nsISupports * aHistoryState = nsnull,
+                     const PRUnichar* aReferrer=nsnull);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                      const PRUint32 localIP = 0,
-                     nsISupports * aHistoryState=nsnull);
+                     nsISupports * aHistoryState=nsnull,
+                     const PRUnichar* aReferrer=nsnull);
 
   NS_IMETHOD LoadURI(nsIURI * aUri,
                      const char * aCommand,
@@ -238,7 +240,8 @@ public:
                      PRBool aModifyHistory=PR_TRUE,
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                      const PRUint32 aLocalIP=0,
-					           nsISupports * aHistoryState=nsnull);
+					           nsISupports * aHistoryState=nsnull,
+                     const PRUnichar* aReferrer=nsnull);
 
   NS_IMETHOD Stop(void);
 
@@ -392,7 +395,6 @@ public:
   NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver);
   NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult);
 
-
 protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURI* aURL);
@@ -429,6 +431,7 @@ protected:
 
   nsString mTitle;
   nsString mURL;
+  nsString mReferrer;
 
   nsString mOverURL;
   nsString mOverTarget;
@@ -454,7 +457,8 @@ protected:
                      const char* aCommand,
                      nsIInputStream* aPostDataStream,
                      nsLoadFlags aType,
-                     const PRUint32 aLocalIP);
+                     const PRUint32 aLocalIP,
+                     const PRUnichar* aReferrer);
 
   float mZoom;
 
@@ -1644,6 +1648,8 @@ nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 NS_IMETHODIMP
 nsWebShell::GetName(const PRUnichar** aName)
 {
+  // XXX This is wrong unless the parameter is marked "shared".
+  // It should otherwise be copied and freed by the caller.
   *aName = mName.GetUnicode();
   return NS_OK;
 }
@@ -1658,6 +1664,8 @@ nsWebShell::SetName(const PRUnichar* aName)
 NS_IMETHODIMP
 nsWebShell::GetURL(const PRUnichar** aURL)
 {
+  // XXX This is wrong unless the parameter is marked "shared".
+  // It should otherwise be copied and freed by the caller.
   *aURL = mURL.GetUnicode();
   return NS_OK;
 }
@@ -1910,15 +1918,18 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     PRBool aModifyHistory,
                     nsLoadFlags aType,
                     const PRUint32 aLocalIP,
-                    nsISupports * aHistoryState)
+                    nsISupports * aHistoryState,
+                    const PRUnichar* aReferrer)
 {
   // Initialize margnwidth, marginheight. Put scrolling back the way it was
   // before the last document was loaded.
   InitFrameData(PR_FALSE);
+
   const char *cmd = mViewSource ? "view-source" : "view" ;
   mViewSource = PR_FALSE; // reset it
-  return LoadURL(aURLSpec, cmd , aPostDataStream,
-                 aModifyHistory,aType, aLocalIP, aHistoryState);
+  return LoadURL(aURLSpec, "view", aPostDataStream,
+                 aModifyHistory,aType, aLocalIP, aHistoryState,
+                 aReferrer);
 }
 
 // Nisheeth: returns true if the host and the file parts of
@@ -1968,8 +1979,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                       const char* aCommand,
                       nsIInputStream* aPostDataStream,
                       nsLoadFlags aType,
-                      const PRUint32 aLocalIP)
-
+                      const PRUint32 aLocalIP,
+                      const PRUnichar* aReferrer)
 
 {
   if (!aUri)
@@ -2094,7 +2105,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                                   nsnull,          // Extra Info...
                                   mObserver,       // Observer
                                   aType,           // reload type
-                                  aLocalIP);       // load attributes.
+                                  aLocalIP,        // load attributes.
+                                  aReferrer);      // referrer
 }
 
 NS_IMETHODIMP 
@@ -2104,11 +2116,14 @@ nsWebShell::LoadURI(nsIURI * aUri,
                     PRBool aModifyHistory,
                     nsLoadFlags aType,
                     const PRUint32 aLocalIP,
-					          nsISupports * aHistoryState)
+					          nsISupports * aHistoryState,
+                    const PRUnichar* aReferrer)
 {
   nsresult rv;
   CancelRefreshURITimers();
   nsXPIDLCString scheme, CUriSpec;
+
+  mReferrer = aReferrer;
 
   rv = aUri->GetScheme(getter_Copies(scheme));
   if (NS_FAILED(rv)) return rv;
@@ -2207,7 +2222,7 @@ nsWebShell::LoadURI(nsIURI * aUri,
   }
 
 
-  return DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP);
+  return DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP, aReferrer);
 }
 
 NS_IMETHODIMP
@@ -2217,7 +2232,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     PRBool aModifyHistory,
                     nsLoadFlags aType,
                     const PRUint32 aLocalIP,
-                    nsISupports * aHistoryState)
+                    nsISupports * aHistoryState,
+                    const PRUnichar* aReferrer)
 {
   nsresult rv;
 
@@ -2304,7 +2320,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 
   // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
-  return LoadURI(uri, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState);
+  return LoadURI(uri, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState, aReferrer);
 }
 
 
@@ -2486,7 +2502,8 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                    "view",        // Command
                    nsnull,        // Post Data
                    nsIChannel::LOAD_NORMAL,   // the reload type
-                   0);            // load attributes
+                   0,            // load attributes
+                   nsnull);      // referrer
   }
   return rv;
 #else
@@ -3001,7 +3018,9 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       {
         nsIWebShell* shell = GetTarget(target.GetUnicode());
         if (nsnull != shell) {
-          (void)shell->LoadURL(aURLSpec, aPostDataStream);
+          (void)shell->LoadURL(aURLSpec, aPostDataStream,
+                               PR_TRUE, nsIChannel::LOAD_NORMAL,
+                               0, nsnull, mURL.GetUnicode());
           NS_RELEASE(shell);
         }
       }
@@ -3198,8 +3217,9 @@ nsWebShell::ReportScriptError(const char* aErrorString,
   // XXX To be implemented by scc. The following implementation
   // is temporary.
 
-  nsCAutoString error;
-  error.SetString(aErrorString);
+  nsAutoString error;
+  error.SetString("JavaScript Error: ");
+  error.Append(aErrorString);
   error += "\n";
 
   if (aFileName) {
@@ -3220,8 +3240,17 @@ nsWebShell::ReportScriptError(const char* aErrorString,
     error += "'\n";
   }
 
-  printf("JavaScript Error: %s\n", error.GetBuffer());
+  // XXX Ughhh...allocation
+  char* errorStr = error.ToNewCString();
+  if (errorStr) {
+    printf("%s\n", errorStr);
+    Recycle(errorStr);
+  }
   
+  if (mPrompter) {
+    mPrompter->Alert(error.GetUnicode());
+  }
+
   return NS_OK;
 }
 
@@ -3272,9 +3301,9 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
      *Fire the OnStartDocumentLoad of the webshell observer
      */
     if ((nsnull != mContainer) && (nsnull != dlObserver))
-	{
+    {
        dlObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
-	}
+    }
   }
 
   return rv;

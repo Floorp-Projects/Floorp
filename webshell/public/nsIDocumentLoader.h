@@ -109,7 +109,8 @@ public:
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                            const PRUint32 aLocalIP = 0) = 0;
+                            const PRUint32 aLocalIP = 0,
+                            const PRUnichar* aReferrer = nsnull) = 0;
 
     NS_IMETHOD LoadSubDocument(nsIURI * aUri,
                                nsISupports* aExtraInfo = nsnull,
