@@ -727,6 +727,12 @@ sub confirm_login {
                  WHERE login_name = " . SqlQuote($enteredlogin));
         ($userid, $realcryptpwd) = FetchSQLData();
 
+        # Make sure the user exists or throw an error (but do not admit it was a username
+        # error to make it harder for a cracker to find account names by brute force).
+        $userid
+          || DisplayError("The username or password you entered is not valid.")
+          && exit;
+
         # If this is a new user, generate a password, insert a record
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
