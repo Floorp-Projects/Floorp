@@ -487,4 +487,24 @@ static PRBool gSetupSmoothTextMenu = PR_FALSE;
   return image;
 }
 
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)theApp hasVisibleWindows:(BOOL)flag
+{
+  // If AppKit knows what to do, let it.
+  if (flag)
+    return YES;
+    
+  // If window available, wake it up. |mainWindow| should always be null.
+  NSWindow* mainWindow = [mApplication mainWindow];
+  if (!mainWindow)
+    [self newWindow:self];
+  else {												// Don't think this will ever happen, but just in case
+    if ([[mainWindow windowController]respondsToSelector:@selector(showWindow:)])
+      [[mainWindow windowController] showWindow:self];
+    else
+      [self newWindow:self];
+  }
+
+  return NO;
+}
+
 @end
