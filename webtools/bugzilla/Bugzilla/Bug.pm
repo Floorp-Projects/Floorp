@@ -27,7 +27,6 @@ package Bugzilla::Bug;
 
 use strict;
 
-use Bugzilla::RelationSet;
 use vars qw($legal_keywords @legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bugs_status
             @settable_resolution %components %versions %target_milestone
@@ -201,11 +200,14 @@ sub initBug  {
       $self->{'qa_contact'} = undef;
   }
 
-  my $ccSet = new Bugzilla::RelationSet;
-  $ccSet->mergeFromDB("select who from cc where bug_id=$bug_id");
-  my @cc = $ccSet->toArrayOfStrings();
-  if (@cc) {
-    $self->{'cc'} = \@cc;
+  my $cc_ref = $dbh->selectcol_arrayref(
+      q{SELECT profiles.login_name FROM cc, profiles
+         WHERE bug_id = ?
+           AND cc.who = profiles.userid
+      ORDER BY profiles.login_name},
+      undef, $bug_id);
+  if (scalar(@$cc_ref)) {
+    $self->{'cc'} = $cc_ref;
   }
 
   if (@::legal_keywords) {
