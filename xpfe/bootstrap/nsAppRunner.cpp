@@ -478,6 +478,7 @@ static nsresult main1(int argc, char* argv[])
 //  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF);
 #endif
 
+
 #ifndef XP_MAC
   // Unbuffer debug output (necessary for automated QA performance scripts).
   setbuf( stdout, 0 );

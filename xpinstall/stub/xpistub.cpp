@@ -28,8 +28,8 @@
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-
 #include "nsSpecialSystemDirectory.h" 
+#include "nsILocalFile.h"
 
 #include "nscore.h"
 #include "nspr.h"
@@ -50,6 +50,8 @@
 #ifdef XP_MAC
 #define COMPONENT_REG "\pComponent Registry"
 #include "MoreFilesExtras.h"
+#include "nsLocalFileMac.h"
+#include "nsILocalFileMac.h"
 #endif
 
 #ifdef XP_UNIX
@@ -91,24 +93,23 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     // Initialize XPCOM and AutoRegister() its components
     //--------------------------------------------------------------------
 #ifdef XP_MAC
-    OSErr      err = noErr;
-    long       xpiStubDirID = 0;
-    Boolean    isDir = false;
+    nsLocalFile* localFile = new nsLocalFile;
+	if (localFile)
+	{
+		localFile->InitWithFSSpec(&aXPIStubDir);
+    	rv = NS_InitXPCOM(&gServiceMgr, localFile);
+    }
+    else
+    {
+    	rv = NS_ERROR_FAILURE;
+    }
+#elif defined(XP_PC) || defined(XP_UNIX)
     
-    FSpGetDirectoryID(&aXPIStubDir, &xpiStubDirID, &isDir);
-    nsfsDirectory = aXPIStubDir;
-    rv = NS_InitXPCOM(&gServiceMgr, &nsfsDirectory);
-#elif defined(XP_PC)
-    char componentPath[_MAX_PATH];
-
-    getcwd(componentPath, _MAX_PATH);
-    nsfsDirectory = componentPath;
-
-    rv = NS_InitXPCOM(&gServiceMgr, &nsfsDirectory);
-#elif defined(XP_UNIX)
-    nsfsDirectory = aProgramDir;
- 
-    rv = NS_InitXPCOM(&gServiceMgr, &nsfsDirectory);
+    nsCOMPtr<nsILocalFile> file;
+    NS_NewLocalFile(aProgramDir, getter_AddRefs(file));
+    
+    rv = NS_InitXPCOM(&gServiceMgr, file); 
+        
 #else
     rv = NS_InitXPCOM(&gServiceMgr, NULL);
 #endif

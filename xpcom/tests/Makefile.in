@@ -33,6 +33,7 @@ TESTS_NOT_COMPILING = \
 		$(NULL)
 
 CPPSRCS		= \
+		nsIFileTest.cpp \
 		TestServMgr.cpp \
 		TestFactory.cpp \
 		TestCOMPtr.cpp \

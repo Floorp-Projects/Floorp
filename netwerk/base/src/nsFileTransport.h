@@ -37,6 +37,8 @@
 #include "nsIBufferOutputStream.h"
 #include "nsIFileSystem.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIFile.h"
+#include "prlog.h"
 
 class nsIInterfaceRequestor;
 
@@ -59,7 +61,8 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsFileSpec& spec, 
+    nsresult Init(nsIFile* file,
+                  PRInt32 mode,
                   const char* command,
                   PRUint32 bufferSegmentSize,
                   PRUint32 bufferMaxSize);
@@ -97,9 +100,9 @@ public:
     };
 
 protected:
+    nsCOMPtr<nsIFile>                   mFile;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
-    nsFileSpec                          mSpec;      // eliminate?
     nsCOMPtr<nsIFileSystem>             mFileObject;
     char*                               mContentType;
     PRUint32                            mBufferSegmentSize;
@@ -130,6 +133,10 @@ protected:
     nsCOMPtr<nsIStreamObserver>         mObserver;
     nsCOMPtr<nsIOutputStream>           mSink;
     char*                               mBuffer;
+
+#ifdef PR_LOGGING
+    char*                               mSpec;
+#endif
 };
 
 #define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (2*1024)

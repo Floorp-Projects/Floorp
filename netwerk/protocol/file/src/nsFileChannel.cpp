@@ -21,37 +21,20 @@
  */
 
 #include "nsFileChannel.h"
-#include "nscore.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIURI.h"
-#include "nsIEventQueue.h"
-#include "nsIStreamListener.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
-#include "nsFileProtocolHandler.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
-#include "nsAutoLock.h"
-#include "netCore.h"
-#include "nsFileStream.h"
-#include "nsIFileStream.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIURL.h"
-#include "prio.h"
-#include "prmem.h" // XXX can be removed when we start doing real content-type discovery
-#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-#include "nsSpecialSystemDirectory.h"
-#include "nsEscape.h"
+#include "nsIServiceManager.h"
 #include "nsIMIMEService.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
+#include "netCore.h"
 #include "nsIFileTransportService.h"
+#include "nsIFile.h"
+#include "nsInt64.h"
 
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "prio.h"	// Need to pick up def of PR_RDONLY
+
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,8 +45,7 @@ nsFileChannel::nsFileChannel()
 }
 
 nsresult
-nsFileChannel::Init(nsIFileProtocolHandler* handler, 
-                    const char* command,
+nsFileChannel::Init(const char* command,
                     nsIURI* uri,
                     nsILoadGroup* aLoadGroup,
                     nsIInterfaceRequestor* notificationCallbacks,
@@ -74,7 +56,6 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler,
 {
     nsresult rv;
 
-    mHandler = handler;
     mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
     mCommand = nsCRT::strdup(command);
@@ -94,41 +75,14 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler,
 
     // if we support the nsIURL interface then use it to get just
     // the file path with no other garbage!
-    nsCOMPtr<nsIURL> aUrl = do_QueryInterface(mURI, &rv);
-    if (NS_SUCCEEDED(rv) && aUrl) { // does it support the url interface?
-        nsXPIDLCString fileString;
-        aUrl->GetFilePath(getter_Copies(fileString));
-        // to be mac friendly you need to convert a file path to a nsFilePath before
-        // passing it to a nsFileSpec...
-#ifdef XP_MAC
-        nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
-        mSpec = filePath;
-
-        // Don't assume we actually created a good file spec
-        FSSpec theSpec = mSpec.GetFSSpec();
-        if (!theSpec.name[0])
-        {
-            NS_ERROR("failed to create a file spec");
-
-            // Since we didn't actually create the file spec
-            // we return an error
-            return NS_ERROR_MALFORMED_URI;
-        }
-#else
-        nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
-        mSpec = filePath;
-#endif
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURI, &rv);
+    if (NS_FAILED(rv)) {
+        // this URL doesn't denote a file
+        return NS_ERROR_MALFORMED_URI;
     }
-    else {
-        // otherwise do the best we can by using the spec for the uri....
-        // XXX temporary, until we integrate more thoroughly with nsFileSpec
-        char* url;
-        rv = mURI->GetSpec(&url);
-        if (NS_FAILED(rv)) return rv;
-        nsFileURL fileURL(url);
-        nsCRT::free(url);
-        mSpec = fileURL;
-    }
+
+    rv = fileURL->GetFile(getter_AddRefs(mFile));
+    if (NS_FAILED(rv)) return rv;
 
     return rv;
 }
@@ -226,7 +180,7 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, 0, 0, getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mFile, PR_RDONLY, mCommand, 0, 0, getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
@@ -252,7 +206,7 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mBufferSegmentSize, mBufferMaxSize,
+    rv = fts->CreateTransport(mFile, PR_RDONLY, mCommand, mBufferSegmentSize, mBufferMaxSize,
                               getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
@@ -309,7 +263,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mBufferSegmentSize, mBufferMaxSize,
+    rv = fts->CreateTransport(mFile, PR_RDONLY, mCommand, mBufferSegmentSize, mBufferMaxSize,
                               getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
@@ -339,7 +293,7 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, mBufferSegmentSize, mBufferMaxSize,
+    rv = fts->CreateTransport(mFile, PR_RDONLY, mCommand, mBufferSegmentSize, mBufferMaxSize,
                               getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
@@ -376,7 +330,9 @@ nsFileChannel::GetContentType(char * *aContentType)
 
     *aContentType = nsnull;
     if (mContentType.IsEmpty()) {
-        if (mSpec.IsDirectory()) {
+        PRBool directory;
+		mFile->IsDirectory(&directory);
+		if (directory) {
             mContentType = "application/http-index-format";
         }
         else {
@@ -414,11 +370,10 @@ NS_IMETHODIMP
 nsFileChannel::GetContentLength(PRInt32 *aContentLength)
 {
     nsresult rv;
-    PRUint32 length;
-
-    rv = GetFileSize(&length);
+    PRInt64 size;
+    rv = mFile->GetFileSize(&size);
     if (NS_SUCCEEDED(rv)) {
-        *aContentLength = (PRInt32)length;
+        *aContentLength = nsInt64(size);
     } else {
         *aContentLength = -1;
     }
@@ -528,325 +483,50 @@ nsFileChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* contex
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::GetModDate(PRTime *aModDate)
-{
-    nsFileSpec::TimeStamp date;
-    mSpec.GetModDate(date);
-    LL_I2L(*aModDate, date);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::GetFileSize(PRUint32 *aFileSize)
-{
-    *aFileSize = mSpec.GetFileSize();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::GetParent(nsIFileChannel * *aParent)
-{
-    nsFileSpec parentSpec;
-    mSpec.GetParent(parentSpec);
-    return CreateFileChannelFromFileSpec(parentSpec, aParent);
-}
-
-class nsDirEnumerator : public nsISimpleEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    nsDirEnumerator() : mDir(nsnull) {
-        NS_INIT_REFCNT();
-    }
-
-    nsresult Init(nsFileChannel* parent, nsIFileProtocolHandler* handler,
-                  nsFileSpec& spec) {
-        const char* path = spec.GetNativePathCString();
-        mDir = PR_OpenDir(path);
-        if (mDir == nsnull)    // not a directory?
-            return NS_ERROR_FAILURE;
-        mHandler = handler;
-        mParent = parent;
-        NS_ADDREF(mParent);
-        return NS_OK;
-    }
-
-    NS_IMETHOD HasMoreElements(PRBool *result) {
-        nsresult rv;
-        if (mNext == nsnull && mDir) {
-            PRDirEntry* entry = PR_ReadDir(mDir, PR_SKIP_BOTH);
-            if (entry == nsnull) {
-                // end of dir entries
-
-                PRStatus status = PR_CloseDir(mDir);
-                if (status != PR_SUCCESS)
-                    return NS_ERROR_FAILURE;
-                mDir = nsnull;
-
-                *result = PR_FALSE;
-                return NS_OK;
-            }
-
-            const char* path = entry->name;
-            rv = mHandler->NewChannelFromNativePath(path,
-                                                    mParent->mLoadGroup,
-                                                    mParent->mCallbacks,
-                                                    mParent->mLoadAttributes,
-                                                    nsnull,
-                                                    mParent->mBufferSegmentSize,
-                                                    mParent->mBufferMaxSize,
-                                                    getter_AddRefs(mNext));
-            if (NS_FAILED(rv)) return rv;
-
-            NS_ASSERTION(mNext, "NewChannel failed");
-        }
-        *result = mNext != nsnull;
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetNext(nsISupports **result) {
-        nsresult rv;
-        PRBool hasMore;
-        rv = HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
-
-        *result = mNext;        // might return nsnull
-        mNext = null_nsCOMPtr();
-        return NS_OK;
-    }
-
-    virtual ~nsDirEnumerator() {
-        if (mDir) {
-            PRStatus status = PR_CloseDir(mDir);
-            NS_ASSERTION(status == PR_SUCCESS, "close failed");
-        }
-        NS_RELEASE(mParent);
-    }
-
-protected:
-    nsFileChannel*                      mParent;
-    nsCOMPtr<nsIFileProtocolHandler>    mHandler;
-    PRDir*                              mDir;
-    nsCOMPtr<nsIFileChannel>            mNext;
-};
-
-NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
-
-NS_IMETHODIMP
-nsFileChannel::GetChildren(nsISimpleEnumerator * *aChildren)
+nsFileChannel::Init(nsIFile* file, 
+                    PRInt32 mode,
+                    const char* contentType, 
+                    PRInt32 contentLength, 
+                    nsILoadGroup* aLoadGroup,
+                    nsIInterfaceRequestor* notificationCallbacks,
+                    nsLoadFlags loadAttributes, 
+                    nsIURI* originalURI,
+                    PRUint32 bufferSegmentSize, 
+                    PRUint32 bufferMaxSize)
 {
     nsresult rv;
-
-    PRBool isDir;
-    rv = IsDirectory(&isDir);
+    nsCOMPtr<nsIFileURL> url;
+    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+                                            NS_GET_IID(nsIFileURL),
+                                            getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
-    if (!isDir)
-        return NS_ERROR_FAILURE;
 
-    nsDirEnumerator* dirEnum = new nsDirEnumerator();
-    if (dirEnum == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(dirEnum);
-    rv = dirEnum->Init(this, mHandler, mSpec);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(dirEnum);
-        return rv;
-    }
-    *aChildren = dirEnum;
-    return NS_OK;
+    rv = url->SetFile(file);
+    if (NS_FAILED(rv)) return rv;
+
+    return Init("load", // XXX 
+                url,
+                aLoadGroup,
+                notificationCallbacks,
+                loadAttributes, 
+                originalURI,
+                bufferSegmentSize, 
+                bufferMaxSize);
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetNativePath(char * *aNativePath)
+nsFileChannel::GetFile(nsIFile* *result)
 {
-    char* nativePath = nsCRT::strdup(mSpec.GetNativePathCString());
-    if (nativePath == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *aNativePath = nativePath;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::Exists(PRBool *result)
-{
-    *result = mSpec.Exists();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::Create()
-{
-    nsFileSpec mySpec(mSpec); // relative path.
-    {
-        nsIOFileStream testStream(mySpec); // creates the file
-        // Scope ends here, file gets closed
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::Delete()
-{
-    mSpec.Delete(PR_TRUE); // RECURSIVE DELETE!
-    if (mSpec.Exists())
-        return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::MoveFrom(nsIURI *src)
-{
-#if 0
-    nsresult rv;
-    nsIFileChannel* fc;
-    rv = src->QueryInterface(NS_GET_IID(nsIFileChannel), (void**)&fc);
-    if (NS_SUCCEEDED(rv)) {
-        rv = fc->moveToDir(this);
-        NS_RELEASE(fc);
-        return rv;
-    }
-    else {
-        // Do it the hard way -- fetch the URL and store the bits locally.
-        // Delete the src when done.
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
-nsFileChannel::CopyFrom(nsIURI *src)
-{
-#if 0
-    nsresult rv;
-    nsIFileChannel* fc;
-    rv = src->QueryInterface(NS_GET_IID(nsIFileChannel), (void**)&fc);
-    if (NS_SUCCEEDED(rv)) {
-        rv = fc->copyToDir(this);
-        NS_RELEASE(fc);
-        return rv;
-    }
-    else {
-        // Do it the hard way -- fetch the URL and store the bits locally.
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
-nsFileChannel::IsDirectory(PRBool *result)
-{
-    *result = mSpec.IsDirectory();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::IsFile(PRBool *result)
-{
-    *result = mSpec.IsFile();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::IsLink(PRBool *_retval)
-{
-    *_retval = mSpec.IsSymlink();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::ResolveLink(nsIFileChannel **_retval)
-{
-    PRBool ignore;
-    nsFileSpec tempSpec = mSpec;
-    nsresult rv = tempSpec.ResolveSymlink(ignore);
-
-    if (NS_SUCCEEDED(rv)) {
-        return CreateFileChannelFromFileSpec(tempSpec, _retval);
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsFileChannel::MakeUnique(const char* baseName, nsIFileChannel **_retval)
-{
-    if (mSpec.IsDirectory()) {
-        nsFileSpec tempSpec = mSpec;
-        tempSpec.MakeUnique(baseName);
-
-        return CreateFileChannelFromFileSpec(tempSpec, _retval);
-    }
-    return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_NOT_DIRECTORY or something
-}
-
-
-NS_IMETHODIMP
-nsFileChannel::Execute(const char *args)
-{
-    nsresult rv;
-    char* queryArgs = nsnull;
-
-    if (args == nsnull) {
-        nsIURL* url;
-        rv = mURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-        if (NS_SUCCEEDED(rv)) {
-            rv = url->GetQuery(&queryArgs);
-            NS_RELEASE(url);
-            if (NS_FAILED(rv)) return rv;
-            args = queryArgs;
-        }
-    }
-
-    rv = mSpec.Execute(args);
-    if (queryArgs)
-        nsCRT::free(queryArgs);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsFileChannel::GetFileSpec(nsFileSpec *spec)
-{
-    *spec = mSpec;
+    *result = mFile;
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **result)
-{
-    nsresult rv;
 
-    nsFileURL aURL(spec);
-    const char* urlStr = aURL.GetURLString();
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
 
-    nsIChannel* channel;
-    rv = serv->NewChannel("load",    // XXX what should this be?
-                          urlStr,
-                          nsnull,
-                          mLoadGroup,
-                          mCallbacks,
-                          mLoadAttributes,
-                          nsnull,
-                          mBufferSegmentSize,
-                          mBufferMaxSize,
-                          &channel);
-    if (NS_FAILED(rv)) return rv;
 
-    // this cast is safe because nsFileURL::GetURLString aways
-    // returns file: strings, and consequently we'll make nsIFileChannel
-    // objects from them:
-    *result = NS_STATIC_CAST(nsIFileChannel*, channel);
-    return NS_OK;
-}
 
-////////////////////////////////////////////////////////////////////////////////
+

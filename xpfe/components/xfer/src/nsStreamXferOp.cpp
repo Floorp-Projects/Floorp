@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -38,6 +38,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
+#include "nsILocalFile.h"
 
 #include "prprf.h"
 
@@ -159,10 +160,13 @@ nsStreamXferOp::Start( void ) {
     
             if ( NS_SUCCEEDED( rv ) ) {
                 // Next, create output file channel.
-                nsFileSpec target;
+                nsFileSpec target;      // XXX eliminate
                 mOutputSpec->GetFileSpec( &target );
-                rv = fts->CreateTransport( target, "load", 0, 0,
-                                          getter_AddRefs( mOutputChannel ) );
+                nsCOMPtr<nsILocalFile> file;
+                rv = NS_NewLocalFile(target, getter_AddRefs(file));
+                if (NS_SUCCEEDED(rv))
+                    rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0,
+                                              getter_AddRefs( mOutputChannel));
     
                 if ( NS_SUCCEEDED( rv ) ) {
                     // reset the channel's interface requestor so we receive status

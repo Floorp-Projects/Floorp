@@ -27,7 +27,8 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
-#include "nsCOMPtr.h"
+#include "nsILocalFile.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
@@ -1279,3 +1280,77 @@ nsStdURL::SetFileBaseName(const char *name)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIFileURL methods:
+
+NS_IMETHODIMP
+nsStdURL::GetFile(nsIFile * *aFile)
+{
+    nsresult rv;
+    if (mFile) {
+        *aFile = mFile;
+        NS_ADDREF(*aFile);
+        return NS_OK;
+    }
+
+    // if we didn't have an nsIFile already, then synthesize one and cache it
+
+    if (nsCRT::strcasecmp(mScheme, "file") != 0) {
+        // if this isn't a file: URL, then we can't return an nsIFile
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_ASSERTION(mPreHost == nsnull, "file: with mPreHost");
+
+	// we do not use the path cause it can contain the # char
+    nsCAutoString path(mDirectory);
+	path.Append(mFileName);
+#ifdef XP_PC
+    if (path.CharAt(2) == '|') {
+        path.SetCharAt(':', 2);
+        // cut off the leading '/'
+        if (path.CharAt(0) == '/')
+            path.Cut(0, 1);
+    }
+    path.ReplaceChar('/', '\\');
+#elif defined(XP_MAC)
+	// For now we'll just convert the /'s into :'s to make it look like a Mac path
+	// at some point we need to doa  better job - FIX ME!!!!!!!
+    path.ReplaceChar('/', ':');
+    if (path.CharAt(0) == ':')
+        path.Cut(0, 1);
+#endif
+
+    // we need to make sure that the filepath is unescaped! 
+	
+	char* escapedPath = (char*) nsAllocator::Clone((void*)(const char*)path,strlen(path));
+	nsUnescape(escapedPath);
+
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = NS_NewLocalFile(escapedPath, getter_AddRefs(localFile));
+
+	nsAllocator::Free(escapedPath);
+
+    mFile = localFile;
+	*aFile = mFile;
+	NS_IF_ADDREF(*aFile);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsStdURL::SetFile(nsIFile * aFile)
+{
+    nsresult rv;
+    mFile = aFile;
+
+    // set up this URL to denote the nsIFile
+    SetScheme("file");
+
+    rv = mFile->GetPath(&mPath);
+    if (NS_FAILED(rv)) return rv;
+
+    return ParsePath();
+}
+
+////////////////////////////////////////////////////////////////////////////////

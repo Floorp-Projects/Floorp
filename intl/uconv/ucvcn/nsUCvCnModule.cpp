@@ -22,6 +22,8 @@
 
 #define NS_IMPL_IDS
 
+#include "nspr.h"
+#include "nsString.h"
 #include "pratom.h"
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"
@@ -202,7 +204,7 @@ public:
 static nsConverterModule * gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* location,
                                           nsIModule** return_cobj)
 {
   nsresult rv = NS_OK;
@@ -346,7 +348,7 @@ NS_IMETHODIMP nsConverterModule::GetClassObject(nsIComponentManager *aCompMgr,
 }
 
 NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                                              nsIFileSpec* aPath,
+                                              nsIFile* aPath,
                                               const char* registryLocation,
                                               const char* componentType)
 {
@@ -410,7 +412,7 @@ done:
 }
 
 NS_IMETHODIMP nsConverterModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                                                nsIFileSpec* aPath,
+                                                nsIFile* aPath,
                                                 const char* registryLocation)
 {
   // XXX also delete the stuff I added to the registry

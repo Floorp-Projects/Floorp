@@ -59,6 +59,7 @@ LINCS =                    \
 	-I$(PUBLIC)\libreg \
         -I..\base          \
         -I..\threads       \
+        -I..\io       \
 	$(NULL)
 
 LCFLAGS = -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN

@@ -35,6 +35,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsXPIDLString.h"
+#include "nsIFile.h"
 
 class nsFactoryEntry;
 class nsDll;
@@ -87,7 +88,7 @@ protected:
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry);
 
-    nsresult SyncComponentsInDir(PRInt32 when, nsIFileSpec *dirSpec);
+    nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashProgID(const char *aprogID, const nsCID &aClass);
@@ -115,9 +116,8 @@ protected:
     PRBool              mPrePopulationDone;
     nsRegistryKey       mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
-    nsSpecialSystemDirectory *mComponentsDir;
-    PRUint32 mComponentsDirLen;
-
+    nsIFile            *mComponentsDir;
+    
     // Shutdown
     #define NS_SHUTDOWN_NEVERHAPPENED 0
     #define NS_SHUTDOWN_INPROGRESS 1

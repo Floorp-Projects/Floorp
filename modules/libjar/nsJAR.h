@@ -28,12 +28,13 @@
 #ifndef nsJAR_h__
 #define nsJAR_h__
 
-#include "nsFileSpec.h"
+#include "nsIFile.h"
 #include "nsIZipReader.h"
 #include "prtypes.h"
 #include "nsIEnumerator.h"
 #include "nsZipArchive.h"
 #include "zipfile.h"
+#include "nsCOMPtr.h"
 
 class nsIInputStream;
 
@@ -60,7 +61,7 @@ class nsJAR : public nsIZipReader
   
   private:
 
-    nsFileSpec          mZipFile;
+    nsCOMPtr<nsIFile>   mZipFile;
     nsZipArchive        mZip;
 };
 

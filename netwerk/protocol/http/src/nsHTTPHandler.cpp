@@ -34,7 +34,7 @@
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHttpEventSink.h"
-#include "nsIFileStream.h" 
+#include "nsIFileStreams.h" 
 #include "nsIStringStream.h" 
 #include "nsHTTPEncodeStream.h" 
 #include "nsHTTPAtoms.h"
@@ -43,6 +43,8 @@
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
 #endif
+#include "nsILocalFile.h"
+#include "nsNetUtil.h"
 
 #if defined(PR_LOGGING)
 //
@@ -328,43 +330,40 @@ nsHTTPHandler::NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
 
 NS_IMETHODIMP
 nsHTTPHandler::NewDecodeStream(nsIInputStream *encodedStream, 
-                                PRUint32 decodeFlags,
-                                nsIInputStream **result)
+                               PRUint32 decodeFlags,
+                               nsIInputStream **result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHTTPHandler::NewPostDataStream(PRBool isFile, 
-                                const char *data, 
-                                PRUint32 encodeFlags,
-                                nsIInputStream **result)
+                                 const char *data, 
+                                 PRUint32 encodeFlags,
+                                 nsIInputStream **result)
 {
     nsresult rv;
     if (isFile) {
-        nsISupports* in;
-        nsFileSpec spec(data);
-        rv = NS_NewTypicalInputFileStream(&in, spec);
+        nsCOMPtr<nsILocalFile> file;
+        rv = NS_NewLocalFile(data, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
-        nsIInputStream* rawStream;
-        rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&rawStream);
-        NS_RELEASE(in);
+        nsCOMPtr<nsIInputStream> in;
+        rv = NS_NewFileInputStream(file, getter_AddRefs(in));
+
         if (NS_FAILED(rv)) return rv;
 
-        rv = NewEncodeStream(rawStream,     
-                nsIHTTPProtocolHandler::ENCODE_NORMAL, 
-                result);
-        NS_RELEASE(rawStream);
+        rv = NewEncodeStream(in,     
+                             nsIHTTPProtocolHandler::ENCODE_NORMAL, 
+                             result);
         return rv;
     }
     else {
-        nsISupports* in;
-        rv = NS_NewStringInputStream(&in, data);
+        nsCOMPtr<nsISupports> in;
+        rv = NS_NewStringInputStream(getter_AddRefs(in), data);
         if (NS_FAILED(rv)) return rv;
 
-        rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)result);
-        NS_RELEASE(in);
+        rv = in->QueryInterface(nsIInputStream::GetIID(), (void**)result);
         return rv;
     }
 }

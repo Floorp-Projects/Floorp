@@ -33,42 +33,39 @@
 
 
 nsDirectoryIndexStream::nsDirectoryIndexStream()
-    : mOffset(0),
-      mIter(nsnull)
+    : mOffset(0)
 {
     NS_INIT_REFCNT();
 }
 
-
 nsresult
-nsDirectoryIndexStream::Init(const nsFileSpec& aDir)
+nsDirectoryIndexStream::Init(nsIFile* aDir)
 {
-    NS_PRECONDITION(aDir.IsDirectory(), "not a directory");
-    if (! aDir.IsDirectory())
+    nsresult rv;
+    PRBool isDir;
+    rv = aDir->IsDirectory(&isDir);
+    if (NS_FAILED(rv)) return rv;
+    NS_PRECONDITION(isDir, "not a directory");
+    if (!isDir)
         return NS_ERROR_ILLEGAL_VALUE;
 
     mDir = aDir;
 
     // Sigh. We have to allocate on the heap because there are no
     // assignment operators defined.
-    mIter = new nsDirectoryIterator(mDir, PR_FALSE);		// rjc: don't resolve aliases
-    if (! mIter)
-        return NS_ERROR_OUT_OF_MEMORY;
+    rv = mDir->GetDirectoryEntries(getter_AddRefs(mIter));
+    if (NS_FAILED(rv)) return rv;
 
-    mBuf  = "200: filename content-length last-modified file-type\n";
+    mBuf = "200: filename content-length last-modified file-type\n";
     return NS_OK;
 }
 
-
 nsDirectoryIndexStream::~nsDirectoryIndexStream()
 {
-    delete mIter;
 }
 
-
-
 nsresult
-nsDirectoryIndexStream::Create(const nsFileSpec& aDir, nsIInputStream** aResult)
+nsDirectoryIndexStream::Create(nsIFile* aDir, nsIInputStream** aResult)
 {
     nsDirectoryIndexStream* result = new nsDirectoryIndexStream();
     if (! result)
@@ -86,29 +83,9 @@ nsDirectoryIndexStream::Create(const nsFileSpec& aDir, nsIInputStream** aResult)
     return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsDirectoryIndexStream);
-NS_IMPL_RELEASE(nsDirectoryIndexStream);
-
-NS_IMETHODIMP
-nsDirectoryIndexStream::QueryInterface(REFNSIID aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(NS_GET_IID(nsIInputStream)) ||
-        aIID.Equals(NS_GET_IID(nsIBaseStream)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aResult = NS_STATIC_CAST(nsIInputStream*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-}
-
+NS_IMPL_ISUPPORTS2(nsDirectoryIndexStream,
+                   nsIInputStream,
+                   nsIBaseStream)
 
 NS_IMETHODIMP
 nsDirectoryIndexStream::Close()
@@ -116,14 +93,15 @@ nsDirectoryIndexStream::Close()
     return NS_OK;
 }
 
-
-
 NS_IMETHODIMP
 nsDirectoryIndexStream::Available(PRUint32* aLength)
 {
     // Lie, and tell the caller that the stream is endless (until we
     // actually don't have anything left).
-    if (mIter->Exists()) {
+    PRBool more;
+    nsresult rv = mIter->HasMoreElements(&more);
+    if (NS_FAILED(rv)) return rv; 
+    if (more) {
         *aLength = PRUint32(-1);
         return NS_OK;
     }
@@ -132,7 +110,6 @@ nsDirectoryIndexStream::Available(PRUint32* aLength)
         return NS_OK;
     }
 }
-
 
 NS_IMETHODIMP
 nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
@@ -153,15 +130,29 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         mBuf.Truncate();
 
         // Okay, now we'll suck stuff off of our iterator into the mBuf...
-        while (PRUint32(mBuf.Length()) < aCount && mIter->Exists()) {
-            nsFileSpec current = mIter->Spec();
-            ++(*mIter);
+        while (PRUint32(mBuf.Length()) < aCount) {
+            PRBool more;
+            nsresult rv = mIter->HasMoreElements(&more);
+            if (NS_FAILED(rv)) return rv; 
+            if (!more) break;
+            
+            nsCOMPtr<nsISupports> cur;
+            rv = mIter->GetNext(getter_AddRefs(cur));
+            nsCOMPtr<nsIFile> current = do_QueryInterface(cur, &rv);
+            if (NS_FAILED(rv)) return rv; 
 
-		// rjc: don't return hidden files/directories!
-		if (current.IsHidden())	continue;
+            // rjc: don't return hidden files/directories!
+            PRBool hidden;
+            rv = current->IsHidden(&hidden);
+            if (NS_FAILED(rv)) return rv; 
+            if (hidden) continue;
 
+            char* path;
+            rv = current->GetPath(&path);
+            if (NS_FAILED(rv)) return rv; 
             PRFileInfo fileinfo;
-            PRStatus status = PR_GetFileInfo(nsNSPRPath(current), &fileinfo);
+            PRStatus status = PR_GetFileInfo(path, &fileinfo);
+            nsCRT::free(path);
             if (status != PR_SUCCESS)
                 continue;
 
@@ -169,7 +160,9 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
             // The "filename" field
             {
-                char* leafname = current.GetLeafName();
+                char* leafname;
+                rv = current->GetLeafName(&leafname);
+                if (NS_FAILED(rv)) return rv; 
                 if (leafname) {
                     char* escaped = nsEscape(leafname, url_Path);
                     if (escaped) {
@@ -195,14 +188,27 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 
             // The "file-type" field
-            if (current.IsFile()) {
+            PRBool isFile;
+            rv = current->IsFile(&isFile);
+            if (NS_FAILED(rv)) return rv; 
+            if (isFile) {
                 mBuf += "FILE ";
             }
-            else if (current.IsDirectory()) {
-                mBuf += "DIRECTORY ";
-            }
-            else if (current.IsSymlink()) {
-                mBuf += "SYMBOLIC-LINK ";
+            else {
+                PRBool isDir;
+                rv = current->IsDirectory(&isDir);
+                if (NS_FAILED(rv)) return rv; 
+                if (isDir) {
+                    mBuf += "DIRECTORY ";
+                }
+                else {
+                    PRBool isLink;
+                    rv = current->IsSymlink(&isLink);
+                    if (NS_FAILED(rv)) return rv; 
+                    if (isLink) {
+                        mBuf += "SYMBOLIC-LINK ";
+                    }
+                }
             }
 
             mBuf.Append('\n');

@@ -23,6 +23,7 @@
 #include "nsClipboard.h"
 
 #include "nsCOMPtr.h"
+#include "nsFileSpec.h"
 
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"

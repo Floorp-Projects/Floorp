@@ -56,7 +56,7 @@ static nsJPGModule *gModule = NULL;
 // Module entry point
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsJPGModule *module;
@@ -169,7 +169,7 @@ nsJPGModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass,
 
 NS_IMETHODIMP
 nsJPGModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec *location,
+                          nsIFile* aPath,
                           const char *registryLocation,
                           const char *componentType)
 {
@@ -177,17 +177,17 @@ nsJPGModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(kJPGDecoderCID, 
                                          "Netscape JPGDec", 
                                          "component://netscape/image/decoder&type=image/jpeg",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
 NS_IMETHODIMP
-nsJPGModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                            nsIFileSpec *location,
+nsJPGModule::UnregisterSelf(nsIComponentManager *aCompMgr, 
+                            nsIFile* aPath, 
                             const char *registryLocation)
 {
     nsresult rv;
-    rv = aCompMgr->UnregisterComponentSpec(kJPGDecoderCID, location);
+    rv = aCompMgr->UnregisterComponentSpec(kJPGDecoderCID, aPath);
     return rv;
 }
 

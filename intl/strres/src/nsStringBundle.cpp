@@ -22,7 +22,7 @@
 
 #define NS_IMPL_IDS
 #include "nsID.h"
-
+#include "nsFileSpec.h"
 #include "nsString2.h"
 #include "nsIPersistentProperties.h"
 #include "nsIStringBundle.h"
@@ -650,4 +650,6 @@ static nsModuleComponentInfo components[] =
 {
    { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_PROGID, nsStringBundleServiceConstructor}
 };
+
 NS_IMPL_NSGETMODULE("nsStringBundleModule", components)
+

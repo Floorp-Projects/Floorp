@@ -25,7 +25,6 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsCRT.h"
 #include "nsIEnumerator.h"
 #include "nsIModule.h"
@@ -34,6 +33,10 @@
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsXPIDLString.h"
+
+#include "nsILocalFile.h"
+#include "nsLocalFile.h"
+#include "nsDirectoryService.h"
 
 #include "plstr.h"
 #include "prlink.h"
@@ -244,14 +247,14 @@ nsresult nsComponentManagerImpl::Init(void)
 	nsStringKey loaderKey(nativeComponentType);
 	mLoaders->Put(&loaderKey, mNativeComponentLoader);
     }
-    
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-           ("nsComponentManager: Initialized."));
 
 #ifdef USE_REGISTRY
-    NR_StartupRegistry();
-    PlatformInit();
+        NR_StartupRegistry();
+        PlatformInit();
 #endif
+
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+           ("nsComponentManager: Initialized."));
 
     return NS_OK;
 }
@@ -413,13 +416,17 @@ nsComponentManagerImpl::PlatformInit(void)
 
     rv = mRegistry->AddSubtree(nsIRegistry::Common, classIDKeyName, &mCLSIDKey);
     if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIProperties> directoryService;
+    rv = nsDirectoryService::Create(nsnull, 
+                                    NS_GET_IID(nsIProperties), 
+                                    getter_AddRefs(directoryService));  
+    
+    directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), (void**)&mComponentsDir);
 
-    mComponentsDir =
-        new nsSpecialSystemDirectory(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
-    mComponentsDirLen = strlen(mComponentsDir->GetNativePathCString());
-
+    
     if (mNativeComponentLoader) {
         /* now that we have the registry, Init the native loader */
         rv = mNativeComponentLoader->Init(this, mRegistry);
@@ -961,21 +968,21 @@ nsDll* nsComponentManagerImpl::CreateCachedDllName(const char *dllName)
 
 
 
-nsDll* nsComponentManagerImpl::CreateCachedDll(nsIFileSpec *dllSpec)
+nsDll* nsComponentManagerImpl::CreateCachedDll(nsIFile *dllSpec)
 {
     nsDll *dll = NULL;
-    PRUint32 modDate;
-    PRUint32 size;
+    PRInt64 modDate;
+    PRInt64 size;
 
     if (NS_FAILED(dllSpec->GetModDate(&modDate)) ||
         NS_FAILED(dllSpec->GetFileSize(&size)))
         return NULL;
 
     char *persistentDescriptor = NULL;
-    if (NS_FAILED(dllSpec->GetPersistentDescriptorString(&persistentDescriptor)))
+    if (NS_FAILED(dllSpec->GetPath(&persistentDescriptor)))
         return NULL;
     dll = CreateCachedDll(persistentDescriptor, modDate, size);
-    nsCRT::free(persistentDescriptor);
+    nsAllocator::free(persistentDescriptor);
 
     return dll;
 }
@@ -1322,42 +1329,36 @@ nsComponentManagerImpl::RegistryNameForLib(const char *aLibName,
 }
 
 nsresult
-nsComponentManagerImpl::RegistryLocationForSpec(nsIFileSpec *aSpec,
+nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
                                                 char **aRegistryName)
 {
     nsresult rv;
-    nsFileSpec spec;
-    if (NS_FAILED(rv = aSpec->GetFileSpec(&spec)))
-        return rv;
+    
+    if (!mComponentsDir) 
+        return NS_ERROR_NOT_INITIALIZED;
 
-    if (spec.IsChildOf(*mComponentsDir)){
-        /*
-         * According to sfraser, this sort of string magic is ``Mac-safe''.
-         * Who knew?
-         */
-        const char *nativePath;
-        nativePath = spec.GetNativePathCString();
-        nativePath += mComponentsDirLen;
-#ifdef XP_MAC                   // XXX move relativize-fragment logic to nsFileSpec?
-        if (nativePath[0] != ':')
-            nativePath--;
-#else
-        char sep = PR_GetDirectorySeparator();
-        if (nativePath[0] == sep)
-            nativePath++;
-#endif
-        rv = MakeRegistryName(nativePath, XPCOM_RELCOMPONENT_PREFIX, 
+    PRBool containedIn;
+    mComponentsDir->IsContainedIn(aSpec, PR_TRUE, &containedIn); // dougt FIX!
+
+    char *persistentDescriptor;
+
+    if (containedIn){
+        rv = aSpec->GetLeafName(&persistentDescriptor);
+        if (NS_FAILED(rv))
+            return rv;
+        rv = MakeRegistryName(persistentDescriptor, XPCOM_RELCOMPONENT_PREFIX, 
                               aRegistryName);
     } else {
         /* absolute names include volume info on Mac, so persistent descriptor */
-        char *persistentDescriptor;
-        rv = aSpec->GetPersistentDescriptorString(&persistentDescriptor);
+        rv = aSpec->GetPath(&persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
         rv = MakeRegistryName(persistentDescriptor, XPCOM_ABSCOMPONENT_PREFIX,
                               aRegistryName);
-        nsAllocator::Free(persistentDescriptor);
     }
+
+    if (persistentDescriptor)
+        nsAllocator::Free(persistentDescriptor);
         
     return rv;
 
@@ -1365,7 +1366,7 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFileSpec *aSpec,
 
 nsresult
 nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
-                                                nsIFileSpec **aSpec)
+                                                nsIFile **aSpec)
 {
     nsresult rv;
     if (!aLocation || !aSpec)
@@ -1373,15 +1374,28 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
 
     /* abs:/full/path/to/libcomponent.so */
     if (!nsCRT::strncmp(aLocation, XPCOM_ABSCOMPONENT_PREFIX, 4)) {
-        if (NS_FAILED(rv = NS_NewFileSpec(aSpec)))
-            return rv;
-        return (*aSpec)->SetPersistentDescriptorString((char *)aLocation + 4);
+
+        nsLocalFile* file = new nsLocalFile;
+        if (!file) return NS_ERROR_FAILURE;
+        
+        rv = file->InitWithPath(((char *)aLocation + 4));
+        file->QueryInterface(NS_GET_IID(nsILocalFile), (void**)aSpec);
+        return rv;
     }
 
     if (!nsCRT::strncmp(aLocation, XPCOM_RELCOMPONENT_PREFIX, 4)) {
-        nsFileSpec compSpec = (*mComponentsDir);
-        compSpec += (aLocation + 4);
-        return NS_NewFileSpecWithSpec(compSpec, aSpec);
+        
+        if (!mComponentsDir)
+            return NS_ERROR_NOT_INITIALIZED;
+
+        nsILocalFile* file = nsnull;
+        rv = mComponentsDir->Clone((nsIFile**)&file);       
+        
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = file->Append(aLocation + 4);
+        *aSpec = file;
+        return rv;
     }
     *aSpec = nsnull;
     return NS_ERROR_INVALID_ARG;
@@ -1470,7 +1484,7 @@ nsresult
 nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   const char *aClassName,
                                                   const char *aProgID,
-                                                  nsIFileSpec *aSpec,
+                                                  nsIFile *aSpec,
                                                   const char *aLocation,
                                                   PRBool aReplace,
                                                   PRBool aPersist,
@@ -1483,13 +1497,13 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
 }
 
 /*
- * Register a component, using whatever they stuck in the FileSpec.
+ * Register a component, using whatever they stuck in the nsIFile.
  */
 nsresult
 nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                               const char *aClassName,
                                               const char *aProgID,
-                                              nsIFileSpec *aLibrarySpec,
+                                              nsIFile *aLibrarySpec,
                                               PRBool aReplace,
                                               PRBool aPersist)
 {
@@ -1821,24 +1835,23 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
         delete [] buf;
     }
 
-    // Convert the persistent descriptor into a nsIFileSpec
-    nsCOMPtr<nsIFileSpec>libSpec;
-    rv = CreateInstanceByProgID(NS_FILESPEC_PROGID, NULL,
-                                NS_GET_IID(nsIFileSpec),
-                                getter_AddRefs(libSpec));
+    // Convert the persistent descriptor into a nsIFile
+    nsLocalFile* libSpec = new nsLocalFile;
+    if (!libSpec) return NS_ERROR_FAILURE;
+        
+    rv = libSpec->InitWithPath((char *)aLibrary);
+            
     if (NS_FAILED(rv)) return rv;
-    rv = libSpec->SetPersistentDescriptorString((char *)aLibrary);
-    if (NS_FAILED(rv)) return rv;
-
-    return UnregisterComponentSpec(aClass, libSpec);
+    
+    return UnregisterComponentSpec(aClass, libSpec);    
 }
 
 nsresult
 nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
-                                                nsIFileSpec *aLibrarySpec)
+                                                nsIFile *aLibrarySpec)
 {
     char *aLibrary;
-    nsresult rv = aLibrarySpec->GetPersistentDescriptorString(&aLibrary);
+    nsresult rv = aLibrarySpec->GetPath(&aLibrary);
     if (NS_FAILED(rv))
         return NS_ERROR_INVALID_ARG;
 
@@ -1973,7 +1986,7 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
 
 struct AutoReg_closure {
     int when;
-    nsIFileSpec *spec;
+    nsIFile *spec;
     nsresult status;   // this is a hack around Enumerate's void return
     nsIComponentLoader *native;
     PRBool registered;
@@ -2012,17 +2025,20 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
 }
 
 nsresult
-nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFileSpec *inDirSpec)
+nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
-    nsCOMPtr<nsIFileSpec> dir;
+    nsCOMPtr<nsIFile> dir;
     nsresult rv;
 
     if (inDirSpec) {
 	dir = inDirSpec;
     } else {
         // Do default components directory
-        nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
-        rv = NS_NewFileSpecWithSpec(sysdir, getter_AddRefs(dir));
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+    
+        rv = directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), getter_AddRefs(dir));
         if (NS_FAILED(rv)) 
 	    return rv; // XXX translate error code?
     }
@@ -2109,7 +2125,7 @@ AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
 
 nsresult
 nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
-                                              nsIFileSpec *component)
+                                              nsIFile *component)
 {
     struct AutoReg_closure closure;
 

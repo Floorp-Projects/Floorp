@@ -26,6 +26,7 @@
 #include "nsObserverService.h"
 #include "nsObserver.h"
 #include "nsProperties.h"
+#include "nsIProperties.h"
 #include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
 
@@ -49,15 +50,15 @@
 #include "nsProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
 
-#include "nsFileSpecImpl.h"
 #include "xptinfo.h"
 
 #include "nsThread.h"
 
-#ifdef _NEW_NSIFILE
-#include "nsIFileImpl.h"
-#include "nsIDirEnumeratorImpl.h"
-#endif
+#include "nsFileSpecImpl.h"
+
+#include "nsILocalFile.h"
+#include "nsLocalFile.h"
+#include "nsDirectoryService.h"
 
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
@@ -171,8 +172,9 @@ nsICaseConversion *gCaseConv = NULL;
 extern nsIServiceManager* gServiceManager;
 extern PRBool gShuttingDown;
 
-nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
-                             nsFileSpec *binDirectory)
+nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result, 
+                             nsIFile* binDirectory
+)
 {
     nsresult rv = NS_OK;
 
@@ -197,6 +199,8 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     // 2. Create the Component Manager and register with global service manager
     //    It is understood that the component manager can use the global service manager.
     nsComponentManagerImpl *compMgr = NULL;
+    nsDirectoryService     *directoryService = NULL;
+
     if (nsComponentManagerImpl::gComponentManager == NULL)
     {
         compMgr = new nsComponentManagerImpl();
@@ -204,24 +208,32 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(compMgr);
 
-        // Set the registry file
-        if (binDirectory && binDirectory->IsDirectory())
+        rv = nsDirectoryService::Create(nsnull, 
+                                        NS_GET_IID(nsIProperties), 
+                                        (void**)&directoryService);  // needs to be around for life of product
+        PRBool value;
+                        
+        if (binDirectory)
         {
-            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory,
-                                          binDirectory);
+            rv = binDirectory->IsDirectory(&value);
+
+            if (NS_SUCCEEDED(rv) && value)
+                directoryService->Define("xpcom.currentProcess", binDirectory);
         }
+
         rv = compMgr->Init();
         if (NS_FAILED(rv))
         {
             NS_RELEASE(compMgr);
             return rv;
         }
+        
         nsComponentManagerImpl::gComponentManager = compMgr;
     }
     
     rv = servMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
-
+    
     // 3. Register the global services with the component manager so that
     //    clients can create new objects.
 
@@ -270,18 +282,6 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 ByteBufferImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kFileSpecCID,
-                                NS_FILESPEC_CLASSNAME,
-                                NS_FILESPEC_PROGID,
-                                nsFileSpecImpl::Create);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = RegisterGenericFactory(compMgr, kDirectoryIteratorCID,
-                                NS_DIRECTORYITERATOR_CLASSNAME,
-                                NS_DIRECTORYITERATOR_PROGID,
-                                nsDirectoryIteratorImpl::Create);
-    if (NS_FAILED(rv)) return rv;
-    
     rv = RegisterGenericFactory(compMgr, kScriptableInputStreamCID,
                                 NS_SCRIPTABLEINPUTSTREAM_CLASSNAME,
                                 NS_SCRIPTABLEINPUTSTREAM_PROGID,
@@ -460,20 +460,29 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 nsSupportsVoidImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
-#ifdef _NEW_NSIFILE
-    rv = RegisterGenericFactory(compMgr, nsIFileImpl::GetCID(),
-                                NS_FILE_CLASSNAME,
-                                NS_FILE_PROGID,
-                                nsIFileImpl::Create);
+    rv = RegisterGenericFactory(compMgr, nsLocalFile::GetCID(),
+                                NS_LOCAL_FILE_CLASSNAME,
+                                NS_LOCAL_FILE_PROGID,
+                                nsLocalFile::nsLocalFileConstructor);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, nsIDirEnumeratorImpl::GetCID(),
-                                NS_DIRECTORY_ENUMERATOR_CLASS,
-                                NS_DIRECTORY_ENUMERATOR_PROGID,
-                                nsIDirEnumeratorImpl::Create);
+    rv = RegisterGenericFactory(compMgr, nsDirectoryService::GetCID(),
+                                NS_DIRECTORY_SERVICE_CLASSNAME,
+                                NS_DIRECTORY_SERVICE_PROGID,
+                                nsDirectoryService::Create);
     if (NS_FAILED(rv)) return rv;
-#endif
 
+    rv = RegisterGenericFactory(compMgr, kFileSpecCID,
+                                NS_FILESPEC_CLASSNAME,
+                                NS_FILESPEC_PROGID,
+                                nsFileSpecImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kDirectoryIteratorCID,
+                                NS_DIRECTORYITERATOR_CLASSNAME,
+                                NS_DIRECTORYITERATOR_PROGID,
+                                nsDirectoryIteratorImpl::Create);
+    if (NS_FAILED(rv)) return rv;
 
     // Prepopulate registry for performance
     // Ignore return value. It is ok if this fails.

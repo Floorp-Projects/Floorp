@@ -39,7 +39,7 @@
 
 #include "nsJAR.h"
 #include "nsJARInputStream.h"
-//#include "nsIFile.h"
+#include "nsILocalFile.h"
 
 #ifndef __gen_nsIFile_h__
 #define NS_ERROR_FILE_UNRECONGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
@@ -99,7 +99,7 @@ nsJAR::~nsJAR()
 NS_IMPL_ISUPPORTS1(nsJAR, nsIZipReader);
 
 NS_IMETHODIMP
-nsJAR::Init(nsFileSpec& zipFile)
+nsJAR::Init(nsIFile* zipFile)
 {
   mZipFile = zipFile;
   return NS_OK;
@@ -108,7 +108,16 @@ nsJAR::Init(nsFileSpec& zipFile)
 NS_IMETHODIMP
 nsJAR::Open()
 {
-  PRInt32 err = mZip.OpenArchive( nsNSPRPath(mZipFile) );
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mZipFile, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRFileDesc* fd;
+  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 err = mZip.OpenArchiveWithFileDesc(fd);
+  PR_Close(fd);
   return ziperr2nsresult(err);
 }
 
@@ -120,9 +129,19 @@ nsJAR::Close()
 }
 
 NS_IMETHODIMP
-nsJAR::Extract(const char *zipEntry, nsFileSpec& outFile)
+nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 {
-  PRInt32 err = mZip.ExtractFile(zipEntry, nsNSPRPath(outFile));
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRFileDesc* fd;
+  rv = localFile->OpenNSPRFileDesc(PR_RDWR, 0664, &fd);
+  if (NS_FAILED(rv)) return rv;
+
+  PRUint16 mode;
+  PRInt32 err = mZip.ExtractFileToFileDesc(zipEntry, fd, &mode);
+  PR_Close(fd);
   return ziperr2nsresult(err);
 }
 

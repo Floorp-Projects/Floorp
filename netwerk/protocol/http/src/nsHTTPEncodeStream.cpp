@@ -161,7 +161,7 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
 // nsIRandomAccessStore methods:
 
 NS_IMETHODIMP
-nsHTTPEncodeStream::Seek(PRSeekWhence whence, PRInt32 offset)
+nsHTTPEncodeStream::Seek(PRInt32 whence, PRInt32 offset)
 {
     nsresult rv;
     nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
@@ -172,7 +172,7 @@ nsHTTPEncodeStream::Seek(PRSeekWhence whence, PRInt32 offset)
 }
 
 NS_IMETHODIMP
-nsHTTPEncodeStream::Tell(PRIntn* outWhere)
+nsHTTPEncodeStream::Tell(PRInt32* outWhere)
 {
     nsresult rv;
     nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
@@ -181,6 +181,7 @@ nsHTTPEncodeStream::Tell(PRIntn* outWhere)
     return ras->Tell(outWhere);
 }
 
+#if 0
 NS_IMETHODIMP
 nsHTTPEncodeStream::GetAtEOF(PRBool* outAtEOF)
 {
@@ -200,5 +201,6 @@ nsHTTPEncodeStream::SetAtEOF(PRBool inAtEOF)
 
     return ras->SetAtEOF(inAtEOF);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

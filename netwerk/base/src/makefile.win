@@ -27,6 +27,8 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 LIBRARY_NAME=neckobase_s
 
 CPP_OBJS =                                         \
+        .\$(OBJDIR)\nsFileStreams.obj              \
+        .\$(OBJDIR)\nsBufferedStreams.obj          \
         .\$(OBJDIR)\nsAsyncStreamListener.obj      \
         .\$(OBJDIR)\nsSyncStreamListener.obj       \
         .\$(OBJDIR)\nsIOService.obj                \

@@ -20,9 +20,9 @@
 #include "nsIRegistry.h"
 #include "nsIComponentLoader.h"
 #include "nsIComponentManager.h"
-#include "nsIFileSpec.h"
+#include "nsIFile.h"
 #include "nsIRegistry.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryService.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
@@ -41,29 +41,29 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     virtual ~nsNativeComponentLoader();
     nsresult RegistryNameForLib(const char *aLibName,
                                 char **aRegistryName);
-    nsresult RegistryNameForSpec(nsIFileSpec *aSpec,
+    nsresult RegistryNameForSpec(nsIFile *aSpec,
                                  char **aRegistryName);
 
  protected:
     nsCOMPtr<nsIRegistry> mRegistry;
     nsIComponentManager* mCompMgr;      // weak reference -- backpointer
     nsObjectHashtable*  mDllStore;
-    NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
+    NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
     nsRegistryKey mXPCOMKey;
     nsVoidArray mDeferredComponents;
 
  private:
-    nsresult CreateDll(nsIFileSpec *aSpec, const char *aLocation,
-                       PRUint32 modifiedTime, PRUint32 fileSize, nsDll **aDll);
+    nsresult CreateDll(nsIFile *aSpec, const char *aLocation,
+                       PRInt64 *modifiedTime, PRInt64 *fileSize, nsDll **aDll);
     nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation,
                              PRBool deferred);
     nsresult SelfUnregisterDll(nsDll *dll);
-    nsresult GetRegistryDllInfo(const char *aLocation, PRUint32 *lastModifiedTime,
-                                PRUint32 *fileSize);
-    nsresult GetRegistryDllInfo(nsRegistryKey key, PRUint32 *lastModifiedTime,
-                                PRUint32 *fileSize);
-    nsresult SetRegistryDllInfo(const char *aLocation, PRUint32 lastModifiedTime,
-                                PRUint32 fileSize);
+    nsresult GetRegistryDllInfo(const char *aLocation, PRInt64 *lastModifiedTime,
+                                PRInt64 *fileSize);
+    nsresult GetRegistryDllInfo(nsRegistryKey key, PRInt64 *lastModifiedTime,
+                                PRInt64 *fileSize);
+    nsresult SetRegistryDllInfo(const char *aLocation, PRInt64 *lastModifiedTime,
+                                PRInt64 *fileSize);
     nsresult GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
                                   nsIFactory **aFactory);
     /* obsolete! already! */

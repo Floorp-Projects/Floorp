@@ -30,7 +30,7 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
-
+#include "nsFileSpec.h" /* for nsAutoString */
 #define DEBUG_UNIX_COLLATION
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);

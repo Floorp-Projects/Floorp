@@ -53,9 +53,7 @@ nsFileProtocolHandler::~nsFileProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsFileProtocolHandler,
-                   nsIFileProtocolHandler,
-                   nsIProtocolHandler);
+NS_IMPL_ISUPPORTS1(nsFileProtocolHandler, nsIProtocolHandler);
 
 NS_METHOD
 nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -142,7 +140,7 @@ nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
     rv = nsFileChannel::Create(nsnull, NS_GET_IID(nsIFileChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(this, command, url, aLoadGroup, notificationCallbacks,
+    rv = channel->Init(command, url, aLoadGroup, notificationCallbacks,
                        loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
@@ -151,38 +149,6 @@ nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
 
     *result = channel;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath, 
-                                                nsILoadGroup* aLoadGroup,
-                                                nsIInterfaceRequestor* notificationCallbacks,
-                                                nsLoadFlags loadAttributes,
-                                                nsIURI* originalURI,
-                                                PRUint32 bufferSegmentSize,
-                                                PRUint32 bufferMaxSize,
-                                                nsIFileChannel* *result)
-{
-    nsresult rv;
-    nsFileSpec spec(nativePath);
-    nsFileURL fileURL(spec);
-    const char* urlStr = fileURL.GetURLString();
-    nsIURI* uri;
-
-    rv = NewURI(urlStr, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NewChannel("load",  // XXX what should this be?
-                    uri, 
-                    aLoadGroup,
-                    notificationCallbacks,
-                    loadAttributes,
-                    originalURI,
-                    bufferSegmentSize,
-                    bufferMaxSize,
-                    (nsIChannel**)result);
-    NS_RELEASE(uri);
-    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -28,45 +28,49 @@
 %{C++
 #include "prio.h"
 #include "prlink.h"
+#include <stdio.h>
 %}
 
 [ptr] native PRFileDescStar(PRFileDesc);
 [ptr] native PRLibraryStar(PRLibrary);
+[ptr] native FILE(FILE);
 
 [scriptable, uuid(aa610f20-a889-11d3-8c81-000064657374)]
 interface nsILocalFile : nsIFile
 {
     /**
-      * initWithPath
-      *
-      * This function will initialize the nsIFile object.  Any
-      * internal state information will be reset.  Non-terminal
-      * nodes will be resolved. An error will be returned if a
-      * non-terminal is a file (NS_ERROR_FILE_INVALID_PATH)
-      * 
-      *
-      *  NOTE:  This function has a known bug on the macintosh and
-      *         other OSes which do not represent file locations 
-      *         as pathes.  If you do use this function, be very
-      *         aware of this problem as bugs.
-      *
-      *   @param filePath       
-      *          A string which specifies a full file path to a 
-      *          location.  Relative paths will be treated as an
-      *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).  This
-      *          path must in native.
-      */
-      
-       void initWithPath([const] in string filePath );
+     * initWithPath
+     *
+     * This function will initialize the nsILocalFile object.  Any
+     * internal state information will be reset.  
+     *
+     *  NOTE:  This function has a known bug on the macintosh and
+     *         other OSes which do not represent file locations 
+     *         as pathes.  If you do use this function, be very
+     *         aware of this problem as bugs.
+     *
+     *   @param filePath       
+     *          A string which specifies a full file path to a 
+     *          location.  Relative paths will be treated as an
+     *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).  This
+     *          path must in native.
+     */
+    void initWithPath([const] in string filePath);
        
-       [noscript] PRFileDescStar open(in long flags, in long mode);
-       [noscript] PRLibraryStar  load();
-    
-       readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
+    [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
+    [noscript] FILE           openANSIFileDesc(in string mode);
 
-       };
+    [noscript] PRLibraryStar  load();
+    
+    readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
+};
 
 %{C++
-#define NS_LOCAL_FILE_PROGID "component://netscape/file/local"
+
+#define NS_LOCAL_FILE_PROGID "component://mozilla/file/local"
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
+
+extern NS_COM nsresult
+NS_NewLocalFile(const char* path, nsILocalFile* *result);
+
 %}

@@ -3,7 +3,7 @@ var prefix = "";
 
 function ls(path, recur)
 {
-    var file = Components.classes["component://netscape/file/local"].
+    var file = Components.classes["component://mozilla/file/local"].
 	createInstance(nsILocalFile);
     try {
         file.initWithPath( path );

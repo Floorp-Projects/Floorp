@@ -134,7 +134,7 @@ SetupFactories(void)
 {
     nsresult err;
     // seed the repository (hack)
-    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, "MyService.dll",
+    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, "rel:MyService.dll",
                                                 PR_TRUE, PR_FALSE);
     NS_ASSERTION(err == NS_OK, "failed to register my factory");
 }

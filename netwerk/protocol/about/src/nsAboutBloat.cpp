@@ -26,10 +26,9 @@
 #include "nsIStringStream.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
-#include "nsSpecialSystemDirectory.h"
 #include "prtime.h"
 #include "nsCOMPtr.h"
-#include "nsIFileStream.h"
+#include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 
 #ifdef XP_MAC
@@ -105,11 +104,21 @@ nsAboutBloat::NewChannel(const char *verb,
         if (NS_FAILED(rv)) return rv;
     }
     else {
-        nsSpecialSystemDirectory file(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        file += "bloatlogs";
+        nsCOMPtr<nsIFile> file;
+        rv = NS_GetSpecialDirectory("xpcom.currentProcess.componentRegistry", 
+                                    getter_AddRefs(file));
+        if (NS_FAILED(rv)) return rv;
+        rv = file->Append("bloatlogs");
+        if (NS_FAILED(rv)) return rv;
 
-        if (!file.Exists())
-            file.CreateDirectory();
+        PRBool exists;
+        rv = file->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+
+        if (!exists) {
+            rv = file->Create(nsIFile::DIRECTORY_TYPE, 0664);
+            if (NS_FAILED(rv)) return rv;
+        }
 
         nsCAutoString dumpFileName;
         if (statType == nsTraceRefcnt::ALL_STATS)
@@ -121,9 +130,15 @@ nsAboutBloat::NewChannel(const char *verb,
         char time[128];
         PR_FormatTimeUSEnglish(time, 128, "%Y-%m-%d-%H%M%S.txt", &expTime);
         dumpFileName += time;
-        file += (const char*)dumpFileName;
+        rv = file->Append((const char*)dumpFileName);
+        if (NS_FAILED(rv)) return rv;
 
-        FILE* out = ::fopen(file, "w");
+        char* nativePath;
+        rv = file->GetPath(&nativePath);
+        if (NS_FAILED(rv)) return rv;
+
+        FILE* out = ::fopen(nativePath, "w");
+        nsCRT::free(nativePath);
         if (out == nsnull)
             return NS_ERROR_FAILURE;
 
@@ -131,12 +146,11 @@ nsAboutBloat::NewChannel(const char *verb,
         ::fclose(out);
         if (NS_FAILED(rv)) return rv;
 
-        size = file.GetFileSize();
-
-        nsCOMPtr<nsISupports> in;
-        rv = NS_NewTypicalInputFileStream(getter_AddRefs(in), file);
+        PRInt64 bigSize;
+        rv = file->GetFileSize(&bigSize);
         if (NS_FAILED(rv)) return rv;
-        inStr = do_QueryInterface(in, &rv);
+
+        rv = NS_NewFileInputStream(file, getter_AddRefs(inStr));
         if (NS_FAILED(rv)) return rv;
     }
 

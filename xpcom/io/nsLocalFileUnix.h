@@ -34,6 +34,7 @@
 
 #include "nscore.h"
 #include "nsIFile.h"
+#include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsXPIDLString.h"
 
@@ -65,7 +66,7 @@ nsresultForErrno(int err)
 
 #define NSRESULT_FOR_ERRNO() nsresultForErrno(errno)
 
-class NS_COM nsLocalFile : public nsIFile
+class NS_COM nsLocalFile : public nsILocalFile
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -73,7 +74,7 @@ public:
     nsLocalFile();
     virtual ~nsLocalFile();
 
-    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -81,17 +82,20 @@ public:
     // nsIFile
     NS_DECL_NSIFILE
 
+    // nsILocalFile
+    NS_DECL_NSILOCALFILE
+
 protected:
     PRBool mHaveCachedStat;
     struct stat mCachedStat;
     nsXPIDLCString mPath;
     
-    nsresult createAllParentDirectories(PRUint32 permissions);
-    nsresult getLeafNameRaw(const char **_retval);
+    nsresult CreateAllAncestors(PRUint32 permissions);
+    nsresult GetLeafNameRaw(const char **_retval);
 
-    void invalidateCache() { mHaveCachedStat = PR_FALSE; }
+    void InvalidateCache() { mHaveCachedStat = PR_FALSE; }
 
-    nsresult fillStatCache() {
+    nsresult FillStatCache() {
 	if (stat(mPath, &mCachedStat) == -1) {
 #ifdef DEBUG_shaver
 	    fprintf(stderr, "stat(%s) -> %d\n", (const char *)mPath, errno);

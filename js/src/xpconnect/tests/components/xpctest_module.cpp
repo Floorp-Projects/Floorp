@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsCRT.h"
 
 // XXX progids need to be standardized!
 static nsModuleComponentInfo components[] = {
@@ -63,3 +64,4 @@ static nsModuleComponentInfo components[] = {
 };
                                                                
 NS_IMPL_NSGETMODULE("xpconnect test", components)
+

@@ -28,7 +28,8 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
+#include "nsCRT.h"
 #include "nsFileStream.h"
 #include "nsIBookmarksService.h"
 #include "nsIComponentManager.h"
@@ -4423,7 +4424,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsBookmarksServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
+                             nsIFile* aPath,
                              const char* registryLocation,
                              const char* componentType)
 {
@@ -4455,7 +4456,7 @@ nsBookmarksServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsBookmarksServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
+                               nsIFile* aPath,
                                const char* registryLocation)
 {
 #ifdef DEBUG
@@ -4496,7 +4497,7 @@ nsBookmarksServiceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToU
 static nsBookmarksServiceModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsresult rv = NS_OK;

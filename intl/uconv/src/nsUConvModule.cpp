@@ -33,7 +33,8 @@
 #include "nsCharsetMenu.h"
 #include "rdf.h"
 #include "nsUConvDll.h"
-
+#include "nsFileSpec.h"
+#include "nsIFile.h"
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -175,7 +176,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                            nsIFileSpec* aPath,
+                            nsIFile* aPath,
                             const char* registryLocation,
                             const char* componentType)
 {
@@ -201,16 +202,13 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
     cp++;
   }
 
-  // XXX also unregister this stuff when time comes
-  rv = NS_RegisterConverterManagerData();
-
   return rv;
 }
 
 NS_IMETHODIMP
 nsUConvModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                              nsIFileSpec* aPath,
-                              const char* registryLocation)
+                             nsIFile* aPath,
+                             const char* registryLocation)
 {
 #ifdef DEBUG
   printf("*** Unregistering uconv components\n");
@@ -246,8 +244,8 @@ nsUConvModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 static nsUConvModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
-                                          nsIModule** return_cobj)
+                             nsIFile* aPath,
+                             nsIModule** return_cobj)
 {
   nsresult rv = NS_OK;
 

@@ -133,3 +133,16 @@ interface nsIURL : nsIURI
 }
 
 %}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface nsIFile;
+
+/**
+ * nsIFileURL is used for the file: protocol, and gives access to the
+ * underlying nsIFile object.
+ */
+interface nsIFileURL : nsIURL
+{
+    attribute nsIFile file;
+};

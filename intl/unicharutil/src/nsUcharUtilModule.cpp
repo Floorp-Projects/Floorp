@@ -30,6 +30,8 @@
 #include "nsEntityConverter.h"
 #include "nsSaveAsCharset.h"
 #include "nsUUDll.h"
+#include "nsFileSpec.h"
+#include "nsIFile.h"
 
 // Functions used to create new instances of a given object by the
 // generic factory.

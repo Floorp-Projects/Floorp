@@ -788,7 +788,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",				"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",		"$distdirectory:idl:");
+	#_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",			"$distdirectory:netwerk:");
 	_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
@@ -1131,7 +1131,7 @@ sub BuildIDLProjects()
 	# protocols
 	BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","about");
 	BuildIDLProject(":mozilla:netwerk:protocol:data:macbuild:dataIDL.mcp","data");
-	BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
+	#BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
 	BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
 	BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
 	BuildIDLProject(":mozilla:netwerk:protocol:jar:macbuild:jarIDL.mcp","jar");

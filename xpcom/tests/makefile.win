@@ -33,6 +33,7 @@ PROG4 = .\$(OBJDIR)\TestID.exe
 PROG5 = .\$(OBJDIR)\TestServMgr.exe
 #PROG6 = .\$(OBJDIR)\TimerTest.exe
 PROG7 = .\$(OBJDIR)\TestAtoms.exe
+PROG8 = .\$(OBJDIR)\nsIFileTest.exe
 PROG9 = .\$(OBJDIR)\TestCRT.exe
 PROG10 = .\$(OBJDIR)\FilesTest.exe
 PROG11 = .\$(OBJDIR)\PropertiesTest.exe
@@ -43,21 +44,26 @@ PROG16 = .\$(OBJDIR)\TestPipes.exe
 PROG17 = .\$(OBJDIR)\TestShutdown.exe
 PROG18 = .\$(OBJDIR)\TestStackCrawl.exe
 
+
 RESFILE = timer.res
 
-PROGRAMS = $(PROG1) $(PROG3) $(PROG4) $(PROG5) \
-        $(PROG6) $(PROG7) \
-        $(PROG8) \
-	$(PROG9) \
-	$(PROG10) \
-	$(PROG11) \
-        $(PROG12) \
-        $(PROG13) \
-        $(PROG14) \
-        $(PROG16) \
-        $(PROG17) \
-        $(PROG18) \
-	$(NULL)
+PROGRAMS = $(PROG1) \
+           $(PROG3) \
+           $(PROG4) \
+           $(PROG5) \
+           $(PROG6) \
+           $(PROG7) \
+           $(PROG8) \
+           $(PROG9) \
+           $(PROG10) \
+           $(PROG11) \
+           $(PROG12) \
+           $(PROG13) \
+           $(PROG14) \
+           $(PROG16) \
+           $(PROG17) \
+           $(PROG18) \
+           $(NULL)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -87,25 +93,15 @@ $(PROG1): $(OBJDIR) TestFactory.cpp
 $(PROG3): $(OBJDIR) TestArray.cpp
 $(PROG4): $(OBJDIR) TestID.cpp
 $(PROG5): $(OBJDIR) TestServMgr.cpp
-
 #$(PROG6): $(OBJDIR) TimerTest.cpp $(RESFILE)
-
 $(PROG7): $(OBJDIR) TestAtoms.cpp
-
-$(PROG10): $(OBJDIR) FilesTest.cpp
-
+$(PROG8): $(OBJDIR) nsIFileTest.cpp
 $(PROG9): $(OBJDIR) TestCRT.cpp
-
+$(PROG10): $(OBJDIR) FilesTest.cpp
 $(PROG11): $(OBJDIR) PropertiesTest.cpp
-
 $(PROG12): $(OBJDIR) TestAutoLock.cpp
-
 $(PROG13): $(OBJDIR) TestThreads.cpp
-
 $(PROG14): $(OBJDIR) TestObserverService.cpp
-
 $(PROG16): $(OBJDIR) TestPipes.cpp
-
 $(PROG17): $(OBJDIR) TestShutdown.cpp
-
 $(PROG18): $(OBJDIR) TestStackCrawl.cpp

@@ -73,12 +73,12 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 #include "nsIModule.h"
 
 typedef NS_CALLBACK(NSRegisterSelfProcPtr) (nsIComponentManager *aCompMgr,
-                                            nsIFileSpec *aPath,
+                                            nsIFile *aPath,
                                             const char *registryLocation,
                                             const char *componentType);
 
 typedef NS_CALLBACK(NSUnregisterSelfProcPtr) (nsIComponentManager *aCompMgr,
-                                              nsIFileSpec *aPath,
+                                              nsIFile *aPath,
                                               const char *registryLocation);
 
 /**
@@ -110,7 +110,7 @@ NS_NewGenericModule(const char* moduleName,
 
 #define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)             \
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,      \
-                                          nsIFileSpec* location,             \
+                                          nsIFile* location,                 \
                                           nsIModule** result)                \
 {                                                                            \
     return NS_NewGenericModule((_name),                                      \

@@ -56,8 +56,8 @@ static nsGIFModule *gModule = NULL;
 // Module entry point
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
-                                          nsIModule** return_cobj)
+                                            nsIFile* aPath,
+                                            nsIModule** return_cobj)
 {
     nsGIFModule *gifModule;
     nsresult rv = NS_OK;
@@ -169,7 +169,7 @@ nsGIFModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass,
 
 NS_IMETHODIMP
 nsGIFModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec *location,
+                          nsIFile* aPath,
                           const char *registryLocation,
                           const char *componentType)
 {
@@ -177,17 +177,17 @@ nsGIFModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(kGIFDecoderCID, 
                                          "Netscape GIFDec", 
                                          "component://netscape/image/decoder&type=image/gif",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
 NS_IMETHODIMP
 nsGIFModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                            nsIFileSpec *location,
+                            nsIFile* aPath,
                             const char *registryLocation)
 {
     nsresult rv;
-    rv = aCompMgr->UnregisterComponentSpec(kGIFDecoderCID, location);
+    rv = aCompMgr->UnregisterComponentSpec(kGIFDecoderCID, aPath);
     return rv;
 }
 

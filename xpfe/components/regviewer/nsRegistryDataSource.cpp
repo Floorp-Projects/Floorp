@@ -28,6 +28,7 @@
 */
 
 #include "nsCOMPtr.h"
+#include "nsIFileSpec.h"
 #include "nsIModule.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIComponentManager.h"
@@ -42,6 +43,7 @@
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "rdf.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,   NS_GENERICFACTORY_CID);
@@ -972,7 +974,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsRegistryDataSourceModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
+                             nsIFile* aPath,
                              const char* registryLocation,
                              const char* componentType)
 {
@@ -1003,7 +1005,7 @@ nsRegistryDataSourceModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsRegistryDataSourceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
+                               nsIFile* aPath,
                                const char* registryLocation)
 {
 #ifdef DEBUG
@@ -1040,7 +1042,7 @@ nsRegistryDataSourceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okT
 static nsRegistryDataSourceModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsresult rv = NS_OK;

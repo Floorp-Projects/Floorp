@@ -81,7 +81,8 @@ nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileTransportService::CreateTransport(nsFileSpec& spec,
+nsFileTransportService::CreateTransport(nsIFile* file,
+                                        PRInt32 mode,
                                         const char* command,
                                         PRUint32 bufferSegmentSize,
                                         PRUint32 bufferMaxSize,
@@ -92,7 +93,7 @@ nsFileTransportService::CreateTransport(nsFileSpec& spec,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(spec, command, bufferSegmentSize, bufferMaxSize);
+    rv = trans->Init(file, mode, command, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;

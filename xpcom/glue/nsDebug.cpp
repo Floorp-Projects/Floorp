@@ -25,6 +25,9 @@
 #include "prlog.h"
 #include "prinit.h"
 #include "plstr.h"
+#include "nsError.h"
+#include "prerror.h"
+#include "prerr.h"
 
 #if defined(XP_BEOS)
 /* For DEBUGGER macros */
@@ -298,3 +301,30 @@ NS_COM void nsDebug::Error(const char* aMessage,
 {
    Assertion(aMessage, "Error", aFile, aLine);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_COM nsresult
+NS_ErrorAccordingToNSPR()
+{
+    PRErrorCode err = PR_GetError();
+    switch (err) {
+      case PR_OUT_OF_MEMORY_ERROR:              return NS_ERROR_OUT_OF_MEMORY;
+      case PR_WOULD_BLOCK_ERROR:                return NS_BASE_STREAM_WOULD_BLOCK;
+      case PR_FILE_NOT_FOUND_ERROR:             return NS_ERROR_FILE_NOT_FOUND;
+      case PR_READ_ONLY_FILESYSTEM_ERROR:       return NS_ERROR_FILE_READ_ONLY;
+      case PR_NOT_DIRECTORY_ERROR:              return NS_ERROR_FILE_NOT_DIRECTORY;
+      case PR_IS_DIRECTORY_ERROR:               return NS_ERROR_FILE_IS_DIRECTORY;
+      case PR_LOOP_ERROR:                       return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+      case PR_FILE_EXISTS_ERROR:                return NS_ERROR_FILE_ALREADY_EXISTS;
+      case PR_FILE_IS_LOCKED_ERROR:             return NS_ERROR_FILE_IS_LOCKED;
+      case PR_FILE_TOO_BIG_ERROR:               return NS_ERROR_FILE_TOO_BIG;
+      case PR_NO_DEVICE_SPACE_ERROR:            return NS_ERROR_FILE_NO_DEVICE_SPACE;
+      case PR_NAME_TOO_LONG_ERROR:              return NS_ERROR_FILE_NAME_TOO_LONG;
+      case PR_DIRECTORY_NOT_EMPTY_ERROR:        return NS_ERROR_FILE_DIR_NOT_EMPTY;
+      case PR_NO_ACCESS_RIGHTS_ERROR:           return NS_ERROR_FILE_ACCESS_DENIED;
+      default:                                  return NS_ERROR_FAILURE;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////

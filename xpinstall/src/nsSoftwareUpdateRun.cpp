@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsIEventQueueService.h"
+#include "nsILocalFile.h"
 
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -135,7 +136,11 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
-    rv = hZip->Init(jarFile);
+    nsCOMPtr<nsILocalFile> jFile;
+    rv = NS_NewLocalFile(jarFile, getter_AddRefs(jFile));
+    if (NS_SUCCEEDED(rv))
+      rv = hZip->Init(jFile);
+
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
@@ -149,7 +154,10 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
     installJSFileSpec.MakeUnique();
 
     // Extract the install.js file.
-    rv = hZip->Extract("install.js", installJSFileSpec);
+    nsCOMPtr<nsILocalFile> iFile;
+    rv = NS_NewLocalFile(installJSFileSpec, getter_AddRefs(iFile));
+    if (NS_SUCCEEDED(rv))
+      rv = hZip->Extract("install.js", iFile);
     if ( NS_SUCCEEDED(rv) )
     {
         // Read it into a buffer

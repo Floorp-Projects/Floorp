@@ -27,8 +27,9 @@
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #include "prinrval.h"
-#include "nsIFileStream.h"
-#include "nsFileSpec.h"
+#include "nsIFileStreams.h"
+#include "nsILocalFile.h"
+#include "nsNetUtil.h"
 #include <stdio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,8 +113,8 @@ nsTimeSampler::PrintStats()
 nsTimeSampler gTimeSampler;
 
 typedef nsresult (*CreateFun)(nsIRunnable* *result,
-                              const char* inPath, 
-                              const char* outPath, 
+                              nsIFile* inPath, 
+                              nsIFile* outPath, 
                               PRUint32 bufferSize);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,40 +150,28 @@ public:
 
         PRIntervalTime startTime = PR_IntervalNow();
         PRIntervalTime endTime;
-
-        nsIInputStream* inStr = nsnull;
-        nsIOutputStream* outStr = nsnull;
-        nsISupports* str = nsnull;
-
+        nsCOMPtr<nsIInputStream> inStr;
+        nsCOMPtr<nsIOutputStream> outStr;
         PRUint32 copyCount = 0;
-        nsFileSpec inSpec(mInPath);
-        nsFileSpec outSpec(mOutPath);
-        
+
         // Open the input stream:
-        rv = NS_NewTypicalInputFileStream(&str, inSpec);
-        if (NS_FAILED(rv)) goto done;
-        rv = str->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inStr);
-        NS_RELEASE(str);
-        if (NS_FAILED(rv)) goto done;
+        rv = NS_NewFileInputStream(mInPath, getter_AddRefs(inStr));
+        if (NS_FAILED(rv)) return rv;
         
         // Open the output stream:
-        rv = NS_NewTypicalOutputFileStream(&str, outSpec);
-        if (NS_FAILED(rv)) goto done;
-        rv = str->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)&outStr);
-        NS_RELEASE(str);
-        if (NS_FAILED(rv)) goto done;
+        rv = NS_NewFileOutputStream(mOutPath, 
+                                    PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                    0664,
+                                    getter_AddRefs(outStr));
+        if (NS_FAILED(rv)) return rv;
 
         // Copy from one to the other
         rv = Copy(inStr, outStr, mBuffer, mBufferSize, &copyCount);
-        if (NS_FAILED(rv)) goto done;
+        if (NS_FAILED(rv)) return rv;
 
         endTime = PR_IntervalNow();
         gTimeSampler.AddTime(endTime - startTime);
 
-      done:
-        NS_IF_RELEASE(outStr);
-        NS_IF_RELEASE(inStr);
-        NS_IF_RELEASE(str);
         return rv;
     }
 
@@ -195,11 +184,11 @@ public:
         NS_INIT_REFCNT();
     }
 
-    nsresult Init(const char* inPath, const char* outPath,
+    nsresult Init(nsIFile* inPath, nsIFile* outPath,
                   PRUint32 bufferSize)
     {
-        mInPath = nsCRT::strdup(inPath);
-        mOutPath = nsCRT::strdup(outPath);
+        mInPath = inPath;
+        mOutPath = outPath;
         mBuffer = new char[bufferSize];
         mBufferSize = bufferSize;
         return (mInPath && mOutPath && mBuffer)
@@ -207,8 +196,8 @@ public:
     }
 
     static nsresult Create(nsIRunnable* *result,
-                           const char* inPath, 
-                           const char* outPath, 
+                           nsIFile* inPath, 
+                           nsIFile* outPath, 
                            PRUint32 bufferSize)
     {
         FileSpecWorker* worker = new FileSpecWorker();
@@ -226,16 +215,14 @@ public:
     }
 
     virtual ~FileSpecWorker() {
-        nsCRT::free(mInPath);
-        nsCRT::free(mOutPath);
         delete[] mBuffer;
     }
 
 protected:
-    char* mInPath;
-    char* mOutPath;
-    char* mBuffer;
-    PRUint32 mBufferSize;
+    nsCOMPtr<nsIFile>   mInPath;
+    nsCOMPtr<nsIFile>   mOutPath;
+    char*               mBuffer;
+    PRUint32            mBufferSize;
 };
 
 NS_IMPL_ISUPPORTS(FileSpecWorker, NS_GET_IID(nsIRunnable));
@@ -243,10 +230,7 @@ NS_IMPL_ISUPPORTS(FileSpecWorker, NS_GET_IID(nsIRunnable));
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsIIOService.h"
-#include "nsIFileChannel.h"
-#include "nsIFileProtocolHandler.h"
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsIChannel.h"
 
 class FileChannelWorker : public nsIRunnable {
 public:
@@ -254,56 +238,53 @@ public:
     NS_IMETHOD Run() {
         nsresult rv;
 
-        NS_WITH_SERVICE(nsIIOService, ioserv, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
         PRIntervalTime startTime = PR_IntervalNow();
         PRIntervalTime endTime;
-
         PRUint32 copyCount = 0;
-        nsIInputStream* inStr = nsnull;
-        nsIOutputStream* outStr = nsnull;
-        nsIFileChannel* inCh = nsnull;
-        nsIFileChannel* outCh = nsnull;
+        nsCOMPtr<nsIFileChannel> inCh;
+        nsCOMPtr<nsIFileChannel> outCh;
+        nsCOMPtr<nsIInputStream> inStr;
+        nsCOMPtr<nsIOutputStream> outStr;
 
-        rv = ioserv->NewChannelFromNativePath(mInPath, 
-                                              nsnull,   // aLoadGroup
-                                              nsnull,   // notificationCallbacks
-                                              nsIChannel::LOAD_NORMAL,
-                                              nsnull,   // originalURI
-                                              0,        // bufferSegmentSize
-                                              0,        // bufferMaxSize
-                                              &inCh);
-        if (NS_FAILED(rv)) goto done;
+        rv = NS_NewFileChannel(mInPath,
+                               PR_RDONLY,
+                               nsnull,   // contentType
+                               0,        // contentLength,
+                               nsnull,   // aLoadGroup
+                               nsnull,   // notificationCallbacks
+                               nsIChannel::LOAD_NORMAL,
+                               nsnull,   // originalURI
+                               0,        // bufferSegmentSize
+                               0,        // bufferMaxSize
+                               getter_AddRefs(inCh));
+        if (NS_FAILED(rv)) return rv;
 
-        rv = inCh->OpenInputStream(0, -1, &inStr);
-        if (NS_FAILED(rv)) goto done;
+        rv = inCh->OpenInputStream(0, -1, getter_AddRefs(inStr));
+        if (NS_FAILED(rv)) return rv;
 
-        rv = ioserv->NewChannelFromNativePath(mOutPath,
-                                              nsnull,   // aLoadGroup
-                                              nsnull,   // notificationCallbacks
-                                              nsIChannel::LOAD_NORMAL,
-                                              nsnull,   // originalURI
-                                              0,        // bufferSegmentSize
-                                              0,        // bufferMaxSize
-                                              &outCh);
-        if (NS_FAILED(rv)) goto done;
+        rv = NS_NewFileChannel(mOutPath,
+                               PR_RDWR,
+                               nsnull,   // contentType
+                               0,        // contentLength,
+                               nsnull,   // aLoadGroup
+                               nsnull,   // notificationCallbacks
+                               nsIChannel::LOAD_NORMAL,
+                               nsnull,   // originalURI
+                               0,        // bufferSegmentSize
+                               0,        // bufferMaxSize
+                               getter_AddRefs(outCh));
+        if (NS_FAILED(rv)) return rv;
 
-        rv = outCh->OpenOutputStream(0, &outStr);
-        if (NS_FAILED(rv)) goto done;
+        rv = outCh->OpenOutputStream(0, getter_AddRefs(outStr));
+        if (NS_FAILED(rv)) return rv;
 
         // Copy from one to the other
         rv = Copy(inStr, outStr, mBuffer, mBufferSize, &copyCount);
-        if (NS_FAILED(rv)) goto done;
+        if (NS_FAILED(rv)) return rv;
         
         endTime = PR_IntervalNow();
         gTimeSampler.AddTime(endTime - startTime);
 
-      done:
-        NS_RELEASE(inStr);
-        NS_RELEASE(inCh);
-        NS_RELEASE(outStr);
-        NS_RELEASE(outCh);
         return rv;
     }
 
@@ -316,11 +297,11 @@ public:
         NS_INIT_REFCNT();
     }
 
-    nsresult Init(const char* inPath, const char* outPath,
+    nsresult Init(nsIFile* inPath, nsIFile* outPath,
                   PRUint32 bufferSize)
     {
-        mInPath = nsCRT::strdup(inPath);
-        mOutPath = nsCRT::strdup(outPath);
+        mInPath = inPath;
+        mOutPath = outPath;
         mBuffer = new char[bufferSize];
         mBufferSize = bufferSize;
         return (mInPath && mOutPath && mBuffer)
@@ -328,8 +309,8 @@ public:
     }
 
     static nsresult Create(nsIRunnable* *result,
-                           const char* inPath, 
-                           const char* outPath, 
+                           nsIFile* inPath, 
+                           nsIFile* outPath, 
                            PRUint32 bufferSize)
     {
         FileChannelWorker* worker = new FileChannelWorker();
@@ -347,16 +328,14 @@ public:
     }
 
     virtual ~FileChannelWorker() {
-        nsCRT::free(mInPath);
-        nsCRT::free(mOutPath);
         delete[] mBuffer;
     }
 
 protected:
-    char* mInPath;
-    char* mOutPath;
-    char* mBuffer;
-    PRUint32 mBufferSize;
+    nsCOMPtr<nsIFile>   mInPath;
+    nsCOMPtr<nsIFile>   mOutPath;
+    char*               mBuffer;
+    PRUint32            mBufferSize;
 };
 
 NS_IMPL_ISUPPORTS(FileChannelWorker, NS_GET_IID(nsIRunnable));
@@ -365,13 +344,19 @@ NS_IMPL_ISUPPORTS(FileChannelWorker, NS_GET_IID(nsIRunnable));
 
 void
 Test(CreateFun create, PRUint32 count,
-     const char* inDir, const char* outDir, PRUint32 bufSize)
+     nsIFile* inDirSpec, nsIFile* outDirSpec, PRUint32 bufSize)
 {
     nsresult rv;
     PRUint32 i;
-
+    
+    char* inDir;
+    char* outDir;
+    (void)inDirSpec->GetPath(&inDir);
+    (void)outDirSpec->GetPath(&outDir);
     printf("###########\nTest: from %s to %s, bufSize = %d\n",
            inDir, outDir, bufSize);
+    nsCRT::free(inDir);
+    nsCRT::free(outDir);
     gTimeSampler.Reset();
     nsTimeSampler testTime;
     testTime.StartTime();
@@ -380,32 +365,56 @@ Test(CreateFun create, PRUint32 count,
     rv = NS_NewISupportsArray(&threads);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewISupportsArray failed");
 
-    nsFileSpec inDirSpec(inDir);
-    nsDirectoryIterator iter(inDirSpec, PR_TRUE);
-    for (i = 0; i < count && iter.Exists(); i++, iter++) {
-        nsIThread* thread;
-        nsIRunnable* worker;
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    rv = inDirSpec->GetDirectoryEntries(getter_AddRefs(entries));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetDirectoryEntries failed");
 
-        nsFileSpec& inSpec = iter.Spec();
+    i = 0;
+    PRBool hasMore;
+    while (i < count && NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> next;
+        rv = entries->GetNext(getter_AddRefs(next));
+        if (NS_FAILED(rv)) goto done;
 
-        nsFileSpec outSpec(outDir);
-        outSpec += inSpec.GetLeafName();
-        if (outSpec.Exists()) {
-            outSpec.Delete(PR_FALSE);
+        nsCOMPtr<nsIFile> inSpec = do_QueryInterface(next, &rv);
+        if (NS_FAILED(rv)) goto done;
+
+        nsCOMPtr<nsIFile> outSpec;
+        rv = outDirSpec->Clone(getter_AddRefs(outSpec)); // don't munge the original
+        if (NS_FAILED(rv)) goto done;
+
+        char* leafName;
+        rv = inSpec->GetLeafName(&leafName);
+        if (NS_FAILED(rv)) goto done;
+
+        rv = outSpec->Append(leafName);
+        nsCRT::free(leafName);
+        if (NS_FAILED(rv)) goto done;
+
+        PRBool exists;
+        rv = outSpec->Exists(&exists);
+        if (NS_FAILED(rv)) goto done;
+
+        if (exists) {
+            rv = outSpec->Delete(PR_FALSE);
+            if (NS_FAILED(rv)) goto done;
         }
-        
-        rv = create(&worker, 
-                    inSpec.GetNativePathCString(),
-                    outSpec.GetNativePathCString(),
+
+        nsCOMPtr<nsIThread> thread;
+        nsCOMPtr<nsIRunnable> worker;
+        rv = create(getter_AddRefs(worker), 
+                    inSpec,
+                    outSpec,
                     bufSize);
         if (NS_FAILED(rv)) goto done;
 
-        rv = NS_NewThread(&thread, worker, 0, PR_JOINABLE_THREAD);
-        NS_RELEASE(worker);
+        rv = NS_NewThread(getter_AddRefs(thread), worker, 0, PR_JOINABLE_THREAD);
         if (NS_FAILED(rv)) goto done;
 
         PRBool inserted = threads->InsertElementAt(thread, i);
         NS_ASSERTION(inserted, "not inserted");
+
+        i++;
     }
 
     PRUint32 j;
@@ -451,43 +460,51 @@ main(int argc, char* argv[])
     rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsILocalFile> inDirFile;
+    rv = NS_NewLocalFile(inDir, getter_AddRefs(inDirFile));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsILocalFile> outDirFile;
+    rv = NS_NewLocalFile(outDir, getter_AddRefs(outDirFile));
+    if (NS_FAILED(rv)) return rv;
+
     CreateFun create = FileChannelWorker::Create;
-    Test(create, 1, inDir, outDir, 16 * 1024);
+    Test(create, 1, inDirFile, outDirFile, 16 * 1024);
 #if 1
     printf("FileChannelWorker *****************************\n");
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
 #endif
     create = FileSpecWorker::Create;
     printf("FileSpecWorker ********************************\n");
 #if 1
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
-    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 16 * 1024);
 #endif
 #if 1
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
-    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+    Test(create, 20, inDirFile, outDirFile, 4 * 1024);
 #endif
 
     return 0;

@@ -32,20 +32,23 @@
 #include "nsDebug.h"
 #include "nsIComponentManager.h"
 #include "nsIModule.h"
-#include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 #include "nsCOMPtr.h"
-
+#include "nsCRT.h"
 #ifdef XP_MAC
 #include "prlink_mac.h"
 #endif
 
 nsDll::nsDll(const char *codeDllName, int type)
-  : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
+  : m_dllName(NULL),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
     m_persistentDescriptor(NULL), m_nativePath(NULL),
     m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
+	m_modDate = LL_Zero();
+	m_size = LL_Zero();
+	
     if (!codeDllName || !*codeDllName)
     {
         m_status = DLL_INVALID_PARAM;
@@ -59,12 +62,16 @@ nsDll::nsDll(const char *codeDllName, int type)
     }
 }
 
-nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation)
-  : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
+nsDll::nsDll(nsIFile *dllSpec, const char *registryLocation)
+  : m_dllName(NULL),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
     m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
+	m_modDate = LL_Zero();
+	m_size = LL_Zero();
+    m_dllSpec = dllSpec;
+
     m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
     // Populate m_modDate and m_size
@@ -74,25 +81,41 @@ nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation)
     }
 }
 
-nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation, PRUint32 modDate, PRUint32 fileSize)
-  : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
+nsDll::nsDll(nsIFile *dllSpec, const char *registryLocation, PRInt64* modDate, PRInt64* fileSize)
+  : m_dllName(NULL),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
     m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
+    m_modDate = LL_Zero();
+    m_size = LL_Zero();
+    m_dllSpec = dllSpec;
+
     m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
-    m_modDate = modDate;
-    m_size = fileSize;
+
+    if (modDate)
+        m_modDate = *modDate;
+    else
+        m_modDate = LL_Zero();
+    
+    if (fileSize)
+        m_size = *fileSize;
+    else
+        m_size = LL_Zero();
+
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor)
-  : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
+  : m_dllName(NULL),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
     m_persistentDescriptor(NULL), m_nativePath(NULL),
     m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
+    m_modDate = LL_Zero();
+    m_size = LL_Zero();
+
     Init(libPersistentDescriptor);
     // Populate m_modDate and m_size
     if (NS_FAILED(Sync()))
@@ -101,26 +124,36 @@ nsDll::nsDll(const char *libPersistentDescriptor)
     }
 }
 
-nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
-  : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
+nsDll::nsDll(const char *libPersistentDescriptor, PRInt64* modDate, PRInt64* fileSize)
+  : m_dllName(NULL),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
     m_persistentDescriptor(NULL), m_nativePath(NULL),
     m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
+    m_modDate = LL_Zero();
+    m_size = LL_Zero();
+
     Init(libPersistentDescriptor);
 
     // and overwrite the modData and fileSize
-	m_modDate = modDate;
-	m_size = fileSize;
+	
+    if (modDate)
+        m_modDate = *modDate;
+    else
+        m_modDate = LL_Zero();
+    
+    if (fileSize)
+        m_size = *fileSize;
+    else
+        m_size = LL_Zero();
 }
  
 void
-nsDll::Init(nsIFileSpec *dllSpec)
+nsDll::Init(nsIFile *dllSpec)
 {
     // Addref the m_dllSpec
     m_dllSpec = dllSpec;
-    NS_ADDREF(m_dllSpec);
 
     // Make sure we are dealing with a file
     PRBool isFile = PR_FALSE;
@@ -145,8 +178,8 @@ void
 nsDll::Init(const char *libPersistentDescriptor)
 {
     nsresult rv;
-    m_modDate = 0;
-	m_size = 0;
+    m_modDate = LL_Zero();
+    m_size = LL_Zero();
 	
 	if (libPersistentDescriptor == NULL)
 	{
@@ -155,23 +188,26 @@ nsDll::Init(const char *libPersistentDescriptor)
 	}
 
     // Create a FileSpec from the persistentDescriptor
-    nsIFileSpec *dllSpec = NULL;
-    rv = nsComponentManager::CreateInstance(NS_FILESPEC_PROGID, NULL, NS_GET_IID(nsIFileSpec), (void **) &dllSpec);
+    nsCOMPtr<nsILocalFile> dllSpec;
+    
+    nsCID clsid;
+    nsComponentManager::ProgIDToClassID(NS_LOCAL_FILE_PROGID, &clsid);
+    rv = nsComponentManager::CreateInstance(clsid, nsnull, 
+                                            NS_GET_IID(nsILocalFile),
+                                            (void**)getter_AddRefs(dllSpec));
     if (NS_FAILED(rv))
     {
         m_status = DLL_INVALID_PARAM;
         return;
     }
 
-    rv = dllSpec->SetPersistentDescriptorString((char *)libPersistentDescriptor);
+    rv = dllSpec->InitWithPath((char *)libPersistentDescriptor);
     if (NS_FAILED(rv))
     {
         m_status = DLL_INVALID_PARAM;
         return;
     }
 
-    Init(dllSpec);
-    NS_RELEASE(dllSpec);
 }
 
 
@@ -186,8 +222,6 @@ nsDll::~nsDll(void)
     // Hence turn it back on after all the above have been removed.
     Unload();
 #endif
-    if (m_dllSpec)
-        NS_RELEASE(m_dllSpec);
     if (m_dllName)
         nsCRT::free(m_dllName);
     if (m_persistentDescriptor)
@@ -206,20 +240,21 @@ nsDll::Sync()
         return NS_ERROR_FAILURE;
 
     // Populate m_modDate and m_size
-    nsresult rv = m_dllSpec->GetModDate(&m_modDate);
+    nsresult rv = m_dllSpec->GetLastModificationDate(&m_modDate);
     if (NS_FAILED(rv)) return rv;
     rv = m_dllSpec->GetFileSize(&m_size);
     return rv;
 }
 
+
 const char *
-nsDll::GetNativePath()
+nsDll::GetDisplayPath()
 {
     if (m_dllName)
         return m_dllName;
     if (m_nativePath)
         return m_nativePath;
-    m_dllSpec->GetNativePath(&m_nativePath);
+    m_dllSpec->GetPath(&m_nativePath);
     return m_nativePath;
 }
 
@@ -230,7 +265,7 @@ nsDll::GetPersistentDescriptorString()
         return m_dllName;
     if (m_persistentDescriptor)
         return m_persistentDescriptor;
-    m_dllSpec->GetPersistentDescriptorString(&m_persistentDescriptor);
+    m_dllSpec->GetPath(&m_persistentDescriptor);
     return m_persistentDescriptor;
 }
 
@@ -241,15 +276,17 @@ nsDll::HasChanged()
         return PR_FALSE;
 
     // If mod date has changed, then dll has changed
-    PRBool modDateChanged = PR_FALSE;
-    nsresult rv = m_dllSpec->ModDateChanged(m_modDate, &modDateChanged);
-    if (NS_FAILED(rv) || modDateChanged == PR_TRUE)
+    PRInt64 currentDate;
+
+    nsresult rv = m_dllSpec->GetLastModificationDate(&currentDate);
+    
+    if (NS_FAILED(rv) || LL_NE(currentDate, m_modDate))
       return PR_TRUE;
 
     // If size has changed, then dll has changed
-    PRUint32 aSize = 0;
+    PRInt64 aSize;
     rv = m_dllSpec->GetFileSize(&aSize);
-    if (NS_FAILED(rv) || aSize != m_size)
+    if (NS_FAILED(rv) || LL_NE(aSize, m_size))
       return PR_TRUE;
 
     return PR_FALSE;
@@ -270,35 +307,43 @@ PRBool nsDll::Load(void)
 		return (PR_TRUE);
 	}
 
-    if (m_dllName)
+    if (m_dllSpec)
     {
-        m_instance = PR_LoadLibrary(m_dllName);
-    }
-    else
-    {
-#ifndef XP_MAC
-        char *nsprPath = NULL;
-        nsresult rv = m_dllSpec->GetNSPRPath(&nsprPath);
-        if (NS_FAILED(rv)) return PR_FALSE;
+        nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(m_dllSpec);
 
-        m_instance = PR_LoadLibrary(nsprPath);
-
-        nsCRT::free(nsprPath);
-#else
-        nsFileSpec fileSpec;
-        m_dllSpec->GetFileSpec(&fileSpec);
-        FSSpec libSpec = fileSpec.GetFSSpec();
-        m_instance = PR_LoadIndexedFragment(&libSpec, 0);
-				
-#endif /* XP_MAC */
-    }
+        if (localFile)
+            localFile->Load(&m_instance);
+    
+        
 #ifdef NS_BUILD_REFCNT_LOGGING
-    if (m_instance) {
-        // Inform refcnt tracer of new library so that calls through the
-        // new library can be traced.
-        nsTraceRefcnt::LoadLibrarySymbols(GetNativePath(), GetInstance());
-    }
+        if (m_instance) {
+            // Inform refcnt tracer of new library so that calls through the
+            // new library can be traced.
+            char* displayPath;
+            m_dllSpec->GetPath(&displayPath);
+            nsTraceRefcnt::LoadLibrarySymbols(displayPath, m_instance);
+            nsAllocator::Free(displayPath);
+        }
 #endif
+    
+    
+    }
+    else if (m_dllName)
+    {
+        // if there is not an nsIFile, but there is a dll name, just try to load that..
+        m_instance = PR_LoadLibrary(m_dllName);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+        if (m_instance) {
+            // Inform refcnt tracer of new library so that calls through the
+            // new library can be traced.
+            nsTraceRefcnt::LoadLibrarySymbols(m_dllName, m_instance);
+        }
+#endif    
+    
+    
+    }
+
     return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 }
 
@@ -334,13 +379,13 @@ void * nsDll::FindSymbol(const char *symbol)
 
 
 // Component dll specific functions
-nsresult nsDll::GetDllSpec(nsIFileSpec **fsobj)
+nsresult nsDll::GetDllSpec(nsIFile **fsobj)
 {
     NS_ASSERTION(m_dllSpec, "m_dllSpec NULL");
     NS_ASSERTION(fsobj, "xcDll::GetModule : Null argument" );
 
-    NS_ADDREF(m_dllSpec);
     *fsobj = m_dllSpec;
+    NS_ADDREF(*fsobj);
     return NS_OK;
 }
 
@@ -363,9 +408,9 @@ nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
 	// If not already loaded, load it now.
 	if (Load() != PR_TRUE) return NS_ERROR_FAILURE;
 
-    // We need a nsIFileSpec for location. If we dont
+    // We need a nsIFile for location. If we dont
     // have one, create one.
-    if (m_dllSpec == NULL && m_dllName)
+    if (!m_dllSpec && m_dllName)
     {
         // Create m_dllSpec from m_dllName
     }

@@ -28,6 +28,8 @@
 
 #include "prlink.h"
 
+#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsSound.h"
 
 #include "nsIURI.h"

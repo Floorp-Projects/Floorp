@@ -81,8 +81,15 @@ nsresult nsFileSpecImpl::MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** r
 NS_IMETHODIMP nsFileSpecImpl::FromFileSpec(const nsIFileSpec *original)
 //----------------------------------------------------------------------------------------
 {
-	mFileSpec = FILESPEC(original);
-	return mFileSpec.Error();
+	if (original) {
+        nsresult rv = ((nsIFileSpec *)original)->GetFileSpec( &mFileSpec);
+        if (NS_SUCCEEDED( rv))
+            return mFileSpec.Error();
+        else
+            return( rv);
+    }
+    else
+        return( NS_ERROR_FAILURE);
 }
 
 //----------------------------------------------------------------------------------------
