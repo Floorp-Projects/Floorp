@@ -43,12 +43,6 @@ nsUnicodeToKOI8U::nsUnicodeToKOI8U()
 {
 }
 
-nsresult nsUnicodeToKOI8U::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToKOI8U();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

@@ -29,9 +29,3 @@ nsMUTF7ToUnicode::nsMUTF7ToUnicode()
 : nsBasicUTF7Decoder(',', '&')
 {
 }
-
-nsresult nsMUTF7ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsMUTF7ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

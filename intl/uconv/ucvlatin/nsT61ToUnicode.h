@@ -43,11 +43,6 @@ public:
    */
   nsT61ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------

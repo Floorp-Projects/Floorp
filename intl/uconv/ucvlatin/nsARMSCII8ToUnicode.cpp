@@ -43,8 +43,3 @@ nsARMSCII8ToUnicode::nsARMSCII8ToUnicode()
 {
 }
 
-nsresult nsARMSCII8ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsARMSCII8ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

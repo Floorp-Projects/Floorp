@@ -43,8 +43,3 @@ nsVPSToUnicode::nsVPSToUnicode()
 {
 }
 
-nsresult nsVPSToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsVPSToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

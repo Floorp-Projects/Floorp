@@ -33,13 +33,6 @@ nsUTF8ToUnicode::nsUTF8ToUnicode()
 	Reset();
 }
 
-
-nsresult nsUTF8ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUTF8ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 

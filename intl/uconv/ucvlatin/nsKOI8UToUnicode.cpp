@@ -42,9 +42,3 @@ nsKOI8UToUnicode::nsKOI8UToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsKOI8UToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsKOI8UToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

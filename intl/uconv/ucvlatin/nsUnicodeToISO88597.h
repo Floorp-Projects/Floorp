@@ -43,11 +43,6 @@ public:
    */
   nsUnicodeToISO88597();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------

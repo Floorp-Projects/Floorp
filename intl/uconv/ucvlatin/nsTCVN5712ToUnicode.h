@@ -43,10 +43,6 @@ public:
    */
   nsTCVN5712ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsTCVN5712ToUnicode_h___ */

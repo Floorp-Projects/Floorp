@@ -43,10 +43,6 @@ public:
    */
   nsCP1254ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsCP1254ToUnicode_h___ */

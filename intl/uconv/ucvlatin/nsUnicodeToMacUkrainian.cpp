@@ -43,12 +43,6 @@ nsUnicodeToMacUkrainian::nsUnicodeToMacUkrainian()
 {
 }
 
-nsresult nsUnicodeToMacUkrainian::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacUkrainian();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

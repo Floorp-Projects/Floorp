@@ -43,8 +43,3 @@ nsCP1250ToUnicode::nsCP1250ToUnicode()
 {
 }
 
-nsresult nsCP1250ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsCP1250ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

@@ -27,7 +27,6 @@
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToUserDefined [declaration]
-
 /**
  * A character set converter from Unicode to UserDefined.
  *
@@ -42,11 +41,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToUserDefined();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
 

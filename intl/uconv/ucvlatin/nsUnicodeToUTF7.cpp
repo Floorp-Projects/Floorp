@@ -305,11 +305,6 @@ nsUnicodeToUTF7::nsUnicodeToUTF7()
 {
 }
 
-nsresult nsUnicodeToUTF7::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUTF7();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
 
 PRBool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
   if ((aChar >= 'A') && (aChar <= 'Z')) return PR_TRUE;

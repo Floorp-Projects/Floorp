@@ -42,9 +42,3 @@ nsISO885915ToUnicode::nsISO885915ToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsISO885915ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsISO885915ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

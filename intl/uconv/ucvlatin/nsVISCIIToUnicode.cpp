@@ -42,9 +42,3 @@ nsVISCIIToUnicode::nsVISCIIToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsVISCIIToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsVISCIIToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

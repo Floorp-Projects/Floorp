@@ -43,10 +43,6 @@ public:
    */
   nsUnicodeToMUTF7();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsUnicodeToMUTF7_h___ */

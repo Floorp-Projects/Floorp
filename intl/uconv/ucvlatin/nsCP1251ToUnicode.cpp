@@ -42,9 +42,3 @@ nsCP1251ToUnicode::nsCP1251ToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsCP1251ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsCP1251ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

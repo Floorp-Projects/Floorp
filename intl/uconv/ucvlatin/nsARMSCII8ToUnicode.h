@@ -43,10 +43,6 @@ public:
    */
   nsARMSCII8ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsARMSCII8ToUnicode_h___ */

@@ -254,9 +254,3 @@ nsUTF7ToUnicode::nsUTF7ToUnicode()
 : nsBasicUTF7Decoder('/', '+')
 {
 }
-
-nsresult nsUTF7ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUTF7ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

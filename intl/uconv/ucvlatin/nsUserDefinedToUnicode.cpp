@@ -42,9 +42,3 @@ nsUserDefinedToUnicode::nsUserDefinedToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsUserDefinedToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUserDefinedToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

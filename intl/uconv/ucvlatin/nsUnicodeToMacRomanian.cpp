@@ -43,12 +43,6 @@ nsUnicodeToMacRomanian::nsUnicodeToMacRomanian()
 {
 }
 
-nsresult nsUnicodeToMacRomanian::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacRomanian();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

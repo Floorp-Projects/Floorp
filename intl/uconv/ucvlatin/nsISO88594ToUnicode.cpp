@@ -43,8 +43,4 @@ nsISO88594ToUnicode::nsISO88594ToUnicode()
 {
 }
 
-nsresult nsISO88594ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsISO88594ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
+

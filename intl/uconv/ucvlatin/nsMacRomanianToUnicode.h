@@ -43,10 +43,6 @@ public:
    */
   nsMacRomanianToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsMacRomanianToUnicode_h___ */

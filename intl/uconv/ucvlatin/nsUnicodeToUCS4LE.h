@@ -42,11 +42,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToUCS4LE();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
   
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 

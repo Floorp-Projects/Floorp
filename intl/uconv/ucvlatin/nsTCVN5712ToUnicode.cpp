@@ -42,9 +42,3 @@ nsTCVN5712ToUnicode::nsTCVN5712ToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsTCVN5712ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsTCVN5712ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

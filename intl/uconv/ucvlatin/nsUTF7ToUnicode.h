@@ -86,10 +86,6 @@ public:
    */
   nsUTF7ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsUTF7ToUnicode_h___ */

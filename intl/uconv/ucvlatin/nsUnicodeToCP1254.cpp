@@ -43,12 +43,6 @@ nsUnicodeToCP1254::nsUnicodeToCP1254()
 {
 }
 
-nsresult nsUnicodeToCP1254::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToCP1254();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

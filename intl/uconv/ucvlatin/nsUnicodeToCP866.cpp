@@ -43,12 +43,6 @@ nsUnicodeToCP866::nsUnicodeToCP866()
 {
 }
 
-nsresult nsUnicodeToCP866::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToCP866();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
