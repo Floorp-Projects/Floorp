@@ -178,8 +178,10 @@ extern HINSTANCE g_hinst;
   compStrLen = 0; \
   if (nsToolkit::gAIMMApp) \
     nsToolkit::gAIMMApp->GetCompositionStringA(hIMC, dwIndex, dwBufLen, &(compStrLen), pBuf); \
-  else \
-    compStrLen = ::ImmGetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); \
+   else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      compStrLen = theIMM.GetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); \
+   } \
 }
 
 #define NS_IMM_GETCOMPOSITIONSTRINGW(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
@@ -187,8 +189,10 @@ extern HINSTANCE g_hinst;
   compStrLen = 0; \
   if (nsToolkit::gAIMMApp) \
     nsToolkit::gAIMMApp->GetCompositionStringW(hIMC, dwIndex, dwBufLen, &(compStrLen), pBuf); \
-  else \
-    compStrLen = ::ImmGetCompositionStringW(hIMC, dwIndex, pBuf, dwBufLen); \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      compStrLen = theIMM.GetCompositionStringW(hIMC, dwIndex, pBuf, dwBufLen); \
+    } \
 }
 
 #define NS_IMM_GETCONTEXT(hWnd, hIMC) \
@@ -196,63 +200,126 @@ extern HINSTANCE g_hinst;
     hIMC = NULL; \
     if (nsToolkit::gAIMMApp) \
       nsToolkit::gAIMMApp->GetContext(hWnd, &(hIMC)); \
-    else \
-      hIMC = ::ImmGetContext(hWnd); \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      hIMC = theIMM.GetContext(hWnd); \
+    } \
   }
 
-#define NS_IMM_GETCONVERSIONSTATUS(hIMC, pfdwConversion, pfdwSentence) \
-  (nsToolkit::gAIMMApp ? \
-    (nsToolkit::gAIMMApp->GetConversionStatus(hIMC, pfdwConversion, pfdwSentence) == S_OK) : \
-    (::ImmGetConversionStatus(hIMC, pfdwConversion, pfdwSentence)))
+#define NS_IMM_GETCONVERSIONSTATUS(hIMC, pfdwConversion, pfdwSentence, bRet) \
+  { \
+    bRet = TRUE; \
+    if (nsToolkit::gAIMMApp) { \
+      bRet = (nsToolkit::gAIMMApp->GetConversionStatus(hIMC, pfdwConversion, pfdwSentence) == S_OK); \
+    } \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      (theIMM.GetConversionStatus(hIMC, pfdwConversion, pfdwSentence)); \
+    }\
+  }
 
 #define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
   { \
     if (nsToolkit::gAIMMApp) \
       nsToolkit::gAIMMApp->ReleaseContext(hWnd, hIMC); \
-    else \
-      ::ImmReleaseContext(hWnd, hIMC); \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      theIMM.ReleaseContext(hWnd, hIMC); \
+    } \
   }
 
-#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue) \
-  (nsToolkit::gAIMMApp ? \
-    (nsToolkit::gAIMMApp->NotifyIME(hIMC, dwAction, dwIndex, dwValue) == S_OK) :	\
-    (::ImmNotifyIME(hIMC, dwAction, dwIndex, dwValue)))
+#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue, bRtn) \
+  { \
+    bRtn = TRUE; \
+    if (nsToolkit::gAIMMApp) { \
+      bRtn = (nsToolkit::gAIMMApp->NotifyIME(hIMC, dwAction, dwIndex, dwValue) == S_OK); \
+    }\
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      (theIMM.NotifyIME(hIMC, dwAction, dwIndex, dwValue)); \
+    } \
+  }
 
 #define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
-  (nsToolkit::gAIMMApp ? \
-    (nsToolkit::gAIMMApp->SetCandidateWindow(hIMC, candForm) == S_OK) : \
-    (::ImmSetCandidateWindow(hIMC, candForm)))
+  { \
+    if (nsToolkit::gAIMMApp) \
+      (nsToolkit::gAIMMApp->SetCandidateWindow(hIMC, candForm) == S_OK); \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      theIMM.SetCandidateWindow(hIMC, candForm); \
+    } \
+  }
 
-#define NS_IMM_SETCONVERSIONSTATUS(hIMC, pfdwConversion, pfdwSentence) \
-  (nsToolkit::gAIMMApp ? \
-    (nsToolkit::gAIMMApp->SetConversionStatus(hIMC, (pfdwConversion), (pfdwSentence)) == S_OK) : \
-    (::ImmSetConversionStatus(hIMC, (pfdwConversion), (pfdwSentence))))
+#define NS_IMM_GETCOMPOSITIONWINDOW(hIMC, compForm) \
+  { \
+    if (nsToolkit::gAIMMApp) \
+      (nsToolkit::gAIMMApp->GetCompositionWindow(hIMC, compForm) == S_OK); \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      theIMM.GetCompositionWindow(hIMC, compForm); \
+    } \
+  }
+
+#define NS_IMM_SETCONVERSIONSTATUS(hIMC, pfdwConversion, pfdwSentence, bRet) \
+  { \
+    bRet = TRUE; \
+    if (nsToolkit::gAIMMApp) \
+      bRet = (nsToolkit::gAIMMApp->SetConversionStatus(hIMC, (pfdwConversion), (pfdwSentence)) == S_OK); \
+    else { \
+      nsIMM &theIMM = nsIMM::LoadModule(); \
+      theIMM.SetConversionStatus(hIMC, (pfdwConversion), (pfdwSentence)); \
+    } \
+  } 
 
 #else /* !MOZ_AIMM */
 
 #define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
-  { compStrLen = ::ImmGetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); }
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    compStrLen = theIMM.GetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); \
+  }
 
 #define NS_IMM_GETCOMPOSITIONSTRINGW(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
-  { compStrLen = ::ImmGetCompositionStringW(hIMC, dwIndex, pBuf, dwBufLen); }
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    compStrLen = theIMM.GetCompositionStringW(hIMC, dwIndex, pBuf, dwBufLen); \
+  }
 
 #define NS_IMM_GETCONTEXT(hWnd, hIMC) \
-  { hIMC = ::ImmGetContext(hWnd); }
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    hIMC = theIMM.GetContext(hWnd); \
+  }
 
 #define NS_IMM_GETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence) \
-  (::ImmGetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)))
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    theIMM.GetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
+  }
 
 #define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
-  { ::ImmReleaseContext(hWnd, hIMC); }
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    theIMM.ReleaseContext(hWnd, hIMC); \
+  }
 
 #define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue) \
-  (::ImmNotifyIME(hIMC, dwAction, dwIndex, dwValue))
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    theIMM.NotifyIME(hIMC, dwAction, dwIndex, dwValue); \
+  }
 
 #define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
-  (::ImmSetCandidateWindow(hIMC, candForm))
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    theIMM.SetCandidateWindow(hIMC, candForm); \
+  }
 
 #define NS_IMM_SETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence) \
-  (::ImmSetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)))
+  { \
+    nsIMM &theIMM = nsIMM::LoadModule(); \
+    theIMM.SetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)); \
+  }
 
 #endif /* MOZ_AIMM */
 
@@ -2877,8 +2944,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #if IME_MOUSE_EVENT_SUPPORT
             // check whether IME window do mouse operation
             if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-              if (HandleMouseActionOfIME(IMEMOUSE_LDOWN))
-                break;
+							POINT ptPos;
+							ptPos.x = LOWORD(lParam);
+							ptPos.y = HIWORD(lParam);
+							if (IMECompositionHitTest(NS_MOUSE_LEFT_BUTTON_DOWN, &ptPos))
+								if (HandleMouseActionOfIME(IMEMOUSE_LDOWN))
+									break;
             }
 #endif
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
@@ -2898,8 +2969,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #if IME_MOUSE_EVENT_SUPPORT
             // check whether IME window do mouse operation
             if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-              if (HandleMouseActionOfIME(IMEMOUSE_MDOWN))
-                break;
+							POINT ptPos;
+							ptPos.x = LOWORD(lParam);
+							ptPos.y = HIWORD(lParam);
+							if (IMECompositionHitTest(NS_MOUSE_MIDDLE_BUTTON_DOWN, &ptPos))
+	              if (HandleMouseActionOfIME(IMEMOUSE_MDOWN))
+		              break;
             }
 #endif
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
@@ -2918,7 +2993,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #if IME_MOUSE_EVENT_SUPPORT
             // check whether IME window do mouse operation
             if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-              if (HandleMouseActionOfIME(IMEMOUSE_RDOWN))
+							POINT ptPos;
+							ptPos.x = LOWORD(lParam);
+							ptPos.y = HIWORD(lParam);
+							if (IMECompositionHitTest(NS_MOUSE_RIGHT_BUTTON_DOWN, &ptPos))
+	              if (HandleMouseActionOfIME(IMEMOUSE_RDOWN))
                 break;
             }
 #endif
@@ -4369,7 +4448,6 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 	HIMC hIMEContext;
 
 	BOOL result = PR_FALSE;					// will change this if an IME message we handle
-
 	NS_IMM_GETCONTEXT(mWnd, hIMEContext);
 	if (hIMEContext==NULL) 
 		return PR_TRUE;
@@ -4872,7 +4950,8 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 		HIMC hIMC;
 		NS_IMM_GETCONTEXT(mWnd, hIMC);
 		if(hIMC) {
-			BOOL ret = NS_IMM_NOTIFYIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, NULL);
+			BOOL ret = FALSE;
+      NS_IMM_NOTIFYIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, NULL, ret);
 			//NS_ASSERTION(ret, "ImmNotify failed");
 			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
 		}
@@ -4888,9 +4967,9 @@ nsWindow::HandleMouseActionOfIME(int aAction)
 {
   PRBool IsHandle = PR_FALSE;
 
-  HWND hIMEWnd = ::ImmGetDefaultIMEWnd(mWnd);
-  if (hIMEWnd) {
-    HIMC hIMC = ::ImmGetContext(mWnd);
+  if (mWnd) {
+    HIMC hIMC = NULL;
+    NS_IMM_GETCONTEXT(mWnd, hIMC);
     if (hIMC) {
       int positioning = 0;
       int offset = 0;
@@ -4900,17 +4979,66 @@ nsWindow::HandleMouseActionOfIME(int aAction)
       // calcurate positioning and offset
 
       // send MS_MSIME_MOUSE message to default IME window.
-      if (::SendMessge(hIMEWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1) {
+      if (::SendMessage(mWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
         IsHandle = PR_TRUE;
-      } else {
-        break;
       }
-    }
-    ::ImmReleaseContext(mWnd, hIMC);
+    NS_IMM_RELEASECONTEXT(mWnd, hIMC);
   }
 
   return IsHandle;
 }
+
+//The coordinate is relative to the upper-left corner of the client area. 
+PRBool nsWindow::IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos)
+{
+  PRBool IsHit = PR_FALSE;
+
+	COMPOSITIONFORM cpForm;
+
+  if (mWnd) {
+    HIMC hIMC = NULL;
+    NS_IMM_GETCONTEXT(mWnd, hIMC);
+    if (hIMC) {
+			GetCompositionWindowPos(hIMC, aEventType, &cpForm);
+			if (PtInRect(&cpForm.rcArea, *ptPos))
+				IsHit = PR_TRUE;
+		}
+    NS_IMM_RELEASECONTEXT(mWnd, hIMC);
+	}
+  return IsHit;
+}
+
+void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITIONFORM *cpForm)
+{
+  nsTextEvent		event;
+  POINT point;
+  point.x = 0;
+  point.y = 0;
+  DWORD pos = ::GetMessagePos();
+
+  point.x = LOWORD(pos);
+  point.y = HIWORD(pos);
+
+  if (mWnd != NULL) {
+    ::ScreenToClient(mWnd, &point);
+    event.point.x = point.x;
+    event.point.y = point.y;
+  } else {
+    event.point.x = 0;
+    event.point.y = 0;
+  }
+
+  NS_IMM_GETCOMPOSITIONWINDOW(hIMC, cpForm);
+
+  cpForm->ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
+  cpForm->ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
+                          + event.theReply.mCursorPosition.height ;
+	cpForm->rcArea.left = cpForm->ptCurrentPos.x;
+	cpForm->rcArea.top = cpForm->ptCurrentPos.y;
+	cpForm->rcArea.right = cpForm->ptCurrentPos.x + event.theReply.mCursorPosition.width;
+	cpForm->rcArea.bottom = cpForm->ptCurrentPos.y + event.theReply.mCursorPosition.height;
+}
+
 #endif
 
 
@@ -4933,11 +5061,12 @@ NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
 		if(hIMC) {
 			DWORD st1,st2;
      
-			BOOL ret = NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2);
+			BOOL ret = FALSE;
+      NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2, ret);
 			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
 			if(ret) {
 				oState = st1;
-				ret = NS_IMM_SETCONVERSIONSTATUS(hIMC, IME_CMODE_NOCONVERSION, st2);
+				NS_IMM_SETCONVERSIONSTATUS(hIMC, IME_CMODE_NOCONVERSION, st2, ret);
 				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
 			}
 			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
@@ -4958,10 +5087,11 @@ NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
 		if(hIMC) {
 			DWORD st1,st2;
 	     
-			BOOL ret = NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2);
+			BOOL ret = FALSE;
+      NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2, ret);
 			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
 			if(ret) {
-				ret = NS_IMM_SETCONVERSIONSTATUS(hIMC, (DWORD)aState, st2);
+				NS_IMM_SETCONVERSIONSTATUS(hIMC, (DWORD)aState, st2, ret);
 				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
 			}
 			NS_IMM_RELEASECONTEXT(mWnd, hIMC);

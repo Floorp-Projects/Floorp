@@ -48,6 +48,125 @@ class nsIMenuBar;
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
 
+/** 
+* Native IMM wrapper
+*/
+class nsIMM 
+{
+    //prototypes for DLL function calls...
+    typedef LONG (CALLBACK *GetCompStrPtr)  (HIMC,DWORD,LPVOID,DWORD);
+    typedef LONG (CALLBACK *GetContextPtr)  (HWND);
+    typedef LONG (CALLBACK *RelContextPtr)  (HWND,HIMC);
+    typedef LONG (CALLBACK *GetCStatusPtr)  (HIMC,LPDWORD,LPDWORD);
+    typedef LONG (CALLBACK *SetCStatusPtr)  (HIMC,DWORD,DWORD);
+    typedef LONG (CALLBACK *NotifyIMEPtr)   (HIMC,DWORD,DWORD,DWORD);
+    typedef LONG (CALLBACK *SetCandWindowPtr)  (HIMC,LPCANDIDATEFORM);
+    typedef LONG (CALLBACK *GetCompWindowPtr)  (HIMC,LPCOMPOSITIONFORM);
+
+public:
+
+    static nsIMM& LoadModule() {
+      static nsIMM gIMM;
+      return gIMM;
+    }
+
+    nsIMM(const char* aModuleName="IMM32.DLL") {
+      mInstance=::LoadLibrary(aModuleName);
+  	  NS_ASSERTION(mInstance!=NULL,"nsIMM.LoadLibrary failed.");
+
+      mGetCompositionStringA=(mInstance) ? (GetCompStrPtr)GetProcAddress(mInstance,"ImmGetCompositionStringA") : 0;
+      NS_ASSERTION(mGetCompositionStringA!=NULL,"nsIMM.ImmGetCompositionStringA failed.");
+
+      mGetCompositionStringW=(mInstance) ? (GetCompStrPtr)GetProcAddress(mInstance,"ImmGetCompositionStringW") : 0;
+	    NS_ASSERTION(mGetCompositionStringW!=NULL,"nsIMM.ImmGetCompositionStringW failed.");
+      
+	    mGetContext=(mInstance) ? (GetContextPtr)GetProcAddress(mInstance,"ImmGetContext") : 0;
+	    NS_ASSERTION(mGetContext!=NULL,"nsIMM.ImmGetContext failed.");
+      
+	    mReleaseContext=(mInstance) ? (RelContextPtr)GetProcAddress(mInstance,"ImmReleaseContext") : 0;
+	    NS_ASSERTION(mReleaseContext!=NULL,"nsIMM.ImmReleaseContext failed.");
+      
+	    mGetConversionStatus=(mInstance) ? (GetCStatusPtr)GetProcAddress(mInstance,"ImmGetConversionStatus") : 0;
+	    NS_ASSERTION(mGetConversionStatus!=NULL,"nsIMM.ImmGetConversionStatus failed.");
+      
+	    mSetConversionStatus=(mInstance) ? (SetCStatusPtr)GetProcAddress(mInstance,"ImmSetConversionStatus") : 0;
+	    NS_ASSERTION(mSetConversionStatus!=NULL,"nsIMM.ImmSetConversionStatus failed.");
+      
+	    mNotifyIME=(mInstance) ? (NotifyIMEPtr)GetProcAddress(mInstance,"ImmNotifyIME") : 0;
+	    NS_ASSERTION(mNotifyIME!=NULL,"nsIMM.ImmNotifyIME failed.");
+      
+	    mSetCandiateWindow=(mInstance) ? (SetCandWindowPtr)GetProcAddress(mInstance,"ImmSetCandidateWindow") : 0;
+	    NS_ASSERTION(mSetCandiateWindow!=NULL,"nsIMM.ImmSetCandidateWindow failed.");
+      
+	    mGetCompositionWindow=(mInstance) ? (GetCompWindowPtr)GetProcAddress(mInstance,"ImmGetCompositionWindow") : 0;
+	    NS_ASSERTION(mGetCompositionWindow!=NULL,"nsIMM.ImmGetCompositionWindow failed.");
+    }
+
+    ~nsIMM() {
+      if(mInstance) {
+        ::FreeLibrary(mInstance);
+      }
+      mGetCompositionStringA= 0;
+      mGetCompositionStringW= 0;
+      mGetContext=0;
+      mReleaseContext=0;
+      mGetConversionStatus=0;
+      mSetConversionStatus=0;
+      mNotifyIME=0;
+      mSetCandiateWindow=0;
+      mGetCompositionWindow=0;
+    }
+
+    LONG GetCompositionStringA(HIMC h,DWORD d1,LPVOID v,DWORD d2) {
+      return (mGetCompositionStringA) ? mGetCompositionStringA(h,d1,v,d2) : 0L;
+    }
+
+    LONG GetCompositionStringW(HIMC h,DWORD d1,LPVOID v,DWORD d2) {
+      return (mGetCompositionStringW) ? mGetCompositionStringW(h,d1,v,d2) : 0L;
+    }
+
+    LONG GetContext(HWND anHWND) {
+      return (mGetContext) ? mGetContext(anHWND) : 0L;
+    }
+
+    LONG ReleaseContext(HWND anHWND,HIMC anIMC) {
+      return (mReleaseContext) ? mReleaseContext(anHWND,anIMC) : 0L;
+    }
+
+    LONG GetConversionStatus(HIMC h, LPDWORD w1, LPDWORD w2) {
+      return (mGetConversionStatus) ? mGetConversionStatus(h,w1,w2) : 0L;
+    }
+
+    LONG SetConversionStatus(HIMC h,DWORD d1,DWORD d2) {
+      return (mSetConversionStatus) ? mSetConversionStatus(h,d1,d2) : 0L;
+    }
+
+    LONG NotifyIME(HIMC h,DWORD d1,DWORD d2,DWORD d3) {
+      return (mNotifyIME) ? mNotifyIME(h,d1,d2,d3) : 0L;
+    }
+
+    LONG SetCandidateWindow(HIMC h,LPCANDIDATEFORM l) {
+      return (mSetCandiateWindow) ? mSetCandiateWindow(h,l) : 0L;
+    }
+
+    LONG GetCompositionWindow(HIMC h,LPCOMPOSITIONFORM l) {
+      return (mGetCompositionWindow) ? mGetCompositionWindow(h,l) : 0L;
+    }
+
+private:
+
+    HINSTANCE mInstance;
+    GetCompStrPtr  mGetCompositionStringA;
+    GetCompStrPtr  mGetCompositionStringW;
+    GetContextPtr  mGetContext;
+    RelContextPtr  mReleaseContext;
+    GetCStatusPtr  mGetConversionStatus;
+    SetCStatusPtr  mSetConversionStatus;
+    NotifyIMEPtr   mNotifyIME;  
+    SetCandWindowPtr  mSetCandiateWindow;   
+    GetCompWindowPtr  mGetCompositionWindow;   
+};
+
 /**
  * Native WIN32 window wrapper. 
  */
