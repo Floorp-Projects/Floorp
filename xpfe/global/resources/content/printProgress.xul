@@ -55,7 +55,8 @@ Contributor(s):
     <grid flex="1">
       <columns>
         <column/>
-        <column flex="1"/>
+        <column/>
+        <column/>
       </columns>
       
       <rows>
@@ -70,7 +71,7 @@ Contributor(s):
             <label value="&progress;"/>
           </hbox>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
-          <hbox pack="end">
+          <hbox pack="end" style="min-width: 2.5em;">
             <label id="dialog.progressText"/>
           </hbox>
         </row>
@@ -78,7 +79,7 @@ Contributor(s):
     </grid>
     <separator/>
     <hbox id="CancelButton" pack="end">
-      <button id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
+      <button id="cancel" label="&dialogCancel.label;" 
+        oncommand="doCancelButton()"/>
     </hbox>
-
 </window>
