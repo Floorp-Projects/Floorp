@@ -38,7 +38,6 @@
 #ifndef nsPluginHostImpl_h__
 #define nsPluginHostImpl_h__
 
-#include "xp_core.h"
 #include "nsIPluginManager.h"
 #include "nsIPluginManager2.h"
 #include "nsIPluginHost.h"

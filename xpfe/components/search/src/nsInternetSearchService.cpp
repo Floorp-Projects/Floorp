@@ -50,12 +50,12 @@
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsXPIDLString.h"
 #include "nsRDFCID.h"
-#include "xp_core.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "prio.h"
+#include "prlog.h"
 #include "rdf.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"

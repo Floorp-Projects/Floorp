@@ -41,8 +41,7 @@
 #ifndef _PSOBJ_H_
 #define _PSOBJ_H_
 
-
-#include "xp_core.h"
+#include "prtypes.h"  /* for int32 & friends */
 #ifdef __cplusplus
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -59,11 +58,15 @@
 class nsIImage;
 #endif
 
+#include <stdio.h>
+
 #define N_FONTS 8
 #define INCH_TO_PAGE(f) ((int) (.5 + (f)*720))
 #define PAGE_TO_POINT_I(f) ((int) ((f) / 10.0))
 #define PAGE_TO_POINT_F(f) ((f) / 10.0)
 #define POINT_TO_PAGE(p) ((p)*10)
+
+typedef int XP_Bool;
 
 typedef struct {
   const char *name;
@@ -85,7 +88,7 @@ PSPaperSizeRec postscript_module_paper_sizes[] =
   { "Letter",    0.25f, 0.25f, 0.25f, 0.25f,  8.00f, 10.50f }, /* 8.50in X 11.0in */
   { "Legal",     0.25f, 0.25f, 0.25f, 0.25f,  8.00f, 13.50f }, /* 8.50in X 14.0in */
   { "Executive", 0.25f, 0.25f, 0.25f, 0.25f,  7.00f,  9.50f }, /* 7.50in X 10.0in */
-  { NULL,        0.25f, 0.25f, 0.25f, 0.25f,  0.00f,  0.0f  }
+  { 0,           0.25f, 0.25f, 0.25f, 0.25f,  0.00f,  0.0f  }
 };
 
 #define PSPaperSizeRec_FullPaperWidth(rec)  ((rec)->left + (rec)->right  + (rec)->width)

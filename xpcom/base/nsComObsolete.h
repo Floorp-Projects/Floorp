@@ -120,7 +120,13 @@
 #define NS_END_EXTERN_C
 #endif
 
+#define PUBLIC
+#define MODULE_PRIVATE
 
+#ifdef PRIVATE
+#undef PRIVATE
+#endif
+#define PRIVATE static
 
 #ifdef __cplusplus
 #include "nsDebug.h"

@@ -51,8 +51,6 @@ DEPTH = ..
 EXPORTS = \
 		minicom.h \
                 platform.h \
-                xp_core.h \
-		xp_mem.h \
 		xp_path.h \
 		xp_str.h \
                 $(NULL)

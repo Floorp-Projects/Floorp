@@ -48,7 +48,6 @@
 #ifndef _XPDebug_
 #define _XPDebug_
 
-#include "xp_core.h"
 #include "xpassert.h"
 #include "xp_trace.h"
 

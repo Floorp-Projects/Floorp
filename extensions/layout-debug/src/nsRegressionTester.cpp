@@ -44,7 +44,6 @@
 #include "nsIFileSpec.h"
 #include "nsIWindowWatcher.h"
 #include "nsVoidArray.h"
-#include "xp_core.h"
 #include "prmem.h"
 #include "nsDebugObject.h"
 #include "nsIDocShellTreeItem.h"

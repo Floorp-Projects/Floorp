@@ -37,7 +37,7 @@
 
 // TODO: Implement Java callbacks
 
-#include "xp_core.h"
+#include "prtypes.h"
 #include "nsplugin.h"
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
@@ -85,7 +85,7 @@ static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_IID(kIMemoryIID, NS_IMEMORY_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
   ////////////////////////////////////////////////////////////////////////
   // Static stub functions that are exported to the 4.x plugin as entry
@@ -189,7 +189,7 @@ XP_BEGIN_PROTOS
 #pragma pointers_in_A0
 #endif
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -40,9 +40,6 @@
  * environment.  Note that there are also Mozilla mods in jmorecfg.h.
  */
 
-#include "xp_core.h"            /* get XP_ symbols */
-
-
 /* We assume an ANSI C or C++ compilation environment */
 #define HAVE_PROTOTYPES 
 #define HAVE_UNSIGNED_CHAR 

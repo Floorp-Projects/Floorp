@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "xp_core.h"
 #include "nspr.h"
 #include "nsHashtable.h"
 #include <stdio.h>

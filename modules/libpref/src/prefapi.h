@@ -41,7 +41,6 @@
 #ifndef PREFAPI_H
 #define PREFAPI_H
 
-#include "xp_core.h"
 #include "prtypes.h"
 #include "jsapi.h"
 #include "pldhash.h"

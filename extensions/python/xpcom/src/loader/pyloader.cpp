@@ -25,7 +25,6 @@
 // the xpcom "components" directory.  Simply locates and loads the standard
 // _xpcom support module and transfers control to that.
 
-#include "xp_core.h"
 #include "nsIComponentLoader.h"
 #include "nsIRegistry.h"
 #include "nsISupports.h"

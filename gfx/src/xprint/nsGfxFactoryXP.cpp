@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
-#include "xp_core.h"                    //this is a hack to get it to build. MMP
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsIGenericFactory.h"     // need this for ps code

@@ -42,7 +42,6 @@
 #ifdef XP_UNIX
 #undef Bool
 #endif
-#include "xp_mem.h"
 
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
@@ -158,7 +157,7 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
     const char* docBase;
     err = fPluginTagInfo->GetDocumentBase(&docBase);
     if (err != NS_OK) return err;
-    PA_LOCK(codebase, const char*, docBase);
+    codebase = (const char*) docBase;
 
     if ((fSimulatedCodebase = PL_strdup(codebase)) != NULL) {
         char* lastSlash = PL_strrchr(fSimulatedCodebase, '/');
@@ -169,7 +168,6 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
             *(lastSlash + 1) = '\0';
     }
     
-    PA_UNLOCK(docBase);
     *result = fSimulatedCodebase;
     return NS_OK;
 }

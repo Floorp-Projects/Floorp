@@ -39,7 +39,6 @@
 #define nsJVMManager_h___
 
 #include "jvmmgr.h"
-#include "xp_core.h"    /* include first because of Bool problem */
 #include "prtypes.h"
 #include "nsCom.h"
 #include "jni.h"

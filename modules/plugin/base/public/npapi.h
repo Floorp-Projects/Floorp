@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.22 $
+ *  npapi.h $Revision: 3.23 $
  *  Netscape client plug-in API spec
  */
 
@@ -47,6 +47,24 @@
 
 #ifdef __OS2__
 #pragma pack(1)
+#endif
+
+#include "prtypes.h"
+/* Copied from xp_core.h */
+/* removed #ifdef for hpux defined in /usr/include/model.h */
+#ifndef XP_MAC
+#ifndef _INT16
+#define _INT16
+#endif
+#ifndef _INT32
+#define _INT32
+#endif
+#ifndef _UINT16
+#define _UINT16
+#endif
+#ifndef _UINT32
+#define _UINT32
+#endif
 #endif
 
 /* 
@@ -96,7 +114,6 @@
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
 #endif
-
 
 /*----------------------------------------------------------------------*/
 /*                        Plugin Version Constants                      */

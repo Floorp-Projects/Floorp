@@ -197,6 +197,7 @@ typedef unsigned int JDIMENSION;
 /* Mozilla mod: make external functions be DLL-able via JRI_PUBLIC_API(),
  * and supply extern "C" for C++ users of the C-compiled IJG library.
  */
+#include "prtypes.h"
 
 /* a function called through method pointers: */
 #define METHODDEF(type)		static type

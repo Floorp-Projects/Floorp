@@ -43,12 +43,8 @@
 #ifndef nsQuickSort_h___
 #define nsQuickSort_h___
 
-#include "nscore.h"
 #include "prtypes.h"
-/* Had to pull the following define out of xp_core.h
- * to avoid including xp_core.h.
- * That brought in too many header file dependencies.
- */
+#include "nsComObsolete.h"
 NS_BEGIN_EXTERN_C
 
 /**

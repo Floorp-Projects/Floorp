@@ -20,8 +20,6 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 
-#include "xp_core.h"
-
 #ifdef HAVE_MMX_INTEL_MNEMONICS
 int MMXAvailable;
 int mmxsupport();
