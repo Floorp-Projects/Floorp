@@ -55,6 +55,8 @@ REQUIRES = seccmd nss dbm
 DEFINES = -DNSPR20
 
 # sigh
-INCLUDES += -I$(CORE_DEPTH)/nss/lib/pk11wrap
+#INCLUDES += -I$(CORE_DEPTH)/nss/lib/pk11wrap
 
-USE_STATIC_LIBS = 1 
+# USE_STATIC_LIBS = 1 
+
+EXTRA_LIBS += $(JAR_LIBS)

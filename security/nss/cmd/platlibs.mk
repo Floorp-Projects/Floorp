@@ -33,6 +33,8 @@
 
 
 ifdef USE_STATIC_LIBS
+
+JAR_LIBS=
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
@@ -185,6 +187,16 @@ ifeq ($(OS_ARCH), SunOS)
 ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += -B/usr/ccs/bin/
 endif
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+JAR_LIBS = $(DIST)/lib/jar.lib \
+	$(DIST)/lib/zlib.lib \
+	$(NULL)
+else
+JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
+	$(NULL)
 endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
