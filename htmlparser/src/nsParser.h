@@ -129,25 +129,6 @@ friend class CTokenHandler;
                           nsIDTDDebug* aDTDDebug = 0);
 
     /**
-     * Cause parser to parse input from given nsIInputStream 
-     * @update	gess5/11/98
-     * @param   pIStream is an nsIInputStream
-     * @param   aListener is a listener to forward notifications to
-     * @return  TRUE if all went well -- FALSE otherwise
-     */
-    virtual PRInt32 Parse(nsIInputStream* pIStream,
-                          nsIStreamObserver* aListener, 
-                          nsIDTDDebug* aDTDDebug = 0);
-
-    /**
-     * Cause parser to parse input from given file in given mode
-     * @update	gess5/11/98
-     * @param   aFilename is a path for file document
-     * @return  TRUE if all went well -- FALSE otherwise
-     */
-    virtual PRInt32 Parse(nsString& aFilename);
-
-    /**
      * Cause parser to parse input from given stream 
      * @update	gess5/11/98
      * @param   aStream is the i/o source
@@ -161,7 +142,7 @@ friend class CTokenHandler;
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens);
+    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString);
 
     /**
      * This method gets called (automatically) during incremental parsing
@@ -310,6 +291,8 @@ private:
      */
     eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
+    void              PushContext(CParserContext& aContext);
+    CParserContext*   PopContext();
 
 protected:
     //*********************************************

@@ -21,13 +21,19 @@
  * MODULE NOTES:
  * @update  gess 4/1/98
  *  
- * This file contains the declarations for all the 
- * HTML specific token types that our HTML tokenizer
- * delegate understands. 
+ * This file contains the declarations for all the HTML specific token types that 
+ * our DTD's understand. In fact, the same set of token types are used for XML.
+ * Currently we have tokens for text, comments, start and end tags, entities, 
+ * attributes, style, script and skipped content. Whitespace and newlines also
+ * have their own token types, but don't count on them to stay forever.
+ * 
+ * If you're looking for the html tags, they're in a file called nsHTMLTag.h/cpp.
  *
- * If you want to add a new kind of token, this is 
- * the place to do it. You should also add a bit of glue
- * code to the HTML tokenizer delegate class.
+ * Most of the token types have a similar API. They have methods to get the type
+ * of token (GetTokenType); those that represent HTML tags also have a method to
+ * get type tag type (GetTypeID). In addition, most have a method that causes the
+ * token to help in the parsing process called (Consume). We've also thrown in a 
+ * few standard debugging methods as well. 
  */
 
 #ifndef HTMLTOKENS_H
@@ -38,6 +44,10 @@
 #include <iostream.h>
 
 class CScanner;
+
+  /*******************************************************************
+   * This enum defines the set of token types that we currently support.
+   *******************************************************************/
 
 enum eHTMLTokenTypes {
   eToken_unknown=0,
@@ -56,34 +66,36 @@ const char*     GetTagName(PRInt32 aTag);
 
 
 /**
- *  This declares the basic token type used in the html-
- *  parser.
- *  
+ *  This declares the basic token type used in the HTML DTD's.
  *  @update  gess 3/25/98
  */
 class CHTMLToken : public CToken {
 public:
                         CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString);
+    virtual void        SetStringValue(const char* aValue);
+    virtual nsString&   GetStringValueXXX(void);
+    virtual char*       GetCStringValue(char* aBuffer, PRInt32 aMaxLen);
+
 protected:
 };
 
 
 /**
- *  This declares start tokens, which always take the 
- *  form <xxxx>. This class also knows how to consume
- *  related attributes.
+ *  This declares start tokens, which always take the form <xxxx>. 
+ *	This class also knows how to consume related attributes.
  *  
  *  @update  gess 3/25/98
  */
 class CStartToken: public CHTMLToken {
   public:
                         CStartToken(eHTMLTags aTag);
-                        CStartToken(const nsString& aString);
+                        CStartToken(nsString& aName);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual PRInt32     GetTypeID(void);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
+
             PRBool      IsAttributed(void);
             void        SetAttributed(PRBool aValue);
             PRBool      IsEmpty(void);
@@ -105,6 +117,7 @@ class CStartToken: public CHTMLToken {
  */
 class CEndToken: public CHTMLToken {
   public:
+                        CEndToken(eHTMLTags aTag);
                         CEndToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual PRInt32     GetTypeID(void);
@@ -124,6 +137,7 @@ class CEndToken: public CHTMLToken {
  */
 class CCommentToken: public CHTMLToken {
   public:
+                        CCommentToken();
                         CCommentToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);
@@ -141,6 +155,7 @@ class CCommentToken: public CHTMLToken {
  */
 class CEntityToken : public CHTMLToken {
   public:
+                        CEntityToken();
                         CEntityToken(const nsString& aString);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
@@ -168,6 +183,7 @@ class CEntityToken : public CHTMLToken {
  */
 class CWhitespaceToken: public CHTMLToken {
   public:
+                        CWhitespaceToken();
                         CWhitespaceToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);
@@ -183,6 +199,7 @@ class CWhitespaceToken: public CHTMLToken {
  */
 class CTextToken: public CHTMLToken {
   public:
+                        CTextToken();
                         CTextToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);
@@ -200,6 +217,7 @@ class CTextToken: public CHTMLToken {
  */
 class CAttributeToken: public CHTMLToken {
   public:
+                          CAttributeToken();
                           CAttributeToken(const nsString& aString);
                           CAttributeToken(const nsString& aKey, const nsString& aString);
     virtual nsresult      Consume(PRUnichar aChar,CScanner& aScanner);
@@ -223,11 +241,12 @@ class CAttributeToken: public CHTMLToken {
  */
 class CNewlineToken: public CHTMLToken { 
   public:
+                        CNewlineToken();
                         CNewlineToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
-    virtual nsString&   GetText(void);
+    virtual nsString&   GetStringValueXXX(void);
 };
 
 
@@ -242,7 +261,7 @@ class CNewlineToken: public CHTMLToken {
  */
 class CScriptToken: public CHTMLToken {
   public:
-
+                        CScriptToken();
                         CScriptToken(const nsString& aString);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
@@ -260,6 +279,7 @@ class CScriptToken: public CHTMLToken {
  */
 class CStyleToken: public CHTMLToken {
   public:
+                         CStyleToken();
                          CStyleToken(const nsString& aString);
     virtual const char*  GetClassName(void);
     virtual PRInt32      GetTokenType(void);
@@ -275,6 +295,7 @@ class CStyleToken: public CHTMLToken {
  */
 class CSkippedContentToken: public CAttributeToken {
   public:
+                        CSkippedContentToken();
                         CSkippedContentToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);

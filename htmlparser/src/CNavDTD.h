@@ -19,11 +19,62 @@
 
 /**
  * MODULE NOTES:
- * @update  gess 4/8/98
+ * @update  gess 7/15/98
+ *
+ * NavDTD is an implementation of the nsIDTD interface.
+ * In particular, this class captures the behaviors of the original 
+ * Navigator parser productions.
+ *
+ * This DTD, like any other in NGLayout, provides a few basic services:
+ *	- First, the DTD collaborates with the Parser class to convert plain 
+ *    text into a sequence of HTMLTokens. 
+ *	- Second, the DTD describes containment rules for known elements. 
+ *	- Third the DTD controls and coordinates the interaction between the
+ *	  parsing system and content sink. (The content sink is the interface
+ *    that serves as a proxy for content model).
+ *	- Fourth the DTD maintains an internal style-stack to handle residual (leaky)
+ *	  style tags.
+ *
+ * You're most likely working in this class file because
+ * you want to add or change a behavior inherent in this DTD. The remainder
+ * of this section will describe what you need to do to affect the kind of
+ * change you want in this DTD.
+ *
+ * RESIDUAL-STYLE HANDLNG:
+ *	 There are a number of ways to represent style in an HTML document.
+ *		1) explicit style tags (<B>, <I> etc)
+ *		2) implicit styles (like those implicit in <Hn>)
+ *		3) CSS based styles
+ *
+ *	 Residual style handling results from explicit style tags that are
+ *	 not closed. Consider this example: <p>text <b>bold </p>
+ *	 When the <p> tag closes, the <b> tag is NOT automatically closed.
+ *	 Unclosed style tags are handled by the process we call residual-style 
+ *	 tag handling. 
+ *
+ *	 There are two aspects to residual style tag handling. The first is the 
+ *	 construction and managing of a stack of residual style tags. The 
+ *	 second is the automatic emission of residual style tags onto leaf content
+ *	 in subsequent portions of the document.This step is necessary to propagate
+ *	 the expected style behavior to subsequent portions of the document.
+ *
+ *	 Construction and managing the residual style stack is an inline process that
+ *	 occurs during the model building phase of the parse process. During the model-
+ *	 building phase of the parse process, a content stack is maintained which tracks
+ *	 the open container hierarchy. If a style tag(s) fails to be closed when a normal
+ *	 container is closed, that style tag is placed onto the residual style stack. If
+ *	 that style tag is subsequently closed (in most contexts), it is popped off the
+ *	 residual style stack -- and are of no further concern.
+ *
+ *	 Residual style tag emission occurs when the style stack is not empty, and leaf
+ *	 content occurs. In our earlier example, the <b> tag "leaked" out of the <p> 
+ *	 container. Just before the next leaf is emitted (in this or another container) the 
+ *	 style tags that are on the stack are emitted in succession. These same residual
+ *   style tags get closed automatically when the leaf's container closes, or if a
+ *   child container is opened.
  * 
  *         
  */
-
 #ifndef NS_NAVHTMLDTD__
 #define NS_NAVHTMLDTD__
 
@@ -49,9 +100,10 @@ class nsParser;
 
 
 /***************************************************************
-  First define a helper class called CTagStack.
+  Before digging into the NavDTD, we'll define a helper 
+  class called CTagStack.
 
-  Simple, we've built ourselves a little data structure that
+  Simply put, we've built ourselves a little data structure that
   serves as a stack for htmltags (and associated bits). 
   What's special is that if you #define _dynstack 1, the stack
   size can grow dynamically (like you'ld want in a release build.)
@@ -105,20 +157,16 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
   public:
     /**
-     *  
-     *  
-     *  @update  gess 4/9/98
-     *  @param   
-     *  @return  
-     */
+      *  Common constructor for navdtd. You probably want to call
+  	  *  NS_NewNavHTMLDTD().
+	    * 
+      *  @update  gess 7/9/98
+      */
     CNavDTD();
 
     /**
-     *  
-     *  
-     *  @update  gess 4/9/98
-     *  @param   
-     *  @return  
+     *  Virtual destructor -- you know what to do
+     *  @update  gess 7/9/98
      */
     virtual ~CNavDTD();
 
@@ -126,49 +174,59 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
     /**
      * This method is called to determine if the given DTD can parse
-     * a document in a given source-type. 
-     * NOTE: Parsing always assumes that the end result will involve
-     *       storing the result in the main content model.
-     * @update	gess6/24/98
-     * @param   
-     * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
+     * a document of a given source-type. 
+     * Note that parsing assumes that the end result will always be stored 
+	   * in the main content model. Of course, it's up to you which content-
+	   * model you pass in to the parser, so you can always control the process.
+	   *
+     * @update	gess 7/15/98
+     * @param	aContentType contains the name of a filetype that you are
+   	 *			being asked to parse).
+     * @return  TRUE if this DTD parse the given type; FALSE otherwise.
      */
     virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion);
 
-    /**
-     * 
-     * @update	gess7/7/98
-     * @param 
-     * @return
-     */
+   /**
+    * This method gets called to determine if the DTD can determine the
+	  * kind of data contained in the given buffer string. If you know the
+	  * type, the you should enter its stringname aType.
+    * @update	gess7/7/98
+    * @param	aBuffer contains data to be examined for autodetection.
+    * @param	aType will contain a typename you specify.
+    * @return	unknown, valid (if you know the type), invalid (if you dont)
+    */
     virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
     /**
-     * 
+     * Sets a debugger into the DTD to help up debug the process.
      * @update	jevering6/23/98
-     * @param 
-     * @return
+     * @param	aDTDDedug is a ptr to the debug object you want us to use
      */
 	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
 
     /**
-     * 
-     * @update	gess5/18/98
-     * @param 
-     * @return
-     */
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
     NS_IMETHOD WillBuildModel(nsString& aFilename);
 
-    /**
-     * 
+   /**
+     * The parser uses a code sandwich to wrap the parsing process. Before
+     * the process begins, WillBuildModel() is called. Afterwards the parser
+     * calls DidBuildModel(). 
      * @update	gess5/18/98
-     * @param 
-     * @return
+     * @param	anErrorCode contans the last error that occured
+     * @return	error code
      */
     NS_IMETHOD DidBuildModel(PRInt32 anErrorCode);
 
     /**
-     *  
+     *  This method is called by the parser, once for each token
+	   *	that has been constructed during the tokenization phase.
      *  @update  gess 3/25/98
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
@@ -176,11 +234,13 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     NS_IMETHOD HandleToken(CToken* aToken);
 
     /**
-     * 
+     *	Set parser is called to notify the DTD which parser is driving
+	   *  the DTD. This is needed by the DTD later, for various parser 
+	   *  callback methods.
      *  
      *  @update  gess 3/25/98
-     *  @param   
-     *  @return 
+     *  @param   aParser pts to the controlling parser
+     *  @return  nada.
      */
     virtual void SetParser(nsIParser* aParser);
 
@@ -196,20 +256,21 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
 
     /**
-     * 
+     * If the parse process gets interrupted, this method gets called
+	   * prior to the process resuming.
      * @update	gess5/18/98
-     * @param 
-     * @return
+     * @return	error code -- usually kNoError (0)
      */
     NS_IMETHOD WillResumeParse(void);
 
     /**
-     * 
+     * If the parse process is about to be interrupted, this method
+	   * will be called just prior.
      * @update	gess5/18/98
-     * @param 
-     * @return
+     * @return	error code  -- usually kNoError (0)
      */
     NS_IMETHOD WillInterruptParse(void);
+
 
    /**
      * Select given content sink into parser for parser output
@@ -231,8 +292,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild);
 
     /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
+     *  This method is called to determine whether a tag
+     *  of one of its children can contain a given child tag.
      *  
      *  @update  gess 3/25/98
      *  @param   aParent -- tag enum of parent container
@@ -243,22 +304,23 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
     /**
      *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
+     *  child tag can be omitted by the given parent.
      *  
      *  @update  gess 3/25/98
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
+     *  @param   aParent -- parent tag being asked about omitting given child
+     *  @param   aChild -- child tag being tested for omittability by parent
+     *  @return  PR_TRUE if given tag can be omitted
      */
     virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild)const;
 
     /**
-     *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
+     *  This is called to determine if the given parent can omit the
+	   *  given child (end tag).
      *  
      *  @update  gess 3/25/98
      *  @param   aParent -- tag type of parent
      *  @param   aChild -- tag type of child
-     *  @return  PR_TRUE if given tag can contain other tags
+     *  @return  PR_TRUE if given tag can contain omit child (end tag)
      */
     virtual PRBool CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild)const;
 
@@ -273,12 +335,13 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRBool IsContainer(eHTMLTags aTags) const;
 
     /**
-     * This method does two things: 1st, help construct
-     * our own internal model of the content-stack; and
-     * 2nd, pass this message on to the sink.
-     * @update  gess4/6/98
-     * @param   aNode -- next node to be added to model
-     * @return  TRUE if ok, FALSE if error
+     * Call this if you want the DTD to give you a default
+	   * Parent tag for given child tag. This is needed in cases
+	   * such as propagation.
+	   *
+     * @update  gess 7/6/98
+     * @param   aTag --  child to determine dflt parent tag for
+     * @return  enum of parent tag -- potentially eHTMLTag_unknown
      */
     virtual eHTMLTags GetDefaultParentTagFor(eHTMLTags aTag) const;
 
@@ -315,7 +378,9 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
     /**
      * This method is used to determine the index on the stack of the
-     * nearest container tag that can constrain autoclosure.
+     * nearest container tag that can constrain autoclosure. It is possible
+	   * that no tag on the stack will gate autoclosure.
+	   *
      * @update	gess 7/15/98
      * @param   id of tag you want to test for
      * @return  index of gating tag on context stack. kNotFound otherwise
@@ -324,7 +389,9 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
 
     /**
-     * Retrieve the tag type of the topmost item on context vector stack
+     * Accessor that retrieves the tag type of the topmost item on context 
+	   * vector stack.
+	   *
      * @update	gess5/11/98
      * @return  tag type (may be unknown)
      */
@@ -350,8 +417,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * The following set of methods are used to partially construct 
      * the content model (via the sink) according to the type of token.
      * @update	gess5/11/98
-     * @param   aToken is the start token to be handled
-     * @return  TRUE if the token was handled.
+     * @param   aToken is the token (of a given type) to be handled
+     * @return  error code representing construction state; usually 0.
      */
     nsresult HandleStartToken(CToken* aToken);
     nsresult HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
@@ -383,11 +450,12 @@ protected:
     //*************************************************
 
     /**
-     * The next set of method open given HTML element.
+     * The next set of method open given HTML elements of
+	   * various types.
      * 
      * @update	gess5/11/98
-     * @param   HTML (node) to be opened in content sink.
-     * @return  TRUE if all went well.
+     * @param   node to be opened in content sink.
+     * @return  error code representing error condition-- usually 0.
      */
     nsresult OpenHTML(const nsIParserNode& aNode);
     nsresult OpenHead(const nsIParserNode& aNode);
@@ -402,7 +470,7 @@ protected:
      * 
      * @update	gess5/11/98
      * @param   HTML (node) to be opened in content sink.
-     * @return  TRUE if all went well.
+     * @return  error code - 0 if all went well.
      */
     nsresult CloseHTML(const nsIParserNode& aNode);
     nsresult CloseHead(const nsIParserNode& aNode);
@@ -416,7 +484,7 @@ protected:
      * The special purpose methods automatically close
      * one or more open containers.
      * @update	gess5/11/98
-     * @return  TRUE if all went well.
+     * @return  error code - 0 if all went well.
      */
     nsresult CloseTopmostContainer();
     nsresult CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles);
@@ -426,7 +494,7 @@ protected:
      * Causes leaf to be added to sink at current vector pos.
      * @update	gess5/11/98
      * @param   aNode is leaf node to be added.
-     * @return  TRUE if all went well -- FALSE otherwise.
+     * @return  error code - 0 if all went well.
      */
     nsresult AddLeaf(const nsIParserNode& aNode);
 
@@ -436,7 +504,7 @@ protected:
      * a fall out.
      * @update	gess5/11/98
      * @param   child to be added (somewhere) to context vector stack.
-     * @return  TRUE if succeeds, otherwise FALSE
+     * @return  error code - 0 if all went well.
      */
     nsresult ReduceContextStackFor(eHTMLTags aChildTag);
 
@@ -449,6 +517,15 @@ protected:
      */
     nsresult CreateContextStackFor(eHTMLTags aChildTag);
 
+    /**
+     * This set of methods is used to create and manage the set of
+	   * transient styles that occur as a result of poorly formed HTML
+   	 * or bugs in the original navigator.
+	   *
+     * @update	gess5/11/98
+     * @param   aTag -- represents the transient style tag to be handled.
+     * @return  error code -- usually 0
+     */
     nsresult OpenTransientStyles(eHTMLTags aTag);
     nsresult CloseTransientStyles(eHTMLTags aTag);
     nsresult UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);

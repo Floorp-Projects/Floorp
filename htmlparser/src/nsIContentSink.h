@@ -24,10 +24,14 @@
  * @update  gess 4/1/98
  * 
  * This file declares the concrete IContentSink interface.
- * This pure virtual interface is used as the "glue" that
- * connects the parsing process to the content model 
- * construction process.
+ * This pure virtual interface is used as the "glue" that connects the parsing 
+ * process to the content model construction process.
+ *
+ * The icontentsink interface is a very lightweight wrapper that represents the
+ * content-sink model building process. There is another one that you may care 
+ * about more, which is the IHTMLContentSink interface. (See that file for details).
  */
+
 #include "nsIParserNode.h"
 #include "nsISupports.h"
 

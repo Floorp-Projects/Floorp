@@ -245,7 +245,7 @@ PRInt32 XIFDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
   eHTMLTokenTypes theType= (eHTMLTokenTypes)aToken->GetTokenType();  
   nsXIFDTD*       theDTD=(nsXIFDTD*)aDTD;
 
-  nsString& name = aToken->GetStringValue();
+  nsString& name = aToken->GetStringValueXXX();
   eXIFTags type = DetermineXIFTagType(name);
   
   if (type != eXIFTag_userdefined)
@@ -519,7 +519,7 @@ PRInt32 nsXIFDTD::HandleTextToken(CToken* aToken) {
 
   if (type == eXIFTag_text)
   {
-    nsString& temp = aToken->GetText();
+    nsString& temp = aToken->GetStringValueXXX();
 
     if (temp != "<xml version=\"1.0\"?>")
     {
@@ -1427,7 +1427,7 @@ PRInt32 nsXIFDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartTok
       //and a textkey of "/". We should destroy it, and tell the 
       //start token it was empty.
       nsString& key=theToken->GetKey();
-      nsString& text=theToken->GetText();
+      nsString& text=theToken->GetStringValueXXX();
       if((key[0]==kForwardSlash) && (0==text.Length())){
         //tada! our special case! Treat it like an empty start tag...
         aToken->SetEmpty(PR_TRUE);
@@ -1488,7 +1488,7 @@ PRInt32 nsXIFDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aT
   PRInt32 theDequeSize=mTokenDeque.GetSize();
   PRInt32 result=kNoError;
 
-  aToken=new CStartToken(nsAutoString(""));
+  aToken=new CStartToken(eHTMLTag_unknown);
 
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
