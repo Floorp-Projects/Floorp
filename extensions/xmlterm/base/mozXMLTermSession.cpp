@@ -1329,7 +1329,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
 
   // If string terminates in whitespace, append NBSP for cursor positioning
   nsAutoString tempString( aString );
-  if (aString.Last() == PRUnichar(' '))
+  if (!aString.IsEmpty() && aString.Last() == PRUnichar(' '))
     tempString += kNBSP;
 
   // Display string
