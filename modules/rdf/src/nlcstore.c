@@ -120,9 +120,11 @@ readInBookmarksOnInit(RDFFile f)
 	*/
   }
   PR_Close(fp);
-  freeMem(f->line);
-  freeMem(f->currentSlot);
-  freeMem(f->holdOver);
+#if 0
+  if (f->line != NULL)		freeMem(f->line);
+  if (f->currentSlot != NULL)	freeMem(f->currentSlot);
+  if (f->holdOver != NULL)	freeMem(f->holdOver);
+#endif
 }
 
 
@@ -133,6 +135,8 @@ DBM_OpenDBMStore (DBMRDF store, char* directory)
   PRBool createp = 0;
   char* dbPathname;
   char* dirPathname;
+  int mode=(O_RDWR | O_CREAT);
+
   CHECK_VAR1(profileDirURL);
   dirPathname = makeDBURL(directory);
   CallPRMkDirUsingFileURL(dirPathname, 00700);  
@@ -140,10 +144,13 @@ DBM_OpenDBMStore (DBMRDF store, char* directory)
 
   dbPathname =  makeRDFDBURL(directory, "names.db");
   CHECK_VAR1(dbPathname);
-  store->nameDB    = CallDBOpenUsingFileURL(dbPathname, O_RDWR, 0644, DB_HASH, &hash_info);
+  store->nameDB    = CallDBOpenUsingFileURL(dbPathname,
+  			O_RDWR, 0644, DB_HASH, &hash_info);
   if (store->nameDB == NULL) {
     createp = 1;
-    store->nameDB    = CallDBOpenUsingFileURL(dbPathname, O_RDWR | O_CREAT, 0644, DB_HASH, &hash_info);
+    mode = (O_RDWR | O_CREAT | O_TRUNC);
+    store->nameDB    = CallDBOpenUsingFileURL(dbPathname,
+    			mode, 0644, DB_HASH, &hash_info);
   }
   freeMem(dbPathname);
   CHECK_VAR1(store->nameDB);
@@ -151,14 +158,14 @@ DBM_OpenDBMStore (DBMRDF store, char* directory)
   CHECK_VAR1(dbPathname);
   hash_info.bsize = 2056;
   store->childrenDB    = CallDBOpenUsingFileURL(dbPathname, 
-			 O_RDWR | O_CREAT, 0644, DB_HASH, &hash_info);
+			 mode, 0644, DB_HASH, &hash_info);
   freeMem(dbPathname);
   CHECK_VAR1(store->childrenDB);
 
   dbPathname = makeRDFDBURL(directory, "lstr.db");
   hash_info.bsize = 1024  ;
   store->propDB   = CallDBOpenUsingFileURL(dbPathname,
-		    O_RDWR | O_CREAT, 0644, DB_HASH, &hash_info);
+		    mode, 0644, DB_HASH, &hash_info);
   freeMem(dbPathname);
   CHECK_VAR1(store->propDB);
 
@@ -166,15 +173,13 @@ DBM_OpenDBMStore (DBMRDF store, char* directory)
   CHECK_VAR1(dbPathname);
   hash_info.bsize = 1024*16;
   store->invPropDB   = CallDBOpenUsingFileURL(dbPathname,
-		       O_RDWR | O_CREAT, 0644, DB_HASH, &hash_info);
+		       mode, 0644, DB_HASH, &hash_info);
   freeMem(dbPathname);
   CHECK_VAR1(store->invPropDB);
   
   if (strcmp(directory, "NavCen") == 0) {
     RDF_Resource bmk = RDF_GetResource(NULL, "NC:Bookmarks", true);
     if (createp) {
-      PRBool nlocalStoreAssert1 (RDFFile f, RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
-                                 RDF_ValueType type, PRBool tv) ;
       RDFFile newFile;
       doingFirstTimeInitp = 1;
       newFile = makeRDFFile(gBookmarkURL, bmk, true);
