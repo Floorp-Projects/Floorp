@@ -48,6 +48,7 @@ public:
   virtual nscoord GetWidth(const nsString& aString);
   virtual nscoord GetWidth(const char *aString);
   virtual nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength);
+  virtual nscoord GetWidth(nsIDeviceContext *aContext, const nsString& aString);
   virtual nscoord GetHeight();
   virtual nscoord GetLeading();
   virtual nscoord GetMaxAscent();
