@@ -244,16 +244,6 @@ sub check_urlbase {
     return "";
 }
 
-DefParam("languages",
-         "A comma-separated list of RFC 1766 language tags. These identify the languages in which you wish Bugzilla output to be displayed. Note that you must install the appropriate language pack before adding a language to this Param. The language used is the one in this list with the highest q-value in the user's Accept-Language header.",
-         "t",
-         "en");
-
-DefParam("defaultlanguage",
-         "The UI language Bugzilla falls back on if no suitable language is found in the user's Accept-Language header.",
-         "t",
-         "en");
-
 DefParam("cookiepath", 
   "Directory path under your document root that holds your Bugzilla installation. Make sure to begin with a /.",
   "t",
