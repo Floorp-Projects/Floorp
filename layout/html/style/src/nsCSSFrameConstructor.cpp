@@ -1448,6 +1448,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
 
   nsIPresShell *shell = aPresContext->PresShell();
 
+  nsCOMPtr<nsIContent> content;
+
   if (eStyleContentType_Image == type) {
     if (!data.mContent.mImage) {
       // CSS had something specified that couldn't be converted to an
@@ -1464,7 +1466,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
                                               kNameSpaceID_None,
                                               getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> content;
     nsresult rv = NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
                                            data.mContent.mImage);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1530,9 +1531,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
         nsresult rv = NS_ERROR_FAILURE;
         if (attrName) {
           nsIFrame*   textFrame = nsnull;
-          nsCOMPtr<nsIContent> content;
           rv = NS_NewAttributeContent(aContent, attrNameSpace, attrName,
                                       getter_AddRefs(content));
+          NS_ENSURE_SUCCESS(rv, rv);
 
           // Set aContent as the parent content so that event handling works.
           content->SetParent(aContent);
@@ -1549,7 +1550,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
           *aFrame = textFrame;
           rv = NS_OK;
         }
-        return rv;
       }
       break;
   
@@ -1587,30 +1587,48 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
     } // switch
   
 
-    // Create a text content node
-    nsIFrame* textFrame = nsnull;
-    nsCOMPtr<nsITextContent> textContent;
-    NS_NewTextNode(getter_AddRefs(textContent));
-    if (textContent) {
-      // Set the text
-      textContent->SetText(contentString, PR_TRUE);
+    if (!content) {
+      // Create a text content node
+      nsIFrame* textFrame = nsnull;
+      nsCOMPtr<nsITextContent> textContent;
+      NS_NewTextNode(getter_AddRefs(textContent));
+      if (textContent) {
+        // Set the text
+        textContent->SetText(contentString, PR_TRUE);
 
-      if (textPtr)
-        *textPtr = do_QueryInterface(textContent);
-  
-      // Set aContent as the parent content so that event handling works.
-      textContent->SetParent(aContent);
-      textContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
-      textContent->SetNativeAnonymous(PR_TRUE);
-      textContent->SetBindingParent(textContent);
-      
-      // Create a text frame and initialize it
-      NS_NewTextFrame(shell, &textFrame);
-      textFrame->Init(aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
+        if (textPtr)
+          *textPtr = do_QueryInterface(textContent);
+
+        // Set aContent as the parent content so that event handling works.
+        textContent->SetParent(aContent);
+        textContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+        textContent->SetNativeAnonymous(PR_TRUE);
+        textContent->SetBindingParent(textContent);
+
+        // Create a text frame and initialize it
+        NS_NewTextFrame(shell, &textFrame);
+        if (!textFrame) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        textFrame->Init(aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
+
+        content = textContent;
+      }
+
+      // Return the text frame
+      *aFrame = textFrame;
     }
-  
-    // Return the text frame
-    *aFrame = textFrame;
+  }
+
+  if (content) {
+    nsCOMPtr<nsISupportsArray> anonymousItems;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(anonymousItems));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    anonymousItems->AppendElement(content);
+
+    shell->SetAnonymousContentFor(aContent, anonymousItems);
   }
 
   return NS_OK;
@@ -9920,9 +9938,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     if (frame) {
       nsresult res;
 
-      void* dummy = propTable->GetProperty(frame,
-                                           nsLayoutAtoms::changeListProperty,
-                                           &res);
+      propTable->GetProperty(frame, nsLayoutAtoms::changeListProperty, &res);
 
       if (NS_PROPTABLE_PROP_NOT_THERE == res)
         continue;
