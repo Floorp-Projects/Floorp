@@ -246,7 +246,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
   curPrefName.Mid(langGroup,  p1+1, curPrefName.Length()-p1-1);
   curPrefName.Mid(genName, p2+1, p1-p2-1);
   
-  if(langGroup == nsCAutoString("x-unicode"))
+  if(langGroup.Equals(nsCAutoString("x-unicode")))
   	return;
   ScriptCode script = Self->MapLangGroupToScriptCode(langGroup);
   if(script >= smUninterp)
