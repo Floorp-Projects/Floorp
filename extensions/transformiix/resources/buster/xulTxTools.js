@@ -23,7 +23,7 @@
 var pop_last=0, pop_chunk=25;
 var isinited=false;
 var xalan_base, xalan_xml, xalan_elems, xalan_length, content_row, target;
-var pref;
+var matchRE, matchNameTag, matchFieldTag;
 
 function loaderstuff(eve) {
   var ns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -33,8 +33,11 @@ function loaderstuff(eve) {
   content_row.appendChild(document.createElementNS(ns,"text"));
   content_row.appendChild(document.createElementNS(ns,"text"));
   content_row.appendChild(document.createElementNS(ns,"text"));
+  content_row.setAttribute("class", "notrun");
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   target = document.getElementById("xalan_grid");
+  matchNameTag = document.getElementById("search-name");
+  matchFieldTag = document.getElementById("search-field");
   xalan_base = document.getElementById("xalan_base");
   xalan_xml = document.implementation.createDocument("","",null);
   xalan_xml.addEventListener("load", xalanIndexLoaded, false);
@@ -46,12 +49,11 @@ function loaderstuff(eve) {
 function xalanIndexLoaded(e) {
   xalan_elems = xalan_xml.getElementsByTagName("test");
   xalan_length = xalan_elems.length;
-  populate_xalan();
   return true;
 }
 
 function refresh_xalan() {
-  while(target.hasChildNodes()) target.removeChild(target.lastChild);
+  while(target.childNodes.length>1) target.removeChild(target.lastChild);
   xalan_elems = xalan_xml.getElementsByTagName("test");
   xalan_length = xalan_elems.length;
   populate_xalan();
@@ -61,22 +63,29 @@ function refresh_xalan() {
 
 function populate_xalan() {
   var upper=pop_last+pop_chunk;
-  var current,test,i,j, re=/\/err\//;
+  var current,test,i,j, lName, re=/\/err\//;
+  var searchField = matchFieldTag.getAttribute("data");
+  var matchValue = matchNameTag.value;
+  if (matchValue.length==0) matchValue='.';
+  var matchRE = new RegExp(matchValue);
   for (i=pop_last;i<Math.min(upper,xalan_length);i++){
     current = content_row.cloneNode(true);
     test = xalan_elems.item(i);
     if (!test.getAttribute("file").match(re)){
+      current.setAttribute("id", test.getAttribute("file"));
       current.childNodes.item(1).setAttribute("value",
   	  test.getAttribute("file"));
-      for (j=0;j<test.childNodes.length;j++){
-  	  if (test.childNodes.item(j).localName=="purpose")
-  	    current.childNodes.item(2).setAttribute("value",
-  	      test.childNodes.item(j).firstChild.nodeValue);
-  	  if (test.childNodes.item(j).localName=="comment")
-  	    current.childNodes.item(3).setAttribute("value",
-  	      test.childNodes.item(j).firstChild.nodeValue);
+      for (j=1;j<test.childNodes.length;j+=2){
+        lName = test.childNodes.item(j).localName;
+        if (lName=="purpose")
+          current.childNodes.item(2).setAttribute("value",
+                             test.childNodes.item(j).firstChild.nodeValue);
+        if (lName=="comment")
+          current.childNodes.item(3).setAttribute("value",
+  	                         test.childNodes.item(j).firstChild.nodeValue);
       }
-      target.appendChild(current);
+      if (matchRE.test(current.childNodes.item(searchField)
+                       .getAttribute("value"))) target.appendChild(current);
     }
   }
   if (pop_last+pop_chunk<xalan_length){
@@ -99,6 +108,14 @@ function dump_checked(){
   do_transforms(todo);
 }
 
+function handle_result(name,success){
+  var classname = (success ? "succeeded" : "failed");
+  var content_row = document.getElementById(name);
+  if (content_row){
+    content_row.setAttribute("class",classname);
+  }
+}
+
 function hide_checked(yes){
   var checks = document.getElementsByTagName("checkbox");
   for (i=0;i<checks.length;i++){
@@ -109,15 +126,12 @@ function hide_checked(yes){
 }
 
 function select(){
-  var se = document.getElementById("search-name");
-  var searchField = document.getElementById("search-field");
-  searchField = searchField.getAttribute("data");
-  var re = new RegExp(se.value);
-  if (searchField<1 || searchField>3) return;
+  var searchField = matchFieldTag.getAttribute("data");
+  var matchRE = new RegExp(matchNameTag.value);
   var nds = target.childNodes;
   for (i=1;i<nds.length;i++){
     node=nds.item(i).childNodes.item(searchField);
-    if (re.test(node.getAttribute("value")))
+    if (matchRE.test(node.getAttribute("value")))
       nds.item(i).firstChild.setAttribute("checked",true);
   }
 }
