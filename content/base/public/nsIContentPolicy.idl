@@ -20,10 +20,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIURL.idl"
 
-interface nsIDOMElement;
-
+interface nsIDOMWindow;
+interface nsIURI;
 
 /**
  * Interface for content policy mechanism.  Implementations of this
@@ -34,25 +33,25 @@ interface nsIDOMElement;
 [scriptable,uuid(1cb4085d-5407-4169-bcfe-4c5ba013fa5b)]
 interface nsIContentPolicy : nsISupports
 {
-  const short CONTENT_OTHER      = 0;
-  const short CONTENT_SCRIPT     = 1;
-  const short CONTENT_IMAGE      = 2;
-  const short CONTENT_STYLESHEET = 3;
-  const short CONTENT_OBJECT     = 4;
+  const PRInt32 OTHER       = 0;
+  const PRInt32 SCRIPT      = 1;
+  const PRInt32 IMAGE       = 2;
+  const PRInt32 STYLESHEET  = 3;
+  const PRInt32 OBJECT      = 4;
+  const PRInt32 SUBDOCUMENT = 5;
+  const PRInt32 CONTROL_TAG = 6;
+  const PRInt32 RAW_URL     = 7;
 
   /**
    * Should the content at this location be loaded and processed?
    *
-   * XXX Permit URL-rewriting?
-   * XXX Use MIME types for contentType?
-   * XXX Use nsIURL for location?
    */
-  boolean shouldLoad(in PRInt32 contentType, in nsIDOMElement element,
-		     in wstring contentLocation);
+  boolean shouldLoad(in PRInt32 contentType, in nsIURI contentLocation,
+                     in nsISupports ctxt, in nsIDOMWindow window);
 
   /**
    * Should the contents of the element in question be processed?
    */
-  boolean shouldProcess(in PRInt32 contentType, in nsIDOMElement element,
-			in wstring documentLocation);
+  boolean shouldProcess(in PRInt32 contentType, in nsIURI documentLocation,
+                        in nsISupports ctxt, in nsIDOMWindow window);
 };

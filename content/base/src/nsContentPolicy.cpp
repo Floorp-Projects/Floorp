@@ -67,8 +67,8 @@ nsContentPolicy::nsContentPolicy()
 
     PRBool hasMore;
     if (NS_FAILED(catEnum->HasMoreElements(&hasMore)) || !hasMore ||
-	NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mPolicies)))) {
-	return;
+       NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mPolicies)))) {
+       return;
     }
     
     /* 
@@ -105,14 +105,13 @@ nsContentPolicy::~nsContentPolicy()
 {
 }
 
-#define POLICY_LOAD    0
-#define POLICY_PROCESS 1
+#define POLICY_LOAD    (PRInt32)0
+#define POLICY_PROCESS (PRInt32)1
 
 NS_IMETHODIMP
 nsContentPolicy::CheckPolicy(PRInt32 policyType, PRInt32 contentType,
-			     nsIDOMElement *element,
-			     const PRUnichar *contentLocation,
-                             PRBool *shouldProceed)
+                             nsIURI *contentLocation, nsISupports *context,
+                             nsIDOMWindow *window, PRBool *shouldProceed)
 {
     *shouldProceed = PR_TRUE;
     if (!mPolicies)
@@ -135,12 +134,13 @@ nsContentPolicy::CheckPolicy(PRInt32 policyType, PRInt32 contentType,
 	    continue;
 	
 	/* check the appropriate policy */
-	if (policyType == POLICY_LOAD)
-	    rv = policy->ShouldLoad(contentType, element, contentLocation,
-				    shouldProceed);
-	else
-	    rv = policy->ShouldProcess(contentType, element, contentLocation,
-				       shouldProceed);
+	if (policyType == POLICY_LOAD) {
+	    rv = policy->ShouldLoad(contentType, contentLocation, context,
+                                    window, shouldProceed);
+	} else {
+	    rv = policy->ShouldProcess(contentType, contentLocation, context,
+                                       window, shouldProceed);
+        }
 	   
 	if (NS_SUCCEEDED(rv) && !*shouldProceed)
 	    /* policy says no, no point continuing to check */
@@ -157,20 +157,20 @@ nsContentPolicy::CheckPolicy(PRInt32 policyType, PRInt32 contentType,
 }
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldLoad(PRInt32 contentType, nsIDOMElement *element,
-			    const PRUnichar *contentLocation,
+nsContentPolicy::ShouldLoad(PRInt32 contentType, nsIURI *contentLocation,
+                            nsISupports *context, nsIDOMWindow *window,
                             PRBool *shouldLoad)
 {
-    return CheckPolicy(POLICY_LOAD, contentType, element, contentLocation,
-		       shouldLoad);
+    return CheckPolicy(POLICY_LOAD, contentType, contentLocation, context,
+                       window, shouldLoad);
 }
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldProcess(PRInt32 contentType, nsIDOMElement *element,
-			       const PRUnichar *contentLocation,
-			       PRBool *shouldProcess)
+nsContentPolicy::ShouldProcess(PRInt32 contentType, nsIURI *contentLocation,
+                               nsISupports *context, nsIDOMWindow *window,
+                               PRBool *shouldProcess)
 {
-    return CheckPolicy(POLICY_PROCESS, contentType, element, contentLocation,
-		       shouldProcess);
+    return CheckPolicy(POLICY_PROCESS, contentType, contentLocation, context,
+		       window, shouldProcess);
 }
 

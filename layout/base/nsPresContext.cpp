@@ -46,6 +46,9 @@
 #include "nsIBox.h"
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
+#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "prprf.h"
 #ifdef IBMBIDI
@@ -1230,14 +1233,30 @@ nsPresContext::StartLoadImage(const nsString& aURL,
     element = do_QueryInterface(content);
   }
 
-  if (NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_IMAGE,
-                                             aURL, element, &shouldLoad))
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  if (NS_FAILED(rv)) {
+      NS_ASSERTION(0, "was expecting a URI");
+      return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDocument> document;
+  rv = mShell->GetDocument(getter_AddRefs(document));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalScript;
+  rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
+
+  if (NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                             uri, element, domWin, &shouldLoad))
       && !shouldLoad) {
     return NS_OK;
   }
 
   // Create image group if needed
-  nsresult rv;
   if (!mImageGroup) {
     nsCOMPtr<nsIImageGroup> group;
     rv = GetImageGroup(getter_AddRefs(group));   // sets mImageGroup as side effect

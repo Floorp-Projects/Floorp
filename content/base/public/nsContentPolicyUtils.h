@@ -39,25 +39,27 @@ class nsIDOMElement;
   {0x0e3afd3d, 0xeb60, 0x4c2b,						      \
     { 0x96, 0x3b, 0x56, 0xd7, 0xc4, 0x39, 0xf1, 0x24 }}
 
-/* takes contentType, aURL, and element from its context */
+/* Takes contentType, aURI, context, and window from its "caller"'s context. */
 #define CHECK_CONTENT_POLICY(action, result)                                  \
-    nsresult rv;                                                              \
-    NS_WITH_SERVICE(nsIContentPolicy, policy, NS_CONTENTPOLICY_CONTRACTID, &rv);  \
-    if (NS_FAILED(rv))                                                        \
-        return rv;                                                            \
+    nsCOMPtr<nsIContentPolicy> policy =                                       \
+         do_GetService(NS_CONTENTPOLICY_CONTRACTID);                          \
+    if (!policy)                                                              \
+        return NS_ERROR_FAILURE;                                              \
                                                                               \
-    return policy->##action(contentType, element, aURL.GetUnicode(), result)
+    return policy-> action (contentType, aURI, context, window, result);
 
 inline nsresult
-NS_CheckContentLoadPolicy(PRInt32 contentType, const nsString &aURL,
-                          nsIDOMElement *element, PRBool *shouldLoad)
+NS_CheckContentLoadPolicy(PRInt32 contentType, nsIURI *aURI,
+                          nsISupports *context, nsIDOMWindow *window,
+                          PRBool *shouldLoad)
 {
     CHECK_CONTENT_POLICY(ShouldLoad, shouldLoad);
 }
 
 inline nsresult
-NS_CheckContentProcessPolicy(PRInt32 contentType, nsString &aURL,
-                             nsIDOMElement *element, PRBool *shouldProcess)
+NS_CheckContentProcessPolicy(PRInt32 contentType, nsIURI *aURI,
+                             nsISupports *context, nsIDOMWindow *window,
+                             PRBool *shouldProcess)
 {
     CHECK_CONTENT_POLICY(ShouldProcess, shouldProcess);
 }
