@@ -935,7 +935,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   // print any child documents
   // like frameset frames or iframes
   parentAsNode->GetChildCount(&count);
-  if(count< 0) {                        // DC EXPERIMENT
+  if(count> 0) {      
     for(i=0;i<count;i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
       parentAsNode->GetChildAt(i, getter_AddRefs(child));
@@ -951,7 +951,6 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   
   // now complete printing the rest of the document
   // if it doesn't contain any framesets
-  doesContainFrameSet = PR_FALSE;                   // DC EXPERIMENT
   if (!doesContainFrameSet) {
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
     aDContext->GetDeviceSurfaceDimensions(width, height);
