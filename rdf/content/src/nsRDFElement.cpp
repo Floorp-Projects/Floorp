@@ -29,7 +29,6 @@
 
  */
 
-
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
@@ -398,7 +397,21 @@ RDFElementImpl::~RDFElementImpl()
     //NS_IF_RELEASE(mParent)    // not refcounted
     NS_IF_RELEASE(mTag);
     NS_IF_RELEASE(mListenerManager);
-    NS_IF_RELEASE(mChildren);
+
+    if (mChildren) {
+        // Force child's parent to be null. This ensures that we don't
+        // have dangling pointers if a child gets leaked.
+        PRUint32 cnt;
+        mChildren->Count(&cnt);
+        for (PRInt32 i = cnt - 1; i >= 0; --i) {
+            nsISupports* isupports = mChildren->ElementAt(i);
+            nsCOMPtr<nsIContent> child = do_QueryInterface(isupports);
+            NS_RELEASE(isupports);
+
+            child->SetParent(nsnull);
+        }
+        NS_RELEASE(mChildren);
+    }
 
     // Release our broadcast listeners
     if (mBroadcastListeners != nsnull)
