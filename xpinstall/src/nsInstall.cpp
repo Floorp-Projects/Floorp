@@ -157,7 +157,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     mStartInstallCompleted  = PR_FALSE;
     mJarFileLocation        = "";
     mInstallArguments       = "";
-    mPackageFolder          = nsnull;
+
 
     // mJarFileData is an opaque handle to the jarfile.
     mJarFileData = theJARFile;
@@ -193,9 +193,6 @@ nsInstall::~nsInstall()
 {
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
-
-    if (mPackageFolder)
-        delete mPackageFolder;
 
     MOZ_COUNT_DTOR(nsInstall);
 }
@@ -801,15 +798,11 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         if (mVersionInfo)
         {
             nsString versionString;
-            nsString path;
 
             mVersionInfo->ToString(versionString);
 
-            if (mPackageFolder)
-                mPackageFolder->GetDirectoryPath(path);
-
             VR_Install( (char*)(const char*)nsAutoCString(mRegistryPackageName), 
-                        (char*)(const char*)nsAutoCString(path),   
+                        nsnull,  
                         (char*)(const char*)nsAutoCString(versionString), 
                         PR_FALSE );
         }
@@ -1338,9 +1331,6 @@ nsInstall::ResetError()
 PRInt32    
 nsInstall::SetPackageFolder(nsInstallFolder& aFolder)
 {
-    if (mPackageFolder)
-        delete mPackageFolder;
-    
     mPackageFolder = new nsInstallFolder(aFolder, "");
 
     return NS_OK;
