@@ -581,6 +581,10 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsIPresContext* aPresContext,
     yoff = (minInternalHeight - aDesiredSize.height) / 2;
   }
 
+  // Adjust the ascent by our offset (since we moved the child's
+  // baseline by that much).
+  aDesiredSize.ascent += yoff;
+  
   // Place the child.  If we have a non-intrinsic width, we want to
   // reduce the left padding as needed to try and fit the text in the
   // button
