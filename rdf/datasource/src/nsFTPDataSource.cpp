@@ -631,7 +631,9 @@ FTPDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, P
 			{
 				nsAutoString	file("");
 				oneLiner.Mid(file, 0, hrefEnd);
-				if (file.Equals("/") || file.Equals(".") || file.Equals(".."))
+
+				// ignore certain paths (if they start with a slash, or ".", or ".."
+				if ((file.Find("/") == 0) || file.Equals(".") || file.Equals(".."))
 					return(rv);
 
                                 nsXPIDLCString parentURL;
