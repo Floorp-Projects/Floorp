@@ -393,6 +393,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kSubtreeIteratorCID,NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kFrameUtilCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
+#if 0    // autoregistration now works on all platforms, so commenting out
   nsComponentManager::RegisterComponent(kCharsetConverterManagerCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCharsetAliasCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kISO88591ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
@@ -403,6 +404,7 @@ NS_SetupRegistry()
   // nsComponentManager::RegisterComponent(kISO2022JPToUnicodeCID,   NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kPlatformCharsetCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+#endif
 
   nsComponentManager::RegisterComponent(kStringBundleServiceCID,  NULL, NULL, STRRES_DLL, PR_FALSE, PR_FALSE);
 
