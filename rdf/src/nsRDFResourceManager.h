@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
@@ -16,33 +16,31 @@
  * Reserved.
  */
 
-#ifndef nsIRDFObserver_h__
-#define nsIRDFObserver_h__
+#ifndef nsRDFResourceManager_h__
+#define nsRDFResourceManager_h__
+#include "nsIRDFResourceManager.h"
+#include "nsHashtable.h"
 
-/*
-  This file defines the interface for RDF observers.
-*/
+class nsString;
+class nsIRDFNode;
+class RDFNodeImpl;
 
-#include "nsISupports.h"
-#include "rdf.h"
+class nsRDFResourceManager : public nsIRDFResourceManager {
+protected:
+    nsHashtable mResources;
+    virtual ~nsRDFResourceManager(void);
 
-
-// 3cc75360-484a-11d2-bc16-00805f912fe7
-#define NS_IRDFOBSERVER_IID \
-{ \
-    0x3cc75360, \
-    0x484a, \
-    0x11d2, \
-  { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } \
-}
-
-class nsIRDFDataSource;      
-
-class nsIRDFObserver : public nsISupports
-{
 public:
-  
+    nsRDFResourceManager(void);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFResourceManager
+    NS_IMETHOD GetNode(const nsString& uri, nsIRDFNode*& resource);
+
+    void ReleaseNode(const RDFNodeImpl* resource);
 };
 
 
-#endif /* nsIRDFObserver_h__ */
+#endif // nsRDFResourceManager_h__

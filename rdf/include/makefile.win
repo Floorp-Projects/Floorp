@@ -23,11 +23,14 @@ DEPTH = ..\..
 
 EXPORTS	= rdf.h \
 	rdfc.h \
-	nsIRDFService.h \
-	nsIRDFDataSource.h \
-	nsIRDFDataBase.h \
-	nsIRDFObserver.h \
 	nsIRDFCursor.h \
+	nsIRDFDataBase.h \
+	nsIRDFDataSource.h \
+        nsIRDFNode.h \
+	nsIRDFObserver.h \
+        nsIRDFRegistry.h \
+        nsIRDFResourceManager.h \
+	nsIRDFService.h \
         nsRDFCID.h \
 	htrdf.h \
 	vocab.h \
