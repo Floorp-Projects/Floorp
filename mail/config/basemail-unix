@@ -157,8 +157,7 @@ components/widget.xpt
 components/gfx.xpt 
 
 ; layout
-components/libgklayout.so                   
-;components/libgkparser.so                 
+components/libgklayout.so               
 components/layout_base.xpt              
 components/layout_xul.xpt               
 components/layout_xul_tree.xpt               
@@ -174,11 +173,11 @@ components/xuldoc.xpt
 
 ;;libmoz_art_lgpl.so
 ;;res/dtd/xhtml11.dtd
-;;components/libgklayout.so                   
-;;	components/layout_base.xpt              
-;;components/layout_xul.xpt
-;;components/layout_xul_tree.xpt               
-;;components/content_base.xpt
+components/libgklayout.so                   
+components/layout_base.xpt              
+components/layout_xul.xpt
+components/layout_xul_tree.xpt               
+components/content_base.xpt
 
 ; Imaging:
 libmozz.so
@@ -208,8 +207,7 @@ components/appshell.xpt
 components/libdocshell.so                 
 components/docshell.xpt
 components/uriloader.xpt
-components/libchrome.so                   
-;components/chrome.xpt                   
+components/libchrome.so                
 components/libwebbrwsr.so
 components/webBrowser_core.xpt
 components/libembedcomponents.so
@@ -235,15 +233,6 @@ components/profile.xpt
 components/librdf.so
 components/rdf.xpt
 
-; session history - MAYBE NOT NEEDED
-;;components/shistory.xpt
-
-; optional typeaheadfind 
-; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
-;components/libtypeaheadfind.so
-;components/typeaheadfind.xpt
-
-
 ; required l10n libraries
 
 components/intl.xpt
@@ -256,7 +245,6 @@ components/unicharutil.xpt
 ; 
 ; DOM:
 ; 
-components/libjsdom.so 
 components/dom.xpt                      
 components/dom_base.xpt
 components/dom_core.xpt
@@ -300,29 +288,23 @@ components/necko_strconv.xpt
 components/necko_file.xpt
 components/necko_cache.xpt
 components/necko_cookie.xpt         
-components/nsProxyAutoConfig.js
-
-; optional for FTP support
-;;components/libnecko2.so                   
-;;components/necko_ftp.xpt                
+components/nsProxyAutoConfig.js              
 
 
 ; psm2
 ; Optional - only if you need HTTPS support
-;;components/libpipboot.so
-;;components/pipboot.xpt
-;;components/libpipnss.so
-;;components/pipnss.xpt
-;; chrome/pipnss.jar ;; apparently not needed
-;;components/libpippki.so
-;;components/pippki.xpt
-;;defaults/pref/security-prefs.js
-;;libnss3.so
-;;libsmime3.so
-;;libsoftokn3.chk
-;;libsoftokn3.so
-;;libssl3.so
-;;libnssckbi.so
+components/libpipboot.so
+components/pipboot.xpt
+components/libpipnss.so
+components/pipnss.xpt
+components/libpippki.so
+components/pippki.xpt
+libnss3.so
+libsmime3.so
+libsoftokn3.chk
+libsoftokn3.so
+libssl3.so
+libnssckbi.so
 
 
 ; core platform files
@@ -330,7 +312,6 @@ regxpcom
 thunderbird-bin
 components/libappcomps.so
 components/autocomplete.xpt
-;;components/alerts.xpt
 components/jsdservice.xpt
 components/find.xpt
 components/chardet.xpt
@@ -352,12 +333,12 @@ components/windowds.xpt
 components/helperAppDlg.xpt
 components/progressDlg.xpt
 components/dom_xpath.xpt
-;;AccessibleMarshal.dll
+
 components/lwbrk.xpt
 components/nsCloseAllWindows.js
-;;components/winhooks.xpt
 components/libxremoteservice.so
 components/libxremote_client.so
+components/xremoteservice.xpt
 components/libfileview.so
 
 ; plugins
