@@ -1271,6 +1271,11 @@ nsFtpState::R_retr() {
     if (mResponseCode/100 == 1) 
          return FTP_READ_BUF;
     
+    // These error codes are related to problems with the connection.  
+    // If we encounter any at this point, do not try CWD and abort.
+    if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
+        return FTP_ERROR;
+
     return FTP_S_CWD;
 }
 
