@@ -1350,13 +1350,11 @@
                     <PATH>nsIComponentLoader.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
-                <FILE>
+                <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsIComponentManagerObsolete.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
+                </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsIComponentManager.idl</PATH>
