@@ -46,7 +46,7 @@ class nsAutoBufferHandle
       nsAutoBufferHandle( const nsAutoBufferHandle<CharT>& aOther )
           : mHandle(aOther.get())
         {
-          if ( mHandle)
+          if ( mHandle )
             mHandle->AcquireReference();
         }
 
@@ -54,7 +54,7 @@ class nsAutoBufferHandle
       nsAutoBufferHandle( const nsSharedBufferHandle<CharT>* aHandle )
           : mHandle( NS_CONST_CAST(nsSharedBufferHandle<CharT>*, aHandle) )
         {
-          if ( mHandle)
+          if ( mHandle )
             mHandle->AcquireReference();
         }
 
@@ -132,7 +132,7 @@ NS_DataAfterHandle( HandleT* aHandlePtr, const CharT* aDummyCharTPtr )
 
 template <class HandleT, class StringT>
 HandleT*
-NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const StringT& aDataSource, PRUint32 aAdditionalCapacity )
+NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, PRUint32 aAdditionalCapacity, const StringT* aDataSource )
   {
     typedef typename StringT::char_type char_type;
     typedef char_type*                  char_ptr;
@@ -141,7 +141,7 @@ NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const Strin
     size_t handle_size    = NS_AlignedHandleSize(aDummyHandlePtr, char_ptr(0));
 
       // figure out how many |char_type|s wee need to fit in the data part
-    size_t data_length    = aDataSource.Length();
+    size_t data_length    = aDataSource? aDataSource->Length() : 0;
     size_t buffer_length  = data_length + aAdditionalCapacity;
 
       // how many bytes is that (including a zero-terminator so we can claim to be flat)?
@@ -157,9 +157,13 @@ NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const Strin
         char_ptr data_end_ptr   = data_start_ptr + data_length;
         char_ptr buffer_end_ptr = data_start_ptr + buffer_length;
 
-        typename StringT::const_iterator fromBegin, fromEnd;
         char_ptr toBegin = data_start_ptr;
-        copy_string(aDataSource.BeginReading(fromBegin), aDataSource.EndReading(fromEnd), toBegin);
+
+        if ( data_length )
+          {
+            typename StringT::const_iterator fromBegin, fromEnd;
+            copy_string(aDataSource->BeginReading(fromBegin), aDataSource->EndReading(fromEnd), toBegin);
+          }
 
           // and if the caller bothered asking for a buffer bigger than their string, we'll zero-terminate
         if ( aAdditionalCapacity > 0 )
@@ -169,6 +173,14 @@ NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const Strin
       }
 
     return result;
+  }
+
+template <class HandleT, class StringT>
+inline
+HandleT*
+NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const StringT& aDataSource, PRUint32 aAdditionalCapacity )
+  {
+    return NS_AllocateContiguousHandleWithData(aDummyHandlePtr, aAdditionalCapacity, &aDataSource);
   }
 
 #endif // !defined(nsBufferHandleUtils_h___)

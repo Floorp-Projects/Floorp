@@ -39,6 +39,11 @@
 #include "nscore.h"
   // for |PRUnichar|, |NS_REINTERPRET_CAST|
 
+#ifdef XP_WIN
+  // VC++ erroneously warns about incompatible linkage in these templates
+  //  It's a lie, and it's bothersome.  This |#pragma| quiets the warning.
+#pragma warning( disable: 4251 )
+#endif
 
   /**
    The classes in this file are collectively called `buffer handles'.
@@ -163,14 +168,17 @@ class nsSharedBufferHandle
     protected:
       enum
         {
-          kIsShared                       = 0x8000000,
-          kIsSingleAllocationWithBuffer   = 0x4000000,  // handle and buffer are one piece, no separate deallocation is possible for the buffer
-          kIsStorageDefinedSeparately     = 0x2000000,  // i.e., we're using the ``flex'' structure defined below
-          kIsUserAllocator                = 0x1000000,  // can't |delete|, call a hook instead
+          kIsShared                       = 0x08000000, // one reason _not_ to set this is for a stack based handle that wants to express `NULL'-ness et al
+          kIsSingleAllocationWithBuffer   = 0x04000000, // handle and buffer are one piece, no separate deallocation is possible for the buffer
+          kIsStorageDefinedSeparately     = 0x02000000, // i.e., we're using the ``flex'' structure defined below
+          kIsUserAllocator                = 0x01000000, // can't |delete|, call a hook instead
 
-          kImplementationFlagsMask        = 0x0F00000,
-          kFlagsMask                      = 0xFF00000,
-          kRefCountMask                   = 0x00FFFFF
+            // the following flags are opaque to the string library itself
+          kIsNULL                         = 0x80000000, // the most common request of external clients is a scheme by which they can express `NULL'-ness
+          kImplementationFlagsMask        = 0xF0000000, // 4 bits for use by site-implementations, e.g., for `NULL'-ness
+
+          kFlagsMask                      = 0xFF000000,
+          kRefCountMask                   = 0x00FFFFFF
         };
 
     public:
