@@ -1787,7 +1787,7 @@ public class Codegen extends Interpreter {
                         && inDirectCallFunction) {
                     OptLocalVariable lVar
                         = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
-                    if (lVar.isParameter()) {
+                    if (lVar != null && lVar.isParameter()) {
                         handled = true;
                         aload(lVar.getJRegister());
                         dload((short)(lVar.getJRegister() + 1));
@@ -1992,7 +1992,7 @@ public class Codegen extends Interpreter {
                             && inDirectCallFunction) {
                         OptLocalVariable lVar
                           = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
-                        if (lVar.isParameter()) {
+                        if (lVar != null && lVar.isParameter()) {
                             child.removeProp(Node.ISNUMBER_PROP);
                             generateCodeFromNode(child, node, -1, -1);
                             handled = true;
