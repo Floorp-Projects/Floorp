@@ -417,7 +417,7 @@ struct NS_COM nsStr {
    */
   static PRUint32 HashCode(const nsStr& aDest);
 
-#ifdef DEBUG
+#ifdef NS_STR_STATS
   /**
    * Prints an nsStr. If truncate is true, the string is only printed up to 
    * the first newline. (Note: The current implementation doesn't handle
@@ -483,7 +483,7 @@ inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
   return 0;
 }
 
-#ifdef DEBUG
+#ifdef NS_STR_STATS
 
 class nsStringInfo {
 public:
@@ -503,6 +503,12 @@ protected:
   PRUint32      mCount;
 };
 
-#endif // DEBUG
+#define NSSTR_SEEN(str) nsStringInfo::Seen(str)
+
+#else // !NS_STR_STATS
+
+#define NSSTR_SEEN(str) /* nothing */
+
+#endif // !NS_STR_STATS
 
 #endif // _nsStr

@@ -173,9 +173,7 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
 
         aDest.mLength+=theLength;
         AddNullTerminator(aDest);
-#ifdef DEBUG
-        nsStringInfo::Seen(aDest);
-#endif
+        NSSTR_SEEN(aDest);
       }
     }
   }
@@ -244,9 +242,7 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
             //finally, make sure to update the string length...
           aDest.mLength+=theLength;
           AddNullTerminator(aDest);
-#ifdef DEBUG
-          nsStringInfo::Seen(aDest);
-#endif
+          NSSTR_SEEN(aDest);
         }//if
         //else nothing to do!
       }
@@ -277,9 +273,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
       (*gShiftChars[aDest.mCharSize][KSHIFTLEFT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       aDest.mLength-=theLength;
       AddNullTerminator(aDest);
-#ifdef DEBUG
-      nsStringInfo::Seen(aDest);
-#endif
+      NSSTR_SEEN(aDest);
     }
     else Truncate(aDest,aDestOffset);
   }//if
@@ -295,9 +289,7 @@ void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset){
   if(aDestOffset<aDest.mLength){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
-#ifdef DEBUG
-    nsStringInfo::Seen(aDest);
-#endif
+    NSSTR_SEEN(aDest);
   }
 }
 
@@ -375,9 +367,7 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
   Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
   PRUint32 aNewLen=gCompressChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
   aDest.mLength=aNewLen;
-#ifdef DEBUG
-  nsStringInfo::Seen(aDest);
-#endif
+  NSSTR_SEEN(aDest);
 }
 
 
@@ -391,9 +381,7 @@ void nsStr::StripChars(nsStr& aDest,const char* aSet){
   if((0<aDest.mLength) && (aSet)) {
     PRUint32 aNewLen=gStripChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
     aDest.mLength=aNewLen;
-#ifdef DEBUG
-    nsStringInfo::Seen(aDest);
-#endif
+    NSSTR_SEEN(aDest);
   }
 }
 
@@ -775,7 +763,7 @@ nsStr::HashCode(const nsStr& aDest)
   return (PRUint32)PL_HashString((const void*) aDest.mStr);
 }
 
-#ifdef DEBUG
+#ifdef NS_STR_STATS
 
 #include <ctype.h>
 
@@ -896,6 +884,6 @@ nsStringInfo::ReportEntry(PLHashEntry *he, PRIntn i, void *arg)
   return HT_ENUMERATE_NEXT;
 }
 
-#endif // DEBUG
+#endif // NS_STR_STATS
 
 ////////////////////////////////////////////////////////////////////////////////
