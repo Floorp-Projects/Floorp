@@ -24,7 +24,7 @@
 
 #include "nsXtEventHandler.h"
 
-#define DBG 1
+#define DBG 0
 
 //-------------------------------------------------------------------------
 //
@@ -35,10 +35,7 @@ nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOu
 {
     strcpy(gInstanceClassName, "nsScrollbar");
     mOrientation  = (aIsVertical) ? XmVERTICAL : XmHORIZONTAL;
-    //mScaleFactor   = 1.0;
     mLineIncrement = 0;
-    //mBackground    = ::GetSysColor(COLOR_SCROLLBAR);
-    //mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
 
 }
 //-------------------------------------------------------------------------
@@ -214,8 +211,10 @@ PRUint32 nsScrollbar::GetPosition()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
-    XtVaSetValues(mWidget, XmNsliderSize, (int)aSize, nsnull);
+    if (aSize > 0) {
+      XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
+      XtVaSetValues(mWidget, XmNsliderSize, (int)aSize, nsnull);
+    }
     if (DBG) printf("SetThumbSize %d\n", aSize);
 }
 
@@ -268,13 +267,16 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
 
-    XtVaSetValues(mWidget, XmNincrement, aLineIncrement,
-                           XmNmaximum,   aMaxRange,
-                           XmNminimum,   0,
-                           XmNsliderSize, aThumbSize,
-                           XmNpageIncrement, aThumbSize,
-                           XmNvalue,     aPosition, 
-                           nsnull);
+    int thumbSize = (aThumbSize > 0?aThumbSize:1);
+
+    XtVaSetValues(mWidget, 
+                  XmNincrement,     (aLineIncrement > 0?aLineIncrement:1),
+                  XmNminimum,       0,
+                  XmNmaximum,       (aMaxRange > 0?aMaxRange:10),
+                  XmNsliderSize,    thumbSize,
+                  XmNpageIncrement, thumbSize,
+                  XmNvalue,         aPosition, 
+                  nsnull);
 
     mLineIncrement = aLineIncrement;
     if (DBG) printf("SetParameters %d %d %d %d \n", aMaxRange, aThumbSize, 
