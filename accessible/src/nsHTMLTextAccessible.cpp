@@ -47,7 +47,7 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAWritableString& _retval)
 /* unsigned long getAccRole (); */
 NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_STATICTEXT;
+  *_retval = ROLE_TEXT;
 
   return NS_OK;
 }
