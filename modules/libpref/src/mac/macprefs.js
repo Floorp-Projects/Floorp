@@ -191,3 +191,9 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // This indicates whether it should use the native dialog or the XP Dialog
 pref("print.use_native_print_dialog", true);
 
+// determines the behavior upon starting a download.
+//  0 - open the download manager
+//  1 - open a progress dialog
+//  2 - do nothing
+
+pref("browser.downloadmanager.behavior", 1);
