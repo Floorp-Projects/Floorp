@@ -26,7 +26,7 @@
 #include "HTMLView.h"
 #include "RDFView.h"
 #include "IconGroup.h"
-
+#include "xp_ncent.h"
 
 #include <Xfe/XfeAll.h>
 
@@ -166,7 +166,30 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   ns->data = this;
 
   m_pane = HT_NewPane(ns);
-  HT_SetPaneFEData(m_pane, context);
+
+  HT_SetPaneFEData(m_pane, this);
+
+  // Register the MWContext in the XP list.
+  XP_SetLastActiveContext(context);
+
+
+  /** 
+    * We need to register our MWContext and pane with the XP's list. 
+    * This function takes a valid MWContext argument only when the 
+    * NavCenterView is docked. I don't know why?. i also don't know what 
+    * happens in the popup mode. In XFE however, we need a HT_Pane-to-context
+    * mapping for properties and Find context menus to work. I think this
+    *  function s'd  take a valid MWContext even in standalone mode because 
+    * we need these menu options to work in standalone mode too. So, I'm
+    *  going to call this function with a valid MWContext irespective of 
+    * what the mode is. Maybe sitemap will be screwed up when we get there. 
+    * But  we are not there yet. 
+    **/
+  XP_RegisterNavCenter(m_pane, context);
+
+  // Need to figure out what to do in popup state
+  if (!m_isStandalone)
+     XP_DockNavCenter(m_pane, context);
 
   // add our subviews to the list of subviews for command dispatching and
   // deletion.
@@ -189,7 +212,13 @@ XFE_NavCenterView::~XFE_NavCenterView()
 {
 	D(printf("XFE_NavCenterView DESTRUCTING\n"););
     if (m_pane)
+    {
+        if (!m_isStandalone)
+          XP_UndockNavCenter(m_pane);
+        XP_UnregisterNavCenter(m_pane);
         HT_DeletePane(m_pane);
+    }
+
 }
 
 //////////////////////////////////////////////////////////////////////////
