@@ -1495,8 +1495,14 @@ nsFastLoadFileWriter::EndMuxedDocument(nsISupports* aURI)
     nsURIMapWriteEntry* uriMapEntry =
         NS_STATIC_CAST(nsURIMapWriteEntry*,
                        PL_DHashTableOperate(&mURIMap, key, PL_DHASH_LOOKUP));
-    NS_ASSERTION(uriMapEntry->mDocMapEntry,
-                 "unknown aURI passed to EndMuxedDocument!");
+
+    // If the URI isn't in the map, nsFastLoadFileWriter::StartMuxedDocument
+    // must have been called with a redundant URI, *and* its caller must have
+    // ignored the NS_ERROR_UNEXPECTED it returned in that case.
+    if (PL_DHASH_ENTRY_IS_FREE(uriMapEntry)) {
+        TRACE_MUX(('w', "bad end %p (%p)\n", aURI, key.get()));
+        return NS_ERROR_UNEXPECTED;
+    }
 
     // Drop our ref to the URI object that was passed to StartMuxedDocument,
     // we no longer need it, and we do not want to extend its lifetime.
@@ -1997,7 +2003,7 @@ nsFastLoadFileWriter::Close()
     return mOutputStream->Close();
 }
 
-// Psuedo-tag used as flag between WriteSingleRefObject and WriteCommon.
+// Psuedo-tag used as flag between WriteSingleRefObject and WriteObjectCommon.
 #define MFL_SINGLE_REF_PSEUDO_TAG       PR_BIT(MFL_OBJECT_TAG_BITS)
 
 nsresult
@@ -2131,7 +2137,7 @@ nsFastLoadFileWriter::WriteSingleRefObject(nsISupports* aObject)
     nsCOMPtr<nsISupports> rootObject(do_QueryInterface(aObject));
 
     NS_ASSERTION(rootObject.get() == aObject,
-                 "bad call to WriteObject -- call WriteCompoundObject!");
+                 "bad call to WriteSingleRefObject -- call WriteCompoundObject!");
 #endif
 
     return WriteObjectCommon(aObject, PR_TRUE, MFL_SINGLE_REF_PSEUDO_TAG);

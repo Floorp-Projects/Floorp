@@ -569,6 +569,7 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry)
 {
     JSDHashNumber keyHash;      /* load first in case clearEntry goofs it */
 
+    JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(entry));
     keyHash = entry->keyHash;
     table->ops->clearEntry(table, entry);
     if (keyHash & COLLISION_FLAG) {
