@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.12 2000/09/28 22:53:45 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.13 2000/09/29 19:51:32 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -184,7 +184,7 @@ void   mp_zero(mp_int *mp);
 void   mp_set(mp_int *mp, mp_digit d);
 mp_err mp_set_int(mp_int *mp, long z);
 #define mp_set_long(mp,z) mp_set_int(mp,z)
-mp_err mp_set_ulong(mp_int *mp, ulong z);
+mp_err mp_set_ulong(mp_int *mp, unsigned long z);
 
 /* Single digit arithmetic */
 mp_err mp_add_d(const mp_int *a, mp_digit d, mp_int *b);
