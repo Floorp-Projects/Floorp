@@ -24,6 +24,8 @@
 
 #include "nsXtEventHandler.h"
 
+#define DBG 1
+
 //-------------------------------------------------------------------------
 //
 // nsScrollbar constructor
@@ -31,6 +33,7 @@
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOuter)
 {
+    strcpy(gInstanceClassName, "nsScrollbar");
     mOrientation  = (aIsVertical) ? XmVERTICAL : XmHORIZONTAL;
     //mScaleFactor   = 1.0;
     mLineIncrement = 0;
@@ -51,7 +54,14 @@ void nsScrollbar::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData)
 {
   Widget parentWidget = nsnull;
-
+  printf("===============\n");
+  printf("===============\n");
+  printf("===============\n");
+  printf("===============\n");
+  printf("===============\n");
+  printf("===============\n");
+  printf("Scrollbar this 0x%x\n", this);
+  strcpy(gInstanceClassName, "nsScrollbar");
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
@@ -100,6 +110,10 @@ void nsScrollbar::Create(nsIWidget *aParent,
                 nsXtWidget_Scrollbar_Callback,
                 this);
 
+  /*XtAddCallback(mWidget,
+                XmNresizeCallback,
+                nsXtWidget_Resize_Callback,
+                this);*/
 
 }
 
@@ -280,7 +294,9 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
-    return PR_FALSE;
+  if (DBG) printf("*&*&*&*&*&*&*()()()()(((( nsScrollbar::OnResize\n");
+  return nsWindow::OnResize(aEvent);
+  //return PR_FALSE;
 }
 
 

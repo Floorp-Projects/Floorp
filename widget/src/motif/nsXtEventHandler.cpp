@@ -28,6 +28,7 @@
 
 #define DBG 0
 
+//==============================================================
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
                             XtPointer  p,
                             nsGUIEvent &anEvent,
@@ -43,6 +44,7 @@ void nsXtWidget_InitNSEvent(XEvent   * anXEv,
 
 }
 
+//==============================================================
 void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
                                  XtPointer  p,
                                  nsMouseEvent &anEvent,
@@ -62,6 +64,7 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
 
 }
 
+//==============================================================
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   if (DBG) fprintf(stderr, "In nsXtWidget_ExposureMask_EventHandler\n");
@@ -244,15 +247,39 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
-  //if (DBG) 
-fprintf(stderr, "In nsXtWidget_Resize_Callback 0x%x\n", p);
 
+  //if (DBG) 
+//fprintf(stderr, "In nsXtWidget_Resize_Callback 0x%x", p);
   nsWindow * widgetWindow = (nsWindow *) p ;
   if (widgetWindow == nsnull) {
     return;
   }
 
   XmDrawingAreaCallbackStruct * cbs = (XmDrawingAreaCallbackStruct *)call_data;
+
+  //fprintf(stderr, "  %s  ** %s\n", widgetWindow->gInstanceClassName, 
+     //cbs->reason == XmCR_RESIZE?"XmCR_RESIZE":"XmCR_EXPOSE");
+
+  /*XEvent * xev = cbs->event;
+  if (xev != nsnull) {
+    //printf("Width %d   Height %d\n", xev->xresizerequest.width, 
+       //xev->xresizerequest.height);
+  } else {
+    //printf("Jumping out ##################################\n");
+    //return;
+  }*/
+
+  /*if (cbs->reason == XmCR_EXPOSE && widgetWindow->IgnoreResize()) {
+    cbs->reason = XmCR_RESIZE;
+    widgetWindow->SetIgnoreResize(PR_FALSE);
+    printf("Got Expose doing resize!\n");
+  } else if (widgetWindow->IgnoreResize() || 
+             (!widgetWindow->IgnoreResize() && cbs->reason == XmCR_RESIZE)) {
+    printf("Skipping resize!\n");
+    widgetWindow->SetIgnoreResize(PR_TRUE);
+    return;
+  }*/
+
   if (cbs->reason == XmCR_RESIZE) {
     nsSizeEvent event;
     nsRect rect;
@@ -265,7 +292,37 @@ fprintf(stderr, "In nsXtWidget_Resize_Callback 0x%x\n", p);
     event.time    = 0; //TBD
     event.windowSize = (nsRect *)&rect;
     widgetWindow->GetBounds(rect);
-    widgetWindow->OnResize(event);
+
+    Window win = nsnull;
+    if (widgetWindow) {
+      win = XtWindow(w);
+    }
+
+    if (widgetWindow && win) {
+      XWindowAttributes attrs ;
+
+      Display * d = XtDisplay(w);
+
+      XGetWindowAttributes(d, win, &attrs);
+
+      PRBool doResize = PR_FALSE;
+      if (attrs.width > 0 && 
+        rect.width != attrs.width) {   
+        rect.width = attrs.width;
+        doResize = true;
+      }
+      if (attrs.height > 0 &&
+          rect.height != attrs.height) {  
+        rect.height = attrs.height;
+        doResize = true;
+      }
+
+      if (doResize) {
+        //printf("??????????????????????????????? Doing Resize\n");
+        widgetWindow->SetBounds(rect); // This needs to be done inside OnResize
+        widgetWindow->OnResize(event);
+      }
+    }
   }
 }
 
