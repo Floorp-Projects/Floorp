@@ -50,7 +50,7 @@ static void* PR_CALLBACK
 ReleaseDestructorEventHandler(PLEvent *self)
 {              
     nsISupports* owner = (nsISupports*) PL_GetEventOwner(self);               
-    NS_DELETEXPCOM(owner);                                                                                              
+    NS_RELEASE(owner);                                                                                              
     return nsnull;                                            
 }
 
@@ -59,6 +59,44 @@ ReleaseDestructorDestroyHandler(PLEvent *self)
 {
     PR_DELETE(self);
 }
+
+static void
+NS_ProxyRelease(nsIEventQueue *eventQ, nsISupports *doomed, PRBool alwaysProxy=PR_FALSE)
+{
+   if (!doomed)
+      return;
+
+   if (!eventQ) {
+      NS_RELEASE(doomed); 
+      return;
+   }
+
+   if (!alwaysProxy) {
+      PRBool onCurrentThread = PR_FALSE;
+      eventQ->IsQueueOnCurrentThread(&onCurrentThread);
+      if (onCurrentThread) {
+         NS_RELEASE(doomed);
+         return;
+      }
+   }
+
+   PLEvent *ev = new PLEvent;
+   if (!ev) {
+      NS_ERROR("failed to allocate PLEvent");
+      // we do not release doomed here since it may cause a delete on the the
+      // wrong thread.  better to leak than crash. 
+      return;
+   }
+
+   PL_InitEvent(ev, 
+                (void *) doomed,
+                ReleaseDestructorEventHandler,
+                ReleaseDestructorDestroyHandler);
+   
+   PRStatus rv = eventQ->PostEvent(ev);
+   NS_ASSERTION(rv == PR_SUCCESS, "PostEvent failed");
+}
+
 
 #define NS_IMPL_PROXY_RELEASE(_class)                                           \
 NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                  \
@@ -105,6 +143,8 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                  
   }                                                                             \
   return count;                                                                 \
 }                                                                               \
+
+
 
            
 #endif

@@ -61,6 +61,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsMemory.h"
 #include "nsIProxyInfo.h"
+#include "nsProxyRelease.h"
 
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gSocketTransportLog = nsnull;
@@ -2637,6 +2638,12 @@ nsSocketRequest::SetTransport(nsSocketTransport *aTransport)
     //
     NS_IF_RELEASE(mTransport);
     NS_IF_ADDREF(mTransport = aTransport);
+
+    //
+    // Set the event queue
+    //
+    nsIEventQueueService* eqService = aTransport->mService->GetCachedEventQueueService(); 
+    eqService->GetSpecialEventQueue(nsIEventQueueService::CURRENT_THREAD_EVENT_QUEUE, getter_AddRefs(mEventQ));
 }
 
 nsresult
@@ -2657,9 +2664,21 @@ nsSocketRequest::OnStop()
             mObserver->OnStartRequest(this, mContext);
             mStartFired = PR_TRUE;
         }
+
         mObserver->OnStopRequest(this, mContext, mStatus);
         mObserver = 0;
-        mContext = 0;
+
+        if (mContext) {
+            if (mEventQ) {
+                nsISupports* doomed = mContext.get();
+                NS_ADDREF(doomed);
+                mContext = 0;
+                NS_ProxyRelease(mEventQ, doomed);
+            }
+            else {
+                mContext = 0;
+            }
+        }
         mStopFired = PR_TRUE;
     }
     return NS_OK;

@@ -1026,6 +1026,15 @@ nsDNSService::Init()
     rv = InstallPrefObserver();
     if (NS_FAILED(rv))  return rv;
 
+    // install xpcom shutdown observer
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+
     mState = DNS_ONLINE;
     return NS_OK;
 
@@ -1265,6 +1274,13 @@ nsDNSService::Observe(nsISupports *      subject,
 {
     nsresult rv = NS_OK;
     
+    if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic))
+    {
+        // we need to shutdown!
+        ShutdownInternal(); 
+        return NS_OK;
+    }
+
     if (nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic))  
         return NS_OK;
     
@@ -1302,7 +1318,6 @@ nsDNSService::Observe(nsISupports *      subject,
             mIDNConverter = nsnull;
         }
     }
-    
     return rv;
 }
 
@@ -1828,6 +1843,15 @@ nsDNSService::ShutdownInternal()
     AbortLookups();
 
     (void) RemovePrefObserver();
+
+
+    // remove xpcom shutdown observer
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    if (NS_FAILED(rv)) return rv;
 
     // reset hashtable
     // XXX assert hashtable is empty

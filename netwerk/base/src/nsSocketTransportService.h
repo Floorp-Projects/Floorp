@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 #include "nsIDNSService.h"
+#include "nsIEventQueueService.h"
 
 #if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
 //
@@ -99,6 +100,7 @@ public:
     nsresult  GetNeckoStringByName (const char *aName, PRUnichar **aString);
 
     nsIDNSService* GetCachedDNSService() { return mDNSService.get(); }
+    nsIEventQueueService* GetCachedEventQueueService() { return mEventQService.get(); }
 
 protected:
     nsIThread*            mThread;
@@ -111,8 +113,9 @@ protected:
     PRInt32               mSelectFDSetCount;
     PRPollDesc*           mSelectFDSet;
     nsSocketTransport**   mActiveTransportList;
-    nsCOMPtr<nsIStringBundle>   m_stringBundle;
+    nsCOMPtr<nsIStringBundle>   mStringBundle;
     nsCOMPtr<nsIDNSService>     mDNSService;
+    nsCOMPtr<nsIEventQueueService>  mEventQService;
 };
 
 

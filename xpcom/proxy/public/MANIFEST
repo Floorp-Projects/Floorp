@@ -3,4 +3,5 @@
 #
 
 nsProxyEvent.h
+nsProxyRelease.h
 nsProxiedService.h

@@ -122,6 +122,15 @@ nsFileTransportService::GetCachedMimeService()
     return mMimeService.get();
 }
 
+nsIEventQueueService* 
+nsFileTransportService::GetCachedEventQueueService()
+{
+    if (!mEventQService) {
+        mEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    }
+    return mEventQService.get();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP

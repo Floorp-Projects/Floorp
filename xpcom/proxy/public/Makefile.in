@@ -35,6 +35,7 @@ endif
 
 EXPORTS		= \
 		nsProxyEvent.h \
+		nsProxyRelease.h \
 		nsProxiedService.h \
 		$(NULL)
 
