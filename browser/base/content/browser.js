@@ -3865,18 +3865,44 @@ function asyncOpenWebPanel(event)
        break;
    }
    if (linkNode) {
-     if (fieldNormalClicks && event.button == 0 && !event.ctrlKey && !event.shiftKey && 
-         !event.altKey && !event.metaKey && 
-         (!linkNode.getAttribute("target") || linkNode.getAttribute("target") == "_content" ||
-           linkNode.getAttribute("target") == "_main")) // IE uses _main, SeaMonkey uses _content, we support both
-     {
-       var url = getShortcutOrURI(linkNode.href);
-       if (!url)
+     if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
+         !event.altKey && !event.metaKey) {
+       // A Web panel's links should target the main content area.  Do this
+       // if no modifier keys are down and if there's no target or the target equals
+       // _main (the IE convention) or _content (the Mozilla convention).
+       // The only reason we field _main and _content here is for the markLinkVisited
+       // hack.
+       var target = linkNode.getAttribute("target");
+       if (fieldNormalClicks && 
+           (!target || target == "_content" || target  == "_main")) 
+         // IE uses _main, SeaMonkey uses _content, we support both
+       {
+         var url = getShortcutOrURI(linkNode.href);
+         if (!url)
+           return false;
+         markLinkVisited(linkNode.href, linkNode);
+         loadURI(url);
+         event.preventDefault();
          return false;
-       markLinkVisited(linkNode.href, linkNode);
-       loadURI(url);
-       event.preventDefault();
-       return false;
+       }
+       else if (linkNode.getAttribute("rel") == "sidebar") {
+         // This is the Opera convention for a special link that - when clicked - allows
+         // you to add a sidebar panel.  We support the Opera convention here.  The link's
+         // title attribute contains the title that should be used for the sidebar panel.
+         openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+                    "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+                    linkNode.getAttribute("title"), 
+                    linkNode.href, null, null, null, null, true);
+         event.preventDefault();
+         return false;
+       }
+       else if (target == "_search") {
+         // Used in WinIE as a way of transiently loading pages in a sidebar.  We
+         // mimic that WinIE functionality here and also load the page transiently.
+         openWebPanel("Search Companion", linkNode.href);
+         event.preventDefault();
+         return false;
+       }
      }
      else
        handleLinkClick(event, linkNode.href, linkNode);
