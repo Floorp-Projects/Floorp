@@ -299,7 +299,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
                            0,          // text
                            style,
                            0, 0, 0, 0, // pos/size
-                           hwndOwner ? hwndOwner : hwndP,
+                           hwndOwner,
                            HWND_TOP,
                            mParent ? mParent->GetNextID() : 0,
                            0, 0);      // ctldata, presparams
