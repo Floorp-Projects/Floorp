@@ -178,13 +178,8 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
   }
 
 
-  if (mChannel && mProcessing) {
-    nsCOMPtr<nsILoadGroup> lg;
-    mChannel->GetLoadGroup(getter_AddRefs(lg));
-    if (lg)
-      lg->RemoveRequest(mChannel, nsnull, NS_BINDING_SUCCEEDED, nsnull);
+  if (mChannel && mProcessing)
     mChannel->Cancel(NS_BINDING_ABORTED); // should prolly use status here
-  }
 
   return NS_OK;
 }
@@ -472,8 +467,6 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   if (mDecoder) {
     mDecoder->Close();
     mDecoder = nsnull; // release the decoder so that it can rest peacefully ;)
-  } else {
-    printf("foo\n");
   }
 
   return NS_OK;
@@ -492,15 +485,10 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   NS_ASSERTION(mChannel, "imgRequest::OnDataAvailable -- no channel!");
 
-  if (!mChannel) {
-    PR_LOG(gImgLog, PR_LOG_WARNING,
-           ("[this=%p] imgRequest::OnDataAvailable -- no channel?\n", this));
-    return NS_OK;
-  }
-
   if (!mDecoder) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- no decoder\n", this));
+
     return NS_OK;
   }
 
