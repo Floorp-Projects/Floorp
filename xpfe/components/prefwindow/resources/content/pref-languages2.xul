@@ -32,9 +32,10 @@
 
   <script language="javascript" src="chrome://communicator/content/pref/pref-languages.js"></script>
   <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["intlAcceptLanguages"];
+    _elementIDs = ["intlAcceptLanguages", "DefaultCharsetList"];
   ]]>
   </script>
 
@@ -75,5 +76,19 @@
       </box>
     </box>
 	</titledbox>
-   
+  <titledbox orient="vertical" autostretch="never">
+    <title><text value="&languages.customize.Charset.grouplabel;"/></title>
+    <box autostretch="never">
+      <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
+      <menulist id="DefaultCharsetList" ref="NC:BrowserCharsetMenuRoot" datasources="rdf:charset-menu"
+          pref="true" preftype="string" prefstring="intl.browser.default_charset"
+          prefattribute="data" wsm_attributes="data">
+          <template>
+            <menupopup>
+              <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+            </menupopup>
+          </template>
+      </menulist>       
+   </box> 
+  </titledbox>
 </window>
