@@ -528,6 +528,8 @@ nsHttpTransaction::HandleContentStart()
                 if (!mChunkedDecoder)
                     return NS_ERROR_OUT_OF_MEMORY;
                 LOG(("chunked decoder created\n"));
+                // Ignore server specified Content-Length.
+                mContentLength = -1;
             }
 #if defined(PR_LOGGING)
             else if (mContentLength == -1)
