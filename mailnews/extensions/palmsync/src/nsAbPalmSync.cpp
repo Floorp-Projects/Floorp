@@ -220,7 +220,7 @@ nsresult nsAbPalmHotSync::AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStru
     fileName.AppendWithConversion(".mab");
     fileName.StripWhitespace();
     nsresult rv = DIR_AddNewAddressBook(mAbName.get(), nsnull /*let filename be generated*/,
-                                            PR_FALSE, MAPIDirectory, &server);
+					PR_FALSE, nsnull, 0, nsnull, MAPIDirectory, &server);
     if(NS_FAILED(rv))
         return rv;
 
