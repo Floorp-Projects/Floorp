@@ -59,11 +59,15 @@ static NS_DEFINE_IID(kIPICSIID, NS_IPICS_IID);
 static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 #endif
 
+#include "nsMetaCharsetCID.h"
+#include "nsIMetaCharsetService.h"
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_IID(kCGlobalHistoryCID, NS_GLOBALHISTORY_CID);
+static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
 
 /* Define Interface IDs */
 
@@ -74,6 +78,7 @@ static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID, NS_IGLOBALHISTORY_IID);
+static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 
 class nsAppShellService : public nsIAppShellService
@@ -196,6 +201,19 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 							  (void **) &pics);
  
 #endif
+
+  nsIMetaCharsetService* metacharset;
+  rv = nsServiceManager::GetService(kMetaCharsetCID,
+                                    kIMetaCharsetServiceIID,
+                                     (nsISupports **) &metacharset);
+   if(NS_FAILED(rv)) {
+      goto done;
+   }
+   rv = metacharset->Start();
+   if(NS_FAILED(rv)) {
+      goto done;
+   }
+   rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
 
   // Initialise the global History
   nsIGlobalHistory *  gHistory;
