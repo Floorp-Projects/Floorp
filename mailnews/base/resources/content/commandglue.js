@@ -311,20 +311,24 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
 function SwitchView(command)
 {
-  gDBView = null; // close existing view.
+  var oldSortType = gDBView ? gDBView.sortType : nsMsgViewSortType.byThread;
+  var oldSortOrder = gDBView ? gDBView.sortOrder : nsMsgViewSortOrder.ascending;
   var viewFlags = gCurViewFlags;
+
+  gDBView = null; // close existing view.
+
   switch(command)
   {
     case "cmd_viewUnreadMsgs":
 
       viewFlags = viewFlags | nsMsgViewFlagsType.kUnreadOnly;
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags,
-            nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
+            oldSortType, oldSortOrder );
     break;
     case "cmd_viewAllMsgs":
       viewFlags = viewFlags & ~nsMsgViewFlagsType.kUnreadOnly;
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags,
-            nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
+            oldSortType, oldSortOrder);
     break;
     case "cmd_viewThreadsWithUnread":
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay,
@@ -505,6 +509,10 @@ var gCurSortType;
 function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 {
   var dbviewContractId = "@mozilla.org/messenger/msgdbview;1?type=";
+
+  // hack to turn this into an integer, if it was a string
+  // it would be a string if it came from localStore.rdf
+  viewType = viewType - 0;
 
   switch (viewType) {
       case nsMsgViewType.eShowThreadsWithUnread:
