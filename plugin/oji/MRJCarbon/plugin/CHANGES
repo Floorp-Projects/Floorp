@@ -1,3 +1,10 @@
+Changes since 1.0fc2:
+
+1. Return correct value when mouse clicks occur within the applet. The browser is still
+initiating drags when it shouldn't. This should be fixed in Mozilla 1.0.1.
+
+2. Built the plugin as a Mac OS X bundle to simplify installation.
+
 Changes since 1.0fc1:
 
 1. Fixed crash resulting from stale reference to an nsIPluginInstancePeer held by the Carbon
