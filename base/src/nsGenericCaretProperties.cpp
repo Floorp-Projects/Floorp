@@ -8,7 +8,7 @@
 
 //-----------------------------------------------------------------------------
 nsCaretProperties::nsCaretProperties()
-:	mCaretWidth(eDetaultCaretWidthTwips)
+:	mCaretWidth(eDefaultCaretWidth)
 ,	mBlinkRate(eDefaulBlinkRate)
 {
 	// in your platform-specific class, get data from the OS in your constructor
