@@ -103,9 +103,7 @@ protected:
 	nsresult SetOSTypeAndCreatorFromExtension(const char* extension = nsnull);
 	
 	nsresult ExtensionIsOnExceptionList(const char *extension, PRBool *onList);
-	
-	static nsresult DetermineCurrentProcessCreator(); 
-					
+						
 private:
 
     // It's important we keep track of how we were initialized
@@ -143,8 +141,10 @@ private:
     
     OSType			mType, mCreator;
 
-    static OSType   mgCurrentProcessSignature;
-        
+    static void     InitClassStatics();
+
+    static OSType   sCurrentProcessSignature;
+    static PRBool   sHasHFSPlusAPIs;        
 };
 
 #endif
