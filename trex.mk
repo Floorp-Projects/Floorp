@@ -36,15 +36,32 @@ CVS=cvs -q co -P
 CVTREX = $(CVSROOT:pub=src)
 CVST=cvs -q -d $(CVTREX) co -P
 
+LIBNLS_BRANCH           = -r libnls_v3_Normandy
+LIBNLS_DIR              = ns/modules/libnls
+
+JULIAN_BRANCH           = -r JULIAN_TREX_BRANCH
+JULIAN_DIR              = ns/julian
+
+
 default:  pull_all build_all
 
-pull_all: pull_platform pull_trex 
+pull_all: pull_platform pull_julian pull_trex 
 
 pull_platform:
 	cd $(MOZ_SRC); \
 	$(CVS) mozilla/config mozilla/nglayout.mk; \
 	cd mozilla ;\
 	gmake -f nglayout.mk pull_all;\
+	cd $(MOZ_SRC)
+
+pull_julian:
+	cd $(MOZ_SRC); \
+	$(CVST) ns/client.mk; \
+	cd $(MOZ_SRC)/ns/.; \
+	$(CVST) -d config ns/clientconfig; \
+	cd $(MOZ_SRC); \
+	$(CVST) $(JULIAN_BRANCH) $(JULIAN_DIR); \
+	$(CVST) $(LIBNLS_BRANCH) $(LIBNLS_DIR); \
 	cd $(MOZ_SRC)
 
 pull_trex:
@@ -55,11 +72,19 @@ pull_trex:
 	$(CVST)  -d trex ns/trex; \
 	cd $(MOZ_SRC)/.
 
-build_all: build_platform build_trex
+build_all: build_platform build_julian build_trex
 
 build_platform:
 	cd $(MOZ_SRC)/mozilla; \
 	gmake -f nglayout.mk real_all; \
+	cd $(MOZ_SRC)
+
+
+build_julian:: 
+	cd $(MOZ_SRC)/ns/modules/libnls; \
+	gmake; \
+	cd $(MOZ_SRC)/ns/julian; \
+	gmake; \
 	cd $(MOZ_SRC)
 
 
