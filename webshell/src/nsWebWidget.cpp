@@ -345,7 +345,9 @@ void WebWidgetImpl::SetBounds(const nsRect& aBounds)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
-    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_TRUE);
+    // Don't have the widget repaint. Layout will generate repaint requests
+    // during reflow
+    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
   }
 }
 
