@@ -332,6 +332,8 @@ BEGIN
     IDS_MSG_SMARTUPDATE_START "Initializing SmartUpdate, please wait..."
     IDS_MSG_CONFIGURING     "Configuring %s, please wait..."
     IDS_ERROR_XPI_INSTALL   "Error ocurred during installation"
+    IDS_ERROR_SETUP_REQUIREMENT 
+                            "Windows95 or greater Operating System is required!  Exiting setup..."
 END
 
 #endif    // English (U.S.) resources
