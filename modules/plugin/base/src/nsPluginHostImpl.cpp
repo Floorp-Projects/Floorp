@@ -117,6 +117,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIInputStreamTee.h"
+#include "nsIInterfaceInfoManager.h"
+#include "xptinfo.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
@@ -2676,7 +2678,8 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 
   // this will create the initial plugin list out of cache
   // if it was not created yet
-  LoadPlugins();
+  if (!mPluginsLoaded)
+    return LoadPlugins();
 
   // we are re-scanning plugins. New plugins may have been added, also some
   // plugins may have been removed, so we should probably shut everything down
@@ -4929,7 +4932,19 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     return NS_OK;
 
   PRBool pluginschanged;
-  return FindPlugins(PR_TRUE, &pluginschanged);
+  nsresult rv = FindPlugins(PR_TRUE, &pluginschanged);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // only if plugins have changed will we ask XPTI to refresh
+  if (pluginschanged) {
+    // rescan XPTI to catch any newly installed interfaces
+    nsCOMPtr<nsIInterfaceInfoManager> iim (dont_AddRef(XPTI_GetInterfaceInfoManager()));
+    if (iim)
+      iim->AutoRegisterInterfaces();
+  }
+
+  return NS_OK;
 }
 
 #include "nsITimelineService.h"
