@@ -22,6 +22,8 @@
 use diagnostics;
 use strict;
 
+use vars qw{ $revision_ctime $revision_author };
+
 require 'CGI.pl';
 
 # This cgi doesn't actually generate a graph.  It relies on the cvsgraph
@@ -109,6 +111,7 @@ unless ($found_rcs_file) {
 }
 
 # Hack these variables up the way that the cvsgraph executable wants them
+my $full_rcs_filename = $rcs_filename;
 $rcs_filename =~ s:^$root/::;
 my $conf = $0;
 $conf =~ s:[^/\\]+$::;
@@ -124,12 +127,70 @@ if (defined $::FORM{'image'}) {
 else {
     push(@cvsgraph_cmd, "-i", "-M", "revmap"); # Include args to make map
     &print_top("CVS Graph for " . $file_tail);
+    print <<"--endquote--" if $::use_dom;
+<script $::script_type><!--
+var r
+function showMessage(rev) {
+    if (r) {
+        r.style.display='none'
+    }
+    r = document.getElementById('rev_'+rev)
+    var l = document.getElementById('link_'+rev)
+    var t = l.offsetTop + 20
+    r.style.top = t
+    r.style.left = l.offsetLeft + l.offsetWidth + 20
+    r.style.display=''
+    return true
+}
+
+function hideMessage() {
+    if (r) {
+        r.style.display='none'
+        return true
+    }
+    return false
+}
+//--></script>
+
+<style type="text/css">
+.log_msg {
+    border-style: solid;
+    border-color: #F0A000;
+    background-color: #FFFFFF;
+    padding: 5;
+    position: absolute;
+}
+</style>
+--endquote--
+
+    print <<"--endquote--" unless $::use_dom;
+<script $::script_type><!--
+// Dummy Functions to prevent script errors (this browser does not support DOM)
+function showMessage() { return false }
+function hideMessage() { return false }
+//--></script>
+--endquote--
 }
 
 system(@cvsgraph_cmd, $rcs_filename);
 
 if (!defined $::FORM{'image'}) {
     print qq{<img src="cvsgraph.cgi?file=$::FORM{'file'}&image=1" };
-    print qq{usemap="#revmap" alt="$filename" border="0">};
+    print qq{usemap="#revmap" alt="$filename" border="0" onclick="hideMessage()">\n};
+    if ($::use_dom) {
+	require 'cvsblame.pl';
+	&parse_cvs_file($full_rcs_filename);
+	foreach my $rev (keys %::revision_log) {
+	    my $author = EmailFromUsername($::revision_author{$rev});
+	    my $rev_log = html_quote($::revision_log{$rev});
+	    $rev_log =~ s/\n/<br>\n/g;
+	    print qq{<div id="rev_$rev" class="log_msg" style="display:none">\n};
+	    print qq{<b>$rev</b> };
+	    print qq{&lt;<a href="mailto:$author">$author</a>&gt };
+	    print qq{<b>$::revision_ctime{$rev}</b><br>\n};
+	    print $rev_log;
+	    print qq{</div>\n};
+	}
+    }
     &print_bottom;
 }

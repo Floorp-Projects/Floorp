@@ -487,4 +487,26 @@ if (defined $::FORM{'batchid'}) {
      }
 }
 
+# Layers are supported only by Netscape 4.
+# The DOM standards are supported by Mozilla and IE 5 or above.  It should
+# also be supported by any browser claiming "Mozilla/5" or above.
+$::use_layers = 0;
+$::use_dom = 0;
+# MSIE chokes on |type="application/x-javascript"| so if we detect MSIE, we
+# we should send |type="text/javascript"|.  While we're at it, we should send
+# |language="JavaScript"| for any browser that is "Mozilla/4" or older.
+$::script_type = '"language="JavaScript""';
+if (defined $ENV{HTTP_USER_AGENT}) {
+    my $user_agent = $ENV{HTTP_USER_AGENT};
+    if ($user_agent =~ m@^Mozilla/4.@ && $user_agent !~ /MSIE/) {
+        $::use_layers = 1;
+    } elsif ($user_agent =~ m@MSIE (\d+)@) {
+        $::use_dom = 1 if $1 >= 5;
+        $::script_type = 'type="text/javascript"';
+    } elsif ($user_agent =~ m@^Mozilla/(\d+)@) {
+        $::use_dom = 1 if $1 >= 5;
+        $::script_type = 'type="application/x-javascript"';
+    }
+}
+
 1;
