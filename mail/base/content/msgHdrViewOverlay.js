@@ -654,6 +654,10 @@ function HideMessageHeaderPane()
   node = document.getElementById("expandedHeaderView");
   if (node)
     node.collapsed = true;
+
+  node = document.getElementById("attachmentView");
+  if (node)
+    node.collapsed = true;
 }
 
 function OutputNewsgroups(headerEntry, headerValue)
