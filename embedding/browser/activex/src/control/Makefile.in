@@ -111,8 +111,8 @@ libs:: MozillaControl.html
 
 export:: $(DEFFILE) MozillaControl_i.c MozillaControl.h
 
-$(DEFFILE): mkctldef.bat
-	$(srcdir)/mkctldef.bat $@
+$(DEFFILE): mkctldef.sh
+	$(srcdir)/mkctldef.sh $@
 
 MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c $(srcdir)/MozillaControl.idl
