@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.16 $ 
-# $Date: 2001/03/26 14:02:51 $ 
+# $Revision: 1.17 $ 
+# $Date: 2001/04/03 15:14:27 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -188,17 +188,24 @@ sub get_env {
 
   # On RedHat Linux
   #	user nobody has uid 99
-  #	All CGI scripts run as user nobody by defult
+  #	user apache has uid 48
+  #	All CGI scripts run as user nobody by defult in RedHat 6.2
+  #	All CGI scripts run as user apache by defult in RedHat 7.0
 
   # The largest Solaris daemon ids is lp at 71
+  my $max_uid = 45;
 
-  ( $< >= 95 ) ||
-    die("Security Error. Must not run this program as root\n");
+  ( $< >= $max_uid ) ||
+    die("Security Error. ".
+        "Must not run this program using restricted user id. ".
+        "id: $< id must be less then $max_uid\n");
 
-  ( $> >= 95 ) ||
-    die("Security Error. Must not run this program as root\n");
+  ( $> >= $max_uid ) ||
+    die("Security Error. ".
+        "Must not run this program using restricted user id. ".
+        "id: $> id must be less then $max_uid\n");
 
-  # check both real and effective gid of the process to see if we have
+  # Check both real and effective gid of the process to see if we have
   # been configured to run with too much privileges.
 
   # On RedHat Linux
@@ -206,12 +213,17 @@ sub get_env {
   #	the ftp group is group 50
 
   # The largest Solaris daemon group is 15
+  my $max_gid = 75;
 
-  ( $( >= 75 ) ||
-    die("Security Error. Must not run this program as group root\n");
+  ( $( >= $max_gid ) ||
+    die("Security Error. ".
+        "Must not run this program using restricted group id. ".
+        "id: $( must be less then $max_gid\n");
 
-  ( $) >= 75 ) ||
-    die("Security Error. Must not run this program as group root\n");
+  ( $) >= $max_gid ) ||
+    die("Security Error. ".
+        "Must not run this program using restricted group id.".
+        "id: $) must be less then $max_gid\n");
 
 
   my ($logdir) = File::Basename::dirname($ERROR_LOG);
