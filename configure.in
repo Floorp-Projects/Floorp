@@ -260,8 +260,8 @@ case "$target" in
 		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
 		DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
 	fi
-	MKSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
-	MKCSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
+	MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
+	MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
 	;;
 
 *-*-solaris*) 
@@ -1393,7 +1393,7 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 
 dnl ========================================================
 dnl =
-dnl = nsString hackery - This is expected to be a shirt lived
+dnl = nsString hackery - This is expected to be a short-lived
 dnl = variable.  It will be yanked once nsString2 replaces
 dnl = nsString completely.
 dnl = 
@@ -1481,6 +1481,27 @@ MOZ_ARG_DISABLE_BOOL(static,
 [  --disable-static        Disable building of internal static libs],
   NO_STATIC_LIB=1)
 
+case "$target" in
+    *-*-aix*)
+	if test "${NO_STATIC_LIB}" = "1" -o -z "${NO_SHARED_LIB}"; then
+	    if test -f /usr/lpp/xlC/bin/makeC++SharedLib_r; then
+		AIX_SHLIB_BIN='/usr/lpp/xlC/bin/makeC++SharedLib_r'
+	    elif test -f /usr/ibmcxx/bin/makeC++SharedLib_r; then
+		AIX_SHLIB_BIN='/usr/ibmcxx/bin/makeC++SharedLib_r'
+	    fi
+	    AC_PATH_PROG(AIX_SHLIB_BIN, makeC++SharedLib_r, :)
+	    if test ! -n "$AIX_SHLIB_BIN"; then
+		echo
+		echo "*** Unable to locate makeC++SharedLib_r, needed for creation of shared"
+		echo "*** libraries on AIX.  You will only be able to build static libraries."
+		echo
+		NO_STATIC_LIB=''
+		NO_SHARED_LIB=1
+	    fi
+	fi
+	AC_SUBST(AIX_SHLIB_BIN)
+	;;
+esac
 
 AC_SUBST(AR)
 AC_SUBST(AS)
