@@ -16,32 +16,19 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  * 
- * Styles for UI, See test3-output-default.css for output window styles
+ * Styles for UI, See output-default.css for output window styles
  *
  */
 
-@import url(chrome://global/skin/global.css);
+@import url(chrome://communicator/skin/);
 
 window {
 
-    font-size: 12px;
-    background: url(chrome://chatzilla/skin/images/xtal.jpg);
-/*
     width: 640px;
     height: 480px;
-*/
-
-}
-
-menubar, menu, menuitem, menupopup {
-
-    background: silver;
 
 }
 
@@ -52,72 +39,75 @@ menubar, menu, menuitem, menupopup {
 }
 
 #main-splitter {
+}
 
-    border: thin silver outset;
-    margin-left: 2px;
-    margin-right: 2px;
-    background: silver;
+#views-tbar, #views-tbox {
+    height: 0px;
+}
+
+.activity-button-image {
+
+    color: black;
+    background: lightgrey;
 
 }
 
-.status-table {
+.activity-button-image[state="normal"] {
 
-    width: 100%;
-    font-weight: bold;
-
-}
-
-#status-bar {
-
-    border: thin silver double;
-    background: #dddddd;
+    list-style-image: url(chrome://chatzilla/skin/images/view-normal.gif);
 
 }
 
-toolbar {
+.activity-button-image[state="activity"] {
 
-    background: #dddddd;
-    border: silver double;
+    list-style-image: url(chrome://chatzilla/skin/images/view-activity.gif);
+}
+
+.activity-button-image[state="current"] {
+
+    list-style-image: url(chrome://chatzilla/skin/images/view-current.gif);
 
 }
 
-.activity-button {
+.activity-button-image[state="attention"] {
 
-    background: #dddddd;
-    padding-top: 1px;
-    padding-left: 2px;
-    padding-right: 2px;
-    padding-bottom: 0px;
-    margin: 1px;
-    border: groove 2px;
+    list-style-image: url(chrome://chatzilla/skin/images/view-attention.gif);
 
 }
 
-.activity-button:hover {
+.activity-button-text {
 
-    background: #eeeeee;
-    padding-top: 0px;
-    padding-left: 1px;
-    padding-right: 3px;
-    padding-bottom: 1px;
-    border: 2px grey outset;
+    color: black;
+    background: lightgrey;
 
 }
 
-.activity-button:active {
+.activity-button-text[state="normal"] {
 
-    background: #cccccc;
-    padding-top: 1px;
-    padding-left: 2px;
-    padding-right: 2px;
-    padding-bottom: 0px;
-    border: 2px grey inset;
+}
+
+.activity-button-text[state="activity"] {
+
+    color: darkgreen;
+
+}
+
+.activity-button-text[state="current"] {
+    
+    color: darkcyan;
+
+}
+
+.activity-button-text[state="attention"] {
+
+    color: red;
 
 }
 
 .status-label {
     
     text-align: right;
+    margin-left: 10px;
 
 }
 
@@ -125,6 +115,7 @@ toolbar {
 
     text-align: left;
     color: darkslategrey;
+    margin-left: 5px;
 
 }
 
@@ -134,16 +125,6 @@ toolbar {
     font-weight: bold;
 
 }
-
-/* input textbox */
-/*
-.input-window {
-
-    overflow: clip;
-    width: 100%;
-
-}
-*/
 
 .output-container {
 
@@ -156,7 +137,7 @@ toolbar {
 
 .quick-list {
 
-/*	border: thin silver inset;*/
+	border: thin silver inset;
 	background: #dddddd;
 	overflow: auto;
 
@@ -172,9 +153,9 @@ toolbar {
 
 /* JG: Selection colors, in accord with standard mozilla chrome colors */
 .list-option[selected="true"] {
-        background: rgb(51,102,153);
-        font-weight: bold;
-        color: white;
+    background: rgb(51,102,153);
+    font-weight: bold;
+    color: white;
 } 
 
 /* text in the quicklist */
