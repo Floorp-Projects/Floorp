@@ -60,6 +60,7 @@ public:
   NS_IMETHOD CreateThreadEventQueue(void);
   NS_IMETHOD DestroyThreadEventQueue(void);
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult);
+  NS_IMETHOD ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEventQueue* *resultQueue);
 
   NS_IMETHOD CreateFromIThread(nsIThread *aThread, nsIEventQueue **aResult);
   NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult);

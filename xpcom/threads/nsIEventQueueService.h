@@ -41,6 +41,13 @@
 #define NS_EVENTQUEUESERVICE_PROGID "component://netscape/event-queue-service"
 #define NS_EVENTQUEUESERVICE_CLASSNAME "Event Queue Service"
 
+#define NS_CURRENT_THREAD    ((PRThread*)0)
+#define NS_CURRENT_EVENTQ    ((nsIEventQueue*)0)
+
+#define NS_UI_THREAD         ((PRThread*)1)
+#define NS_UI_THREAD_EVENTQ  ((nsIEventQueue*)1)
+
+
 class nsIThread;
 
 class nsIEventQueueService : public nsISupports
@@ -62,7 +69,8 @@ public:
   NS_IMETHOD PopThreadEventQueue(nsIEventQueue *aQueue) = 0;
 
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult) = 0;
-  
+  NS_IMETHOD ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEventQueue* *resultQueue) = 0;
+
 #ifdef XP_MAC
 // This is ment to be temporary until something better is worked out
  NS_IMETHOD ProcessEvents() = 0;

@@ -132,36 +132,21 @@ NS_IMETHODIMP
 nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, PRInt32 proxyType, void** aProxyObject)
 {
     nsresult rv;
-
-    nsCOMPtr<nsIEventQueue> postQ(do_QueryInterface(destQueue));
+    nsCOMPtr<nsIEventQueue> postQ;
+    
 
     *aProxyObject = nsnull;
 
-    // post to primordial thread event queue if no queue specified
-    if (postQ == nsnull)
-    {
-        nsCOMPtr<nsIThread>  mainIThread;
-        PRThread            *mainThread;
-
-        // Get the primordial thread
-        rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
-        if ( NS_FAILED( rv ) )
-            return NS_ERROR_UNEXPECTED;
-
-        rv = mainIThread->GetPRThread(&mainThread);
-        if ( NS_FAILED( rv ) )
-            return NS_ERROR_UNEXPECTED;
-
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-        if ( NS_FAILED( rv ) )
-            return NS_ERROR_UNEXPECTED;
-        
-        rv = eventQService->GetThreadEventQueue(mainThread, getter_AddRefs(postQ));
-        
-        if ( NS_FAILED( rv ) )
-            return NS_ERROR_UNEXPECTED;
-    }
-
+    //  check to see if the destination Q is a special case.
+    
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) 
+        return rv;
+    
+    rv = eventQService->ResolveEventQueue(destQueue, getter_AddRefs(postQ));
+    if (NS_FAILED(rv)) 
+        return rv;
+    
     // check to see if the eventQ is on our thread.  If so, just return the real object.
     
     if (postQ != nsnull && !(proxyType & PROXY_ASYNC) && !(proxyType & PROXY_ALWAYS))
