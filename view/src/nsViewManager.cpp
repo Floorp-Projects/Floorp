@@ -293,7 +293,11 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
-    mRootWindow->GetBounds(wrect);
+    nsIWidget*  widget;
+    aView->GetWidget(widget);
+    widget->GetBounds(wrect);
+    wrect.x = wrect.y = 0;
+    NS_RELEASE(widget);
     ds = GetDrawingSurface(*localcx, wrect);
     localcx->SelectOffScreenDrawingSurface(ds);
   }
