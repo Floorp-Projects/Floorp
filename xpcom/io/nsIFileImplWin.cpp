@@ -233,79 +233,6 @@ nsIFileImpl::bufferedStat(struct stat *st)
     return rv;
 }
 
-
-void 
-nsIFileImpl::convertToNative(PRUint32 type, const char* filePath, char** nativeFilePath)
-{
-    *nativeFilePath = nsnull;
-
-    if (filePath == nsnull)
-        return;
-
-    char * temp;
-
-    if (type == nsIFile::UNIX_PATH)
-    {
-        // Strip initial slash for an absolute path
-	    char* src = (char*)filePath;
-	    if (*src == '/')
-	    {
-		    // Since it was an absolute path, check for the drive letter
-            // format looks like:  /d|/
-            //                     ^
-            //                     |
-            //                    src
-		    char* colonPointer = src + 2;
-		    if (strstr(src, "|/") == colonPointer)
-            {
-                // allocate new string
-	            temp = (char*) nsAllocator::Clone( src+1, strlen(src+1)+1 );
-                temp[1] = ':';
-            }
-            else
-            {
-                // there is not a drive letter specifier.  we need to preserve the first slash.
-                temp = (char*) nsAllocator::Clone( src, strlen(src)+1 );
-            }
-        }
-        else
-        {
-            temp = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
-        }
-        
-        *nativeFilePath = temp;
-
-	    // Convert '/' to '\'.
-        do
-        {
-            if (*temp == '/')
-                *temp = '\\';
-        }
-        while (*temp++);
-    }
-    else if (type == nsIFile::NATIVE_PATH  || type == nsIFile::NSPR_PATH)  //TODO does NSPR take any other kind of path?
-    {
-        // just do a sanity check.  if it has any forward slashes, it is not a Native path
-        // on windows.
-
-        if (strchr(filePath, '/') == 0)
-        {
-            // This is a native path
-            *nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
-        }
-    }
-
-    // kill any trailing seperator
-    if(*nativeFilePath)
-    {
-        temp = *nativeFilePath;
-        int len = strlen(temp) - 1;
-        if(temp[len] == '\\')
-            temp[len] = '\0';
-    }
-
-}
-
 NS_IMETHODIMP  
 nsIFileImpl::InitWithKey(const char *fileKey)
 {
@@ -317,7 +244,7 @@ nsIFileImpl::InitWithFile(nsIFile *file)
 {
     NS_ENSURE_ARG(file);
 
-    // TODO:  how do we get to the |file|'s working
+    // TODO:  how do we get to the |file|'s working    XXXXXX
     //        directory so that we do not expose
     //        symlinked directories.
 
@@ -343,8 +270,61 @@ nsIFileImpl::InitWithPath(PRUint32 pathType, const char *filePath)
 
     makeDirty();
 
-    char* nativeFilePath;  // todo  need to make sure that this is an absolute path
-    convertToNative(pathType, filePath, &nativeFilePath);
+    char* nativeFilePath = nsnull;
+    char* temp;
+
+    if (pathType == nsIFile::UNIX_PATH)
+    {
+        if (*filePath != '/')
+	        return NS_ERROR_FILE_INVALID_PATH;
+
+        // Since it was an absolute path, check for the drive letter
+        // format looks like:  /d|/
+        //                     ^
+        //                     |
+        //                    filePath
+		char* colonPointer = ((char*)(filePath)) + 2;  // this case is okay since I am not changing
+		if (strstr(filePath, "|/") == colonPointer)    // filePath
+        {
+            // allocate new string
+	        nativeFilePath = (char*) nsAllocator::Clone( filePath+1, strlen(filePath+1)+1 );
+            nativeFilePath[1] = ':';
+        }
+        else
+        {
+            // there is not a drive letter specifier.  we need to preserve the first slash.
+            nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
+        }
+    
+        // Convert '/' to '\'.
+        temp = nativeFilePath;
+        do
+        {
+            if (*temp == '/')
+                *temp = '\\';
+        }
+        while (*temp++);
+    }
+    else if (pathType == nsIFile::NATIVE_PATH  || pathType == nsIFile::NSPR_PATH)  //TODO does NSPR take any other kind of path?
+    {
+        // just do a sanity check.  if it has any forward slashes, it is not a Native path
+        // on windows.  Also, it must have a colon at after the first char.
+
+        if ((strchr(filePath, '/') == 0) && filePath[1] == ':')
+        {
+            // This is a native path
+            nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
+        }
+    }
+
+    // kill any trailing seperator
+    if(nativeFilePath)
+    {
+        temp = nativeFilePath;
+        int len = strlen(temp) - 1;
+        if(temp[len] == '\\')
+            temp[len] = '\0';
+    }
 
     if (nativeFilePath == nsnull)
         return NS_ERROR_FILE_UNRECONGNIZED_PATH;
@@ -411,16 +391,32 @@ nsIFileImpl::AppendPath(const char *node)
 
     makeDirty();
 
-    char* nativeFilePath;
-    convertToNative(nsIFile::UNIX_PATH, node, &nativeFilePath);
+    // We only can append relative unix styles strings.
 
-    if (nativeFilePath == nsnull)
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
+    // Convert '\' to '/'
+	nsString path(node);
+
+    char* nodeCString = path.ToNewCString();    
+    char* temp = nodeCString;
+    for (; *temp; temp++)
+    {
+        if (*temp == '/')
+            *temp = '\\';
+    }
+
+    // kill any trailing seperator
+    if(nodeCString)
+    {
+        temp = nodeCString;
+        int len = strlen(temp) - 1;
+        if(temp[len] == '\\')
+            temp[len] = '\0';
+    }
     
     mWorkingPath.Append("\\");
-    mWorkingPath.Append(nativeFilePath);
+    mWorkingPath.Append(nodeCString);
     
-    nsAllocator::Free( nativeFilePath );
+    Recycle(nodeCString);
 
     return NS_OK;
 }
@@ -462,11 +458,6 @@ nsIFileImpl::GetPath(PRUint32 pathType, char **_retval)
     
     if (canonicalPath == nsnull)
         return NS_ERROR_NULL_POINTER;
-
-    // we need to make sure that this is a valid path.  so we call _fullpath() on it.
-    //char buffer[MAX_PATH];
-    //*buffer = '\0';
-    //char* canonicalPath = _fullpath(buffer, inFilePath, MAX_PATH);  // TODO THIS IS WRONG!
 
     if (pathType == nsIFile::UNIX_PATH)
     {

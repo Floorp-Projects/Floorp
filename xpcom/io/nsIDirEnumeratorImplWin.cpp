@@ -36,8 +36,6 @@ nsIDirEnumeratorImpl::nsIDirEnumeratorImpl()
 
 nsIDirEnumeratorImpl::~nsIDirEnumeratorImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-    
     if (mDir)
 	    PR_CloseDir(mDir);    
 }
@@ -102,26 +100,13 @@ nsIDirEnumeratorImpl::HasMoreElements(PRBool *result)
             return NS_OK;
         
         mNext->InitWithFile(mParent);
-        rv = mNext->AppendPath(entry->name);  // TODO.  entry->name maybe a NATIVE_PATH
-
-        // if (mResoveSymLinks)
-        //{   
-            // PRBool isSymlink;
-            // mNext->IsSymlink(&isSymlink);
-        
-            //if (isSymlink)
-            //{   
-            //   // initalized mNext to the resolved file.    
-            //}
-        //}
+        rv = mNext->AppendPath(entry->name);
 
         if (NS_FAILED(rv)) 
             return rv;
     }
-    
     *result = PR_TRUE;
     return NS_OK;
-
 }
 
 /* nsISupports GetNext (); */
