@@ -52,6 +52,7 @@
 #include <xpgetstr.h>
 extern int XFE_OPEN_FILE;
 extern int XFE_ERROR_OPENING_FILE;
+extern int XFE_CANNOT_READ_FILE;
 extern int XFE_ERROR_OPENING_PIPE;
 extern int XFE_NO_SUBJECT;
 extern int XFE_UNKNOWN_ERROR_CODE;
@@ -4993,6 +4994,8 @@ ps_file_close (PrintSetup *p)
 void
 XFE_InitializePrintSetup (PrintSetup *p)
 {
+  int i;
+  
   XL_InitializePrintSetup (p);
   p->reverse = fe_globalPrefs.print_reversed;
   p->color = fe_globalPrefs.print_color;
@@ -5022,6 +5025,13 @@ XFE_InitializePrintSetup (PrintSetup *p)
       p->width = 210 * 0.039 * 72;
       p->height = 297 * 0.039 * 72;
     }
+  p->paper_size = fe_globalPrefs.print_paper_size;
+
+  /* initialize things related to other font to be NULL */
+  for (i=0; i<N_FONTS; i++) {
+      p->otherFontName[i] = NULL;
+      p->otherFontInfo[i] = NULL;
+  }
 }
 
 
@@ -5038,6 +5048,11 @@ fe_Print(MWContext *context, URL_Struct *url, Boolean last_to_file_p,
   XrmValue value;
   XrmDatabase db = XtDatabase(XtDisplay(CONTEXT_WIDGET(context)));
   INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
+
+  FILE *afmfile;		/* AFM (font metrics) file descriptor */
+  char *measures[2] = { "variable", "fixed" };
+  char *styles[4] = { "normal", "bold", "italic", "boldItalic" };
+  int measure, style, i;	/* Loop variable */
 
   XFE_InitializePrintSetup (&p);
 
@@ -5110,34 +5125,122 @@ fe_Print(MWContext *context, URL_Struct *url, Boolean last_to_file_p,
   INTL_CharSetIDToName(INTL_GetCSIWinCSID(c), mimecharset);
 
   PR_snprintf(clas, sizeof (clas),
-		"%s.DocumentFonts.Charset.PSName", fe_progclass);
-  PR_snprintf(name, sizeof (name),
-		"%s.documentFonts.%s.psname", fe_progclass, mimecharset);
-  if (XrmGetResource(db, name, clas, &type, &value))
-      p.otherFontName = value.addr;
-  else
-      p.otherFontName = NULL;
-
-  PR_snprintf(clas, sizeof (clas),
 		"%s.DocumentFonts.Charset.PSCode", fe_progclass);
   PR_snprintf(name, sizeof (name),
 		"%s.documentFonts.%s.pscode", fe_progclass, mimecharset);
   if (XrmGetResource(db, name, clas, &type, &value))
       p.otherFontCharSetID = INTL_CharSetNameToID(value.addr);
 
-  PR_snprintf(clas, sizeof (clas),
-		"%s.DocumentFonts.Charset.PSWidth", fe_progclass);
-  PR_snprintf(name, sizeof (name),
-		"%s.documentFonts.%s.pswidth", fe_progclass, mimecharset);
-  if (XrmGetResource(db, name, clas, &type, &value))
-      p.otherFontWidth = atoi(value.addr);
+  /* read in font spec from the resource 
+     NOTE: Currently eight fonts styles are used 
+  */
+  for (measure = 0; measure < 2; measure++)
+      for (style = 0; style < 4; style++) {
+  	int index = measure * 4 + style;
 
-  PR_snprintf(clas, sizeof (clas),
-		"%s.DocumentFonts.Charset.PSAscent", fe_progclass);
-  PR_snprintf(name, sizeof (name),
-		"%s.documentFonts.%s.psascent", fe_progclass, mimecharset);
-  if (XrmGetResource(db, name, clas, &type, &value))
-      p.otherFontAscent = atoi(value.addr);
+  	PR_snprintf(clas, sizeof (clas),
+		"%s.DocumentFonts.Charset.Measure.Style.PSName", fe_progclass);
+  	PR_snprintf(name, sizeof (name),
+		"%s.documentFonts.%s.%s.%s.psname", fe_progclass, mimecharset,
+				measures[measure], styles[style]);
+
+  	if (XrmGetResource(db, name, clas, &type, &value)
+  	    && XP_STRLEN(value.addr) > 0 ) {
+  	    /* read in font name for this style */
+      	    p.otherFontName[index] = (char*)malloc(strlen(value.addr)+1);
+      	    strncpy(p.otherFontName[index], value.addr, XP_STRLEN(value.addr)+1);
+
+	    /* Read and parse AFM file if psafmfile is specified */
+  	    PR_snprintf(clas, sizeof (clas),
+  		"%s.DocumentFonts.Charset.Measure.Style.PSAFMFile", fe_progclass);
+  	    PR_snprintf(name, sizeof (name),
+  		 "%s.documentFonts.%s.%s.%s.psafmfile", fe_progclass, 
+  		 	mimecharset, measures[measure], styles[style]);
+
+     	    if (XrmGetResource(db, name, clas, &type, &value) 
+     	        && XP_STRLEN(value.addr) > 0) {
+     	        /* open the file according to the name */
+	        afmfile = fopen(value.addr, "r");
+	    	if (!afmfile) {         
+	    	    /* fail to open file */
+            	    char buf [2048];
+            	    PR_snprintf(buf, sizeof (buf),
+                    	XP_GetString(XFE_ERROR_OPENING_FILE),
+                      	value.addr);
+            	    fprintf(stderr, buf);
+            	    fprintf(stderr, "\n");
+            	}
+            	else {          /* parse the afm file */
+            	    int err;
+            	    if (err = XP_parseAFMFile(afmfile, 
+            	    		&(p.otherFontInfo[index]))) {
+                        /* error in parsing */
+                    	char buf [2048];
+                    	if (p.otherFontInfo[index] != NULL)
+                    	    free(p.otherFontInfo[index]);
+                    	p.otherFontInfo[index] = NULL;
+                        fclose(afmfile);
+                        PR_snprintf(buf, sizeof (buf),
+                            XP_GetString(XFE_CANNOT_READ_FILE),
+                            value.addr);
+                        fprintf(stderr, buf);
+                        fprintf(stderr, "\n");
+			fprintf(stderr, "Error code is %d\n", err);
+            	    }
+              	    else /* successfully parsed */
+            	    	fclose(afmfile);
+            	}
+            }
+            else {	/* no psafmfile, then look for psmetric */
+                PR_snprintf(clas, sizeof (clas),
+  		    "%s.DocumentFonts.Charset.Measure.Style.PSMetric", fe_progclass);
+  	        PR_snprintf(name, sizeof (name),
+  		    "%s.documentFonts.%s.%s.%s.psmetric", fe_progclass, 
+  		    mimecharset, measures[measure], styles[style]);
+
+  	        if (XrmGetResource(db, name, clas, &type, &value)) {
+  	            int params[4];
+  	            int param = 0;
+  	            int len = XP_STRLEN(value.addr);
+  	            char *start = value.addr;
+  	            i = params[0] = params[1] = params[2] = params[3] = 0;
+  	            while (i <= len) {
+  	            	if (i != 0 && !isdigit(*(value.addr+i)) 
+			    && isdigit(*(value.addr+i-1)) ) {
+  	            	    *(value.addr+i) = '\0';
+  	            	    params[param++] = atoi(start);
+  	            	    start = value.addr + i + 1;
+  	                }
+  	                i++;
+  	            }
+  	            if (param > 0) {
+      	                p.otherFontInfo[index] = (PS_FontInfo *) 
+  	            				malloc(sizeof(PS_FontInfo));
+  	                p.otherFontInfo[index]->chars[0].wx = params[0];
+  	                p.otherFontInfo[index]->chars[0].wy = params[1];
+  	                p.otherFontInfo[index]->fontBBox.ury = params[2];
+  	                p.otherFontInfo[index]->fontBBox.lly = params[3];
+  	                for (i=1; i<256; i++)
+  	             	    p.otherFontInfo[index]->chars[i] = 
+  	             		p.otherFontInfo[index]->chars[0];
+  	            }
+	        }
+            }
+        }
+      }
+  /* end of reading font specifications */
+  
+  /* post-parsing process, to map unspecified fonts to specified fonts */
+  if (p.otherFontName[LO_FONT_NORMAL] == NULL)
+      p.otherFontName[LO_FONT_NORMAL] = p.otherFontName[LO_FONT_FIXED];
+  else if (p.otherFontName[LO_FONT_FIXED] == NULL)
+      p.otherFontName[LO_FONT_FIXED] = p.otherFontName[LO_FONT_NORMAL];
+
+
+  for (i=0; i<N_FONTS; i++) {
+      if (p.otherFontName[i] == NULL) 
+      	   p.otherFontName[i] = p.otherFontName[i & LO_FONT_FIXED];
+  }
 
   if (last_to_file_p)
       p.completion = ps_file_close;
@@ -5149,7 +5252,27 @@ fe_Print(MWContext *context, URL_Struct *url, Boolean last_to_file_p,
 				XP_GetString(XFE_DIALOGS_PRINTING));
   XL_TranslatePostscript (context, url, &saved_data, &p);
   fe_await_synchronous_url (context);
-
+  
+  /* dispose used memory blocks */
+  for (i=0; i<N_FONTS; i++) {
+      if (p.otherFontName[i] != NULL) {
+          int j;
+          for (j = i+1; j < N_FONTS; j++) 
+              if (p.otherFontName[i] == p.otherFontName[j]) 
+                  p.otherFontName[j] = NULL;
+          free(p.otherFontName[i]);
+          p.otherFontName[i] = NULL;
+      }
+      if (p.otherFontInfo[i] != NULL) {
+          int j;
+          for (j = i+1; j < N_FONTS; j++) 
+              if (p.otherFontInfo[i] == p.otherFontInfo[j]) 
+                  p.otherFontInfo[j] = NULL;
+          free(p.otherFontInfo[i]);
+          p.otherFontInfo[i] = NULL;
+      }
+  }	/* end of dispose */
+  
   /* XXX do we need to delete the URL ? */
 }
 
