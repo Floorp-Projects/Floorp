@@ -40,6 +40,15 @@ function onLoad()
                                              [ caName ],
                                               1);
   setText("message2", message2);
+
+  var xulWindow = document.getElementById("download_cert");
+  var wdth = window.innerWidth; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("width",window.innerWidth + 30);
+
+  var hght = window.innerHeight; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("height",window.innerHeight + 40);
 }
 
 function viewCert()
