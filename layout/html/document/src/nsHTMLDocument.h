@@ -189,6 +189,9 @@ protected:
   PLHashTable *mNamedItems;
 
   nsIParser *mParser;
+
+  PRUint32 mIsWriting : 1;
+  PRUint32 mWriteLevel : 31;
 };
 
 #endif /* nsHTMLDocument_h___ */

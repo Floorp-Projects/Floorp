@@ -318,6 +318,7 @@ public:
                                 nsISupportsArray* aResults);
 
   NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument);
+  NS_IMETHOD Reset(nsIURL* aURL);
   NS_IMETHOD SetLinkColor(nscolor aColor);
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
@@ -654,6 +655,7 @@ protected:
   nsIHTMLAttributes*  mRecycledAttrs;
   nsIFrame*           mInitialContainingBlock;
   nsIFrame*           mFixedContainingBlock;
+  nsIFrame*           mDocElementContainingBlock;
 };
 
 
@@ -701,7 +703,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mVisitedRule(nsnull),
     mActiveRule(nsnull),
     mRecycledAttrs(nsnull),
-    mInitialContainingBlock(nsnull)
+    mInitialContainingBlock(nsnull),
+    mDocElementContainingBlock(nsnull)
 {
   NS_INIT_REFCNT();
 #ifdef INCLUDE_XUL
@@ -942,6 +945,29 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
   mDocument = aDocument; // not refcounted!
   mURL = aURL;
   NS_ADDREF(mURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURL* aURL)
+{
+  NS_IF_RELEASE(mURL);
+  mURL = aURL;
+  NS_ADDREF(mURL);
+  
+  if (nsnull != mLinkRule) {
+    mLinkRule->mSheet = nsnull;
+    NS_RELEASE(mLinkRule);
+  }
+  if (nsnull != mVisitedRule) {
+    mVisitedRule->mSheet = nsnull;
+    NS_RELEASE(mVisitedRule);
+  }
+  if (nsnull != mActiveRule) {
+    mActiveRule->mSheet = nsnull;
+    NS_RELEASE(mActiveRule);
+  }
+  mAttrTable.Reset();
+
   return NS_OK;
 }
 
@@ -2299,16 +2325,13 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
     pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, rootPseudoStyle);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
                                              rootPseudoStyle, PR_TRUE);
-
-    // Create frames for the document element and its child elements
-    nsIFrame*       docElementFrame;
-    nsAbsoluteItems fixedItems(pageFrame);
-    ConstructDocElementFrame(aPresContext, aDocElement, pageFrame,
-                             rootPseudoStyle, docElementFrame, fixedItems);
     NS_RELEASE(rootPseudoStyle);
 
+    // The eventual parent of the document element frame
+    mDocElementContainingBlock = pageFrame;
+
+
     // Set the initial child lists
-    pageFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
     pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
     if (isScrollable) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
@@ -2317,12 +2340,6 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
       viewportFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
     }
 
-    // Tell the page about its 'fixed' frames
-    if (nsnull != fixedItems.childList) {
-      pageFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::fixedList,
-                                     fixedItems.childList);
-    }
-  
   } else {
     // The viewport is the containing block for 'fixed' elements
     mFixedContainingBlock = viewportFrame;
@@ -2343,27 +2360,17 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
                                                rootPseudoStyle, PR_TRUE);
     }
-
-    // Create frames for the document element and its child elements
-    nsIFrame*       docElementFrame;
-    nsAbsoluteItems fixedItems(viewportFrame);
-    ConstructDocElementFrame(aPresContext, aDocElement, rootFrame,
-                             rootPseudoStyle, docElementFrame, fixedItems);
     NS_RELEASE(rootPseudoStyle);
 
+    // The eventual parent of the document element frame
+    mDocElementContainingBlock = rootFrame;
+
     // Set the initial child lists
-    rootFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
     if (isScrollable) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
       viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
     } else {
       viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
-    }
-
-    // Tell the viewport about its 'fixed' frames
-    if (nsnull != fixedItems.childList) {
-      viewportFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::fixedList,
-                                         fixedItems.childList);
     }
   }
 
@@ -3935,80 +3942,122 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
                                     PRInt32         aIndexInContainer)
 {
   nsIPresShell* shell = aPresContext->GetShell();
+  nsresult rv = NS_OK;
 
-  // Find the frame that precedes the insertion point.
-  nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
-  nsIFrame* nextSibling = nsnull;
-  PRBool    isAppend = PR_FALSE;
+  // If we have a null parent, then this must be the document element
+  // being inserted
+  if (nsnull == aContainer) {
 
-  // If there is no previous sibling, then find the frame that follows
-  if (nsnull == prevSibling) {
-    nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
-  }
+    NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
+    nsIStyleContext*  rootPseudoStyle;
+    nsIContent* docElement = nsnull;
 
-  // Get the geometric parent.
-  nsIFrame* parentFrame;
-  if ((nsnull == prevSibling) && (nsnull == nextSibling)) {
-    // No previous or next sibling so treat this like an appended frame.
-    // XXX This won't always be true if there's auto-generated before/after
-    // content
-    isAppend = PR_TRUE;
-    shell->GetPrimaryFrameFor(aContainer, parentFrame);
+    docElement = mDocument->GetRootContent();
 
-  } else {
-    // Use the prev sibling if we have it; otherwise use the next sibling
-    if (nsnull != prevSibling) {
-      prevSibling->GetParent(parentFrame);
-    } else {
-      nextSibling->GetParent(parentFrame);
-    }
-  }
-
-  // Construct a new frame
-  nsresult  rv = NS_OK;
-  if (nsnull != parentFrame) {
-    // Get the containing block for absolutely positioned elements
-    nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
-                                                                   parentFrame);
-
-    nsAbsoluteItems absoluteItems(absoluteContainingBlock);
-    nsFrameItems    frameItems;
+    // Create a pseudo element style context
+    // XXX Use a different pseudo style context...
+    rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
+                                                                 nsHTMLAtoms::rootPseudo, nsnull);
+    
+    // Create frames for the document element and its child elements
+    nsIFrame*       docElementFrame;
     nsAbsoluteItems fixedItems(mFixedContainingBlock);
-    rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems, frameItems,
-                        fixedItems);
+    ConstructDocElementFrame(aPresContext, 
+                             docElement, 
+                             mDocElementContainingBlock,
+                             rootPseudoStyle, 
+                             docElementFrame, 
+                             fixedItems);
+    NS_RELEASE(rootPseudoStyle);
+    NS_IF_RELEASE(docElement);
+    
+    // Set the initial child list for the parent
+    mDocElementContainingBlock->SetInitialChildList(*aPresContext, 
+                                                    nsnull, 
+                                                    docElementFrame);
+    
+    // Tell the fixed containing block about its 'fixed' frames
+    if (nsnull != fixedItems.childList) {
+      mFixedContainingBlock->SetInitialChildList(*aPresContext, 
+                                                 nsLayoutAtoms::fixedList,
+                                                 fixedItems.childList);
+    }
+    
+  }
+  else {
+    // Find the frame that precedes the insertion point.
+    nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
+    nsIFrame* nextSibling = nsnull;
+    PRBool    isAppend = PR_FALSE;
+    
+    // If there is no previous sibling, then find the frame that follows
+    if (nsnull == prevSibling) {
+      nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+    }
 
-    nsIFrame* newFrame = frameItems.childList;
-
-    if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-      nsIReflowCommand* reflowCmd = nsnull;
-
-      // Notify the parent frame
-      if (isAppend) {
-        rv = parentFrame->AppendFrames(*aPresContext, *shell,
-                                       nsnull, newFrame);
+    // Get the geometric parent.
+    nsIFrame* parentFrame;
+    if ((nsnull == prevSibling) && (nsnull == nextSibling)) {
+      // No previous or next sibling so treat this like an appended frame.
+      // XXX This won't always be true if there's auto-generated before/after
+      // content
+      isAppend = PR_TRUE;
+      shell->GetPrimaryFrameFor(aContainer, parentFrame);
+      
+    } else {
+      // Use the prev sibling if we have it; otherwise use the next sibling
+      if (nsnull != prevSibling) {
+        prevSibling->GetParent(parentFrame);
       } else {
-        rv = parentFrame->InsertFrames(*aPresContext, *shell, nsnull,
-                                       prevSibling, newFrame);
+        nextSibling->GetParent(parentFrame);
       }
+    }
 
-      // If there are new absolutely positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (nsnull != absoluteItems.childList) {
-        rv = absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
-                                                         nsLayoutAtoms::absoluteList,
-                                                         absoluteItems.childList);
-      }
-
-      // If there are new fixed positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (nsnull != fixedItems.childList) {
-        rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
-                                                      nsLayoutAtoms::fixedList,
-                                                      fixedItems.childList);
+    // Construct a new frame
+    if (nsnull != parentFrame) {
+      // Get the containing block for absolutely positioned elements
+      nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
+                                                                     parentFrame);
+      
+      nsAbsoluteItems absoluteItems(absoluteContainingBlock);
+      nsFrameItems    frameItems;
+      nsAbsoluteItems fixedItems(mFixedContainingBlock);
+      rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems, frameItems,
+                          fixedItems);
+      
+      nsIFrame* newFrame = frameItems.childList;
+      
+      if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+        nsIReflowCommand* reflowCmd = nsnull;
+        
+        // Notify the parent frame
+        if (isAppend) {
+          rv = parentFrame->AppendFrames(*aPresContext, *shell,
+                                         nsnull, newFrame);
+        } else {
+          rv = parentFrame->InsertFrames(*aPresContext, *shell, nsnull,
+                                         prevSibling, newFrame);
+        }
+        
+        // If there are new absolutely positioned child frames, then notify
+        // the parent
+        // XXX We can't just assume these frames are being appended, we need to
+        // determine where in the list they should be inserted...
+        if (nsnull != absoluteItems.childList) {
+          rv = absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                           nsLayoutAtoms::absoluteList,
+                                                           absoluteItems.childList);
+        }
+        
+        // If there are new fixed positioned child frames, then notify
+        // the parent
+        // XXX We can't just assume these frames are being appended, we need to
+        // determine where in the list they should be inserted...
+        if (nsnull != fixedItems.childList) {
+          rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                        nsLayoutAtoms::fixedList,
+                                                        fixedItems.childList);
+        }
       }
     }
   }
@@ -4082,6 +4131,10 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
       // Update the parent frame
       rv = parentFrame->RemoveFrame(*aPresContext, *shell,
                                     nsnull, childFrame);
+    }
+
+    if (mInitialContainingBlock == childFrame) {
+      mInitialContainingBlock = nsnull;
     }
   }
 

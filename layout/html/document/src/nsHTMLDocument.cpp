@@ -181,7 +181,8 @@ nsHTMLDocument::nsHTMLDocument()
   mChildStack  = (nsIDOMNode**) new PRUint32[32];
   mBodyContent = nsnull;
   mForms = nsnull;
-
+  mIsWriting = 0;
+  mWriteLevel = 0;
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -288,20 +289,21 @@ nsHTMLDocument::Reset(nsIURL *aURL)
   }
   NS_IF_RELEASE(mForms);
 
-  if (nsnull != mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mAttrStyleSheet);
+  if (nsnull == mAttrStyleSheet) {
+    result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
   }
-  if (nsnull != mStyleAttrStyleSheet) {
-    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mStyleAttrStyleSheet);
+  else {
+    result = mAttrStyleSheet->Reset(aURL);
   }
-
-  result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
   if (NS_OK == result) {
     AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-    
-    result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
+
+    if (nsnull == mStyleAttrStyleSheet) {
+      result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
+    }
+    else {
+      result = mStyleAttrStyleSheet->Reset(aURL);
+    }
     if (NS_OK == result) {
       AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
     }
@@ -707,7 +709,7 @@ nsHTMLDocument::ContentRemoved(nsIContent* aContainer,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
-  if (nsnull != mNamedItems) {
+  if ((nsnull != mNamedItems) && (nsnull != aContainer)) {
     nsIAtom *name;
 
     aContainer->GetTag(name);
@@ -1178,7 +1180,6 @@ NS_IMETHODIMP
 nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 {
   nsresult result = NS_OK;
-#if 0
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
@@ -1197,11 +1198,13 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
                                               nsnull, 
                                               kCParserIID, 
                                               (void **)&mParser);
-        
+        mIsWriting = 1;
+
         if (NS_OK == result) { 
           nsIHTMLContentSink* sink;
           nsIWebShell* webShell = nsnull;
           
+          // Get the webshell of our primary presentation shell
           nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
           if (nsnull != shell) {
             nsIPresContext* cx = shell->GetPresContext();
@@ -1228,14 +1231,26 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
       NS_RELEASE(blankURL);
     }
   }
-#endif
   return result;
 }
+
+#define NS_GENERATE_PARSER_KEY() (void*)((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
 
 NS_IMETHODIMP    
 nsHTMLDocument::Close()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+
+  if ((nsnull != mParser) && mIsWriting) {
+    nsAutoString emptyStr("</HTML>");
+    mWriteLevel++;
+    result = mParser->Parse(emptyStr, NS_GENERATE_PARSER_KEY(), 
+                            PR_TRUE, PR_FALSE, PR_TRUE);
+    mWriteLevel--;
+    mIsWriting = 0;
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -1249,7 +1264,9 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
   // XXX Right now, we only deal with inline document.writes
   if (nsnull == mParser) {
     result = Open(cx, argv, argc);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (NS_OK != result) {
+      return result;
+    }
   }
   
   if (argc > 0) {
@@ -1268,7 +1285,11 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
       str.Append('\n');
     }
 
-    result = mParser->Parse(str, PR_TRUE,PR_FALSE,PR_TRUE);
+    mWriteLevel++;
+    result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
+                            PR_TRUE, PR_FALSE, 
+                            (!mIsWriting || (mWriteLevel > 1)));
+    mWriteLevel--;
     if (NS_OK != result) {
       return result;
     }

@@ -208,6 +208,8 @@ public:
                             PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet);
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                             nsIStyleSheet* aStyleSheet,
                                             PRBool aDisabled);
@@ -671,7 +673,7 @@ PresShell::EndObservingDocument()
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
-  NS_PRECONDITION(nsnull == mRootFrame, "unexpected root frame");
+  nsIContent* root = nsnull;
 
   EnterReflowLock();
 
@@ -680,16 +682,21 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(r);
   }
 
-  if (nsnull == mRootFrame) {
-    if (nsnull != mDocument) {
-      nsIContent* root = mDocument->GetRootContent();
-      if (nsnull != root) {
-        // Have style sheet processor construct a frame for the
-        // root content object
-        mStyleSet->ConstructRootFrame(mPresContext, root, mRootFrame);
-        NS_RELEASE(root);
-      }
+  if (nsnull != mDocument) {
+    root = mDocument->GetRootContent();
+  }
+
+  if (nsnull != root) {
+    if (nsnull == mRootFrame) {
+      // Have style sheet processor construct a frame for the
+      // precursors to the root content object's frame
+      mStyleSet->ConstructRootFrame(mPresContext, root, mRootFrame);
     }
+
+    // Have the style sheet processor construct frame for the root
+    // content object down
+    mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
+    NS_RELEASE(root);
   }
 
   if (nsnull != mRootFrame) {
@@ -1199,6 +1206,13 @@ PresShell::ReconstructFrames(void)
 NS_IMETHODIMP
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
+{
+  return ReconstructFrames();
+}
+
+NS_IMETHODIMP 
+PresShell::StyleSheetRemoved(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet)
 {
   return ReconstructFrames();
 }

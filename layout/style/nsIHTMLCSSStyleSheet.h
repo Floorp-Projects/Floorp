@@ -28,6 +28,7 @@
 class nsIHTMLCSSStyleSheet : public nsIStyleSheet {
 public:
   NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument) = 0;
+  NS_IMETHOD Reset(nsIURL* aURL) = 0;
 };
 
 // XXX for convenience and backward compatibility
