@@ -104,6 +104,34 @@ function onInputKeyUp (e)
 
 }
 
+function onWindowKeyPress (e)
+{
+    var code = Number (e.keyCode)
+    switch (code)
+    {
+        case 112: /* F1 */
+        case 113: /* ... */
+        case 114:
+        case 115:
+        case 116:
+        case 117:
+        case 118:
+        case 119:
+        case 120:
+        case 121: /* F10 */
+            var idx = code - 112;
+            if ((client.viewsArray[idx]) && (client.viewsArray[idx].source))
+                setCurrentObject(client.viewsArray[idx].source);
+            
+            return false;
+            break;
+
+        default:
+            
+    }
+            
+}
+
 function onInputCompleteLine(e)
 {
 

@@ -54,7 +54,6 @@ function getCharPref (prefObj, prefName, defaultValue)
     }
     catch (e)
     {
-        dd ("Reading pref '" + prefName + "' threw '" + e + "'");
         return defaultValue;
     }
 }

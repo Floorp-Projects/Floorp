@@ -45,7 +45,6 @@ client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
                 
 client.name = "*client*";
 client.viewsArray = new Array();
-client.currentObject = client;
 client.lastListType = "chan-users";
 
 CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
@@ -76,7 +75,7 @@ function initStatic()
     
     obj = document.getElementById("input");
     obj.onkeyup = onInputKeyUp;
-
+    
     obj = document.getElementById("tb[*client*]");
     
     client.quickList = new CListBox(document.getElementById("quickList"));
@@ -92,6 +91,8 @@ function initStatic()
     client.PRINT_DIRECTION = saveDir;
     
     setCurrentObject (client);
+
+    window.onkeypress = onWindowKeyPress;
     
 }
 
@@ -132,7 +133,8 @@ function initHost(obj)
         ("link", /((http|mailto|ftp)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,
          insertLink);
     obj.munger.addRule
-        ("face", /([\<\>]?[\;\=\:\8]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\])/,
+        ("face",
+         /((^|\s)[\<\>]?[\;\=\:\8]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
     obj.munger.addRule ("rheet", /(rhe+t\!*)/i, "rheet");
     obj.munger.addRule ("bold", /(\*.*\*)/, "bold");
@@ -400,7 +402,14 @@ function setCurrentObject (obj)
         return false;
     }
 
-    var tb = getTBForObject(client.currentObject);
+    if (client.currentObject == obj)
+        return true;
+        
+    var tb;
+
+    if (client.currentObject)
+        tb = getTBForObject(client.currentObject);
+    
     if (tb)
         tb.setAttribute ("src", client.NACT_IMG);
 
@@ -423,6 +432,9 @@ function setCurrentObject (obj)
 
     updateNetwork();
     updateChannel();
+
+    if (client.PRINT_DIRECTION == 1)
+        window.frames[0].scrollTo(0, 100000);
     
 }
 
@@ -506,6 +518,13 @@ function getTBForObject (source, create)
 {
     var name;
 
+    if (!source)
+    {
+        dd ("** UNDEFINED  passed to getTBForObject **");
+        dd (getStackTrace());
+        return;
+    }
+    
     create = (typeof create != "undefined") ? Boolean(create) : false;
 
     switch (source.TYPE)
@@ -909,7 +928,7 @@ function chan_display (message, msgtype, nick)
     
     for (var l in ary)
     {
-        if (msgtype.search (/PRIVMSG|ACTION/) != -1)
+        if (msgtype.search (/PRIVMSG|ACTION|TOPIC/) != -1)
             client.munger.munge(ary[l], msgData, getObjectDetails (this));
         else
             msgData.appendChild(newInlineText (ary[l]));
