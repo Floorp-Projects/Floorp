@@ -229,12 +229,12 @@ function print()
 
 function createBackMenu(event)
 {
-  FillHistoryMenu(event.target, "back");
+  return FillHistoryMenu(event.target, "back");
 }
 
 function createForwardMenu(event)
 {
-  FillHistoryMenu(event.target, "forward");
+  return FillHistoryMenu(event.target, "forward");
 }
 
 function gotoHistoryIndex(aEvent)

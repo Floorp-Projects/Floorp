@@ -40,8 +40,8 @@
   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
 
   <popupset id="aTooltipSet">
-    <popup id="backMenu" oncreate="createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="forwardMenu" oncreate="createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="backMenu" position="after_start" onpopupshowing="return createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="forwardMenu" position="after_start" onpopupshowing="return createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   </popupset>
   <popupset id="contentAreaContextSet"/>
   <broadcasterset id="helpBroadcasters">
@@ -94,12 +94,12 @@
         <menubutton id="helpBackButton" label="&backBtn.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="goBack();" context="backMenu"
                     class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoBack">
-          <menupopup context="" oncreate="createBackMenu(event);"/>
+          <menupopup context="" onpopupshowing="createBackMenu(event);"/>
         </menubutton>
         <menubutton id="helpForwardButton" label="&fwdBtn.label;" tooltiptext="&forwardButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="goForward();" context="forwardMenu"
                     class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoForward">
-          <menupopup context="" oncreate="createForwardMenu(event);"/>
+          <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
         </menubutton>
         <button id="helpHomeButton"
                 class="button-toolbar-1 top"
