@@ -151,6 +151,7 @@ public class NativeGlobal implements IdFunction.Master {
             String name = errorMethods[i];
             IdFunction ctor = new IdFunction(this, name, Id_new_CommonError);
             ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
+            ctor.setParentScope(global);
             global.defineProperty(name, ctor, ScriptableObject.DONTENUM);
 
             Scriptable errorProto = cx.newObject(global, "Error");
