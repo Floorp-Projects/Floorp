@@ -55,11 +55,12 @@ foreach my $file(@testitems) {
 my $template = Template->new(
 {
     INCLUDE_PATH => $include_path ,
-    RELATIVE => 1,
     # Need to define filters used in the codebase, they don't
     # actually have to function in this test, just be defined.
     FILTERS =>
     {
+        strike => sub { return $_ } ,
+        js     => sub { return $_ }
     },
 }
 );
