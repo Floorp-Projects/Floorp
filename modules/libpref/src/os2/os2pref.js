@@ -206,3 +206,7 @@ pref("font.substitute_vector_fonts", true);
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
+
+pref("applications.telnet", "telnetpm.exe");
+pref("applications.telnet.host", "%host%");
+pref("applications.telnet.port", "-p %port%");
