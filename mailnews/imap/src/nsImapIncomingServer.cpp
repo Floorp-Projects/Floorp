@@ -3705,6 +3705,20 @@ nsImapIncomingServer::GetUriWithNamespacePrefixIfNecessary(PRInt32 namespaceType
     nsCAutoString namespacePrefix(ns->GetPrefix());
     if (!namespacePrefix.IsEmpty())
     {
+      // check if namespacePrefix is the same as the online directory; if so, ignore it.
+
+      nsXPIDLCString onlineDir;
+      rv = GetServerDirectory(getter_Copies(onlineDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!onlineDir.IsEmpty())
+      {
+        char delimiter = ns->GetDelimiter();
+          if ( onlineDir.Last() != delimiter )
+            onlineDir += delimiter;
+          if (onlineDir.Equals(namespacePrefix))
+            return NS_OK;
+      }
+
       namespacePrefix.ReplaceChar(ns->GetDelimiter(), '/'); // use canonical format
       nsCAutoString resultUri(originalUri);
       PRInt32 index = resultUri.Find("//");           // find scheme
