@@ -342,10 +342,10 @@ MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 // Process messages from the frame
 MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-   MRESULT mRC = 0;
+   MRESULT mresult = 0;
    BOOL    bDone = FALSE;
 
-   switch( msg)
+   switch (msg)
    {
       case WM_WINDOWPOSCHANGED:
       {
@@ -365,7 +365,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
          // When the frame is sized, do stuff to recalculate client size.
          if( pSwp->fl & SWP_SIZE && !(pSwp->fl & SWP_MINIMIZE))
          {
-            mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
+            mresult = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
             bDone = TRUE;
 
             mBounds.width = pSwp->cx;
@@ -375,11 +375,11 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             DispatchResizeEvent( mSizeClient.width, mSizeClient.height);
          }
  
-         if ( pSwp->fl & (SWP_MAXIMIZE | SWP_MINIMIZE | SWP_RESTORE)) {
+         if (pSwp->fl & (SWP_MAXIMIZE | SWP_MINIMIZE | SWP_RESTORE)) {
 	    nsSizeModeEvent event(NS_SIZEMODE, this);
-            if ( pSwp->fl & SWP_MAXIMIZE)
+            if (pSwp->fl & SWP_MAXIMIZE)
               event.mSizeMode = nsSizeMode_Maximized;
-            else if ( pSwp->fl & SWP_MINIMIZE)
+            else if (pSwp->fl & SWP_MINIMIZE)
               event.mSizeMode = nsSizeMode_Minimized;
             else
               event.mSizeMode = nsSizeMode_Normal;
@@ -426,7 +426,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
               if (SHORT1FROMMP(mp1) == SC_SYSMENU) {
                 MENUITEM menuitem;
                 WinSendMsg(WinWindowFromID(mFrameWnd, FID_SYSMENU), MM_QUERYITEM, MPFROM2SHORT(SC_SYSMENU, FALSE), MPARAM(&menuitem));
-                mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
+                mresult = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
                 WinEnableMenuItem(menuitem.hwndSubMenu, SC_MAXIMIZE, FALSE);
                 bDone = TRUE;
               }
@@ -454,13 +454,13 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 #ifdef DEBUG_FOCUS
             printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
 #endif
-            mRC = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+            bDone = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
          }
          break;
    }
 
    if( !bDone)
-      mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
+      mresult = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
 
-   return mRC;
+   return mresult;
 }

@@ -291,7 +291,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
         NS_ENSURE_SUCCESS(rv,rv);
 
         if (filedlg.papszFQFilename) {
-          for (int i=0;i<filedlg.ulFQFCount;i++) {
+          for (ULONG i=0;i<filedlg.ulFQFCount;i++) {
             nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
             NS_ENSURE_SUCCESS(rv,rv);
 

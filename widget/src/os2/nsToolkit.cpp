@@ -40,6 +40,9 @@
 #include "nsToolkit.h"
 #include "nsSwitchToUIThread.h"
 
+// Window procedure for the internal window
+static MRESULT EXPENTRY nsToolkitWindowProc(HWND, ULONG, MPARAM, MPARAM);
+
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 //
@@ -205,27 +208,10 @@ MRESULT EXPENTRY nsToolkitWindowProc(HWND hWnd, ULONG msg, MPARAM mp1,
         case WM_CALLMETHOD:
         {
             MethodInfo *info = (MethodInfo *)mp2;
-            PRMonitor *monitor = (PRMonitor *)mp1;
-            info->Invoke();
-            PR_EnterMonitor(monitor);
-            PR_Notify(monitor);
-            PR_ExitMonitor(monitor);
-            break;
+            return (MRESULT)info->Invoke();
         }
-        case WM_SENDMSG:
-        {
-            SendMsgStruct *pData = (SendMsgStruct*) mp1;
-            // send the message
-            pData->rc = WinSendMsg( pData->hwnd, pData->msg, pData->mp1, pData->mp2);
-            // signal the monitor to let the caller continue
-            PR_EnterMonitor( pData->pMonitor);
-            PR_Notify( pData->pMonitor);
-            PR_ExitMonitor( pData->pMonitor);
-            break;
-        }
-        default:
-            return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
     }
+    return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
 }
 
 
@@ -277,39 +263,4 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
 
   return rv;
-}
-
-void nsToolkit::CallMethod(MethodInfo *info)
-{
-   PR_EnterMonitor(mMonitor);
-
-   ::WinPostMsg(mDispatchWnd, WM_CALLMETHOD, MPFROMP(mMonitor), MPFROMP(info));
-
-   PR_Wait(mMonitor, PR_INTERVAL_NO_TIMEOUT);
-   PR_ExitMonitor( mMonitor);
-}
-
-MRESULT nsToolkit::SendMsg( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
-{
-   MRESULT rc = 0;
-
-   if( hwnd && IsGuiThread())
-      rc = WinSendMsg( hwnd, msg, mp1, mp2);
-   else if( hwnd)
-   {
-      PR_EnterMonitor( mMonitor);
-
-      SendMsgStruct data( hwnd, msg, mp1, mp2, mMonitor);
-
-      // post a message to the window
-      WinPostMsg( mDispatchWnd, WM_SENDMSG, MPFROMP(&data), 0);
-
-      // wait for it to complete...
-      PR_Wait( mMonitor, PR_INTERVAL_NO_TIMEOUT);
-      PR_ExitMonitor( mMonitor);
-
-      rc = data.rc;
-   }
-
-   return rc;
 }

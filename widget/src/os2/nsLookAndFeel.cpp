@@ -414,6 +414,13 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
       aSize.width  = kTextAreaWidths[aFontID][aFontSize-1];
       aSize.height = kTextAreaHeights[aFontID][aFontSize-1];
       break;
+   /* Added to avoid warning errors - these are not used right now */
+   case eMetricSize_ListBox:
+   case eMetricSize_ComboBox:
+   case eMetricSize_Radio:
+   case eMetricSize_CheckBox:
+   case eMetricSize_Button:
+      break;
   } //switch
 
   return NS_OK;
