@@ -46,7 +46,7 @@
     <vbox flex="1">
       <label value="&sidebar.customize.additional.label;" crop="right"/>
 
-      <tree id="other-panels" flex="1" seltype="multiple"
+      <tree id="other-panels" flex="1"
         datasources="rdf:null" hidecolumnpicker="true"
         containment="http://home.netscape.com/NC-rdf#panel-list"
         onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode);"
@@ -103,7 +103,7 @@
     <vbox flex="1">
       <label value="&sidebar.customize.current.label;"
         crop="right"/>
-      <tree id="current-panels" flex="1" seltype="multiple"
+      <tree id="current-panels" flex="1"
             datasources="rdf:null" hidecolumnpicker="true"
             onclick="SelectChangeForCurrentPanels();">
         <template>
