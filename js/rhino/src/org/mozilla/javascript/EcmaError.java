@@ -38,7 +38,7 @@ package org.mozilla.javascript;
 /**
  * The class of exceptions thrown by the JavaScript engine.
  */
-public class EvaluatorException extends RuntimeException {
+public class EcmaError extends EvaluatorException {
 
     /**
      * Create an exception with the specified detail message.
@@ -46,10 +46,13 @@ public class EvaluatorException extends RuntimeException {
      * Errors internal to the JavaScript engine will simply throw a
      * RuntimeException.
      *
-     * @param detail a message with detail about the exception
+     * @nativeError the NativeError object constructed for this error
      */
-    public EvaluatorException(String detail) {
-        super(detail);
+    public EcmaError(NativeError nativeError) {
+        super("EcmaError");
+        errorObject = nativeError;
     }
+    
+    public NativeError errorObject;
 
 }

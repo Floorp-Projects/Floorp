@@ -2493,7 +2493,6 @@ if (true) {
         // javascript handler; unwrap exception and GOTO to javascript
         // catch area.
         if (catchTarget != null) {
-            
             int jsHandler = classFile.markHandler(acquireLabel());
 
             // MS JVM gets cranky if the exception object is left on the stack
@@ -2521,6 +2520,28 @@ if (true) {
             classFile.addExceptionHandler
                 (startLabel, catchLabel, jsHandler,
                  "org/mozilla/javascript/JavaScriptException");
+
+            
+            /*
+                we also need to catch EcmaErrors and feed the 
+                associated error object to the handler
+            */
+            jsHandler = classFile.markHandler(acquireLabel());
+            exceptionObject = getNewWordLocal();
+            astore(exceptionObject);
+            aload(savedVariableObject);
+            astore(variableObjectLocal);
+            aload(exceptionObject);
+            classFile.add(ByteCode.GETFIELD,
+                         "org/mozilla/javascript/EcmaError",
+                         "errorObject", "Lorg/mozilla/javascript/NativeError;");
+            releaseWordLocal(exceptionObject);
+            addByteCode(ByteCode.GOTO, catchLabel);
+            classFile.addExceptionHandler
+                (startLabel, catchLabel, jsHandler,
+                 "org/mozilla/javascript/EcmaError");
+            
+                 
         }
 
         // finally handler; catch all exceptions, store to a local; JSR to

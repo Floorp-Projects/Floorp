@@ -52,11 +52,4 @@ public class EvaluatorException extends RuntimeException {
         super(detail);
     }
 
-    public EvaluatorException(Object nativeError) {
-        super("NativeError");
-        errorObject = nativeError;
-    }
-    
-    Object errorObject;
-
 }

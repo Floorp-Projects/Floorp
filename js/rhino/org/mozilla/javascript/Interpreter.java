@@ -1802,46 +1802,28 @@ public class Interpreter extends LabelTable {
                 }
                 pc++;
             }
-            catch (EvaluatorException ee) {
-                if (ee.errorObject != null) {
-                    // an EvaluatorException that is actually an offical
-                    // ECMA error object, handle as if it were a JavaScriptException
-                    stackTop = 0;
-                    cx.interpreterSecurityDomain = null;
-                    if (tryStackTop > 0) {
-                        pc = catchStack[--tryStackTop];
-                        scope = scopeStack[tryStackTop];
-                        if (pc == 0) {
-                            pc = finallyStack[tryStackTop];
-                            if (pc == 0) 
-                                throw ee;
-                            stack[0] = ee.errorObject;
-                        }
-                        else
-                            stack[0] = ee.errorObject;
+            catch (EcmaError ee) {
+                // an offical ECMA error object, 
+                // handle as if it were a JavaScriptException
+                stackTop = 0;
+                cx.interpreterSecurityDomain = null;
+                if (tryStackTop > 0) {
+                    pc = catchStack[--tryStackTop];
+                    scope = scopeStack[tryStackTop];
+                    if (pc == 0) {
+                        pc = finallyStack[tryStackTop];
+                        if (pc == 0) 
+                            throw ee;
+                        stack[0] = ee.errorObject;
                     }
                     else
-                        throw ee;
-                    // We caught an exception; restore this function's 
-                    // security domain.
-                    cx.interpreterSecurityDomain = theData.securityDomain;
+                        stack[0] = ee.errorObject;
                 }
-                else {
-                    // handle like any other RuntimeException, more code duplication
-                    cx.interpreterSecurityDomain = null;
-                    if (tryStackTop > 0) {
-                        stackTop = 0;
-                        stack[0] = ee;
-                        pc = finallyStack[--tryStackTop];
-                        scope = scopeStack[tryStackTop];
-                        if (pc == 0) throw ee;
-                    }
-                    else
-                        throw ee;
-                    // We caught an exception; restore this function's 
-                    // security domain.
-                    cx.interpreterSecurityDomain = theData.securityDomain;
-                }   
+                else
+                    throw ee;
+                // We caught an exception; restore this function's 
+                // security domain.
+                cx.interpreterSecurityDomain = theData.securityDomain;
             }
             catch (JavaScriptException jsx) {
                 stackTop = 0;

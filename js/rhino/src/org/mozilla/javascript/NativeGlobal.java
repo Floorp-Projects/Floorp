@@ -450,7 +450,7 @@ public class NativeGlobal {
      * See ECMA 15.11.6
      */
      
-    public static EvaluatorException constructError(Context cx, 
+    public static EcmaError constructError(Context cx, 
                                                     String error, 
                                                     String message,
                                                     Object scope)
@@ -466,7 +466,7 @@ public class NativeGlobal {
         Object args[] = { message };
         try {
             Object errorObject = cx.newObject(scopeObject, error, args);
-            return new EvaluatorException(errorObject);
+            return new EcmaError((NativeError)errorObject);
         }
         catch (PropertyException x) {
             throw new RuntimeException(x.toString());
