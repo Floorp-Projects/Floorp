@@ -20,6 +20,7 @@
 
 #include "nsDebug.h"
 #include "nsEscape.h"
+#include "nsIAllocator.h"
 
 #include "prtypes.h"
 #include "plstr.h"
@@ -1121,7 +1122,7 @@ void nsPersistentFileDescriptor::SetData(const char* inData, PRInt32 inSize)
 nsAutoCString::~nsAutoCString()
 //----------------------------------------------------------------------------------------
 {
-    delete [] (char*)mCString;
+    nsAllocator::Free(mCString);
 }
 
 //========================================================================================
