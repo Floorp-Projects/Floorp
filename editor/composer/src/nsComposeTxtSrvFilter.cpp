@@ -35,30 +35,56 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#include "nsISupports.idl"
 
-interface nsIEditor;
-interface nsITextServicesFilter;
+#include "nsComposeTxtSrvFilter.h"
+#include "nsIContent.h"
+#include "nsIDOMNode.h"
+#include "nsString.h"
+#include "nsINameSpaceManager.h"
 
-[scriptable, uuid(87ce8b81-1cf2-11d3-9ce4-c60a16061e7c)]
-interface nsIEditorSpellCheck : nsISupports
+nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
+  mIsForMail(PR_FALSE)
 {
+  NS_INIT_ISUPPORTS();
 
-  void          InitSpellChecker(in nsIEditor editor);
-  wstring       GetNextMisspelledWord();
-  wstring       GetSuggestedWord();
-  boolean       CheckCurrentWord(in wstring suggestedWord);
-  void          ReplaceWord(in wstring misspelledWord, in wstring replaceWord, in boolean allOccurrences);
-  void          IgnoreWordAllOccurrences(in wstring word);
-  void          GetPersonalDictionary();
-  wstring       GetPersonalDictionaryWord();
-  void          AddWordToDictionary(in wstring word);
-  void          RemoveWordFromDictionary(in wstring word);
-  void          GetDictionaryList([array, size_is(count)] out wstring dictionaryList, out PRUint32 count);
-  wstring       GetCurrentDictionary();
-  void          SetCurrentDictionary(in wstring dictionary);
-  void          UninitSpellChecker();
-  void          setFilter(in nsITextServicesFilter filter);
+  mBlockQuoteAtom  = getter_AddRefs(do_GetAtom("blockquote"));
+  mTypeAtom        = getter_AddRefs(do_GetAtom("type"));
+  mScriptAtom      = getter_AddRefs(do_GetAtom("script"));
+  mTextAreaAtom    = getter_AddRefs(do_GetAtom("textarea"));
+  mSelectAreaAtom  = getter_AddRefs(do_GetAtom("select"));
+  mMapAtom         = getter_AddRefs(do_GetAtom("map"));
+}
 
-};
+NS_IMPL_ISUPPORTS1(nsComposeTxtSrvFilter, nsITextServicesFilter);
+
+NS_IMETHODIMP 
+nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+
+  // Check to see if we can skip this node
+  // For nodes that are blockquotes, we must make sure
+  // their type is "cite"
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (content) {
+    nsCOMPtr<nsIAtom> tag;
+    content->GetTag(*getter_AddRefs(tag));
+    if (tag) {
+      if (tag == mBlockQuoteAtom) {
+        if (mIsForMail) {
+          nsAutoString cite;
+          if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mTypeAtom, cite))) {
+            *_retval = cite.EqualsIgnoreCase("cite");
+          }
+        }
+      } else if (tag == mScriptAtom ||
+                 tag == mTextAreaAtom ||
+                 tag == mSelectAreaAtom ||
+                 tag == mMapAtom) {
+        *_retval = PR_TRUE;
+      }
+    }
+  }
+
+  return NS_OK;
+}

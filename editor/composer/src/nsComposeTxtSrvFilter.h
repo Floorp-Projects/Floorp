@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,30 +35,57 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#include "nsISupports.idl"
 
-interface nsIEditor;
-interface nsITextServicesFilter;
+#ifndef nsComposeTxtSrvFilter_h__
+#define nsComposeTxtSrvFilter_h__
 
-[scriptable, uuid(87ce8b81-1cf2-11d3-9ce4-c60a16061e7c)]
-interface nsIEditorSpellCheck : nsISupports
+#include "nsITextServicesFilter.h"
+#include "nsIAtom.h"
+
+class nsIContent;
+
+/**
+ * This class implements a filter interface, that enables
+ * those usnig it to ski;p over certain nodes when traversing content
+ *
+ * This filter is used to skip over various form control nodes and
+ * mail's cite nodes
+ */
+class nsComposeTxtSrvFilter : public nsITextServicesFilter
 {
+public:
+  nsComposeTxtSrvFilter();
+  virtual ~nsComposeTxtSrvFilter() {};
 
-  void          InitSpellChecker(in nsIEditor editor);
-  wstring       GetNextMisspelledWord();
-  wstring       GetSuggestedWord();
-  boolean       CheckCurrentWord(in wstring suggestedWord);
-  void          ReplaceWord(in wstring misspelledWord, in wstring replaceWord, in boolean allOccurrences);
-  void          IgnoreWordAllOccurrences(in wstring word);
-  void          GetPersonalDictionary();
-  wstring       GetPersonalDictionaryWord();
-  void          AddWordToDictionary(in wstring word);
-  void          RemoveWordFromDictionary(in wstring word);
-  void          GetDictionaryList([array, size_is(count)] out wstring dictionaryList, out PRUint32 count);
-  wstring       GetCurrentDictionary();
-  void          SetCurrentDictionary(in wstring dictionary);
-  void          UninitSpellChecker();
-  void          setFilter(in nsITextServicesFilter filter);
+  // nsISupports interface...
+  NS_DECL_ISUPPORTS
+
+  // nsITextServicesFilter 
+  NS_DECL_NSITEXTSERVICESFILTER
+
+  // Helper - Intializer
+  void Init(PRBool aIsForMail) { mIsForMail = aIsForMail; }
+
+protected:
+  PRBool            mIsForMail;
+  nsCOMPtr<nsIAtom> mBlockQuoteAtom;
+  nsCOMPtr<nsIAtom> mTypeAtom;
+  nsCOMPtr<nsIAtom> mScriptAtom;
+  nsCOMPtr<nsIAtom> mTextAreaAtom;
+  nsCOMPtr<nsIAtom> mSelectAreaAtom;
+  nsCOMPtr<nsIAtom> mMapAtom;
 
 };
+
+#define NS_COMPOSERTXTSRVFILTER_CID \
+{/* {171E72DB-0F8A-412a-8461-E4C927A3A2AC}*/ \
+0x171e72db, 0xf8a, 0x412a, \
+{ 0x84, 0x61, 0xe4, 0xc9, 0x27, 0xa3, 0xa2, 0xac} } 
+
+// Generic for the editor
+#define COMPOSER_TXTSRVFILTER_CONTRACTID     "@mozilla.org/editor/txtsrvfilter;1"
+
+// This is the same but includes "cite" typed blocked quotes
+#define COMPOSER_TXTSRVFILTERMAIL_CONTRACTID "@mozilla.org/editor/txtsrvfiltermail;1"
+
+#endif

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Rod Spears <rods@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,30 +36,20 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #include "nsISupports.idl"
 
-interface nsIEditor;
-interface nsITextServicesFilter;
+interface nsIDOMNode;
 
-[scriptable, uuid(87ce8b81-1cf2-11d3-9ce4-c60a16061e7c)]
-interface nsIEditorSpellCheck : nsISupports
+[scriptable, uuid(5BEC321F-59AC-413a-A4AD-8A8D7C50A0D0)]
+interface nsITextServicesFilter : nsISupports
 {
 
-  void          InitSpellChecker(in nsIEditor editor);
-  wstring       GetNextMisspelledWord();
-  wstring       GetSuggestedWord();
-  boolean       CheckCurrentWord(in wstring suggestedWord);
-  void          ReplaceWord(in wstring misspelledWord, in wstring replaceWord, in boolean allOccurrences);
-  void          IgnoreWordAllOccurrences(in wstring word);
-  void          GetPersonalDictionary();
-  wstring       GetPersonalDictionaryWord();
-  void          AddWordToDictionary(in wstring word);
-  void          RemoveWordFromDictionary(in wstring word);
-  void          GetDictionaryList([array, size_is(count)] out wstring dictionaryList, out PRUint32 count);
-  wstring       GetCurrentDictionary();
-  void          SetCurrentDictionary(in wstring dictionary);
-  void          UninitSpellChecker();
-  void          setFilter(in nsITextServicesFilter filter);
+  /**
+   * Indicates whether the content node should be skipped by the iterator
+   *  @param aNode - node to skip
+   */
+  boolean skip(in nsIDOMNode aNode);
 
 };
+

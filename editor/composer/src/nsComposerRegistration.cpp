@@ -44,6 +44,7 @@
 #include "nsComposerController.h"   // for the CID
 #include "nsEditorSpellCheck.h"     // for the CID
 #include "nsEditorService.h"
+#include "nsComposeTxtSrvFilter.h"
 #include "nsIControllerContext.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -56,39 +57,82 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditingSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 
+// There are no macros that enable us to have 2 constructors 
+// for the same object
+//
+// Here we are creating the same object with two different contract IDs
+// and then initializing it different.
+// Basically, we need to tell the filter whether it is doing mail or not
+static nsresult
+nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                 void **aResult, PRBool aIsForMail)
+{
+    *aResult = NULL;
+    if (NULL != aOuter) 
+    {
+        return NS_ERROR_NO_AGGREGATION;
+    }
+    nsComposeTxtSrvFilter * inst;
+    NS_NEWXPCOM(inst, nsComposeTxtSrvFilter);
+    if (NULL == inst) 
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(inst);
+	  inst->Init(aIsForMail);
+    nsresult rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+    return rv;
+}
+
+static NS_IMETHODIMP
+nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter, 
+                                            REFNSIID aIID,
+                                            void **aResult)
+{
+    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_TRUE);
+}
+
+static NS_IMETHODIMP
+nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter, 
+                                        REFNSIID aIID,
+                                        void **aResult)
+{
+    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_FALSE);
+}
 
 NS_IMETHODIMP nsEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
                                               void **aResult)
 {
-  static PRBool sDocStateCommandsRegistered = PR_FALSE;
+    static PRBool sDocStateCommandsRegistered = PR_FALSE;
 
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> context =
-      do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!context)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIControllerCommandManager> composerCommandManager(
-      do_GetService(NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
-
-  if (NS_FAILED(rv))
-    return rv;
-  if (!composerCommandManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-  if (!sDocStateCommandsRegistered)
-  {
-    rv = nsComposerController::RegisterEditorDocStateCommands(composerCommandManager);
+    nsresult rv;
+    nsCOMPtr<nsIControllerContext> context =
+        do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
     if (NS_FAILED(rv))
+        return rv;
+    if (!context)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIControllerCommandManager> composerCommandManager(
+        do_GetService(NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
+
+    if (NS_FAILED(rv))
+        return rv;
+    if (!composerCommandManager)
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (!sDocStateCommandsRegistered)
     {
-      return rv;
+        rv = nsComposerController::RegisterEditorDocStateCommands(composerCommandManager);
+        if (NS_FAILED(rv))
+        {
+            return rv;
+        }
+        sDocStateCommandsRegistered = PR_TRUE;
     }
-    sDocStateCommandsRegistered = PR_TRUE;
-  }
   
-  context->SetControllerCommandManager(composerCommandManager);
-  return context->QueryInterface(aIID, aResult);
+    context->SetControllerCommandManager(composerCommandManager);
+    return context->QueryInterface(aIID, aResult);
 }
 
 NS_IMETHODIMP nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
@@ -151,6 +195,12 @@ static const nsModuleComponentInfo components[] = {
     { "Edit Startup Handler", NS_EDITORSERVICE_CID,
       "@mozilla.org/commandlinehandler/general-startup;1?type=edit",
       nsEditorServiceConstructor, },
+    { "TxtSrv Filter", NS_COMPOSERTXTSRVFILTER_CID,
+      COMPOSER_TXTSRVFILTER_CONTRACTID,
+      nsComposeTxtSrvFilterConstructorForComposer, },
+    { "TxtSrv Filter For Mail", NS_COMPOSERTXTSRVFILTER_CID,
+      COMPOSER_TXTSRVFILTERMAIL_CONTRACTID,
+      nsComposeTxtSrvFilterConstructorForMail, },
 };
 
 ////////////////////////////////////////////////////////////////////////

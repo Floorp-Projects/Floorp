@@ -37,6 +37,7 @@ function Startup()
     window.close();
     return;
   }
+
   // Get the spellChecker shell
   gSpellChecker = Components.classes['@mozilla.org/editor/editorspellchecker;1'].createInstance(Components.interfaces.nsIEditorSpellCheck);
   if (!gSpellChecker)
@@ -48,7 +49,16 @@ function Startup()
 
   // Start the spell checker module.
   try {
-   gSpellChecker.InitSpellChecker(GetCurrentEditor());
+    // TxtSrv Filter Contract Id
+    var filterContractId;
+    gSendMailMessageMode = window.arguments[0];
+    if (gSendMailMessageMode)
+      filterContractId = "@mozilla.org/editor/txtsrvfiltermail;1";
+    else
+      filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
+
+    gSpellChecker.setFilter(Components.classes[filterContractId].createInstance(Components.interfaces.nsITextServicesFilter));
+    gSpellChecker.InitSpellChecker(GetCurrentEditor());
 
    // XXX: We need to read in a pref here so we can set the
    //      default language for the spellchecker!
@@ -88,7 +98,6 @@ function Startup()
 
   // When startup param is true, setup different UI when spell checking 
   //   just before sending mail message  
-  gSendMailMessageMode = window.arguments[0];
   if (gSendMailMessageMode)
   {
     // If no misspelled words found, simply close dialog and send message

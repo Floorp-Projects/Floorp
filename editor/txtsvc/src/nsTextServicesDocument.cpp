@@ -49,6 +49,7 @@
 #include "nsISelection.h"
 #include "nsIPlaintextEditor.h"
 #include "nsTextServicesDocument.h"
+#include "nsFilteredContentIterator.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
@@ -388,6 +389,15 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
   UNLOCK_DOC(this);
 
   return result;
+}
+
+NS_IMETHODIMP
+nsTextServicesDocument::SetFilter(nsITextServicesFilter *aFilter)
+{
+  // Hang on to the filter so we can set it into the filtered iterator.
+  mTxtSvcFilter = aFilter;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2580,12 +2590,19 @@ nsTextServicesDocument::CreateContentIterator(nsIDOMRange *aRange, nsIContentIte
 
   *aIterator = 0;
 
-  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        (void **)aIterator);
-
-  if (NS_FAILED(result))
-    return result;
+  // Create a nsFilteredContentIterator
+  // This class wraps the ContentIterator in order to give itself a chance 
+  // to filter out certain content nodes
+  nsFilteredContentIterator* filter = new nsFilteredContentIterator(mTxtSvcFilter);
+  *aIterator = NS_STATIC_CAST(nsIContentIterator *, filter);
+  if (*aIterator) {
+    NS_IF_ADDREF(*aIterator);
+    result = filter ? NS_OK : NS_ERROR_FAILURE;
+  } else {
+    delete filter;
+    result = NS_ERROR_FAILURE;
+  }
+  NS_ENSURE_SUCCESS(result, result);
 
   if (!*aIterator)
     return NS_ERROR_NULL_POINTER;
@@ -2926,6 +2943,33 @@ nsTextServicesDocument::AdjustContentIterator()
     mIteratorStatus = eIsDone;
 
   return NS_OK;
+}
+
+PRBool
+nsTextServicesDocument::DidSkip(nsIContentIterator* aFilteredIter)
+{
+  // We can assume here that the Iterator is a nsFilteredContentIterator because
+  // all the iterator are created in CreateContentIterator which create a 
+  // nsFilteredContentIterator
+  // So if the iterator bailed on one of the "filtered" content nodes then we 
+  // consider that to be a block and bail with PR_TRUE
+  if (aFilteredIter) {
+    nsFilteredContentIterator* filter = NS_STATIC_CAST(nsFilteredContentIterator *, aFilteredIter);
+    if (filter && filter->DidSkip()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+void
+nsTextServicesDocument::ClearDidSkip(nsIContentIterator* aFilteredIter)
+{
+  // Clear filter's skip flag
+  if (aFilteredIter) {
+    nsFilteredContentIterator* filter = NS_STATIC_CAST(nsFilteredContentIterator *, aFilteredIter);
+    filter->ClearDidSkip();
+  }
 }
 
 PRBool
@@ -4024,6 +4068,8 @@ nsTextServicesDocument::FirstTextNodeInCurrentBlock(nsIContentIterator *iter)
   if (!iter)
     return NS_ERROR_NULL_POINTER;
 
+  ClearDidSkip(iter);
+
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIContent> last;
 
@@ -4055,6 +4101,9 @@ nsTextServicesDocument::FirstTextNodeInCurrentBlock(nsIContentIterator *iter)
 
     if (NS_FAILED(result))
       return result;
+
+    if (DidSkip(iter))
+      break;
   }
   
   if (last)
@@ -4107,6 +4156,8 @@ nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
   if (!aIterator)
     return NS_ERROR_NULL_POINTER;
 
+  ClearDidSkip(aIterator);
+
   while (NS_ENUMERATOR_FALSE == aIterator->IsDone())
   {
   	result = aIterator->CurrentNode(getter_AddRefs(content));
@@ -4122,15 +4173,17 @@ nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
         prev = content;
       else
         break;
-
     }
-    else if (IsBlockNode(content))
+    else if (!crossedBlockBoundary && IsBlockNode(content))
       crossedBlockBoundary = PR_TRUE;
 
     result = aIterator->Next();
 
     if (NS_FAILED(result))
       return result;
+
+    if (!crossedBlockBoundary && DidSkip(aIterator))
+      crossedBlockBoundary = PR_TRUE;
   }
 
   return NS_OK;
@@ -4255,6 +4308,8 @@ nsTextServicesDocument::CreateOffsetTable(nsString *aStr)
 
   PRInt32 offset = 0;
 
+  ClearDidSkip(mIterator);
+
   while (NS_ENUMERATOR_FALSE == mIterator->IsDone())
   {
   	result = mIterator->CurrentNode(getter_AddRefs(content));
@@ -4318,6 +4373,9 @@ nsTextServicesDocument::CreateOffsetTable(nsString *aStr)
 
     if (NS_FAILED(result))
       return result;
+
+    if (DidSkip(mIterator))
+      break;
   }
 
   if (first)
