@@ -101,6 +101,7 @@ public:
   NS_IMETHOD GetServer(nsIMsgIncomingServer * *aServer);
   NS_IMETHOD GetIsServer(PRBool *aIsServer);
   NS_IMETHOD GetNoSelect(PRBool *aNoSelect);
+  NS_IMETHOD GetImapShared(PRBool *aNoSelect);
   NS_IMETHOD GetCanSubscribe(PRBool *aCanSubscribe);
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
   NS_IMETHOD GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aFilterList);

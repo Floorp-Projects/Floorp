@@ -94,6 +94,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_HasUnreadMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NewMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SubfoldersHaveUnreadMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NoSelect = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_ImapShared = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Synchronize = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SyncDisabled = nsnull;
 // commands
@@ -156,6 +157,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_NEWMESSAGES, &kNC_NewMessages);
     rdf->GetResource(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES, &kNC_SubfoldersHaveUnreadMessages);
     rdf->GetResource(NC_RDF_NOSELECT, &kNC_NoSelect);
+    rdf->GetResource(NC_RDF_IMAPSHARED, &kNC_ImapShared);
     rdf->GetResource(NC_RDF_SYNCHRONIZE, &kNC_Synchronize);
     rdf->GetResource(NC_RDF_SYNCDISABLED, &kNC_SyncDisabled);
     
@@ -222,6 +224,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_NewMessages, refcnt);
 		NS_RELEASE2(kNC_SubfoldersHaveUnreadMessages, refcnt);
     NS_RELEASE2(kNC_NoSelect, refcnt);
+    NS_RELEASE2(kNC_ImapShared, refcnt);
         NS_RELEASE2(kNC_Synchronize, refcnt);
         NS_RELEASE2(kNC_SyncDisabled, refcnt);
 
@@ -450,6 +453,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
              (kNC_CanCreateFoldersOnServer == property) ||
              (kNC_CanFileMessagesOnServer == property) ||
              (kNC_NoSelect == property) ||
+             (kNC_ImapShared == property) ||
              (kNC_Synchronize == property) ||
              (kNC_SyncDisabled == property))
     {
@@ -550,6 +554,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
                aArc == kNC_BiffState ||
                aArc == kNC_Child ||
                aArc == kNC_NoSelect ||
+               aArc == kNC_ImapShared ||
                aArc == kNC_Synchronize ||
                aArc == kNC_SyncDisabled);
 	}
@@ -614,6 +619,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_BiffState);
   (*arcs)->AppendElement(kNC_Child);
   (*arcs)->AppendElement(kNC_NoSelect);
+  (*arcs)->AppendElement(kNC_ImapShared);
   (*arcs)->AppendElement(kNC_Synchronize);
   (*arcs)->AppendElement(kNC_SyncDisabled);
   
@@ -1035,6 +1041,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createFolderChildNode(folder, target);
     else if ((kNC_NoSelect == property))
     rv = createFolderNoSelectNode(folder, target);
+    else if ((kNC_ImapShared == property))
+    rv = createFolderImapSharedNode(folder, target);
     else if ((kNC_Synchronize == property))
         rv = createFolderSynchronizeNode(folder, target);
     else if ((kNC_SyncDisabled == property))
@@ -1247,6 +1255,26 @@ nsMsgFolderDataSource::createFolderNoSelectNode(nsIMsgFolder* folder,
   NS_IF_ADDREF(*target);
   return NS_OK;
 }
+
+nsresult
+nsMsgFolderDataSource::createFolderImapSharedNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool imapShared; 
+  rv = folder->GetImapShared(&imapShared);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (imapShared)
+	*target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
 
 nsresult
 nsMsgFolderDataSource::createFolderSynchronizeNode(nsIMsgFolder* folder,
@@ -2056,6 +2084,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_Charset == property) ||
            (kNC_BiffState == property) ||
            (kNC_HasUnreadMessages == property) ||
+           (kNC_NoSelect == property)  ||
            (kNC_NoSelect == property)  ||
            (kNC_Synchronize == property) ||
            (kNC_SyncDisabled == property))

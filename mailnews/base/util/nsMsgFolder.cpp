@@ -754,6 +754,13 @@ nsMsgFolder::GetNoSelect(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::GetImapShared(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  return GetFlag(MSG_FOLDER_FLAG_PERSONAL_SHARED, aResult);
+}
+
+NS_IMETHODIMP
 nsMsgFolder::GetCanSubscribe(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);

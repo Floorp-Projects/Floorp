@@ -98,6 +98,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_HASUNREADMESSAGES	NC_NAMESPACE_URI "HasUnreadMessages"
 #define NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES NC_NAMESPACE_URI "SubfoldersHaveUnreadMessages"
 #define NC_RDF_NOSELECT       NC_NAMESPACE_URI "NoSelect"
+#define NC_RDF_IMAPSHARED     NC_NAMESPACE_URI "ImapShared"
 #define NC_RDF_NEWMESSAGES			NC_NAMESPACE_URI "NewMessages"
 #define NC_RDF_SYNCHRONIZE          NC_NAMESPACE_URI "Synchronize"
 #define NC_RDF_SYNCDISABLED         NC_NAMESPACE_URI "SyncDisabled"

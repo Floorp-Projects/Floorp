@@ -123,7 +123,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   readonly attribute boolean isServer;
   readonly attribute boolean canSubscribe;
   readonly attribute boolean canFileMessages;
-  readonly attribute boolean noSelect;
+  readonly attribute boolean noSelect;  // this is an imap no select folder
+  readonly attribute boolean imapShared; // this is an imap shared folder
 
   /**
    * does this folder allow subfolders?
