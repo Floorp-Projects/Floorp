@@ -51,6 +51,7 @@ public:
 protected:
   nsresult useDefaultPrefFile();
   nsresult useUserPrefFile();
+  nsresult readConfigFile();
 
 private:
   nsCOMPtr<nsIPrefBranch> mRootBranch;

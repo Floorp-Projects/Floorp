@@ -112,22 +112,25 @@ NS_INTERFACE_MAP_END
 
 nsresult nsPrefService::Init()
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
-  if (PREF_Init(nsnull) == PR_TRUE) {
-    nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (observerService) {
-      // Our refcnt must be > 0 when we call this, or we'll get deleted!
-      ++mRefCnt;
-      rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-      if (NS_SUCCEEDED(rv)) {
-        rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
-      }
-      --mRefCnt;
+  if (!PREF_Init(nsnull))
+    return NS_ERROR_FAILURE;
+
+  rv = readConfigFile();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (observerService) {
+    // Our refcnt must be > 0 when we call this, or we'll get deleted!
+    ++mRefCnt;
+    rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    if (NS_SUCCEEDED(rv)) {
+      rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
     }
-  } else {
-    rv = NS_ERROR_FAILURE;
+    --mRefCnt;
   }
   return(rv);
 }
@@ -151,87 +154,6 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTo
   }
   return rv;
 }
-
-NS_IMETHODIMP nsPrefService::ReadConfigFile()
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIFile> lockPrefFile;
-  nsXPIDLCString lockFileName;
-  nsXPIDLCString lockVendor;
-  PRUint32 fileNameLen = 0;
-    
-  // This preference is set in the all.js or all-ns.js (depending whether 
-  // running mozilla or netscp6) default - preference is commented out, so 
-  // it doesn't exist
-  rv = mRootBranch->GetCharPref("general.config.filename", 
-                                getter_Copies(lockFileName));
-  if (NS_FAILED(rv))
-    return NS_OK;
-  // If the lockFileName is NULL return ok, because no lockFile will be used
-  
-  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                              getter_AddRefs(lockPrefFile));
-  if (NS_SUCCEEDED(rv)) {
-      
-#ifdef XP_MAC
-    lockPrefFile->Append("Essential Files");
-#endif
-    
-    if (NS_SUCCEEDED(lockPrefFile->Append(lockFileName))) {
-      if (NS_FAILED(openPrefFile(lockPrefFile, PR_FALSE, PR_TRUE, 
-                                 PR_FALSE, PR_TRUE)))
-        return NS_ERROR_FAILURE;
-      // failure here means problem within the config file script
-    }
-  }
-  
-  //  Once the config file is read, we should check that the vendor name 
-  // is consistent By checking for the vendor name after reading the config 
-  // file we allow for the preference to be set (and locked) by the creator 
-  // of the cfg file meaning the file can not be renamed (successfully).
-  
-  rv = mRootBranch->GetCharPref("general.config.filename", 
-                                getter_Copies(lockFileName));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  // There is NO REASON we should ever get here. This is POST reading 
-  // of the config file.
-  
-  rv = mRootBranch->GetCharPref("general.config.vendor", 
-                                getter_Copies(lockVendor));
-  // If vendor is not NULL, do this check
-  if (NS_SUCCEEDED(rv)) {
-
-    fileNameLen = PL_strlen(lockFileName);
-    
-    //  lockVendor and lockFileName should be the same with the addtion of 
-    // .cfg to the filename by checking this post reading of the cfg file 
-    // this value can be set within the cfg file adding a level of security.
-    
-    if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
-      return NS_ERROR_FAILURE;
-  }
-  
-  // get the value of the autoconfig url
-  nsXPIDLCString urlName;
-  rv = mRootBranch->GetCharPref("autoadmin.global_config_url",
-                                getter_Copies(urlName));
-  if (NS_SUCCEEDED(rv) && *urlName != '\0' ) {  
-    
-    // Instantiating nsAutoConfig object if the pref is present
-    nsCOMPtr<nsIAutoConfig> autocfg;
-    autocfg = do_CreateInstance(NS_AUTOCONFIG_CONTRACTID,&rv);
-    if (NS_FAILED(rv))
-      return NS_ERROR_OUT_OF_MEMORY;
-    rv = autocfg->SetConfigURL(urlName);
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-  }
-  
-  return NS_OK;
-} // nsPref::ReadConfigFile
-
-
 
 
 NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
@@ -264,7 +186,11 @@ NS_IMETHODIMP nsPrefService::ResetPrefs()
   nsresult rv;
 
   PREF_CleanupPrefs();
-  rv = PREF_Init(nsnull);
+
+  if (!PREF_Init(nsnull))
+    return NS_ERROR_FAILURE;
+
+  rv = readConfigFile();
   return rv;
 }
 
@@ -337,6 +263,100 @@ NS_IMETHODIMP nsPrefService::RemoveObserver(const char *aDomain, nsIObserver *aO
   if (NS_SUCCEEDED(rv))
     rv = prefBranch->RemoveObserver(aDomain, aObserver);
   return rv;
+}
+
+
+nsresult nsPrefService::readConfigFile()
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> lockPrefFile;
+  nsXPIDLCString lockFileName;
+  nsXPIDLCString lockVendor;
+    
+  /*
+   * This preference is set in the all.js or all-ns.js (depending whether 
+   * running mozilla or netscp6) default - preference is commented out, so 
+   * it doesn't exist.
+   */
+  rv = mRootBranch->GetCharPref("general.config.filename", 
+                                getter_Copies(lockFileName));
+  if (NS_FAILED(rv)) {
+    /*
+     * if we got a "PREF_ERROR" back, the pref doesn't exist so, we ignore it
+     * - PREF_ERROR is converted to NS_ERROR_UNEXPECTED in _convertRes()
+     */
+   if (rv == NS_ERROR_UNEXPECTED)
+      rv = NS_OK;
+    return rv;
+  }
+
+  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                              getter_AddRefs(lockPrefFile));
+  if (NS_SUCCEEDED(rv)) {
+
+#ifdef XP_MAC
+    lockPrefFile->Append("Essential Files");
+#endif
+
+    rv = lockPrefFile->Append(lockFileName);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+
+    if (NS_FAILED(openPrefFile(lockPrefFile, PR_FALSE, PR_TRUE, 
+                               PR_FALSE, PR_TRUE)))
+      return NS_ERROR_FAILURE;
+      // failure here means problem within the config file script
+  }
+
+  /*
+   * Once the config file is read, we should check that the vendor name 
+   * is consistent By checking for the vendor name after reading the config 
+   * file we allow for the preference to be set (and locked) by the creator 
+   * of the cfg file meaning the file can not be renamed (successfully).
+   */
+  rv = mRootBranch->GetCharPref("general.config.filename", 
+                                getter_Copies(lockFileName));
+  if (NS_FAILED(rv))         // There is NO REASON this should fail.
+    return NS_ERROR_FAILURE;
+
+  rv = mRootBranch->GetCharPref("general.config.vendor", 
+                                getter_Copies(lockVendor));
+
+  /*
+   * If the "vendor" preference exists, do this simple check to add a
+   * level of security, albeit a small one, to the validation of the
+   * contents of the .cfg file.
+   */
+  if (NS_SUCCEEDED(rv)) {
+    /*
+     * lockVendor and lockFileName should be the same with the addition of 
+     * .cfg to the filename.  By checking this post reading of the cfg file 
+     * this value can, and should, be set within the cfg file adding a level
+     * of security.
+     */
+
+    PRUint32 fileNameLen = PL_strlen(lockFileName);
+
+    if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
+      return NS_ERROR_FAILURE;
+  }
+  
+  // get the value of the autoconfig url
+  nsXPIDLCString urlName;
+  rv = mRootBranch->GetCharPref("autoadmin.global_config_url",
+                                getter_Copies(urlName));
+  if (NS_SUCCEEDED(rv) && *urlName != '\0' ) {  
+    
+    // Instantiating nsAutoConfig object if the pref is present
+    nsCOMPtr<nsIAutoConfig> autocfg = do_CreateInstance(NS_AUTOCONFIG_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = autocfg->SetConfigURL(urlName);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+  }
+  
+  return NS_OK;
 }
 
 
