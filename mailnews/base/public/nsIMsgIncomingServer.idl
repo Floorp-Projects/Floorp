@@ -181,6 +181,8 @@ interface nsIMsgIncomingServer : nsISupports {
   
   wstring toString();
 
+  void displayOfflineMsg(in nsIMsgWindow aWindow);
+
   /* used for comparing nsIMsgIncomingServers */
   boolean equals(in nsIMsgIncomingServer server);
 

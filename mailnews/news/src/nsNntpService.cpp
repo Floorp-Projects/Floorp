@@ -221,8 +221,20 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
         folder->ShouldStoreMsgOffline(key, &shouldStoreMsgOffline);
         folder->HasMsgOffline(key, &hasMsgOffline);
         msgUrl->SetMsgIsInLocalCache(hasMsgOffline);
+        if (WeAreOffline())
+        {
+          if (!hasMsgOffline)
+          {
+            nsCOMPtr<nsIMsgIncomingServer> server;
+
+            rv = folder->GetServer(getter_AddRefs(server));
+            if (server)
+              return server->DisplayOfflineMsg(aMsgWindow);
+          }
+        }
       }
       newsFolder->SetSaveArticleOffline(shouldStoreMsgOffline);
+
     }
 
     // now is where our behavior differs....if the consumer is the docshell then we want to 

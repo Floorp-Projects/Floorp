@@ -48,6 +48,7 @@
 #include "nsIPrompt.h"
 #include "nsIWalletService.h"
 #include "nsINetSupportDialogService.h"
+#include "nsIStringBundle.h"
 
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
@@ -1094,6 +1095,33 @@ NS_IMETHODIMP nsMsgIncomingServer::SetRetentionSettings(nsIMsgRetentionSettings 
   return NS_OK;
 }
 
+#define BASE_MSGS_URL       "chrome://messenger/locale/messenger.properties"
+
+NS_IMETHODIMP nsMsgIncomingServer::DisplayOfflineMsg(nsIMsgWindow *aMsgWindow)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(BASE_MSGS_URL, nsnull, 
+                              getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (bundle)
+  {
+    nsXPIDLString errorMsgTitle;
+    nsXPIDLString errorMsgBody;
+
+    bundle->GetStringFromName(NS_LITERAL_STRING("nocachedbodybody"), getter_Copies(errorMsgBody));
+    bundle->GetStringFromName(NS_LITERAL_STRING("nocachedbodytitle"),  getter_Copies(errorMsgTitle));
+    if (aMsgWindow)
+      return aMsgWindow->DisplayHTMLInMessagePane(errorMsgTitle, errorMsgBody);
+    else
+      return NS_ERROR_FAILURE;
+
+  }
+  return rv;
+}
 
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
