@@ -53,6 +53,11 @@ public:
 
 	virtual void hide();
 
+	virtual Pixel getFGPixel();
+	virtual Pixel getBGPixel();
+	virtual Pixel getTopShadowPixel();
+	virtual Pixel getBottomShadowPixel();
+
 protected:
 	Widget m_wParent;        // parent widget
 	Widget m_chrome;         // dialog chrome - selection box

@@ -27,6 +27,7 @@
 #include "xfe2_extern.h"
 
 #include <Xm/SelectioB.h>
+#include <Xfe/Xfe.h>
 
 // ==================== Public Member Functions ====================
 
@@ -35,6 +36,7 @@
 // Inputs:
 // Side effects: Creates a prompt dialog
 
+//////////////////////////////////////////////////////////////////////////
 XFE_Dialog::XFE_Dialog(Widget   parent,      // dialog parent
 					   char    *name,        // dialog name
 					   Boolean  ok,          // show OK button?
@@ -77,7 +79,7 @@ XFE_Dialog::XFE_Dialog(Widget   parent,      // dialog parent
 	setBaseWidget(XtParent(m_chrome));
 	installDestroyHandler();
 }
-
+//////////////////////////////////////////////////////////////////////////
 // Member:       ~XFE_Dialog
 // Description:  Destructor
 // Inputs:
@@ -86,7 +88,7 @@ XFE_Dialog::XFE_Dialog(Widget   parent,      // dialog parent
 XFE_Dialog::~XFE_Dialog()
 {
 }
-
+//////////////////////////////////////////////////////////////////////////
 // Member:       show
 // Description:  
 // Inputs:
@@ -98,7 +100,7 @@ void XFE_Dialog::show()
 	fe_NukeBackingStore(m_chrome);
 	XtManageChild(m_chrome);
 }
-
+//////////////////////////////////////////////////////////////////////////
 // Member:       hide
 // Description:  
 // Inputs:
@@ -109,6 +111,39 @@ void XFE_Dialog::hide()
 	XP_ASSERT(m_chrome);
 	XtUnmanageChild(m_chrome);
 }
+//////////////////////////////////////////////////////////////////////////
+Pixel
+XFE_Dialog::getFGPixel()
+{
+	XP_ASSERT( XfeIsAlive(m_chrome) );
+
+	return XfeForeground(m_chrome);
+}
+//////////////////////////////////////////////////////////////////////////
+Pixel
+XFE_Dialog::getBGPixel()
+{
+	XP_ASSERT( XfeIsAlive(m_chrome) );
+
+	return XfeBackground(m_chrome);
+}
+//////////////////////////////////////////////////////////////////////////
+Pixel
+XFE_Dialog::getTopShadowPixel()
+{
+	XP_ASSERT( XfeIsAlive(m_chrome) );
+
+	return XfeTopShadowColor(m_chrome);
+}
+//////////////////////////////////////////////////////////////////////////
+Pixel
+XFE_Dialog::getBottomShadowPixel()
+{
+	XP_ASSERT( XfeIsAlive(m_chrome) );
+
+	return XfeBottomShadowColor(m_chrome);
+}
+//////////////////////////////////////////////////////////////////////////
 
 // ==================== Protected Member Functions ====================
 
@@ -192,4 +227,4 @@ XFE_Dialog::createDialogChromeWidget(Widget   parent,
 
 	return chrome;
 }
-
+//////////////////////////////////////////////////////////////////////////
