@@ -35,10 +35,10 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#ifdef NECKO
+
 #include "nsNeckoUtil.h"
 #include "nsIBufferInputStream.h"
-#endif // NECKO
+
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -54,11 +54,15 @@
 #include <ctype.h> // for toupper()
 #include <stdio.h>
 
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRelatedLinksHandlerCID,   NS_RELATEDLINKSHANDLER_CID);
-static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kGenericFactoryCID,        NS_GENERICFACTORY_CID);
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
+
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRelatedLinksHandlerCID,     NS_RELATEDLINKSHANDLER_CID);
+static NS_DEFINE_CID(kComponentManagerCID,        NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kGenericFactoryCID,          NS_GENERICFACTORY_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 
@@ -73,20 +77,21 @@ static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 class RelatedLinksStreamListener : public nsIStreamListener
 {
 private:
-	 nsCOMPtr<nsIRDFDataSource> mDataSource;
-	 nsVoidArray		mParentArray;
+	nsCOMPtr<nsIRDFDataSource> 	mDataSource;
+	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
+	nsVoidArray			mParentArray;
 
-    // pseudo-constants
-	 static PRInt32		gRefCnt;
-	 static nsIRDFService   *gRDFService;
-	 static nsIRDFResource	*kNC_Child;
-	 static nsIRDFResource	*kNC_Name;
-	 static nsIRDFResource	*kNC_loading;
-	 static nsIRDFResource	*kNC_RelatedLinksRoot;
-	 static nsIRDFResource	*kNC_BookmarkSeparator;
-	 static nsIRDFResource	*kRDF_type;
+	// pseudo-constants
+	static PRInt32			gRefCnt;
+	static nsIRDFService		*gRDFService;
+	static nsIRDFResource		*kNC_Child;
+	static nsIRDFResource		*kNC_Name;
+	static nsIRDFResource		*kNC_loading;
+	static nsIRDFResource		*kNC_RelatedLinksRoot;
+	static nsIRDFResource		*kNC_BookmarkSeparator;
+	static nsIRDFResource		*kRDF_type;
 
-	 char			*mLine;
+	nsAutoString			mBuffer;
 
 public:
 
@@ -98,27 +103,14 @@ public:
 	 NS_METHOD	Init();
 	 NS_METHOD	CreateAnonymousResource(const nsString& aPrefixURI, nsCOMPtr<nsIRDFResource>* aResult);
 
-#ifdef NECKO
-    // nsIStreamObserver
-    NS_DECL_NSISTREAMOBSERVER
-	
+	// nsIStreamObserver
+	NS_DECL_NSISTREAMOBSERVER
+
 	// nsIStreamListener
-    NS_DECL_NSISTREAMLISTENER
-#else
-	// stream observer
-
-	NS_IMETHOD	OnStartRequest(nsIURI *aURL, const char *aContentType);
-	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
-	 // stream listener
-	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-								PRUint32 aLength);
-#endif
-
+	NS_DECL_NSISTREAMLISTENER
 };
+
+
 
 PRInt32			RelatedLinksStreamListener::gRefCnt;
 nsIRDFService		*RelatedLinksStreamListener::gRDFService;
@@ -131,7 +123,10 @@ nsIRDFResource		*RelatedLinksStreamListener::kNC_BookmarkSeparator;
 nsIRDFResource		*RelatedLinksStreamListener::kRDF_type;
 
 
+
 ////////////////////////////////////////////////////////////////////////
+
+
 
 nsresult
 NS_NewRelatedLinksStreamListener(nsIRDFDataSource* aDataSource,
@@ -157,8 +152,7 @@ NS_NewRelatedLinksStreamListener(nsIRDFDataSource* aDataSource,
 
 
 RelatedLinksStreamListener::RelatedLinksStreamListener(nsIRDFDataSource *aDataSource)
-	 : mDataSource(dont_QueryInterface(aDataSource)),
-	   mLine(nsnull)
+	 : mDataSource(dont_QueryInterface(aDataSource))
 {
 	 NS_INIT_REFCNT();
 }
@@ -167,11 +161,6 @@ RelatedLinksStreamListener::RelatedLinksStreamListener(nsIRDFDataSource *aDataSo
 
 RelatedLinksStreamListener::~RelatedLinksStreamListener()
 {
-	 if (mLine) {
-		 delete [] mLine;
-		 mLine = nsnull;
-	 }
-
 	 if (--gRefCnt == 0)
 	 {
 		 NS_RELEASE(kNC_Child);
@@ -190,25 +179,38 @@ RelatedLinksStreamListener::~RelatedLinksStreamListener()
 NS_METHOD
 RelatedLinksStreamListener::Init()
 {
-	 if (gRefCnt++ == 0) {
-		 nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-							    nsIRDFService::GetIID(),
-							    (nsISupports**) &gRDFService);
+	if (gRefCnt++ == 0)
+	{
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+				    nsIRDFService::GetIID(),
+				    (nsISupports**) &gRDFService);
 
-		 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-		 if (NS_FAILED(rv))
-			 return rv;
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+		if (NS_FAILED(rv))
+			return(rv);
 
-		 gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
-		 gRDFService->GetResource(NC_NAMESPACE_URI "Name",  &kNC_Name);
-		 gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
-		 gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
-		 gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
-		 gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
+		nsICharsetConverterManager	*charsetConv = nsnull;
+
+		rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+				nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
+				(nsISupports**)&charsetConv);
+		if (NS_SUCCEEDED(rv) && (charsetConv))
+		{
+			rv = charsetConv->GetUnicodeDecoder(&nsString("UTF-8"),
+				getter_AddRefs(mUnicodeDecoder));
+			NS_RELEASE(charsetConv);
+		}
+
+		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Name",  &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+		gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
+		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
 	 }
 
 	 mParentArray.AppendElement(kNC_RelatedLinksRoot);
-	 return NS_OK;
+	 return(NS_OK);
 }
 
 
@@ -238,11 +240,7 @@ NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, nsIStreamListener::GetIID());
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 RelatedLinksStreamListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-RelatedLinksStreamListener::OnStartRequest(nsIURI *aURL, const char *aContentType)
-#endif
 {
 	 nsAutoString		trueStr("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -256,30 +254,10 @@ RelatedLinksStreamListener::OnStartRequest(nsIURI *aURL, const char *aContentTyp
 }
 
 
-#ifndef NECKO
-NS_IMETHODIMP
-RelatedLinksStreamListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
-{
-	 return(NS_OK);
-}
-
-
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-	 return(NS_OK);
-}
-#endif
-
-
-NS_IMETHODIMP
-#ifdef NECKO
 RelatedLinksStreamListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-										  nsresult status, const PRUnichar *errorMsg) 
-#else
-RelatedLinksStreamListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
-#endif
+					nsresult status, const PRUnichar *errorMsg) 
 {
 	 nsAutoString		trueStr("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -297,241 +275,237 @@ RelatedLinksStreamListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const 
 // stream listener methods
 
 
-#ifndef NECKO
-NS_IMETHODIMP
-RelatedLinksStreamListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-	return(NS_OK);
-}
-#endif
-
 
 NS_IMETHODIMP
-#ifdef NECKO
 RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
-											nsIInputStream *aIStream,
-											PRUint32 sourceOffset,
-											PRUint32 aLength)
-#else
-RelatedLinksStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
-#endif
+		nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	nsresult	rv = NS_OK;
 
-	if (aLength > 0)
+	if (aLength < 1)	return(rv);
+
+	PRUint32	count;
+	char		*buffer = new char[ aLength ];
+	if (!buffer)	return(NS_ERROR_OUT_OF_MEMORY);
+
+	if (NS_FAILED(rv = aIStream->Read(buffer, aLength, &count)) || count == 0)
 	{
-		nsAutoString	line;
-		if (mLine)
+#ifdef	DEBUG
+		printf("Related Links datasource read failure.\n");
+#endif
+		delete []buffer;
+		return(rv);
+	}
+	if (count != aLength)
+	{
+#ifdef	DEBUG
+		printf("Related Links datasource read # of bytes failure.\n");
+#endif
+		delete []buffer;
+		return(NS_ERROR_UNEXPECTED);
+	}
+
+	if (mUnicodeDecoder)
+	{
+		char			*aBuffer = buffer;
+		PRInt32			unicharBufLen = 0;
+		mUnicodeDecoder->GetMaxLength(aBuffer, aLength, &unicharBufLen);
+		PRUnichar		*unichars = new PRUnichar [ unicharBufLen+1 ];
+		do
 		{
-			line += mLine;
-			delete	[]mLine;
-			mLine = nsnull;
+			PRInt32		srcLength = aLength;
+			PRInt32		unicharLength = unicharBufLen;
+			rv = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
+			unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+
+			// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
+
+			// Hack Start
+			for(PRInt32 i=0;i<unicharLength;i++)
+				if(0x0000 == unichars[i])	unichars[i] = 0x0020;
+			// Hack End
+
+			mBuffer.Append(unichars, unicharLength);
+			// if we failed, we consume one byte by replace it with U+FFFD
+			// and try conversion again.
+			if(NS_FAILED(rv))
+			{
+				mUnicodeDecoder->Reset();
+				mBuffer.Append( (PRUnichar)0xFFFD);
+				if(((PRUint32) (srcLength + 1)) > aLength)
+					srcLength = aLength;
+				else 
+					srcLength++;
+				aBuffer += srcLength;
+				aLength -= srcLength;
+			}
+		} while (NS_FAILED(rv) && (aLength > 0));
+		delete [] unichars;
+		unichars = nsnull;
+	}
+	else
+	{
+		mBuffer.Append(buffer, aLength);
+	}
+	delete [] buffer;
+	buffer = nsnull;
+
+	// parse out any available lines
+	while (PR_TRUE)
+	{
+		PRInt32 eol = mBuffer.FindCharInSet("\r\n");
+		if (eol < 0)
+		{
+			break;
 		}
 
-		char	buffer[257];
-		while (aLength > 0)
+		nsAutoString	oneLiner("");
+		if (eol >= 0)
 		{
-			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
-			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)) || count == 0)
-			{
-				printf("Related Links datasource read failure.\n");
-				break;
-			}
-			if (numBytes != count)
-			{
-				printf("Related Links datasource read # of bytes failure.\n");
-				break;
-			}
-			buffer[count] = '\0';
-			line += buffer;
-			aLength -= count;
+			mBuffer.Left(oneLiner, eol);
+			mBuffer.Cut(0, eol+1);
 		}
+		if (oneLiner.Length() < 1)	break;
 
-		while (PR_TRUE)
+
+//		printf("RL: '%s'\n", oneLiner.ToNewCString());
+
+
+		// yes, very primitive RDF parsing follows
+
+		nsAutoString	child(""), title("");
+
+		// get href
+		PRInt32 theStart = oneLiner.Find("<child href=\"");
+		if (theStart == 0)
 		{
-			PRInt32 eol = line.FindCharInSet("\r\n");
-			if (eol < 0)
+			// get child href
+			theStart += PL_strlen("<child href=\"");
+			oneLiner.Cut(0, theStart);
+			PRInt32 theEnd = oneLiner.Find("\"");
+			if (theEnd > 0)
 			{
-				if (mLine)
+				oneLiner.Mid(child, 0, theEnd);
+			}
+			// get child name
+			theStart = oneLiner.Find("name=\"");
+			if (theStart >= 0)
+			{
+				theStart += PL_strlen("name=\"");
+				oneLiner.Cut(0, theStart);
+				theEnd = oneLiner.Find("\"");
+				if (theEnd > 0)
 				{
-					delete []mLine;
-					mLine = nsnull;
+					oneLiner.Mid(title, 0, theEnd);
 				}
-				mLine = line.ToNewCString();
-				break;
 			}
-
-			nsAutoString	oneLiner("");
-			if (eol >= 0)
+		}
+		// check for separator
+		else if ((theStart = oneLiner.Find("<child instanceOf=\"Separator1\"/>")) == 0)
+		{
+			nsCOMPtr<nsIRDFResource>	newSeparator;
+			nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
+			if (NS_SUCCEEDED(rv = CreateAnonymousResource(rlRoot, &newSeparator)))
 			{
-				line.Left(oneLiner, eol);
-				line.Cut(0, eol+1);
+				mDataSource->Assert(newSeparator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE);
+
+				PRInt32		numParents = mParentArray.Count();
+				if (numParents > 0)
+				{
+					nsIRDFResource	*parent = (nsIRDFResource *)(mParentArray.ElementAt(numParents - 1));
+					mDataSource->Assert(parent, kNC_Child, newSeparator, PR_TRUE);
+				}
 			}
-			if (mLine)
-			{
-				delete []mLine;
-				mLine = nsnull;
-			}
-			mLine = line.ToNewCString();
-			if (oneLiner.Length() < 1)	return(rv);
-
-
-//			printf("RL: '%s'\n", oneLiner.ToNewCString());
-
-
-			// yes, very primitive RDF parsing follows
-
-			nsAutoString	child(""), title("");
-
-			// get href
-			PRInt32 theStart = oneLiner.Find("<child href=\"");
+		}
+		else
+		{
+			theStart = oneLiner.Find("<Topic name=\"");
 			if (theStart == 0)
 			{
-				// get child href
-				theStart += PL_strlen("<child href=\"");
+				// get topic name
+				theStart += PL_strlen("<Topic name=\"");
 				oneLiner.Cut(0, theStart);
 				PRInt32 theEnd = oneLiner.Find("\"");
 				if (theEnd > 0)
 				{
-					oneLiner.Mid(child, 0, theEnd);
+					oneLiner.Mid(title, 0, theEnd);
 				}
-				// get child name
-				theStart = oneLiner.Find("name=\"");
-				if (theStart >= 0)
-				{
-					theStart += PL_strlen("name=\"");
-					oneLiner.Cut(0, theStart);
-					theEnd = oneLiner.Find("\"");
-					if (theEnd > 0)
-					{
-						oneLiner.Mid(title, 0, theEnd);
-					}
-				}
-			}
-			// check for separator
-			else if ((theStart = oneLiner.Find("<child instanceOf=\"Separator1\"/>")) == 0)
-			{
-				nsCOMPtr<nsIRDFResource>	newSeparator;
-				nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
-				if (NS_SUCCEEDED(rv = CreateAnonymousResource(rlRoot, &newSeparator)))
-				{
-					mDataSource->Assert(newSeparator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE);
 
+				nsCOMPtr<nsIRDFResource>	newTopic;
+				nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
+				if (NS_SUCCEEDED(rv = CreateAnonymousResource(rlRoot, &newTopic)))
+				{
+					if (title.Length() > 0)
+					{
+						const PRUnichar		*titleName = title.GetUnicode();
+						if (nsnull != titleName)
+						{
+							nsCOMPtr<nsIRDFLiteral> nameLiteral;
+							if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(titleName, getter_AddRefs(nameLiteral))))
+							{
+								mDataSource->Assert(newTopic, kNC_Name, nameLiteral, PR_TRUE);
+							}
+						}
+					}
 					PRInt32		numParents = mParentArray.Count();
 					if (numParents > 0)
 					{
 						nsIRDFResource	*parent = (nsIRDFResource *)(mParentArray.ElementAt(numParents - 1));
-						mDataSource->Assert(parent, kNC_Child, newSeparator, PR_TRUE);
+						mDataSource->Assert(parent, kNC_Child, newTopic, PR_TRUE);
 					}
+					mParentArray.AppendElement(newTopic);
 				}
+
 			}
 			else
 			{
-				theStart = oneLiner.Find("<Topic name=\"");
+				theStart = oneLiner.Find("</Topic>");
 				if (theStart == 0)
 				{
-					// get topic name
-					theStart += PL_strlen("<Topic name=\"");
-					oneLiner.Cut(0, theStart);
-					PRInt32 theEnd = oneLiner.Find("\"");
-					if (theEnd > 0)
+					PRInt32		numParents = mParentArray.Count();
+					if (numParents > 0)
 					{
-						oneLiner.Mid(title, 0, theEnd);
-					}
-
-					nsCOMPtr<nsIRDFResource>	newTopic;
-					nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
-					if (NS_SUCCEEDED(rv = CreateAnonymousResource(rlRoot, &newTopic)))
-					{
-						if (title.Length() > 0)
-						{
-							char *name = title.ToNewCString();
-							if (nsnull != name)
-							{
-								nsAutoString	theName(name);
-								nsCOMPtr<nsIRDFLiteral> nameLiteral;
-								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(theName.GetUnicode(), getter_AddRefs(nameLiteral))))
-								{
-									mDataSource->Assert(newTopic, kNC_Name, nameLiteral, PR_TRUE);
-								}
-#ifdef	DEBUG
-								for (PRInt32 i=0; i<mParentArray.Count(); i++)	printf("    ");
-								printf("Topic: '%s'\n", name);
-#endif
-								delete [] name;
-							}
-						}
-						PRInt32		numParents = mParentArray.Count();
-						if (numParents > 0)
-						{
-							nsIRDFResource	*parent = (nsIRDFResource *)(mParentArray.ElementAt(numParents - 1));
-							mDataSource->Assert(parent, kNC_Child, newTopic, PR_TRUE);
-						}
-						mParentArray.AppendElement(newTopic);
-					}
-
-				}
-				else
-				{
-					theStart = oneLiner.Find("</Topic>");
-					if (theStart == 0)
-					{
-						PRInt32		numParents = mParentArray.Count();
-						if (numParents > 0)
-						{
-							mParentArray.RemoveElementAt(numParents - 1);
-						}
-#ifdef	DEBUG
-						for (PRInt32 i=0; i<mParentArray.Count(); i++)	printf("    ");
-						printf("Topic ends.\n");
-#endif
+						mParentArray.RemoveElementAt(numParents - 1);
 					}
 				}
 			}
+		}
 
-			if (child.Length() > 0)
+		if (child.Length() > 0)
+		{
+			const PRUnichar	*url = child.GetUnicode();
+			if (nsnull != url)
 			{
-				char	*url = child.ToNewCString();
-				if (nsnull != url)
+				nsCOMPtr<nsIRDFResource>	relatedLinksChild;
+				PRInt32		numParents = mParentArray.Count();
+				if (numParents > 1)
 				{
-					nsCOMPtr<nsIRDFResource>	relatedLinksChild;
-					PRInt32		numParents = mParentArray.Count();
-					if (numParents > 1)
+					nsAutoString	rlRoot(kURINC_RelatedLinksRoot);
+					rv = CreateAnonymousResource(rlRoot, &relatedLinksChild);
+				}
+				else
+				{
+					rv = gRDFService->GetUnicodeResource(url, getter_AddRefs(relatedLinksChild));
+				}
+				if (NS_SUCCEEDED(rv))
+				{					
+					if (title.Length() > 0)
 					{
-						nsAutoString	rlRoot(kURINC_RelatedLinksRoot);
-						rv = CreateAnonymousResource(rlRoot, &relatedLinksChild);
-					}
-					else
-					{
-						rv = gRDFService->GetResource(url, getter_AddRefs(relatedLinksChild));
-					}
-					if (NS_SUCCEEDED(rv))
-					{					
-						if (title.Length() > 0)
+						const PRUnichar	*name = title.GetUnicode();
+						if (nsnull != name)
 						{
-							char *name = title.ToNewCString();
-							if (nsnull != name)
+							nsCOMPtr<nsIRDFLiteral>	nameLiteral;
+							if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(name, getter_AddRefs(nameLiteral))))
 							{
-								nsAutoString		theName(name);
-								nsCOMPtr<nsIRDFLiteral>	nameLiteral;
-								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(theName.GetUnicode(), getter_AddRefs(nameLiteral))))
-								{
-									mDataSource->Assert(relatedLinksChild, kNC_Name, nameLiteral, PR_TRUE);
-								}
-#ifdef	DEBUG
-								for (PRInt32 i=0; i<mParentArray.Count(); i++)	printf("    ");
-								printf("Name: '%s'  URL: '%s'\n", name, url);
-#endif
-								delete [] name;
+								mDataSource->Assert(relatedLinksChild, kNC_Name, nameLiteral, PR_TRUE);
 							}
 						}
-						if (numParents > 0)
-						{
-							nsIRDFResource	*parent = (nsIRDFResource *)(mParentArray.ElementAt(numParents - 1));
-							mDataSource->Assert(parent, kNC_Child, relatedLinksChild, PR_TRUE);
-						}
 					}
-					delete []url;
+					if (numParents > 0)
+					{
+						nsIRDFResource	*parent = (nsIRDFResource *)(mParentArray.ElementAt(numParents - 1));
+						mDataSource->Assert(parent, kNC_Child, relatedLinksChild, PR_TRUE);
+					}
 				}
 			}
 		}
@@ -543,6 +517,8 @@ RelatedLinksStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStre
 
 ////////////////////////////////////////////////////////////////////////
 // RelatedLinksHanlderImpl
+
+
 
 class RelatedLinksHandlerImpl : public nsIRelatedLinksHandler,
 				public nsIRDFDataSource
@@ -835,25 +811,16 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsCOMPtr<nsIURI> url;
-#ifndef NECKO
-	rv = NS_NewURL(getter_AddRefs(url), queryURL);
-#else
 	rv = NS_NewURI(getter_AddRefs(url), queryURL);
-#endif // NECKO
 
 	if (NS_FAILED(rv)) return rv;
 
-	// XXX When is this destroyed?
 	nsCOMPtr<nsIStreamListener> listener;
 	rv = NS_NewRelatedLinksStreamListener(mInner, getter_AddRefs(listener));
 	if (NS_FAILED(rv)) return rv;
 
-#ifdef NECKO
-    // XXX: Should there be a LoadGroup?
+	// XXX: Should there be a LoadGroup?
 	rv = NS_OpenURI(listener, nsnull, url, nsnull);
-#else
-	rv = NS_OpenURL(url, listener);
-#endif
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
