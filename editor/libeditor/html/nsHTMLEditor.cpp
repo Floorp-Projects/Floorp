@@ -3060,7 +3060,7 @@ nsHTMLEditor::ApplyOverrideStyleSheet(const nsString& aURL)
 NS_IMETHODIMP 
 nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
 {
-  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE);
+  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_FALSE);
 }
 
 //Note: Loading a document style sheet is undoable, loading an override sheet is not
