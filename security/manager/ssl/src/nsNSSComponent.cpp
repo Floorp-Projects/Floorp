@@ -63,7 +63,6 @@ extern "C" {
 PRLogModuleInfo* gPIPNSSLog = nsnull;
 #endif
 
-static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 PRBool nsNSSComponent::mNSSInitialized = PR_FALSE;
 
 #ifdef XP_MAC
@@ -98,7 +97,6 @@ extern char * pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 nsNSSComponent::nsNSSComponent()
 {
   NS_INIT_ISUPPORTS();
-  mCertContentListener = nsnull;
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -106,12 +104,10 @@ nsNSSComponent::~nsNSSComponent()
   if (mCertContentListener) {
     nsresult rv = NS_ERROR_FAILURE;
       
-    NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
+    if (dispatcher) {
       rv = dispatcher->UnRegisterContentListener(mCertContentListener);
     }
-      
-    mCertContentListener = nsnull;
   }
   if (mPref)
     mPref->UnregisterCallback("security.", nsNSSComponent::PrefChangedCallback,
@@ -192,12 +188,10 @@ nsNSSComponent::InstallLoadableRoots()
     if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsILocalFile> mozFile;
-
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);									
-    if (NS_FAILED(rv)) {
-        return ;
-    }    
-    										
+    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+    if (!directoryService)
+      return;
+    
     directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
                            NS_GET_IID(nsIFile), 
                            getter_AddRefs(mozFile));
@@ -333,9 +327,9 @@ nsresult
 nsNSSComponent::RegisterCertContentListener()
 {
   nsresult rv = NS_OK;
-  if (mCertContentListener == nsnull) {
-    NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+  if (!mCertContentListener) {
+    nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
+    if (dispatcher) {
       mCertContentListener = do_CreateInstance(NS_CERTCONTENTLISTEN_CONTRACTID);
       rv = dispatcher->RegisterContentListener(mCertContentListener);
     }
@@ -450,12 +444,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSComponent,
 NS_IMETHODIMP
 nsNSSComponent::DisplaySecurityAdvisor()
 {
-  return NS_ERROR_FAILURE; // not implemented
+  return NS_ERROR_NOT_IMPLEMENTED; // not implemented
 }
 
 
 //---------------------------------------------
-// Functions Implenenting NSISignatureVerifier
+// Functions Implementing nsISignatureVerifier
 //---------------------------------------------
 NS_IMETHODIMP
 nsNSSComponent::HashBegin(PRUint32 alg, PRUint32* id)
@@ -561,8 +555,7 @@ nsNSSComponent::RegisterProfileChangeObserver()
 {
   nsresult rv;
   
-  NS_WITH_SERVICE(nsIObserverService, observerService, 
-                  NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
   NS_ASSERTION(observerService, "could not get observer service");
   if (observerService) {
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
