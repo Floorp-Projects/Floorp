@@ -95,8 +95,8 @@ nsContextMenu.prototype = {
         this.showItem( "context-reload", !this.inFrame );
         this.showItem( "context-reload-frame", this.inFrame );
     
-        // Stop determined by canStop broadcaster.
-        this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
+        // XXX: Stop is determined in navigator.js; the canStop broadcaster is broken
+        //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
         // Save page is always OK, unless in directory listing.
