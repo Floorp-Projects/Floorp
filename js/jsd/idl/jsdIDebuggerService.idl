@@ -77,6 +77,20 @@ interface jsdIProperty : nsISupports
 {
     [noscript] readonly attribute JSDContext  JSDContext;
     [noscript] readonly attribute JSDProperty JSDProperty;
+
+    const unsigned long FLAG_ENUMERATE = 0x01;  /* visible to for/in loop */
+    const unsigned long FLAG_READONLY  = 0x02;  /* assignment is error */
+    const unsigned long FLAG_PERMANENT = 0x04;  /* property cannot be deleted */
+    const unsigned long FLAG_ALIAS     = 0x08;  /* property has an alias id */
+    const unsigned long FLAG_ARGUMENT  = 0x10;  /* argument to function */
+    const unsigned long FLAG_VARIABLE  = 0x20;  /* local variable in function */
+    const unsigned long FLAG_HINTED    = 0x800; /* found via explicit lookup */
+
+    readonly attribute jsdIValue     alias;
+    readonly attribute unsigned long flags;
+    readonly attribute jsdIValue     name;
+    readonly attribute jsdIValue     value;
+    readonly attribute unsigned long varArgSlot;
 };
 
 [scriptable, uuid(a38f65ca-1dd1-11b2-95d5-ff2947e9c920)]

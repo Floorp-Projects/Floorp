@@ -39,6 +39,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "nsMemory.h"
 #include "jsdebug.h"
 #include "prmem.h"
 
@@ -112,6 +113,65 @@ jsdProperty::GetJSDProperty(JSDProperty **_rval)
         return NS_ERROR_NULL_POINTER;
     
     *_rval = mProperty;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdProperty::GetAlias(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetPropertyValue (mCx, mProperty);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdProperty::GetFlags(PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetPropertyFlags (mCx, mProperty);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdProperty::GetName(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetPropertyName (mCx, mProperty);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdProperty::GetValue(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetPropertyValue (mCx, mProperty);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdProperty::GetVarArgSlot(PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetPropertyVarArgSlot (mCx, mProperty);
     return NS_OK;
 }
 
@@ -610,9 +670,31 @@ jsdValue::GetStringValue(char **_rval)
 NS_IMETHODIMP
 jsdValue::GetProperties (jsdIProperty ***propArray, PRUint32 *length)
 {
-    /* XXX how do I allocate this in an XPCOM way? */
-    *propArray = 0;
-    *length = 0;
+    if (!propArray)
+        return NS_ERROR_NULL_POINTER;
+    
+    jsdIProperty **pa_temp;
+    PRUint32 prop_count = JSD_GetCountOfProperties (mCx, mValue);
+    
+    pa_temp = NS_STATIC_CAST(jsdIProperty **,
+                             nsMemory::Alloc(sizeof (jsdIProperty *) * 
+                                             prop_count));
+
+    PRUint32     i    = 0;
+    JSDProperty *iter = NULL;
+    JSDProperty *prop;
+    while ((prop = JSD_IterateProperties (mCx, mValue, &iter))) {
+        pa_temp[i] = jsdProperty::FromPtr (mCx, prop);
+        ++i;
+    }
+    
+    NS_ASSERTION (prop_count == i, "property count mismatch");    
+
+    /* if caller doesn't care about length, don't bother telling them */
+    *propArray = pa_temp;
+    if (length)
+        *length = prop_count;
+    
     return NS_OK;
 }
 
@@ -851,6 +933,12 @@ NS_IMETHODIMP
 jsdService::SetScriptHook (jsdIScriptHook *aHook)
 {    
     mScriptHook = aHook;
+    if (aHook)
+        JSD_SetScriptHook (mJSDcx, jsds_ScriptHookProc,
+                           NS_STATIC_CAST(void *, aHook));
+    else
+        JSD_SetScriptHook (mJSDcx, NULL, NULL);
+    
     return NS_OK;
 }
 
