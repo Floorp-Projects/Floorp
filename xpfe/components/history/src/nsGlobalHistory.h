@@ -172,6 +172,7 @@ protected:
   nsresult FindUrlToSearchQuery(const char *aURL, searchQuery& aResult);
   PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
   nsresult NotifyFindAssertions(nsIRDFResource *aSource, nsIMdbRow *aRow);
+  nsresult NotifyFindUnassertions(nsIRDFResource *aSource, nsIMdbRow *aRow);
     
   // 
   // autocomplete stuff
@@ -354,10 +355,10 @@ protected:
   class AutoCompleteEnumerator : public nsMdbTableEnumerator
   {
   protected:
+    nsGlobalHistory* mHistory;
     mdb_column mURLColumn;
     mdb_column mCommentColumn;
     const nsAReadableString& mSelectValue;
-    nsGlobalHistory* mHistory;
 
     virtual ~AutoCompleteEnumerator();
   
