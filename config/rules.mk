@@ -135,21 +135,13 @@ ifdef SHORT_LIBNAME
 LIBRARY_NAME		:= $(SHORT_LIBNAME)
 endif
 endif
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-LIBRARY			:= $(LIBRARY_NAME).$(LIB_SUFFIX)
-else
-LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
-endif # WINNT && !GNU_CC
+LIBRARY			:= $(LIB_PREFIX)$(LIBRARY_NAME).$(LIB_SUFFIX)
 endif
 endif
 
 ifndef HOST_LIBRARY
 ifdef HOST_LIBRARY_NAME
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-HOST_LIBRARY		:= lib$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
-else
-HOST_LIBRARY		:= lib$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
-endif # WINNT && !GNU_CC
+HOST_LIBRARY		:= $(LIB_PREFIX)$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
 endif
 endif
 
@@ -157,28 +149,27 @@ ifdef LIBRARY
 ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB))
 ifdef MKSHLIB
 
-ifeq ($(OS_ARCH),OS2)
-DEF_OBJS		= $(OBJS)
-ifneq ($(EXPORT_OBJS),1)
-DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
-endif
-SHARED_LIBRARY		:= $(LIBRARY_NAME)$(DLL_SUFFIX)
-DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
-IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
-else  # OS2
-
-
-ifeq (,$(filter-out BeOS, $(OS_ARCH)))
 # Unix only
+ifeq (,$(filter-out BeOS OS2 WINNT, $(OS_ARCH)))
 ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
 endif
 endif
 
 SHARED_LIBRARY		:= $(LIBRARY:.$(LIB_SUFFIX)=$(DLL_SUFFIX))
-IMPORT_LIBRARY		:= 
 
-endif # OS2
+ifeq ($(OS_ARCH),OS2)
+DEF_OBJS		= $(OBJS)
+ifneq ($(EXPORT_OBJS),1)
+DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
+endif
+DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
+endif
+
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
+endif
+
 endif # MKSHLIB
 endif # BUILD_SHARED_LIBS || FORCE_SHARED_LIB
 endif # LIBRARY
@@ -201,11 +192,40 @@ IMPORT_LIBRARY		:= $(NULL)
 endif
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+
 ifdef LIBRARY_NAME
 PDBFILE=$(LIBRARY_NAME).pdb
-else
-PDBFILE='$*.pdb'
+ifdef MOZ_DEBUG
+MAPFILE=$(LIBRARY_NAME).map
+CODFILE=$(LIBRARY_NAME).cod
 endif
+else
+PDBFILE=$*.pdb
+ifdef MOZ_DEBUG
+MAPFILE=$*.map
+CODFILE=$*.cod
+endif
+endif # LIBRARY_NAME
+
+ifdef DEFFILE
+CFLAGS += /DEF:$(DEFFILE)
+CXXFLAGS += /DEF:$(DEFFILE)
+DSO_LDOPTS += /DEF:$(DEFFILE)
+endif
+
+ifdef MAPFILE
+DSO_LDOPTS += /MAP:$(MAPFILE) /MAPINFO:LINES
+#CFLAGS += -Fm$(MAPFILE)
+#CXXFLAGS += -Fm$(MAPFILE)
+endif
+
+#ifdef CODFILE
+#CFLAGS += -Fa$(CODFILE) -FAsc
+#CFLAGS += -Fa$(CODFILE) -FAsc
+#endif
+
+endif # WINNT
 
 ifndef TARGETS
 TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
@@ -259,6 +279,7 @@ ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
 	$(EXE_DEF_FILE) so_locations _gen _stubs $(wildcard *.res) \
+	$(wildcard *.pdb) $(wildcard *.exp) $(wildcard *.map) \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 ALL_TRASH_DIRS = \
 	$(GARBAGE_DIRS)
@@ -654,7 +675,7 @@ ifdef BEOS_ADDON_WORKAROUND
 	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
 else # ! IS_COMPONENT
-ifeq ($(OS_ARCH),OS2)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
@@ -721,11 +742,15 @@ $(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) $(EXE_DEF_FILE) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) $(EXE_DEF_FILE) /ST:0x100000
 else
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(PROGOBJS) $(LDFLAGS) $(LIBS) $(OS_LIBS)
+else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
 else # ! CPP_PROG_LINK
 	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
 endif # CPP_PROG_LINK
+endif # WINNT && !GNU_CC
 endif # OS2
 ifdef ENABLE_STRIP
 	$(STRIP) $@
@@ -758,19 +783,19 @@ $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 $(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(EXTRA_DEPS) Makefile Makefile.in
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(LD) /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
+else
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+	$(LD) /nologo /out:$@ /pdb:$(PDBFILE) $< $(LIBS) $(OS_LIBS)
+else
 ifeq ($(CPP_PROG_LINK),1)
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(LD) /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
-else
 	$(CCC) $(WRAP_MALLOC_CFLAGS) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
-endif
 else
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(LD) /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
-else
-	$(CC) $(WRAP_MALLOC_CFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
-endif
-endif
+	$(CC) $(WRAP_MALLOC_CFLAGS) $(CFLAGS) $(OUTOPTION)$@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
+endif # CPP_PROG_LINK
+endif # WINNT && !GNU_CC
+endif # OS/2 VACPP
 ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
@@ -950,7 +975,7 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.c Makefile.in
 
 $(OBJ_PREFIX)%.ho: %.c Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC)$(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
+	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
 
 moc_%.cpp: %.h Makefile.in
 	$(MOC) $< $(OUTOPTION)$@ 
@@ -969,7 +994,7 @@ endif
 
 %: %.cpp Makefile.in
 	@$(MAKE_DEPS_AUTO)
-	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
+	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
