@@ -1161,6 +1161,23 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         return NS_OK;
     }
 
+    // Make sure it's a XUL element; otherwise, we really don't have
+    // any business with the attribute.
+    PRBool isXULElement;
+    if (NS_FAILED(rv = mDB->HasAssertion(resource,
+                                         kRDF_instanceOf,
+                                         kXUL_element,
+                                         PR_TRUE,
+                                         &isXULElement))) {
+        NS_ERROR("unable to determine if element is a XUL element");
+        return rv;
+    }
+
+    if (! isXULElement)
+        return NS_OK;
+
+    // Okay, so it _is_ a XUL element. Deal with it.
+
     // Get the nsIContent interface, it's a bit more utilitarian
     nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
     if (! element) {
@@ -1168,64 +1185,70 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         return NS_ERROR_UNEXPECTED;
     }
 
-    // Make sure it's a XUL element; otherwise, we really don't have
-    // any business with the attribute.
-    PRBool isXULElement;
-    if (NS_SUCCEEDED(rv = mDB->HasAssertion(resource,
-                                            kRDF_instanceOf,
-                                            kXUL_element,
-                                            PR_TRUE,
-                                            &isXULElement))
-        && isXULElement) {
+    // Split the property name into its namespace and tag components
+    PRInt32  nameSpaceID;
+    nsCOMPtr<nsIAtom> nameAtom;
+    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
+        NS_ERROR("unable to parse attribute string");
+        return rv;
+    }
 
-        // Get the nsIContent interface, it's a bit more utilitarian
-        nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-        if (! element) {
-            NS_ERROR("element doesn't support nsIContent");
-            return NS_ERROR_UNEXPECTED;
+    // Check for "special" properties that may wreak havoc on the
+    // content model.
+    if ((nameSpaceID == kNameSpaceID_None) && (nameAtom == kIdAtom)) {
+        // They're changing the ID of the element.
+
+        // XXX Punt for now.
+        NS_WARNING("ignoring id change on XUL element");
+        return NS_OK;
+    }
+    else if (nameSpaceID == kNameSpaceID_RDF) {
+        if (nameAtom == kDataSourcesAtom) {
+            NS_NOTYETIMPLEMENTED("can't change the data sources yet");
+            return NS_ERROR_NOT_IMPLEMENTED;
         }
 
-        // Split the property name into its namespace and tag components
-        PRInt32  nameSpaceID;
-        nsCOMPtr<nsIAtom> nameAtom;
-        if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
-            NS_ERROR("unable to parse attribute string");
+        // XXX we should probably just ignore any changes to rdf: attribute
+        NS_WARNING("changing an rdf: attribute; this is probably not a good thing");
+        return NS_OK;
+    }
+
+
+    // If we get here, it's a vanilla property that we need to go into
+    // the RDF graph to update. So, build an RDF resource from the
+    // property name...
+    nsCOMPtr<nsIRDFResource> property;
+    if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
+        NS_ERROR("unable to construct resource");
+        return rv;
+    }
+
+    // Unassert the old value, if there was one.
+    nsAutoString oldValue;
+    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
+        nsCOMPtr<nsIRDFLiteral> value;
+        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+            NS_ERROR("unable to construct literal");
             return rv;
         }
 
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
-            NS_ERROR("unable to construct resource");
+        rv = mDB->Unassert(resource, property, value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+    }
+
+    // Assert the new value
+    {
+        nsCOMPtr<nsIRDFLiteral> value;
+        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+            NS_ERROR("unable to construct literal");
             return rv;
         }
 
-        // Unassert the old value, if there was one.
-        nsAutoString oldValue;
-        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
-
-            rv = mDB->Unassert(resource, property, value);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+        if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
+            NS_ERROR("unable to assert new property value");
+            return rv;
         }
-
-        // Assert the new value
-        {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
-                NS_ERROR("unable to assert new property value");
-                return rv;
-            }
-        }
-    }    
+    }
 
     return NS_OK;
 }
@@ -1464,17 +1487,16 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         return rv;
     }
 
-    if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE))) {
-        NS_ERROR("couldn't set document on the element");
-        return rv;
-    }
-
     // Make sure our ID is set. Unlike XUL elements, we want to make sure
     // that our ID is relative if possible.
+    //
+    // XXX Why? Is this for supporting inline style or something?
     const char* uri;
     if (NS_FAILED(rv = aResource->GetValue(&uri)))
         return rv;
 
+    // XXX Won't somebody just cram this back into a fully qualified
+    // URI somewhere?
     nsString fullURI(uri);
     nsIURL* docURL = nsnull;
     doc->GetBaseURL(docURL);
@@ -1485,8 +1507,18 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         NS_RELEASE(docURL);
     }
        
-    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, fullURI, PR_FALSE)))
+    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, fullURI, PR_FALSE))) {
+        NS_ERROR("unable to set element's ID");
         return rv;
+    }
+
+    // Set the document. N.B. that we do this _after_ setting up the
+    // ID so that we get the element hashed correctly in the
+    // document's resource-to-element map.
+    if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE))) {
+        NS_ERROR("couldn't set document on the element");
+        return rv;
+    }
 
     // XXX Do we add ourselves to the map here? If so, this is non-dynamic! 
     // If the HTML element's ID changes, we won't adjust
@@ -2008,18 +2040,19 @@ RDFXULBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
         return rv;
 
-    // Set the document for this resource element.  It must be set now
-    // in order for event handlers to be detected in the subsequent
-    // SetAttribute calls (and in the ID-setting call below).
-    nsCOMPtr<nsIDocument> document( do_QueryInterface(mDocument) );
-    result->SetDocument(document, PR_FALSE);
-
+    // Set the element's ID. We do this _before_ we insert the element
+    // into the document so that it gets properly hashed into the
+    // document's resource-to-element map.
     const char* uri;
     if (NS_FAILED(rv = aResource->GetValue(&uri)))
         return rv;
 
     if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
         return rv;
+
+    // Set the document for this element.
+    nsCOMPtr<nsIDocument> document( do_QueryInterface(mDocument) );
+    result->SetDocument(document, PR_FALSE);
 
     *aResult = result;
     NS_ADDREF(*aResult);

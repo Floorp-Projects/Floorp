@@ -1489,9 +1489,9 @@ RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aR
 
 nsresult
 RDFGenericBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
-                                          nsIAtom* aTag,
-                                          nsIRDFResource* aResource,
-                                          nsIContent** aResult)
+                                             nsIAtom* aTag,
+                                             nsIRDFResource* aResource,
+                                             nsIContent** aResult)
 {
     nsresult rv;
 
@@ -1515,8 +1515,8 @@ RDFGenericBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
 
 nsresult
 RDFGenericBuilderImpl::GetResource(PRInt32 aNameSpaceID,
-                                nsIAtom* aNameAtom,
-                                nsIRDFResource** aResource)
+                                   nsIAtom* aNameAtom,
+                                   nsIRDFResource** aResource)
 {
     NS_PRECONDITION(aNameAtom != nsnull, "null ptr");
     if (! aNameAtom)

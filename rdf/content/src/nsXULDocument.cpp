@@ -273,7 +273,11 @@ public:
             }
         }
 
-       // NS_ERROR("attempt to remove an element that was never added");
+        // XXX Don't comment out this assert: if you get here,
+        // something has gone dreadfully, horribly
+        // wrong. Curse. Scream. File a bug against
+        // waterson@netscape.com.
+        NS_ERROR("attempt to remove an element that was never added");
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -1933,6 +1937,12 @@ XULDocumentImpl::AddElementForResource(nsIRDFResource* aResource, nsIContent* aE
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
+#ifdef DEBUG
+    const char* uri;
+    aResource->GetValue(&uri);
+    printf("add    [%p] <-- %s\n", aElement, uri);
+#endif
+
     mResources.Add(aResource, aElement);
     return NS_OK;
 }
@@ -1948,6 +1958,12 @@ XULDocumentImpl::RemoveElementForResource(nsIRDFResource* aResource, nsIContent*
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
+
+#ifdef DEBUG
+    const char* uri;
+    aResource->GetValue(&uri);
+    printf("remove [%p] <-- %s\n", aElement, uri);
+#endif
 
     mResources.Remove(aResource, aElement);
     return NS_OK;
@@ -2282,6 +2298,11 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     }
 
     if (elements->Count() > 0) {
+        if (elements->Count() > 1) {
+            // This is a scary case that our API doesn't deal with well.
+            NS_WARNING("more than one element found with specified ID; returning first");
+        }
+
         nsISupports* element = elements->ElementAt(0);
         rv = element->QueryInterface(nsIDOMElement::GetIID(), (void**) aReturn);
         NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
@@ -2290,6 +2311,14 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     }
 
     // Didn't find it in our hash table. Walk the tree looking for the node
+
+    // I'd like to make this an NS_ERROR(), but am sure someone would
+    // just comment it out :-/. This should've all been set up when
+    // nsRDFElement::SetDocument() got called. (Of course, somebody
+    // could've inserted a non-RDF element into this tree, so, I guess
+    // we'll leave it as a warning for now...)
+    NS_WARNING("unable to find hashed element; crawling the tree to find it");
+
     *aReturn = nsnull;
     SearchForNodeByID(aId, mRootContent, aReturn);
 

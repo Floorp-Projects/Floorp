@@ -705,11 +705,17 @@ RDFElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDO
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-        obs->OnInsertBefore(this, aNewChild, aRefChild);
-        NS_RELEASE(obs);
+    // It's possible that mDocument will be null for an element that's
+    // not in the content model (e.g., somebody is working on a
+    // "scratch" element that has been removed from the content tree).
+    if (mDocument) {
+        nsIDOMNodeObserver* obs;
+        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
+            obs->OnInsertBefore(this, aNewChild, aRefChild);
+            NS_RELEASE(obs);
+        }
     }
+
     NS_ADDREF(aNewChild);
     *aReturn = aNewChild;
     return NS_OK;
@@ -723,11 +729,17 @@ RDFElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-        obs->OnReplaceChild(this, aNewChild, aOldChild);
-        NS_RELEASE(obs);
+    // It's possible that mDocument will be null for an element that's
+    // not in the content model (e.g., somebody is working on a
+    // "scratch" element that has been removed from the content tree).
+    if (mDocument) {
+        nsIDOMNodeObserver* obs;
+        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
+            obs->OnReplaceChild(this, aNewChild, aOldChild);
+            NS_RELEASE(obs);
+        }
     }
+
     NS_ADDREF(aNewChild);
     *aReturn = aNewChild;
     return NS_OK;
@@ -741,11 +753,17 @@ RDFElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-        obs->OnRemoveChild(this, aOldChild);
-        NS_RELEASE(obs);
+    // It's possible that mDocument will be null for an element that's
+    // not in the content model (e.g., somebody is working on a
+    // "scratch" element that has been removed from the content tree).
+    if (mDocument) {
+        nsIDOMNodeObserver* obs;
+        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
+            obs->OnRemoveChild(this, aOldChild);
+            NS_RELEASE(obs);
+        }
     }
+
     NS_ADDREF(aOldChild);
     *aReturn = aOldChild;
     return NS_OK;
@@ -759,11 +777,17 @@ RDFElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
-        obs->OnAppendChild(this, aNewChild);
-        NS_RELEASE(obs);
+    // It's possible that mDocument will be null for an element that's
+    // not in the content model (e.g., somebody is working on a
+    // "scratch" element that has been removed from the content tree).
+    if (mDocument) {
+        nsIDOMNodeObserver* obs;
+        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
+            obs->OnAppendChild(this, aNewChild);
+            NS_RELEASE(obs);
+        }
     }
+
     NS_ADDREF(aNewChild);
     *aReturn = aNewChild;
     return NS_OK;
@@ -1588,29 +1612,6 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
     nsresult rv = NS_OK;
 
-    // If they're changing the identity of this object, then we need to re-hash 
-    // it into the document's resource-to-element map.
-    //
-    // XXX Changing the object's identity is a big deal: we actually need to
-    // toss the kids and recreate them. We don't do that here.
-    // XXX This code doesn't work unless ID is set, since GetResource 
-    // actually tries to fetch the ID!  We need to move this whole
-    // block down so that we can figure out whether or not we're making
-    // a NEW ID or overwriting an EXISTING ID - Dave.
-    /*if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kIdAtom) { // XXX regardless of namespace
-      nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
-      NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
-      if (rdfDoc) {
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_SUCCEEDED(rv = GetResource(getter_AddRefs(resource)))) {
-          if (NS_FAILED(rv = rdfDoc->RemoveElementForResource(resource, this))) {
-            NS_ERROR("unable to remove element from map");
-            return rv;
-          }
-        }
-      }
-    }*/
-
     // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
     // class list.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kClassAtom) {
@@ -1654,22 +1655,6 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
           return NS_ERROR_OUT_OF_MEMORY;
 
         mAttributes->AppendElement(attr);
-    }
-
-    // XXX Changing the object's identity is a big deal: we actually need to
-    // toss the kids and recreate them. We don't do that here.
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kIdAtom) { // XXX regardless of namespace
-      nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
-      NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
-      if (rdfDoc) {
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_SUCCEEDED(rv = GetResource(getter_AddRefs(resource)))) {
-          if (NS_FAILED(rv = rdfDoc->AddElementForResource(resource, this))) {
-            NS_ERROR("unable to remove element from map");
-            return rv;
-          }
-        }
-      }
     }
 
     // Check for event handlers
@@ -2291,6 +2276,7 @@ RDFElementImpl::GetResource(nsIRDFResource** aResource)
         // RDF will treat all document IDs as absolute URIs, so we'll need convert 
         // a possibly-relative ID attribute into a fully-qualified (that is, with
         // the current document's URL) URI.
+        NS_ASSERTION(mDocument != nsnull, "element has no document");
         if (nsnull != mDocument) {
           nsIURL* docURL = nsnull;
           mDocument->GetBaseURL(docURL);
@@ -2321,7 +2307,10 @@ RDFElementImpl::EnsureContentsGenerated(void) const
 
     nsresult rv;
 
-//    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+    // Ensure that the element is actually _in_ the document tree;
+    // otherwise, somebody is trying to generate children for a node
+    // that's not currently in the content model.
+    NS_PRECONDITION(mDocument != nsnull, "element not in tree");
     if (!mDocument)
         return NS_ERROR_NOT_INITIALIZED;
 
