@@ -2445,7 +2445,7 @@ nsXULDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
   nsCOMPtr<nsIPrivateDOMImplementation> impl = do_QueryInterface(*aImplementation, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = impl->Init((nsIDocument*) this);
+  rv = impl->Init(mDocumentURL);
   return rv;
 }
 

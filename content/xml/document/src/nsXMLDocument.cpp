@@ -785,14 +785,82 @@ nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName,
   
   return rv;
 }
+
+NS_IMETHODIMP    
+nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocumentType> docType, newDocType;
+  nsCOMPtr<nsIDOMDocument> newDoc;
+
+  // Get the doctype prior to new document construction. There's no big 
+  // advantage now to dealing with the doctype separately, but maybe one 
+  // day we'll do something significant with the doctype on document creation.
+  GetDoctype(getter_AddRefs(docType));
+  if (docType) {
+    nsCOMPtr<nsIDOMNode> newDocTypeNode;
+    rv = docType->CloneNode(PR_TRUE, getter_AddRefs(newDocTypeNode));
+    if (NS_FAILED(rv)) return rv;
+    newDocType = do_QueryInterface(newDocTypeNode);
+  }
+
+  // Create an empty document
+  nsAutoString emptyStr;
+  emptyStr.Truncate();
+  rv = NS_NewDOMDocument(getter_AddRefs(newDoc), emptyStr, emptyStr,
+                         newDocType, mDocumentURL);
+  if (NS_FAILED(rv)) return rv;
+
+  if (aDeep) {
+    // If there was a doctype, a new one has already been inserted into the
+    // new document. We might have to add nodes before it.
+    PRBool beforeDocType = (docType.get() != nsnull);
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    
+    GetChildNodes(getter_AddRefs(childNodes));
+    if (childNodes) {
+      PRUint32 index, count;
+      childNodes->GetLength(&count);
+      for (index=0; index < count; index++) {
+        nsCOMPtr<nsIDOMNode> child;
+        childNodes->Item(index, getter_AddRefs(child));
+        if (child && (child != docType)) {
+          nsCOMPtr<nsIDOMNode> newChild;
+          rv = child->CloneNode(aDeep, getter_AddRefs(newChild));
+          if (NS_FAILED(rv)) return rv;
+          
+          nsCOMPtr<nsIDOMNode> dummyNode;
+          if (beforeDocType) {
+            rv = newDoc->InsertBefore(newChild, 
+                                      docType, 
+                                      getter_AddRefs(dummyNode));
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+          }
+          else {
+            rv = newDoc->AppendChild(newChild, 
+                                     getter_AddRefs(dummyNode));
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+          }
+        }
+        else {
+          beforeDocType = PR_FALSE;
+        }
+      }
+    }
+  }
+
+  return newDoc->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
+}
  
 NS_IMETHODIMP
 nsXMLDocument::ImportNode(nsIDOMNode* aImportedNode,
                           PRBool aDeep,
                           nsIDOMNode** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsDocument::ImportNode(aImportedNode, aDeep, aReturn);
 }
 
 NS_IMETHODIMP

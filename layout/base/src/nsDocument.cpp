@@ -361,7 +361,7 @@ class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation
 {
 public:
-  nsDOMImplementation(nsIDocument* aDocument = nsnull);
+  nsDOMImplementation(nsIURI* aBaseURI = nsnull);
   virtual ~nsDOMImplementation();
 
   NS_DECL_ISUPPORTS
@@ -385,11 +385,11 @@ public:
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   //nsIPrivateDOMImplementation
-  NS_IMETHOD Init(nsIDocument* aDoc);
+  NS_IMETHOD Init(nsIURI* aBaseURI);
 
 protected:
   void *mScriptObject;
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsIURI> mBaseURI;
 };
 
 
@@ -402,11 +402,11 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
   return domImpl->QueryInterface(NS_GET_IID(nsIDOMDOMImplementation), (void**) aInstancePtrResult);
 }
 
-nsDOMImplementation::nsDOMImplementation(nsIDocument* aDocument)
+nsDOMImplementation::nsDOMImplementation(nsIURI* aBaseURI)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
-  mDocument = aDocument;
+  mBaseURI = aBaseURI;
 }
 
 nsDOMImplementation::~nsDOMImplementation()
@@ -447,15 +447,8 @@ nsDOMImplementation::CreateDocument(const nsString& aNamespaceURI,
   nsresult rv = NS_OK;
   *aReturn = nsnull;
 
-  nsIURI* baseURI = nsnull;
-  if (mDocument) {
-    rv = mDocument->GetBaseURL(baseURI);
-    if (NS_FAILED(rv)) return rv;
-  }
+  NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype, mBaseURI);
 
-  NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype, baseURI);
-
-  NS_IF_RELEASE(baseURI);
   return rv;
 }
 
@@ -490,9 +483,9 @@ nsDOMImplementation::SetScriptObject(void *aScriptObject)
 }
 
 NS_IMETHODIMP
-nsDOMImplementation::Init(nsIDocument* aDoc)
+nsDOMImplementation::Init(nsIURI* aBaseURI)
 {
-  mDocument = aDoc;
+  mBaseURI = aBaseURI;
   return NS_OK;
 }
 
@@ -2062,7 +2055,7 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
   // For now, create a new implementation every time. This shouldn't
   // be a high bandwidth operation
-  nsDOMImplementation* impl = new nsDOMImplementation(this);
+  nsDOMImplementation* impl = new nsDOMImplementation(mDocumentURL);
   if (nsnull == impl) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2245,6 +2238,17 @@ nsDocument::CreateElementWithNameSpace(const nsString& aTagName,
 {
   *aReturn = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::ImportNode(nsIDOMNode* aImportedNode,
+                       PRBool aDeep,
+                       nsIDOMNode** aReturn)
+{
+  NS_ENSURE_ARG(aImportedNode);
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  return aImportedNode->CloneNode(aDeep, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2466,6 +2470,7 @@ nsDocument::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP
 nsDocument::Load (const nsString& aUrl)
 {
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2677,6 +2682,7 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
 
   aNewChild->GetNodeType(&nodeType);
   if ((COMMENT_NODE != nodeType) &&
+      (TEXT_NODE != nodeType) &&
       (PROCESSING_INSTRUCTION_NODE != nodeType) &&
       (DOCUMENT_TYPE_NODE != nodeType) &&
       (ELEMENT_NODE != nodeType)) {
@@ -2764,6 +2770,7 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   aNewChild->GetNodeType(&nodeType);
 
   if ((COMMENT_NODE != nodeType) &&
+      (TEXT_NODE != nodeType) &&
       (PROCESSING_INSTRUCTION_NODE != nodeType) &&
       (DOCUMENT_TYPE_NODE != nodeType) &&
       (ELEMENT_NODE != nodeType)) {
@@ -2894,7 +2901,7 @@ nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP    
 nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  // We don't allow cloning of a document
+  // XXX should be implemented by subclass
   *aReturn = nsnull;
   return NS_OK;
 }
@@ -2902,8 +2909,16 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX Not completely correct, since you can still have unnormalized
+  // text nodes as immediate children of the document.
+  if (mRootContent) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mRootContent);
+
+    if (node) {
+      return node->Normalize();
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
