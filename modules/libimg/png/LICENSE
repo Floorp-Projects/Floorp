@@ -1,10 +1,14 @@
 
+This copy of the libpng notices is provided for your convenience.  In case of
+any discrepancy between this copy and the notices in the file png.h that is
+included in the libpng distribution, the latter shall prevail.
+
 COPYRIGHT NOTICE, DISCLAIMER, and LICENSE:
 
 If you modify libpng you may insert additional notices immediately following
 this sentence.
 
-libpng versions 1.0.7, July 1, 2000, through 1.0.8, July 24, 2000, are
+libpng versions 1.0.7, July 1, 2000, through 1.0.9, January 31, 2001, are
 Copyright (c) 2000 Glenn Randers-Pehrson
 and are distributed according to the same disclaimer and license as libpng-1.0.6
 with the following individuals added to the list of Contributing Authors
@@ -95,4 +99,4 @@ certification mark of the Open Source Initiative.
 
 Glenn Randers-Pehrson
 randeg@alum.rpi.edu
-July 24, 2000
+January 31, 2001

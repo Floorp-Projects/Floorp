@@ -6,14 +6,14 @@
  *     and http://www.intel.com/drg/pentiumII/appnotes/923/923.htm
  *     for Intel's performance analysis of the MMX vs. non-MMX code.
  *
- * libpng version 1.0.8 - July 24, 2000
+ * libpng 1.0.9 - January 31, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * Copyright (c) 1998, Intel Corporation
  *
  * Based on MSVC code contributed by Nirav Chhatrapati, Intel Corp., 1998.
  * Interface to libpng contributed by Gilles Vollant, 1999.
- * GNU C port by Greg Roelofs, 1999.
+ * GNU C port by Greg Roelofs, 1999-2001.
  *
  * Lines 2350-4300 converted in place with intel2gas 1.3.1:
  *
@@ -43,8 +43,8 @@
  */
 
 /*
- * NOTES (mostly by Greg Roelofs)
- * =====
+ * TEMPORARY PORTING NOTES AND CHANGELOG (mostly by Greg Roelofs)
+ * =====================================
  *
  * 19991006:
  *  - fixed sign error in post-MMX cleanup code (16- & 32-bit cases)
@@ -55,13 +55,13 @@
  *     - write MMX code for 48-bit case (pixel_bytes == 6)
  *     - figure out what's up with 24-bit case (pixel_bytes == 3):
  *        why subtract 8 from width_mmx in the pass 4/5 case?
- *        (only width_mmx case)
+ *        (only width_mmx case) (near line 1606)
  *     x [DONE] replace pixel_bytes within each block with the true
  *        constant value (or are compilers smart enough to do that?)
  *     - rewrite all MMX interlacing code so it's aligned with
  *        the *beginning* of the row buffer, not the end.  This
  *        would not only allow one to eliminate half of the memory
- *        writes for odd passes (i.e., pass == odd), it may also
+ *        writes for odd passes (that is, pass == odd), it may also
  *        eliminate some unaligned-data-access exceptions (assuming
  *        there's a penalty for not aligning 64-bit accesses on
  *        64-bit boundaries).  The only catch is that the "leftover"
@@ -113,7 +113,7 @@
  *
  * 19991107:
  *  - verified CPUID clobberage:  12-char string constant ("GenuineIntel",
- *     "AuthenticAMD", etc.) placed in EBX:ECX:EDX.  Still need to polish.
+ *     "AuthenticAMD", etc.) placed in ebx:ecx:edx.  Still need to polish.
  *
  * 19991120:
  *  - made "diff" variable (now "_dif") global to simplify conversion of
@@ -123,14 +123,14 @@
  *     macro determines which is used); original not yet tested.
  *
  * 20000213:
- *  - When compiling with gcc, be sure to use  -fomit-frame-pointer
+ *  - when compiling with gcc, be sure to use  -fomit-frame-pointer
  *
  * 20000319:
  *  - fixed a register-name typo in png_do_read_interlace(), default (MMX) case,
  *     pass == 4 or 5, that caused visible corruption of interlaced images
  *
  * 20000623:
- *  -  Various problems were reported with gcc 2.95.2 in the Cygwin environment,
+ *  - Various problems were reported with gcc 2.95.2 in the Cygwin environment,
  *     many of the form "forbidden register 0 (ax) was spilled for class AREG."
  *     This is explained at http://gcc.gnu.org/fom_serv/cache/23.html, and
  *     Chuck Wilson supplied a patch involving dummy output registers.  See
@@ -147,51 +147,137 @@
  *       pnggccrd.c:1177: more than 10 operands in `asm'
  *     They are all the same problem and can be worked around by using the
  *     global _unmask variable unconditionally, not just in the -fPIC case.
- *     Apparently earlier versions of gcc also have the problem with more than
+ *     Reportedly earlier versions of gcc also have the problem with more than
  *     10 operands; they just don't report it.  Much strangeness ensues, etc.
+ *
+ * 20000729:
+ *  - enabled png_read_filter_row_mmx_up() (shortest remaining unconverted
+ *     MMX routine); began converting png_read_filter_row_mmx_sub()
+ *  - to finish remaining sections:
+ *     - clean up indentation and comments
+ *     - preload local variables
+ *     - add output and input regs (order of former determines numerical
+ *        mapping of latter)
+ *     - avoid all usage of ebx (including bx, bh, bl) register [20000823]
+ *     - remove "$" from addressing of Shift and Mask variables [20000823]
+ *
+ * 20000731:
+ *  - global union vars causing segfaults in png_read_filter_row_mmx_sub()?
+ *
+ * 20000822:
+ *  - ARGH, stupid png_read_filter_row_mmx_sub() segfault only happens with
+ *     shared-library (-fPIC) version!  Code works just fine as part of static
+ *     library.  Damn damn damn damn damn, should have tested that sooner.
+ *     ebx is getting clobbered again (explicitly this time); need to save it
+ *     on stack or rewrite asm code to avoid using it altogether.  Blargh!
+ *
+ * 20000823:
+ *  - first section was trickiest; all remaining sections have ebx -> edx now.
+ *     (-fPIC works again.)  Also added missing underscores to various Shift*
+ *     and *Mask* globals and got rid of leading "$" signs.
+ *
+ * 20000826:
+ *  - added visual separators to help navigate microscopic printed copies
+ *     (http://pobox.com/~newt/code/gpr-latest.zip, mode 10); started working
+ *     on png_read_filter_row_mmx_avg()
+ *
+ * 20000828:
+ *  - finished png_read_filter_row_mmx_avg():  only Paeth left! (930 lines...)
+ *     What the hell, did png_read_filter_row_mmx_paeth(), too.  Comments not
+ *     cleaned up/shortened in either routine, but functionality is complete
+ *     and seems to be working fine.
+ *
+ * 20000829:
+ *  - ahhh, figured out last(?) bit of gcc/gas asm-fu:  if register is listed
+ *     as an input reg (with dummy output variables, etc.), then it *cannot*
+ *     also appear in the clobber list or gcc 2.95.2 will barf.  The solution
+ *     is simple enough...
+ *
+ * 20000914:
+ *  - bug in png_read_filter_row_mmx_avg():  16-bit grayscale not handled
+ *     correctly (but 48-bit RGB just fine)
+ *
+ * 20000916:
+ *  - fixed bug in png_read_filter_row_mmx_avg(), bpp == 2 case; three errors:
+ *     - "_ShiftBpp.use = 24;"      should have been   "_ShiftBpp.use = 16;"
+ *     - "_ShiftRem.use = 40;"      should have been   "_ShiftRem.use = 48;"
+ *     - "psllq _ShiftRem, %%mm2"   should have been   "psrlq _ShiftRem, %%mm2"
+ *
+ * 20010103:
+ *  - renamed mmxsupport() to png_mmx_support(), with auto-set of mmx_supported,
+ *     and made it public
+ *
+ * 20010104:
+ *  - removed dependency on png_read_filter_row_c() (C code already duplicated
+ *     within MMX version of png_read_filter_row()) so no longer necessary to
+ *     compile it into pngrutil.o
+ *
+ * STILL TO DO:
+ *     - test png_do_read_interlace() 64-bit case (pixel_bytes == 8)
+ *     - write MMX code for 48-bit case (pixel_bytes == 6)
+ *     - figure out what's up with 24-bit case (pixel_bytes == 3):
+ *        why subtract 8 from width_mmx in the pass 4/5 case?
+ *        (only width_mmx case) (near line 1606)
+ *     - rewrite all MMX interlacing code so it's aligned with beginning
+ *        of the row buffer, not the end (see 19991007 for details)
+ *     x pick one version of mmxsupport() and get rid of the other
+ *     - add error messages to any remaining bogus default cases
+ *     - enable pixel_depth == 8 cases in png_read_filter_row()? (test speed)
+ *     - add support for runtime enable/disable/query of various MMX routines
  */
+
+//#define PNG_DEBUG 2   // GRR
 
 #define PNG_INTERNAL
 #include "png.h"
 
 #if defined(PNG_ASSEMBLER_CODE_SUPPORTED) && defined(PNG_USE_PNGGCCRD)
 
-int mmxsupport(void);
-
-static int mmx_supported = 2;
-
 #ifdef PNG_USE_LOCAL_ARRAYS
-static const int png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
-static const int png_pass_inc[7]   = {8, 8, 4, 4, 2, 2, 1};
-static const int png_pass_width[7] = {8, 4, 4, 2, 2, 1, 1};
+static const int FARDATA png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
+static const int FARDATA png_pass_inc[7]   = {8, 8, 4, 4, 2, 2, 1};
+static const int FARDATA png_pass_width[7] = {8, 4, 4, 2, 2, 1, 1};
 #endif
 
 // djgpp, Win32, and Cygwin add their own underscores to global variables,
 // so define them without:
 #if defined(__DJGPP__) || defined(WIN32) || defined(__CYGWIN__)
-#  define _unmask      unmask
-#  define _const4      const4
-#  define _const6      const6
-#  define _mask8_0     mask8_0  
-#  define _mask16_1    mask16_1 
-#  define _mask16_0    mask16_0 
-#  define _mask24_2    mask24_2 
-#  define _mask24_1    mask24_1 
-#  define _mask24_0    mask24_0 
-#  define _mask32_3    mask32_3 
-#  define _mask32_2    mask32_2 
-#  define _mask32_1    mask32_1 
-#  define _mask32_0    mask32_0 
-#  define _mask48_5    mask48_5 
-#  define _mask48_4    mask48_4 
-#  define _mask48_3    mask48_3 
-#  define _mask48_2    mask48_2 
-#  define _mask48_1    mask48_1 
-#  define _mask48_0    mask48_0 
-#  define _FullLength  FullLength
-#  define _MMXLength   MMXLength
-#  define _dif         dif
+#  define _mmx_supported  mmx_supported
+#  define _unmask         unmask
+#  define _const4         const4
+#  define _const6         const6
+#  define _mask8_0        mask8_0
+#  define _mask16_1       mask16_1
+#  define _mask16_0       mask16_0
+#  define _mask24_2       mask24_2
+#  define _mask24_1       mask24_1
+#  define _mask24_0       mask24_0
+#  define _mask32_3       mask32_3
+#  define _mask32_2       mask32_2
+#  define _mask32_1       mask32_1
+#  define _mask32_0       mask32_0
+#  define _mask48_5       mask48_5
+#  define _mask48_4       mask48_4
+#  define _mask48_3       mask48_3
+#  define _mask48_2       mask48_2
+#  define _mask48_1       mask48_1
+#  define _mask48_0       mask48_0
+#  define _FullLength     FullLength
+#  define _MMXLength      MMXLength
+#  define _dif            dif
+#  define _LBCarryMask    LBCarryMask
+#  define _HBClearMask    HBClearMask
+#  define _ActiveMask     ActiveMask
+#  define _ActiveMask2    ActiveMask2
+#  define _ActiveMaskEnd  ActiveMaskEnd
+#  define _ShiftBpp       ShiftBpp
+#  define _ShiftRem       ShiftRem
+#  define _patemp         patemp
+#  define _pbtemp         pbtemp
+#  define _pctemp         pctemp
 #endif
+
+static int _mmx_supported = 2;
 
 /* These constants are used in the inlined MMX assembly code.
    Ignore gcc's "At top level: defined but not used" warnings. */
@@ -235,12 +321,18 @@ static unsigned long long _const6   = 0x00000000000000FFLL;
 static png_uint_32  _FullLength;
 static png_uint_32  _MMXLength;
 static int          _dif;
+static int          _patemp;	// temp variables for Paeth routine
+static int          _pbtemp;
+static int          _pctemp;
 
 
-void /* PRIVATE */
-png_read_filter_row_c(png_structp png_ptr, png_row_infop row_info,
-   png_bytep row, png_bytep prev_row, int filter);
 
+
+//===========================================================================//
+//                                                                           //
+//                       P N G _ C O M B I N E _ R O W                       //
+//                                                                           //
+//===========================================================================//
 
 #if defined(PNG_HAVE_ASSEMBLER_COMBINE_ROW)
 
@@ -263,20 +355,16 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
 {
    png_debug(1,"in png_combine_row_asm\n");
 
-   if (mmx_supported == 2)
-       mmx_supported = mmxsupport();
+   if (_mmx_supported == 2) {
+       png_mmx_support();
+   }
 
-/*
-fprintf(stderr, "GRR DEBUG:  png_combine_row() pixel_depth = %d, mask = 0x%02x, unmask = 0x%02x\n", png_ptr->row_info.pixel_depth, mask, ~mask);
-fflush(stderr);
- */
    if (mask == 0xff)
    {
       png_memcpy(row, png_ptr->row_buf + 1,
        (png_size_t)((png_ptr->width * png_ptr->row_info.pixel_depth + 7) >> 3));
    }
-   /* GRR:  add "else if (mask == 0)" case?
-    *       or does png_combine_row() not even get called in that case? */
+   /* GRR:  png_combine_row() never called with mask == 0 */
    else
    {
       switch (png_ptr->row_info.pixel_depth)
@@ -452,7 +540,7 @@ fflush(stderr);
             png_bytep srcptr;
             png_bytep dstptr;
 
-            if (mmx_supported)
+            if ( _mmx_supported  )
             {
                png_uint_32 len;
                int diff;
@@ -533,9 +621,8 @@ fflush(stderr);
                     "2" (len),         // ecx
                     "1" (mask)         // edx
 
-//                  :          // clobber list
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
-                  : "%mm0", "%mm4", "%mm6", "%mm7"
+                  : "%mm0", "%mm4", "%mm6", "%mm7"  // clobber list
 #endif
                );
             }
@@ -558,7 +645,7 @@ fflush(stderr);
                   png_memcpy(dstptr, srcptr, rep_bytes);
                   srcptr += stride;
                   dstptr += stride;
-               } 
+               }
             } /* end of else */
 
             break;
@@ -569,7 +656,7 @@ fflush(stderr);
             png_bytep srcptr;
             png_bytep dstptr;
 
-            if (mmx_supported)
+            if ( _mmx_supported )
             {
                png_uint_32 len;
                int diff;
@@ -652,23 +739,22 @@ fflush(stderr);
                 "end16:                       \n\t"
                   "EMMS                       \n\t" // DONE
 
-                  : "=a" (dummy_value_a),              // output regs (dummy)
-                    "=d" (dummy_value_d),
+                  : "=a" (dummy_value_a),           // output regs (dummy)
                     "=c" (dummy_value_c),
+                    "=d" (dummy_value_d),
                     "=S" (dummy_value_S),
                     "=D" (dummy_value_D)
 
-                  : "3" (srcptr),      // esi       // input regs
-                    "4" (dstptr),      // edi
-                    "0" (diff),        // eax
-// was (unmask)     "b"    RESERVED    // ebx       // Global Offset Table idx
-                    "2" (len),         // ecx
-                    "1" (mask)         // edx
+                  : "0" (diff),        // eax       // input regs
+// was (unmask)     " "    RESERVED    // ebx       // Global Offset Table idx
+                    "1" (len),         // ecx
+                    "2" (mask),        // edx
+                    "3" (srcptr),      // esi
+                    "4" (dstptr)       // edi
 
-//                  :          // clobber list
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
-                  : "%mm0", "%mm1",
-                    "%mm4", "%mm5", "%mm6", "%mm7"
+                  : "%mm0", "%mm1", "%mm4"          // clobber list
+                  , "%mm5", "%mm6", "%mm7"
 #endif
                );
             }
@@ -691,7 +777,7 @@ fflush(stderr);
                   png_memcpy(dstptr, srcptr, rep_bytes);
                   srcptr += stride;
                   dstptr += stride;
-               } 
+               }
             } /* end of else */
 
             break;
@@ -702,7 +788,7 @@ fflush(stderr);
             png_bytep srcptr;
             png_bytep dstptr;
 
-            if (mmx_supported)
+            if ( _mmx_supported )
             {
                png_uint_32 len;
                int diff;
@@ -800,7 +886,7 @@ fflush(stderr);
                 "end24:                       \n\t"
                   "EMMS                       \n\t" // DONE
 
-                  : "=a" (dummy_value_a),              // output regs (dummy)
+                  : "=a" (dummy_value_a),           // output regs (dummy)
                     "=d" (dummy_value_d),
                     "=c" (dummy_value_c),
                     "=S" (dummy_value_S),
@@ -813,10 +899,9 @@ fflush(stderr);
                     "2" (len),         // ecx
                     "1" (mask)         // edx
 
-//                  :          // clobber list
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
-                  : "%mm0", "%mm1", "%mm2",
-                    "%mm4", "%mm5", "%mm6", "%mm7"
+                  : "%mm0", "%mm1", "%mm2"          // clobber list
+                  , "%mm4", "%mm5", "%mm6", "%mm7"
 #endif
                );
             }
@@ -839,7 +924,7 @@ fflush(stderr);
                   png_memcpy(dstptr, srcptr, rep_bytes);
                   srcptr += stride;
                   dstptr += stride;
-               } 
+               }
             } /* end of else */
 
             break;
@@ -850,7 +935,7 @@ fflush(stderr);
             png_bytep srcptr;
             png_bytep dstptr;
 
-            if (mmx_supported)
+            if ( _mmx_supported )
             {
                png_uint_32 len;
                int diff;
@@ -955,7 +1040,7 @@ fflush(stderr);
                 "end32:                       \n\t"
                   "EMMS                       \n\t" // DONE
 
-                  : "=a" (dummy_value_a),              // output regs (dummy)
+                  : "=a" (dummy_value_a),           // output regs (dummy)
                     "=d" (dummy_value_d),
                     "=c" (dummy_value_c),
                     "=S" (dummy_value_S),
@@ -968,10 +1053,9 @@ fflush(stderr);
                     "2" (len),         // ecx
                     "1" (mask)         // edx
 
-//                  :          // clobber list
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
-                  : "%mm0", "%mm1", "%mm2", "%mm3",
-                    "%mm4", "%mm5", "%mm6", "%mm7"
+                  : "%mm0", "%mm1", "%mm2", "%mm3"  // clobber list
+                  , "%mm4", "%mm5", "%mm6", "%mm7"
 #endif
                );
             }
@@ -1005,7 +1089,7 @@ fflush(stderr);
             png_bytep srcptr;
             png_bytep dstptr;
 
-            if (mmx_supported)
+            if ( _mmx_supported )
             {
                png_uint_32 len;
                int diff;
@@ -1127,7 +1211,7 @@ fflush(stderr);
                 "end48:                       \n\t"
                   "EMMS                       \n\t" // DONE
 
-                  : "=a" (dummy_value_a),              // output regs (dummy)
+                  : "=a" (dummy_value_a),           // output regs (dummy)
                     "=d" (dummy_value_d),
                     "=c" (dummy_value_c),
                     "=S" (dummy_value_S),
@@ -1140,10 +1224,9 @@ fflush(stderr);
                     "2" (len),         // ecx
                     "1" (mask)         // edx
 
-//                  :         // clobber list
 #if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
-                  : "%mm0", "%mm1", "%mm2", "%mm3",
-                    "%mm4", "%mm5", "%mm6", "%mm7"
+                  : "%mm0", "%mm1", "%mm2", "%mm3"  // clobber list
+                  , "%mm4", "%mm5", "%mm6", "%mm7"
 #endif
                );
             }
@@ -1166,7 +1249,7 @@ fflush(stderr);
                   png_memcpy(dstptr, srcptr, rep_bytes);
                   srcptr += stride;
                   dstptr += stride;
-               } 
+               }
             } /* end of else */
 
             break;
@@ -1193,7 +1276,7 @@ fflush(stderr);
                png_memcpy(dstptr, srcptr, rep_bytes);
                srcptr += stride;
                dstptr += stride;
-            } 
+            }
             break;
          }       // end 64 bpp
 
@@ -1216,6 +1299,13 @@ fflush(stderr);
 
 
 
+
+//===========================================================================//
+//                                                                           //
+//                 P N G _ D O _ R E A D _ I N T E R L A C E                 //
+//                                                                           //
+//===========================================================================//
+
 #if defined(PNG_READ_INTERLACING_SUPPORTED)
 #if defined(PNG_HAVE_ASSEMBLER_READ_INTERLACE)
 
@@ -1224,44 +1314,25 @@ fflush(stderr);
  */
 
 void /* PRIVATE */
-png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
-   png_uint_32 transformations)
+png_do_read_interlace(png_structp png_ptr)
 {
-/*
-fprintf(stderr, "GRR DEBUG:  entering png_do_read_interlace()\n");
-if (row == NULL) fprintf(stderr, "GRR DEBUG:  row == NULL\n");
-if (row_info == NULL) fprintf(stderr, "GRR DEBUG:  row_info == NULL\n");
-fflush(stderr);
- */
+   png_row_infop row_info = &(png_ptr->row_info);
+   png_bytep row = png_ptr->row_buf + 1;
+   int pass = png_ptr->pass;
+   png_uint_32 transformations = png_ptr->transformations;
+
    png_debug(1,"in png_do_read_interlace\n");
 
-   if (mmx_supported == 2)
-       mmx_supported = mmxsupport();
-/*
-{
-fprintf(stderr, "GRR DEBUG:  calling mmxsupport()\n");
-fprintf(stderr, "GRR DEBUG:  done with mmxsupport() (mmx_supported = %d)\n", mmx_supported);
-}
- */
+   if (_mmx_supported == 2) {
+       png_mmx_support();
+   }
 
-/*
-this one happened on first row due to weirdness with mmxsupport():
-if (row == NULL) fprintf(stderr, "GRR DEBUG:  now row == NULL!!!\n");
-  row was in ebx, and even though nothing touched ebx, it still got wiped...
-  [weird side effect of CPUID instruction?]
-if (row_info == NULL) fprintf(stderr, "GRR DEBUG:  now row_info == NULL!!!\n");
- */
    if (row != NULL && row_info != NULL)
    {
       png_uint_32 final_width;
 
       final_width = row_info->width * png_pass_inc[pass];
 
-/*
-fprintf(stderr, "GRR DEBUG:  png_do_read_interlace() row_info->width = %d, final_width = %d\n", row_info->width, final_width);
-fprintf(stderr, "GRR DEBUG:  png_do_read_interlace() pixel_depth = %d\n", row_info->pixel_depth);
-fflush(stderr);
- */
       switch (row_info->pixel_depth)
       {
          case 1:
@@ -1457,7 +1528,7 @@ fflush(stderr);
 
             // New code by Nirav Chhatrapati - Intel Corporation
 
-            if (mmx_supported)  // use MMX code if machine supports it
+            if ( _mmx_supported )
             {
                //--------------------------------------------------------------
                if (pixel_bytes == 3)
@@ -1467,6 +1538,7 @@ fflush(stderr);
                      int dummy_value_c;   // fix 'forbidden register spilled'
                      int dummy_value_S;
                      int dummy_value_D;
+
                      __asm__ __volatile__ (
                         "subl $21, %%edi         \n\t"
                                      // (png_pass_inc[pass] - 1)*pixel_bytes
@@ -1496,7 +1568,7 @@ fflush(stderr);
                         "jnz .loop3_pass0        \n\t"
                         "EMMS                    \n\t" // DONE
 
-                        : "=c" (dummy_value_c),           // output regs (dummy)
+                        : "=c" (dummy_value_c),        // output regs (dummy)
                           "=S" (dummy_value_S),
                           "=D" (dummy_value_D)
 
@@ -1505,9 +1577,9 @@ fflush(stderr);
                           "0" (width)      // ecx
 // doesn't work           "i" (0x0000000000FFFFFFLL)   // %1 (a.k.a. _const4)
 
-//                        :        // clobber list
 #if 0  /* %mm0, ..., %mm4 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                        : "%mm0", "%mm1", "%mm2", "%mm3", "%mm4"
+                        : "%mm0", "%mm1", "%mm2"       // clobber list
+                        , "%mm3", "%mm4"
 #endif
                      );
                   }
@@ -1516,6 +1588,7 @@ fflush(stderr);
                      int dummy_value_c;   // fix 'forbidden register spilled'
                      int dummy_value_S;
                      int dummy_value_D;
+
                      __asm__ __volatile__ (
                         "subl $9, %%edi          \n\t"
                                      // (png_pass_inc[pass] - 1)*pixel_bytes
@@ -1539,7 +1612,7 @@ fflush(stderr);
                         "jnz .loop3_pass2        \n\t"
                         "EMMS                    \n\t" // DONE
 
-                        : "=c" (dummy_value_c),           // output regs (dummy)
+                        : "=c" (dummy_value_c),        // output regs (dummy)
                           "=S" (dummy_value_S),
                           "=D" (dummy_value_D)
 
@@ -1547,9 +1620,8 @@ fflush(stderr);
                           "2" (dp),        // edi
                           "0" (width)      // ecx
 
-//                        :        // clobber list
 #if 0  /* %mm0, ..., %mm2 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                        : "%mm0", "%mm1", "%mm2"
+                        : "%mm0", "%mm1", "%mm2"       // clobber list
 #endif
                      );
                   }
@@ -1567,6 +1639,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $3, %%esi          \n\t"
                            "subl $9, %%edi          \n\t"
@@ -1593,7 +1666,7 @@ fflush(stderr);
                            "jnz .loop3_pass4        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1601,9 +1674,9 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, ..., %mm3 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1", "%mm2", "%mm3"
+                           : "%mm0", "%mm1"               // clobber list
+                           , "%mm2", "%mm3"
 #endif
                         );
                      }
@@ -1638,6 +1711,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $3, %%esi          \n\t"
                            "subl $31, %%edi         \n\t"
@@ -1665,7 +1739,7 @@ fflush(stderr);
                            "jnz .loop1_pass0        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1673,9 +1747,9 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :       // clobber list
 #if 0  /* %mm0, ..., %mm4 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1", "%mm2", "%mm3", "%mm4"
+                           : "%mm0", "%mm1", "%mm2"       // clobber list
+                           , "%mm3", "%mm4"
 #endif
                         );
                      }
@@ -1718,6 +1792,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $3, %%esi          \n\t"
                            "subl $15, %%edi         \n\t"
@@ -1736,7 +1811,7 @@ fflush(stderr);
                            "jnz .loop1_pass2        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1744,9 +1819,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -1771,6 +1845,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $7, %%esi          \n\t"
                            "subl $15, %%edi         \n\t"
@@ -1788,7 +1863,7 @@ fflush(stderr);
                            "jnz .loop1_pass4        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (none)
+                           : "=c" (dummy_value_c),        // output regs (none)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1796,9 +1871,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -1828,6 +1902,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $2, %%esi          \n\t"
                            "subl $30, %%edi         \n\t"
@@ -1848,7 +1923,7 @@ fflush(stderr);
                            "jnz .loop2_pass0        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1856,9 +1931,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -1887,6 +1961,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $2, %%esi          \n\t"
                            "subl $14, %%edi         \n\t"
@@ -1905,7 +1980,7 @@ fflush(stderr);
                            "jnz .loop2_pass2        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1913,9 +1988,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -1944,6 +2018,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $2, %%esi          \n\t"
                            "subl $6, %%edi          \n\t"
@@ -1958,7 +2033,7 @@ fflush(stderr);
                            "jnz .loop2_pass4        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -1966,9 +2041,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0"
+                           : "%mm0"                       // clobber list
 #endif
                         );
                      }
@@ -1997,21 +2071,12 @@ fflush(stderr);
                   {
                      int width_mmx = ((width >> 1) << 1);
                      width -= width_mmx;        // 0,1 pixels => 0,4 bytes
-/*
-fprintf(stderr, "GRR DEBUG:  png_do_read_interlace() pass = %d, width_mmx = %d, width = %d\n", pass, width_mmx, width);
-fprintf(stderr, "            sptr = 0x%08lx, dp = 0x%08lx\n", (unsigned long)sptr, (unsigned long)dp);
-fflush(stderr);
- */
                      if (width_mmx)
                      {
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
-#ifdef GRR_DEBUG
-                        FILE *junk = fopen("junk.4bytes", "wb");
-                        if (junk)
-                           fclose(junk);
-#endif /* GRR_DEBUG */
+
                         __asm__ __volatile__ (
                            "subl $4, %%esi          \n\t"
                            "subl $60, %%edi         \n\t"
@@ -2035,17 +2100,16 @@ fflush(stderr);
                            "jnz .loop4_pass0        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
- 
+
                            : "1" (sptr),      // esi      // input regs
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -2074,6 +2138,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $4, %%esi          \n\t"
                            "subl $28, %%edi         \n\t"
@@ -2093,17 +2158,16 @@ fflush(stderr);
                            "jnz .loop4_pass2        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
- 
+
                            : "1" (sptr),      // esi      // input regs
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -2132,6 +2196,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $4, %%esi          \n\t"
                            "subl $12, %%edi         \n\t"
@@ -2149,7 +2214,7 @@ fflush(stderr);
                            "jnz .loop4_pass4        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -2157,9 +2222,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width_mmx)  // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0, %mm1 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0", "%mm1"
+                           : "%mm0", "%mm1"               // clobber list
 #endif
                         );
                      }
@@ -2181,58 +2245,50 @@ fflush(stderr);
                   }
                } /* end of pixel_bytes == 4 */
 
-#define STILL_WORKING_ON_THIS
-#ifdef STILL_WORKING_ON_THIS  // GRR: should work, but needs testing
-                              //      (special 64-bit version of rpng2)
-
                //--------------------------------------------------------------
                else if (pixel_bytes == 8)
                {
+// GRR TEST:  should work, but needs testing (special 64-bit version of rpng2?)
                   // GRR NOTE:  no need to combine passes here!
                   if (((pass == 0) || (pass == 1)) && width)
                   {
+                     int dummy_value_c;  // fix 'forbidden register spilled'
+                     int dummy_value_S;
+                     int dummy_value_D;
+
                      // source is 8-byte RRGGBBAA
                      // dest is 64-byte RRGGBBAA RRGGBBAA RRGGBBAA RRGGBBAA ...
-                        int dummy_value_c;  // fix 'forbidden register spilled'
-                        int dummy_value_S;
-                        int dummy_value_D;
-#ifdef GRR_DEBUG
-                        FILE *junk = fopen("junk.8bytes", "wb");
-                        if (junk)
-                            fclose(junk);
-#endif /* GRR_DEBUG */
-                        __asm__ __volatile__ (
-                           "subl $56, %%edi         \n\t" // start of last block
+                     __asm__ __volatile__ (
+                        "subl $56, %%edi         \n\t" // start of last block
 
-                        ".loop8_pass0:              \n\t"
-                           "movq (%%esi), %%mm0     \n\t" // 7 6 5 4 3 2 1 0
-                           "movq %%mm0, (%%edi)     \n\t"
-                           "movq %%mm0, 8(%%edi)    \n\t"
-                           "movq %%mm0, 16(%%edi)   \n\t"
-                           "movq %%mm0, 24(%%edi)   \n\t"
-                           "movq %%mm0, 32(%%edi)   \n\t"
-                           "movq %%mm0, 40(%%edi)   \n\t"
-                           "movq %%mm0, 48(%%edi)   \n\t"
-                           "subl $8, %%esi          \n\t"
-                           "movq %%mm0, 56(%%edi)   \n\t"
-                           "subl $64, %%edi         \n\t"
-                           "decl %%ecx              \n\t"
-                           "jnz .loop8_pass0        \n\t"
-                           "EMMS                    \n\t" // DONE
+                     ".loop8_pass0:              \n\t"
+                        "movq (%%esi), %%mm0     \n\t" // 7 6 5 4 3 2 1 0
+                        "movq %%mm0, (%%edi)     \n\t"
+                        "movq %%mm0, 8(%%edi)    \n\t"
+                        "movq %%mm0, 16(%%edi)   \n\t"
+                        "movq %%mm0, 24(%%edi)   \n\t"
+                        "movq %%mm0, 32(%%edi)   \n\t"
+                        "movq %%mm0, 40(%%edi)   \n\t"
+                        "movq %%mm0, 48(%%edi)   \n\t"
+                        "subl $8, %%esi          \n\t"
+                        "movq %%mm0, 56(%%edi)   \n\t"
+                        "subl $64, %%edi         \n\t"
+                        "decl %%ecx              \n\t"
+                        "jnz .loop8_pass0        \n\t"
+                        "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
-                             "=S" (dummy_value_S),
-                             "=D" (dummy_value_D)
+                        : "=c" (dummy_value_c),        // output regs (dummy)
+                          "=S" (dummy_value_S),
+                          "=D" (dummy_value_D)
 
-                           : "1" (sptr),      // esi      // input regs
-                             "2" (dp),        // edi
-                             "0" (width)      // ecx
+                        : "1" (sptr),      // esi      // input regs
+                          "2" (dp),        // edi
+                          "0" (width)      // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0"
+                        : "%mm0"                       // clobber list
 #endif
-                        );
+                     );
                   }
                   else if (((pass == 2) || (pass == 3)) && width)
                   {
@@ -2245,6 +2301,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $24, %%edi         \n\t" // start of last block
 
@@ -2260,7 +2317,7 @@ fflush(stderr);
                            "jnz .loop8_pass2        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -2268,9 +2325,8 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width)      // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0"
+                           : "%mm0"                       // clobber list
 #endif
                         );
                      }
@@ -2286,6 +2342,7 @@ fflush(stderr);
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
+
                         __asm__ __volatile__ (
                            "subl $8, %%edi          \n\t" // start of last block
 
@@ -2299,7 +2356,7 @@ fflush(stderr);
                            "jnz .loop8_pass4        \n\t"
                            "EMMS                    \n\t" // DONE
 
-                           : "=c" (dummy_value_c),           // output regs (dummy)
+                           : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
                              "=D" (dummy_value_D)
 
@@ -2307,17 +2364,14 @@ fflush(stderr);
                              "2" (dp),        // edi
                              "0" (width)      // ecx
 
-//                           :        // clobber list
 #if 0  /* %mm0 not supported by gcc 2.7.2.3 or egcs 1.1 */
-                           : "%mm0"
+                           : "%mm0"                       // clobber list
 #endif
                         );
                      }
                   }
 
                } /* end of pixel_bytes == 8 */
-
-#endif /* STILL_WORKING_ON_THIS */
 
                //--------------------------------------------------------------
                else if (pixel_bytes == 6)
@@ -2352,7 +2406,7 @@ fflush(stderr);
                      sptr-= pixel_bytes;
                   }
                }
-            } // end of mmx_supported =========================================
+            } // end of _mmx_supported ========================================
 
             else /* MMX not supported:  use modified C code - takes advantage
                   *   of inlining of memcpy for a constant */
@@ -2477,19 +2531,30 @@ fflush(stderr);
 #endif /* PNG_READ_INTERLACING_SUPPORTED */
 
 
+
+
 // These variables are utilized in the functions below.  They are declared
 // globally here to ensure alignment on 8-byte boundaries.
 
 union uAll {
    long long use;
    double  align;
-} LBCarryMask = {0x0101010101010101LL},
-  HBClearMask = {0x7f7f7f7f7f7f7f7fLL},
-  ActiveMask, ActiveMask2, ActiveMaskEnd, ShiftBpp, ShiftRem;
+} _LBCarryMask = {0x0101010101010101LL},
+  _HBClearMask = {0x7f7f7f7f7f7f7f7fLL},
+  _ActiveMask, _ActiveMask2, _ActiveMaskEnd, _ShiftBpp, _ShiftRem;
 
+
+
+
+//===========================================================================//
+//                                                                           //
+//           P N G _ R E A D _ F I L T E R _ R O W _ M M X _ A V G           //
+//                                                                           //
+//===========================================================================//
 
 // Optimized code for PNG Average filter decoder
-void /* PRIVATE */
+
+static void /* PRIVATE */
 png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
                             png_bytep prev_row)
 {
@@ -2497,29 +2562,32 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
    int dummy_value_c;   // fix 'forbidden register 2 (cx) was spilled' error
    int dummy_value_S;
    int dummy_value_D;
-// int diff;  GRR: global now (shortened to dif/_dif)
 
-   bpp = (row_info->pixel_depth + 7) >> 3;  // Get # bytes per pixel
-   _FullLength  = row_info->rowbytes;        // # of bytes to filter
+   bpp = (row_info->pixel_depth + 7) >> 3;  // get # bytes per pixel
+   _FullLength  = row_info->rowbytes;       // # of bytes to filter
+
    __asm__ __volatile__ (
-      // Init address pointers and offset
-//GRR "movl row, %%edi             \n\t" // edi ==> Avg(x)
-      "xorl %%ebx, %%ebx           \n\t" // ebx ==> x
+      // initialize address pointers and offset
+#ifdef __PIC__
+      "pushl %%ebx                 \n\t" // save index to Global Offset Table
+#endif
+//pre "movl row, %%edi             \n\t" // edi:  Avg(x)
+      "xorl %%ebx, %%ebx           \n\t" // ebx:  x
       "movl %%edi, %%edx           \n\t"
-//GRR "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
-//GRR "subl bpp, %%edx             \n\t" // (bpp is preloaded into ecx)
-      "subl %%ecx, %%edx           \n\t" // edx ==> Raw(x-bpp)
+//pre "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
+//pre "subl bpp, %%edx             \n\t" // (bpp is preloaded into ecx)
+      "subl %%ecx, %%edx           \n\t" // edx:  Raw(x-bpp)
 
       "xorl %%eax,%%eax            \n\t"
 
       // Compute the Raw value for the first bpp bytes
       //    Raw(x) = Avg(x) + (Prior(x)/2)
    "avg_rlp:                       \n\t"
-      "movb (%%esi,%%ebx,),%%al    \n\t" // Load al with Prior(x)
+      "movb (%%esi,%%ebx,),%%al    \n\t" // load al with Prior(x)
       "incl %%ebx                  \n\t"
       "shrb %%al                   \n\t" // divide by 2
       "addb -1(%%edi,%%ebx,),%%al  \n\t" // add Avg(x); -1 to offset inc ebx
-//GRR "cmpl bpp, %%ebx             \n\t" // (bpp is preloaded into ecx)
+//pre "cmpl bpp, %%ebx             \n\t" // (bpp is preloaded into ecx)
       "cmpl %%ecx, %%ebx           \n\t"
       "movb %%al,-1(%%edi,%%ebx,)  \n\t" // write Raw(x); -1 to offset inc ebx
       "jb avg_rlp                  \n\t" // mov does not affect flags
@@ -2529,13 +2597,14 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
       "addl %%ebx, _dif            \n\t" // add bpp
       "addl $0xf, _dif             \n\t" // add 7+8 to incr past alignment bdry
       "andl $0xfffffff8, _dif      \n\t" // mask to alignment boundary
-      "subl %%edi, _dif            \n\t" // subtract from start => value ebx at alignment
-      "jz avg_go                   \n\t"
+      "subl %%edi, _dif            \n\t" // subtract from start => value ebx at
+      "jz avg_go                   \n\t" //  alignment
 
       // fix alignment
       // Compute the Raw value for the bytes up to the alignment boundary
       //    Raw(x) = Avg(x) + ((Raw(x-bpp) + Prior(x))/2)
       "xorl %%ecx, %%ecx           \n\t"
+
    "avg_lp1:                       \n\t"
       "xorl %%eax, %%eax           \n\t"
       "movb (%%esi,%%ebx,), %%cl   \n\t" // load cl with Prior(x)
@@ -2555,108 +2624,116 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
       "andl $0x00000007, %%eax     \n\t" // calc bytes over mult of 8
       "subl %%eax, %%ecx           \n\t" // drop over bytes from original length
       "movl %%ecx, _MMXLength      \n\t"
+#ifdef __PIC__
+      "popl %%ebx                  \n\t" // restore index to Global Offset Table
+#endif
 
-      : "=c" (dummy_value_c), // output regs/vars here, e.g., "=m" (_MMXLength) instead of final instr
+      : "=c" (dummy_value_c),            // output regs (dummy)
         "=S" (dummy_value_S),
         "=D" (dummy_value_D)
 
-      : "1" (prev_row),  // esi          // input regs
-        "2" (row),       // edi
-        "0" (bpp)        // ecx
+      : "0" (bpp),       // ecx          // input regs
+        "1" (prev_row),  // esi
+        "2" (row)        // edi
 
-      : "%eax", "%ebx",          // clobber list
-        "%edx"
-// GRR: INCLUDE "memory" as clobbered? (_dif, _MMXLength)     PROBABLY
+      : "%eax", "%edx"                   // clobber list
+#ifndef __PIC__
+      , "%ebx"
+#endif
+      // GRR: INCLUDE "memory" as clobbered? (_dif, _MMXLength)
+      // (seems to work fine without...)
    );
 
-#ifdef GRR_GCC_MMX_CONVERTED
-   // Now do the math for the rest of the row
-   switch ( bpp )
+   // now do the math for the rest of the row
+   switch (bpp)
    {
       case 3:
       {
-         ActiveMask.use  = 0x0000000000ffffff;
-         ShiftBpp.use = 24;    // == 3 * 8
-         ShiftRem.use = 40;    // == 64 - 24
-         __asm__ (
-            // Re-init address pointers and offset
-            "movq $ActiveMask, %%mm7     \n\t"
-            "movl _dif, %%ebx            \n\t" // ebx ==> x = offset to alignment boundary
-            "movq $LBCarryMask, %%mm5    \n\t"
-            "movl row, %%edi             \n\t" // edi ==> Avg(x)
-            "movq $HBClearMask, %%mm4    \n\t"
-            "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
-            // PRIME the pump (load the first Raw(x-bpp) data set)
-            "movq -8(%%edi,%%ebx,), %%mm2 \n\t" // Load previous aligned 8 bytes
-                                          // (we correct position in loop below)
-         "avg_3lp:                       \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t" // Load mm0 with Avg(x)
-            // Add (Prev_row/2) to Average
-            "movq %%mm5, %%mm3           \n\t"
-            "psrlq $ShiftRem, %%mm2      \n\t" // Correct position Raw(x-bpp) data
-            "movq (%%esi,%%ebx,), %%mm1  \n\t" // Load mm1 with Prior(x)
-            "movq %%mm7, %%mm6           \n\t"
-            "pand %%mm1, %%mm3           \n\t" // get lsb for each prev_row byte
-            "psrlq $1, %%mm1             \n\t" // divide prev_row bytes by 2
-            "pand  %%mm4, %%mm1          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm1, %%mm0          \n\t" // add (Prev_row/2) to Avg for each byte
-            // Add 1st active group (Raw(x-bpp)/2) to Average with LBCarry
-            "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
-            "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                               // lsb's were == 1 (Only valid for active group)
-            "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
-            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 1 bytes to add to Avg
-            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
+         _ActiveMask.use  = 0x0000000000ffffffLL;
+         _ShiftBpp.use = 24;    // == 3 * 8
+         _ShiftRem.use = 40;    // == 64 - 24
+
+         __asm__ __volatile__ (
+            // re-init address pointers and offset
+            "movq _ActiveMask, %%mm7      \n\t"
+            "movl _dif, %%ecx             \n\t" // ecx:  x = offset to
+            "movq _LBCarryMask, %%mm5     \n\t" //  alignment boundary
+// preload  "movl row, %%edi              \n\t" // edi:  Avg(x)
+            "movq _HBClearMask, %%mm4     \n\t"
+// preload  "movl prev_row, %%esi         \n\t" // esi:  Prior(x)
+
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm2 \n\t" // load previous aligned 8 bytes
+                                                // (correct pos. in loop below)
+         "avg_3lp:                        \n\t"
+            "movq (%%edi,%%ecx,), %%mm0   \n\t" // load mm0 with Avg(x)
+            "movq %%mm5, %%mm3            \n\t"
+            "psrlq _ShiftRem, %%mm2       \n\t" // correct position Raw(x-bpp) data
+            "movq (%%esi,%%ecx,), %%mm1   \n\t" // load mm1 with Prior(x)
+            "movq %%mm7, %%mm6            \n\t"
+            "pand %%mm1, %%mm3            \n\t" // get lsb for each prev_row byte
+            "psrlq $1, %%mm1              \n\t" // divide prev_row bytes by 2
+            "pand  %%mm4, %%mm1           \n\t" // clear invalid bit 7 of each byte
+            "paddb %%mm1, %%mm0           \n\t" // add (Prev_row/2) to Avg for each byte
+            // add 1st active group (Raw(x-bpp)/2) to average with LBCarry
+            "movq %%mm3, %%mm1            \n\t" // now use mm1 for getting LBCarrys
+            "pand %%mm2, %%mm1            \n\t" // get LBCarrys for each byte where both
+                               // lsb's were == 1 (only valid for active group)
+            "psrlq $1, %%mm2              \n\t" // divide raw bytes by 2
+            "pand  %%mm4, %%mm2           \n\t" // clear invalid bit 7 of each byte
+            "paddb %%mm1, %%mm2           \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
+            "pand %%mm6, %%mm2            \n\t" // leave only Active Group 1 bytes to add to Avg
+            "paddb %%mm2, %%mm0           \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
                                //  byte
-            // Add 2nd active group (Raw(x-bpp)/2) to Average with LBCarry
-            "psllq $ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 3-5
-            "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
-            "psllq $ShiftBpp, %%mm2      \n\t" // shift data to position correctly
-            "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
-            "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                               // lsb's were == 1 (Only valid for active group)
-            "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
-            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 2 bytes to add to Avg
-            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
+            // add 2nd active group (Raw(x-bpp)/2) to average with _LBCarry
+            "psllq _ShiftBpp, %%mm6       \n\t" // shift the mm6 mask to cover bytes 3-5
+            "movq %%mm0, %%mm2            \n\t" // mov updated Raws to mm2
+            "psllq _ShiftBpp, %%mm2       \n\t" // shift data to pos. correctly
+            "movq %%mm3, %%mm1            \n\t" // now use mm1 for getting LBCarrys
+            "pand %%mm2, %%mm1            \n\t" // get LBCarrys for each byte where both
+                               // lsb's were == 1 (only valid for active group)
+            "psrlq $1, %%mm2              \n\t" // divide raw bytes by 2
+            "pand  %%mm4, %%mm2           \n\t" // clear invalid bit 7 of each byte
+            "paddb %%mm1, %%mm2           \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
+            "pand %%mm6, %%mm2            \n\t" // leave only Active Group 2 bytes to add to Avg
+            "paddb %%mm2, %%mm0           \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
                                //  byte
 
-            // Add 3rd active group (Raw(x-bpp)/2) to Average with LBCarry
-            "psllq $ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover the last two
+            // add 3rd active group (Raw(x-bpp)/2) to average with _LBCarry
+            "psllq _ShiftBpp, %%mm6       \n\t" // shift mm6 mask to cover last two
                                  // bytes
-            "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
-            "psllq $ShiftBpp, %%mm2      \n\t" // shift data to position correctly
+            "movq %%mm0, %%mm2            \n\t" // mov updated Raws to mm2
+            "psllq _ShiftBpp, %%mm2       \n\t" // shift data to pos. correctly
                               // Data only needs to be shifted once here to
                               // get the correct x-bpp offset.
-            "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
-            "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                              // lsb's were == 1 (Only valid for active group)
-            "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
-            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 2 bytes to add to Avg
-            "addl $8, %%ebx              \n\t"
-            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
-                                               // byte
-            // Now ready to write back to memory
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t"
-            // Move updated Raw(x) to use as Raw(x-bpp) for next loop
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, %%mm2           \n\t" // mov updated Raw(x) to mm2
-            "jb avg_3lp                  \n\t"
+            "movq %%mm3, %%mm1            \n\t" // now use mm1 for getting LBCarrys
+            "pand %%mm2, %%mm1            \n\t" // get LBCarrys for each byte where both
+                              // lsb's were == 1 (only valid for active group)
+            "psrlq $1, %%mm2              \n\t" // divide raw bytes by 2
+            "pand  %%mm4, %%mm2           \n\t" // clear invalid bit 7 of each byte
+            "paddb %%mm1, %%mm2           \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
+            "pand %%mm6, %%mm2            \n\t" // leave only Active Group 2 bytes to add to Avg
+            "addl $8, %%ecx               \n\t"
+            "paddb %%mm2, %%mm0           \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
+                                                // byte
+            // now ready to write back to memory
+            "movq %%mm0, -8(%%edi,%%ecx,) \n\t"
+            // move updated Raw(x) to use as Raw(x-bpp) for next loop
+            "cmpl _MMXLength, %%ecx       \n\t"
+            "movq %%mm0, %%mm2            \n\t" // mov updated Raw(x) to mm2
+            "jb avg_3lp                   \n\t"
 
-            : // output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),             // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : "S" (prev_row),  // esi          // input regs
-              "D" (row)        // edi
+            : "0" (prev_row),  // esi           // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi"           // clobber list
-//            GRR: INCLUDE "memory" as clobbered? (_dif, _MMXLength)   PROBABLY
-//          , "%mm0", "%mm1", "%mm2", "%mm3",
-//            "%mm4", "%mm5", "%mm6", "%mm7"
+            : "%ecx"                            // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
       break;  // end 3 bpp
@@ -2664,189 +2741,207 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
       case 6:
       case 4:
       //case 7:   // who wrote this?  PNG doesn't support 5 or 7 bytes/pixel
-      //case 5:
+      //case 5:   // GRR BOGUS
       {
-         ActiveMask.use  = 0xffffffffffffffff;  // use shift below to clear
-                                                // appropriate inactive bytes
-         ShiftBpp.use = bpp << 3;
-         ShiftRem.use = 64 - ShiftBpp.use;
-         __asm__ (
-            "movq $HBClearMask, %%mm4    \n\t"
+         _ActiveMask.use  = 0xffffffffffffffffLL; // use shift below to clear
+                                                  // appropriate inactive bytes
+         _ShiftBpp.use = bpp << 3;
+         _ShiftRem.use = 64 - _ShiftBpp.use;
 
-            // Re-init address pointers and offset
-            "movl _dif, %%ebx            \n\t" // ebx ==> x = offset to alignment boundary
+         __asm__ __volatile__ (
+            "movq _HBClearMask, %%mm4    \n\t"
 
-            // Load ActiveMask and clear all bytes except for 1st active group
-            "movq $ActiveMask, %%mm7     \n\t"
-            "movl row, %%edi             \n\t" // edi ==> Avg(x)
-            "psrlq $ShiftRem, %%mm7      \n\t"
-            "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
+            // re-init address pointers and offset
+            "movl _dif, %%ecx            \n\t" // ecx:  x = offset to alignment boundary
+
+            // load _ActiveMask and clear all bytes except for 1st active group
+            "movq _ActiveMask, %%mm7     \n\t"
+// preload  "movl row, %%edi             \n\t" // edi:  Avg(x)
+            "psrlq _ShiftRem, %%mm7      \n\t"
+// preload  "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
             "movq %%mm7, %%mm6           \n\t"
-            "movq $LBCarryMask, %%mm5    \n\t"
-            "psllq $ShiftBpp, %%mm6      \n\t" // Create mask for 2nd active group
+            "movq _LBCarryMask, %%mm5    \n\t"
+            "psllq _ShiftBpp, %%mm6      \n\t" // create mask for 2nd active group
 
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm2 \n\t" // Load previous aligned 8 bytes
-                                          // (we correct position in loop below)
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm2 \n\t" // load previous aligned 8 bytes
+                                          // (we correct pos. in loop below)
          "avg_4lp:                       \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "psrlq $ShiftRem, %%mm2      \n\t" // shift data to position correctly
-            "movq (%%esi,%%ebx,), %%mm1  \n\t"
-            // Add (Prev_row/2) to Average
+            "movq (%%edi,%%ecx,), %%mm0  \n\t"
+            "psrlq _ShiftRem, %%mm2      \n\t" // shift data to pos. correctly
+            "movq (%%esi,%%ecx,), %%mm1  \n\t"
+            // add (Prev_row/2) to average
             "movq %%mm5, %%mm3           \n\t"
             "pand %%mm1, %%mm3           \n\t" // get lsb for each prev_row byte
             "psrlq $1, %%mm1             \n\t" // divide prev_row bytes by 2
             "pand  %%mm4, %%mm1          \n\t" // clear invalid bit 7 of each byte
             "paddb %%mm1, %%mm0          \n\t" // add (Prev_row/2) to Avg for each byte
-            // Add 1st active group (Raw(x-bpp)/2) to Average with LBCarry
+            // add 1st active group (Raw(x-bpp)/2) to average with _LBCarry
             "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
             "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                              // lsb's were == 1 (Only valid for active group)
+                              // lsb's were == 1 (only valid for active group)
             "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
             "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
             "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm7, %%mm2           \n\t" // Leave only Active Group 1 bytes to add to Avg
+            "pand %%mm7, %%mm2           \n\t" // leave only Active Group 1 bytes to add to Avg
             "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
                               // byte
-            // Add 2nd active group (Raw(x-bpp)/2) to Average with LBCarry
+            // add 2nd active group (Raw(x-bpp)/2) to average with _LBCarry
             "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
-            "psllq $ShiftBpp, %%mm2      \n\t" // shift data to position correctly
-            "addl $8, %%ebx              \n\t"
+            "psllq _ShiftBpp, %%mm2      \n\t" // shift data to pos. correctly
+            "addl $8, %%ecx              \n\t"
             "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
             "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                              // lsb's were == 1 (Only valid for active group)
+                              // lsb's were == 1 (only valid for active group)
             "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
             "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
             "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 2 bytes to add to Avg
+            "pand %%mm6, %%mm2           \n\t" // leave only Active Group 2 bytes to add to Avg
             "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active
                               // byte
-            "cmpl _MMXLength, %%ebx      \n\t"
-            // Now ready to write back to memory
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t"
-            // Prep Raw(x-bpp) for next loop
+            "cmpl _MMXLength, %%ecx      \n\t"
+            // now ready to write back to memory
+            "movq %%mm0, -8(%%edi,%%ecx,) \n\t"
+            // prep Raw(x-bpp) for next loop
             "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
             "jb avg_4lp                  \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),            // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi          // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            : "%ecx"                           // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
       break;  // end 4,6 bpp
 
       case 2:
       {
-         ActiveMask.use  = 0x000000000000ffff;
-         ShiftBpp.use = 24;   // == 3 * 8
-         ShiftRem.use = 40;   // == 64 - 24
-         __asm__ (
-            // Load ActiveMask
-            "movq $ActiveMask, %%mm7     \n\t"
-            // Re-init address pointers and offset
-            "movl _dif, %%ebx            \n\t" // ebx ==> x = offset to alignment boundary
-            "movq $LBCarryMask, %%mm5    \n\t"
-            "movl row, %%edi             \n\t" // edi ==> Avg(x)
-            "movq $HBClearMask, %%mm4    \n\t"
-            "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm2 \n\t" // Load previous aligned 8 bytes
-                              // (we correct position in loop below)
+         _ActiveMask.use  = 0x000000000000ffffLL;
+         _ShiftBpp.use = 16;   // == 2 * 8
+         _ShiftRem.use = 48;   // == 64 - 16
+
+         __asm__ __volatile__ (
+            // load _ActiveMask
+            "movq _ActiveMask, %%mm7     \n\t"
+            // re-init address pointers and offset
+            "movl _dif, %%ecx            \n\t" // ecx:  x = offset to alignment boundary
+            "movq _LBCarryMask, %%mm5    \n\t"
+// preload  "movl row, %%edi             \n\t" // edi:  Avg(x)
+            "movq _HBClearMask, %%mm4    \n\t"
+// preload  "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
+
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm2 \n\t" // load previous aligned 8 bytes
+                              // (we correct pos. in loop below)
          "avg_2lp:                       \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "psllq $ShiftRem, %%mm2      \n\t" // shift data to position correctly
-            "movq (%%esi,%%ebx,), %%mm1  \n\t"
-            // Add (Prev_row/2) to Average
+            "movq (%%edi,%%ecx,), %%mm0  \n\t"
+            "psrlq _ShiftRem, %%mm2      \n\t" // shift data to pos. correctly
+            "movq (%%esi,%%ecx,), %%mm1  \n\t" //  (GRR BUGFIX:  was psllq)
+            // add (Prev_row/2) to average
             "movq %%mm5, %%mm3           \n\t"
             "pand %%mm1, %%mm3           \n\t" // get lsb for each prev_row byte
             "psrlq $1, %%mm1             \n\t" // divide prev_row bytes by 2
             "pand  %%mm4, %%mm1          \n\t" // clear invalid bit 7 of each byte
             "movq %%mm7, %%mm6           \n\t"
             "paddb %%mm1, %%mm0          \n\t" // add (Prev_row/2) to Avg for each byte
-            // Add 1st active group (Raw(x-bpp)/2) to Average with LBCarry
+
+            // add 1st active group (Raw(x-bpp)/2) to average with _LBCarry
             "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
             "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                              // lsb's were == 1 (Only valid for active group)
+                                               // lsb's were == 1 (only valid for active group)
             "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
             "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
             "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 1 bytes to add to Avg
-            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active byte
-            // Add 2nd active group (Raw(x-bpp)/2) to Average with LBCarry
-            "psllq $ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 2 & 3
-            "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
-            "psllq $ShiftBpp, %%mm2      \n\t" // shift data to position correctly
-            "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
-            "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                                // lsb's were == 1 (Only valid for active group)
-            "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
-            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 2 bytes to add to Avg
+            "pand %%mm6, %%mm2           \n\t" // leave only Active Group 1 bytes to add to Avg
             "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active byte
 
-            // Add rdd active group (Raw(x-bpp)/2) to Average with LBCarry
-            "psllq $ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 4 & 5
+            // add 2nd active group (Raw(x-bpp)/2) to average with _LBCarry
+            "psllq _ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 2 & 3
             "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
-            "psllq $ShiftBpp, %%mm2      \n\t" // shift data to position correctly
-                                // Data only needs to be shifted once here to
-                                // get the correct x-bpp offset.
+            "psllq _ShiftBpp, %%mm2      \n\t" // shift data to pos. correctly
             "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
             "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                                // lsb's were == 1 (Only valid for active group)
+                                               // lsb's were == 1 (only valid for active group)
             "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
             "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
             "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 2 bytes to add to Avg
+            "pand %%mm6, %%mm2           \n\t" // leave only Active Group 2 bytes to add to Avg
             "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active byte
 
-            // Add 4th active group (Raw(x-bpp)/2) to Average with LBCarry
-            "psllq $ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 6 & 7
+            // add 3rd active group (Raw(x-bpp)/2) to average with _LBCarry
+            "psllq _ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 4 & 5
             "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
-            "psllq $ShiftBpp, %%mm2      \n\t" // shift data to position correctly
-                                 // Data only needs to be shifted once here to
-                                 // get the correct x-bpp offset.
-            "addl $8, %%ebx              \n\t"
+            "psllq _ShiftBpp, %%mm2      \n\t" // shift data to pos. correctly
             "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
             "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
-                             // lsb's were == 1 (Only valid for active group)
+                                               // lsb's were == 1 (only valid for active group)
             "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
             "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
             "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
-            "pand %%mm6, %%mm2           \n\t" // Leave only Active Group 2 bytes to add to Avg
+            "pand %%mm6, %%mm2           \n\t" // leave only Active Group 2 bytes to add to Avg
             "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active byte
 
-            "cmpl _MMXLength, %%ebx      \n\t"
-            // Now ready to write back to memory
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t"
-            // Prep Raw(x-bpp) for next loop
+            // add 4th active group (Raw(x-bpp)/2) to average with _LBCarry
+            "psllq _ShiftBpp, %%mm6      \n\t" // shift the mm6 mask to cover bytes 6 & 7
+            "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
+            "psllq _ShiftBpp, %%mm2      \n\t" // shift data to pos. correctly
+            "addl $8, %%ecx              \n\t"
+            "movq %%mm3, %%mm1           \n\t" // now use mm1 for getting LBCarrys
+            "pand %%mm2, %%mm1           \n\t" // get LBCarrys for each byte where both
+                                               // lsb's were == 1 (only valid for active group)
+            "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
+            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
+            "paddb %%mm1, %%mm2          \n\t" // add LBCarrys to (Raw(x-bpp)/2) for each byte
+            "pand %%mm6, %%mm2           \n\t" // leave only Active Group 2 bytes to add to Avg
+            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) + LBCarrys to Avg for each Active byte
+
+            "cmpl _MMXLength, %%ecx      \n\t"
+            // now ready to write back to memory
+            "movq %%mm0, -8(%%edi,%%ecx,) \n\t"
+            // prep Raw(x-bpp) for next loop
             "movq %%mm0, %%mm2           \n\t" // mov updated Raws to mm2
             "jb avg_2lp                  \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),            // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi          // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            : "%ecx"                           // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
       break;  // end 2 bpp
 
       case 1:
       {
-         __asm__ (
-            // Re-init address pointers and offset
-            "movl _dif, %%ebx            \n\t" // ebx ==> x = offset to alignment boundary
-            "movl row, %%edi             \n\t" // edi ==> Avg(x)
-            "cmpl _FullLength, %%ebx     \n\t" // Test if offset at end of array
+         __asm__ __volatile__ (
+            // re-init address pointers and offset
+#ifdef __PIC__
+            "pushl %%ebx                 \n\t" // save Global Offset Table index
+#endif
+            "movl _dif, %%ebx            \n\t" // ebx:  x = offset to alignment boundary
+// preload  "movl row, %%edi             \n\t" // edi:  Avg(x)
+            "cmpl _FullLength, %%ebx     \n\t" // test if offset at end of array
             "jnb avg_1end                \n\t"
-            // Do Paeth decode for remaining bytes
-            "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
+            // do Paeth decode for remaining bytes
+// preload  "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
             "movl %%edi, %%edx           \n\t"
-            "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx in loop below
-            "subl bpp, %%edx             \n\t" // edx ==> Raw(x-bpp)
+// preload  "subl bpp, %%edx             \n\t" // (bpp is preloaded into ecx)
+            "subl %%ecx, %%edx           \n\t" // edx:  Raw(x-bpp)
+            "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx
+                                               //  in loop below
          "avg_1lp:                       \n\t"
             // Raw(x) = Avg(x) + ((Raw(x-bpp) + Prior(x))/2)
             "xorl %%eax, %%eax           \n\t"
@@ -2855,77 +2950,99 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
             "addw %%cx, %%ax             \n\t"
             "incl %%ebx                  \n\t"
             "shrw %%ax                   \n\t" // divide by 2
-            "addb -1(%%edi,%%ebx,), %%al \n\t" // Add Avg(x); -1 to offset inc ebx
-            "cmpl _FullLength, %%ebx     \n\t" // Check if at end of array
-            "movb %%al, -1(%%edi,%%ebx,) \n\t" // Write back Raw(x);
+            "addb -1(%%edi,%%ebx,), %%al \n\t" // add Avg(x); -1 to offset inc ebx
+            "cmpl _FullLength, %%ebx     \n\t" // check if at end of array
+            "movb %%al, -1(%%edi,%%ebx,) \n\t" // write back Raw(x);
                          // mov does not affect flags; -1 to offset inc ebx
             "jb avg_1lp                  \n\t"
+
          "avg_1end:                      \n\t"
+#ifdef __PIC__
+            "popl %%ebx                  \n\t" // Global Offset Table index
+#endif
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=c" (dummy_value_c),            // output regs (dummy)
+              "=S" (dummy_value_S),
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (bpp),       // ecx          // input regs
+              "1" (prev_row),  // esi
+              "2" (row)        // edi
 
-            : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
+            : "%eax", "%edx"                   // clobber list
+#ifndef __PIC__
+            , "%ebx"
+#endif
          );
       }
       return;  // end 1 bpp
 
       case 8:
       {
-         __asm__ (
-            // Re-init address pointers and offset
-            "movl _dif, %%ebx            \n\t" // ebx ==> x = offset to alignment boundary
-            "movq $LBCarryMask, %%mm5    \n\t"
-            "movl row, %%edi             \n\t" // edi ==> Avg(x)
-            "movq $HBClearMask, %%mm4    \n\t"
-            "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm2 \n\t" // Load previous aligned 8 bytes
-                                // (NO NEED to correct position in loop below)
+         __asm__ __volatile__ (
+            // re-init address pointers and offset
+            "movl _dif, %%ecx            \n\t" // ecx:  x == offset to alignment
+            "movq _LBCarryMask, %%mm5    \n\t" //            boundary
+// preload  "movl row, %%edi             \n\t" // edi:  Avg(x)
+            "movq _HBClearMask, %%mm4    \n\t"
+// preload  "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
+
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm2 \n\t" // load previous aligned 8 bytes
+                                      // (NO NEED to correct pos. in loop below)
+
          "avg_8lp:                       \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
+            "movq (%%edi,%%ecx,), %%mm0  \n\t"
             "movq %%mm5, %%mm3           \n\t"
-            "movq (%%esi,%%ebx,), %%mm1  \n\t"
-            "addl $8, %%ebx              \n\t"
+            "movq (%%esi,%%ecx,), %%mm1  \n\t"
+            "addl $8, %%ecx              \n\t"
             "pand %%mm1, %%mm3           \n\t" // get lsb for each prev_row byte
             "psrlq $1, %%mm1             \n\t" // divide prev_row bytes by 2
-            "pand %%mm2, %%mm3           \n\t" // get LBCarrys for each byte where both
-                                // lsb's were == 1
+            "pand %%mm2, %%mm3           \n\t" // get LBCarrys for each byte
+                                               //  where both lsb's were == 1
             "psrlq $1, %%mm2             \n\t" // divide raw bytes by 2
-            "pand  %%mm4, %%mm1          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm3, %%mm0          \n\t" // add LBCarrys to Avg for each byte
-            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7 of each byte
-            "paddb %%mm1, %%mm0          \n\t" // add (Prev_row/2) to Avg for each byte
-            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) to Avg for each byte
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t"
+            "pand  %%mm4, %%mm1          \n\t" // clear invalid bit 7, each byte
+            "paddb %%mm3, %%mm0          \n\t" // add LBCarrys to Avg, each byte
+            "pand  %%mm4, %%mm2          \n\t" // clear invalid bit 7, each byte
+            "paddb %%mm1, %%mm0          \n\t" // add (Prev_row/2) to Avg, each
+            "paddb %%mm2, %%mm0          \n\t" // add (Raw/2) to Avg for each
+            "cmpl _MMXLength, %%ecx      \n\t"
+            "movq %%mm0, -8(%%edi,%%ecx,) \n\t"
             "movq %%mm0, %%mm2           \n\t" // reuse as Raw(x-bpp)
             "jb avg_8lp                  \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),            // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi          // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5" // CHECKASM: clobber list
+            : "%ecx"                           // clobber list
+#if 0  /* %mm0, ..., %mm5 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2"
+            , "%mm3", "%mm4", "%mm5"
+#endif
          );
       }
       break;  // end 8 bpp
 
-      default:                  // bpp greater than 8 (!= 1,2,3,4,6,8)
+      default:                  // bpp greater than 8 (!= 1,2,3,4,[5],6,[7],8)
       {
 
-      GRR:  PRINT ERROR HERE:  SHOULD NEVER BE REACHED (unless smaller than 1?)
+         // GRR:  PRINT ERROR HERE:  SHOULD NEVER BE REACHED
+         fprintf(stderr,
+           "libpng:  internal logic error (png_read_filter_row_mmx_avg())\n");
 
-        __asm__ (
-            "movq $LBCarryMask, %%mm5    \n\t"
-            // Re-init address pointers and offset
-            "movl _dif, %%ebx            \n\t" // ebx ==> x = offset to alignment boundary
-            "movl row, %%edi             \n\t" // edi ==> Avg(x)
-            "movq $HBClearMask, %%mm4    \n\t"
+#if 0
+        __asm__ __volatile__ (
+            "movq _LBCarryMask, %%mm5    \n\t"
+            // re-init address pointers and offset
+            "movl _dif, %%ebx            \n\t" // ebx:  x = offset to alignment boundary
+            "movl row, %%edi             \n\t" // edi:  Avg(x)
+            "movq _HBClearMask, %%mm4    \n\t"
             "movl %%edi, %%edx           \n\t"
-            "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
-            "subl bpp, %%edx             \n\t" // edx ==> Raw(x-bpp)
+            "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
+            "subl bpp, %%edx             \n\t" // edx:  Raw(x-bpp)
          "avg_Alp:                       \n\t"
             "movq (%%edi,%%ebx,), %%mm0  \n\t"
             "movq %%mm5, %%mm3           \n\t"
@@ -2950,24 +3067,32 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
 
             : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
 
-            : "%ebx", "%edx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5" // CHECKASM: clobber list
+            : "%ebx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
          );
+#endif /* 0 - NEVER REACHED */
       }
       break;
-   }                         // end switch ( bpp )
 
-   __asm__ (
-      // MMX acceleration complete now do clean-up
-      // Check if any remaining bytes left to decode
-      "movl _MMXLength, %%ebx      \n\t" // ebx ==> x = offset bytes remaining after MMX
-      "movl row, %%edi             \n\t" // edi ==> Avg(x)
-      "cmpl _FullLength, %%ebx     \n\t" // Test if offset at end of array
+   } // end switch (bpp)
+
+   __asm__ __volatile__ (
+      // MMX acceleration complete; now do clean-up
+      // check if any remaining bytes left to decode
+#ifdef __PIC__
+      "pushl %%ebx                 \n\t" // save index to Global Offset Table
+#endif
+      "movl _MMXLength, %%ebx      \n\t" // ebx:  x == offset bytes after MMX
+//pre "movl row, %%edi             \n\t" // edi:  Avg(x)
+      "cmpl _FullLength, %%ebx     \n\t" // test if offset at end of array
       "jnb avg_end                 \n\t"
-      // Do Paeth decode for remaining bytes
-      "movl prev_row, %%esi        \n\t" // esi ==> Prior(x)
+
+      // do Avg decode for remaining bytes
+//pre "movl prev_row, %%esi        \n\t" // esi:  Prior(x)
       "movl %%edi, %%edx           \n\t"
-      "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx in loop below
-      "subl bpp, %%edx             \n\t" // edx ==> Raw(x-bpp)
+//pre "subl bpp, %%edx             \n\t" // (bpp is preloaded into ecx)
+      "subl %%ecx, %%edx           \n\t" // edx:  Raw(x-bpp)
+      "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx below
+
    "avg_lp2:                       \n\t"
       // Raw(x) = Avg(x) + ((Raw(x-bpp) + Prior(x))/2)
       "xorl %%eax, %%eax           \n\t"
@@ -2976,39 +3101,64 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
       "addw %%cx, %%ax             \n\t"
       "incl %%ebx                  \n\t"
       "shrw %%ax                   \n\t" // divide by 2
-      "addb -1(%%edi,%%ebx,), %%al \n\t" // Add Avg(x); -1 to offset inc ebx
-      "cmpl _FullLength, %%ebx     \n\t" // Check if at end of array
-      "movb %%al, -1(%%edi,%%ebx,) \n\t" // Write back Raw(x);
-                       // mov does not affect flags; -1 to offset inc ebx
-      "jb avg_lp2                  \n\t"
+      "addb -1(%%edi,%%ebx,), %%al \n\t" // add Avg(x); -1 to offset inc ebx
+      "cmpl _FullLength, %%ebx     \n\t" // check if at end of array
+      "movb %%al, -1(%%edi,%%ebx,) \n\t" // write back Raw(x) [mov does not
+      "jb avg_lp2                  \n\t" //  affect flags; -1 to offset inc ebx]
+
    "avg_end:                       \n\t"
-      "emms                        \n\t" // End MMX instructions; prep for possible FP instrs.
+      "EMMS                        \n\t" // end MMX; prep for poss. FP instrs.
+#ifdef __PIC__
+      "popl %%ebx                  \n\t" // restore index to Global Offset Table
+#endif
 
-      : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+      : "=c" (dummy_value_c),            // output regs (dummy)
+        "=S" (dummy_value_S),
+        "=D" (dummy_value_D)
 
-      : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+      : "0" (bpp),       // ecx          // input regs
+        "1" (prev_row),  // esi
+        "2" (row)        // edi
 
-      : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
+      : "%eax", "%edx"                   // clobber list
+#ifndef __PIC__
+      , "%ebx"
+#endif
    );
-#endif /* GRR_GCC_MMX_CONVERTED */
-}
+
+} /* end png_read_filter_row_mmx_avg() */
+
+
+
+
+//===========================================================================//
+//                                                                           //
+//         P N G _ R E A D _ F I L T E R _ R O W _ M M X _ P A E T H         //
+//                                                                           //
+//===========================================================================//
 
 // Optimized code for PNG Paeth filter decoder
-void /* PRIVATE */
+
+static void /* PRIVATE */
 png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
                               png_bytep prev_row)
 {
-#ifdef GRR_GCC_MMX_CONVERTED
    int bpp;
-   int patemp, pbtemp, pctemp;
+   int dummy_value_c;   // fix 'forbidden register 2 (cx) was spilled' error
+   int dummy_value_S;
+   int dummy_value_D;
 
    bpp = (row_info->pixel_depth + 7) >> 3; // Get # bytes per pixel
    _FullLength  = row_info->rowbytes; // # of bytes to filter
-   __asm__ (
-      "xorl %%ebx, %%ebx           \n\t" // ebx ==> x offset
-      "movl row, %%edi             \n\t"
-      "xorl %%edx, %%edx           \n\t" // edx ==> x-bpp offset
-      "movl prev_row, %%esi        \n\t"
+
+   __asm__ __volatile__ (
+#ifdef __PIC__
+      "pushl %%ebx                 \n\t" // save index to Global Offset Table
+#endif
+      "xorl %%ebx, %%ebx           \n\t" // ebx:  x offset
+//pre "movl row, %%edi             \n\t"
+      "xorl %%edx, %%edx           \n\t" // edx:  x-bpp offset
+//pre "movl prev_row, %%esi        \n\t"
       "xorl %%eax, %%eax           \n\t"
 
       // Compute the Raw value for the first bpp bytes
@@ -3018,7 +3168,8 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
       "movb (%%edi,%%ebx,), %%al   \n\t"
       "addb (%%esi,%%ebx,), %%al   \n\t"
       "incl %%ebx                  \n\t"
-      "cmpl bpp, %%ebx             \n\t"
+//pre "cmpl bpp, %%ebx             \n\t" (bpp is preloaded into ecx)
+      "cmpl %%ecx, %%ebx           \n\t"
       "movb %%al, -1(%%edi,%%ebx,) \n\t"
       "jb paeth_rlp                \n\t"
       // get # of bytes to alignment
@@ -3030,62 +3181,70 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
       "subl %%edi, _dif            \n\t" // subtract from start ==> value ebx at alignment
       "jz paeth_go                 \n\t"
       // fix alignment
+
    "paeth_lp1:                     \n\t"
       "xorl %%eax, %%eax           \n\t"
       // pav = p - a = (a + b - c) - a = b - c
       "movb (%%esi,%%ebx,), %%al   \n\t" // load Prior(x) into al
       "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
       "subl %%ecx, %%eax           \n\t" // subtract Prior(x-bpp)
-      "movl %%eax, patemp          \n\t" // Save pav for later use
+      "movl %%eax, _patemp         \n\t" // Save pav for later use
       "xorl %%eax, %%eax           \n\t"
       // pbv = p - b = (a + b - c) - b = a - c
       "movb (%%edi,%%edx,), %%al   \n\t" // load Raw(x-bpp) into al
       "subl %%ecx, %%eax           \n\t" // subtract Prior(x-bpp)
       "movl %%eax, %%ecx           \n\t"
       // pcv = p - c = (a + b - c) -c = (a - c) + (b - c) = pav + pbv
-      "addl patemp, %%eax          \n\t" // pcv = pav + pbv
+      "addl _patemp, %%eax         \n\t" // pcv = pav + pbv
       // pc = abs(pcv)
       "testl $0x80000000, %%eax    \n\t"
       "jz paeth_pca                \n\t"
       "negl %%eax                  \n\t" // reverse sign of neg values
+
    "paeth_pca:                     \n\t"
-      "movl %%eax, pctemp          \n\t" // save pc for later use
+      "movl %%eax, _pctemp         \n\t" // save pc for later use
       // pb = abs(pbv)
       "testl $0x80000000, %%ecx    \n\t"
       "jz paeth_pba                \n\t"
       "negl %%ecx                  \n\t" // reverse sign of neg values
+
    "paeth_pba:                     \n\t"
-      "movl %%ecx, pbtemp          \n\t" // save pb for later use
+      "movl %%ecx, _pbtemp         \n\t" // save pb for later use
       // pa = abs(pav)
-      "movl patemp, %%eax          \n\t"
+      "movl _patemp, %%eax         \n\t"
       "testl $0x80000000, %%eax    \n\t"
       "jz paeth_paa                \n\t"
       "negl %%eax                  \n\t" // reverse sign of neg values
+
    "paeth_paa:                     \n\t"
-      "movl %%eax, patemp          \n\t" // save pa for later use
+      "movl %%eax, _patemp         \n\t" // save pa for later use
       // test if pa <= pb
       "cmpl %%ecx, %%eax           \n\t"
       "jna paeth_abb               \n\t"
       // pa > pb; now test if pb <= pc
-      "cmpl pctemp, %%ecx          \n\t"
+      "cmpl _pctemp, %%ecx         \n\t"
       "jna paeth_bbc               \n\t"
       // pb > pc; Raw(x) = Paeth(x) + Prior(x-bpp)
       "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
       "jmp paeth_paeth             \n\t"
+
    "paeth_bbc:                     \n\t"
       // pb <= pc; Raw(x) = Paeth(x) + Prior(x)
       "movb (%%esi,%%ebx,), %%cl   \n\t" // load Prior(x) into cl
       "jmp paeth_paeth             \n\t"
+
    "paeth_abb:                     \n\t"
       // pa <= pb; now test if pa <= pc
-      "cmpl pctemp, %%eax          \n\t"
+      "cmpl _pctemp, %%eax         \n\t"
       "jna paeth_abc               \n\t"
       // pa > pc; Raw(x) = Paeth(x) + Prior(x-bpp)
       "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
       "jmp paeth_paeth             \n\t"
+
    "paeth_abc:                     \n\t"
       // pa <= pc; Raw(x) = Paeth(x) + Raw(x-bpp)
       "movb (%%edi,%%edx,), %%cl   \n\t" // load Raw(x-bpp) into cl
+
    "paeth_paeth:                   \n\t"
       "incl %%ebx                  \n\t"
       "incl %%edx                  \n\t"
@@ -3093,6 +3252,7 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
       "addb %%cl, -1(%%edi,%%ebx,) \n\t"
       "cmpl _dif, %%ebx            \n\t"
       "jb paeth_lp1                \n\t"
+
    "paeth_go:                      \n\t"
       "movl _FullLength, %%ecx     \n\t"
       "movl %%ecx, %%eax           \n\t"
@@ -3100,40 +3260,51 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
       "andl $0x00000007, %%eax     \n\t" // calc bytes over mult of 8
       "subl %%eax, %%ecx           \n\t" // drop over bytes from original length
       "movl %%ecx, _MMXLength      \n\t"
+#ifdef __PIC__
+      "popl %%ebx                  \n\t" // restore index to Global Offset Table
+#endif
 
-      : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+      : "=c" (dummy_value_c),            // output regs (dummy)
+        "=S" (dummy_value_S),
+        "=D" (dummy_value_D)
 
-      : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+      : "0" (bpp),       // ecx          // input regs
+        "1" (prev_row),  // esi
+        "2" (row)        // edi
 
-      : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
+      : "%eax", "%edx"                   // clobber list
+#ifndef __PIC__
+      , "%ebx"
+#endif
    );
 
-   // Now do the math for the rest of the row
-   switch ( bpp )
+   // now do the math for the rest of the row
+   switch (bpp)
    {
       case 3:
       {
-         ActiveMask.use = 0x0000000000ffffff;
-         ActiveMaskEnd.use = 0xffff000000000000;
-         ShiftBpp.use = 24;    // == bpp(3) * 8
-         ShiftRem.use = 40;    // == 64 - 24
-         __asm__ (
-            "movl _dif, %%ebx            \n\t"
-            "movl row, %%edi             \n\t"
-            "movl prev_row, %%esi        \n\t"
+         _ActiveMask.use = 0x0000000000ffffffLL;
+         _ActiveMaskEnd.use = 0xffff000000000000LL;
+         _ShiftBpp.use = 24;    // == bpp(3) * 8
+         _ShiftRem.use = 40;    // == 64 - 24
+
+         __asm__ __volatile__ (
+            "movl _dif, %%ecx            \n\t"
+// preload  "movl row, %%edi             \n\t"
+// preload  "movl prev_row, %%esi        \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t"
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm1 \n\t"
          "paeth_3lp:                     \n\t"
-            "psrlq $ShiftRem, %%mm1      \n\t" // shift last 3 bytes to 1st 3 bytes
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x)
-            "punpcklbw %%mm0, %%mm1      \n\t" // Unpack High bytes of a
-            "movq -8(%%esi,%%ebx,), %%mm3 \n\t" // Prep c=Prior(x-bpp) bytes
-            "punpcklbw %%mm0, %%mm2      \n\t" // Unpack High bytes of b
-            "psrlq $ShiftRem, %%mm3      \n\t" // shift last 3 bytes to 1st 3 bytes
+            "psrlq _ShiftRem, %%mm1      \n\t" // shift last 3 bytes to 1st 3 bytes
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x)
+            "punpcklbw %%mm0, %%mm1      \n\t" // unpack High bytes of a
+            "movq -8(%%esi,%%ecx,), %%mm3 \n\t" // prep c=Prior(x-bpp) bytes
+            "punpcklbw %%mm0, %%mm2      \n\t" // unpack High bytes of b
+            "psrlq _ShiftRem, %%mm3      \n\t" // shift last 3 bytes to 1st 3 bytes
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
-            "punpcklbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
+            "punpcklbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
             // pbv = p - b = (a + b - c) - b = a - c
             "movq %%mm1, %%mm5           \n\t"
             "psubw %%mm3, %%mm4          \n\t"
@@ -3145,17 +3316,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3179,18 +3350,18 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
             "packuswb %%mm1, %%mm7       \n\t"
-            "movq (%%esi,%%ebx,), %%mm3  \n\t" // load c=Prior(x-bpp)
-            "pand $ActiveMask, %%mm7     \n\t"
+            "movq (%%esi,%%ecx,), %%mm3  \n\t" // load c=Prior(x-bpp)
+            "pand _ActiveMask, %%mm7     \n\t"
             "movq %%mm3, %%mm2           \n\t" // load b=Prior(x) step 1
-            "paddb (%%edi,%%ebx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
-            "punpcklbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
-            "movq %%mm7, (%%edi,%%ebx,)  \n\t" // write back updated value
-            "movq %%mm7, %%mm1           \n\t" // Now mm1 will be used as Raw(x-bpp)
-            // Now do Paeth for 2nd set of bytes (3-5)
-            "psrlq $ShiftBpp, %%mm2      \n\t" // load b=Prior(x) step 2
-            "punpcklbw %%mm0, %%mm1      \n\t" // Unpack High bytes of a
+            "paddb (%%edi,%%ecx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
+            "punpcklbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
+            "movq %%mm7, (%%edi,%%ecx,)  \n\t" // write back updated value
+            "movq %%mm7, %%mm1           \n\t" // now mm1 will be used as Raw(x-bpp)
+            // now do Paeth for 2nd set of bytes (3-5)
+            "psrlq _ShiftBpp, %%mm2      \n\t" // load b=Prior(x) step 2
+            "punpcklbw %%mm0, %%mm1      \n\t" // unpack High bytes of a
             "pxor %%mm7, %%mm7           \n\t"
-            "punpcklbw %%mm0, %%mm2      \n\t" // Unpack High bytes of b
+            "punpcklbw %%mm0, %%mm2      \n\t" // unpack High bytes of b
             // pbv = p - b = (a + b - c) - b = a - c
             "movq %%mm1, %%mm5           \n\t"
             // pav = p - a = (a + b - c) - a = b - c
@@ -3205,17 +3376,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm5, %%mm0        \n\t" // Create mask pbv bytes < 0
-            "pcmpgtw %%mm4, %%mm7        \n\t" // Create mask pav bytes < 0
-            "pand %%mm5, %%mm0           \n\t" // Only pbv bytes < 0 in mm0
-            "pand %%mm4, %%mm7           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm0        \n\t" // create mask pbv bytes < 0
+            "pcmpgtw %%mm4, %%mm7        \n\t" // create mask pav bytes < 0
+            "pand %%mm5, %%mm0           \n\t" // only pbv bytes < 0 in mm0
+            "pand %%mm4, %%mm7           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm0, %%mm5          \n\t"
             "psubw %%mm7, %%mm4          \n\t"
             "psubw %%mm0, %%mm5          \n\t"
             "psubw %%mm7, %%mm4          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
             "movq %%mm4, %%mm7           \n\t"
@@ -3232,7 +3403,7 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "paddw %%mm2, %%mm0          \n\t"
             //  test  ((pa <= pb)? pa:pb) <= pc
             "pcmpgtw %%mm6, %%mm7        \n\t" // pab > pc?
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x)
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x)
             "pand %%mm7, %%mm3           \n\t"
             "pandn %%mm0, %%mm7          \n\t"
             "pxor %%mm1, %%mm1           \n\t"
@@ -3240,21 +3411,21 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "pxor %%mm0, %%mm0           \n\t"
             "packuswb %%mm1, %%mm7       \n\t"
             "movq %%mm2, %%mm3           \n\t" // load c=Prior(x-bpp) step 1
-            "pand $ActiveMask, %%mm7     \n\t"
-            "punpckhbw %%mm0, %%mm2      \n\t" // Unpack High bytes of b
-            "psllq $ShiftBpp, %%mm7      \n\t" // Shift bytes to 2nd group of 3 bytes
+            "pand _ActiveMask, %%mm7     \n\t"
+            "punpckhbw %%mm0, %%mm2      \n\t" // unpack High bytes of b
+            "psllq _ShiftBpp, %%mm7      \n\t" // shift bytes to 2nd group of 3 bytes
              // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
-            "paddb (%%edi,%%ebx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
-            "psllq $ShiftBpp, %%mm3      \n\t" // load c=Prior(x-bpp) step 2
-            "movq %%mm7, (%%edi,%%ebx,)  \n\t" // write back updated value
+            "paddb (%%edi,%%ecx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
+            "psllq _ShiftBpp, %%mm3      \n\t" // load c=Prior(x-bpp) step 2
+            "movq %%mm7, (%%edi,%%ecx,)  \n\t" // write back updated value
             "movq %%mm7, %%mm1           \n\t"
-            "punpckhbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
-            "psllq $ShiftBpp, %%mm1      \n\t" // Shift bytes
-                                    // Now mm1 will be used as Raw(x-bpp)
-            // Now do Paeth for 3rd, and final, set of bytes (6-7)
+            "punpckhbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
+            "psllq _ShiftBpp, %%mm1      \n\t" // shift bytes
+                                    // now mm1 will be used as Raw(x-bpp)
+            // now do Paeth for 3rd, and final, set of bytes (6-7)
             "pxor %%mm7, %%mm7           \n\t"
-            "punpckhbw %%mm0, %%mm1      \n\t" // Unpack High bytes of a
+            "punpckhbw %%mm0, %%mm1      \n\t" // unpack High bytes of a
             "psubw %%mm3, %%mm4          \n\t"
             // pbv = p - b = (a + b - c) - b = a - c
             "movq %%mm1, %%mm5           \n\t"
@@ -3267,17 +3438,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
             "movq %%mm4, %%mm7           \n\t"
@@ -3299,55 +3470,63 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm1, %%mm1           \n\t"
             "packuswb %%mm7, %%mm1       \n\t"
-            // Step ebx to next set of 8 bytes and repeat loop til done
-            "addl $8, %%ebx              \n\t"
-            "pand $ActiveMaskEnd, %%mm1  \n\t"
-            "paddb -8(%%edi,%%ebx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
+            // step ecx to next set of 8 bytes and repeat loop til done
+            "addl $8, %%ecx              \n\t"
+            "pand _ActiveMaskEnd, %%mm1  \n\t"
+            "paddb -8(%%edi,%%ecx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
 
-            "cmpl _MMXLength, %%ebx      \n\t"
+            "cmpl _MMXLength, %%ecx      \n\t"
             "pxor %%mm0, %%mm0           \n\t" // pxor does not affect flags
-            "movq %%mm1, -8(%%edi,%%ebx,) \n\t" // write back updated value
+            "movq %%mm1, -8(%%edi,%%ecx,) \n\t" // write back updated value
                                  // mm1 will be used as Raw(x-bpp) next loop
                            // mm3 ready to be used as Prior(x-bpp) next loop
             "jb paeth_3lp                \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),             // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi           // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            : "%ecx"                            // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
-      break;
+      break;  // end 3 bpp
 
       case 6:
       //case 7:   // GRR BOGUS
       //case 5:   // GRR BOGUS
       {
-         ActiveMask.use  = 0x00000000ffffffff;
-         ActiveMask2.use = 0xffffffff00000000;
-         ShiftBpp.use = bpp << 3;    // == bpp * 8
-         ShiftRem.use = 64 - ShiftBpp.use;
-         __asm__ (
-            "movl _dif, %%ebx            \n\t"
-            "movl row, %%edi             \n\t"
-            "movl prev_row, %%esi        \n\t"
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t"
+         _ActiveMask.use  = 0x00000000ffffffffLL;
+         _ActiveMask2.use = 0xffffffff00000000LL;
+         _ShiftBpp.use = bpp << 3;    // == bpp * 8
+         _ShiftRem.use = 64 - _ShiftBpp.use;
+
+         __asm__ __volatile__ (
+            "movl _dif, %%ecx            \n\t"
+// preload  "movl row, %%edi             \n\t"
+// preload  "movl prev_row, %%esi        \n\t"
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm1 \n\t"
             "pxor %%mm0, %%mm0           \n\t"
+
          "paeth_6lp:                     \n\t"
-            // Must shift to position Raw(x-bpp) data
-            "psrlq $ShiftRem, %%mm1      \n\t"
-            // Do first set of 4 bytes
-            "movq -8(%%esi,%%ebx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
-            "punpcklbw %%mm0, %%mm1      \n\t" // Unpack Low bytes of a
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x)
-            "punpcklbw %%mm0, %%mm2      \n\t" // Unpack Low bytes of b
-            // Must shift to position Prior(x-bpp) data
-            "psrlq $ShiftRem, %%mm3      \n\t"
+            // must shift to position Raw(x-bpp) data
+            "psrlq _ShiftRem, %%mm1      \n\t"
+            // do first set of 4 bytes
+            "movq -8(%%esi,%%ecx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
+            "punpcklbw %%mm0, %%mm1      \n\t" // unpack Low bytes of a
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x)
+            "punpcklbw %%mm0, %%mm2      \n\t" // unpack Low bytes of b
+            // must shift to position Prior(x-bpp) data
+            "psrlq _ShiftRem, %%mm3      \n\t"
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
-            "punpcklbw %%mm0, %%mm3      \n\t" // Unpack Low bytes of c
+            "punpcklbw %%mm0, %%mm3      \n\t" // unpack Low bytes of c
             // pbv = p - b = (a + b - c) - b = a - c
             "movq %%mm1, %%mm5           \n\t"
             "psubw %%mm3, %%mm4          \n\t"
@@ -3358,17 +3537,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3392,24 +3571,24 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
             "packuswb %%mm1, %%mm7       \n\t"
-            "movq -8(%%esi,%%ebx,), %%mm3 \n\t" // load c=Prior(x-bpp)
-            "pand $ActiveMask, %%mm7     \n\t"
-            "psrlq $ShiftRem, %%mm3      \n\t"
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x) step 1
-            "paddb (%%edi,%%ebx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
+            "movq -8(%%esi,%%ecx,), %%mm3 \n\t" // load c=Prior(x-bpp)
+            "pand _ActiveMask, %%mm7     \n\t"
+            "psrlq _ShiftRem, %%mm3      \n\t"
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x) step 1
+            "paddb (%%edi,%%ecx,), %%mm7 \n\t" // add Paeth predictor and Raw(x)
             "movq %%mm2, %%mm6           \n\t"
-            "movq %%mm7, (%%edi,%%ebx,)  \n\t" // write back updated value
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t"
-            "psllq $ShiftBpp, %%mm6      \n\t"
+            "movq %%mm7, (%%edi,%%ecx,)  \n\t" // write back updated value
+            "movq -8(%%edi,%%ecx,), %%mm1 \n\t"
+            "psllq _ShiftBpp, %%mm6      \n\t"
             "movq %%mm7, %%mm5           \n\t"
-            "psrlq $ShiftRem, %%mm1      \n\t"
+            "psrlq _ShiftRem, %%mm1      \n\t"
             "por %%mm6, %%mm3            \n\t"
-            "psllq $ShiftBpp, %%mm5      \n\t"
-            "punpckhbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
+            "psllq _ShiftBpp, %%mm5      \n\t"
+            "punpckhbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
             "por %%mm5, %%mm1            \n\t"
-            // Do second set of 4 bytes
-            "punpckhbw %%mm0, %%mm2      \n\t" // Unpack High bytes of b
-            "punpckhbw %%mm0, %%mm1      \n\t" // Unpack High bytes of a
+            // do second set of 4 bytes
+            "punpckhbw %%mm0, %%mm2      \n\t" // unpack High bytes of b
+            "punpckhbw %%mm0, %%mm1      \n\t" // unpack High bytes of a
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
             // pbv = p - b = (a + b - c) - b = a - c
@@ -3422,17 +3601,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3456,44 +3635,51 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "pxor %%mm1, %%mm1           \n\t"
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            // Step ex to next set of 8 bytes and repeat loop til done
-            "addl $8, %%ebx              \n\t"
+            // step ecx to next set of 8 bytes and repeat loop til done
+            "addl $8, %%ecx              \n\t"
             "packuswb %%mm7, %%mm1       \n\t"
-            "paddb -8(%%edi,%%ebx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm1, -8(%%edi,%%ebx,) \n\t" // write back updated value
+            "paddb -8(%%edi,%%ecx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
+            "cmpl _MMXLength, %%ecx      \n\t"
+            "movq %%mm1, -8(%%edi,%%ecx,) \n\t" // write back updated value
                                 // mm1 will be used as Raw(x-bpp) next loop
             "jb paeth_6lp                \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),             // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi           // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            : "%ecx"                            // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
-      break;
+      break;  // end 6 bpp
 
       case 4:
       {
-         ActiveMask.use  = 0x00000000ffffffff;
-         __asm__ (
-            "movl _dif, %%ebx            \n\t"
-            "movl row, %%edi             \n\t"
-            "movl prev_row, %%esi        \n\t"
+         _ActiveMask.use  = 0x00000000ffffffffLL;
+
+         __asm__ __volatile__ (
+            "movl _dif, %%ecx            \n\t"
+// preload  "movl row, %%edi             \n\t"
+// preload  "movl prev_row, %%esi        \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t" // Only time should need to read
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm1 \n\t" // only time should need to read
                                      //  a=Raw(x-bpp) bytes
          "paeth_4lp:                     \n\t"
-            // Do first set of 4 bytes
-            "movq -8(%%esi,%%ebx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
-            "punpckhbw %%mm0, %%mm1      \n\t" // Unpack Low bytes of a
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x)
-            "punpcklbw %%mm0, %%mm2      \n\t" // Unpack High bytes of b
+            // do first set of 4 bytes
+            "movq -8(%%esi,%%ecx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
+            "punpckhbw %%mm0, %%mm1      \n\t" // unpack Low bytes of a
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x)
+            "punpcklbw %%mm0, %%mm2      \n\t" // unpack High bytes of b
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
-            "punpckhbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
+            "punpckhbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
             // pbv = p - b = (a + b - c) - b = a - c
             "movq %%mm1, %%mm5           \n\t"
             "psubw %%mm3, %%mm4          \n\t"
@@ -3504,17 +3690,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3538,16 +3724,16 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
             "packuswb %%mm1, %%mm7       \n\t"
-            "movq (%%esi,%%ebx,), %%mm3  \n\t" // load c=Prior(x-bpp)
-            "pand $ActiveMask, %%mm7     \n\t"
+            "movq (%%esi,%%ecx,), %%mm3  \n\t" // load c=Prior(x-bpp)
+            "pand _ActiveMask, %%mm7     \n\t"
             "movq %%mm3, %%mm2           \n\t" // load b=Prior(x) step 1
-            "paddb (%%edi,%%ebx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
-            "punpcklbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
-            "movq %%mm7, (%%edi,%%ebx,)  \n\t" // write back updated value
-            "movq %%mm7, %%mm1           \n\t" // Now mm1 will be used as Raw(x-bpp)
-            // Do second set of 4 bytes
-            "punpckhbw %%mm0, %%mm2      \n\t" // Unpack Low bytes of b
-            "punpcklbw %%mm0, %%mm1      \n\t" // Unpack Low bytes of a
+            "paddb (%%edi,%%ecx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
+            "punpcklbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
+            "movq %%mm7, (%%edi,%%ecx,)  \n\t" // write back updated value
+            "movq %%mm7, %%mm1           \n\t" // now mm1 will be used as Raw(x-bpp)
+            // do second set of 4 bytes
+            "punpckhbw %%mm0, %%mm2      \n\t" // unpack Low bytes of b
+            "punpcklbw %%mm0, %%mm1      \n\t" // unpack Low bytes of a
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
             // pbv = p - b = (a + b - c) - b = a - c
@@ -3560,17 +3746,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3594,43 +3780,51 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "pxor %%mm1, %%mm1           \n\t"
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            // Step ex to next set of 8 bytes and repeat loop til done
-            "addl $8, %%ebx              \n\t"
+            // step ecx to next set of 8 bytes and repeat loop til done
+            "addl $8, %%ecx              \n\t"
             "packuswb %%mm7, %%mm1       \n\t"
-            "paddb -8(%%edi,%%ebx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm1, -8(%%edi,%%ebx,) \n\t" // write back updated value
+            "paddb -8(%%edi,%%ecx,), %%mm1 \n\t" // add predictor with Raw(x)
+            "cmpl _MMXLength, %%ecx      \n\t"
+            "movq %%mm1, -8(%%edi,%%ecx,) \n\t" // write back updated value
                                 // mm1 will be used as Raw(x-bpp) next loop
             "jb paeth_4lp                \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),             // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi           // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            : "%ecx"                            // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
-      break;
+      break;  // end 4 bpp
+
       case 8:                          // bpp == 8
       {
-         ActiveMask.use  = 0x00000000ffffffff;
-         __asm__ (
-            "movl _dif, %%ebx            \n\t"
-            "movl row, %%edi             \n\t"
-            "movl prev_row, %%esi        \n\t"
+         _ActiveMask.use  = 0x00000000ffffffffLL;
+
+         __asm__ __volatile__ (
+            "movl _dif, %%ecx            \n\t"
+// preload  "movl row, %%edi             \n\t"
+// preload  "movl prev_row, %%esi        \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t" // Only time should need to read
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%ecx,), %%mm1 \n\t" // only time should need to read
                                        //  a=Raw(x-bpp) bytes
          "paeth_8lp:                     \n\t"
-            // Do first set of 4 bytes
-            "movq -8(%%esi,%%ebx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
-            "punpcklbw %%mm0, %%mm1      \n\t" // Unpack Low bytes of a
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x)
-            "punpcklbw %%mm0, %%mm2      \n\t" // Unpack Low bytes of b
+            // do first set of 4 bytes
+            "movq -8(%%esi,%%ecx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
+            "punpcklbw %%mm0, %%mm1      \n\t" // unpack Low bytes of a
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x)
+            "punpcklbw %%mm0, %%mm2      \n\t" // unpack Low bytes of b
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
-            "punpcklbw %%mm0, %%mm3      \n\t" // Unpack Low bytes of c
+            "punpcklbw %%mm0, %%mm3      \n\t" // unpack Low bytes of c
             // pbv = p - b = (a + b - c) - b = a - c
             "movq %%mm1, %%mm5           \n\t"
             "psubw %%mm3, %%mm4          \n\t"
@@ -3641,17 +3835,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3675,17 +3869,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
             "packuswb %%mm1, %%mm7       \n\t"
-            "movq -8(%%esi,%%ebx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
-            "pand $ActiveMask, %%mm7     \n\t"
-            "movq (%%esi,%%ebx,), %%mm2  \n\t" // load b=Prior(x)
-            "paddb (%%edi,%%ebx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
-            "punpckhbw %%mm0, %%mm3      \n\t" // Unpack High bytes of c
-            "movq %%mm7, (%%edi,%%ebx,)  \n\t" // write back updated value
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t" // read a=Raw(x-bpp) bytes
+            "movq -8(%%esi,%%ecx,), %%mm3 \n\t" // read c=Prior(x-bpp) bytes
+            "pand _ActiveMask, %%mm7     \n\t"
+            "movq (%%esi,%%ecx,), %%mm2  \n\t" // load b=Prior(x)
+            "paddb (%%edi,%%ecx,), %%mm7 \n\t" // add Paeth predictor with Raw(x)
+            "punpckhbw %%mm0, %%mm3      \n\t" // unpack High bytes of c
+            "movq %%mm7, (%%edi,%%ecx,)  \n\t" // write back updated value
+            "movq -8(%%edi,%%ecx,), %%mm1 \n\t" // read a=Raw(x-bpp) bytes
 
-            // Do second set of 4 bytes
-            "punpckhbw %%mm0, %%mm2      \n\t" // Unpack High bytes of b
-            "punpckhbw %%mm0, %%mm1      \n\t" // Unpack High bytes of a
+            // do second set of 4 bytes
+            "punpckhbw %%mm0, %%mm2      \n\t" // unpack High bytes of b
+            "punpckhbw %%mm0, %%mm1      \n\t" // unpack High bytes of a
             // pav = p - a = (a + b - c) - a = b - c
             "movq %%mm2, %%mm4           \n\t"
             // pbv = p - b = (a + b - c) - b = a - c
@@ -3698,17 +3892,17 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             // pa = abs(p-a) = abs(pav)
             // pb = abs(p-b) = abs(pbv)
             // pc = abs(p-c) = abs(pcv)
-            "pcmpgtw %%mm4, %%mm0        \n\t" // Create mask pav bytes < 0
+            "pcmpgtw %%mm4, %%mm0        \n\t" // create mask pav bytes < 0
             "paddw %%mm5, %%mm6          \n\t"
-            "pand %%mm4, %%mm0           \n\t" // Only pav bytes < 0 in mm7
-            "pcmpgtw %%mm5, %%mm7        \n\t" // Create mask pbv bytes < 0
+            "pand %%mm4, %%mm0           \n\t" // only pav bytes < 0 in mm7
+            "pcmpgtw %%mm5, %%mm7        \n\t" // create mask pbv bytes < 0
             "psubw %%mm0, %%mm4          \n\t"
-            "pand %%mm5, %%mm7           \n\t" // Only pbv bytes < 0 in mm0
+            "pand %%mm5, %%mm7           \n\t" // only pbv bytes < 0 in mm0
             "psubw %%mm0, %%mm4          \n\t"
             "psubw %%mm7, %%mm5          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            "pcmpgtw %%mm6, %%mm0        \n\t" // Create mask pcv bytes < 0
-            "pand %%mm6, %%mm0           \n\t" // Only pav bytes < 0 in mm7
+            "pcmpgtw %%mm6, %%mm0        \n\t" // create mask pcv bytes < 0
+            "pand %%mm6, %%mm0           \n\t" // only pav bytes < 0 in mm7
             "psubw %%mm7, %%mm5          \n\t"
             "psubw %%mm0, %%mm6          \n\t"
             //  test pa <= pb
@@ -3732,94 +3926,113 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "pxor %%mm1, %%mm1           \n\t"
             "paddw %%mm3, %%mm7          \n\t"
             "pxor %%mm0, %%mm0           \n\t"
-            // Step ex to next set of 8 bytes and repeat loop til done
-            "addl $8, %%ebx              \n\t"
+            // step ecx to next set of 8 bytes and repeat loop til done
+            "addl $8, %%ecx              \n\t"
             "packuswb %%mm7, %%mm1       \n\t"
-            "paddb -8(%%edi,%%ebx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm1, -8(%%edi,%%ebx,) \n\t" // write back updated value
+            "paddb -8(%%edi,%%ecx,), %%mm1 \n\t" // add Paeth predictor with Raw(x)
+            "cmpl _MMXLength, %%ecx      \n\t"
+            "movq %%mm1, -8(%%edi,%%ecx,) \n\t" // write back updated value
                             // mm1 will be used as Raw(x-bpp) next loop
             "jb paeth_8lp                \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=S" (dummy_value_S),             // output regs (dummy)
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (prev_row),  // esi           // input regs
+              "1" (row)        // edi
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            : "%ecx"                            // clobber list
+#if 0  /* %mm0, ..., %mm7 not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3"
+            , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
-      break;
+      break;  // end 8 bpp
 
       case 1:                // bpp = 1
       case 2:                // bpp = 2
       default:               // bpp > 8
       {
-         __asm__ (
+         __asm__ __volatile__ (
+#ifdef __PIC__
+            "pushl %%ebx                 \n\t" // save Global Offset Table index
+#endif
             "movl _dif, %%ebx            \n\t"
             "cmpl _FullLength, %%ebx     \n\t"
             "jnb paeth_dend              \n\t"
-            "movl row, %%edi             \n\t"
-            "movl prev_row, %%esi        \n\t"
-            // Do Paeth decode for remaining bytes
+
+// preload  "movl row, %%edi             \n\t"
+// preload  "movl prev_row, %%esi        \n\t"
+            // do Paeth decode for remaining bytes
             "movl %%ebx, %%edx           \n\t"
-            "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx in loop below
-            "subl bpp, %%edx             \n\t" // Set edx = ebx - bpp
+// preload  "subl bpp, %%edx             \n\t" // (bpp is preloaded into ecx)
+            "subl %%ecx, %%edx           \n\t" // edx = ebx - bpp
+            "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx
+
          "paeth_dlp:                     \n\t"
             "xorl %%eax, %%eax           \n\t"
             // pav = p - a = (a + b - c) - a = b - c
             "movb (%%esi,%%ebx,), %%al   \n\t" // load Prior(x) into al
             "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
             "subl %%ecx, %%eax           \n\t" // subtract Prior(x-bpp)
-            "movl %%eax, patemp          \n\t" // Save pav for later use
+            "movl %%eax, _patemp         \n\t" // Save pav for later use
             "xorl %%eax, %%eax           \n\t"
             // pbv = p - b = (a + b - c) - b = a - c
             "movb (%%edi,%%edx,), %%al   \n\t" // load Raw(x-bpp) into al
             "subl %%ecx, %%eax           \n\t" // subtract Prior(x-bpp)
             "movl %%eax, %%ecx           \n\t"
             // pcv = p - c = (a + b - c) -c = (a - c) + (b - c) = pav + pbv
-            "addl patemp, %%eax          \n\t" // pcv = pav + pbv
+            "addl _patemp, %%eax         \n\t" // pcv = pav + pbv
             // pc = abs(pcv)
             "testl $0x80000000, %%eax    \n\t"
             "jz paeth_dpca               \n\t"
             "negl %%eax                  \n\t" // reverse sign of neg values
+
          "paeth_dpca:                    \n\t"
-            "movl %%eax, pctemp          \n\t" // save pc for later use
+            "movl %%eax, _pctemp         \n\t" // save pc for later use
             // pb = abs(pbv)
             "testl $0x80000000, %%ecx    \n\t"
             "jz paeth_dpba               \n\t"
             "negl %%ecx                  \n\t" // reverse sign of neg values
+
          "paeth_dpba:                    \n\t"
-            "movl %%ecx, pbtemp          \n\t" // save pb for later use
+            "movl %%ecx, _pbtemp         \n\t" // save pb for later use
             // pa = abs(pav)
-            "movl patemp, %%eax          \n\t"
+            "movl _patemp, %%eax         \n\t"
             "testl $0x80000000, %%eax    \n\t"
             "jz paeth_dpaa               \n\t"
             "negl %%eax                  \n\t" // reverse sign of neg values
+
          "paeth_dpaa:                    \n\t"
-            "movl %%eax, patemp          \n\t" // save pa for later use
+            "movl %%eax, _patemp         \n\t" // save pa for later use
             // test if pa <= pb
             "cmpl %%ecx, %%eax           \n\t"
             "jna paeth_dabb              \n\t"
             // pa > pb; now test if pb <= pc
-            "cmpl pctemp, %%ecx          \n\t"
+            "cmpl _pctemp, %%ecx         \n\t"
             "jna paeth_dbbc              \n\t"
             // pb > pc; Raw(x) = Paeth(x) + Prior(x-bpp)
             "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
             "jmp paeth_dpaeth            \n\t"
+
          "paeth_dbbc:                    \n\t"
             // pb <= pc; Raw(x) = Paeth(x) + Prior(x)
             "movb (%%esi,%%ebx,), %%cl   \n\t" // load Prior(x) into cl
             "jmp paeth_dpaeth            \n\t"
+
          "paeth_dabb:                    \n\t"
             // pa <= pb; now test if pa <= pc
-            "cmpl pctemp, %%eax          \n\t"
+            "cmpl _pctemp, %%eax         \n\t"
             "jna paeth_dabc              \n\t"
             // pa > pc; Raw(x) = Paeth(x) + Prior(x-bpp)
             "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
             "jmp paeth_dpaeth            \n\t"
+
          "paeth_dabc:                    \n\t"
             // pa <= pc; Raw(x) = Paeth(x) + Raw(x-bpp)
             "movb (%%edi,%%edx,), %%cl   \n\t" // load Raw(x-bpp) into cl
+
          "paeth_dpaeth:                  \n\t"
             "incl %%ebx                  \n\t"
             "incl %%edx                  \n\t"
@@ -3827,85 +4040,110 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
             "addb %%cl, -1(%%edi,%%ebx,) \n\t"
             "cmpl _FullLength, %%ebx     \n\t"
             "jb paeth_dlp                \n\t"
+
          "paeth_dend:                    \n\t"
+#ifdef __PIC__
+            "popl %%ebx                  \n\t" // index to Global Offset Table
+#endif
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=c" (dummy_value_c),            // output regs (dummy)
+              "=S" (dummy_value_S),
+              "=D" (dummy_value_D)
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (bpp),       // ecx          // input regs
+              "1" (prev_row),  // esi
+              "2" (row)        // edi
 
-            : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
+            : "%eax", "%edx"                   // clobber list
+#ifndef __PIC__
+            , "%ebx"
+#endif
          );
       }
       return;                   // No need to go further with this one
-   }                         // end switch ( bpp )
-   __asm__ (
-      // MMX acceleration complete now do clean-up
-      // Check if any remaining bytes left to decode
+
+   } // end switch (bpp)
+
+   __asm__ __volatile__ (
+      // MMX acceleration complete; now do clean-up
+      // check if any remaining bytes left to decode
+#ifdef __PIC__
+      "pushl %%ebx                 \n\t" // save index to Global Offset Table
+#endif
       "movl _MMXLength, %%ebx      \n\t"
       "cmpl _FullLength, %%ebx     \n\t"
       "jnb paeth_end               \n\t"
-      "movl row, %%edi             \n\t"
-      "movl prev_row, %%esi        \n\t"
-      // Do Paeth decode for remaining bytes
+//pre "movl row, %%edi             \n\t"
+//pre "movl prev_row, %%esi        \n\t"
+      // do Paeth decode for remaining bytes
       "movl %%ebx, %%edx           \n\t"
-      "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx in loop below
-      "subl bpp, %%edx             \n\t" // Set edx = ebx - bpp
+//pre "subl bpp, %%edx             \n\t" // (bpp is preloaded into ecx)
+      "subl %%ecx, %%edx           \n\t" // edx = ebx - bpp
+      "xorl %%ecx, %%ecx           \n\t" // zero ecx before using cl & cx below
+
    "paeth_lp2:                     \n\t"
       "xorl %%eax, %%eax           \n\t"
       // pav = p - a = (a + b - c) - a = b - c
       "movb (%%esi,%%ebx,), %%al   \n\t" // load Prior(x) into al
       "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
       "subl %%ecx, %%eax           \n\t" // subtract Prior(x-bpp)
-      "movl %%eax, patemp          \n\t" // Save pav for later use
+      "movl %%eax, _patemp         \n\t" // Save pav for later use
       "xorl %%eax, %%eax           \n\t"
       // pbv = p - b = (a + b - c) - b = a - c
       "movb (%%edi,%%edx,), %%al   \n\t" // load Raw(x-bpp) into al
       "subl %%ecx, %%eax           \n\t" // subtract Prior(x-bpp)
       "movl %%eax, %%ecx           \n\t"
       // pcv = p - c = (a + b - c) -c = (a - c) + (b - c) = pav + pbv
-      "addl patemp, %%eax          \n\t" // pcv = pav + pbv
+      "addl _patemp, %%eax         \n\t" // pcv = pav + pbv
       // pc = abs(pcv)
       "testl $0x80000000, %%eax    \n\t"
       "jz paeth_pca2               \n\t"
       "negl %%eax                  \n\t" // reverse sign of neg values
+
    "paeth_pca2:                    \n\t"
-      "movl %%eax, pctemp          \n\t" // save pc for later use
+      "movl %%eax, _pctemp         \n\t" // save pc for later use
       // pb = abs(pbv)
       "testl $0x80000000, %%ecx    \n\t"
       "jz paeth_pba2               \n\t"
       "negl %%ecx                  \n\t" // reverse sign of neg values
+
    "paeth_pba2:                    \n\t"
-      "movl %%ecx, pbtemp          \n\t" // save pb for later use
+      "movl %%ecx, _pbtemp         \n\t" // save pb for later use
       // pa = abs(pav)
-      "movl patemp, %%eax          \n\t"
+      "movl _patemp, %%eax         \n\t"
       "testl $0x80000000, %%eax    \n\t"
       "jz paeth_paa2               \n\t"
       "negl %%eax                  \n\t" // reverse sign of neg values
+
    "paeth_paa2:                    \n\t"
-      "movl %%eax, patemp          \n\t" // save pa for later use
+      "movl %%eax, _patemp         \n\t" // save pa for later use
       // test if pa <= pb
       "cmpl %%ecx, %%eax           \n\t"
       "jna paeth_abb2              \n\t"
       // pa > pb; now test if pb <= pc
-      "cmpl pctemp, %%ecx          \n\t"
+      "cmpl _pctemp, %%ecx         \n\t"
       "jna paeth_bbc2              \n\t"
       // pb > pc; Raw(x) = Paeth(x) + Prior(x-bpp)
       "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
       "jmp paeth_paeth2            \n\t"
+
    "paeth_bbc2:                    \n\t"
       // pb <= pc; Raw(x) = Paeth(x) + Prior(x)
       "movb (%%esi,%%ebx,), %%cl   \n\t" // load Prior(x) into cl
       "jmp paeth_paeth2            \n\t"
+
    "paeth_abb2:                    \n\t"
       // pa <= pb; now test if pa <= pc
-      "cmpl pctemp, %%eax          \n\t"
+      "cmpl _pctemp, %%eax         \n\t"
       "jna paeth_abc2              \n\t"
       // pa > pc; Raw(x) = Paeth(x) + Prior(x-bpp)
       "movb (%%esi,%%edx,), %%cl   \n\t" // load Prior(x-bpp) into cl
       "jmp paeth_paeth2            \n\t"
+
    "paeth_abc2:                    \n\t"
       // pa <= pc; Raw(x) = Paeth(x) + Raw(x-bpp)
       "movb (%%edi,%%edx,), %%cl   \n\t" // load Raw(x-bpp) into cl
+
    "paeth_paeth2:                  \n\t"
       "incl %%ebx                  \n\t"
       "incl %%edx                  \n\t"
@@ -3913,491 +4151,602 @@ png_read_filter_row_mmx_paeth(png_row_infop row_info, png_bytep row,
       "addb %%cl, -1(%%edi,%%ebx,) \n\t"
       "cmpl _FullLength, %%ebx     \n\t"
       "jb paeth_lp2                \n\t"
+
    "paeth_end:                     \n\t"
-      "emms                        \n\t" // End MMX instructions; prep for possible FP instrs.
+      "EMMS                        \n\t" // end MMX; prep for poss. FP instrs.
+#ifdef __PIC__
+      "popl %%ebx                  \n\t" // restore index to Global Offset Table
+#endif
 
-      : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+      : "=c" (dummy_value_c),            // output regs (dummy)
+        "=S" (dummy_value_S),
+        "=D" (dummy_value_D)
 
-      : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+      : "0" (bpp),       // ecx          // input regs
+        "1" (prev_row),  // esi
+        "2" (row)        // edi
 
-      : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
+      : "%eax", "%edx"                   // clobber list (no input regs!)
+#ifndef __PIC__
+      , "%ebx"
+#endif
    );
-#endif /* GRR_GCC_MMX_CONVERTED */
-}
+
+} /* end png_read_filter_row_mmx_paeth() */
+
+
+
+
+//===========================================================================//
+//                                                                           //
+//           P N G _ R E A D _ F I L T E R _ R O W _ M M X _ S U B           //
+//                                                                           //
+//===========================================================================//
 
 // Optimized code for PNG Sub filter decoder
-void /* PRIVATE */
+
+static void /* PRIVATE */
 png_read_filter_row_mmx_sub(png_row_infop row_info, png_bytep row)
 {
-#ifdef GRR_GCC_MMX_CONVERTED
    int bpp;
+   int dummy_value_a;
+   int dummy_value_D;
 
-   bpp = (row_info->pixel_depth + 7) >> 3; // Get # bytes per pixel
-   _FullLength  = row_info->rowbytes - bpp; // # of bytes to filter
-   __asm__ (
-      "movl row, %%edi             \n\t"
+   bpp = (row_info->pixel_depth + 7) >> 3;   // calc number of bytes per pixel
+   _FullLength = row_info->rowbytes - bpp;   // number of bytes to filter
+
+   __asm__ __volatile__ (
+//pre "movl row, %%edi             \n\t"
       "movl %%edi, %%esi           \n\t" // lp = row
-      "addl bpp, %%edi             \n\t" // rp = row + bpp
-      "xorl %%eax, %%eax           \n\t"
+//pre "movl bpp, %%eax             \n\t"
+      "addl %%eax, %%edi           \n\t" // rp = row + bpp
+//irr "xorl %%eax, %%eax           \n\t"
       // get # of bytes to alignment
       "movl %%edi, _dif            \n\t" // take start of row
       "addl $0xf, _dif             \n\t" // add 7 + 8 to incr past
-                                         // alignment boundary
-      "xorl %%ebx, %%ebx           \n\t"
+                                         //  alignment boundary
+      "xorl %%ecx, %%ecx           \n\t"
       "andl $0xfffffff8, _dif      \n\t" // mask to alignment boundary
       "subl %%edi, _dif            \n\t" // subtract from start ==> value
-                                         //  ebx at alignment
-      "jz sub_go                   \n\t"
-      // fix alignment
-   "sub_lp1:                       \n\t"
-      "movb (%%esi,%%ebx,), %%al   \n\t"
-      "addb %%al, (%%edi,%%ebx,)   \n\t"
-      "incl %%ebx                  \n\t"
-      "cmpl _dif, %%ebx            \n\t"
+      "jz sub_go                   \n\t" //  ecx at alignment
+
+   "sub_lp1:                       \n\t" // fix alignment
+      "movb (%%esi,%%ecx,), %%al   \n\t"
+      "addb %%al, (%%edi,%%ecx,)   \n\t"
+      "incl %%ecx                  \n\t"
+      "cmpl _dif, %%ecx            \n\t"
       "jb sub_lp1                  \n\t"
+
    "sub_go:                        \n\t"
-      "movl _FullLength, %%ecx     \n\t"
-      "movl %%ecx, %%edx           \n\t"
-      "subl %%ebx, %%edx           \n\t" // subtract alignment fix
+      "movl _FullLength, %%eax     \n\t"
+      "movl %%eax, %%edx           \n\t"
+      "subl %%ecx, %%edx           \n\t" // subtract alignment fix
       "andl $0x00000007, %%edx     \n\t" // calc bytes over mult of 8
-      "subl %%edx, %%ecx           \n\t" // drop over bytes from length
-      "movl %%ecx, _MMXLength      \n\t"
+      "subl %%edx, %%eax           \n\t" // drop over bytes from length
+      "movl %%eax, _MMXLength      \n\t"
 
-      : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+      : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+        "=D" (dummy_value_D)    // 1
 
-      : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+      : "0" (bpp),              // eax    // input regs
+        "1" (row)               // edi
 
-      : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi" // CHECKASM: clobber list
+      : "%ebx", "%ecx", "%edx"            // clobber list
+      , "%esi"
+
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+      , "%mm0", "%mm1", "%mm2", "%mm3"
+      , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
    );
 
-   // Now do the math for the rest of the row
-   switch ( bpp )
+   // now do the math for the rest of the row
+   switch (bpp)
    {
-        case 3:
-        {
-         ActiveMask.use  = 0x0000ffffff000000;
-         ShiftBpp.use = 24;       // == 3 * 8
-         ShiftRem.use  = 40;      // == 64 - 24
-         __asm__ (
-            "movl row, %%edi             \n\t"
-            "movq $ActiveMask, %%mm7     \n\t" // Load ActiveMask for 2nd active byte group
-            "movl %%edi, %%esi           \n\t" // lp = row
-            "addl bpp, %%edi             \n\t" // rp = row + bpp
-            "movq %%mm7, %%mm6           \n\t"
-            "movl _dif, %%ebx            \n\t"
-            "psllq $ShiftBpp, %%mm6      \n\t" // Move mask in mm6 to cover 3rd active
-                                  // byte group
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t"
-         "sub_3lp:                       \n\t"
-            "psrlq $ShiftRem, %%mm1      \n\t" // Shift data for adding 1st bpp bytes
-                          // no need for mask; shift clears inactive bytes
-            // Add 1st active group
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            // Add 2nd active group
-            "movq %%mm0, %%mm1           \n\t" // mov updated Raws to mm1
-            "psllq $ShiftBpp, %%mm1      \n\t" // shift data to position correctly
-            "pand %%mm7, %%mm1           \n\t" // mask to use only 2nd active group
-            "paddb %%mm1, %%mm0          \n\t"
-            // Add 3rd active group
-            "movq %%mm0, %%mm1           \n\t" // mov updated Raws to mm1
-            "psllq $ShiftBpp, %%mm1      \n\t" // shift data to position correctly
-            "pand %%mm6, %%mm1           \n\t" // mask to use only 3rd active group
-            "addl $8, %%ebx              \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t" // Write updated Raws back to array
-            // Prep for doing 1st add at top of loop
-            "movq %%mm0, %%mm1           \n\t"
-            "jb sub_3lp                  \n\t"
+      case 3:
+      {
+         _ActiveMask.use  = 0x0000ffffff000000LL;
+         _ShiftBpp.use = 24;       // == 3 * 8
+         _ShiftRem.use  = 40;      // == 64 - 24
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+         __asm__ __volatile__ (
+// preload  "movl row, %%edi              \n\t"
+            "movq _ActiveMask, %%mm7       \n\t" // load _ActiveMask for 2nd
+                                                //  active byte group
+            "movl %%edi, %%esi            \n\t" // lp = row
+// preload  "movl bpp, %%eax              \n\t"
+            "addl %%eax, %%edi            \n\t" // rp = row + bpp
+            "movq %%mm7, %%mm6            \n\t"
+            "movl _dif, %%edx             \n\t"
+            "psllq _ShiftBpp, %%mm6       \n\t" // move mask in mm6 to cover
+                                                //  3rd active byte group
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%edx,), %%mm1 \n\t"
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+         "sub_3lp:                        \n\t" // shift data for adding first
+            "psrlq _ShiftRem, %%mm1       \n\t" //  bpp bytes (no need for mask;
+                                                //  shift clears inactive bytes)
+            // add 1st active group
+            "movq (%%edi,%%edx,), %%mm0   \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm6", "%mm7" // CHECKASM: clobber list
+            // add 2nd active group
+            "movq %%mm0, %%mm1            \n\t" // mov updated Raws to mm1
+            "psllq _ShiftBpp, %%mm1       \n\t" // shift data to pos. correctly
+            "pand %%mm7, %%mm1            \n\t" // mask to use 2nd active group
+            "paddb %%mm1, %%mm0           \n\t"
+
+            // add 3rd active group
+            "movq %%mm0, %%mm1            \n\t" // mov updated Raws to mm1
+            "psllq _ShiftBpp, %%mm1       \n\t" // shift data to pos. correctly
+            "pand %%mm6, %%mm1            \n\t" // mask to use 3rd active group
+            "addl $8, %%edx               \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
+
+            "cmpl _MMXLength, %%edx       \n\t"
+            "movq %%mm0, -8(%%edi,%%edx,) \n\t" // write updated Raws to array
+            "movq %%mm0, %%mm1            \n\t" // prep 1st add at top of loop
+            "jb sub_3lp                   \n\t"
+
+            : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+              "=D" (dummy_value_D)    // 1
+
+            : "0" (bpp),              // eax    // input regs
+              "1" (row)               // edi
+
+            : "%edx", "%esi"                    // clobber list
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm6", "%mm7"
+#endif
          );
       }
       break;
 
       case 1:
       {
-         // Placed here just in case this is a duplicate of the
-         // non-MMX code for the SUB filter in png_read_filter_row above
-         //
-         //         png_bytep rp;
-         //         png_bytep lp;
-         //         png_uint_32 i;
-         //         bpp = (row_info->pixel_depth + 7) >> 3;
-         //         for (i = (png_uint_32)bpp, rp = row + bpp, lp = row;
-         //            i < row_info->rowbytes; i++, rp++, lp++)
-         //      {
-         //            *rp = (png_byte)(((int)(*rp) + (int)(*lp)) & 0xff);
-         //      }
-         __asm__ (
-            "movl _dif, %%ebx            \n\t"
-            "movl row, %%edi             \n\t"
-            "cmpl _FullLength, %%ebx     \n\t"
+         __asm__ __volatile__ (
+            "movl _dif, %%edx            \n\t"
+// preload  "movl row, %%edi             \n\t"
+            "cmpl _FullLength, %%edx     \n\t"
             "jnb sub_1end                \n\t"
             "movl %%edi, %%esi           \n\t" // lp = row
             "xorl %%eax, %%eax           \n\t"
-            "addl bpp, %%edi             \n\t" // rp = row + bpp
+// preload  "movl bpp, %%eax             \n\t"
+            "addl %%eax, %%edi           \n\t" // rp = row + bpp
+
          "sub_1lp:                       \n\t"
-            "movb (%%esi,%%ebx,), %%al   \n\t"
-            "addb %%al, (%%edi,%%ebx,)   \n\t"
-            "incl %%ebx                  \n\t"
-            "cmpl _FullLength, %%ebx     \n\t"
+            "movb (%%esi,%%edx,), %%al   \n\t"
+            "addb %%al, (%%edi,%%edx,)   \n\t"
+            "incl %%edx                  \n\t"
+            "cmpl _FullLength, %%edx     \n\t"
             "jb sub_1lp                  \n\t"
+
          "sub_1end:                      \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+              "=D" (dummy_value_D)    // 1
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "0" (bpp),              // eax    // input regs
+              "1" (row)               // edi
 
-            : "%eax", "%ebx", "%edi", "%esi" // CHECKASM: clobber list
+            : "%edx", "%esi"                    // clobber list
          );
       }
       return;
 
       case 6:
-      case 7:
       case 4:
-      case 5:
+      //case 7:   // GRR BOGUS
+      //case 5:   // GRR BOGUS
       {
-         ShiftBpp.use = bpp << 3;
-         ShiftRem.use = 64 - ShiftBpp.use;
-         __asm__ (
-            "movl row, %%edi             \n\t"
-            "movl _dif, %%ebx            \n\t"
-            "movl %%edi, %%esi           \n\t" // lp = row
-            "addl bpp, %%edi             \n\t" // rp = row + bpp
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t"
-         "sub_4lp:                       \n\t"
-            "psrlq $ShiftRem, %%mm1      \n\t" // Shift data for adding 1st bpp bytes
-                          // no need for mask; shift clears inactive bytes
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            // Add 2nd active group
-            "movq %%mm0, %%mm1           \n\t" // mov updated Raws to mm1
-            "psllq $ShiftBpp, %%mm1      \n\t" // shift data to position correctly
-                                   // there is no need for any mask
-                                   // since shift clears inactive bits/bytes
-            "addl $8, %%ebx              \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t"
-            "movq %%mm0, %%mm1           \n\t" // Prep for doing 1st add at top of loop
-            "jb sub_4lp                  \n\t"
+         _ShiftBpp.use = bpp << 3;
+         _ShiftRem.use = 64 - _ShiftBpp.use;
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+         __asm__ __volatile__ (
+// preload  "movl row, %%edi              \n\t"
+            "movl _dif, %%edx             \n\t"
+            "movl %%edi, %%esi            \n\t" // lp = row
+// preload  "movl bpp, %%eax              \n\t"
+            "addl %%eax, %%edi            \n\t" // rp = row + bpp
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%edx,), %%mm1 \n\t"
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1" // CHECKASM: clobber list
+         "sub_4lp:                        \n\t" // shift data for adding first
+            "psrlq _ShiftRem, %%mm1       \n\t" //  bpp bytes (no need for mask;
+                                                //  shift clears inactive bytes)
+            "movq (%%edi,%%edx,), %%mm0   \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
+
+            // add 2nd active group
+            "movq %%mm0, %%mm1            \n\t" // mov updated Raws to mm1
+            "psllq _ShiftBpp, %%mm1       \n\t" // shift data to pos. correctly
+            "addl $8, %%edx               \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
+
+            "cmpl _MMXLength, %%edx       \n\t"
+            "movq %%mm0, -8(%%edi,%%edx,) \n\t"
+            "movq %%mm0, %%mm1            \n\t" // prep 1st add at top of loop
+            "jb sub_4lp                   \n\t"
+
+            : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+              "=D" (dummy_value_D)    // 1
+
+            : "0" (bpp),              // eax    // input regs
+              "1" (row)               // edi
+
+            : "%edx", "%esi"                    // clobber list
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1"
+#endif
          );
       }
       break;
 
       case 2:
       {
-         ActiveMask.use  = 0x00000000ffff0000;
-         ShiftBpp.use = 16;       // == 2 * 8
-         ShiftRem.use = 48;       // == 64 - 16
-         __asm__ (
-            "movq $ActiveMask, %%mm7     \n\t" // Load ActiveMask for 2nd active byte group
-            "movl _dif, %%ebx            \n\t"
-            "movq %%mm7, %%mm6           \n\t"
-            "movl row, %%edi             \n\t"
-            "psllq $ShiftBpp, %%mm6      \n\t" // Move mask in mm6 to cover 3rd active
-                                    //  byte group
-            "movl %%edi, %%esi           \n\t" // lp = row
-            "movq %%mm6, %%mm5           \n\t"
-            "addl bpp, %%edi             \n\t" // rp = row + bpp
-            "psllq $ShiftBpp, %%mm5      \n\t" // Move mask in mm5 to cover 4th active
-                                    //  byte group
-            // PRIME the pump (load the first Raw(x-bpp) data set
-            "movq -8(%%edi,%%ebx,), %%mm1 \n\t"
-         "sub_2lp:                       \n\t"
-            // Add 1st active group
-            "psrlq $ShiftRem, %%mm1      \n\t" // Shift data for adding 1st bpp bytes
-                                    // no need for mask; shift clears inactive
-                                    //  bytes
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            // Add 2nd active group
-            "movq %%mm0, %%mm1           \n\t" // mov updated Raws to mm1
-            "psllq $ShiftBpp, %%mm1      \n\t" // shift data to position correctly
-            "pand %%mm7, %%mm1           \n\t" // mask to use only 2nd active group
-            "paddb %%mm1, %%mm0          \n\t"
-            // Add 3rd active group
-            "movq %%mm0, %%mm1           \n\t" // mov updated Raws to mm1
-            "psllq $ShiftBpp, %%mm1      \n\t" // shift data to position correctly
-            "pand %%mm6, %%mm1           \n\t" // mask to use only 3rd active group
-            "paddb %%mm1, %%mm0          \n\t"
-            // Add 4th active group
-            "movq %%mm0, %%mm1           \n\t" // mov updated Raws to mm1
-            "psllq $ShiftBpp, %%mm1      \n\t" // shift data to position correctly
-            "pand %%mm5, %%mm1           \n\t" // mask to use only 4th active group
-            "addl $8, %%ebx              \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t" // Write updated Raws back to array
-            "movq %%mm0, %%mm1           \n\t" // Prep for doing 1st add at top of loop
-            "jb sub_2lp                  \n\t"
+         _ActiveMask.use = 0x00000000ffff0000LL;
+         _ShiftBpp.use = 16;       // == 2 * 8
+         _ShiftRem.use = 48;       // == 64 - 16
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+         __asm__ __volatile__ (
+            "movq _ActiveMask, %%mm7      \n\t" // load _ActiveMask for 2nd
+                                                //  active byte group
+            "movl _dif, %%edx             \n\t"
+            "movq %%mm7, %%mm6            \n\t"
+// preload  "movl row, %%edi              \n\t"
+            "psllq _ShiftBpp, %%mm6       \n\t" // move mask in mm6 to cover
+                                                //  3rd active byte group
+            "movl %%edi, %%esi            \n\t" // lp = row
+            "movq %%mm6, %%mm5            \n\t"
+// preload  "movl bpp, %%eax              \n\t"
+            "addl %%eax, %%edi            \n\t" // rp = row + bpp
+            "psllq _ShiftBpp, %%mm5       \n\t" // move mask in mm5 to cover
+                                                //  4th active byte group
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%edx,), %%mm1 \n\t"
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+         "sub_2lp:                        \n\t" // shift data for adding first
+            "psrlq _ShiftRem, %%mm1       \n\t" //  bpp bytes (no need for mask;
+                                                //  shift clears inactive bytes)
+            // add 1st active group
+            "movq (%%edi,%%edx,), %%mm0   \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            // add 2nd active group
+            "movq %%mm0, %%mm1            \n\t" // mov updated Raws to mm1
+            "psllq _ShiftBpp, %%mm1       \n\t" // shift data to pos. correctly
+            "pand %%mm7, %%mm1            \n\t" // mask to use 2nd active group
+            "paddb %%mm1, %%mm0           \n\t"
+
+            // add 3rd active group
+            "movq %%mm0, %%mm1            \n\t" // mov updated Raws to mm1
+            "psllq _ShiftBpp, %%mm1       \n\t" // shift data to pos. correctly
+            "pand %%mm6, %%mm1            \n\t" // mask to use 3rd active group
+            "paddb %%mm1, %%mm0           \n\t"
+
+            // add 4th active group
+            "movq %%mm0, %%mm1            \n\t" // mov updated Raws to mm1
+            "psllq _ShiftBpp, %%mm1       \n\t" // shift data to pos. correctly
+            "pand %%mm5, %%mm1            \n\t" // mask to use 4th active group
+            "addl $8, %%edx               \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
+            "cmpl _MMXLength, %%edx       \n\t"
+            "movq %%mm0, -8(%%edi,%%edx,) \n\t" // write updated Raws to array
+            "movq %%mm0, %%mm1            \n\t" // prep 1st add at top of loop
+            "jb sub_2lp                   \n\t"
+
+            : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+              "=D" (dummy_value_D)    // 1
+
+            : "0" (bpp),              // eax    // input regs
+              "1" (row)               // edi
+
+            : "%edx", "%esi"                    // clobber list
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
       break;
+
       case 8:
       {
-         __asm__ (
-            "movl row, %%edi             \n\t"
-            "movl _dif, %%ebx            \n\t"
-            "movl %%edi, %%esi           \n\t" // lp = row
-            "addl bpp, %%edi             \n\t" // rp = row + bpp
-            "movl _MMXLength, %%ecx      \n\t"
-            "movq -8(%%edi,%%ebx,), %%mm7 \n\t" // PRIME the pump (load the first
-                                    // Raw(x-bpp) data set
-            "andl $0x0000003f, %%ecx     \n\t" // calc bytes over mult of 64
-         "sub_8lp:                       \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t" // Load Sub(x) for 1st 8 bytes
-            "paddb %%mm7, %%mm0          \n\t"
-            "movq 8(%%edi,%%ebx,), %%mm1 \n\t" // Load Sub(x) for 2nd 8 bytes
-            "movq %%mm0, (%%edi,%%ebx,)  \n\t" // Write Raw(x) for 1st 8 bytes
-                                   // Now mm0 will be used as Raw(x-bpp) for
-                                   // the 2nd group of 8 bytes.  This will be
-                                   // repeated for each group of 8 bytes with
-                                   // the 8th group being used as the Raw(x-bpp)
-                                   // for the 1st group of the next loop.
-            "paddb %%mm0, %%mm1          \n\t"
-            "movq 16(%%edi,%%ebx,), %%mm2 \n\t" // Load Sub(x) for 3rd 8 bytes
-            "movq %%mm1, 8(%%edi,%%ebx,) \n\t" // Write Raw(x) for 2nd 8 bytes
-            "paddb %%mm1, %%mm2          \n\t"
-            "movq 24(%%edi,%%ebx,), %%mm3 \n\t" // Load Sub(x) for 4th 8 bytes
-            "movq %%mm2, 16(%%edi,%%ebx,) \n\t" // Write Raw(x) for 3rd 8 bytes
-            "paddb %%mm2, %%mm3          \n\t"
-            "movq 32(%%edi,%%ebx,), %%mm4 \n\t" // Load Sub(x) for 5th 8 bytes
-            "movq %%mm3, 24(%%edi,%%ebx,) \n\t" // Write Raw(x) for 4th 8 bytes
-            "paddb %%mm3, %%mm4          \n\t"
-            "movq 40(%%edi,%%ebx,), %%mm5 \n\t" // Load Sub(x) for 6th 8 bytes
-            "movq %%mm4, 32(%%edi,%%ebx,) \n\t" // Write Raw(x) for 5th 8 bytes
-            "paddb %%mm4, %%mm5          \n\t"
-            "movq 48(%%edi,%%ebx,), %%mm6 \n\t" // Load Sub(x) for 7th 8 bytes
-            "movq %%mm5, 40(%%edi,%%ebx,) \n\t" // Write Raw(x) for 6th 8 bytes
-            "paddb %%mm5, %%mm6          \n\t"
-            "movq 56(%%edi,%%ebx,), %%mm7 \n\t" // Load Sub(x) for 8th 8 bytes
-            "movq %%mm6, 48(%%edi,%%ebx,) \n\t" // Write Raw(x) for 7th 8 bytes
-            "addl $64, %%ebx             \n\t"
-            "paddb %%mm6, %%mm7          \n\t"
-            "cmpl %%ecx, %%ebx           \n\t"
-            "movq %%mm7, -8(%%edi,%%ebx,) \n\t" // Write Raw(x) for 8th 8 bytes
-            "jb sub_8lp                  \n\t"
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "jnb sub_8lt8                \n\t"
-         "sub_8lpA:                      \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "addl $8, %%ebx              \n\t"
-            "paddb %%mm7, %%mm0          \n\t"
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t" // use -8 to offset early add to ebx
-            "movq %%mm0, %%mm7           \n\t" // Move calculated Raw(x) data to mm1 to
-                                    // be the new Raw(x-bpp) for the next loop
-            "jb sub_8lpA                 \n\t"
-         "sub_8lt8:                      \n\t"
+         __asm__ __volatile__ (
+// preload  "movl row, %%edi              \n\t"
+            "movl _dif, %%edx             \n\t"
+            "movl %%edi, %%esi            \n\t" // lp = row
+// preload  "movl bpp, %%eax              \n\t"
+            "addl %%eax, %%edi            \n\t" // rp = row + bpp
+            "movl _MMXLength, %%ecx       \n\t"
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+            // prime the pump:  load the first Raw(x-bpp) data set
+            "movq -8(%%edi,%%edx,), %%mm7 \n\t"
+            "andl $0x0000003f, %%ecx      \n\t" // calc bytes over mult of 64
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+         "sub_8lp:                        \n\t"
+            "movq (%%edi,%%edx,), %%mm0   \n\t" // load Sub(x) for 1st 8 bytes
+            "paddb %%mm7, %%mm0           \n\t"
+            "movq 8(%%edi,%%edx,), %%mm1  \n\t" // load Sub(x) for 2nd 8 bytes
+            "movq %%mm0, (%%edi,%%edx,)   \n\t" // write Raw(x) for 1st 8 bytes
 
-            : "%ebx", "%ecx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+            // Now mm0 will be used as Raw(x-bpp) for the 2nd group of 8 bytes.
+            // This will be repeated for each group of 8 bytes with the 8th
+            // group being used as the Raw(x-bpp) for the 1st group of the
+            // next loop.
+
+            "paddb %%mm0, %%mm1           \n\t"
+            "movq 16(%%edi,%%edx,), %%mm2 \n\t" // load Sub(x) for 3rd 8 bytes
+            "movq %%mm1, 8(%%edi,%%edx,)  \n\t" // write Raw(x) for 2nd 8 bytes
+            "paddb %%mm1, %%mm2           \n\t"
+            "movq 24(%%edi,%%edx,), %%mm3 \n\t" // load Sub(x) for 4th 8 bytes
+            "movq %%mm2, 16(%%edi,%%edx,) \n\t" // write Raw(x) for 3rd 8 bytes
+            "paddb %%mm2, %%mm3           \n\t"
+            "movq 32(%%edi,%%edx,), %%mm4 \n\t" // load Sub(x) for 5th 8 bytes
+            "movq %%mm3, 24(%%edi,%%edx,) \n\t" // write Raw(x) for 4th 8 bytes
+            "paddb %%mm3, %%mm4           \n\t"
+            "movq 40(%%edi,%%edx,), %%mm5 \n\t" // load Sub(x) for 6th 8 bytes
+            "movq %%mm4, 32(%%edi,%%edx,) \n\t" // write Raw(x) for 5th 8 bytes
+            "paddb %%mm4, %%mm5           \n\t"
+            "movq 48(%%edi,%%edx,), %%mm6 \n\t" // load Sub(x) for 7th 8 bytes
+            "movq %%mm5, 40(%%edi,%%edx,) \n\t" // write Raw(x) for 6th 8 bytes
+            "paddb %%mm5, %%mm6           \n\t"
+            "movq 56(%%edi,%%edx,), %%mm7 \n\t" // load Sub(x) for 8th 8 bytes
+            "movq %%mm6, 48(%%edi,%%edx,) \n\t" // write Raw(x) for 7th 8 bytes
+            "addl $64, %%edx              \n\t"
+            "paddb %%mm6, %%mm7           \n\t"
+            "cmpl %%ecx, %%edx            \n\t"
+            "movq %%mm7, -8(%%edi,%%edx,) \n\t" // write Raw(x) for 8th 8 bytes
+            "jb sub_8lp                   \n\t"
+
+            "cmpl _MMXLength, %%edx       \n\t"
+            "jnb sub_8lt8                 \n\t"
+
+         "sub_8lpA:                       \n\t"
+            "movq (%%edi,%%edx,), %%mm0   \n\t"
+            "addl $8, %%edx               \n\t"
+            "paddb %%mm7, %%mm0           \n\t"
+            "cmpl _MMXLength, %%edx       \n\t"
+            "movq %%mm0, -8(%%edi,%%edx,) \n\t" // -8 to offset early addl edx
+            "movq %%mm0, %%mm7            \n\t" // move calculated Raw(x) data
+                                                //  to mm1 to be new Raw(x-bpp)
+                                                //  for next loop
+            "jb sub_8lpA                  \n\t"
+
+         "sub_8lt8:                       \n\t"
+
+            : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+              "=D" (dummy_value_D)    // 1
+
+            : "0" (bpp),              // eax    // input regs
+              "1" (row)               // edi
+
+            : "%ecx", "%edx", "%esi"            // clobber list
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
          );
       }
       break;
 
-      default:                // bpp greater than 8 bytes
+      default:                // bpp greater than 8 bytes	GRR BOGUS
       {
-         __asm__ (
-            "movl _dif, %%ebx            \n\t"
-            "movl row, %%edi             \n\t"
-            "movl %%edi, %%esi           \n\t" // lp = row
-            "addl bpp, %%edi             \n\t" // rp = row + bpp
-         "sub_Alp:                       \n\t"
-            "movq (%%edi,%%ebx,), %%mm0  \n\t"
-            "movq (%%esi,%%ebx,), %%mm1  \n\t"
-            "addl $8, %%ebx              \n\t"
-            "paddb %%mm1, %%mm0          \n\t"
-            "cmpl _MMXLength, %%ebx      \n\t"
-            "movq %%mm0, -8(%%edi,%%ebx,) \n\t" // mov does not affect flags; -8 to offset
-                                   //  add ebx
-            "jb sub_Alp                  \n\t"
+         __asm__ __volatile__ (
+            "movl _dif, %%edx             \n\t"
+// preload  "movl row, %%edi              \n\t"
+            "movl %%edi, %%esi            \n\t" // lp = row
+// preload  "movl bpp, %%eax              \n\t"
+            "addl %%eax, %%edi            \n\t" // rp = row + bpp
 
-            : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+         "sub_Alp:                        \n\t"
+            "movq (%%edi,%%edx,), %%mm0   \n\t"
+            "movq (%%esi,%%edx,), %%mm1   \n\t"
+            "addl $8, %%edx               \n\t"
+            "paddb %%mm1, %%mm0           \n\t"
+            "cmpl _MMXLength, %%edx       \n\t"
+            "movq %%mm0, -8(%%edi,%%edx,) \n\t" // mov does not affect flags;
+                                                //  -8 to offset addl edx
+            "jb sub_Alp                   \n\t"
 
-            : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+            : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+              "=D" (dummy_value_D)    // 1
 
-            : "%ebx", "%edi", "%esi", "%mm0", "%mm1" // CHECKASM: clobber list
+            : "0" (bpp),              // eax    // input regs
+              "1" (row)               // edi
+
+            : "%edx", "%esi"                    // clobber list
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+            , "%mm0", "%mm1"
+#endif
          );
       }
       break;
 
-   } // end switch ( bpp )
+   } // end switch (bpp)
 
-   __asm__ (
-      "movl _MMXLength, %%ebx      \n\t"
-      "movl row, %%edi             \n\t"
-      "cmpl _FullLength, %%ebx     \n\t"
-      "jnb sub_end                 \n\t"
-      "movl %%edi, %%esi           \n\t" // lp = row
-      "xorl %%eax, %%eax           \n\t"
-      "addl bpp, %%edi             \n\t" // rp = row + bpp
-   "sub_lp2:                       \n\t"
-      "movb (%%esi,%%ebx,), %%al   \n\t"
-      "addb %%al, (%%edi,%%ebx,)   \n\t"
-      "incl %%ebx                  \n\t"
-      "cmpl _FullLength, %%ebx     \n\t"
-      "jb sub_lp2                  \n\t"
-   "sub_end:                       \n\t"
-      "emms                        \n\t" // end MMX instructions
+   __asm__ __volatile__ (
+      "movl _MMXLength, %%edx       \n\t"
+//pre "movl row, %%edi              \n\t"
+      "cmpl _FullLength, %%edx      \n\t"
+      "jnb sub_end                  \n\t"
 
-      : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+      "movl %%edi, %%esi            \n\t" // lp = row
+//pre "movl bpp, %%eax              \n\t"
+      "addl %%eax, %%edi            \n\t" // rp = row + bpp
+      "xorl %%eax, %%eax            \n\t"
 
-      : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+   "sub_lp2:                        \n\t"
+      "movb (%%esi,%%edx,), %%al    \n\t"
+      "addb %%al, (%%edi,%%edx,)    \n\t"
+      "incl %%edx                   \n\t"
+      "cmpl _FullLength, %%edx      \n\t"
+      "jb sub_lp2                   \n\t"
 
-      : "%eax", "%ebx", "%edi", "%esi" // CHECKASM: clobber list
+   "sub_end:                        \n\t"
+      "EMMS                         \n\t" // end MMX instructions
+
+      : "=a" (dummy_value_a),   // 0      // output regs (dummy)
+        "=D" (dummy_value_D)    // 1
+
+      : "0" (bpp),              // eax    // input regs
+        "1" (row)               // edi
+
+      : "%edx", "%esi"                    // clobber list
    );
-#endif /* GRR_GCC_MMX_CONVERTED */
-}
+
+} // end of png_read_filter_row_mmx_sub()
+
+
+
+
+//===========================================================================//
+//                                                                           //
+//            P N G _ R E A D _ F I L T E R _ R O W _ M M X _ U P            //
+//                                                                           //
+//===========================================================================//
 
 // Optimized code for PNG Up filter decoder
-void /* PRIVATE */
+
+static void /* PRIVATE */
 png_read_filter_row_mmx_up(png_row_infop row_info, png_bytep row,
                            png_bytep prev_row)
 {
-#ifdef GRR_GCC_MMX_CONVERTED
    png_uint_32 len;
+   int dummy_value_d;   // fix 'forbidden register 3 (dx) was spilled' error
+   int dummy_value_S;
+   int dummy_value_D;
 
-   len = row_info->rowbytes;       // # of bytes to filter
-   __asm__ (
-      "movl row, %%edi             \n\t"
+   len = row_info->rowbytes;              // number of bytes to filter
+
+   __asm__ __volatile__ (
+//pre "movl row, %%edi              \n\t"
       // get # of bytes to alignment
-      "movl %%edi, %%ecx           \n\t"
-      "xorl %%ebx, %%ebx           \n\t"
-      "addl $0x7, %%ecx            \n\t"
-      "xorl %%eax, %%eax           \n\t"
-      "andl $0xfffffff8, %%ecx     \n\t"
-      "movl prev_row, %%esi        \n\t"
-      "subl %%edi, %%ecx           \n\t"
-      "jz up_go                    \n\t"
-      // fix alignment
-   "up_lp1:                        \n\t"
-      "movb (%%edi,%%ebx,), %%al   \n\t"
-      "addb (%%esi,%%ebx,), %%al   \n\t"
-      "incl %%ebx                  \n\t"
-      "cmpl %%ecx, %%ebx           \n\t"
-      "movb %%al, -1(%%edi,%%ebx,) \n\t" // mov does not affect flags; -1 to offset inc ebx
-      "jb up_lp1                   \n\t"
-   "up_go:                         \n\t"
-      "movl len, %%ecx             \n\t"
-      "movl %%ecx, %%edx           \n\t"
-      "subl %%ebx, %%edx           \n\t" // subtract alignment fix
-      "andl $0x0000003f, %%edx     \n\t" // calc bytes over mult of 64
-      "subl %%edx, %%ecx           \n\t" // drop over bytes from length
-      // Unrolled loop - use all MMX registers and interleave to reduce
+      "movl %%edi, %%ecx            \n\t"
+      "xorl %%ebx, %%ebx            \n\t"
+      "addl $0x7, %%ecx             \n\t"
+      "xorl %%eax, %%eax            \n\t"
+      "andl $0xfffffff8, %%ecx      \n\t"
+//pre "movl prev_row, %%esi         \n\t"
+      "subl %%edi, %%ecx            \n\t"
+      "jz up_go                     \n\t"
+
+   "up_lp1:                         \n\t" // fix alignment
+      "movb (%%edi,%%ebx,), %%al    \n\t"
+      "addb (%%esi,%%ebx,), %%al    \n\t"
+      "incl %%ebx                   \n\t"
+      "cmpl %%ecx, %%ebx            \n\t"
+      "movb %%al, -1(%%edi,%%ebx,)  \n\t" // mov does not affect flags; -1 to
+      "jb up_lp1                    \n\t" //  offset incl ebx
+
+   "up_go:                          \n\t"
+//pre "movl len, %%edx              \n\t"
+      "movl %%edx, %%ecx            \n\t"
+      "subl %%ebx, %%edx            \n\t" // subtract alignment fix
+      "andl $0x0000003f, %%edx      \n\t" // calc bytes over mult of 64
+      "subl %%edx, %%ecx            \n\t" // drop over bytes from length
+
+      // unrolled loop - use all MMX registers and interleave to reduce
       // number of branch instructions (loops) and reduce partial stalls
-   "up_loop:                       \n\t"
-      "movq (%%esi,%%ebx,), %%mm1  \n\t"
-      "movq (%%edi,%%ebx,), %%mm0  \n\t"
-      "movq 8(%%esi,%%ebx,), %%mm3 \n\t"
-      "paddb %%mm1, %%mm0          \n\t"
-      "movq 8(%%edi,%%ebx,), %%mm2 \n\t"
-      "movq %%mm0, (%%edi,%%ebx,)  \n\t"
-      "paddb %%mm3, %%mm2          \n\t"
+   "up_loop:                        \n\t"
+      "movq (%%esi,%%ebx,), %%mm1   \n\t"
+      "movq (%%edi,%%ebx,), %%mm0   \n\t"
+      "movq 8(%%esi,%%ebx,), %%mm3  \n\t"
+      "paddb %%mm1, %%mm0           \n\t"
+      "movq 8(%%edi,%%ebx,), %%mm2  \n\t"
+      "movq %%mm0, (%%edi,%%ebx,)   \n\t"
+      "paddb %%mm3, %%mm2           \n\t"
       "movq 16(%%esi,%%ebx,), %%mm5 \n\t"
-      "movq %%mm2, 8(%%edi,%%ebx,) \n\t"
+      "movq %%mm2, 8(%%edi,%%ebx,)  \n\t"
       "movq 16(%%edi,%%ebx,), %%mm4 \n\t"
       "movq 24(%%esi,%%ebx,), %%mm7 \n\t"
-      "paddb %%mm5, %%mm4          \n\t"
+      "paddb %%mm5, %%mm4           \n\t"
       "movq 24(%%edi,%%ebx,), %%mm6 \n\t"
       "movq %%mm4, 16(%%edi,%%ebx,) \n\t"
-      "paddb %%mm7, %%mm6          \n\t"
+      "paddb %%mm7, %%mm6           \n\t"
       "movq 32(%%esi,%%ebx,), %%mm1 \n\t"
       "movq %%mm6, 24(%%edi,%%ebx,) \n\t"
       "movq 32(%%edi,%%ebx,), %%mm0 \n\t"
       "movq 40(%%esi,%%ebx,), %%mm3 \n\t"
-      "paddb %%mm1, %%mm0          \n\t"
+      "paddb %%mm1, %%mm0           \n\t"
       "movq 40(%%edi,%%ebx,), %%mm2 \n\t"
       "movq %%mm0, 32(%%edi,%%ebx,) \n\t"
-      "paddb %%mm3, %%mm2          \n\t"
+      "paddb %%mm3, %%mm2           \n\t"
       "movq 48(%%esi,%%ebx,), %%mm5 \n\t"
       "movq %%mm2, 40(%%edi,%%ebx,) \n\t"
       "movq 48(%%edi,%%ebx,), %%mm4 \n\t"
       "movq 56(%%esi,%%ebx,), %%mm7 \n\t"
-      "paddb %%mm5, %%mm4          \n\t"
+      "paddb %%mm5, %%mm4           \n\t"
       "movq 56(%%edi,%%ebx,), %%mm6 \n\t"
       "movq %%mm4, 48(%%edi,%%ebx,) \n\t"
-      "addl $64, %%ebx             \n\t"
-      "paddb %%mm7, %%mm6          \n\t"
-      "cmpl %%ecx, %%ebx           \n\t"
+      "addl $64, %%ebx              \n\t"
+      "paddb %%mm7, %%mm6           \n\t"
+      "cmpl %%ecx, %%ebx            \n\t"
       "movq %%mm6, -8(%%edi,%%ebx,) \n\t" // (+56)movq does not affect flags;
-                                     // -8 to offset add ebx
-      "jb up_loop                  \n\t"
+      "jb up_loop                   \n\t" //  -8 to offset addl ebx
 
-      "cmpl $0, %%edx              \n\t" // Test for bytes over mult of 64
-      "jz up_end                   \n\t"
+      "cmpl $0, %%edx               \n\t" // test for bytes over mult of 64
+      "jz up_end                    \n\t"
 
+      "cmpl $8, %%edx               \n\t" // test for less than 8 bytes
+      "jb up_lt8                    \n\t" //  [added by lcreeve@netins.net]
 
-      // 2 lines added by lcreeve@netins.net
-      // (mail 11 Jul 98 in png-implement list)
-      "cmpl $8, %%edx              \n\t" //test for less than 8 bytes
-      "jb up_lt8                   \n\t"
+      "addl %%edx, %%ecx            \n\t"
+      "andl $0x00000007, %%edx      \n\t" // calc bytes over mult of 8
+      "subl %%edx, %%ecx            \n\t" // drop over bytes from length
+      "jz up_lt8                    \n\t"
 
+   "up_lpA:                         \n\t" // use MMX regs to update 8 bytes sim.
+      "movq (%%esi,%%ebx,), %%mm1   \n\t"
+      "movq (%%edi,%%ebx,), %%mm0   \n\t"
+      "addl $8, %%ebx               \n\t"
+      "paddb %%mm1, %%mm0           \n\t"
+      "cmpl %%ecx, %%ebx            \n\t"
+      "movq %%mm0, -8(%%edi,%%ebx,) \n\t" // movq does not affect flags; -8 to
+      "jb up_lpA                    \n\t" //  offset add ebx
+      "cmpl $0, %%edx               \n\t" // test for bytes over mult of 8
+      "jz up_end                    \n\t"
 
-      "addl %%edx, %%ecx           \n\t"
-      "andl $0x00000007, %%edx     \n\t" // calc bytes over mult of 8
-      "subl %%edx, %%ecx           \n\t" // drop over bytes from length
-      "jz up_lt8                   \n\t"
-      // Loop using MMX registers mm0 & mm1 to update 8 bytes simultaneously
-   "up_lpA:                        \n\t"
-      "movq (%%esi,%%ebx,), %%mm1  \n\t"
-      "movq (%%edi,%%ebx,), %%mm0  \n\t"
-      "addl $8, %%ebx              \n\t"
-      "paddb %%mm1, %%mm0          \n\t"
-      "cmpl %%ecx, %%ebx           \n\t"
-      "movq %%mm0, -8(%%edi,%%ebx,) \n\t" // movq does not affect flags; -8 to offset add ebx
-      "jb up_lpA                   \n\t"
-      "cmpl $0, %%edx              \n\t" // Test for bytes over mult of 8
-      "jz up_end                   \n\t"
-   "up_lt8:                        \n\t"
-      "xorl %%eax, %%eax           \n\t"
-      "addl %%edx, %%ecx           \n\t" // move over byte count into counter
-      // Loop using x86 registers to update remaining bytes
-   "up_lp2:                        \n\t"
-      "movb (%%edi,%%ebx,), %%al   \n\t"
-      "addb (%%esi,%%ebx,), %%al   \n\t"
-      "incl %%ebx                  \n\t"
-      "cmpl %%ecx, %%ebx           \n\t"
-      "movb %%al, -1(%%edi,%%ebx,) \n\t" // mov does not affect flags; -1 to offset inc ebx
-      "jb up_lp2                   \n\t"
-   "up_end:                        \n\t"
-      // Conversion of filtered row completed
-      "emms                        \n\t" // End MMX instructions; prep for possible FP instrs.
+   "up_lt8:                         \n\t"
+      "xorl %%eax, %%eax            \n\t"
+      "addl %%edx, %%ecx            \n\t" // move over byte count into counter
 
-      : // FIXASM: output regs/vars go here, e.g.:  "=m" (memory_var)
+   "up_lp2:                         \n\t" // use x86 regs for remaining bytes
+      "movb (%%edi,%%ebx,), %%al    \n\t"
+      "addb (%%esi,%%ebx,), %%al    \n\t"
+      "incl %%ebx                   \n\t"
+      "cmpl %%ecx, %%ebx            \n\t"
+      "movb %%al, -1(%%edi,%%ebx,)  \n\t" // mov does not affect flags; -1 to
+      "jb up_lp2                    \n\t" //  offset inc ebx
 
-      : // FIXASM: input regs, e.g.:  "c" (count), "S" (src), "D" (dest)
+   "up_end:                         \n\t"
+      "EMMS                         \n\t" // conversion of filtered row complete
 
-      : "%eax", "%ebx", "%ecx", "%edx", "%edi", "%esi", "%mm0", "%mm1", "%mm2", "%mm3", "%mm4", "%mm5", "%mm6", "%mm7" // CHECKASM: clobber list
+      : "=d" (dummy_value_d),   // 0      // output regs (dummy)
+        "=S" (dummy_value_S),   // 1
+        "=D" (dummy_value_D)    // 2
+
+      : "0" (len),              // edx    // input regs
+        "1" (prev_row),         // esi
+        "2" (row)               // edi
+
+      : "%eax", "%ebx", "%ecx"            // clobber list (no input regs!)
+
+#if 0  /* MMX regs (%mm0, etc.) not supported by gcc 2.7.2.3 or egcs 1.1 */
+      , "%mm0", "%mm1", "%mm2", "%mm3"
+      , "%mm4", "%mm5", "%mm6", "%mm7"
+#endif
    );
-#endif /* GRR_GCC_MMX_CONVERTED */
-}
 
+} // end of png_read_filter_row_mmx_up()
+
+
+
+
+//===========================================================================//
+//                                                                           //
+//                   P N G _ R E A D _ F I L T E R _ R O W                   //
+//                                                                           //
+//===========================================================================//
 
 #if defined(PNG_HAVE_ASSEMBLER_READ_FILTER_ROW)
 
@@ -4408,48 +4757,42 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
    row, png_bytep prev_row, int filter)
 {
 #ifdef PNG_DEBUG
-   char filnm[6];
+   char filnm[10];
 #endif
-   #define UseMMX 1
 
-   if (mmx_supported == 2)
-       mmx_supported = mmxsupport();
+/* GRR:  these are superseded by png_ptr->asm_flags: */
+#define UseMMX_sub    1   // GRR:  converted 20000730
+#define UseMMX_up     1   // GRR:  converted 20000729
+#define UseMMX_avg    1   // GRR:  converted 20000828 (+ 16-bit bugfix 20000916)
+#define UseMMX_paeth  1   // GRR:  converted 20000828
 
-#ifdef GRR_GCC_MMX_CONVERTED
-   if (!mmx_supported)
-#endif
-   {
-       png_read_filter_row_c(png_ptr, row_info, row, prev_row, filter);
-       return ;
+   if (_mmx_supported == 2) {
+       png_mmx_support();
    }
 
 #ifdef PNG_DEBUG
    png_debug(1, "in png_read_filter_row\n");
-#if (UseMMX == 1)
-   png_debug1(0,"%s, ", "MMX");
-#else
-   png_debug1(0,"%s, ", "x86");
-#endif
    switch (filter)
    {
-      case 0: sprintf(filnm, "None ");
+      case 0: sprintf(filnm, "none");
          break;
-      case 1: sprintf(filnm, "Sub  ");
+      case 1: sprintf(filnm, "sub-%s", "MMX");
          break;
-      case 2: sprintf(filnm, "Up   ");
+      case 2: sprintf(filnm, "up-%s", "MMX");
          break;
-      case 3: sprintf(filnm, "Avg  ");
+      case 3: sprintf(filnm, "avg-%s", "MMX");
          break;
-      case 4: sprintf(filnm, "Paeth");
+      case 4: sprintf(filnm, "Paeth-%s", "MMX");
          break;
-      default: sprintf(filnm, "Unknw");
+      default: sprintf(filnm, "unknw");
          break;
    }
-   png_debug2(0,"row=%5d, %s, ", png_ptr->row_number, filnm);
-   png_debug2(0, "pd=%2d, b=%d, ", (int)row_info->pixel_depth,
+   png_debug2(0, "row_number=%5ld, %5s, ", png_ptr->row_number, filnm);
+   png_debug1(0, "row=0x%08lx, ", (unsigned long)row);
+   png_debug2(0, "pixdepth=%2d, bytes=%d, ", (int)row_info->pixel_depth,
       (int)((row_info->pixel_depth + 7) >> 3));
-   png_debug1(0,"len=%8d, ", row_info->rowbytes);
-#endif
+   png_debug1(0,"rowbytes=%8ld\n", row_info->rowbytes);
+#endif /* PNG_DEBUG */
 
    switch (filter)
    {
@@ -4457,13 +4800,13 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
          break;
 
       case PNG_FILTER_VALUE_SUB:
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) && (row_info->rowbytes >= 128))
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_sub(row_info, row);
          }
          else
-#endif
          {
             png_uint_32 i;
             png_uint_32 istop = row_info->rowbytes;
@@ -4476,37 +4819,39 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                *rp = (png_byte)(((int)(*rp) + (int)(*lp++)) & 0xff);
                rp++;
             }
-         }  //end !UseMMX
+         }  //end !UseMMX_sub
          break;
 
       case PNG_FILTER_VALUE_UP:
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) && (row_info->rowbytes >= 128))
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_up(row_info, row, prev_row);
          }
          else
-#endif
          {
-            png_bytep rp;
-            png_bytep pp;
             png_uint_32 i;
-            for (i = 0, rp = row, pp = prev_row;
-               i < row_info->rowbytes; i++, rp++, pp++)
+            png_uint_32 istop = row_info->rowbytes;
+            png_bytep rp = row;
+            png_bytep pp = prev_row;
+
+            for (i = 0; i < istop; ++i)
             {
-                  *rp = (png_byte)(((int)(*rp) + (int)(*pp)) & 0xff);
+               *rp = (png_byte)(((int)(*rp) + (int)(*pp++)) & 0xff);
+               rp++;
             }
-         }  //end !UseMMX
+         }  //end !UseMMX_up
          break;
 
       case PNG_FILTER_VALUE_AVG:
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) && (row_info->rowbytes >= 128))
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_avg(row_info, row, prev_row);
          }
          else
-#endif
          {
             png_uint_32 i;
             png_bytep rp = row;
@@ -4528,17 +4873,17 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                   ((int)(*pp++ + *lp++) >> 1)) & 0xff);
                rp++;
             }
-         }  //end !UseMMX
+         }  //end !UseMMX_avg
          break;
 
       case PNG_FILTER_VALUE_PAETH:
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) && (row_info->rowbytes >= 128))
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_paeth(row_info, row, prev_row);
          }
          else
-#endif
          {
             png_uint_32 i;
             png_bytep rp = row;
@@ -4546,7 +4891,7 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
             png_bytep lp = row;
             png_bytep cp = prev_row;
             png_uint_32 bpp = (row_info->pixel_depth + 7) >> 3;
-            png_uint_32 istop=row_info->rowbytes - bpp;
+            png_uint_32 istop = row_info->rowbytes - bpp;
 
             for (i = 0; i < bpp; i++)
             {
@@ -4554,7 +4899,7 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                rp++;
             }
 
-            for (i = 0; i < istop; i++)   // use leftover rp,pp
+            for (i = 0; i < istop; i++)   /* use leftover rp,pp */
             {
                int a, b, c, pa, pb, pc, p;
 
@@ -4584,16 +4929,16 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                      p = c;
                 */
 
-               p = (pa <= pb && pa <=pc) ? a : (pb <= pc) ? b : c;
+               p = (pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c;
 
                *rp = (png_byte)(((int)(*rp) + p) & 0xff);
                rp++;
             }
-         }  //end !UseMMX
+         }  //end !UseMMX_paeth
          break;
 
       default:
-         png_warning(png_ptr, "Ignoring bad adaptive filter type");
+         png_warning(png_ptr, "Ignoring bad row-filter type");
          *row=0;
          break;
    }
@@ -4601,6 +4946,14 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 
 #endif /* PNG_HAVE_ASSEMBLER_READ_FILTER_ROW */
 
+
+
+
+//===========================================================================//
+//                                                                           //
+//                      P N G _ M M X _ S U P P O R T                        //
+//                                                                           //
+//===========================================================================//
 
 // GRR NOTES:  (1) the following code assumes 386 or better (pushfl/popfl)
 //             (2) all instructions compile with gcc 2.7.2.3 and later
@@ -4610,83 +4963,27 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 //             [is there a way to signal that a *single* function should
 //              not be inlined?  is there a way to modify the label for
 //              each inlined instance, e.g., by appending _1, _2, etc.?
-//              maybe if don't use leading "." in label name? (not tested)]
+//              maybe if don't use leading "." in label name? (nope...sigh)]
 
-#ifdef ORIG_THAT_USED_TO_CLOBBER_EBX
+// GRR TO DO:  make sure PNGAPI doesn't do/require anything screwy here
+//             [looks OK for everybody except possibly Cygwin (__cdecl)]
 
-int mmxsupport(void)
+int PNGAPI
+png_mmx_support(void)
 {
-    int mmx_supported_local = 0;
-
-    __asm__ (
-//      ".byte  0x66          \n\t"  // convert 16-bit pushf to 32-bit pushfd
-//      "pushf                \n\t"  // save Eflag to stack
-        "pushfl               \n\t"  // save Eflag to stack
-        "popl %%eax           \n\t"  // get Eflag from stack into eax
-        "movl %%eax, %%ecx    \n\t"  // make another copy of Eflag in ecx
-        "xorl $0x200000, %%eax \n\t" // toggle ID bit in Eflag (i.e., bit 21)
-        "pushl %%eax          \n\t"  // save modified Eflag back to stack
-//      ".byte  0x66          \n\t"  // convert 16-bit popf to 32-bit popfd
-//      "popf                 \n\t"  // restore modified value to Eflag reg
-        "popfl                \n\t"  // restore modified value to Eflag reg
-        "pushfl               \n\t"  // save Eflag to stack
-        "popl %%eax           \n\t"  // get Eflag from stack
-        "xorl %%ecx, %%eax    \n\t"  // compare new Eflag with original Eflag
-        "jz .NOT_SUPPORTED    \n\t"  // if same, CPUID instr. is not supported
-
-        "xorl %%eax, %%eax    \n\t"  // set eax to zero
-//      ".byte  0x0f, 0xa2    \n\t"  // CPUID instruction (two-byte opcode)
-        "cpuid                \n\t"  // get the CPU identification info
-        "cmpl $1, %%eax       \n\t"  // make sure eax return non-zero value
-        "jl .NOT_SUPPORTED    \n\t"  // if eax is zero, MMX is not supported
-
-        "xorl %%eax, %%eax    \n\t"  // set eax to zero and...
-        "incl %%eax           \n\t"  // ...increment eax to 1.  This pair is
-                                     // faster than the instruction "mov eax, 1"
-        "cpuid                \n\t"  // get the CPU identification info again
-        "andl $0x800000, %%edx \n\t" // mask out all bits but MMX bit (23)
-        "cmpl $0, %%edx       \n\t"  // 0 = MMX not supported
-        "jz .NOT_SUPPORTED    \n\t"  // non-zero = yes, MMX IS supported
-
-        "movl $1, %0          \n\t"  // set return value to 1 and fall through
-
-    ".NOT_SUPPORTED:          \n\t"  // target label for jump instructions
-        "movl %0, %%eax       \n\t"  // move return value to eax
-                                     // DONE
-
-        : "=m" (mmx_supported_local) // %0 (output list:  memory only)
-
-        :                            // any variables used on input (none)
-
-        : "%eax", "%ebx",            // clobber list
-          "%ecx", "%edx"
-//      , "memory"   // if write to a variable gcc thought was in a reg
-//      , "cc"       // "condition codes" (flag bits)
-    );
-
-    //mmx_supported_local=0; // test code for force don't support MMX
-    //printf("MMX : %u (1=MMX supported)\n",mmx_supported_local);
-
-    return mmx_supported_local;
-}
-
-#else /* !ORIG_THAT_USED_TO_CLOBBER_EBX */
-
-int mmxsupport(void)
-{
-    __asm__ (
+    __asm__ __volatile__ (
         "pushl %%ebx          \n\t"  // ebx gets clobbered by CPUID instruction
         "pushl %%ecx          \n\t"  // so does ecx...
         "pushl %%edx          \n\t"  // ...and edx (but ecx & edx safe on Linux)
 //      ".byte  0x66          \n\t"  // convert 16-bit pushf to 32-bit pushfd
-//      "pushf                \n\t"  // save Eflag to stack
+//      "pushf                \n\t"  // 16-bit pushf
         "pushfl               \n\t"  // save Eflag to stack
         "popl %%eax           \n\t"  // get Eflag from stack into eax
         "movl %%eax, %%ecx    \n\t"  // make another copy of Eflag in ecx
         "xorl $0x200000, %%eax \n\t" // toggle ID bit in Eflag (i.e., bit 21)
         "pushl %%eax          \n\t"  // save modified Eflag back to stack
 //      ".byte  0x66          \n\t"  // convert 16-bit popf to 32-bit popfd
-//      "popf                 \n\t"  // restore modified value to Eflag reg
+//      "popf                 \n\t"  // 16-bit popf
         "popfl                \n\t"  // restore modified value to Eflag reg
         "pushfl               \n\t"  // save Eflag to stack
         "popl %%eax           \n\t"  // get Eflag from stack
@@ -4708,6 +5005,7 @@ int mmxsupport(void)
         "jz .NOT_SUPPORTED    \n\t"  // non-zero = yes, MMX IS supported
 
         "movl $1, %%eax       \n\t"  // set return value to 1
+        "movl %%eax, _mmx_supported \n\t" // save in global static variable, too
         "popl %%edx           \n\t"  // restore edx
         "popl %%ecx           \n\t"  // restore ecx
         "popl %%ebx           \n\t"  // restore ebx ("row" in png_do_interlace)
@@ -4715,13 +5013,14 @@ int mmxsupport(void)
 
     ".NOT_SUPPORTED:          \n\t"  // target label for jump instructions
         "movl $0, %%eax       \n\t"  // set return value to 0
+        "movl %%eax, _mmx_supported \n\t" // save in global static variable, too
         "popl %%edx           \n\t"  // restore edx
         "popl %%ecx           \n\t"  // restore ecx
         "popl %%ebx           \n\t"  // restore ebx ("row" in png_do_interlace)
 //      "ret                  \n\t"  // DONE:  no MMX support
                                      // (fall through to standard C "ret")
 
-        : // "=m" (mmx_supported_local) // %0 (output list:  memory only)
+        :                            // output list (none)
 
         :                            // any variables used on input (none)
 
@@ -4731,14 +5030,7 @@ int mmxsupport(void)
 //      , "cc"       // "condition codes" (flag bits)
     );
 
-    //mmx_supported_local=0; // test code for force don't support MMX
-    //printf("MMX : %u (1=MMX supported)\n",mmx_supported_local);
-
-    //return mmx_supported_local;
+    // return %%eax;
 }
 
-#endif /* ?ORIG_THAT_USED_TO_CLOBBER_EBX */
-
 #endif /* PNG_ASSEMBLER_CODE_SUPPORTED && PNG_USE_PNGGCCRD */
-
-

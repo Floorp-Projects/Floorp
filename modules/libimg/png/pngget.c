@@ -1,9 +1,9 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * libpng 1.0.8 - July 24, 2000
+ * libpng 1.0.9 - January 31, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -807,7 +807,7 @@ png_get_unknown_chunks(png_structp png_ptr, png_infop info_ptr,
 png_byte PNGAPI
 png_get_rgb_to_gray_status (png_structp png_ptr)
 {
-   return png_ptr->rgb_to_gray_status;
+   return (png_byte)(png_ptr? png_ptr->rgb_to_gray_status : 0);
 }
 #endif
 
@@ -815,7 +815,7 @@ png_get_rgb_to_gray_status (png_structp png_ptr)
 png_voidp PNGAPI
 png_get_user_chunk_ptr(png_structp png_ptr)
 {
-   return (png_ptr->user_chunk_ptr);
+   return (png_ptr? png_ptr->user_chunk_ptr : NULL);
 }
 #endif
 
@@ -823,5 +823,6 @@ png_get_user_chunk_ptr(png_structp png_ptr)
 png_uint_32 PNGAPI
 png_get_compression_buffer_size(png_structp png_ptr)
 {
-   return(png_ptr->zbuf_size);
+   return (png_uint_32)(png_ptr? png_ptr->zbuf_size : 0L);
 }
+

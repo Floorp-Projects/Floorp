@@ -1,9 +1,9 @@
 
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * libpng 1.0.8 - July 24, 2000
+ * libpng 1.0.9 - January 31, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -99,7 +99,7 @@ png_format_buffer(png_structp png_ptr, png_charp buffer, png_const_charp message
 void PNGAPI
 png_chunk_error(png_structp png_ptr, png_const_charp message)
 {
-   char msg[16+64];
+   char msg[18+64];
    png_format_buffer(png_ptr, msg, message);
    png_error(png_ptr, msg);
 }

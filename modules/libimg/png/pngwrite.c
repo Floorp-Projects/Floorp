@@ -1,9 +1,9 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * libpng 1.0.8 - July 24, 2000
+ * libpng 1.0.9 - January 31, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -28,6 +28,13 @@ png_write_info_before_PLTE(png_structp png_ptr, png_infop info_ptr)
    if (!(png_ptr->mode & PNG_WROTE_INFO_BEFORE_PLTE))
    {
    png_write_sig(png_ptr); /* write PNG signature */
+#if defined(PNG_MNG_FEATURES_SUPPORTED)
+   if((png_ptr->mode&PNG_HAVE_PNG_SIGNATURE)&&(png_ptr->mng_features_permitted))
+   {
+      png_warning(png_ptr,"MNG features are not allowed in a PNG datastream\n");
+      png_ptr->mng_features_permitted=0;
+   }
+#endif
    /* write IHDR information. */
    png_write_IHDR(png_ptr, info_ptr->width, info_ptr->height,
       info_ptr->bit_depth, info_ptr->color_type, info_ptr->compression_type,
@@ -57,7 +64,7 @@ png_write_info_before_PLTE(png_structp png_ptr, png_infop info_ptr)
 #endif
 #if defined(PNG_WRITE_iCCP_SUPPORTED)
    if (info_ptr->valid & PNG_INFO_iCCP)
-      png_write_iCCP(png_ptr, info_ptr->iccp_name, PNG_TEXT_COMPRESSION_zTXt,
+      png_write_iCCP(png_ptr, info_ptr->iccp_name, PNG_COMPRESSION_TYPE_BASE,
                      info_ptr->iccp_profile, (int)info_ptr->iccp_proflen);
 #endif
 #if defined(PNG_WRITE_sBIT_SUPPORTED)
@@ -375,7 +382,11 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
 
    /* write end of PNG file */
    png_write_IEND(png_ptr);
+#if 0
+/* This flush, added in libpng-1.0.8,  causes some applications to crash
+   because they do not set png_ptr->output_flush_fn */
    png_flush(png_ptr);
+#endif
 }
 
 #if defined(PNG_WRITE_tIME_SUPPORTED)
@@ -488,7 +499,7 @@ png_create_write_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
         removed from version 2.0.0 and beyond because the previous test
         would have already rejected it. */
 
-     if (user_png_ver[4] == '6' && user_png_ver[2] == '0' && 
+     if (user_png_ver[4] == '6' && user_png_ver[2] == '0' &&
          user_png_ver[0] == '1' && user_png_ver[5] == '\0')
      {
         png_error(png_ptr,
@@ -769,6 +780,24 @@ png_write_row(png_structp png_ptr, png_bytep row)
    if (png_ptr->transformations)
       png_do_write_transformations(png_ptr);
 
+#if defined(PNG_MNG_FEATURES_SUPPORTED)
+   /* Write filter_method 64 (intrapixel differencing) only if
+    * 1. Libpng was compiled with PNG_MNG_FEATURES_SUPPORTED and
+    * 2. Libpng did not write a PNG signature (this filter_method is only
+    *    used in PNG datastreams that are embedded in MNG datastreams) and
+    * 3. The application called png_permit_mng_features with a mask that
+    *    included PNG_FLAG_MNG_FILTER_64 and
+    * 4. The filter_method is 64 and
+    * 5. The color_type is RGB or RGBA
+    */
+   if((png_ptr->mng_features_permitted & PNG_FLAG_MNG_FILTER_64) &&
+      (png_ptr->filter_type == PNG_INTRAPIXEL_DIFFERENCING))
+   {
+      /* Intrapixel differencing */
+      png_do_write_intrapixel(&(png_ptr->row_info), png_ptr->row_buf + 1);
+   }
+#endif
+
    /* Find a filter if necessary, filter the row and write it out. */
    png_write_find_filter(png_ptr, &(png_ptr->row_info));
 
@@ -964,7 +993,11 @@ void PNGAPI
 png_set_filter(png_structp png_ptr, int method, int filters)
 {
    png_debug(1, "in png_set_filter\n");
-   /* We allow 'method' only for future expansion of the base filter method. */
+#if defined(PNG_MNG_FEATURES_SUPPORTED)
+   if((png_ptr->mng_features_permitted & PNG_FLAG_MNG_FILTER_64) &&
+      (method == PNG_INTRAPIXEL_DIFFERENCING))
+         method = PNG_FILTER_TYPE_BASE;
+#endif
    if (method == PNG_FILTER_TYPE_BASE)
    {
       switch (filters & (PNG_ALL_FILTERS | 0x07))

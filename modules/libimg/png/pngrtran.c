@@ -1,9 +1,9 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * libpng 1.0.8 - July 24, 2000
+ * libpng 1.0.9 - January 31, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -1090,7 +1090,12 @@ png_read_transform_info(png_structp png_ptr, png_infop info_ptr)
    if ((png_ptr->transformations & PNG_FILLER) &&
        ((info_ptr->color_type == PNG_COLOR_TYPE_RGB) ||
        (info_ptr->color_type == PNG_COLOR_TYPE_GRAY)))
+   {
       info_ptr->channels++;
+#if 0 /* if adding a true alpha channel not just filler */
+      info_ptr->color_type |= PNG_COLOR_MASK_ALPHA;
+#endif
+   }
 #endif
 
 #if defined(PNG_USER_TRANSFORM_PTR_SUPPORTED) && \
@@ -4048,3 +4053,63 @@ png_build_gamma_table(png_structp png_ptr)
 /* To do: install integer version of png_build_gamma_table here */
 #endif
 
+#if defined(PNG_MNG_FEATURES_SUPPORTED)
+/* undoes intrapixel differencing  */
+void /* PRIVATE */
+png_do_read_intrapixel(png_row_infop row_info, png_bytep row)
+{
+   png_debug(1, "in png_do_read_intrapixel\n");
+   if (
+#if defined(PNG_USELESS_TESTS_SUPPORTED)
+       row != NULL && row_info != NULL &&
+#endif
+       (row_info->color_type & PNG_COLOR_MASK_COLOR))
+   {
+      int bytes_per_pixel;
+      png_uint_32 row_width = row_info->width;
+      if (row_info->bit_depth == 8)
+      {
+         png_bytep rp;
+         png_uint_32 i;
+
+         if (row_info->color_type == PNG_COLOR_TYPE_RGB)
+            bytes_per_pixel = 3;
+         else if (row_info->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+            bytes_per_pixel = 4;
+         else
+            return;
+
+         for (i = 0, rp = row; i < row_width; i++, rp += bytes_per_pixel)
+         {
+            *(rp) = (png_byte)((256 + *rp + *(rp+1))&0xff);
+            *(rp+2) = (png_byte)((256 + *(rp+2) + *(rp+1))&0xff);
+         }
+      }
+      else if (row_info->bit_depth == 16)
+      {
+         png_bytep rp;
+         png_uint_32 i;
+
+         if (row_info->color_type == PNG_COLOR_TYPE_RGB)
+            bytes_per_pixel = 6;
+         else if (row_info->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+            bytes_per_pixel = 8;
+         else
+            return;
+
+         for (i = 0, rp = row; i < row_width; i++, rp += bytes_per_pixel)
+         {
+            png_uint_32 s0=*(rp  )<<8 | *(rp+1);
+            png_uint_32 s1=*(rp+2)<<8 | *(rp+3);
+            png_uint_32 s2=*(rp+4)<<8 | *(rp+5);
+            png_uint_32 red=(65536+s0+s1)&0xffff;
+            png_uint_32 blue=(65536+s2+s1)&0xffff;
+            *(rp  ) = (png_byte)((red>>8)&0xff);
+            *(rp+1) = (png_byte)(red&0xff);
+            *(rp+4) = (png_byte)((blue>>8)&0xff);
+            *(rp+5) = (png_byte)(blue&0xff);
+         }
+      }
+   }
+}
+#endif /* PNG_MNG_FEATURES_SUPPORTED */
