@@ -85,7 +85,6 @@ namespace VM {
     
     /********************************************************************/
     
-    typedef uint32 Register;
     typedef std::pair<Register, JSType*> TypedRegister;
     typedef std::vector<TypedRegister> RegisterList;        
     typedef std::vector<Instruction *> InstructionStream;

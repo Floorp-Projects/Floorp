@@ -1598,6 +1598,10 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
         icg.call(icg.getStatic(mClass, initName), thisValue, &args);   // ok, so it's mis-named
     }
     icg.genStmt(f->function.body);
+    if (isConstructor) {
+        TypedRegister thisValue = TypedRegister(0, mClass);
+        icg.returnStmt(thisValue);
+    }
     return icg.complete();
 
 }
