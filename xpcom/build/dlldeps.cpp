@@ -92,6 +92,7 @@
 #include "nsComponentManagerObsolete.h"
 #include "nsInterfaceRequestorAgg.h"
 #include "nsHashPropertyBag.h"
+#include "nsStringAPI.h"
 
 void XXXNeverCalled()
 {
@@ -201,4 +202,25 @@ void XXXNeverCalled()
     depstring.Rebind(nsnull, PRUint32(0));
     nsDependentCString depcstring;
     depcstring.Rebind(nsnull, PRUint32(0));
+    // nsStringAPI
+    nsCStringContainer sc1;
+    NS_CStringContainerInit(sc1);
+    NS_CStringContainerInit2(sc1, nsnull, 0, 0);
+    NS_CStringContainerFinish(sc1);
+    NS_CStringGetData(str2, nsnull, nsnull);
+    NS_CStringSetData(str2, nsnull, 0);
+    NS_CStringSetDataRange(str2, 0, 0, nsnull, 0);
+    NS_CStringCopy(str2, str2);
+    NS_CStringCloneData(str2);
+    nsStringContainer sc2;
+    NS_StringContainerInit(sc2);
+    NS_StringContainerInit2(sc2, nsnull, 0, 0);
+    NS_StringContainerFinish(sc2);
+    NS_StringGetData(str1, nsnull, nsnull);
+    NS_StringSetData(str1, nsnull, 0);
+    NS_StringSetDataRange(str1, 0, 0, nsnull, 0);
+    NS_StringCopy(str1, str1);
+    NS_StringCloneData(str1);
+    NS_UTF16ToCString(str1, NS_CSTRING_ENCODING_ASCII, str2);
+    NS_CStringToUTF16(str2, NS_CSTRING_ENCODING_ASCII, str1);
 }
