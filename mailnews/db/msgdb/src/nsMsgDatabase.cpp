@@ -2128,6 +2128,43 @@ nsresult nsMsgDatabase::UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnTo
 	return row->AddColumn(GetEnv(),  columnToken, UInt32ToYarn(&yarn, value));
 }
 
+nsresult nsMsgDatabase::CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr)
+{
+	struct mdbYarn yarn;
+	yarn.mYarn_Buf = (void *) charPtr;
+	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
+	yarn.mYarn_Fill = yarn.mYarn_Size - 1;
+	yarn.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
+
+	return row->AddColumn(GetEnv(),  columnToken, &yarn);
+}
+
+nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result)
+{
+	nsresult	err = NS_ERROR_NULL_POINTER;
+	nsIMdbCell	*hdrCell;
+
+	if (row && result)
+	{
+		err = row->GetCell(GetEnv(), columnToken, &hdrCell);
+		if (err == NS_OK && hdrCell)
+		{
+			struct mdbYarn yarn;
+			hdrCell->AliasYarn(GetEnv(), &yarn);
+			*result = (char *) PR_CALLOC(yarn.mYarn_Fill + 1);
+			if (*result && yarn.mYarn_Fill > 0)
+				nsCRT::memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+			else
+				err = NS_ERROR_OUT_OF_MEMORY;
+
+			hdrCell->CutStrongRef(GetEnv()); // always release ref
+		}
+	}
+	return err;
+}
+
+
+
 /* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
 {
 	yarn->mYarn_Buf = str->ToNewCString();

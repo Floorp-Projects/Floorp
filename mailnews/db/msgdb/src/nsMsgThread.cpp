@@ -132,14 +132,15 @@ NS_IMETHODIMP nsMsgThread::SetFlags(PRUint32 flags)
 
 NS_IMETHODIMP nsMsgThread::SetSubject(char *subject)
 {
-	return NS_OK;
+	return m_mdbDB->CharPtrToRowCellColumn(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, subject);
 }
 
 NS_IMETHODIMP nsMsgThread::GetSubject(char **result)
 {
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
-	return NS_OK;
+	nsresult ret = m_mdbDB->RowCellColumnToCharPtr(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, result);
+	return ret;
 }
 
 NS_IMETHODIMP nsMsgThread::GetNumChildren(PRUint32 *result)
@@ -228,7 +229,7 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 	*result = nsnull;
 	// mork doesn't seem to handle this correctly, so deal with going off
 	// the end here.
-	if (aIndex > m_numChildren)
+	if (aIndex > (PRInt32) m_numChildren)
 		return NS_OK;
 
 	nsIMdbTableRowCursor *rowCursor;

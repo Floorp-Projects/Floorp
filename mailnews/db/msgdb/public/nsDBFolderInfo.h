@@ -87,8 +87,8 @@ public:
 
 	NS_IMETHOD			GetFolderSize(PRUint32 *size);
 	NS_IMETHOD			SetFolderSize(PRUint32 size);
-	NS_IMETHOD			GetFolderDate(PRInt32 *date);
-	NS_IMETHOD			SetFolderDate(PRInt32 date);
+	NS_IMETHOD			GetFolderDate(PRUint32 *date);
+	NS_IMETHOD			SetFolderDate(PRUint32 date);
 
     NS_IMETHOD			ChangeExpungedBytes(PRInt32 delta);
   

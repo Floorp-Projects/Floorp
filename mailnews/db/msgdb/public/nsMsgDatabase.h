@@ -209,6 +209,8 @@ public:
 
 	// helper functions to put values in cells for the passed-in row
 	nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
+	nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
+	nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
 	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);

@@ -100,7 +100,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIM
 			{
 				PRInt32 numNewMessages;
                 PRUint32 folderSize;
-                PRInt32  folderDate;
+                PRUint32  folderDate;
 				nsFileSpec::TimeStamp actualFolderTimeStamp;
 
 				mailDB->m_folderSpec->GetModDate(actualFolderTimeStamp) ;

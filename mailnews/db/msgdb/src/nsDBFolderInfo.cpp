@@ -299,7 +299,7 @@ NS_IMETHODIMP	nsDBFolderInfo::SetFolderSize(PRUint32 size)
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetFolderDate(PRInt32 *folderDate)
+nsDBFolderInfo::GetFolderDate(PRUint32 *folderDate)
 {
   if (!folderDate) 
 	  return NS_ERROR_NULL_POINTER;
@@ -307,7 +307,7 @@ nsDBFolderInfo::GetFolderDate(PRInt32 *folderDate)
   return NS_OK;
 }
 
-NS_IMETHODIMP	nsDBFolderInfo::SetFolderDate(PRInt32 folderDate)
+NS_IMETHODIMP	nsDBFolderInfo::SetFolderDate(PRUint32 folderDate)
 {
 	m_folderDate = folderDate;
 	return SetUint32PropertyWithToken(m_folderDateColumnToken, folderDate);

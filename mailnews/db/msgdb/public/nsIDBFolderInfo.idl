@@ -35,7 +35,7 @@ interface  nsIDBFolderInfo : nsISupports {
 	attribute nsMsgKey ExpiredMark;
 	attribute unsigned long FolderSize;
 	attribute nsMsgKey LastMessageLoaded;
-	attribute long FolderDate;
+	attribute unsigned long FolderDate;
 	void ChangeNumNewMessages(in long delta);
 	void ChangeNumMessages(in long delta);
 	void ChangeNumVisibleMessages(in long delta);

@@ -335,7 +335,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 	nsresult ret;
 	const char *curName = names;
 	const char *curAddress = addresses;
-	nsString	allRecipients;
+	nsAutoString	allRecipients(eOneByte);
 
 	for (PRUint32 i = 0; i < numAddresses; i++)
 	{
@@ -360,9 +360,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	char *cstringRecipients = allRecipients.ToNewCString();
-	ret = SetCCList(cstringRecipients);
-	delete [] cstringRecipients;
+	ret = SetCCList(allRecipients.GetBuffer());
 	return ret;
 }
 
