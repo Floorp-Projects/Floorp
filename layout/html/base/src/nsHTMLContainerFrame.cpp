@@ -342,35 +342,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
           zIndex = position->mZIndex.GetIntValue();
         }
-
-        // XXX CSS2 says clip applies to block-level and replaced elements with
-        // overflow set to other than 'visible'. Where should this go?
-#if 0
-        // Is there a clip rect specified?
-        nsViewClip    clip = {0, 0, 0, 0};
-        PRUint8       clipType = (display->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
-        nsViewClip*   pClip = nsnull;
-
-        if (NS_STYLE_CLIP_RECT == clipType) {
-          if ((NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags) == 0) {
-            clip.mLeft = display->mClip.left;
-          }
-          if ((NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags) == 0) {
-            clip.mRight = display->mClip.right;
-          }
-          if ((NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags) == 0) {
-            clip.mTop = display->mClip.top;
-          }
-          if ((NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags) == 0) {
-            clip.mBottom = display->mClip.bottom;
-          }
-          pClip = &clip;
-        }
-        else if (NS_STYLE_CLIP_INHERIT == clipType) {
-          // XXX need to handle clip inherit (get from parent style context)
-          NS_NOTYETIMPLEMENTED("clip inherit");
-        }
-#endif
       }
     }
 
@@ -433,7 +404,9 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         }
 
         // If the background color is transparent or the visibility is hidden
-        // then mark the view as having transparent content.
+        // then mark the view as having transparent content. The reason we
+        // need to do it for visibility of hidden is that child elements can
+        // override their parent's visibility and be visible
         // XXX We could try and be smarter about this and check whether there's
         // a background image. If there is a background image and the image is
         // fully opaque then we don't need to mark the view as having transparent
@@ -444,21 +417,14 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         }
 
         // Set the initial visiblity of the view -EDV
-        view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow);
-
-        // XXX If it's relatively positioned or absolutely positioned then we
-        // need to mark it as having transparent content, too. See bug #2502
-        const nsStylePosition* position = (const nsStylePosition*)
-          aStyleContext->GetStyleData(eStyleStruct_Position);
-
-        // XXX Michael: uncomment this code to test the problem I described...
-        if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) ||
-            (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
-          viewManager->SetViewContentTransparency(view, PR_TRUE);
-        }
+        view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ?
+                            nsViewVisibility_kHide : nsViewVisibility_kShow);
 
         // XXX If it's fixed positioned, then create a widget so it floats
         // above the scrolling area
+        const nsStylePosition* position = (const nsStylePosition*)
+          aStyleContext->GetStyleData(eStyleStruct_Position);
+
         if (NS_STYLE_POSITION_FIXED == position->mPosition) {
           view->CreateWidget(kCChildCID);
         }
