@@ -361,7 +361,7 @@ calRecurrenceRule::GetNextOccurrence(calIDateTime *aStartTime,
 
     struct icaltimetype next = icalrecur_iterator_next(recur_iter);
     while (!icaltime_is_null_time(next)) {
-        if (icaltime_compare(next, occurtime) >= 0)
+        if (icaltime_compare(next, occurtime) > 0)
             break;
 
         next = icalrecur_iterator_next(recur_iter);

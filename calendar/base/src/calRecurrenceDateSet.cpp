@@ -208,7 +208,7 @@ calRecurrenceDateSet::GetNextOccurrence(calIDateTime *aStartTime,
 
     // we ignore aStartTime
     for (i = 0; i < mDates.Count(); i++) {
-        if (NS_SUCCEEDED(mDates[i]->Compare(aOccurrenceTime, &result)) && result >= 0) {
+        if (NS_SUCCEEDED(mDates[i]->Compare(aOccurrenceTime, &result)) && result > 0) {
             NS_ADDREF (*_retval = mDates[i]);
             return NS_OK;
         }

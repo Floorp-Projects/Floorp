@@ -86,7 +86,7 @@ interface calIRecurrenceInfo : nsISupports
   //
 
   // return the next display item for the event,
-  // where the start time is >= aStartTime
+  // where the start time is > aStartTime
   calIItemOccurrence getNextOccurrence (in calIDateTime aOccurrenceTime);
 
   // return array of calIItemOccurrence representing all

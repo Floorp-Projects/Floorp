@@ -141,7 +141,7 @@ calRecurrenceDate::GetNextOccurrence(calIDateTime *aStartTime,
 
     if (mDate) {
         PRInt32 result;
-        if (NS_SUCCEEDED(mDate->Compare(aStartTime, &result)) && result >= 0) {
+        if (NS_SUCCEEDED(mDate->Compare(aStartTime, &result)) && result > 0) {
             NS_ADDREF (*_retval = mDate);
             return NS_OK;
         }
