@@ -265,6 +265,18 @@ public:
   NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const = 0;
 
   /**
+   * Get the value used to scale a "standard" pixel to a pixel
+   * of the same physical size for this device. a standard pixel
+   * is defined as a pixel on display 0. this is used to make
+   * sure that entities defined in pixel dimensions maintain a
+   * constant relative size when displayed from one output
+   * device to another.
+   * @param aScale in parameter for scale value
+   * @return error status
+   */
+  NS_IMETHOD  SetCanonicalPixelScale(float aScale) = 0;
+
+  /**
    * Get the width of a vertical scroll bar and the height
    * of a horizontal scrollbar in application units.
    * @param aWidth out parameter for width

@@ -58,6 +58,7 @@ public:
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
   NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
+  NS_IMETHOD  SetCanonicalPixelScale(float aScale);
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
   NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;

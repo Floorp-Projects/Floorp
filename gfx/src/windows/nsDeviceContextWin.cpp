@@ -340,6 +340,14 @@ NS_IMETHODIMP nsDeviceContextWin :: GetCanonicalPixelScale(float &aScale) const
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextWin :: SetCanonicalPixelScale(float aScale)
+{
+  DeviceContextImpl::SetCanonicalPixelScale(aScale);
+  mPixelScale = aScale;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;

@@ -104,6 +104,7 @@ public:
   NS_IMETHOD  GetDevUnitsToAppUnits(float &aDevUnits) const;
 
   NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
+  NS_IMETHOD  SetCanonicalPixelScale(float aScale);
 
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
                             nsIFontMetrics*& aMetrics);
