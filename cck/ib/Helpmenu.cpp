@@ -71,3 +71,201 @@ void CreateHelpMenu (void)
 
 	Hlp.close();
 }
+
+// This function creates the file "mailaccount.rdf" to customize the Mail account
+void CreateIspMenu(void)
+{
+	CString root   = GetGlobal("Root");
+	CString config = GetGlobal("CustomizationList");
+	CString IspPath = root + "\\Configs\\" + config + "\\Temp\\";//ISpPath=CCKTool\Configs\configname\Temp
+
+	_mkdir (IspPath);
+	CString ispDomainName = GetGlobal("DomainName");
+	CString ispPrettyName = GetGlobal("PrettyName");
+	CString ispLongName = GetGlobal("LongName");
+	CString ispInServer = GetGlobal("IncomingServer");
+	CString ispOutServer = GetGlobal("OutgoingServer");
+	CString ispPortNumber = GetGlobal("PortNumber");
+	CString serverType = GetGlobal("Serverlist");
+	if (serverType == "POP")
+		serverType = "pop3";
+	if (serverType == "IMAP")
+		serverType = "imap";
+	CString popMessage = GetGlobal("PopMessages");
+	if (popMessage == "0")	// check if "leave messages on server" option is set
+		popMessage = "false";
+	else if (popMessage == "1")
+		popMessage = "true";
+	
+	// mailaccount.rdf file is created only if values are entered for all the fields in the CCK mail UI
+	if (!( (ispDomainName.IsEmpty()) || (ispPrettyName.IsEmpty()) || (ispLongName.IsEmpty()) || (ispInServer.IsEmpty()) || (ispOutServer.IsEmpty()) || (ispPortNumber.IsEmpty()) ))
+	{
+		CString IspFile = IspPath +"mailaccount.rdf";
+		ofstream Isp(IspFile);
+
+		char *shortname;
+		char tempdomain[25];
+		strcpy(tempdomain,ispDomainName);
+		shortname = strtok(tempdomain,".");
+
+		if (!Isp) 
+		{
+			cout << "The file cannot be opened \n";
+		}
+		else
+		{
+	
+			Isp <<"<\?xml version=\"1.0\"\?>\n";
+			Isp <<"<RDF:RDF\n";
+			Isp <<" xmlns:NC=\"http://home.netscape.com/NC-rdf#\"\n";
+			Isp <<" xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n\n";
+			Isp <<"<RDF:Description about=\"NC:ispinfo\">\n";
+			Isp <<" <NC:providers>\n";
+			Isp <<"  <NC:nsIMsgAccount about=\"domain:" << ispDomainName << "\">\n\n";
+
+			Isp <<"   <!-- server info -->\n";
+			Isp <<"   <NC:incomingServer>\n";
+			Isp <<"    <NC:nsIMsgIncomingServer>\n";
+			Isp <<"     <NC:prettyName>" << ispPrettyName << "</NC:prettyName>\n";
+			Isp <<"     <NC:hostName>" << ispInServer << "</NC:hostName>\n";
+			Isp <<"     <NC:type>" << serverType << "</NC:type>\n";
+			Isp <<"     <NC:port>" << ispPortNumber << "<NC:port>\n";
+			Isp <<"     <NC:rememberPassword>false</NC:rememberPassword>\n";
+			if (serverType == "pop3")
+			{
+				Isp <<"     <NC:ServerType-pop3>\n";
+				Isp <<"      <NC:nsIPopIncomingServer>\n";
+				Isp <<"       <NC:leaveMessagesOnServer>" << popMessage << "</NC:leaveMessagesOnServer>\n";
+				Isp <<"       <NC:deleteMailLeftOnServer>false</NC:deleteMailLeftOnServer>\n";
+				Isp <<"      </NC:nsIPopIncomingServer>\n";
+				Isp <<"     </NC:ServerType-pop3>\n";
+			}
+			Isp <<"    </NC:nsIMsgIncomingServer>\n";
+			Isp <<"   </NC:incomingServer>\n\n";
+
+			Isp <<"   <!-- identity defaults -->\n";
+			Isp <<"   <NC:identity>\n";
+			Isp <<"    <NC:nsIMsgIdentity>\n";
+			Isp <<"     <NC:composeHtml>false</NC:composeHtml>\n";
+			Isp <<"     <NC:bccSelf>false</NC:bccSelf>\n";
+			Isp <<"    </NC:nsIMsgIdentity>\n";
+			Isp <<"   </NC:identity>\n\n";
+
+			Isp <<"   <NC:smtp>\n";
+			Isp <<"    <NC:nsISmtpServer>\n";
+			Isp <<"     <NC:hostname>" << ispOutServer << "</NC:hostname>\n";
+			Isp <<"    </NC:nsISmtpServer>\n";
+			Isp <<"   </NC:smtp>\n\n";
+
+			Isp <<"   <NC:smtpRequiresUsername>true</NC:smtpRequiresUsername>\n";
+			Isp <<"   <NC:smtpCreateNewServer>ture</NC:smtpCreateNewServer>\n";
+			Isp <<"   <NC:smtpUsePreferredServer>true</NC:smtpUsePreferredServer>\n\n";
+
+			Isp <<"   <NC:wizardSkipPanels>true</NC:wizardSkipPanels>\n";
+			Isp <<"   <NC:wizardShortName>" << shortname << "</NC:wizardShortName>\n";
+			Isp <<"   <NC:wizardLongName>" << ispLongName << "</NC:wizardLongName>\n";
+			Isp <<"   <NC:wizardShow>true</NC:wizardShow>\n";
+			Isp <<"   <NC:wizardPromote>true</NC:wizardPromote>\n";
+			Isp <<"   <NC:emailProviderName>" << ispDomainName << "</NC:emailProviderName>\n";
+			Isp <<"   <NC:sampleEmail>username@" << ispDomainName << "</NC:sampleEmail>\n";
+			Isp <<"   <NC:sampleUserName>username</NC:sampleUserName>\n";
+			Isp <<"   <NC:emailIDDescription>user name</NC:emailIDDescription>\n";
+			Isp <<"   <NC:emailIDFieldTitle>User name:</NC:emailIDFieldTitle>\n";
+			Isp <<"   <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary>\n";
+			Isp <<"  </NC:nsIMsgAccount>\n";
+			Isp <<" </NC:providers>\n";
+			Isp <<"</RDF:Description>\n\n";
+			Isp <<"</RDF:RDF>\n";
+		}
+	Isp.close();
+	}
+}
+
+// This function creates the file "newsaccount.rdf" to customize the News account
+void CreateNewsMenu(void)
+{
+	CString root   = GetGlobal("Root");
+	CString config = GetGlobal("CustomizationList");
+	CString NewsPath = root + "\\Configs\\" + config + "\\Temp\\";//NewsPath=CCKTool\Configs\configname\Temp
+
+	_mkdir (NewsPath);
+	CString newsDomainName = GetGlobal("nDomainName");
+	CString newsPrettyName = GetGlobal("nPrettyName");
+	CString newsLongName = GetGlobal("nLongName");
+	CString newsInServer = GetGlobal("nIncomingServer");
+	CString newsOutServer = GetGlobal("nOutgoingServer");
+	CString newsPortNumber = GetGlobal("nPortNumber");
+
+	// newsaccount.rdf file is created only if values are entered for all the fields in the CCK News UI		
+	if (!( (newsDomainName.IsEmpty()) || (newsPrettyName.IsEmpty()) || (newsLongName.IsEmpty()) || (newsInServer.IsEmpty()) || (newsOutServer.IsEmpty()) || (newsPortNumber.IsEmpty()) ))
+	{
+		CString NewsFile = NewsPath +"newsaccount.rdf";
+		ofstream News(NewsFile);
+
+		char *shortname;
+		char tempdomain[25];
+		strcpy(tempdomain,newsDomainName);
+		shortname = strtok(tempdomain,".");
+
+		if (!News) 
+		{
+			cout << "The file cannot be opened \n";
+		}
+		else
+		{
+			News <<"<\?xml version=\"1.0\"\?>\n";
+			News <<"<RDF:RDF\n";
+			News <<" xmlns:NC=\"http://home.netscape.com/NC-rdf#\"\n";
+			News <<" xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n\n";
+			News <<"<RDF:Description about=\"NC:ispinfo\">\n";
+			News <<" <NC:providers>\n";
+			News <<"  <NC:nsIMsgAccount about=\"domain:" << newsDomainName << "\">\n\n";
+
+			News <<"   <!-- server info -->\n";
+			News <<"   <NC:incomingServer>\n";
+			News <<"    <NC:nsIMsgIncomingServer>\n";
+			News <<"     <NC:prettyName>" << newsPrettyName << "</NC:prettyName>\n";
+			News <<"     <NC:hostName>" << newsInServer << "</NC:hostName>\n";
+			News <<"     <NC:type>nntp</NC:type>\n";
+			News <<"     <NC:port>" << newsPortNumber << "<NC:port>\n";
+			News <<"     <NC:rememberPassword>false</NC:rememberPassword>\n";
+			News <<"    </NC:nsIMsgIncomingServer>\n";
+			News <<"   </NC:incomingServer>\n\n";
+
+			News <<"   <!-- identity defaults -->\n";
+			News <<"   <NC:identity>\n";
+			News <<"    <NC:nsIMsgIdentity>\n";
+			News <<"     <NC:composeHtml>false</NC:composeHtml>\n";
+			News <<"     <NC:bccSelf>false</NC:bccSelf>\n";
+			News <<"    </NC:nsIMsgIdentity>\n";
+			News <<"   </NC:identity>\n\n";
+
+			News <<"   <NC:smtp>\n";
+			News <<"    <NC:nsISmtpServer>\n";
+			News <<"     <NC:hostname>" << newsOutServer << "</NC:hostname>\n";
+			News <<"    </NC:nsISmtpServer>\n";
+			News <<"   </NC:smtp>\n\n";
+
+			News <<"   <NC:smtpRequiresUsername>true</NC:smtpRequiresUsername>\n";
+			News <<"   <NC:smtpCreateNewServer>ture</NC:smtpCreateNewServer>\n";
+			News <<"   <NC:smtpUsePreferredServer>true</NC:smtpUsePreferredServer>\n\n";
+
+			News <<"   <NC:wizardSkipPanels>true</NC:wizardSkipPanels>\n";
+			News <<"   <NC:wizardShortName>" << shortname << "</NC:wizardShortName>\n";
+			News <<"   <NC:wizardLongName>" << newsLongName << "</NC:wizardLongName>\n";
+			News <<"   <NC:wizardShow>true</NC:wizardShow>\n";
+			News <<"   <NC:wizardPromote>true</NC:wizardPromote>\n";
+			News <<"   <NC:emailProviderName>" << newsDomainName << "</NC:emailProviderName>\n";
+			News <<"   <NC:sampleEmail>username@" << newsDomainName << "</NC:sampleEmail>\n";
+			News <<"   <NC:sampleUserName>username</NC:sampleUserName>\n";
+			News <<"   <NC:emailIDDescription>user name</NC:emailIDDescription>\n";
+			News <<"   <NC:emailIDFieldTitle>User name:</NC:emailIDFieldTitle>\n";
+			News <<"   <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary>\n";
+			News <<"  </NC:nsIMsgAccount>\n";
+			News <<" </NC:providers>\n";
+			News <<"</RDF:Description>\n\n";
+			News <<"</RDF:RDF>\n";
+		}
+	News.close();
+	}
+}
