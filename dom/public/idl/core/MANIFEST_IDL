@@ -12,6 +12,7 @@ nsIDOMEntity.idl
 nsIDOMEntityReference.idl
 nsIDOMNamedNodeMap.idl
 nsIDOMNode.idl
+nsIDOM3Node.idl
 nsIDOMNodeList.idl
 nsIDOMNotation.idl
 nsIDOMNSDocument.idl
