@@ -238,7 +238,9 @@ nsIEnumerator* nsBaseWidget::GetChildren()
       }
       if (NS_OK == child->QueryInterface(kIWidgetIID, (void**)&widget)) {
         children->Append(widget);
+        NS_IF_RELEASE(widget);
       }
+      NS_IF_RELEASE(child);
     }
     while (NS_SUCCEEDED(mChildren->Next()));
 
