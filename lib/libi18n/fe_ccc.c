@@ -356,42 +356,54 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/* UNICODE */
 		{CS_UTF8,		CS_UTF8,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_UTF8},
+		/*************** Vietnamese ****************/
+		{CS_VIET_VIQR,   CS_VIET_VIQR,   0, (CCCFunc)0, 0},
+		{CS_VIET_VISCII, CS_VIET_VISCII, 0, (CCCFunc)0, 0},
+		{CS_VIET_VPS,    CS_VIET_VPS,    0, (CCCFunc)0, 0},
+		{CS_VIET_TCVN,   CS_VIET_TCVN,   0, (CCCFunc)0, 0},
+		{CS_VIET_VNI,    CS_VIET_VNI,    0, (CCCFunc)0, 0},
+		{CS_CP_1258,     CS_CP_1258,     0, (CCCFunc)0, 0},
+		
+		{CS_VIET_VIQR,   CS_VIET_VISCII, 0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VIQR,   CS_VIET_VPS,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VIQR,   CS_VIET_TCVN,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VIQR,   CS_VIET_VNI,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VIQR,   CS_CP_1258,     0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		
+		{CS_VIET_VISCII, CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VISCII, CS_VIET_VPS,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VISCII, CS_VIET_TCVN,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VISCII, CS_VIET_VNI,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VISCII, CS_CP_1258,     0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		
+		{CS_VIET_VPS,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VPS,    CS_VIET_VISCII, 0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VPS,    CS_VIET_TCVN,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VPS,    CS_VIET_VNI,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VPS,    CS_CP_1258,     0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		
+		{CS_VIET_TCVN,   CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_TCVN,   CS_VIET_VISCII, 0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_TCVN,   CS_VIET_VPS,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_TCVN,   CS_VIET_VNI,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_TCVN,   CS_CP_1258,     0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		
+		{CS_VIET_VNI,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VNI,    CS_VIET_VISCII, 0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VNI,    CS_VIET_VPS,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VNI,    CS_VIET_TCVN,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VNI,    CS_CP_1258,     0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		
+		{CS_CP_1258,     CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_CP_1258,     CS_VIET_VISCII, 0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_CP_1258,     CS_VIET_VPS,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_CP_1258,     CS_VIET_TCVN,   0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_CP_1258,     CS_VIET_VNI,    0, (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		
+		{CS_VIET_VIQR,   CS_UTF8,   0,      (CCCFunc)viet_any_2_any, INTL_CHARLEN_SINGLEBYTE},
+		{CS_VIET_VISCII, CS_UTF8,   0,      (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
+		{CS_UTF8,        CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_UTF8},
 
-                /*************** Vietnamese ****************/
-                {CS_VIET_VIQR,   CS_VIET_VIQR,   0, (CCCFunc)0, 0},
-                {CS_VIET_VISCII, CS_VIET_VISCII, 0, (CCCFunc)0, 0},
-                {CS_VIET_VPS,    CS_VIET_VPS,    0, (CCCFunc)0, 0},
-                {CS_VIET_TCVN,   CS_VIET_TCVN,   0, (CCCFunc)0, 0},
-                {CS_VIET_VNI,   CS_VIET_VNI,   0, (CCCFunc)0, 0},
- 
-                {CS_VIET_VPS,    CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_TCVN,   CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VISCII, CS_VIET_VPS,    0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_TCVN,   CS_VIET_VPS,    0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VISCII, CS_VIET_TCVN,   0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VPS,    CS_VIET_TCVN,   0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
- 
-                {CS_VIET_VIQR,   CS_VIET_VISCII, 0, (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VIQR,   CS_VIET_VPS,    0, (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VIQR,   CS_VIET_TCVN,   0, (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VNI,    CS_VIET_VISCII, 0, (CCCFunc)viet_vni_2_any,         INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VNI,    CS_VIET_VPS,    0, (CCCFunc)viet_vni_2_any,         INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VNI,    CS_VIET_TCVN,   0, (CCCFunc)viet_vni_2_any,         INTL_CHARLEN_SINGLEBYTE},
- 
-                {CS_VIET_VISCII, CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_TCVN,   CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VPS,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VNI,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
- 
-                {CS_VIET_VISCII, CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_TCVN,   CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VPS,    CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VNI,    CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
- 
-                {CS_VIET_VIQR,   CS_UTF8,   0,      (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
-                {CS_VIET_VISCII, CS_UTF8,   0,      (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
-                {CS_UTF8,        CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_UTF8},
-                /*******************************************/
 
  		{CS_T61,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_T61},
  		{CS_UTF8,		CS_T61,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
@@ -997,6 +1009,7 @@ PUBLIC int16 INTL_DocToWinCharSetID(int16 csid)
                (def_doccsid == CS_VIET_VPS) ||
                (def_doccsid == CS_VIET_TCVN) ||
                (def_doccsid == CS_VIET_VNI) ||
+               (def_doccsid == CS_CP_1258) ||
                (def_doccsid == CS_VIET_VIQR)
            )) {
                 def_doccsid = 0;

@@ -70,6 +70,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"windows-1250", "Cp1250", CS_CP_1250},
 			{"windows-1251", "Cp1251", CS_CP_1251}, /* cyrillic */
 			{"windows-1253", "Cp1253", CS_CP_1253},  /* greek */
+			{"windows-1258", "Cp1258", CS_CP_1258}, 
 			{"UTF-8", "UTF8", CS_UTF8},
 			{"UTF-7", "UTF7", CS_UTF7},
 			{"ISO-10646-UCS-2", "UCS2", CS_UCS2},
