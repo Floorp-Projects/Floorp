@@ -496,15 +496,20 @@ public final class JavaAdapter
         if (master == null) {
             if (!cl.isInterface())
                 return null;
-            Method[] interfaceMethods = cl.getMethods();
-            if (interfaceMethods.length != 1)
-                return null;
+            Method[] methods = cl.getMethods();
+            if (methods.length == 0) { return null; }
+            Class[] argTypes = methods[0].getParameterTypes();
+            // check that the rest of methods has the same signature
+            for (int i = 1; i != methods.length; ++i) {
+                Class[] types2 = methods[i].getParameterTypes();
+                if (types2.length != argTypes.length) { return null; }
+                for (int j = 0; j != argTypes.length; ++j) {
+                    if (types2[j] != argTypes[j]) { return null; }
+                }
+            }
 
-            String glueName = "ifglue"
-                               +cache.newClassSerialNumber();
-            Method method = interfaceMethods[0];
-            Class[] argTypes = method.getParameterTypes();
-            byte[] code = createIFGlueCode(cl, method, argTypes, glueName);
+            String glueName = "ifglue"+cache.newClassSerialNumber();
+            byte[] code = createIFGlueCode(cl, methods, argTypes, glueName);
             Class glueClass = loadAdapterClass(glueName, code);
             try {
                 master = (IFGlue)glueClass.newInstance();
@@ -521,7 +526,7 @@ public final class JavaAdapter
     }
 
     private static byte[] createIFGlueCode(Class interfaceClass,
-                                           Method method,
+                                           Method[] methods,
                                            Class[] argTypes,
                                            String className)
     {
@@ -539,26 +544,28 @@ public final class JavaAdapter
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)1, null); // 1: single this argument
 
-        Class returnType = method.getReturnType();
-        StringBuffer sb = new StringBuffer();
-        int localsEnd = appendMethodSignature(argTypes, returnType, sb);
-        String methodSignature = sb.toString();
-        cfw.startMethod(method.getName(), methodSignature,
-                        ClassFileWriter.ACC_PUBLIC);
+        for (int i = 0; i != methods.length; ++i) {
+            Method method = methods[i];
+            Class returnType = method.getReturnType();
+            StringBuffer sb = new StringBuffer();
+            int localsEnd = appendMethodSignature(argTypes, returnType, sb);
+            String methodSignature = sb.toString();
+            cfw.startMethod(method.getName(), methodSignature,
+                            ClassFileWriter.ACC_PUBLIC);
+            cfw.addLoadThis();
+            generatePushWrappedArgs(cfw, argTypes, argTypes.length + 1);
+            // add method name as the last JS parameter
+            cfw.add(ByteCode.DUP); // duplicate array reference
+            cfw.addPush(argTypes.length);
+            cfw.addPush(method.getName());
+            cfw.add(ByteCode.AASTORE);
 
-        cfw.addLoadThis();
-        generatePushWrappedArgs(cfw, argTypes, argTypes.length + 1);
-        // add method name as the last JS parameter
-        cfw.add(ByteCode.DUP); // duplicate array reference
-        cfw.addPush(argTypes.length);
-        cfw.addPush(method.getName());
-        cfw.add(ByteCode.AASTORE);
+            cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "ifglue_call",
+                          "([Ljava/lang/Object;)Ljava/lang/Object;");
+            generateReturnResult(cfw, returnType);
 
-        cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "ifglue_call",
-                      "([Ljava/lang/Object;)Ljava/lang/Object;");
-        generateReturnResult(cfw, returnType);
-
-        cfw.stopMethod((short)localsEnd, null);
+            cfw.stopMethod((short)localsEnd, null);
+        }
 
         return cfw.toByteArray();
     }
