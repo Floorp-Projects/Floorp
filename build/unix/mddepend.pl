@@ -37,7 +37,7 @@ $outfile = shift @ARGV;
 # Parse dependency files
 while ($line = <>) {
   chomp $line;
-  ($obj,$rest) = split /:\s+/, $line, 2;
+  ($obj,$rest) = split /\s*:\s+/, $line, 2;
   next if $obj eq '';
 
   if ($line =~ /\\$/) {
