@@ -3014,14 +3014,25 @@ nsHTMLEditor::GetFontFaceState(PRBool &aMixed, nsString &outFace)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
+nsHTMLEditor::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
   if (!htmlRules) return NS_ERROR_FAILURE;
   
-  return htmlRules->GetListState(aMixed, aOL, aUL);
+  return htmlRules->GetListState(aMixed, aOL, aUL, aDL);
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)
+{
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  if (!htmlRules) return NS_ERROR_FAILURE;
+  
+  return htmlRules->GetListItemState(aMixed, aLI, aDT, aDD);
 }
 
 NS_IMETHODIMP 

@@ -350,11 +350,12 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
  ********************************************************/
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
+nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)
 {
   aMixed = PR_FALSE;
   aOL = PR_FALSE;
   aUL = PR_FALSE;
+  aDL = PR_FALSE;
   PRBool bNonList = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
@@ -370,11 +371,11 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
     nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
-    if (nsHTMLEditUtils::IsUnorderedList(curNode))
+    if (mEditor->NodeIsType(curNode,nsIEditProperty::ul))
       aUL = PR_TRUE;
-    else if (nsHTMLEditUtils::IsOrderedList(curNode))
+    else if (mEditor->NodeIsType(curNode,nsIEditProperty::ol))
       aOL = PR_TRUE;
-    else if (nsHTMLEditUtils::IsListItem(curNode))
+    else if (mEditor->NodeIsType(curNode,nsIEditProperty::li))
     {
       nsCOMPtr<nsIDOMNode> parent;
       PRInt32 offset;
@@ -385,11 +386,71 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
       else if (nsHTMLEditUtils::IsOrderedList(parent))
         aOL = PR_TRUE;
     }
+    else if (mEditor->NodeIsType(curNode,nsIEditProperty::dl) ||
+             mEditor->NodeIsType(curNode,nsIEditProperty::dt) ||
+             mEditor->NodeIsType(curNode,nsIEditProperty::dd) )
+    {
+      aDL = PR_TRUE;
+    }
     else bNonList = PR_TRUE;
   }  
   
   // hokey arithmetic with booleans
-  if ( (aUL + aOL + bNonList) > 1) aMixed = PR_TRUE;
+  if ( (aUL + aOL + aDL + bNonList) > 1) aMixed = PR_TRUE;
+  
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)
+{
+  aMixed = PR_FALSE;
+  aLI = PR_FALSE;
+  aDT = PR_FALSE;
+  aDD = PR_FALSE;
+  PRBool bNonList = PR_FALSE;
+  
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  nsresult res = GetListActionNodes(&arrayOfNodes, PR_TRUE);
+  if (NS_FAILED(res)) return res;
+
+  // examine list type for nodes in selection
+  PRUint32 listCount;
+  PRInt32 i;
+  arrayOfNodes->Count(&listCount);
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+    
+    if (mEditor->NodeIsType(curNode,nsIEditProperty::ul) ||
+        mEditor->NodeIsType(curNode,nsIEditProperty::ol) ||
+        mEditor->NodeIsType(curNode,nsIEditProperty::li) )
+    {
+      aLI = PR_TRUE;
+    }
+    else if (mEditor->NodeIsType(curNode,nsIEditProperty::dt))
+    {
+      aDT = PR_TRUE;
+    }
+    else if (mEditor->NodeIsType(curNode,nsIEditProperty::dd))
+    {
+      aDD = PR_TRUE;
+    }
+    else if (mEditor->NodeIsType(curNode,nsIEditProperty::dl))
+    {
+      // need to look inside dl and see which types of items it has
+      PRBool bDT, bDD;
+      res = GetDefinitionListItemTypes(curNode, bDT, bDD);
+      if (NS_FAILED(res)) return res;
+      aDT |= bDT;
+      aDD |= bDD;
+    }
+    else bNonList = PR_TRUE;
+  }  
+  
+  // hokey arithmetic with booleans
+  if ( (aDT + aDD + bNonList) > 1) aMixed = PR_TRUE;
   
   return res;
 }
@@ -2362,107 +2423,41 @@ nsHTMLEditRules::AlignTableCellContents(nsIDOMNode *aNode, const nsString *align
 }
 
 
+
 ///////////////////////////////////////////////////////////////////////////
-// GetTableContent: take a table element and list it's editable, non-table contents
+// GetInnerContent: aList and aTbl allow the caller to specify what kind 
+//                  of content to "look inside".  If aTbl is true, look inside
+//                  any table content, and append the inner content to the
+//                  supplied issupportsarray.  Similarly with aList and list content.
 //                  
 nsresult
-nsHTMLEditRules::GetTableContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
+nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOfNodes, PRBool aList, PRBool aTbl)
 {
   if (!aNode || !outArrayOfNodes) return NS_ERROR_NULL_POINTER;
 
-  // make a array
-  nsresult res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
-  if (NS_FAILED(res)) return res;
-  
-  // make an iter
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
-                                            NS_GET_IID(nsIContentIterator), 
-                                            getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  if (!iter)          return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsISupports> isupports;
   
-  // iterate node and build up array of non-table content
-  content = do_QueryInterface(aNode);
-  iter->Init(content);
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  nsresult res = mEditor->GetFirstEditableChild(aNode, &node);
+  while (NS_SUCCEEDED(res) && node)
   {
-    res = iter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(res)) return res;
-    node = do_QueryInterface(content);
-    if (!node) return NS_ERROR_FAILURE;
-    if (mEditor->IsTableCell(node))
+    if (  ( aList && (nsHTMLEditUtils::IsList(node)     || 
+                      nsHTMLEditUtils::IsListItem(node) ) )
+       || ( aTbl && mEditor->IsTableElement(node) )  )
     {
-      nsCOMPtr <nsIDOMNode> child, tmp;
-      res = mEditor->GetFirstEditableChild(node, &child);
+      res = GetInnerContent(node, outArrayOfNodes, aList, aTbl);
       if (NS_FAILED(res)) return res;
-      while (child)
-      {
-        isupports = do_QueryInterface(child);
-        (*outArrayOfNodes)->AppendElement(isupports);
-        mEditor->GetNextHTMLSibling(child, &tmp);
-        child = tmp;
-      }
     }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
-  }
-  return res;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// GetListContent: take a list element and get it's editable, non-list contents
-//                  
-nsresult
-nsHTMLEditRules::GetListContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
-{
-  if (!aNode || !outArrayOfNodes) return NS_ERROR_NULL_POINTER;
-
-  // make a array
-  nsresult res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
-  if (NS_FAILED(res)) return res;
-  
-  // make an iter
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
-                                            NS_GET_IID(nsIContentIterator), 
-                                            getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  if (!iter)          return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsISupports> isupports;
-  
-  // iterate node and build up array of non-list content
-  content = do_QueryInterface(aNode);
-  iter->Init(content);
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
-  {
-    res = iter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(res)) return res;
-    node = do_QueryInterface(content);
-    if (!node) return NS_ERROR_FAILURE;
-    if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsListItem(node))
+    else
     {
-      nsCOMPtr <nsIDOMNode> child, tmp;
-      res = mEditor->GetFirstEditableChild(node, &child);
-      if (NS_FAILED(res)) return res;
-      while (child)
-      {
-        isupports = do_QueryInterface(child);
-        (*outArrayOfNodes)->AppendElement(isupports);
-        mEditor->GetNextHTMLSibling(child, &tmp);
-        child = tmp;
-      }
+      isupports = do_QueryInterface(node);
+      outArrayOfNodes->AppendElement(isupports);
     }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = node->GetNextSibling(getter_AddRefs(tmp));
+    node = tmp;
   }
+
   return res;
 }
 
@@ -3033,15 +3028,34 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
     if (mEditor->IsTableElement(testNode) && !mEditor->IsTable(testNode))
     {
       (*outArrayOfNodes)->RemoveElementAt(i);
-      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
-      res = GetTableContent(testNode, &arrayOfTableContent);
+      res = GetInnerContent(testNode, *outArrayOfNodes, PR_FALSE);
       if (NS_FAILED(res)) return res;
-      (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
     }
   }
   return res;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// GetDefinitionListItemTypes: 
+//                       
+nsresult 
+nsHTMLEditRules::GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBool &aDD)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  aDT = aDD = PR_FALSE;
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> child, temp;
+  res = aNode->GetFirstChild(getter_AddRefs(child));
+  while (child && NS_SUCCEEDED(res))
+  {
+    if (mEditor->NodeIsType(child,nsIEditProperty::dt)) aDT = PR_TRUE;
+    else if (mEditor->NodeIsType(child,nsIEditProperty::dd)) aDD = PR_TRUE;
+    res = child->GetNextSibling(getter_AddRefs(temp));
+    child = temp;
+  }
+  return res;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // GetParagraphFormatNodes: 
@@ -3080,22 +3094,14 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfN
     }
     
     // scan for table elements.  If we find table elements other than table,
-    // replace it with a list of any editable non-table content.
-    if (mEditor->IsTableElement(testNode) && !mEditor->IsTable(testNode))
+    // replace it with a list of any editable non-table content.  Ditto for list elements.
+    if (mEditor->IsTableElement(testNode) ||
+        nsHTMLEditUtils::IsList(testNode) || 
+        nsHTMLEditUtils::IsListItem(testNode) )
     {
       (*outArrayOfNodes)->RemoveElementAt(i);
-      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
-      res = GetTableContent(testNode, &arrayOfTableContent);
+      res = GetInnerContent(testNode, *outArrayOfNodes);
       if (NS_FAILED(res)) return res;
-      (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
-    }
-    else if (nsHTMLEditUtils::IsList(testNode) || nsHTMLEditUtils::IsListItem(testNode))
-    {
-      (*outArrayOfNodes)->RemoveElementAt(i);
-      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
-      res = GetListContent(testNode, &arrayOfTableContent);
-      if (NS_FAILED(res)) return res;
-      (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
     }
   }
   return res;

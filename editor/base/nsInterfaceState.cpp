@@ -493,8 +493,8 @@ nsInterfaceState::UpdateListState(const char* observerName)
   nsresult  rv = NS_ERROR_NO_INTERFACE;
   nsAutoString tagStr;  // empty by default.
   
-  PRBool bMixed, bOL, bUL;
-  rv = mEditor->GetListState(bMixed, bOL, bUL);
+  PRBool bMixed, bOL, bUL, bDL;
+  rv = mEditor->GetListState(bMixed, bOL, bUL, bDL);
   if (NS_FAILED(rv)) return rv;  
 
   if (bMixed)
@@ -503,6 +503,8 @@ nsInterfaceState::UpdateListState(const char* observerName)
     tagStr.AssignWithConversion("ol");
   else if (bUL)
     tagStr.AssignWithConversion("ul");
+  else if (bDL)
+    tagStr.AssignWithConversion("dl");
   // else leave tagStr empty
   
   rv = SetNodeAttribute(observerName, "format", tagStr);
