@@ -284,6 +284,16 @@ function panel_loader() {
   this.removeAttribute('collapsed');
   this.setAttribute('loadstate','loaded');
   this.parentNode.firstChild.setAttribute('hidden','true');
+
+  if (this.hasAttribute('focusOnLoad')) {
+    var elementToFocus = this.contentDocument.documentElement.getAttribute('elementtofocus');
+    if (elementToFocus) {
+      var element = this.contentDocument.getElementById(elementToFocus);
+      if (element)
+        element.focus();
+    }
+    this.removeAttribute('focusOnLoad');
+  }
 }
 sbPanelList.prototype.update =
 function (force_reload)
@@ -956,6 +966,8 @@ function SidebarSelectPanel(header, should_popopen, should_unhide) {
   }
   if (unhide)  SidebarShowHide();
   if (popopen) SidebarExpandCollapse();
+
+  panel.get_iframe().setAttribute('focusOnLoad', true);
   if (!panel.is_selected()) panel.select(false);
 
   return true;

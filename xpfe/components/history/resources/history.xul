@@ -32,7 +32,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
 <window title="&historyWindowTitle.label;" id="history-window"
-        onload="HistoryInit();"
+        onload="HistoryWindowInit();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="500" height="400"
         persist="width height screenX screenY sizemode"
