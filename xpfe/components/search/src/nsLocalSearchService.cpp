@@ -17,8 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Robert John Churchill      <rjc@netscape.com>
+ *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Pierre Phaneuf             <pp@ludusdesign.com>
  */
 
 /*

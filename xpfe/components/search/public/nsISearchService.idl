@@ -17,6 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Robert John Churchill      <rjc@netscape.com>
+ *
  * Contributor(s): 
  */
 
@@ -46,16 +49,29 @@ interface nsIInternetSearchService : nsISupports
 	void			ClearResults();
 	void			ClearResultSearchSites();
 	nsIRDFDataSource	GetCategoryDataSource();
+	void			AddSearchEngine(in string engineURL, in string iconURL,
+				                 in wstring suggestedTitle, in wstring suggestedCategory);
 };
 
 [noscript, uuid(ac0c0781-ab71-11d3-a652-b09b68feee44)]
 interface nsIInternetSearchContext : nsISupports
 {
+	// context types: WEB_SEARCH_CONTEXT=1, ENGINE_DOWNLOAD_CONTEXT, ICON_DOWNLOAD_CONTEXT };
+	const unsigned long WEB_SEARCH_CONTEXT      = 1;
+	const unsigned long ENGINE_DOWNLOAD_CONTEXT = 2;
+	const unsigned long ICON_DOWNLOAD_CONTEXT   = 3;
+
+	// attributes
+	readonly attribute unsigned long ContextType;
+
+	// methods
 	nsIUnicodeDecoder	GetUnicodeDecoder();
 	nsIRDFResource		GetParent();
 	nsIRDFResource		GetEngine();
+	void			GetHintConst([shared] out wstring buffer);
 	void			AppendBytes(in string buffer, in long numBytes);
 	void			AppendUnicodeBytes(in wstring buffer, in long numUniBytes);
+	long			GetBufferLength();
 	void			GetBufferConst([shared] out wstring buffer);
 	void			Truncate();
 };
