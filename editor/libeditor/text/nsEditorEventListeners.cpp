@@ -388,7 +388,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           }
           */
         }
-        aProcessed=PR_TRUE;
+//      aProcessed=PR_TRUE;
         break;
 
       case nsIDOMEvent::VK_INSERT:
