@@ -43,6 +43,8 @@
 #include "nsIObserverService.h"
 #include "nsIPref.h"
 
+static nsresult ensureCacheDirectory(nsIFile * cacheDirectory);
+
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -87,8 +89,11 @@ NS_IMETHODIMP nsDiskCacheObserver::Observe(nsISupports *aSubject, const PRUnicha
         if (prefName.Equals(NS_LITERAL_STRING(CACHE_DIR_PREF))) {
         	nsCOMPtr<nsILocalFile> cacheDirectory;
             rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDirectory));
-        	if (NS_SUCCEEDED(rv))
-                mDevice->setCacheDirectory(cacheDirectory);
+        	if (NS_SUCCEEDED(rv)) {
+                rv = ensureCacheDirectory(cacheDirectory);
+                if (NS_SUCCEEDED(rv))
+                    mDevice->setCacheDirectory(cacheDirectory);
+            }
         } else
         if (prefName.Equals(NS_LITERAL_STRING(CACHE_DISK_CAPACITY_PREF))) {
             PRInt32 cacheCapacity;
@@ -106,7 +111,10 @@ NS_IMETHODIMP nsDiskCacheObserver::Observe(nsISupports *aSubject, const PRUnicha
             nsCOMPtr<nsILocalFile> cacheDirectory = do_QueryInterface(profileDir);
             if (cacheDirectory) {
                 cacheDirectory->Append("NewCache");
-                mDevice->setCacheDirectory(cacheDirectory);
+                // always make sure the directory exists, we may have just switched to a new profile dir.
+                rv = ensureCacheDirectory(cacheDirectory);
+                if (NS_SUCCEEDED(rv))
+                    mDevice->setCacheDirectory(cacheDirectory);
             }
         }
     }
@@ -1167,7 +1175,7 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsDiskCacheEntry* diskEntry)
 
         nsCOMPtr<nsIFile> file;
         rv = getFileForDiskCacheEntry(diskEntry, PR_TRUE,
-                                 getter_AddRefs(file));
+                                      getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIOutputStream> output;
