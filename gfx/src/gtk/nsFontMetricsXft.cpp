@@ -1787,7 +1787,8 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
         goto end;
 
     // take the pattern and add the lang group to it
-    AddLangGroup(pat, aLangGroup);
+    if (aLangGroup)
+        AddLangGroup(pat, aLangGroup);
 
     // get the font list
     fs = FcFontList(0, pat, os);
