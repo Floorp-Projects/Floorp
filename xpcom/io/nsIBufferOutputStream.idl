@@ -27,4 +27,20 @@ interface nsIBufferOutputStream : nsIOutputStream
      * Returns the buffer underlying this output stream.
      */
     readonly attribute nsIBuffer Buffer;
+
+    /**
+     * Writes data into the stream from an input stream.
+     * Implementer's note: This method is defined by this interface in order
+     * to allow the output stream to efficiently copy the data from the input
+     * stream into its internal buffer (if any). If this method was provide
+     * as an external facility, a separate char* buffer would need to be used
+     * in order to call the output stream's other Write method.
+     * @param fromStream the stream from which the data is read
+     * @param count the maximun number of bytes to write
+     * @return aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
+     */
+    unsigned long WriteFrom(in nsIInputStream inStr, in unsigned long count);
+
 };

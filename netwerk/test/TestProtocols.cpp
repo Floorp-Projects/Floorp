@@ -37,7 +37,7 @@
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBufferInputStream.h"
 #include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIURL.h"
@@ -79,7 +79,7 @@ public:
   NS_IMETHOD OnStartBinding(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
-                             nsIInputStream *aIStream, 
+                             nsIBufferInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
@@ -124,7 +124,7 @@ InputTestConsumer::OnStartBinding(nsISupports* context)
 
 NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsISupports* context,
-                                   nsIInputStream *aIStream, 
+                                   nsIBufferInputStream *aIStream, 
                                    PRUint32 aSourceOffset,
                                    PRUint32 aLength)
 {

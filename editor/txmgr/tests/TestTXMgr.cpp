@@ -447,11 +447,6 @@ public:
     fflush(stdout);
     return NS_OK;
   }
-  NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count,
-                       PRUint32 *aWriteCount)
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   NS_IMETHOD Flush()
   {
     fflush(stdout);

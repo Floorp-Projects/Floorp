@@ -24,6 +24,7 @@
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
 #include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -212,7 +213,7 @@ nsFileTransport::OpenInputStream(nsIInputStream* *result)
     nsresult rv;
 
     nsIStreamListener* syncListener;
-    nsIInputStream* inStr;
+    nsIBufferInputStream* inStr;
     rv = NS_NewSyncStreamListener(&syncListener, &inStr);
     if (NS_FAILED(rv)) return rv;
 

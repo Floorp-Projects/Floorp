@@ -30,8 +30,9 @@
 #include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
-#include "nsIInputStream.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
 
@@ -88,7 +89,7 @@ public:
   char    GetBufferChar(void)   { return mBufferChar; }
 
 protected:
-  nsIByteBufferInputStream* mStream;
+  nsIBufferInputStream* mStream;
 
   nsIInputStream*  mInStream;
   nsIOutputStream* mOutStream;
@@ -124,7 +125,7 @@ public:
   NS_IMETHOD OnStartBinding(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
-                             nsIInputStream *aIStream, 
+                             nsIBufferInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
@@ -176,7 +177,7 @@ InputConsumer::OnStartBinding(nsISupports* context)
 
 NS_IMETHODIMP
 InputConsumer::OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream, 
+                               nsIBufferInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
@@ -189,7 +190,7 @@ InputConsumer::OnDataAvailable(nsISupports* context,
     nsresult rv = aIStream->Read(buf, 1024, &amt);
     mBytesRead += amt;
     buf[amt] = '\0';
-///    printf(buf);
+    printf(buf);
   } while (amt != 0);
 
   if (mConnection->GetBufferLength() == mBytesRead) {
@@ -340,7 +341,9 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
 
       // Create a stream for the data being written to the server...
       if (NS_SUCCEEDED(rv)) {
-        rv = NS_NewByteBufferInputStream(&mStream);
+        nsIBuffer* buf;
+        rv = NS_NewBuffer(&buf, 1024, 4096);
+        rv = NS_NewBufferInputStream(&mStream, buf);
       }
     } 
     // Synchronous transport...

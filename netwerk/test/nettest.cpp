@@ -64,7 +64,7 @@ public:
 
 	// stream listener methods
 	NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream,
+                               nsIBufferInputStream *aIStream,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
@@ -98,11 +98,10 @@ TestConsumer::~TestConsumer()
     }
 }
 
-NS_IMETHODIMP TestConsumer::OnDataAvailable(
-              nsISupports *context,
-              nsIInputStream* aIStream, 
-              PRUint32 aSourceOffset,
-              PRUint32 aLength) {
+NS_IMETHODIMP TestConsumer::OnDataAvailable(nsISupports *context,
+                                            nsIBufferInputStream* aIStream, 
+                                            PRUint32 aSourceOffset,
+                                            PRUint32 aLength) {
     PRUint32 len;
 
     if (bTraceEnabled) {

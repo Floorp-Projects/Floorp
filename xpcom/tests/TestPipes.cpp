@@ -17,8 +17,12 @@
  */
 
 #include "nsIThread.h"
+#if 0   // obsolete old implementation
 #include "nsIByteBufferInputStream.h"
+#endif
 #include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "prinrval.h"
@@ -135,8 +139,8 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv;
-    nsIInputStream* in;
-    nsIOutputStream* out;
+    nsIBufferInputStream* in;
+    nsIBufferOutputStream* out;
     nsIServiceManager* servMgr;
 
     rv = NS_InitXPCOM(&servMgr);
@@ -149,7 +153,7 @@ main(int argc, char* argv[])
 
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)
         gTrace = PR_TRUE;
-
+#if 0   // obsolete old implementation
     rv = NS_NewPipe(&in, &out, PR_TRUE, 4096 * 4);
     if (NS_FAILED(rv)) {
         printf("NewPipe failed\n");
@@ -163,7 +167,7 @@ main(int argc, char* argv[])
         printf("TestPipe failed\n");
         return -1;
     }
-
+#endif
     rv = NS_NewPipe2(&in, &out, 4096, 4096 * 4);
     if (NS_FAILED(rv)) {
         printf("NewPipe failed\n");

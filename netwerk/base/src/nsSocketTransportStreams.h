@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,14 +20,14 @@
 #define nsSocketTransportStreams_h___
 
 #include "prtypes.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBufferInputStream.h"
 
 
 // Forward declarations...
 class nsSocketTransport;
 
 
-class nsSocketTransportStream : public nsIByteBufferInputStream
+class nsSocketTransportStream : public nsIBufferInputStream
 {
 public:
   nsSocketTransportStream();
@@ -42,9 +42,10 @@ public:
   NS_IMETHOD GetLength(PRUint32 *aResult);
   NS_IMETHOD Read(char * aBuf, PRUint32 aCount, PRUint32 *aReadCount);
 
-  // nsIByteBufferInputStream methods:
-  NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 aCount, PRUint32 *aWriteCount);
+  // nsIBufferInputStream methods:
+  NS_IMETHOD GetBuffer(nsIBuffer* *result);
   NS_IMETHOD Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
+  NS_IMETHOD FillFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
 
   // nsSocketTransportStream methods:
   nsresult Init(nsSocketTransport* aTransport, PRBool aBlockingFlag);
@@ -64,7 +65,7 @@ private:
   PRBool  mIsStreamBlocking;
 
   PRMonitor*                mMonitor;
-  nsIByteBufferInputStream* mStream;
+  nsIBufferInputStream*     mStream;
   nsSocketTransport*        mTransport;
 };
 

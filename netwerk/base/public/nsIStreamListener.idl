@@ -18,14 +18,14 @@
 
 #include "nsIStreamObserver.idl"
 
-interface nsIInputStream;
+interface nsIBufferInputStream;
 interface nsIEventQueue;
 
 [scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
 interface nsIStreamListener : nsIStreamObserver
 {
     void OnDataAvailable(in nsISupports ctxt, 
-                         in nsIInputStream inStr,
+                         in nsIBufferInputStream inStr,
                          in unsigned long sourceOffset,
                          in unsigned long count);
 };
@@ -44,6 +44,6 @@ NS_NewAsyncStreamListener(nsIStreamListener* *result,
 // in an input stream to be read by another thread.
 extern nsresult
 NS_NewSyncStreamListener(nsIStreamListener* *listener,
-                         nsIInputStream* *inStream);
+                         nsIBufferInputStream* *inStream);
 
 %}

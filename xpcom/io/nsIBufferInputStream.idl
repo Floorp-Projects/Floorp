@@ -27,4 +27,16 @@ interface nsIBufferInputStream : nsIInputStream
      * Returns the buffer underlying this input stream.
      */
     readonly attribute nsIBuffer Buffer;
+
+    /**
+     * Fill the input stream so that someone can read from it.
+     */
+    unsigned long Fill(in string inStr,
+                       in unsigned long count);
+
+    /**
+     * Fill the input stream so that someone can read from it.
+     */
+    unsigned long FillFrom(in nsIInputStream inStr,
+                           in unsigned long count);
 };

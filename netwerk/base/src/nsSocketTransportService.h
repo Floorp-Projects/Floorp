@@ -61,10 +61,6 @@ public:
   nsresult RemoveFromSelectList(nsSocketTransport* aTransport);
 
 protected:
-  // Inline helpers...
-  void Lock  (void) { NS_ASSERTION(mThreadLock, "Lock null."); PR_Lock(mThreadLock);   }
-  void Unlock(void) { NS_ASSERTION(mThreadLock, "Lock null."); PR_Unlock(mThreadLock); }
-
   nsIThread*  mThread;
   PRFileDesc* mThreadEvent;
   PRLock*     mThreadLock;

@@ -17,10 +17,11 @@
  */
 
 #include "nsIStreamListener.h"
-#include "nsIByteBufferInputStream.h"
 #include "nsIString.h"
 #include "nsCRT.h"
-#include "nsIOutputStream.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
+#include "nsIBuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +42,7 @@ public:
 
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream, 
+                               nsIBufferInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
@@ -52,21 +53,21 @@ public:
     }
     virtual ~nsSyncStreamListener();
 
-    nsresult Init(nsIInputStream* *result);
+    nsresult Init(nsIBufferInputStream* *result);
 
 protected:
-    nsIOutputStream*    mOutputStream;
+    nsIBufferOutputStream*      mOutputStream;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult 
-nsSyncStreamListener::Init(nsIInputStream* *result)
+nsSyncStreamListener::Init(nsIBufferInputStream* *result)
 {
     nsresult rv;
-    nsIInputStream* in;
+    nsIBufferInputStream* in;
 
-    rv = NS_NewPipe(&in, &mOutputStream);
+    rv = NS_NewPipe2(&in, &mOutputStream, 4 * 1024, 16 * 1024);
     if (NS_FAILED(rv)) return rv;
 
     *result = in;
@@ -127,7 +128,7 @@ nsSyncStreamListener::OnStopRequest(nsISupports* context,
 
 NS_IMETHODIMP 
 nsSyncStreamListener::OnDataAvailable(nsISupports* context,
-                                      nsIInputStream *aIStream, 
+                                      nsIBufferInputStream *aIStream, 
                                       PRUint32 aSourceOffset,
                                       PRUint32 aLength)
 {
@@ -146,7 +147,7 @@ nsSyncStreamListener::OnDataAvailable(nsISupports* context,
 
 nsresult
 NS_NewSyncStreamListener(nsIStreamListener* *listener,
-                         nsIInputStream* *inStream)
+                         nsIBufferInputStream* *inStream)
 {
     nsSyncStreamListener* l = new nsSyncStreamListener();
     if (l == nsnull)

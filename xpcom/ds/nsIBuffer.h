@@ -24,8 +24,8 @@
 
 class nsIInputStream;
 class nsIAllocator;
-class nsIInputStream;
-class nsIOutputStream;
+class nsIBufferInputStream;
+class nsIBufferOutputStream;
 
 #define NS_IBUFFER_IID                               \
 { /* 1eebb300-fb8b-11d2-9324-00104ba0fd40 */         \
@@ -97,16 +97,16 @@ NS_NewPageBuffer(nsIBuffer* *result,
                  PRUint32 growBySize, PRUint32 maxSize);
 
 extern NS_COM nsresult
-NS_NewBufferInputStream(nsIInputStream* *result,
+NS_NewBufferInputStream(nsIBufferInputStream* *result,
                         nsIBuffer* buffer, PRBool blocking = PR_FALSE);
 
 extern NS_COM nsresult
-NS_NewBufferOutputStream(nsIOutputStream* *result,
+NS_NewBufferOutputStream(nsIBufferOutputStream* *result,
                          nsIBuffer* buffer, PRBool blocking = PR_FALSE);
 
 extern NS_COM nsresult
-NS_NewPipe2(nsIInputStream* *inStrResult,
-           nsIOutputStream* *outStrResult,
+NS_NewPipe2(nsIBufferInputStream* *inStrResult,
+           nsIBufferOutputStream* *outStrResult,
            PRUint32 growBySize, PRUint32 maxSize);
 
 #endif // nsIBuffer_h___
