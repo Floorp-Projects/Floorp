@@ -23,11 +23,11 @@
 /* Definition of the wrapper classes.
 */
 
-/**
+/*
  * Implementation of the Mozilla Wrapper classes for the Mozilla DOM to
- * TransforMIIX DOM interface conversion. Note that these wrapper classes are
- * only interchangable with the TransforMIIX DOM at compile time. They are
- * merely a copy of the TransforMIIX interface/class structure wich then
+ * TransforMiiX DOM interface conversion. Note that these wrapper classes are
+ * only interchangable with the TransforMiiX DOM at compile time. They are
+ * merely a copy of the TransforMiiX interface/class structure wich then
  * deffer their processing to a Mozilla object. Complete interchangability
  * would require the use of multiple inherritance using virtual base classes
  * and RTTI which is not supported in Mozilla's cross platform domain.
@@ -71,6 +71,9 @@
 #include "nsIDOMNotation.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMText.h"
+#include "nsINameSpaceManager.h"
+
+#include "txAtom.h"
 
 #ifndef NULL
 typedef 0 NULL;
@@ -92,8 +95,22 @@ class Notation;
 class ProcessingInstruction;
 class Text;
 
+/*
+ * Definition of txXMLAtoms
+ */
+class txXMLAtoms
+{
+public:
+    static txAtom* XMLPrefix;
+    static txAtom* XMLNSPrefix;
+};
 
-/**
+#define TX_IMPL_DOM_STATICS \
+  txAtom* txXMLAtoms::XMLPrefix = 0;  \
+  txAtom* txXMLAtoms::XMLNSPrefix = 0
+
+
+/*
  * This macro creates a nsCOMPtr to a specific interface for the
  * wrapper's Mozilla object. The nsCOMPtr will be named like the
  * supplied class with "ns" as a prefix.
@@ -101,7 +118,7 @@ class Text;
 #define NSI_FROM_TX(_txClass)                                         \
 nsCOMPtr<nsIDOM##_txClass> ns##_txClass(do_QueryInterface(nsObject));
 
-/**
+/*
  * This macro creates a nsCOMPtr to a specific interface for the
  * wrapper's Mozilla object. It returns NULL if the interface is
  * unavailable (or the wrapper's Mozilla object is nsnull). The
@@ -113,7 +130,7 @@ NSI_FROM_TX(_txClass)                                      \
 if (!ns##_txClass) return NULL;
 
 
-/**
+/*
  * This macro can be used to declare a createWrapper implementation
  * for the supplied wrapper class. This macro should only be used
  * in MozillaDocument.
@@ -121,7 +138,7 @@ if (!ns##_txClass) return NULL;
 #define IMPL_CREATE_WRAPPER(_txClass)                      \
 IMPL_CREATE_WRAPPER2(_txClass, create##_txClass)
 
-/**
+/*
  * This macro can be used to declare a createWrapper implementation
  * for the supplied wrapper class. The function parameter defines
  * the function name for the implementation function. This macro
@@ -144,13 +161,13 @@ _txClass* Document::_function(nsIDOM##_txClass* aNsObject) \
     return wrapper;                                        \
 }
 
-/**
+/*
  * This macro does a nullsafe getNSObj. If the wrapper object is NULL,
  * NULL is returned. Else getNSObj is used to get the inner object.
  */
 #define GET_NSOBJ(_txWrapper) ((_txWrapper) ? (_txWrapper)->getNSObj() : nsnull)
 
-/**
+/*
  * Base wrapper class for a Mozilla object. Owns the Mozilla object through an
  * nsCOMPtr<nsISupports>.
  */
@@ -172,7 +189,7 @@ class MozillaObjectWrapper : public TxObject
         nsCOMPtr<nsISupports> nsObject;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMDOMImplementation.
  */
 class DOMImplementation : public MozillaObjectWrapper
@@ -184,7 +201,7 @@ class DOMImplementation : public MozillaObjectWrapper
         MBool hasFeature(const String& aFeature, const String& aVersion) const;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMNode. It provides the generic Node interface,
  * forwarding all functionality to its Mozilla counterpart.
  */
@@ -238,18 +255,25 @@ class Node : public MozillaObjectWrapper
 
         virtual MBool hasChildNodes() const;
 
+        //Introduced in DOM2
+        virtual String getNamespaceURI();
+
         //From DOM3 26-Jan-2001 WD
         virtual String getBaseURI();
 
         // txXPathNode functions
+        virtual MBool getLocalName(txAtom** aLocalName);
+        virtual PRInt32 getNamespaceID();
+        virtual PRInt32 lookupNamespaceID(txAtom* prefix);
         virtual Node* getXPathParent();
 
     protected:
         String nodeName;
         String nodeValue;
+        PRInt32 namespaceID;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMNodeList.
  */
 class NodeList : public MozillaObjectWrapper
@@ -263,7 +287,7 @@ class NodeList : public MozillaObjectWrapper
 };
 
 
-/**
+/*
  * Wrapper class for nsIDOMNamedNodeMap.
  */
 class NamedNodeMap : public MozillaObjectWrapper
@@ -279,7 +303,7 @@ class NamedNodeMap : public MozillaObjectWrapper
         PRUint32 getLength();
 };
 
-/**
+/*
  * Wrapper class for nsIDOMDocumentFragment.
  */
 class DocumentFragment : public Node
@@ -290,11 +314,14 @@ class DocumentFragment : public Node
         ~DocumentFragment();
 };
 
-/**
+/*
  * Wrapper class for nsIDOMDocument.
  */
 class Document : public Node
 {
+    friend class Attr; // Attrs and Nodes need to get to the cached nsNSManager
+    friend class Node; 
+
     public:
         Document();
         Document(nsIDOMDocument* aDocument);
@@ -374,9 +401,11 @@ class Document : public Node
         PRBool bInHashTableDeletion;
 
         nsObjectHashtable *wrapperHashTable;
+
+        nsCOMPtr<nsINameSpaceManager> nsNSManager;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMElement.
  */
 class Element : public Node
@@ -397,9 +426,12 @@ class Element : public Node
         NodeList* getElementsByTagName(const String& aName);
         void normalize();
 
+        // txXPathNode functions
+        MBool getLocalName(txAtom** aLocalName);
+        MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, String& aValue);
 };
 
-/**
+/*
  * Wrapper class for nsIDOMAttr.
  */
 class Attr : public Node
@@ -414,10 +446,11 @@ class Attr : public Node
         void setValue(const String& aNewValue);
 
         // txXPathNode functions override
+        MBool getLocalName(txAtom** aLocalName);
         Node* getXPathParent();
 };
 
-/**
+/*
  * Wrapper class for nsIDOMCharacterData.
  */
 class CharacterData : public Node
@@ -440,7 +473,7 @@ class CharacterData : public Node
         String nodeValue;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMText.
  */
 class Text : public CharacterData
@@ -452,7 +485,7 @@ class Text : public CharacterData
         Text* splitText(PRInt32 aOffset);
 };
 
-/**
+/*
  * Wrapper class for nsIDOMComment.
  */
 class Comment : public CharacterData
@@ -462,7 +495,7 @@ class Comment : public CharacterData
         ~Comment();
 };
 
-/**
+/*
  * Wrapper class for nsIDOMCDATASection.
  */
 class CDATASection : public Text
@@ -472,7 +505,7 @@ class CDATASection : public Text
         ~CDATASection();
 };
 
-/**
+/*
  * Wrapper class for nsIDOMProcessingInstruction.
  */
 class ProcessingInstruction : public Node
@@ -487,12 +520,15 @@ class ProcessingInstruction : public Node
 
         void setData(const String& aData);
 
+        // txXPathNode functions
+        MBool getLocalName(txAtom** aLocalName);
+
     private:
         String target;
         String data;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMNotation.
  */
 class Notation : public Node
@@ -509,7 +545,7 @@ class Notation : public Node
         String systemId;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMEntity.
  */
 class Entity : public Node
@@ -528,7 +564,7 @@ class Entity : public Node
         String notationName;
 };
 
-/**
+/*
  * Wrapper class for nsIDOMEntityReference.
  */
 class EntityReference : public Node
@@ -539,7 +575,7 @@ class EntityReference : public Node
         ~EntityReference();
 };
 
-/**
+/*
  * Wrapper class for nsIDOMDocumentType.
  */
 class DocumentType : public Node

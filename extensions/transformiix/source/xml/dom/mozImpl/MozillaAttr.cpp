@@ -23,13 +23,14 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMAttr
-   interface into a TransforMIIX Attr interface.
-*/
+/* 
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMAttr
+ * interface into a TransforMiiX Attr interface.
+ */
 
 #include "mozilladom.h"
 
-/**
+/*
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aAttr the nsIDOMAttr you want to wrap
@@ -37,16 +38,27 @@
  */
 Attr::Attr(nsIDOMAttr* aAttr, Document* aOwner) : Node(aAttr, aOwner)
 {
+    NS_ASSERTION(aAttr, "Wrapper needs nsObject");
+    NS_ASSERTION(aOwner, "Wrapper needs owner document");
+    if (!aAttr || !aOwner)
+        return;
+    nsAutoString ns;
+    aAttr->GetNamespaceURI(ns);
+    NS_ASSERTION(aOwner->nsNSManager,
+                 "owner document lacks namespace manager");
+    if (!aOwner->nsNSManager)
+        return;
+    aOwner->nsNSManager->GetNameSpaceID(ns, namespaceID);
 }
 
-/**
+/*
  * Destructor
  */
 Attr::~Attr()
 {
 }
 
-/**
+/*
  * Call nsIDOMAttr::GetName to retrieve the name of this attribute.
  *
  * @return the attribute's name
@@ -61,7 +73,7 @@ const String& Attr::getName()
     return nodeName;
 }
 
-/**
+/*
  * Call nsIDOMAttr::GetSpecified to retrieve the specified flag for this
  * attribute.
  *
@@ -77,7 +89,7 @@ MBool Attr::getSpecified() const
     return specified;
 }
 
-/**
+/*
  * Call nsIDOMAttr::GetValue to retrieve the value of this attribute.
  *
  * @return the attribute's value
@@ -92,7 +104,7 @@ const String& Attr::getValue()
     return nodeValue;
 }
 
-/**
+/*
  * Call nsIDOMAttr::SetValue to set the value of this attribute.
  *
  * @return the attribute's value
@@ -118,4 +130,23 @@ Node* Attr::getXPathParent()
     if (NS_SUCCEEDED(nsAttr->GetOwnerElement(getter_AddRefs(ownerElem))))
         return ownerDocument->createWrapper(ownerElem);
     return NULL;
+}
+
+/*
+ * Returns the local name atomized
+ *
+ * @return the node's localname atom
+ */
+MBool Attr::getLocalName(txAtom** aLocalName)
+{
+    if (!aLocalName)
+        return MB_FALSE;
+    NSI_FROM_TX(Attr)
+    if (!nsAttr)
+        return MB_FALSE;
+    nsAutoString lName;
+    NS_ENSURE_SUCCESS(nsAttr->GetLocalName(lName), MB_FALSE);
+    *aLocalName = NS_NewAtom(lName);
+    NS_ENSURE_TRUE(*aLocalName, MB_FALSE);
+    return MB_TRUE;
 }

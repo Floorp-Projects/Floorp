@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -59,8 +60,15 @@ Document::Document() : Node(0, 0)
     //if (NS_FAILED(res)) return NULL;
 
     ownerDocument = this;
-    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
+    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull,
+                                             DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+    NS_ASSERTION(doc,"document doesn't implement nsIDocument");
+    if (doc) {
+        doc->GetNameSpaceManager(*getter_AddRefs(nsNSManager));
+        NS_ASSERTION(nsNSManager, "Unable to get nsINamespaceManager");
+    }
     addWrapper(this);
 }
 
@@ -73,8 +81,15 @@ Document::Document() : Node(0, 0)
 Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, 0)
 {
     ownerDocument = this;
-    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
+    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull,
+                                             DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+    NS_ASSERTION(doc,"document doesn't implement nsIDocument");
+    if (doc) {
+        doc->GetNameSpaceManager(*getter_AddRefs(nsNSManager));
+        NS_ASSERTION(nsNSManager, "Unable to get nsINamespaceManager");
+    }
     addWrapper(this);
 }
 

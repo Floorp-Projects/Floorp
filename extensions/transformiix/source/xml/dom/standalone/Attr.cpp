@@ -26,6 +26,7 @@
 //
 
 #include "dom.h"
+#include "txAtom.h"
 
 //
 //Construct an Attribute object using the specified name and document owner
@@ -34,6 +35,41 @@ Attr::Attr(const String& name, Document* owner):
       NodeDefinition(Node::ATTRIBUTE_NODE, name, NULL_STRING, owner)
 {
   specified = MB_FALSE;
+
+  int idx = nodeName.indexOf(':');
+  if (idx == NOT_FOUND) {
+    mLocalName = TX_GET_ATOM(nodeName);
+    if (mLocalName == txXMLAtoms::XMLNSPrefix)
+      mNamespaceID = kNameSpaceID_XMLNS;
+    else
+      mNamespaceID = kNameSpaceID_None;
+  }
+  else {
+    String tmp;
+    nodeName.subString(idx+1, tmp);
+    mLocalName = TX_GET_ATOM(tmp);
+    // namespace handling has to be handled late, the attribute must
+    // be added to the tree to resolve the prefix, unless it's
+    // xmlns or xml, try to do that here
+    String prefix;
+    nodeName.subString(0, idx, prefix);
+    txAtom* prefixAtom = TX_GET_ATOM(prefix);
+    if (prefixAtom == txXMLAtoms::XMLNSPrefix)
+      mNamespaceID = kNameSpaceID_XMLNS;
+    else if (prefixAtom == txXMLAtoms::XMLPrefix)
+      mNamespaceID = kNameSpaceID_XML;
+    else
+      mNamespaceID = kNameSpaceID_Unknown;
+    TX_RELEASE_IF_ATOM(prefixAtom);
+  }
+}
+
+//
+//Release the mLocalName
+//
+Attr::~Attr()
+{
+  TX_RELEASE_IF_ATOM(mLocalName);
 }
 
 //
@@ -133,6 +169,37 @@ Node* Attr::insertBefore(Node* newChild, Node* refChild)
     }
 
   return returnVal;
+}
+
+//
+//Return the attributes local (unprefixed) name atom.
+//
+MBool Attr::getLocalName(txAtom** aLocalName)
+{
+  if (!aLocalName)
+    return MB_FALSE;
+  *aLocalName = mLocalName;
+  TX_ADDREF_ATOM(*aLocalName);
+  return MB_TRUE;
+}
+
+//
+//Return the namespace the attribute belongs to. If the attribute doesn't
+//have a prefix it doesn't belong to any namespace per the namespace spec,
+//and is handled in the constructor.
+//
+PRInt32 Attr::getNamespaceID()
+{
+  if (mNamespaceID >= 0)
+    return mNamespaceID;
+
+  int idx = nodeName.indexOf(':');
+  String prefix;
+  nodeName.subString(0, idx, prefix);
+  txAtom* prefixAtom = TX_GET_ATOM(prefix);
+  mNamespaceID = lookupNamespaceID(prefixAtom);
+  TX_RELEASE_IF_ATOM(prefixAtom);
+  return mNamespaceID;
 }
 
 //

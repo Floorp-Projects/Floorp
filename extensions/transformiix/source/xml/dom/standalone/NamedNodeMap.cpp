@@ -131,3 +131,19 @@ Node* AttrMap::removeNamedItem(const String& name)
     node->ownerElement = NULL;
   return node;
 }
+
+void AttrMap::clear()
+{
+  ListItem* pDeleteItem;
+  ListItem* pListTraversal = firstItem;
+
+  while (pListTraversal) {
+    pDeleteItem = pListTraversal;
+    pListTraversal = pListTraversal->next;
+    delete pDeleteItem->node;
+    delete pDeleteItem;
+  }
+  firstItem = 0;
+  lastItem = 0;
+  length = 0;
+}

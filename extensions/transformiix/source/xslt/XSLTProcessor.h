@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -56,8 +57,16 @@
 #define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
 "@mozilla.org/document-transformer;1?type=text/xsl"
 
-#endif
+#else
 
+/*
+ * Initialisation and shutdown routines for standalone
+ * Allocate and free static atoms.
+ */
+MBool txInit();
+MBool txShutdown();
+
+#endif
 
 /**
  * A class for Processing XSL Stylesheets
