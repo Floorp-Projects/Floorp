@@ -482,7 +482,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
   else {
     PRInt32 argc = 0;
     rv = cmdLineArgs->GetArgc(&argc);
-    if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(argc > 1, "we shouldn't be here if there were no command line arguments");
     if (argc <= 1) return NS_ERROR_FAILURE;
@@ -739,7 +739,12 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
 	// if we have no command line arguments, we need to heed the
 	// "general.startup.*" prefs
 	// if we had no command line arguments, argc == 1.
+#ifdef XP_MAC
+	// if we do no command line args on the mac, it says argc is 0, and not 1
+	rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)) );
+#else
 	rv = DoCommandLines( cmdLineArgs, (argc == 1) );
+#endif /* XP_MAC */
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process command line");
 	if ( NS_FAILED(rv) )
     return rv;
