@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+ * vim:expandtab:shiftwidth=2:tabstop=3:
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -80,6 +80,7 @@
 #include "nsIDOMWindow.h"
 
 #include "nsITextToSubURI.h"
+#include "nsIMIMEHeaderParam.h"
 
 #include "nsIPrefService.h"
 
@@ -991,90 +992,54 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
   // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
   if ( NS_SUCCEEDED( rv ) && !disp.IsEmpty() ) 
   {
-    nsCAutoString::const_iterator start, end;
-    disp.BeginReading(start);
-    disp.EndReading(end);
-    // skip leading whitespace
-    while (start != end && nsCRT::IsAsciiSpace(*start)) {
-      ++start;
-    }
-    nsCAutoString::const_iterator iter = start;
-    // walk forward till we hit the next whitespace, semicolon, or
-    // equals sign
-    while (iter != end && *iter != ';' && *iter != '=' &&
-           !nsCRT::IsAsciiSpace(*iter)) {
-      ++iter;
-    }
-
-    if (start != iter) {
-      const nsACString & dispToken = Substring(start, iter);
-      // RFC 2183, section 2.8 says that an unknown disposition
-      // value should be treated as "attachment"
-      if (!dispToken.Equals(NS_LITERAL_CSTRING("inline"),
-                            nsCaseInsensitiveCStringComparator()) &&
-          // Broken sites just send
-          // Content-Disposition: filename="file"
-          // without a disposition token... screen those out.
-          !dispToken.Equals(NS_LITERAL_CSTRING("filename"),
-                            nsCaseInsensitiveCStringComparator())) {
-        // We have a content-disposition of "attachment" or unknown
-        mHandlingAttachment = PR_TRUE;
-      }
+    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return;
+    nsAutoString dispToken;
+    // Get the disposition type
+    rv = mimehdrpar->GetParameter(disp, "", NS_LITERAL_CSTRING(""), PR_FALSE, 
+                                  nsnull, dispToken);
+    // RFC 2183, section 2.8 says that an unknown disposition
+    // value should be treated as "attachment"
+    if (NS_FAILED(rv) || !dispToken.EqualsIgnoreCase("inline", 6) &&
+        // Broken sites just send
+        // Content-Disposition: filename="file"
+        // without a disposition token... screen those out.
+        !dispToken.EqualsIgnoreCase("filename", 8)) 
+    {
+      // We have a content-disposition of "attachment" or unknown
+      mHandlingAttachment = PR_TRUE;
     }
 
     // We may not have a disposition type listed; some servers suck.
     // But they could have listed a filename anyway.
-    disp.BeginReading(start);
-    iter = end;
+    nsCOMPtr<nsIURI> srcUri;
+    GetSource(getter_AddRefs(srcUri));
+    nsCOMPtr<nsIURL> url = do_QueryInterface(srcUri);
 
-    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("filename="),
-                                      start,
-                                      iter))
-    {
-      // The value is either a string with no whitespace or a string
-      // in double quotes.  See RFC 2183 and bug 66181. 
+    nsCAutoString fallbackCharset;
+    nsAutoString fileName;
+    if (url)
+      url->GetOriginCharset(fallbackCharset);
+    // Get the value of 'filename' parameter
+    rv = mimehdrpar->GetParameter(disp, "filename", fallbackCharset, 
+                                  PR_TRUE, nsnull, fileName);
+    if (NS_FAILED(rv) || fileName.IsEmpty())
+      // Try 'name' parameter, instead.
+      rv = mimehdrpar->GetParameter(disp, "name",fallbackCharset, PR_TRUE, 
+                                    nsnull, fileName);
+    if (NS_FAILED(rv) || fileName.IsEmpty())
+      return;
 
-      // Search for the ';' if it's not in double quotes, then walk
-      // back past any whitespace
-      if (iter != end) { // otherwise our filename is empty...
-        char endChar = ';';
-        if (*iter == '"') {
-          endChar = '"';
-          ++iter; // since we had iter < end, this is not running us past the end of the string
-        }
-        start = iter;
-        FindCharInReadable(endChar, iter, end);
-        // Now start points at the beginning of the filename.  iter
-        // points to just past its end if the name was quoted.  If we
-        // looked for a semicolon, we need to step back past
-        // whitespace.
-        if (endChar == ';' && iter != start) {
-          --iter;
-          while (iter != start && nsCRT::IsAsciiSpace(*iter)) {
-            --iter;
-          }
-          ++iter;
-        }
-
-        if (iter != start) { // not empty
-          // ONLY if we got here, will we remember the suggested file name...
-          // The filename must be ASCII, see RFC 2231
-          // We ignore the filename in the header if the filename contains raw 8bit.
-          // (and keep the URI filename instead).
-          const nsACString& newFileName = Substring(start, iter);
-          if (IsASCII(newFileName))
-            CopyASCIItoUCS2(newFileName, mSuggestedFileName);
+    mSuggestedFileName = fileName;
 
 #ifdef XP_WIN
-          // Make sure extension is still correct.
-          EnsureSuggestedFileName();
+    // Make sure extension is still correct.
+    EnsureSuggestedFileName();
 #endif
 
-          // replace platform specific path separator and illegal characters to avoid any confusion
-          mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-        }
-      }
-    } // if we found a file name in the header disposition field
+    // replace platform specific path separator and illegal characters to avoid any confusion
+    mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
   } // we had a disp header 
 }
 

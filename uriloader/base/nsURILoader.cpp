@@ -71,6 +71,9 @@
 #include "nsICategoryManager.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
+#include "nsIMIMEHeaderParam.h"
+#include "nsNetCID.h"
+
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 
@@ -281,8 +284,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // could happen because the Content-Disposition header is set so, or, in the
   // future, because the user has specified external handling for the MIME
   // type.
-  // XXXbz we need a utility function in necko for parsing content-disposition
-  // headers, methinks.
   PRBool forceExternalHandling = PR_FALSE;
   nsCAutoString disposition;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
@@ -302,39 +303,22 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
 
   if (NS_SUCCEEDED(rv) && !disposition.IsEmpty())
   {
-    nsCAutoString::const_iterator start, end;
-    disposition.BeginReading(start);
-    disposition.EndReading(end);
-    // skip leading whitespace
-    while (start != end && nsCRT::IsAsciiSpace(*start))
+    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
     {
-      ++start;
-    }
-    nsCAutoString::const_iterator iter = start;
-    // walk forward till we hit the next whitespace, semicolon, or
-    // equals sign
-    while (iter != end && *iter != ';' && *iter != '=' &&
-           !nsCRT::IsAsciiSpace(*iter))
-    {
-      ++iter;
-    }
-      
-    if (start != iter)
-    {
-      const nsACString & dispToken = Substring(start, iter);
+      nsAutoString dispToken;
+      // Get the disposition type
+      rv = mimehdrpar->GetParameter(disposition, "", NS_LITERAL_CSTRING(""), 
+                                    PR_FALSE, nsnull, dispToken);
       // RFC 2183, section 2.8 says that an unknown disposition
       // value should be treated as "attachment"
-      if (!dispToken.Equals(NS_LITERAL_CSTRING("inline"),
-                            nsCaseInsensitiveCStringComparator()) &&
+      if (NS_FAILED(rv) || !dispToken.EqualsIgnoreCase("inline",6) &&
           // Broken sites just send
           // Content-Disposition: filename="file"
           // without a disposition token... screen those out.
-          !dispToken.Equals(NS_LITERAL_CSTRING("filename"),
-                            nsCaseInsensitiveCStringComparator()))
-      {
+          !dispToken.EqualsIgnoreCase("filename", 8))
         // We have a content-disposition of "attachment" or unknown
         forceExternalHandling = PR_TRUE;
-      }
     }
   }
     

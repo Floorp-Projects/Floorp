@@ -156,7 +156,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   {
     char *fname = NULL;
     fname = mime_decode_filename(tmp->real_name, charset, obj->options);
-    PR_FREEIF(charset);
+    nsMemory::Free(charset);
     if (fname && fname != tmp->real_name)
     {
       PR_Free(tmp->real_name);
@@ -367,7 +367,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
       for (i = 0; i < 2 && !tmp->real_name; i ++)
       {
         PR_FREEIF(disp);
-        PR_FREEIF(charset);
+        nsMemory::Free(charset);
         disp = MimeHeaders_get(((MimeContainer *)object)->children[i]->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
         tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, nsnull);
       }
@@ -382,7 +382,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
 
       char *fname = nsnull;
       fname = mime_decode_filename(tmp->real_name, charset, options);
-      PR_FREEIF(charset);
+      nsMemory::Free(charset);
 
       if (fname && fname != tmp->real_name)
       {
@@ -408,7 +408,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
         for (i = 0; i < 2 && !tmp->real_name; i ++)
         {
           PR_FREEIF(disp);
-          PR_FREEIF(charset);
+          nsMemory::Free(charset);
           disp = MimeHeaders_get(((MimeContainer *)object)->children[i]->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
           tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, nsnull);
         }
@@ -423,7 +423,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
 
         char *fname = nsnull;
         fname = mime_decode_filename(tmp->real_name, charset, options);
-        PR_FREEIF(charset);
+        nsMemory::Free(charset);
 
         if (fname && fname != tmp->real_name)
         {

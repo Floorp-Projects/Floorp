@@ -118,15 +118,18 @@ extern char *MimeHeaders_get(MimeHeaders *hdrs,
 
    Returns NULL if there is no match, or if there is an allocation failure.
 
-	RFC2231 - MIME Parameter Value and Encoded Word Extensions: Character Sets,
-	Languages, and Continuations
+   RFC2231 - MIME Parameter Value and Encoded Word Extensions: Character Sets,
+   Languages, and Continuations
 
-	RFC2231 has added the character sets, languages, and continuations mechanism.
-	charset, and language information may also be returned to the caller.
-	For example,
-	MimeHeaders_get_parameter("text/plain; name*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A", "name")
-	MimeHeaders_get_parameter("text/plain; name*0*=us-ascii'en-us'This%20is%20; CRLFLWSPname*1*=%2A%2A%2Afun%2A%2A%2A", "name")
-	would return "This is ***fun***" and *charset = "us-ascii", *language = "en-us"
+   RFC2231 has added the character sets, languages, and continuations mechanism.
+   charset, and language information may also be returned to the caller.
+   Note that charset and language should be nsMemory::Free()'d while 
+   the return value (parameter) has to be PR_FREE'd. 
+
+   For example,
+   MimeHeaders_get_parameter("text/plain; name*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A", "name")
+   MimeHeaders_get_parameter("text/plain; name*0*=us-ascii'en-us'This%20is%20; CRLFLWSPname*1*=%2A%2A%2Afun%2A%2A%2A", "name")
+   would return "This is ***fun***" and *charset = "us-ascii", *language = "en-us"
  */
 extern char *MimeHeaders_get_parameter (const char *header_value,
 										const char *parm_name,

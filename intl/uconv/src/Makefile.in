@@ -61,6 +61,7 @@ CPPSRCS		= \
 		nsTextToSubURI.cpp \
 		nsURLProperties.cpp \
 		nsCharsetConverterManager.cpp \
+		nsUTF8ConverterService.cpp \
 		$(NULL)
 
 ifndef MOZ_USE_NATIVE_UCONV

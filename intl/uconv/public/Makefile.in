@@ -40,6 +40,7 @@ EXPORTS		= \
 		nsIConverterInputStream.h \
 		uconvutil.h \
 		nsEncoderDecoderUtils.h \
+		nsUConvCID.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

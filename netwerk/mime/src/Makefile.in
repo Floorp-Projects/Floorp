@@ -31,11 +31,13 @@ LIBRARY_NAME	= nkmime_s
 REQUIRES	= xpcom \
 		  string \
 		  necko \
+		  uconv \
 		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsMIMEInfoImpl.cpp \
+		nsMIMEHeaderParamImpl.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

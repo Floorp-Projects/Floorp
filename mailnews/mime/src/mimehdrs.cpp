@@ -55,6 +55,8 @@
 #include "mimemoz2.h"
 #include "nsMsgI18N.h"
 #include "mimehdrs.h"
+#include "nsIMIMEHeaderParam.h" 
+#include "nsNetCID.h"
 
 // Forward declares...
 PRInt32 MimeHeaders_build_heads_list(MimeHeaders *hdrs);
@@ -481,190 +483,22 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 
 char *
 MimeHeaders_get_parameter (const char *header_value, const char *parm_name, 
-						   char **charset, char **language)
+                           char **charset, char **language)
 {
-  const char *str;
-  char *s = NULL; /* parm value to be returned */
-  PRInt32 parm_len;
   if (!header_value || !parm_name || !*header_value || !*parm_name)
-	return 0;
+    return nsnull;
 
-  /* The format of these header lines is
-	 <token> [ ';' <token> '=' <token-or-quoted-string> ]*
-   */
+  nsresult rv;
+  nsCOMPtr <nsIMIMEHeaderParam> mimehdrpar = 
+    do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
 
-  if (charset) *charset = NULL;
-  if (language) *language = NULL;
+  if (NS_FAILED(rv))
+    return nsnull;
 
-  str = header_value;
-  parm_len = strlen(parm_name);
-
-  /* Skip forward to first ';' */
-  for (; *str && *str != ';' && *str != ','; str++)
-	;
-  if (*str)
-	str++;
-  /* Skip over following whitespace */
-  for (; *str && nsCRT::IsAsciiSpace(*str); str++)
-	;
-  if (!*str)
-	return 0;
-
-  while (*str)
-	{
-	  const char *token_start = str;
-	  const char *token_end = 0;
-	  const char *value_start = str;
-	  const char *value_end = 0;
-
-	  NS_ASSERTION(!nsCRT::IsAsciiSpace(*str), "1.1 <rhp@netscape.com> 19 Mar 1999 12:00"); /* should be after whitespace already */
-
-	  /* Skip forward to the end of this token. */
-	  for (; *str && !nsCRT::IsAsciiSpace(*str) && *str != '=' && *str != ';'; str++)
-		;
-	  token_end = str;
-
-	  /* Skip over whitespace, '=', and whitespace */
-	  while (nsCRT::IsAsciiSpace (*str)) str++;
-	  if (*str == '=') str++;
-	  while (nsCRT::IsAsciiSpace (*str)) str++;
-
-	  if (*str != '"')
-		{
-		  /* The value is a token, not a quoted string. */
-		  value_start = str;
-		  for (value_end = str;
-			   *value_end && !nsCRT::IsAsciiSpace (*value_end) && *value_end != ';';
-			   value_end++)
-			;
-		  str = value_end;
-		}
-	  else
-		{
-		  /* The value is a quoted string. */
-		  str++;
-		  value_start = str;
-		  for (value_end = str; *value_end; value_end++)
-			{
-			  if (*value_end == '\\')
-				value_end++;
-			  else if (*value_end == '"')
-				break;
-			}
-		  str = value_end+1;
-		}
-
-	  /* See if this is the parameter we're looking for.
-		 If so, copy it and return.
-	   */
-	  if (token_end - token_start == parm_len &&
-		  !nsCRT::strncasecmp(token_start, parm_name, parm_len))
-		{
-		  s = (char *) PR_MALLOC ((value_end - value_start) + 1);
-		  if (! s) return 0;  /* MIME_OUT_OF_MEMORY */
-		  memcpy (s, value_start, value_end - value_start);
-		  s [value_end - value_start] = 0;
-		  /* if the parameter spans across multiple lines we have to strip out the
-			 line continuatio -- jht 4/29/98 */
-		  MIME_StripContinuations(s);
-		  return s;
-		}
-	  else if (token_end - token_start > parm_len &&
-			   !nsCRT::strncasecmp(token_start, parm_name, parm_len) &&
-			   *(token_start+parm_len) == '*')
-	  {
-		  /* RFC2231 - The legitimate parm format can be:
-			 title*=us-ascii'en-us'This%20is%20weired.
-			    or
-			 title*0*=us-ascii'en'This%20is%20weired.%20We
-			 title*1*=have%20to%20support%20this.
-			 title*3="Else..."
-			    or
-			 title*0="Hey, what you think you are doing?"
-			 title*1="There is no charset and language info."
-		   */
-		  const char *cp = token_start+parm_len+1; /* 1st char pass '*' */
-		  PRBool needUnescape = *(token_end-1) == '*';
-		  if ((*cp == '0' && needUnescape) || (token_end-token_start == parm_len+1))
-		  {
-			  const char *s_quote1 = PL_strchr(value_start, 0x27);
-			  const char *s_quote2 = (char *) (s_quote1 ? PL_strchr(s_quote1+1, 0x27) : NULL);
-			  NS_ASSERTION(s_quote1 && s_quote2, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
-			  if (charset && s_quote1 > value_start && s_quote1 < value_end)
-			  {
-				  *charset = (char *) PR_MALLOC(s_quote1-value_start+1);
-				  if (*charset)
-				  {
-					  memcpy(*charset, value_start, s_quote1-value_start);
-					  *(*charset+(s_quote1-value_start)) = 0;
-				  }
-			  }
-			  if (language && s_quote1 && s_quote2 && s_quote2 > s_quote1+1 &&
-				  s_quote2 < value_end)
-			  {
-				  *language = (char *) PR_MALLOC(s_quote2-(s_quote1+1)+1);
-				  if (*language)
-				  {
-					  memcpy(*language, s_quote1+1, s_quote2-(s_quote1+1));
-					  *(*language+(s_quote2-(s_quote1+1))) = 0;
-				  }
-			  }
-			  if (s_quote2 && s_quote2+1 < value_end)
-			  {
-				  NS_ASSERTION(!s, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
-				  s = (char *) PR_MALLOC(value_end-(s_quote2+1)+1);
-				  if (s)
-				  {
-					  memcpy(s, s_quote2+1, value_end-(s_quote2+1));
-					  *(s+(value_end-(s_quote2+1))) = 0;
-					  if (needUnescape)
-					  {
-						  nsUnescape(s);
-						  if (token_end-token_start == parm_len+1)
-							  return s; /* we done; this is the simple case of
-										   encoding charset and language info
-										 */
-					  }
-				  }
-			  }
-		  }
-		  else if (IS_DIGIT(*cp))
-		  {
-			  PRInt32 len = 0;
-			  char *ns = NULL;
-			  if (s)
-			  {
-				  len = strlen(s);
-				  ns = (char *) PR_Realloc(s, len+(value_end-value_start)+1);
-				  if (!ns)
-                    {
-					  PR_FREEIF(s);
-                    }
-				  else if (ns != s)
-					  s = ns;
-			  }
-			  else if (*cp == '0') /* must be; otherwise something is wrong */
-			  {
-				  s = (char *) PR_MALLOC(value_end-value_start+1);
-			  }
-			  /* else {} something is really wrong; out of memory */
-			  if (s)
-			  {
-				  memcpy(s+len, value_start, value_end-value_start);
-				  *(s+len+(value_end-value_start)) = 0;
-				  if (needUnescape)
-					  nsUnescape(s+len);
-			  }
-		  }
-	  }
-
-	  /* str now points after the end of the value.
-		 skip over whitespace, ';', whitespace. */
-	  while (nsCRT::IsAsciiSpace (*str)) str++;
-	  if (*str == ';') str++;
-	  while (nsCRT::IsAsciiSpace (*str)) str++;
-	}
-  return s;
+  nsXPIDLCString result;
+  rv = mimehdrpar->GetParameterInternal(header_value, parm_name, charset, 
+                                        language, getter_Copies(result));
+  return NS_SUCCEEDED(rv) ? PL_strdup(result.get()) : nsnull; 
 }
 
 #define MimeHeaders_write(OPT,DATA,LENGTH) \
@@ -848,40 +682,17 @@ char *
 mime_decode_filename(char *name, const char *charset,
                      MimeDisplayOptions *opt)
 {
-	char *s = name, *d = name;
-	char *cvt, *returnVal = NULL;
-  
-	// If charset parameter is used, this is RFC2231 encoding.
-	if (charset)
-	{
-    nsAutoString tempUnicodeString;
-    if (NS_SUCCEEDED(ConvertToUnicode(charset, name, tempUnicodeString)))
-    {
-      if (returnVal = nsCRT::strdup(NS_ConvertUCS2toUTF8(tempUnicodeString.get()).get()))
-        return returnVal;
-    }
-	}
+  nsresult rv;
+  nsCOMPtr <nsIMIMEHeaderParam> mimehdrpar = 
+    do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
 
-	while (*s)
-	{
-		/* Remove backslashes when they are used to escape special characters. */
-		if ((*s == '\\') &&
-			((*(s+1) == nsCRT::CR) || (*(s+1) == nsCRT::LF) || (*(s+1) == '"') || (*(s+1) == '\\')))
-			s++; /* take whatever char follows the backslash */
-		if (*s)
-			*d++ = *s++;
-	}
-	*d = 0;
-	returnVal = name;
-	
-    cvt = MIME_DecodeMimeHeader(returnVal, opt->default_charset,
-                                opt->override_charset, PR_TRUE);
-
-    if (cvt && cvt != returnVal) {
-      returnVal = cvt;
-    }
-
-	return returnVal;
+  if (NS_FAILED(rv))
+    return nsnull;
+  nsCAutoString result;
+  rv = mimehdrpar->DecodeParameter(nsDependentCString(name), charset,
+                                   opt->default_charset,
+                                   opt->override_charset, result);
+  return NS_SUCCEEDED(rv) ? PL_strdup(result.get()) : nsnull; 
 }
 
 /* Pull the name out of some header or another.  Order is:
@@ -898,50 +709,50 @@ MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opt)
 
   s = MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
   if (s)
-	{
-	  name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME, &charset, NULL);
-	  PR_Free(s);
-	}
-
-  if (! name)
   {
-	  s = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
-	  if (s)
-	  {
-		  PR_FREEIF(charset);
-
-		  name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME, &charset, NULL);
-		  PR_Free(s);
-	  }
+    name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME, &charset, NULL);
+    PR_Free(s);
   }
 
   if (! name)
-	  name = MimeHeaders_get (hdrs, HEADER_CONTENT_NAME, PR_FALSE, PR_FALSE);
+  {
+    s = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+    if (s)
+    {
+      nsMemory::Free(charset);
+
+      name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME, &charset, NULL);
+      PR_Free(s);
+    }
+  }
+
+  if (! name)
+    name = MimeHeaders_get (hdrs, HEADER_CONTENT_NAME, PR_FALSE, PR_FALSE);
   
   if (! name)
-	  name = MimeHeaders_get (hdrs, HEADER_X_SUN_DATA_NAME, PR_FALSE, PR_FALSE);
+    name = MimeHeaders_get (hdrs, HEADER_X_SUN_DATA_NAME, PR_FALSE, PR_FALSE);
 
   if (name)
   {
-		/*	First remove continuation delimiters (CR+LF+space), then
-			remove escape ('\\') characters, then attempt to decode
-			mime-2 encoded-words. The latter two are done in 
-			mime_decode_filename. 
-			*/
-		MIME_StripContinuations(name);
+    /* First remove continuation delimiters (CR+LF+space), then
+       remove escape ('\\') characters, then attempt to decode
+       mime-2 encoded-words. The latter two are done in 
+       mime_decode_filename. 
+    */
+    MIME_StripContinuations(name);
 
-		/*	Argh. What we should do if we want to be robust is to decode qtext
-			in all appropriate headers. Unfortunately, that would be too scary
-			at this juncture. So just decode qtext/mime2 here. */
-		cvt = mime_decode_filename(name, charset, opt);
+    /* Argh. What we should do if we want to be robust is to decode qtext
+       in all appropriate headers. Unfortunately, that would be too scary
+       at this juncture. So just decode qtext/mime2 here. */
+    cvt = mime_decode_filename(name, charset, opt);
 
-		PR_FREEIF(charset);
+    nsMemory::Free(charset);
 
-	   	if (cvt && cvt != name)
-	   	{
-	   		PR_Free(name);
-	   		name = cvt;
-	   	}
+    if (cvt && cvt != name)
+    {
+      PR_Free(name);
+      name = cvt;
+    }
   }
 
   return name;
