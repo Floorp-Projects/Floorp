@@ -1033,6 +1033,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>                
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandLineServiceMac.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1273,6 +1280,11 @@
                     <PATH>Splash.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>                
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsNativeAppSupportMac.cpp</PATH>
@@ -2380,6 +2392,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>                
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandLineServiceMac.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -2620,6 +2639,11 @@
                     <PATH>Splash.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>                
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsNativeAppSupportMac.cpp</PATH>
@@ -3727,6 +3751,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>                
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandLineServiceMac.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -3981,6 +4012,11 @@
                     <PATH>Splash.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>                
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsNativeAppSupportMac.cpp</PATH>
@@ -5098,6 +5134,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>                
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandLineServiceMac.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -5354,6 +5397,11 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsNativeAppSupportBase.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>                
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsNativeAppSupportMac.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -5512,6 +5560,12 @@
                 <PATH>nsNativeAppSupportMac.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
+            <FILEREF>
+                <TARGETNAME>apprunnerDebug</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsNativeAppSupportBase.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>           
             <FILEREF>
                 <TARGETNAME>apprunnerDebug</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
