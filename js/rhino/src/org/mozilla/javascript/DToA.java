@@ -169,7 +169,7 @@ class DToA {
 	 * bits in b in bits.  d must be finite and nonzero. */
     static BigInteger d2b(double d, int[] e, int[] bits)
     {
-        byte dbl_bits[] = new byte[8];
+        byte dbl_bits[];
         int i, k, y, z, de;
         long dBits = Double.doubleToLongBits(d);
         int d0 = (int)(dBits >>> 32);
@@ -182,6 +182,7 @@ class DToA {
             z |= Exp_msk1;
 
         if ((y = d1) != 0) {
+	        dbl_bits = new byte[8];
             k = lo0bits(y);
             y >>>= k;
             if (k != 0) {
@@ -195,6 +196,7 @@ class DToA {
         }
         else {
     //        JS_ASSERT(z);
+			dbl_bits = new byte[4];
             k = lo0bits(z);
             z >>>= k;
             stuffBits(dbl_bits, 0, z);
