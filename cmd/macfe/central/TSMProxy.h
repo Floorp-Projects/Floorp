@@ -85,7 +85,7 @@ class	HTMLInlineTSMProxy //: public VTSMProxy
 			Boolean			mDocActive;
 			
 			static AEEventHandlerUPP	sAEHandler;
-			static HTMLInlineTSMProxy	*sCurrentProxy;
+			// static HTMLInlineTSMProxy	*sCurrentProxy;
 			
 	};
 

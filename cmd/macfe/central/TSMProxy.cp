@@ -21,6 +21,9 @@
 #include "edt.h"
 #include "uintl.h"
 #include "intl_csi.h"
+#include "xp_trace.h"
+
+
 
 
 HoldUpdatesProxy::HoldUpdatesProxy(CEditView &inTextView) :
@@ -85,7 +88,7 @@ void HoldUpdatesProxy::DocumentChanged( int32 iStartY, int32 iHeight )
 
 
 AEEventHandlerUPP	HTMLInlineTSMProxy::sAEHandler 		= NewAEEventHandlerProc( AEHandlerTSM );
-HTMLInlineTSMProxy	*HTMLInlineTSMProxy::sCurrentProxy 	= NULL;
+// HTMLInlineTSMProxy	*HTMLInlineTSMProxy::sCurrentProxy 	= NULL;
 
 
 #if _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
@@ -211,7 +214,7 @@ HTMLInlineTSMProxy::Activate( void )
 	
 		InstallTSMHandlers();
 	
-		sCurrentProxy = this;
+//		sCurrentProxy = this;
 
 		#ifdef Debug_Signal
 			//	check to see if a bug in TSM will be encountered
@@ -246,7 +249,7 @@ HTMLInlineTSMProxy::Deactivate( void )
 		
 		RemoveTSMHandlers();
 	
-		sCurrentProxy = NULL;
+//		sCurrentProxy = NULL;
 
 		err = ::DeactivateTSMDocument( mTSMDocID );
 
@@ -315,7 +318,7 @@ HTMLInlineTSMProxy::RemoveTSMHandlers( void )
 pascal OSErr	
 HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *outReply, Int32 inRefCon )
 	{
-	
+	 	// XP_Trace("begin HTMLInlineTSMProxy::AEHandlerTSM\n");
 		OSErr	err = noErr;
 		
 		THz	oldZone = ::LMGetTheZone(),	//	Apple bug #115424?
@@ -332,44 +335,58 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 				AESubDesc 		appleEvent;
 				AEDescToSubDesc(inAppleEvent, &appleEvent);
 
-//				ThrowIf_(((Int32)(void *)sCurrentProxy) != appleEvent.KeyedItem(keyAETSMDocumentRefcon).ToInt32());
 				AESubDesc keySubDesc;
 				AEGetKeySubDesc( &appleEvent, keyAETSMDocumentRefcon, &keySubDesc );
 				long len;
-				void *tsmdocrefcon = AEGetSubDescData( &keySubDesc, &len );
-	
-				ThrowIf_(((Int32)(void *)sCurrentProxy) != ((Int32)tsmdocrefcon));
-				
+				Int32 *tsmdocrefcon = (Int32*)AEGetSubDescData( &keySubDesc, &len );
+				ThrowIf_(NULL == tsmdocrefcon);
+
+			 	// XP_Trace("try to get keyAETSMDocumentRefcon\n");
+
+				HTMLInlineTSMProxy *proxy = (HTMLInlineTSMProxy *)(*tsmdocrefcon);
+
 				AEStream		replyStream;
-				err = AEStream_OpenRecord( &replyStream, 'xxxx' );
+				err = AEStream_Open( &replyStream);
 				
-				if ( sCurrentProxy != NULL )
+				err = AEStream_OpenRecord( &replyStream, typeAERecord );
+				
+				if ( proxy != NULL )
 					{
-							
+						
 						switch( inRefCon )  
 							{
 
 								case kUpdateActiveInputArea:
-								
-									sCurrentProxy->AEUpdate(appleEvent);
+
+	 								// XP_Trace("kUpdateActiveInputArea\n");
+	
+									proxy->AEUpdate(appleEvent);
+									
 									
 								break;
 
 								case kPos2Offset:
+	 								XP_Trace("kPos2Offset\n");
 								
-									sCurrentProxy->AEPos2Offset(appleEvent, replyStream);
+									proxy->AEPos2Offset(appleEvent, replyStream);
 									
 								break;
 
 								case kOffset2Pos:
+	 								XP_Trace("kOffset2Pos\n");
 								
-									sCurrentProxy->AEOffset2Pos(appleEvent, replyStream);
+									proxy->AEOffset2Pos(appleEvent, replyStream);
 									
 								break;
 								
+								default:
+	 								XP_Trace("AppleEvent %c%c%c%c \n", (char)(inRefCon >> 24), (char)((inRefCon >> 16) & 0xff), (char)((inRefCon >> 8) & 0xff),	(char)(inRefCon & 0xff)	);
+									Assert_(0);
+								break;
 							}
 						
 					}
+	 			// XP_Trace("AEStream_CloseRecord\n");
 				
 				err = AEStream_CloseRecord( &replyStream );
 				
@@ -379,6 +396,8 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 				//		replyStream.Close(outReply);
 				//
 				StAEDescriptor	reply;
+	 			// XP_Trace("AEStream_Close\n");
+
 				err = AEStream_Close( &replyStream, reply );
 				AESubDesc 		replySD;
 				AEDescToSubDesc(reply, &replySD);
@@ -413,6 +432,7 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 #endif _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
 
 		::LMSetTheZone(oldZone);	//	Apple bug #115424?
+		// XP_Trace ("end HTMLInlineTSMProxy::AEHandlerTSM\n");	
 		
 		return err;
 		
@@ -435,25 +455,42 @@ void	HTMLInlineTSMProxy::AEUpdate(
 		mInputHoleLen = 0;
 	}
 	
-	// get the text in the input hole
-	AESubDesc keySubDesc;
-	AEGetKeySubDesc( &inAppleEvent, keyAETheData, &keySubDesc );
 	
-	int32 textlen;
-	Ptr thedata = (char *)AEGetSubDescData( &keySubDesc, &textlen );
-	ThrowIf_(((Int32)(void *)sCurrentProxy) != ((Int32)(void*)thedata));
-//	AESubDesc	textSD(inAppleEvent.KeyedItem(keyAETheData), typeChar);
-			
-	// fixLength is the number of characters which can be fixed into the buffer.
-	AESubDesc fixedLengthDesc;
-	AEGetKeySubDesc( &inAppleEvent, keyAEFixLength, &fixedLengthDesc );
-
-	Int32 fixLength, lengthlen;
-	fixLength = *(Int32 *)AEGetSubDescData( &fixedLengthDesc, &lengthlen );
-//	Int32	fixLength = inAppleEvent.KeyedItem(keyAEFixLength).ToInt32();
+	AESubDesc keySubDesc;
+	long textlen;
+	long dummylen;
+	
+	// Get keyAETheData
+	AEGetKeySubDesc( &inAppleEvent, keyAETheData, &keySubDesc );
+	Ptr thedata = (char *) AEGetSubDescData( &keySubDesc, &textlen );
+	
+	// Get keyAEFixLength
+	AEGetKeySubDesc( &inAppleEvent, keyAEFixLength, &keySubDesc );
+	Int32 fixLength = *(Int32 *) AEGetSubDescData( &keySubDesc, &dummylen );
 	if (fixLength < 0)			// special signal to fix it all!!
 		fixLength = textlen;
 
+	
+	// Get keyAEScriptTag
+	
+	// Currently do not depend on it.	
+
+	// Get [optional] keyAEUpdateRange
+	
+	// Currently do not depend on it.	
+
+
+	// Get [optional] keyAEPinRange
+	
+	// Currently do not depend on it.	
+
+
+	// Get [optional] keyAEClauseOffsets
+	
+	// Currently do not depend on it.	
+
+	
+	
 	mTextView.EraseCaret();
 	mTextView.HideCaret(true);
 	
@@ -489,15 +526,15 @@ void	HTMLInlineTSMProxy::AEUpdate(
 		mInputHoleStart = EDT_GetInsertPointOffset(mContext);	// a new starting point for our input hole
 	}
 
-	AESubDesc hiliteRangeSubDesc;
-	err = AEGetKeySubDesc( &inAppleEvent, keyAEHiliteRange, &hiliteRangeSubDesc );
-	XP_ASSERT( hiliteRangeSubDesc != NULL && err == noErr );
+	// Get [optional] keyAEHiliteRange
+	err = AEGetKeySubDesc( &inAppleEvent, keyAEHiliteRange, &keySubDesc );
+	XP_ASSERT( keySubDesc != NULL && err == noErr );
 	
 	if ( err == noErr) {
 //	if (inAppleEvent.KeyExists(keyAEHiliteRange)) {
 //		AESubDesc	hiliteSD( hiliteRangeSubDesc, typeTextRangeArray );
 //		TextRangeArrayPtr	p = (TextRangeArrayPtr)hiliteSD.GetDataPtr();
-		TextRangeArrayPtr p = (TextRangeArrayPtr)AEGetSubDescData( &hiliteRangeSubDesc, &textlen );
+		TextRangeArrayPtr p = (TextRangeArrayPtr)AEGetSubDescData( &keySubDesc, &dummylen );
 		for (Int32 i = 0; i < p->fNumOfRanges; i++) {
 		
 			TextRange	record;
@@ -526,6 +563,7 @@ void	HTMLInlineTSMProxy::AEPos2Offset(
 	AEStream		&inStream) const
 {
 	//	input
+	Point*	pWhere;
 	Point	where;
 	Boolean	dragging;
 	long len;
@@ -533,7 +571,9 @@ void	HTMLInlineTSMProxy::AEPos2Offset(
 
 	AESubDesc subdesc;
 	err = AEGetKeySubDesc( &inAppleEvent, keyAECurrentPoint, &subdesc );
-	where = *(Point *)AEGetSubDescData( &subdesc, &len );
+	pWhere = (Point *)AEGetSubDescData( &subdesc, &len );
+	where.h = pWhere->h;
+	where.v = pWhere->v;
 //	inAppleEvent.KeyedItem(keyAECurrentPoint).ToPtr(typeQDPoint, &where, sizeof(where));
 
 	
@@ -636,7 +676,6 @@ void	HTMLInlineTSMProxy::AEOffset2Pos(
 	err = AEGetKeySubDesc( &inAppleEvent, keyAEOffset, &subdesc );
 	long len;
 	Int32	offset = *(Int32 *)AEGetSubDescData( &subdesc, &len );
-//	Int32	offset = inAppleEvent.KeyedItem(keyAEOffset).ToInt32();
 	offset += mInputHoleStart;
 	
 	LO_Element * element;
