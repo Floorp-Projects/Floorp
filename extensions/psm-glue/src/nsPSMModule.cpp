@@ -44,6 +44,8 @@
 #include "nsCURILoader.h"
 #include "nsISupportsUtils.h"
 
+
+
 // Define SDR object constructor
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID); 
@@ -171,6 +173,12 @@ static nsModuleComponentInfo components[] =
       NS_FORMPROCESSOR_CID,
       NS_FORMPROCESSOR_CONTRACTID,
       nsKeygenFormProcessor::Create
+    },
+    {
+      "Entropy Collector",
+      NS_ENTROPYCOLLECTOR_CID,
+      NS_ENTROPYCOLLECTOR_CONTRACTID,
+      nsPSMComponent::CreatePSMComponent      
     }
 };
 
