@@ -1090,49 +1090,49 @@
 		F5247C320228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libnss3.dylib;
-			path = ../security/nss/lib/nss/Darwin5.4_OPT.OBJ/libnss3.dylib;
+			path = ../dist/Embed/libnss3.dylib;
 			refType = 2;
 		};
 		F5247C330228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libnssckbi.dylib;
-			path = ../security/nss/lib/ckfw/builtins/Darwin5.4_OPT.OBJ/libnssckbi.dylib;
+			path = ../dist/Embed/libnssckbi.dylib;
 			refType = 2;
 		};
 		F5247C340228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libsmime3.dylib;
-			path = ../security/nss/lib/smime/Darwin5.4_OPT.OBJ/libsmime3.dylib;
+			path = ../dist/Embed/libsmime3.dylib;
 			refType = 2;
 		};
 		F5247C350228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libsoftokn3.dylib;
-			path = ../security/nss/lib/softoken/Darwin5.4_OPT.OBJ/libsoftokn3.dylib;
+			path = ../dist/Embed/libsoftokn3.dylib;
 			refType = 2;
 		};
 		F5247C360228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libssl3.dylib;
-			path = ../security/nss/lib/ssl/Darwin5.4_OPT.OBJ/libssl3.dylib;
+			path = ../dist/Embed/libssl3.dylib;
 			refType = 2;
 		};
 		F5247C3C0228B990013DD99A = {
 			isa = PBXFileReference;
 			name = libpipboot.dylib;
-			path = ../security/manager/boot/src/libpipboot.dylib;
+			path = ../dist/Embed/components/libpipboot.dylib;
 			refType = 2;
 		};
 		F5247C3D0228B990013DD99A = {
 			isa = PBXFileReference;
 			name = libpipnss.dylib;
-			path = ../security/manager/ssl/src/libpipnss.dylib;
+			path = ../dist/Embed/components/libpipnss.dylib;
 			refType = 2;
 		};
 		F5247C3E0228B990013DD99A = {
 			isa = PBXFileReference;
 			name = libpippki.dylib;
-			path = ../security/manager/pki/src/libpippki.dylib;
+			path = ../dist/Embed/components/libpippki.dylib;
 			refType = 2;
 		};
 		F5247C420228B9D7013DD99A = {
@@ -1215,19 +1215,19 @@
 		F5247C4C0228BBB2013DD99A = {
 			isa = PBXFileReference;
 			name = pipboot.xpt;
-			path = ../security/manager/boot/public/_xpidlgen/pipboot.xpt;
+			path = ../dist/Embed/components/pipboot.xpt;
 			refType = 2;
 		};
 		F5247C4D0228BBB2013DD99A = {
 			isa = PBXFileReference;
 			name = pipnss.xpt;
-			path = ../security/manager/ssl/public/_xpidlgen/pipnss.xpt;
+			path = ../dist/Embed/components/pipnss.xpt;
 			refType = 2;
 		};
 		F5247C4E0228BBB2013DD99A = {
 			isa = PBXFileReference;
 			name = pippki.xpt;
-			path = ../security/manager/pki/public/_xpidlgen/pippki.xpt;
+			path = ../dist/Embed/components/pippki.xpt;
 			refType = 2;
 		};
 		F5247C520228BBB3013DD99A = {
@@ -1244,18 +1244,6 @@
 		};
 		F5247C540228BBB3013DD99A = {
 			fileRef = F5247C4E0228BBB2013DD99A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5247C550228BF8E013DD99A = {
-			isa = PBXFileReference;
-			name = libjsj.dylib;
-			path = ../js/src/liveconnect/libjsj.dylib;
-			refType = 2;
-		};
-		F5247C560228BF8E013DD99A = {
-			fileRef = F5247C550228BF8E013DD99A;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1841,13 +1829,13 @@
 		F54EF7ED022A2F9C01A80165 = {
 			isa = PBXFileReference;
 			name = pipnss.jar;
-			path = ../dist/bin/chrome/pipnss.jar;
+			path = ../dist/Embed/chrome/pipnss.jar;
 			refType = 2;
 		};
 		F54EF7EE022A2F9C01A80165 = {
 			isa = PBXFileReference;
 			name = pippki.jar;
-			path = ../dist/bin/chrome/pippki.jar;
+			path = ../dist/Embed/chrome/pippki.jar;
 			refType = 2;
 		};
 		F54EF7EF022A2F9D01A80165 = {
@@ -2016,7 +2004,7 @@
 		F55A9BC60228CCE101DAE4DB = {
 			isa = PBXFileReference;
 			name = "security-prefs.js";
-			path = "../netwerk/base/public/security-prefs.js";
+			path = "../dist/Embed/defaults/pref/security-prefs.js";
 			refType = 2;
 		};
 		F55A9BC70228CCE201DAE4DB = {
@@ -2258,7 +2246,7 @@
 		F57F0F470209DF5301A967DF = {
 			isa = PBXFileReference;
 			name = libxpcom.dylib;
-			path = ../xpcom/build/libxpcom.dylib;
+			path = ../dist/Embed/libxpcom.dylib;
 			refType = 2;
 		};
 		F57F0F480209DF5301A967DF = {
@@ -2540,7 +2528,7 @@
 		F585FDBD0239B9E101A967DF = {
 			isa = PBXFileReference;
 			name = libmozz.dylib;
-			path = ../modules/zlib/src/libmozz.dylib;
+			path = ../dist/Embed/libmozz.dylib;
 			refType = 2;
 		};
 		F585FDBF0239B9F701A967DF = {
@@ -3010,7 +2998,6 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
-				F5247C550228BF8E013DD99A,
 				F585FDBD0239B9E101A967DF,
 				F5247C2F0228B5E7013DD99A,
 				F6BD645501B3167601A962F7,
@@ -3033,7 +3020,6 @@
 				F6BD638B01B30F5301A962F7,
 				F6BD638C01B30F5301A962F7,
 				F6BD638D01B30F5301A962F7,
-				F5247C560228BF8E013DD99A,
 				F6BD638E01B30F5301A962F7,
 				F585FDBF0239B9F701A967DF,
 			);
@@ -3049,25 +3035,25 @@
 		F6BD638001B30EA301A962F7 = {
 			isa = PBXFileReference;
 			name = libnspr4.dylib;
-			path = ../nsprpub/pr/src/libnspr4.dylib;
+			path = ../dist/Embed/libnspr4.dylib;
 			refType = 2;
 		};
 		F6BD638101B30EA301A962F7 = {
 			isa = PBXFileReference;
 			name = libplc4.dylib;
-			path = ../nsprpub/lib/libc/src/libplc4.dylib;
+			path = ../dist/Embed/libplc4.dylib;
 			refType = 2;
 		};
 		F6BD638201B30EA301A962F7 = {
 			isa = PBXFileReference;
 			name = libplds4.dylib;
-			path = ../nsprpub/lib/ds/libplds4.dylib;
+			path = ../dist/Embed/libplds4.dylib;
 			refType = 2;
 		};
 		F6BD638701B30F5301A962F7 = {
 			isa = PBXFileReference;
 			name = libgkgfx.dylib;
-			path = ../gfx/src/libgkgfx.dylib;
+			path = ../dist/Embed/libgkgfx.dylib;
 			refType = 2;
 		};
 		F6BD638901B30F5301A962F7 = {
@@ -3337,187 +3323,187 @@
 		F6BD639301B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = appshell.xpt;
-			path = ../xpfe/appshell/public/_xpidlgen/appshell.xpt;
+			path = ../dist/Embed/components/appshell.xpt;
 			refType = 2;
 		};
 		F6BD639401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = caps.xpt;
-			path = ../caps/idl/_xpidlgen/caps.xpt;
+			path = ../dist/Embed/components/caps.xpt;
 			refType = 2;
 		};
 		F6BD639501B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = chrome.xpt;
-			path = ../rdf/chrome/public/_xpidlgen/chrome.xpt;
+			path = ../dist/Embed/components/chrome.xpt;
 			refType = 2;
 		};
 		F6BD639601B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = docshell.xpt;
-			path = ../docshell/base/_xpidlgen/docshell.xpt;
+			path = ../dist/Embed/components/docshell.xpt;
 			refType = 2;
 		};
 		F6BD639701B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_base.xpt;
-			path = ../dom/public/idl/base/_xpidlgen/dom_base.xpt;
+			path = ../dist/Embed/components/dom_base.xpt;
 			refType = 2;
 		};
 		F6BD639801B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_core.xpt;
-			path = ../dom/public/idl/core/_xpidlgen/dom_core.xpt;
+			path = ../dist/Embed/components/dom_core.xpt;
 			refType = 2;
 		};
 		F6BD639901B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_css.xpt;
-			path = ../dom/public/idl/css/_xpidlgen/dom_css.xpt;
+			path = ../dist/Embed/components/dom_css.xpt;
 			refType = 2;
 		};
 		F6BD639A01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_events.xpt;
-			path = ../dom/public/idl/events/_xpidlgen/dom_events.xpt;
+			path = ../dist/Embed/components/dom_events.xpt;
 			refType = 2;
 		};
 		F6BD639B01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_html.xpt;
-			path = ../dom/public/idl/html/_xpidlgen/dom_html.xpt;
+			path = ../dist/Embed/components/dom_html.xpt;
 			refType = 2;
 		};
 		F6BD639C01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_range.xpt;
-			path = ../dom/public/idl/range/_xpidlgen/dom_range.xpt;
+			path = ../dist/Embed/components/dom_range.xpt;
 			refType = 2;
 		};
 		F6BD639D01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_stylesheets.xpt;
-			path = ../dom/public/idl/stylesheets/_xpidlgen/dom_stylesheets.xpt;
+			path = ../dist/Embed/components/dom_stylesheets.xpt;
 			refType = 2;
 		};
 		F6BD639E01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_traversal.xpt;
-			path = ../dom/public/idl/traversal/_xpidlgen/dom_traversal.xpt;
+			path = ../dist/Embed/components/dom_traversal.xpt;
 			refType = 2;
 		};
 		F6BD639F01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_views.xpt;
-			path = ../dom/public/idl/views/_xpidlgen/dom_views.xpt;
+			path = ../dist/Embed/components/dom_views.xpt;
 			refType = 2;
 		};
 		F6BD63A001B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_xbl.xpt;
-			path = ../dom/public/idl/xbl/_xpidlgen/dom_xbl.xpt;
+			path = ../dist/Embed/components/dom_xbl.xpt;
 			refType = 2;
 		};
 		F6BD63A101B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_xul.xpt;
-			path = ../dom/public/idl/xul/_xpidlgen/dom_xul.xpt;
+			path = ../dist/Embed/components/dom_xul.xpt;
 			refType = 2;
 		};
 		F6BD63A201B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom.xpt;
-			path = ../dom/public/_xpidlgen/dom.xpt;
+			path = ../dist/Embed/components/dom.xpt;
 			refType = 2;
 		};
 		F6BD63A301B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = editor.xpt;
-			path = ../editor/idl/_xpidlgen/editor.xpt;
+			path = ../dist/Embed/components/editor.xpt;
 			refType = 2;
 		};
 		F6BD63A401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = gfx.xpt;
-			path = ../gfx/idl/_xpidlgen/gfx.xpt;
+			path = ../dist/Embed/components/gfx.xpt;
 			refType = 2;
 		};
 		F6BD63A501B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = gfx2.xpt;
-			path = ../gfx2/public/_xpidlgen/gfx2.xpt;
+			path = ../dist/Embed/components/gfx2.xpt;
 			refType = 2;
 		};
 		F6BD63A601B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libcaps.dylib;
-			path = ../caps/src/libcaps.dylib;
+			path = ../dist/Embed/components/libcaps.dylib;
 			refType = 2;
 		};
 		F6BD63A701B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libchrome.dylib;
-			path = ../rdf/chrome/build/libchrome.dylib;
+			path = ../dist/Embed/components/libchrome.dylib;
 			refType = 2;
 		};
 		F6BD63A801B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libcookie.dylib;
-			path = ../extensions/cookie/libcookie.dylib;
+			path = ../dist/Embed/components/libcookie.dylib;
 			refType = 2;
 		};
 		F6BD63A901B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libdocshell.dylib;
-			path = ../docshell/build/libdocshell.dylib;
+			path = ../dist/Embed/components/libdocshell.dylib;
 			refType = 2;
 		};
 		F6BD63AA01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libeditor.dylib;
-			path = ../editor/libeditor/build/libeditor.dylib;
+			path = ../dist/Embed/components/libeditor.dylib;
 			refType = 2;
 		};
 		F6BD63AB01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libembedcomponents.dylib;
-			path = ../embedding/components/build/libembedcomponents.dylib;
+			path = ../dist/Embed/components/libembedcomponents.dylib;
 			refType = 2;
 		};
 		F6BD63AC01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libgfx_mac.dylib;
-			path = ../gfx/src/mac/libgfx_mac.dylib;
+			path = ../dist/Embed/components/libgfx_mac.dylib;
 			refType = 2;
 		};
 		F6BD63AD01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libgfx2.dylib;
-			path = ../gfx2/src/libgfx2.dylib;
+			path = ../dist/Embed/components/libgfx2.dylib;
 			refType = 2;
 		};
 		F6BD63AE01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libmozbrwsr.dylib;
-			path = ../xpfe/browser/src/libmozbrwsr.dylib;
+			path = ../dist/Embed/components/libmozbrwsr.dylib;
 			refType = 2;
 		};
 		F6BD63AF01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libnsappshell.dylib;
-			path = ../xpfe/appshell/src/libnsappshell.dylib;
+			path = ../dist/Embed/components/libnsappshell.dylib;
 			refType = 2;
 		};
 		F6BD63B001B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libtxtsvc.dylib;
-			path = ../editor/txtsvc/src/libtxtsvc.dylib;
+			path = ../dist/Embed/components/libtxtsvc.dylib;
 			refType = 2;
 		};
 		F6BD63B101B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libwebbrwsr.dylib;
-			path = ../embedding/browser/build/libwebbrwsr.dylib;
+			path = ../dist/Embed/components/libwebbrwsr.dylib;
 			refType = 2;
 		};
 		F6BD63B201B3131201A962F7 = {
@@ -3529,145 +3515,145 @@
 		F6BD63B301B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = txtsvc.xpt;
-			path = ../editor/txtsvc/public/_xpidlgen/txtsvc.xpt;
+			path = ../dist/Embed/components/txtsvc.xpt;
 			refType = 2;
 		};
 		F6BD63B401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = webBrowser_core.xpt;
-			path = ../embedding/browser/webBrowser/_xpidlgen/webBrowser_core.xpt;
+			path = ../dist/Embed/components/webBrowser_core.xpt;
 			refType = 2;
 		};
 		F6BD63B501B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = windowwatcher.xpt;
-			path = ../embedding/components/windowwatcher/public/_xpidlgen/windowwatcher.xpt;
+			path = ../dist/Embed/components/windowwatcher.xpt;
 			refType = 2;
 		};
 		F6BD63D901B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = content_base.xpt;
-			path = ../content/base/public/_xpidlgen/content_base.xpt;
+			path = ../dist/Embed/components/content_base.xpt;
 			refType = 2;
 		};
 		F6BD63DA01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = jar.xpt;
-			path = ../modules/libjar/_xpidlgen/jar.xpt;
+			path = ../dist/Embed/components/jar.xpt;
 			refType = 2;
 		};
 		F6BD63DB01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = jsurl.xpt;
-			path = ../dom/src/jsurl/_xpidlgen/jsurl.xpt;
+			path = ../dist/Embed/components/jsurl.xpt;
 			refType = 2;
 		};
 		F6BD63DC01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = layout_base.xpt;
-			path = ../layout/base/public/_xpidlgen/layout_base.xpt;
+			path = ../dist/Embed/components/layout_base.xpt;
 			refType = 2;
 		};
 		F6BD63DD01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = layout_xul.xpt;
-			path = ../layout/xul/base/public/_xpidlgen/layout_xul.xpt;
+			path = ../dist/Embed/components/layout_xul.xpt;
 			refType = 2;
 		};
 		F6BD63DE01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libgkcontent.dylib;
-			path = ../content/build/libgkcontent.dylib;
+			path = ../dist/Embed/components/libgkcontent.dylib;
 			refType = 2;
 		};
 		F6BD63DF01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libgklayout.dylib;
-			path = ../layout/build/libgklayout.dylib;
+			path = ../dist/Embed/components/libgklayout.dylib;
 			refType = 2;
 		};
 		F6BD63E001B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libgkview.dylib;
-			path = ../view/src/libgkview.dylib;
+			path = ../dist/Embed/components/libgkview.dylib;
 			refType = 2;
 		};
 		F6BD63E101B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libhtmlpars.dylib;
-			path = ../htmlparser/src/libhtmlpars.dylib;
+			path = ../dist/Embed/components/libhtmlpars.dylib;
 			refType = 2;
 		};
 		F6BD63E201B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libjar50.dylib;
-			path = ../modules/libjar/libjar50.dylib;
+			path = ../dist/Embed/components/libjar50.dylib;
 			refType = 2;
 		};
 		F6BD63E301B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libjsurl.dylib;
-			path = ../dom/src/jsurl/libjsurl.dylib;
+			path = ../dist/Embed/components/libjsurl.dylib;
 			refType = 2;
 		};
 		F6BD63E401B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libnecko.dylib;
-			path = ../netwerk/build/libnecko.dylib;
+			path = ../dist/Embed/components/libnecko.dylib;
 			refType = 2;
 		};
 		F6BD63E501B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libnecko2.dylib;
-			path = ../netwerk/build2/libnecko2.dylib;
+			path = ../dist/Embed/components/libnecko2.dylib;
 			refType = 2;
 		};
 		F6BD63E601B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_about.xpt;
-			path = ../netwerk/protocol/about/public/_xpidlgen/necko_about.xpt;
+			path = ../dist/Embed/components/necko_about.xpt;
 			refType = 2;
 		};
 		F6BD63E701B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_cache.xpt;
-			path = ../netwerk/cache/public/_xpidlgen/necko_cache.xpt;
+			path = ../dist/Embed/components/necko_cache.xpt;
 			refType = 2;
 		};
 		F6BD63E801B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_data.xpt;
-			path = ../netwerk/protocol/data/public/_xpidlgen/necko_data.xpt;
+			path = ../dist/Embed/components/necko_data.xpt;
 			refType = 2;
 		};
 		F6BD63E901B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_dns.xpt;
-			path = ../netwerk/dns/public/_xpidlgen/necko_dns.xpt;
+			path = ../dist/Embed/components/necko_dns.xpt;
 			refType = 2;
 		};
 		F6BD63EA01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_ftp.xpt;
-			path = ../netwerk/protocol/ftp/public/_xpidlgen/necko_ftp.xpt;
+			path = ../dist/Embed/components/necko_ftp.xpt;
 			refType = 2;
 		};
 		F6BD63EB01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_http.xpt;
-			path = ../netwerk/protocol/http/public/_xpidlgen/necko_http.xpt;
+			path = ../dist/Embed/components/necko_http.xpt;
 			refType = 2;
 		};
 		F6BD63EC01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_jar.xpt;
-			path = ../netwerk/protocol/jar/public/_xpidlgen/necko_jar.xpt;
+			path = ../dist/Embed/components/necko_jar.xpt;
 			refType = 2;
 		};
 		F6BD63ED01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_res.xpt;
-			path = ../netwerk/protocol/res/public/_xpidlgen/necko_res.xpt;
+			path = ../dist/Embed/components/necko_res.xpt;
 			refType = 2;
 		};
 		F6BD63EE01B313EE01A962F7 = {
@@ -3679,7 +3665,7 @@
 		F6BD63EF01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_strconv.xpt;
-			path = ../netwerk/streamconv/public/_xpidlgen/necko_strconv.xpt;
+			path = ../dist/Embed/components/necko_strconv.xpt;
 			refType = 2;
 		};
 		F6BD63F001B313EE01A962F7 = {
@@ -3691,205 +3677,205 @@
 		F6BD63F101B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko.xpt;
-			path = ../netwerk/base/public/_xpidlgen/necko.xpt;
+			path = ../dist/Embed/components/necko.xpt;
 			refType = 2;
 		};
 		F6BD640B01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libchardet.dylib;
-			path = ../intl/chardet/src/libchardet.dylib;
+			path = ../dist/Embed/components/libchardet.dylib;
 			refType = 2;
 		};
 		F6BD640C01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libimggif.dylib;
-			path = ../modules/libpr0n/decoders/gif/libimggif.dylib;
+			path = ../dist/Embed/components/libimggif.dylib;
 			refType = 2;
 		};
 		F6BD640D01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libimgjpeg.dylib;
-			path = ../modules/libpr0n/decoders/jpeg/libimgjpeg.dylib;
+			path = ../dist/Embed/components/libimgjpeg.dylib;
 			refType = 2;
 		};
 		F6BD640E01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libimglib2.dylib;
-			path = ../modules/libpr0n/src/libimglib2.dylib;
+			path = ../dist/Embed/components/libimglib2.dylib;
 			refType = 2;
 		};
 		F6BD640F01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libimgpng.dylib;
-			path = ../modules/libpr0n/decoders/png/libimgpng.dylib;
+			path = ../dist/Embed/components/libimgpng.dylib;
 			refType = 2;
 		};
 		F6BD641001B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = liblwbrk.dylib;
-			path = ../intl/lwbrk/src/liblwbrk.dylib;
+			path = ../dist/Embed/components/liblwbrk.dylib;
 			refType = 2;
 		};
 		F6BD641101B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libnslocale.dylib;
-			path = ../intl/locale/src/unix/libnslocale.dylib;
+			path = ../dist/Embed/components/libnslocale.dylib;
 			refType = 2;
 		};
 		F6BD641201B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libpref.dylib;
-			path = ../modules/libpref/src/libpref.dylib;
+			path = ../dist/Embed/components/libpref.dylib;
 			refType = 2;
 		};
 		F6BD641301B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libprofile.dylib;
-			path = ../profile/src/libprofile.dylib;
+			path = ../dist/Embed/components/libprofile.dylib;
 			refType = 2;
 		};
 		F6BD641401B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = librdf.dylib;
-			path = ../rdf/build/librdf.dylib;
+			path = ../dist/Embed/components/librdf.dylib;
 			refType = 2;
 		};
 		F6BD641501B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libshistory.dylib;
-			path = ../xpfe/components/shistory/src/libshistory.dylib;
+			path = ../dist/Embed/components/libshistory.dylib;
 			refType = 2;
 		};
 		F6BD641601B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libstrres.dylib;
-			path = ../intl/strres/src/libstrres.dylib;
+			path = ../dist/Embed/components/libstrres.dylib;
 			refType = 2;
 		};
 		F6BD641701B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libuconv.dylib;
-			path = ../intl/uconv/src/libuconv.dylib;
+			path = ../dist/Embed/components/libuconv.dylib;
 			refType = 2;
 		};
 		F6BD641801B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libucvlatin.dylib;
-			path = ../intl/uconv/ucvlatin/libucvlatin.dylib;
+			path = ../dist/Embed/components/libucvlatin.dylib;
 			refType = 2;
 		};
 		F6BD641901B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libunicharutil.dylib;
-			path = ../intl/unicharutil/src/libunicharutil.dylib;
+			path = ../dist/Embed/components/libunicharutil.dylib;
 			refType = 2;
 		};
 		F6BD641A01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = liburiloader.dylib;
-			path = ../uriloader/build/liburiloader.dylib;
+			path = ../dist/Embed/components/liburiloader.dylib;
 			refType = 2;
 		};
 		F6BD641B01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libwidget_mac.dylib;
-			path = ../widget/src/cocoa/libwidget_mac.dylib;
+			path = ../dist/Embed/components/libwidget_mac.dylib;
 			refType = 2;
 		};
 		F6BD641C01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libxpconnect.dylib;
-			path = ../js/src/xpconnect/src/libxpconnect.dylib;
+			path = ../dist/Embed/components/libxpconnect.dylib;
 			refType = 2;
 		};
 		F6BD641D01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = pref.xpt;
-			path = ../modules/libpref/public/_xpidlgen/pref.xpt;
+			path = ../dist/Embed/components/pref.xpt;
 			refType = 2;
 		};
 		F6BD641E01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = profile.xpt;
-			path = ../profile/public/_xpidlgen/profile.xpt;
+			path = ../dist/Embed/components/profile.xpt;
 			refType = 2;
 		};
 		F6BD641F01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = rdf.xpt;
-			path = ../rdf/base/idl/_xpidlgen/rdf.xpt;
+			path = ../dist/Embed/components/rdf.xpt;
 			refType = 2;
 		};
 		F6BD642001B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = shistory.xpt;
-			path = ../xpfe/components/shistory/public/_xpidlgen/shistory.xpt;
+			path = ../dist/Embed/components/shistory.xpt;
 			refType = 2;
 		};
 		F6BD642101B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = uconv.xpt;
-			path = ../intl/uconv/idl/_xpidlgen/uconv.xpt;
+			path = ../dist/Embed/components/uconv.xpt;
 			refType = 2;
 		};
 		F6BD642201B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = unicharutil.xpt;
-			path = ../intl/unicharutil/idl/_xpidlgen/unicharutil.xpt;
+			path = ../dist/Embed/components/unicharutil.xpt;
 			refType = 2;
 		};
 		F6BD642301B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = uriloader.xpt;
-			path = ../uriloader/base/_xpidlgen/uriloader.xpt;
+			path = ../dist/Embed/components/uriloader.xpt;
 			refType = 2;
 		};
 		F6BD642401B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = widget.xpt;
-			path = ../widget/src/cocoa/_xpidlgen/widget.xpt;
+			path = ../dist/Embed/components/widget.xpt;
 			refType = 2;
 		};
 		F6BD642501B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_base.xpt;
-			path = ../xpcom/base/_xpidlgen/xpcom_base.xpt;
+			path = ../dist/Embed/components/xpcom_base.xpt;
 			refType = 2;
 		};
 		F6BD642601B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_components.xpt;
-			path = ../xpcom/components/_xpidlgen/xpcom_components.xpt;
+			path = ../dist/Embed/components/xpcom_components.xpt;
 			refType = 2;
 		};
 		F6BD642701B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_ds.xpt;
-			path = ../xpcom/ds/_xpidlgen/xpcom_ds.xpt;
+			path = ../dist/Embed/components/xpcom_ds.xpt;
 			refType = 2;
 		};
 		F6BD642801B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_io.xpt;
-			path = ../xpcom/io/_xpidlgen/xpcom_io.xpt;
+			path = ../dist/Embed/components/xpcom_io.xpt;
 			refType = 2;
 		};
 		F6BD642901B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_threads.xpt;
-			path = ../xpcom/threads/_xpidlgen/xpcom_threads.xpt;
+			path = ../dist/Embed/components/xpcom_threads.xpt;
 			refType = 2;
 		};
 		F6BD642A01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_xpti.xpt;
-			path = ../xpcom/reflect/xptinfo/public/_xpidlgen/xpcom_xpti.xpt;
+			path = ../dist/Embed/components/xpcom_xpti.xpt;
 			refType = 2;
 		};
 		F6BD642B01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpconnect.xpt;
-			path = ../js/src/xpconnect/idl/_xpidlgen/xpconnect.xpt;
+			path = ../dist/Embed/components/xpconnect.xpt;
 			refType = 2;
 		};
 		F6BD644D01B315FA01A962F7 = {
@@ -3901,7 +3887,7 @@
 		F6BD644E01B315FA01A962F7 = {
 			isa = PBXFileReference;
 			name = imglib2.xpt;
-			path = ../modules/libpr0n/public/_xpidlgen/imglib2.xpt;
+			path = ../dist/Embed/components/imglib2.xpt;
 			refType = 2;
 		};
 		F6BD644F01B315FA01A962F7 = {
@@ -3913,7 +3899,7 @@
 		F6BD645001B315FA01A962F7 = {
 			isa = PBXFileReference;
 			name = libjsdom.dylib;
-			path = ../dom/src/build/libjsdom.dylib;
+			path = ../dist/Embed/components/libjsdom.dylib;
 			refType = 2;
 		};
 		F6BD645501B3167601A962F7 = {
@@ -4536,31 +4522,31 @@
 		F6BD64B801B316DA01A962F7 = {
 			isa = PBXFileReference;
 			name = charsetalias.properties;
-			path = ../intl/uconv/src/charsetalias.properties;
+			path = ../dist/Embed/res/charsetalias.properties;
 			refType = 2;
 		};
 		F6BD64B901B316DA01A962F7 = {
 			isa = PBXFileReference;
 			name = charsetData.properties;
-			path = ../intl/uconv/src/charsetData.properties;
+			path = ../dist/Embed/res/charsetData.properties;
 			refType = 2;
 		};
 		F6BD64BA01B316DA01A962F7 = {
 			isa = PBXFileReference;
 			name = langGroups.properties;
-			path = ../intl/locale/src/langGroups.properties;
+			path = ../dist/Embed/res/langGroups.properties;
 			refType = 2;
 		};
 		F6BD64BB01B316DA01A962F7 = {
 			isa = PBXFileReference;
 			name = language.properties;
-			path = ../intl/locale/src/language.properties;
+			path = ../dist/Embed/res/language.properties;
 			refType = 2;
 		};
 		F6BD64BC01B316DA01A962F7 = {
 			isa = PBXFileReference;
 			name = unixcharset.properties;
-			path = ../intl/uconv/src/unixcharset.properties;
+			path = ../dist/Embed/res/unixcharset.properties;
 			refType = 2;
 		};
 		F6BD64C201B316DA01A962F7 = {
@@ -4596,102 +4582,30 @@
 		F6BD64C701B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = arrow.gif;
-			path = ../layout/html/document/src/arrow.gif;
+			path = ../dist/Embed/res/arrow.gif;
 			refType = 2;
 		};
 		F6BD64C801B3172601A962F7 = {
 			children = (
-				F6BD64C901B3172601A962F7,
-				F6BD64CA01B3172601A962F7,
-				F6BD64CB01B3172601A962F7,
-				F6BD64CC01B3172601A962F7,
-				F6BD64CD01B3172601A962F7,
-				F6BD64CE01B3172601A962F7,
-				F6BD64CF01B3172601A962F7,
-				F6BD64D001B3172601A962F7,
-				F6BD64D101B3172601A962F7,
-				F6BD64D201B3172601A962F7,
 				F6BD64D301B3172601A962F7,
-				F6BD64D401B3172601A962F7,
 				F6BD64D501B3172601A962F7,
-				F6BD64D601B3172601A962F7,
 			);
 			isa = PBXGroup;
 			name = builtin;
-			path = ../dist/bin/res/builtin;
+			path = ../dist/Embed/res/builtin;
 			refType = 2;
-		};
-		F6BD64C901B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-disabled-left.gif";
-			refType = 4;
-		};
-		F6BD64CA01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-disabled-middle.gif";
-			refType = 4;
-		};
-		F6BD64CB01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-disabled-right.gif";
-			refType = 4;
-		};
-		F6BD64CC01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-normal-left.gif";
-			refType = 4;
-		};
-		F6BD64CD01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-normal-middle.gif";
-			refType = 4;
-		};
-		F6BD64CE01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-normal-right.gif";
-			refType = 4;
-		};
-		F6BD64CF01B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-pressed-left.gif";
-			refType = 4;
-		};
-		F6BD64D001B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-pressed-middle.gif";
-			refType = 4;
-		};
-		F6BD64D101B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "button-pressed-right.gif";
-			refType = 4;
-		};
-		F6BD64D201B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = buttons.css;
-			refType = 4;
 		};
 		F6BD64D301B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = htmlBindings.xml;
-			path = ../content/xbl/builtin/htmlBindings.xml;
+			path = ../dist/Embed/res/builtin/htmlBindings.xml;
 			refType = 2;
-		};
-		F6BD64D401B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = platformButtonBindings.xml;
-			refType = 4;
 		};
 		F6BD64D501B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = platformHTMLBindings.xml;
-			path = ../content/xbl/builtin/mac/platformHTMLBindings.xml;
+			path = ../dist/Embed/res/builtin/platformHTMLBindings.xml;
 			refType = 2;
-		};
-		F6BD64D601B3172601A962F7 = {
-			isa = PBXFileReference;
-			path = "xbl-forms.css";
-			refType = 4;
 		};
 		F6BD64D701B3172601A962F7 = {
 			children = (
@@ -4703,67 +4617,67 @@
 			);
 			isa = PBXGroup;
 			name = entityTables;
-			path = ../dist/bin/res/entityTables;
+			path = ../dist/Embed/res/entityTables;
 			refType = 2;
 		};
 		F6BD64D801B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = html40Latin1.properties;
-			path = ../intl/unicharutil/tables/html40Latin1.properties;
+			path = ../dist/Embed/res/entityTables/html40Latin1.properties;
 			refType = 2;
 		};
 		F6BD64D901B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = html40Special.properties;
-			path = ../intl/unicharutil/tables/html40Special.properties;
+			path = ../dist/Embed/res/entityTables/html40Special.properties;
 			refType = 2;
 		};
 		F6BD64DA01B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = html40Symbols.properties;
-			path = ../intl/unicharutil/tables/html40Symbols.properties;
+			path = ../dist/Embed/res/entityTables/html40Symbols.properties;
 			refType = 2;
 		};
 		F6BD64DB01B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = htmlEntityVersions.properties;
-			path = ../intl/unicharutil/tables/htmlEntityVersions.properties;
+			path = ../dist/Embed/res/entityTables/htmlEntityVersions.properties;
 			refType = 2;
 		};
 		F6BD64DC01B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = transliterate.properties;
-			path = ../intl/unicharutil/tables/transliterate.properties;
+			path = ../dist/Embed/res/entityTables/transliterate.properties;
 			refType = 2;
 		};
 		F6BD64DD01B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = forms.css;
-			path = ../layout/html/document/src/forms.css;
+			path = ../dist/Embed/res/forms.css;
 			refType = 2;
 		};
 		F6BD64DE01B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = html.css;
-			path = ../layout/html/document/src/html.css;
+			path = ../dist/Embed/res/html.css;
 			refType = 2;
 		};
 		F6BD64DF01B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = quirk.css;
-			path = ../layout/html/document/src/quirk.css;
+			path = ../dist/Embed/res/quirk.css;
 			refType = 2;
 		};
 		F6BD64E001B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = ua.css;
-			path = ../dist/bin/res/ua.css;
+			path = ../dist/Embed/res/ua.css;
 			refType = 2;
 		};
 		F6BD64E101B3172601A962F7 = {
 			isa = PBXFileReference;
 			name = viewsource.css;
-			path = ../layout/html/document/src/viewsource.css;
+			path = ../dist/Embed/res/viewsource.css;
 			refType = 2;
 		};
 		F6BD64FB01B3184301A962F7 = {
@@ -4779,7 +4693,7 @@
 		F6BD64FC01B3184301A962F7 = {
 			isa = PBXFileReference;
 			name = all.js;
-			path = ../modules/libpref/src/init/all.js;
+			path = ../dist/Embed/defaults/pref/all.js;
 			refType = 2;
 		};
 		F6BD64FF01B3184301A962F7 = {
@@ -4796,7 +4710,7 @@
 		F6BD650001B3184301A962F7 = {
 			isa = PBXFileReference;
 			name = embed.jar;
-			path = ../dist/bin/chrome/embed.jar;
+			path = ../dist/Embed/chrome/embed.jar;
 			refType = 2;
 		};
 		F6BD650401B3184301A962F7 = {
