@@ -6884,16 +6884,17 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   nsIFrame* newFrame = nsnull;
   //nsSVGTableCreator svgTableCreator(aPresShell); // Used to make table views.
  
-  // See if the element is absolute or fixed positioned
-  const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
-  if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
-    isAbsolutelyPositioned = PR_TRUE;
-  }
-  else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
-    isFixedPositioned = PR_TRUE;
-  }
-
   if (aTag == nsSVGAtoms::svg) {
+    // See if the element is absolute or fixed positioned. These
+    // properties only apply to outer SVG elements.
+    const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
+    if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
+      isAbsolutelyPositioned = PR_TRUE;
+    }
+    else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
+      isFixedPositioned = PR_TRUE;
+    }
+    
     forceView = PR_TRUE;
     isBlock = PR_TRUE;
     processChildren = PR_TRUE;
@@ -6966,6 +6967,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
       // containing block so that we get the SPACE_MGR bit set.
       nsFrameConstructorSaveState saveState;
       aState.PushFloatContainingBlock(nsnull, saveState, PR_FALSE, PR_FALSE);
+      const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
       rv = ConstructBlock(aPresShell, aPresContext, aState, disp, aContent,
                           geometricParent, aParentFrame, aStyleContext,
                           newFrame, PR_TRUE);
