@@ -80,6 +80,7 @@ protected:
    PRBool     LoadPositionFromXUL();
    PRBool     LoadSizeFromXUL();
    PRBool     LoadSizeStateFromXUL();
+   nsresult   LoadChromeHidingFromXUL();
    NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD LoadWindowClassFromXUL();
    NS_IMETHOD LoadIconFromXUL();
