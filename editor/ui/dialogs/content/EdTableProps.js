@@ -101,9 +101,10 @@ function Startup()
   gDialog.TableWidthUnits = document.getElementById("TableWidthUnits");
   gDialog.TableHeightInput = document.getElementById("TableHeightInput");
   gDialog.TableHeightUnits = document.getElementById("TableHeightUnits");
-  if (!gPrefs.getBoolPref("editor.use_css") || (editorShell.editorType != "html")) {
+  if (!gPrefs.getBoolPref("editor.use_css") || (editorShell.editorType != "html"))
+  {
     gUseCSS = false;
-    tableHeightLabel = document.getElementById("TableHeightLabel");
+    var tableHeightLabel = document.getElementById("TableHeightLabel");
     tableHeightLabel.parentNode.removeChild(tableHeightLabel);
     gDialog.TableHeightInput.parentNode.removeChild(gDialog.TableHeightInput);
     gDialog.TableHeightUnits.parentNode.removeChild(gDialog.TableHeightUnits);
