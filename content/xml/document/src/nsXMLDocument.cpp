@@ -961,7 +961,7 @@ nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
   if (namespaceID == kNameSpaceID_HTML) {
     nsCOMPtr<nsIHTMLContent> htmlContent;
 
-    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
+    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_TRUE);
     content = do_QueryInterface(htmlContent);
   }
   else {

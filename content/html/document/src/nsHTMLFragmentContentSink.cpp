@@ -498,7 +498,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
                                     *getter_AddRefs(nodeInfo));
 
-    result = NS_CreateHTMLElement(&content, nodeInfo);
+    result = NS_CreateHTMLElement(&content, nodeInfo, PR_FALSE);
 
     if (NS_OK == result) {
       result = AddAttributes(aNode, content);
@@ -576,7 +576,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
                                                *getter_AddRefs(nodeInfo));
 
         if(NS_SUCCEEDED(result)) {
-          result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
+          result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
 
           if (NS_OK == result) {
             result = AddAttributes(aNode, content);

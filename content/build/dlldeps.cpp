@@ -34,5 +34,4 @@ void XXXNeverCalled()
   NS_NewImageDocument(&doc);
   nsINameSpaceManager* nsm;
   NS_NewNameSpaceManager(&nsm);
-  NS_CreateHTMLElement(nsnull, nsnull);
 }

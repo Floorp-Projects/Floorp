@@ -929,7 +929,7 @@ nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 
   nsresult rv;
   nsCOMPtr<nsIHTMLContent> htmlContent;
-  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo);
+  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo, PR_FALSE);
   nsCOMPtr<nsIContent> content = do_QueryInterface(htmlContent);
   *aResult = content;
   NS_IF_ADDREF(*aResult);
@@ -3826,7 +3826,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
                                   nsnull, kNameSpaceID_None,
                                   *getter_AddRefs(nodeInfo));
 
-    result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo);
+    result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     if (NS_SUCCEEDED(result)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);
@@ -4186,7 +4186,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_HTML,
                                   *getter_AddRefs(nodeInfo));
 
-    result = NS_CreateHTMLElement(&element, nodeInfo);
+    result = NS_CreateHTMLElement(&element, nodeInfo, PR_FALSE);
     if (NS_SUCCEEDED(result)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);      
@@ -4858,7 +4858,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::script, nsnull, kNameSpaceID_None,
                                 *getter_AddRefs(nodeInfo));
 
-  rv = NS_CreateHTMLElement(&element, nodeInfo);
+  rv = NS_CreateHTMLElement(&element, nodeInfo, PR_FALSE);
   if (NS_SUCCEEDED(rv)) {
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);    
@@ -5028,7 +5028,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
                                   kNameSpaceID_None,
                                   *getter_AddRefs(nodeInfo));
 
-    rv = NS_CreateHTMLElement(&element, nodeInfo);
+    rv = NS_CreateHTMLElement(&element, nodeInfo, PR_FALSE);
     if (NS_SUCCEEDED(rv)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);    
