@@ -895,57 +895,48 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     nsAutoString classid;
     PRInt32 nameSpaceID;
 
-    // if we have a clsid, we're either an internal widget or an ActiveX control
+    // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
     mContent->GetNameSpaceID(nameSpaceID);
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
     {
       nsCID widgetCID;
-      classid.Cut(0, 6); // Strip off the clsid:. What's left is the class ID.
 
-      // These are some builtin types that we know about for now.
-      // (Eventually this will move somewhere else.)
-      if (classid == "treeview")
+      // if we find "java:" in the class idea, we have a java applet
+      if(classid.Find("java:") != -1)
       {
-        widgetCID = kCTreeViewCID;
-	      rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
-      }
-      else if (classid == "toolbar")
-      {
-        widgetCID = kCToolbarCID;
-	      rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
-      }
-      else if (classid == "browser")
-      {
-        widgetCID = kCAppShellCID;
-	      rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
-      }
-      else
-      {
-	    // if we haven't matched to an internal type, check to see if we have an ActiveX handler
-	    // if not, create the default plugin
         nsIURL* baseURL;
 	      nsIURL* fullURL;
+
+        mimeType = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
+        PL_strcpy(mimeType, "application/x-java-vm");
+
+        // removing the "java:" leaves us with the class file
+        classid.Cut(0, 5);
 
 	      if((rv = GetBaseURL(baseURL)) != NS_OK)
 	        return rv;
 
-	      nsIURLGroup* group = nsnull;
-        if(nsnull != baseURL)
+        nsIURLGroup* group = nsnull;
+        if (nsnull != baseURL)
           baseURL->GetURLGroup(&group);
 
-	      // if we have a codebase, add it to the fullURL
-	      nsAutoString codeBase;
+        nsAutoString codeBase;
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
-	      {
+		    {
           nsIURL* codeBaseURL = nsnull;
-          rv = NS_NewURL(&fullURL, codeBase, baseURL, nsnull, group);
+          rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
+          if(rv == NS_OK)
+          {
+            NS_IF_RELEASE(baseURL);
+            baseURL = codeBaseURL;
+          }
         }
-	      else
-	        fullURL = baseURL;
 
-	      NS_IF_RELEASE(group);
+        // Create an absolute URL
+        rv = NS_NewURL(&fullURL, classid, baseURL, nsnull, group);
+        NS_IF_RELEASE(group);
 
-      // get the nsIPluginHost interface
+        // get the nsIPluginHost interface
         if((rv = aPresContext.GetContainer(&container)) != NS_OK)
 	        return rv;
         if((rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv)) != NS_OK)
@@ -960,24 +951,95 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           return rv;
         }
 
-        if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
-	        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
-        else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
-	        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/oleobject", fullURL);
-	      else
-	        rv = NS_ERROR_FAILURE;
+        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
 
   	    NS_RELEASE(pluginHost);
 	      NS_RELEASE(cv);
 	      NS_RELEASE(container);
       }
+      else // otherwise, we're either an ActiveX control or an internal widget
+      {
+        classid.Cut(0, 6); // Strip off the clsid:. What's left is the class ID.
 
+        // These are some builtin types that we know about for now.
+        // (Eventually this will move somewhere else.)
+        if (classid == "treeview")
+        {
+          widgetCID = kCTreeViewCID;
+	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
+        }
+        else if (classid == "toolbar")
+        {
+          widgetCID = kCToolbarCID;
+	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
+        }
+        else if (classid == "browser")
+        {
+          widgetCID = kCAppShellCID;
+	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
+        }
+        else
+        {
+	      // if we haven't matched to an internal type, check to see if we have an ActiveX handler
+	      // if not, create the default plugin
+          nsIURL* baseURL;
+	        nsIURL* fullURL;
+
+	        if((rv = GetBaseURL(baseURL)) != NS_OK)
+	          return rv;
+
+	        nsIURLGroup* group = nsnull;
+          if(nsnull != baseURL)
+            baseURL->GetURLGroup(&group);
+
+	        // if we have a codebase, add it to the fullURL
+	        nsAutoString codeBase;
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
+	        {
+            nsIURL* codeBaseURL = nsnull;
+            rv = NS_NewURL(&fullURL, codeBase, baseURL, nsnull, group);
+          }
+	        else
+	          fullURL = baseURL;
+
+	        NS_IF_RELEASE(group);
+
+          // get the nsIPluginHost interface
+          if((rv = aPresContext.GetContainer(&container)) != NS_OK)
+	          return rv;
+          if((rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv)) != NS_OK)
+          {
+		        NS_RELEASE(container); 
+            return rv;
+          }
+	        if((rv = cv->QueryCapability(kIPluginHostIID, (void **)&pluginHost)) != NS_OK)
+          {
+		        NS_RELEASE(container); 
+            NS_RELEASE(cv); 
+            return rv;
+          }
+
+          if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
+	          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
+          else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
+	          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/oleobject", fullURL);
+	        else
+	          rv = NS_ERROR_FAILURE;
+
+  	      NS_RELEASE(pluginHost);
+	        NS_RELEASE(cv);
+	        NS_RELEASE(container);
+        }
+      }
+
+      // finish up
       if(rv == NS_OK)
       {
         aStatus = NS_FRAME_COMPLETE;
         return NS_OK;
       }
 
+      // if we got an error, we'll check for alternative content with CantRenderReplacedElement()
       nsIPresShell* presShell;
       aPresContext.GetShell(&presShell);
       presShell->CantRenderReplacedElement(&aPresContext, this);
@@ -1029,8 +1091,11 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		    {
           nsIURL* codeBaseURL = nsnull;
           rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
-          NS_IF_RELEASE(baseURL);
-          baseURL = codeBaseURL;
+          if(rv == NS_OK)
+          {
+            NS_IF_RELEASE(baseURL);
+            baseURL = codeBaseURL;
+          }
         }
 
         // Create an absolute URL
@@ -1103,12 +1168,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	  NS_IF_RELEASE(container);
   }
 
+  // finish up
   if(rv == NS_OK)
   {
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
 
+  // if we got an error, we'll check for alternative content with CantRenderReplacedElement()
   nsIPresShell* presShell;
   aPresContext.GetShell(&presShell);
   presShell->CantRenderReplacedElement(&aPresContext, this);
@@ -1298,7 +1365,8 @@ nsObjectFrame::GetBaseURL(nsIURL* &aURL)
   return NS_OK;
 }
 
-#endif
+#endif // REFLOW_MODS
+
 //~~~
 NS_IMETHODIMP
 nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
