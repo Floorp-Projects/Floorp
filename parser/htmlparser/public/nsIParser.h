@@ -108,9 +108,10 @@ enum eParserDocType {
 #define kCharsetFromMetaTag             9
 #define kCharsetFromByteOrderMark      10
 #define kCharsetFromChannel            11 
-#define kCharsetFromParentForced       12
-#define kCharsetFromUserForced         13
-#define kCharsetFromOtherComponent     14
+#define kCharsetFromOtherComponent     12
+// Levels below here will be forced onto childframes too
+#define kCharsetFromParentForced       13
+#define kCharsetFromUserForced         14
 #define kCharsetFromPreviousLoading    15
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
