@@ -2234,7 +2234,9 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   if (platformLen) {
     platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
     if (platformText) {
-      rv = encoder->Convert(aTitle.get(), &len, platformText, &platformLen);
+      rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+      if (NS_SUCCEEDED(rv))
+        rv = encoder->Convert(aTitle.get(), &len, platformText, &platformLen);
       (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
     }
   } // if valid length
