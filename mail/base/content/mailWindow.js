@@ -260,6 +260,7 @@ nsMsgStatusFeedback.prototype =
   progressMeterContainer : null,
   pendingStartRequests : 0,
   meteorsSpinning : false,
+  myDefaultStatus : null,
   progressMeterVisible : false,
 
   ensureStatusFields : function()
@@ -274,13 +275,21 @@ nsMsgStatusFeedback.prototype =
   // nsIXULBrowserWindow implementation
   setJSStatus : function(status)
     {
+      if (status.length > 0)
+        this.showStatusString(status);
     },
   setJSDefaultStatus : function(status)
     {
+      if (status.length > 0)
+      {
+        myDefaultStatus = status;
+        this.statusTextFld.label = status;
+      }
     },
   setOverLink : function(link)
     {
-      this.showStatusString(link);
+      this.ensureStatusFields();
+      this.statusTextFld.label = link;
     },
   QueryInterface : function(iid)
     {
@@ -295,8 +304,10 @@ nsMsgStatusFeedback.prototype =
   showStatusString : function(statusText)
     {
       this.ensureStatusFields();
-      if ( statusText == "" )
-        statusText = defaultStatus;
+      if ( !statusText.length )
+        statusText = myDefaultStatus;
+      else
+        myDefaultStatus = "";
       this.statusTextFld.label = statusText;
   },
   _startMeteors : function()
@@ -347,9 +358,7 @@ nsMsgStatusFeedback.prototype =
         gTimelineService.resetTimer("FolderLoading");
       }
       this.ensureStatusFields();
-      var msg = gMessengerBundle.getString("documentDone");
-      this.showStatusString(msg);
-      defaultStatus = msg;
+      this.showStatusString(defaultStatus);
       
       // stop the throbber
       if (this.throbber)
