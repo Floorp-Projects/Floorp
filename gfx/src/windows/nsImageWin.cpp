@@ -125,7 +125,8 @@ NS_IMPL_ISUPPORTS1(nsImageWin, nsIImage)
  *  See documentation in nsIImageWin.h  
  *  @update 3/27/00 dwc
  */
-nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
+nsresult nsImageWin::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
+                          nsMaskRequirements aMaskRequirements)
 {
   if (mInitialized)
     return NS_ERROR_FAILURE;
@@ -143,42 +144,46 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
   // limit images to 64k pixels on a side (~55 feet on a 100dpi monitor)
   const PRInt32 k64KLimit = 0x0000FFFF;
   if (aWidth > k64KLimit || aHeight > k64KLimit)
-      return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 
-  if (mNumPaletteColors >= 0){
-    // If we have a palette
-    if (0 == mNumPaletteColors) {
-      // space for the header only (no color table)
-      mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFO)];
-    } else {
-      // Space for the header and the palette. Since we'll be using DIB_PAL_COLORS
-      // the color table is an array of 16-bit unsigned integers that specify an
-      // index into the currently realized logical palette
-      mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + (256 * sizeof(WORD))];
-    }
-    mBHead->biSize = sizeof(BITMAPINFOHEADER);
-    mBHead->biWidth = aWidth;
-    mBHead->biHeight = aHeight;
-    mBHead->biPlanes = 1;
-    mBHead->biBitCount = (WORD)aDepth;
-    mBHead->biCompression = BI_RGB;
-    mBHead->biSizeImage = 0;            // not compressed, so we dont need this to be set
-    mBHead->biXPelsPerMeter = 0;
-    mBHead->biYPelsPerMeter = 0;
-    mBHead->biClrUsed = mNumPaletteColors;
-    mBHead->biClrImportant = mNumPaletteColors;
+  if (0 == mNumPaletteColors) {
+    // space for the header only (no color table)
+    mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFO)];
+  } else {
+    // Space for the header and the palette. Since we'll be using DIB_PAL_COLORS
+    // the color table is an array of 16-bit unsigned integers that specify an
+    // index into the currently realized logical palette
+    mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) +
+                                          (256 * sizeof(WORD))];
+  }
+  if (!mBHead)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  mBHead->biSize = sizeof(BITMAPINFOHEADER);
+  mBHead->biWidth = aWidth;
+  mBHead->biHeight = aHeight;
+  mBHead->biPlanes = 1;
+  mBHead->biBitCount = (WORD)aDepth;
+  mBHead->biCompression = BI_RGB;
+  mBHead->biSizeImage = 0;     // not compressed, so we dont need this to be set
+  mBHead->biXPelsPerMeter = 0;
+  mBHead->biYPelsPerMeter = 0;
+  mBHead->biClrUsed = mNumPaletteColors;
+  mBHead->biClrImportant = mNumPaletteColors;
 
-    // Compute the size of the image
-    mRowBytes = CalcBytesSpan(mBHead->biWidth);
-    mSizeImage = mRowBytes * mBHead->biHeight; // no compression
+  // Compute the size of the image
+  mRowBytes = CalcBytesSpan(mBHead->biWidth);
+  mSizeImage = mRowBytes * mBHead->biHeight; // no compression
 
+  // Allocate the image bits
+  mImageBits = new unsigned char[mSizeImage];
+  if (!mImageBits) {
+    delete[] mBHead;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    // Allocate the image bits
-    mImageBits = new unsigned char[mSizeImage];
- 
-    // Need to clear the entire buffer so an incrementally loaded image
-    // will not have garbage rendered for the unloaded bits.
+  // Need to clear the entire buffer so an incrementally loaded image
+  // will not have garbage rendered for the unloaded bits.
 /* XXX: Since there is a performance hit for doing the clear we need
    a different solution. For now, we will let garbage be drawn for
    incrementally loaded images. Need a solution where only the portion
@@ -188,53 +193,50 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     }
 */
 
+  if (256 == mNumPaletteColors) {
+    // Initialize the array of indexes into the logical palette
+    WORD* palIndx = (WORD*)(((LPBYTE)mBHead) + mBHead->biSize);
+    for (WORD index = 0; index < 256; index++) {
+      *palIndx++ = index;
+    }
+  }
 
-    if (256 == mNumPaletteColors) {
-      // Initialize the array of indexes into the logical palette
-      WORD* palIndx = (WORD*)(((LPBYTE)mBHead) + mBHead->biSize);
-      for (WORD index = 0; index < 256; index++) {
-        *palIndx++ = index;
-      }
+  // Allocate mask image bits if requested
+  if (aMaskRequirements != nsMaskRequirements_kNoMask) {
+    if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements) {
+      mARowBytes = (aWidth + 7) / 8;
+      mAlphaDepth = 1;
+    }else{
+      //NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
+      // "unexpected mask depth");
+      mARowBytes = aWidth;
+      mAlphaDepth = 8;
     }
 
-
-    // Allocate mask image bits if requested
-    if (aMaskRequirements != nsMaskRequirements_kNoMask){
-      if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements){
-        mARowBytes = (aWidth + 7) / 8;
-        mAlphaDepth = 1;
-      }else{
-        //NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
-        // "unexpected mask depth");
-        mARowBytes = aWidth;
-        mAlphaDepth = 8;
-      }
-
-
-      // 32-bit align each row
-      mARowBytes = (mARowBytes + 3) & ~0x3;
-
-
-      mAlphaBits = new unsigned char[mARowBytes * aHeight];
+    // 32-bit align each row
+    mARowBytes = (mARowBytes + 3) & ~0x3;
+    mAlphaBits = new unsigned char[mARowBytes * aHeight];
+    if (!mAlphaBits) {
+      delete[] mBHead;
+      delete[] mImageBits;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+  }
 
 
-    // XXX Let's only do this if we actually have a palette...
-    mColorMap = new nsColorMap;
+  // XXX Let's only do this if we actually have a palette...
+  mColorMap = new nsColorMap;
 
+  if (mColorMap != nsnull) {
+    mColorMap->NumColors = mNumPaletteColors;
+    mColorMap->Index = nsnull;
+    if (mColorMap->NumColors > 0) {
+      mColorMap->Index = new PRUint8[3 * mColorMap->NumColors];
 
-    if (mColorMap != nsnull){
-      mColorMap->NumColors = mNumPaletteColors;
-      mColorMap->Index = nsnull;
-      if (mColorMap->NumColors > 0) {
-        mColorMap->Index = new PRUint8[3 * mColorMap->NumColors];
-
-
-        // XXX Note: I added this because purify claims that we make a
-        // copy of the memory (which we do!). I'm not sure if this
-        // matters or not, but this shutup purify.
-        memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mColorMap->NumColors));
-      }
+      // XXX Note: I added this because purify claims that we make a
+      // copy of the memory (which we do!). I'm not sure if this
+      // matters or not, but this shutup purify.
+      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mColorMap->NumColors));
     }
   }
 
