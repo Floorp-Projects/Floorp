@@ -148,6 +148,17 @@ nsCacheProfilePrefObserver::Install()
     rv = prefInternal->AddObserver(MEMORY_CACHE_CAPACITY_PREF, this, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
+    // determine if we have a profile already
+    //     if there is only a single profile, or it is specified on the commandline
+    //     at startup, our Install() method won't be called until after the
+    //     profile-after-change notification.  In that case we detect the presence of
+    //     a profile by the existence of the NS_APP_USER_PROFILE_50_DIR.
+    nsCOMPtr<nsIFile>  directory;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(directory));
+    if (NS_SUCCEEDED(rv)) {
+        mHaveProfile = PR_TRUE;
+    }
+
     rv = ReadPrefs();
     
     return NS_SUCCEEDED(rv) ? rv2 : rv;
