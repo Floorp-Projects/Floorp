@@ -22,7 +22,7 @@
 DEPTH=..\..\..\.. 
 
 EXPORTS=nsIFormControl.h nsIForm.h nsILink.h  \
-	nsISelectElement.h nsIScriptElement.h
+	nsISelectElement.h nsIScriptElement.h nsIBodySuper.h
 
 MODULE=raptor 
 

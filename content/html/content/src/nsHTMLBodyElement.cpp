@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -51,6 +52,7 @@
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIRuleWalker.h"
+#include "nsIBodySuper.h"
 
 //----------------------------------------------------------------------
 
@@ -110,19 +112,24 @@ public:
 //----------------------------------------------------------------------
 
 // special subclass of inner class to override set document
-class nsBodySuper: public nsGenericHTMLContainerElement
+class nsBodySuper: public nsGenericHTMLContainerElement,
+                   public nsIBodySuper
 {
 public:
   nsBodySuper();
   virtual ~nsBodySuper();
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
+  NS_IMETHOD RemoveBodyFixupRule();
 
   BodyRule*       mContentStyleRule;
   BodyFixupRule*  mInlineStyleRule;
 };
 
+NS_IMPL_ISUPPORTS_INHERITED(nsBodySuper, nsGenericHTMLContainerElement, nsIBodySuper)
 
 nsBodySuper::nsBodySuper() : nsGenericHTMLContainerElement(),
                              mContentStyleRule(nsnull),
@@ -164,6 +171,17 @@ nsBodySuper::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   }
   return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
                                                     aCompileEventHandlers);
+}
+
+NS_IMETHODIMP
+nsBodySuper::RemoveBodyFixupRule(void)
+{
+  if (mInlineStyleRule) {
+    mInlineStyleRule->mPart = nsnull;
+    mInlineStyleRule->mSheet = nsnull;
+    NS_RELEASE(mInlineStyleRule);
+  }
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -711,7 +729,7 @@ nsHTMLBodyElement::~nsHTMLBodyElement()
 
 // QueryInterface implementation for nsHTMLBodyElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBodyElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsBodySuper)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLBodyElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLBodyElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

@@ -187,7 +187,7 @@ protected:
   nsresult GetSourceDocumentURL(JSContext* cx, nsIURI** sourceURL);
 
   PRBool GetBodyContent();
-  nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);
+  NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody);
 
   NS_IMETHOD GetDomainURI(nsIURI **uri);
 

@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
@@ -40,6 +41,9 @@
 #include "nsIStyleRuleSupplier.h"
 #include "nsRuleNode.h"
 #include "nsIRuleWalker.h"
+#include "nsIBodySuper.h"
+#include "nsIHTMLDocument.h"
+#include "nsIDOMHTMLBodyElement.h"
 
 #ifdef MOZ_PERF_METRICS
   #include "nsITimeRecorder.h"
@@ -116,6 +120,8 @@ public:
 
   virtual nsresult GetRuleTree(nsIRuleNode** aResult);
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext);
+
+  virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument);
 
   NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
                                   nsIStyleContext* aStyleContext, 
@@ -1032,6 +1038,24 @@ StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, 
 
   return NS_OK;
 }
+
+nsresult
+StyleSetImpl::RemoveBodyFixupRule(nsIDocument *aDocument)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
+  if (htmlDoc) {
+    nsCOMPtr<nsIDOMHTMLBodyElement> node;
+    htmlDoc->GetBodyElement(getter_AddRefs(node));
+    if (node) {
+      nsCOMPtr<nsIBodySuper> bodyElement = do_QueryInterface(node);
+      bodyElement->RemoveBodyFixupRule();
+      return NS_OK;
+    }
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
