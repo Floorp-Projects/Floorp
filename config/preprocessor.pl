@@ -135,28 +135,28 @@ sub newline {
 sub define {
     my $self = shift;
     my($variable, $value) = @_;
-    die "not a valid variable name\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
     $self->{'variables'}->{$variable} = $value;
 }
 
 sub defined {
     my $self = shift;
     my($variable) = @_;
-    die "not a valid variable name\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
     return defined($self->{'variables'}->{$variable});
 }
 
 sub undefine {
     my $self = shift;
     my($variable) = @_;
-    die "not a valid variable name\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
     delete($self->{'variables'}->{$variable});
 }
 
 sub get {
     my $self = shift;
     my($variable) = @_;
-    die "not a valid variable name\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
     my $value = $self->{'variables'}->{$variable};
     if (defined($value)) {
         return $value;
@@ -206,7 +206,7 @@ sub define {
         /^(\w+)$/os && do {
             return $stack->define($1, 1);
         };
-        die "invalid argument\n";
+        die "invalid argument: '$_'\n";
     }
 }
 
@@ -250,7 +250,7 @@ sub if {
             # false value
             return $stack->push(not $stack->get($1));
         };
-        die "invalid argument\n";
+        die "invalid argument: '$_'\n";
     }
 }
 
