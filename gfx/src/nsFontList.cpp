@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsFontList.h"
 #include "nsGfxCIID.h"
-#include "nsLocalString.h"
+#include "nsDependentString.h"
 #include "nsIFontEnumerator.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
@@ -104,9 +104,9 @@ nsFontListEnumerator::Init(const PRUnichar *aLangGroup,
     return rv;
  
   nsXPIDLCString langGroup;
-  langGroup = ToNewUTF8String(nsLocalString(aLangGroup));
+  langGroup = ToNewUTF8String(nsDependentString(aLangGroup));
   nsXPIDLCString fontType;
-  fontType = ToNewUTF8String(nsLocalString(aFontType));
+  fontType = ToNewUTF8String(nsDependentString(aFontType));
   rv = fontEnumerator->EnumerateFonts(langGroup.get(), fontType.get(), 
                                         &mCount, &mFonts);
   return rv;
