@@ -33,6 +33,4 @@
 //class nsIWalletDataSource;
 //class nsIWalletDataBase;
 
-nsresult NS_NewWalletService(nsIWalletServiceDataSource** result);
-
 #endif // nsBuiltinDataSources_h__

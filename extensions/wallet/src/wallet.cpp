@@ -148,7 +148,7 @@ InputConsumer::~InputConsumer()
 }
 
 
-NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
+NS_IMPL_ISUPPORTS1(InputConsumer, nsIStreamListener);
 
 
 NS_IMETHODIMP

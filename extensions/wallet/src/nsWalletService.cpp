@@ -368,16 +368,3 @@ nsWalletlibService::HandleUnknownContentType
   return NS_OK;
 }
 
-/* call to create the wallet object */
-
-nsresult
-NS_NewWalletService(nsIWalletService** result)
-{
-  nsIWalletService* wallet = new nsWalletlibService();
-  if (! wallet) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *result = wallet;
-  NS_ADDREF(*result);
-  return NS_OK;
-}
