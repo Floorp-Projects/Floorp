@@ -318,8 +318,7 @@ nsresult nsPref::useDefaultPrefFile()
     SetCharPref("mail.identity.id1.smtp_name", currProfileName);
     SetCharPref("mail.identity.id1.smtp_server", "nsmail-2");
     SetCharPref("mail.identity.id1.useremail", emailStr);
-    SetBoolPref("mail.identity.id1.send_html", PR_TRUE);
-    SetIntPref("mail.identity.id1.wrap_column", 72);
+    SetBoolPref("mail.identity.id1.compose_html", PR_TRUE);
     SetCharPref("mail.server.server0.directory", imapDirStr);
     SetCharPref("mail.server.server0.hostname", "nsmail-2");
     SetCharPref("mail.server.server0.password", "clear text password");
@@ -328,6 +327,7 @@ nsresult nsPref::useDefaultPrefFile()
     SetCharPref("mail.server.server1.directory", newsDirStr);
     SetCharPref("mail.server.server1.hostname", "news.mozilla.org");
     SetCharPref("mail.server.server1.type", "nntp");
+    SetIntPref("mail.wraplength", 72);
     SetIntPref("news.max_articles",50);
     SetBoolPref("news.mark_old_read",PR_FALSE);
     PR_FREEIF(imapDirStr);

@@ -31,7 +31,7 @@ public:
 	const char * GetUserFullName() {return m_userFullName;}
 	const char * GetUserEmail() {return m_userEmail;}
 	const char * GetReplyTo() {return m_replyTo;}
-	const PRBool GetUseHtml() {return m_useHTML;}
+	const PRBool GetComposeHtml() {return m_composeHTML;}
 	const PRInt32 GetWrapColumn() {return m_wrapColumn;}
 
 private:
@@ -39,7 +39,7 @@ private:
 	char *	m_userFullName;
 	char *	m_userEmail;
 	char *	m_replyTo;
-	PRBool	m_useHTML;
+	PRBool	m_composeHTML;
 	PRInt32	m_wrapColumn;
 };
 

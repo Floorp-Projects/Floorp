@@ -787,9 +787,9 @@ nsMsgAccountManager::upgradePrefs()
         PR_Free(oldstr);
     }
     
-    rv = m_prefs->GetBoolPref("mail.send_html", &oldbool);
+    rv = m_prefs->GetBoolPref("mail.compose_html", &oldbool);
     if (NS_SUCCEEDED(rv)) {
-        identity->SetUseHtml(oldbool);
+        identity->SetComposeHtml(oldbool);
     }
 
     rv = m_prefs->CopyCharPref("mail.smtp_server", &oldstr);
@@ -803,12 +803,7 @@ nsMsgAccountManager::upgradePrefs()
         identity->SetSmtpUsername(oldstr);
         PR_Free(oldstr);
     }
-    
-    rv = m_prefs->GetIntPref("mail.wrap_column", &oldint);
-    if (NS_SUCCEEDED(rv)) {
-        identity->SetWrapColumn(oldint);
-    }
-    
+        
     // generic server stuff
 
     // pop stuff

@@ -20,8 +20,10 @@
 #include "nsIMsgIdentity.h"
 #include "nsMsgCompPrefs.h"
 #include "nsMsgBaseCID.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsMsgCompPrefs::nsMsgCompPrefs()
 {
@@ -31,7 +33,7 @@ nsMsgCompPrefs::nsMsgCompPrefs()
 	m_userFullName = nsnull;
 	m_userEmail = nsnull;
 	m_replyTo = nsnull;
-	m_useHTML = PR_TRUE;
+	m_composeHTML = PR_TRUE;
 	m_wrapColumn = 72;
 
 	// get the current identity from the mail session....
@@ -50,8 +52,12 @@ nsMsgCompPrefs::nsMsgCompPrefs()
 
 			identity->GetReplyTo(&m_replyTo);
 
-			identity->GetUseHtml(&m_useHTML);
-			identity->GetWrapColumn(&m_wrapColumn);
+			identity->GetComposeHtml(&m_composeHTML);
+			NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+			if (NS_SUCCEEDED(res) && prefs) 
+			{
+				res = prefs->GetIntPref("mail.wraplength", &m_wrapColumn);
+			}
 		}
 		else
 			NS_ASSERTION(0, "no current identity found for this user (a)....");

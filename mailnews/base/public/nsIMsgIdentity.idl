@@ -30,12 +30,11 @@ interface nsIMsgIdentity : nsISupports {
   attribute string email;
   attribute string replyTo;
   attribute string organization;
-  attribute boolean useHtml;
+  attribute boolean composeHtml;
   attribute boolean attachSignature;
   attribute boolean attachVCard;
   attribute nsIMsgSignature signature;
   attribute nsIMsgVCard vCard;
   attribute string smtpHostname;
   attribute string smtpUsername;
-  attribute long wrapColumn;
 };

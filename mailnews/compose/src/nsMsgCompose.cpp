@@ -66,7 +66,7 @@ nsMsgCompose::nsMsgCompose()
     	PR_Free(default_mail_charset);
   	}
 	
-	m_composeHTML = prefs.GetUseHtml();
+	m_composeHTML = prefs.GetComposeHtml();
 
 	NS_INIT_REFCNT();
 }
@@ -116,7 +116,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 	{
 		case MSGCOMP_FORMAT_HTML		: m_composeHTML = PR_TRUE;					break;
 		case MSGCOMP_FORMAT_PlainText	: m_composeHTML = PR_FALSE;					break;
-		default							: m_composeHTML = prefs.GetUseHtml();		break;
+		default							: m_composeHTML = prefs.GetComposeHtml();	break;
 
 	}
 	
@@ -192,20 +192,20 @@ nsresult nsMsgCompose::LoadFields()
 					{
 						nsString id;
 						inputElement->GetId(id);
-            char *elementValue;
-            m_compFields->GetTo(&elementValue);
+			            char *elementValue;
+			            m_compFields->GetTo(&elementValue);
 						if (id == "msgTo") inputElement->SetValue(elementValue);
 
-            m_compFields->GetCc(&elementValue);
+			            m_compFields->GetCc(&elementValue);
 						if (id == "msgCc") inputElement->SetValue(elementValue);
 
-            m_compFields->GetBcc(&elementValue);
+			            m_compFields->GetBcc(&elementValue);
 						if (id == "msgBcc") inputElement->SetValue(elementValue);
 
-            m_compFields->GetNewsgroups(&elementValue);
-            if (id == "msgNewsgroup") inputElement->SetValue(elementValue);
+			            m_compFields->GetNewsgroups(&elementValue);
+			            if (id == "msgNewsgroup") inputElement->SetValue(elementValue);
 
-            m_compFields->GetSubject(&elementValue);
+			            m_compFields->GetSubject(&elementValue);
 						if (id == "msgSubject") inputElement->SetValue(elementValue);
 					}
                     
