@@ -50,7 +50,7 @@ function UpdateHistory(event)
 	{
 		try
 		{
-      var history = getService( "component://netscape/browser/global-history", "nsIGlobalHistory" );
+			var history = getService( "component://netscape/browser/global-history", "nsIGlobalHistory" );
 			if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
 		}
 		catch (ex)
@@ -159,6 +159,16 @@ function Shutdown()
     // If bookmarks are dirty, flush 'em to disk
     var bmks = getService( "component://netscape/browser/bookmarks-service", "nsIRDFRemoteDataSource" );
     if (bmks)	bmks.Flush();
+  }
+  catch (ex)
+  {
+  }
+
+  try
+  {
+    // give history a change at flushing to disk also
+    var history = getService( "component://netscape/browser/global-history", "nsIRDFRemoteDataSource" );
+    if (history)	history.Flush();
   }
   catch (ex)
   {
