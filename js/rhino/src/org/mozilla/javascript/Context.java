@@ -23,13 +23,14 @@
  * Kemal Bayram
  * Patrick Beard
  * Norris Boyd
- * Igor Bukanov
+ * Igor Bukanov, igor@mir2.org
  * Brendan Eich
  * Ethan Hugg
  * Roger Lawrence
  * Terry Lucas
  * Mike McCabe
  * Milen Nankov
+ * Attila Szegedi, szegedia@freemail.hu
  * Ian D. Stewart
  * Andi Vajda
  * Andrew Wason
@@ -338,10 +339,10 @@ public class Context
      */
     public static Context enter(Context cx)
     {
-        Context[] storage = getThreadContextStorage();
+        Object[] storage = getThreadContextStorage();
         Context old;
         if (storage != null) {
-            old = storage[0];
+            old = (Context)storage[0];
         } else {
             old = getCurrentContext_jdk11();
         }
@@ -405,10 +406,10 @@ public class Context
      */
     public static void exit()
     {
-        Context[] storage = getThreadContextStorage();
+        Object[] storage = getThreadContextStorage();
         Context cx;
         if (storage != null) {
-            cx = storage[0];
+            cx = (Context)storage[0];
         } else {
             cx = getCurrentContext_jdk11();
         }
@@ -476,10 +477,10 @@ public class Context
         if (factory == null) {
             factory = ScriptRuntime.getContextFactory(scope);
         }
-        Context[] storage = getThreadContextStorage();
+        Object[] storage = getThreadContextStorage();
         Context cx;
         if (storage != null) {
-            cx = storage[0];
+            cx = (Context)storage[0];
         } else {
             cx = getCurrentContext_jdk11();
         }
@@ -510,10 +511,10 @@ public class Context
      */
     static Object call(ContextFactory factory, ContextAction action)
     {
-        Context[] storage = getThreadContextStorage();
+        Object[] storage = getThreadContextStorage();
         Context cx;
         if (storage != null) {
-            cx = storage[0];
+            cx = (Context)storage[0];
         } else {
             cx = getCurrentContext_jdk11();
         }
@@ -540,7 +541,7 @@ public class Context
     }
 
     private static Context prepareNewContext(ContextFactory factory,
-                                             Context[] storage)
+                                             Object[] storage)
     {
         Context cx = factory.makeContext();
         if (cx.factory != null || cx.enterCount != 0) {
@@ -560,7 +561,7 @@ public class Context
         return cx;
     }
 
-    private static void releaseContext(Context[] storage, Context cx)
+    private static void releaseContext(Object[] storage, Context cx)
     {
         if (storage != null) {
             storage[0] = null;
@@ -627,21 +628,21 @@ public class Context
      */
     public static Context getCurrentContext()
     {
-        Context[] storage = getThreadContextStorage();
+        Object[] storage = getThreadContextStorage();
         if (storage != null) {
-            return storage[0];
+            return (Context)storage[0];
         }
         return getCurrentContext_jdk11();
     }
 
-    private static Context[] getThreadContextStorage()
+    private static Object[] getThreadContextStorage()
     {
         if (threadLocalCx != null) {
             try {
-                Context[] storage
-                    = (Context[])threadLocalGet.invoke(threadLocalCx, null);
+                Object[] storage
+                    = (Object[])threadLocalGet.invoke(threadLocalCx, null);
                 if (storage == null) {
-                    storage = new Context[1];
+                    storage = new Object[1];
                     threadLocalSet.invoke(threadLocalCx,
                                           new Object[] { storage });
                 }
