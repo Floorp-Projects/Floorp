@@ -5,160 +5,398 @@ This is Bugzilla.  See <http://www.mozilla.org/bugs/>.
 	DISCLAIMER
 	==========
 
-This is not very well packaged code.  It's not packaged at all.  Don't
+   This is not very well packaged code.  It's not packaged at all.  Don't
 come here expecting something you plop in a directory, twiddle a few
-things, and you're off and using it.  Work has to be done to get
-there.  We'd like to get there, but it wasn't clear when that would
-be, and so we decided to let people see it first.
-
-
+things, and you're off and using it.  Work has to be done to get there.  
+We'd like to get there, but it wasn't clear when that would be, and so we
+decided to let people see it first.
 
 	============
 	INSTALLATION
 	============
 
-(This section stolen heavily from the Bonsai INSTALL document.  It's
-also probably incomplete.  "We're accepting patches", especially to
-this document!)
+0. Introduction
 
-First, you need some other things:
+   Installation of bugzilla is pretty straight forward, especially if your
+machine already has MySQL and the MySQL-related perl packages installed.
+If those aren't installed yet, then that's the first order of business.  The
+other necessary ingredient is a web server set up to run cgi scripts.
 
-   1) MySQL database server.
-   2) Perl5.004 or greater, including MySQL support, and modules
-	    Date::Format and Chart::Base available from your nearest
-			CPAN server. See http://www.perl.com/CPAN.
-      ftp://ftp.cpan.org/pub/CPAN/authors/id/GBARR/TimeDate-1.08.tar.gz
-      ftp://ftp.cpan.org/pub/CPAN/authors/id/DBONNER/Chart-0.99.tar.gz
-      ftp://ftp.cpan.org/pub/CPAN/authors/id/LDS/GD-1.18.tar.gz
-   3) Some kind of HTTP server so you could use CGI scripts
+1. Installing the Prerequisites
 
-Earlier versions of Bugzilla required TCL.  THIS IS NO LONGER TRUE.
-All dependencies on TCL have been removed.
+   The software packages necessary for the proper running of bugzilla are:
 
-1.1 Getting and setting up MySQL database
+	1. MySQL database server and the mysql client
+	2. Perl (5.004 or greater)
+	3. DBI Perl module 
+	4. Data::Dumper Perl module
+	5. MySQL related Perl module collection
+	6. TimeDate Perl module collection
+	7. GD perl module (1.18 or greater)
+	8. Chart::Base Perl module (0.99 or greater)
+	9. The web server of your choice
 
-   Visit MySQL homepage at http://www.tcx.se and grab the latest
-stable binary release of the server. Sure, you can get sources and
-compile them yourself, but binaries are the easiest and the fastest
-way to get it up and running. Follow instructions found in
-manual. There is a section about installing binary-only
-distributions. 
+   Bugzilla has quite a few prerequisites, but none of them are TCL.
+Previous versions required TCL, but it no longer needed (or used).
 
-   You should create database "bugs". It may be a good idea to make it
-writable by all users on your machine and change access level
-later. This would save you a lot of time trying to guess whether it's
-permissions or a mistake in the script that make things fail.
+1.1. Getting and setting up MySQL database
+
+   Visit MySQL homepage at http://www.mysql.org and grab the latest stable
+release of the server.  Both binaries and source are available and which you
+get shouldn't matter.  Be aware that many of the binary versions of MySQL store
+their data files in /var which on many installations (particularly common with
+linux installations) is part of a smaller root partition.  If you decide to
+build from sources you can easily set the dataDir as an option to configure.
+
+  If you've installed from source or non-package (RPM, deb, etc.) binaries
+you'll want to make sure to add mysqld to your init scripts so the server
+daemon will come back up whenever your machine reboots.
+
+1.2. Perl (5.004 or greater)
+
+  Any machine that doesn't have perl on it is a sad machine indeed.  Perl
+for *nix systems can be gotten in source form from http://www.perl.com.
+
+  Perl is now a far cry from the the single compiler/interpreter binary it
+once. It now includes a great many required modules and quite a few other
+support files.  If you're not up to or not inclined to build perl from source,
+you'll want to install it on your machine using some sort of packaging system
+(be it RPM, deb, or what have you) to ensure a sane install.  In the subsequent
+sections you'll be installing quite a few perl modules; this can be quite
+ornery if your perl installation isn't up to snuff.
+
+1.3. DBI Perl module
+
+   The DBI module is a generic Perl module used by other database related
+Perl modules.  For our purposes it's required by the MySQL-related
+modules.  As long as your Perl installation was done correctly the DBI
+module should be a breeze.  It's a mixed Perl/C module, but Perl's
+MakeMaker system simplifies the C compilation greatly.
+
+  Like almost all Perl modules DBI can be found on the Comprehensive Perl
+Archive Network (CPAN) at http://www.cpan.org .  The CPAN servers have a
+real tendency to bog down, so please use mirrors.  The current location at
+the time of this writing (02/17/99) can be found in Appendix A.
+
+  Quality, general Perl module installation instructions can be found on
+the CPAN website, but basically you'll just need to:
+
+	1. Untar the module tarball -- it should create its own directory
+	2. Enter the following commands:
+		perl Makefile.PL
+		make
+		make test
+		make install
+
+   If everything went ok that should be all it takes.  For the vast
+majority of perl modules this is all that's required.
+
+1.4 Data::Dumper Perl module
+
+   The Data::Dumper module provides data structure persistence for Perl
+(similar to Java's serialization).  It comes with later sub-releases of
+Perl 5.004, but a re-installation just to be sure it's available won't
+hurt anything.
+
+   Data::Dumper is used by the MySQL related Perl modules.  It can be
+found on CPAN (link in Appendix A) and can be installed by following the
+same four step make sequence used for the DBI module.
+
+1.5. MySQL related Perl module collection
+
+   The Perl/MySQL interface requires a few mutually-dependent perl
+modules.  These modules are grouped together into the the
+Msql-Mysql-modules package.  This package can be found at CPAN (link in
+Appendix A).  After the archive file has been downloaded it should be
+untarred.
+
+   The MySQL modules are all build using one make file which is generated
+by running:
+
+	make Makefile.PL
+
+   The MakeMaker process will ask you a few questions about the desired
+compilation target and your MySQL installation.  For many of the questions
+the provided default will be adequate.
+
+   When asked if your desired target is the MySQL or mSQL packages
+selected the MySQL related ones.  Later you will be asked if you wish to
+provide backwards compatibility with the older MySQL packages; you must
+answer YES to this question.  The default will be no, and if you select it
+things won't work later.
+
+   A host of 'localhost' should be fine and a testing user of 'test'
+should find itself with sufficient access to run tests on the 'test'
+database which MySQL created upon installation.  If 'make test' and 'make
+install' go through without errors you should be ready to go as far as
+database connectivity is concerned.
+
+1.6. TimeDate Perl module collection
+
+   Many of the more common date/time/calendar related Perl modules have
+been grouped into a bundle similar to the MySQL modules bundle. This
+bundle is stored on the CPAN under the name TimeDate.  A (hopefully
+current) link can be found in Appendix A.  The component module we're most
+interested in is the Date::Format module, but installing all of them is
+probably a good idea anyway.  The standard Perl module installation
+instructions should work perfectly for this simple package.
+
+1.7. GD Perl module (1.18 or greater)
+
+   The GD library was written by Thomas Boutel a long while ago to
+programatically generate images in C.  Since then it's become almost a
+defacto standard for programatic image construction.  The Perl bindings to
+it found in the GD library are used on a million web pages to generate
+graphs on the fly.  That's what bugzilla will be using it for so you'd
+better install it if you want any of the graphing to work.
+  Actually bugzilla uses the Graph module which relies on GD itself, but
+isn't that always the way with OOP.  At any rate, you can find the GD
+library on CPAN (link in Appendix A) and it installs beautifully in the
+usual fashion.
+
+1.8. Chart::Base Perl module (0.99 or greater)
+
+   The Chart module provides bugzilla with on-the-fly charting abilities.
+It can be installed in the usual fashion after it has been fetched from
+CPAN where it is found as the Chart-x.x... tarball in a directory to be
+listed in Appendix A.
+
+1.9. HTTP server
+
+   You have a freedom of choice here - Apache, Netscape or any other server on
+UNIX would do. The only thing - to make configuration easier you'd better run
+HTTP daemon on the same machine that you run MySQL server on.  (Theoretically,
+it's possible to always use MySQL in a remote manner, but we don't know of
+anyone who has done that with Bugzilla yet.)
+
+   You'll want to make sure that your web server will run any file with the
+.cgi extension as a cgi and not just display it.  If you're using apache that
+means uncommenting the following line in the srm.conf file:
+
+	AddHandler cgi-script .cgi
+
+   With apache you'll also want to make sure that within the access.conf
+file the line:
+
+	Options ExecCGI
+
+is in the stanza that covers the directories you intend to put the
+bugzilla .html and .cgi files into.
+
+2. Installing the Bugzilla Files
+
+   You should untar the bugzilla files into a directory that you're
+willing to make writable by the default web server user (probably
+'nobody').  You may decide to put the files off of the main web space for
+your web server or perhaps off of /usr/local with a symbolic link in the
+web space that points to the bugzilla directory.  At any rate, just dump
+all the files in the same place (optionally omitting the CVS directory if
+it accidentally got tarred up with the rest of bugzilla) and make sure
+you can get at the files in that directory through your web server.
+
+   Once all the files are in a web accessible directory, make that
+directory writable by your webserver's user (which may require just
+making it world writable).  Inside this main bugzilla directory issue the
+following commands:
+
+	touch comments
+	touch nomail
+	touch mail
+	
+   Make sure the commands, nomail, and mail files are writable by the
+webserver too.
+
+   Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
+to the correct location of your perl executable (probably /usr/bin/perl).  Or,
+you'll have to hack all the .cgi files to change where they look for perl.
+
+3. Setting Up the MySQL database
+
+   After you've gotten all the software installed and working you're ready
+to start preparing the database for its life as a the back end to a high
+quality bug tracker.
+
+    First, you'll want to fix MySQL permissions.  Bugzilla always logs in as
+user "bugs", with no password.  That needs to work.  MySQL permissions are a
+deep, nasty complicated thing.  I've just turned them off.  If you want to do
+that, too, then the magic is to do run "mysql mysql", and feed it commands like
+this (replace all instances of HOSTNAME with the name of the machine mysql is
+running on):
+
+	DELETE * FROM host;
+	DELETE * FROM user;
+	INSERT INTO host VALUES ('localhost','%','Y','Y','Y','Y','Y','Y');
+	INSERT INTO host VALUES (HOSTNAME,'%','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES ('localhost','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES (HOSTNAME,'','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES (HOSTNAME,'root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+	INSERT INTO user VALUES ('localhost','','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
+
+This run of "mysql mysql" may need some extra parameters to deal with whatever
+database permissions were set up previously.  In particular, you might have to say "mysql -uroot mysql", and give it an appropriate password.
+
+For much more information about MySQL permissions, see the MySQL documentation.
+
+   Next we'll create the bugs database in MySQL.  This is done using the
+'mysql' command line client.  This client allows one to funnel SQL
+statements into the MySQL server directly.  It's usage summary is
+available by running:
+
+	mysql --help
+
+from the command line.
+
+   Once you've begun mysql you'll see a 'mysql>' prompt.  At the prompt you
+should enter:
+
+	create database bugs;
+	quit  
 
 
-1.2 HTTP server
 
-You have a freedom of choice here - Apache, Netscape or any other
-server on UNIX would do. The only thing - to make configuration easier
-you'd better run HTTP daemon on the same machine that you run MySQL
-server on. Make sure that you can access 'bugs' database with user
-id you're running the daemon with. 
-
-globals.pl:     $::db = Mysql->Connect("localhost", "bugs", "nobody", "")
-
-In globals.pl, the database connect call uses a mysql account
-name "bugs" (third argument to Mysql->Connect) to access the 
-bugs database. You may have to hack the code to use "nobody" 
-or whatever your HTTP server is running as.
+   To create the tables necessary for bug tracking and to minimally
+populate the bug tracking system you'll need to run the eight shell
+scripts found in your bugzilla directory that begin with 'make'.  These
+scripts load data into the database by piping input into the mysql
+command.
 
 
-1.3 Perl
+   When calling the eight scripts order doesn't matter, but this one is
+fine:
 
-    MySQL used to come with a perl module.  More recent versions do
-not; they count on you grabbing the DBI package from CPAN.  So, if you
-are installing a new version of MySQL, you will probably also need to
-grab the following:
+	./makeactivitytable.sh
+	./makebugtable.sh
+	./makecctable.sh
+	./makecomponenttable.sh
+	./makelogincookiestable.sh
+	./makeproducttable.sh
+	./makeprofilestable.sh
+	./makeversiontable.sh
 
-ftp://ftp.cpan.org/pub/CPAN/authors/id/TIMB/DBI-1.06.tar.gz
-ftp://ftp.cpan.org/pub/CPAN/authors/id/JWIED/Msql-Mysql-modules-1.2017.tar.gz
+   After running those you've got a nearly empty copy of the mozilla bug
+tracking setup.
 
-   For Mysql support, the Msql-Mysql-modules (for 1.2017, at least)
-uses DBI, so that will have to be installed first (0.93 or later).
-Then, when making the Makefile for the Msql-Mysql modules, you will
-be asked which DB to support.  Only Mysql is necessary.  Also, you
-will be asked if you want to install the "MysqlPerl emulation".  You
-must say yes for Bugzilla to work.
+4. Tweaking the Bugzilla->MySQL Connection Data
 
-This assumes, of course, that you do not have a version of "MysqlPerl"
-already installed.
+   If you have played with MySQL permissions, rather than just opening it
+wide open as described above, then you may need to tweak the Bugzilla 
+code to connect appropriately.
+
+   In order for bugzilla to be able to connect to the MySQL database
+you'll have to tell bugzilla where the database server is, what database
+you're connecting to, and whom to connect as.  Simply open up the
+global.pl file in the bugzilla directory and find the line that begins
+like:
+
+	$::db = Mysql->Connect("
+
+   That line does the actual database connection.  The Connect method
+takes four parameters which are (with appropriate values):
+
+	1. server's host: just use "localhost"
+	2. database name: "bugs" if you're following these directions
+	3. MySQL username: whatever you created for your webserver user
+		probably "nobody"
+	4. Password for the MySQL account in item 3.
+
+Just fill in those values and close up global.pl
+
+5. Setting the Maintainer Information
+
+    Before the last file level configuration can be done you'll have to create
+a data/params file.  This file is created when the first bugzilla page is
+accessed that needs it.  The easiest way is to go visit the "query.cgi"
+bugzilla page.  After that, the data subdirectory should have been created, and
+the data/params file should have appeared.
+
+    Within that directory you'll find a file called 'params'.  params contains
+all sorts of juicy things that you'll be tempted to change, but don't bother --
+there's a nice web form to change all except the maintainer's email address.
+Find the line that begins with "$::param{'maintainer'}" and set the
+maintainer's email address to your own.
+
+    Now, you can create your own bugzilla account.  To do so, just try to "add
+a bug" from the main bugzilla menu (now available from your system through your
+web browser!).  You'll be prompted for logon info, and you should enter your
+email address and then select 'mail me my password'.  When you get the password
+mail, log in with it.  Don't finish entering that new bug; instead, go to the
+query page (off of the bugzilla main menu) where you'll now find a 'edit
+parameters' option which is filled with editable treats.
+
+6. Setting Up the Whining Cron Job (Optional)
+
+   By now you've got a fully functional bugzilla, but what good are bugs
+if they're not annoying?  To help make those bugs more annoying you can
+set up bugzilla's automatic whining system.  This can be done by adding
+the following command as a daily crontab entry (for help on that see that
+crontab man page):
+
+	cd <your-bugzilla-directory> ; ./whineatnews.pl
+
+7. Bug Graphs (Optional)
+
+   As long as you installed the GD and Graph::Base Perl modules you might
+as well turn on the nifty bugzilla bug reporting graphs.  Just add the
+command:
+	
+	cd <your-bugzilla-directory> ; ./collectstats.pl
+
+as a nightly entry to your crontab and after two days have passed you'll
+be able to view bug graphs from the Bug Reports page.
+
+---------[ Appendices ]-----------------------
+
+Appendix A. Required Software Download Links
+
+   All of these sites are current as of February 17, 1999.  Hopefully
+they'll stay current for a while.
+
+MySQL: http://www.mysql.org
+
+Perl: http://www.perl.org
+
+CPAN: http://www.cpan.org
+
+DBI Perl module: ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/DBI/
+
+Data::Dumper module:
+	ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Data/
+
+MySQL related Perl modules:
+	ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Mysql/
+
+TimeDate Perl module collection:
+	ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Date/
 
 
-2. Tweaking the Tools
+GD Perl module: ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/GD/
 
-  All scripts look in /usr/bonsaitools/bin for perl. Make 
-the appropriate links or modify the paths in each script.
-
-   Make sure the directory containing the binaries is writable by the 
-web server.  Bugzilla keeps some temporary files here.
-
-  Create an empty file in that directory named "comments"; make sure
-it is writable by the web server.  Also, create empty files named
-"nomail" and "mail".
-
-3. Setting up database
-
-First, run mysql, and tell it "create database bugs;".
-
-Now, you should be run all six scripts named make*.sh.  This creates the
-database tables and populates them a teeny bit.
+Chart::Base module:
+	ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Chart/
 
 
-4. Setting the parameters
+Appendix B. Modifying Your Running System
 
-At this point, you ought to be able to go and browse some pages.  But you'd
-like to customize some things.
+   Bugzilla optimizes database lookups by storing all relatively static
+information in the versioncache file, located in the data/ subdirectory
+under your installation directory (we said before it needs to be writable,
+right?!)
 
-Create yourself an account.  (Try to enter a new bug, and it will
-prompt you for your login.  Give it your email address, and have it
-mail you your password.)  Go visit the query page; that ought to force
-the creation of the "data/params" file in your installation dir.  Edit the
-data/params file, and change the line that sets "$::param{'maintainer'}" to
-have your email address as the maintainer.  Go visit the query page
-again; there should now be a link at the bottom that invites you to
-edit the parameters.  (If you have cookies turned off, you'll have to
-go to editparams.cgi manually.)
-
-Tweak the parameters to taste.  Be careful.
-
-
-5. Set up the whining cron job.
-
-It's a good idea to set up a daily cronjob that does
-
-	cd <your-installation-dir> ; ./whineatnews.pl
-
-This causes email that gets sent to anyone who has a NEW bug that
-hasn't been touched for several days.  For more info, see the
-whinedays and whinemail parameters.
-
-
-6. Modifying your running system
-
-Bugzilla optimizes database lookups by storing all relatively static
-information in the versioncache file, located in the data/
-subdirectory under your installation directory (we said before it
-needs to be writable, right?!)
-
-If you make a change to the structural data in your database (the
+   If you make a change to the structural data in your database (the
 versions table for example), or to the "constants" encoded in
 defparams.pl, you will need to remove the cached content from the data
-directory (by doing a "rm data/versioncache"), or your changes won't
-show up!
+directory (by doing a "rm data/versioncache"), or your changes won't show
+up!
 
-That file gets automatically regenerated whenever it's more than an
-hour old, so Bugzilla will eventually notice your changes by itself,
-but generally you want it to notice right away, so that you can test
-things.
+   That file gets automatically regenerated whenever it's more than an
+hour old, so Bugzilla will eventually notice your changes by itself, but
+generally you want it to notice right away, so that you can test things.
 
 
-7. Optional: Bug Graphs
+Appendix C. History
 
-Place collectstats.pl in your crontab once/day to take a snapshot
-of the number of open, assigned and reopened bugs for every 
-product. The tool will create a data/mining directory and append 
-the count to a file named for the product. After at least two points 
-of data are available, you can view a graph from the Bug Reports page. 
+   This document was originally adapted from the Bonsai installation
+instructions by Terry Weissman <terry@mozilla.org>.
+
+   The February 25, 1999 re-write was done by Ry4an Brase
+<ry4an@ry4an.org>, with some edits by Terry Weissman.
