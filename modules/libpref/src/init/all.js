@@ -509,8 +509,7 @@ pref("network.http.connect.timeout",  30);	// in seconds
 pref("network.http.request.timeout", 120);	// in seconds
 
 // Headers
-pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1");
-
+pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5");
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
 // Controls whether we send HTTPS referres to other HTTPS sites.
