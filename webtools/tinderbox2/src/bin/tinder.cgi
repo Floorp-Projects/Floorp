@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:24:32 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/24 14:57:19 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -533,7 +533,7 @@ sub write_stats {
  my ($run_time) = sprintf ("%.2f",         # round
                            ($end_time - $TIME)/60);
 
- print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
+# print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
 
  return ;
 }
