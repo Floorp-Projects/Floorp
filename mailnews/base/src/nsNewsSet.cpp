@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #include "MailNewsTypes.h"
 #include "nsNewsSet.h"
 #include "prprf.h"

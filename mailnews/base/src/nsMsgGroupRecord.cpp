@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
 
 #include "nsMsgGroupRecord.h"
 

@@ -15,10 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "msgCore.h"    // precompiled header...
+
 #include "MailNewsTypes.h"
 #include "nsUInt32Array.h"
-#include "xp_qsort.h"
-#include "xp.h"
+#include "xp_qsort.h"   // XXX we need to remove this dependency
+#include "xp.h"			// XXX  we need to remove this dependency..
 
 
 nsUInt32Array::nsUInt32Array()

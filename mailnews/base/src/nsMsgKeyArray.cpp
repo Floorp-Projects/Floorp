@@ -17,6 +17,9 @@
  */
 // nsMsgKeyArray.cpp : implementation file
 //
+
+#include "msgCore.h"    // precompiled header...
+
 #include "nsMsgKeyArray.h"
 
 

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #include "nsISupports.h"
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"	 

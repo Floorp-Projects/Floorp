@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #include "nsMsgLocalMailFolder.h"	 
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
