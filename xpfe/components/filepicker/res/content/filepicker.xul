@@ -25,9 +25,11 @@
 
 <box align="horizontal" flex="1">
   <tree id="directoryList" onclick="onClick(event);" flex="1">
-    <treecol/>
-    <treecol/>
-    <treecol/>
+    <treecolgroup>
+      <treecol flex="1"/>
+      <treecol flex="1"/>
+      <treecol flex="1"/>
+    </treecolgroup>
     <treehead>
       <treerow>
         <treecell class="treecell-header" value="Name"/>
