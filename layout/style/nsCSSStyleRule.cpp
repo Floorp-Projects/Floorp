@@ -435,7 +435,7 @@ protected:
   nsICSSDeclaration*  mDeclaration;
   nsICSSStyleSheet*   mSheet;
 
-friend CSSStyleRuleImpl;
+friend class CSSStyleRuleImpl;
 };
 
 CSSImportantRule::CSSImportantRule(nsICSSStyleSheet* aSheet, nsICSSDeclaration* aDeclaration)
