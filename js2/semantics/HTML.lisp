@@ -96,6 +96,7 @@
 (define-html 'th 1 0 0 1 :indent 2)
 (define-html 'title 1 0 0 1)
 (define-html 'tr 1 0 0 1 :indent 2)
+(define-html 'tt 0 0 0 0)
 (define-html 'u 0 0 0 0)
 (define-html 'ul 1 1 1 2 :indent 2)
 (define-html 'var 0 0 0 0)
@@ -506,6 +507,7 @@
     ;Inline Styles
     (:script (script (type "text/javascript")))
     (:symbol (span (class "symbol")))
+    (:external-name tt)
     (:character-literal code)
     (:character-literal-control (span (class "control")))
     (:terminal (span (class "terminal")))
