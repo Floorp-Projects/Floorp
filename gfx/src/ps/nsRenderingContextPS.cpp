@@ -131,7 +131,7 @@ PS_State :: ~PS_State()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextPS, nsIRenderingContext)
+NS_IMPL_ISUPPORTS1(nsRenderingContextPS, nsIRenderingContext)
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h

@@ -48,7 +48,7 @@
 #include <math.h>
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextBeOS, nsIRenderingContext)
+NS_IMPL_ISUPPORTS1(nsRenderingContextBeOS, nsIRenderingContext)
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 

@@ -58,7 +58,7 @@
 #include <gdk/gdkwindow.h>
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextGTK, nsIRenderingContext)
+NS_IMPL_ISUPPORTS1(nsRenderingContextGTK, nsIRenderingContext)
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 

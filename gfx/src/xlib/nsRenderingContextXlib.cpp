@@ -58,7 +58,7 @@
 
 #define NS_TO_XLIBRGB_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextXlib, nsIRenderingContext)
+NS_IMPL_ISUPPORTS1(nsRenderingContextXlib, nsIRenderingContext)
 
 #ifdef PR_LOGGING 
 static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
