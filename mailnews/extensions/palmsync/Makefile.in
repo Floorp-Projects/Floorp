@@ -24,12 +24,20 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+README  = palm.html
+
 include $(DEPTH)/config/autoconf.mk
 
 DIRS		= build public src
 
 ifdef PALM_CDK_DIR
 DIRS		+= conduit
+
+install:: $(README)
+	$(INSTALL) $< $(DIST)/bin
+
+GARBAGE += $(DIST)/bin/$(README)
+
 else
 libs::
 	@echo " "
