@@ -2,52 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-
-<!-- These entity declarations will go into a separate, locale file at some point -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Image Properties">
-
-<!ENTITY locationFieldset.label "Image Location">
-<!ENTITY locationEditField.label "Image URL">
-<!ENTITY altTextEditField.label "Alternative Text">
-<!ENTITY chooseButton.label "Choose File...">
-
-<!ENTITY pixelsPopup.value "pixels">
-<!ENTITY percentPopup.value "percent">
-
-<!ENTITY dimensionsFieldset.label "Dimensions">
-<!ENTITY originalSizeRadio.label "Original Size">
-<!ENTITY customSizeRadio.label "Custom Size">
-<!ENTITY heightEditField.label "Height">
-<!ENTITY widthEditField.label "Width">
-<!ENTITY constrainCheckbox.label "Constrain">
-
-<!ENTITY alignment.label "Align Text to Image">
-<!ENTITY bottomPopup.value "at the bottom">
-<!ENTITY topPopup.value "at the top">
-<!ENTITY centerPopup.value "in the center">
-<!ENTITY wrapRightPopup.value "wrap around right side">
-<!ENTITY wrapLeftPopup.value "wrap around left side">
-<!ENTITY bottomIcon.url "chrome://editor/skin/images/ED_imgalignbottom.gif">
-<!ENTITY topIcon.url "chrome://editor/skin/images/ED_imgaligntop.gif">
-<!ENTITY centerIcon.url "chrome://editor/skin/images/ED_imgalignmiddle.gif">
-<!ENTITY wrapRightIcon.url "chrome://editor/skin/images/ED_imgalignleft.gif">
-<!ENTITY wrapLeftIcon.url "chrome://editor/skin/images/ED_imgalignright.gif">
-
-<!ENTITY spacingFieldset.label "Spacing">
-<!ENTITY leftrightEditField.label "Left and Right">
-<!ENTITY topBottomEditField.label "Top and Bottom">
-<!ENTITY borderEditField.label "Solid Border">
-
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">
-<!ENTITY MoreButton.label "More">
-<!ENTITY FewerButton.label "Fewer">
-
-]>
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
 
 
 <!-- dialog containing a control requiring initial setup -->
@@ -131,7 +86,7 @@
         <button id="MoreFewerButton" 
             class="disabled" 
             onclick="onMoreFewer()">
-          &MoreButton.label;
+          &FewerButton.label;
         </button>  
       </td>
       <td/>
@@ -312,7 +267,7 @@
                 <label class="disabled" 
                     for="imageleftrightInput"
                     id="leftrightLabel">
-                  &leftrightEditField.label;
+                  &leftRightEditField.label;
                 </label>
 
               </td>
