@@ -1,0 +1,5 @@
+messenger.jar:
+    content/spam/contents.rdf
+    content/spam/menuOverlay.js
+    content/spam/menuOverlay.xul
+    content/spam/primaryToolbar.css
