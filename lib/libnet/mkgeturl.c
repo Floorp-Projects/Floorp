@@ -318,11 +318,6 @@ MODULE_PRIVATE CacheUseEnum NET_CacheUseMethod=CU_CHECK_PER_SESSION;
 #define MULT_ALL_HEADER_COUNT   2
 #define MAX_ALL_HEADER_COUNT    16000
 
-#ifndef XP_MAC
-	/* I don't want these annoying asserts in the Mac build but in case some other platform does... */
-	#define DO_ANNOYING_ASSERTS_IN_STUBS	1
-#endif
-
 MODULE_PRIVATE time_t NET_StartupTime=0;
 
 MODULE_PRIVATE XP_Bool NET_ProxyAcLoaded = FALSE;
