@@ -51,6 +51,10 @@ ifdef XPCOM_USE_LEA
 CSRCS += malloc.c
 endif
 
+ifeq ($(OS_TARGET),OS2)
+CPPSRCS         += nsOS2VACLegacy.cpp
+endif
+
 ifdef GC_LEAK_DETECTOR
 EXTRA_DSO_LIBS = boehm
 endif
