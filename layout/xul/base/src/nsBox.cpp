@@ -331,8 +331,8 @@ nsBox::MarkStyleChange(nsBoxLayoutState& aState)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     /*
-    nsFrame::CreateAndPostReflowCommand(aState.PresShell(), this, 
-      nsHTMLReflowCommand::StyleChange, nsnull, nsnull, nsnull);
+    aState.PresShell()->AppendReflowCommand(this, eReflowType_StyleChanged,
+                                            nsnull);
     return NS_OK;
     */
     return GetParent()->ReflowDirtyChild(aState.PresShell(), this);
@@ -396,9 +396,8 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
       if (GetStateBits() & NS_FRAME_REFLOW_ROOT) {
-        nsFrame::CreateAndPostReflowCommand(aState.PresShell(), this,
-                                            eReflowType_ReflowDirty,
-                                            nsnull, nsnull, nsnull);
+        aState.PresShell()->AppendReflowCommand(this, eReflowType_ReflowDirty,
+                                                nsnull);
         return NS_OK;
       }
 

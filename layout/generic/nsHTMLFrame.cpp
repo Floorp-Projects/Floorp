@@ -288,11 +288,8 @@ CanvasFrame::AppendFrames(nsIAtom*        aListName,
     mFrames.AppendFrame(nsnull, aFrameList);
 
     // Generate a reflow command to reflow the newly inserted frame
-    nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
-    if (NS_SUCCEEDED(rv)) {
-      GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
-    }
+    rv = GetPresContext()->PresShell()->
+          AppendReflowCommand(this, eReflowType_ReflowDirty, nsnull);
   }
 
   return rv;
@@ -339,12 +336,8 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
     mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
     // Generate a reflow command so we get reflowed
-    nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
-    if (NS_SUCCEEDED(rv)) {
-      GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
-    }
-
+    rv = GetPresContext()->PresShell()->
+          AppendReflowCommand(this, eReflowType_ReflowDirty, nsnull);
   } else {
     rv = NS_ERROR_FAILURE;
   }
@@ -468,10 +461,7 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
     nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
     if (command) {
       // Get the reflow type
-      nsReflowType reflowType;
-      command->GetType(reflowType);
-
-      switch (reflowType) {
+      switch (command->Type()) {
       case eReflowType_ReflowDirty:
         isDirtyChildReflow = PR_TRUE;
         break;

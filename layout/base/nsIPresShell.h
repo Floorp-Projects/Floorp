@@ -84,7 +84,6 @@ class nsILayoutHistoryState;
 class nsIReflowCallback;
 class nsISupportsArray;
 class nsIDOMNode;
-class nsHTMLReflowCommand;
 class nsIStyleFrameConstruction;
 class nsIStyleSheet;
 class nsCSSFrameConstructor;
@@ -323,7 +322,10 @@ public:
   /**
    * Reflow commands
    */
-  NS_IMETHOD AppendReflowCommand(nsHTMLReflowCommand* aReflowCommand) = 0;
+  NS_IMETHOD AppendReflowCommand(nsIFrame*    aTargetFrame,
+                                 nsReflowType aReflowType,
+                                 nsIAtom*     aChildListName) = 0;
+  // XXXbz don't we need a child list name on this too?
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsReflowType* aCmdType) = 0;
   NS_IMETHOD CancelAllReflowCommands() = 0;
 

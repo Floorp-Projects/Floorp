@@ -236,11 +236,9 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
 
       // Reflow the new caption frame. It's already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames
-      nsHTMLReflowCommand* reflowCmd;
-  
-      rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
-      if (NS_SUCCEEDED(rv))
-        GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
+      rv = GetPresContext()->
+          PresShell()->AppendReflowCommand(this, eReflowType_ReflowDirty,
+                                           nsnull);
     }
   }
   else {
@@ -264,8 +262,6 @@ NS_IMETHODIMP
 nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
                                nsIFrame*       aOldFrame)
 {
-  nsresult rv;
-
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame can't be removed so this should be the caption
   NS_PRECONDITION(nsLayoutAtoms::captionList == aListName, "can't remove inner frame");
@@ -290,11 +286,9 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
   }
 
   // Generate a reflow command so we get reflowed
-  nsHTMLReflowCommand* reflowCmd;
-
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
-  if (NS_SUCCEEDED(rv))
-    GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
+  GetPresContext()->PresShell()->AppendReflowCommand(this,
+                                                     eReflowType_ReflowDirty,
+                                                     nsnull);
 
   return NS_OK;
 }
@@ -1305,9 +1299,7 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
       mInnerTableFrame == aChildFrame && childRS.reason == eReflowReason_Incremental) {
     nsHTMLReflowCommand* command = childRS.path->mReflowCommand;
     if (command) {
-      nsReflowType type;
-      command->GetType(type);
-      *aNeedToReflowCaption = eReflowType_StyleChanged == type;
+      *aNeedToReflowCaption = eReflowType_StyleChanged == command->Type();
     }
   }
 
@@ -1454,9 +1446,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsPresContext*           aPresContext
   nsReflowReason reflowReason = eReflowReason_Incremental;
   nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
   if (command) {
-    nsReflowType reflowCommandType;
-    command->GetType(reflowCommandType);
-    switch(reflowCommandType) {
+    switch(command->Type()) {
       case eReflowType_StyleChanged:
         needInnerReflow = PR_TRUE;
         break;
@@ -1605,12 +1595,7 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsPresContext*           aPresContext,
                                           nsReflowStatus&           aStatus)
 {
   nsresult rv = NS_OK;
-  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
-  nsReflowType type;
-  command->GetType(type);
-  nsIFrame* objectFrame;
-  command->GetChildFrame(objectFrame); 
-  switch (type) {
+  switch (aReflowState.path->mReflowCommand->Type()) {
   case eReflowType_ReflowDirty:
      rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
@@ -1658,9 +1643,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsPresContext*           aPresContext,
   nsReflowReason reflowReason = eReflowReason_Incremental;
   nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
   if (command) {
-    nsReflowType type;
-    command->GetType(type);
-    if (eReflowType_StyleChanged == type) {
+    if (eReflowType_StyleChanged == command->Type()) {
       reflowReason = eReflowReason_StyleChange;
       reflowCaption = PR_TRUE;
     }

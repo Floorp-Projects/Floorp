@@ -48,7 +48,6 @@
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsVoidArray.h"
-#include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsFrameManager.h"
 #include "nsIPresShell.h"
@@ -416,8 +415,7 @@ nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
   // child because the frame may have more than one child
   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
-  nsFrame::CreateAndPostReflowCommand(aPresShell, aChild, 
-    eReflowType_ReflowDirty, nsnull, nsnull, nsnull);
+  aPresShell->AppendReflowCommand(aChild, eReflowType_ReflowDirty, nsnull);
 
   return NS_OK;
 }

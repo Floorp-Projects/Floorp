@@ -685,10 +685,7 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
 
     // See if it's targeted at us
     if (command) {
-      nsReflowType reflowType;
-      command->GetType(reflowType);
-      
-      switch (reflowType) {
+      switch (command->Type()) {
         
       case eReflowType_StyleChanged:
         kidReason = eReflowReason_StyleChange;

@@ -10193,14 +10193,9 @@ nsCSSFrameConstructor::StyleChangeReflow(nsPresContext* aPresContext,
       aFrame = GetIBContainingBlockFor(aFrame);
 
     // Target a style-change reflow at the frame.
-    nsHTMLReflowCommand *reflowCmd;
-    nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                          eReflowType_StyleChanged,
-                                          nsnull,
-                                          aAttribute);
-  
-    if (NS_SUCCEEDED(rv))
-      aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
+    aPresContext->PresShell()->AppendReflowCommand(aFrame,
+                                                   eReflowType_StyleChanged,
+                                                   nsnull);
   }
 
   return NS_OK;

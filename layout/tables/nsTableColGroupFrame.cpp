@@ -419,11 +419,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsHTMLReflowMetrics&     aDesiredS
 {
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
-  nsReflowType type;
-  aReflowState.path->mReflowCommand->GetType(type);
-  nsIFrame *objectFrame;
-  aReflowState.path->mReflowCommand->GetChildFrame(objectFrame); 
-  switch (type)
+  switch (aReflowState.path->mReflowCommand->Type())
   {
   case eReflowType_StyleChanged :
     rv = IR_StyleChanged(aDesiredSize, aReflowState, aStatus);

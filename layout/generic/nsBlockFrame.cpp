@@ -593,9 +593,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
         // We're the target.
         reflow += " (";
 
-        nsReflowType type;
-        command->GetType(type);
-        reflow += kReflowCommandType[type];
+        reflow += kReflowCommandType[command->Type()];
 
         reflow += ")";
       }
@@ -760,12 +758,10 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     nsReflowPath *path = aReflowState.path;
     nsHTMLReflowCommand *command = path->mReflowCommand;
     if (command) {
-      nsReflowType type;
-      command->GetType(type);
 #ifdef NOISY_REFLOW_REASON
-      printf("type=%s ", kReflowCommandType[type]);
+      printf("type=%s ", kReflowCommandType[command->Type()]);
 #endif
-      switch (type) {
+      switch (command->Type()) {
       case eReflowType_StyleChanged:
         rv = PrepareStyleChangedReflow(state);
         break;
@@ -2080,9 +2076,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       nsHTMLReflowCommand *command = aState.mReflowState.path->mReflowCommand;
       if (command) {
-        nsReflowType type;
-        command->GetType(type);
-        printf(": type=%s(%d)", kReflowCommandType[type], type);
+        printf(": type=%s(%d)", kReflowCommandType[command->Type()],
+               command->Type());
       }
     }
     else {
@@ -2991,13 +2986,8 @@ nsBlockFrame::AttributeChanged(nsIContent*     aChild,
     // XXX Not sure if this is necessary anymore
     RenumberLists(presContext);
 
-    nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 eReflowType_ContentChanged,
-                                 nsnull,
-                                 aAttribute);
-    if (NS_SUCCEEDED(rv))
-      presContext->PresShell()->AppendReflowCommand(reflowCmd);
+    rv = presContext->PresShell()->
+      AppendReflowCommand(this, eReflowType_ContentChanged, nsnull);
   }
   else if (nsHTMLAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
@@ -3024,13 +3014,8 @@ nsBlockFrame::AttributeChanged(nsIContent*     aChild,
         // XXX Not sure if this is necessary anymore
         blockParent->RenumberLists(presContext);
 
-        nsHTMLReflowCommand* reflowCmd;
-        rv = NS_NewHTMLReflowCommand(&reflowCmd, blockParent,
-                                     eReflowType_ContentChanged,
-                                     nsnull,
-                                     aAttribute);
-        if (NS_SUCCEEDED(rv))
-          presContext->PresShell()->AppendReflowCommand(reflowCmd);
+        rv = presContext->PresShell()->
+          AppendReflowCommand(blockParent, eReflowType_ContentChanged, nsnull);
       }
     }
   }
@@ -6549,13 +6534,9 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
         // although we should. We can't use the NS_FRAME_HAS_DIRTY_CHILDREN
         // flag, because that's used to indicate whether in-flow children are
         // dirty...
-        nsHTMLReflowCommand* reflowCmd;
-        nsresult          rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                                       eReflowType_ReflowDirty);
-        if (NS_SUCCEEDED(rv)) {
-          reflowCmd->SetChildListName(mAbsoluteContainer.GetChildListName());
-          aPresShell->AppendReflowCommand(reflowCmd);
-        }
+        nsresult rv = aPresShell->
+          AppendReflowCommand(this, eReflowType_ReflowDirty,
+                              mAbsoluteContainer.GetChildListName());
 
 #ifdef DEBUG
         if (gNoisyReflow) {
@@ -6599,8 +6580,7 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     // post a dirty children reflow command targeted at yourself
     mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
-    nsFrame::CreateAndPostReflowCommand(aPresShell, this, 
-      eReflowType_ReflowDirty, nsnull, nsnull, nsnull);
+    aPresShell->AppendReflowCommand(this, eReflowType_ReflowDirty, nsnull);
 
 #ifdef DEBUG
     if (gNoisyReflow) {
@@ -6970,9 +6950,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
     // the block, in which case, we propagate that to its children.
     nsHTMLReflowCommand *command = rs.path->mReflowCommand;
     if (command) {
-      nsReflowType type;
-      command->GetType(type);
-      if (type == eReflowType_StyleChanged)
+      if (command->Type() == eReflowType_StyleChanged)
         reason = eReflowReason_StyleChange;
     }
   }
