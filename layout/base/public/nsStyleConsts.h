@@ -214,6 +214,11 @@
 #define NS_STYLE_BG_CLIP_PADDING          1
 
 // See nsStyleBackground
+#define NS_STYLE_BG_INLINE_POLICY_EACH_BOX      0
+#define NS_STYLE_BG_INLINE_POLICY_CONTINUOUS    1
+#define NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX  2
+
+// See nsStyleBackground
 #define NS_STYLE_BG_ORIGIN_BORDER         0
 #define NS_STYLE_BG_ORIGIN_PADDING        1
 #define NS_STYLE_BG_ORIGIN_CONTENT        2

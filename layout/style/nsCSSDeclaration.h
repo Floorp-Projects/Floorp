@@ -177,6 +177,7 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue      mBackPositionY;
   nsCSSValue      mBackClip;
   nsCSSValue      mBackOrigin;
+  nsCSSValue      mBackInlinePolicy;
 };
 
 struct nsRuleDataColor : public nsCSSColor {

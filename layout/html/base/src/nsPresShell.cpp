@@ -109,6 +109,7 @@
 #include "nsIDOMRange.h"
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
+#include "nsCSSRendering.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -7319,6 +7320,8 @@ PresShellViewEventListener::DidRefreshRegion(nsIViewManager *aViewManager,
                                     nsIRegion *aRegion,
                                     PRUint32 aUpdateFlags)
 {
+  nsCSSRendering::DidPaint();
+
   return RestoreCaretVisibility();
 }
 
@@ -7339,6 +7342,8 @@ PresShellViewEventListener::DidRefreshRect(nsIViewManager *aViewManager,
                                   const nsRect *aRect,
                                   PRUint32 aUpdateFlags)
 {
+  nsCSSRendering::DidPaint();
+
   return RestoreCaretVisibility();
 }
 

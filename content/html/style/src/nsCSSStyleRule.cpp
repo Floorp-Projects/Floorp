@@ -2142,6 +2142,10 @@ MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRu
     if (aColor.mBackClip.GetUnit() == eCSSUnit_Null && ourColor->mBackClip.GetUnit() != eCSSUnit_Null)
       aColor.mBackClip = ourColor->mBackClip;
 
+    // background-inline-policy: enum, inherit
+    if (aColor.mBackInlinePolicy.GetUnit() == eCSSUnit_Null && ourColor->mBackInlinePolicy.GetUnit() != eCSSUnit_Null)
+      aColor.mBackInlinePolicy = ourColor->mBackInlinePolicy;
+
     // background-origin: enum, inherit
     if (aColor.mBackOrigin.GetUnit() == eCSSUnit_Null && ourColor->mBackOrigin.GetUnit() != eCSSUnit_Null)
       aColor.mBackOrigin = ourColor->mBackOrigin;

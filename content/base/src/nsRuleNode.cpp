@@ -892,6 +892,7 @@ static const PropertyCheckData BackgroundCheckProperties[] = {
   CHECKDATA_PROP(nsRuleDataColor, mBackClip, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsRuleDataColor, mBackColor, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsRuleDataColor, mBackImage, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsRuleDataColor, mBackInlinePolicy, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsRuleDataColor, mBackOrigin, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsRuleDataColor, mBackPositionX, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsRuleDataColor, mBackPositionY, CHECKDATA_VALUE, PR_FALSE)
@@ -3252,6 +3253,17 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   }
   else if (eCSSUnit_Initial == colorData.mBackClip.GetUnit()) {
     bg->mBackgroundClip = NS_STYLE_BG_CLIP_BORDER;
+  }
+
+  // background-inline-policy: enum, inherit, initial
+  if (eCSSUnit_Enumerated == colorData.mBackInlinePolicy.GetUnit()) {
+    bg->mBackgroundInlinePolicy = colorData.mBackInlinePolicy.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == colorData.mBackInlinePolicy.GetUnit()) {
+    bg->mBackgroundInlinePolicy = parentBG->mBackgroundInlinePolicy;
+  }
+  else if (eCSSUnit_Initial == colorData.mBackInlinePolicy.GetUnit()) {
+    bg->mBackgroundInlinePolicy = NS_STYLE_BG_INLINE_POLICY_CONTINUOUS;
   }
 
   // background-origin: enum, inherit, initial

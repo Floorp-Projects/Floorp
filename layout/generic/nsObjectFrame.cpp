@@ -808,13 +808,13 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     // Sometimes, a frame doesn't have a background color or is transparent. In this
     // case, walk up the frame tree until we do find a frame with a background color
     for (nsIFrame* frame = this; frame; frame->GetParent(&frame)) {
-      const nsStyleBackground*  color;
-      frame->GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)color);
-      if (!color->BackgroundIsTransparent()) {  // make sure we got an actual color
+      const nsStyleBackground* background;
+      ::GetStyleData(frame, &background);
+      if (!background->IsTransparent()) {  // make sure we got an actual color
         nsCOMPtr<nsIWidget> win;
         view->GetWidget(*getter_AddRefs(win));
         if (win)
-          win->SetBackgroundColor(color->mBackgroundColor);
+          win->SetBackgroundColor(background->mBackgroundColor);
         break;
       }
     }
