@@ -5654,6 +5654,8 @@ NavigatorImpl::GetPlatform(nsAString& aPlatform)
     // XXX not sure what to do about Mac OS X on non-PPC, but since Comm 4.x
     // doesn't know about it this will actually be backward compatible
     aPlatform = NS_LITERAL_STRING("MacPPC");
+#elif defined(XP_OS2)
+    aPlatform = NS_LITERAL_STRING("OS/2");
 #else
     // XXX Communicator uses compiled-in build-time string defines
     // to indicate the platform it was compiled *for*, not what it is
