@@ -95,9 +95,9 @@ static nsModuleComponentInfo components[] =
 
 
     { 
-        PSM_UI_HANLDER_CLASSNAME, 
+        PSM_UI_HANDLER_CLASSNAME, 
         NS_PSMUIHANDLER_CID, 
-        PSM_UI_HANLDER_CONTRACTID,  
+        PSM_UI_HANDLER_CONTRACTID,  
         nsPSMUIHandlerImpl::CreatePSMUIHandler
     },
 
@@ -106,13 +106,6 @@ static nsModuleComponentInfo components[] =
         NS_SECURE_BROWSER_UI_CID, 
         NS_SECURE_BROWSER_UI_CONTRACTID, 
         nsSecureBrowserUIImpl::Create 
-    },
-
-    { 
-        NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME, 
-        NS_SECURE_BROWSER_DOCOBSERVER_CID, 
-        NS_SECURE_BROWSER_DOCOBSERVER_CONTRACTID, 
-        nsSecureBrowserUIImpl::Create
     },
 
     { 
@@ -176,7 +169,7 @@ static nsModuleComponentInfo components[] =
     },
     {
       "Entropy Collector",
-      NS_ENTROPYCOLLECTOR_CID,
+      NS_PSMCOMPONENT_CID,
       NS_ENTROPYCOLLECTOR_CONTRACTID,
       nsPSMComponent::CreatePSMComponent      
     }

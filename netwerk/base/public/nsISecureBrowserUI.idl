@@ -37,8 +37,4 @@ interface nsSecureBrowserUI : nsISupports
 %{C++
 #define NS_SECURE_BROWSER_UI_CONTRACTID "@mozilla.org/secure_browser_ui;1"
 #define NS_SECURE_BROWSER_UI_CLASSNAME "Mozilla Secure Browser UI Handler"
-
-#define NS_SECURE_BROWSER_UI_CID \
-{ 0x10fe7ea0, 0xa10a, 0x11d3, {0x8c, 0x7c, 0x00, 0x60, 0x97, 0x92, 0x27, 0x8c}}
-
 %}

@@ -43,13 +43,8 @@
 #include "nsISecurityEventSink.h"
 #include "nsWeakReference.h"
 
-#define NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME "Mozilla Secure Browser Doc Observer"
-
-#define NS_SECURE_BROWSER_DOCOBSERVER_CID \
-{0x91003b94, 0x1dd2, 0x11b2, \
-{0xaf, 0xc1, 0xc2, 0xc9, 0xc2, 0x15, 0x98, 0xf0}}
-
-#define NS_SECURE_BROWSER_DOCOBSERVER_CONTRACTID "@mozilla.org/secure_browser_docobserver;1"
+#define NS_SECURE_BROWSER_UI_CID \
+{ 0xcc75499a, 0x1dd1, 0x11b2, {0x8a, 0x82, 0xca, 0x41, 0x0a, 0xc9, 0x07, 0xb8}}
 
 
 class nsSecureBrowserUIImpl : public nsSecureBrowserUI,

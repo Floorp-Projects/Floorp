@@ -24,11 +24,6 @@
  */
 %{C++
 
-// Define CID {29a1d8b6-ac5a-11d4-9978-00b0d02354a0}
-#define NS_ENTROPYCOLLECTOR_CID \
- { 0x29a1d8b6, 0xac5a, 0x11d4, \
-  { 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0 } }
-
 /*
  * If anyone wants to collect the entropy distributed by the
  * event handler, they'll have to implement this CONTRACTID
