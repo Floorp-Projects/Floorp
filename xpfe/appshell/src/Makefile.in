@@ -36,7 +36,6 @@ GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
 		  string \
-		  xpcom_obsolete \
 		  widget \
 		  docshell \
 		  webshell \

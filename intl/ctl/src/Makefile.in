@@ -35,7 +35,7 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCtlLEModule
 
-REQUIRES	= xpcom_obsolete \
+REQUIRES	= \
 		  xpcom \
 		  string \
 		  uconv \
@@ -65,8 +65,7 @@ else
 endif
 
 EXTRA_DSO_LDOPTS += \
+	$(LIBS_DIR) \
 	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
-	-L$(DIST)/lib \
 	$(EXTRA_DSO_LIBS) \
 	$(NULL)

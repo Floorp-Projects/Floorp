@@ -28,7 +28,6 @@
 
 #include "nspr.h"
 #include "nsIFactory.h"
-#include "nsIRegistry.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"

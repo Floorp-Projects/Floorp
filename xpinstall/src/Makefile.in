@@ -39,7 +39,6 @@ MODULE_NAME	= nsSoftwareUpdate
 GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  jar \
 		  caps \
@@ -127,7 +126,6 @@ EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NULL)

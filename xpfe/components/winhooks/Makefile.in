@@ -36,7 +36,6 @@ CPPSRCS		= nsWindowsHooks.cpp
 
 REQUIRES	= \
 		  xpcom \
-		  xpcom_obsolete \
 		  string \
 		  dom \
 		  windowwatcher \

@@ -34,7 +34,6 @@ MODULE_NAME	= nsUCvMathModule
 GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  uconv \
 		  $(NULL)

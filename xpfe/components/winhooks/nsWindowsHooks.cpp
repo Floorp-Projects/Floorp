@@ -55,9 +55,6 @@
 #include "nsString.h"
 #include "nsMemory.h"
 #include "nsNetUtil.h"
-// The order of these headers is important on Win2K because CreateDirectory
-// is |#undef|-ed in nsFileSpec.h, so we need to pull in windows.h for the
-// first time after nsFileSpec.h.
 #include "nsWindowsHooksUtil.cpp"
 #include "nsWindowsHooks.h"
 #include <windows.h>
@@ -75,7 +72,6 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#include "nsIFileStream.h"
 
 #define RUNKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 
