@@ -340,7 +340,7 @@ sub BuildClientDist()
 
 	#UNICHARUTIL
 	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",				"$distdirectory:unicharutil");
-	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",			"$distdirectory:idl:");
+#	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	#LOCALE
 	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
@@ -439,9 +439,6 @@ sub BuildClientDist()
 	#DBM
     _InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
 	
-	#LAYERS (IS THIS STILL NEEDED)
-	_InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
-
 	if ( $main::NECKO )
 	{
 	#NETWERK
