@@ -1069,7 +1069,7 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
 
 
 #if 0
-#ifdef SCC_TESTS
+#ifdef STANDALONE_STRING_TESTS
 template <class CharT, class TraitsT>
 basic_ostream<CharT, TraitsT>&
 operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<CharT>& s )

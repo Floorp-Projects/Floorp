@@ -36,7 +36,7 @@
 
 #include "nsCRT.h"
 
-#ifndef RICKG_TESTBED
+#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
 #include "nsUnicharUtilCIID.h"
 #include "nsIServiceManager.h"
 #include "nsICaseConversion.h"
@@ -704,7 +704,7 @@ PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){
 
 //----------------------------------------------------------------------------------------
 
-#ifndef RICKG_TESTBED
+#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
 class HandleCaseConversionShutdown3 : public nsIShutdownListener {
 public :
    NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
@@ -759,7 +759,7 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
   PRUnichar* end = cp + aCount-1;
   PRInt32 result=0;
 
-#ifndef RICKG_TESTBED
+#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
   static CCaseConversionServiceInitializer  gCaseConversionServiceInitializer;
 
   // I18N code begin
