@@ -486,7 +486,7 @@ FILE,
 
 OR
 
-mysql> GRANT ALL PRIVELEGES 
+mysql> GRANT ALL PRIVILEGES 
 		ON keystone.*
 		TO &lt;$sys_dbuser name>@localhost
 		IDENTIFIED BY '(password)'

@@ -170,7 +170,7 @@ sub EmitFormElements ($$$$$)
                 print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
                 print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
             }
-            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these privileges</B></TD>\n";
             while (MoreSQLData()) {
                 my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
                 print "</TR><TR>\n";
@@ -184,7 +184,7 @@ sub EmitFormElements ($$$$$)
             }
         }
     } else {
-        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Priveleges:</TH><TD><TABLE><TR>";        
+        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Privileges:</TH><TD><TABLE><TR>";        
         print "<TD COLSPAN=3>The new user will be inserted into groups " .
           "based on their userregexps.<BR>To change the group " .
           "permissions for this user, you must edit the account after ".

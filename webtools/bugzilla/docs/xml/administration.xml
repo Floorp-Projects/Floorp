@@ -249,7 +249,7 @@
 	  the bug; if the <quote>watcher</quote> would not normally be
 	  allowed to view a bug, the watcher cannot get around the
 	  system by setting herself up to watch the bugs of someone
-	  with bugs outside her priveleges.  She would still only
+	  with bugs outside her privileges.  She would still only
 	  receive email updates for those bugs she could normally
 	  view.</para>
 	<para>For Bugzilla sites which require strong inter-Product
@@ -587,7 +587,7 @@
 	      <emphasis>Editusers</emphasis>: This flag allows a user
 	      do what you're doing right now: edit other users. This
 	      will allow those with the right to do so to remove
-	      administrator priveleges from other users or grant them
+	      administrator privileges from other users or grant them
 	      to themselves.  Enable with care.
 	    </para>
 	  </listitem>
@@ -1280,7 +1280,7 @@ because he is not in Group3.
 
 Bug7 can be seen by anyone who is in Group1, Group2, and Group3.  This
 is only User4.  All of the others are missing at least one of those
-group priveleges, and thus cannot see the bug.
+group privileges, and thus cannot see the bug.
 
 Bug8 can be seen by anyone who is in Group1, Group2, Group3, and
 Group4.  There is nobody in all four of these groups, so nobody can
