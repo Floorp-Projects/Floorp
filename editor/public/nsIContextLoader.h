@@ -44,6 +44,8 @@
 class nsIContextLoader  : public nsISupports{
  public:
 
+  static const nsIID& IID() { static nsIID iid = NS_ICONTEXTLOADER_IID; return iid; }
+
   /**
    * Lookup(PRUint32 aIndex1, PRUint32 aIndex2, PRUint32 **aResult)
    * @param aIndex1 first index to lookup the result
