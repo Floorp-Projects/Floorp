@@ -18,7 +18,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s):
 
 
 # You need to put this in your CVSROOT directory, and check it in.  (Change the
@@ -30,7 +30,7 @@
 #
 # Replace "/cvsroot" with the name of the CVS root directory, and
 # "my.bonsai.machine" with the name of the machine Bonsai runs on.
-# Now, on my.bonsai.machine, add a mail alias so that mail sent to 
+# Now, on my.bonsai.machine, add a mail alias so that mail sent to
 # "bonsai-checkin-daemon" will get piped to handleCheckinMail.tcl.
 # The first argument to handleCheckinMail.tcl is the directory that
 # bonsai is installed in.
@@ -47,7 +47,7 @@ $repository_tag = '';
 $mailhost = 'localhost';
 $rlogcommand = '/usr/bin/rlog';
 
-@mailto=();
+@mailto = ();
 @changed_files = ();
 @added_files = ();
 @removed_files = ();
@@ -62,14 +62,14 @@ $STATE_LOG     = 4;
 
 &process_args;
 
-if ($flag_debug ){
+if ($flag_debug) {
     print STDERR "----------------------------------------------\n";
     print STDERR "LOGINFO:\n";
     print STDERR " pwd:" . `pwd` . "\n";
     print STDERR " Args @ARGV\n";
-    print STDERR " CVSROOT: $cvsroot\n";                      
-    print STDERR " who: $username\n";                      
-    print STDERR " Repository: $repository\n";                      
+    print STDERR " CVSROOT: $cvsroot\n";
+    print STDERR " who: $username\n";
+    print STDERR " Repository: $repository\n";
     print STDERR " mailto: @mailto\n";
     print STDERR "----------------------------------------------\n";
 }
@@ -81,7 +81,7 @@ if ($flag_tagcmd) {
     &process_cvs_info;
 }
 
-if( $flag_debug){
+if ($flag_debug) {
     print STDERR "----------------------------------------------\n";
     print STDERR @outlist;
     print STDERR "----------------------------------------------\n";
@@ -98,47 +98,47 @@ sub process_args {
         if ($arg eq '-d') {
             $flag_debug = 1;
             print STDERR "Debug turned on...\n";
-	} elsif ($arg eq '-r') {
-	    $cvsroot = shift @ARGV;
+        } elsif ($arg eq '-r') {
+            $cvsroot = shift @ARGV;
         } elsif ($arg eq '-t') {
-	    $flag_tagcmd = 1;
-	    last;		# Keep the rest in ARGV; they're handled later.
-	} elsif ($arg eq '-h') {
-	    $mailhost = shift @ARGV;
-	} else {
+            $flag_tagcmd = 1;
+            last;              # Keep the rest in ARGV; they're handled later.
+        } elsif ($arg eq '-h') {
+            $mailhost = shift @ARGV;
+        } else {
             push(@mailto, $arg);
         }
     }
-    if( $repository eq '' ){
-	open( REP, "<CVS/Repository");
-	$repository = <REP>;
-	chop($repository);
-	close(REP);
+    if ($repository eq '') {
+        open(REP, "<CVS/Repository");
+        $repository = <REP>;
+        chop($repository);
+        close(REP);
     }
     $repository =~ s:^$cvsroot/::;
     $repository =~ s:^$envcvsroot/::;
-    
+
     if (!$flag_tagcmd) {
-	if( open( REP, "<CVS/Tag") ) {
-	    $repository_tag = <REP>;
-	    chop($repository_tag);
-	    close(REP);
-	}
+        if (open(REP, "<CVS/Tag")) {
+            $repository_tag = <REP>;
+            chop($repository_tag);
+            close(REP);
+        }
     }
 }
 
 sub get_loginfo {
 
-    if( $flag_debug){
+    if ($flag_debug) {
         print STDERR "----------------------------------------------\n";
     }
 
     # Iterate over the body of the message collecting information.
     #
     while (<STDIN>) {
-        chop;			# Drop the newline
+        chop;                  # Drop the newline
 
-        if( $flag_debug){
+        if ($flag_debug) {
             print STDERR "$_\n";
         }
 
@@ -151,16 +151,16 @@ sub get_loginfo {
         if (/^Removed Files/)  { $state = $STATE_REMOVED; next; }
         if (/^Log Message/)    { $state = $STATE_LOG;     next; }
 
-        s/^[ \t\n]+//;		# delete leading whitespace
-        s/[ \t\n]+$//;		# delete trailing whitespace
-        
+        s/^[ \t\n]+//;         # delete leading whitespace
+        s/[ \t\n]+$//;         # delete trailing whitespace
+
         if ($state == $STATE_CHANGED && !(/^Tag:/)) { push(@changed_files, split); }
         if ($state == $STATE_ADDED && !(/^Tag:/))   { push(@added_files,   split); }
         if ($state == $STATE_REMOVED && !(/^Tag:/)) { push(@removed_files, split); }
         if ($state == $STATE_LOG)     { push(@log_lines,     $_); }
     }
-    
-    if( $flag_debug){
+
+    if ($flag_debug) {
         print STDERR "----------------------------------------------\n"
                      . "changed files: @changed_files\n"
                      . "added files: @added_files\n"
@@ -172,24 +172,24 @@ sub get_loginfo {
 
 sub process_cvs_info {
     local($d,$fn,$rev,$mod_time,$sticky,$tag,$stat,@d,$l,$rcsfile);
-    if (!open(ENT, "<CVS/Entries.Log" )) {
-	open(ENT, "<CVS/Entries");
+    if (!open(ENT, "<CVS/Entries.Log")) {
+        open(ENT, "<CVS/Entries");
     }
     $time = time;
-    while( <ENT> ){
+    while (<ENT>) {
         chop;
         ($d,$fn,$rev,$mod_time,$sticky,$tag) = split(/\//);
         $stat = 'C';
-        for $i (@changed_files, "BEATME.NOW", @added_files ) {
-            if( $i eq "BEATME.NOW" ){ $stat = 'A'; }
-            if($i eq $fn ){
+        for $i (@changed_files, "BEATME.NOW", @added_files) {
+            if ($i eq "BEATME.NOW") { $stat = 'A'; }
+            if ($i eq $fn) {
                 $rcsfile = shell_escape("$envcvsroot/$repository/$fn,v");
-                if( ! -r $rcsfile ){
+                if (! -r $rcsfile) {
                     $rcsfile = shell_escape("$envcvsroot/$repository/Attic/$fn,v");
                 }
-                open(LOG, "$rlogcommand -N -r$rev $rcsfile |") 
+                open(LOG, "$rlogcommand -N -r$rev $rcsfile |")
                         || print STDERR "dolog.pl: Couldn't run rlog\n";
-                while(<LOG>){
+                while (<LOG>) {
                     if (/^date:.* author: ([^;]*);.*/) {
                         $username = $1;
                         if (/lines: \+([0-9]*) -([0-9]*)/) {
@@ -198,20 +198,22 @@ sub process_cvs_info {
                         }
                     }
                 }
-                close( LOG );
-                push(@outlist, ("$stat|$time|$username|$cvsroot|$repository|$fn|$rev|$sticky|$tag|$lines_added|$lines_removed\n"));
+                close(LOG);
+                push(@outlist,
+                     ("$stat|$time|$username|$cvsroot|$repository|$fn|$rev|$sticky|$tag|$lines_added|$lines_removed\n"));
             }
         }
     }
     close(ENT);
 
     for $i (@removed_files) {
-        push( @outlist, ("R|$time|$username|$cvsroot|$repository|$i|||$repository_tag\n"));
+        push(@outlist,
+             ("R|$time|$username|$cvsroot|$repository|$i|||$repository_tag\n"));
     }
 
-    push (@outlist, "LOGCOMMENT\n");
-    push (@outlist, join("\n",@log_lines));
-    push (@outlist, "\n:ENDLOGCOMMENT\n");
+    push(@outlist, "LOGCOMMENT\n");
+    push(@outlist, join("\n",@log_lines));
+    push(@outlist, "\n:ENDLOGCOMMENT\n");
 }
 
 
@@ -220,12 +222,12 @@ sub process_tag_command {
     $time = time;
     $str = "Tag|$cvsroot|$time";
     while (@ARGV) {
-	$part = shift @ARGV;
-	$str .= "|" . $part;
+        $part = shift @ARGV;
+        $str .= "|" . $part;
     }
-    push (@outlist, ("$str\n"));
+    push(@outlist, ("$str\n"));
 }
-	
+
 
 
 sub do_commitinfo {
@@ -236,31 +238,31 @@ sub do_commitinfo {
 
 sub get_response_code {
     my ($expecting) = @_;
-#     if ($flag_debug) {
-# 	print STDERR "SMTP: Waiting for code $expecting\n";
-#     }
+#   if ($flag_debug) {
+#       print STDERR "SMTP: Waiting for code $expecting\n";
+#   }
     while (1) {
-	my $line = <S>;
-# 	if ($flag_debug) {
-# 	    print STDERR "SMTP: $line";
-# 	}
-	if ($line =~ /^[0-9]*-/) {
-	    next;
-	}
-	if ($line =~ /(^[0-9]*) /) {
-	    my $code = $1;
-	    if ($code == $expecting) {
-# 		if ($flag_debug) {
-# 		    print STDERR "SMTP: got it.\n";
-# 		}
-		return;
-	    }
-	    die "Bad response from SMTP -- $line";
-	}
+        my $line = <S>;
+#       if ($flag_debug) {
+#           print STDERR "SMTP: $line";
+#       }
+        if ($line =~ /^[0-9]*-/) {
+            next;
+        }
+        if ($line =~ /(^[0-9]*) /) {
+            my $code = $1;
+            if ($code == $expecting) {
+#               if ($flag_debug) {
+#                   print STDERR "SMTP: got it.\n";
+#               }
+                return;
+            }
+            die "Bad response from SMTP -- $line";
+        }
     }
 }
-	    
-    
+
+
 
 
 sub mail_notification {
@@ -286,16 +288,16 @@ sub mail_notification {
     print S "MAIL FROM: bonsai-daemon\@$hostname\n";
     get_response_code(250);
     foreach $i (@mailto) {
-	print S "RCPT TO: $i\n";
-	get_response_code(250);
+        print S "RCPT TO: $i\n";
+        get_response_code(250);
     }
     print S "DATA\n";
     get_response_code(354);
     # Get one line starting with "354 ".
     if ($flag_tagcmd) {
-	print S "Subject:  cvs tag in $repository\n";
+        print S "Subject:  cvs tag in $repository\n";
     } else {
-	print S "Subject:  cvs commit to $repository\n";
+        print S "Subject:  cvs commit to $repository\n";
     }
     print S "\n";
     print S @outlist, "\n";
