@@ -787,6 +787,10 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
   return NS_OK;
 }
 
+//XXXbz this function does not deal well with something like "foo
+//!important" as the aPropValue.  It will parse the "foo" and set it
+//in the decl, then ignore the !important.  It should either fail to
+//parse this or do !important correctly....
 NS_IMETHODIMP
 CSSParserImpl::ParseProperty(const nsAString& aPropName,
                              const nsAString& aPropValue,

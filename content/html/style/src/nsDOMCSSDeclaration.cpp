@@ -244,8 +244,13 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
     return ParsePropertyValue(aPropertyName, aValue);
   }
 
-  return ParsePropertyValue(aPropertyName,
-                            aValue + NS_LITERAL_STRING("!") + aPriority);
+  // ParsePropertyValue does not handle priorities correctly -- it's
+  // optimized for speed.  And the priority is not part of the
+  // property value anyway.... So we have to use the full-blown
+  // ParseDeclaration()
+  return ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
+                          aValue + NS_LITERAL_STRING("!") + aPriority,
+                          PR_TRUE, PR_FALSE);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -282,7 +287,8 @@ NS_INTERFACE_MAP_END_AGGREGATED(fOuter)
   CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)          \
   {                                                                     \
     return NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, fOuter)->         \
-      SetProperty(NS_LITERAL_STRING(#name_), aValue, nsAutoString());   \
+      SetProperty(NS_LITERAL_STRING(#name_), aValue,                    \
+                  NS_LITERAL_STRING(""));                               \
   }
 
 #define CSS_PROP_INTERNAL(name_, id_, method_, hint_)  /* nothing */
