@@ -30,6 +30,13 @@
 #include "NSReg.h"
 #endif
 
+#ifdef XP_MAC
+#ifdef MOZ_NGLAYOUT
+#define IMPL_MAC_REPOSITORY
+#include "nsMacRepository.h"
+#endif
+#endif
+
 nsHashtable *NSRepository::factories = NULL;
 PRMonitor *NSRepository::monitor = NULL;
 
