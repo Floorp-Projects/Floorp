@@ -195,6 +195,7 @@ protected:
 
     BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
+    UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
 
 
     BOOL                    OnInputLangChange(HKL aHKL, LRESULT *oResult);			
@@ -231,10 +232,10 @@ protected:
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
     void GetNonClientBounds(nsRect &aRect);
-	void HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr=PR_TRUE);
-	void HandleStartComposition(HIMC hIMEContext);
-	void HandleEndComposition(void);
-	void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
+    void HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr=PR_TRUE);
+    void HandleStartComposition(HIMC hIMEContext);
+    void HandleEndComposition(void);
+    void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 
     NS_IMETHOD PasswordFieldEnter(PRUint32& oSavedState);
     NS_IMETHOD PasswordFieldExit(PRUint32 aRestoredState);

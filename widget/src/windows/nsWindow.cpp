@@ -1829,6 +1829,17 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
   return rv;
 }
 
+//-------------------------------------------------------------------------
+UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
+{
+  if (aNativeKeyCode == 0xBB) { // equals
+    return 0x3D;
+  } else if (aNativeKeyCode == 0xBA) { // semicolon
+    return 0x3B;
+  }
+
+  return aNativeKeyCode;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1846,7 +1857,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
   InitEvent(event, aEventType, &point); // this add ref's event.widget
 
   event.charCode = aCharCode;
-  event.keyCode  = aVirtualCharCode;
+  event.keyCode  = !mIMEIsComposing?MapFromNativeToDOM(aVirtualCharCode):aVirtualCharCode;
 
 #ifdef KE_DEBUG
   static cnt=0;
@@ -2064,8 +2075,8 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
     virtualKeyCode = 0;
   } 
   else 
-  {
-    if(virtualKeyCode < 0x20) 
+  { // 0x20 - SPACE, 0x3D - EQUALS
+    if(virtualKeyCode < 0x20 || virtualKeyCode == 0x3D) 
     {
       uniChar = 0;
     } 
