@@ -103,6 +103,7 @@ CSRCS =	SSLSocket.c \
         callbacks.c \
         SSLServerSocket.c \
         common.c \
+        javasock.c \
 	$(NULL)
 
 LIBRARY_NAME = jssssl

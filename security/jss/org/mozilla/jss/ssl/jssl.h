@@ -40,6 +40,7 @@ struct JSSL_SocketData {
     jobject certApprovalCallback; /* global ref */
     jobject clientCertSelectionCallback; /* global ref */
     char *clientCertNickname;
+    PRFilePrivate *jsock;
 };
 typedef struct JSSL_SocketData JSSL_SocketData;
 
@@ -114,5 +115,11 @@ typedef enum {LOCAL_SOCK, PEER_SOCK} LocalOrPeer;
 void
 JSSL_getSockAddr
     (JNIEnv *env, jobject self, PRNetAddr *addr, LocalOrPeer localOrPeer);
+
+PRFileDesc*
+JSS_SSL_javasockToPRFD(JNIEnv *env, jobject sockObj);
+
+jobject
+JSS_SSL_popException(PRFilePrivate *priv);
 
 #endif

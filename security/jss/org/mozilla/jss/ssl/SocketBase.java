@@ -61,8 +61,18 @@ class SocketBase {
 
     native byte[] socketCreate(Object socketObject,
         SSLCertificateApprovalCallback certApprovalCallback,
-        SSLClientCertificateSelectionCallback clientCertSelectionCallback)
+        SSLClientCertificateSelectionCallback clientCertSelectionCallback,
+        java.net.Socket javaSock, String host, int port)
             throws SocketException;
+
+    byte[] socketCreate(Object socketObject,
+        SSLCertificateApprovalCallback certApprovalCallback,
+        SSLClientCertificateSelectionCallback clientCertSelectionCallback)
+            throws SocketException
+    {
+        return socketCreate(socketObject, certApprovalCallback,
+            clientCertSelectionCallback, null, null, 0);
+    }
 
     native void socketBind(byte[] addrBA, int port) throws SocketException;
 
@@ -182,4 +192,31 @@ class SocketBase {
     void useCache(boolean b) throws SocketException {
         setSSLOption(SSL_NO_CACHE, !b);
     }
+
+/*
+    static Throwable processExceptions(Throwable topException,
+        Vector bottomExceptions)
+    {
+      try {
+        StringBuffer strBuf;
+        Enumeration bottoms = bottomExceptions.elements();
+
+        strBuf = new StringBuffer( topException.toString() );
+
+        while( bottoms.hasMoreElements() ) {
+            strBuf.append(" --> ");
+            strBuf.append( ((Throwable)bottoms.nextElement()).toString() );
+        }
+
+        Class excepClass = topException.getClass();
+        Class stringClass = java.lang.String.class;
+        Constructor cons = excepClass.getConstructor(new Class[] {stringClass});
+
+        return (Throwable) cons.newInstance(new Object[] { strBuf.toString() });
+      } catch(Exception e ) {
+        Assert.notReached();
+        return topException;
+      }
+    }
+*/
 }

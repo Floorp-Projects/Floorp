@@ -230,6 +230,22 @@ public class SSLSocket extends java.net.Socket {
         socketConnect(address.getAddress(), hostname, port);
     }
 
+    public SSLSocket(java.net.Socket s, String host, int port,
+        SSLCertificateApprovalCallback certApprovalCallback,
+        SSLClientCertificateSelectionCallback clientCertSelectionCallback)
+            throws IOException
+    {
+        // create the socket
+        sockProxy =
+            new SocketProxy(
+                base.socketCreate(
+                    this, certApprovalCallback, clientCertSelectionCallback,
+                    s, host, port) );
+
+        base.setProxy(sockProxy);
+    }
+
+
     /**
      * @return The remote peer's IP address.
      */

@@ -54,18 +54,29 @@
 JNIEXPORT jbyteArray JNICALL
 Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     jobject sockObj, jobject certApprovalCallback,
-    jobject clientCertSelectionCallback)
+    jobject clientCertSelectionCallback, jobject javaSock, jstring host,
+    jint port)
 {
     jbyteArray sdArray = NULL;
     JSSL_SocketData *sockdata;
     SECStatus status;
     PRFileDesc *newFD;
 
-    /* create a TCP socket */
-    newFD = PR_NewTCPSocket();
-    if( newFD == NULL ) {
-        JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "PR_NewTCPSocket() returned NULL");
-        goto finish;
+    if( javaSock == NULL ) {
+        /* create a TCP socket */
+        newFD = PR_NewTCPSocket();
+        if( newFD == NULL ) {
+            JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
+                "PR_NewTCPSocket() returned NULL");
+            goto finish;
+        }
+    } else {
+        newFD = JSS_SSL_javasockToPRFD(env, javaSock);
+        if( newFD == NULL ) {
+            JSS_throwMsg(env, SOCKET_EXCEPTION,
+                "JSS_SSL_constructNewFD failed");   
+            goto finish;
+        }
     }
 
     sockdata = JSSL_CreateSocketData(env, sockObj, newFD);
@@ -78,6 +89,20 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     if( sockdata->fd == NULL ) {
         JSS_throwMsgPrErr(env, SOCKET_EXCEPTION, "SSL_ImportFD() returned NULL");
         goto finish;
+    }
+
+    if( host != NULL ) {
+        const char *chars;
+        int retval;
+        PR_ASSERT( javaSock != NULL );
+        chars = (*env)->GetStringUTFChars(env, host, NULL);
+        retval = SSL_SetURL(sockdata->fd, chars);
+        (*env)->ReleaseStringUTFChars(env, host, chars);
+        if( retval ) {
+            JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
+                "Failed to set SSL domain name");
+            goto finish;
+        }
     }
 
     status = SSL_OptionSet(sockdata->fd, SSL_SECURITY, PR_TRUE);
@@ -93,6 +118,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     if( status != SECSuccess ) {
         JSS_throwMsgPrErr(env, SOCKET_EXCEPTION,
             "Unable to install handshake callback");
+        goto finish;
     }
 
     /* setup the cert authentication callback */
@@ -434,3 +460,30 @@ finish:
         (*env)->ReleaseStringUTFChars(env, nickStr, nick);
     }
 }
+
+#if 0
+void
+JSS_SSL_processExceptions(JNIEnv *env, PRFilePrivate *priv)
+{
+    jthrowable currentExcep;
+    jthrowable excep;
+    currentExcep = (*env)->ExceptionOccurred(env);
+
+    if( currentExcep != NULL ) {
+        jobject strBuf;
+        jclass strBufClass;
+        jmethodID appendMethod;
+        jmethodID toStringMethod;
+
+        while( excep = JSS_SSL_popException(priv) ) {
+            /* append description to existing exception */
+        }
+    } else {
+        excep = JSS_SSL_popException(priv);
+        PR_ASSERT( excep == NULL );
+        (*env)->DeleteGlobalRef(env, excep);
+    }
+
+finish:
+}
+#endif
