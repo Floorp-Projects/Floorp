@@ -489,7 +489,7 @@
 #define HG27129
 #define HG21198 FALSE, FALSE
 #define HG26726
-#define HG21892
+#define HG21892 FALSE, FALSE
 #define HG28118
 #define HG26262
 #define HG79266
