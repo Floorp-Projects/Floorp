@@ -262,7 +262,7 @@ function isCommandSatisfied(e, command)
             return false;
         }
 
-        if (!e.server.isConnected)
+        if (e.network.state != NET_ONLINE)
         {
             e.parseError = MSG_ERR_NOT_CONNECTED;
             return false;
@@ -1727,7 +1727,6 @@ function cmdLeave(e)
         return;
     }
 
-    // FIXME: Smart param handling... //
     if (e.channelName)
     {
         if (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1)
@@ -1753,11 +1752,15 @@ function cmdLeave(e)
             {
                 if (e.channel)
                 {
+                    /* Their channel name was invalid, but we have a channel
+                     * view, so we'll assume they did "/leave part msg".
+                     */
                     e.reason = e.channelName + " " + e.reason;
                 }
                 else
                 {
-                    display("Huh?", MT_ERROR);
+                    display(getMsg(MSG_ERR_UNKNOWN_CHANNEL, e.channelName),
+                            MT_ERROR);
                     return;
                 }
             }
@@ -1766,13 +1769,19 @@ function cmdLeave(e)
         {
             // Valid prefix, so get real channel (if it exists...).
             e.channel = e.server.getChannel(e.channelName);
+            if (!e.channel)
+            {
+                display(getMsg(MSG_ERR_UNKNOWN_CHANNEL, e.channelName),
+                        MT_ERROR);
+                return;
+            }
         }
     }
 
     /* If it's not active, we're not actually in it, even though the view is
      * still here.
      */
-    if (e.channel && e.channel.active)
+    if (e.channel.active)
     {
         if (e.noDelete)
             e.channel.noDelete = true;

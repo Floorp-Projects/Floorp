@@ -499,7 +499,7 @@ function chan_getchannel(name)
 
     tname = this.toLowerCase(fromUnicode(name, this));
 
-    if (name in this.channels)
+    if (tname in this.channels)
         return this.channels[tname];
 
     return null;
