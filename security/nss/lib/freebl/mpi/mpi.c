@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.17 2000/08/10 21:43:16 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.18 2000/08/11 01:58:20 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -81,6 +81,8 @@ static const char *s_dmap_1 =
 
 unsigned long mp_allocs;
 unsigned long mp_frees;
+
+#define MP_CHECKOK(x) if (MP_OKAY > (res = (x))) goto CLEANUP
 
 /* {{{ Default precision manipulation */
 
@@ -136,6 +138,7 @@ mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
   ARGCHK(mp != NULL && prec > 0, MP_BADARG);
 
+  prec = MP_ROUNDUP(prec, s_mp_defprec);
   if((DIGITS(mp) = s_mp_alloc(prec, sizeof(mp_digit))) == NULL)
     return MP_MEM;
 
@@ -704,32 +707,30 @@ mp_err mp_add(const mp_int *a, const mp_int *b, mp_int *c)
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
-  if(SIGN(a) == SIGN(b)) { /* same sign:  add values, keep sign */
-    if((res = mp_init_copy(&tmp, a)) != MP_OKAY)
-      return res;
-
-    if((res = s_mp_add(&tmp, b)) != MP_OKAY)
-      goto CLEANUP;
-
-  } else if(s_mp_cmp(a, b) >= 0) {  /* different sign: a >= b   */
-    if((res = mp_init_copy(&tmp, a)) != MP_OKAY)
-      return res;
-
-    if((res = s_mp_sub(&tmp, b)) != MP_OKAY)
-      goto CLEANUP;
-
-  } else {                          /* different sign: a < b    */
-    if((res = mp_init_copy(&tmp, b)) != MP_OKAY)
-      return res;
-
-    if((res = s_mp_sub(&tmp, a)) != MP_OKAY)
-      goto CLEANUP;
+  MP_DIGITS(&tmp) = 0;
+  if (c == a) {
+    MP_CHECKOK( mp_init_copy(&tmp, a) );
+    a = &tmp;
+    if (c == b)
+      b = &tmp;
+  } else if (c == b) {
+    MP_CHECKOK( mp_init_copy(&tmp, b) );
+    b = &tmp;
   }
 
-  if(s_mp_cmp_d(&tmp, 0) == MP_EQ)
-    SIGN(&tmp) = ZPOS;
+  if(SIGN(a) == SIGN(b)) { /* same sign:  add values, keep sign */
+    MP_CHECKOK( mp_copy(a, c)  );
+    MP_CHECKOK( s_mp_add(c, b) );
+  } else if(s_mp_cmp(a, b) >= 0) {  /* different sign: a >= b   */
+    MP_CHECKOK( mp_copy(a, c)  );
+    MP_CHECKOK( s_mp_sub(c, b) );
+  } else {                          /* different sign: a < b    */
+    MP_CHECKOK( mp_copy(b, c)  );
+    MP_CHECKOK( s_mp_sub(c, a) );
+  }
 
-  s_mp_exch(&tmp, c);
+  if (s_mp_cmp_d(c, 0) == MP_EQ)
+    SIGN(c) = ZPOS;
 
 CLEANUP:
   mp_clear(&tmp);
@@ -751,41 +752,44 @@ mp_err mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
 {
   mp_int  tmp;
   mp_err  res;
+  int     diffSign;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
-  if(SIGN(a) != SIGN(b)) {
-    if((res = mp_init_copy(&tmp, a)) != MP_OKAY)
-      return res;
-
-    if((res = s_mp_add(&tmp, b)) != MP_OKAY)
-      goto CLEANUP;
-
-  } else if(s_mp_cmp(a, b) >= 0) {
-    if((res = mp_init_copy(&tmp, a)) != MP_OKAY)
-      return res;
-
-    if((res = s_mp_sub(&tmp, b)) != MP_OKAY)
-      goto CLEANUP;
-
-  } else {
-    if((res = mp_init_copy(&tmp, b)) != MP_OKAY)
-      return res;
-
-    if((res = s_mp_sub(&tmp, a)) != MP_OKAY)
-      goto CLEANUP;
-
-    SIGN(&tmp) = (SIGN(a) == NEG) ? ZPOS : NEG;
+  MP_DIGITS(&tmp) = 0;
+  if (a == b) {
+    mp_zero(c);
+    return MP_OKAY;
+  }
+  if (c == a) {
+    MP_CHECKOK( mp_init_copy(&tmp, a) );
+    a = &tmp;
+  } else if (c == b) {
+    MP_CHECKOK( mp_init_copy(&tmp, b) );
+    b = &tmp;
   }
 
-  if(s_mp_cmp_d(&tmp, 0) == 0)
-    SIGN(&tmp) = ZPOS;
+  if (MP_SIGN(a) != MP_SIGN(b)) {
+    MP_CHECKOK( mp_copy(a, c)  );
+    MP_CHECKOK( s_mp_add(c, b) );
+  } else if (!(diffSign = s_mp_cmp(a, b))) {
+    mp_zero(c);
+    res = MP_OKAY;
+  } else if (diffSign > 0) {
+    MP_CHECKOK( mp_copy(a, c)  );
+    MP_CHECKOK( s_mp_sub(c, b) );
+  } else {
+    MP_CHECKOK( mp_copy(b, c)  );
+    MP_CHECKOK( s_mp_sub(c, a) );
+    MP_SIGN(c) = !MP_SIGN(a);
+  }
 
-  s_mp_exch(&tmp, c);
+  if (s_mp_cmp_d(c, 0) == MP_EQ)
+    MP_SIGN(c) = MP_ZPOS;
 
 CLEANUP:
   mp_clear(&tmp);
-  return MP_OKAY;
+  return res;
 
 } /* end mp_sub() */
 
@@ -2038,8 +2042,6 @@ mp_err s_mp_almost_inverse(const mp_int *a, const mp_int *p, mp_int *c)
   mp_int d, f, g;
 
   ARGCHK(a && p && c, MP_BADARG);
-
-#define MP_CHECKOK(x) if (MP_OKAY > (res = (x))) goto CLEANUP
 
   MP_DIGITS(&d) = 0;
   MP_DIGITS(&f) = 0;
