@@ -1,14 +1,30 @@
 <?xml version="1.0"?> 
 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
         title="Saving file"
         onload="onLoad()"
         onunload="onUnload()">
 
     <html:script src="chrome://global/content/downloadProgress.js"/>
+
+    <!-- This is non-visible content that simply adds translatable string
+         into the document so that it is accessible to JS code.
+    -->
+    <html:div style="display:none">
+        <html:div id="dialog.strings.confirmCancel">&confirmCancel;</html:div>
+        <html:div id="dialog.strings.progressMsg">&progressMsg;</html:div>
+        <html:div id="dialog.strings.completeMsg">&completeMsg;</html:div>
+        <html:div id="dialog.strings.percentMsg">&percentMsg;</html:div>
+        <html:div id="dialog.strings.shortTimeFormat">&shortTimeFormat;</html:div>
+        <html:div id="dialog.strings.longTimeFormat">&longTimeFormat;</html:div>
+        <html:div id="dialog.strings.unknownTime">&unknownTime;</html:div>
+    </html:div>
 
     <html:table style="width:100%;">
 
@@ -36,7 +52,18 @@
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.status">
-                    &dialogStatus.label;
+                    &progressMsg;
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="right">
+                &timeElapsed;
+            </html:td>
+            <html:td align="left">
+                <html:span id="dialog.timeElapsed">
+                    00:00:00
                 </html:span>
             </html:td>
         </html:tr>
@@ -47,7 +74,7 @@
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.timeLeft">
-                    &dialogTimeLeft.label;
+                    00:00:00
                 </html:span>
             </html:td>
         </html:tr>
@@ -57,7 +84,7 @@
                 <progressmeter id="dialog.progress" mode="normal" value="0"
                                style="width:300px;height:16px;"/>
                 <html:span id="dialog.progressPercent" style="border-left:5px solid lightgray;">
-                    0%
+                    &percentMsg;
                 </html:span>
             </html:td>
         </html:tr>
