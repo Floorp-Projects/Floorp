@@ -51,7 +51,6 @@ EXPORTS =			\
 	nsICSSRule.h 	\
 	nsICSSGroupRule.h 	\
 	nsICSSStyleRule.h 	\
-	nsICSSCharsetRule.h \
 	nsICSSImportRule.h \
 	nsICSSMediaRule.h \
 	nsICSSNameSpaceRule.h \

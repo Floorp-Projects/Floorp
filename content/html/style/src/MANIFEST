@@ -3,7 +3,6 @@
 #
 nsCSSValue.h
 nsDOMCSSDeclaration.h
-nsICSSCharsetRule.h
 nsCSSDeclaration.h
 nsICSSGroupRule.h
 nsICSSImportRule.h
