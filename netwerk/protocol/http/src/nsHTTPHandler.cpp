@@ -79,6 +79,7 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAuthUrlParserCID, NS_AUTHORITYURLPARSER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 NS_IMPL_ISUPPORTS3(nsHTTPHandler,
                    nsIHTTPProtocolHandler,
@@ -113,10 +114,9 @@ static nsresult
 CategoryCreateService( const char *category )
 {
     nsresult rv = NS_OK;
-    int nFailed = 0;
-
-    nsCOMPtr<nsICategoryManager> categoryManager = do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    int nFailed = 0; 
+    nsCOMPtr<nsICategoryManager> categoryManager = do_GetService("mozilla.categorymanager.1", &rv);
+    if (!categoryManager) return rv;
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     rv = categoryManager->EnumerateCategory(category, getter_AddRefs(enumerator));
@@ -173,7 +173,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsIURI> url;
-    nsCOMPtr<nsIURLParser> urlparser;
+    nsCOMPtr<nsIURLParser> urlparser; 
     if (aBaseURI)
     {
         rv = aBaseURI->Clone(getter_AddRefs(url));
@@ -193,7 +193,6 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
         rv = url->SetURLParser(urlparser);
         if (NS_FAILED(rv)) return rv;
-
         rv = url->SetSpec((char*)aSpec);
     }
     if (NS_FAILED(rv)) return rv;
@@ -708,26 +707,10 @@ nsHTTPHandler::Init()
    
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
-    return CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
-}
-
-NS_METHOD
-nsHTTPHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-    if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-    nsHTTPHandler* handler = new nsHTTPHandler();
-    if (!handler) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(handler);
-    rv = handler->Init();
-    if (NS_FAILED(rv)) {
-        delete handler;
-        return rv;
-    }
-    rv = handler->QueryInterface(aIID, aResult);
-    NS_RELEASE(handler);
-    return rv;
+    CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
+    // if creating the category service fails, that doesn't mean we should fail to create
+    // the http handler
+    return NS_OK;
 }
 
 nsHTTPHandler::~nsHTTPHandler()

@@ -63,7 +63,6 @@ public:
 
     nsHTTPHandler();
     nsresult Init();
-    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
     /** 
     *   Pull out an existing transport from the list, or if none exists
