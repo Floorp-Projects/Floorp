@@ -37,12 +37,16 @@
 
 NS_DEF_PTR(nsIStyleContext);
 
+const nsIID kTableCellFrameCID = NS_TABLECELLFRAME_CID;
+
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebugNT = PR_FALSE;
 //#define   NOISY_STYLE
 //#define NOISY_FLOW
 #else
 static const PRBool gsDebug = PR_FALSE;
+static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
 /**
@@ -83,11 +87,6 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, mRect, *mySpacing, 0);
-    /*
-    printf("painting borders, size = %d %d %d %d\n", 
-            myBorder->mSize.left, myBorder->mSize.top, 
-            myBorder->mSize.right, myBorder->mSize.bottom);
-    */
   }
 
   // for debug...
@@ -228,9 +227,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
-  if (gsDebug==PR_TRUE)
-    printf("nsTableCellFrame::ResizeReflow: maxSize=%d,%d\n",
-           aReflowState.maxSize.width, aReflowState.maxSize.height);
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
+    printf("%p nsTableCellFrame::Reflow: maxSize=%d,%d\n",
+           this, aReflowState.maxSize.width, aReflowState.maxSize.height);
 
   mFirstContentOffset = mLastContentOffset = 0;
 
@@ -325,17 +324,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   mFirstChild->WillReflow(*aPresContext);
   aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
 
-  if (gsDebug==PR_TRUE)
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
     if (nsnull!=pMaxElementSize)
-      printf("  nsTableCellFrame::ResizeReflow: child returned desiredSize=%d,%d,\
+      printf("  %p cellFrame child returned desiredSize=%d,%d,\
              and maxElementSize=%d,%d\n",
-             kidSize.width, kidSize.height,
+             this, kidSize.width, kidSize.height,
              pMaxElementSize->width, pMaxElementSize->height);
     else
-      printf("  nsTableCellFrame::ResizeReflow: child returned desiredSize=%d,%d,\
+      printf("  %p cellFrame child returned desiredSize=%d,%d,\
              and maxElementSize=nsnull\n",
-             kidSize.width, kidSize.height);
+             this, kidSize.width, kidSize.height);
   }
 
   SetFirstContentOffset(mFirstChild);
@@ -359,7 +358,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   // the height can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
   if (NS_UNCONSTRAINEDSIZE!=cellHeight)
+  {
     cellHeight += topInset + bottomInset;
+  }
+  if (PR_TRUE==gsDebugNT)
+    printf("  %p cellFrame height set to %d from kidSize=%d and insets %d,%d\n",
+             this, cellHeight, kidSize.height, topInset, bottomInset);
   // next determine the cell's width
   cellWidth = kidSize.width;  // at this point, we've factored in the cell's style attributes
   if (NS_UNCONSTRAINEDSIZE!=cellWidth)
@@ -373,13 +377,15 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   if (nsnull!=aDesiredSize.maxElementSize)
   {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    aDesiredSize.maxElementSize->height += topInset + bottomInset;
-    aDesiredSize.maxElementSize->width += leftInset + rightInset;
+    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->height)
+      aDesiredSize.maxElementSize->height += topInset + bottomInset;
+    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->width)
+      aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
   
-  if (gsDebug==PR_TRUE)
-    printf("  nsTableCellFrame::ResizeReflow returning aDesiredSize=%d,%d\n",
-           aDesiredSize.width, aDesiredSize.height);
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
+    printf("  %p cellFrame returning aDesiredSize=%d,%d\n",
+           this, aDesiredSize.width, aDesiredSize.height);
 
 #ifdef NS_DEBUG
   //PostReflowCheck(result);
@@ -418,10 +424,10 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   aSpacingStyle.mBorder.SetBottom(width);
   aSpacingStyle.mBorder.SetRight(width);
 
-  aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_INSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_SOLID; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_SOLID; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_SOLID; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_SOLID; 
   
   nsTableFrame*     tableFrame = GetTableFrame();
   nsIStyleContext*  styleContext = nsnull;
@@ -523,13 +529,18 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   }
 
   // get border information from the table
-  if (tableSpacingStyle->mBorder.GetTopUnit() != eStyleUnit_Null)
+  if (tableSpacingStyle->mBorder.GetTopUnit() == eStyleUnit_Coord)
   {
-    nsStyleCoord borderSize;
-    tableSpacingStyle->mBorder.GetTop(borderSize);
-    border = borderSize.GetCoordValue();
+    nsStyleCoord borderWidth;
+    tableSpacingStyle->mBorder.GetTop(borderWidth);
+    if (0!=borderWidth.GetCoordValue())
+    {
+      // in HTML, cell borders are always 1 pixel by default
+      border = (nscoord)(1*(aPresContext->GetPixelsToTwips()));
+      MapHTMLBorderStyle(aPresContext, *spacingData, border);
+    }
   }
-  MapHTMLBorderStyle(aPresContext, *spacingData, border);
+  
 }
 
 void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
@@ -559,6 +570,19 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 }
 
 
+NS_METHOD
+nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kTableCellFrameCID)) {
+    *aInstancePtr = (void*) (this);
+    return NS_OK;
+  }
+  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 /* ----- static methods ----- */
 

@@ -22,3 +22,4 @@
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
 const nsIID kBlockFrameCID = NS_BLOCKFRAME_CID;
 const nsIID kIInlineFrameIID = NS_IINLINE_FRAME_IID;
+

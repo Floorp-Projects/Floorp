@@ -677,7 +677,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
     }
   }
   // border
-  GetTableBorder(this, aContext, aPresContext, PR_FALSE);
+  GetTableBorder(this, aContext, aPresContext);
 
   // align
   GetAttribute(nsHTMLAtoms::align, value);
@@ -711,6 +711,12 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
     tableStyle->mCellSpacing.SetCoordValue((nscoord)(p2t*(float)(value.GetPixelValue())));
   }
+  else
+  { // XXX: remove me as soon as we get this from the style sheet
+    if (nsnull==tableStyle)
+      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+    tableStyle->mCellSpacing.SetCoordValue((nscoord)(p2t*(float)2));
+  }
 
   // cols
   GetAttribute(nsHTMLAtoms::cols, value);
@@ -727,8 +733,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
 
 void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
                                  nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext,
-                                 PRBool aForCell)
+                                 nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad content arg");
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
@@ -743,7 +748,7 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
     float p2t = aPresContext->GetPixelsToTwips();
     nsStyleCoord twips;
-    if (aForCell || (value.GetUnit() == eHTMLUnit_Empty)) {
+    if (value.GetUnit() == eHTMLUnit_Empty) {
       twips.SetCoordValue(nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t)));
     }
     else {

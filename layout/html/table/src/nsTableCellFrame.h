@@ -25,6 +25,12 @@
 class nsCellLayoutData;
 struct nsStyleSpacing;
 
+/* eb42f7b0-079e-11d2-8f37-006008159b0c */
+#define NS_TABLECELLFRAME_CID \
+ {0xeb42f7b0, 0x079e, 0x11d2, {0x8f, 0x37, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
+
+extern const nsIID kTableCellFrameCID;
+
 /**
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame
@@ -40,6 +46,9 @@ public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
