@@ -524,11 +524,10 @@ public:
     NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-    NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
+    virtual nsICSSStyleRule* GetInlineStyleRule();
     NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
-    NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                      PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+    virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                                PRInt32 aModType) const;
     NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
     // nsIXULContent

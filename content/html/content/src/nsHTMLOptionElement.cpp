@@ -105,9 +105,8 @@ public:
   NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
                         PRUint32 argc, jsval *argv);
 
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
 
   // nsIOptionElement
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
@@ -352,19 +351,18 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            PRInt32 aModType,
-                                            nsChangeHint& aHint) const
+                                            PRInt32 aModType) const
 {
-  nsresult rv =
-    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
+  nsChangeHint retval =
+      nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
 
   if (aAttribute == nsHTMLAtoms::label ||
       aAttribute == nsHTMLAtoms::text) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
-  return rv;
+  return retval;
 }
 
 NS_IMETHODIMP

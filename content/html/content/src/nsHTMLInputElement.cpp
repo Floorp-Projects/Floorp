@@ -183,9 +183,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
@@ -1871,24 +1870,22 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                           PRInt32 aModType,
-                                           nsChangeHint& aHint) const
+                                           PRInt32 aModType) const
 {
-  nsresult rv =
-    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
-                                                     aHint);
+  nsChangeHint retval =
+    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsHTMLAtoms::type) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   } else if (aAttribute == nsHTMLAtoms::value) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   } else if (aAttribute == nsHTMLAtoms::size &&
              (mType == NS_FORM_INPUT_TEXT ||
               mType == NS_FORM_INPUT_PASSWORD)) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
-  return rv;
+  return retval;
 }
 
 NS_IMETHODIMP_(PRBool)

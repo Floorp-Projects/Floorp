@@ -2137,11 +2137,10 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
+nsICSSStyleRule*
+nsGenericElement::GetInlineStyleRule()
 {
-  *aStyleRule = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -2158,13 +2157,11 @@ nsGenericElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsGenericElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                         PRInt32 aModType, 
-                                         nsChangeHint& aHint) const
+                                         PRInt32 aModType) const
 {
-  aHint = nsChangeHint(0);
-  return NS_OK;
+  return nsChangeHint(0);
 }
 
 nsIAtom *

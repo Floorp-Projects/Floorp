@@ -1947,11 +1947,9 @@ nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-nsresult
-nsGenericHTMLElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
-{
-  *aStyleRule = nsnull;
-  
+nsICSSStyleRule*
+nsGenericHTMLElement::GetInlineStyleRule()
+{ 
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
   
   if (attrVal) {
@@ -1962,11 +1960,11 @@ nsGenericHTMLElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
     }
 
     if (attrVal->Type() == nsAttrValue::eCSSStyleRule) {
-      NS_ADDREF(*aStyleRule = attrVal->GetCSSStyleRuleValue());
+      return attrVal->GetCSSStyleRuleValue();
     }
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult

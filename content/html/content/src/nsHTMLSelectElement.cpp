@@ -250,9 +250,8 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 
@@ -1714,19 +1713,17 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLSelectElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            PRInt32 aModType,
-                                            nsChangeHint& aHint) const
+                                            PRInt32 aModType) const
 {
-  nsresult rv =
-    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
-                                                     aHint);
+  nsChangeHint retval =
+      nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsHTMLAtoms::multiple ||
       aAttribute == nsHTMLAtoms::size) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
-  return rv;
+  return retval;
 }
 
 NS_IMETHODIMP_(PRBool)

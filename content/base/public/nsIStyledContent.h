@@ -48,7 +48,7 @@ class nsAttrValue;
 
 // IID for the nsIStyledContent class
 #define NS_ISTYLEDCONTENT_IID   \
-{ 0xc1e84e01, 0xcd15, 0x11d2, { 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } }
+{ 0x13cc12f1, 0x2892, 0x47e4, { 0xaa, 0x77, 0x24, 0xc, 0xa7, 0x49, 0x82, 0xde } };
 
 // Abstract interface for all styled content (that supports ID, CLASS, STYLE, and
 // the ability to specify style hints on an attribute change).
@@ -66,7 +66,7 @@ public:
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;
 
-  NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule) = 0;
+  virtual nsICSSStyleRule* GetInlineStyleRule() = 0;
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify) = 0;
 
   /**
@@ -83,9 +83,8 @@ public:
    * in response to the change *other* than the result of what is
    * mapped into style data via any type of style rule.
    */
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType, 
-                                    nsChangeHint& aHint) const = 0;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const = 0;
 
 };
 

@@ -3130,19 +3130,17 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
+nsICSSStyleRule*
+nsXULElement::GetInlineStyleRule()
 {
-    *aStyleRule = nsnull;
-
     // Fetch the cached style rule from the attributes.
     const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::style);
 
     if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
-        NS_ADDREF(*aStyleRule = attrVal->GetCSSStyleRuleValue());
+        return attrVal->GetCSSStyleRuleValue();
     }
 
-    return NS_OK;
+    return nsnull;
 }
 
 NS_IMETHODIMP
@@ -3171,12 +3169,11 @@ nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
                             aNotify);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                     PRInt32 aModType,
-                                     nsChangeHint& aHint) const
+                                     PRInt32 aModType) const
 {
-    aHint = NS_STYLE_HINT_NONE;
+    nsChangeHint retval(NS_STYLE_HINT_NONE);
 
     if (aAttribute == nsXULAtoms::value &&
         (aModType == nsIDOMMutationEvent::REMOVAL ||
@@ -3188,16 +3185,16 @@ nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
         // value attribute is being added or removed, then we need to
         // return a hint of frame change.  (See bugzilla bug 95475 for
         // details.)
-        aHint = NS_STYLE_HINT_FRAMECHANGE;
+        retval = NS_STYLE_HINT_FRAMECHANGE;
     } else {
         // if left or top changes we reflow. This will happen in xul
         // containers that manage positioned children such as a
         // bulletinboard.
         if (nsXULAtoms::left == aAttribute || nsXULAtoms::top == aAttribute)
-            aHint = NS_STYLE_HINT_REFLOW;
+            retval = NS_STYLE_HINT_REFLOW;
     }
 
-    return NS_OK;
+    return retval;
 }
 
 NS_IMETHODIMP_(PRBool)

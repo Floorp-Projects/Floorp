@@ -121,9 +121,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
@@ -471,18 +470,17 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                           PRInt32 aModType,
-                                           nsChangeHint& aHint) const
+                                           PRInt32 aModType) const
 {
-  nsresult rv =
-    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
+  nsChangeHint retval =
+    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsHTMLAtoms::usemap ||
       aAttribute == nsHTMLAtoms::ismap) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
-  return rv;
+  return retval;
 }
 
 NS_IMETHODIMP_(PRBool)

@@ -89,9 +89,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
 private:
   nsresult ParseRowCol(const nsAString& aValue,
                        PRInt32&         aNumSpecs,
@@ -316,18 +315,17 @@ nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
   return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType,
-                                              nsChangeHint& aHint) const
+                                              PRInt32 aModType) const
 {
-  nsresult rv =
-    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
+  nsChangeHint retval =
+    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsHTMLAtoms::rows ||
       aAttribute == nsHTMLAtoms::cols) {
-    NS_UpdateHint(aHint, mCurrentRowColHint);
+    NS_UpdateHint(retval, mCurrentRowColHint);
   }
-  return rv;
+  return retval;
 }
 
 nsresult
