@@ -157,7 +157,6 @@ function editPage(url, launchWindow, delay)
     // Create new Composer window
     if (delay)
     {
-      dump("delaying\n");
       launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
     }
     else
@@ -169,7 +168,7 @@ function editPage(url, launchWindow, delay)
 function createURI(urlstring)
 {
   try {
-    ioserv = Components.classes["@mozilla.org/network/io-service;1"]
+    var ioserv = Components.classes["@mozilla.org/network/io-service;1"]
                .getService(Components.interfaces.nsIIOService);
     return ioserv.newURI(urlstring, null, null);
   } catch (e) {}
