@@ -848,7 +848,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	*/
 	if (m_lastMsgNumber > m_firstMsgNumber)
 	{
-		PRInt32	totToDownload = m_lastMsgToDownload - m_firstMsgToDownload;
+		PRInt32	totToDownload = m_lastMsgToDownload - m_firstMsgToDownload + 1;
 		PRInt32	lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
 		PRInt32	numDownloaded = lastIndex;
 		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
