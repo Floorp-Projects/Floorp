@@ -104,9 +104,6 @@ var kDaysInWeek = 7;
 
 const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that fit in the month view
 
-const k_NO_DATE = -62171262000000; // ms value for -0001/11/30 00:00:00, libical value for no date.
-// (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
-
 var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
 var rootPrefNode = prefService.getBranch(null); // preferences root node

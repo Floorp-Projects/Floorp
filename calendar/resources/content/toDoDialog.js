@@ -85,6 +85,9 @@ var gOnOkFunction;   // function to be called when user clicks OK
 
 var gDuration = -1;   // used to preserve duration when changing event start.
 
+var gStartDate = new Date( );
+var gDueDate = new Date( );
+
 const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes off before an event
 
 const kRepeatDay_0 = 1<<0;//Sunday
@@ -94,12 +97,6 @@ const kRepeatDay_3 = 1<<3;//Wednesday
 const kRepeatDay_4 = 1<<4;//Thursday
 const kRepeatDay_5 = 1<<5;//Friday
 const kRepeatDay_6 = 1<<6;//Saturday
-
-const kNODATE = -62171262000000;   // ms value for -0001/11/30 00:00:00, libical value for no date.
-// (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
-
-var gStartDate = new Date( );
-var gDueDate = new Date( );
 
 /*-----------------------------------------------------------------
 *   W I N D O W      F U N C T I O N S
@@ -134,7 +131,7 @@ function loadCalendarEventDialog()
    document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
 
    // fill in fields from the event
-   var hasStart = (gEvent.start.getTime() != kNODATE);
+   var hasStart = gEvent.start && gEvent.start.isSet;
    if (hasStart) 
      gStartDate.setTime( gEvent.start.getTime() );
    var startPicker = document.getElementById( "start-datetime" );
@@ -142,9 +139,9 @@ function loadCalendarEventDialog()
    startPicker.disabled = !hasStart;
    document.getElementById("start-checkbox").checked = hasStart;
 
-   var hasDue = (gEvent.due.getTime() != kNODATE)
+   var hasDue = gEvent.due && gEvent.due.isSet;
    if (hasDue)
-     gDueDate.setTime(gEvent.due.getTime() );
+     gDueDate.setTime(gEvent.due.getTime());
    var duePicker = document.getElementById( "due-datetime" );
    duePicker.value = gDueDate;
    duePicker.disabled = !hasDue;
@@ -229,7 +226,10 @@ function loadCalendarEventDialog()
    else
        setFieldValue( "repeat-length-units", "weeks" );
 
+   if ( gEvent.recurEnd && gEvent.recurEnd.isSet )
    setFieldValue( "repeat-end-date-picker", new Date( gEvent.recurEnd.getTime() ) );
+   else
+     setFieldValue( "repeat-end-date-picker", new Date() ); // now
    
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
    
@@ -240,7 +240,7 @@ function loadCalendarEventDialog()
 
    setFieldValue( "priority-levels", gEvent.priority );
    
-   if( gEvent.completed.getTime() > 0 )
+   if( gEvent.completed && gEvent.completed.isSet )
    {
       var completedDate = new Date( gEvent.completed.getTime() );
       document.getElementById( "completed-date-picker" ).value = completedDate; 
@@ -404,11 +404,18 @@ function onOKCommand()
    if( gEvent.recurInterval == 0 )
       gEvent.recur = false;
 
+   if ( gEvent.recur && getFieldValue( "repeat-until-radio", "selected" ))
+   {
    var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
    
    gEvent.recurEnd.setTime( recurEndDate );
    gEvent.recurEnd.hour = gEvent.start.hour;
    gEvent.recurEnd.minute = gEvent.start.minute;
+   }
+   else
+   {
+     gEvent.recurEnd.clear();
+   }
 
    if( gEvent.recur == true )
    {

@@ -232,7 +232,10 @@ function loadCalendarEventDialog()
    else
        setFieldValue( "repeat-length-units", "weeks" );
 
+   if ( gEvent.recurEnd && gEvent.recurEnd.isSet )
    setFieldValue( "repeat-end-date-picker", new Date( gEvent.recurEnd.getTime() ) );
+   else
+     setFieldValue( "repeat-end-date-picker", new Date() ); // now
    
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
    
@@ -386,11 +389,18 @@ function onOKCommand()
    if( gEvent.recurInterval == 0 )
       gEvent.recur = false;
 
+   if ( gEvent.recur && getFieldValue( "repeat-until-radio", "selected" ))
+   {
    var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
    
    gEvent.recurEnd.setTime( recurEndDate );
    gEvent.recurEnd.hour = gEvent.start.hour;
    gEvent.recurEnd.minute = gEvent.start.minute;
+   }
+   else
+   {
+     gEvent.recurEnd.clear();
+   }
 
    if( gEvent.recur == true )
    {

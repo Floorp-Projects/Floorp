@@ -52,10 +52,6 @@ const ToDoUnifinderTreeName = "unifinder-todo-tree";
 
 var gTaskArray = new Array();
 
-const kNODATE = -62171262000000;   // ms value for -0001/11/30 00:00:00, libical value for no date.
-// (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
-
-
 /**
 *   Observer for the calendar event data source. This keeps the unifinder
 *   display up to date when the calendar event data is changed
@@ -129,11 +125,11 @@ function finishCalendarToDoUnifinder( )
 *   Helper function to display todo datetimes in the unifinder
 */
 
-function formatUnifinderToDoDateTime( datetime )
+function formatUnifinderToDoDateTime( oeICalDateTime )
 {
   // datetime is from todo object, it is not a javascript date
-  if (datetime != null && datetime.getTime() != kNODATE)
-    return gCalendarWindow.dateFormater.formatDateTime( new Date(datetime.getTime()), true );
+  if (oeICalDateTime && oeICalDateTime.isSet)
+    return gCalendarWindow.dateFormater.formatDateTime( new Date(oeICalDateTime.getTime()), true );
   else 
     return "";
 }
@@ -254,29 +250,28 @@ function ToDoProgressAtom( calendarToDo )
 {
   var now = new Date();
    
-  var completed = calendarToDo.completed.getTime();
+  var completed = calendarToDo.completed;
       
-  if( completed > 0 ) {
+  if (completed && completed.isSet) { 
     return("completed");
   }
       
-  var startDate     = new Date( calendarToDo.start.getTime() );
-  var dueDate       = new Date( calendarToDo.due.getTime() );
+  var startDate     = calendarToDo.start;
+  var dueDate       = calendarToDo.due;
       
-  if (dueDate.getTime() != kNODATE) {
+  if (dueDate && dueDate.isSet) {
     if (dueDate.getTime() < now.getTime()) {
       return "overdue";
-    } else if (dueDate.getFullYear() == now.getFullYear() &&
-               dueDate.getMonth() == now.getMonth() &&
-               dueDate.getDate() == now.getDate()) {
+    } else if (dueDate.year == now.getFullYear() &&
+               dueDate.month == now.getMonth() &&
+               dueDate.day == now.getDate()) {
       return "duetoday";
     }
   }
-  if (startDate.getTime() != kNODATE) { 
-    if (startDate.getTime() < now.getTime()) {
+  if (startDate && startDate.isSet &&
+      startDate.getTime() < now.getTime()) {
       return "inprogress";
     }
-  }
   return "future";
 }
 
@@ -478,15 +473,14 @@ function compareDate(a, b) {
   return ((a < b) ? -1 :      // avoid underflow problems of subtraction
           (a > b) ?  1 : 0); 
 }
-function dateToMilliseconds(date) {
-  // Treat null/0 as 'now' when sort started, so incomplete tasks stay current.
-  // Time is computed once per sort (just before sort) so sort is stable.
-  if (date == null)
+function dateToMilliseconds(oeICalDateTime) {
+  // Treat unset time as "time when sort started", so incomplete tasks
+  // stay current.  "Time when sort started" is computed once per sort
+  // (just before sort) so sort is stable.
+  if (oeICalDateTime && oeICalDateTime.isSet)
+    return oeICalDateTime.getTime();
+  else 
     return treeView.sortStartedTime;
-  var ms = date.getTime();   // note: date is not a javascript date.
-  if (ms == kNODATE) 
-    return treeView.sortStartedTime;
-  return ms;
 }
 
 

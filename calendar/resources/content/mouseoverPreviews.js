@@ -87,14 +87,14 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
    
-    if (toDoItem.start && oeICalDateTime_isSet(toDoItem.start))
+    if (toDoItem.start && toDoItem.start.isSet)
     {
       var startDate = new Date( toDoItem.start.getTime() );
       boxAppendLabeledDateTime(vbox, "tooltipStart", startDate, toDoItem.allDay);
       hasHeader = true;
     }
    
-    if (toDoItem.due && oeICalDateTime_isSet(toDoItem.due))
+    if (toDoItem.due && toDoItem.due.isSet)
     {
       var dueDate = new Date( toDoItem.due.getTime() );
       boxAppendLabeledDateTime(vbox, "tooltipDue", dueDate, toDoItem.allDay);
@@ -120,7 +120,7 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
 
-    if (toDoItem.completed && oeICalDateTime_isSet(toDoItem.completed))
+    if (toDoItem.completed && toDoItem.completed.isSet)
     {
       var completedDate = new Date( toDoItem.completed.getTime() );
       boxAppendLabeledDateTime(vbox, "tooltipCompleted", completedDate, toDoItem.allDay);
