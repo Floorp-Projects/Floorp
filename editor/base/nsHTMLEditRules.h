@@ -108,6 +108,9 @@ protected:
   nsresult RemoveContainer(nsIDOMNode *inNode);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
 
+  nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
+  nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
+
 };
 
 #endif //nsHTMLEditRules_h__
