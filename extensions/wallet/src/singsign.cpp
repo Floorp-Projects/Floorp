@@ -2277,6 +2277,7 @@ si_DoDialogIfPrefIsOff(
     prompt_string = Wallet_Localize("PromptForData");
   }
 
+  nsAutoString data(defaultText);
   switch (dlg) {
     case promptUsernameAndPassword:
       res = dialog->PromptUsernameAndPassword(prompt_string,
@@ -2294,6 +2295,7 @@ si_DoDialogIfPrefIsOff(
                                    pressedOK);
       break;
     case prompt:
+      *resultText = ToNewUnicode(data);
       res = dialog->Prompt(prompt_string,
                            text,
                            resultText,
