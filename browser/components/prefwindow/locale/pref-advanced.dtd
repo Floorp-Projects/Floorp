@@ -84,3 +84,19 @@
 <!ENTITY serviceURL.accesskey "S">
 <!ENTITY signingCA.label "Response Signer:">
 <!ENTITY signingCA.accesskey "R">
+
+<!-- Software Update -->
+<!ENTITY browsing.label                   "Browsing">
+<!ENTITY softwareupdate.label             "Software Update">
+<!ENTITY enableSoftwareUpdate.label       "Allow web sites to install software">
+<!ENTITY enableSoftwareUpdate.accesskey   "i">
+<!ENTITY softwareupdateinfo.label         "Periodically check for updates to:">
+<!ENTITY enableSmartUpdate.label          "&brandShortName;">
+<!ENTITY enableSmartUpdate.accesskey      "F">
+<!ENTITY enableExtensionUpdate.label      "My Extensions">
+<!ENTITY enableExtensionUpdate.accesskey  "y">
+<!ENTITY enableAutoInstall.label          "Automatically download and install updates to Extensions.">
+<!ENTITY enableAutoInstall.accesskey      "d">
+<!ENTITY checkNow.label                   "Check Now">
+<!ENTITY checkNow.accesskey               "N">
+
