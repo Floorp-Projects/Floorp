@@ -518,6 +518,23 @@ nsWebDAVService::Put(nsIWebDAVResource *resource,
 }
 
 NS_IMETHODIMP
+nsWebDAVService::PutFromString(nsIWebDAVResource *resource,
+                               const nsACString& contentType,
+                               const nsACString& data,
+                               nsIWebDAVOperationListener *listener,
+                               nsISupports *closure)
+{
+    nsresult rv;
+    nsCOMPtr<nsIStringInputStream> dataStream = 
+        do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    dataStream->SetData(PromiseFlatCString(data).get(),
+                        data.Length());
+    return Put(resource, contentType, dataStream, listener, closure);
+}
+
+NS_IMETHODIMP
 nsWebDAVService::Remove(nsIWebDAVResource *resource,
                         nsIWebDAVOperationListener *listener,
                         nsISupports *closure)

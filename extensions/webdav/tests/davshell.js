@@ -279,10 +279,7 @@ function PUT(filename, url, contentType)
 
 function PUT_string(string, url, contentType)
 {
-    var stream = createInstance("@mozilla.org/io/string-input-stream;1",
-				"nsIStringInputStream");
-    stream.setData(string, string.length);
-    davSvc.put(new Resource(url), contentType, stream,
-               new OperationListener(), null);
+    davSvc.putFromString(new Resource(url), contentType, string,
+                         new OperationListener(), null);
     runEventPump();
 }
