@@ -648,9 +648,10 @@ case "$target" in
     ;;
 
 *-hpux*)
+    AC_DEFINE(XP_UNIX)
     AC_DEFINE(HPUX)
     AC_DEFINE(_HPUX_SOURCE)
-    DEFINES="$DEFINES -D${target_cpu}"
+    AC_DEFINE(hppa)
     DLL_SUFFIX=sl
     DSO_LDOPTS='-b +h $(notdir $@)'
     PR_MD_CSRCS=hpux.c
@@ -668,52 +669,70 @@ case "$target" in
     else
         DSO_CFLAGS=-fPIC
     fi
+
     if test -n "$MOZILLA_CLIENT"; then
-        USE_NSPR_THREADS=1
+        DEFAULT_IMPL_STRATEGY=_EMU
     fi
-    case "${target_os}" in
-    hpuxA.09*)
-        AC_DEFINE(HPUX9)
+
+    if echo "$OS_RELEASE" | grep ^A.09 >/dev/null; then
         AC_DEFINE(_PR_NEED_H_ERRNO)
-        AC_DEFINE(_PR_NO_LARGE_FILES)
-        ;;
-    hpuxB.10.01*)
+        AC_DEFINE(HPUX9)
+        DEFAULT_IMPL_STRATEGY=_EMU
+    	USE_NSPR_THREADS=1
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
+        AC_DEFINE(_PR_NEED_H_ERRNO)
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
+        AC_DEFINE(HAVE_INT_LOCALTIME_R)
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00)' >/dev/null; then
+        AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
+    fi
+
+    if test "$OS_RELEASE" = "B.10.01"; then
         AC_DEFINE(HPUX10)
-        ;;
-    hpuxB.10.10*)
+        DEFAULT_IMPL_STRATEGY=_EMU
+    fi
+
+    if test "$OS_RELEASE" = "B.10.10"; then
         AC_DEFINE(HPUX10)
         AC_DEFINE(HPUX10_10)
-        AC_DEFINE(HAVE_INT_LOCALTIME_R)
-        USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    hpuxB.10.20*)
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if test "$OS_RELEASE" = "B.10.20"; then
         AC_DEFINE(HPUX10)
         AC_DEFINE(HPUX10_20)
-        AC_DEFINE(HAVE_INT_LOCALTIME_R)
-        if test -z "$GNU_CC"; then
+        if test -z "$GNU_CC" && test 0 = 1; then
             CFLAGS="$CFLAGS +DAportable +DS1.1"
             CXXFLAGS="$CXXFLAGS +DAportable +DS1.1"
         fi
-        USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    hpuxB.10.30*)
-        AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-        if test -z "$GNU_CC"; then
+        DEFAULT_IMPL_STRATEGY=_EMU
+    fi
+
+    if test "$OS_RELEASE" = "B.10.30"; then
+        AC_DEFINE(HPUX10)
+        AC_DEFINE(HPUX10_30)
+        #CXX="/opt/aCC/bin/aCC -ext"
+        if test -z "$GNU_CC" && test 0 = 1; then
             CFLAGS="$CFLAGS +DAportable +DS1.1"
             CXXFLAGS="$CXXFLAGS +DAportable +DS1.1"
         fi
-        USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    hpuxB.11.00*)
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if test "$OS_RELEASE" = "B.11.00"; then
         AC_DEFINE(HPUX10)
         AC_DEFINE(HPUX11)
         AC_DEFINE(_LARGEFILE64_SOURCE)
         AC_DEFINE(_PR_HAVE_OFF64_T)
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
         if test -z "$GNU_CC"; then
+            if test 0 = 1; then
             if test -z "$USE_64"; then
                 CFLAGS="$CFLAGS +DAportable +DS2.0"
                 CXXFLAGS="$CXXFLAGS +DAportable +DS2.0"
@@ -721,18 +740,23 @@ case "$target" in
                 CFLAGS="$CFLAGS +DA2.0W +DS2.0"
                 CXXFLAGS="$CXXFLAGS +DA2.0W +DS2.0"
             fi
+            fi
         fi
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if test "$DEFAULT_IMPL_STRATEGY" = "_EMU"; then
+        USE_NSPR_THREADS=1
+        USE_PTHREADS=
+        USE_USER_THREADS=
+    elif test "$DEFAULT_IMPL_STRATEGY" = "_PTH"; then
         USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    esac
-    case "${target_os}" in
-    hpuxB.10*)
-        AC_DEFINE(_PR_NO_LARGE_FILES)
-        ;;
-    esac
-    if test -n "$USE_NSPR_THREADS"; then
-        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+        if test "$MOZILLA_CLIENT"; then
+            USE_PTHREADS=
+        fi
+        if test "$USE_USER_PTHREADS"; then
+            USE_PTHREADS=
+        fi
     fi
     ;;
 
@@ -1314,17 +1338,6 @@ if test -n "$USE_PTHREADS"; then
 	        _PTHREAD_LDFLAGS=
 	    fi
 	    ;;
-    *-hpuxB.10.10*)
-        AC_DEFINE(_REENTRANT)
-        AC_DEFINE(_PR_DCETHREADS)
-        ;;
-    *-hpuxB.10.20*)
-        AC_DEFINE(_REENTRANT)
-        AC_DEFINE(_PR_DCETHREADS)
-        ;;
-    *-hpux*)
-        AC_DEFINE(_POSIX_C_SOURCE=199506L)
-        ;;
     *)
 	    AC_DEFINE(_REENTRANT)
 	    ;;
@@ -1362,8 +1375,24 @@ case "$target" in
     ;;
 
 *-hpux*)
-    if test -n "$USE_USER_PTHREADS"; then
-        AC_DEFINE(_POSIX_C_SOURCE=199506L)
+    if test "$USE_NSPR_THREADS"; then
+        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(A.09|B.10)' >/dev/null; then
+        AC_DEFINE(_PR_NO_LARGE_FILES)
+    fi
+
+    if test "$USE_PTHREADS"; then
+        if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
+            AC_DEFINE(REENTRANT)
+            AC_DEFINE(_PR_DCETHREADS)
+        else
+            AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)
+        fi
+    fi
+    if test "$USE_USER_PTHREADS"; then
+        AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)
     fi
     ;;
 *-mingw*|*-cygwin*|*-uwin*|*-msvc*)
