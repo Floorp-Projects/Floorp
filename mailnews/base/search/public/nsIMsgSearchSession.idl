@@ -38,7 +38,6 @@
 #include "nsISupports.idl"
 #include "nsMsgSearchCore.idl"
 #include "nsIMsgSearchValue.idl"
-#include "nsIFolderListener.idl"
 
 interface nsMsgResultElement;
 interface nsIMsgSearchAdapter;
@@ -133,7 +132,4 @@ interface nsIMsgSearchSession :  nsISupports {
     /* these longs are all actually of type nsMsgSearchBooleanOp */
     const long BooleanOR=0;
     const long BooleanAND=1;
-
-    void addFolderListener(in nsIFolderListener listener);
-    void removeFolderListener(in nsIFolderListener listener);
 };

@@ -278,8 +278,7 @@ function searchOnUnload()
     gSearchSession.unregisterListener(gViewSearchListener);
     gSearchSession.unregisterListener(gSearchNotificationListener);
 
-    gMailSession.RemoveFolderListener(gSearchSessionFolderListener);
-	gSearchSession.removeFolderListener(gFolderListener);
+    gMailSession.RemoveFolderListener(gFolderListener);
 	
     if (gSearchView) {
 	gSearchView.close();
@@ -526,12 +525,11 @@ function setupDatasource() {
     gMailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
     var nsIFolderListener = Components.interfaces.nsIFolderListener;
     var notifyFlags = nsIFolderListener.event;
-    gMailSession.AddFolderListener(gSearchSessionFolderListener, notifyFlags);
+    gMailSession.AddFolderListener(gFolderListener, notifyFlags);
 
     // the datasource is a listener on the search results
     gViewSearchListener = gSearchView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
     gSearchSession.registerListener(gViewSearchListener);
-    gSearchSession.addFolderListener(gFolderListener);
 }
 
 

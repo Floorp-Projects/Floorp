@@ -114,13 +114,11 @@ function removeListeners()
 function removeGlobalListeners()
 {
   removeListeners();
-  gSearchSession.removeFolderListener(folderListener);
   gSearchSession.unregisterListener(gSearchNotificationListener); 
 }
 
 function initializeGlobalListeners()
 {
-  gSearchSession.addFolderListener(folderListener);
   // Setup the javascript object as a listener on the search results
   gSearchSession.registerListener(gSearchNotificationListener);
 }

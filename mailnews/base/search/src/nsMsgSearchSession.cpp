@@ -51,7 +51,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsMsgLocalSearch.h"
 
-NS_IMPL_ISUPPORTS4(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIFolderListener, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsISupportsWeakReference)
 
 nsMsgSearchSession::nsMsgSearchSession()
 {
@@ -718,99 +718,6 @@ nsMsgSearchSession::EnableFolderNotifications(PRBool aEnable)
     if (folder)  //enable msg count notifications
       folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, aEnable, PR_FALSE);
   }
-}
-
-NS_IMETHODIMP
-nsMsgSearchSession::AddFolderListener(nsIFolderListener *listener)
-{
-    return m_folderListenerList.AppendObject(listener) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsMsgSearchSession::RemoveFolderListener(nsIFolderListener *listener)
-{
-    m_folderListenerList.RemoveObject(listener);
-
-    return NS_OK;
-}
-
-// nsIFolderListener methods.
-NS_IMETHODIMP 
-nsMsgSearchSession::OnItemEvent(nsIMsgFolder *aFolder,
-                                nsIAtom *aEvent)
-{
-	PRInt32 count = m_folderListenerList.Count();
-
-	for(PRInt32 i = 0; i < count; i++)
-	{
-		nsIFolderListener* listener = m_folderListenerList[i];
-		if(listener)
-			listener->OnItemEvent(aFolder, aEvent);
-	}
-	
-	return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsMsgSearchSession::OnItemAdded(nsIRDFResource *parentItem, 
-                                nsISupports *item)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsMsgSearchSession::OnItemRemoved(nsIRDFResource *parentItem, 
-                                  nsISupports *item)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchSession::OnItemPropertyChanged(nsIRDFResource *item,
-                                        nsIAtom *property,
-                                        const char* oldValue,
-                                        const char* newValue)
-{
-    return NS_OK;
-
-}
-
-NS_IMETHODIMP
-nsMsgSearchSession::OnItemIntPropertyChanged(nsIRDFResource *item,
-                                            nsIAtom *property,
-                                            PRInt32 oldValue,
-                                            PRInt32 newValue)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchSession::OnItemBoolPropertyChanged(nsIRDFResource *item,
-                                            nsIAtom *property,
-                                            PRBool oldValue,
-                                            PRBool newValue)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchSession::OnItemUnicharPropertyChanged(nsIRDFResource *item,
-                                                nsIAtom *property,
-                                                const PRUnichar* oldValue,
-                                                const PRUnichar* newValue)
-{
-    return NS_OK;
-
-}
-
-
-NS_IMETHODIMP
-nsMsgSearchSession::OnItemPropertyFlagChanged(nsISupports *item,
-                                            nsIAtom *property,
-                                            PRUint32 oldValue,
-                                            PRUint32 newValue)
-{
-    return NS_OK;
 }
 
 //this method is used for adding new hdrs to quick search view
