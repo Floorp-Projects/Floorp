@@ -43,6 +43,7 @@
 #include "prprf.h"
 
 #include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
@@ -51,28 +52,6 @@
 #include "nsNetUtil.h"
 #include "ProxyJNI.h"
 #include "nsCNullSecurityContext.h"
-
-/**
- * Obtain the URL of the document of the currently running script. This will
- * be used as the default location to download classes from.
- */
-static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
-{
-    nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
-
-    if (scriptContext) {
-        nsCOMPtr<nsIScriptObjectPrincipal> scriptObjectPrincipal =
-            do_QueryInterface(scriptContext->GetGlobalObject());
-
-        if (scriptObjectPrincipal) {
-            nsIPrincipal *principal = scriptObjectPrincipal->GetPrincipal();
-            if (principal) {
-                return principal->GetURI(result);
-            }
-        }
-    }
-    return NS_ERROR_FAILURE;
-}
 
 /**
  * Obtain the netscape.oji.ProxyClassLoader instance associated with the
@@ -107,10 +86,42 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
             return NS_OK;
     }
 
-    nsCOMPtr<nsIURI> codebase;
-    rv = getScriptCodebase(cx, getter_AddRefs(codebase));
+    // use default netscape.oji.ProxyClassLoaderFactory (which is no longer supported in recent JRE) as the classloader
+    jclass netscape_oji_ProxyClassLoaderFac = env->FindClass("netscape/oji/ProxyClassLoaderFactory");
+    if (!netscape_oji_ProxyClassLoaderFac) {
+        env->ExceptionClear();
+        return NS_ERROR_FAILURE;
+    }
+    jmethodID staticMethodID = env->GetStaticMethodID(netscape_oji_ProxyClassLoaderFac, "createClassLoader",
+						      "(Ljava/lang/String;)Ljava/lang/ClassLoader;");
+    if (!staticMethodID) {
+        env->ExceptionClear();
+        return NS_ERROR_FAILURE;
+    }
+
+    // Obtain the URL of the document of the currently running script. This will
+    // be used as the default location to download classes from.
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
+    nsCOMPtr<nsIPrincipal> principal, sysprincipal;
+    rv = secMan->GetPrincipalFromContext(cx, getter_AddRefs(principal));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = secMan->GetSystemPrincipal(getter_AddRefs(sysprincipal));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool equals;
+    rv = principal->Equals(sysprincipal, &equals);
+    // Can't get URI from system principal
+    if (NS_FAILED(rv)) return rv;
+    if (equals) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIURI> codebase;
+    rv = principal->GetURI(getter_AddRefs(codebase));
+    if (NS_FAILED(rv)) return rv;
+
     // create a netscape.oji.ProxyClassLoader instance.
     nsCAutoString spec;
     rv = codebase->GetSpec(spec);
@@ -121,17 +132,7 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
     }
-    jclass netscape_oji_ProxyClassLoaderFac = env->FindClass("netscape/oji/ProxyClassLoaderFactory");
-    if (!netscape_oji_ProxyClassLoaderFac) {
-        env->ExceptionClear();
-        return NS_ERROR_FAILURE;
-    }
-    jmethodID staticMethodID = env->GetStaticMethodID(netscape_oji_ProxyClassLoaderFac, "createClassLoader", 
-						      "(Ljava/lang/String;)Ljava/lang/ClassLoader;");
-    if (!staticMethodID) {
-        env->ExceptionClear();
-        return NS_ERROR_FAILURE;
-    }
+
     // In order to have permission to create classloader, we need to grant enough permission
     nsISecurityContext* origContext = nsnull;
     if (NS_FAILED(GetSecurityContext(env, &origContext))) {
