@@ -27,7 +27,7 @@ DIRS		= public nglsrc
 include $(topsrcdir)/config/rules.mk
 
 $(DIST)/bin/plugins:
-	mkdir $@
+	$(NSINSTALL) -D $@
 
 export:: $(DIST)/bin/plugins
 
