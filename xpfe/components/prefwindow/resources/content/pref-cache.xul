@@ -112,7 +112,7 @@
 		</html:div>
     	<html:div class="hspace-both">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency2"
-                    pref="true" preftype="int" prefinex="1" prefstring="browser.cache.check_doc_frequency"/>
+                    pref="true" preftype="int" prefindex="2" prefstring="browser.cache.check_doc_frequency"/>
 			<html:label for="browserCacheCheckDocFrequency2" accesskey="n" tabindex="0">
 			&neverRadio.label;	
 			</html:label>
