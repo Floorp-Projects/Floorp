@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/02 03:09:10 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/05/02 23:15:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -74,7 +74,7 @@ sub page_header {
   my ($refresh) = '';
 
   ($args{'refresh'}) &&
-    ( $refresh =  "<META HTTP-EQUIV=\"Refresh: $args{'refresh'}\" CONTENT=\"300\">" );
+    ( $refresh =  "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"$args{'refresh'}\">" );
   
 $header .=<<EOF;
 <HTML>

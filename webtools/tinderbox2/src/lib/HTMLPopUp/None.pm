@@ -3,8 +3,8 @@
 # HTMLPopUp::None.pm - the implementation of the header and link
 # command which will be used if no popup menus are desired.
 
-# $Revision: 1.6 $ 
-# $Date: 2002/05/01 02:01:49 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/05/02 23:15:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/None.pm,v $ 
 # $Name:  $ 
@@ -66,7 +66,7 @@ sub page_header {
   my ($refresh) = '';
 
   ($args{'refresh'}) &&
-    ( $refresh =  "<META HTTP-EQUIV=\"Refresh: $args{'refresh'}\" CONTENT=\"300\">" );
+    ( $refresh =  "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"$args{'refresh'}\">" );
   
 $header .=<<EOF;
 <HTML>
