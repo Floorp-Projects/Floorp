@@ -120,4 +120,9 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
         in nsIJunkMailClassificationListener aListener);
 
     readonly attribute boolean userHasClassified;
+ 
+    /** Removes the training file and clears out any in memory training tokens. 
+        User must retrain after doing this.
+    **/
+    void resetTrainingData();
 };

@@ -1010,3 +1010,27 @@ NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL,
     analyzer->setTokenListener(tokenListener);
     return tokenizeMessage(aMsgURL, aMsgWindow, analyzer);
 }
+
+NS_IMETHODIMP nsBayesianFilter::ResetTrainingData()
+{
+  // clear out our in memory training tokens...
+  if (mGoodCount && mGoodTokens.countTokens())
+  {
+    mGoodTokens.clearTokens();
+    mGoodCount = 0;
+  }
+
+  if (mBadCount && mBadTokens.countTokens())
+  {
+    mBadTokens.clearTokens();
+    mBadCount = 0;
+  }
+
+  // now remove training.dat
+  nsCOMPtr<nsILocalFile> file;
+  nsresult rv = getTrainingFile(file);
+  if (file)
+    file->Remove(PR_FALSE);
+
+  return NS_OK;
+}
