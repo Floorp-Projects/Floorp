@@ -96,8 +96,7 @@ nsCodebasePrincipal::GetJSPrincipals(JSPrincipals **jsprin)
 {
     if (mJSPrincipals.nsIPrincipalPtr == nsnull) {
         mJSPrincipals.nsIPrincipalPtr = this;
-        NS_ADDREF(mJSPrincipals.nsIPrincipalPtr);
-        // matching release in nsDestroyJSPrincipals
+        // No need for a ADDREF since it is a self-reference
     }
     *jsprin = &mJSPrincipals;
     JSPRINCIPALS_HOLD(cx, *jsprin);

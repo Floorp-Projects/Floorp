@@ -935,7 +935,7 @@ nsIURI* nsDocument::GetDocumentURL() const
   return mDocumentURL;
 }
 
-nsIPrincipal* nsDocument::GetDocumentPrincipal() const
+nsIPrincipal* nsDocument::GetDocumentPrincipal()
 {
   if (!mPrincipal) {
     nsresult rv;
@@ -943,13 +943,11 @@ nsIPrincipal* nsDocument::GetDocumentPrincipal() const
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) 
         return nsnull;
-    nsIPrincipal *p;
-    if (NS_FAILED(securityManager->CreateCodebasePrincipal(mDocumentURL, &p)))
+    if (NS_FAILED(securityManager->CreateCodebasePrincipal(mDocumentURL, 
+                                                           &mPrincipal)))
         return nsnull;
-    // XXX cast away const: should change type of member function
-    ((nsDocument *) this)->mPrincipal = p;
   }
-  NS_IF_ADDREF(mPrincipal);
+  NS_ADDREF(mPrincipal);
   return mPrincipal;
 }
 

@@ -112,7 +112,7 @@ public:
   /**
    * Return the principal responsible for this document.
    */
-  virtual nsIPrincipal* GetDocumentPrincipal() const = 0;
+  virtual nsIPrincipal* GetDocumentPrincipal() = 0;
 
   /**
    * Return the LoadGroup for the document. May return null.

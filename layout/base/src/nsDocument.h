@@ -139,7 +139,7 @@ public:
   /**
    * Return the principal responsible for this document.
    */
-  virtual nsIPrincipal* GetDocumentPrincipal() const;
+  virtual nsIPrincipal* GetDocumentPrincipal();
 
   /**
    * Return the content (mime) type of this document.
