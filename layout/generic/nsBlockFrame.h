@@ -230,11 +230,6 @@ protected:
     return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
-  /** return PR_TRUE if the incremental reflow described by aState is 100% contained
-    * within the bounds of a ancestor frame, relative to this frame.
-    */
-  PRBool IsIncrementalDamageConstrained(const nsBlockReflowState& aState) const;
-
   /** move the frames contained by aLine by aDY
     * if aLine is a block, it's child floaters are added to the state manager
     */
