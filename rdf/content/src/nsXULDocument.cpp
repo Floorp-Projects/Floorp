@@ -2146,14 +2146,6 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 // nsIXMLDocument interface
 //
 
-NS_IMETHODIMP
-nsXULDocument::GetContentById(const nsString& aName, nsIContent** aContent)
-{
-    NS_ASSERTION(0,"not implemented");
-    NS_NOTREACHED("nsXULDocument::GetContentById");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 #ifdef MOZ_XSL
 NS_IMETHODIMP
 nsXULDocument::SetTransformMediator(nsITransformMediator* aMediator)
@@ -3186,6 +3178,13 @@ nsXULDocument::CreateAttributeNS(const nsString& aNamespaceURI,
 NS_IMETHODIMP
 nsXULDocument::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
+
+    NS_WARN_IF_FALSE(!aId.IsEmpty(),"getElementById(\"\"), fix caller?");
+    if (aId.IsEmpty())
+      return NS_OK;
+
     nsresult rv;
 
     nsCOMPtr<nsIContent> element;
@@ -3196,7 +3195,6 @@ nsXULDocument::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
         rv = element->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aReturn);
     }
     else {
-        *aReturn = nsnull;
         rv = NS_OK;
     }
 
