@@ -1,5 +1,6 @@
 bookmarks-toolbar {
   -moz-binding: url("chrome://browser/content/bookmarks/bookmarksToolbar.xml#bookmarks-toolbar");
+  min-width: 0px;
 }
   
 bookmarks-tree, bookmarks-tree[type="multi-column"] {
