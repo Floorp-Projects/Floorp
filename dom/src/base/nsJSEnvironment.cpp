@@ -51,13 +51,38 @@ static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID)
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-  if (nsnull != report) {
-    printf("JavaScript error: %s\nURL :%s, LineNo :%u\nLine text: '%s', Error text: '%s'\n", message, 
-           report->filename, report->lineno, report->linebuf, report->tokenptr);
-  }
-  else {
-    printf("JavaScript error: %s\n", message);
-  }
+	if (nsnull != report) {
+   		printf("JavaScript error: ");
+
+		if(message) {
+			printf("%s\n", message);
+		}
+
+		if(report->filename) {
+			printf("URL :%s ", report->filename);
+		}
+
+		if(report->lineno) {
+			printf("LineNo :%u", report->lineno);
+		}
+
+		printf("\n");
+
+		if(report->linebuf) {
+			printf("Line text: '%s', ", report->linebuf);
+		}
+
+		if(report->tokenptr) {
+			printf("Error text: '%s'", report->tokenptr);
+		}
+
+		printf("\n");
+
+	} else if(message) {
+		printf("JavaScript error: %s\n", message);
+	} else {
+		printf("JavaScript error: <unknown>\n");
+	}
 }
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
