@@ -666,17 +666,12 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   nsRect viewRect;
   aView->GetDimensions(viewRect);
-  // move the view rect into widget pixel coordinates
-  nsRect viewRectInPixels = viewRect;
-  viewRectInPixels.MoveTo(0, 0);
-  float t2p;
-  mContext->GetAppUnitsToDevUnits(t2p);
-  viewRectInPixels.ScaleRoundOut(t2p);
 
-  // Get the damaged area into app coordinates (twips), but the origin is
-  // still the widget origin
+  // damageRegion is the damaged area, in twips, relative to the view origin
   nsRegion damageRegion;
+  // convert pixels-relative-to-widget-origin to twips-relative-to-widget-origin
   ConvertNativeRegionToAppRegion(aRegion, &damageRegion, mContext);
+  // move it from widget coordinates into view coordinates
   damageRegion.MoveBy(viewRect.x, viewRect.y);
 
   // Clip it to the view; shouldn't be necessary, but do it for sanity
@@ -758,16 +753,22 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     }
   }
 
+  // damageRect is the clipped damage area bounds, in twips-relative-to-view-origin
   nsRect damageRect = damageRegion.GetBounds();
-  nsRect damageRectInPixels = damageRect;
-  damageRectInPixels.ScaleRoundOut(t2p);
+  // widgetDamageRectInPixels is the clipped damage area bounds,
+  // in pixels-relative-to-widget-origin
+  nsRect widgetDamageRectInPixels = damageRect;
+  widgetDamageRectInPixels.MoveBy(-viewRect.x, -viewRect.y);
+  float t2p;
+  mContext->GetAppUnitsToDevUnits(t2p);
+  widgetDamageRectInPixels.ScaleRoundOut(t2p);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     nsRect maxWidgetSize;
     GetMaxWidgetBounds(maxWidgetSize);
 
-    nsRect r(0, 0, damageRectInPixels.width, damageRectInPixels.height);
+    nsRect r(0, 0, widgetDamageRectInPixels.width, widgetDamageRectInPixels.height);
     if (NS_FAILED(localcx->GetBackbuffer(r, maxWidgetSize, ds))) {
       //Failed to get backbuffer so turn off double buffering
       aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
@@ -775,9 +776,22 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   }
 
   if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
-    // backbuffer's (0,0) is mapped to damageRect.x, damageRect.y
+    // Adjust translations because the backbuffer holds just the damaged area,
+    // not the whole widget
+
+    // RenderViews draws in view coordinates. We want (damageRect.x, damageRect.y)
+    // to be translated to (0,0) in the backbuffer. So:
     localcx->Translate(-damageRect.x, -damageRect.y);
-    aRegion->Offset(-damageRectInPixels.x, -damageRectInPixels.y);
+    // We're going to reset the clip region for the backbuffer. We can't
+    // just use damageRegion because nsIRenderingContext::SetClipRegion doesn't
+    // translate/scale the coordinates (grrrrrrrrrr)
+    // So we have to translate the region before we use it. aRegion is in
+    // pixels-relative-to-widget-origin, so:
+    aRegion->Offset(-widgetDamageRectInPixels.x, -widgetDamageRectInPixels.y);
+  } else {
+    // RenderViews draws in view coordinates. We want (viewRect.x, viewRect.y)
+    // to be translated to (0,0) in the widget. So:
+    localcx->Translate(-viewRect.x, -viewRect.y);
   }
 
   PRBool result;
@@ -788,18 +802,26 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
   localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, result);
 
-  // painting will be done in aView's coordinates, so shift them back to widget coordinates
-  localcx->Translate(-viewRect.x, -viewRect.y);
+  // painting will be done in aView's coordinates
   RenderViews(aView, *localcx, damageRegion, result);
-  localcx->Translate(viewRect.x, viewRect.y);
 
   if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
-    // Setup the region relative to the destination's coordinates
-    aRegion->Offset(damageRectInPixels.x, damageRectInPixels.y);
-    localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
+    // Flush bits back to the screen
+
+    // Restore aRegion to pixels-relative-to-widget-origin
+    aRegion->Offset(widgetDamageRectInPixels.x, widgetDamageRectInPixels.y);
+    // Restore translation to its previous state (so that (0,0) is the widget origin)
     localcx->Translate(damageRect.x, damageRect.y);
+    // Make damageRect twips-relative-to-widget-origin
+    damageRect.MoveBy(-viewRect.x, -viewRect.y);
+    // Reset clip region to widget-relative
+    localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
     localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, result);
-    localcx->CopyOffScreenBits(ds, 0, 0, damageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    // neither source nor destination are transformed
+    localcx->CopyOffScreenBits(ds, 0, 0, widgetDamageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+  } else {
+    // undo earlier translation
+    localcx->Translate(viewRect.x, viewRect.y);
   }
 
   mPainting = PR_FALSE;
