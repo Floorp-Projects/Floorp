@@ -114,10 +114,9 @@ Rights Reserved.
 </popupset>
 
 
+  <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>
-
-
-	<toolbox id="mailToolbarToolbox"/>
+  </toolbox>
   <!-- The main mail three pane frame -->
 
 

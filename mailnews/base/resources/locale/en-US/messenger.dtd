@@ -159,8 +159,8 @@ Rights Reserved.
 <!ENTITY reloadCmd.accesskey "r">  
 <!ENTITY stopCmd.label "Stop">  
 <!ENTITY stopCmd.accesskey "s">  
-<!ENTITY pageSourceCmd.label "Page Source">  
-<!ENTITY pageSourceCmd.accesskey "u">  
+<!ENTITY pageSourceCmd.label "Message Source">  
+<!ENTITY pageSourceCmd.accesskey "o">  
 <!ENTITY pageSourceCmd.key "u">  
 <!ENTITY translateMenu.label ".Translate"> 
 <!ENTITY dcharMenu.label "Character Set  ISO">
