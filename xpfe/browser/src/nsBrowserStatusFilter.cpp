@@ -130,6 +130,11 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
         }
         if (aStateFlags & STATE_IS_REQUEST) {
             ++mTotalRequests;
+
+            // if the total requests exceeds 1, then we'll base our progress
+            // notifications on the percentage of completed requests.
+            // otherwise, progress for the single request will be reported.
+            mUseRealProgressFlag = (mTotalRequests == 1);
         }
     }
     else if (aStateFlags & STATE_STOP) {
@@ -141,15 +146,6 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
         }
     }
     else if (aStateFlags & STATE_TRANSFERRING) {
-        if (aStateFlags & STATE_IS_DOCUMENT) {
-            nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-            if (chan) {
-                nsCAutoString contentType;
-                chan->GetContentType(contentType);
-                if (!contentType.Equals(NS_LITERAL_CSTRING("text/html")))
-                    mUseRealProgressFlag = PR_TRUE;
-            }
-        }
         if (aStateFlags & STATE_IS_REQUEST) {
             if (!mUseRealProgressFlag && mTotalRequests)
                 return OnProgressChange(nsnull, nsnull, 0, 0, mFinishedRequests, mTotalRequests);
