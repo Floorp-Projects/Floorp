@@ -53,7 +53,7 @@
     <key id="pastequotationkb"  key="&editpastequotation.keybinding;"   observes="cmd_pasteQuote"  modifiers="accel, shift"/>
     <key id="findkb"            key="&editfind.keybinding;"            observes="cmd_find"  modifiers="accel"/>
     <key id="findnextkb"        key="&editfindnext.keybinding;"        observes="cmd_findNext"  modifiers="accel"/>
-    <key id="checkspellingkb"   key="&editcheckspelling.keybinding;"   observes="cmd_spelling"  modifiers="accel"/>
+    <key id="checkspellingkb"   key="&editcheckspelling.keybinding;"   observes="cmd_spelling"  modifiers="accel" disabled="true"/>
 
     <key id="boldkb"         key="&stylebold.keybinding;"       observes="cmd_bold" modifiers="accel"/>
     <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>
@@ -293,6 +293,10 @@
     <menupopup id="menu_FilePopup" onpopupshowing="EditorInitFileMenu();">
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
+          <menuitem id="menu_newBlankPage" label="&newBlankPageCmd.label;" 
+                    accesskey="&newBlankPage.accesskey;" key="key_newBlankPage"
+                    command="cmd_newEditor"/>
+          <menuseparator id="composerBeginGlobalNewItems"/>
           <!-- From globalOverlay.xul -->
           <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
         </menupopup>
@@ -352,7 +356,9 @@
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find" label="&findCmd.label;"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator id="sep_checkspelling"/>
-      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
+      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"
+                key="checkspellingkb"   observes="cmd_spelling" disabled="true"
+                label="&checkSpellingCmd.label;"/>
       <menuseparator id="menu_prefsSep"/>
       <menuitem id="menu_preferences"     observes="cmd_preferences"/>
       <!-- Note: other Edit items (menu_validate, menu_publishSettings) are inserted from composerOverlay.xul -->
@@ -681,7 +687,7 @@
   <toolbarbutton id="findButton" class="toolbarbutton-1"
                  label="&findToolbarCmd.label;" observes="cmd_find"
                  tooltiptext="&findToolbarCmd.tooltip;"/>
-  <toolbarbutton id="spellingButton" class="toolbarbutton-1"
+  <toolbarbutton id="spellingButton" class="toolbarbutton-1" disabled="true"
                  label="&spellToolbarCmd.label;" observes="cmd_spelling"
                  tooltiptext="&spellToolbarCmd.tooltip;"/>
   <toolbarbutton id="imageButton" class="toolbarbutton-1"
