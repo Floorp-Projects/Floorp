@@ -317,9 +317,12 @@ void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
     nsIContent* content;
     aFrame->GetContent(content);
     if (nsnull != content) {
-      nsIDocument* doc = content->GetDocument();
-      docURL = doc->GetDocumentURL();
-      NS_RELEASE(doc);
+      nsIDocument* doc = nsnull;
+      content->GetDocument(doc);
+      if (nsnull != doc) {
+        docURL = doc->GetDocumentURL();
+        NS_RELEASE(doc);
+      }
       NS_RELEASE(content);
     }
 
