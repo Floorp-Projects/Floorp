@@ -123,6 +123,8 @@
 	      const unsigned long DOM_VK_CLOSE_BRACKET  = 0xDD;
 	      const unsigned long DOM_VK_QUOTE          = 0xDE;
 
+	      const unsigned long DOM_VK_META           = 0xE0;
+
 		  readonly	  attribute   unsigned long   charCode;
 		  readonly	  attribute   unsigned long   keyCode;
 

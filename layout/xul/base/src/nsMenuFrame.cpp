@@ -63,7 +63,9 @@
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsCSSFrameConstructor.h"
-
+#include "nsIDOMKeyEvent.h"
+#include "nsIPref.h"
+ 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
 static PRInt32 gEatMouseMove = PR_FALSE;
@@ -72,7 +74,7 @@ nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //
 // NS_NewMenuFrame
@@ -135,7 +137,7 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
 NS_IMETHODIMP
 nsMenuFrame::SetParent(const nsIFrame* aParent)
 {
-  nsresult rv = nsBoxFrame::SetParent(aParent);
+  nsBoxFrame::SetParent(aParent);
   nsIFrame* currFrame = (nsIFrame*)aParent;
   while (!mMenuParent && currFrame) {
     // Set our menu parent.
@@ -1363,59 +1365,77 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   
   nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
   nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
-	nsAutoString altAtom; altAtom.AssignWithConversion("alt");
-	nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
+  nsAutoString altAtom; altAtom.AssignWithConversion("alt");
+  nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
   nsAutoString controlAtom; controlAtom.AssignWithConversion("control");
 
-	nsAutoString shiftValue;
-	nsAutoString altValue;
-	nsAutoString commandValue;
+  nsAutoString shiftValue;
+  nsAutoString altValue;
+  nsAutoString commandValue;
   nsAutoString controlValue;
-	nsAutoString keyChar; keyChar.AssignWithConversion(" ");
+  nsAutoString keyChar; keyChar.AssignWithConversion(" ");
 	
-	keyElement->GetAttribute(keyAtom, keyChar);
-	keyElement->GetAttribute(shiftAtom, shiftValue);
-	keyElement->GetAttribute(altAtom, altValue);
-	keyElement->GetAttribute(commandAtom, commandValue);
+  keyElement->GetAttribute(keyAtom, keyChar);
+  keyElement->GetAttribute(shiftAtom, shiftValue);
+  keyElement->GetAttribute(altAtom, altValue);
+  keyElement->GetAttribute(commandAtom, commandValue);
   keyElement->GetAttribute(controlAtom, controlValue);
 	  
-  nsAutoString xulkey;
-  keyElement->GetAttribute(NS_ConvertASCIItoUCS2("xulkey"), xulkey);
-  if (xulkey.EqualsWithConversion("true")) {
-    // Set the default for the xul key modifier
-#ifdef XP_MAC
-    commandValue.AssignWithConversion("true");
-#elif defined(XP_PC) || defined(NTO)
-    controlValue.AssignWithConversion("true");
-#else 
-    altValue.AssignWithConversion("true");
-#endif
-  }
-  
+  PRInt32 accelKey = 0;
+
   PRBool prependPlus = PR_FALSE;
 
-  if(!commandValue.IsEmpty() && !commandValue.EqualsWithConversion("false")) {
-    prependPlus = PR_TRUE;
-	  aAccelString.AppendWithConversion("Ctrl"); // Hmmm. Kinda defeats the point of having an abstraction.
+  nsAutoString xulkey;
+  keyElement->GetAttribute(NS_ConvertASCIItoUCS2("xulkey"), xulkey);
+  if (xulkey.EqualsWithConversion("true"))
+  {
+    // Compiled-in defaults, in case we can't get LookAndFeel --
+    // command for mac, control for all other platforms.
+#ifdef XP_MAC
+    accelKey = nsIDOMKeyEvent::DOM_VK_META;
+#else
+    accelKey = nsIDOMKeyEvent::DOM_VK_CONTROL;
+#endif
+
+    // Get the accelerator key value from prefs, overriding the default:
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs)
+    {
+      rv = prefs->GetIntPref("ui.key.acceleratorKey", &accelKey);
+    }
+#ifdef DEBUG_akkana
+    else
+    {
+      NS_ASSERTION(PR_FALSE,"Menu couldn't get accel key from prefs!\n");
+    }
+#endif
+
+    switch (accelKey)
+    {
+      case nsIDOMKeyEvent::DOM_VK_META:
+        prependPlus = PR_TRUE;
+        aAccelString.AppendWithConversion("Ctrl"); // Hmmm. Kinda defeats the point of having an abstraction.
+        break;
+
+      case nsIDOMKeyEvent::DOM_VK_ALT:
+        prependPlus = PR_TRUE;
+        aAccelString.AppendWithConversion("Alt");
+        break;
+
+      case nsIDOMKeyEvent::DOM_VK_CONTROL:
+      default:
+        prependPlus = PR_TRUE;
+        aAccelString.AppendWithConversion("Ctrl");
+        break;
+    }
   }
 
-  if(!controlValue.IsEmpty() && !controlValue.EqualsWithConversion("false")) {
-    prependPlus = PR_TRUE;
-	  aAccelString.AppendWithConversion("Ctrl");
-  }
-
-  if(!shiftValue.IsEmpty() && !shiftValue.EqualsWithConversion("false")) {
+  if (!shiftValue.IsEmpty() && !shiftValue.EqualsWithConversion("false")) {
     if (prependPlus)
       aAccelString.AppendWithConversion("+");
     prependPlus = PR_TRUE;
     aAccelString.AppendWithConversion("Shift");
-  }
-
-  if (!altValue.IsEmpty() && !altValue.EqualsWithConversion("false")) {
-	  if (prependPlus)
-      aAccelString.AppendWithConversion("+");
-    prependPlus = PR_TRUE;
-    aAccelString.AppendWithConversion("Alt");
   }
 
   keyChar.ToUpperCase();

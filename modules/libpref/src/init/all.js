@@ -414,6 +414,11 @@ pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
 
+// Modifier key prefs: default to Windows settings,
+// menu access key = alt, accelerator key = control.
+pref("ui.key.acceleratorKey", 17);
+pref("ui.key.menuAccessKey", 18);
+
 // Middle-mouse handling
 pref("middlemouse.paste", false);
 pref("middlemouse.openNewWindow", false);
