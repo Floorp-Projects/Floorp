@@ -148,55 +148,55 @@ DayView.prototype.refreshEvents = function( )
 
    for ( i = 0; i < dayEventList.length; i++ ) 
    {
-      var calendarEvent = dayEventList[i];
+      var calendarEventDisplay = dayEventList[i];
             
       //check to make sure that the event is not an all day event...
-      if ( calendarEvent.allDay != true ) 
+      if ( calendarEventDisplay.event.allDay != true ) 
       {
          //see if there's another event at the same start time.
          
          for ( j = 0; j < dayEventList.length; j++ ) 
          {
-            //thisCalendarEvent = dayEventList[j];
-            calendarEventToMatch = dayEventList[j];
-
-            calendarEventToMatchHours = calendarEventToMatch.displayDate.getHours();
+            //thisCalendarEventDisplay = dayEventList[j];
+            calendarEventDisplayToMatch = dayEventList[j];
+            calendarEventToMatchHours = calendarEventDisplayToMatch.displayDate.getHours();
+            calendarEventToMatchMinutes = calendarEventDisplayToMatch.displayDate.getMinutes();
             calendarEventToMatchMinutes = calendarEventToMatch.displayDate.getMinutes();
-            calendarEventDisplayHours = calendarEvent.displayDate.getHours();
-            calendarEventDisplayMinutes = calendarEvent.displayDate.getMinutes();
-            calendarEventToMatchEndHours = calendarEventToMatch.end.getHours();
-            calendarEventToMatchEndMinutes = calendarEventToMatch.end.getMinutes();
+            calendarEventDisplayHours = calendarEventDisplay.displayDate.getHours();
+            calendarEventDisplayMinutes = calendarEventDisplay.displayDate.getMinutes();
+            calendarEventEndHours = calendarEventDisplay.event.end.hour;
+            calendarEventEndMinutes = calendarEventDisplay.event.end.hour;
 
-            calendarEventToMatch.displayDateTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventToMatchMinutes, 0 );
-            calendarEvent.displayDateTime = new Date( 2000, 1, 1, calendarEventDisplayHours, calendarEventDisplayMinutes, 0 );
-            calendarEventToMatch.endTime = new Date( 2000, 1, 1, calendarEventToMatchEndHours, calendarEventToMatchEndMinutes, 0 );
-           
+            calendarEventDisplayToMatch.displayDateTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventToMatchMinutes, 0 );
+            calendarEventDisplay.displayDateTime = new Date( 2000, 1, 1, calendarEventDisplayHours, calendarEventDisplayMinutes, 0 );
+            calendarEventDisplayToMatch.endTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventEndMinutes, 0 );
+
             //if this event overlaps with another event...
-            if ( ( ( calendarEventToMatch.displayDateTime >= calendarEvent.displayDateTime &&
-                 calendarEventToMatch.displayDateTime < calendarEvent.endTime ) ||
-                  ( calendarEvent.displayDateTime >= calendarEventToMatch.displayDateTime &&
-                 calendarEvent.displayDateTime < calendarEventToMatch.endTime ) ) &&
-                 calendarEvent.id != calendarEventToMatch.id )
+            if ( ( ( calendarEventDisplayToMatch.displayDateTime >= calendarEventDisplay.displayDateTime &&
+                 calendarEventDisplayToMatch.displayDateTime < calendarEventDisplay.endTime ) ||
+                  ( calendarEventDisplay.displayDateTime >= calendarEventDisplayToMatch.displayDateTime &&
+                 calendarEventDisplay.displayDateTime < calendarEventDisplayToMatch.endTime ) ) &&
+                 calendarEventDisplay.event.id != calendarEventDisplayToMatch.event.id )
             {
                //get the spot that this event will go in.
-               var ThisSpot = calendarEventToMatch.CurrentSpot;
+               var ThisSpot = calendarEventDisplayToMatch.CurrentSpot;
                
-               calendarEvent.OtherSpotArray.push( ThisSpot );
+               calendarEventDisplay.OtherSpotArray.push( ThisSpot );
                ThisSpot++;
                
-               if ( ThisSpot > calendarEvent.CurrentSpot ) 
+               if ( ThisSpot > calendarEventDisplay.CurrentSpot ) 
                {
-                  calendarEvent.CurrentSpot = ThisSpot;
+                  calendarEventDisplay.CurrentSpot = ThisSpot;
                } 
             }
          }
          SortedOtherSpotArray = new Array();
-         SortedOtherSpotArray = calendarEvent.OtherSpotArray.sort( gCalendarWindow.compareNumbers );
+         SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers );
          LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
          
          //this is the actual spot (0 -> n) that the event will go in on the day view.
-         calendarEvent.CurrentSpot = LowestNumber;
-         calendarEvent.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
+         calendarEventDisplay.CurrentSpot = LowestNumber;
+         calendarEventDisplay.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
   
       }
 
@@ -204,23 +204,23 @@ DayView.prototype.refreshEvents = function( )
    
    for ( var eventIndex = 0; eventIndex < dayEventList.length; ++eventIndex )
    {
-      var calendarEvent = dayEventList[ eventIndex ];
+      var calendarEventDisplay = dayEventList[ eventIndex ];
 
       //if its an all day event, don't show it in the hours stack.
-      if ( calendarEvent.allDay == true ) 
+      if ( calendarEventDisplay.event.allDay == true ) 
       {
          // build up the text to show for this event
          
-         var eventText = calendarEvent.title;
+         var eventText = calendarEventDisplay.event.title;
          
-         if( calendarEvent.location )
+         if( calendarEventDisplay.event.location )
          {
-            eventText += " " + calendarEvent.location;
+            eventText += " " + calendarEventDisplay.event.location;
          }
             
-         if( calendarEvent.description )
+         if( calendarEventDisplay.event.description )
          {
-            eventText += " " + calendarEvent.description;
+            eventText += " " + calendarEventDisplay.event.description;
          }
          
          //show the all day box 
@@ -238,10 +238,22 @@ DayView.prototype.refreshEvents = function( )
 
          newTextNode = document.createElement( "label" );
          newTextNode.setAttribute( "value", eventText );
+         newTextNode.calendarEventDisplay = calendarEventDisplay;
+         newTextNode.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+         newTextNode.setAttribute( "onclick", "dayEventItemClick( this, event )" );
+         newTextNode.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
+         newTextNode.setAttribute( "tooltip", "savetip" );
+         
          //newTextNode.setAttribute( "AllDayText", "true" );
          
          newImage = document.createElement("image");
          newImage.setAttribute( "src", "chrome://calendar/skin/all_day_event.png" );
+         newImage.calendarEventDisplay = calendarEventDisplay;
+         newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+         newImage.setAttribute( "onclick", "dayEventItemClick( this, event )" );
+         newImage.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
+         newImage.setAttribute( "tooltip", "savetip" );
+         
          //newImage.setAttribute( "AllDayText", "true" );
          
          AllDayBox.appendChild( SeperatorNode );
@@ -253,7 +265,7 @@ DayView.prototype.refreshEvents = function( )
       }
       else
       {
-         eventBox = this.createEventBox( calendarEvent );    
+         eventBox = this.createEventBox( calendarEventDisplay );    
          
          //add the box to the stack.
          document.getElementById( "day-view-content-board" ).appendChild( eventBox );
@@ -276,35 +288,32 @@ DayView.prototype.refreshEvents = function( )
 *
 *   This creates an event box for the day view
 */
-DayView.prototype.createEventBox = function ( calendarEvent )
+DayView.prototype.createEventBox = function ( calendarEventDisplay )
 {
    
    // build up the text to show for this event
 
-   var eventText = calendarEvent.title;
+   var eventText = calendarEventDisplay.event.title;
       
-   var eventStartDate = calendarEvent.displayDate;
+   var eventStartDate = calendarEventDisplay.displayDate;
    var startHour = eventStartDate.getHours();
    var startMinutes = eventStartDate.getMinutes();
 
-   var eventEndDate = calendarEvent.end;
-   var endHour = eventEndDate.getHours();
-   
-   var eventEndDateTime = new Date( 2000, 1, 1, eventEndDate.getHours(), eventEndDate.getMinutes(), 0 );
+   var eventEndDateTime = new Date( 2000, 1, 1, calendarEventDisplay.event.end.hour, calendarEventDisplay.event.end.minute, 0 );
    var eventStartDateTime = new Date( 2000, 1, 1, eventStartDate.getHours(), eventStartDate.getMinutes(), 0 );
 
    var eventDuration = new Date( eventEndDateTime - eventStartDateTime );
    
    var hourDuration = eventDuration / (3600000);
    
-   /*if( calendarEvent.location )
+   /*if( calendarEventDisplay.event.location )
    {
-      eventText += "\n" + calendarEvent.location;
+      eventText += "\n" + calendarEventDisplay.event.location;
    }
       
-   if(  calendarEvent.description )
+   if(  calendarEventDisplay.event.description )
    {
-      eventText += "\n" + calendarEvent.description;
+      eventText += "\n" + calendarEventDisplay.event.description;
    }
    */
       
@@ -313,8 +322,8 @@ DayView.prototype.createEventBox = function ( calendarEvent )
    top = eval( ( startHour*kDayViewHourHeight ) + ( ( startMinutes/60 ) * kDayViewHourHeight ) );
    eventBox.setAttribute( "top", top );
    eventBox.setAttribute( "height", ( hourDuration*kDayViewHourHeight ) - 2 );
-   eventBox.setAttribute( "width", 500 / calendarEvent.NumberOfSameTimeEvents );
-   left = eval( ( ( calendarEvent.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) )  + kDayViewHourLeftStart );
+   eventBox.setAttribute( "width", 500 / calendarEventDisplay.NumberOfSameTimeEvents );
+   left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) )  + kDayViewHourLeftStart );
    eventBox.setAttribute( "left", left );
    
    eventBox.setAttribute( "class", "day-view-event-class" );
@@ -322,15 +331,15 @@ DayView.prototype.createEventBox = function ( calendarEvent )
    eventBox.setAttribute( "eventbox", "dayview" );
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEvent, event )" );
+   eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
          
 
-   eventBox.setAttribute( "id", "day-view-event-box-"+calendarEvent.id );
-   eventBox.setAttribute( "name", "day-view-event-box-"+calendarEvent.id );
+   eventBox.setAttribute( "id", "day-view-event-box-"+calendarEventDisplay.event.id );
+   eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
 
    var eventHTMLElement = document.createElement( "description" );
-   eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEvent.id );
+   eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
 
    var eventTextElement = document.createTextNode( eventText );
    
@@ -345,7 +354,7 @@ DayView.prototype.createEventBox = function ( calendarEvent )
    // add a property to the event box that holds the calendarEvent that the
    // box represents
    
-   eventBox.calendarEvent = calendarEvent;
+   eventBox.calendarEventDisplay = calendarEventDisplay;
    
    this.kungFooDeathGripOnEventBoxes.push( eventBox );
          
@@ -441,9 +450,9 @@ DayView.prototype.clickEventBox = function( eventBox, event )
    if( eventBox )
    {
       // select the event
-      this.selectEvent( eventBox.calendarEvent );
+      this.selectEvent( eventBox.calendarEventDisplay.event );
          
-      selectEventInUnifinder( eventBox.calendarEvent );
+      selectEventInUnifinder( eventBox.calendarEventDisplay.event );
    }
    // Do not let the click go through, suppress default selection
    

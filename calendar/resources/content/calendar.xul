@@ -47,7 +47,6 @@
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
-
 <?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
 
 <?xul-overlay href="chrome://calendar/content/unifinder-overlay.xul"?>
@@ -95,24 +94,21 @@
 <script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/calendarEvent.js"/>
 
-<!-- ALL THIS IS NEEDED FOR CATEGORIES 
-   <script type="application/x-javascript" src="chrome://calendar/content/categories.js"/>
-   <script type="application/x-javascript" src="chrome://jslib/content/jslib.js"/>
-   <script type="application/x-javascript" src="chrome://jslib/content/io/fileUtils.js"/>
-   <script type="application/x-javascript" src="chrome://penglobal/content/jslib/libraries/io/file.js"/>
-   <script type="application/x-javascript" src="chrome://penglobal/content/jslib/libraries/io/dir.js"/>
-   <script type="application/x-javascript" src="chrome://penglobal/content/penFileUtils.js"/>
-   <script type="application/x-javascript" src="chrome://penglobal/content/penCategoryManager.js"/>	
--->
 
 <!-- Pop up menus -->
 
 <popupset id="aTooltipSet"/>
 
+<popup id="savetip"/>
+
+<popupset>
  <popup id="debug-menu">
    <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
  </popup>
  
+</popupset>
+
+<popupset>
  <popup  id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
  <popup id="unifinder-options-menu" position="end_before">
@@ -122,6 +118,7 @@
      <menuitem label="&calendar.menu.options.modify;"      oncommand="unifinderModifyCommand()" />
      <menuitem label="&calendar.menu.options.remove;"      oncommand="unifinderRemoveCommand()" />
  </popup>
+</popupset>
 
 
    <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
@@ -169,9 +166,11 @@
     
 		<splitter id="unifinder-splitter" />
    
+		<popupset>
 		<popup id="savetip" style="background-color: #FFFFC0;">
 			<label id="popuptooltiptext" value=" "/>
 		</popup>
+		</popupset>
 
 
 		<spacer flex="1"/>

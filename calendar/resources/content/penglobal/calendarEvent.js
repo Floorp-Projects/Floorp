@@ -1356,6 +1356,12 @@ CalendarEvent.makeNewEvent = function( startDate, allDay )
    calendarEvent.end = new Date( calendarEvent.start );
    calendarEvent.end.setHours( calendarEvent.end.getHours() + 1 );
    
+   if( calendarEvent.end.getDate() != calendarEvent.start.getDate() )
+   {
+      calendarEvent.end.setHours( 23 );
+      calendarEvent.end.setMinutes( 55 );
+   }
+
    calendarEvent.allDay = allDay;
    
    calendarEvent.title       = "";

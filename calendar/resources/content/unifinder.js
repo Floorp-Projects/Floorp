@@ -59,29 +59,52 @@ var unifinderEventDataSourceObserver =
 {
    onLoad   : function()
    {
-      unifinderRefesh();
+        if( !gICalLib.batchMode )
+        {
+            unifinderRefesh();
+        }
    },
    
+   onStartBatch   : function()
+   {
+   },
+    
+   onEndBatch   : function()
+   {
+        unifinderRefesh();
+   },
+    
    onAddItem : function( calendarEvent )
    {
-      if( calendarEvent )
-      {
-         unifinderRefesh();
-      }
+        if( !gICalLib.batchMode )
+        {
+            if( calendarEvent )
+            {
+                unifinderRefesh();
+            }
+        }
    },
 
-   onModifyItem : function( calendarEvent )
+   onModifyItem : function( calendarEvent, originalEvent )
    {
-      if( calendarEvent )
-      {
-         unifinderRefesh();
-      }
+        if( !gICalLib.batchMode )
+        {
+            unifinderRefesh();
+        }
    },
 
    onDeleteItem : function( calendarEvent )
    {
-      unifinderRefesh();
+        if( !gICalLib.batchMode )
+        {
+            unifinderRefesh();
+        }
    },
+
+   onAlarm : function( calendarEvent )
+   {
+      
+   }
 
 };
 
@@ -97,7 +120,7 @@ function prepareCalendarUnifinder( eventSource )
  
    // set up our calendar event observer
    
-   eventSource.addObserver( unifinderEventDataSourceObserver  );
+   gICalLib.addObserver( unifinderEventDataSourceObserver );
 }
 
 
@@ -107,7 +130,7 @@ function prepareCalendarUnifinder( eventSource )
 
 function finishCalendarUnifinder( eventSource )
 {
-   eventSource.removeObserver( unifinderEventDataSourceObserver  );
+//   eventSource.removeObserver( unifinderEventDataSourceObserver  );
 }
 
 
@@ -180,7 +203,7 @@ function unifinderDoubleClickEvent( id )
 {
    // find event by id
    
-   var calendarEvent = gEventSource.getCalendarEventById( id );
+   var calendarEvent = gICalLib.fetchEvent( id );
    
    if( calendarEvent != null )
    {
@@ -202,7 +225,7 @@ function unifinderClickEvent( id, event )
 {
    gUnifinderSelection = id;
    
-   var calendarEvent = gEventSource.getCalendarEventById( id );
+   var calendarEvent = gICalLib.fetchEvent( id );
    
    var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
    
@@ -217,7 +240,8 @@ function unifinderClickEvent( id, event )
 
       gCalendarWindow.setSelectedEvent( calendarEvent );
 
-      gCalendarWindow.currentView.goToDay( calendarEvent.start, true);
+      var eventStartDate = new Date( calendarEvent.start.getTime() );
+      gCalendarWindow.currentView.goToDay( eventStartDate, true);
       
       var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
    
@@ -247,7 +271,7 @@ function unifinderModifyCommand()
       {
          if( gUnifinderSelection != null )
          {
-            var calendarEvent = gEventSource.getCalendarEventById( gUnifinderSelection );
+            var calendarEvent = gICalLib.fetchEvent( gUnifinderSelection );
       
             if( calendarEvent != null )
             {
@@ -280,12 +304,12 @@ function unifinderRemoveCommand()
       {
          if( gUnifinderSelection != null )
          {
-            var calendarEvent = gEventSource.getCalendarEventById( gUnifinderSelection );
+            var calendarEvent = gICalLib.fetchEvent( gUnifinderSelection );
          
             if( calendarEvent != null )
             {
                if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
-                  gEventSource.deleteEvent( calendarEvent );
+                  gICalLib.deleteEvent( calendarEvent.id );
                }
             }
          }
@@ -376,9 +400,11 @@ function refreshSearchEventTree( eventArray, childrenName )
       
       text1.setAttribute( "value" , calendarEvent.title );
       
-      var startDate = formatUnifinderEventDate( calendarEvent.start );
-      var startTime = formatUnifinderEventTime( calendarEvent.start );
-      var endTime  = formatUnifinderEventTime( calendarEvent.end );
+      var eventStartDate = new Date( calendarEvent.start.getTime() );
+      var eventEndDate = new Date( calendarEvent.end.getTime() );
+      var startDate = formatUnifinderEventDate( eventStartDate );
+      var startTime = formatUnifinderEventTime( eventStartDate );
+      var endTime  = formatUnifinderEventTime( eventEndDate );
       
       if( calendarEvent.allDay )
       {
@@ -437,6 +463,7 @@ function refreshEventTree( eventArray, childrenName )
 
       var catTreeItem = document.createElement( "treeitem" );
       catTreeItem.setAttribute( "container", "true" );
+      catTreeItem.setAttribute( "onclick", "selectCategoryInUnifinder()" );
       catTreeItem.categoryobject = ThisCategory;
       //catTreeItem.setAttribute( "id", "catitem"+Categories[i].id );
       
@@ -479,17 +506,17 @@ function refreshEventTree( eventArray, childrenName )
       
       var image = document.createElement( "image" );
       
+      image.setAttribute( "class", "unifinder-calendar-event-icon-class" );
+      
       if ( calendarEvent.alarm ) 
       {
-         var imageSrc = "chrome://calendar/skin/event_alarm.png";
+         image.setAttribute( "alarm", "true" );
       }
-      else
+      else if( calendarEvent.recur == true )
       {
-         var imageSrc = "chrome://calendar/skin/event.png";
+         image.setAttribute( "recur", "true" );
       }
 
-      image.setAttribute( "src", imageSrc );
-      
       var treeCellHBox = document.createElement( "hbox" );
       
       /* 
@@ -497,9 +524,11 @@ function refreshEventTree( eventArray, childrenName )
       ** There is a mysterious child of the HBox, with a flex of one, so set the flex on the HBox really high to hide the child. 
       */
       treeCellHBox.setAttribute( "flex" , "1000" );
-      treeCellHBox.setAttribute( "class", "unifinder-treecell-box-class" );
+      treeCellHBox.setAttribute( "id", "unifinder-treecell-box" );
       treeCellHBox.setAttribute( "crop", "right" );
       
+
+
       var treeCellVBox = document.createElement( "vbox" );
       treeCellVBox.setAttribute( "crop", "right" );
       treeCellVBox.setAttribute( "flex", "1" );
@@ -517,9 +546,11 @@ function refreshEventTree( eventArray, childrenName )
       
       text1.setAttribute( "value" , calendarEvent.title );
       
-      var startDate = formatUnifinderEventDate( calendarEvent.start );
-      var startTime = formatUnifinderEventTime( calendarEvent.start );
-      var endTime  = formatUnifinderEventTime( calendarEvent.end );
+      var eventStartDate = new Date( calendarEvent.start.getTime() );
+      var eventEndDate = new Date( calendarEvent.end.getTime() );
+      var startDate = formatUnifinderEventDate( eventStartDate );
+      var startTime = formatUnifinderEventTime( eventStartDate );
+      var endTime  = formatUnifinderEventTime( eventEndDate );
       
       if( calendarEvent.allDay )
       {

@@ -149,53 +149,53 @@ WeekView.prototype.refreshEvents = function( )
    
       for ( i = 0; i < dayEventList.length; i++ ) 
       {
-         var calendarEvent = dayEventList[i];
+         var calendarEventDisplay = dayEventList[i];
          
          //check to make sure that the event is not an all day event...
          
-         if ( calendarEvent.allDay != true ) 
+         if ( calendarEventDisplay.event.allDay != true ) 
          {
             //see if there's another event at the same start time.
             
             for ( j = 0; j < dayEventList.length; j++ ) 
             {
-               thisCalendarEvent = dayEventList[j];
+               thisCalendarEventDisplay = dayEventList[j];
    
                //if this event overlaps with another event...
-               if ( ( ( thisCalendarEvent.displayDate >= calendarEvent.displayDate &&
-                    thisCalendarEvent.displayDate < calendarEvent.end ) ||
-                     ( calendarEvent.displayDate >= thisCalendarEvent.displayDate &&
-                    calendarEvent.displayDate < thisCalendarEvent.end ) ) &&
-                    calendarEvent.id != thisCalendarEvent.id )
+               if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
+                    thisCalendarEventDisplay.displayDate.getTime() < calendarEventDisplay.event.end.getTime() ) ||
+                     ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
+                    calendarEventDisplay.displayDate.getTime() < thisCalendarEventDisplay.event.end.getTime() ) ) &&
+                    calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id )
                {
                   //get the spot that this event will go in.
-                  var ThisSpot = thisCalendarEvent.CurrentSpot;
+                  var ThisSpot = thisCalendarEventDisplay.CurrentSpot;
                   
-                  calendarEvent.OtherSpotArray.push( ThisSpot );
+                  calendarEventDisplay.OtherSpotArray.push( ThisSpot );
                   ThisSpot++;
                   
-                  if ( ThisSpot > calendarEvent.CurrentSpot ) 
+                  if ( ThisSpot > calendarEventDisplay.CurrentSpot ) 
                   {
-                     calendarEvent.CurrentSpot = ThisSpot;
+                     calendarEventDisplay.CurrentSpot = ThisSpot;
                   } 
                }
             }
             SortedOtherSpotArray = new Array();
-            SortedOtherSpotArray = calendarEvent.OtherSpotArray.sort( gCalendarWindow.compareNumbers);
+            SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers);
             LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
             
             //this is the actual spot (0 -> n) that the event will go in on the day view.
-            calendarEvent.CurrentSpot = LowestNumber;
+            calendarEventDisplay.CurrentSpot = LowestNumber;
             if ( SortedOtherSpotArray.length > 4 ) 
             {
-               calendarEvent.NumberOfSameTimeEvents = 4;
+               calendarEventDisplay.NumberOfSameTimeEvents = 4;
             }
             else
             {
-               calendarEvent.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
+               calendarEventDisplay.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
             }
             
-         dayEventList[i] = calendarEvent;
+         dayEventList[i] = calendarEventDisplay;
          }
    
       }
@@ -208,39 +208,37 @@ WeekView.prototype.refreshEvents = function( )
       
       for ( var eventIndex = 0; eventIndex < dayEventList.length; ++eventIndex )
       {
-         var calendarEvent = dayEventList[ eventIndex ];
+         var calendarEventDisplay = dayEventList[ eventIndex ];
    
-         var eventDate = calendarEvent.start;
-      
          // get the day box for the calendarEvent's day
          
-         var eventDayInMonth = eventDate.getDate();
+         var eventDayInMonth = calendarEventDisplay.event.start.day;
          
          var weekBoxItem = gHeaderDateItemArray[ dayIndex ];
                
          // Display no more than three, show dots for the events > 3
          
-         if ( calendarEvent.allDay != true ) 
+         if ( calendarEventDisplay.event.allDay != true ) 
          {
             weekBoxItem.numEvents +=  1;
          }
          
-         //if its an all day event, don't show it in the hours stack.
+         //if its an all day event, don't show it in the hours bulletin board.
          
-         if ( calendarEvent.allDay == true ) 
+         if ( calendarEventDisplay.event.allDay == true ) 
          {
             // build up the text to show for this event
             
-            var eventText = calendarEvent.title;
+            var eventText = calendarEventDisplay.event.title;
             
-            if( calendarEvent.location )
+            if( calendarEventDisplay.event.location )
             {
-               eventText += " " + calendarEvent.location;
+               eventText += " " + calendarEventDisplay.event.location;
             }
                
-            if( calendarEvent.description )
+            if( calendarEventDisplay.event.description )
             {
-               eventText += " " + calendarEvent.description;
+               eventText += " " + calendarEventDisplay.event.description;
             }
             
             //show the all day box 
@@ -262,12 +260,20 @@ WeekView.prototype.refreshEvents = function( )
             //newTextNode.setAttribute( "value", eventText );
             newHTMLNode.appendChild( newTextNode );
             newHTMLNode.setAttribute( "WeekViewAllDayText", "true" );
-            
+            newHTMLNode.calendarEventDisplay = calendarEventDisplay;
+            newHTMLNode.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+            newHTMLNode.setAttribute( "onclick", "weekEventItemClick( this, event )" );
+            newHTMLNode.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
+            newHTMLNode.setAttribute( "tooltip", "savetip" );
+         
+
             newImage = document.createElement("image");
             newImage.setAttribute( "src", "chrome://calendar/skin/all_day_event.png" );
             newImage.setAttribute( "WeekViewAllDayText", "true" );
-            newImage.calendarEvent = calendarEvent;
-            newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEvent, event )" );
+            newImage.calendarEventDisplay = calendarEventDisplay;
+            newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+            newImage.setAttribute( "onclick", "weekEventItemClick( this, event )" );
+            newImage.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newImage.setAttribute( "tooltip", "savetip" );
          
 
@@ -278,11 +284,11 @@ WeekView.prototype.refreshEvents = function( )
             //change the seperator to add commas after the text.
             Seperator = ", ";
          }
-         else if ( calendarEvent.CurrentSpot <= 4 ) 
+         else if ( calendarEventDisplay.CurrentSpot <= 4 ) 
          {
-            eventBox = this.createEventBox( calendarEvent, dayIndex );    
+            eventBox = this.createEventBox( calendarEventDisplay, dayIndex );    
             
-            //add the box to the stack.
+            //add the box to the bulletin board.
             document.getElementById( "week-view-content-board" ).appendChild( eventBox );
          }
       }
@@ -304,22 +310,19 @@ WeekView.prototype.refreshEvents = function( )
 *
 *   This creates an event box for the day view
 */
-WeekView.prototype.createEventBox = function ( calendarEvent, dayIndex )
+WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
 {
    
    // build up the text to show for this event
 
-   var eventText = calendarEvent.title;
+   var eventText = calendarEventDisplay.event.title;
       
-   var eventStartDate = calendarEvent.displayDate;
+   var eventStartDate = calendarEventDisplay.displayDate;
    var startHour = eventStartDate.getHours();
    var startMinutes = eventStartDate.getMinutes();
 
-   var eventEndDate = calendarEvent.end;
-   var endHour = eventEndDate.getHours();
-
    var eventEndDateTime = new Date( 2000, 1, 1, eventEndDate.getHours(), eventEndDate.getMinutes(), 0 );
-   var eventStartDateTime = new Date( 2000, 1, 1, eventStartDate.getHours(), eventStartDate.getMinutes(), 0 );
+   var eventEndDateTime = new Date( 2000, 1, 1, calendarEventDisplay.event.end.hour, calendarEventDisplay.event.end.minute, 0 );
 
    var eventDuration = new Date( eventEndDateTime - eventStartDateTime );
    
@@ -327,43 +330,41 @@ WeekView.prototype.createEventBox = function ( calendarEvent, dayIndex )
    
    var eventBox = document.createElement( "vbox" );
    
-   eventBox.calendarEvent = calendarEvent;
+   eventBox.calendarEventDisplay = calendarEventDisplay;
    
    var Height = ( hourDuration * kWeekViewHourHeight ) + 1;
-   var Width = ( 80 / calendarEvent.NumberOfSameTimeEvents ) - 1;
+   var Width = ( 80 / calendarEventDisplay.NumberOfSameTimeEvents ) - 1;
    eventBox.setAttribute( "height", Height );
    eventBox.setAttribute( "width", Width );
       
    top = eval( ( startHour*kWeekViewHourHeight ) + ( ( startMinutes/60 ) * kWeekViewHourHeight ) - kWeekViewHourHeightDifference );
    eventBox.setAttribute( "top", top );
    
-   left = eval( kWeekViewHourLeftStart + ( kWeekViewHourWidth * ( dayIndex - 1 ) ) + ( ( calendarEvent.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) + 1 );
+   left = eval( kWeekViewHourLeftStart + ( kWeekViewHourWidth * ( dayIndex - 1 ) ) + ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) + 1 );
    eventBox.setAttribute( "left", left );
    
    eventBox.setAttribute( "class", "week-view-event-class" );
-   eventBox.setAttribute( "style", "max-width: "+Width+"; max-height: "+Height+";" );
-   eventBox.setAttribute( "flex", "0" );
+   eventBox.setAttribute( "style", "width: "+Width+"; height: "+Height+";" );
    eventBox.setAttribute( "eventbox", "weekview" );
    eventBox.setAttribute( "onclick", "weekEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "id", "week-view-event-box-"+calendarEvent.id );
-   eventBox.setAttribute( "name", "week-view-event-box-"+calendarEvent.id );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEvent, event )" );
+   eventBox.setAttribute( "id", "week-view-event-box-"+calendarEventDisplay.event.id );
+   eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
+   eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
          
    /*
-   ** REMOVE THE EVENT TEXT FOR NOW 
-   ** 
-   ** THIS REQUIRES THE DESCRIPTION XUL ELEMENT, WHICH WE MISSED BY 9 DAYS FOR BETA
+   ** The event description. This doesn't go multi line, but does crop properly.
    */
-   /*
-   var eventDescriptionElement = document.createElement( "description" );
+   var eventDescriptionElement = document.createElement( "label" );
+   eventDescriptionElement.setAttribute( "value", eventText );
+   eventDescriptionElement.setAttribute( "flex", "1" );
    var DescriptionText = document.createTextNode( "This is my new text" );
    eventDescriptionElement.appendChild( DescriptionText );
    eventDescriptionElement.setAttribute( "style", "border: 1px solid red; height: "+Height+";" );
    eventDescriptionElement.crop = "end";
    eventBox.appendChild( eventDescriptionElement );
-   */
+   
    
    // add a property to the event box that holds the calendarEvent that the
    // box represents
@@ -612,14 +613,14 @@ WeekView.prototype.clickEventBox = function( eventBox, event )
    if( eventBox )
    {
       // select the event
-      this.selectEvent( eventBox.calendarEvent );
+      this.selectEvent( eventBox.calendarEventDisplay.event );
       
       //set the selected date to the start date of this event.
    
-      this.calendarWindow.selectedDate.setDate( eventBox.calendarEvent.start.getDate() );
+      this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
          
       // mark new box as selected
-      var ArrayOfBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+eventBox.calendarEvent.id );
+      var ArrayOfBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+eventBox.calendarEventDisplay.event.id );
       for ( i = 0; i < ArrayOfBoxes.length; i++ ) 
       {
          ArrayOfBoxes[i].setAttribute( "selected", "true" );
@@ -629,7 +630,7 @@ WeekView.prototype.clickEventBox = function( eventBox, event )
       
       //select the event in the unifinder
    
-      selectEventInUnifinder( eventBox.calendarEvent );
+      selectEventInUnifinder( eventBox.calendarEventDisplay.event );
 
 
    }

@@ -204,9 +204,9 @@ MonthView.prototype.refreshEvents = function( )
    
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
-      var calendarEvent = monthEventList[ eventIndex ];
+      var calendarEventDisplay = monthEventList[ eventIndex ];
       
-      var eventDate = calendarEvent.displayDate;
+      var eventDate = calendarEventDisplay.displayDate;
       // get the day box for the calendarEvent's day
       var eventDayInMonth = eventDate.getDate();
       
@@ -221,46 +221,47 @@ MonthView.prototype.refreshEvents = function( )
          // Make a text item to show the event title
          
          var eventBoxText = document.createElement( "label" );
-         eventBoxText.setAttribute( "crop", "right" );
+         eventBoxText.setAttribute( "crop", "end" );
          eventBoxText.setAttribute( "class", "month-day-event-text-class" );
-         eventBoxText.setAttribute( "value", calendarEvent.title );
-         
+         eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
+         //you need this flex in order for text to crop
+         eventBoxText.setAttribute( "flex", "1" );
+
          // Make a box item to hold the text item
          
-         var eventBox = document.createElement( "vbox" );
-         eventBox.setAttribute( "id", "month-view-event-box-"+calendarEvent.id );
-         eventBox.setAttribute( "name", "month-view-event-box-"+calendarEvent.id );
-         eventBox.setAttribute( "event"+calendarEvent.id, true );
+         var eventBox = document.createElement( "box" );
+         eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
+         eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
+         eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
          eventBox.setAttribute( "class", "month-day-event-box-class" );
          eventBox.setAttribute( "eventbox", "monthview" );
          eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
+         eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+         eventBox.setAttribute( "tooltip", "savetip" );
          
          // add a property to the event box that holds the calendarEvent that the
          // box represents
 
-         eventBox.calendarEvent = calendarEvent;
+         eventBox.calendarEventDisplay = calendarEventDisplay;
          
          this.kungFooDeathGripOnEventBoxes.push( eventBox );
-         
-         eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEvent, event )" );
-         
-         eventBox.setAttribute( "tooltip", "savetip" );
          
          // add the text to the event box and the event box to the day box
          
          eventBox.appendChild( eventBoxText );        
+         
          dayBoxItem.appendChild( eventBox );
       }
       else
       {
          //if there is not a box to hold the little dots for this day...
-         if ( !document.getElementById( "dotboxholder"+calendarEvent.start.getDate() ) )
+         if ( !document.getElementById( "dotboxholder"+calendarEventDisplay.event.start.day ) )
          {
             //make one
             dotBoxHolder = document.createElement( "hbox" );
             
-            dotBoxHolder.setAttribute( "id", "dotboxholder"+calendarEvent.start.getDate() );
+            dotBoxHolder.setAttribute( "id", "dotboxholder"+calendarEventDisplay.event.start.day );
             
             dotBoxHolder.setAttribute( "eventbox", "monthview" );
                         
@@ -271,7 +272,7 @@ MonthView.prototype.refreshEvents = function( )
          {
             //otherwise, get the box
             
-            dotBoxHolder = document.getElementById( "dotboxholder"+calendarEvent.start.getDate() );
+            dotBoxHolder = document.getElementById( "dotboxholder"+calendarEventDisplay.event.start.day );
 
          }
          
@@ -289,14 +290,14 @@ MonthView.prototype.refreshEvents = function( )
             
             eventBox.setAttribute( "class", "month-view-event-dot-class" );
             
-            eventBox.setAttribute( "id", "month-view-event-box-"+calendarEvent.id );
-            eventBox.setAttribute( "name", "month-view-event-box-"+calendarEvent.id );
+            eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
+            eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
             
-            eventBox.calendarEvent = calendarEvent;
+            eventBox.calendarEventDisplay = calendarEventDisplay;
             
             this.kungFooDeathGripOnEventBoxes.push( eventBox );
             
-            eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEvent, event )" );
+            eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
             eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
    
@@ -312,13 +313,13 @@ MonthView.prototype.refreshEvents = function( )
 
       // mark the box as selected, if the event is
          
-      if( this.calendarWindow.getSelectedEvent() === calendarEvent )
+      if( this.calendarWindow.getSelectedEvent() === calendarEventDisplay.event )
       {
-         var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
+         var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEventDisplay.event );
    
          gCalendarWindow.currentView.clickEventBox( eventBox ); 
 
-         selectEventInUnifinder( calendarEvent );
+         selectEventInUnifinder( calendarEventDisplay.event );
       } 
    }
 }
@@ -515,7 +516,7 @@ MonthView.prototype.deletedSelectedEvent = function( )
    {
       for ( i = 0; i < this.selectedEventBoxes.length; i++ ) 
       {
-         var calendarEvent =  this.selectedEventBoxes[i].calendarEvent;
+         var calendarEvent =  this.selectedEventBoxes[i].calendarEventDisplay.event;
       
          // tell the event source to delete it, the observers will be called
          // back into to update the display
@@ -684,7 +685,7 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
    //set the selected date to the start date of this event.
    if( eventBox) 
    {
-      this.calendarWindow.selectedDate.setDate( eventBox.calendarEvent.start.getDate() );
+      this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
       
       // clear the old selected box
       
@@ -692,11 +693,11 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
    
       // select the event
       
-      this.calendarWindow.setSelectedEvent( eventBox.calendarEvent );
+      this.calendarWindow.setSelectedEvent( eventBox.calendarEventDisplay.event );
       
       // mark new box as selected
       
-      var ArrayOfBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+eventBox.calendarEvent.id );
+      var ArrayOfBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+eventBox.calendarEventDisplay.event.id );
    
       for ( i = 0; i < ArrayOfBoxes.length; i++ ) 
       {
@@ -713,7 +714,7 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
       
       //select the event in the unifinder
    
-      selectEventInUnifinder( eventBox.calendarEvent );
+      selectEventInUnifinder( eventBox.calendarEventDisplay.event );
    }
    
 

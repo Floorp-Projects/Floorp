@@ -74,9 +74,10 @@
          <box flex="1" id="month-next-button-box">
             <image id="month-next-button" onclick="gCalendarWindow.goToNext()"/>            
          </box>
+    
+      </hbox>
       
-      </hbox>            
-			  
+      	  
 	<vbox id="month-content-box">
 			 
    		<!-- Month View: Day name header -->

@@ -40,17 +40,6 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    
-  <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-  	  <xul:box class="button-internal-box" orient="vertical" flex="1">
-        <xul:image class="button-icon" inherits="src"/>
-        <xul:box orient="vertical" class="button-text-container" flex="1">
-          <xul:label class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:box>
-      </xul:box>
-    </content>
-  </binding>
-  
   <binding id="penButton" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
   	  <xul:box class="button-internal-box" orient="vertical" flex="1" style="-moz-box-align:center;">
@@ -59,16 +48,5 @@
         <xul:spacer flex="1"/>
       </xul:box>
     </content>
-  </binding>  
-
-  <binding id="penButton-labelRight" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-  	  <xul:box class="button-internal-box" flex="1" style="-moz-box-align:center;">
-        <xul:image class="button-icon" inherits="src"/>
-        <xul:spacer flex="1"/>
-        <xul:label class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        <xul:spacer flex="1"/>
-      </xul:box>
-    </content>
-  </binding>  
+  </binding>    
 </bindings>  

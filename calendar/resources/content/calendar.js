@@ -79,7 +79,11 @@
 
 var gDebugCalendar = false;
 
-// calendar event data source see calendarEvent.js
+// ICal Library
+
+var gICalLib = null;
+
+// calendar event data source see penCalendarEvent.js
 
 var gEventSource = null;
 
@@ -91,15 +95,10 @@ var gCalendarWindow;
 
 var gHeaderDateItemArray = null;
 
-//a category manager available globally.
-
-//var gCategoryManager = null;
-
 // Show event details on mouseover
 
 var showEventDetails = true;
 
-var Root = null;
 
 // DAY VIEW VARIABLES
 var kDayViewHourHeight = 50;
@@ -125,16 +124,17 @@ const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that
 
 function calendarInit() 
 {
-   
-   // get the calendar event data source
-   gEventSource = self.gCalendarEventDataSource;
-   
-   //get the category manager.
-   
-   //gCategoryManager = new PenCategoryManager( "calendar" );
+	// get the calendar event data source
+   // global calendar
+   var dirServiceProvider = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIDirectoryServiceProvider);   
+   var persistent = new Object();
+   var homeDir = dirServiceProvider.getFile("Home", persistent);
 
-   //prepareCalendarCategories( );
-      
+   gEventSource = new CalendarEventDataSource( null, homeDir.unicodePath );
+   
+   // get the Ical Library
+   gICalLib = gEventSource.getICalLib();
+   
    // set up the unifinder
    
    prepareCalendarUnifinder( gEventSource );
@@ -179,8 +179,6 @@ function calendarFinish()
 {
    finishCalendarUnifinder( gEventSource );
    
-   //finishCalendarCategories();
-
    gCalendarWindow.close( );
 }
 
@@ -229,7 +227,7 @@ function dayEventItemClick( eventBox, event )
 
 function dayEventItemDoubleClick( eventBox, event )
 {
-   editEvent( eventBox.calendarEvent );
+   editEvent( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
    {
@@ -263,7 +261,7 @@ function dayViewHourDoubleClick( hourNumber, event )
    gCalendarWindow.setSelectedHour( hourNumber );
    
    var startDate = gCalendarWindow.dayView.getNewEventDate();
-   newEvent( startDate, false );
+   newEvent( startDate );
 }
 
 
@@ -298,7 +296,7 @@ function weekEventItemClick( eventBox, event )
 
 function weekEventItemDoubleClick( eventBox, event )
 {
-   editEvent( eventBox.calendarEvent );
+   editEvent( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
    {
@@ -339,7 +337,7 @@ function weekViewHourDoubleClick( dayIndex, hourNumber, event )
    gCalendarWindow.setSelectedHour( hourNumber );
    
    var startDate = gCalendarWindow.weekView.getNewEventDate();
-   newEvent( startDate, false );
+   newEvent( startDate );
    
 }
 
@@ -368,11 +366,11 @@ function monthEventBoxClickEvent( eventBox, event )
 
 function monthEventBoxDoubleClickEvent( eventBox, event )
 {
-   selectEventInUnifinder( eventBox.calendarEvent );
+   selectEventInUnifinder( eventBox.calendarEventDisplay.event );
 
    gCalendarWindow.monthView.clearSelectedDate( );
    
-   editEvent( eventBox.calendarEvent );
+   editEvent( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
    {
@@ -404,6 +402,10 @@ function selectEventInUnifinder( calendarEvent )
    document.getElementById( "unifinder-remove-button" ).removeAttribute( "disabled" );
 
    document.getElementById( "unifinder-modify-button" ).removeAttribute( "disabled" );
+
+   document.getElementById( "unifinder-modify-menu" ).removeAttribute( "disabled" );
+   
+   document.getElementById( "unifinder-remove-menu" ).removeAttribute( "disabled" );
 }
 
 
@@ -426,8 +428,34 @@ function deselectEventInUnifinder( )
    document.getElementById( "unifinder-remove-button" ).setAttribute( "disabled", true );
 
    document.getElementById( "unifinder-modify-button" ).setAttribute( "disabled", true );
+
+   document.getElementById( "unifinder-modify-menu" ).setAttribute( "disabled", true );
+   
+   document.getElementById( "unifinder-remove-menu" ).setAttribute( "disabled", true );
 }
    
+function selectCategoryInUnifinder( )
+{
+   document.getElementById( "unifinder-remove-button" ).removeAttribute( "disabled" );
+
+   document.getElementById( "unifinder-modify-button" ).removeAttribute( "disabled" );
+
+   document.getElementById( "unifinder-modify-menu" ).removeAttribute( "disabled" );
+   
+   document.getElementById( "unifinder-remove-menu" ).removeAttribute( "disabled" );
+}
+
+function deselectCategoryInUnifinder( )
+{
+   document.getElementById( "unifinder-remove-button" ).setAttribute( "disabled", true );
+
+   document.getElementById( "unifinder-modify-button" ).setAttribute( "disabled", true );
+
+   document.getElementById( "unifinder-modify-menu" ).setAttribute( "disabled", true );
+   
+   document.getElementById( "unifinder-remove-menu" ).setAttribute( "disabled", true );
+}
+
 
 /** 
 * Called when the new event button is clicked
@@ -439,14 +467,26 @@ function newEventCommand()
    
    
    Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
+   
    startDate = new Date( startDate.getFullYear(),
                          startDate.getMonth(),
                          startDate.getDate(),
                          startDate.getHours(),
                          Minutes,
                          0);
-   newEvent( startDate, false );
+   newEvent( startDate );
 }
+
+
+function createEvent ()
+{
+   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+   return iCalEvent;
+}
+
+
+
 
 
 /** 
@@ -454,7 +494,7 @@ function newEventCommand()
 * When the user clicks OK "addEventDialogResponse" is called
 */
 
-function newEvent( startDate, allDay )
+function newEvent( startDate )
 {
    // set up a bunch of args to pass to the dialog
    
@@ -464,8 +504,12 @@ function newEvent( startDate, allDay )
    
    args.onOk =  self.addEventDialogResponse; 
    
-   args.calendarEvent = self.CalendarEvent.makeNewEvent( startDate, allDay );
+   args.calendarEvent = createEvent();
    
+   args.calendarEvent.start.setTime( startDate );
+   args.calendarEvent.end.setTime( startDate );
+   args.calendarEvent.end.hour++;
+
    // open the dialog non modally
             
    openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
@@ -481,7 +525,7 @@ function newEvent( startDate, allDay )
 
 function addEventDialogResponse( calendarEvent )
 {
-   gEventSource.addEvent( calendarEvent );
+   gICalLib.addEvent( calendarEvent );
 }
 
 
@@ -514,7 +558,7 @@ function editEvent( calendarEvent )
 
 function modifyEventDialogResponse( calendarEvent )
 {
-   gEventSource.modifyEvent( calendarEvent );
+   gICalLib.modifyEvent( calendarEvent );
    
 }
 
@@ -523,34 +567,35 @@ function modifyEventDialogResponse( calendarEvent )
 *  Called when a user hovers over an element and the text for the mouse over is changed.
 */
 
-function getPreviewText( calendarEvent )
+function getPreviewText( calendarEventDisplay )
 {
-   //var TextToReturn = " At "+calendarEvent.displayDate+" you have an event titled: "+calendarEvent.title;
+   var TextToReturn = " At "+calendarEventDisplay.displayDate+" you have an event titled: "+calendarEventDisplay.event.title;
 	HolderBox = document.createElement( "vbox" );
 
    TitleHtml = document.createElement( "description" );
-   TitleText = document.createTextNode( calendarEvent.title );
+   TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
    TitleHtml.appendChild( TitleText );
    HolderBox.appendChild( TitleHtml );
 
    DateHtml = document.createElement( "description" );
-   DateText = document.createTextNode( calendarEvent.start );
+   DateText = document.createTextNode( "Start: "+calendarEventDisplay.event.start.toString() );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
-   TimeHtml = document.createElement( "description" );
-   TimeText = document.createTextNode( calendarEvent.start );
+   /*TimeHtml = document.createElement( "description" );
+   TimeText = document.createTextNode( calendarEvent.start.toString() );
    TimeHtml.appendChild( TimeText );
    HolderBox.appendChild( TimeHtml );
-
+   */
    DescriptionHtml = document.createElement( "description" );
-   DescriptionText = document.createTextNode( calendarEvent.description );
+   DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
    DescriptionHtml.appendChild( DescriptionText );
    HolderBox.appendChild( DescriptionHtml );
 
 
    return ( HolderBox );
 }
+
 
 
 /*-----------------------------------------------------------------
@@ -622,61 +667,83 @@ function CalendarWindow( calendarDataSource )
    
    this.calendarEventDataSourceObserver =
    {
+      
       onLoad   : function()
       {
          // called when the data source has finished loading
          
          calendarWindow.currentView.refreshEvents( );
       },
+      onStartBatch   : function()
+      {
+      },
+      onEndBatch   : function()
+      {
+         calendarWindow.currentView.refreshEvents( );
+      },
       
       onAddItem : function( calendarEvent )
       {
-         if( calendarEvent )
+         if( !gICalLib.batchMode )
          {
-            calendarWindow.setSelectedEvent( calendarEvent );
-            calendarWindow.currentView.clearSelectedDate( );
-            calendarWindow.currentView.refreshEvents( )
+             if( calendarEvent )
+             {
+                calendarWindow.setSelectedEvent( calendarEvent );
+                calendarWindow.currentView.clearSelectedDate( );
+                calendarWindow.currentView.refreshEvents( );
+             }
          }
       },
    
-      onModifyItem : function( calendarEvent )
+      onModifyItem : function( calendarEvent, originalEvent )
       {
-         if( calendarEvent )
-         {
-            calendarWindow.setSelectedEvent( calendarEvent );
-            
-         }
-         calendarWindow.currentView.clearSelectedDate( );
-            
-         calendarWindow.currentView.refreshEvents( );
+        if( !gICalLib.batchMode )
+        {
+             if( calendarEvent )
+             {
+                calendarWindow.setSelectedEvent( calendarEvent );
+                
+             }
+             calendarWindow.currentView.clearSelectedDate( );
+                
+             calendarWindow.currentView.refreshEvents( );
+        }
       },
    
       onDeleteItem : function( calendarEvent, nextEvent )
       {
-         calendarWindow.clearSelectedEvent( calendarEvent );
-         
-         if ( nextEvent ) 
-         {
-            calendarWindow.setSelectedEvent( nextEvent );
-
-            calendarWindow.currentView.clearSelectedDate( );
-         }
-         else
-         {
-            calendarWindow.setSelectedDate( calendarEvent.start );
-
-            if( calendarWindow.currentView == calendarWindow.monthView )
+        calendarWindow.clearSelectedEvent( calendarEvent );
+        
+        if( !gICalLib.batchMode )
+        {
+            if ( nextEvent ) 
             {
-               calendarWindow.currentView.hiliteSelectedDate( );
+                calendarWindow.setSelectedEvent( nextEvent );
+                
+                calendarWindow.currentView.clearSelectedDate( );
             }
-         }
-         calendarWindow.currentView.refreshEvents( )
+            else
+            {
+                var eventStartDate = new Date( calendarEvent.start.getTime() );
+                calendarWindow.setSelectedDate( eventStartDate );
+                
+                if( calendarWindow.currentView == calendarWindow.monthView )
+                {
+                   calendarWindow.currentView.hiliteSelectedDate( );
+                }
+            }
+            calendarWindow.currentView.refreshEvents( );
+        }
       },
+      onAlarm : function( calendarEvent )
+      {
+      
+      }
    };
    
    // add the observer to the event source
    
-   this.eventSource.addObserver( this.calendarEventDataSourceObserver );
+   gICalLib.addObserver( this.calendarEventDataSourceObserver );
 }
 
 
@@ -688,7 +755,7 @@ function CalendarWindow( calendarDataSource )
 
 CalendarWindow.prototype.close = function( )
 {
-   this.eventSource.removeObserver(  this.calendarEventDataSourceObserver ); 
+//   this.eventSource.removeObserver(  this.calendarEventDataSourceObserver ); 
 }
 
 
@@ -884,6 +951,7 @@ CalendarWindow.prototype.switchToView = function( newView )
    if( this.currentView !== newView )
    {
       // call switch from for the view we are leaving
+      
       if( this.currentView )
       {
          this.currentView.switchFrom();
@@ -917,7 +985,7 @@ CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
       Html.removeChild( Html.firstChild ); 
    }
    
-   HolderBox = getPreviewText( event.currentTarget.calendarEvent );
+   HolderBox = getPreviewText( event.currentTarget.calendarEventDisplay );
    
    Html.appendChild( HolderBox );
 }
@@ -933,7 +1001,7 @@ CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
 CalendarWindow.prototype.getLowestElementNotInArray = function( InputArray )
 {
    var Temp = 1;
-   var AllZero = 1; //are all the elements in the array 0?
+   var AllZero = true; //are all the elements in the array 0?
    //CAUTION: Watch the scope here.  This function is called from inside a nested for loop.
    //You can't have the index variable named anything that is used in those for loops.
 
@@ -946,7 +1014,7 @@ CalendarWindow.prototype.getLowestElementNotInArray = function( InputArray )
       }
       if ( InputArray[Mike] > 0)
       {
-         AllZero = 0;
+         AllZero = false;
          Temp++; //don't increment if the array value is 0, otherwise add 1.
       }
    }
