@@ -236,7 +236,6 @@ function MsgFolderProperties()
 
 	var name = GetFolderNameFromUri(preselectedURI, folderTree);
 
-	dump("preselectedURI = " + preselectedURI + "\n");
 	var windowTitle = gMessengerBundle.getString("folderProperties");
 	var dialog = window.openDialog(
                     "chrome://messenger/content/imapFolderProps.xul",
@@ -312,15 +311,5 @@ function LastToClose()
 
 function MsgSetFolderCharset() 
 {
-  var preselectedURI = GetSelectedFolderURI();
-  var folderTree = GetFolderTree();
-  var name = GetFolderNameFromUri(preselectedURI, folderTree);
-  var windowTitle = gMessengerBundle.getString("folderProperties");
-  var dialog = window.openDialog(
-                      "chrome://messenger/content/imapFolderProps.xul",
-                      "",
-                      "chrome,centerscreen,titlebar,modal",
-                      {preselectedURI:preselectedURI, title:windowTitle,
-                      okCallback:FolderProperties, 
-                      tabID:"folderCharsetTab",  tabIndex:2, name:name});
+  MsgFolderProperties() 
 }

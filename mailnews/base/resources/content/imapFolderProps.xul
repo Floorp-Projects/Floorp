@@ -19,7 +19,7 @@
   Rights Reserved.
  
    - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
-
+                     Doron Rosenberg         <doronr@naboonline.com> 
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
@@ -40,56 +40,52 @@
   <script language="JavaScript" src="chrome://messenger/content/folderProps.js"></script>
 
 <keyset id="dialogKeys"/>  
-  
+
 <tabbox orient="vertical">
   <tabs>
-    <tab id="GeneralTab" label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
-    <tab id="DownloadTab" label="&download.label;" accesskey="&download.accesskey;"/>
-    <tab id="folderCharsetTab" label="&folderCharsetTab.label;" accesskey="&folderCharsetTab.accesskey;"/>
-    <tab id="OfflineTab" label="&folderOfflineTab.label;" accesskey="&folderOfflineTab.accesskey;"/>
+    <tab id="GeneralTab" label="&generalInfo.label;"/>
+    <tab hidefor="pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
   </tabs>
   <tabpanels id="folderPropTabPanel">
-  	<box orient="vertical">
-  		<box id="nameBox" orient="vertical">
-  			<text class="label" value="&folderProps.name.label;" />
-  			<textbox id="name" readonly="true" />
-  		</box>
-    </box>
-
-  <titledbox orient="vertical">
-    <titledbox orient="vertical">
-      <checkbox id="selectForDownload" label="&download.check.label;" />
-    </titledbox>
-  </titledbox>
-
-    <box orient="vertical">
-      <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
-        <template>
-          <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-          </menupopup>
-        </template>
-      </menulist> 
-      <checkbox id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
-    </box>
+    <vbox>
+      <hbox id="nameBox" autostretch="never">
+        <text class="label" value="&folderProps.name.label;" for="name"/>
+        <textbox flex="1" id="name" readonly="true" />
+      </hbox>
+      
+      <vbox>
+        <hbox autostretch="never" valign="middle">
+          <text class="label" value="&folderCharsetTab.label;" for="folderCharSetList"/>
+          <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
+            <template>
+              <menupopup>
+                <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+              </menupopup>
+            </template>
+          </menulist>
+        </hbox> 
+        <checkbox id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
+      </vbox>
+    </vbox>
  
-    <titledbox orient="vertical">
-        <titledbox orient="vertical">
-            <checkbox iscontrolcontainer="true" hidable="true"  
-                    wsm_persist="true" id="offline.selectForOfflineFolder"  
-                    hidefor="nntp" label="&offlineFolder.check.label;" />
-            <checkbox iscontrolcontainer="true" hidable="true" 
-                    wsm_persist="true" id="offline.selectForOfflineNewsgroup" 
-                    hidefor="pop3,imap" label="&selectofflineNewsgroup.check.label;" />
-        </titledbox>
-            <button iscontrolcontainer="true" hidable="true" label="&offlineFolder.button.label;" 
-                    class="dialog" oncommand="onOfflineFolderDownload();" 
-                    id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
-            <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
-                    class="dialog" oncommand="onOfflineFolderDownload();" 
-                    id="offline.offlineNewsgroupDownloadButton" hidefor="pop3,imap" orient="right"/>
-    </titledbox>
+    <vbox hidable="true" hidefor="pop3,none" valign="top" autostretch="never">
+      <vbox>
+        <checkbox iscontrolcontainer="true" hidable="true"  
+                  wsm_persist="true" id="offline.selectForOfflineFolder"  
+                  hidefor="nntp" label="&offlineFolder.check.label;" />
+        <checkbox iscontrolcontainer="true" hidable="true" 
+                  wsm_persist="true" id="offline.selectForOfflineNewsgroup" 
+                  hidefor="imap" label="&selectofflineNewsgroup.check.label;" />
+      </vbox>
+      <button iscontrolcontainer="true" hidable="true" label="&offlineFolder.button.label;" 
+              class="dialog" oncommand="onOfflineFolderDownload();" 
+              id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
+      <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
+              class="dialog" oncommand="onOfflineFolderDownload();" 
+              id="offline.offlineNewsgroupDownloadButton" hidefor="imap" orient="right"/>
+    </vbox>
   </tabpanels>
 </tabbox>
-<box id="okCancelButtonsRight"/>
+
+<box align="right" id="okCancelButtonsRight"/>
 </window>
