@@ -82,7 +82,7 @@ Rights Reserved.
 <!ENTITY filtersCmd.accesskey "m">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings">
-<!ENTITY accountManagerCmd.accesskey "a">
+<!ENTITY accountManagerCmd.accesskey "m">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
 <!ENTITY undoMoveMsgCmd.label "Undo Move Message">

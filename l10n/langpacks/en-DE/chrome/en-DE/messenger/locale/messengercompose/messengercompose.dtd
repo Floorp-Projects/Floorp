@@ -46,7 +46,7 @@
 	<!ENTITY findAgainCmd.key "G">
 	<!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings...">
-	<!ENTITY accountManagerCmd.accesskey "a">
+	<!ENTITY accountManagerCmd.accesskey "m">
 
 <!-- View menu items -->
 <!ENTITY showComposeToolbarCmd.label "Mail Toolbar">
