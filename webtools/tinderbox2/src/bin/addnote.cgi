@@ -6,9 +6,9 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/01/04 00:24:50 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/03/26 14:01:00 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
 
@@ -30,7 +30,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

@@ -8,9 +8,9 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/01/04 00:23:24 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/03/26 14:02:58 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 
 
@@ -33,7 +33,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

@@ -8,9 +8,9 @@
 
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/11/09 19:27:20 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/03/26 14:04:28 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState.pm,v $ 
 # $Name:  $ 
 
@@ -33,7 +33,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 
@@ -55,7 +58,7 @@ use TinderHeader::BasicTxtHeader;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.

@@ -5,8 +5,8 @@
 # application MajorCool.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/02/15 20:49:42 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/03/26 14:03:05 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
@@ -31,7 +31,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

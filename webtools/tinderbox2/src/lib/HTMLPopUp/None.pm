@@ -3,9 +3,9 @@
 # HTMLPopUp::None.pm - the implementation of the header and link
 # command which will be used if no popup menus are desired.
 
-# $Revision: 1.3 $ 
-# $Date: 2000/09/06 01:24:18 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/03/26 14:03:21 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/None.pm,v $ 
 # $Name:  $ 
 
@@ -29,7 +29,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 
