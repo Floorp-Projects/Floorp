@@ -83,7 +83,7 @@ String::String(const char* source)
 //
 String::String(const UNICODE_CHAR* source)
 {
-  ptrNSString = new nsString(source);
+  ptrNSString = new nsString((PRUnichar *)source);
 }
 
 //
@@ -94,7 +94,7 @@ String::String(const UNICODE_CHAR* source)
 //
 String::String(const UNICODE_CHAR* source, Int32 srcLength)
 {
-  ptrNSString = new nsString(source, srcLength);
+  ptrNSString = new nsString((PRUnichar *)source, srcLength);
 }
 
 //
@@ -136,7 +136,7 @@ ostream& operator<<(ostream& output, const String& source)
 String& String::operator=(const String& source)
 {
   //Assign the Unicode Char buffer to the nsString
-  ptrNSString->Assign(source.toUnicode(), source.length());
+  ptrNSString->Assign((PRUnichar *)source.toUnicode(), source.length());
   return *this;
 }
 
@@ -156,7 +156,7 @@ String& String::operator=(const char* source)
 //
 String& String::operator=(const UNICODE_CHAR* source)
 {
-  ptrNSString->Assign(source);
+  ptrNSString->Assign((PRUnichar *)source);
   return *this;
 }
 
@@ -175,7 +175,7 @@ String& String::operator=(Int32 source)
 //
 void String::append(UNICODE_CHAR source)
 {
-  ptrNSString->Append(source);
+  ptrNSString->Append((PRUnichar)source);
 }
 
 //
@@ -201,7 +201,7 @@ void String::append(const String& source)
   if (this == &source)
     ptrNSString->Append(*((String)source).ptrNSString);
   else
-    ptrNSString->Append(source.toUnicode(), source.length());
+    ptrNSString->Append((PRUnichar *)source.toUnicode(), source.length());
 }
 
 //
@@ -219,7 +219,7 @@ void String::append(const char* source)
 //
 void String::append(const UNICODE_CHAR* source)
 {
-  ptrNSString->Append(source, UnicodeLength(source));
+  ptrNSString->Append((PRUnichar *)source, UnicodeLength(source));
 }
 
 //
@@ -228,7 +228,7 @@ void String::append(const UNICODE_CHAR* source)
 //
 void String::append(const UNICODE_CHAR* source, Int32 length)
 {
-  ptrNSString->Append(source, length);
+  ptrNSString->Append((PRUnichar *)source, length);
 }
 
 //
@@ -246,7 +246,7 @@ void String::append(Int32 source)
 //
 void String::insert(Int32 offset, const UNICODE_CHAR source)
 {
-  ptrNSString->Insert(source, offset);
+  ptrNSString->Insert((PRUnichar)source, offset);
 }
 
 //
@@ -274,7 +274,7 @@ void String::insert(Int32 offset, const String& source)
   if (this == &source)
     ptrNSString->Insert(*((String)source).ptrNSString, offset);
   else
-    ptrNSString->Insert(source.toUnicode(), offset, source.length());
+    ptrNSString->Insert((PRUnichar *)source.toUnicode(), offset, source.length());
 }
 
 //
@@ -293,7 +293,7 @@ void String::insert(Int32 offset, const char* source)
 //
 void String::insert(Int32 offset, const UNICODE_CHAR* source)
 {
-  ptrNSString->Insert(source, offset, UnicodeLength(source));
+  ptrNSString->Insert((PRUnichar *)source, offset, UnicodeLength(source));
 }
 
 //
@@ -304,7 +304,7 @@ void String::insert(Int32 offset, const UNICODE_CHAR* source)
 void String::insert(Int32 offset, const UNICODE_CHAR* source,
                            Int32 srcLength)
 {
-  ptrNSString->Insert(source, offset, srcLength);
+  ptrNSString->Insert((PRUnichar *)source, offset, srcLength);
 }
 
 //
@@ -384,7 +384,7 @@ void String::replace(Int32 offset, const UNICODE_CHAR* source,
                             Int32 srcLength)
 {
   ptrNSString->Cut(offset, srcLength);
-  ptrNSString->Insert(source, offset, srcLength);
+  ptrNSString->Insert((PRUnichar *)source, offset, srcLength);
 }
 
 //
@@ -431,7 +431,7 @@ void String::setLength(Int32 length, UNICODE_CHAR padChar)
   {
     ptrNSString->SetCapacity(length);
     for(Int32 i=strLength; i < length; i++)
-      ptrNSString->Append(padChar);
+      ptrNSString->Append((PRUnichar)padChar);
   }
 } //-- setLength
 
@@ -513,7 +513,7 @@ Int32 String::indexOf(const String& data, Int32 offset) const
 {
   Int32 searchIndex = offset < 0 ? searchIndex = 0 : searchIndex = offset;
 
-  nsString nsStrData(data.toUnicode());
+  nsString nsStrData((PRUnichar *)data.toUnicode());
 
   return ptrNSString->Find(nsStrData, PR_FALSE, searchIndex);
 }
@@ -530,7 +530,7 @@ MBool String::isEqual(const String& data) const
     return MB_FALSE;
   else
   {
-    if (ptrNSString->EqualsWithConversion(data.toUnicode(),
+    if (ptrNSString->EqualsWithConversion((PRUnichar *)data.toUnicode(),
                             PR_FALSE, data.length()) == PR_TRUE)
       return MB_TRUE;
     else
@@ -581,7 +581,7 @@ Int32 String::lastIndexOf(const String& data) const
 **/
 Int32 String::lastIndexOf(const String& data, Int32 offset) const
 {
-  nsString nsData(data.toUnicode(), data.length());
+  nsString nsData((PRUnichar *)data.toUnicode(), data.length());
 
   return ptrNSString->RFind(nsData, PR_FALSE, offset);
 }
@@ -672,7 +672,7 @@ UNICODE_CHAR* String::toUnicode(UNICODE_CHAR* dest) const
 {
   Int32 copyLoop;
   Int32 strLength = ptrNSString->Length();
-  const UNICODE_CHAR* strBuffer = ptrNSString->GetUnicode();
+  const UNICODE_CHAR* strBuffer = (PRUnichar *)ptrNSString->GetUnicode();
 
   for (copyLoop=0;copyLoop<strLength;copyLoop++)
    dest[copyLoop] = strBuffer[copyLoop];
@@ -687,7 +687,7 @@ UNICODE_CHAR* String::toUnicode(UNICODE_CHAR* dest) const
 //
 const UNICODE_CHAR* String::toUnicode() const
 {
-  return ptrNSString->GetUnicode();
+  return (PRUnichar *)ptrNSString->GetUnicode();
 }
 
 //
