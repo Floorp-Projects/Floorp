@@ -9,4 +9,5 @@ nsIXULSortService.h
 nsIXULParentDocument.h
 nsIXULChildDocument.h
 nsIXULDocumentInfo.h
+nsIXULPopupListener.h
 nsIStreamLoadableDocument.h
