@@ -3301,7 +3301,7 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #ifdef LAYPROBE_API
 	{
 		/* Send a notification when a frame has finished loading */
-		XP_List* pList = GetCallbackFuncList((int32)FRAME_DOCUMENT_COMPLETE);
+		XP_List* pList = LAPIGetCallbackFuncList((int32)FRAME_DOCUMENT_COMPLETE);
 		
 		if (pList)
 		{
@@ -5686,7 +5686,7 @@ lo_InternalDiscardDocument(MWContext *context, lo_DocState *state,
 #ifdef LAYPROBE_API
 	{
 		/* Send a notification when a frame unloads */
-		XP_List * pList = GetCallbackFuncList((int32)FRAME_ON_UNLOAD);
+		XP_List * pList = LAPIGetCallbackFuncList((int32)FRAME_ON_UNLOAD);
 		
 		if (pList)
 		{

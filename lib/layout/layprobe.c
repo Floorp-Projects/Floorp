@@ -28,6 +28,10 @@
 #include "layprobe.h"
 #include "layout.h"
 #include "xp.h"
+#include "prlink.h"
+
+/* test dll init function prototype. */
+typedef Bool TEST_LIB_INIT_PROC(void *);
 
 typedef struct _lo_ProbeState {
 	MWContext *context;
@@ -1625,7 +1629,7 @@ static int32 LAPIRegisterElementCallback(
 }
 
 
-/* GetCallbackFuncList
+/* LAPIGetCallbackFuncList
 **
 **	Description:	This function retrieves the list of callback
 **					funcions registered on a specific event.
@@ -1636,7 +1640,7 @@ static int32 LAPIRegisterElementCallback(
 **					a pointer to the list of registerd callbacks, otherwise
 **					the function returns NULL.
 */
-XP_List* GetCallbackFuncList(
+XP_List* LAPIGetCallbackFuncList(
 	int32	EventID
 )
 {
@@ -1721,7 +1725,7 @@ Bool LAPINotificationHandler(LAPIEventInfo* pEvent)
 		break;
 	}
 	
-	pList = GetCallbackFuncList(LAPIEvent);
+	pList = LAPIGetCallbackFuncList(LAPIEvent);
 	
 	if (pList)
 	{
@@ -2191,3 +2195,75 @@ static long lo_QA_RGBColorToLong( LO_Color color )
 
 	return c;
 }
+
+/* LAPILoadTestLib
+**
+**	Description:	This function loads the testing library and calls
+**					"Initialize" in the lib.
+**
+**	Parameters:		szLibName	-  The Full path to the library (null terminated).
+**
+**	Return Value:	If the function succeeds, the return value is a TRUE,
+**					otherwise the return value is FALSE and LAPI_LastError will be set to:
+**.					LAPI_E_INVALIDARG		- if the szLibName is null.
+**					LAPI_E_LIB_LOAD_FAILED	- if library dosen't exist/ library dosen't have the "Initialize" function.
+**					LAPI_E_INIT_TEST_LIB_FAILED - if the Initialize function indicates a faiure to initialie.
+*/
+Bool LAPILoadTestLib(char* szLibName)
+{
+	TEST_LIB_INIT_PROC *proc = NULL;
+	PRLibrary* hLib = NULL;
+	Bool bInit = FALSE;
+
+	if (!szLibName)
+	{
+		LAPI_LastError = LAPI_E_INVALIDARG;
+		return FALSE;
+	}
+
+#ifdef XP_MAC
+		const char *libPath = PR_GetLibraryPath();
+		char *libDir = CopyString(szLibName);
+		char *libName = strrchr(libDir, '/');
+		
+		if (libName != NULL)
+		{
+			libName[1] = '\0';
+			PR_SetLibraryPath(libDir);
+		}
+		
+		hLib = PR_LoadLibrary(szLibName);
+		
+		if (libName != NULL)
+			PR_SetLibraryPath(libPath);
+		
+		delete[] libDir;
+
+#else
+		hLib = PR_LoadLibrary(szLibName);
+#endif
+	if (!hLib)
+	{
+		LAPI_LastError = LAPI_E_LIB_LOAD_FAILED;
+		return FALSE;
+	}
+	*proc =
+	  (TEST_LIB_INIT_PROC *)PR_FindSymbol(hLib, "Initialize");
+	if (!proc)
+	{
+		PR_UnloadLibrary(hLib);
+		LAPI_LastError = LAPI_E_LIB_LOAD_FAILED;
+		return FALSE;
+	}
+	
+	bInit = (*proc)(NULL);
+	if (!bInit)
+	{
+		PR_UnloadLibrary(hLib);
+		LAPI_LastError = LAPI_E_INIT_TEST_LIB_FAILED;
+		return FALSE;
+	}
+
+	return TRUE;
+}
+

@@ -136,6 +136,17 @@ typedef struct {
 } LAPIEventInfo;
 
 
+#define LAPI_COPY_JS2API_EVENT(ei,jsevent)		\
+		(ei)->type = (jsevent)->type;				\
+		(ei)->lo_element = (jsevent)->lo_element;	\
+		(ei)->x = (jsevent)->x;						\
+		(ei)->y = (jsevent)->y;						\
+		(ei)->docx = (jsevent)->docx;				\
+		(ei)->docy = (jsevent)->docy;				\
+		(ei)->screenx = (jsevent)->screenx;			\
+		(ei)->screeny = (jsevent)->screeny;
+
+
 /* The different types of layout elements */
 #define LO_TEXT         1
 #define LO_HRULE        3
@@ -253,6 +264,8 @@ Bool LO_QA_GetColor( long probeID, long *color, ColorType type);
 /**********************************************************
 *********               Queries API                ********
 **********************************************************/
+
+Bool LAPILoadTestLib(char* szLibName);
 
 int32 LAPIGetLastError();
 
@@ -391,7 +404,7 @@ Bool LAPIUnregisterCallbackFunction(
 	void* CallbackID
 );
 
-XP_List* GetCallbackFuncList(
+XP_List* LAPIGetCallbackFuncList(
 	int32	EventID
 );
 
