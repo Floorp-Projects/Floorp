@@ -62,7 +62,7 @@ insert into components (value, program, initialowner) values ("JavaScript Debugg
 insert into components (value, program, initialowner) values ("JavaScript/Java Reflection", "Communicator", "fur@netscape.com");
 insert into components (value, program, initialowner) values ("Layout", "Communicator", "djw@netscape.com");
 insert into components (value, program, initialowner) values ("LibMocha", "Communicator", "chouck@netscape.com");
-insert into components (value, program, initialowner) values ("MIMELib", "Communicator", "terry@netscape.com");
+insert into components (value, program, initialowner) values ("MIMELib", "Communicator", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("NetLib", "Communicator", "gagan@netscape.com");
 insert into components (value, program, initialowner) values ("NSPR", "Communicator", "wtc@netscape.com");
 insert into components (value, program, initialowner) values ("Password Cache", "Communicator", "montulli@netscape.com");
@@ -90,8 +90,8 @@ insert into components (value, program, initialowner) values ("Platform: Rhapsod
 insert into components (value, program, initialowner) values ("Platform: MFC/Win32 on Windows", "Communicator", "blythe@netscape.com");
 
 
-insert into components (value, program, initialowner) values ("UI", "Bugzilla", "terry@netscape.com");
-insert into components (value, program, initialowner) values ("Database", "Bugzilla", "terry@netscape.com");
+insert into components (value, program, initialowner) values ("UI", "Bugzilla", "terry@mozilla.org");
+insert into components (value, program, initialowner) values ("Database", "Bugzilla", "terry@mozilla.org");
 
 
 select * from components;
