@@ -58,6 +58,8 @@ CPPSRCS =				\
       JoinTableCellsTxn.cpp     \
       nsInternetCiter.cpp     \
       nsAOLCiter.cpp          \
+      nsEditorShell.cpp				\
+      nsEditorShellFactory.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
@@ -98,7 +100,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\JoinTableCellsTxn.obj     \
   .\$(OBJDIR)\nsInternetCiter.obj      \
   .\$(OBJDIR)\nsAOLCiter.obj           \
-  .\$(OBJDIR)\nsEditorShell.obj        \     
+  .\$(OBJDIR)\nsEditorShell.obj        \
   .\$(OBJDIR)\nsEditorShellFactory.obj \
 	$(NULL)
 
