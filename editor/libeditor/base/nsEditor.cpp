@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "pratom.h"
+
 #include "nsVoidArray.h"
 
 #include "nsIDOMDocument.h"
@@ -155,9 +157,8 @@ nsEditor::nsEditor()
 {
   //initialize member variables here
   NS_INIT_REFCNT();
-  PR_EnterMonitor(GetEditorMonitor());
-  gInstanceCount++;
-  PR_ExitMonitor(GetEditorMonitor());
+
+  PR_AtomicIncrement(&gInstanceCount);
 }
 
 nsEditor::~nsEditor()
@@ -184,6 +185,8 @@ nsEditor::~nsEditor()
   InsertTextTxn::ClassShutdown();
   IMETextTxn::ClassShutdown();
   IMECommitTxn::ClassShutdown();
+
+  PR_AtomicDecrement(&gInstanceCount);
 }
 
 

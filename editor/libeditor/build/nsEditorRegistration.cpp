@@ -304,6 +304,8 @@ nsEditorModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
     if (!okToUnload) {
         return NS_ERROR_INVALID_POINTER;
     }
+    // we might want to check nsEditor::gInstanceCount == 0 and count
+    // factory locks here one day.
     *okToUnload = PR_FALSE;
     return NS_ERROR_FAILURE;
 }
@@ -335,21 +337,4 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     }
     gModule = m;                  // WARNING: Weak Reference
     return rv;
-}
-
-//!!!!!! This is obsolete is needs to be removed.  It should be removed after the calls to
-//!!!!!! it are removed.
-
-//if more than one person asks for the monitor at the same time for the FIRST time, we are screwed
-PRMonitor *GetEditorMonitor()
-{
-  static PRMonitor *ns_editlock = nsnull;
-  if (nsnull == ns_editlock)
-  {
-    ns_editlock = (PRMonitor *)1; //how long will the next line take?  lets cut down on the chance of reentrancy
-    ns_editlock = PR_NewMonitor();
-  }
-  else if ((PRMonitor *)1 == ns_editlock)
-    return GetEditorMonitor();
-  return ns_editlock;
 }

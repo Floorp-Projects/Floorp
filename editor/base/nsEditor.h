@@ -21,7 +21,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
-#include "prmon.h"
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
@@ -65,9 +64,6 @@ class IMETextTxn;
 class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 class nsFileSpec;
-
-//This is the monitor for the editor.
-PRMonitor *GetEditorMonitor();
 
 
 /** implementation of an editor object.  it will be the controler/focal point 
