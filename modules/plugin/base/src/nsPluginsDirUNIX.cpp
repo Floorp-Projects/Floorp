@@ -133,6 +133,15 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     PRLibSpec libSpec;
     void * handle;
 
+/* This is a hack for Tru64 Unix.  We really should not be calling dlopen()
+ * directly, but since the original authors use NSPR functions in other
+ * places, I assume they have a reason for not doing it here.
+ * jlnance - Mon Apr 24 13:52:14 EDT 2000
+ */
+#ifndef RTLD_GLOBAL
+#define RTLD_GLOBAL 0
+#endif
+
     // Ok, now to pull a rabbit out of my hat
     handle = dlopen("libXt.so", RTLD_LAZY|RTLD_GLOBAL);
     handle = dlopen("libXext.so", RTLD_NOW|RTLD_GLOBAL);
