@@ -114,7 +114,7 @@ use constant LOGOUT_KEEP_CURRENT => 2;
 use constant contenttypes =>
   {
    "html" => "text/html" , 
-   "rdf" => "application/xml" , 
+   "rdf" => "application/rdf+xml" , 
    "xml" => "text/xml" , 
    "js" => "application/x-javascript" , 
    "csv" => "text/plain" ,
