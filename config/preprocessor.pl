@@ -98,6 +98,9 @@ sub include {
     my $directory = $stack->{'variables'}->{'DIRECTORY'};
     if ($filename ne '-') {
         $filename = File::Spec::_0_8::rel2abs($filename, $directory);
+        # splitpath expects forward-slash paths on windows, so we have to
+        # change the slashes if using Activestate Perl.
+        $filename =~ s?\\?/?g if "$^O" eq "MSWin32";
         my($volume, $path) = File::Spec::_0_8::splitpath($filename);
         $directory = File::Spec::_0_8::catpath($volume, $path, '');
     }
