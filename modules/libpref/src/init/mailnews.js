@@ -121,6 +121,11 @@ pref("mailnews.reply_header_type",          1);
 
 pref("mail.purge_threshhold",                100);
 pref("mail.prompt_purge_threshhold",             false);   
+
+pref("mailnews.offline_sync_mail",         false);
+pref("mailnews.offline_sync_news",         false);
+pref("mailnews.offline_sync_send_unsent",  true);
+pref("mailnews.offline_sync_work_offline", false);   
 pref("mailnews.force_ascii_search",         false);
 pref("mailnews.autolookup_unknown_mime_types",  true);
 
