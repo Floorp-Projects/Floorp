@@ -742,9 +742,8 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 
   if (!m_defaultAccount) {
     PRUint32 count;
-#ifdef DEBUG_ACCOUNTMANAGER
-    printf("No default account. Looking for one..\n");
     m_accounts->Count(&count);
+#ifdef DEBUG_ACCOUNTMANAGER
     printf("There are %d accounts\n", count);
 #endif
     if (count == 0) {
