@@ -292,7 +292,7 @@ private:
 #endif
 
     // The cursor cache
-    static GdkCursor   *gsGtkCursorCache[eCursor_count_up_down + 1];
+    static GdkCursor   *gsGtkCursorCache[eCursorCount];
 
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.

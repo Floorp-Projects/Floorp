@@ -48,3 +48,5 @@
 #define IDC_CELL                        4111
 #define IDC_COPY                        4112
 #define IDC_ALIAS                       4113
+#define IDC_ZOOMIN                      4114
+#define IDC_ZOOMOUT                     4115

@@ -2459,6 +2459,12 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
   case NS_STYLE_CURSOR_COUNT_UP_DOWN:
     c = eCursor_count_up_down;
     break;
+  case NS_STYLE_CURSOR_MOZ_ZOOM_IN:
+    c = eCursor_zoom_in;
+    break;
+  case NS_STYLE_CURSOR_MOZ_ZOOM_OUT:
+    c = eCursor_zoom_out;
+    break;
   }
 
   aWidget->SetCursor(c);

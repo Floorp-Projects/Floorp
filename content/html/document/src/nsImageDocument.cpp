@@ -328,7 +328,7 @@ nsImageDocument::ShrinkToFit()
     image->SetWidth(NSToCoordFloor(GetRatio() * mImageWidth));
 
     mImageElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                NS_LITERAL_STRING("cursor: move"));
+                                NS_LITERAL_STRING("cursor: -moz-zoom-in"));
 
     mImageIsResized = PR_TRUE;
 
@@ -343,7 +343,11 @@ nsImageDocument::RestoreImage()
   if (mImageResizingEnabled) {
     mImageElement->RemoveAttribute(NS_LITERAL_STRING("width"));
 
-    if (!mImageIsOverflowing) {
+    if (mImageIsOverflowing) {
+      mImageElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                  NS_LITERAL_STRING("cursor: -moz-zoom-out"));
+    }
+    else {
       mImageElement->RemoveAttribute(NS_LITERAL_STRING("style"));
     }
 

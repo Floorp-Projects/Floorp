@@ -201,7 +201,11 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_spinning,
                 eCursor_count_up,
                 eCursor_count_down,
-                eCursor_count_up_down
+                eCursor_count_up_down,
+                eCursor_zoom_in,
+                eCursor_zoom_out,
+                // This one better be the last one in this list.
+                eCursorCount
                 }; 
 
 enum nsContentType {

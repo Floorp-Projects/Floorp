@@ -121,7 +121,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 static PRBool gGlobalsInitialized   = PR_FALSE;
 static PRBool gRaiseWindows         = PR_TRUE;
 /* cursors cache */
-GdkCursor *nsWindow::gsGtkCursorCache[eCursor_count_up_down + 1];
+GdkCursor *nsWindow::gsGtkCursorCache[eCursorCount];
 
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
 
@@ -1210,6 +1210,12 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
      case eCursor_count_up_down:
        // XXX: these CSS3 cursors need to be implemented
        gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+       break;
+     case eCursor_zoom_in:
+       newType = MOZ_CURSOR_ZOOM_IN;
+       break;
+     case eCursor_zoom_out:
+       newType = MOZ_CURSOR_ZOOM_OUT;
        break;
     default:
       NS_ASSERTION(aCursorType, "Invalid cursor type");

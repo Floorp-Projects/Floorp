@@ -2452,6 +2452,14 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     case eCursor_count_up_down:
       break;
 
+    case eCursor_zoom_in:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ZOOMIN));
+      break;
+
+    case eCursor_zoom_out:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ZOOMOUT));
+      break;
+
     default:
       NS_ASSERTION(0, "Invalid cursor type");
       break;

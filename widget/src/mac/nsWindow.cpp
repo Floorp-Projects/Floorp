@@ -740,6 +740,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 			case eCursor_count_up:				cursor = kThemeCountingUpHandCursor; 					break;
 			case eCursor_count_down:			cursor = kThemeCountingDownHandCursor;				break;
 			case eCursor_count_up_down:		cursor = kThemeCountingUpAndDownHandCursor; 	break;
+			case eCursor_zoom_in:		break;
+			case eCursor_zoom_out:		break;
 
 	  }
 	  if (cursor >= 0)
@@ -793,6 +795,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 			case eCursor_count_up:				cursor = watchCursor; 	break;
 			case eCursor_count_down:			cursor = watchCursor; 	break;
 			case eCursor_count_up_down:		cursor = watchCursor; 	break;
+			case eCursor_zoom_in:		break;
+			case eCursor_zoom_out:		break;
 	  }
 	  if (cursor > 0)
 	  {

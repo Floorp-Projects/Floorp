@@ -214,7 +214,7 @@ static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
 #define kWindowPositionSlop 20
 
 // cursor cache
-GdkCursor *gCursorCache[eCursor_count_up_down + 1];
+GdkCursor *gCursorCache[eCursorCount];
 
 nsWindow::nsWindow()
 {
@@ -2996,6 +2996,12 @@ get_gtk_cursor(nsCursor aCursor)
     case eCursor_count_up_down:
         // XXX: these CSS3 cursors need to be implemented
         gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+        break;
+    case eCursor_zoom_in:
+        newType = MOZ_CURSOR_ZOOM_IN;
+        break;
+    case eCursor_zoom_out:
+        newType = MOZ_CURSOR_ZOOM_OUT;
         break;
     default:
         NS_ASSERTION(aCursor, "Invalid cursor type");

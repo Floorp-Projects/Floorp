@@ -1746,6 +1746,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   case eCursor_count_up_down:
     break;
 
+  case eCursor_zoom_in:
+  case eCursor_zoom_out:
+    break;
+
   default:
     NS_ASSERTION(0, "Invalid cursor type");
     break;
