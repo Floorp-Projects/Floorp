@@ -37,7 +37,6 @@
 #include "nsIXULWindowCallbacks.h"
 
 #include "nsIAppShellService.h"
-#include "nsIWidgetController.h"
 #include "nsAppShellCIDs.h"
 
 #include "nsXULCommand.h"
@@ -57,7 +56,6 @@
 #include "plevent.h"
 #include "prmem.h"
 
-// XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -104,7 +102,6 @@ static NS_DEFINE_IID(kIBrowserWindowIID,		  NS_IBROWSER_WINDOW_IID);
 
 static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,           NS_IAPPSHELL_IID);
-static NS_DEFINE_IID(kIWidgetControllerIID,   NS_IWIDGETCONTROLLER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,        NS_IDOMDOCUMENT_IID);
@@ -139,24 +136,17 @@ struct ThreadedWindowEvent {
 // subsequently be filled in when we receive a webshell added notification.
 struct nsWebShellInfo {
   nsString id; // The identifier of the iframe or frame node in the XUL tree.
-  nsString name; // The name to apply to the webshell once we create it.
-  nsString url; // The URL to load in the webshell once we create it.
-  nsIWebShell* opener; // The web shell that will be the opener of this new shell.
   nsIWebShell* child; // The child web shell that will end up being used for the content area.
 
-  nsWebShellInfo(const nsString& anID, const nsString aName, const nsString& anURL,
-                 nsIWebShell* anOpenerShell, nsIWebShell* aChildShell)
+  nsWebShellInfo(const nsString& anID, nsIWebShell* aChildShell)
   {
-    id = anID; name = aName; url = anURL;
-    opener = anOpenerShell;
-    NS_IF_ADDREF(anOpenerShell);
+    id = anID; 
     child = aChildShell;
     NS_IF_ADDREF(aChildShell);
   }
 
   ~nsWebShellInfo()
   {
-    NS_IF_RELEASE(opener);
     NS_IF_RELEASE(child);
   }
 };
@@ -167,10 +157,10 @@ nsWebShellWindow::nsWebShellWindow()
 
   mWebShell = nsnull;
   mWindow   = nsnull;
-  mController = nsnull;
   mCallbacks = nsnull;
   mContinueModalLoop = PR_FALSE;
   mChromeInitialized = PR_FALSE;
+	mLockedUntilChromeLoad = PR_FALSE;
   mContentShells = nsnull;
 }
 
@@ -183,7 +173,6 @@ nsWebShellWindow::~nsWebShellWindow()
   }
 
   NS_IF_RELEASE(mWindow);
-  NS_IF_RELEASE(mController);
   NS_IF_RELEASE(mCallbacks);
 
   // Delete any remaining content shells.
@@ -243,7 +232,7 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURL* aUrl, 
-                                      nsString& aControllerIID, nsIStreamObserver* anObserver,
+                                      nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
@@ -252,11 +241,9 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   nsString urlString;
   nsIWidget *parentWidget;
   const char *tmpStr = NULL;
-  nsIID iid;
-  char str[40];
-
-
+  
   // XXX: need to get the default window size from prefs...
+	// Doesn't come from prefs... will come from CSS/XUL/RDF
   nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
   nsWidgetInitData initData;
@@ -339,15 +326,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   if (nsnull != aUrl)  {
     mWebShell->LoadURL(urlString.GetUnicode());
   }
-
-  // Create the IWidgetController for the document...
-  mController = nsnull; 
-  aControllerIID.ToCString(str, sizeof(str));
-  iid.Parse(str);
-
-  //rv = nsComponentManager::CreateInstance(iid, nsnull,
-  //                                  kIWidgetControllerIID,
-  //                                  (void**)&mController);
+                     
   return rv;
 }
 
@@ -833,15 +812,40 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
 } // nsWebShellWindow::LoadMenus
 
+NS_IMETHODIMP
+nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildShell)
+{
+	// Set to null just to be certain
+  *aChildShell = nsnull;
+
+  // If we don't have a content array, we just don't care.
+  if (mContentShells == nsnull)
+    return NS_ERROR_FAILURE;
+
+  // Find out if the id in question is one that we have web shell info for.
+  PRInt32 count = mContentShells->Count();
+  for (PRInt32 i = 0; i < count; i++)
+  {
+    nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(i));
+    if (webInfo->id == aID)
+    {
+      // We have a match!
+      *aChildShell = webInfo->child;
+      NS_ADDREF(*aChildShell);
+
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
-nsWebShellWindow::AddWebShellInfo(const nsString& aID, const nsString& aName,
-                                  const nsString& anURL, nsIWebShell* aOpenerShell,
+nsWebShellWindow::AddWebShellInfo(const nsString& aID,
                                   nsIWebShell* aChildShell)
 {
 
   nsWebShellInfo* webShellInfo = new nsWebShellInfo(aID, 
-                                                    aName, anURL, aOpenerShell, aChildShell);
+                                                    aChildShell);
   
   if (mContentShells == nsnull)
     mContentShells = new nsVoidArray();
@@ -879,45 +883,14 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
+nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 {
-  // Set to null just to be certain
-  *aChildShell = nsnull;
-
-  // If we don't have a content array, we just don't care.
-  if (mContentShells == nsnull)
-    return NS_OK;
-
-  // Find out if the frameNode in question is one that we have web shell info for.
+  // Find out the id of the frameNode in question 
   nsIAtom* idAtom = NS_NewAtom("id");
-  nsIAtom* srcAtom = NS_NewAtom("src");
-	nsAutoString value;
+  nsAutoString value;
 	frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
-
-  PRInt32 count = mContentShells->Count();
-  for (PRInt32 i = 0; i < count; i++)
-  {
-    nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(i));
-    if (webInfo->id == value)
-    {
-      // We have a match!
-      
-      // Alter the frame node's source using the nsIContent method (to ensure that
-      // the value isn't persistently stored).
-      frameNode->SetAttribute(kNameSpaceID_None, srcAtom, webInfo->url, PR_FALSE);
-
-      *aChildShell = webInfo->child;
-      NS_ADDREF(*aChildShell);
-
-      // Remove this object from our array.
-      mContentShells->RemoveElementAt(i);
-      delete webInfo;
-
-      return NS_OK;
-    }
-  }
+	AddWebShellInfo(value, aChildShell);
   NS_RELEASE(idAtom);
-  NS_RELEASE(srcAtom);
   return NS_OK;
 }
 
@@ -925,31 +898,28 @@ NS_IMETHODIMP
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                               nsIWebShell *&aNewWebShell)
 {
-	// Don't return a web shell, since the shell that will hold our content
-  // hasn't been instantiated yet.  We'll have to wait and set up the linkage
-  // at a later date.
-	aNewWebShell = nsnull;
-  return NS_OK;
-}
+#ifdef XP_WIN32 // XXX: Won't work on any other platforms yet. Sigh.
+	// We need to create a new top level window and then enter a nested
+	// loop. Eventually the new window will be told that it has loaded,
+	// at which time we know it is safe to spin out of the nested loop
+	// and allow the opening code to proceed.
 
-NS_IMETHODIMP
-nsWebShellWindow::CanCreateNewWebShell(PRBool& aResult)
-{
-  aResult = PR_FALSE; 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
-                                     nsIWebShell* aOpenerShell, PRUint32 chrome,
-                                     nsIWebShell** anOuterResult,
-                                     nsIWebShell** anInnerResult)
-{
-  // Create a new browser window. That's what this method is here for.
+	// First push a nested event queue for event processing from netlib
+	// onto our UI thread queue stack.
 	nsresult           rv;
-  nsString           controllerCID;
   nsIAppShellService *appShell;
-  
+	nsIEventQueueService *eQueueService;
+	nsCOMPtr<nsIEventQueue> outerQueue;
+	nsCOMPtr<nsIEventQueue> innerQueue;
+  if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&eQueueService))) {
+		NS_ERROR("Unable to obtain queue service.");
+		return rv;
+	}
+	
+	eQueueService->PushThreadEventQueue();
+
   nsCOMPtr<nsIURL> urlObj;
   rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
   if (NS_FAILED(rv))
@@ -960,36 +930,55 @@ nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anUR
   if (NS_FAILED(rv))
     return rv;
 
-  // hardwired temporary hack.  See nsAppRunner.cpp at main()
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
 	nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, urlObj, controllerCID, *getter_AddRefs(newWindow),
+  appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
                                  nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
-  // Now return the new window's web shell.
-  newWindow->GetWebShell(*anOuterResult);
-
-  // Create a new dummy shell that we will eventually want to reuse (when we find the
-  // right place for it).
-  // Create web shell
-  nsIWebShell* dummyShell;
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                    kIWebShellIID,
-                                    (void**)&dummyShell);
-  if (rv != NS_OK) {
+	// Spin into the modal loop.
+	nsIAppShell *subshell;
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
+  if (NS_FAILED(rv))
     return rv;
+
+  subshell->Create(0, nsnull);
+  subshell->Spinup(); // Spin up 
+
+  // Specify that we want the window to remain locked until the chrome has loaded.
+	newWindow->LockUntilChromeLoad();
+
+	PRBool locked = PR_FALSE;
+	newWindow->GetLockedState(locked);
+  while (NS_SUCCEEDED(rv) && locked) {
+    void      *data;
+    PRBool    isRealEvent;
+    
+    rv = subshell->GetNativeEvent(isRealEvent, data);
+    subshell->DispatchNativeEvent(isRealEvent, data);
+
+		newWindow->GetLockedState(locked);
   }
 
-  // Return this inner dummy shell. Set this shell's container to point to the outer shell.
-  *anInnerResult = dummyShell;
-  dummyShell->SetContainer(this);
+	// Get rid of the nested UI thread queue used for netlib, and release the event queue service.
+	eQueueService->PopThreadEventQueue();
+	nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueueService);
 
-  // Cache our webshell info.
-  newWindow->AddWebShellInfo("content", aName, anURL, aOpenerShell, dummyShell);
+  subshell->Spindown();
+  NS_RELEASE(subshell);
+
+	// We're out of the nested loop.
+  // During the layout of the new window, all content shells were located and placed
+	// into the new window's content shell array.  Locate the "content area" content
+	// shell.
+	if (NS_FAILED(rv = newWindow->GetContentShellById("content", &aNewWebShell))) {
+		NS_ERROR("Unable to obtain a browser content shell.");
+		return rv;
+	}
+#endif // XP_WIN32
+
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
                                                      nsIWebShell*& aResult)
@@ -1033,37 +1022,7 @@ NS_IMETHODIMP
 nsWebShellWindow::ShowModal()
 {
   nsresult  rv;
-
-#if 0
-  // a nice though unnecessary shortcut should we happen to already be in the right thread
-  if (PR_CurrentThread() == mozilla_thread)
-    rv = ShowModalInternal();
-  else {
-    ThreadedWindowEvent *event = PR_NEW(ThreadedWindowEvent);
-    if (!event)
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      PL_InitEvent(&event->event, NULL, HandleModalDialogEvent, DestroyModalDialogEvent);
-      event->window = this;
-
-      nsIEventQueueService *eQueueService;
-      PLEventQueue         *eQueue;
-      rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                        kIEventQueueServiceIID,
-                                        (nsISupports **)&eQueueService);
-      if (NS_SUCCEEDED(rv)) {
-        rv = eQueueService->GetThreadEventQueue(mozilla_thread, &eQueue);
-        NS_RELEASE(eQueueService);
-//        nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueue); (?)
-        PL_PostSynchronousEvent(eQueue, &event->event);
-      }
-      rv = NS_OK;
-    }
-  }
-#else
   rv = ShowModalInternal();
-#endif
-
   return rv;
 }
 
@@ -1071,6 +1030,9 @@ nsWebShellWindow::ShowModal()
 NS_IMETHODIMP
 nsWebShellWindow::ShowModalInternal()
 {
+	// XXX This sucks right now.  The pushing of an event queue has to happen outside of this function
+	// before the CreateTopLevelWindow, and the popping has to happen here.  This really needs to all be
+	// pulled out into a new function so that the flow can be cleaner.
   nsresult    rv;
   nsIAppShell *subshell;
 
@@ -1078,6 +1040,14 @@ nsWebShellWindow::ShowModalInternal()
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
   if (NS_FAILED(rv))
     return rv;
+
+	nsIEventQueueService *eQueueService;
+	if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&eQueueService))) {
+		NS_ERROR("Unable to obtain queue service.");
+		return rv;
+	}
 
   subshell->Create(0, nsnull);
   subshell->Spinup();
@@ -1098,9 +1068,16 @@ nsWebShellWindow::ShowModalInternal()
         subshell->DispatchNativeEvent(isRealEvent, data);
     }
   }
+
+#ifdef XP_WIN32 // XXX Won't work on other platforms yet
+	eQueueService->PopThreadEventQueue();
+#endif // XP_WIN32
+	
   subshell->Spindown();
   NS_RELEASE(window);
   NS_RELEASE(subshell);
+
+	nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueueService);
 
   return rv;
 }
@@ -1166,6 +1143,10 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     return NS_OK;
 
   mChromeInitialized = PR_TRUE;
+
+	if (mLockedUntilChromeLoad) {
+		mLockedUntilChromeLoad = PR_FALSE;
+  }
 
   // register as document listener
   // this is needed for menus
@@ -1836,9 +1817,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    // Note: null nsIStreamObserver means this window won't be able to answer FE_callback-type
    // questions from netlib.  Observers are generally appcores.  We'll have to supply
    // a generic browser appcore here someday.
-   nsAutoString controllerID("43147b80-8a39-11d2-9938-0080c7cb1081"); // time for this hack to die, or what?
    rv = Initialize(nsnull, aAppShell, urlObj,
-       controllerID,
        nsnull, nsnull, aBounds.width, aBounds.height);
    if (NS_SUCCEEDED(rv))
      MoveTo(aBounds.x, aBounds.y);

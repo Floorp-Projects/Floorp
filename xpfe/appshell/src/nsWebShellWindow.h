@@ -50,7 +50,6 @@ class nsIDOMHTMLImageElement;
 class nsIDOMHTMLInputElement;
 class nsIStreamObserver;
 class nsIWidget;
-class nsIWidgetController;
 class nsIXULWindowCallbacks;
 class nsVoidArray;
 
@@ -85,20 +84,18 @@ public:
                         PRInt32 aStatus);
 
 
-  NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode);
+  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
 
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
 
-  NS_IMETHOD AddWebShellInfo(const nsString& aID, const nsString& aName,
-                             const nsString& aURL, nsIWebShell* aOpenerShell,
+  NS_IMETHOD AddWebShellInfo(const nsString& aID,
                              nsIWebShell* aChildShell);
 
-  NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
-  NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
-                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell);
+	NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
+	NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
+  NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
 
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
                                   nsIWebShell*& aResult);
@@ -115,7 +112,7 @@ public:
 
   // nsWebShellWindow methods...
   nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURL* aUrl,
-                      nsString& aControllerIID, nsIStreamObserver* anObserver,
+                      nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   nsIWidget* GetWidget(void) { return mWindow; }
@@ -244,9 +241,9 @@ protected:
 
   nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
-  nsIWidgetController*    mController;
   nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mContinueModalLoop;
+	PRBool									mLockedUntilChromeLoad;
   PRBool                  mChromeInitialized;
 
   nsVoidArray mMenuDelegates;

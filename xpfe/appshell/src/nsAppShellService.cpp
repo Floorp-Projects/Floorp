@@ -74,13 +74,13 @@ public:
   NS_IMETHOD Shutdown(void);
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
-                                  nsString& aControllerIID,
+                                  PRBool showWindow,
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
-                                  nsString& aControllerIID,
+                                  PRBool showWindow,
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
@@ -224,10 +224,7 @@ nsAppShellService::Shutdown(void)
  *                  included for compatibility with dialogs).
  *                  (currently unused).
  * @param aURL - location of XUL window contents description
- * @param aControllerIID - currently provided as an argument. in the future,
- *                         this will be specified by the XUL document itself.
- *                         (currently unused, but please specify the same
- *                         hardwired IID as others are using).
+ * @param aShowWindow - whether or not to show the window initially.
  * @param anObserver - a stream observer to give to the new window
  * @param aConstructionCallbacks - methods which will be called during
  *                                 window construction. can be null.
@@ -236,7 +233,7 @@ nsAppShellService::Shutdown(void)
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
-                                        nsIURL* aUrl, nsString& aControllerIID,
+                                        nsIURL* aUrl, PRBool showWindow,
                                         nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                         nsIXULWindowCallbacks *aCallbacks,
                                         PRInt32 aInitialWidth, PRInt32 aInitialHeight)
@@ -250,13 +247,14 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
   } else {
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
-    rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl, aControllerIID,
+    rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
       RegisterTopLevelWindow(window);
-      window->Show(PR_TRUE);
+      if (showWindow)
+				window->Show(PR_TRUE);
     }
   }
 
@@ -278,7 +276,7 @@ nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
  */
 NS_IMETHODIMP
 nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
-                                      nsIURL* aUrl, nsString& aControllerIID,
+                                      nsIURL* aUrl, PRBool showWindow,
                                       nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
@@ -292,13 +290,14 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
   } else {
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
-    rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl, aControllerIID,
+    rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
       RegisterTopLevelWindow(window);
-      window->Show(PR_TRUE);
+      if (showWindow)
+				window->Show(PR_TRUE);
     }
   }
 

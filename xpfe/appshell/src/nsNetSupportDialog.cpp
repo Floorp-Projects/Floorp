@@ -318,8 +318,7 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
  		return result;
  	}
  	
- 	nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
- 	result = appShellService->CreateDialogWindow( nsnull, dialogURL, controllerCID, mWebShellWindow, nsnull, this, 300,  150);
+  result = appShellService->CreateDialogWindow( nsnull, dialogURL, PR_TRUE, mWebShellWindow, nsnull, this, 300,  150);
 
 	// Run the dialog
 	// Results will be in the XUL callback

@@ -49,7 +49,7 @@ struct NotificationEvent : public PLEvent
                     PRInt32 aCode, 
                     nsISupports *aExtraInfo);
   ~NotificationEvent();
-  PRStatus Fire(PLEventQueue* aEventQ);
+  PRStatus Fire(nsIEventQueue* aEventQ);
 
   static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
   static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
@@ -166,7 +166,7 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
      * Post a message to the appropriate thread event queue to
      * handle the notification...
      */
-    PLEventQueue *evQ = nsnull;
+    nsIEventQueue *evQ = nsnull;
 
     /* locate the event queue for the thread... */
     if (mEventQService) {
@@ -192,6 +192,8 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
         /* allocation of the Notification event failed... */ 
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
+
+			NS_IF_RELEASE(evQ);
     } else {
       /* No event queue was found! */
       NS_ASSERTION(0, "No Event Queue is available!");
@@ -317,15 +319,13 @@ void PR_CALLBACK NotificationEvent::DestroyPLEvent(PLEvent* aEvent)
   delete ev;
 }
 
-PRStatus NotificationEvent::Fire(PLEventQueue* aEventQ) 
+PRStatus NotificationEvent::Fire(nsIEventQueue* aEventQ) 
 {
-  PRStatus status;
-
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc)  NotificationEvent::HandlePLEvent,
                (PLDestroyEventProc) NotificationEvent::DestroyPLEvent);
 
-  status = PL_PostEvent(aEventQ, this);
+  PRStatus status = aEventQ->PostEvent(this);
   return status;
 }
 
