@@ -1379,8 +1379,10 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
              ("HTMLContentSink::DidBuildModel: layout final content"));
 
   // Reflow the last batch of content
-  mDocument->ContentAppended(mBody, mBodyChildCount);
-  mBody->ChildCount(mBodyChildCount);
+  if (nsnull != mBody) {
+    mDocument->ContentAppended(mBody, mBodyChildCount);
+    mBody->ChildCount(mBodyChildCount);
+  }
   ScrollToRef();
 
   mDocument->EndLoad();
