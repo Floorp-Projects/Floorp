@@ -21,6 +21,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 PROGRAM = widget
 
@@ -38,7 +39,6 @@ CPPSRCS = \
 	$(NULL)
 
 LIBS := \
-	-L$(DIST)/bin	\
 	-lraptorbase	\
 	-lpng \
 	-lpref \
@@ -60,6 +60,7 @@ LIBS := \
 	-limg \
 	-ljpeg \
 	-ljs \
+	-ljsurl \
 	-ljsdom \
 	-lmimetype \
 	-lnetcache \
@@ -91,10 +92,9 @@ LIBS := \
 	-lxpcom \
 	$(ZLIB_LIBS) \
 	-lmozdbm \
+	$(TK_LIBS) \
 	$(NULL)
 
-
-include $(topsrcdir)/config/config.mk
 
 CFLAGS += $(TOOLKIT_CFLAGS)
 
