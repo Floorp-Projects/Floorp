@@ -114,6 +114,11 @@ NS_METHOD
 nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -124,10 +129,6 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     JSBool             dummy_bool     = PR_FALSE;
     JSErrorReporter    saved_state    = NULL;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
@@ -168,6 +169,11 @@ NS_METHOD
 nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext,  jobject *pjobj)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -178,10 +184,6 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsA
     JSBool             dummy_bool     = PR_FALSE;
     JSErrorReporter    saved_state    = NULL;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
@@ -216,6 +218,11 @@ NS_METHOD
 nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject java_obj, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -223,11 +230,6 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     jsval              js_val;
     JSErrorReporter    saved_state    = NULL;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
-    
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
@@ -262,6 +264,11 @@ NS_METHOD
 nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,  void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -269,10 +276,6 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,
     jsval              js_val;
     JSErrorReporter    saved_state    = NULL;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
@@ -298,6 +301,11 @@ NS_METHOD
 nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
                              int numPrincipals, void *pNSISecurityContext)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -305,10 +313,6 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
     jsval              js_val;
     JSErrorReporter    saved_state    = NULL;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
@@ -338,6 +342,11 @@ NS_METHOD
 nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray java_args, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     int                i              = 0;
     int                argc           = 0;
     int                arg_num        = 0;
@@ -353,10 +362,6 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     JSErrorReporter    saved_state    = NULL;
     jobject            result         = NULL;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
@@ -417,6 +422,11 @@ NS_METHOD
 nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -426,14 +436,10 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
     JSBool             dummy_bool     = PR_FALSE;
     JSErrorReporter    saved_state    = NULL;
     jobject            result         = NULL;
-	   const char		      *codebase       = NULL;
+	const char		  *codebase       = NULL;
     JSPrincipals      *principals     = NULL;
     JSBool             eval_succeeded = PR_FALSE;
 
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
@@ -484,6 +490,11 @@ NS_METHOD
 nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *java_applet_obj,  void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jsobject *pobj)
 {
+    if(jEnv == NULL || JSJ_callbacks == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     char              *err_msg        = NULL;
     JSContext         *cx             = NULL;
     JSObject          *js_obj         = NULL;
@@ -493,10 +504,7 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *java_applet_obj,  void* principals
     int                dummy_cost     = 0;
     JSBool             dummy_bool     = PR_FALSE;
     JSObjectHandle    *handle         = NULL;
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
+
     jsj_env = jsj_enter_js(jEnv, java_applet_obj, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
@@ -545,10 +553,13 @@ done:
 NS_METHOD	
 nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSObjectHandle    *handle         = (JSObjectHandle *)obj;
     
-    if(jEnv == NULL)
-       return NS_ERROR_FAILURE;
     if (!handle)
         return NS_ERROR_NULL_POINTER;
     JS_RemoveRootRT(handle->rt, &handle->js_obj);
@@ -560,6 +571,11 @@ nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
 NS_METHOD	
 nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
 {
+    if(jEnv == NULL || obj == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+
     JSJavaThreadState *jsj_env        = NULL;
     JSObjectHandle    *handle         = (JSObjectHandle*)obj;
     JSObject          *js_obj         = handle->js_obj;
@@ -568,11 +584,6 @@ nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
     jstring            result         = NULL;
     JSString          *jsstr          = NULL;
 
-    
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, NULL, 0, NULL );
     if (!jsj_env)
        return NS_ERROR_FAILURE;
