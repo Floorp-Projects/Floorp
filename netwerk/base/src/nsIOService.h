@@ -48,6 +48,9 @@ public:
     NS_IMETHOD GetLanguage(PRUnichar* *aLanguage);
     NS_IMETHOD GetPlatform(PRUnichar* *aPlatform);
     NS_IMETHOD GetUserAgent(PRUnichar* *aUserAgent);
+    NS_IMETHOD NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue, nsIStreamObserver **_retval);
+    NS_IMETHOD NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue, nsIStreamListener **_retval);
+    NS_IMETHOD NewSyncStreamListener(nsIBufferInputStream **inStream, nsIStreamListener **_retval);
 
     // nsIOService methods:
     nsIOService();

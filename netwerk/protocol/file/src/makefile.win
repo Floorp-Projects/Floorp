@@ -33,7 +33,6 @@ LLIBS= $(LLIBS)                 \
 	$(LIBNSPR)              \
 	$(DIST)\lib\plc3.lib    \
 	$(DIST)\lib\xpcom.lib   \
-	$(DIST)\lib\netwerk.lib \
 	$(NULL)
 
 MISCDEP=$(LLIBS)

@@ -24,6 +24,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIFileTransportService.h"
 #include "nsIURI.h"
+#include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "prprf.h"
 #include "prmem.h"      // for PR_Malloc
@@ -262,6 +263,32 @@ nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
     nsAutoString2 aUA(buf);
     *aUserAgent = aUA.ToNewUnicode();
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsIOService::NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue,
+                                    nsIStreamObserver **result)
+{
+    return NS_NewAsyncStreamObserver(result, eventQueue, receiver);
+    
+}
+
+NS_IMETHODIMP
+nsIOService::NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue,
+                                    nsIStreamListener **result)
+{
+    return NS_NewAsyncStreamListener(result, eventQueue, receiver);
+
+}
+
+NS_IMETHODIMP
+nsIOService:: NewSyncStreamListener(nsIBufferInputStream **inStream,
+                                    nsIStreamListener **listener)
+{
+    return NS_NewSyncStreamListener(listener, inStream);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

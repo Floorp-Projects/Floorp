@@ -195,9 +195,12 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     if (mState != ENDED)
         return NS_ERROR_IN_PROGRESS;
 
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     nsIStreamListener* syncListener;
     nsIBufferInputStream* inStr;
-    rv = NS_NewSyncStreamListener(&syncListener, &inStr);
+    rv = serv->NewSyncStreamListener(&inStr, &syncListener);
     if (NS_FAILED(rv)) return rv;
 
     mListener = syncListener;
@@ -233,8 +236,11 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     nsresult rv;
 
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     nsIStreamListener* asyncListener;
-    rv = NS_NewAsyncStreamListener(&asyncListener, eventQueue, listener);
+    rv = serv->NewAsyncStreamListener(listener, eventQueue, &asyncListener);
     if (NS_FAILED(rv)) return rv;
 
     mListener = asyncListener;
