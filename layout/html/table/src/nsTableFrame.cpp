@@ -3167,8 +3167,15 @@ nsTableFrame::OrderRowGroups(nsVoidArray&           aChildren,
     else {
       nonRowGroups.AppendElement(kidFrame);
     }
-
-    kidFrame->GetNextSibling(&kidFrame);
+    // Get the next sibling but skip it if it's also the next-in-flow, since
+    // a next-in-flow will not be part of the current table.
+    while (kidFrame) {
+      nsIFrame* nif;
+      kidFrame->GetNextInFlow(&nif);
+      kidFrame->GetNextSibling(&kidFrame);
+      if (kidFrame != nif) 
+        break;
+    }
   }
   aNumRowGroups = aChildren.Count();
   // put the thead first
@@ -3351,12 +3358,6 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
             PlaceChild(aPresContext, aReflowState, repeatedFooter, desiredSize);
           }
           break;
-        }
-        else if (kidNextInFlow) {
-          // during printing, the unfortunate situation arises where a next in flow can be a
-          // next sibling and the next sibling can get destroyed during the reflow. By reordering
-          // the row groups, the rowGroups array can be kept in sync.
-          OrderRowGroups(rowGroups, numRowGroups, nsnull);
         }
       }
     }
