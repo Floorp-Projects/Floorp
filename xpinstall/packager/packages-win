@@ -8,6 +8,12 @@
 ; ; file comment
 ;
 
+[langenus]
+;
+; en-US 
+bin\defaults\profile\en-US\*
+bin\chrome\locales\en-US\*
+
 [langengb]
 ;
 ; en-GB 
@@ -189,8 +195,8 @@ bin\components\nsXmlRpcClient.js
 ; chrome stuff
 bin\chrome\packages\core\*
 bin\chrome\packages\widget-toolkit\*
-bin\chrome\locales\en-US\*
-bin\chrome\skins\*
+bin\chrome\skins\modern\*
+bin\chrome\skins\classic\*
 -bin\chrome\packages\core\editor\content\EditorInitPage.html
 -bin\chrome\packages\core\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -208,7 +214,6 @@ bin\chrome\skins\*
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin\defaults\pref\*
-bin\defaults\profile\*
 bin\searchplugins\*
 bin\res\html.css
 bin\res\ua.css
