@@ -697,9 +697,9 @@ BEGIN
 #ifdef TRANSACTION_RECEIPTS
 			MENUITEM "Display &Receipts",           ID_PRIVACY_DISPLAY_RECEIPTS
 #endif
+			MENUITEM "Display Site &Info",          ID_PRIVACY_DISPLAY_SITEINFO
 			MENUITEM SEPARATOR
-			MENUITEM "A&bout Site",                 ID_PRIVACY_DISPLAY_SITEINFO
-			MENUITEM "Ab&out Privacy",              ID_PRIVACY_DISPLAY_TUTORIAL
+			MENUITEM "A&bout Privacy",              ID_PRIVACY_DISPLAY_TUTORIAL
 		END
 
 	    MENUITEM SEPARATOR
