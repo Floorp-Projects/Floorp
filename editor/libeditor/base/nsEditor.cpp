@@ -165,7 +165,7 @@ NSCanUnload(nsISupports* serviceMgr)
 extern "C" NS_EXPORT nsresult 
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
-  return nsRepository::RegisterFactory(kIEditFactoryIID, path, 
+  return nsRepository::RegisterComponent(kIEditFactoryIID, NULL, NULL, path, 
                                        PR_TRUE, PR_TRUE); //this will register the factory with the xpcom dll.
 }
 
@@ -290,7 +290,7 @@ nsEditor::EnableUndo(PRBool aEnable)
   nsresult result=NS_OK;
 
 /** -- temp code until the txn mgr auto-registers -- **/
-  nsRepository::RegisterFactory(kCTransactionManagerFactoryCID,
+  nsRepository::RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
 /** -- end temp code -- **/
   if (PR_TRUE==aEnable)

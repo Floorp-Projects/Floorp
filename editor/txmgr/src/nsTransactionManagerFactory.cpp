@@ -134,7 +134,8 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
-  return nsRepository::RegisterFactory(kCTransactionManagerFactoryCID, path, 
+  return nsRepository::RegisterComponent(kCTransactionManagerFactoryCID,
+                                       NULL, NULL, path,
                                        PR_TRUE, PR_TRUE);
 }
 

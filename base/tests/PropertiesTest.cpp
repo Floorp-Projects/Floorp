@@ -60,9 +60,9 @@ extern "C" void NS_SetupRegistry();
 int
 main(int argc, char *argv[])
 {
-  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE,
-    PR_FALSE);
-  nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL,
+  nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
+    PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,
     PR_FALSE, PR_FALSE);
 #ifdef XP_MAC    // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
   NS_SetupRegistry(); 

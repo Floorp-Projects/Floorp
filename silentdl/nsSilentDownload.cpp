@@ -1433,8 +1433,8 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** SilentDownload is being registered\n");
-    nsRepository::RegisterFactory(kSilentDownloadCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kSilentDownloadTaskCID, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kSilentDownloadCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kSilentDownloadTaskCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     return NS_OK;
 }
 

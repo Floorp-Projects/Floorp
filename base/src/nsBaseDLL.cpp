@@ -31,8 +31,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult ret;
 
-  ret = nsRepository::RegisterFactory(kPropertiesCID, path, PR_TRUE,
-    PR_TRUE);
+  ret = nsRepository::RegisterComponent(kPropertiesCID, NULL, NULL,
+    path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(ret)) {
     return ret;
   }
