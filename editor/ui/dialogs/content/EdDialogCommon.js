@@ -236,8 +236,8 @@ function SetTextboxFocus(textbox)
     // Select entire contents
     if (textbox.value.length > 0)
       textbox.select();
-
-    textbox.focus();
+    else
+      textbox.focus();
   }
 }
 
