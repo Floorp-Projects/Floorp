@@ -1,7 +1,7 @@
    interface HTMLInputElement : HTMLElement {
      attribute wstring         defaultValue;
      attribute boolean         defaultChecked;
-     attribute HTMLFormElement form;
+     readonly attribute HTMLFormElement form;
      attribute wstring         accept;
      attribute wstring         accessKey;
      attribute wstring         align;
@@ -14,7 +14,7 @@
      attribute wstring         size;
      attribute wstring         src;
      attribute long            tabIndex;
-     attribute wstring         type;
+     readonly attribute wstring         type;
      attribute wstring         useMap;
      attribute wstring         value;
      void                      blur();

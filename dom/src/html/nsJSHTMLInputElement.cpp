@@ -386,29 +386,6 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      case HTMLINPUTELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLINPUTELEMENT_ACCEPT:
       {
         nsAutoString prop;
@@ -591,21 +568,6 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetTabIndex(prop);
-        
-        break;
-      }
-      case HTMLINPUTELEMENT_TYPE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetType(prop);
         
         break;
       }
@@ -883,7 +845,7 @@ static JSPropertySpec HTMLInputElementProperties[] =
 {
   {"defaultValue",    HTMLINPUTELEMENT_DEFAULTVALUE,    JSPROP_ENUMERATE},
   {"defaultChecked",    HTMLINPUTELEMENT_DEFAULTCHECKED,    JSPROP_ENUMERATE},
-  {"form",    HTMLINPUTELEMENT_FORM,    JSPROP_ENUMERATE},
+  {"form",    HTMLINPUTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"accept",    HTMLINPUTELEMENT_ACCEPT,    JSPROP_ENUMERATE},
   {"accessKey",    HTMLINPUTELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
   {"align",    HTMLINPUTELEMENT_ALIGN,    JSPROP_ENUMERATE},
@@ -896,7 +858,7 @@ static JSPropertySpec HTMLInputElementProperties[] =
   {"size",    HTMLINPUTELEMENT_SIZE,    JSPROP_ENUMERATE},
   {"src",    HTMLINPUTELEMENT_SRC,    JSPROP_ENUMERATE},
   {"tabIndex",    HTMLINPUTELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
   {0}

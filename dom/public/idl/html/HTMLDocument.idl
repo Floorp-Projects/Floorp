@@ -21,3 +21,19 @@
      Element                   getElementById(in wstring elementId);
      NodeList                  getElementsByName(in wstring elementName);
    };
+
+   interface NSHTMLDocument {
+     attribute wstring alinkColor;
+     attribute wstring linkColor;
+     attribute wstring vlinkColor;
+     attribute wstring bgColor;
+     attribute wstring fgColor;
+     readonly attribute wstring lastModified;
+
+     readonly attribute HTMLCollection embeds;
+     readonly attribute HTMLCollection layers;    
+     readonly attribute HTMLCollection plugins;
+
+     wstring getSelection();
+     Element namedItem(in wstring name);
+   };
