@@ -1000,7 +1000,8 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   if (crop == "")
     crop = "right";
   content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
+  // XXX Causes menu items to disappear.
+  // content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
 
   // append now, after we've set all the attributes
   aAnonymousChildren.AppendElement(content);
@@ -1099,7 +1100,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   
   if (!keyElement)
     return;
-    
+  
   nsAutoString keyAtom("key");
   nsAutoString shiftAtom("shift");
 	nsAutoString altAtom("alt");
@@ -1118,6 +1119,19 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 	keyElement->GetAttribute(commandAtom, commandValue);
   keyElement->GetAttribute(controlAtom, controlValue);
 	  
+  nsAutoString xulkey;
+  keyElement->GetAttribute(nsAutoString("xulkey"), xulkey);
+  if (xulkey == "true") {
+      // Set the default for the xul key modifier
+#ifdef XP_MAC
+      commandValue = "true";
+#elif XP_PC
+      controlValue = "true";
+#else 
+      altValue = "true";
+#endif
+  }
+  
   PRBool prependPlus = PR_FALSE;
 
   if(commandValue != "" && commandValue != "false") {
