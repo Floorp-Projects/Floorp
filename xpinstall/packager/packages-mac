@@ -129,7 +129,6 @@ viewer:Components:gfx.xpt
 viewer:Components:gfxComponent.shlb 
 viewer:Components:history.xpt 
 viewer:Components:htmlparser.shlb 
-viewer:Components:JSLoader.shlb 
 viewer:Components:jsconsole-clhandler.js
 viewer:Components:jsdService.shlb
 viewer:Components:jsdservice.xpt

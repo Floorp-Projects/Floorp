@@ -1645,7 +1645,6 @@ sub BuildCommonProjects()
     BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.xml",              "libreg$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.xml",                     "xpcom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:js:macbuild:JavaScript.xml",                      "JavaScript$D.shlb", 1, $main::ALIAS_SYM_FILES, 0); 
-    BuildOneProject(":mozilla:js:macbuild:JSLoader.xml",                        "JSLoader$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:js:macbuild:LiveConnect.xml",                     "LiveConnect$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
 
     BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.xml",                  "zlib$D.$S", 1, $main::ALIAS_SYM_FILES, 0); 

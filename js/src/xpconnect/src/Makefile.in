@@ -87,9 +87,17 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/config.mk
 
+LOCAL_INCLUDES = \
+		-I$(srcdir)/../loader \
+		$(NULL)
+
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(NULL)
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

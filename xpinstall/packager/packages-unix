@@ -200,7 +200,6 @@ bin/components/layout_xul.xpt
 bin/components/layout_xul_tree.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
-bin/components/libjsloader.so
 bin/components/libnsprefm.so
 bin/components/libregviewer.so
 bin/components/prefmigr.xpt
