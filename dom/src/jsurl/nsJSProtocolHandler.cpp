@@ -87,12 +87,16 @@ nsEvaluateStringProxy::Init(nsIChannel* channel)
 NS_IMETHODIMP
 nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
 {
+    NS_ENSURE_ARG_POINTER(mChannel);
+    NS_ENSURE_ARG_POINTER(aRetValue);
+    NS_ENSURE_ARG_POINTER(aIsUndefined);
+
     nsresult rv;
     
-    NS_ENSURE_ARG_POINTER(mChannel);
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
     if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_TRUE(callbacks, NS_ERROR_FAILURE);
 
     // The event sink must be a script global Object Owner or we fail.
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
