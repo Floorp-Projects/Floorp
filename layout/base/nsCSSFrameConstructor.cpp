@@ -680,9 +680,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
         // Creates the content and frame and return if successful
         nsresult rv = NS_ERROR_FAILURE;
         if (nsnull != attrName) {
-          nsIContent* content = nsnull;
+          nsCOMPtr<nsIContent> content;
           nsIFrame*   textFrame = nsnull;
-          NS_NewAttributeContent(&content);
+          NS_NewAttributeContent(getter_AddRefs(content));
           if (nsnull != content) {
             nsCOMPtr<nsIAttributeContent> attrContent(do_QueryInterface(content));
             if (attrContent) {
