@@ -23,6 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
+		nsINNTPCategory.h \
 		nsINNTPNewsgroupList.h \
 		nsINNTPHost.h \
 		nsINNTPNewsgroup.h \
