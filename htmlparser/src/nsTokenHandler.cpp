@@ -31,60 +31,60 @@
 
 static const char* kNullParserGiven = "Error: Null parser given as argument";
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CTokenHandler::CTokenHandler(eHTMLTokenTypes aType) {
   mType=aType;
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CTokenHandler::~CTokenHandler(){
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 eHTMLTokenTypes CTokenHandler::GetTokenType(void){
   return mType;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   PRBool result=PR_FALSE;
@@ -95,35 +95,35 @@ PRBool CTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CStartTokenHandler::CStartTokenHandler() : CTokenHandler(eToken_start) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CStartTokenHandler::~CStartTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CStartTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -132,48 +132,48 @@ PRBool CStartTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CStartTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CEndTokenHandler::CEndTokenHandler(): CTokenHandler(eToken_end) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CEndTokenHandler::~CEndTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CEndTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -182,48 +182,48 @@ PRBool CEndTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CEndTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CCommentTokenHandler::CCommentTokenHandler() : CTokenHandler(eToken_comment) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CCommentTokenHandler::~CCommentTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CCommentTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -232,47 +232,47 @@ PRBool CCommentTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CCommentTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CEntityTokenHandler::CEntityTokenHandler() : CTokenHandler(eToken_entity) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CEntityTokenHandler::~CEntityTokenHandler() {
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CEntityTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -281,47 +281,47 @@ PRBool CEntityTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CEntityTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CWhitespaceTokenHandler::CWhitespaceTokenHandler() : CTokenHandler(eToken_whitespace) {
 }
 
   
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CWhitespaceTokenHandler::~CWhitespaceTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CWhitespaceTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -330,48 +330,48 @@ PRBool CWhitespaceTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser)
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CWhitespaceTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CNewlineTokenHandler::CNewlineTokenHandler() : CTokenHandler(eToken_newline) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CNewlineTokenHandler::~CNewlineTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CNewlineTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -380,47 +380,47 @@ PRBool CNewlineTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CNewlineTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CTextTokenHandler::CTextTokenHandler() : CTokenHandler(eToken_text) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CTextTokenHandler::~CTextTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CTextTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -429,46 +429,46 @@ PRBool CTextTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CTextTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CAttributeTokenHandler::CAttributeTokenHandler() : CTokenHandler(eToken_attribute) {
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CAttributeTokenHandler::~CAttributeTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CAttributeTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -477,47 +477,47 @@ PRBool CAttributeTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CAttributeTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CScriptTokenHandler::CScriptTokenHandler() : CTokenHandler(eToken_script) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CScriptTokenHandler::~CScriptTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CScriptTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -526,47 +526,47 @@ PRBool CScriptTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CScriptTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CStyleTokenHandler::CStyleTokenHandler() : CTokenHandler(eToken_style) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CStyleTokenHandler::~CStyleTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CStyleTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -575,47 +575,47 @@ PRBool CStyleTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CStyleTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CSkippedContentTokenHandler::CSkippedContentTokenHandler() : CTokenHandler(eToken_skippedcontent) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CSkippedContentTokenHandler::~CSkippedContentTokenHandler(){
 }
                           
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CSkippedContentTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
@@ -624,13 +624,13 @@ PRBool CSkippedContentTokenHandler::operator()(CToken* aToken,nsHTMLParser* aPar
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 4/2/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CSkippedContentTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;

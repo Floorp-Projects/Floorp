@@ -25,13 +25,13 @@ const char* gURLRef;
 const char* kBadHTMLText1="<HTML><BODY><H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
 const char* kBadHTMLText2="</BODY></HTML>";
 
-/**-------------------------------------------------------
+/**
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aURL -- pointer to URL to be loaded
  *  @return  
- *------------------------------------------------------*/
+ */
 CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
   NS_ASSERTION(0!=aURL,"Error: Null URL!");
   mOffset=0;
@@ -45,13 +45,13 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
   }
 }
 
-/**-------------------------------------------------------
+/**
  *  default destructor
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CScanner::~CScanner() {
   mStream->Close();
   delete mStream;
@@ -63,7 +63,7 @@ CScanner::~CScanner() {
  * @update  gess4/3/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::FillBuffer(PRInt32& anError) {
   mBuffer.Cut(0,mBuffer.Length());
   if(!mStream) {
@@ -91,13 +91,13 @@ PRInt32 CScanner::FillBuffer(PRInt32& anError) {
   return mBuffer.Length();
 }
 
-/**-------------------------------------------------------
+/**
  *  determine if the scanner has reached EOF
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  PR_TRUE upon eof condition
- *------------------------------------------------------*/
+ */
 PRBool CScanner::Eof() {
   PRInt32 theError=0;
   if(mOffset>=mBuffer.Length()) {
@@ -114,13 +114,13 @@ PRBool CScanner::Eof() {
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  retrieve next char from scanners internal input stream
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code reflecting read status
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::GetChar(PRUnichar& aChar) {
   if(!Eof()) {
     aChar=mBuffer[mOffset++];
@@ -130,14 +130,14 @@ PRInt32 CScanner::GetChar(PRUnichar& aChar) {
 }
 
 
-/**-------------------------------------------------------
+/**
  *  peek ahead to consume next char from scanner's internal
  *  input buffer
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::Peek(PRUnichar& aChar){
   if(!Eof()) {
     aChar=mBuffer[mOffset];        
@@ -147,13 +147,13 @@ PRInt32 CScanner::Peek(PRUnichar& aChar){
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Push the given char back onto the scanner
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::PutBack(PRUnichar aChar) {
   mOffset--;
   return kNoError;
@@ -161,33 +161,57 @@ PRInt32 CScanner::PutBack(PRUnichar aChar) {
 
 
 
-/**-------------------------------------------------------
+/**
  *  Skip whitespace on scanner input stream
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error status
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::SkipWhite(void) {
   static nsAutoString chars(" \n\r\t");
   return SkipOver(chars);
 }
 
-
-/**-------------------------------------------------------
- *  Skip over chars as long as they're in aValidSet
+/**
+ *  Skip over chars as long as they equal given char
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
- *------------------------------------------------------*/
-PRInt32 CScanner::SkipOver(nsString& aValidSet){
+ */
+PRInt32 CScanner::SkipOver(PRUnichar aSkipChar){
   PRUnichar ch=0;
   PRInt32   result=kNoError;
+
   while(kNoError==result) {
     result=GetChar(ch);
     if(!result) {
-      PRInt32 pos=aValidSet.Find(ch);
+      if(ch!=aSkipChar) {
+        PutBack(ch);
+        break;
+      }
+    } 
+    else break;
+  } //while
+  return result;
+}
+
+/**
+ *  Skip over chars as long as they're in aSkipSet
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  error code
+ */
+PRInt32 CScanner::SkipOver(nsString& aSkipSet){
+  PRUnichar ch=0;
+  PRInt32   result=kNoError;
+
+  while(kNoError==result) {
+    result=GetChar(ch);
+    if(!result) {
+      PRInt32 pos=aSkipSet.Find(ch);
       if(kNotFound==pos) {
         PutBack(ch);
         break;
@@ -198,26 +222,26 @@ PRInt32 CScanner::SkipOver(nsString& aValidSet){
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  Skip over chars as long as they're in aValidSet
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::SkipPast(nsString& aValidSet){
   NS_NOTYETIMPLEMENTED("Error: SkipPast not yet implemented.");
   return kNoError;
 }
 
-/**-------------------------------------------------------
+/**
  *  Consume chars as long as they are <i>in</i> the 
  *  given validSet of input chars.
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::ReadWhile(nsString& aString,nsString& aValidSet,PRBool addTerminal){
   PRUnichar ch=0;
   PRInt32   result=kNoError;
@@ -240,14 +264,14 @@ PRInt32 CScanner::ReadWhile(nsString& aString,nsString& aValidSet,PRBool addTerm
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Consume characters until you find one contained in given
  *  input set.
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addTerminal){
   PRUnichar ch=0;
   PRInt32   result=kNoError;
@@ -269,13 +293,13 @@ PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addT
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Consumes chars until you see the given terminalChar
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
- *------------------------------------------------------*/
+ */
 PRInt32 CScanner::ReadUntil(nsString& aString,PRUnichar aTerminalChar,PRBool addTerminal){
   PRUnichar ch=0;
   PRInt32   result=kNoError;
@@ -294,14 +318,14 @@ PRInt32 CScanner::ReadUntil(nsString& aString,PRUnichar aTerminalChar,PRBool add
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Conduct self test. Actually, selftesting for this class
  *  occurs in the parser selftest.
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 
 void CScanner::SelfTest(void) {
 #ifdef _DEBUG
