@@ -218,8 +218,8 @@ my $modules = [
         version => '0' 
     }, 
     {        
-        name => 'Date::Parse', 
-        version => '0' 
+        name => 'Date::Format', 
+        version => '1.21' 
     }, 
     { 
         name => 'DBI', 
