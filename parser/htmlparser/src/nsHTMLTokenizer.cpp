@@ -394,8 +394,26 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
       if(theTagIsBlock || theTagIsInline || eHTMLTag_table == theTag) {
         switch(theType) {
           case eToken_start:
-            theStack.Push(theToken);
-            ++theStackDepth;
+            {
+              if (gHTMLElements[theTag].ShouldVerifyHierarchy()) {
+                PRInt32 earlyPos = FindLastIndexOfTag(theTag, theStack);
+                if (earlyPos != kNotFound) {
+                  // Uh-oh, we've found a tag that is not allowed to nest at
+                  // all. Mark the previous one as malformed to increase our
+                  // chances of doing RS handling on it. We want to do this
+                  // for cases such as: <a><div><a></a></div></a>.
+                  // XXX What about <a><span><a>, where the second <a> closes
+                  // the <span>?
+                  CHTMLToken *theMalformedToken = 
+                    NS_STATIC_CAST(CHTMLToken*, theStack.ObjectAt(earlyPos));
+                  
+                  theMalformedToken->SetContainerInfo(eMalformed);
+                }
+              }
+
+              theStack.Push(theToken);
+              ++theStackDepth;
+            }
             break;
           case eToken_end: 
             {
