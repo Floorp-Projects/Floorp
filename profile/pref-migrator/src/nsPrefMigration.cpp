@@ -274,7 +274,7 @@ nsPrefMigration::ProcessPrefs()
   PRInt32 pmWinWidth  = 300;
   PRInt32 pmWinHeight = 200;
   nsAutoString args;
-  const char *pmprogressStr = "chrome://global/content/pmunprog.xul";
+  const char *pmprogressStr = "resource:/res/profile/pmunprog.xul";
 
 
   NS_WITH_SERVICE(nsIAppShellService, PMProgressAppShell,
@@ -1429,3 +1429,4 @@ nsPrefMigration::ShowPMDialogEngine(nsIDialogParamBlock *ioParamBlock, const cha
  }
 
 #endif /* 0 */
+
