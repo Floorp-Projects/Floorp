@@ -652,7 +652,7 @@ void nsTableFrame::BuildCellMap ()
     mCellMap->Reset(rowCount, mColCount);
   if (gsDebug==PR_TRUE) printf("mCellMap set to (%d, %d)\n", rowCount, mColCount);
 
-  // Iterate over each row frame group
+  // Iterate over each row group frame
   PRInt32 rowIndex = -1;
   while (nsnull != rowGroupFrame)
   {
@@ -666,50 +666,51 @@ void nsTableFrame::BuildCellMap ()
       rowIndex++;
       rowFrame->SetRowIndex(rowIndex);
 
-      // XXX We should iterate the table cells using the sibling pointers, and
-      // not use ChildAt()...
-      PRInt32 cellCount;
-      rowFrame->ChildCount (cellCount);
+      // Iterate the table cells
       PRInt32 cellIndex = 0;
       PRInt32 colIndex = 0;
+      nsIFrame* cellFrame;
+      rowFrame->FirstChild(cellFrame);
       if (gsDebug==PR_TRUE) 
         DumpCellMap();
 
-      while (colIndex < mColCount)
+      while ((nsnull != cellFrame) && (colIndex < mColCount))
       {
         if (gsDebug==PR_TRUE) printf("      colIndex = %d, with mColCount = %d\n", colIndex, mColCount);
         CellData *data = mCellMap->GetCellAt(rowIndex, colIndex);
         if (nsnull == data)
         {
-          if (cellIndex < cellCount)
-          {
-            nsTableCellFrame* cell;
-            rowFrame->ChildAt(cellIndex, (nsIFrame *&)cell);
-            BuildCellIntoMap(cell, rowIndex, colIndex);
-            cellIndex++;
-          }
+          BuildCellIntoMap((nsTableCellFrame*)cellFrame, rowIndex, colIndex);
+          cellIndex++;
+
+          // Get the next cell frame
+          cellFrame->GetNextSibling(cellFrame);
         }
         colIndex++;
       }
 
-      if (cellIndex < cellCount)  
+      // See if there are any cell frames left in this row
+      if (nsnull != cellFrame)
       {
         // We didn't use all the cells in this row up. Grow the cell
         // data because we now know that we have more columns than we
         // originally thought we had.
+        PRInt32 cellCount = cellIndex + LengthOf(cellFrame);
+
         if (gsDebug==PR_TRUE) printf("   calling GrowCellMap because cellIndex < %d\n", cellIndex, cellCount);
         GrowCellMap (cellCount);
-        while (cellIndex < cellCount)
+        while (nsnull != cellFrame)
         {
           if (gsDebug==PR_TRUE) printf("     calling GrowCellMap again because cellIndex < %d\n", cellIndex, cellCount);
           GrowCellMap (colIndex + 1); // ensure enough cols in map, may be low due to colspans
           CellData *data =mCellMap->GetCellAt(rowIndex, colIndex);
           if (data == nsnull)
           {
-            nsTableCellFrame* cell;
-            rowFrame->ChildAt (cellIndex, (nsIFrame *&)cell);
-            BuildCellIntoMap (cell, rowIndex, colIndex);
+            BuildCellIntoMap((nsTableCellFrame*)cellFrame, rowIndex, colIndex);
             cellIndex++;
+
+            // Get the next cell frame
+            cellFrame->GetNextSibling(cellFrame);
           }
           colIndex++;
         }
