@@ -29,11 +29,14 @@
 #include "nsPlatformCharsetFactory.h"
 #include "nsICharsetAlias.h"
 #include "nsCharsetAliasFactory.h"
+#include "nsITextToSubURI.h"
+#include "nsTextToSubURI.h"
 #include "nsIServiceManager.h"
 #include "nsUConvDll.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kTextToSubURICID, NS_TEXTTOSUBURI_CID);
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -130,6 +133,16 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     return res;
   }
 
+  if (aClass.Equals(kTextToSubURICID)) {
+    nsIFactory *factory = NEW_TEXTTOSUBURI_FACTORY();
+	nsresult res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -162,6 +175,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   rv = compMgr->RegisterComponent(kCharsetAliasCID, 
       "Charset Alias Information", 
       NS_CHARSETALIAS_PROGID, 
+      path, 
+      PR_TRUE, PR_TRUE);
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
+  rv = compMgr->RegisterComponent(kTextToSubURICID, 
+      "Text To Sub URI Helper", 
+      NS_ITEXTTOSUBURI_PROGID, 
       path, 
       PR_TRUE, PR_TRUE);
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
@@ -203,6 +223,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   if(NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kCharsetAliasCID, path);
+  if(NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kTextToSubURICID, path);
   if(NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kCharsetConverterManagerCID, path);

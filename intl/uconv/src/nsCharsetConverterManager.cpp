@@ -31,7 +31,6 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsCharsetConverterManager.h"
 #include "nsUConvDll.h"
-#include "registryhack1.h"
 
 // just for CIDs
 #include "nsIUnicodeDecodeHelper.h"
@@ -119,11 +118,6 @@ private:
    * Creates some sort of mapping (Charset, Charset) -> Converter.
    */
   nsresult CreateMapping();
-
-  /**
-   * Creates the Converters list.
-   */
-  nsresult CreateConvertersList();
 
   /**
    * Gathers the necessary informations about each Converter.
@@ -314,16 +308,6 @@ done:
   return res;
 }
 
-// XXX Hack! These lists should be obtained from the Repository, in a Component 
-// Category fashion. However, for now this is the place where you should add
-// new converters. Just increase the array Sizes and place those CIDs in the 
-// slots.
-nsresult nsCharsetConverterManager::CreateConvertersList()
-{
-#include "registryhack2.h"
-
-  return NS_OK;
-}
 
 nsresult nsCharsetConverterManager::GatherConvertersInfo()
 {

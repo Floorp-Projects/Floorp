@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsTextToSubURI.h"
 #include "nsString.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetConverterManager.h"
@@ -93,4 +94,64 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   }
   
   return rv;
+}
+//==============================================================
+class nsTextToSubURIFactory : public nsIFactory {
+   NS_DECL_ISUPPORTS
+
+public:
+   nsTextToSubURIFactory() {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(&g_InstanceCount);
+   }
+   virtual ~nsTextToSubURIFactory() {
+     PR_AtomicDecrement(&g_InstanceCount);
+   }
+
+   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
+   NS_IMETHOD LockFactory(PRBool aLock);
+ 
+};
+
+//--------------------------------------------------------------
+NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS( nsTextToSubURIFactory , kIFactoryIID);
+
+NS_IMETHODIMP nsTextToSubURIFactory::CreateInstance(
+    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+{
+  if(NULL == aResult) 
+        return NS_ERROR_NULL_POINTER;
+  if(NULL != aDelegate) 
+        return NS_ERROR_NO_AGGREGATION;
+
+  *aResult = NULL;
+
+  nsISupports *inst = new nsTextToSubURI();
+
+
+  if(NULL == inst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult res =inst->QueryInterface(aIID, aResult);
+  if(NS_FAILED(res)) {
+     delete inst;
+  }
+  
+  return res;
+}
+//--------------------------------------------------------------
+NS_IMETHODIMP nsTextToSubURIFactory::LockFactory(PRBool aLock)
+{
+  if(aLock)
+     PR_AtomicIncrement( &g_LockCount );
+  else
+     PR_AtomicDecrement( &g_LockCount );
+  return NS_OK;
+}
+
+//==============================================================
+nsIFactory* NEW_TEXTTOSUBURI_FACTORY()
+{
+  return new nsTextToSubURIFactory();
 }
