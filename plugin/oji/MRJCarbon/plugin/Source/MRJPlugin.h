@@ -157,10 +157,6 @@ public:
     NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value);
 
-    // (Corresponds to NPP_SetValue.)
-    NS_IMETHOD
-    SetValue(nsPluginVariable variable, void *value);
-
 	// JVM Plugin Methods.
 
     // This method us used to start the Java virtual machine.
@@ -170,13 +166,6 @@ public:
     // method).
     NS_IMETHOD
     StartupJVM(void);
-
-    // This method us used to stop the Java virtual machine.
-    // It tears down any global state necessary to host Java programs.
-    // The fullShutdown flag specifies whether the browser is quitting
-    // (PR_TRUE) or simply whether the JVM is being shut down (PR_FALSE).
-    NS_IMETHOD
-    ShutdownJVM(PRBool fullShutdown);
 
     // Causes the JVM to append a new directory to its classpath.
     // If the JVM doesn't support this operation, an error is returned.
@@ -198,21 +187,6 @@ public:
     NS_IMETHOD
     GetJavaWrapper(JNIEnv* env, jint jsobj, jobject *jobj);
 
-    NS_IMETHOD
-    GetJavaVM(JavaVM* *result);
-
-	// nsIJNIPlugin Methods.
-
-    // Find or create a JNIEnv for the current thread.
-    // Returns NULL if an error occurs.
-    NS_IMETHOD_(nsrefcnt)
-    GetJNIEnv(JNIEnv* *result);
-
-    // This method must be called when the caller is done using the JNIEnv.
-    // This decrements a refcount associated with it may free it.
-    NS_IMETHOD_(nsrefcnt)
-    ReleaseJNIEnv(JNIEnv* env);
-
 	/**
 	 * This creates a new secure communication channel with Java. The second parameter,
 	 * nativeEnv, if non-NULL, will be the actual thread for Java communication.
@@ -230,6 +204,9 @@ public:
 	NS_IMETHOD
 	SpendTime(PRUint32 timeMillis);
 	
+	NS_IMETHOD
+	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj);
+
 	/**
 	 * The Run method gives time to the JVM periodically. This makes SpendTIme() obsolete.
 	 */
@@ -247,9 +224,6 @@ public:
     
     Boolean inPluginThread();
 	
-	NS_IMETHOD
-	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj);
-
 private:
 	nsIJVMManager* mManager;
 	nsIThreadManager* mThreadManager;
