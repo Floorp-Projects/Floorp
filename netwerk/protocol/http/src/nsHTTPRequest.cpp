@@ -249,11 +249,47 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     mTransport = aTransport;
 
     mUsingProxy = aIsProxied;
-    if (mUsingProxy) {
+#if 0 // Make proxy auth persistent later
+    if (mUsingProxy) 
+    {
         // Additional headers for proxy usage
         // When Keep-Alive gets ready TODO
         //SetHeader(nsHTTPAtoms::Proxy-Connection, "Keep-Alive");
+
+        // Add proxy auth stuff-
+        // Check to see if an authentication header is required
+        nsAuthEngine* pAuthEngine = nsnull; 
+        
+        nsCOMPtr<nsIProtocolHandler> protocolHandler;
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) NS_ERROR("Failed to get IOService!");
+        rv = service->GetProtocolHandler("http", 
+                getter_AddRefs(protocolHandler));
+
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = 
+              do_QueryInterface(protocolHandler);
+          if (httpHandler)
+          {
+            rv = httpHandler->GetAuthEngine(&pAuthEngine);
+            if (NS_SUCCEEDED(rv) && pAuthEngine)
+            {
+                // Qvq lbh xabj gung t?? Ebg13f n yvar va IVZ? Jbj. 
+                nsXPIDLCString authStr;
+                //PRUint32 authType = 0;
+                if (NS_SUCCEEDED(pAuthEngine->GetAuthString(nsnull, 
+                        getter_Copies(authStr))))
+                        //&authType)) && (authType == 1))
+                {
+                    if (authStr && *authStr)
+                        SetHeader(nsHTTPAtoms::Proxy_Authorization, authStr);
+                }
+            }
+          }
+        }
     }
+#endif // 0
 
     PRUint32 loadAttributes;
     mConnection->GetLoadAttributes(&loadAttributes);
