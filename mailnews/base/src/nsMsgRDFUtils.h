@@ -19,6 +19,7 @@
 //This file holds some useful utility functions and declarations used by our datasources.
 
 #include "rdf.h"
+#include "nsIRDFResource.h"
 #include "nsIRDFNode.h"
 #include "nsString.h"
 

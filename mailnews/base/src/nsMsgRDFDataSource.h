@@ -21,6 +21,7 @@
 #define __nsMsgRDFDataSource_h
 
 #include "nsIRDFDataSource.h"
+#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsVoidArray.h"
 

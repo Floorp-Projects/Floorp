@@ -17,6 +17,7 @@
  */
 
 #include "nsIRDFDataSource.h"
+#include "nsIRDFService.h"
 #include "nsIMsgHeaderParser.h"
 
 /**
