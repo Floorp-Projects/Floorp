@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
+#include "nsIJARURI.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
@@ -105,29 +106,24 @@ NS_IMETHODIMP
 nsCodebasePrincipal::CanEnableCapability(const char *capability, 
                                          PRInt16 *result)
 {
-    // Either this principal must be preconfigured as a trusted source
-    // (mTrusted), or else the codebase principal pref must be enabled
-    if (!mTrusted)
-    {
-        static char pref[] = "signed.applets.codebase_principal_support";
-        nsresult rv;
-	    nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
-	    if (NS_FAILED(rv))
-		    return NS_ERROR_FAILURE;
-	    PRBool enabled;
-        if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
-	    {
-            // Deny unless subject is executing from file: or resource: 
-            PRBool isFile = PR_FALSE;
-            PRBool isRes = PR_FALSE;
+    static char pref[] = "signed.applets.codebase_principal_support";
+    nsresult rv;
+	nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
+	{
+        // Deny unless subject is executing from file: or resource: 
+        PRBool isFile = PR_FALSE;
+        PRBool isRes = PR_FALSE;
 
-            if (NS_FAILED(mURI->SchemeIs("file", &isFile)) || 
-                NS_FAILED(mURI->SchemeIs("resource", &isRes)) ||
-                (!isFile && !isRes))
-            {
-                *result = nsIPrincipal::ENABLE_DENIED;
-                return NS_OK;
-            }
+        if (NS_FAILED(mURI->SchemeIs("file", &isFile)) || 
+            NS_FAILED(mURI->SchemeIs("resource", &isRes)) ||
+            (!isFile && !isRes))
+        {
+            *result = nsIPrincipal::ENABLE_DENIED;
+            return NS_OK;
         }
     }
     nsBasePrincipal::CanEnableCapability(capability, result);
@@ -181,8 +177,7 @@ nsCodebasePrincipal::GetSpec(char **spec)
 NS_IMETHODIMP
 nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
 {
-
-    //-- Equals is defined as object equality or same origin
+    // Equals is defined as object equality or same origin
     *result = PR_FALSE;
     if (this == other) 
 	{
@@ -192,6 +187,8 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
     if (other == nsnull) 
         // return false
         return NS_OK;
+
+    // Get the other principal's URI
     nsCOMPtr<nsICodebasePrincipal> otherCodebase;
     if (NS_FAILED(other->QueryInterface(
             NS_GET_IID(nsICodebasePrincipal),
@@ -200,21 +197,38 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
     nsCOMPtr<nsIURI> otherURI;
     if (NS_FAILED(otherCodebase->GetURI(getter_AddRefs(otherURI))))
         return NS_ERROR_FAILURE;
+
+    // If either uri is a jar URI, get the base URI
+    nsCOMPtr<nsIJARURI> jarURI;
+    nsCOMPtr<nsIURI> myBaseURI(mURI);
+    while((jarURI = do_QueryInterface(myBaseURI)))
+    {
+        jarURI->GetJARFile(getter_AddRefs(myBaseURI));
+    }
+    while((jarURI = do_QueryInterface(otherURI)))
+    {
+        jarURI->GetJARFile(getter_AddRefs(otherURI));
+    }
+
+    if (!myBaseURI || !otherURI)
+        return NS_ERROR_FAILURE;
+
+    // Compare schemes
     nsCAutoString otherScheme;
     nsresult rv = otherURI->GetScheme(otherScheme);
     nsCAutoString myScheme;
     if (NS_SUCCEEDED(rv))
-        rv = mURI->GetScheme(myScheme);
-    if (NS_SUCCEEDED(rv) && strcmp(otherScheme.get(), myScheme.get()) == 0) 
+        rv = myBaseURI->GetScheme(myScheme);
+    if (NS_SUCCEEDED(rv) && otherScheme.Equals(myScheme)) 
     {
-        if (strcmp(otherScheme.get(), "file") == 0)
+        if (otherScheme.Equals("file"))
         {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         }
-        else if (strcmp(otherScheme.get(), "imap")    == 0 ||
-	             strcmp(otherScheme.get(), "mailbox") == 0 ||
-                 strcmp(otherScheme.get(), "news")    == 0) 
+        else if (otherScheme.Equals("imap")    ||
+                 otherScheme.Equals("mailbox") ||
+                 otherScheme.Equals("news"))
         {
             // Each message is a distinct trust domain; use the 
             // whole spec for comparison
@@ -222,27 +236,62 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
             if (NS_FAILED(otherURI->GetSpec(otherSpec)))
                 return NS_ERROR_FAILURE;
             nsCAutoString mySpec;
-            if (NS_FAILED(mURI->GetSpec(mySpec)))
+            if (NS_FAILED(myBaseURI->GetSpec(mySpec)))
                 return NS_ERROR_FAILURE;
-            *result = strcmp(otherSpec.get(), mySpec.get()) == 0;
+            *result = otherSpec.Equals(mySpec);
         } 
 		else
 		{
-            // Need to check the host
+            // Compare hosts
             nsCAutoString otherHost;
             rv = otherURI->GetHost(otherHost);
             nsCAutoString myHost;
             if (NS_SUCCEEDED(rv))
-                rv = mURI->GetHost(myHost);
-            *result = NS_SUCCEEDED(rv) && strcmp(otherHost.get(), myHost.get()) == 0;
+                rv = myBaseURI->GetHost(myHost);
+            *result = NS_SUCCEEDED(rv) && otherHost.Equals(myHost);
             if (*result) 
             {
-                int otherPort;
+                // Compare ports
+                PRInt32 otherPort;
                 rv = otherURI->GetPort(&otherPort);
-                int myPort;
+                PRInt32 myPort;
                 if (NS_SUCCEEDED(rv))
-                    rv = mURI->GetPort(&myPort);
+                    rv = myBaseURI->GetPort(&myPort);
                 *result = NS_SUCCEEDED(rv) && otherPort == myPort;
+                // If the port comparison failed, see if either URL has a
+                // port of -1. If so, replace -1 with the default port
+                // for that scheme.
+                if(!*result && (myPort == -1 || otherPort == -1))
+                {
+                    PRInt32 defaultPort;
+                    //XXX had to hard-code the defualt port for http(s) here.
+                    //    remove this after darin fixes bug 113206
+                    if (myScheme.Equals("http"))
+                        defaultPort = 80;
+                    else if (myScheme.Equals("https"))
+                        defaultPort = 443;
+                    else
+                    {
+                        nsCOMPtr<nsIIOService> ioService(
+                            do_GetService(NS_IOSERVICE_CONTRACTID));
+                        if (!ioService)
+                            return NS_ERROR_FAILURE;
+                        nsCOMPtr<nsIProtocolHandler> protocolHandler;
+                        rv = ioService->GetProtocolHandler(myScheme.get(),
+                                                           getter_AddRefs(protocolHandler));
+                        if (NS_FAILED(rv))
+                            return rv;
+                    
+                        rv = protocolHandler->GetDefaultPort(&defaultPort);
+                        if (NS_FAILED(rv) || defaultPort == -1)
+                            return NS_OK; // No default port for this scheme
+                    }
+                    if (myPort == -1)
+                        myPort = defaultPort;
+                    else if (otherPort == -1)
+                        otherPort = defaultPort;
+                    *result = otherPort == myPort;
+                }
             }
         }
     }
@@ -279,7 +328,7 @@ nsCodebasePrincipal::Write(nsIObjectOutputStream* aStream)
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
 
-nsCodebasePrincipal::nsCodebasePrincipal() : mTrusted(PR_FALSE)
+nsCodebasePrincipal::nsCodebasePrincipal()
 {
     NS_INIT_ISUPPORTS();
 }
@@ -300,8 +349,7 @@ nsCodebasePrincipal::Init(nsIURI *uri)
 // This method overrides nsBasePrincipal::InitFromPersistent
 nsresult
 nsCodebasePrincipal::InitFromPersistent(const char* aPrefName, const char* aURLStr, 
-                                        const char* aGrantedList, const char* aDeniedList,
-                                        PRBool aTrusted)
+                                        const char* aGrantedList, const char* aDeniedList)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
@@ -310,8 +358,6 @@ nsCodebasePrincipal::InitFromPersistent(const char* aPrefName, const char* aURLS
     if (NS_FAILED(rv)) return rv;
 
     if (NS_FAILED(Init(uri))) return NS_ERROR_FAILURE;
-    // XXX: Add check for trusted = SSL only here?
-    mTrusted = aTrusted;
 
     return nsBasePrincipal::InitFromPersistent(aPrefName, aURLStr, 
                                                aGrantedList, aDeniedList);

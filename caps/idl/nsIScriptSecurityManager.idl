@@ -204,11 +204,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     boolean subjectPrincipalIsSystem();
 
-    /**
-     * Forget all currently stored security policies and reread from prefs.
-     * This must be called after any capability.policy prefs have changed.
-     */ 
-    void reloadSecurityPolicies();
 };
 
 %{C++
