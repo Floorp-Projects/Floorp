@@ -33,7 +33,7 @@
 #include "nsMsgUtils.h"
 #include "nsMsgSearchTerm.h"
 #include "nsXPIDLString.h"
-
+#include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
 
@@ -433,7 +433,7 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 {
 	nsresult	err = NS_OK;
 	nsMsgFilterFileAttribValue attrib;
-
+    nsCOMPtr<nsIImportService> impSvc;
 	// We'd really like to move lot's of these into the objects that they refer to.
 	aStream->seek(PR_SEEK_SET, 0);
 	do 
@@ -460,7 +460,12 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 				attrib = nsIMsgFilterList::attribNone;
 				NS_ASSERTION(PR_FALSE, "error parsing filter file version");
 			}
-			break;
+            if (m_fileVersion == k45Version)
+            {
+              impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
+              NS_ASSERTION(impSvc, "cannot get importService");
+            }
+ 			break;
 		case nsIMsgFilterList::attribLogging:
 			m_loggingEnabled = StrToBool(value);
 			break;
@@ -473,11 +478,11 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 				break;
 			}
 			filter->SetFilterList(NS_STATIC_CAST(nsIMsgFilterList*,this));
-            if (m_fileVersion == k45Version)
+            if (m_fileVersion == k45Version && impSvc)
             {
-              nsAutoString unicodeStr;
-              unicodeStr.AssignWithConversion(value.get());
-              filter->SetFilterName(unicodeStr.get());
+                nsAutoString unicodeStr;
+                impSvc->SystemStringToUnicode(value.get(), unicodeStr);
+                filter->SetFilterName(unicodeStr.get());
             }
             else
             {  
@@ -534,10 +539,10 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 		case nsIMsgFilterList::attribCondition:
             if (m_curFilter)
             {
-              if ( m_fileVersion == k45Version)
+              if ( m_fileVersion == k45Version && impSvc)
               {
                 nsAutoString unicodeStr;
-                unicodeStr.AssignWithConversion(value.get());
+                impSvc->SystemStringToUnicode(value.get(), unicodeStr);
                 char *utf8 = unicodeStr.ToNewUTF8String();
                 value.Assign(utf8);
                 nsMemory::Free(utf8);
