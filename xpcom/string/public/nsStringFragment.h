@@ -81,17 +81,17 @@ struct nsReadableFragment
       }
 
     void
-    SetID( const void* id )
+    SetID( const void* aID )
       {
-        mFragmentIdentifier = id;
+        mFragmentIdentifier = aID;
       }
 
     void
-    SetID( unsigned long id )
+    SetID( unsigned long aID )
       {
         typedef char* char_ptr;
         typedef void* void_ptr;
-        mFragmentIdentifier = void_ptr(char_ptr(0)+id);
+        mFragmentIdentifier = void_ptr(char_ptr(0)+aID);
       }
   };
 
