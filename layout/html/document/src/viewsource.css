@@ -26,13 +26,11 @@ html {
   background-color: window;
 }
 .viewsource {
-  font-family: monospace;
+  font-family: -moz-fixed;
   font-weight: normal;
+  font-size: normal;
   color: windowtext;
   white-space: pre;
-  font-size: 12px;
-  padding-top: 8px; 
-  margin-left: 8px;
 }
 .start-tag {
  color: purple;
