@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  mime \
 		  msgcompose \
 		  appcomps \
+		  intl \
 		  $(NULL)
 
 CPPSRCS		= \

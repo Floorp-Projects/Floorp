@@ -64,6 +64,7 @@ Rights Reserved.
                      autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                      minResultsForPopup="3" 
                      ontextcommand="awRecipientTextCommand(userAction, this)"
+                     onerrorcommand="awRecipientErrorCommand(errItem, this)"
                      oninput="setupAutocomplete();" disableonsend="true"
                      onkeypress="awRecipientKeyPress(event, this)"
                      onkeydown="awRecipientKeyDown(event, this)">

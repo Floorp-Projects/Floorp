@@ -36,6 +36,9 @@
 #include "nsILDAPMessage.h"
 #include "nsLDAP.h"
 #include "prlog.h"
+#include "nsIStringBundle.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIDNSService.h"
 
 NS_IMPL_ISUPPORTS2(nsAbLDAPAutoCompFormatter, 
 		   nsILDAPAutoCompFormatter, 
@@ -136,6 +139,215 @@ nsAbLDAPAutoCompFormatter::Format(nsILDAPMessage *aMsg,
     rv = item->SetClassName("remote-abook");
     if (NS_FAILED(rv)) {
         NS_WARNING("nsAbLDAPAutoCompleteFormatter::Format():"
+                   " item->SetClassName() failed");
+    }
+
+    // all done; return the item
+    //
+    NS_IF_ADDREF(*aItem = item);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState, 
+                                           nsresult aErrorCode, 
+                                           nsIAutoCompleteItem **aItem) 
+{
+    PRInt32 errorKey;
+    nsresult rv;
+
+    // create an nsIAutoCompleteItem to hold the returned value
+    //
+    nsCOMPtr<nsIAutoCompleteItem> item = do_CreateInstance(
+        NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::FormatException(): couldn't"
+                 " create " NS_AUTOCOMPLETEITEM_CONTRACTID "\n");
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    // get the string bundle service
+    //
+    nsXPIDLString errMsg, ldapErrMsg, errCode, alertMsg, ldapHint;
+    nsString errCodeNum;
+
+    nsCOMPtr<nsIStringBundleService> stringBundleSvc(do_GetService(
+                                            NS_STRINGBUNDLE_CONTRACTID, &rv)); 
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
+                 " error getting string bundle service");
+        return rv;
+    }
+
+    // get the string bundles relevant here: the main LDAP bundle,
+    // and the ldap AutoCompletion-specific bundle
+    //
+    nsCOMPtr<nsIStringBundle> ldapBundle, ldapACBundle;
+
+    rv = stringBundleSvc->CreateBundle(
+        "chrome://mozldap/locale/ldapErrors.properties",
+        getter_AddRefs(ldapBundle));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
+                 " error creating string bundle"
+                 " chrome://mozldap/locale/ldapErrors.properties");
+        return rv;
+    } 
+
+    rv = stringBundleSvc->CreateBundle(
+        "chrome://global/locale/ldapAutoCompErrs.properties",
+        getter_AddRefs(ldapACBundle));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
+                 " error creating string bundle"
+                 " chrome://global/locale/ldapAutoCompErrs.properties");
+        return rv;
+    }
+
+    // get the general error that goes in the dropdown and the window
+    // title
+    //
+    rv = ldapACBundle->GetStringFromID(aState, getter_Copies(errMsg));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
+                 " error getting general error from bundle"
+                 " chrome://global/locale/ldapAutoCompErrs.properties");
+        return rv;
+    }
+
+    // get the phrase corresponding to "Error code"
+    //
+    rv = ldapACBundle->GetStringFromName(NS_LITERAL_STRING("errCode").get(), 
+                                         getter_Copies(errCode));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
+                   "(): error getting 'errCode' string from bundle "
+                   "chrome://mozldap/locale/ldapErrors.properties");
+        return rv;
+    }
+
+    // for LDAP errors
+    //
+    if (NS_ERROR_GET_MODULE(aErrorCode) == NS_ERROR_MODULE_LDAP) {
+
+        errorKey = NS_ERROR_GET_CODE(aErrorCode);
+
+        // put the number itself in string form
+        //
+        errCodeNum.AppendInt(errorKey);
+
+        // get the LDAP error message itself
+        //
+        rv = ldapBundle->GetStringFromID(NS_ERROR_GET_CODE(aErrorCode), 
+                                                getter_Copies(ldapErrMsg));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
+                     "(): error getting string 2 from bundle "
+                     "chrome://mozldap/locale/ldapErrors.properties");
+            return rv;
+        }
+  
+    } else {
+
+        // put the entire nsresult in string form
+        //
+        errCodeNum += NS_LITERAL_STRING("0x");
+        errCodeNum.AppendInt(aErrorCode, 16);    
+
+        // figure out the key to index into the string bundle
+        //
+        const PRInt32 HOST_NOT_FOUND_ERROR=5000;
+        const PRInt32 GENERIC_ERROR=9999;
+        errorKey = ( (aErrorCode == NS_ERROR_UNKNOWN_HOST) ? 
+                     HOST_NOT_FOUND_ERROR : GENERIC_ERROR );
+
+        // get the specific error message itself
+        rv = ldapACBundle->GetStringFromID(errorKey,
+                                           getter_Copies(ldapErrMsg));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
+                     "(): error getting specific non LDAP error-string "
+                     "from bundle "
+                     "chrome://mozldap/locale/ldapErrors.properties");
+            return rv;
+        }
+    }
+
+    // and try to find a hint about what the user should do next
+    //
+    const PRInt32 HINT_BASE=10000;
+    const PRInt32 GENERIC_HINT_CODE = 9999;
+    rv = ldapACBundle->GetStringFromID(HINT_BASE + errorKey, 
+                                       getter_Copies(ldapHint));
+    if (NS_FAILED(rv)) {
+        rv = ldapACBundle->GetStringFromID(HINT_BASE + GENERIC_HINT_CODE,
+                                           getter_Copies(ldapHint));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException()"
+                     "(): error getting hint string from bundle "
+                     "chrome://mozldap/locale/ldapErrors.properties");
+            return rv;
+        }
+    }
+        
+    const PRUnichar *stringParams[4] = { errCode.get(), errCodeNum.get(), 
+                                         ldapErrMsg.get(), ldapHint.get() };
+
+    rv = ldapACBundle->FormatStringFromName(
+        NS_LITERAL_STRING("alertFormat").get(), stringParams, 4, 
+        getter_Copies(alertMsg));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("YYY");
+    }
+
+    // put the error message, between angle brackets, into the XPIDL |value|
+    // attribute.  Note that the hardcoded string is only used since 
+    // stringbundles have already failed us.
+    //
+    if (errMsg.Length()) {
+        rv = item->SetValue(PromiseFlatString(NS_LITERAL_STRING("<") + errMsg
+                                              + NS_LITERAL_STRING(">")));
+    } else {
+        rv = item->SetValue(
+            NS_LITERAL_STRING("<Unknown LDAP autocompletion error>"));
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsAbLDAPAutoCompFormatter::FormatException(): "
+                 "item->SetValue failed");
+        return rv;
+    }
+    
+    // pass the alert message in as the param; if that fails, proceed anyway
+    //
+    nsCOMPtr<nsISupportsWString> alert(do_CreateInstance(
+                                           NS_SUPPORTS_WSTRING_CONTRACTID,
+                                           &rv));
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbLDAPAutoCompFormatter::FormatException(): "
+                   "could not create nsISupportsWString");
+    } else {
+        rv = alert->SetData(alertMsg.get());
+        if (NS_FAILED(rv)) {
+            NS_WARNING("nsAbLDAPAutoCompFormatter::FormatException(): "
+                     "alert.Set() failed");
+        } else {
+            rv = item->SetParam(alert);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("nsAbLDAPAutoCompFormatter::FormatException(): "
+                           "item->SetParam failed");
+            }
+        }
+    }
+
+    // this is a remote addresbook, set the class name so the autocomplete 
+    // item can be styled to show this
+    //
+    rv = item->SetClassName("remote-err");
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbLDAPAutoCompleteFormatter::FormatException():"
                    " item->SetClassName() failed");
     }
 

@@ -24,6 +24,7 @@ top.MAX_RECIPIENTS = 0;
 var inputElementType = "";
 var selectElementType = "";
 var selectElementIndexTable = null;
+var gPromptService = null;
 
 var test_addresses_sequence = false;
 if (prefs)
@@ -150,7 +151,7 @@ function CompFields2Recipients(msgCompFields, msgType)
     //If it's a new message, we need to add an extrat empty recipient.
     if (!msgTo && !msgNewsgroups)
       _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
-    dump("replacing child in comp fields 2 recips \n");
+      // dump("replacing child in comp fields 2 recips \n");
       var parent = treeChildren.parentNode;
       parent.replaceChild(newTreeChildrenNode, treeChildren);
       awFitDummyRows();
@@ -350,7 +351,7 @@ function awClickEmptySpace(targ, setFocus)
   if (targ.localName != 'treechildren')
     return;
 
-  dump("awClickEmptySpace\n");
+  // dump("awClickEmptySpace\n");
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
   if ( lastInput && lastInput.value )
@@ -749,6 +750,61 @@ function awRecipientTextCommand(userAction, element)
 {
   if (userAction == "typing" || userAction == "scrolling")
     awReturnHit(element);
+}
+
+// Called when an autocomplete session item is selected and the status of
+// the session it was selected from is nsIAutoCompleteStatus::failureItems.
+//
+// As of this writing, the only way that can happen is when an LDAP 
+// autocomplete session returns an error to be displayed to the user.
+//
+// There are hardcoded messages in here, but these are just fallbacks for
+// when string bundles have already failed us.
+//
+function awRecipientErrorCommand(errItem, element)
+{
+    // remove the angle brackets from the general error message to construct 
+    // the title for the alert.  someday we'll pass this info using a real
+    // exception object, and then this code can go away.
+    //
+    var generalErrString;
+    if (errItem.value != "") {
+	generalErrString = errItem.value.slice(1, errItem.value.length-1);
+    } else {
+	generalErrString = "Unknown LDAP server problem encountered";
+    }	
+
+    // try and get the string of the specific error to contruct the complete
+    // err msg, otherwise fall back to something generic.  This message is
+    // handed to us as an nsISupportsWString in the param slot of the 
+    // autocomplete error item, by agreement documented in 
+    // nsILDAPAutoCompFormatter.idl
+    //
+    var specificErrString = "";
+    try {
+	var specificError = errItem.param.QueryInterface(
+	    Components.interfaces.nsISupportsWString);
+	specificErrString = specificError.data;
+    } catch (ex) {
+    }
+    if (specificErrString == "") {
+	specificErrString = "Internal error";
+    }
+
+    try {
+	if (!gPromptService) {
+	    gPromptService = Components.classes[
+		"@mozilla.org/embedcomp/prompt-service;1"].getService().
+		QueryInterface(Components.interfaces.nsIPromptService);
+	}
+    } catch (ex) {
+    }
+
+    if (gPromptService) {
+	gPromptService.alert(window, generalErrString, specificErrString);
+    } else {
+	window.alert(generalErrString + ": " + specificErrString);
+    }
 }
 
 function awRecipientKeyPress(event, element)
