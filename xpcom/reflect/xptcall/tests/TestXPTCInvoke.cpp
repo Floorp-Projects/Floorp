@@ -22,6 +22,9 @@
 #include "xptcall.h"
 #include "prlong.h"
 
+// forward declration
+static void DoMultipleInheritenceTest();
+
 // {AAC1FB90-E099-11d2-984E-006008962422}
 #define INVOKETESTTARGET_IID \
 { 0xaac1fb90, 0xe099, 0x11d2, \
@@ -58,28 +61,28 @@ InvokeTestTarget::InvokeTestTarget()
     NS_ADDREF_THIS();
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 InvokeTestTarget::AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
     *retval = p1 + p2;
     return NS_OK;
-}        
+}
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 InvokeTestTarget::MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
     *retval = p1 * p2;
     return NS_OK;
-}        
+}
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 InvokeTestTarget::AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
 {
     LL_ADD(*retval, p1, p2);
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 InvokeTestTarget::MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
 {
     LL_MUL(*retval, p1, p2);
@@ -196,6 +199,244 @@ int main()
     else
         printf("\tFAILED");
 
+    DoMultipleInheritenceTest();
+
     return 0;
 }
 
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+
+// {491C65A0-3317-11d3-9885-006008962422}
+#define FOO_IID \
+{ 0x491c65a0, 0x3317, 0x11d3, \
+    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+// {491C65A1-3317-11d3-9885-006008962422}
+#define BAR_IID \
+{ 0x491c65a1, 0x3317, 0x11d3, \
+    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+/***************************/
+
+class nsIFoo : public nsISupports
+{
+public:
+    NS_IMETHOD FooMethod1(PRInt32 i) = 0;
+    NS_IMETHOD FooMethod2(PRInt32 i) = 0;
+};
+
+class nsIBar : public nsISupports
+{
+public:
+    NS_IMETHOD BarMethod1(PRInt32 i) = 0;
+    NS_IMETHOD BarMethod2(PRInt32 i) = 0;
+};
+
+/***************************/
+
+class FooImpl : public nsIFoo
+{
+public:
+    NS_IMETHOD FooMethod1(PRInt32 i);
+    NS_IMETHOD FooMethod2(PRInt32 i);
+
+    FooImpl();
+    virtual ~FooImpl();
+
+    virtual char* ImplName() = 0;
+
+    int SomeData1;
+    int SomeData2;
+    char* Name;
+};
+
+class BarImpl : public nsIBar
+{
+public:
+    NS_IMETHOD BarMethod1(PRInt32 i);
+    NS_IMETHOD BarMethod2(PRInt32 i);
+
+    BarImpl();
+    virtual ~BarImpl();
+
+    virtual char * ImplName() = 0;
+
+    int SomeData1;
+    int SomeData2;
+    char* Name;
+};
+
+/***************************/
+
+FooImpl::FooImpl() : Name("FooImpl")
+{
+}
+FooImpl::~FooImpl()
+{
+}
+
+NS_IMETHODIMP FooImpl::FooMethod1(PRInt32 i)
+{
+    printf("\tFooImpl::FooMethod1 called with i == %d, %s part of a %s\n", 
+           i, Name, ImplName());
+    return NS_OK;
+}
+
+NS_IMETHODIMP FooImpl::FooMethod2(PRInt32 i)
+{
+    printf("\tFooImpl::FooMethod2 called with i == %d, %s part of a %s\n", 
+           i, Name, ImplName());
+    return NS_OK;
+}
+
+/***************************/
+
+BarImpl::BarImpl() : Name("BarImpl")
+{
+}
+BarImpl::~BarImpl()
+{
+}
+
+NS_IMETHODIMP BarImpl::BarMethod1(PRInt32 i)
+{
+    printf("\tBarImpl::BarMethod1 called with i == %d, %s part of a %s\n", 
+           i, Name, ImplName());
+    return NS_OK;
+}
+
+NS_IMETHODIMP BarImpl::BarMethod2(PRInt32 i)
+{
+    printf("\tBarImpl::BarMethod2 called with i == %d, %s part of a %s\n", 
+           i, Name, ImplName());
+    return NS_OK;
+}
+
+/***************************/
+
+class FooBarImpl : FooImpl, BarImpl
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    char* ImplName();
+
+    FooBarImpl();
+    virtual ~FooBarImpl();
+    char* MyName;
+};
+
+FooBarImpl::FooBarImpl() : MyName("FooBarImpl")
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}
+
+FooBarImpl::~FooBarImpl()
+{
+}
+
+char* FooBarImpl::ImplName()
+{
+    return MyName;
+}
+
+static NS_DEFINE_IID(kFooIID, FOO_IID);
+static NS_DEFINE_IID(kBarIID, BAR_IID);
+
+NS_IMETHODIMP
+FooBarImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+
+
+  if (aIID.Equals(kFooIID)) {
+    *aInstancePtr = (void*) NS_STATIC_CAST(nsIFoo*,this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kBarIID)) {
+    *aInstancePtr = (void*) NS_STATIC_CAST(nsIBar*,this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    *aInstancePtr = (void*) NS_STATIC_CAST(nsISupports*,
+                                           NS_STATIC_CAST(nsIFoo*,this));
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(FooBarImpl)
+NS_IMPL_RELEASE(FooBarImpl)
+
+
+static void DoMultipleInheritenceTest()
+{
+    FooBarImpl* impl = new FooBarImpl();
+    if(!impl)
+        return;
+
+    nsIFoo* foo;
+    nsIBar* bar;
+
+    nsXPTCVariant var[1];
+
+    printf("\n");
+    if(NS_SUCCEEDED(impl->QueryInterface(kFooIID, (void**)&foo)) &&
+       NS_SUCCEEDED(impl->QueryInterface(kBarIID, (void**)&bar)))
+    {
+        printf("impl == %x\n", impl);
+        printf("foo  == %x\n", foo);
+        printf("bar  == %x\n", bar);
+
+        printf("Calling Foo...\n");
+        printf("direct calls:\n");
+        foo->FooMethod1(1);
+        foo->FooMethod2(2);
+
+        printf("invoke calls:\n");
+        var[0].val.i32 = 1;
+        var[0].type = nsXPTType::T_I32;
+        var[0].flags = 0;
+        XPTC_InvokeByIndex(foo, 3, 1, var);
+
+        var[0].val.i32 = 2;
+        var[0].type = nsXPTType::T_I32;
+        var[0].flags = 0;
+        XPTC_InvokeByIndex(foo, 4, 1, var);
+
+        printf("\n");
+
+        printf("Calling Bar...\n");
+        printf("direct calls:\n");
+        bar->BarMethod1(1);
+        bar->BarMethod2(2);
+
+        printf("invoke calls:\n");
+        var[0].val.i32 = 1;
+        var[0].type = nsXPTType::T_I32;
+        var[0].flags = 0;
+        XPTC_InvokeByIndex(bar, 3, 1, var);
+
+        var[0].val.i32 = 2;
+        var[0].type = nsXPTType::T_I32;
+        var[0].flags = 0;
+        XPTC_InvokeByIndex(bar, 4, 1, var);
+
+        printf("\n");
+
+        NS_RELEASE(foo);
+        NS_RELEASE(bar);
+    }
+    NS_RELEASE(impl);
+}
