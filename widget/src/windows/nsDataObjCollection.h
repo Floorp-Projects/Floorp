@@ -38,6 +38,8 @@
 #ifndef _NSDATAOBJCOLLECTION_H_
 #define _NSDATAOBJCOLLECTION_H_
 
+#define INITGUID // needed for initializing the IID_IDataObjCollection GUID
+
 #include "OLEIDL.H"
 
 #include "nsString.h"
@@ -65,13 +67,24 @@ public:
 };
 #endif
 
+// {25589C3E-1FAC-47b9-BF43-CAEA89B79533}
+DEFINE_GUID(IID_IDataObjCollection, 
+0x25589c3e, 0x1fac, 0x47b9, 0xbf, 0x43, 0xca, 0xea, 0x89, 0xb7, 0x95, 0x33);
+
+// An interface to make sure we have the right kind of object for D&D
+// this way we can filter out collection objects that aren't ours
+class nsIDataObjCollection : public IUnknown {
+public:
+  
+};
+
 /*
  * This ole registered class is used to facilitate drag-drop of objects which
  * can be adapted by an object derived from CfDragDrop. The CfDragDrop is
  * associated with instances via SetDragDrop().
  */
  
-class nsDataObjCollection : public IDataObject //, public nsPIDataObjCollection
+class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, public nsPIDataObjCollection
 {
 	public: // construction, destruction
 		nsDataObjCollection();

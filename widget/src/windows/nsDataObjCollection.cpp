@@ -60,7 +60,6 @@ ULONG nsDataObjCollection::g_cRef = 0;
 EXTERN_C GUID CDECL CLSID_nsDataObjCollection =
 { 0x2d851b91, 0xd4c, 0x11d3, { 0x96, 0xd4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } };
 
-
 /*
  * Class nsDataObjCollection
  */
@@ -113,7 +112,13 @@ STDMETHODIMP nsDataObjCollection::QueryInterface(REFIID riid, void** ppv)
 	*ppv=NULL;
 
 	if ( (IID_IUnknown == riid) || (IID_IDataObject	== riid) ) {
-		*ppv = this;
+		*ppv = static_cast<IDataObject*>(this); 
+		AddRef();
+		return NOERROR;
+	}
+
+	if ( IID_IDataObjCollection	== riid ) {
+		*ppv = static_cast<nsIDataObjCollection*>(this); 
 		AddRef();
 		return NOERROR;
 	}
