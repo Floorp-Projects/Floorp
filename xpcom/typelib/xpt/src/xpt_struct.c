@@ -174,7 +174,7 @@ XPT_PUBLIC_API(PRBool)
 XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, PRUint32 * ide_offset)
 {
     XPTMode mode = cursor->state->mode;
-    int i;
+    unsigned int i;
     XPTHeader * header;
 
     if (mode == XPT_DECODE) {
