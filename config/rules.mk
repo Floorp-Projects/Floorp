@@ -140,38 +140,21 @@ SHARED_LIBRARY		:= $(LIBRARY_NAME).$(DLL_SUFFIX)
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
 else  # OS2
-ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
-else  # WINNT
-ifeq ($(OS_ARCH),BeOS)
-SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
-else
 
+
+ifeq (,$(filter-out BeOS, $(OS_ARCH)))
 # Unix only
 ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
 endif
+endif
 
-ifeq ($(OS_ARCH),HP-UX)
-SHARED_LIBRARY		:= $(LIBRARY:.a=.sl)
-else  # HPUX
-ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS4.1)
-SHARED_LIBRARY		:= $(LIBRARY:.a=.so.1.0)
-else  # SunOS4
-ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
-SHARED_LIBRARY		:= $(LIBRARY:.a=)_shr.a
-else  # AIX
-SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
-endif # AIX
-endif # SunOS4
-endif # HPUX
+SHARED_LIBRARY		:= $(LIBRARY:.$(LIB_SUFFIX)=$(DLL_SUFFIX))
 
-endif # BeOS
-endif # WINNT
 endif # OS2
 endif # MKSHLIB
 endif # !NO_SHARED_LIB
-endif
+endif # LIBRARY
 
 ifdef NO_STATIC_LIB
 LIBRARY			= $(NULL)
@@ -596,9 +579,6 @@ $(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) /ST:0x1000000
 else
-ifeq ($(OS_ARCH),WINNT)
-	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
-else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -607,18 +587,17 @@ ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
 	mimeset $@
 endif
-endif
-else
+endif # BeOS
+else # ! CPP_PROG_LINK
 	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
 	mimeset $@
 endif
-endif
-endif
-endif
-endif
+endif # BeOS
+endif # CPP_PROG_LINK
+endif # OS2
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
@@ -773,38 +752,26 @@ $(SHARED_LIBRARY): $(OBJS) $(DEF_FILE) Makefile Makefile.in
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),OS2)
 $(DLL): $(OBJS) $(EXTRA_LIBS)
 	rm -f $@
-ifeq ($(OS_ARCH),OS2)
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
-else
-	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS)
-endif
 endif
 
 %: %.c
 	$(REPORT_BUILD)
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
-else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
 	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
-endif
 
 %.o: %.c Makefile.in
 	$(REPORT_BUILD)
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
-else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
 else
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
-endif
 endif
 
 %.ho: %.c Makefile.in
@@ -839,14 +806,10 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
 	rm -f t_$*.cc
 else
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-	$(ELOG) $(CCC) -Fo$@ -c $(CXXFLAGS) $<
-else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
 	$(ELOG) $(CCC) -Fo$@ -c $(COMPILE_CXXFLAGS) $<
 else
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
-endif
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
