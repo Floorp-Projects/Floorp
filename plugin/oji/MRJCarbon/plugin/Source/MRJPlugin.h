@@ -67,10 +67,10 @@ class MRJPlugin :	public nsIPlugin, public nsIJVMPlugin,
 public:
 	MRJPlugin();
 	virtual ~MRJPlugin();
-	
-	// Currently, this is a singleton, statically allocated object.
-	void operator delete(void* ptr) {}
 
+    static nsresult GetService(const nsCID &aCID, const nsIID& aIID, void* *aService);
+    static nsresult GetService(const char* aContractID, const nsIID& aIID, void* *aService);
+	
 	// NS_DECL_ISUPPORTS
 	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 	NS_IMETHOD_(nsrefcnt) AddRef(void) { return addRef(); }
