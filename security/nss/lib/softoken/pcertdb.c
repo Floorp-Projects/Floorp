@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.39 2002/11/26 22:14:55 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.40 2002/11/27 01:28:03 wtc%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2246,7 +2246,6 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     SECStatus rv;
     unsigned int keyidoff;
     unsigned int nnlen, eaddrlen;
-    unsigned int nemailAddrs = 0;
     unsigned int stdlen;
     
     arena = entry->common.arena;
@@ -2369,7 +2368,7 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 	/* read in the additional email addresses */
 	entry->nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
 	entry->emailAddrs = (char **)
-		PORT_ArenaAlloc(arena, nemailAddrs * sizeof(char *));
+		PORT_ArenaAlloc(arena, entry->nemailAddrs * sizeof(char *));
 	if (entry->emailAddrs == NULL) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
@@ -3699,7 +3698,7 @@ UpdateV6DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 		    
 		    subjectEntry->emailAddrs = (char **)
 				PORT_ArenaAlloc(subjectEntry->common.arena,
-						key.size - 1);
+						sizeof(char *));
 		    if ( subjectEntry->emailAddrs ) {
 			subjectEntry->emailAddrs[0] =
 			     (char *)PORT_ArenaAlloc(subjectEntry->common.arena,
