@@ -2,11 +2,12 @@
  * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgOfflineNewsState.idl
  */
 
-#ifndef __nsIMsgOfflineNewsState_h__
-#define __nsIMsgOfflineNewsState_h__
+#ifndef __gen_nsIMsgOfflineNewsState_h__
+#define __gen_nsIMsgOfflineNewsState_h__
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
+
 
 /* starting interface nsIMsgOfflineNewsState */
 
@@ -26,15 +27,15 @@ class nsIMsgOfflineNewsState : public nsISupports {
     return iid;
   }
 
-  /* attribute nsIMsgNewsgroup newsgroup; */
+  /*  <IDL>  */
   NS_IMETHOD GetNewsgroup(nsIMsgNewsgroup * *aNewsgroup) = 0;
   NS_IMETHOD SetNewsgroup(nsIMsgNewsgroup * aNewsgroup) = 0;
 
-  /*  Process(out string outputBuffer, in  bufferSize); */
+  /*  <IDL>  */
   NS_IMETHOD Process(char **outputBuffer, PRInt32 bufferSize, PRInt32 *_retval) = 0;
 
-  /*  Interrupt(); */
+  /*  <IDL>  */
   NS_IMETHOD Interrupt(PRInt32 *_retval) = 0;
 };
 
-#endif /* __nsIMsgOfflineNewsState_h__ */
+#endif /* __gen_nsIMsgOfflineNewsState_h__ */

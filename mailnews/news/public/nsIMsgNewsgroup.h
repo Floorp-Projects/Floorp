@@ -2,10 +2,11 @@
  * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgNewsgroup.idl
  */
 
-#ifndef __nsIMsgNewsgroup_h__
-#define __nsIMsgNewsgroup_h__
+#ifndef __gen_nsIMsgNewsgroup_h__
+#define __gen_nsIMsgNewsgroup_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+
 
 /* starting interface nsIMsgNewsgroup */
 
@@ -25,24 +26,24 @@ class nsIMsgNewsgroup : public nsISupports {
     return iid;
   }
 
-  /* attribute string name; */
+  /*  <IDL>  */
   NS_IMETHOD GetName(char * *aName) = 0;
   NS_IMETHOD SetName(char * aName) = 0;
 
-  /* attribute string password; */
+  /*  <IDL>  */
   NS_IMETHOD GetPassword(char * *aPassword) = 0;
   NS_IMETHOD SetPassword(char * aPassword) = 0;
 
-  /* attribute string username; */
+  /*  <IDL>  */
   NS_IMETHOD GetUsername(char * *aUsername) = 0;
   NS_IMETHOD SetUsername(char * aUsername) = 0;
 
-  /* attribute boolean needsExtraInfo; */
+  /*  <IDL>  */
   NS_IMETHOD IsNeedsExtraInfo(PRBool *aIsNeedsExtraInfo) = 0;
   NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo) = 0;
 
-  /* boolean IsOfflineArticle(in  num); */
+  /*  <IDL>  */
   NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval) = 0;
 };
 
-#endif /* __nsIMsgNewsgroup_h__ */
+#endif /* __gen_nsIMsgNewsgroup_h__ */
