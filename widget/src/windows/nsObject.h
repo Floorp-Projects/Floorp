@@ -52,8 +52,9 @@ protected:
     //
     CList m_link;
 
-private:
     nsISupports *mOuter;
+
+private:
 
     class InnerSupport : public nsISupports {
     public:

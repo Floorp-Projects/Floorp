@@ -48,6 +48,8 @@ struct nsGUIEvent {
                 /// Originator of the event
   nsIWidget*  widget;           
                 /// in widget relative coordinates
+  nsISupports* widgetSupports; 
+                /// nsISupports of widget XXX remove the one above and rename this
   nsPoint     point;               
                 /// elapsed time, in milliseconds, from the time the system was started to the time the message was created
   PRUint32    time;                                                

@@ -38,6 +38,8 @@
 
 #define ALIGN_UNSET PRUint8(-1)
 
+static NS_DEFINE_IID(kSupportsIID, NS_ISUPPORTS_IID);
+
 // Note: we inherit a base class operator new that zeros our memory
 nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
   : nsHTMLContainer(aTag), mControl()
@@ -56,6 +58,7 @@ nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
 nsInput::~nsInput()
 {
   NS_IF_RELEASE(mWidget);
+  NS_IF_RELEASE(mWidgetSupports);
   if (nsnull != mName) {
     delete mName;
   }
@@ -178,6 +181,9 @@ nsInput::SetWidget(nsIWidget* aWidget)
 	  NS_IF_RELEASE(mWidget);
     NS_IF_ADDREF(aWidget);
     mWidget = aWidget;
+
+    NS_IF_RELEASE(mWidgetSupports);
+    mWidget->QueryInterface(kSupportsIID, (void**)&mWidgetSupports);
   }
 }
 
@@ -186,11 +192,14 @@ nsrefcnt nsInput::GetRefCount() const
   return mRefCnt;
 }
 
-// this is for internal use and does not do an AddRef
-nsIWidget* 
-nsInput::GetWidget()
+// these do not AddRef
+nsIWidget* nsInput::GetWidget()
 {
   return mWidget;
+}
+nsISupports* nsInput::GetWidgetSupports()
+{
+  return mWidgetSupports;
 }
 
 PRBool nsInput::GetContent(nsString& aResult) const
