@@ -105,7 +105,7 @@ sub show_tree_selector {
   foreach (@list) {
     print "<LI><a href=showbuilds.cgi?tree=$_>$_</a>\n";
   }
-  print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
+  print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
   
   print "<P><TABLE WIDTH=\"100%\">";
   print "<TR><TD ALIGN=CENTER><a href=admintree.cgi>";
