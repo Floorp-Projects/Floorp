@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Harshal Pradhan <keeda@hotpop.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -532,6 +532,14 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
         if (shelltree)
           shelltree->GetSameTypeRootTreeItem(getter_AddRefs(newDocShellItem));
+      } else if (name.EqualsIgnoreCase("_parent")) {
+        nsCOMPtr<nsIDocShellTreeItem> shelltree;
+        GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
+        if (shelltree)
+          shelltree->GetSameTypeParent(getter_AddRefs(newDocShellItem));
+        // If there is no real parent then _self acts as _parent
+        if (!newDocShellItem)
+          newDocShellItem = shelltree;
       } else {
         /* parent is being simultaneously torn down (probably because of
            the code that keeps an old docshell alive but disconnected while
