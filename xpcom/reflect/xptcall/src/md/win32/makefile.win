@@ -31,10 +31,23 @@ LCFLAGS = \
 
 LIBRARY_NAME = xpcomxptcmd_s
 
-OBJS=					\
-	.\$(OBJDIR)\xptcinvoke.obj	\
-	.\$(OBJDIR)\xptcstubs.obj	\
+OBJS= \
+	.\$(OBJDIR)\xptcinvoke.obj \
+	.\$(OBJDIR)\xptcstubs.obj \
+$(NULL)
+
+!if "$(CPU)" == "ALPHA"
+OBJS= \
+	.\$(OBJDIR)\xptcinvoke_alpha.obj \
+	.\$(OBJDIR)\xptcstubs_alpha.obj \
+	.\$(OBJDIR)\xptcinvoke_asm_alpha.obj \
+	.\$(OBJDIR)\xptcstubs_asm_alpha.obj \
 	$(NULL)
+ASFILES= \
+	xptcinvoke_asm_alpha.s \
+	xptcstubs_asm_alpha.s \
+$(NULL)
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 
@@ -42,4 +55,4 @@ libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

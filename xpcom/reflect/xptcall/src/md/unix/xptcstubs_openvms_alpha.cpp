@@ -19,12 +19,14 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
-#include "xptc_platforms_unixish_x86.h"
 
-static nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
+extern "C" {
+
+nsresult
+PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
 {
-#define PARAM_BUFFER_COUNT     16
+    const PRUint8 PARAM_BUFFER_COUNT = 16;
+    const PRUint8 NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
@@ -51,7 +53,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
         dispatchParams = paramBuffer;
     NS_ASSERTION(dispatchParams,"no place for params");
 
-    PRUint32* ap = args;
+    // args[0] to args[NUM_ARG_REGS] hold floating point register values
+    PRUint64* ap = args + NUM_ARG_REGS;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -66,19 +69,33 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
         // else
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = *((PRInt8*)  ap);       break;
-        case nsXPTType::T_I16    : dp->val.i16 = *((PRInt16*) ap);       break;
-        case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
-        case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-        case nsXPTType::T_U8     : dp->val.u8  = *((PRUint8*) ap);       break;
-        case nsXPTType::T_U16    : dp->val.u16 = *((PRUint16*)ap);       break;
-        case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
-        case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
-        case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
-        case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
-        case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*)  ap);       break;
-        case nsXPTType::T_CHAR   : dp->val.c   = *((char*)    ap);       break;
-        case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;
+        case nsXPTType::T_I8     : dp->val.i8  = (PRInt8)    *ap; break;
+        case nsXPTType::T_I16    : dp->val.i16 = (PRInt16)   *ap; break;
+        case nsXPTType::T_I32    : dp->val.i32 = (PRInt32)   *ap; break;
+        case nsXPTType::T_I64    : dp->val.i64 = (PRInt64)   *ap; break;
+        case nsXPTType::T_U8     : dp->val.u8  = (PRUint8)   *ap; break;
+        case nsXPTType::T_U16    : dp->val.u16 = (PRUint16)  *ap; break;
+        case nsXPTType::T_U32    : dp->val.u32 = (PRUint32)  *ap; break;
+        case nsXPTType::T_U64    : dp->val.u64 = (PRUint64)  *ap; break;
+        case nsXPTType::T_FLOAT  :
+            if(i < NUM_ARG_REGS)
+            {
+                // floats passed via registers are stored as doubles
+                // in the first NUM_ARG_REGS entries in args
+                dp->val.u64 = (PRUint64) args[i];
+                dp->val.f = (float) dp->val.d;    // convert double to float
+            }
+            else
+                dp->val.u32 = (PRUint32) *ap;
+            break;
+        case nsXPTType::T_DOUBLE :
+            // doubles passed via registers are also stored
+            // in the first NUM_ARG_REGS entries in args
+            dp->val.u64 = (i < NUM_ARG_REGS) ? args[i] : *ap;
+            break;
+        case nsXPTType::T_BOOL   : dp->val.b   = (PRBool)    *ap; break;
+        case nsXPTType::T_CHAR   : dp->val.c   = (char)      *ap; break;
+        case nsXPTType::T_WCHAR  : dp->val.wc  = (PRUnichar) *ap; break;
         default:
             NS_ASSERTION(0, "bad type");
             break;
@@ -95,23 +112,9 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
     return result;
 }
 
-#define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n() \
-{ \
-  register void* method = PrepareAndDispatch; \
-  register nsresult result; \
-  __asm__ __volatile__( \
-    "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
-    "pushl  %%ecx\n\t" \
-    "pushl  $"#n"\n\t"                 /* method index */ \
-    "movl   0x08(%%ebp), %%ecx\n\t"    /* this */ \
-    "pushl  %%ecx\n\t" \
-    "call   *%%edx"                    /* PrepareAndDispatch */ \
-    : "=a" (result)     /* %0 */ \
-    : "d" (method)      /* %1 */ \
-    : "ax", "dx", "cx", "memory" ); \
-    return result; \
 }
+
+#define STUB_ENTRY(n)  /* This is in the ASM file */
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
@@ -121,3 +124,5 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 }
 
 #include "xptcstubsdef.inc"
+
+

@@ -18,11 +18,9 @@
 
 /* Platform specific code to invoke XPCOM methods on native objects */
 
-#include "xptcprivate.h"
+/* contributed by bob meader <bob@guiduck.com> */
 
-#if (_MIPS_SIM != _ABIN32)
-#error "This code is for IRIX N32 only"
-#endif
+#include "xptcprivate.h"
 
 extern "C" uint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
@@ -34,7 +32,7 @@ extern "C" void
 invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
                      nsXPTCVariant* s, PRUint64 *regs)
 {
-#define N_ARG_REGS       7       /* 8 regs minus 1 for "this" ptr */
+#define N_ARG_REGS       5       /* 6 regs minus 1 for "this" ptr */
 
     for (PRUint32 i = 0; i < paramCount; i++, s++)
     {
@@ -42,7 +40,7 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
             if (i < N_ARG_REGS)
                regs[i] = (PRUint64)s->ptr;
             else
-               *d++ = (PRUint64)s->ptr; 
+               *d++ = (PRUint64)s->ptr;
             continue;
         }
         switch (s->type) {
@@ -141,7 +139,7 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
     }
 }
 
-extern "C" nsresult _XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+extern "C" nsresult XPTC__InvokebyIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params);
 
 extern "C"
@@ -149,5 +147,6 @@ XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
 {
-    return _XPTC_InvokeByIndex(that, methodIndex, paramCount, params);
-}    
+    return XPTC__InvokebyIndex(that, methodIndex, paramCount, params);
+}
+

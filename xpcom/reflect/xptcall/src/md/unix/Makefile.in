@@ -28,12 +28,13 @@ DEFINES		+= -DEXPORT_XPTC_API
 LIBRARY_NAME	= xptcmd
 MODULE		= xpcom
 
+# the default is this buildable non-functioning code
 CPPSRCS		= \
 		  xptcinvoke_unsupported.cpp \
 		  xptcstubs_unsupported.cpp \
 		  $(NULL)
 
-# SunOS i86pc should use the intel code too.
+# Lots of Unixish x86 flavors
 ifneq (,$(filter SunOS Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		= \
@@ -113,6 +114,31 @@ ASFILES		= \
 endif
 endif
 
+# Linux/Alpha
+ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TEST),alpha)
+CPPSRCS		= \
+		  xptcinvoke_linux_alpha.cpp \
+		  xptcstubs_linux_alpha.cpp \
+		  $(NULL)
+endif
+endif
+
+# OpenVMS (Alpha only at this point)
+ifeq ($(OS_ARCH),OpenVMS)
+ifeq ($(CPU_ARCH),Alpha)
+CPPSRCS		= \
+		  xptcinvoke_openvms_alpha.cpp \
+		  xptcstubs_openvms_alpha.cpp \
+		  $(NULL)
+ASFILES		= \
+		  xptcinvoke_asm_openvms_alpha.s \
+		  xptcstubs_asm_openvms_alpha.s \
+		  $(NULL)
+endif
+endif
+
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
@@ -131,4 +157,27 @@ $(OBJDIR)/xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcs
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_irix.s
 	@rm -f ./xptcstubsdef.inc
 	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; else true; fi
+endif
+
+
+ifeq ($(OS_ARCH),OpenVMS)
+# Our assembler wants the include file to be of assembler syntax, not C/C++
+# syntax, so we have to massage it slightly.
+
+$(OBJDIR)/xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc (srcdir)/xptcstubs_asm_openvms_alpha.s
+	@rm -f ./xptcstubsdef_asm.vms
+	@awk ' \
+	/^.*_ENTRY\([0-9]+\)/ { \
+	  sub("\\("," "); \
+	  sub("\\)",""); \
+	  sub("","\t"); \
+	} \
+	{ sub("\\/\\*",";"); \
+	  sub("\\*\\/",""); \
+	  print \
+	} \
+	' \
+	$(PUBLIC)/xptcstubsdef.inc > $$HOME/xptcstubsdef_asm.vms
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) xptcstubs_asm_openvms_alpha.s 
+	@rm -f $$HOME/xptcstubsdef_asm.vms
 endif
