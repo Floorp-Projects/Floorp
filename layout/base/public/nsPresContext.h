@@ -554,13 +554,6 @@ public:
 extern NS_EXPORT nsresult
   NS_NewGalleyContext(nsIPresContext** aInstancePtrResult);
 
-// Factory method to create a "paginated" presentation context for
-// the screen.
-extern NS_EXPORT nsresult
-  NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult);
-
-
-
 #ifdef MOZ_REFLOW_PERF
 
 #define DO_GLOBAL_REFLOW_COUNT(_name, _type) \
