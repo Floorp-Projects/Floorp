@@ -2486,7 +2486,8 @@ SECU_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m, int level)
 			  level + 1);
     SECU_PrintName(out, &(crl->name), "Issuer", level + 1);
     SECU_PrintTimeChoice(out, &(crl->lastUpdate), "This Update", level + 1);
-    SECU_PrintTimeChoice(out, &(crl->nextUpdate), "Next Update", level + 1);
+    if (crl->nextUpdate.data && crl->nextUpdate.len) /* is optional */
+	SECU_PrintTimeChoice(out, &(crl->nextUpdate), "Next Update", level + 1);
     
     if (crl->entries != NULL) {
 	iv = 0;
