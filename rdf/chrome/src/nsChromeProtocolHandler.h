@@ -49,8 +49,6 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
-
-protected:
 };
 
 #endif /* nsChromeProtocolHandler_h___ */
