@@ -33,7 +33,6 @@ install::
 	$(MAKE_INSTALL) globalOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.js $(DISTBROWSER)
-	$(MAKE_INSTALL) tasksExtension.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) dialogOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) dialogOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.xul $(DISTBROWSER)
