@@ -1340,6 +1340,9 @@ nsDocShell::GetCharset(char** aCharset)
     nsCAutoString charset;
     NS_ENSURE_SUCCESS(doc->GetDocumentCharacterSet(charset), NS_ERROR_FAILURE);
     *aCharset = ToNewCString(charset);
+    if (!*aCharset) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     return NS_OK;
 }
@@ -5788,6 +5791,9 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
                         aLoadType != LOAD_RELOAD_NORMAL;
 
         char *str = ToNewCString(sNewRef);
+        if (!str) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         // nsUnescape modifies the string that is passed into it.
         nsUnescape(str);
