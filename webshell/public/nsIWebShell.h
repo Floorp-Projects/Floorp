@@ -29,7 +29,6 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIChannel.h"
 #include "nsIScrollableView.h"
-#include "nsISessionHistory.h"
 #include "nsIUrlDispatcher.h"
 
 class nsIDOMElement;
@@ -126,10 +125,6 @@ public:
    */
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
 
-  NS_IMETHOD SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
-                     nsLoadFlags aType,
-                     nsISupports * aHistoryState,
-                     const PRUnichar* aReferrer) = 0;
   //
   // History api's
   //
@@ -154,20 +149,6 @@ public:
    * Set the URL of the current WebShell.
    */
   NS_IMETHOD SetURL(const PRUnichar* aURL) = 0;
-
-  /**
-   * Return the handle to SessionHistory
-   */
-  NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult) = 0;
-
-  /**
-   * Set a handle to SessionHistory
-   */
-  NS_IMETHOD SetSessionHistory(nsISessionHistory * aSHist) = 0;
-
-  /* Set & Get Session History details */
-  NS_IMETHOD SetIsInSHist(PRBool aIsFrame)       = 0;
-  NS_IMETHOD GetIsInSHist(PRBool& aIsFrame)      = 0;
 
   /**
    * Notify children to fire unload events before root data gone
