@@ -44,7 +44,8 @@
 %junkMailInfoDTD;
 ]>
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/primaryToolbar.css" type="text/css"?> 
 
 <dialog id="junkMailInfo"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -53,20 +54,19 @@
         buttons="accept,help"
         width="&window.width;"
         height="&window.height;"
-        ondialogaccept="return window.close()"
-        ondialoghelp="openHelp('mail-junk-controls'); return window.close();">
+        ondialogaccept="return window.close();"
+        ondialoghelp="return openHelp('mail-junk');">
 
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <vbox flex="1">
       <spacer/>
-      <description>&info1.label;</description>
+      <description>&info1a.label;<image align="center" id="junkIcon"/>&info1b.label;</description>
       <spacer/>
       <description>&info2.label;</description>
       <spacer/>
       <description>&info3.label;</description>
       <spacer/>
       <description>&info4.label;</description>
-      <spacer/>
   </vbox>
 </dialog>

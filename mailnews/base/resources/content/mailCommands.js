@@ -439,8 +439,6 @@ function getJunkmailComponent()
 {
     if (!gJunkmailComponent) {
         gJunkmailComponent = Components.classes[NS_BAYESIANFILTER_CONTRACTID].getService(nsIJunkMailPlugin);
-        // gJunkmailComponent.initComponent();
-        // who calls init method?
     }
 }
 

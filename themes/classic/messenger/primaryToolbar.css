@@ -241,3 +241,7 @@
   -moz-border-bottom-colors: #000000;
   background-color: #C7BC8F;
 }
+
+#junkIcon {
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+}
