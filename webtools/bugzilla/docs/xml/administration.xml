@@ -1628,7 +1628,7 @@ P template/en/default/list/quips.html.tmpl
         <para>
           If you are unable (or unwilling) to use CVS, another option that's
           always available is to obtain the latest tarball from the <ulink
-          href="http://www.bugzilla.org/download/">Download Page</ulink> and 
+          url="http://www.bugzilla.org/download/">Download Page</ulink> and 
           create a new Bugzilla installation from that.
         </para>
 
@@ -1688,9 +1688,9 @@ bash$ <command>mv bugzilla-2.18.1 bugzilla</command>
           last number of the revision changes, such as from 2.16.6 to 2.16.7
           -- then you have the option of obtaining and applying a patch file
           from the <ulink
-          href="http://www.bugzilla.org/download/">Download Page</ulink>.
+          url="http://www.bugzilla.org/download/">Download Page</ulink>.
           This file is made available by the <ulink
-          href="http://www.bugzilla.org/developers/profiles.html">Bugzilla
+          url="http://www.bugzilla.org/developers/profiles.html">Bugzilla
           Development Team</ulink>, and is a collection of all the bug fixes
           and security patches that have been made since the last bugfix
           release. If you are planning to upgrade via patches, it is safer
