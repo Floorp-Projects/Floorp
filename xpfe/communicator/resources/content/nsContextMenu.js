@@ -132,10 +132,12 @@ nsContextMenu.prototype = {
         if( isWin && this.onImage ) {
             var wallpaperItem = document.getElementById("context-setWallpaper");
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
-            if( !("complete" in this.target) || this.target.complete ) {
+            if (wallpaperItem) {
+              if( !("complete" in this.target) || this.target.complete ) {
                 wallpaperItem.removeAttribute("disabled");
-            } else {
+              } else {
                 wallpaperItem.setAttribute("disabled", "true");
+              }
             }
         }
 
@@ -147,10 +149,12 @@ nsContextMenu.prototype = {
         this.showItem( "context-sep-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
         var menuitem = document.getElementById("context-viewbgimage");
 
-        if (this.hasBGImage)
-          menuitem.removeAttribute("disabled");
-        else
-          menuitem.setAttribute("disabled", "true");
+        if ( menuitem ) {
+          if ( this.hasBGImage )
+            menuitem.removeAttribute("disabled");
+          else
+            menuitem.setAttribute("disabled", "true");
+        }    
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
