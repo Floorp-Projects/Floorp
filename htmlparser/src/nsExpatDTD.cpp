@@ -307,7 +307,7 @@ void nsExpatDTD::SetupExpatCallbacks(void) {
  */
 nsITokenizer* nsExpatDTD::GetTokenizer(void) {
   if(!mTokenizer) {
-    mTokenizer=new nsExpatTokenizer(this);
+    mTokenizer=new nsExpatTokenizer();
     mExpatParser = XML_ParserCreate(NULL);
     if (mExpatParser) {
       SetupExpatCallbacks();
