@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com>
+ *   Brant Gurganus <brantgurganus2001@cherokeescouting.org>
  */
 
 //NOTE: This script expects gBrandBundle and gProfileManagerBundle to be
@@ -52,7 +53,7 @@ function CreateProfile( aProfName, aProfDir )
 function RenameProfile()
 {
   var lString, oldName, newName;
-  renameButton = document.getElementById("renbutton");
+  var renameButton = document.getElementById("renbutton");
   if (renameButton.getAttribute("disabled") == "true" )
     return false;
   var profileList = document.getElementById( "profiles" );
@@ -131,7 +132,7 @@ function RenameProfile()
 
 function ConfirmDelete()
 {
-  deleteButton = document.getElementById("delbutton");
+  var deleteButton = document.getElementById("delbutton");
   if( deleteButton.getAttribute("disabled") == "true" )
     return;
   var profileList = document.getElementById( "profiles" );
