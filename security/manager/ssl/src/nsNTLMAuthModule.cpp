@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prlog.h"
+
 #include <stdlib.h>
 #include "nsNSSShutDown.h"
 #include "nsNTLMAuthModule.h"
@@ -46,9 +48,13 @@
 #include "pk11func.h"
 #include "md4.h"
 
-#ifdef DEBUG
-// enable this directive to turn on extra debug output
-#define NTLM_DEBUG
+#ifdef PR_LOGGING
+PRLogModuleInfo *gNTLMLog = PR_NewLogModule("NTLM");
+
+#define LOG(x) PR_LOG(gNTLMLog, PR_LOG_DEBUG, x)
+#define LOG_ENABLED() PR_LOG_TEST(gNTLMLog, PR_LOG_DEBUG)
+#else
+#define LOG(x)
 #endif
 
 static void des_makekey(const PRUint8 *raw, PRUint8 *key);
@@ -119,13 +125,18 @@ static const char NTLM_TYPE3_MARKER[] = { 0x03, 0x00, 0x00, 0x00 };
 
 //-----------------------------------------------------------------------------
 
-#ifdef NTLM_DEBUG
+#ifdef PR_LOGGING
 
-static void PrintFlags(PRUint32 flags)
+/**
+ * Prints a description of flags to the NSPR Log, if enabled.
+ */
+static void LogFlags(PRUint32 flags)
 {
+  if (!LOG_ENABLED())
+    return;
 #define TEST(_flag) \
   if (flags & NTLM_ ## _flag) \
-    printf("    0x%08x (" # _flag ")\n", NTLM_ ## _flag)
+    PR_LogPrint("    0x%08x (" # _flag ")\n", NTLM_ ## _flag)
 
   TEST(NegotiateUnicode);
   TEST(NegotiateOEM);
@@ -163,37 +174,51 @@ static void PrintFlags(PRUint32 flags)
 #undef TEST
 }
 
+/**
+ * Prints a hexdump of buf to the NSPR Log, if enabled.
+ * @param tag Description of the data, will be printed in front of the data
+ * @param buf the data to print
+ * @param bufLen length of the data
+ */
 static void
-PrintBuf(const char *tag, const PRUint8 *buf, PRUint32 bufLen)
+LogBuf(const char *tag, const PRUint8 *buf, PRUint32 bufLen)
 {
   int i;
 
-  printf("%s =\n", tag);
+  if (!LOG_ENABLED())
+    return;
+
+  PR_LogPrint("%s =\n", tag);
+  char line[80];
   while (bufLen > 0)
   {
     int count = bufLen;
     if (count > 8)
       count = 8;
 
-    printf("    ");
+    strcpy(line, "    ");
     for (i=0; i<count; ++i)
     {
-      printf("0x%02x ", int(buf[i]));
+      int len = strlen(line);
+      PR_snprintf(line + len, sizeof(line) - len, "0x%02x ", int(buf[i]));
     }
     for (; i<8; ++i)
     {
-      printf("     ");
+      int len = strlen(line);
+      PR_snprintf(line + len, sizeof(line) - len, "     ");
     }
 
-    printf("   ");
+    int len = strlen(line);
+    PR_snprintf(line + len, sizeof(line) - len, "   ");
     for (i=0; i<count; ++i)
     {
+      len = strlen(line);
       if (isprint(buf[i]))
-        printf("%c", buf[i]);
+        PR_snprintf(line + len, sizeof(line) - len, "%c", buf[i]);
       else
-        printf(".");
+        PR_snprintf(line + len, sizeof(line) - len, ".");
     }
-    printf("\n");
+    PR_LogPrint("%s\n", line);
 
     bufLen -= count;
     buf += count;
@@ -202,17 +227,31 @@ PrintBuf(const char *tag, const PRUint8 *buf, PRUint32 bufLen)
 
 #include "plbase64.h"
 #include "prmem.h"
-static void PrintToken(const char *name, const void *token, PRUint32 tokenLen)
+/**
+ * Print base64-encoded token to the NSPR Log.
+ * @param name Description of the token, will be printed in front
+ * @param token The token to print
+ * @param tokenLen length of the data in token
+ */
+static void LogToken(const char *name, const void *token, PRUint32 tokenLen)
 {
+  if (!LOG_ENABLED())
+    return;
+
   char *b64data = PL_Base64Encode((const char *) token, tokenLen, NULL);
   if (b64data)
   {
-    printf("%s: %s\n", name, b64data);
+    PR_LogPrint("%s: %s\n", name, b64data);
     PR_Free(b64data);
   }
 }
 
-#endif // NTLM_DEBUG
+#else
+#define LogFlags(x)
+#define LogBuf(a,b,c)
+#define LogToken(a,b,c)
+
+#endif // PR_LOGGING
 
 //-----------------------------------------------------------------------------
 
@@ -498,13 +537,12 @@ ParseType2Msg(const void *inBuf, PRUint32 inLen, Type2Msg *msg)
   memcpy(msg->challenge, cursor, sizeof(msg->challenge));
   cursor += sizeof(msg->challenge);
 
-#ifdef NTLM_DEBUG
-  printf("NTLM type 2 message:\n");
-  PrintBuf("target", (const PRUint8 *) msg->target, msg->targetLen);
-  PrintBuf("flags", (const PRUint8 *) &msg->flags, 4);
-  PrintFlags(msg->flags);
-  PrintBuf("challenge", msg->challenge, sizeof(msg->challenge));
-#endif
+
+  LOG(("NTLM type 2 message:\n"));
+  LogBuf("target", (const PRUint8 *) msg->target, msg->targetLen);
+  LogBuf("flags", (const PRUint8 *) &msg->flags, 4);
+  LogFlags(msg->flags);
+  LogBuf("challenge", msg->challenge, sizeof(msg->challenge));
 
   // we currently do not implement LMv2/NTLMv2 or NTLM2 responses,
   // so we can ignore target information.  we may want to enable
@@ -745,9 +783,7 @@ nsNTLMAuthModule::GetNextToken(const void *inToken,
   // if inToken is non-null, then assume it contains a type 2 message...
   if (inToken)
   {
-#ifdef NTLM_DEBUG
-    PrintToken("in-token", inToken, inTokenLen);
-#endif
+    LogToken("in-token", inToken, inTokenLen);
     rv = GenerateType3Msg(mDomain, mUsername, mPassword, inToken,
                           inTokenLen, outToken, outTokenLen);
   }
@@ -756,10 +792,8 @@ nsNTLMAuthModule::GetNextToken(const void *inToken,
     rv = GenerateType1Msg(outToken, outTokenLen);
   }
 
-#ifdef NTLM_DEBUG
   if (NS_SUCCEEDED(rv))
-    PrintToken("out-token", *outToken, *outTokenLen);
-#endif
+    LogToken("out-token", *outToken, *outTokenLen);
 
   return rv;
 }
