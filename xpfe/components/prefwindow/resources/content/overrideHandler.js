@@ -25,9 +25,9 @@ HandlerOverride.prototype = {
   set mimeType(aMIMETypeString)
   {
     if (!this.mUpdateMode)
-      assertMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString);
+      assertMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString.toLowerCase());
     else
-      changeMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString);
+      changeMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString.toLowerCase());
   },
   
   get description()
@@ -100,7 +100,7 @@ HandlerOverride.prototype = {
         var currentExtension = extensionTargets.getNext();
         if (currentExtension) {
           currentExtension = currentExtension.QueryInterface(Components.interfaces.nsIRDFLiteral);
-          extString += currentExtension.Value.toUpperCase() + " ";
+          extString += currentExtension.Value.toLowerCase() + " ";
         }
       }
     }
@@ -109,12 +109,12 @@ HandlerOverride.prototype = {
   
   addExtension: function (aExtensionString)
   {
-    assertMIMEStuff(MIME_URI(this.mimeType), "fileExtensions", aExtensionString);
+    assertMIMEStuff(MIME_URI(this.mimeType), "fileExtensions", aExtensionString.toLowerCase());
   },
   
   removeExtension: function (aExtensionString)
   {
-    unassertMIMEStuff(MIME_URI(this.mimeType), "fileExtensions", aExtensionString);
+    unassertMIMEStuff(MIME_URI(this.mimeType), "fileExtensions", aExtensionString.toLowerCase());
   },
   
   // content handling
