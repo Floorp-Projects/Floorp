@@ -376,6 +376,7 @@ if ($action eq 'new') {
     my $realname = trim($::FORM{realname} || '');
     my $password = trim($::FORM{password} || '');
     my $disabledtext = trim($::FORM{disabledtext} || '');
+    my $emailregexp = Param("emailregexp");
 
     unless ($user) {
         print "You must enter a name for the new user. Please press\n";
@@ -383,7 +384,7 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    unless ($user =~ /^[^\@]+\@[^\@]+$/) {
+    unless ($user =~ m/$emailregexp/) {
         print "The user name entered must be a valid e-mail address. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
