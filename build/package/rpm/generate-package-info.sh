@@ -20,9 +20,20 @@
 # The way this thing works:
 #
 # + A packages file is parsed.  This file contains something 
-#   that looks like this:
+#   that looks like this (note that spaces are illegal):
 #
-#   XXX
+#   +----------------------------------------------
+#   |nspr:nsprpub
+#   |core:build,db,xpcom,intl,js,modules/libutil,modules/security/freenav,modules/libpref,modules/libimg,modules/libjar,caps
+#   |network:netwerk
+#   |layout:htmlparser,gfx,dom,view,widget/timer,widget,layout,webshell,editor,modules/plugin
+#   |xpinstall:xpinstall
+#   |profile:profile
+#   |xptoolkit:xpfe,rdf
+#   |cookie:extensions/cookie
+#   |wallet:extensions/wallet
+#   |mailnews:mailnews
+#   +----------------------------------------------
 #
 # + For each package, a list of modules corresponding to that
 #   package is parsed.  Each modules corresponds to a 
@@ -99,12 +110,12 @@ packages=`cat $package_list | grep -v -e "^#.*$" | grep -v -e "^[ \t]*$"`
 
 for p in $packages
 do
-	list=$module_list_dir/mozilla-$p-module-list.txt
+	package=`echo $p | awk -F":" '{ print $1; }'`
 
-	modules=`cat $list | grep -v -e "^#.*$" | grep -v -e "^[ \t]*$"`
-
-	file_list=$outdir/mozilla-$p-file-list.txt
-	file_list_devel=$outdir/mozilla-$p-devel-file-list.txt
+	modules=`echo $p | awk -F":" '{ print $2; }' | tr "," " "`
+	
+	file_list=$outdir/mozilla-$package-file-list.txt
+	file_list_devel=$outdir/mozilla-$package-devel-file-list.txt
 
 	tmp_raw=/tmp/raw-list.$$.tmp
 
@@ -114,7 +125,7 @@ do
 	tmp_dir_list=/tmp/dir-list.$$.tmp
 	tmp_dir_list_devel=/tmp/dir-list-devel.$$.tmp
 
-#	echo "package=$p"
+#	echo "package=$package"
 #	echo "modules=$modules"
 #	echo "file_list=$file_list"
 #	echo "file_list_devel=$file_list_devel"
