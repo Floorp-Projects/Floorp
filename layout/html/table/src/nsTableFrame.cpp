@@ -183,7 +183,9 @@ nsTableFrame::nsTableFrame()
 #else
   mColumnWidthsLength = 5;  
   mColumnWidths = new PRInt32[mColumnWidthsLength];
-  nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
+  if (mColumnWidths) {
+    nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
+  }
 #endif
 }
 
@@ -217,6 +219,7 @@ nsTableFrame::Init(nsIPresContext*  aPresContext,
   // Create the cell map
   // XXX Why do we do this for continuing frames?
   mCellMap = new nsTableCellMap(aPresContext, *this);
+  if (!mCellMap) return NS_ERROR_OUT_OF_MEMORY;
 
   // Let the base class do its processing
   rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
@@ -3371,6 +3374,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
         mColumnWidthsLength += kColumnWidthIncrement;
     }
     PRInt32 * newColumnWidthsArray = new PRInt32[mColumnWidthsLength];
+    if (!newColumnWidthsArray) return;
     nsCRT::memset (newColumnWidthsArray, 0, mColumnWidthsLength*sizeof(PRInt32));
     if (mColumnWidths) {
       nsCRT::memcpy (newColumnWidthsArray, mColumnWidths, priorColumnWidthsLength*sizeof(PRInt32));
@@ -3393,6 +3397,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
+    if (!mTableLayoutStrategy) return;
     mTableLayoutStrategy->Initialize(aPresContext, aMaxElementSize, boxWidth, aReflowState);
     mBits.mColumnWidthsValid=PR_TRUE;
   }
@@ -3761,6 +3766,7 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
     if (!mColumnWidths) {
       mColumnWidthsLength = mCellMap->GetColCount(); // mCellMap is valid since first inflow
       mColumnWidths = new PRInt32[mColumnWidthsLength];
+      if (!mColumnWidths) return;
       nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
     }
     
