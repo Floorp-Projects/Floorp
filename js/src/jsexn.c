@@ -1033,21 +1033,21 @@ js_ReportUncaughtException(JSContext *cx)
     const char *bytes;
 
     if (!JS_IsExceptionPending(cx))
-        return JS_FALSE;
+        return JS_TRUE;
 
     if (!JS_GetPendingException(cx, &exn))
         return JS_FALSE;
 
     /*
      * Because js_ValueToString below could error and an exception object
-     * could become unrooted, we root it here.
+     * could become unrooted, we must root exnObject.
      */
-    if (JSVAL_IS_OBJECT(exn) && exn != JSVAL_NULL) {
+    if (JSVAL_IS_PRIMITIVE(exn)) {
+        exnObject = NULL;
+    } else {
         exnObject = JSVAL_TO_OBJECT(exn);
         if (!js_AddRoot(cx, &exnObject, "exn.report.root"))
             return JS_FALSE;
-    } else {
-        exnObject = NULL;
     }
 
 #if JS_HAS_ERROR_EXCEPTIONS
@@ -1075,6 +1075,7 @@ js_ReportUncaughtException(JSContext *cx)
 
     if (exnObject != NULL)
         js_RemoveRoot(cx->runtime, &exnObject);
+    JS_ClearPendingException(cx);
     return JS_TRUE;
 }
 
