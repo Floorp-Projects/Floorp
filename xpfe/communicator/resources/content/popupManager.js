@@ -350,7 +350,7 @@ function addPermission() {
   var host = addSiteBox.value;
   
   if (host != "") {
-    host = host.replace(/^\s*([-\w]*:\/*)?/, ""); // trim any leading space and scheme    
+    host = host.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
     
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService); 
@@ -367,6 +367,8 @@ function addPermission() {
       addSiteBox.value = "";
       return;
     }
+
+    host = uri.hostPort;
 
     if (!host) {
       addSiteBox.value = "";
