@@ -347,15 +347,11 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DownloadBodiesOnGetNewMail,
 NS_IMETHODIMP								   	
 nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
 {						
-  PRBool isAOLServer = PR_FALSE;
-
   NS_ENSURE_ARG(retval);
 
-  GetIsAOLServer(&isAOLServer);
-  nsXPIDLCString hostName;
-  GetHostName(getter_Copies(hostName));
-
-  if (isAOLServer && ((const char *) hostName) && !nsCRT::strcmp(hostName, "imap.mail.aol.com"))
+  nsXPIDLCString redirectorType;
+  GetRedirectorType(getter_Copies(redirectorType));
+  if (redirectorType.Equals("aol"))
   {
     PRBool suppressPseudoView = PR_FALSE;
     GetBoolAttribute("suppresspseudoview", &suppressPseudoView);
@@ -363,7 +359,6 @@ nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
       *retval = nsMsgImapDeleteModels::DeleteNoTrash;
     else
       *retval = nsMsgImapDeleteModels::IMAPDelete;
-
     return NS_OK;
   }
   nsresult ret = GetIntValue("delete_model", retval);
@@ -1163,7 +1158,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       NS_ENSURE_SUCCESS(rv,rv);
       msgFolder = do_QueryInterface(subFolder, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
-      msgFolder->GetNoSelect(&noSelect);
+      noSelect = (boxFlags & kNoselect) != 0;
       nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(msgFolder, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
       imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
