@@ -197,7 +197,8 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 #define NS_SINK_FLAG_DYNAMIC_LOWER_VALUE 0x40 // Lower the value for mNotificationInterval and mMaxTokenProcessingTime
 
 #define NS_DELAY_FOR_WINDOW_CREATION  500000  // 1/2 second fudge factor for window creation
-
+#define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200 //200 determined empirically to provide good user response without
+                                                     //sampling the clock too often.
 
 class SinkContext;
 
@@ -422,7 +423,12 @@ public:
   PRInt32             mMaxTokenProcessingTime;  // Interrupt parsing during token procesing after # of microseconds
   PRInt32             mDynamicIntervalSwitchThreshold;   // Switch between intervals when time is exceeded
   PRInt32             mBeginLoadTime;
+  PRUint32            mLastSampledUserEventTime;  // Last mouse event or keyboard event time sampled by the content sink
+  PRUint8             mDeflectedCount;            // The number of tokens that have been processed while in the low frequency
+                                                  // parser interrupt mode without falling through to the logic which decides whether
+                                                  // to switch to the high frequency parser interrupt mode.
 
+ 
   nsCOMPtr<nsIObserverEntry> mObservers;
 
   void StartLayout();
@@ -2307,6 +2313,8 @@ HTMLContentSink::HTMLContentSink() {
   mNeedToBlockParser = PR_FALSE;
   mDummyParserRequest = nsnull;
   mBeginLoadTime = 0;
+  mDeflectedCount = 0;
+  mLastSampledUserEventTime = 0;
   mScrolledToRefAlready = PR_FALSE;
 }
 
@@ -3777,6 +3785,48 @@ HTMLContentSink::DidProcessAToken(void)
 PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
 #endif
 
+    // There is both a high frequency interrupt mode and a low frequency 
+    // interupt mode controlled by the flag NS_SINK_FLAG_DYNAMIC_LOWER_VALUE
+    // The high frequency mode interupts the parser frequently to provide
+    // UI responsiveness at the expense of page load time. The low frequency mode 
+    // interrupts the parser and samples the system clock infrequently to provide fast 
+    // page load time. When the user moves the mouse, clicks or types the mode switches 
+    // to the high frequency interrupt mode. If the user stops moving the mouse or typing 
+    // for a duration of time (mDynamicIntervalSwitchThreshold) it switches to low 
+    // frequency interrupt mode.
+
+    // Get the current user event time
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(0, getter_AddRefs(shell));
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
+    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+    PRUint32 eventTime;
+    nsresult rv = vm->GetLastUserEventTime(eventTime);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), NS_ERROR_FAILURE);
+     
+   
+    if ((!(mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) && 
+      (mLastSampledUserEventTime == eventTime)) {
+      // The magic value of NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE was selected by 
+      // empirical testing. It provides reasonable
+      // user response and prevents us from sampling the clock too frequently.
+      if (mDeflectedCount < NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE) {
+        mDeflectedCount++;
+        return NS_OK; // return early to prevent sampling the clock. Note: This prevents
+                      // us from switching to higher frequency (better UI responsive) mode, so
+                      // limit ourselves to doing for no more than 
+                      // NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE tokens.
+      } else {
+         mDeflectedCount = 0; // reset count and drop through to the code which samples the clock and
+                              // does the dynamic switch between the high frequency and low frequency
+                              // interruption of the parser.
+      }
+    }
+
+    mLastSampledUserEventTime = eventTime;
+    
     PRUint32 currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
    
     // Get the last user event time and compare it with
@@ -3795,29 +3845,18 @@ PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
     // reaction to pressing the ENTER key in the URL bar...
 
     PRUint32 delayBeforeLoweringThreshold = NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) + NS_DELAY_FOR_WINDOW_CREATION));
-    if (((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) && mDocument) {
-      nsCOMPtr<nsIPresShell> shell;
-      mDocument->GetShellAt(0, getter_AddRefs(shell));
-      if (shell) {
-        nsCOMPtr<nsIViewManager> vm;
-        shell->GetViewManager(getter_AddRefs(vm));
-        PRUint32 eventTime;
-        nsresult rv = vm->GetLastUserEventTime(eventTime);
-        if (NS_SUCCEEDED(rv)) {
-                   
-          if ((currentTime - eventTime) < NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
-            // lower the dynamic values to favor
-            // application responsiveness over page load
-            // time.
-            mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
-          }
-          else {
-            // raise the content notification and
-            // MaxTokenProcessing time to favor overall 
-            // page load speed over responsiveness
-            mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
-          }
+    if (((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) && mDocument) {      
+        if ((currentTime - eventTime) < NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
+          // lower the dynamic values to favor
+          // application responsiveness over page load
+          // time.
+          mFlags |= NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
         }
+        else {
+          // raise the content notification and
+          // MaxTokenProcessing time to favor overall 
+          // page load speed over responsiveness
+          mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
       }
     }
 
