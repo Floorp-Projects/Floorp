@@ -28,7 +28,7 @@ public:
     bool match(const char *s, uint32 n)   { return hasAvailable(n) && (strstr(p, s) == p); }
     bool match(const char *s)             { return match(s, strlen(s)); }
 
-    uint32 getPos()             { return p - base; }
+    uint32 getPos()             { return uint32(p - base); }
 
     void beginRecording(String &s);
     String &endRecording();
