@@ -322,11 +322,6 @@ treecell[hidden="true"] {
 
 /********** Tab widget *********/
 
-tab { 
-  behavior: url(chrome://global/content/xulBindings.xml#tab);
-}
-
-/* not quite ready for this yet...
 tab {
   behavior: url(chrome://global/content/tabBindings.xml#tab);
 }
@@ -342,7 +337,6 @@ tabcontrol {
 tabbox {
   behavior: url(chrome://global/content/tabBindings.xml#tabbox);
 }
-*/
 
 :-moz-deck-hidden {
    visibility: hidden;
