@@ -241,19 +241,19 @@ vreport_java_error(JSContext *cx, JNIEnv *jEnv, const char *format, va_list ap)
             PR_ASSERT(0);       /* Out-of-memory */
             return;
         }
-    }
+    } else
 
-#else
-
-    java_error_msg = jsj_GetJavaErrorMessage(jEnv);
-    if (java_error_msg) {
-        error_msg = PR_smprintf("%s (%s)\n", js_error_msg, java_error_msg);
-        free((char*)java_error_msg);
-        free(js_error_msg);
-    } else {
-        error_msg = js_error_msg;
-    }
 #endif
+    {
+        java_error_msg = jsj_GetJavaErrorMessage(jEnv);
+        if (java_error_msg) {
+            error_msg = PR_smprintf("%s (%s)\n", js_error_msg, java_error_msg);
+            free((char*)java_error_msg);
+            free(js_error_msg);
+        } else {
+            error_msg = js_error_msg;
+        }
+    }
     
     JS_ReportError(cx, error_msg);
     
@@ -286,9 +286,10 @@ jsj_UnexpectedJavaError(JSContext *cx, JNIEnv *env, const char *format, ...)
 
     va_start(ap, format);
     format2 = PR_smprintf("internal error: %s", format);
-    if (format2)
+    if (format2) {
         vreport_java_error(cx, env, format2, ap);
-    free((void*)format2);
+        free((void*)format2);
+    }
     va_end(ap);
 }
 
