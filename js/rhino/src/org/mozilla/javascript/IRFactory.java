@@ -768,17 +768,19 @@ public class IRFactory {
     /**
      * Binary
      */
-    public Object createBinary(int nodeType, Object left, Object right) {
-        Node temp;
+    public Object createBinary(int nodeType, Object leftObj, Object rightObj) 
+    {
+        Node left = (Node)leftObj;
+        Node right = (Node)rightObj;
+        
         switch (nodeType) {
 
           case Token.DOT:
             nodeType = Token.GETPROP;
-            Node idNode = (Node) right;
-            idNode.setType(Token.STRING);
-            String id = idNode.getString();
+            right.setType(Token.STRING);
+            String id = right.getString();
             if (id.equals("__proto__") || id.equals("__parent__")) {
-                Node result = new Node(nodeType, (Node) left);
+                Node result = new Node(nodeType, left);
                 result.putProp(Node.SPECIAL_PROP_PROP, id);
                 return result;
             }
@@ -788,14 +790,22 @@ public class IRFactory {
             // OPT: could optimize to GETPROP iff string can't be a number
             nodeType = Token.GETELEM;
             break;
+            
+          case Token.IN:
+          case Token.INSTANCEOF:
+          case Token.LE:
+          case Token.LT:
+          case Token.GE:
+          case Token.GT:
+            return new Node(Token.RELOP, left, right, nodeType);
+            
+          case Token.EQ:
+          case Token.NE:
+          case Token.SHEQ:
+          case Token.SHNE:
+            return new Node(Token.EQOP, left, right, nodeType);
         }
-        return new Node(nodeType, (Node)left, (Node)right);
-    }
-
-    public Object createBinary(int nodeType, int nodeOp, Object left,
-                               Object right)
-    {
-        return new Node(nodeType, (Node) left, (Node) right, nodeOp);
+        return new Node(nodeType, left, right);
     }
 
     public Object createAssignment(int assignOp, Object left, Object right)

@@ -1011,8 +1011,7 @@ class Parser {
                     }
                 }
                 decompiler.addToken(decompilerToken);
-                pn = nf.createBinary(Token.EQOP, parseToken, pn,
-                                     relExpr(ts, inForInit));
+                pn = nf.createBinary(parseToken, pn, relExpr(ts, inForInit));
                 continue;
             }
             break;
@@ -1038,7 +1037,7 @@ class Parser {
               case Token.GT:
                 ts.getToken();
                 decompiler.addToken(tt);
-                pn = nf.createBinary(Token.RELOP, tt, pn, shiftExpr(ts));
+                pn = nf.createBinary(tt, pn, shiftExpr(ts));
                 continue;
             }
             break;
