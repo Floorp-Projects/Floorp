@@ -202,7 +202,7 @@ calMemoryCalendar.prototype = {
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
-                                               aId,
+                                               aItem.id,
                                                "ID is null or is from different calendar in deleteItem");
             return;
         }
@@ -213,7 +213,7 @@ calMemoryCalendar.prototype = {
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
-                                               aId,
+                                               aItem.id,
                                                "generation mismatch in deleteItem");
             return;
         }
@@ -224,10 +224,10 @@ calMemoryCalendar.prototype = {
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.DELETE,
-                                           aId,
+                                           aItem.id,
                                            null);
         // notify observers
-        observeDeleteItem(oldItem);
+        this.observeDeleteItem(oldItem);
     },
 
     // void getItem( in string id, in calIOperationListener aListener );
