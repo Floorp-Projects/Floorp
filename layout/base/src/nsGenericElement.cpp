@@ -1779,6 +1779,14 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    // In other cases we already set the out param.
+    // Since we are returning a success code we'd better do
+    // something about the out parameters (someone may have
+    // given us a non-empty string).
+    aResult.Truncate();
+  }
+
   return rv;
 }
 
