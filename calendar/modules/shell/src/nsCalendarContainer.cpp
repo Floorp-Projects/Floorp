@@ -132,7 +132,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
   /*
    * Create the view manager
    */
-
+#if 0
   res = nsRepository::CreateInstance(kViewManagerCID, 
                                      nsnull, 
                                      kIViewManagerIID, 
@@ -145,6 +145,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
   mViewManager->Init(aParent->GetDeviceContext());
 
   mViewManager->SetFrameRate(25);
+#endif
 
   /*
    * Create the Root UI
@@ -180,6 +181,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     mRootUI->SetVisibility(PR_FALSE);
     ((nsBoxLayout *)(mRootUI->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
 
+#if 0
     nsIView * view = nsnull ;
 
     res = nsRepository::CreateInstance(kViewCID, 
@@ -206,6 +208,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     //view->GetWidget(widget_parent);
 
     gXPFCToolkit->GetCanvasManager()->Register(mRootUI,view);
+#endif
   }
 
 

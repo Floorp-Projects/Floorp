@@ -24,6 +24,7 @@
 #include "nsCRT.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
 
 #include "datetime.h"
 #include "ptrarray.h"
@@ -287,6 +288,19 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
       aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
 
       aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
+
+      nsIDeviceContext * dc ;
+
+      float f = 0.0;
+      
+      dc = aRenderingContext.GetDeviceContext();
+      
+      dc->GetTwipsToDevUnits(f);
+
+      fm_height *= f;
+
+      NS_RELEASE(dc);
+            
 
       if (rect.height > fm_height)
       {

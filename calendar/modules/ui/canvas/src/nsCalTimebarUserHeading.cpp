@@ -24,6 +24,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nscalstrings.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalTimebarUserHeadingCID, NS_CAL_TIMEBARUSERHEADING_CID);
@@ -89,6 +90,19 @@ nsEventStatus nsCalTimebarUserHeading :: PaintForeground(nsIRenderingContext& aR
   
   aRenderingContext.GetFontMetrics()->GetHeight(height);
   aRenderingContext.GetFontMetrics()->GetWidth(mUserName,width);
+
+  nsIDeviceContext * dc ;
+
+  float f = 0.0;
+  
+  dc = aRenderingContext.GetDeviceContext();
+  
+  dc->GetTwipsToDevUnits(f);
+
+  NS_RELEASE(dc);
+
+  height *= f;
+  width *= f;
 
   /*
    * center the text in our rect and draw it
