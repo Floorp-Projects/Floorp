@@ -528,7 +528,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURL* aURL, nsISupports * /* aConsumer */)
     m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
     PL_strfree(mailDirectory);
 
-	m_pop3ConData->biffstate = MSG_BIFF_NOMAIL;
+	m_pop3ConData->biffstate = nsMsgBiffState_NoMail;
 
 	const char* uidl = PL_strcasestr(urlSpec, "?uidl=");
     PR_FREEIF(m_pop3ConData->only_uidl);
@@ -967,7 +967,7 @@ nsPop3Protocol::GetStat()
            involve keeping messages on the server.  Therefore, we now know enough
            to finish up.  If we had no messages, that would have been handled
            above; therefore, we know we have some new messages. */
-        m_pop3ConData->biffstate = MSG_BIFF_NEWMAIL;
+        m_pop3ConData->biffstate = nsMsgBiffState_NewMail;
         m_pop3ConData->next_state = POP3_SEND_QUIT;
         return(0);
     }
@@ -1186,8 +1186,16 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
         {
             /* we either ran out of messages or reached the edge of new
                messages and no messages are marked dele */
-            m_pop3ConData->next_state = POP3_GET_MSG;
-            m_pop3ConData->pause_for_read = PR_FALSE;
+			if (m_pop3ConData->only_check_for_new_mail)
+			{
+				m_pop3ConData->biffstate = nsMsgBiffState_NewMail;
+				m_pop3ConData->next_state = POP3_SEND_QUIT;
+			}
+			else
+			{
+				m_pop3ConData->next_state = POP3_GET_MSG;
+			}
+	        m_pop3ConData->pause_for_read = PR_FALSE;
             
             /* if all of the messages are new, toss all hash table entries */
             if (!m_pop3ConData->current_msg_to_top &&
@@ -1216,26 +1224,16 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
             {	/* we have not seen this message before */
                 
-                /* if we are only doing a biff, stop here */
-                if (m_pop3ConData->only_check_for_new_mail)
-                {
-                    m_pop3ConData->biffstate = MSG_BIFF_NEWMAIL;
-                    m_pop3ConData->next_state = POP3_SEND_QUIT;
-                    m_pop3ConData->pause_for_read = PR_FALSE;
-                }
-                else	/* we will retrieve it and cache it in GET_MSG */
-                {
-                    m_pop3ConData->number_of_messages_not_seen_before++;
-                    m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl = 
-                        PL_strdup(message_id_token);
-                    if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
-					{
-						PR_FREEIF(line);
-                        return MK_OUT_OF_MEMORY;
-					}
-                }
-            }
-            else if (m_pop3ConData->only_uidl && message_id_token &&
+				m_pop3ConData->number_of_messages_not_seen_before++;
+				m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl = 
+					PL_strdup(message_id_token);
+				if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
+				{
+					PR_FREEIF(line);
+					return MK_OUT_OF_MEMORY;
+				}
+			}
+			else if (m_pop3ConData->only_uidl && message_id_token &&
                      !PL_strcmp(m_pop3ConData->only_uidl, message_id_token))
             {
                 m_pop3ConData->last_accessed_msg = m_pop3ConData->current_msg_to_top - 1;
@@ -1243,10 +1241,10 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
                 m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl =
                     PL_strdup(message_id_token);
                 if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
-				{
-					PR_FREEIF(line);
-                    return MK_OUT_OF_MEMORY;
-				}
+								{
+									PR_FREEIF(line);
+                  return MK_OUT_OF_MEMORY;
+								}
             }
             else if (!m_pop3ConData->only_uidl)
             {	/* we have seen this message and we care about the edge,
@@ -1593,7 +1591,7 @@ nsPop3Protocol::GetMsg()
         }
         if (m_pop3ConData->only_check_for_new_mail) {
             if (m_pop3ConData->total_download_size > 0)
-                m_pop3ConData->biffstate = MSG_BIFF_NEWMAIL; 
+                m_pop3ConData->biffstate = nsMsgBiffState_NewMail; 
             m_pop3ConData->next_state = POP3_SEND_QUIT;
             return(0);
         }
@@ -1787,12 +1785,14 @@ PRInt32 nsPop3Protocol::XsenderResponse()
 PRInt32
 nsPop3Protocol::SendRetr()
 {
+
    	char * cmd = PR_smprintf("RETR %ld" CRLF, m_pop3ConData->last_accessed_msg+1);
 	PRInt32 status = -1;
 	if (cmd)
 	{
 		m_pop3ConData->next_state_after_response = POP3_RETR_RESPONSE;    
 		m_pop3ConData->cur_msg_size = -1;
+
 
 		/* zero the bytes received in message in preparation for
 		* the next
@@ -2299,8 +2299,8 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
                 (m_password.IsEmpty() || m_username.IsEmpty())) 
             {
                 status = MK_POP3_PASSWORD_UNDEFINED;
-                m_pop3ConData->biffstate = MSG_BIFF_UNKNOWN;
-                m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate);	
+                m_pop3ConData->biffstate = nsMsgBiffState_Unknown;
+                m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, 0);	
 
                 /* update old style biff */
                 m_pop3ConData->next_state = POP3_FREE;
@@ -2551,7 +2551,7 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
             if (!m_pop3ConData->only_uidl) 
             {
                 if (m_pop3ConData->only_check_for_new_mail)
-                    m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate);	
+                    m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, m_pop3ConData->number_of_messages_not_seen_before);	
                     /* update old style biff */
                 else 
                 {
@@ -2592,7 +2592,7 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
                         PR_FREEIF(statusString);
                         if (context == MSG_GetBiffContext())
 #endif 
-                            m_nsIPop3Sink->SetBiffStateAndUpdateFE(MSG_BIFF_NEWMAIL);
+                            m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsMsgBiffState_NewMail, m_pop3ConData->number_of_messages_not_seen_before);
                     }
                 }
             }

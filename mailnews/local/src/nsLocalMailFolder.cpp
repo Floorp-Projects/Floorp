@@ -208,7 +208,10 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
 	if(name == "Inbox")
+	{
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
+		mBiffState = nsMsgBiffState_Unknown;
+	}
 	else if(name == "Trash")
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
 	else if(name == "Unsent Messages" || name == "Outbox")

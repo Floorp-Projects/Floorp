@@ -27,6 +27,7 @@
 #include "prio.h"
 #include "plstr.h"
 #include "prenv.h"
+#include "nsIMsgFolder.h"
 
 class nsParseNewMailState;
 class nsIFolder;
@@ -53,10 +54,12 @@ public:
     NS_IMETHOD IncorporateComplete(void* closure);
     NS_IMETHOD IncorporateAbort(void* closure, PRInt32 status);
     NS_IMETHOD BiffGetNewMail();
-    NS_IMETHOD SetBiffStateAndUpdateFE(PRUint32 aBiffState);
+    NS_IMETHOD SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages);
     NS_IMETHOD SetSenderAuthedFlag(void* closure, PRBool authed);
     NS_IMETHOD SetPopServer(nsIPop3IncomingServer *server);
     NS_IMETHOD GetPopServer(nsIPop3IncomingServer* *server);
+	NS_IMETHOD GetFolder(nsIMsgFolder * *folder);
+	NS_IMETHOD SetFolder(nsIMsgFolder * folder);
 
 	nsresult	GetServerFolder(nsIFolder **aFolder);
 
@@ -73,6 +76,8 @@ protected:
     char* m_outputBuffer;
     PRInt32 m_outputBufferSize;
     nsIPop3IncomingServer *m_popServer;
+	//Currently the folder we want to update about biff info
+	nsIMsgFolder *m_folder;
 	nsParseNewMailState	*m_newMailParser;
 #ifdef DEBUG
     PRInt32 m_fileCounter;

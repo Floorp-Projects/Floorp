@@ -19,12 +19,17 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsPop3IncomingServer.h"
 #include "nsMsgIncomingServer.h"
+#include "nsIPop3Service.h"
+#include "nsMsgLocalCID.h"
+#include "nsMsgFolderFlags.h"
 
 #include "nsIPref.h"
 
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
+
+static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
 /* get some implementation from nsMsgIncomingServer */
 class nsPop3IncomingServer : public nsMsgIncomingServer,
@@ -47,6 +52,9 @@ public:
     NS_IMETHOD SetDeleteMailLeftOnServer(PRBool);
 
     NS_IMETHOD GetServerURI(char * *uri);
+
+	NS_IMETHOD PerformBiff();
+
     
 private:
     char *m_rootFolderPath;
@@ -98,6 +106,31 @@ nsPop3IncomingServer::GetServerURI(char **uri)
 
     PR_Free(hostname);
     return rv;
+}
+
+NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
+{
+	nsresult rv;
+
+	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+	nsIMsgFolder *inbox = nsnull;
+	nsCOMPtr<nsIFolder> rootFolder;
+	rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+		if(rootMsgFolder)
+		{
+			PRUint32 numFolders;
+			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1, &numFolders);
+		}
+	}
+
+	rv = pop3Service->CheckForNewMail(nsnull, inbox, this, nsnull);
+
+	return NS_OK;
 }
     
 nsresult NS_NewPop3IncomingServer(const nsIID& iid,

@@ -41,6 +41,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsPop3Service, nsIPop3Service::GetIID());
 
 NS_IMETHODIMP
 nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
+							   nsIMsgFolder *inbox, 
                                nsIPop3IncomingServer *popServer,
                                nsIURL ** aURL)
 {
@@ -66,7 +67,7 @@ nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s?check", hostname);
-        rv = BuildPop3Url(urlSpec, popServer, getter_AddRefs(pop3Url));
+        rv = BuildPop3Url(urlSpec, inbox, popServer, getter_AddRefs(pop3Url));
         PR_FREEIF(urlSpec);
     }
     
@@ -125,7 +126,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s", popHost);
-        rv = BuildPop3Url(urlSpec, popServer, getter_AddRefs(pop3Url));
+        rv = BuildPop3Url(urlSpec, nsnull, popServer, getter_AddRefs(pop3Url));
         PR_FREEIF(urlSpec);
 	}
     
@@ -158,6 +159,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 }
 
 nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
+									 nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
                                      nsIPop3URL ** aUrl)
 {
@@ -165,7 +167,10 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 	// create a sink to run the url with
 	nsPop3Sink * pop3Sink = new nsPop3Sink();
 	if (pop3Sink)
+	{
 		pop3Sink->SetPopServer(server);
+		pop3Sink->SetFolder(inbox);
+	}
 
 	// now create a pop3 url and a protocol instance to run the url....
 	nsPop3URL * pop3Url = new nsPop3URL(nsnull, nsnull);

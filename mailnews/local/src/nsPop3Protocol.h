@@ -28,6 +28,7 @@
 #include "nsMsgLineBuffer.h"
 #include "nsCOMPtr.h"
 #include "nsMsgProtocol.h"
+#include "MailNewsTypes.h"
 
 #include "rosetta.h"
 #include HG09893
@@ -182,11 +183,6 @@ enum Pop3StatesEnum {
     POP3_INTERRUPTED
 };
 
-enum MsgBiffState {
-    MSG_BIFF_UNKNOWN,
-    MSG_BIFF_NEWMAIL,
-    MSG_BIFF_NOMAIL
-};
 
 #define KEEP		'k'			/* If we want to keep this item on server. */
 #define DELETE_CHAR	'd'			/* If we want to delete this item. */
@@ -244,7 +240,7 @@ typedef struct _Pop3ConData {
                                  * called
                                  */
     PRBool only_check_for_new_mail;
-  	MsgBiffState biffstate;     /* If just checking for, what the answer is. */
+  	nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
     
     PRBool password_failed;     /* flag for password querying */
     void *msg_closure;

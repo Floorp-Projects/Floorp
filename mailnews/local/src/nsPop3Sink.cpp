@@ -44,6 +44,7 @@ nsPop3Sink::nsPop3Sink()
 #endif
     m_popServer = nsnull;
     m_outFileStream = nsnull;
+	m_folder = nsnull;
 }
 
 nsPop3Sink::~nsPop3Sink()
@@ -51,6 +52,8 @@ nsPop3Sink::~nsPop3Sink()
     PR_FREEIF(m_accountUrl);
     PR_FREEIF(m_outputBuffer);
     NS_IF_RELEASE(m_popServer);
+	NS_IF_RELEASE(m_folder);
+
 	if (m_newMailParser)
 		delete m_newMailParser;
 }
@@ -237,6 +240,24 @@ nsPop3Sink::GetPopServer(nsIPop3IncomingServer* *server)
     return NS_OK;
 }
 
+nsresult nsPop3Sink::GetFolder(nsIMsgFolder * *folder)
+{
+	if(!folder) return NS_ERROR_NULL_POINTER;
+	*folder = m_folder;
+	NS_IF_ADDREF(*folder);
+	return NS_OK;
+}
+
+nsresult nsPop3Sink::SetFolder(nsIMsgFolder * folder)
+{
+  NS_IF_RELEASE(m_folder);
+  m_folder=folder;
+  NS_IF_ADDREF(m_folder);
+  
+  return NS_OK;
+
+}
+
 nsresult
 nsPop3Sink::GetServerFolder(nsIFolder **aFolder)
 {
@@ -358,25 +379,31 @@ nsPop3Sink::BiffGetNewMail()
 }
 
 nsresult
-nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState)
+nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 {
 #ifdef DEBUG
     printf("Set biff state: %d\n", aBiffState);
 #endif 
 
+    m_biffState = aBiffState;
+	if(m_folder)
+	{
+		m_folder->SetBiffState(aBiffState);
+		m_folder->SetNumNewMessages(numNewMessages);
+	}
+
 	// do not take out these printfs!!! They are used by QA 
 	// as part of the smoketest process.
-    m_biffState = aBiffState;
     switch (aBiffState)
     {
-    case 0:
+    case nsMsgBiffState_Unknown:
     default:
         printf("Excuse me, Sir. I have no idea.\n");
         break;
-    case 1:
+    case nsMsgBiffState_NewMail:
         printf("Ya'll got mail!\n");
         break;
-    case 2:
+    case nsMsgBiffState_NoMail:
         printf("You have no mail.\n");
         break;
     }
