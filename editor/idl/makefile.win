@@ -16,7 +16,7 @@
 # Reserved.
 
 
-DEPTH=../..
+DEPTH=..\..
 MODULE=editor
 
 XPIDLSRCS = nsIEditorShell.idl \
