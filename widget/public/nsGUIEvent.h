@@ -419,7 +419,6 @@ struct nsTextRange {
   PRUint32 mRangeType;
 };
 
-typedef struct nsTextRange nsTextRange;
 typedef nsTextRange* nsTextRangeArray;
 
 struct nsTextEventReply {
@@ -440,7 +439,7 @@ struct nsTextEvent : public nsInputEvent
               nsIWidget *w = nsnull,
               PRUint8 structType = NS_TEXT_EVENT)
     : nsInputEvent(msg, w, structType),
-      theText(nsnull), rangeCount(0), isChar(PR_FALSE)
+      theText(nsnull), rangeCount(0), rangeArray(nsnull), isChar(PR_FALSE)
   {
   }
 
