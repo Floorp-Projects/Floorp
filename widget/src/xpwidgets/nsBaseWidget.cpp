@@ -307,7 +307,8 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
-  NS_ASSERTION(aChild->GetParent() == NS_STATIC_CAST(nsIWidget*, this),
+  NS_ASSERTION(nsCOMPtr<nsIWidget>(dont_AddRef(aChild->GetParent())) ==
+                 NS_STATIC_CAST(nsIWidget*, this),
                "Not one of our kids!");
   
   if (mLastChild == aChild) {
@@ -1029,7 +1030,7 @@ case _value: eventName.AssignWithConversion(_name) ; break
 //////////////////////////////////////////////////////////////
 struct PrefPair
 {
-  char * name;
+  const char * name;
   PRBool value;
 };
 
