@@ -305,6 +305,7 @@ BrowserAppCoreWalletSafeFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *
 {
   nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -313,9 +314,17 @@ BrowserAppCoreWalletSafeFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  if (argc >= 1) {
 
-    if (NS_OK != nativeThis->WalletSafeFillin()) {
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->WalletSafeFillin(b0)) {
       return JS_FALSE;
     }
 
@@ -338,6 +347,7 @@ BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval 
 {
   nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -346,9 +356,17 @@ BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval 
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  if (argc >= 1) {
 
-    if (NS_OK != nativeThis->WalletQuickFillin()) {
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->WalletQuickFillin(b0)) {
       return JS_FALSE;
     }
 
