@@ -1142,10 +1142,10 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 	if (!part)
 		return 0;
 	status = toppart->AddChild(part);
-	if (status < 0)
+	if (NS_FAILED(status))
 		return 0;
 	status = part->SetType(ma->m_type);
-	if (status < 0)
+	if (NS_FAILED(status))
 		return 0;
 
   // Set this so we know what to do with the separator when writing
@@ -1178,15 +1178,15 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 
 	status = part->SetOtherHeaders(hdrs);
 	PR_FREEIF(hdrs);
-	if (status < 0)
+	if (NS_FAILED(status))
 		return 0;
 	status = part->SetFile(ma->mFileSpec);
-	if (status < 0)
+	if (NS_FAILED(status))
 		return 0;
 	if (ma->m_encoder_data) 
   {
 		status = part->SetEncoderData(ma->m_encoder_data);
-		if (status < 0)
+    if (NS_FAILED(status))
 			return 0;
 		ma->m_encoder_data = nsnull;
 	}
@@ -1197,7 +1197,7 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 			(!PL_strcasecmp (ma->m_type, MESSAGE_RFC822) ||
 			!PL_strcasecmp (ma->m_type, MESSAGE_NEWS))) {
 		status = part->SetStripSensitiveHeaders(PR_TRUE);
-		if (status < 0)
+  	if (NS_FAILED(status))
 			return 0;
 	}
 
