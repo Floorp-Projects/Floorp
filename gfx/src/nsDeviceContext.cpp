@@ -356,7 +356,7 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
     mIcons[aId] = imageReq;
   }
   
-  netContext->Release();
+  NS_RELEASE(netContext);
   return result;
 }
 
