@@ -75,6 +75,8 @@
     $catname = "Newest";
     $catdesc = "Most recent ".ucwords($typename);
     echo"<li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+
+    $uriparams_skip="";
     ?>
     </ul>
     </div>
