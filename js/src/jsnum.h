@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -234,22 +234,25 @@ extern jsdouble
 js_DoubleToInteger(jsdouble d);
 
 /*
- * Similar to strtod except that replaces overflows with infinities of the correct
- * sign and underflows with zeros of the correct sign.  Guaranteed to return the
- * closest double number to the given input in dp.
- * Also allows inputs of the form [+|-]Infinity, which produce an infinity of the
- * appropriate sign.  The case of the "Infinity" string must match.
- * If the string does not have a number in it, set *ep to s and return 0.0 in dp.
+ * Similar to strtod except that it replaces overflows with infinities of the
+ * correct sign, and underflows with zeros of the correct sign.  Guaranteed to
+ * return the closest double number to the given input in dp.
+ *
+ * Also allows inputs of the form [+|-]Infinity, which produce an infinity of
+ * the appropriate sign.  The case of the "Infinity" string must match exactly.
+ * If the string does not contain a number, set *ep to s and return 0.0 in dp.
  * Return false if out of memory.
  */
 extern JSBool
 js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp);
 
 /*
- * Similar to strtol except that handles integers of arbitrary size.  Guaranteed to
- * return the closest double number to the given input when radix is 10 or a power of 2.
- * May experience roundoff errors for very large numbers of a different radix.
- * If the string does not have a number in it, set *ep to s and return 0.0 in dp.
+ * Similar to strtol except that it handles integers of arbitrary size.
+ * Guaranteed to return the closest double number to the given input when radix
+ * is 10 or a power of 2.  Callers may see round-off errors for very large
+ * numbers of a different radix than 10 or a power of 2.
+ *
+ * If the string does not contain a number, set *ep to s and return 0.0 in dp.
  * Return false if out of memory.
  */
 extern JSBool
