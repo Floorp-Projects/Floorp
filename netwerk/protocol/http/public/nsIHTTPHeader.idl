@@ -28,5 +28,6 @@ interface nsIAtom;
 interface nsIHTTPHeader : nsISupports
 {
     nsIAtom GetField();
+    string GetFieldName();
     string GetValue();
 };

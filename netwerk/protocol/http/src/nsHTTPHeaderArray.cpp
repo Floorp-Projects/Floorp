@@ -57,6 +57,27 @@ nsHeaderEntry::GetField(nsIAtom** aResult)
   return rv;
 }
 
+NS_IMETHODIMP
+nsHeaderEntry::GetFieldName(char** aResult)
+{
+    if (!aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    const char* standardName;
+    nsHTTPHeaderArray::GetStandardHeaderName(mAtom, &standardName);
+    if (standardName)
+    {
+        *aResult = nsCRT::strdup(standardName);
+    }
+    else
+    {
+        nsAutoString name;
+        mAtom->ToString(name);
+        *aResult = name.ToNewCString();
+    }
+    return NS_OK;
+
+}
 
 NS_IMETHODIMP
 nsHeaderEntry::GetValue(char ** aResult)
@@ -320,4 +341,133 @@ nsHTTPHeaderEnumerator::GetNext(nsISupports** aResult)
   return rv;
 }
 
+void 
+nsHTTPHeaderArray::GetStandardHeaderName(nsIAtom* aAtom, const char** aResult)
+{
+    if (!aAtom || !aResult)
+        return; // NS_ERROR_NULL_POINTER;
+
+    if (nsHTTPAtoms::Accept == aAtom)
+        *aResult = "Accept";
+    else if (nsHTTPAtoms::Accept_Charset == aAtom)
+        *aResult = "Accept-Charset";
+    else if (nsHTTPAtoms::Accept_Encoding == aAtom)
+        *aResult = "Accept-Encoding";
+    else if (nsHTTPAtoms::Accept_Language == aAtom)
+        *aResult = "Accept-Language";
+    else if (nsHTTPAtoms::Accept_Ranges == aAtom)
+        *aResult = "Accept-Ranges";
+    else if (nsHTTPAtoms::Age == aAtom)
+        *aResult = "Age";
+    else if (nsHTTPAtoms::Allow == aAtom)
+        *aResult = "Allow";
+    else if (nsHTTPAtoms::Authentication == aAtom)
+        *aResult = "Authentication";
+    else if (nsHTTPAtoms::Authorization == aAtom)
+        *aResult = "Authorization";
+    else if (nsHTTPAtoms::Cache_Control == aAtom)
+        *aResult = "Cache-Control";
+    else if (nsHTTPAtoms::Connection == aAtom)
+        *aResult = "Connection";
+    else if (nsHTTPAtoms::Content_Base == aAtom)
+        *aResult = "Content-Base";
+    else if (nsHTTPAtoms::Content_Encoding == aAtom)
+        *aResult = "Content-Encoding";
+    else if (nsHTTPAtoms::Content_Language == aAtom)
+        *aResult = "Content-Language";
+    else if (nsHTTPAtoms::Content_Length == aAtom)
+        *aResult = "Content-Length";
+    else if (nsHTTPAtoms::Content_Location == aAtom)
+        *aResult = "Content-Location";
+    else if (nsHTTPAtoms::Content_MD5 == aAtom)
+        *aResult = "Content-MD5";
+    else if (nsHTTPAtoms::Content_Range == aAtom)
+        *aResult = "Content-Range";
+    else if (nsHTTPAtoms::Content_Transfer_Encoding == aAtom)
+        *aResult = "Content-Transfer-Encoding";
+    else if (nsHTTPAtoms::Content_Type == aAtom)
+        *aResult = "Content-Type";
+    else if (nsHTTPAtoms::Date == aAtom)
+        *aResult = "Date";
+    else if (nsHTTPAtoms::Derived_From == aAtom)
+        *aResult = "Derived-From";
+    else if (nsHTTPAtoms::ETag == aAtom)
+        *aResult = "ETag";
+    else if (nsHTTPAtoms::Expect == aAtom)
+        *aResult = "Expect";
+    else if (nsHTTPAtoms::Expires == aAtom)
+        *aResult = "Expires";
+    else if (nsHTTPAtoms::From == aAtom)
+        *aResult = "From";
+    else if (nsHTTPAtoms::Forwarded == aAtom)
+        *aResult = "Forwarded";
+    else if (nsHTTPAtoms::Host == aAtom)
+        *aResult = "Host";
+    else if (nsHTTPAtoms::If_Match == aAtom)
+        *aResult = "If-Match";
+    else if (nsHTTPAtoms::If_Match_Any == aAtom)
+        *aResult = "If-Match-Any";
+    else if (nsHTTPAtoms::If_Modified_Since == aAtom)
+        *aResult = "If-Modified-Since";
+    else if (nsHTTPAtoms::If_None_Match == aAtom)
+        *aResult = "If-None-Match";
+    else if (nsHTTPAtoms::If_None_Match_Any == aAtom)
+        *aResult = "If-None-Match-Any";
+    else if (nsHTTPAtoms::If_Range == aAtom)
+        *aResult = "If-Range";
+    else if (nsHTTPAtoms::If_Unmodified_Since == aAtom)
+        *aResult = "If-Unmodified-Since";
+    else if (nsHTTPAtoms::Keep_Alive == aAtom)
+        *aResult = "Keep-Alive";
+    else if (nsHTTPAtoms::Last_Modified == aAtom)
+        *aResult = "Last-Modified";
+    else if (nsHTTPAtoms::Link == aAtom)
+        *aResult = "Link";
+    else if (nsHTTPAtoms::Location == aAtom)
+        *aResult = "Location";
+    else if (nsHTTPAtoms::Max_Forwards == aAtom)
+        *aResult = "Max-Forwards";
+    else if (nsHTTPAtoms::Message_Id == aAtom)
+        *aResult = "Message-ID";
+    else if (nsHTTPAtoms::Mime == aAtom)
+        *aResult = "Mime";
+    else if (nsHTTPAtoms::Pragma == aAtom)
+        *aResult = "Pragma";
+    else if (nsHTTPAtoms::Proxy_Authenticate == aAtom)
+        *aResult = "Proxy-Authenticate";
+    else if (nsHTTPAtoms::Proxy_Authorization == aAtom)
+        *aResult = "Proxy-Authorization";
+    else if (nsHTTPAtoms::Range == aAtom)
+        *aResult = "Range";
+    else if (nsHTTPAtoms::Referer == aAtom)
+        *aResult = "Referer";
+    else if (nsHTTPAtoms::Retry_After == aAtom)
+        *aResult = "Retry-After";
+    else if (nsHTTPAtoms::Server == aAtom)
+        *aResult = "Server";
+    else if (nsHTTPAtoms::TE == aAtom)
+        *aResult = "TE";
+    else if (nsHTTPAtoms::Title == aAtom)
+        *aResult = "Title";
+    else if (nsHTTPAtoms::Trailer == aAtom)
+        *aResult = "Trailer";
+    else if (nsHTTPAtoms::Transfer_Encoding == aAtom)
+        *aResult = "Transfer-Encoding";
+    else if (nsHTTPAtoms::Upgrade == aAtom)
+        *aResult = "Upgrade";
+    else if (nsHTTPAtoms::URI == aAtom)
+        *aResult = "URI";
+    else if (nsHTTPAtoms::User_Agent == aAtom)
+        *aResult = "User-Agent";
+    else if (nsHTTPAtoms::Version == aAtom)
+        *aResult = "Version";
+    else if (nsHTTPAtoms::Warning == aAtom)
+        *aResult = "Warning";
+    else if (nsHTTPAtoms::WWW_Authenticate == aAtom)
+        *aResult = "WWW-Authenticate";
+    else if (nsHTTPAtoms::Set_Cookie == aAtom)
+        *aResult = "Set-Cookie";
+    else
+        *aResult = nsnull;
+}
 

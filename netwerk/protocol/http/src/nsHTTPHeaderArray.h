@@ -55,13 +55,14 @@ public:
   nsHTTPHeaderArray();
   ~nsHTTPHeaderArray();
 
-  nsresult SetHeader(nsIAtom* aHeader, const char* i_Value);
-  nsresult GetHeader(nsIAtom* aHeader, char* *o_Value);
-  nsresult GetEnumerator(nsISimpleEnumerator** aResult);
+  nsresult      SetHeader(nsIAtom* aHeader, const char* i_Value);
+  nsresult      GetHeader(nsIAtom* aHeader, char* *o_Value);
+  nsresult      GetEnumerator(nsISimpleEnumerator** aResult);
+  static void   GetStandardHeaderName(nsIAtom* aHeader, const char** aResult);
 
 protected:
-  PRInt32 GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult);
-  PRBool  IsHeaderMultiple(nsIAtom* aHeader);
+  PRInt32   GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult);
+  PRBool    IsHeaderMultiple(nsIAtom* aHeader);
 
 protected:
   nsCOMPtr<nsISupportsArray> mHTTPHeaders;

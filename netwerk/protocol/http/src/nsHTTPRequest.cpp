@@ -110,7 +110,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
     rv = service->GetProtocolHandler("http", getter_AddRefs(protocolHandler));
     if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = do_QueryInterface(protocolHandler);
+      nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = 
+          do_QueryInterface(protocolHandler);
       if (httpHandler)
       {
         rv = httpHandler->GetAuthEngine(&pAuthEngine);
@@ -247,7 +248,8 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
 
     PRUint32 loadAttributes;
     mConnection->GetLoadAttributes(&loadAttributes);
-    if (loadAttributes & (nsIChannel::FORCE_VALIDATION | nsIChannel::FORCE_RELOAD)) {
+    if (loadAttributes & (nsIChannel::FORCE_VALIDATION | 
+                nsIChannel::FORCE_RELOAD)) {
 
         // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
         // no proxy is configured since we might be talking with a transparent
@@ -320,10 +322,14 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
             NS_ASSERTION(header, "Bad HTTP header.");
             if (header) {
                 header->GetField(getter_AddRefs(headerAtom));
+                char* fieldName = nsnull;
+                header->GetFieldName(&fieldName);
+                NS_ASSERTION(fieldName, "field name not returned!, \
+                        out of memory?");
+                //if (!fieldName)
+                    //return NS_ERROR_OUT_OF_MEMORY;
+                mRequestBuffer.Append(fieldName);
                 header->GetValue(getter_Copies(autoBuffer));
-
-                headerAtom->ToString(autoString);
-                mRequestBuffer.Append(autoString);
 
                 mRequestBuffer.Append(": ");
                 mRequestBuffer.Append(autoBuffer);
