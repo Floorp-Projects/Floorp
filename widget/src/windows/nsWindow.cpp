@@ -3552,6 +3552,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // (read as: windows created by plugins like Adobe Acrobat)
           // has been activated via clicking.
           DispatchFocus(NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus);
+          if (gRollupListener != nsnull)
+            gRollupListener->Rollup();  // rollup any open menus
             break;
         }
 
