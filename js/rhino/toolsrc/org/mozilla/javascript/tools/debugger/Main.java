@@ -2624,23 +2624,23 @@ public class Main extends JFrame implements Debugger, ContextListener {
         interrupted(cx);
     }
 
-    private static Object unwrapException(Object ex) {
-        for (;;) {
-            if (ex instanceof JavaScriptException) {
-                ex = ((JavaScriptException)ex).getValue();
-            } else if (ex instanceof EcmaError) {
-                ex = ((EcmaError)ex).getErrorObject();
-            } else if (ex instanceof NativeJavaObject) {
-                ex = ((NativeJavaObject)ex).unwrap();
-                break;
-            } else if (ex instanceof WrappedException) {
-                ex = ((WrappedException)ex).getWrappedException();
-                continue;
-            } else {
-                break;
+    private static String exceptionString(Throwable ex) {
+        if (ex instanceof JavaScriptException) {
+            JavaScriptException jse = (JavaScriptException)ex;
+            return ScriptRuntime.toString(jse.getValue());
+        } else if (ex instanceof EcmaError) {
+            return ex.toString();
+        } else if (ex instanceof WrappedException) {
+            Throwable wrapped = ((WrappedException)ex).getWrappedException();
+            if (wrapped != null) {
+                ex = wrapped;
             }
         }
-        return ex;
+        String msg = ex.toString();
+        if (msg == null || msg.length() == 0) {
+            msg = ex.getClass().toString();
+        }
+        return msg;
     }
 
     void handleExceptionThrown(Context cx, Throwable ex, FrameHelper frame) {
@@ -2648,11 +2648,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             String url = frame.getUrl();
             int lineNumber = frame.getLineNumber();
             FileWindow w = getFileWindow(url);
-            Object e = unwrapException(ex);
-            String msg = e.toString();
-            if (msg == null || msg.length() == 0) {
-                msg = e.getClass().toString();
-            }
+            String msg = exceptionString(ex);
             msg += " (" + url + ", line " + lineNumber + ")";
             if (w != null) {
                 swingInvoke(new SetFilePosition(this, w, lineNumber));
