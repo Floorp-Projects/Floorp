@@ -2442,30 +2442,10 @@ nsIFrame::AreAncestorViewsVisible() const
   return PR_TRUE;
 }
 
-nsIWidget* nsIFrame::GetWindow() const
+nsIWidget*
+nsIFrame::GetWindow() const
 {
-  const nsIFrame* frame;
-  for (frame = this; frame; frame = frame->GetAncestorWithView()) {
-    if (frame->HasView()) {
-      nsIWidget* window = frame->GetView()->GetWidget();
-      if (window) {
-        return window;
-      }
-    }
-  }
-
-  // Ask the view manager for the widget
-  NS_NOTREACHED("this shouldn't happen, should it?");
-  nsIWidget* window;
-  GetPresContext()->GetViewManager()->GetWidget(&window);
-  // drop refcount that the view manager added, since we are not supposed
-  // to be adding a refcount
-  if (window) {
-    window->Release();
-  }
-
-  NS_POSTCONDITION(window, "no window in frame tree");
-  return window;
+  return GetClosestView()->GetNearestWidget(nsnull);
 }
 
 nsIAtom*
