@@ -35,7 +35,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsHTMLContentSerializer();
   virtual ~nsHTMLContentSerializer();
 
-  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn);
+  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
+                  nsIAtom* aCharSet);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, 
                         PRInt32 aStartOffset,
@@ -104,6 +105,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRInt32   mMaxColumn;
 
   nsString  mLineBreak;
+
+  PRBool mIsLatin1;
 };
 
 extern nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);

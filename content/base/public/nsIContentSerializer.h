@@ -25,6 +25,7 @@
 
 #include "nsISupports.h"
 #include "nsAWritableString.h"
+#include "nsIAtom.h"
 
 class nsIDOMText; /* forward declaration */
 class nsIDOMCDATASection; /* forward declaration */
@@ -45,7 +46,8 @@ class nsIContentSerializer : public nsISupports {
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
-  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn) = 0;
+  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
+                  nsIAtom* aCharSet) = 0;
 
   NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAWritableString& aStr) = 0;
