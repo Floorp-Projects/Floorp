@@ -69,6 +69,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "prmjtime.h"
 
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
@@ -85,6 +86,12 @@
 #else
 #define CHECK_REQUEST(cx)       ((void)0)
 #endif
+
+JS_PUBLIC_API(int64)
+JS_Now()
+{
+    return PRMJ_Now();
+}
 
 JS_PUBLIC_API(jsval)
 JS_GetNaNValue(JSContext *cx)

@@ -140,6 +140,13 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_FALSE             BOOLEAN_TO_JSVAL(JS_FALSE)
 #define JSVAL_TRUE              BOOLEAN_TO_JSVAL(JS_TRUE)
 
+/*
+ * Microseconds since the epoch, midnight, January 1, 1970 UTC.  See the
+ * comment in jstypes.h regarding safe int64 usage.
+ */
+extern JS_PUBLIC_API(int64)
+JS_Now();
+
 /* Don't want to export data, so provide accessors for non-inline jsvals. */
 extern JS_PUBLIC_API(jsval)
 JS_GetNaNValue(JSContext *cx);
