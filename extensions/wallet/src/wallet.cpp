@@ -2517,7 +2517,7 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
       wallet_Initialize();
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
-      nsresult result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
+      result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
       if ((NS_SUCCEEDED(result)) && (nsnull != htmldoc)) {
         nsIDOMHTMLCollection* forms = nsnull;
         htmldoc->GetForms(&forms);
