@@ -663,12 +663,6 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
-{
-  *aVisible = PR_TRUE;
-  return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
-}
-
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
   // not implimented for toplevel windows

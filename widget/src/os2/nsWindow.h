@@ -72,7 +72,6 @@ class nsWindow : public nsBaseWidget,
    // Strangely misplaced menubar methods
    NS_IMETHOD         SetMenuBar( nsIMenuBar *aMenuBar);
    NS_IMETHOD         ShowMenuBar( PRBool bShow);
-   NS_IMETHOD         IsMenuBarVisible( PRBool *aVisible);
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);

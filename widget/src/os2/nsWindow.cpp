@@ -1124,23 +1124,6 @@ nsresult nsWindow::ShowMenuBar( PRBool bShow)
    return NS_OK;
 }
 
-nsresult nsWindow::IsMenuBarVisible( PRBool *aVisible)
-{
-   if( !aVisible)
-      return NS_ERROR_NULL_POINTER;
-
-   *aVisible = PR_FALSE;
-
-   if( mMenuBar)
-   {
-      void *hwndMenu = 0;
-      mMenuBar->GetNativeData( hwndMenu);
-      *aVisible = WinIsWindowVisible( (HWND)hwndMenu);
-   }
-
-   return NS_OK;
-}
-
 void nsWindow::SetContextMenu( nsContextMenu *aMenu)
 {
    mActiveMenu = aMenu;

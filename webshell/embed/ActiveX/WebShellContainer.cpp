@@ -241,15 +241,6 @@ CWebShellContainer::ShowMenuBar(PRBool aShow)
 
 
 NS_IMETHODIMP
-CWebShellContainer::IsMenuBarVisible(PRBool *aVisible)
-{
-	NG_TRACE_METHOD(CWebShellContainer::IsMenuBarVisible);
-	*aVisible = PR_FALSE;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
 CWebShellContainer::GetWebShell(nsIWebShell*& aResult)
 {
 	NG_TRACE_METHOD(CWebShellContainer::GetWebShell);

@@ -2462,12 +2462,6 @@ printf("nsWindow::ShowMenuBar - FIXME: not implemented!\n");
 	return NS_OK;
 }
 
-NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
-{
-  *aVisible = PR_TRUE;
-  return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
-}
-
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   aWidth  = mPreferredWidth;

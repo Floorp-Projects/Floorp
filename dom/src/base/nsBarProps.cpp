@@ -129,24 +129,12 @@ MenubarPropImpl::~MenubarPropImpl() {
 
 NS_IMETHODIMP
 MenubarPropImpl::GetVisible(PRBool *aVisible) {
-#if 1
   return BarPropImpl::GetVisibleByFlag(aVisible, NS_CHROME_MENU_BAR_ON);
-#else
-  if (mBrowser)
-    return mBrowser->IsMenuBarVisible(aVisible);
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 NS_IMETHODIMP
 MenubarPropImpl::SetVisible(PRBool aVisible) {
-#if 1
   return BarPropImpl::SetVisibleByFlag(aVisible, NS_CHROME_MENU_BAR_ON);
-#else
-  if (mBrowser)
-    return mBrowser->ShowMenuBar(aVisible);
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 //

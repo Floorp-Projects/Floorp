@@ -312,11 +312,6 @@ NS_IMETHODIMP nsWidget::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::IsMenuBarVisible(PRBool *aVisible)
-{
-  return NS_OK;
-}
-
 void * nsWidget::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {

@@ -759,14 +759,6 @@ NS_METHOD nsWindow::ShowMenuBar( PRBool aShow)
 }
 
 	
-NS_METHOD nsWindow::IsMenuBarVisible( PRBool *aVisible )
-{
-	PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::IsMenuBarVisible - Not Implemented\n"));
-    *aVisible = PR_TRUE;
-	return NS_ERROR_FAILURE;
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Process all nsWindows messages
