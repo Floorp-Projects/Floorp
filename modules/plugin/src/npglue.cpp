@@ -181,6 +181,7 @@ np_processURLNode(np_urlsnode* node, np_instance* instance, int status)
                 nsIPluginStreamListener* listener = inStr->GetListener();
                 nsresult err = listener->OnStopBinding(node->urls->address,
                                                        (nsPluginReason)np_statusToReason(status));
+                inStr->Release();
                 // XXX ignore error?
 
 #else // !NEW_PLUGIN_STREAM_API
@@ -580,10 +581,12 @@ NPL_Write(NET_StreamClass *stream, const unsigned char *str, int32 len)
     if (newstream->handle->userPlugin) {
 #ifdef NEW_PLUGIN_STREAM_API
 
-        nsPluginInputStream* instr = (nsPluginInputStream*)newstream->pstream->pdata;
-        nsIPluginStreamListener* listener = instr->GetListener();
-        instr->SetReadBuffer(len, (const char*)str);
-        nsresult err = listener->OnDataAvailable((const char*)urls->address, instr, urls->position, len);
+        nsPluginInputStream* inStr = (nsPluginInputStream*)newstream->pstream->pdata;
+        nsIPluginStreamListener* listener = inStr->GetListener();
+        nsresult err = inStr->ReceiveData((const char*)str, urls->position, len);
+        if (err == NS_OK) {
+            err = listener->OnDataAvailable((const char*)urls->address, inStr, urls->position, len);
+        }
         PR_ASSERT(err == NS_OK);        // XXX this error should go somewhere
 
 #else // !NEW_PLUGIN_STREAM_API
@@ -803,8 +806,10 @@ np_destroystream(np_stream *stream, NPError reason)
         TRACEMSG(("npglue.c: CallNPP_DestroyStreamProc"));
         if (stream->handle->userPlugin) {
 #ifdef NEW_PLUGIN_STREAM_API
+#if 0 // released in np_processURLNode during NPL_URLExit
             nsPluginInputStream* inStr = (nsPluginInputStream*)stream->pstream->pdata;
             inStr->Release();
+#endif
 #else // !NEW_PLUGIN_STREAM_API
             nsPluginStreamPeer* peerStream = (nsPluginStreamPeer*)stream->pstream->pdata;
             nsIPluginStream* userStream = peerStream->GetUserStream();
@@ -958,13 +963,13 @@ NPL_Abort(NET_StreamClass *stream, int status)
 
     newstream->nstream = NULL;		/* Remove reference to netlib stream */
 
-	/*
-	 * MK_UNABLE_TO_CONVERT is the special status code we
-	 * return from NPL_Write to cancel the original netlib
-	 * stream when we get a byte-range request, so we don't
-	 * want to destroy the plug-in stream in this case (we
-	 * shouldn't get this status code any other time here).
-	 */
+    /*
+     * MK_UNABLE_TO_CONVERT is the special status code we
+     * return from NPL_Write to cancel the original netlib
+     * stream when we get a byte-range request, so we don't
+     * want to destroy the plug-in stream in this case (we
+     * shouldn't get this status code any other time here).
+     */
     if (!newstream->dontclose || (status < 0 && status != MK_UNABLE_TO_CONVERT))
         np_destroystream(newstream, np_statusToReason(status));
 }

@@ -780,20 +780,27 @@ public:
         mStream = stream;
     }
 
-    void SetReadBuffer(PRUint32 len, const char* buffer) {
-        mBuffer = PL_strdup(buffer);
-        mBufferLength = len;
-        mAmountRead = 0;
-    }
+    nsresult ReceiveData(const char* buffer, PRUint32 offset, PRUint32 len);
+    void Cleanup(void);
 
 protected:
     nsIPluginStreamListener* mListener;
     nsPluginStreamType mStreamType;
     URL_Struct* mUrls;
     np_stream* mStream;
-    char* mBuffer;
-    PRUint32 mBufferLength;
-    PRUint32 mAmountRead;
+
+    struct BufferElement {
+        BufferElement* next;
+        char* segment;
+        PRUint32 offset;
+        PRUint32 length;
+    };
+
+    BufferElement* mBuffer;
+//    PRUint32 mReadCursor;
+
+//    PRUint32 mBufferLength;
+//    PRUint32 mAmountRead;
 
 };
 
