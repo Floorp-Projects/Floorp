@@ -760,42 +760,42 @@ fi
 dnl system FullCircle/Talkback support
 dnl ========================================================
 
-dnl AC_ARG_WITH(fullcircle,
-dnl [  --with-fullcircle=\$dir        location of FullCircle headers and libraries],
-dnl         FULLCIRCLE_DIR=$withval)
+AC_ARG_WITH(fullcircle,
+[  --with-fullcircle=\$dir        location of FullCircle headers and libraries],
 
-dnl if test "$FULLCIRCLE_DIR" = no; then
-dnl     FULLCIRCLE_DIR=
-dnl else
+        FULLCIRCLE_DIR=$withval,
+        FULLCIRCLE_DIR=no)
 
-dnl _SAVE_CFLAGS=$CFLAGS
-dnl _SAVE_LDFLAGS=$LDFLAGS
-dnl _SAVE_LIBS=$LIBS
-dnl CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
-dnl LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
+if test "$FULLCIRCLE_DIR" = no; then
+    FULLCIRCLE_DIR=
+else
 
-dnl AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
-dnl LIBS="-ltalkback $LIBS"
-dnl AC_TRY_LINK(
-dnl 	#include "fullcircle.h",
-dnl         #include <stdio.h>
-dnl         int main () {
-dnl             FC_Initialize();
-dnl             exit(0);
-dnl         }
-dnl         ,[FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
-dnl         [MISSING_FULLCIRCLE=1 result="no"])
-dnl AC_MSG_RESULT("$result")
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
+LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 
-dnl CFLAGS=$_SAVE_CFLAGS
-dnl LDFLAGS=$_SAVE_LDFLAGS
-dnl LIBS=$_SAVE_LIBS
+AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
+LIBS="-ltalkback $LIBS"
+AC_TRY_LINK(
+	#include "fullcircle.h",
+        #include <stdio.h>],
+        [FC_Initialize();
+        exit(0);]
+        ,[FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
+        [MISSING_FULLCIRCLE=1 result="no"])
+AC_MSG_RESULT("$result")
 
-dnl if [ test -n "$MISSING_FULLCIRCLE" ]; then
-dnl     AC_MSG_ERROR([Could not find FullCircle Library]);
-dnl fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
 
-dnl fi
+if [ test -n "$MISSING_FULLCIRCLE" ]; then
+    AC_MSG_ERROR([Could not find FullCircle Library]);
+fi
+
+fi
 
 dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
