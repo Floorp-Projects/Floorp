@@ -510,7 +510,7 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
   webShell->GetRootWebShell(rootWebShell);
   if (nsnull != rootWebShell) 
   {
-    rootWebShell->FindChildWithName(webShellName, mWebShell);
+    rootWebShell->FindChildWithName(webShellName.GetUnicode(), mWebShell);
 #ifdef NS_DEBUG
     if (nsnull != mWebShell)
         printf("nsMsgAppCore::SetWindow(): Got the webShell %s.\n", webShellName.ToNewCString());
@@ -818,7 +818,7 @@ nsMsgAppCore::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *p
 		nsIRDFLiteral *nameLiteral;
 		nsIRDFResource *newFolderResource;
 
-	    gRDFService->GetLiteral(nameStr, &nameLiteral);
+    gRDFService->GetLiteral(nameStr.GetUnicode(), &nameLiteral);
 		nameArray->AppendElement(nameLiteral);
 		if(NS_SUCCEEDED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#NewFolder", &newFolderResource)))
 		{

@@ -83,7 +83,7 @@ void createNode(nsString& str, nsIRDFNode **node)
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return;   // always check this before proceeding 
 	nsIRDFLiteral * value;
-	if(NS_SUCCEEDED(rdf->GetLiteral((const PRUnichar*)str, &value))) {
+	if(NS_SUCCEEDED(rdf->GetLiteral(str.GetUnicode(), &value))) {
 		*node = value;
 	}
 }

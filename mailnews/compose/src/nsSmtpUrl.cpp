@@ -696,7 +696,7 @@ nsresult nsSmtpUrl::GetUserPassword(const nsString ** aUserPassword)
 nsresult nsSmtpUrl::SetUserEmailAddress(const nsString& aUserName)
 {
 	nsresult rv = NS_OK;
-	if (aUserName)
+	if (aUserName.GetUnicode())
 	{
 		m_userName = aUserName;
 		if (m_userNameString)
@@ -710,7 +710,7 @@ nsresult nsSmtpUrl::SetUserEmailAddress(const nsString& aUserName)
 nsresult nsSmtpUrl::SetUserPassword(const nsString& aUserPassword)
 {
 	nsresult rv = NS_OK;
-	if (aUserPassword)
+	if (aUserPassword.GetUnicode())
 	{
 		m_userPassword = aUserPassword;
 	}

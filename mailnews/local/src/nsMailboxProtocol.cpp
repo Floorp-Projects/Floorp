@@ -207,7 +207,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 			nsFileURL  fileURL(filePath);
 			char * message_path_url = PL_strdup(fileURL.GetAsString());
 
-			m_displayConsumer->LoadURL(nsAutoString(message_path_url), nsnull, PR_TRUE, nsURLReload, 0);
+			m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
 
 			PR_FREEIF(message_path_url);
 		}

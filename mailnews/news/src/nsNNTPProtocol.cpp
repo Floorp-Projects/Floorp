@@ -2052,7 +2052,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 				//  to load the webshell!
 				//  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
 				//                      nsnull, PR_TRUE, nsURLReload, 0);
-				m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
+				m_displayConsumer->LoadURL(nsAutoString(fileUrl).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
 			}
 
 			// mscott: we may need to release our reference on the url....

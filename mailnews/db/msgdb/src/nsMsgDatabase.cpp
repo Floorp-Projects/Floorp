@@ -2360,7 +2360,7 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 
 		nsString messageId;
         (void)pHeader->GetMessageId(messageId);
-		if (msgID.Equals(messageId, PR_FALSE))
+		if (msgID.Equals(messageId.GetUnicode(), PR_FALSE))
 			break;
 		NS_RELEASE(pHeader);
 		pHeader = nsnull;
