@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@:@srcdir@/../xlib:@srcdir@/../xlibrgb
+VPATH		= @srcdir@ @srcdir@/../xlib
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -37,9 +37,8 @@ EXTRA_DSO_LIBS	= gkgfx
 REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko imglib2 intl
 
 CSRCS		= \
-		xlibrgb.c \
-		xprintutil.c \
-		xprintutil_printtofile.c \
+                xprintutil.c \
+                xprintutil_printtofile.c \
 		$(NULL)
 
 CPPSRCS		= \
@@ -49,7 +48,7 @@ CPPSRCS		= \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
 		nsRegionXlib.cpp \
-		nsGCCache.cpp \
+                nsGCCache.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -73,15 +72,10 @@ endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
-# gisburn: linking against xlibrgb.so does not work due global variables
-# in that library which must not be shared between main toolkit and
-# Xprint module classes. 
-# This will be fixed by bug 85527 ("Turn xlibrgb into a shared library" - 
-# this RFE will introduce a new API for xlibrgb where these variables are 
-# stored in a "handle" instead of using global variables...).
 EXTRA_DSO_LDOPTS += \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		-lxlibrgb  \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
