@@ -3192,6 +3192,11 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
 
   PRInt32 indx;
   if (!aRefChild) {
+    if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE && mRootContent) {
+      // docType needs to be before documentElement
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
     indx = mChildren.Count();
     mChildren.AppendObject(content);
   }
@@ -3205,6 +3210,12 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
     if (indx == -1) {
       // couldn't find refChild
       return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+
+    if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE && mRootContent &&
+        indx > mChildren.IndexOf(mRootContent)) {
+      // docType needs to be before documentElement
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
 
     mChildren.InsertObjectAt(content, indx);
@@ -3259,6 +3270,12 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
   if (indx == -1) {
     // The reference child is not a child of the document.
     return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE && mRootContent &&
+      indx > mChildren.IndexOf(mRootContent)) {
+    // docType needs to be before documentElement
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   ContentRemoved(nsnull, refContent, indx);
