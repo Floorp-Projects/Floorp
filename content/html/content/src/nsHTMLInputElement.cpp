@@ -114,6 +114,7 @@ typedef nsIGfxTextControlFrame2 textControlPlace;
 #define BF_VALUE_CHANGED 2
 #define BF_CHECKED_CHANGED 3
 #define BF_CHECKED 4
+#define BF_HANDLING_SELECT_EVENT 5
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -892,11 +893,18 @@ nsHTMLInputElement::Select()
 
     // Just like SetFocus() but without the ScrollIntoView()!
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FORM_SELECTED;
-    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                        &status);
+    
+    //If already handling select event, don't dispatch a second.
+    if (!GET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT)) {
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_FORM_SELECTED;
+  
+      SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
+      rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+                          &status);
+      SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_FALSE);
+    }
 
     // If the DOM event was not canceled (e.g. by a JS event handler
     // returning false)
