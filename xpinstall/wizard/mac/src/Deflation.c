@@ -44,25 +44,22 @@ do {																\
 	}																\
 } while(0)
 
-/*-----------------------------------------------------------*
- *   Deflation
- *-----------------------------------------------------------*/
 
+/*-----------------------------------------------------------*
+ *   Inflation
+ *-----------------------------------------------------------*/
 OSErr
 ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 {
-	OSErr 					err = noErr;
-	StringPtr 				coreFile, coreDirPath, extractedFile, pdir;
- 	short 					fullPathLen;
- 	Handle 					fullPathH;
- 	void					*hZip, *hFind;
- 	PRInt32					rv;
-	Boolean 				bFoundAll = false, isDir;
- 	char					filename[255] = "\0", dir[255] = "\0", *lastslash;
- 	Ptr						fullPathStr;
- 	FSSpec					coreDirFSp, extractedFSp, outFSp, extractedDir;
- 	long					coreDirID, extractedDirID;
- 	
+	OSErr 			err = noErr;
+	StringPtr 		coreFile = 0;
+	short			fullPathLen = 0;
+	Handle			fullPathH = 0;
+	Ptr				fullPathStr = 0;
+	PRInt32			rv = 0;
+	void			*hZip = 0, *hFind = 0;
+	
+
 	/* if there's a core file... */
 	HLock(gControls->cfg->coreFile);
 	if (*gControls->cfg->coreFile != NULL)
@@ -79,39 +76,12 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 		return fnfErr;
 	HUnlock(gControls->cfg->coreFile);
 	
-	/* if there's a relative subdir... */
-	HLock(gControls->cfg->coreDir);
-	if (*gControls->cfg->coreDir != NULL)
-	{
-		coreDirPath = CToPascal(*gControls->cfg->coreDir);
-		if (!coreDirPath)
-		{
-			err = memFullErr;
-			goto cleanup;
-		}
-	}		
-	HUnlock(gControls->cfg->coreDir);
+	ERR_CHECK_RET(GetFullPath(tgtVRefNum, tgtDirID, coreFile, &fullPathLen, &fullPathH), err);
 	
-	// if coreDir specified create the core dir
-	if (coreDirPath[0] > 0)
-	{
-		err = FSMakeFSSpec( tgtVRefNum, tgtDirID, coreDirPath, &coreDirFSp );
-		if (err!=noErr && err!=fnfErr)
-			return err;
-		err = FSpDirCreate( &coreDirFSp, smSystemScript, &coreDirID );
-		if (err!=noErr && err!=dupFNErr)
-			return err;
-		
-		// move core file to core dir
-		ERR_CHECK_RET(ForceMoveFile(tgtVRefNum, tgtDirID, coreFile, coreDirID), err);			
-			
-		ERR_CHECK_RET(GetFullPath(tgtVRefNum, coreDirID, coreFile, &fullPathLen, &fullPathH), err);
-	}
-	else
-	{
-		ERR_CHECK_RET(GetFullPath(tgtVRefNum, tgtDirID, coreFile, &fullPathLen, &fullPathH), err);
-	}
-
+	
+	/* --- o p e n   a r c h i v e --- */
+	
+	/* extract the full path string from the handle so we can NULL terminate */
 	HLock(fullPathH);
 	fullPathStr = NewPtrClear(fullPathLen+1);
 	strncat(fullPathStr, *fullPathH, fullPathLen);
@@ -119,14 +89,61 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	
 	rv = ZIP_OpenArchive( fullPathStr, &hZip );
 	
+	/* dispose mem used so we can reuse the ptr and handle */
 	HUnlock(fullPathH);
-	DisposeHandle(fullPathH);
-	DisposePtr(fullPathStr);
+	if (fullPathH)
+		DisposeHandle(fullPathH);
 	if (rv!=ZIP_OK) return rv;
-	
+
+	/* initialize the search */
 	hFind = ZIP_FindInit( hZip, NULL ); /* NULL to match all files in archive */
+	
+	
+	/* --- i n f l a t e   a l l   f i l e s --- */
+	
+	err = InflateFiles(hZip, hFind, tgtVRefNum, tgtDirID);
+	if (err!=noErr)
+		goto cleanup;	/* XXX review later: this check may be pointless */
+	
+	
+	/* --- c l o s e   a r c h i v e --- */
+cleanup:
+
+	if (hFind)
+		rv = ZIP_FindFree( hFind );
+#ifdef MIW_DEBUG
+		if (rv!=ZIP_OK) SysBeep(10);
+#endif
+	if (hZip)
+		rv = ZIP_CloseArchive( &hZip );
+#ifdef MIW_DEBUG
+		if (rv!=ZIP_OK) SysBeep(10); 
+#endif
+	if (coreFile)
+		DisposePtr((Ptr)coreFile);
+	if (fullPathStr)
+		DisposePtr(fullPathStr);
+
+	return err;
+}
+
+OSErr
+InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
+{
+	OSErr		err = noErr;
+	Boolean		bFoundAll = false;
+	PRInt32		rv = 0;
+	char		filename[255] = "\0", *lastslash;
+	Handle		fullPathH = 0;
+	short 		fullPathLen = 0;
+	Ptr			fullPathStr = 0;
+	StringPtr	extractedFile = 0;
+	FSSpec		extractedFSp, outFSp;
+	
+	
 	while (!bFoundAll)
 	{
+		/* find next item if one exists */
 		rv = ZIP_FindNext( hFind, filename, 255 );
 		if (rv==ZIP_ERR_FNF)
 		{
@@ -134,13 +151,14 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 			break;
 		}
 		else if (rv!=ZIP_OK)
-			return rv;
-
+			return rv;	
+		
+		/* ignore if item is a dir entry */	
 		lastslash = strrchr(filename, '/');
 		if (lastslash == (&filename[0] + strlen(filename) - 1)) /* dir entry encountered */
 			continue;
-		
-		// extract the file
+			
+		/* obtain and NULL terminate the full path string */
 		err = GetFullPath(tgtVRefNum, tgtDirID, "\p", &fullPathLen, &fullPathH); /* get dirpath */
 		if (err!=noErr)
 			return err;
@@ -149,98 +167,66 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 		strncat(fullPathStr, *fullPathH, fullPathLen);
 		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
 		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
-		SLASHES_2_COLONS(fullPathStr);
-		err = DirCreateRecursive(fullPathStr);
-		if (err!=noErr)
-			continue;
 		
+		/* create directories if file is nested in new subdirs */
+		SLASHES_2_COLONS(fullPathStr);
+		err = DirCreateRecursive(fullPathStr);			
+		
+		if (err!=noErr)
+		{
+			if (fullPathStr) 
+				DisposePtr((Ptr)fullPathStr);
+			if (fullPathH)
+			{
+				HUnlock(fullPathH);				
+				DisposeHandle(fullPathH);
+			}
+			continue; /* XXX do we want to do this? */
+		}
+		
+		/* extract the file to its full path destination */
 		rv = ZIP_ExtractFile( hZip, filename, fullPathStr );
 		
 		HUnlock(fullPathH);
-		DisposeHandle(fullPathH);
-		DisposePtr(fullPathStr);
+		if (fullPathH)
+			DisposeHandle(fullPathH);
 		if (rv!=ZIP_OK)
-			return rv;
-		
-		// AppleSingle decode if need be
-		SLASHES_2_COLONS(filename);
-		extractedFile = CToPascal(filename); 
-		err = FSMakeFSSpec(tgtVRefNum, tgtDirID, extractedFile, &extractedFSp);
-		err = FSMakeFSSpec(tgtVRefNum, tgtDirID, extractedFile, &outFSp);
-		err = AppleSingleDecode(&extractedFSp, &outFSp);
-		
-		// check if file is leaf or nested in subdir
-		dir[0] = 0;
-		ResolveDirs(filename, dir);
-		if (*dir)
 		{
-			pdir = CToPascal(dir);
+			if (fullPathStr)
+				DisposePtr((Ptr)fullPathStr);			
+			return rv;
+		}
+		
+		/* AppleSingle decode if need be */
+		extractedFile = CToPascal(fullPathStr); 
+		if (extractedFile)
+		{
+			err = FSMakeFSSpec(0, 0, extractedFile, &extractedFSp);
+			err = FSMakeFSSpec(0, 0, extractedFile, &outFSp);
+			err = AppleSingleDecode(&extractedFSp, &outFSp);
 			
+			/* delete original file if named different than final file */
 			if (!pstrcmp(extractedFSp.name, outFSp.name))
 			{
 				err = FSpDelete(&extractedFSp);
 			}
 		}
+			
+		/* record for cleanup later */
+		FSMakeFSSpec(outFSp.vRefNum, outFSp.parID, outFSp.name, &coreFileList[currCoreFile]);
+		currCoreFile++;
 		
-		// if there's a coreDir specified move the file into it
-		if (coreDirPath[0] > 0) 
-		{
-			if (*dir) 		// coreDir:extractedDir:<leaffile>
-			{
-				err = DirCreate(coreDirFSp.vRefNum, coreDirID, pdir, &extractedDirID);
-				if (err==noErr)
-					FSMakeFSSpec(outFSp.vRefNum, coreDirID, pdir, &coreFileList[currCoreFile]); // track for deletion
-				else if (err!=dupFNErr)
-					goto cleanup;
-				ERR_CHECK_RET(ForceMoveFile(outFSp.vRefNum, outFSp.parID, outFSp.name, extractedDirID), err);
-				FSMakeFSSpec(outFSp.vRefNum, extractedDirID, outFSp.name, &coreFileList[currCoreFile]);
-			}
-			else 			// else coreDir:<leaffile>
-			{
-				ERR_CHECK_RET(ForceMoveFile(outFSp.vRefNum, outFSp.parID, outFSp.name, coreDirID), err);
-				FSMakeFSSpec(outFSp.vRefNum, coreDirID, outFSp.name, &coreFileList[currCoreFile]); 
-			}
-		}		
-		else if (*dir)		// extractedDir:<leaffile>
-		{
-			err = FSMakeFSSpec(tgtVRefNum, tgtDirID, pdir, &extractedDir);
-			if (err==noErr) // already created
-				err = FSpGetDirectoryID(&extractedDir, &extractedDirID, &isDir);
-			else			// otherwise mkdir
-			{
-				err = FSpDirCreate(&extractedDir, smSystemScript, &extractedDirID);
-				FSMakeFSSpec(tgtVRefNum, tgtDirID, pdir, &coreFileList[currCoreFile]); // track for deletion
-			}
-			if (err!=noErr && err!=dupFNErr)
-				goto cleanup;
-				
-			ERR_CHECK_RET(ForceMoveFile(outFSp.vRefNum, outFSp.parID, outFSp.name, extractedDirID), err);
-			FSMakeFSSpec(outFSp.vRefNum, extractedDirID, outFSp.name, &coreFileList[currCoreFile]);
-		}
-		else				// just cwd:<leaffile>
-		{
-			FSMakeFSSpec(outFSp.vRefNum, outFSp.parID, outFSp.name, &coreFileList[currCoreFile]);
-		}
-		
-		if (*dir && pdir)
-			DisposePtr((Ptr) pdir);
+		/* progress bar update (roll the barber poll) */
+		if (gWPtr)
+			IdleControls(gWPtr);	
+			
 		if (extractedFile)
 			DisposePtr((Ptr)extractedFile);
-		
-		currCoreFile++;
-		if (gWPtr)
-			IdleControls(gWPtr);	// progress bar (roll the barber poll)
+		if (fullPathStr)
+			DisposePtr(fullPathStr);
 	}
-	
-cleanup:							
-	// dispose of coreFile, coreDirPath, hFind opaque handle
-	if (hFind)
-		rv = ZIP_FindFree( hFind );
-	if (coreFile)
-		DisposePtr((Ptr) coreFile);
-	if (coreDirPath)
-		DisposePtr((Ptr) coreDirPath);
-	return err;	
+
+	return err;
 }
 
 OSErr
@@ -315,7 +301,10 @@ DirCreateRecursive(char* path)
 					err = FSpDirCreate(&currDirFSp, smSystemScript, &dummyDirID);
 					if (err!=noErr) 
 					{
-						SysBeep(10);	// XXX remove...
+						if (currDir)
+							free(currDir);
+						if (pCurrDir)
+							DisposePtr((Ptr)pCurrDir);
 						return err;
 					}
 				}
