@@ -216,7 +216,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // in a pointer that hasn't been QI'd to IDispatch properly this could
     // create multiple wrappers for the same object, creating a fair bit of
     // confusion.
-    if(Interface->GetIID()->Equals(NSID_IDISPATCH))
+    PRBool isIDispatch = Interface->GetIID()->Equals(NSID_IDISPATCH);
+    if(isIDispatch)
         identity = Object;
     else
 #endif
@@ -267,6 +268,14 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // to this same function but with a different scope.
 
     nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
+#ifdef XPC_IDISPATCH_SUPPORT
+    // If this is an IDispatch wrapper and it didn't give us a class info
+    // we'll provide a default one
+    if(isIDispatch && !info)
+    {
+        info = already_AddRefed<nsIClassInfo>(XPCIDispatchClassInfo::GetSingleton());
+    }
+#endif
 
     // If we are making a wrapper for the nsIClassInfo interface then
     // We *don't* want to have it use the prototype meant for instances

@@ -107,6 +107,7 @@ xpcModuleDtor(nsIModule* self)
     xpc_DestroyJSxIDClassObjects();
 #ifdef XPC_IDISPATCH_SUPPORT
     nsDispatchSupport::FreeSingleton();
+    XPCIDispatchClassInfo::FreeSingleton();
 #endif
 }
 
