@@ -506,7 +506,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
   return NS_OK;
 }
 
-void GetNextRowSibling(nsIFrame** aRowFrame)
+static void GetNextRowSibling(nsIFrame** aRowFrame)
 {
   nsresult rv = (*aRowFrame)->GetNextSibling(aRowFrame);
   while(*aRowFrame && (NS_SUCCEEDED(rv))) {

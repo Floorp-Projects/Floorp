@@ -1742,7 +1742,7 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
 
 
 //----------------------------
-PRBool IsInline(eHTMLTags aTag)
+static PRBool IsInline(eHTMLTags aTag)
 {
   PRBool  result = PR_FALSE;
 
@@ -1789,7 +1789,7 @@ PRBool IsInline(eHTMLTags aTag)
 }
 
 //----------------------------
-PRBool IsBlockLevel(eHTMLTags aTag, PRBool &isPreTag) 
+static PRBool IsBlockLevel(eHTMLTags aTag, PRBool &isPreTag)
 {
   isPreTag = (aTag == eHTMLTag_pre);
 
@@ -2335,7 +2335,7 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
 
 
 
-nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
+static nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
 {
   nsIContent* content;
   nsresult rv = aNode->QueryInterface(kIContentIID,(void **)&content);
