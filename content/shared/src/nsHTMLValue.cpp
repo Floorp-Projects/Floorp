@@ -207,7 +207,7 @@ void nsHTMLValue::SetStringValue(const nsString& aValue)
   mValue.mString = aValue.ToNewString();
 }
 
-void nsHTMLValue::SetSupportsValue(nsISupports* aValue)
+void nsHTMLValue::SetISupportsValue(nsISupports* aValue)
 {
   Reset();
   mUnit = eHTMLUnit_ISupports;
