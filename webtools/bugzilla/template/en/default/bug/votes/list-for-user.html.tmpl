@@ -44,9 +44,9 @@
     <table cellspacing="4">
       <tr>
         <td></td>
+        <th>Votes</th>
         <th>[% terms.Bug %] #</th>
         <th>Summary</th>
-        <th>Votes</th>
       </tr>
 
       [% onevoteproduct = 0 %]
@@ -75,17 +75,6 @@
         [% FOREACH bug = product.bugs %]
           <tr>
             <td></td>
-            <td>
-              [% "<strike>" IF NOT bug.opened %]
-                <a href="show_bug.cgi?id=[% bug.id %]">
-                  [% bug.id %]</a>
-              [% "</strike>" IF NOT bug.opened %]
-            </td>
-            <td>
-              <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">
-                [% bug.summary FILTER html %]
-              </a>
-            </td>
             <td align="right">
               [% IF canedit %]
                 [% IF product.onevoteonly %]
@@ -98,6 +87,17 @@
               [% ELSE %]
                 [% bug.count %]
               [% END %]
+            </td>
+            <td align="right">
+              [% "<strike>" IF NOT bug.opened %]
+                <a href="show_bug.cgi?id=[% bug.id %]">
+                  [% bug.id %]</a>
+              [% "</strike>" IF NOT bug.opened %]
+            </td>
+            <td>
+              <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">
+                [% bug.summary FILTER html %]
+              </a>
             </td>
           </tr>
         [% END %]
