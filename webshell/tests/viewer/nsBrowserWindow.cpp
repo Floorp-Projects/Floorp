@@ -1157,7 +1157,8 @@ GetTitleSuffix(void)
 nsBrowserWindow::nsBrowserWindow()
 {
   if (!gTitleSuffix) {
-    gTitleSuffix = GetTitleSuffix();
+    //gTitleSuffix = GetTitleSuffix();
+    gTitleSuffix = new nsString(" - Raptor");
   }
   AddBrowser(this);
 }
