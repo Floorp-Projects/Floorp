@@ -1317,11 +1317,11 @@ nsLocalFile::Remove(PRBool recursive)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
+nsLocalFile::GetLastModificationTime(PRInt64 *aLastModificationTime)
 {
-    NS_ENSURE_ARG(aLastModificationDate);
+    NS_ENSURE_ARG(aLastModificationTime);
     
-    *aLastModificationDate = 0;
+    *aLastModificationTime = 0;
 
     nsresult rv = ResolveAndStat(PR_TRUE);
     
@@ -1329,17 +1329,17 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
         return rv;
     
     // microseconds -> milliseconds
-    *aLastModificationDate = mFileInfo64.modifyTime / PR_USEC_PER_MSEC;
+    *aLastModificationTime = mFileInfo64.modifyTime / PR_USEC_PER_MSEC;
     return NS_OK;
 }
 
 
 NS_IMETHODIMP  
-nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
+nsLocalFile::GetLastModificationTimeOfLink(PRInt64 *aLastModificationTime)
 {
-    NS_ENSURE_ARG(aLastModificationDate);
+    NS_ENSURE_ARG(aLastModificationTime);
     
-    *aLastModificationDate = 0;
+    *aLastModificationTime = 0;
 
     nsresult rv = ResolveAndStat(PR_FALSE);
     
@@ -1347,27 +1347,27 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
         return rv;
     
     // microseconds -> milliseconds
-    *aLastModificationDate = mFileInfo64.modifyTime / PR_USEC_PER_MSEC;
+    *aLastModificationTime = mFileInfo64.modifyTime / PR_USEC_PER_MSEC;
 
     return NS_OK;
 }
 
 
 NS_IMETHODIMP  
-nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
+nsLocalFile::SetLastModificationTime(PRInt64 aLastModificationTime)
 {
-    return nsLocalFile::SetModDate(aLastModificationDate, PR_TRUE);
+    return nsLocalFile::SetModDate(aLastModificationTime, PR_TRUE);
 }
 
 
 NS_IMETHODIMP  
-nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
+nsLocalFile::SetLastModificationTimeOfLink(PRInt64 aLastModificationTime)
 {
-    return nsLocalFile::SetModDate(aLastModificationDate, PR_FALSE);
+    return nsLocalFile::SetModDate(aLastModificationTime, PR_FALSE);
 }
 
 nsresult
-nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
+nsLocalFile::SetModDate(PRInt64 aLastModificationTime, PRBool resolveTerminal)
 {
     nsresult rv = ResolveAndStat(resolveTerminal);
     
@@ -1409,7 +1409,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
     }
     
     // PR_ExplodeTime expects usecs...
-    PR_ExplodeTime(aLastModificationDate * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
+    PR_ExplodeTime(aLastModificationTime * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
     pathInfo.fdateLastWrite.year      = pret.tm_year;    
     pathInfo.fdateLastWrite.month    = pret.tm_month + 1; // Convert start offset -- Win32: Jan=1; NSPR: Jan=0
 // ???? OS2TODO    st.wDayOfWeek       = pret.tm_wday;    
@@ -1436,7 +1436,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
     PRExplodedTime pret;
     
     // PR_ExplodeTime expects usecs...
-    PR_ExplodeTime(aLastModificationDate * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
+    PR_ExplodeTime(aLastModificationTime * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
     st.wYear            = pret.tm_year;    
     st.wMonth           = pret.tm_month + 1; // Convert start offset -- Win32: Jan=1; NSPR: Jan=0
     st.wDayOfWeek       = pret.tm_wday;    

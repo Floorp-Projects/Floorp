@@ -357,7 +357,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         LL_L2I( fileInfoSize,fileSize );
         
         PRInt64 tmpTime, fileInfoModifyTime;
-        rv = current->GetLastModificationDate( &tmpTime );
+        rv = current->GetLastModificationTime( &tmpTime );
         // Why does nsIFile give this back in milliseconds?
         LL_MUL(fileInfoModifyTime, tmpTime, PR_USEC_PER_MSEC);
         if (NS_FAILED(rv)) return rv; 

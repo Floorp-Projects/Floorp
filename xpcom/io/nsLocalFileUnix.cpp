@@ -904,7 +904,7 @@ nsLocalFile::Remove(PRBool recursive)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModificationDate(PRInt64 *aLastModTime)
+nsLocalFile::GetLastModificationTime(PRInt64 *aLastModTime)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTime);
@@ -922,7 +922,7 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModTime)
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModificationDate(PRInt64 aLastModTime)
+nsLocalFile::SetLastModificationTime(PRInt64 aLastModTime)
 {
     CHECK_mPath();
 
@@ -945,7 +945,7 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModTime)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModTimeOfLink)
+nsLocalFile::GetLastModificationTimeOfLink(PRInt64 *aLastModTimeOfLink)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTimeOfLink);
@@ -967,9 +967,9 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModTimeOfLink)
  * utime(2) may or may not dereference symlinks, joy.
  */
 NS_IMETHODIMP
-nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModTimeOfLink)
+nsLocalFile::SetLastModificationTimeOfLink(PRInt64 aLastModTimeOfLink)
 {
-    return SetLastModificationDate(aLastModTimeOfLink);
+    return SetLastModificationTime(aLastModTimeOfLink);
 }
 
 /*

@@ -186,8 +186,8 @@ interface nsIFile : nsISupports
      *  midnight (00:00:00), January 1, 1970 Greenwich Mean
      *  Time (GMT).
      */
-    attribute PRInt64 lastModificationDate;
-    attribute PRInt64 lastModificationDateOfLink;
+    attribute PRInt64 lastModificationTime;
+    attribute PRInt64 lastModificationTimeOfLink;
 
     /**
      * WARNING!  On the Mac getting/setting the file size with nsIFile

@@ -3009,7 +3009,7 @@ nsChromeRegistry::CheckForNewChrome()
   rv = allPkgs->Append(kAllPackagesName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 allPkgsDate;
-  (void)allPkgs->GetLastModificationDate(&allPkgsDate.mValue);
+  (void)allPkgs->GetLastModificationTime(&allPkgsDate.mValue);
 
   nsCOMPtr<nsIFile> allSkns;
   rv = listFile->Clone(getter_AddRefs(allSkns));
@@ -3017,7 +3017,7 @@ nsChromeRegistry::CheckForNewChrome()
   rv = allSkns->Append(kAllSkinsName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 allSknsDate;
-  (void)allSkns->GetLastModificationDate(&allSknsDate.mValue);
+  (void)allSkns->GetLastModificationTime(&allSknsDate.mValue);
 
   nsCOMPtr<nsIFile> allLocs;
   rv = listFile->Clone(getter_AddRefs(allLocs));
@@ -3025,12 +3025,12 @@ nsChromeRegistry::CheckForNewChrome()
   rv = allLocs->Append(kAllLocalesName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 allLocsDate;
-  (void)allLocs->GetLastModificationDate(&allLocsDate.mValue);
+  (void)allLocs->GetLastModificationTime(&allLocsDate.mValue);
 
   rv = listFile->AppendRelativePath(kInstalledChromeFileName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 listFileDate;
-  (void)listFile->GetLastModificationDate(&listFileDate.mValue);
+  (void)listFile->GetLastModificationTime(&listFileDate.mValue);
 
   if (listFileDate < allPkgsDate &&
       listFileDate < allSknsDate &&

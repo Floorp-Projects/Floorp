@@ -406,7 +406,7 @@ static void MacintoshInitializeTime(void)
     gJanuaryFirst1970Seconds = 2082844800 + GMTDelta();
 }
 
-static nsresult	ConvertMacTimeToMilliseconds( PRInt64* aLastModificationDate, PRUint32 timestamp )
+static nsresult	ConvertMacTimeToMilliseconds( PRInt64* aLastModificationTime, PRUint32 timestamp )
 {
 	if ( gJanuaryFirst1970Seconds == 0)
 		MacintoshInitializeTime();
@@ -414,7 +414,7 @@ static nsresult	ConvertMacTimeToMilliseconds( PRInt64* aLastModificationDate, PR
     PRTime usecPerSec, dateInMicroSeconds;
 	LL_I2L(dateInMicroSeconds, timestamp);
 	LL_I2L(usecPerSec, PR_MSEC_PER_SEC);
-	LL_MUL(*aLastModificationDate, usecPerSec, dateInMicroSeconds);
+	LL_MUL(*aLastModificationTime, usecPerSec, dateInMicroSeconds);
 	return NS_OK;
 }
 
@@ -1859,9 +1859,9 @@ nsLocalFile::Remove(PRBool recursive)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
+nsLocalFile::GetLastModificationTime(PRInt64 *aLastModificationTime)
 {
-	NS_ENSURE_ARG(aLastModificationDate);
+	NS_ENSURE_ARG(aLastModificationTime);
 	nsresult rv = ResolveAndStat( PR_TRUE );
 	if ( NS_FAILED( rv ) )
 		return rv;
@@ -1873,11 +1873,11 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
 	else
 		timestamp = 0;
 	
-  return ConvertMacTimeToMilliseconds( aLastModificationDate, timestamp );
+  return ConvertMacTimeToMilliseconds( aLastModificationTime, timestamp );
 }
 
 NS_IMETHODIMP  
-nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
+nsLocalFile::SetLastModificationTime(PRInt64 aLastModificationTime)
 {
 	MakeDirty();
 	nsresult rv = ResolveAndStat( PR_TRUE );
@@ -1889,7 +1889,7 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
 	OSErr err = noErr;
 	PRBool bIsDir = PR_FALSE;
 	
-	ConvertMillisecondsToMacTime(aLastModificationDate, &macTime);
+	ConvertMillisecondsToMacTime(aLastModificationTime, &macTime);
 	rv = IsDirectory(&bIsDir);
 	if ( NS_FAILED(rv) )
 		return rv;
@@ -1917,18 +1917,18 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
+nsLocalFile::GetLastModificationTimeOfLink(PRInt64 *aLastModificationTime)
 {
-	NS_ENSURE_ARG(aLastModificationDate);
+	NS_ENSURE_ARG(aLastModificationTime);
 	
-	*aLastModificationDate = LL_Zero();
+	*aLastModificationTime = LL_Zero();
 
 	NS_ASSERTION(0, "Not implemented");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP  
-nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
+nsLocalFile::SetLastModificationTimeOfLink(PRInt64 aLastModificationTime)
 {
 	MakeDirty();
 

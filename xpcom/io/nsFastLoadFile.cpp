@@ -742,7 +742,7 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
             return rv;
 
         PRInt64 currentMtime;
-        rv = file->GetLastModificationDate(&currentMtime);
+        rv = file->GetLastModificationTime(&currentMtime);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1506,7 +1506,7 @@ nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
         if (!tmp)
             return NS_ERROR_OUT_OF_MEMORY;
         entry->mString = NS_REINTERPRET_CAST(const char*, tmp);
-        rv = aFile->GetLastModificationDate(&entry->mLastModified);
+        rv = aFile->GetLastModificationTime(&entry->mLastModified);
     }
     return rv;
 }
