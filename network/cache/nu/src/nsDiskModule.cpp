@@ -386,13 +386,6 @@ PRBool nsDiskModule::ReduceSizeTo(const PRUint32 i_NewSize)
         if (nObjectsToFree < 1)
             nObjectsToFree = 1;
 
-        //TODO
-        /*
-        if (Contains("http://gagan/"))
-        {
-            Remove(GetObject("http://gagan/"));
-        }
-        */
         while (nObjectsToFree > 0)
         {
             Remove(LRUObject(m_pDB));
