@@ -887,10 +887,8 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 }
 
 void
-nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
+nsInlineReflow::TrimTrailingWhiteSpace(nsRect& aLineBox)
 {
-  // Before we start, trim any trailing whitespace off of the last
-  // frame in the line.
   nscoord deltaWidth;
   PerFrameData* pfd = mFrameDataBase + (mFrameNum - 1);
   if (pfd->mBounds.width > 0) {
@@ -904,7 +902,11 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
       pfd->mBounds.width -= deltaWidth;
     }
   }
+}
 
+void
+nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
+{
   const nsStyleText* styleText = mOuterReflowState.mStyleText;
   nscoord maxWidth = mRightEdge - mLeftEdge;
   if (aLineBox.width < maxWidth) {
@@ -946,7 +948,7 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
 
     if (0 != dx) {
       // Position children
-      pfd = mFrameDataBase;
+      PerFrameData* pfd = mFrameDataBase;
       PerFrameData* end = pfd + mFrameNum;
       nsPoint origin;
       for (; pfd < end; pfd++) {
