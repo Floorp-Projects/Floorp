@@ -357,8 +357,9 @@ function SetPixelOrPercentByID(elementID, percentString)
 // USE onkeyup!
 // forceInteger by petejc (pete@postpagan.com)
 
-var sysBeep = Components.classes["component://netscape/sound"].createInstance();
-sysBeep     = sysBeep.QueryInterface(Components.interfaces.nsISound);
+// No one likes the beep!
+//var sysBeep = Components.classes["component://netscape/sound"].createInstance();
+//sysBeep     = sysBeep.QueryInterface(Components.interfaces.nsISound);
 
 function forceInteger(elementID)
 {
@@ -375,7 +376,7 @@ function forceInteger(elementID)
     // we hope to remove the following line for blur() once xp widgets land
     // cmanske (9/15) testing this now that GFX ender widget is active
     //editField.blur();
-    sysBeep.Beep();
+    //sysBeep.Beep();
   }
 }
 

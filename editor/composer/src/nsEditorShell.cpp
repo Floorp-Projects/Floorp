@@ -3256,11 +3256,15 @@ nsEditorShell::GetCellAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 
 NS_IMETHODIMP    
 nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 colIndex,
                              PRInt32 *aStartRowIndex, PRInt32 *aStartColIndex, 
-                             PRInt32 *aRowSpan, PRInt32 *aColSpan, PRBool *aIsSelected, nsIDOMElement **_retval)
+                             PRInt32 *aRowSpan, PRInt32 *aColSpan, 
+                             PRInt32 *aActualRowSpan, PRInt32 *aActualColSpan, 
+                             PRBool *aIsSelected, nsIDOMElement **_retval)
 {
   if (!_retval || 
       !aStartRowIndex || !aStartColIndex || 
-      !aRowSpan || !aColSpan || !aIsSelected )
+      !aRowSpan || !aColSpan || 
+      !aActualRowSpan || !aActualColSpan ||
+      !aIsSelected )
     return NS_ERROR_NULL_POINTER;
 
   nsresult  result = NS_NOINTERFACE;
@@ -3271,7 +3275,10 @@ nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRIn
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
           result = tableEditor->GetCellDataAt(tableElement, rowIndex, colIndex, *_retval,
-                                              *aStartRowIndex, *aStartColIndex, *aRowSpan, *aColSpan, *aIsSelected);
+                                              *aStartRowIndex, *aStartColIndex, 
+                                              *aRowSpan, *aColSpan, 
+                                              *aActualRowSpan, *aActualColSpan,
+                                              *aIsSelected);
       }
       break;
     default:

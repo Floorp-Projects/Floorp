@@ -24,52 +24,38 @@
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
-
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdDictionary.js">
-  </script>
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdDictionary.js"/>
 
-  <xul:broadcaster id="args" value=""/>
-  <table>
-    <tr>
-      <td colspan="2">
-        &wordEditField.label;<br/>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <input type="text" class="SpellCheckWord" id="WordInput" size="10"/>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="AddWord" onclick="AddWord()" value="&AddButton.label;"/>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        &DictionaryList.label;
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <select class="SpellCheckList" id="DictionaryList" size="10">
-        </select>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="ReplaceWord" onclick="ReplaceWord()" value="&ReplaceButton.label;"/>
-        <br/>
-        <xul:titledbutton class="push SizeToParent"  id="RemoveWord" onclick="RemoveWord()" value="&RemoveButton.label;"/>
-        <br/>
-        <!-- This simply closes the window -->
-        <xul:titledbutton class="push CloseButton"  id="Close" onclick="onCancel()" value="&CloseButton.label;"/>
-      </td>
-    </tr>
-  </table>
-</xul:window>
+  <broadcaster id="args" value=""/>
+
+<box align="vertical">
+  <html:label for="WordInput">&wordEditField.label;</html:label>
+  <box align="horizontal">
+    <html:input type="text" class="SpellCheckWord" id="WordInput"/>
+    <spring class="bigspacer"/>
+    <titledbutton class="push SizeToParent" flex="100%" id="AddWord" onclick="AddWord()" value="&AddButton.label;"/>
+  </box>
+  <spring class="bigspacer"/>
+  <html:label for="WordInput">&DictionaryList.label;</html:label>
+  <spring class="bigspacer"/>
+  <box align="horizontal">
+    <html:select class="SpellCheckList" id="DictionaryList" size="10"/>
+    <spring class="bigspacer"/>
+    <box align="vertical">
+      <titledbutton class="push SizeToParent"  id="ReplaceWord" onclick="ReplaceWord()" value="&ReplaceButton.label;"/>
+      <spring class="spacer"/>
+      <titledbutton class="push SizeToParent"  id="RemoveWord" onclick="RemoveWord()" value="&RemoveButton.label;"/>
+      <spring flex="100%"/>
+      <titledbutton class="push CloseButton"  id="Close" onclick="onCancel()" value="&CloseButton.label;"/>
+    </box>
+  </box>
+</box>
+</window>

@@ -7246,3 +7246,48 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection)
   return result;
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
+                                      const nsString   *aTagName,
+                                      nsIDOMElement   **aReturn)
+{
+  nsresult res = NS_OK;
+  if (!aCurrentElement || !aTagName || !aReturn)
+    return NS_ERROR_NULL_POINTER;
+
+  nsIAtom *tagAtom = NS_NewAtom(*aTagName);
+  if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
+  if (tagAtom==nsIEditProperty::th)
+    tagAtom=nsIEditProperty::td;
+
+  nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(aCurrentElement);
+  if (!currentNode)
+    return NS_ERROR_FAILURE;
+
+  *aReturn = nsnull;
+
+  nsCOMPtr<nsIDOMNode> nextNode;
+  PRBool done = PR_FALSE;
+
+  do {
+    res = GetNextNode(currentNode, PR_TRUE, getter_AddRefs(nextNode));
+    if (NS_FAILED(res)) return res;
+    if (!nextNode) break;
+
+    nsCOMPtr<nsIAtom> atom = GetTag(currentNode);
+
+    if (tagAtom==atom)
+    {
+      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(currentNode);
+      if (!element) return NS_ERROR_NULL_POINTER;
+
+      *aReturn = element;
+      NS_ADDREF(*aReturn);
+      done = PR_TRUE;
+      return NS_OK;
+    }
+    currentNode = nextNode;
+  } while (!done);
+
+  return res;
+}
