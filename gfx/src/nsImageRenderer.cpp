@@ -192,7 +192,6 @@ ImageRendererImpl::ControlPixmapBits(void* aDisplayContext,
 void 
 ImageRendererImpl::DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)
 {
-  nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
   nsIImage *img = (nsIImage *)aImage->client_data;
 
   aImage->client_data = nsnull;
