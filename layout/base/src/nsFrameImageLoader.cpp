@@ -28,8 +28,6 @@
 #include "nsString.h"
 #include "prlog.h"
 
-#undef NOISY
-
 static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
 static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -178,9 +176,6 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
 
   switch (aNotificationType) {
   case nsImageNotification_kDimensions:
-#ifdef NOISY
-    printf("image for %p: %d x %d\n", mTargetFrame, aParam1, aParam2);
-#endif
     mSize.width = aParam1;
     mSize.height = aParam2;
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE;
