@@ -741,8 +741,10 @@ function sidebar_overlay_init() {
     }
 
     // for old profiles that don't persist the hidden attribute when splitter is not hidden.
-    document.getElementById('sidebar-splitter').setAttribute('hidden', 'false');
-
+    var sidebar_splitter = document.getElementById('sidebar-splitter')
+    if (sidebar_splitter)
+      sidebar_splitter.setAttribute('hidden', 'false');
+    
     if (sidebarObj.never_built) {
       sidebarObj.never_built = false;
       
