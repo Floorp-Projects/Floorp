@@ -36,6 +36,7 @@ $DEBUG					= 0;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
 $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
+$INCLUDE_CLASSIC_SKIN = 1; 
 
 $pull{all} 				= 0;
 $pull{moz}				= 0;
