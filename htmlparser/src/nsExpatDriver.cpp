@@ -699,10 +699,11 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
 {
   nsresult rv;
   nsCOMPtr<nsIURI> baseURI;  
-  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUCS2toUTF8(aBaseURL).get());
+  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUTF16toUTF8(aBaseURL));
   if (NS_SUCCEEDED(rv) && baseURI) {
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aURLStr).get(), baseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(aURLStr), nsnull,
+                   baseURI);
     if (NS_SUCCEEDED(rv) && uri) {
       // check if it is alright to load this uri
       PRBool isChrome = PR_FALSE;
@@ -721,7 +722,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
       rv = NS_OpenURI(in, uri);
       nsCAutoString absURL;
       uri->GetSpec(absURL);
-      aAbsURL = NS_ConvertUTF8toUCS2(absURL);
+      CopyUTF8toUTF16(absURL, aAbsURL);
     }
   }
   return rv;
