@@ -234,6 +234,8 @@ int CRDFOutliner::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
     int iRetVal = COutliner::OnCreate(lpCreateStruct);
 	DragAcceptFiles(FALSE);
+    // RDF widget only take UTF8 
+    SetCSID(CS_UTF8);	
     return iRetVal;
 }
 
@@ -1284,7 +1286,6 @@ int CRDFOutliner::DetermineClickLocation(CPoint point)
 
 	// All this code just determines our text rectangle.
 	CClientDC dc(this);
-	CString theString(text);
 	CRect bgRect;
 	dc.SelectObject( GetLineFont( r ) );
 	UINT dwDTFormat = DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER;
@@ -1301,7 +1302,7 @@ int CRDFOutliner::DetermineClickLocation(CPoint point)
 			dwDTFormat |= DT_LEFT;
 	}
 		
-	dc.DrawText(theString, theString.GetLength(), &bgRect, DT_CALCRECT | dwDTFormat);
+	CIntlWin::DrawText(CS_UTF8, dc, (char*)text, -1, &bgRect, DT_CALCRECT | dwDTFormat);
 	int w = bgRect.Width() + 2*COL_LEFT_MARGIN;
 	if (w > textRect.Width())
 		w = textRect.Width();
@@ -2575,10 +2576,9 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 	textRect.bottom -= 2; // Account for the slight padding and the divider line.
 
 	CRect bgRect;
-	CString theString(lpszString);
 
 	// Compute background rectangle
-	DrawText(hdc, theString, theString.GetLength(), &bgRect, DT_CALCRECT | dwDTFormat);
+	CIntlWin::DrawText(CS_UTF8, hdc, (char*)lpszString, -1, &bgRect, DT_CALCRECT | dwDTFormat);
 	int w = bgRect.Width() + 2*COL_LEFT_MARGIN;
 	if (w > textRect.Width())
 		w = textRect.Width();
@@ -2610,7 +2610,7 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 	textRect.left += COL_LEFT_MARGIN;
 	textRect.right -= COL_LEFT_MARGIN;
 
-	WFE_DrawTextEx( m_iCSID, hdc, (LPTSTR) lpszString, iLength, &textRect, dwDTFormat, dwMoreFormat );
+	WFE_DrawTextEx( CS_UTF8, hdc, (LPTSTR) lpszString, iLength, &textRect, dwDTFormat, dwMoreFormat );
 }
 
 int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void * pLineData )
@@ -3916,7 +3916,7 @@ BOOL CRDFOutlinerParent::RenderData( int iColumn, CRect & rect, CDC &dc, LPCTSTR
 							   (rect.top + rect.bottom) / 2 - 4,
 							   &dc );
 
-	WFE_DrawTextEx( 0, dc.m_hDC, (LPTSTR) text, -1, 
+	WFE_DrawTextEx( CS_UTF8, dc.m_hDC, (LPTSTR) text, -1, 
 					&rectText, dwDTFormat, WFE_DT_CROPRIGHT );
 
     return TRUE;

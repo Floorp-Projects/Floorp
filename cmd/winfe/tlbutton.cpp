@@ -682,7 +682,8 @@ void CToolbarButton::AddTextEdit(void)
 		{
 			CRect rect;
 			HDC hDC = ::GetDC(m_hWnd);
-			HFONT hFont = WFE_GetUIFont(hDC);
+			//HFONT hFont = WFE_GetUIFont(hDC);
+			HFONT hFont = this->GetFont(hDC);
 			HFONT hOldFont = (HFONT)::SelectObject(hDC, hFont);
 			TEXTMETRIC tm;
 
@@ -711,7 +712,8 @@ void CToolbarButton::AddTextEdit(void)
 				m_pTextEdit->ShowWindow(SW_SHOW);
 				HDC hDC = ::GetDC(m_hWnd);
 
-				HFONT hFont = WFE_GetUIFont(hDC);
+				//HFONT hFont = WFE_GetUIFont(hDC);
+				HFONT hFont = this->GetFont(hDC);
 				CFont *font = (CFont*) CFont::FromHandle(hFont);
 				m_pTextEdit->SetFont(font);
 				::ReleaseDC(m_hWnd, hDC);
@@ -1353,19 +1355,21 @@ void CToolbarButton::DrawBitmapOnTop(HDC hDC, CRect rect)
 	// hold both text and graphics.
 	CString strTxt(m_pButtonText);
 
+	// Bad I18N Code follow, need to change
 	if(m_nMaxTextChars != SHOW_ALL_CHARACTERS)
 	{
 		 strTxt = strTxt.Left(m_nMaxTextChars);
 	}
 
-	HFONT font = WFE_GetUIFont(hDC);
+	//HFONT hFont = WFE_GetUIFont(hDC);
+	HFONT font = this->GetFont(hDC);
 
 	HFONT hOldFont = (HFONT)::SelectObject(hDC, font);
 
 	SIZE sizeTxt;
 
 	CRect sizeRect(0,0,150,0);
-	::DrawText(hDC, strTxt, strTxt.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
+	this->DrawText(hDC, strTxt, strTxt.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
 	sizeTxt.cx = sizeRect.Width();
 	sizeTxt.cy = sizeRect.Height();
 
@@ -1391,23 +1395,19 @@ void CToolbarButton::DrawBitmapOnSide(HDC hDC, CRect rect)
 
 	CString strTxt(m_pButtonText);
 
+	// Bad I18N Code follow, need to change
 	if(m_nMaxTextChars != SHOW_ALL_CHARACTERS)
 	{
 		 strTxt = strTxt.Left(m_nMaxTextChars);
 	}
 
-	HFONT font = WFE_GetUIFont(hDC);
+	//HFONT hFont = WFE_GetUIFont(hDC);
+	HFONT font = this->GetFont(hDC);
 
 	HFONT hOldFont = (HFONT)::SelectObject(hDC, font);
 
 	SIZE sizeTxt;
-#if defined (WIN32)
-	::GetTextExtentPoint32(hDC, (LPCSTR)strTxt, strTxt.GetLength(), &sizeTxt);
-#else
-	DWORD dwSize = ::GetTextExtent(hDC, (LPCSTR)strTxt, strTxt.GetLength());
-	sizeTxt.cx = LOWORD(dwSize);
-	sizeTxt.cy = HIWORD(dwSize);
-#endif
+	this->GetTextExtentPoint32(hDC, (LPCSTR)strTxt, strTxt.GetLength(), &sizeTxt);
 
 	CRect txtRect = rect;
 
@@ -1423,12 +1423,14 @@ void CToolbarButton::DrawTextOnly(HDC hDC, CRect rect)
 
 	CString strTxt(m_pButtonText);
 
+	// Bad I18N Code follow, need to change
 	if(m_nMaxTextChars != SHOW_ALL_CHARACTERS)
 	{
 		 strTxt = strTxt.Left(m_nMaxTextChars);
 	}
 
-	HFONT font = WFE_GetUIFont(hDC);
+	//HFONT hFont = WFE_GetUIFont(hDC);
+	HFONT font = this->GetFont(hDC);
 
 	HFONT hOldFont = (HFONT)::SelectObject(hDC, font);
 
@@ -1436,7 +1438,7 @@ void CToolbarButton::DrawTextOnly(HDC hDC, CRect rect)
 	SIZE sizeTxt;
 
 	CRect sizeRect(0,0,150,0);
-	::DrawText(hDC, strTxt, strTxt.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
+	this->DrawText(hDC, strTxt, strTxt.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
 	sizeTxt.cx = sizeRect.Width();
 	sizeTxt.cy = sizeRect.Height();
 
@@ -1479,7 +1481,7 @@ void CToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString
 			oldColor = ::SetTextColor(hDC, RGB(0, 0, 255));
 		}
 
-		DrawText(hDC, (LPCSTR)strTxt, -1, &rcTxt, DT_CENTER | DT_EXTERNALLEADING | nFormat);
+		this->DrawText(hDC, (LPCSTR)strTxt, -1, &rcTxt, DT_CENTER | DT_EXTERNALLEADING | nFormat);
 
 		::SetTextColor(hDC, oldColor);
 	}
@@ -1493,6 +1495,9 @@ void CToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString
 
 		CRect textBackgroundRect = textRect;
 
+#if 0 
+// DrawState with DST_TEXT is not Unicode friendly on Win95
+// So we should not use it.
 #ifdef XP_WIN32
 		if(sysInfo.m_bWin4)
 		{
@@ -1508,6 +1513,7 @@ void CToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString
 		}
 		else
 #endif
+#endif
 		{
 			UINT nFormat = strTxt.Find('\n') != -1 ? 0 : DT_SINGLELINE;
 
@@ -1515,9 +1521,9 @@ void CToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString
 			textBackgroundRect.top +=1;
 			
 			COLORREF oldColor = ::SetTextColor(hDC,  GetSysColor(COLOR_BTNHIGHLIGHT )); // white
-			::DrawText( hDC, (LPCSTR) strTxt, -1, &textBackgroundRect,   DT_EXTERNALLEADING | nFormat);
+			this->DrawText( hDC, (LPCSTR) strTxt, -1, &textBackgroundRect,   DT_EXTERNALLEADING | nFormat);
 			::SetTextColor(hDC, GetSysColor( COLOR_GRAYTEXT ) );
-			::DrawText(hDC, (LPCSTR) strTxt, -1, &textRect,   DT_EXTERNALLEADING | nFormat);
+			this->DrawText(hDC, (LPCSTR) strTxt, -1, &textRect,   DT_EXTERNALLEADING | nFormat);
 			::SetTextColor(hDC, oldColor );
 		}
 	}
@@ -1753,12 +1759,14 @@ CSize CToolbarButton::GetBitmapOnTopSize(CString strTxt, int c)
 	}
 	else if(c != SHOW_ALL_CHARACTERS)
 	{
+	// Bad I18N Code follow, need to change
          if (strTxt.GetLength() > c)
              strTxt = strTxt.Left(c - 3) + "...";
          else strTxt = strTxt.Left(c);
 	}
 
-	HFONT font = WFE_GetUIFont(hDC);
+	//HFONT hFont = WFE_GetUIFont(hDC);
+	HFONT font = this->GetFont(hDC);
 
 	HFONT hOldFont = (HFONT)::SelectObject(hDC, font);
 	
@@ -1770,7 +1778,7 @@ CSize CToolbarButton::GetBitmapOnTopSize(CString strTxt, int c)
 		sizeTxt.cx = sizeTxt.cy = 0;
 	else
 	{
-		DrawText(hDC, strTxt, strTxt.GetLength(), &textRect, DT_CALCRECT | DT_WORDBREAK);
+		this->DrawText(hDC, strTxt, strTxt.GetLength(), &textRect, DT_CALCRECT | DT_WORDBREAK);
 		sizeTxt.cx = textRect.Width();
 		sizeTxt.cy = textRect.Height();
 	}
@@ -1806,6 +1814,7 @@ CSize CToolbarButton::GetBitmapOnSideSize(CString strTxt, int c)
 
 	HDC hDC = ::GetDC(m_hWnd);
 
+	// Bad I18N Code follow, need to change
 	if(c != SHOW_ALL_CHARACTERS)
 	{
          if (strTxt.GetLength() > c)
@@ -1813,18 +1822,13 @@ CSize CToolbarButton::GetBitmapOnSideSize(CString strTxt, int c)
          else strTxt = strTxt.Left(c);
 	}
 
-	HFONT font = WFE_GetUIFont(hDC);
+	//HFONT hFont = WFE_GetUIFont(hDC);
+	HFONT font = this->GetFont(hDC);
 
 	HFONT hOldFont = (HFONT)::SelectObject(hDC, font);
 	
 	SIZE sizeTxt;
-#if defined (_WIN32)
-	::GetTextExtentPoint32(hDC, (LPCSTR)strTxt, strTxt.GetLength(), &sizeTxt);
-#else
-	DWORD dwSize = ::GetTextExtent(hDC, (LPCSTR)strTxt, strTxt.GetLength());
-	sizeTxt.cx = LOWORD(dwSize);
-	sizeTxt.cy = HIWORD(dwSize);
-#endif
+	this->GetTextExtentPoint32(hDC, (LPCSTR)strTxt, strTxt.GetLength(), &sizeTxt);
 
 	::SelectObject(hDC, hOldFont);
 
@@ -1842,6 +1846,7 @@ CSize CToolbarButton::GetTextOnlySize(CString strTxt, int c)
 
 	HDC hDC = ::GetDC(m_hWnd);
 
+	// Bad I18N Code follow, need to change
 	if(c != SHOW_ALL_CHARACTERS)
 	{
          if (strTxt.GetLength() > c)
@@ -1849,7 +1854,8 @@ CSize CToolbarButton::GetTextOnlySize(CString strTxt, int c)
          else strTxt = strTxt.Left(c);
 	}
 
-	HFONT font = WFE_GetUIFont(hDC);
+	//HFONT hFont = WFE_GetUIFont(hDC);
+	HFONT font = this->GetFont(hDC);
 
 	HFONT hOldFont = (HFONT)::SelectObject(hDC, font);
 	
@@ -1861,7 +1867,7 @@ CSize CToolbarButton::GetTextOnlySize(CString strTxt, int c)
 		sizeTxt.cx = sizeTxt.cy = 0;
 	else
 	{
-		DrawText(hDC, strTxt, strTxt.GetLength(), &textRect, DT_CALCRECT | DT_WORDBREAK);
+		this->DrawText(hDC, strTxt, strTxt.GetLength(), &textRect, DT_CALCRECT | DT_WORDBREAK);
 
 		sizeTxt.cx = textRect.Width();
 		sizeTxt.cy = textRect.Height();
@@ -2061,6 +2067,29 @@ CSize CToolbarButton::GetTextOnlySize(CString strTxt, int c)
  {
 		
  }
+
+ HFONT CToolbarButton::GetFont(HDC hDC)
+ {
+	return WFE_GetUIFont(hDC);
+ }
+
+ int CToolbarButton::DrawText(HDC hDC, LPCSTR lpString, int nCount, LPRECT lpRect, UINT uFormat)
+ {
+	return ::DrawText(hDC, lpString, nCount, lpRect, uFormat);
+ }
+
+BOOL CToolbarButton::GetTextExtentPoint32(HDC hDC, LPCSTR lpString, int nCount, LPSIZE lpSize)
+ {
+#if defined (WIN32)
+	return ::GetTextExtentPoint32(hDC, lpString, nCount, lpSize);
+#else
+	DWORD dwSize = ::GetTextExtent(hDC, lpString, nCount);
+	lpSize->cx = LOWORD(dwSize);
+	lpSize->cy = HIWORD(dwSize);
+	return TRUE;
+#endif
+ }
+
 
  void CToolbarButton::GetBitmapOnSideTextRect(CRect &rect)
  {

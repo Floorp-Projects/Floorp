@@ -332,6 +332,10 @@ protected:
 		return point;
 	}
 
+	virtual HFONT GetFont(HDC hDC);
+	virtual int DrawText(HDC hDC, LPCSTR lpString, int nCount, LPRECT lpRect, UINT uFormat);
+	virtual BOOL GetTextExtentPoint32(HDC hDC, LPCSTR lpString, int nCount, LPSIZE lpSize);
+
 	// Generated message map functions
 	//{{AFX_MSG(CToolbarButton)
 	afx_msg void OnPaint();
