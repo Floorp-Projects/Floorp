@@ -199,8 +199,8 @@ ssl_cov()
           is_selfserv_alive
           echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
           echo "        -f -d . < ${REQUEST_FILE}"
-          if [ `uname -n` = "dump" ] ; then
-              echo "workaround for dump to avoid client and server writes at "
+          if [ `uname -s` = "HP-UX" ] ; then
+              echo "workaround for HP-UX to avoid client and server writes at "
               echo "       the same time"
               rm ${TMP}/dump.tmp.$$ 2>/dev/null
               tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
