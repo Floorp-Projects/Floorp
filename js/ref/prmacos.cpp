@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <Errors.h>
 
 #include "prtypes.h"
 #include "prmacos.h"
@@ -73,6 +74,15 @@ static jint MRJ_DestroyJavaVM(JavaVM* javaVM)
 	return -1;
 }
 
+static void shutdownJava()
+{
+	// Toss the Java session.
+	if (theSession != NULL) {
+		delete theSession;
+		theSession = NULL;
+	}
+}
+
 jint JNICALL JNI_CreateJavaVM(JavaVM** outVM, JNIEnv ** outEnv, void* args)
 {
 	int result = -1;
@@ -82,6 +92,14 @@ jint JNICALL JNI_CreateJavaVM(JavaVM** outVM, JNIEnv ** outEnv, void* args)
 	try {
 		if (theSession == NULL)
 			theSession = new JavaSession();
+		if (theSession == NULL)
+			throw(OSStatusException(memFullErr));
+		
+		// Make sure that the JavaSession is torn down at the end of execution.
+		// If the user chooses "Quit" from the file menu, this guarantees
+		// the shutdown will happen.
+		atexit(&shutdownJava);
+		
 		JNIEnv* env = theSession->getEnv();
 		JavaVM* javaVM = NULL;
 		result = env->GetJavaVM(&javaVM);
@@ -89,7 +107,9 @@ jint JNICALL JNI_CreateJavaVM(JavaVM** outVM, JNIEnv ** outEnv, void* args)
 			*outEnv = env;
 			*outVM = javaVM;
 
-			// patch the JavaVM so it won't actually destroy itself. This crashes MRJ right now.
+			// Patch the JavaVM so it won't actually destroy itself.
+			// If we don't do this, MRJ crashest at exit.
+			// The functions are restored when DestoryJavaVM is called.
 			theActualFunctions = javaVM->functions;
 			thePatchedFunctions = *theActualFunctions;
 			thePatchedFunctions.DestroyJavaVM = MRJ_DestroyJavaVM;
