@@ -21,7 +21,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(A6CF90C3-15B3-11D2-932E-00805F8ADD32)]
+[scriptable, uuid(a6cf90c3-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMUIEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMAbstractView view;
