@@ -220,7 +220,7 @@ bool nsToolkit::sInForeground = true;
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit() : mInited(false)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   
   if ( !gEventQueueHandler )
     gEventQueueHandler = [[[EventQueueHandler alloc] init] autorelease];

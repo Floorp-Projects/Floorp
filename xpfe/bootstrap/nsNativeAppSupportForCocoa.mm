@@ -84,7 +84,7 @@ protected:
 nsSplashScreenCocoa::nsSplashScreenCocoa()
 : mDialog(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 
