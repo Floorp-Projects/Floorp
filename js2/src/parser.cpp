@@ -969,16 +969,20 @@ namespace JavaScript
     {
         fn.prefix = FunctionName::normal;
         const Token *t = &lexer.get(true);
-        if (t->hasKind(Token::Get) || t->hasKind(Token::Set)) {
-            const Token *t2 = &lexer.peek(true);
-            if (!lineBreakBefore(*t2) && t2->getFlag(Token::canFollowGet)) {
-                fn.prefix = t->hasKind(Token::Get) ? FunctionName::Get :
-                    FunctionName::Set;
-                t = &lexer.get(true);
-            }
+        if (t->hasKind(Token::string)) {
+            fn.name = NodeFactory::LiteralString(t->getPos(),ExprNode::string,copyTokenChars(*t));
         }
-        
-        fn.name = parseQualifiedIdentifier(*t, true);
+        else {
+            if (t->hasKind(Token::Get) || t->hasKind(Token::Set)) {
+                const Token *t2 = &lexer.peek(true);
+                if (!lineBreakBefore(*t2) && t2->getFlag(Token::canFollowGet)) {
+                    fn.prefix = t->hasKind(Token::Get) ? FunctionName::Get :
+                        FunctionName::Set;
+                    t = &lexer.get(true);
+                }
+            }        
+            fn.name = parseQualifiedIdentifier(*t, true);
+        }
     }
 
 

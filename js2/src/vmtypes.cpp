@@ -181,6 +181,9 @@ Formatter& operator<< (Formatter& f, JSTypes::Operator& op)
     f << "BitXor"; break;
     case JSTypes::BitOr:
     f << "BitOr"; break;
+    default:
+        NOT_REACHED("Bad op");
+        break;
     }
     return f;
 }

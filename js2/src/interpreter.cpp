@@ -813,6 +813,41 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
 
             case INVOKE_CALL:
+                {
+                    // the call operator has been invoked, see if it's overridden
+                    // for the target
+                    InvokeCall* call = static_cast<InvokeCall*>(instruction);
+                    JSValue v = (*registers)[op2(call).first];
+                    JSClass *clazz = v.isObject() ? dynamic_cast<JSClass*>(v.object->getType()) : NULL;
+                    JSFunction *target = NULL;
+                    if (clazz) {
+                        JSOperator *candidate = clazz->findUnaryOperator(JSTypes::Call);
+                        if (candidate) {
+                            target = candidate->mFunction;
+                            if (invokeFunction(target, registers, op1(call), v, op3(call))) {
+                                endPC = mICode->its_iCode->end();
+                                continue;
+                            }
+                        }
+                    }
+                    if (v.isFunction())
+                        target = v.function;
+                    else
+                        if (v.isObject()) {
+                            JSType *t = dynamic_cast<JSType*>(v.object);
+                            if (t)
+                                target = t->getInvokor();
+                        }
+                    if (!target)
+                        throw new JSException("Call to non callable object");
+
+                    if (invokeFunction(target, registers, op1(call), target->getThis(), op3(call))) {
+                        endPC = mICode->its_iCode->end();
+                        continue;
+                    }
+                }
+                break;
+
             case DIRECT_CALL:
                 {
                     DirectCall* call = static_cast<DirectCall*>(instruction);

@@ -229,7 +229,6 @@ bool ICodeGenerator::resolveIdentifier(const StringAtom &name, Reference &ref, b
         else {
             if (mClass) {   // we're compiling a method of a class
                 // look for static references first
-                bool isConstructor = false;
                 if (isStaticName(mClass, name, ref)) {
                     return true;
                 }
@@ -429,7 +428,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     ICodeOp dblOp;
     JSTypes::Operator op;
     TypedRegister ret(NotARegister, &None_Type);
-    ICodeOp xOp = ADD;
     switch (p->getKind()) {
     case ExprNode::True:
         if (trueBranch || falseBranch) {
