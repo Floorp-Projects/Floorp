@@ -70,7 +70,7 @@ EXPORTS2= \
 	nsIDOMHTMLOListElement.h \
 	nsIDOMHTMLObjectElement.h \
 	nsIDOMHTMLOptGroupElement.h \
-	nsIDOMHTMLOptionCollection.h \
+	nsIDOMNSHTMLOptionCollection.h \
 	nsIDOMHTMLOptionElement.h \
 	nsIDOMHTMLParagraphElement.h \
 	nsIDOMHTMLParamElement.h \
