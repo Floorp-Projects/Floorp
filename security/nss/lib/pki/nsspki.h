@@ -35,7 +35,7 @@
 #define NSSPKI_H
 
 #ifdef DEBUG
-static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.5 $ $Date: 2001/10/12 17:54:50 $ $Name:  $";
+static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.6 $ $Date: 2001/10/17 15:48:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -227,7 +227,15 @@ NSSCertificate_Encode
  * in the "chain" starting from the specified one up to and
  * including the root.  The zeroth element in the array is the
  * specified ("leaf") certificate.
+ *
+ * If statusOpt is supplied, and is returned as PR_FAILURE, possible
+ * error values are:
+ *
+ * NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND - the chain is incomplete
+ *
  */
+
+extern const NSSError NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND;
 
 NSS_EXTERN NSSCertificate **
 NSSCertificate_BuildChain
@@ -238,7 +246,8 @@ NSSCertificate_BuildChain
   NSSPolicies *policiesOpt,
   NSSCertificate **rvOpt,
   PRUint32 rvLimit, /* zero for no limit */
-  NSSArena *arenaOpt
+  NSSArena *arenaOpt,
+  PRStatus *statusOpt
 );
 
 /*

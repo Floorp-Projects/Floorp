@@ -1047,7 +1047,7 @@ loser:
     stanCert = STAN_GetNSSCertificate(cert);
     /* XXX usage */
     stanChain = NSSCertificate_BuildChain(stanCert, NULL, NULL, NULL, NULL,
-                                                    0, NULL);
+                                                    0, NULL, NULL);
     if (!stanChain) {
 	return NULL;
     }
