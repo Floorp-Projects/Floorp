@@ -83,7 +83,6 @@ typedef long int32;
 
 #include "nsIPref.h"
 #include "nsIURL.h"
-#include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebBrowser.h"
 #include "nsIDocShell.h"
@@ -91,6 +90,8 @@ typedef long int32;
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIInterfaceRequestor.h"
