@@ -41,7 +41,7 @@
 function initMunger()
 {
     client.linkRE =
-        /((\w[\w-]+):[^<>\[\]()\'\"\s\u201d]+|www(\.[^.<>\[\]()\'\"\s\u201d]+){2,})/;    
+        /(?:\s|\W|^)((?:(\w[\w-]+):[^\s]+|www(\.[^.\s]+){2,})[^>)\].,!?\'\"\u201d])(?:\s|\W|$)/;
 
     var munger = client.munger = new CMunger();
     // Special internal munger!
