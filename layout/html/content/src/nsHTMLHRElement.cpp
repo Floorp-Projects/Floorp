@@ -130,7 +130,32 @@ nsHTMLHRElement::CloneNode(nsIDOMNode** aReturn)
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align, eSetAttrNotify_Reflow)
+
+#ifdef DEBUG_SET_ATTR
+NS_IMETHODIMP
+nsHTMLHRElement::GetNoShade(PRBool* aValue)
+{
+  nsHTMLValue val;
+  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::noshade, val);
+  *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsHTMLHRElement::SetNoShade(PRBool aValue)
+{
+  nsAutoString empty;
+  if (aValue) {
+    return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
+  }
+  else {
+    mInner.UnsetAttr(nsHTMLAtoms::noshade, eSetAttrNotify_Render);
+    return NS_OK;
+  }
+}
+#else
 NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade, eSetAttrNotify_Render)
+#endif
+
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width, eSetAttrNotify_Reflow)
 
