@@ -54,7 +54,7 @@ use Carp;
 
 $|++;
 
-my $VERSION = "1.5"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.7"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %cmds = 
@@ -234,8 +234,13 @@ sub on_msg
 				}
 			elsif ($arg =~ /^say (.*)/)
 				{
-				$self->privmsg ($channel, $1);
-				return;
+                    my $text = $1;
+                    if ($text =~ m@^/me (.*)@) {
+                        $self->me($channel, $1);
+                    } else {
+                        $self->privmsg ($channel, $text);
+                    }
+                    return;
 				}
 			elsif ($arg =~ /^list$/)
 				{
