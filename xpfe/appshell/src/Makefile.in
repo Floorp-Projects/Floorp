@@ -33,6 +33,9 @@ CPPSRCS= \
 	nsWebShellWindow.cpp	\
 	nsAppShellFactory.cpp	\
 	nsCommandLineService.cpp \
+  nsXPConnectFactory.cpp \
+  nsJSXPConnectFactory.cpp \
+  nsAppShellNameSet.cpp \
 	nsFileLocations.cpp     \
 	$(NULL)
 
