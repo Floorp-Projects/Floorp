@@ -3664,12 +3664,10 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
 
   mimetype = aMimeType;
 
-  nsCAutoString contractID(
-          NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*"));
-  
   GetPluginFactory("*", getter_AddRefs(plugin));
 
-  result = CallCreateInstance(contractID, &instance);
+  result = CallCreateInstance(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*",
+                              &instance);
 
   // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
   if (NS_FAILED(result)) 
