@@ -48,7 +48,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
 else
-	CPPSRCS += nsPluginsDirUNIX.cpp
+	CPPSRCS += nsPluginsDirUnix.cpp
 endif
 endif
 
