@@ -604,6 +604,24 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
     }
   }
 
+  // is the row bogus? If so then just ask it for its size
+  // it should not be affected by cells in the grid. 
+  if (row->mIsBogus)
+  {
+     nsSize size(0,0);
+     nsIBox* box = row->GetBox();
+     if (box) {
+       box->GetPrefSize(aState, size);
+       nsBox::AddMargin(box, size);
+       nsStackLayout::AddOffset(aState, box, size);
+     }
+
+     row->mPref = GET_HEIGHT(size, aIsRow);
+     aSize = row->mPref;
+
+     return NS_OK;
+  }
+
   nsSize size(0,0);
 
   nsGridCell* child;
@@ -673,6 +691,24 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
     }
   }
 
+    // is the row bogus? If so then just ask it for its size
+  // it should not be affected by cells in the grid. 
+  if (row->mIsBogus)
+  {
+     nsSize size(0,0);
+     nsIBox* box = row->GetBox();
+     if (box) {
+       box->GetPrefSize(aState, size);
+       nsBox::AddMargin(box, size);
+       nsStackLayout::AddOffset(aState, box, size);
+     }
+
+     row->mMin = GET_HEIGHT(size, aIsRow);
+     aSize = row->mMin;
+
+     return NS_OK;
+  }
+
   nsSize size(0,0);
 
   nsGridCell* child;
@@ -740,6 +776,24 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
       aSize = row->mMax;
       return NS_OK;
     }
+  }
+
+    // is the row bogus? If so then just ask it for its size
+  // it should not be affected by cells in the grid. 
+  if (row->mIsBogus)
+  {
+     nsSize size(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
+     nsIBox* box = row->GetBox();
+     if (box) {
+       box->GetPrefSize(aState, size);
+       nsBox::AddMargin(box, size);
+       nsStackLayout::AddOffset(aState, box, size);
+     }
+
+     row->mMax = GET_HEIGHT(size, aIsRow);
+     aSize = row->mMax;
+
+     return NS_OK;
   }
 
   nsSize size(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
