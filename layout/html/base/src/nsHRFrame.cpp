@@ -51,7 +51,7 @@
 #include "nsIDeviceContext.h"
 #include "nsStyleUtil.h"
 #include "nsLayoutAtoms.h"
-
+#include "nsILookAndFeel.h"
 
 // default hr thickness in pixels
 #define DEFAULT_THICKNESS 3
@@ -117,6 +117,39 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
+  nsIFrame *parent = nsnull;
+  //hack to get around lack of selection bit setting.
+  GetParent(&parent);//get the parent and check to see if its selected
+  PRBool isSelected = PR_FALSE;
+  if (parent)
+  {
+    nsCOMPtr<nsIContent> content;
+    parent->GetContent(getter_AddRefs(content));
+    nsFrameState  frameState;
+    if (content.get() == mContent)
+      parent->GetFrameState(&frameState);
+    else
+      GetFrameState(&frameState);
+    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+  }
+  if (isSelected) //check the display flags to see if we draw this frame selected.
+  {
+    nsresult result; 
+    nsCOMPtr<nsIPresShell> shell;
+    result = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(result))
+      return result;
+
+    PRInt16 displaySelection = nsISelectionDisplay::DISPLAY_ALL;
+    result = shell->GetSelectionFlags(&displaySelection);
+    if (NS_FAILED(result))
+      return result;
+    if (!(displaySelection & nsISelectionDisplay::DISPLAY_TEXT))
+      isSelected = PR_FALSE;
+  }
+
+
+
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord thickness = mThickness;
@@ -137,7 +170,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
   // three decision criteria: rendering to the printer or the display, is the
   // "Beveled Lines" checkbox set in the page setup dialog, and does the tag
   // have the NOSHADE attribute set.
-	PRBool noShadeAttribute = GetNoShade();
+  PRBool noShadeAttribute = GetNoShade();
 
   // Now that we have the data to make the shading criteria, we next
   // collect the decision criteria for rending in solid black:
@@ -146,11 +179,21 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
 
   const nsStyleBackground* color;
   // Draw a "shadowed" box around the rule area
+  nscolor selectionBGColor = 0;
+  if (isSelected)
+  {
+    nsILookAndFeel* look = nsnull;
+    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+      look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, selectionBGColor);
+      NS_RELEASE(look);
+    }
+    aRenderingContext.SetColor (selectionBGColor);
+    aRenderingContext.FillRect(0,0,mRect.width,mRect.height);//(x0, y0, width, height);
+  }
   if (!noShadeAttribute) {
     nsRect rect(x0, y0, width, height);
 
-    const nsStyleBorder* border = (const nsStyleBorder*)
-      mStyleContext->GetStyleData(eStyleStruct_Border);
+    const nsStyleBorder* border = (const nsStyleBorder*) mStyleContext->GetStyleData(eStyleStruct_Border);
     
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
                                     this,aDirtyRect, rect,
@@ -180,7 +223,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
                                  width - diameter, height);
      }
   }
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return NS_OK; 
 }
 
 NS_IMETHODIMP
