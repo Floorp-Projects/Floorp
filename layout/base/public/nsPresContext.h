@@ -83,6 +83,13 @@ enum nsWidgetType {
   eWidgetType_Text			= 4
 };
 
+enum nsLanguageSpecificTransformType {
+  eLanguageSpecificTransformType_Unknown = -1,
+  eLanguageSpecificTransformType_None = 0,
+  eLanguageSpecificTransformType_Japanese,
+  eLanguageSpecificTransformType_Korean
+};
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {
@@ -321,6 +328,17 @@ public:
   NS_IMETHOD GetDefaultDirection(PRUint8* aDirection) = 0;
   NS_IMETHOD SetDefaultDirection(PRUint8 aDirection) = 0;
   NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage) = 0;
+
+  /**
+   * Get the language-specific transform type for the current document.
+   * This tells us whether we need to perform special language-dependent
+   * transformations such as Unicode U+005C (backslash) to Japanese
+   * Yen Sign (Unicode U+00A5, JIS 0x5C).
+   *
+   * @param aType returns type, must be non-NULL
+   */
+  NS_IMETHOD GetLanguageSpecificTransformType(
+              nsLanguageSpecificTransformType* aType) = 0;
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType) = 0;
