@@ -20,7 +20,6 @@ toolkit.jar:
          content/global/widgets/button.xml                  (content/widgets/button.xml)
          content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
          content/global/widgets/toolbarbutton.xml           (content/widgets/toolbarbutton.xml)
-         content/global/widgets/checkbox.xml                (content/widgets/checkbox.xml)
          content/global/widgets/colorpicker.xml             (content/widgets/colorpicker.xml)
          content/global/widgets/dialog.xml                  (content/widgets/dialog.xml)
          content/global/widgets/general.xml                 (content/widgets/general.xml)
