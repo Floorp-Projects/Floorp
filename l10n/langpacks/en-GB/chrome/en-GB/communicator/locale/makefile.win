@@ -43,6 +43,8 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 install:: 
+	$(MAKE_INSTALL) openLocation.dtd $(DIST)\bin\chrome\locales\$(THEME)\navigator\locale
+	$(MAKE_INSTALL) openLocation.properties $(DIST)\bin\chrome\locales\$(THEME)\navigator\locale
 	$(MAKE_INSTALL) PSMTaskMenu.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale
 	$(MAKE_INSTALL) security.properties $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale
 	$(MAKE_INSTALL) securityOverlay.dtd $(DIST)\bin\chrome\locales\$(THEME)\communicator\locale
