@@ -486,6 +486,10 @@ nsXULDocument::~nsXULDocument()
         mScriptLoader->DropDocumentReference();
     }
 
+    if (mNodeInfoManager) {
+        mNodeInfoManager->DropDocumentReference();
+    }
+
     delete mTemplateBuilderTable;
     delete mBoxObjectTable;
 
@@ -513,11 +517,6 @@ nsXULDocument::~nsXULDocument()
             NS_RELEASE(gXULCache);
         }
     }
-
-    if (mNodeInfoManager) {
-        mNodeInfoManager->DropDocumentReference();
-    }
-
 }
 
 
@@ -808,6 +807,10 @@ nsXULDocument::GetDocumentURL(nsIURI** aURI) const
 NS_IMETHODIMP
 nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 {
+    *aPrincipal = nsnull;
+    NS_ASSERTION(mMasterPrototype, "Missing master prototype. See bug 169036");
+    NS_ENSURE_TRUE(mMasterPrototype, NS_ERROR_UNEXPECTED);
+
     return mMasterPrototype->GetDocumentPrincipal(aPrincipal);
 }
 
