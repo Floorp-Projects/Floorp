@@ -1605,6 +1605,7 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMW
   *aDOMWindow = 0;
 
   nsCOMPtr<nsIDocShellTreeItem> item;
+  NS_ENSURE_TRUE(mDocShellTreeOwner, NS_ERROR_FAILURE);
   mDocShellTreeOwner->GetPrimaryContentShell(getter_AddRefs(item));
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
@@ -1642,21 +1643,23 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
   nsCOMPtr<nsIDOMWindowInternal> domWindow;
   domWindow = do_QueryInterface(domWindowExternal);
   nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
   PRBool needToFocus = PR_TRUE;
-  if (focusController) {
-    // Go ahead and mark the focus controller as being active.  We have
-    // to do this even before the activate message comes in.
-    focusController->SetActive(PR_TRUE);
+  if (piWin) {
+    nsCOMPtr<nsIFocusController> focusController;
+    piWin->GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController) {
+      // Go ahead and mark the focus controller as being active.  We have
+      // to do this even before the activate message comes in.
+      focusController->SetActive(PR_TRUE);
 
-    nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-    focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
-    if (focusedWindow) {
-      needToFocus = PR_FALSE;
-      focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
-      domWindow->Focus(); // This sets focus, but we'll ignore it.  
-                         // A subsequent activate will cause us to stop suppressing.
+      nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+      focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+      if (focusedWindow) {
+        needToFocus = PR_FALSE;
+        focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
+        domWindow->Focus(); // This sets focus, but we'll ignore it.  
+                           // A subsequent activate will cause us to stop suppressing.
+      }
     }
   }
 
