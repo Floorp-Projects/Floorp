@@ -45,6 +45,9 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="searchbar" extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <resources>
+      <stylesheet src="chrome://messenger/skin/searchBox.css"/>
+    </resources>
     <content> 
       <children/>
       <xul:hbox class="quick-search-textbox textbox-input-box" flex="1">
@@ -123,6 +126,9 @@
   </binding>
   
   <binding id="searchBarDropMarker">
+    <resources>
+      <stylesheet src="chrome://messenger/skin/searchBox.css"/>
+    </resources>
     <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
                  xmlns:xbl="http://www.mozilla.org/xbl" popup="_child">
       <children/>

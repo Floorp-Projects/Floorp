@@ -397,10 +397,4 @@ html|p {
   border: none !important;
 }
 
-/* ::::: Search Bar  ::::: */
 
-#searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  height: 30px;
-  min-height: 30px;
-}

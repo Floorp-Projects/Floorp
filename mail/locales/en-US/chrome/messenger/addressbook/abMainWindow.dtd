@@ -163,7 +163,7 @@
 <!ENTITY dirTreeHeader.label                            "Address Books">
 
 <!-- Search Bar -->
-<!ENTITY SearchNameOrEmail.label                        "Name or Email contains:">
+<!ENTITY SearchNameOrEmail.label                        "Name or Email">
 <!ENTITY SearchNameOrEmail.accesskey                    "N">
 <!ENTITY clearButton.label                              "Clear">
 <!ENTITY clearButton.accesskey                          "C">
@@ -171,6 +171,7 @@
 <!ENTITY advancedButton.label                           "Advanced...">
 <!ENTITY advancedButton.accesskey                       "A">
 <!ENTITY advancedButton.tooltip                         "Advanced address search">
+<!ENTITY quickSearchCmd.key                             "k">
 
 <!-- Results Pane -->
 <!ENTITY GeneratedName.label                            "Name">

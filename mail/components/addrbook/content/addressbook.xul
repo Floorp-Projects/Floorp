@@ -148,6 +148,7 @@
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 
+  <key key="&quickSearchCmd.key;" oncommand="QuickSearchFocus();" modifiers="accel"/>
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
 #ifdef XP_MACOSX
   <!-- Mac Window keys -->
@@ -586,24 +587,16 @@
     <vbox flex="1" minwidth="100">
 
       <hbox id="searchBox" persist="collapsed" align="center">
-        <label id="searchCriteria" value="&SearchNameOrEmail.label;"
-               accesskey="&SearchNameOrEmail.accesskey;"
-               control="searchInput"/>
-        <textbox id="searchInput" flex="1" 
-                oninput="onAbSearchInput(false);"
-                onkeypress="onAbSearchKeyPress(event);"
-                onfocus="this.select();" onclick="this.select();"/>
-        <button id="clear" label="&clearButton.label;" disabled="true"
-                accesskey="&clearButton.accesskey;"
-                oncommand="onAbClearSearch();"
-                tooltiptext="&clearButton.tooltip;"/>
-
-<!-- Hide the advanced button like we do for the main 3-pane window...
-        <button id="advancedButton" label="&advancedButton.label;" 
-                accesskey="&advancedButton.accesskey;"
-                tooltiptext="&advancedButton.tooltip;" 
-                oncommand="onAdvancedAbSearch();"/>
--->
+        <spring flex="4"/>
+        <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onblur="onSearchInputBlur(event);" 
+                 onclick="this.select();" oninput="onAbSearchInput(false);"
+                 onkeypress="onAbSearchKeyPress(event);">
+          <button id="quick-search-button" type="menu">
+            <menupopup id="quick-search-menupopup" value="0" persist="value" popupalign="topleft" popupanchor="bottomleft">
+              <menuitem value="0" label="&SearchNameOrEmail.label;" type="radio"/>
+            </menupopup>
+          </button>
+        </textbox>
       </hbox>
 
       <!-- results pane -->
