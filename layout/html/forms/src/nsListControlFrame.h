@@ -320,6 +320,8 @@ public:
   // Helper
   void SetPassId(PRInt16 aId)  { mPassId = aId; }
 
+  void PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer aWhichLayer);
+
 protected:
 
   nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
@@ -421,6 +423,8 @@ protected:
   nsSize       mCachedMaxElementSize;
   nsSize       mCachedUnconstrainedSize;
   nsSize       mCachedAvailableSize;
+
+  static nsListControlFrame * mFocused;
 
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;

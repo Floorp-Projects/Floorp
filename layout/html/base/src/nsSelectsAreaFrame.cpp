@@ -40,6 +40,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
+#include "nsListControlFrame.h"
 
 nsresult
 NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aNewFrame, PRUint32 aFlags)
@@ -130,4 +131,19 @@ nsSelectsAreaFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+nsSelectsAreaFrame::Paint(nsIPresContext*      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
+{
+  nsresult rv = nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
+  // This assumes that that the ListControlFrame is the Parent
+  nsListControlFrame* listFrame = NS_STATIC_CAST(nsListControlFrame*, mParent);
+  listFrame->PaintFocus(aRenderingContext, aWhichLayer);
+
+  return rv;
 }
