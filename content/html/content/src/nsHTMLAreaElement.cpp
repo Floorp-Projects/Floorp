@@ -93,6 +93,17 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                       PRBool aNotify);
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -284,6 +295,67 @@ nsHTMLAreaElement::SetHref(const nsAString& aValue)
   mLinkState = eLinkState_Unknown;
 
   return SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                               PRBool aCompileEventHandlers)
+{
+  // Unregister the access key for the old document.
+  if (mDocument) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  nsresult rv = nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+                                                  aCompileEventHandlers);
+
+  // Register the access key for the new document.
+  if (mDocument) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetAttr(nsINodeInfo* aNodeInfo,
+                           const nsAString& aValue,
+                           PRBool aNotify)
+{
+  return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
+}
+
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue,
+                           PRBool aNotify)
+{
+  if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  nsresult rv =
+    nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+
+  if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None &&
+      !aValue.IsEmpty()) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify)
+{
+  if (aAttribute == nsHTMLAtoms::accesskey &&
+      aNameSpaceID == kNameSpaceID_None) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 #ifdef DEBUG
