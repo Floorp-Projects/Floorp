@@ -1225,6 +1225,7 @@ sub BuildClientDist()
 
     #WEBSHELL
     _InstallFromManifest(":mozilla:webshell:public:MANIFEST",                       "$distdirectory:webshell:");
+    _InstallFromManifest(":mozilla:webshell:public:MANIFEST_IDL",                   "$distdirectory:idl:");
     _InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",          "$distdirectory:webshell:");
 
     #LAYOUT
@@ -1614,6 +1615,7 @@ sub BuildIDLProjects()
 
     BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",                      "chrome");
         
+    BuildIDLProject(":mozilla:webshell:macbuild:webshellIDL.mcp",                   "webshell");
     BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",                   "docshell");
     BuildIDLProject(":mozilla:embedding:browser:macbuild:browserIDL.mcp",           "embeddingbrowser");
 
