@@ -1845,6 +1845,15 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpLDIFFile));
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
+  // do the migration in a subdirectory of temp, to prevent 
+  // collision (between multiple users), deleting TMPDIR
+  // and privacy issues (where the temp ldif files are readable)
+  rv = tmpLDIFFile->Append("addr-migrate");
+  if (NS_FAILED(rv) || !tmpLDIFFile) return;
+
+  rv = tmpLDIFFile->CreateUnique("addr-migrate", nsIFile::DIRECTORY_TYPE, 0700);
+  if (NS_FAILED(rv) || !tmpLDIFFile) return;
+
   // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
   {
      nsXPIDLCString pathBuf;  
