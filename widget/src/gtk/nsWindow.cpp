@@ -671,6 +671,11 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+#if 0
+  printf("nsWindow::Move %s (%p) to %d %d\n",
+         mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+         aX, aY);
+#endif
   // not implimented for toplevel windows
   if (mIsToplevel && mShell)
   {
@@ -711,10 +716,13 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
-  printf("nsWidget::Resize %s (%p) to %d %d\n",
+  printf("nsWindow::Resize %s (%p) to %d %d\n",
          mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
          aWidth, aHeight);
 #endif
+
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
 
   // ignore resizes smaller than or equal to 1x1 for everything except not-yet-shown toplevel windows
   if (aWidth <= 1 || aHeight <= 1)
@@ -730,16 +738,22 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     else
       return NS_OK;
   }
-    
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-
 
   if (mWidget) {
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
     {
-      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+      // XXX HACK FIXME
+      // gtk does not want to resize windows using set_default_size on a window after is is shown
+      // work around this behavior as we should always resize before we show.
+      if (GTK_WIDGET_VISIBLE(mShell))
+      {
+        gtk_widget_hide(mShell);
+        gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+        gtk_widget_show(mShell);
+      }
+      else
+        gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
       //      gtk_widget_set_usize(mShell, aWidth, aHeight);
     }
 
