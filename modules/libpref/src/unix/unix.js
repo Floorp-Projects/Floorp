@@ -82,6 +82,7 @@ pref("print.print_color", true);
 pref("print.print_landscape", false);
 pref("print.print_paper_size", 0);
 
+pref("font.allow_double_byte_special_chars", true);
 // font names
 
 // ar
