@@ -20,8 +20,6 @@
 #include "nsIImgDecoder.h" // include if_struct.h Needs to be first
 
 #include "ipng.h"
-
-
 #include "dllcompat.h"
 #include "pngdec.h"
 
@@ -32,22 +30,11 @@
 #define MINIMUM_DELAY_TIME 10
 
 
-void row_callback( png_structp png_ptr, png_bytep new_row,
-   png_uint_32 row_num, int pass /*, il_container *ic*/);
-
-extern void end_callback(png_structp png_ptr, png_infop info);
-extern void info_callback(png_structp png_ptr, png_infop info);
-
-extern void il_create_alpha_mask( il_container *, int, int, int ); 
-
-#if defined(PNG_LIBPNG_VER) && (PNG_LIBPNG_VER < 100)
-extern png_structp png_create_read_struct(png_charp user_png_ver, png_voidp, png_error_ptr, png_error_ptr);
-extern png_infop png_create_info_struct(png_structp png_ptr);
-
-extern void png_destroy_read_struct(png_structpp, png_infopp, png_infopp);
-extern void png_set_progressive_read_fn(png_structp, png_voidp, png_progressive_info_ptr, png_progressive_row_ptr, png_progressive_end_ptr);
-extern void png_process_data(png_structp, png_infop, png_bytep, png_size_t);
-#endif
+static void png_set_dims(il_container *, png_structp);
+static void row_callback(png_structp png_ptr, png_bytep new_row,
+                         png_uint_32 row_num, int pass);
+static void end_callback(png_structp png_ptr, png_infop info);
+static void info_callback(png_structp png_ptr, png_infop info);
 
 
 
@@ -55,15 +42,15 @@ int
 il_png_init(il_container *ic)
 {
 
-	ipng_struct *ipngs;
+	ipng_struct *ipng_p;
     NI_ColorSpace *src_color_space = ic->src_header->color_space;
 
-	ipngs = PR_NEWZAP(ipng_struct);
-	if (ipngs) 
+	ipng_p = PR_NEWZAP(ipng_struct);
+	if (ipng_p) 
 	{
-		ic->ds = ipngs;
-		ipngs->state = PNG_INIT;
-		ipngs->ic = ic;
+		ic->ds = ipng_p;
+		ipng_p->state = PNG_INIT;
+		ipng_p->ic = ic;
 
         /* Initialize the container's source image header. */
 	    /* Always decode to 24 bit pixdepth */
@@ -82,20 +69,20 @@ il_png_init(il_container *ic)
 int 
 il_png_write(il_container *ic, const unsigned char *buf, int32 len)
 {
-   ipng_structp ipng_ptr;
+   ipng_structp ipng_p;
 
    png_structp png_ptr;
    png_infop info_ptr;
   
 	/*------*/
    
-	ipng_ptr = (ipng_structp)ic->ds;   
-    if(ipng_ptr->state == PNG_INIT ){
+	ipng_p = (ipng_structp)ic->ds;   
+    if(ipng_p->state == PNG_INIT ){
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
-    	ipng_ptr->pngs_p = png_ptr;
+    	ipng_p->pngs_p = png_ptr;
         /* Allocate/initialize the memory for image information.  REQUIRED. */
 	    info_ptr = png_create_info_struct(png_ptr);
-        ipng_ptr->info_p = info_ptr;
+        ipng_p->info_p = info_ptr;
 	    if (info_ptr == NULL){
 		      png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 		      return -1;
@@ -104,8 +91,8 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
         info_callback, row_callback, end_callback); 
     }
 	else{
-        png_ptr = ipng_ptr->pngs_p;
-        info_ptr = ipng_ptr->info_p;
+        png_ptr = ipng_p->pngs_p;
+        info_ptr = ipng_p->info_p;
     }
     /* note addition of ic to png structure.... */
     png_ptr->io_ptr = ic;
@@ -114,12 +101,12 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
          return -1;
     }
     png_process_data( png_ptr, info_ptr, (unsigned char *)buf, len );
-    ipng_ptr->state = PNG_CONTINUE;
+    ipng_p->state = PNG_CONTINUE;
           
     return 0;
 }
 
-void
+static void
 png_set_dims( il_container *ic, png_structp png_ptr)
 {    
     int status;
@@ -159,98 +146,56 @@ png_set_dims( il_container *ic, png_structp png_ptr)
     return;
 }
 
-void
-il_png_init_transparency(png_structp png_ptr, il_container *ic, int index)
-{
-    IL_IRGB *src_trans_pixel /*= ic->src_header->transparent_pixel*/;
-    IL_IRGB *img_trans_pixel;
-    
-    if (ic->src_header) {
-        ic->src_header->transparent_pixel = PR_NEWZAP(IL_IRGB);
-    }
-    src_trans_pixel = ic->src_header->transparent_pixel;
-
-        /* Initialize the destination image's transparent pixel. */
-    //il_init_image_transparent_pixel(ic);
-     ic->imgdcb->ImgDCBInitTransparentPixel();
-
-        /* Set the source image's transparent pixel color to be the preferred
-           transparency color of the destination image. */
-        img_trans_pixel = ic->image->header.transparent_pixel;
-
-        src_trans_pixel->red = (uint8) png_ptr->trans_values.red;
-        src_trans_pixel->green = (uint8) png_ptr->trans_values.green;
-        src_trans_pixel->blue = (uint8) png_ptr->trans_values.blue;
-  
-        
-    /* Set the source image's transparent pixel index.  Do this even if the source
-       image's transparent pixel has previously been set, since the index can vary
-       from frame to frame in an animated png. */
-    src_trans_pixel->index = index;
-
-    return; 
-}
-
-
-static void
-il_png_destroy_transparency(il_container *ic)
-{
-    NI_PixmapHeader *src_header = ic->src_header;
-    
-    if (src_header->transparent_pixel) {
-        /* Destroy the source image's transparent pixel. */
-        PR_FREEIF(src_header->transparent_pixel);
-        src_header->transparent_pixel = NULL;
-
-        /* Destroy the destination image's transparent pixel. */
-        //il_destroy_image_transparent_pixel(ic);
-        ic->imgdcb->ImgDCBDestroyTransparentPixel();
-    }
-}
-
 
 void
 png_delay_time_callback(void *closure)
 {
-    ipng_struct *ipng_ptr = (ipng_struct *)closure;
+    ipng_struct *ipng_p = (ipng_struct *)closure;
 
-    PR_ASSERT(ipng_ptr->state == PNG_DELAY);
+    PR_ASSERT(ipng_p->state == PNG_DELAY);
 
-    if (ipng_ptr->ic->state == IC_ABORT_PENDING)
+    if (ipng_p->ic->state == IC_ABORT_PENDING)
         return;                                        
     
-    ipng_ptr->delay_time = 0;         /* Reset for next image */
+    ipng_p->delay_time = 0;         /* Reset for next image */
     return;
 }
+
+
+#define WE_DONT_HAVE_SUBSEQUENT_IMAGES
 
 int
 il_png_complete(il_container *ic)
 {
-	ipng_structp ipng_ptr;
+#ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
+	ipng_structp ipng_p;
 
-	ipng_ptr = (ipng_structp)ic->ds;
+	ipng_p = (ipng_structp)ic->ds;
 
 	il_png_abort(ic);
+#endif
    
 	/* notify observers that the current frame has completed. */
                  
     ic->imgdcb->ImgDCBHaveImageFrame();
 
+#ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
     /* An image can specify a delay time before which to display
        subsequent images.  Block until the appointed time. */
-	if(ipng_ptr->delay_time < MINIMUM_DELAY_TIME )
-		ipng_ptr->delay_time = MINIMUM_DELAY_TIME ;
-	if (ipng_ptr->delay_time){
-			ipng_ptr->delay_timeout =
-			ic->imgdcb->ImgDCBSetTimeout(png_delay_time_callback, ipng_ptr, ipng_ptr->delay_time);
+	if(ipng_p->delay_time < MINIMUM_DELAY_TIME )
+		ipng_p->delay_time = MINIMUM_DELAY_TIME ;
+	if (ipng_p->delay_time){
+			ipng_p->delay_timeout =
+			ic->imgdcb->ImgDCBSetTimeout(png_delay_time_callback, ipng_p, ipng_p->delay_time);
 
 			/* Essentially, tell the decoder state machine to wait
 			forever.  The delay_time callback routine will wake up the
 			state machine and force it to decode the next image. */
-			ipng_ptr->state = PNG_DELAY;
+			ipng_p->state = PNG_DELAY;
      } else {
-		    ipng_ptr->state = PNG_INIT;
+		    ipng_p->state = PNG_INIT;
      }
+#endif
  
 	return 0;
 }
@@ -258,7 +203,129 @@ il_png_complete(il_container *ic)
 int
 il_png_abort(il_container *ic)
 {
+    if (ic->ds) {
+        ipng_structp ipng_p = (ipng_structp)ic->ds;
+
+#ifdef WE_DONT_HAVE_SUBSEQUENT_IMAGES
+        PR_FREEIF(ipng_p);
+        ic->ds = NULL;
+#endif
+    }
     /*   il_abort( ic ); */
 	return 0;
 }
 
+
+
+/*---------------------------------------------------------------------------
+    Former contents of png_png.cpp, a.k.a. libpng's example.c (modified):
+  ---------------------------------------------------------------------------*/
+
+static void
+info_callback(png_structp png_ptr, png_infop info)
+{
+/* do any setup here, including setting any of the transformations
+ * mentioned in the Reading PNG files section.  For now, you _must_
+ * call either png_start_read_image() or png_read_update_info()
+ * after all the transformations are set (even if you don't set
+ * any).  You may start getting rows before png_process_data()
+ * returns, so this is your last chance to prepare for that.
+ */
+    int number_passes;
+    double screen_gamma;
+
+    /*always decode to 24 bit*/
+    if(png_ptr->color_type == PNG_COLOR_TYPE_PALETTE && png_ptr->bit_depth <= 8)
+       png_set_expand(png_ptr);
+
+    if(png_ptr->color_type == PNG_COLOR_TYPE_GRAY && png_ptr->bit_depth <= 8){
+       png_set_gray_to_rgb(png_ptr);
+       png_set_expand(png_ptr);
+    }
+
+    if(png_get_valid(png_ptr, info, PNG_INFO_tRNS))    
+       png_set_expand(png_ptr);
+
+
+    /* implement scr gamma for mac & unix. (do preferences later.) */
+#ifdef XP_MAC
+    screen_gamma = 1.7;  /*Mac : 1.7 */
+#else
+    screen_gamma = 2.2;  /*good for PC.*/
+#endif
+/*
+    if (png_get_gAMA(png_ptr, info, (double *)&png_ptr->gamma))
+      png_set_gamma(png_ptr, screen_gamma, png_ptr->gamma);
+    else
+      png_set_gamma(png_ptr, screen_gamma, 0.45);
+*/
+    if(png_ptr->interlaced == PNG_INTERLACE_ADAM7)
+        number_passes = png_set_interlace_handling(png_ptr);
+
+    png_read_update_info(png_ptr, info);
+
+    /* Set the ic values */
+    png_set_dims((il_container *)png_ptr->io_ptr, png_ptr);
+
+}
+
+
+
+static void
+row_callback(png_structp png_ptr, png_bytep new_row,
+             png_uint_32 row_num, int pass)
+{
+/* this function is called for every row in the image.  If the
+ * image is interlacing, and you turned on the interlace handler,
+ * this function will be called for every row in every pass.
+ * Some of these rows will not be changed from the previous pass.
+ * When the row is not changed, the new_row variable will be NULL.
+ * The rows and passes are called in order, so you don't really
+ * need the row_num and pass, but I'm supplying them because it
+ * may make your life easier.
+ *
+ * For the non-NULL rows of interlaced images, you must call
+ * png_progressive_combine_row() passing in the row and the
+ * old row.  You can call this function for NULL rows (it will
+ * just return) and for non-interlaced images (it just does the
+ * memcpy for you) if it will make the code easier.  Thus, you
+ * can just do this for all cases:
+ */
+    il_container *ic = (il_container *)png_ptr->io_ptr;  
+
+	if(new_row){
+
+  		ic->imgdcb->ImgDCBHaveRow( 0,  new_row, 0, png_ptr->width, 
+        row_num, 1, ilErase /* ilOverlay */, png_ptr->pass );
+    
+		/*	il_flush_image_data(png_ptr->io_ptr); */
+	}
+
+
+/* where old_row is what was displayed for previous rows.  Note
+ * that the first pass (pass == 0 really) will completely cover
+ * the old row, so the rows do not have to be initialized.  After
+ * the first pass (and only for interlaced images), you will have
+ * to pass the current row, and the function will combine the
+ * old row and the new row.
+ */
+}
+
+
+
+static void
+end_callback(png_structp png_ptr, png_infop info)
+{
+/* this function is called when the whole image has been read,
+ * including any chunks after the image (up to and including
+ * the IEND).  You will usually have the same info chunk as you
+ * had in the header, although some data may have been added
+ * to the comments and time fields.
+ *
+ * Most people won't do much here, perhaps setting a flag that
+ * marks the image as finished.
+ */
+      il_container *ic = (il_container *)png_ptr->io_ptr;
+        
+      ic->imgdcb->ImgDCBFlushImage();
+}
