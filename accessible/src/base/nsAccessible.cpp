@@ -1483,6 +1483,9 @@ NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, const nsAStrin
   */
 NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAString& _retval)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIDOMHTMLLabelElement> labelElement;
   nsCOMPtr<nsIDOMHTMLFormElement> formElement;
@@ -1490,20 +1493,25 @@ NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAString& _retval)
 
   nsAutoString label;
   // go up tree get name of ancestor label if there is one. Don't go up farther than form element
-  while (walkUpContent && label.IsEmpty() && !formElement) {
+  while (label.IsEmpty() && !formElement) {
     labelElement = do_QueryInterface(walkUpContent);
     if (labelElement) 
       rv = AppendFlatStringFromSubtree(walkUpContent, &label);
     formElement = do_QueryInterface(walkUpContent); // reached top ancestor in form
+    if (formElement) {
+      break;
+    }
     nsCOMPtr<nsIContent> nextParent;
     walkUpContent->GetParent(*getter_AddRefs(nextParent));
+    if (!nextParent) {
+      break;
+    }
     walkUpContent = nextParent;
   }
   
 
   // There can be a label targeted at this control using the for="control_id" attribute
   // To save computing time, only look for those inside of a form element
-  walkUpContent = do_QueryInterface(formElement);
   
   if (walkUpContent) {
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));

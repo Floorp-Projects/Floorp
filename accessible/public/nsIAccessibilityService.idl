@@ -49,7 +49,9 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLCheckboxAccessibleXBL(in nsIDOMNode aNode);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLLabelAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLNativeWindowAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell, in PRInt32 aHWnd);
   nsIAccessible createHTMLPluginAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell);
@@ -62,7 +64,6 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
 
   nsIAccessible createXULButtonAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULCheckboxAccessible(in nsIDOMNode aNode);
