@@ -19,38 +19,61 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Simon Fraser <sfraser@netscape.com>
 #
 
-#
-# nglayout pull script 
-#
+require 5.004;
+
+use strict;
 
 use Cwd;
+use Moz::BuildUtils;
 use Moz::BuildCore;
 
-#-----------------------------------------------
+#-------------------------------------------------------------
+# Where have the build options gone?
+# 
+# The various build flags have been centralized into one place. 
+# The master list of options is in MozBuildFlags.txt. However, 
+# you should never need to edit that file, or this one.
+# 
+# To customize what gets built, or where to start the build, 
+# edit the $prefs_file_name file in
+# System Folder:Preferences:Mozilla build prefs:
+# Documentation is provided in that file.
+#-------------------------------------------------------------
+
+my($prefs_file_name) = "Mozilla pull prefs";
+
+#-------------------------------------------------------------
 # hashes to hold build options
-#-----------------------------------------------
+#-------------------------------------------------------------
 my(%pull);
 my(%build);
 my(%options);
 my(%filepaths);
 my(%optiondefines);
 
-# hash of input files for this build
-# eventually, there will be input files for manifests,
-# and projects too.
+# Hash of input files for this build. Eventually, there will be
+# input files for manifests, and projects too.
 my(%inputfiles) = (
   "buildflags",     "MozillaBuildFlags.txt",
-  "checkoutdata",   "MozillaCheckoutList.txt"
+  "checkoutdata",   "MozillaCheckoutList.txt",
+  "buildprogress",  "",
+  "buildmodule",    "MozillaBuildList.pm"
 );
+#-------------------------------------------------------------
+# end build hashes
+#-------------------------------------------------------------
 
-my($cur_dir) = cwd();
-$cur_dir =~ s/:mozilla:build:mac:build_scripts$//;
-chdir($cur_dir);
-$MOZ_SRC = cwd();
+# set the build root directory, which is the the dir above mozilla
+SetupBuildRootDir(":mozilla:build:mac:build_scripts");
+
+# Set up all the flags on $main::, like DEBUG, CARBON etc.
+# Override the defaults using the preferences files.
+SetupDefaultBuildOptions(0, ":mozilla:dist:viewer:");
 
 my($do_checkout)    = 1;
 my($do_build)       = 0;
 
-RunBuild($do_checkout, $do_build, \%inputfiles, "Mozilla Pull prefs");
+RunBuild($do_checkout, $do_build, \%inputfiles, $prefs_file_name);

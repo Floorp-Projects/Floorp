@@ -24,7 +24,6 @@ use Moz::MacCVS;
 
 @ISA        = qw(Exporter);
 @EXPORT     = qw(
-                    UpdateBuildNumberFiles
                     BuildDist
                     BuildProjects
                  );
@@ -776,7 +775,7 @@ sub BuildDist()
     ActivateApplication('McPL');
 
     StartBuildModule("dist");
-    
+        
     my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
     my $dist_dir = GetBinDirectory(); # the subdirectory with the libs and executable.
     if ($main::CLOBBER_DIST_ALL)
@@ -805,6 +804,8 @@ sub BuildDist()
     mkpath([ ":mozilla:dist:viewer:Plug-ins", ":mozilla:dist:viewer_debug:Plug-ins"]);
     #mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
     
+    UpdateBuildNumberFiles();
+
     BuildRuntimeDist();
     
     if (!$main::RUNTIME) {

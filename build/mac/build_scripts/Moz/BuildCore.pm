@@ -18,7 +18,7 @@ use Moz::BuildFlags;
 use Moz::BuildUtils;
 use Moz::CodeWarriorLib;
 
-use MozillaBuildList;   # eventually, this should go away, and be replaced by data input
+# use MozillaBuildList;   # eventually, this should go away, and be replaced by data input
 
 
 @ISA        = qw(Exporter);
@@ -191,7 +191,7 @@ sub ConfigureBuildSystem()
 #//--------------------------------------------------------------------------------------------------
 sub CheckOutModule($$$$)
 {
-	my($session, $module, $revision, $date) = @_;
+    my($session, $module, $revision, $date) = @_;
 
     my($result) = $session->checkout($module, $revision, $date);
     
@@ -284,6 +284,8 @@ sub Checkout($)
 sub RunBuild($$$$)
 {
     my($do_pull, $do_build, $input_files, $build_prefs) = @_;
+
+    InitBuildProgress($input_files->{"buildprogress"});
     
     # if we are pulling, we probably want to do a full build, so clear the build progress
     if ($do_pull) {
@@ -324,13 +326,26 @@ sub RunBuild($$$$)
 
     # create generated headers
     ConfigureBuildSystem();
-    UpdateBuildNumberFiles();
-    
-    chdir($main::MOZ_SRC);
-    BuildDist();
-    
-    chdir($main::MOZ_SRC);
-    BuildProjects();
+
+    # here we load and call methods in the build module indirectly.
+    # we have to use indirection because the build module can be named
+    # differently for different builds.
+    chdir(dirname($0));     # change to the script dir
+    my($build_module) = $input_files->{"buildmodule"};
+    # load the build module
+    require $build_module;
+    {   # scope for no strict 'refs'
+        no strict 'refs';
+        
+        my($package_name) = $build_module;
+        $package_name =~ s/\.pm$//;
+        
+        chdir($main::MOZ_SRC);
+        &{$package_name."::BuildDist"}();
+        
+        chdir($main::MOZ_SRC);
+        &{$package_name."::BuildProjects"}();
+    }
     
     # the build finished, so clear the build progress state
     ClearBuildProgress();

@@ -76,7 +76,6 @@ sub WriteDefaultPrefsFile($)
 %
 %    pull        runtime         1                    % just pull runtime
 %    options     mng             1                    % turn mng on
-%    build       jars            0                    % don't build jar files
 %   
 %   Line containing the special 'buildfrom' flag, which specifies
 %   where to start the build. Example:
@@ -223,7 +222,7 @@ sub ReadPrefsFile($$$$$)
         my($var_setting) = $2;
         
         print "Setting \$main::$build_var to $var_setting\n";
-        eval "\$main::$build_var = $var_setting";
+        eval "\$main::$build_var = \"$var_setting\"";
       }
       else
       {
