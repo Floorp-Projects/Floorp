@@ -20,15 +20,17 @@ DEPTH=../../..
 DEFINES = -D_IMPL_NS_DOM
 
 EXPORTS =               \
-	nsIDOMAttribute.h \
+	nsIDOMAttr.h \
 	nsIDOMCDATASection.h \
+	nsIDOMCharacterData.h \
 	nsIDOMComment.h \
-	nsIDOMData.h \
-	nsIDOMDOM.h \
+	nsIDOMDOMImplementation.h \
 	nsIDOMDocument.h \
 	nsIDOMDocumentType.h \
 	nsIDOMDocumentFragment.h \
 	nsIDOMElement.h \
+	nsIDOMEntity.h \
+	nsIDOMEntityReference.h \
 	nsIDOMNode.h \
 	nsIDOMNamedNodeMap.h \
 	nsIDOMNodeList.h \

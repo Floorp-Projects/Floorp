@@ -196,40 +196,39 @@ public:
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMDocument interface
-  NS_IMETHOD    GetMasterDoc(nsIDOMDocument **aDocument);
-  NS_IMETHOD    GetDocumentType(nsIDOMDocumentType** aDocumentType);
-  NS_IMETHOD    GetProlog(nsIDOMNodeList** aProlog);
-  NS_IMETHOD    GetEpilog(nsIDOMNodeList** aEpilog);
+  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype);
+  NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation);
   NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement);
+
+  NS_IMETHOD    CreateElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
-  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMNode* aValue, nsIDOMAttribute** aReturn);
-  NS_IMETHOD    CreateElement(const nsString& aTagName, 
-                              nsIDOMNamedNodeMap* aAttributes, 
-                              nsIDOMElement** aReturn);
   NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
+  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
+  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
+  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
+  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
+  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
 
   // nsIDOMNode interface
   NS_IMETHOD    GetNodeName(nsString& aNodeName);
   NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
   NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType);
+  NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
   NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD    HasChildNodes(PRBool* aHasChildNodes);
   NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
   NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
   NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn);
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
+  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMEventCapturer interface
   NS_IMETHOD    CaptureEvent(const nsString& aType);

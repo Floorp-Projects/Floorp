@@ -46,7 +46,7 @@ function findBody(node)
 function TestInsert(parent, child)
 {
   var childTag = "(text)";
-  if (child.nodeType != Node.TEXT) {
+  if (child.nodeType != Node.TEXT_NODE) {
     childTag = child.tagName;
   }
 
@@ -67,8 +67,8 @@ function TestInsert(parent, child)
 var body = findBody(document.documentElement);
 
 // Create a block child with a span in it
-var block = document.createElement("P", null);
-var span = document.createElement("SPAN", null);
+var block = document.createElement("P");
+var span = document.createElement("SPAN");
 var spanText = document.createTextNode("Some text");
 span.insertBefore(spanText, null);
 block.insertBefore(span, null);

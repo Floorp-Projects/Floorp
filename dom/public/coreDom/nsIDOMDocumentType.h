@@ -23,37 +23,36 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMNode.h"
 
 class nsIDOMNamedNodeMap;
 
 #define NS_IDOMDOCUMENTTYPE_IID \
-{ 0x6f7652e6,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf9077, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMDocumentType : public nsISupports {
+class nsIDOMDocumentType : public nsIDOMNode {
 public:
 
   NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
 
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities)=0;
-  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities)=0;
+
+  NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations)=0;
 };
 
 
 #define NS_DECL_IDOMDOCUMENTTYPE   \
   NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities);  \
-  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities);  \
+  NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations);  \
 
 
 
 #define NS_FORWARD_IDOMDOCUMENTTYPE(_to)  \
   NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return _to##GetEntities(aEntities); } \
-  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities) { return _to##SetEntities(aEntities); } \
+  NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations) { return _to##GetNotations(aNotations); } \
 
 
 extern nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);

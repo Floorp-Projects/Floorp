@@ -124,7 +124,7 @@ nsHTMLTableColGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLTableColGroupElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTableColGroupElement* it = new nsHTMLTableColGroupElement(mInner.mTag);
   if (nsnull == it) {

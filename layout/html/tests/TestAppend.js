@@ -30,7 +30,7 @@ function findBody(node)
   var child = null;
   var count = 0;
   while (count < length) {
-    child = children.item(count);
+    child = children[count];
     if (child.tagName == "BODY") {
       return child;
     }
@@ -46,12 +46,12 @@ function findBody(node)
 function AppendTest(parent, kidTag, grandKidTag, empty, asWeGo)
 {
   trace("enter [" + kidTag + "," + (grandKidTag?grandKidTag:"") + "]");
-  var kid = document.createElement(kidTag, null);
+  var kid = document.createElement(kidTag);
   if (asWeGo) {
     parent.insertBefore(kid, null);
   }
   if (null != grandKidTag) {
-    var grandKid = document.createElement(grandKidTag, null);
+    var grandKid = document.createElement(grandKidTag);
     if (empty) {
       kid.insertBefore(grandKid, null);
     }
@@ -96,7 +96,7 @@ var body = findBody(document.documentElement);
 RunTests(body, false);
 RunTests(body, true);
 
-var inline = document.createElement("SPAN", null);
+var inline = document.createElement("SPAN");
 body.insertBefore(inline, null);
 RunTests(inline, false);
 RunTests(inline, true);

@@ -233,7 +233,7 @@ int main(int argc, char** argv)
   static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
   text->QueryInterface(kIDOMTextIID, (void**) &txt);
   nsAutoString tmp(destStr, destLen);
-  txt->Append(tmp);
+  txt->AppendData(tmp);
   NS_RELEASE(txt);
 
   PRBool canHaveKids;

@@ -32,6 +32,7 @@
 #include "nsIDOMNode.h" // for Find
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
+#include "nsIDOMComment.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
@@ -70,6 +71,7 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -623,7 +625,6 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
 //
 NS_IMETHODIMP    
 nsHTMLDocument::CreateElement(const nsString& aTagName, 
-                              nsIDOMNamedNodeMap* aAttributes, 
                               nsIDOMElement** aReturn)
 {
   nsIHTMLContent* content;
@@ -643,14 +644,74 @@ nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aTextNode)
 
   if (NS_OK == rv) {
     rv = text->QueryInterface(kIDOMTextIID, (void**)aTextNode);
-    (*aTextNode)->Append(aData);
+    (*aTextNode)->AppendData(aData);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP    
-nsHTMLDocument::GetDocumentType(nsIDOMDocumentType** aDocumentType)
+nsHTMLDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
+{
+  // XXX To be implemented
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
+{
+  nsIHTMLContent* comment = nsnull;
+  nsresult        rv = NS_NewCommentNode(&comment);
+
+  if (NS_OK == rv) {
+    rv = comment->QueryInterface(kIDOMCommentIID, (void**)aReturn);
+    (*aReturn)->AppendData(aData);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateProcessingInstruction(const nsString& aTarget, 
+                                            const nsString& aData, 
+                                            nsIDOMProcessingInstruction** aReturn)
+{
+  // There are no PIs for HTML
+  *aReturn = nsnull;
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateCDATASection(const nsString& aData, 
+                                   nsIDOMCDATASection** aReturn)
+{
+  // There are no CDATASections in HTML
+  *aReturn = nsnull;
+
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP    
+nsHTMLDocument::CreateEntityReference(const nsString& aName, 
+                                      nsIDOMEntityReference** aReturn)
+{
+  // There are no EntityReferences in HTML
+  *aReturn = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateAttribute(const nsString& aName, 
+                                nsIDOMAttr** aReturn)
+{
+  // XXX To be implemented
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 {
   // There's no document type for a HTML document
   *aDocumentType = nsnull;
@@ -671,34 +732,6 @@ nsHTMLDocument::GetTitle(nsString& aTitle)
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetReferrer(nsString& aReferrer)
-{
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::GetFileSize(nsString& aFileSize)
-{
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::GetFileCreatedDate(nsString& aFileCreatedDate)
-{
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::GetFileModifiedDate(nsString& aFileModifiedDate)
-{
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::GetFileUpdatedDate(nsString& aFileUpdatedDate)
 {
   //XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1666,7 +1699,7 @@ PRBool nsHTMLDocument::BuildBlockTraversing(nsIDOMNode * aParent,
     NS_RELEASE(textContent);
   } else {
     PRBool hasChildNode;
-    aParent->GetHasChildNodes(&hasChildNode);
+    aParent->HasChildNodes(&hasChildNode);
     if (hasChildNode) {
       nsIDOMNode * child;
       if (mSearchDirection == kForward) {
@@ -1706,7 +1739,7 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIDOMNode * aParent,
   nsIDOMNode * stackChild  = mChildStack[aStackInx];
 
   PRBool hasChildNode;
-  aParent->GetHasChildNodes(&hasChildNode);
+  aParent->HasChildNodes(&hasChildNode);
   if (hasChildNode) {
     nsIDOMNode * child = stackChild;
     NS_ADDREF(child);
@@ -1798,7 +1831,7 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
   delete[] cStr;
 
   PRBool hasChildren;
-  aNode->GetHasChildNodes(&hasChildren);
+  aNode->HasChildNodes(&hasChildren);
   if (hasChildren) {
     nsIDOMNode * childNode;
     aNode->GetFirstChild(&childNode);
@@ -1825,7 +1858,7 @@ nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
   }
 
   PRBool hasChildren;
-  aNode->GetHasChildNodes(&hasChildren);
+  aNode->HasChildNodes(&hasChildren);
   if (hasChildren) {
     nsIDOMNode * childNode;
     aNode->GetFirstChild(&childNode);

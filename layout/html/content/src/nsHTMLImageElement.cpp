@@ -157,7 +157,7 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLImageElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLImageElement* it = new nsHTMLImageElement(mInner.mTag);
   if (nsnull == it) {

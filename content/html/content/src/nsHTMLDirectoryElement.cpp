@@ -117,7 +117,7 @@ nsHTMLDirectoryElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLDirectoryElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLDirectoryElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLDirectoryElement* it = new nsHTMLDirectoryElement(mInner.mTag);
   if (nsnull == it) {

@@ -23,7 +23,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
-#include "nsIDOMAttribute.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
@@ -75,7 +75,7 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 //NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
-static NS_DEFINE_IID(kIDOMAttributeIID, NS_IDOMATTRIBUTE_IID);
+static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -83,11 +83,12 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
 
 // Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttribute and nsIDOMNode and
+// object that implements nsIDOMAttr and nsIDOMNode and
 // nsIScriptObjectOwner
-class DOMAttribute : public nsIDOMAttribute, public nsIScriptObjectOwner {
+class DOMAttribute : public nsIDOMAttr, public nsIScriptObjectOwner {
 public:
   DOMAttribute(const nsString &aName, const nsString &aValue);
   ~DOMAttribute();
@@ -97,20 +98,20 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  // nsIDOMAttribute interface
+  // nsIDOMAttr interface
   NS_IMETHOD GetSpecified(PRBool* aSpecified);
-  NS_IMETHOD SetSpecified(PRBool aSpecified);
   NS_IMETHOD GetName(nsString& aReturn);
   NS_IMETHOD GetValue(nsString& aReturn);
-
+  NS_IMETHOD SetValue(const nsString& aValue);
+  
   // nsIDOMNode interface
   NS_IMETHOD GetNodeName(nsString& aNodeName);
   NS_IMETHOD GetNodeValue(nsString& aNodeValue);
   NS_IMETHOD SetNodeValue(const nsString& aNodeValue);
-  NS_IMETHOD GetNodeType(PRInt32* aNodeType);
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType);
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode);
   NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD GetHasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
   NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
   NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
   NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling);
@@ -122,8 +123,8 @@ public:
                           nsIDOMNode** aReturn);
   NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-  NS_IMETHOD CloneNode(nsIDOMNode** aReturn);
-  NS_IMETHOD Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
 private:
   nsString mName;
@@ -147,7 +148,7 @@ public:
   // nsIDOMNamedNodeMap interface
   NS_IMETHOD GetLength(PRUint32* aSize);
   NS_IMETHOD GetNamedItem(const nsString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD SetNamedItem(nsIDOMNode* aNode);
+  NS_IMETHOD SetNamedItem(nsIDOMNode* aNode, nsIDOMNode** aReturn);
   NS_IMETHOD RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
@@ -200,8 +201,8 @@ DOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMAttributeIID)) {
-    nsIDOMAttribute* tmp = this;
+  if (aIID.Equals(kIDOMAttrIID)) {
+    nsIDOMAttr* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -213,7 +214,7 @@ DOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    nsIDOMAttribute* tmp1 = this;
+    nsIDOMAttr* tmp1 = this;
     nsISupports* tmp2 = tmp1;
     *aInstancePtr = (void*)tmp2;
     NS_ADDREF_THIS();
@@ -232,10 +233,10 @@ DOMAttribute::GetScriptObject(nsIScriptContext *aContext,
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttribute(aContext, 
-                                (nsISupports *)(nsIDOMAttribute *)this, 
-                                nsnull,
-                                (void **)&mScriptObject);
+    res = NS_NewScriptAttr(aContext, 
+                           (nsISupports *)(nsIDOMAttr *)this, 
+                           nsnull,
+                           (void **)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -263,13 +264,14 @@ DOMAttribute::GetValue(nsString& aValue)
 }
 
 nsresult
-DOMAttribute::GetSpecified(PRBool* aSpecified)
+DOMAttribute::SetValue(const nsString& aValue)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mValue = aValue;
+  return NS_OK;
 }
 
 nsresult
-DOMAttribute::SetSpecified(PRBool specified)
+DOMAttribute::GetSpecified(PRBool* aSpecified)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -294,9 +296,9 @@ DOMAttribute::SetNodeValue(const nsString& aNodeValue)
 }
 
 NS_IMETHODIMP
-DOMAttribute::GetNodeType(PRInt32* aNodeType)
+DOMAttribute::GetNodeType(PRUint16* aNodeType)
 {
-  *aNodeType = (PRInt32)nsIDOMNode::ATTRIBUTE;
+  *aNodeType = (PRUint16)nsIDOMNode::ATTRIBUTE_NODE;
   return NS_OK;
 }
 
@@ -315,7 +317,7 @@ DOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 }
 
 NS_IMETHODIMP
-DOMAttribute::GetHasChildNodes(PRBool* aHasChildNodes)
+DOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
 {
   *aHasChildNodes = PR_FALSE;
   return NS_OK;
@@ -381,7 +383,7 @@ DOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-DOMAttribute::CloneNode(nsIDOMNode** aReturn)
+DOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   DOMAttribute* newAttr = new DOMAttribute(mName, mValue);
   if (nsnull == newAttr) {
@@ -392,8 +394,8 @@ DOMAttribute::CloneNode(nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DOMAttribute::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
+NS_IMETHODIMP 
+DOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   // XXX TBI
   return NS_OK;
@@ -479,13 +481,13 @@ DOMAttributeMap::GetNamedItem(const nsString &aAttrName,
 }
 
 nsresult
-DOMAttributeMap::SetNamedItem(nsIDOMNode *aNode)
+DOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 {
-  nsIDOMAttribute *attribute;
+  nsIDOMAttr *attribute;
   nsAutoString name, value;
   nsresult err;
 
-  if (NS_OK != (err = aNode->QueryInterface(kIDOMAttributeIID,
+  if (NS_OK != (err = aNode->QueryInterface(kIDOMAttrIID,
                                             (void **)&attribute))) {
     return err;
   }
@@ -803,9 +805,9 @@ nsGenericHTMLElement::SetNodeValue(const nsString& aNodeValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetNodeType(PRInt32* aNodeType)
+nsGenericHTMLElement::GetNodeType(PRUint16* aNodeType)
 {
-  *aNodeType = nsIDOMNode::ELEMENT;
+  *aNodeType = (PRUint16)nsIDOMNode::ELEMENT_NODE;
   return NS_OK;
 }
 
@@ -866,6 +868,21 @@ nsGenericHTMLElement::GetNextSibling(nsIDOMNode** aNextSibling)
 }
 
 nsresult
+nsGenericHTMLElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
+{
+  // XXX Actually the owner document is the document in whose context
+  // the element has been created. We should be able to get at it
+  // whether or not we are attached to the document.
+  if (nsnull != mDocument) {
+    return mDocument->QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
+  }
+  else {
+    *aOwnerDocument = nsnull;
+    return NS_OK;
+  }
+}
+
+nsresult
 nsGenericHTMLElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
@@ -920,7 +937,7 @@ nsGenericHTMLElement::RemoveAttribute(const nsString& aName)
 
 nsresult
 nsGenericHTMLElement::GetAttributeNode(const nsString& aName,
-                                       nsIDOMAttribute** aReturn)
+                                       nsIDOMAttr** aReturn)
 {
   nsAutoString value;
   if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(aName, value)) {
@@ -930,7 +947,8 @@ nsGenericHTMLElement::GetAttributeNode(const nsString& aName,
 }
 
 nsresult
-nsGenericHTMLElement::SetAttributeNode(nsIDOMAttribute* aAttribute)
+nsGenericHTMLElement::SetAttributeNode(nsIDOMAttr* aAttribute, 
+                                       nsIDOMAttr** aReturn)
 {
   NS_PRECONDITION(nsnull != aAttribute, "null attribute");
 
@@ -950,7 +968,8 @@ nsGenericHTMLElement::SetAttributeNode(nsIDOMAttribute* aAttribute)
 }
 
 nsresult
-nsGenericHTMLElement::RemoveAttributeNode(nsIDOMAttribute* aAttribute)
+nsGenericHTMLElement::RemoveAttributeNode(nsIDOMAttr* aAttribute, 
+                                          nsIDOMAttr** aReturn)
 {
   NS_PRECONDITION(nsnull != aAttribute, "null attribute");
 
@@ -2846,15 +2865,6 @@ nsGenericHTMLLeafElement::CopyInnerTo(nsIHTMLContent* aSrcContent,
 }
 
 nsresult
-nsGenericHTMLLeafElement::Equals(nsIDOMNode* aNode, PRBool aDeep,
-                                 PRBool* aReturn)
-{
-  // XXX not yet implemented
-  *aReturn = PR_FALSE;
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots *slots = GetDOMSlots();
@@ -3061,15 +3071,6 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIHTMLContent* aSrcContent,
 }
 
 nsresult
-nsGenericHTMLContainerElement::Equals(nsIDOMNode* aNode, PRBool aDeep,
-                                      PRBool* aReturn)
-{
-  // XXX not yet implemented
-  *aReturn = PR_FALSE;
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots *slots = GetDOMSlots();
@@ -3083,7 +3084,7 @@ nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 }
 
 nsresult
-nsGenericHTMLContainerElement::GetHasChildNodes(PRBool* aReturn)
+nsGenericHTMLContainerElement::HasChildNodes(PRBool* aReturn)
 {
   if (0 != mChildren.Count()) {
     *aReturn = PR_TRUE;

@@ -24,15 +24,17 @@ REQUIRES=xpcom raptor js netlib
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\
-	nsJSAttribute.cpp		\
+	nsJSAttr.cpp			\
 	nsJSCDATASection.cpp		\
 	nsJSComment.cpp			\
-	nsJSDOM.cpp			\
-	nsJSData.cpp			\
+	nsJSDOMImplementation.cpp	\
+	nsJSCharacterData.cpp		\
 	nsJSDocument.cpp		\
 	nsJSDocumentFragment.cpp	\
 	nsJSDocumentType.cpp		\
 	nsJSElement.cpp			\
+	nsJSEntity.cpp			\
+	nsJSEntityReference.cpp		\
 	nsJSNamedNodeMap.cpp		\
 	nsJSNode.cpp			\
 	nsJSNodeList.cpp		\
@@ -43,15 +45,17 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\nsJSAttribute.obj			\
+	.\$(OBJDIR)\nsJSAttr.obj			\
 	.\$(OBJDIR)\nsJSCDATASection.obj		\
 	.\$(OBJDIR)\nsJSComment.obj			\
-	.\$(OBJDIR)\nsJSDOM.obj				\
-	.\$(OBJDIR)\nsJSData.obj			\
+	.\$(OBJDIR)\nsJSDOMImplementation.obj		\
+	.\$(OBJDIR)\nsJSCharacterData.obj		\
 	.\$(OBJDIR)\nsJSDocument.obj			\
 	.\$(OBJDIR)\nsJSDocumentFragment.obj		\
 	.\$(OBJDIR)\nsJSDocumentType.obj		\
 	.\$(OBJDIR)\nsJSElement.obj			\
+	.\$(OBJDIR)\nsJSEntity.obj			\
+	.\$(OBJDIR)\nsJSEntityReference.obj		\
 	.\$(OBJDIR)\nsJSNamedNodeMap.obj		\
 	.\$(OBJDIR)\nsJSNode.obj			\
 	.\$(OBJDIR)\nsJSNodeList.obj			\

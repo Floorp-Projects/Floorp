@@ -118,7 +118,7 @@ nsHTMLParagraphElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLParagraphElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLParagraphElement* it;
   NS_NEWXPCOM(it, nsHTMLParagraphElement);

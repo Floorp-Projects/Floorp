@@ -25,6 +25,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -33,10 +34,12 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kINamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
+NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMNamedNodeMap);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMNodeList);
@@ -50,12 +53,12 @@ enum Node_slots {
   NODE_NODETYPE = -3,
   NODE_PARENTNODE = -4,
   NODE_CHILDNODES = -5,
-  NODE_HASCHILDNODES = -6,
-  NODE_FIRSTCHILD = -7,
-  NODE_LASTCHILD = -8,
-  NODE_PREVIOUSSIBLING = -9,
-  NODE_NEXTSIBLING = -10,
-  NODE_ATTRIBUTES = -11
+  NODE_FIRSTCHILD = -6,
+  NODE_LASTCHILD = -7,
+  NODE_PREVIOUSSIBLING = -8,
+  NODE_NEXTSIBLING = -9,
+  NODE_ATTRIBUTES = -10,
+  NODE_OWNERDOCUMENT = -11
 };
 
 /***********************************************************************/
@@ -102,7 +105,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_NODETYPE:
       {
-        PRInt32 prop;
+        PRUint16 prop;
         if (NS_OK == a->GetNodeType(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -159,17 +162,6 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           else {
             *vp = JSVAL_NULL;
           }
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case NODE_HASCHILDNODES:
-      {
-        PRBool prop;
-        if (NS_OK == a->GetHasChildNodes(&prop)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
           return JS_FALSE;
@@ -288,6 +280,33 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIDOMNamedNodeMap* prop;
         if (NS_OK == a->GetAttributes(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_OWNERDOCUMENT:
+      {
+        nsIDOMDocument* prop;
+        if (NS_OK == a->GetOwnerDocument(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -765,14 +784,14 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 
 //
-// Native method CloneNode
+// Native method HasChildNodes
 //
 PR_STATIC_CALLBACK(JSBool)
-NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMNode* nativeRet;
+  PRBool nativeRet;
 
   *rval = JSVAL_NULL;
 
@@ -783,7 +802,47 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
   if (argc >= 0) {
 
-    if (NS_OK != nativeThis->CloneNode(&nativeRet)) {
+    if (NS_OK != nativeThis->HasChildNodes(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function hasChildNodes requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CloneNode
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+  PRBool b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToBoolean(cx, argv[0], &b0)) {
+      JS_ReportError(cx, "Parameter must be a boolean");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->CloneNode(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
@@ -805,66 +864,7 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     }
   }
   else {
-    JS_ReportError(cx, "Function cloneNode requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Equals
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeEquals(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRBool nativeRet;
-  nsIDOMNodePtr b0;
-  PRBool b1;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 2) {
-
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (!JS_ValueToBoolean(cx, argv[1], &b1)) {
-      JS_ReportError(cx, "Parameter must be a boolean");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->Equals(b0, b1, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function equals requires 2 parameters");
+    JS_ReportError(cx, "Function cloneNode requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -900,12 +900,12 @@ static JSPropertySpec NodeProperties[] =
   {"nodeType",    NODE_NODETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parentNode",    NODE_PARENTNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"childNodes",    NODE_CHILDNODES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"hasChildNodes",    NODE_HASCHILDNODES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"firstChild",    NODE_FIRSTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"lastChild",    NODE_LASTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"previousSibling",    NODE_PREVIOUSSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"nextSibling",    NODE_NEXTSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"attributes",    NODE_ATTRIBUTES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"ownerDocument",    NODE_OWNERDOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -919,8 +919,8 @@ static JSFunctionSpec NodeMethods[] =
   {"replaceChild",          NodeReplaceChild,     2},
   {"removeChild",          NodeRemoveChild,     1},
   {"appendChild",          NodeAppendChild,     1},
-  {"cloneNode",          NodeCloneNode,     0},
-  {"equals",          NodeEquals,     2},
+  {"hasChildNodes",          NodeHasChildNodes,     0},
+  {"cloneNode",          NodeCloneNode,     1},
   {0}
 };
 
@@ -970,35 +970,41 @@ nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype)
     if ((PR_TRUE == JS_LookupProperty(jscontext, global, "Node", &vp)) &&
         JSVAL_IS_OBJECT(vp) &&
         ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
-      vp = INT_TO_JSVAL(nsIDOMNode::DOCUMENT);
-      JS_SetProperty(jscontext, constructor, "DOCUMENT", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::ELEMENT_NODE);
+      JS_SetProperty(jscontext, constructor, "ELEMENT_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::ELEMENT);
-      JS_SetProperty(jscontext, constructor, "ELEMENT", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::ATTRIBUTE_NODE);
+      JS_SetProperty(jscontext, constructor, "ATTRIBUTE_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::ATTRIBUTE);
-      JS_SetProperty(jscontext, constructor, "ATTRIBUTE", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::TEXT_NODE);
+      JS_SetProperty(jscontext, constructor, "TEXT_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::PROCESSING_INSTRUCTION);
-      JS_SetProperty(jscontext, constructor, "PROCESSING_INSTRUCTION", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::CDATA_SECTION_NODE);
+      JS_SetProperty(jscontext, constructor, "CDATA_SECTION_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::COMMENT);
-      JS_SetProperty(jscontext, constructor, "COMMENT", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::ENTITY_REFERENCE_NODE);
+      JS_SetProperty(jscontext, constructor, "ENTITY_REFERENCE_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::TEXT);
-      JS_SetProperty(jscontext, constructor, "TEXT", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::ENTITY_NODE);
+      JS_SetProperty(jscontext, constructor, "ENTITY_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::CDATA_SECTION);
-      JS_SetProperty(jscontext, constructor, "CDATA_SECTION", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::PROCESSING_INSTRUCTION_NODE);
+      JS_SetProperty(jscontext, constructor, "PROCESSING_INSTRUCTION_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::DOCUMENT_FRAGMENT);
-      JS_SetProperty(jscontext, constructor, "DOCUMENT_FRAGMENT", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::COMMENT_NODE);
+      JS_SetProperty(jscontext, constructor, "COMMENT_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::ENTITY_DECLARATION);
-      JS_SetProperty(jscontext, constructor, "ENTITY_DECLARATION", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::DOCUMENT_NODE);
+      JS_SetProperty(jscontext, constructor, "DOCUMENT_NODE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::ENTITY_REFERENCE);
-      JS_SetProperty(jscontext, constructor, "ENTITY_REFERENCE", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::DOCUMENT_TYPE_NODE);
+      JS_SetProperty(jscontext, constructor, "DOCUMENT_TYPE_NODE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
+      JS_SetProperty(jscontext, constructor, "DOCUMENT_FRAGMENT_NODE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMNode::NOTATION_NODE);
+      JS_SetProperty(jscontext, constructor, "NOTATION_NODE", &vp);
 
     }
 

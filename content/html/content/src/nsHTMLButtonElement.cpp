@@ -59,7 +59,6 @@ public:
 
   // nsIDOMHTMLButtonElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetAccessKey(nsString& aAccessKey);
   NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
   NS_IMETHOD GetDisabled(PRBool* aDisabled);
@@ -69,7 +68,6 @@ public:
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
   NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
 
@@ -86,6 +84,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIFormControl
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD SetWidget(nsIWidget* aWidget) { return NS_OK; };
   NS_IMETHOD Init() { return NS_OK; }
@@ -179,7 +178,7 @@ nsHTMLButtonElement::Release()
 // nsIDOMHTMLButtonElement
 
 nsresult
-nsHTMLButtonElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLButtonElement* it = new nsHTMLButtonElement(mInner.mTag);
   if (nsnull == it) {
@@ -187,30 +186,6 @@ nsHTMLButtonElement::CloneNode(nsIDOMNode** aReturn)
   }
   mInner.CopyInnerTo(this, &it->mInner);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
-}
-
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
-NS_IMETHODIMP
-nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  nsresult result = NS_OK;
-	if (nsnull == aForm) {
-    mForm = nsnull;
-    return NS_OK;
-  } else {
-    NS_IF_RELEASE(mForm);
-    nsIFormControl* formControl = nsnull;
-    result = QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
-      }
-      NS_RELEASE(formControl);
-    }
-  }
-  return result;
 }
 
 NS_IMETHODIMP
@@ -227,11 +202,16 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
   }
   return result;
 }
+NS_IMETHODIMP
+nsHTMLButtonElement::GetType(nsString& aType)
+{
+  aType.SetString("button");
+  return NS_OK;
+}
 
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey, eSetAttrNotify_None)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Type, type, eSetAttrNotify_Restart)
 NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value, eSetAttrNotify_Render)
 
@@ -398,4 +378,28 @@ nsHTMLButtonElement::GetType(PRInt32* aType)
   } else {
     return NS_FORM_NOTOK;
   }
+}
+
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
+NS_IMETHODIMP
+nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  nsresult result = NS_OK;
+  if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
 }

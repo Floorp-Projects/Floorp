@@ -1,13 +1,16 @@
-   interface HTMLAppletElement : HTMLElement {
-     attribute wstring         align;
-     attribute wstring         alt;
-     attribute wstring         archive;
-     attribute wstring         code;
-     attribute wstring         codeBase;
-     attribute wstring         height;
-     attribute wstring         hspace;
-     attribute wstring         name;
-     attribute wstring         object;
-     attribute wstring         vspace;
-     attribute wstring         width;
-   };
+ interface HTMLAppletElement : HTMLElement {
+ /* IID: { 0xa6cf90ae, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            align;
+            attribute  DOMString            alt;
+            attribute  DOMString            archive;
+            attribute  DOMString            code;
+            attribute  DOMString            codeBase;
+            attribute  DOMString            height;
+            attribute  DOMString            hspace;
+            attribute  DOMString            name;
+            attribute  DOMString            object;
+            attribute  DOMString            vspace;
+            attribute  DOMString            width;
+ };

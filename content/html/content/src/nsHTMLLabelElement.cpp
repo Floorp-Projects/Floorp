@@ -52,7 +52,6 @@ public:
 
   // nsIDOMHTMLLabelElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetAccessKey(nsString& aAccessKey);
   NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
   NS_IMETHOD GetHtmlFor(nsString& aHtmlFor);
@@ -116,7 +115,7 @@ nsHTMLLabelElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLLabelElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLLabelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLLabelElement* it = new nsHTMLLabelElement(mInner.mTag);
   if (nsnull == it) {
@@ -130,12 +129,6 @@ NS_IMETHODIMP
 nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   *aForm = nsnull;/* XXX */
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLabelElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
   return NS_OK;
 }
 

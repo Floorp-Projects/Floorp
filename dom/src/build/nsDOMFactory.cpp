@@ -28,11 +28,11 @@
 #include "jsurl.h"
 #include "nsIScriptContext.h"
 #include "nsHTMLTagsEnums.h"
-#include "nsIDOMAttribute.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMCDATASection.h"		   
 #include "nsIDOMComment.h"
-#include "nsIDOMDOM.h"			   
-#include "nsIDOMData.h"
+#include "nsIDOMDOMImplementation.h"			   
+#include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"		   
 #include "nsIDOMDocumentFragment.h"	   
 #include "nsIDOMDocumentType.h"
@@ -52,7 +52,6 @@
 #include "nsIDOMHTMLButtonElement.h"	   
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLDListElement.h"	   
-#include "nsIDOMHTMLDelElement.h"
 #include "nsIDOMHTMLDirectoryElement.h"	   
 #include "nsIDOMHTMLDivElement.h"
 #include "nsIDOMHTMLDocument.h"		   
@@ -68,7 +67,6 @@
 #include "nsIDOMHTMLIFrameElement.h"	   
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"	   
-#include "nsIDOMHTMLInsElement.h"
 #include "nsIDOMHTMLIsIndexElement.h"	   
 #include "nsIDOMHTMLLIElement.h"
 #include "nsIDOMHTMLLabelElement.h"	   
@@ -95,10 +93,7 @@
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableRowElement.h"	   
 #include "nsIDOMHTMLTableSectionElement.h"
-#include "nsIDOMHTMLTbodyElement.h"	   
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMHTMLTfootElement.h"	   
-#include "nsIDOMHTMLTheadElement.h"
 #include "nsIDOMHTMLTitleElement.h"	   
 #include "nsIDOMHTMLUListElement.h"
 #include "nsIDOMNSHTMLDocument.h"		   
@@ -200,10 +195,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD    NewScriptAttribute(nsIScriptContext *aContext, 
-                                   nsISupports *aAttribute, 
-                                   nsISupports *aParent, 
-                                   void** aReturn);
+  NS_IMETHOD    NewScriptAttr(nsIScriptContext *aContext, 
+                              nsISupports *aAttribute, 
+                              nsISupports *aParent, 
+                              void** aReturn);
 
   NS_IMETHOD    NewScriptComment(nsIScriptContext *aContext, 
                                  nsISupports *aComment,
@@ -226,17 +221,17 @@ public:
                                       nsISupports *aParent, 
                                       void** aReturn);
   
-  NS_IMETHOD    NewScriptDOM(nsIScriptContext *aContext, 
-                             nsISupports *aDOM, 
-                             nsISupports *aParent, 
-                             void** aReturn);
+  NS_IMETHOD    NewScriptDOMImplementation(nsIScriptContext *aContext, 
+                                           nsISupports *aDOM, 
+                                           nsISupports *aParent, 
+                                           void** aReturn);
   
-  NS_IMETHOD    NewScriptData(const int aNodeType,
-                              nsIScriptContext *aContext, 
-                              nsISupports *aData, 
-                              nsISupports *aParent, 
-                              void** aReturn);
-
+  NS_IMETHOD    NewScriptCharacterData(const int aNodeType,
+                                       nsIScriptContext *aContext, 
+                                       nsISupports *aData, 
+                                       nsISupports *aParent, 
+                                       void** aReturn);
+  
   NS_IMETHOD    NewScriptElement(const nsString &aTagName, 
                                  nsIScriptContext *aContext, 
                                  nsISupports *aElement, 
@@ -277,12 +272,12 @@ nsDOMScriptObjectFactory::~nsDOMScriptObjectFactory()
 NS_IMPL_ISUPPORTS(nsDOMScriptObjectFactory, kIDOMScriptObjectFactory);
 
 NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptAttribute(nsIScriptContext *aContext, 
-                                             nsISupports *aAttribute, 
-                                             nsISupports *aParent, 
-                                             void** aReturn)
+nsDOMScriptObjectFactory::NewScriptAttr(nsIScriptContext *aContext, 
+                                        nsISupports *aAttribute, 
+                                        nsISupports *aParent, 
+                                        void** aReturn)
 {
-  return NS_NewScriptAttribute(aContext, aAttribute, aParent, aReturn);
+  return NS_NewScriptAttr(aContext, aAttribute, aParent, aReturn);
 }
 
 NS_IMETHODIMP    
@@ -323,22 +318,22 @@ nsDOMScriptObjectFactory::NewScriptDocumentType(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptDOM(nsIScriptContext *aContext, 
-                                       nsISupports *aDOM, 
-                                       nsISupports *aParent, 
-                                       void** aReturn)
+nsDOMScriptObjectFactory::NewScriptDOMImplementation(nsIScriptContext *aContext, 
+                                                     nsISupports *aDOM, 
+                                                     nsISupports *aParent, 
+                                                     void** aReturn)
 {
-  return NS_NewScriptDOM(aContext, aDOM, aParent, aReturn);
+  return NS_NewScriptDOMImplementation(aContext, aDOM, aParent, aReturn);
 }
 
 NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptData(const int aNodeType,
-                                        nsIScriptContext *aContext, 
-                                        nsISupports *aData, 
-                                        nsISupports *aParent, 
-                                        void** aReturn)
+nsDOMScriptObjectFactory::NewScriptCharacterData(const int aNodeType,
+                                                 nsIScriptContext *aContext, 
+                                                 nsISupports *aData, 
+                                                 nsISupports *aParent, 
+                                                 void** aReturn)
 {
-  if (aNodeType == nsIDOMNode::CDATA_SECTION) {
+  if (aNodeType == nsIDOMNode::CDATA_SECTION_NODE) {
     return NS_NewScriptCDATASection(aContext, aData, aParent, aReturn);
   }
   else {

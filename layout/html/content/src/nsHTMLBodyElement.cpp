@@ -274,7 +274,7 @@ nsHTMLBodyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLBodyElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLBodyElement* it = new nsHTMLBodyElement(mInner.mTag);
   if (nsnull == it) {

@@ -1,21 +1,30 @@
-   interface HTMLImageElement : HTMLElement {
-     void HTMLImageElement();
+ interface HTMLImageElement : HTMLElement {
+ /* IID: { 0xa6cf90ab, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-     attribute wstring         lowSrc;
-     attribute wstring         name;
-     attribute wstring         align;
-     attribute wstring         alt;
-     attribute wstring         border;
-     attribute wstring         height;
-     attribute wstring         hspace;
-     attribute boolean         isMap;
-     attribute wstring         longDesc;
-     attribute wstring         src;
-     attribute wstring         useMap;
-     attribute wstring         vspace;
-     attribute wstring         width;
-   };
+ /* IID: { 0xa6cf90c8, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            void HTMLImageElement();
+
+            attribute  DOMString            lowSrc;
+            attribute  DOMString            name;
+            attribute  DOMString            align;
+            attribute  DOMString            alt;
+            attribute  DOMString            border;
+            attribute  DOMString            height;
+            attribute  DOMString            hspace;
+            attribute  boolean              isMap;
+            attribute  DOMString            longDesc;
+            attribute  DOMString            src;
+            attribute  DOMString            useMap;
+            attribute  DOMString            vspace;
+            attribute  DOMString            width;
+ };
 
    interface Image {
+ /* IID: { 0xa6cf90c7, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
      void Image();
    };

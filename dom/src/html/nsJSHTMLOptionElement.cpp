@@ -219,29 +219,6 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLOPTIONELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLOPTIONELEMENT_DEFAULTSELECTED:
       {
         PRBool prop;
@@ -255,21 +232,6 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetDefaultSelected(prop);
-        
-        break;
-      }
-      case HTMLOPTIONELEMENT_TEXT:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetText(prop);
         
         break;
       }
@@ -317,22 +279,6 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetLabel(prop);
-        
-        break;
-      }
-      case HTMLOPTIONELEMENT_SELECTED:
-      {
-        PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
-          return JS_FALSE;
-        }
-      
-        a->SetSelected(prop);
         
         break;
       }
@@ -461,13 +407,13 @@ JSClass HTMLOptionElementClass = {
 //
 static JSPropertySpec HTMLOptionElementProperties[] =
 {
-  {"form",    HTMLOPTIONELEMENT_FORM,    JSPROP_ENUMERATE},
+  {"form",    HTMLOPTIONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"defaultSelected",    HTMLOPTIONELEMENT_DEFAULTSELECTED,    JSPROP_ENUMERATE},
-  {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE},
+  {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE},
   {"disabled",    HTMLOPTIONELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"label",    HTMLOPTIONELEMENT_LABEL,    JSPROP_ENUMERATE},
-  {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE},
+  {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"value",    HTMLOPTIONELEMENT_VALUE,    JSPROP_ENUMERATE},
   {0}
 };

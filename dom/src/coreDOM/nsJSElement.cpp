@@ -26,7 +26,7 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMAttribute.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMNodeList.h"
 
 
@@ -34,11 +34,11 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIAttributeIID, NS_IDOMATTRIBUTE_IID);
+static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
-NS_DEF_PTR(nsIDOMAttribute);
+NS_DEF_PTR(nsIDOMAttr);
 NS_DEF_PTR(nsIDOMNodeList);
 
 //
@@ -352,7 +352,7 @@ ElementGetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMAttribute* nativeRet;
+  nsIDOMAttr* nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -410,7 +410,8 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMAttributePtr b0;
+  nsIDOMAttr* nativeRet;
+  nsIDOMAttrPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -429,8 +430,8 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       NS_ASSERTION(nsnull != supports0, "null pointer");
 
       if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Attribute");
+          (NS_OK != supports0->QueryInterface(kIAttrIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Attr");
         return JS_FALSE;
       }
     }
@@ -439,11 +440,26 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->SetAttributeNode(b0)) {
+    if (NS_OK != nativeThis->SetAttributeNode(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function setAttributeNode requires 1 parameters");
@@ -462,7 +478,8 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 {
   nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMAttributePtr b0;
+  nsIDOMAttr* nativeRet;
+  nsIDOMAttrPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -481,8 +498,8 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       NS_ASSERTION(nsnull != supports0, "null pointer");
 
       if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Attribute");
+          (NS_OK != supports0->QueryInterface(kIAttrIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Attr");
         return JS_FALSE;
       }
     }
@@ -491,11 +508,26 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->RemoveAttributeNode(b0)) {
+    if (NS_OK != nativeThis->RemoveAttributeNode(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function removeAttributeNode requires 1 parameters");

@@ -1,10 +1,13 @@
-   interface HTMLOptionElement : HTMLElement {
-     attribute HTMLFormElement form;
-     attribute boolean         defaultSelected;
-     attribute wstring         text;
-     attribute long            index;
-     attribute boolean         disabled;
-     attribute wstring         label;
-     attribute boolean         selected;
-     attribute wstring         value;
-   };
+ interface HTMLOptionElement : HTMLElement {
+ /* IID: { 0xa6cf9092, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+   readonly attribute  HTMLFormElement      form;
+            attribute  boolean              defaultSelected;
+   readonly attribute  DOMString            text;
+            attribute  long                 index;
+            attribute  boolean              disabled;
+            attribute  DOMString            label;
+   readonly attribute  boolean              selected;
+            attribute  DOMString            value;
+ };

@@ -17,7 +17,7 @@
 
 DEPTH=../..
 
-DIRS = coreDom coreEvents events html css
+DIRS = base coreDom coreEvents events html css
 
 DEFINES = -D_IMPL_NS_DOM
  
@@ -28,10 +28,6 @@ EXPORTS =			 \
 	nsIScriptEventListener.h \
 	nsIScriptObjectOwner.h	 \
 	nsIScriptGlobalObject.h	 \
-	nsIDOMWindow.h	         \
-	nsIDOMNavigator.h        \
-	nsIDOMLocation.h	 \
-	nsIDOMWindowCollection.h \
 	nsIDOMScriptObjectFactory.h   \
 	nsIDOMNativeObjectRegistry.h  \
 	nsDOMCID.h		 \

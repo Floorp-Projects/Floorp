@@ -46,8 +46,10 @@ NS_DEF_PTR(nsIDOMHTMLCollection);
 //
 enum HTMLTableSectionElement_slots {
   HTMLTABLESECTIONELEMENT_ALIGN = -1,
-  HTMLTABLESECTIONELEMENT_VALIGN = -2,
-  HTMLTABLESECTIONELEMENT_ROWS = -3
+  HTMLTABLESECTIONELEMENT_CH = -2,
+  HTMLTABLESECTIONELEMENT_CHOFF = -3,
+  HTMLTABLESECTIONELEMENT_VALIGN = -4,
+  HTMLTABLESECTIONELEMENT_ROWS = -5
 };
 
 /***********************************************************************/
@@ -70,6 +72,32 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       {
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case HTMLTABLESECTIONELEMENT_CH:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetCh(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case HTMLTABLESECTIONELEMENT_CHOFF:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetChOff(prop)) {
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
@@ -175,6 +203,36 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
         
         break;
       }
+      case HTMLTABLESECTIONELEMENT_CH:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetCh(prop);
+        
+        break;
+      }
+      case HTMLTABLESECTIONELEMENT_CHOFF:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetChOff(prop);
+        
+        break;
+      }
       case HTMLTABLESECTIONELEMENT_VALIGN:
       {
         nsAutoString prop;
@@ -188,29 +246,6 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       
         a->SetVAlign(prop);
         
-        break;
-      }
-      case HTMLTABLESECTIONELEMENT_ROWS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetRows(prop);
-        if (prop) NS_RELEASE(prop);
         break;
       }
       default:
@@ -418,8 +453,10 @@ JSClass HTMLTableSectionElementClass = {
 static JSPropertySpec HTMLTableSectionElementProperties[] =
 {
   {"align",    HTMLTABLESECTIONELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"ch",    HTMLTABLESECTIONELEMENT_CH,    JSPROP_ENUMERATE},
+  {"chOff",    HTMLTABLESECTIONELEMENT_CHOFF,    JSPROP_ENUMERATE},
   {"vAlign",    HTMLTABLESECTIONELEMENT_VALIGN,    JSPROP_ENUMERATE},
-  {"rows",    HTMLTABLESECTIONELEMENT_ROWS,    JSPROP_ENUMERATE},
+  {"rows",    HTMLTABLESECTIONELEMENT_ROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

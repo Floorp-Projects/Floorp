@@ -115,7 +115,7 @@ nsHTMLPreElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLPreElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLPreElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLPreElement* it = new nsHTMLPreElement(mInner.mTag);
   if (nsnull == it) {

@@ -32,8 +32,8 @@ class nsIDOMHTMLCollection;
 class nsIDOMNodeList;
 
 #define NS_IDOMHTMLDOCUMENT_IID \
-{ 0x6f7652fe,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf9084, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLDocument : public nsIDOMDocument {
 public:
@@ -42,14 +42,6 @@ public:
   NS_IMETHOD    SetTitle(const nsString& aTitle)=0;
 
   NS_IMETHOD    GetReferrer(nsString& aReferrer)=0;
-
-  NS_IMETHOD    GetFileSize(nsString& aFileSize)=0;
-
-  NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate)=0;
-
-  NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate)=0;
-
-  NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate)=0;
 
   NS_IMETHOD    GetDomain(nsString& aDomain)=0;
 
@@ -89,10 +81,6 @@ public:
   NS_IMETHOD    GetTitle(nsString& aTitle);  \
   NS_IMETHOD    SetTitle(const nsString& aTitle);  \
   NS_IMETHOD    GetReferrer(nsString& aReferrer);  \
-  NS_IMETHOD    GetFileSize(nsString& aFileSize);  \
-  NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate);  \
-  NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate);  \
-  NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate);  \
   NS_IMETHOD    GetDomain(nsString& aDomain);  \
   NS_IMETHOD    GetURL(nsString& aURL);  \
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody);  \
@@ -117,10 +105,6 @@ public:
   NS_IMETHOD    GetTitle(nsString& aTitle) { return _to##GetTitle(aTitle); } \
   NS_IMETHOD    SetTitle(const nsString& aTitle) { return _to##SetTitle(aTitle); } \
   NS_IMETHOD    GetReferrer(nsString& aReferrer) { return _to##GetReferrer(aReferrer); } \
-  NS_IMETHOD    GetFileSize(nsString& aFileSize) { return _to##GetFileSize(aFileSize); } \
-  NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate) { return _to##GetFileCreatedDate(aFileCreatedDate); } \
-  NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate) { return _to##GetFileModifiedDate(aFileModifiedDate); } \
-  NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate) { return _to##GetFileUpdatedDate(aFileUpdatedDate); } \
   NS_IMETHOD    GetDomain(nsString& aDomain) { return _to##GetDomain(aDomain); } \
   NS_IMETHOD    GetURL(nsString& aURL) { return _to##GetURL(aURL); } \
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody) { return _to##GetBody(aBody); } \

@@ -132,7 +132,7 @@ nsHTMLAppletElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLAppletElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLAppletElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLAppletElement* it = new nsHTMLAppletElement(mInner.mTag);
   if (nsnull == it) {

@@ -27,24 +27,24 @@ function traverse(node, indent)
     var type = node.nodeType;
 
     // if it's an element dump the tag and recurse the children
-    if (type == Node.ELEMENT) {
+    if (type == Node.ELEMENT_NODE) {
 
         dump(indent + node.tagName)
 
         // go through the children
-        if (node.hasChildNodes) {
+        if (node.hasChildNodes()) {
             var children = node.childNodes;
             var length = children.length;
             var count = 0;
             while(count < length) {
-                child = children.item(count)
+                child = children[count]
                 traverse(child, indent)
                 count++
             }
         }
     }
     // it's just text, no tag, dump "Text"
-    else if (type == Node.TEXT) {
+    else if (type == Node.TEXT_NODE) {
         dump(indent + "Text")
     }
 }

@@ -82,6 +82,7 @@ ostream& operator<<(ostream &s, IdlInterface &aInterface)
 
 IdlInterface::IdlInterface()
 {
+  mIIDs = (nsVoidArray *)0;
   mBaseClasses = (nsVoidArray*)0;
   mAttributes = (nsVoidArray*)0;
   mFunctions = (nsVoidArray*)0;
@@ -95,6 +96,12 @@ IdlInterface::IdlInterface()
 
 IdlInterface::~IdlInterface()
 {
+  if (mIIDs) {
+    for (int i = 0; i < mIIDs->Count(); i++) {
+      char *iid = (char*)mIIDs->ElementAt(i);
+      delete [] iid;
+    }
+  }
   if (mBaseClasses) {
     for (int i = 0; i < mBaseClasses->Count(); i++) {
       char *baseClass = (char*)mBaseClasses->ElementAt(i);
@@ -149,6 +156,37 @@ IdlInterface::~IdlInterface()
       delete exceptionObj;
     }
   }
+}
+
+void IdlInterface::AddIID(char *aIID)
+{
+  if (aIID) {
+    char *iid = new char[strlen(aIID) + 1];
+    strcpy(iid, aIID);
+    if (!mIIDs) {
+      mIIDs = new nsVoidArray();
+    }
+    mIIDs->AppendElement((void*)iid);
+  }
+}
+
+long IdlInterface::IIDCount()
+{
+  if (mIIDs) {
+    return mIIDs->Count();
+  }
+  return 0;
+}
+
+char* IdlInterface::GetIIDAt(long aIndex)
+{
+  char *iid = (char*)0;
+
+  if (mIIDs) {
+    iid = (char*)mIIDs->ElementAt(aIndex);
+  }
+
+  return iid;
 }
 
 void IdlInterface::InheritsFrom(char *aBase)

@@ -23,7 +23,7 @@
 function html(node)
 {
     var type = node.nodeType;
-    if (type == Node.ELEMENT) {
+    if (type == Node.ELEMENT_NODE) {
 
         // open tag
         dump("<" + node.tagName)
@@ -34,7 +34,7 @@ function html(node)
             var countAttrs = attributes.length;
             var index = 0
             while(index < countAttrs) {
-                att = attributes.item(index);
+                att = attributes[index];
                 if (null != att) {
                     dump(" " + att.value)
                 }
@@ -46,13 +46,13 @@ function html(node)
         dump(">")
 
         // recursively dump the children
-        if (node.hasChildNodes) {
+        if (node.hasChildNodes()) {
             // get the children
             var children = node.childNodes;
             var length = children.length;
             var count = 0;
             while(count < length) {
-                child = children.item(count)
+                child = children[count]
                 html(child)
                 count++
             }
@@ -62,7 +62,7 @@ function html(node)
         
     }
     // if it's a piece of text just dump the text
-    else if (type == Node.TEXT) {
+    else if (type == Node.TEXT_NODE) {
         dump(node.data)
     }
 }

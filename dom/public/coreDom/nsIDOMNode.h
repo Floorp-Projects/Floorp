@@ -24,27 +24,30 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMDocument;
 class nsIDOMNamedNodeMap;
 class nsIDOMNode;
 class nsIDOMNodeList;
 
 #define NS_IDOMNODE_IID \
-{ 0x6f7652eb,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf907c, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMNode : public nsISupports {
 public:
   enum {
-    DOCUMENT = 1,
-    ELEMENT = 2,
-    ATTRIBUTE = 3,
-    PROCESSING_INSTRUCTION = 4,
-    COMMENT = 5,
-    TEXT = 6,
-    CDATA_SECTION = 7,
-    DOCUMENT_FRAGMENT = 8,
-    ENTITY_DECLARATION = 9,
-    ENTITY_REFERENCE = 10
+    ELEMENT_NODE = 1,
+    ATTRIBUTE_NODE = 2,
+    TEXT_NODE = 3,
+    CDATA_SECTION_NODE = 4,
+    ENTITY_REFERENCE_NODE = 5,
+    ENTITY_NODE = 6,
+    PROCESSING_INSTRUCTION_NODE = 7,
+    COMMENT_NODE = 8,
+    DOCUMENT_NODE = 9,
+    DOCUMENT_TYPE_NODE = 10,
+    DOCUMENT_FRAGMENT_NODE = 11,
+    NOTATION_NODE = 12
   };
 
   NS_IMETHOD    GetNodeName(nsString& aNodeName)=0;
@@ -52,13 +55,11 @@ public:
   NS_IMETHOD    GetNodeValue(nsString& aNodeValue)=0;
   NS_IMETHOD    SetNodeValue(const nsString& aNodeValue)=0;
 
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType)=0;
+  NS_IMETHOD    GetNodeType(PRUint16* aNodeType)=0;
 
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)=0;
 
   NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes)=0;
-
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes)=0;
 
   NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild)=0;
 
@@ -70,6 +71,8 @@ public:
 
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes)=0;
 
+  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument)=0;
+
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)=0;
@@ -78,9 +81,9 @@ public:
 
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)=0;
 
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    HasChildNodes(PRBool* aReturn)=0;
 
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)=0;
+  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn)=0;
 };
 
 
@@ -88,21 +91,21 @@ public:
   NS_IMETHOD    GetNodeName(nsString& aNodeName);  \
   NS_IMETHOD    GetNodeValue(nsString& aNodeValue);  \
   NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);  \
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType);  \
+  NS_IMETHOD    GetNodeType(PRUint16* aNodeType);  \
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);  \
   NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);  \
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);  \
   NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);  \
   NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);  \
   NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);  \
   NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);  \
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);  \
+  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);  \
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);  \
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn);  \
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);  \
+  NS_IMETHOD    HasChildNodes(PRBool* aReturn);  \
+  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);  \
 
 
 
@@ -110,21 +113,21 @@ public:
   NS_IMETHOD    GetNodeName(nsString& aNodeName) { return _to##GetNodeName(aNodeName); } \
   NS_IMETHOD    GetNodeValue(nsString& aNodeValue) { return _to##GetNodeValue(aNodeValue); } \
   NS_IMETHOD    SetNodeValue(const nsString& aNodeValue) { return _to##SetNodeValue(aNodeValue); } \
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType) { return _to##GetNodeType(aNodeType); } \
+  NS_IMETHOD    GetNodeType(PRUint16* aNodeType) { return _to##GetNodeType(aNodeType); } \
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode) { return _to##GetParentNode(aParentNode); } \
   NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes) { return _to##GetChildNodes(aChildNodes); } \
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes) { return _to##GetHasChildNodes(aHasChildNodes); } \
   NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild) { return _to##GetFirstChild(aFirstChild); } \
   NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild) { return _to##GetLastChild(aLastChild); } \
   NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling) { return _to##GetPreviousSibling(aPreviousSibling); } \
   NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling) { return _to##GetNextSibling(aNextSibling); } \
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes) { return _to##GetAttributes(aAttributes); } \
+  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument) { return _to##GetOwnerDocument(aOwnerDocument); } \
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to##InsertBefore(aNewChild, aRefChild, aReturn); }  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##ReplaceChild(aNewChild, aOldChild, aReturn); }  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##RemoveChild(aOldChild, aReturn); }  \
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) { return _to##AppendChild(aNewChild, aReturn); }  \
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn) { return _to##CloneNode(aReturn); }  \
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn) { return _to##Equals(aNode, aDeep, aReturn); }  \
+  NS_IMETHOD    HasChildNodes(PRBool* aReturn) { return _to##HasChildNodes(aReturn); }  \
+  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn) { return _to##CloneNode(aDeep, aReturn); }  \
 
 
 extern nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);

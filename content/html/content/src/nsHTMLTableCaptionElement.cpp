@@ -113,7 +113,7 @@ nsHTMLTableCaptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLTableCaptionElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTableCaptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTableCaptionElement* it = new nsHTMLTableCaptionElement(mInner.mTag);
   if (nsnull == it) {

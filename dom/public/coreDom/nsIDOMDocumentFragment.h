@@ -25,26 +25,21 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-class nsIDOMDocument;
 
 #define NS_IDOMDOCUMENTFRAGMENT_IID \
-{ 0x6f7652e5,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf9076, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMDocumentFragment : public nsIDOMNode {
 public:
-
-  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc)=0;
 };
 
 
 #define NS_DECL_IDOMDOCUMENTFRAGMENT   \
-  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc);  \
 
 
 
 #define NS_FORWARD_IDOMDOCUMENTFRAGMENT(_to)  \
-  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc) { return _to##GetMasterDoc(aMasterDoc); } \
 
 
 extern nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype);

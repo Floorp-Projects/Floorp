@@ -28,14 +28,13 @@
 class nsIDOMHTMLFormElement;
 
 #define NS_IDOMHTMLOBJECTELEMENT_IID \
-{ 0x6f765317,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf90ac, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLObjectElement : public nsIDOMHTMLElement {
 public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm)=0;
 
   NS_IMETHOD    GetCode(nsString& aCode)=0;
   NS_IMETHOD    SetCode(const nsString& aCode)=0;
@@ -92,7 +91,6 @@ public:
 
 #define NS_DECL_IDOMHTMLOBJECTELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
   NS_IMETHOD    GetCode(nsString& aCode);  \
   NS_IMETHOD    SetCode(const nsString& aCode);  \
   NS_IMETHOD    GetAlign(nsString& aAlign);  \
@@ -132,7 +130,6 @@ public:
 
 #define NS_FORWARD_IDOMHTMLOBJECTELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return _to##SetForm(aForm); } \
   NS_IMETHOD    GetCode(nsString& aCode) { return _to##GetCode(aCode); } \
   NS_IMETHOD    SetCode(const nsString& aCode) { return _to##SetCode(aCode); } \
   NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \

@@ -1,9 +1,12 @@
-   interface HTMLButtonElement : HTMLElement {
-     attribute HTMLFormElement form;
-     attribute wstring         accessKey;
-     attribute boolean         disabled;
-     attribute wstring         name;
-     attribute long            tabIndex;
-     attribute wstring         type;
-     attribute wstring         value;
-   };
+ interface HTMLButtonElement : HTMLElement {
+ /* IID: { 0xa6cf9095, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+   readonly attribute  HTMLFormElement      form;
+            attribute  DOMString            accessKey;
+            attribute  boolean              disabled;
+            attribute  DOMString            name;
+            attribute  long                 tabIndex;
+   readonly attribute  DOMString            type;
+            attribute  DOMString            value;
+ };

@@ -38,8 +38,8 @@ public:
   // nsIDOMNode
   NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
-  // nsIDOMData
-  NS_IMPL_IDOMDATA_USING_GENERIC_DOM_DATA(mInner)
+  // nsIDOMCharacterData
+  NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMComment
 
@@ -95,22 +95,14 @@ nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsCommentNode::GetNodeType(PRInt32* aNodeType)
+nsCommentNode::GetNodeType(PRUint16* aNodeType)
 {
-  *aNodeType = (PRInt32)nsIDOMNode::TEXT;
+  *aNodeType = (PRUint16)nsIDOMNode::COMMENT_NODE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommentNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
-{
-  // XXX not yet implemented
-  *aReturn = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommentNode::CloneNode(nsIDOMNode** aReturn)
+nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsCommentNode* it = new nsCommentNode();
   if (nsnull == it) {

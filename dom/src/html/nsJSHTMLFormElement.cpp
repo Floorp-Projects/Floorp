@@ -49,14 +49,14 @@ NS_DEF_PTR(nsIDOMHTMLCollection);
 //
 enum HTMLFormElement_slots {
   HTMLFORMELEMENT_ELEMENTS = -1,
-  HTMLFORMELEMENT_NAME = -2,
-  HTMLFORMELEMENT_ACCEPTCHARSET = -3,
-  HTMLFORMELEMENT_ACTION = -4,
-  HTMLFORMELEMENT_ENCTYPE = -5,
-  HTMLFORMELEMENT_METHOD = -6,
-  HTMLFORMELEMENT_TARGET = -7,
-  NSHTMLFORMELEMENT_ENCODING = -8,
-  NSHTMLFORMELEMENT_LENGTH = -9
+  HTMLFORMELEMENT_LENGTH = -2,
+  HTMLFORMELEMENT_NAME = -3,
+  HTMLFORMELEMENT_ACCEPTCHARSET = -4,
+  HTMLFORMELEMENT_ACTION = -5,
+  HTMLFORMELEMENT_ENCTYPE = -6,
+  HTMLFORMELEMENT_METHOD = -7,
+  HTMLFORMELEMENT_TARGET = -8,
+  NSHTMLFORMELEMENT_ENCODING = -9
 };
 
 /***********************************************************************/
@@ -96,6 +96,17 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           else {
             *vp = JSVAL_NULL;
           }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case HTMLFORMELEMENT_LENGTH:
+      {
+        PRUint32 prop;
+        if (NS_OK == a->GetLength(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
         }
         else {
           return JS_FALSE;
@@ -189,26 +200,6 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
-            NS_RELEASE(b);
-          }
-          else {
-            NS_RELEASE(b);
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Object must be of type NSHTMLFormElement");
-          return JS_FALSE;
-        }
-        break;
-      }
-      case NSHTMLFORMELEMENT_LENGTH:
-      {
-        PRUint32 prop;
-        nsIDOMNSHTMLFormElement* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLFormElementIID, (void **)&b)) {
-          if(NS_OK == b->GetLength(&prop)) {
-          *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
           else {
@@ -318,6 +309,21 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+      case HTMLFORMELEMENT_NAME:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetName(prop);
+        
+        break;
+      }
       case HTMLFORMELEMENT_ACCEPTCHARSET:
       {
         nsAutoString prop;
@@ -481,39 +487,6 @@ ResolveHTMLFormElement(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method Reset
-//
-PR_STATIC_CALLBACK(JSBool)
-HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->Reset()) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function reset requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method Submit
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -547,13 +520,46 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method Reset
+//
+PR_STATIC_CALLBACK(JSBool)
+HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Reset()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function reset requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method NamedItem
 //
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLFormElement *privateThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
-  nsIDOMNSHTMLFormElement *nativeThis;
+  nsIDOMNSHTMLFormElement *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLFormElementIID, (void **)nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLFormElement");
     return JS_FALSE;
@@ -634,14 +640,14 @@ JSClass HTMLFormElementClass = {
 static JSPropertySpec HTMLFormElementProperties[] =
 {
   {"elements",    HTMLFORMELEMENT_ELEMENTS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"name",    HTMLFORMELEMENT_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"length",    HTMLFORMELEMENT_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    HTMLFORMELEMENT_NAME,    JSPROP_ENUMERATE},
   {"acceptCharset",    HTMLFORMELEMENT_ACCEPTCHARSET,    JSPROP_ENUMERATE},
   {"action",    HTMLFORMELEMENT_ACTION,    JSPROP_ENUMERATE},
   {"enctype",    HTMLFORMELEMENT_ENCTYPE,    JSPROP_ENUMERATE},
   {"method",    HTMLFORMELEMENT_METHOD,    JSPROP_ENUMERATE},
   {"target",    HTMLFORMELEMENT_TARGET,    JSPROP_ENUMERATE},
   {"encoding",    NSHTMLFORMELEMENT_ENCODING,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"length",    NSHTMLFORMELEMENT_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -651,8 +657,8 @@ static JSPropertySpec HTMLFormElementProperties[] =
 //
 static JSFunctionSpec HTMLFormElementMethods[] = 
 {
-  {"reset",          HTMLFormElementReset,     0},
   {"submit",          HTMLFormElementSubmit,     0},
+  {"reset",          HTMLFormElementReset,     0},
   {"namedItem",          NSHTMLFormElementNamedItem,     1},
   {0}
 };

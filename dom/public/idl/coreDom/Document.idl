@@ -1,21 +1,31 @@
-   interface Document : DocumentFragment {
-     readonly attribute DocumentType    documentType;
-     readonly attribute NodeList        prolog;
-     readonly attribute NodeList        epilog;
-     readonly attribute Element         documentElement;
-     Element                   createElement(in wstring tagName, 
-                                             in NamedNodeMap attributes);
+   interface Document : Node {
+ /* IID: { 0xa6cf9075, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+     readonly attribute  DocumentType         doctype;
+     readonly attribute  DOMImplementation    implementation;
+     readonly attribute  Element              documentElement;
+     Element                   createElement(in DOMString tagName)
+                                             raises(DOMException);
      DocumentFragment          createDocumentFragment();
-     Text                      createTextNode(in wstring data);
-     Comment                   createComment(in wstring data);
-     ProcessingInstruction     createProcessingInstruction(in wstring target, 
-                                                           in wstring data);
-     Attribute                 createAttribute(in wstring name, 
-                                               in Node value);
-     NodeList                  getElementsByTagName(in wstring tagname);
+     Text                      createTextNode(in DOMString data);
+     Comment                   createComment(in DOMString data);
+     CDATASection              createCDATASection(in DOMString data)
+                                                  raises(DOMException);
+     ProcessingInstruction     createProcessingInstruction(in DOMString target, 
+                                                           in DOMString data)
+                                                           raises(DOMException);
+     Attr                      createAttribute(in DOMString name)
+                                                 raises(DOMException);
+     EntityReference           createEntityReference(in DOMString name)
+                                                     raises(DOMException);
+     NodeList                  getElementsByTagName(in DOMString tagname);
    };
 
    interface EventCapturer : EventReceiver {
+/* IID: { 0xa6cf906c, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
      void                      captureEvent(in wstring type);
      void                      releaseEvent(in wstring type);
    };

@@ -116,7 +116,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSELECTELEMENT_LENGTH:
       {
-        PRInt32 prop;
+        PRUint32 prop;
         if (NS_OK == a->GetLength(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -277,21 +277,6 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLSELECTELEMENT_TYPE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetType(prop);
-        
-        break;
-      }
       case HTMLSELECTELEMENT_SELECTEDINDEX:
       {
         PRInt32 prop;
@@ -321,68 +306,6 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       
         a->SetValue(prop);
         
-        break;
-      }
-      case HTMLSELECTELEMENT_LENGTH:
-      {
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
-        }
-      
-        a->SetLength(prop);
-        
-        break;
-      }
-      case HTMLSELECTELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLSELECTELEMENT_OPTIONS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetOptions(prop);
-        if (prop) NS_RELEASE(prop);
         break;
       }
       case HTMLSELECTELEMENT_DISABLED:
@@ -750,12 +673,12 @@ JSClass HTMLSelectElementClass = {
 //
 static JSPropertySpec HTMLSelectElementProperties[] =
 {
-  {"type",    HTMLSELECTELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"type",    HTMLSELECTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"selectedIndex",    HTMLSELECTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
   {"value",    HTMLSELECTELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"length",    HTMLSELECTELEMENT_LENGTH,    JSPROP_ENUMERATE},
-  {"form",    HTMLSELECTELEMENT_FORM,    JSPROP_ENUMERATE},
-  {"options",    HTMLSELECTELEMENT_OPTIONS,    JSPROP_ENUMERATE},
+  {"length",    HTMLSELECTELEMENT_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"form",    HTMLSELECTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"options",    HTMLSELECTELEMENT_OPTIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"disabled",    HTMLSELECTELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"multiple",    HTMLSELECTELEMENT_MULTIPLE,    JSPROP_ENUMERATE},
   {"name",    HTMLSELECTELEMENT_NAME,    JSPROP_ENUMERATE},

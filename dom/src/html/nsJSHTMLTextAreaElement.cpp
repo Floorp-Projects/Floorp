@@ -50,7 +50,9 @@ enum HTMLTextAreaElement_slots {
   HTMLTEXTAREAELEMENT_NAME = -6,
   HTMLTEXTAREAELEMENT_READONLY = -7,
   HTMLTEXTAREAELEMENT_ROWS = -8,
-  HTMLTEXTAREAELEMENT_TABINDEX = -9
+  HTMLTEXTAREAELEMENT_TABINDEX = -9,
+  HTMLTEXTAREAELEMENT_TYPE = -10,
+  HTMLTEXTAREAELEMENT_VALUE = -11
 };
 
 /***********************************************************************/
@@ -190,6 +192,32 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         }
         break;
       }
+      case HTMLTEXTAREAELEMENT_TYPE:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetType(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case HTMLTEXTAREAELEMENT_VALUE:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetValue(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -244,29 +272,6 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       
         a->SetDefaultValue(prop);
         
-        break;
-      }
-      case HTMLTEXTAREAELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
         break;
       }
       case HTMLTEXTAREAELEMENT_ACCESSKEY:
@@ -376,6 +381,21 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         }
       
         a->SetTabIndex(prop);
+        
+        break;
+      }
+      case HTMLTEXTAREAELEMENT_VALUE:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetValue(prop);
         
         break;
       }
@@ -589,7 +609,7 @@ JSClass HTMLTextAreaElementClass = {
 static JSPropertySpec HTMLTextAreaElementProperties[] =
 {
   {"defaultValue",    HTMLTEXTAREAELEMENT_DEFAULTVALUE,    JSPROP_ENUMERATE},
-  {"form",    HTMLTEXTAREAELEMENT_FORM,    JSPROP_ENUMERATE},
+  {"form",    HTMLTEXTAREAELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"accessKey",    HTMLTEXTAREAELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
   {"cols",    HTMLTEXTAREAELEMENT_COLS,    JSPROP_ENUMERATE},
   {"disabled",    HTMLTEXTAREAELEMENT_DISABLED,    JSPROP_ENUMERATE},
@@ -597,6 +617,8 @@ static JSPropertySpec HTMLTextAreaElementProperties[] =
   {"readOnly",    HTMLTEXTAREAELEMENT_READONLY,    JSPROP_ENUMERATE},
   {"rows",    HTMLTEXTAREAELEMENT_ROWS,    JSPROP_ENUMERATE},
   {"tabIndex",    HTMLTEXTAREAELEMENT_TABINDEX,    JSPROP_ENUMERATE},
+  {"type",    HTMLTEXTAREAELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"value",    HTMLTEXTAREAELEMENT_VALUE,    JSPROP_ENUMERATE},
   {0}
 };
 

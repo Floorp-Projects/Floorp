@@ -155,7 +155,7 @@ nsHTMLFieldSetElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsIDOMHTMLFieldSetElement
 
 nsresult
-nsHTMLFieldSetElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLFieldSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement(mInner.mTag);
   if (nsnull == it) {

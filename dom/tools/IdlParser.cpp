@@ -266,6 +266,9 @@ void IdlParser::ParseInterfaceBody(IdlSpecification &aSpecification, IdlInterfac
 
     // parse the proper valid type
     switch (token->id) {
+      case IID_TOKEN:
+        aInterface.AddIID(token->stringID);
+        break;
       case TYPEDEF_TOKEN:
         aInterface.AddTypedef(ParseTypedef(aSpecification));
         break;
@@ -297,11 +300,13 @@ void IdlParser::ParseInterfaceBody(IdlSpecification &aSpecification, IdlInterfac
     TrimComments();
 
     // read the final ";"
-    token = mScanner->NextToken();
-    if (TERMINATOR_TOKEN != token->id) {
-      throw InterfaceParsingException("Missing ';'.");
+    if (IID_TOKEN != token->id) {
+      token = mScanner->NextToken();
+      if (TERMINATOR_TOKEN != token->id) {
+        throw InterfaceParsingException("Missing ';'.");
+      }
+      TrimComments();
     }
-    TrimComments();
   }
 
   // eat "}"

@@ -117,7 +117,7 @@ nsHTMLMenuElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLMenuElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLMenuElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLMenuElement* it = new nsHTMLMenuElement(mInner.mTag);
   if (nsnull == it) {

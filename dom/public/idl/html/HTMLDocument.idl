@@ -1,28 +1,30 @@
-   interface HTMLDocument : Document {
-     attribute wstring         title;
-     readonly attribute wstring         referrer;
-     readonly attribute wstring         fileSize;
-     readonly attribute wstring         fileCreatedDate;
-     readonly attribute wstring         fileModifiedDate;
-     readonly attribute wstring         fileUpdatedDate;
-     readonly attribute wstring         domain;
-     readonly attribute wstring         URL;
-     attribute HTMLElement     body;
-     readonly attribute HTMLCollection  images;
-     readonly attribute HTMLCollection  applets;
-     readonly attribute HTMLCollection  links;
-     readonly attribute HTMLCollection  forms;
-     readonly attribute HTMLCollection  anchors;
-     attribute wstring         cookie;
-     void                      open(/* ... */);
-     void                      close();
-     void                      write(/* ... */);
-     void                      writeln(/* ... */);
-     Element                   getElementById(in wstring elementId);
-     NodeList                  getElementsByName(in wstring elementName);
-   };
+ interface HTMLDocument : Document {
+ /* IID: { 0xa6cf9084, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            title;
+   readonly attribute  DOMString            referrer;
+   readonly attribute  DOMString            domain;
+   readonly attribute  DOMString            URL;
+            attribute  HTMLElement          body;
+   readonly attribute  HTMLCollection       images;
+   readonly attribute  HTMLCollection       applets;
+   readonly attribute  HTMLCollection       links;
+   readonly attribute  HTMLCollection       forms;
+   readonly attribute  HTMLCollection       anchors;
+            attribute  DOMString            cookie;
+   void                      open(/* ... */);
+   void                      close();
+   void                      write(/* ... */);
+   void                      writeln(/* ... */);
+   Element                   getElementById(in DOMString elementId);
+   NodeList                  getElementsByName(in DOMString elementName);
+ };
 
    interface NSHTMLDocument {
+ /* IID: { 0xa6cf90c5, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
      attribute wstring alinkColor;
      attribute wstring linkColor;
      attribute wstring vlinkColor;

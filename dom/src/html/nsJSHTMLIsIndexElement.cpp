@@ -143,29 +143,6 @@ SetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLISINDEXELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLISINDEXELEMENT_PROMPT:
       {
         nsAutoString prop;
@@ -291,7 +268,7 @@ JSClass HTMLIsIndexElementClass = {
 //
 static JSPropertySpec HTMLIsIndexElementProperties[] =
 {
-  {"form",    HTMLISINDEXELEMENT_FORM,    JSPROP_ENUMERATE},
+  {"form",    HTMLISINDEXELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"prompt",    HTMLISINDEXELEMENT_PROMPT,    JSPROP_ENUMERATE},
   {0}
 };

@@ -1,24 +1,27 @@
-   interface HTMLInputElement : HTMLElement {
-     attribute wstring         defaultValue;
-     attribute boolean         defaultChecked;
-     readonly attribute HTMLFormElement form;
-     attribute wstring         accept;
-     attribute wstring         accessKey;
-     attribute wstring         align;
-     attribute wstring         alt;
-     attribute boolean         checked;
-     attribute boolean         disabled;
-     attribute long            maxLength;
-     attribute wstring         name;
-     attribute boolean         readOnly;
-     attribute wstring         size;
-     attribute wstring         src;
-     attribute long            tabIndex;
-     readonly attribute wstring         type;
-     attribute wstring         useMap;
-     attribute wstring         value;
-     void                      blur();
-     void                      focus();
-     void                      select();
-     void                      click();
-   };
+ interface HTMLInputElement : HTMLElement {
+ /* IID: { 0xa6cf9093, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            defaultValue;
+            attribute  boolean              defaultChecked;
+   readonly attribute  HTMLFormElement      form;
+            attribute  DOMString            accept;
+            attribute  DOMString            accessKey;
+            attribute  DOMString            align;
+            attribute  DOMString            alt;
+            attribute  boolean              checked;
+            attribute  boolean              disabled;
+            attribute  long                 maxLength;
+            attribute  DOMString            name;
+            attribute  boolean              readOnly;
+            attribute  DOMString            size;
+            attribute  DOMString            src;
+            attribute  long                 tabIndex;
+   readonly attribute  DOMString            type;
+            attribute  DOMString            useMap;
+            attribute  DOMString            value;
+   void                      blur();
+   void                      focus();
+   void                      select();
+   void                      click();
+ };

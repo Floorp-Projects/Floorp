@@ -1,14 +1,19 @@
-   interface HTMLTextAreaElement : HTMLElement {
-     attribute wstring         defaultValue;
-     attribute HTMLFormElement form;
-     attribute wstring         accessKey;
-     attribute long            cols;
-     attribute boolean         disabled;
-     attribute wstring         name;
-     attribute boolean         readOnly;
-     attribute long            rows;
-     attribute long            tabIndex;
-     void                      blur();
-     void                      focus();
-     void                      select();
-   };
+ interface HTMLTextAreaElement : HTMLElement {
+ /* IID: { 0xa6cf9094, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            defaultValue;
+   readonly attribute  HTMLFormElement      form;
+            attribute  DOMString            accessKey;
+            attribute  long                 cols;
+            attribute  boolean              disabled;
+            attribute  DOMString            name;
+            attribute  boolean              readOnly;
+            attribute  long                 rows;
+            attribute  long                 tabIndex;
+   readonly attribute  DOMString            type;
+            attribute  DOMString            value;
+   void                      blur();
+   void                      focus();
+   void                      select();
+ };

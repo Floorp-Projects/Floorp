@@ -112,7 +112,7 @@ nsHTMLQuoteElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLQuoteElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLQuoteElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLQuoteElement* it = new nsHTMLQuoteElement(mInner.mTag);
   if (nsnull == it) {

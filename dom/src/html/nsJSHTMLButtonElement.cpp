@@ -209,29 +209,6 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLBUTTONELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLBUTTONELEMENT_ACCESSKEY:
       {
         nsAutoString prop;
@@ -291,21 +268,6 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetTabIndex(prop);
-        
-        break;
-      }
-      case HTMLBUTTONELEMENT_TYPE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetType(prop);
         
         break;
       }
@@ -434,12 +396,12 @@ JSClass HTMLButtonElementClass = {
 //
 static JSPropertySpec HTMLButtonElementProperties[] =
 {
-  {"form",    HTMLBUTTONELEMENT_FORM,    JSPROP_ENUMERATE},
+  {"form",    HTMLBUTTONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"accessKey",    HTMLBUTTONELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
   {"disabled",    HTMLBUTTONELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"name",    HTMLBUTTONELEMENT_NAME,    JSPROP_ENUMERATE},
   {"tabIndex",    HTMLBUTTONELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"type",    HTMLBUTTONELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"type",    HTMLBUTTONELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"value",    HTMLBUTTONELEMENT_VALUE,    JSPROP_ENUMERATE},
   {0}
 };

@@ -246,7 +246,7 @@ nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitDataClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitCharacterDataClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context

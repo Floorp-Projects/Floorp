@@ -363,29 +363,6 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLOBJECTELEMENT_FORM:
-      {
-        nsIDOMHTMLFormElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLFormElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLFormElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForm(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       case HTMLOBJECTELEMENT_CODE:
       {
         nsAutoString prop;
@@ -753,7 +730,7 @@ JSClass HTMLObjectElementClass = {
 //
 static JSPropertySpec HTMLObjectElementProperties[] =
 {
-  {"form",    HTMLOBJECTELEMENT_FORM,    JSPROP_ENUMERATE},
+  {"form",    HTMLOBJECTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"code",    HTMLOBJECTELEMENT_CODE,    JSPROP_ENUMERATE},
   {"align",    HTMLOBJECTELEMENT_ALIGN,    JSPROP_ENUMERATE},
   {"archive",    HTMLOBJECTELEMENT_ARCHIVE,    JSPROP_ENUMERATE},

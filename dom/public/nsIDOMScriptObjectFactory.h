@@ -30,10 +30,10 @@ class nsIScriptContext;
 
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
-  NS_IMETHOD    NewScriptAttribute(nsIScriptContext *aContext, 
-                                   nsISupports *aAttribute, 
-                                   nsISupports *aParent, 
-                                   void** aReturn)=0;
+  NS_IMETHOD    NewScriptAttr(nsIScriptContext *aContext, 
+                              nsISupports *aAttribute, 
+                              nsISupports *aParent, 
+                              void** aReturn)=0;
 
   NS_IMETHOD    NewScriptComment(nsIScriptContext *aContext, 
                                  nsISupports *aComment,
@@ -56,17 +56,17 @@ public:
                                       nsISupports *aParent, 
                                       void** aReturn)=0;
   
-  NS_IMETHOD    NewScriptDOM(nsIScriptContext *aContext, 
-                             nsISupports *aDOM, 
-                             nsISupports *aParent, 
-                             void** aReturn)=0;
+  NS_IMETHOD    NewScriptDOMImplementation(nsIScriptContext *aContext, 
+                                           nsISupports *aDOM, 
+                                           nsISupports *aParent, 
+                                           void** aReturn)=0;
 
-  NS_IMETHOD    NewScriptData(const int aNodeType,
-                              nsIScriptContext *aContext, 
-                              nsISupports *aData, 
-                              nsISupports *aParent, 
-                              void** aReturn)=0;
-
+  NS_IMETHOD    NewScriptCharacterData(const int aNodeType,
+                                       nsIScriptContext *aContext, 
+                                       nsISupports *aData, 
+                                       nsISupports *aParent, 
+                                       void** aReturn)=0;
+  
   NS_IMETHOD    NewScriptElement(const nsString &aTagName, 
                                  nsIScriptContext *aContext, 
                                  nsISupports *aElement, 

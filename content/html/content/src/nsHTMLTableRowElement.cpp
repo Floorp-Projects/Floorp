@@ -129,7 +129,7 @@ nsHTMLTableRowElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLTableRowElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLTableRowElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLTableRowElement* it = new nsHTMLTableRowElement(mInner.mTag);
   if (nsnull == it) {

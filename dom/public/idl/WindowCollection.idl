@@ -1,5 +1,0 @@
-   interface WindowCollection {
-     readonly attribute unsigned long   length;
-     Window                      item(in unsigned long index);
-     Window                      namedItem(in wstring name);
-   };

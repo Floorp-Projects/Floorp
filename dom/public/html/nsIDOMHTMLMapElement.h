@@ -28,14 +28,13 @@
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLMAPELEMENT_IID \
-{ 0x6f765313,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf90af, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
 class nsIDOMHTMLMapElement : public nsIDOMHTMLElement {
 public:
 
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas)=0;
-  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas)=0;
 
   NS_IMETHOD    GetName(nsString& aName)=0;
   NS_IMETHOD    SetName(const nsString& aName)=0;
@@ -44,7 +43,6 @@ public:
 
 #define NS_DECL_IDOMHTMLMAPELEMENT   \
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas);  \
-  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas);  \
   NS_IMETHOD    GetName(nsString& aName);  \
   NS_IMETHOD    SetName(const nsString& aName);  \
 
@@ -52,7 +50,6 @@ public:
 
 #define NS_FORWARD_IDOMHTMLMAPELEMENT(_to)  \
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas) { return _to##GetAreas(aAreas); } \
-  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas) { return _to##SetAreas(aAreas); } \
   NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
   NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
 

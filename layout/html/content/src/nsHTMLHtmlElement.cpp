@@ -116,7 +116,7 @@ nsHTMLHtmlElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLHtmlElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLHtmlElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLHtmlElement* it;
   NS_NEWXPCOM(it, nsHTMLHtmlElement);

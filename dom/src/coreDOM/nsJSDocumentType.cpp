@@ -43,7 +43,8 @@ NS_DEF_PTR(nsIDOMDocumentType);
 //
 enum DocumentType_slots {
   DOCUMENTTYPE_NAME = -1,
-  DOCUMENTTYPE_ENTITIES = -2
+  DOCUMENTTYPE_ENTITIES = -2,
+  DOCUMENTTYPE_NOTATIONS = -3
 };
 
 /***********************************************************************/
@@ -79,6 +80,33 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIDOMNamedNodeMap* prop;
         if (NS_OK == a->GetEntities(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case DOCUMENTTYPE_NOTATIONS:
+      {
+        nsIDOMNamedNodeMap* prop;
+        if (NS_OK == a->GetNotations(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -143,44 +171,7 @@ SetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case DOCUMENTTYPE_NAME:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetName(prop);
-        
-        break;
-      }
-      case DOCUMENTTYPE_ENTITIES:
-      {
-        nsIDOMNamedNodeMap* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kINamedNodeMapIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type NamedNodeMap");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetEntities(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -291,8 +282,9 @@ JSClass DocumentTypeClass = {
 //
 static JSPropertySpec DocumentTypeProperties[] =
 {
-  {"name",    DOCUMENTTYPE_NAME,    JSPROP_ENUMERATE},
-  {"entities",    DOCUMENTTYPE_ENTITIES,    JSPROP_ENUMERATE},
+  {"name",    DOCUMENTTYPE_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"entities",    DOCUMENTTYPE_ENTITIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"notations",    DOCUMENTTYPE_NOTATIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -334,6 +326,9 @@ nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
+    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 

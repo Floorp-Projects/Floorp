@@ -19,7 +19,7 @@
 #ifndef nsGenericDOMDataNode_h___
 #define nsGenericDOMDataNode_h___
 
-#include "nsIDOMData.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -27,7 +27,7 @@
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
 
-extern const nsIID kIDOMDataIID;
+extern const nsIID kIDOMCharacterDataIID;
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMEventReceiverIID;
 extern const nsIID kIScriptObjectOwnerIID;
@@ -35,7 +35,7 @@ extern const nsIID kISupportsIID;
 extern const nsIID kIContentIID;
 extern const nsIID kIHTMLContentIID;
 
-class nsIDOMAttribute;
+class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIEventListenerManager;
@@ -70,7 +70,7 @@ struct nsGenericDOMDataNode {
     *aChildNodes = nsnull;
     return NS_OK;
   }
-  nsresult    GetHasChildNodes(PRBool* aHasChildNodes) {
+  nsresult    HasChildNodes(PRBool* aHasChildNodes) {
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
   }
@@ -96,16 +96,17 @@ struct nsGenericDOMDataNode {
   nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
     return NS_ERROR_FAILURE;
   }
+  nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
-  // Implementation for nsIDOMData
-  nsresult GetData(nsString& aData);
-  nsresult SetData(const nsString& aData);
-  nsresult GetSize(PRUint32* aSize);
-  nsresult Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn);
-  nsresult Append(const nsString& aData);
-  nsresult Insert(PRUint32 aOffset, const nsString& aData);
-  nsresult Remove(PRUint32 aOffset, PRUint32 aCount);
-  nsresult Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData);
+  // Implementation for nsIDOMCharacterData
+  nsresult    GetData(nsString& aData);
+  nsresult    SetData(const nsString& aData);
+  nsresult    GetLength(PRUint32* aLength);
+  nsresult    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn);
+  nsresult    AppendData(const nsString& aArg);
+  nsresult    InsertData(PRUint32 aOffset, const nsString& aArg);
+  nsresult    DeleteData(PRUint32 aOffset, PRUint32 aCount);
+  nsresult    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg);
 
   // nsIDOMEventReceiver interface
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -258,8 +259,8 @@ struct nsGenericDOMDataNode {
  * nsGenericHTMLContainerContent)
  *
  * Note that classes using this macro will need to implement:
- *       NS_IMETHOD GetNodeType(PRInt32* aNodeType);
- *       NS_IMETHOD CloneNode(nsIDOMNode** aReturn);
+ *       NS_IMETHOD GetNodeType(PRUint16* aNodeType);
+ *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(_g)                     \
   NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \
@@ -271,15 +272,15 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD SetNodeValue(const nsString& aNodeValue) {                 \
     return _g.SetNodeValue(aNodeValue);                                 \
   }                                                                     \
-  NS_IMETHOD GetNodeType(PRInt32* aNodeType);                           \
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType);                          \
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                  \
     return _g.GetParentNode(aParentNode);                               \
   }                                                                     \
   NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) {              \
     return _g.GetChildNodes(aChildNodes);                               \
   }                                                                     \
-  NS_IMETHOD GetHasChildNodes(PRBool* aHasChildNodes) {                 \
-    return _g.GetHasChildNodes(aHasChildNodes);                         \
+  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes) {                    \
+    return _g.HasChildNodes(aHasChildNodes);                            \
   }                                                                     \
   NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {                  \
     return _g.GetFirstChild(aFirstChild);                               \
@@ -310,34 +311,36 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { \
     return _g.RemoveChild(aOldChild, aReturn);                          \
   }                                                                     \
-  NS_IMETHOD Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);  \
-  NS_IMETHOD CloneNode(nsIDOMNode** aReturn);
+  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {        \
+    return _g.GetOwnerDocument(aOwnerDocument);                         \
+  }                                                                     \
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
-#define NS_IMPL_IDOMDATA_USING_GENERIC_DOM_DATA(_g)                         \
+#define NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(_g)                         \
   NS_IMETHOD GetData(nsString& aData) {                                     \
     return _g.GetData(aData);                                               \
   }                                                                         \
   NS_IMETHOD SetData(const nsString& aData) {                               \
     return _g.SetData(aData);                                               \
   }                                                                         \
-  NS_IMETHOD GetSize(PRUint32* aSize) {                                     \
-    return _g.GetSize(aSize);                                               \
+  NS_IMETHOD GetLength(PRUint32* aLength) {                                 \
+    return _g.GetLength(aLength);                                           \
   }                                                                         \
-  NS_IMETHOD Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn) { \
-    return _g.Substring(aStart, aEnd, aReturn);                             \
+  NS_IMETHOD SubstringData(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn) { \
+    return _g.SubstringData(aStart, aEnd, aReturn);                         \
   }                                                                         \
-  NS_IMETHOD Append(const nsString& aData) {                                \
-    return _g.Append(aData);                                                \
+  NS_IMETHOD AppendData(const nsString& aData) {                            \
+    return _g.AppendData(aData);                                            \
   }                                                                         \
-  NS_IMETHOD Insert(PRUint32 aOffset, const nsString& aData) {              \
-    return _g.Insert(aOffset, aData);                                       \
+  NS_IMETHOD InsertData(PRUint32 aOffset, const nsString& aData) {          \
+    return _g.InsertData(aOffset, aData);                                   \
   }                                                                         \
-  NS_IMETHOD Remove(PRUint32 aOffset, PRUint32 aCount) {                    \
-    return _g.Remove(aOffset, aCount);                                      \
+  NS_IMETHOD DeleteData(PRUint32 aOffset, PRUint32 aCount) {                \
+    return _g.DeleteData(aOffset, aCount);                                  \
   }                                                                         \
-  NS_IMETHOD Replace(PRUint32 aOffset, PRUint32 aCount,                     \
+  NS_IMETHOD ReplaceData(PRUint32 aOffset, PRUint32 aCount,                 \
                      const nsString& aData) {                               \
-    return _g.Replace(aOffset, aCount, aData);                              \
+    return _g.ReplaceData(aOffset, aCount, aData);                          \
   }
 
 
@@ -529,8 +532,8 @@ struct nsGenericDOMDataNode {
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
-  if (_id.Equals(kIDOMDataIID)) {                           \
-    nsIDOMData* tmp = _this;                                \
+  if (_id.Equals(kIDOMCharacterDataIID)) {                  \
+    nsIDOMCharacterData* tmp = _this;                       \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \

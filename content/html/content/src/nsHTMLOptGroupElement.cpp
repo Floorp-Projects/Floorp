@@ -114,7 +114,7 @@ nsHTMLOptGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLOptGroupElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLOptGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLOptGroupElement* it = new nsHTMLOptGroupElement(mInner.mTag);
   if (nsnull == it) {

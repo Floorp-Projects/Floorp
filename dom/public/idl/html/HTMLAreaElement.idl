@@ -1,10 +1,13 @@
-   interface HTMLAreaElement : HTMLElement {
-     attribute wstring         accessKey;
-     attribute wstring         alt;
-     attribute wstring         coords;
-     attribute wstring         href;
-     attribute boolean         noHref;
-     attribute wstring         shape;
-     attribute long            tabIndex;
-     attribute wstring         target;
-   };
+ interface HTMLAreaElement : HTMLElement {
+ /* IID: { 0xa6cf90b0, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            accessKey;
+            attribute  DOMString            alt;
+            attribute  DOMString            coords;
+            attribute  DOMString            href;
+            attribute  boolean              noHref;
+            attribute  DOMString            shape;
+            attribute  long                 tabIndex;
+            attribute  DOMString            target;
+ };

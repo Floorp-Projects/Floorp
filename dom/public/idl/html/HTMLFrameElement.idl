@@ -1,10 +1,13 @@
-   interface HTMLFrameElement : HTMLElement {
-     attribute wstring         frameBorder;
-     attribute wstring         longDesc;
-     attribute wstring         marginHeight;
-     attribute wstring         marginWidth;
-     attribute wstring         name;
-     attribute boolean         noResize;
-     attribute wstring         scrolling;
-     attribute wstring         src;
-   };
+ interface HTMLFrameElement : HTMLElement {
+ /* IID: { 0xa6cf90b9, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            frameBorder;
+            attribute  DOMString            longDesc;
+            attribute  DOMString            marginHeight;
+            attribute  DOMString            marginWidth;
+            attribute  DOMString            name;
+            attribute  boolean              noResize;
+            attribute  DOMString            scrolling;
+            attribute  DOMString            src;
+ };

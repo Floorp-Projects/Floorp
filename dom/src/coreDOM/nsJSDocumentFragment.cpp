@@ -25,25 +25,16 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 
-NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMDocumentFragment);
 
-//
-// DocumentFragment property ids
-//
-enum DocumentFragment_slots {
-  DOCUMENTFRAGMENT_MASTERDOC = -1
-};
 
 /***********************************************************************/
 //
@@ -61,33 +52,7 @@ GetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case DOCUMENTFRAGMENT_MASTERDOC:
-      {
-        nsIDOMDocument* prop;
-        if (NS_OK == a->GetMasterDoc(&prop)) {
-          // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -240,7 +205,6 @@ JSClass DocumentFragmentClass = {
 //
 static JSPropertySpec DocumentFragmentProperties[] =
 {
-  {"masterDoc",    DOCUMENTFRAGMENT_MASTERDOC,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

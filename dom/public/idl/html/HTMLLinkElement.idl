@@ -1,11 +1,14 @@
-   interface HTMLLinkElement : HTMLElement {
-     attribute boolean         disabled;
-     attribute wstring         charset;
-     attribute wstring         href;
-     attribute wstring         hreflang;
-     attribute wstring         media;
-     attribute wstring         rel;
-     attribute wstring         rev;
-     attribute wstring         target;
-     attribute wstring         type;
-   };
+ interface HTMLLinkElement : HTMLElement {
+ /* IID: { 0xa6cf9088, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  boolean              disabled;
+            attribute  DOMString            charset;
+            attribute  DOMString            href;
+            attribute  DOMString            hreflang;
+            attribute  DOMString            media;
+            attribute  DOMString            rel;
+            attribute  DOMString            rev;
+            attribute  DOMString            target;
+            attribute  DOMString            type;
+ };

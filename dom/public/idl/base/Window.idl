@@ -1,0 +1,56 @@
+      interface Window {
+/* IID: { 0xa6cf906b, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+ 
+        readonly attribute  Window window;
+        readonly attribute  Window self;
+        readonly attribute  Document document;
+        readonly attribute  Navigator navigator;
+        readonly attribute  Window parent;
+        readonly attribute  Window top;
+        readonly attribute  boolean closed;
+        readonly attribute  WindowCollection frames;
+                 attribute  Window opener;
+                 attribute  wstring status;
+                 attribute  wstring defaultStatus;
+                 attribute  wstring name;
+                 attribute  long innerWidth;
+                 attribute  long innerHeight;
+                 attribute  long outerWidth;
+                 attribute  long outerHeight;
+                 attribute  long screenX;
+                 attribute  long screenY;
+                 attribute  long pageXOffset;
+                 attribute  long pageYOffset;
+
+        void  dump(in wstring str);
+        void  alert(in wstring str);
+        void  focus();
+        void  blur();
+        void  close();
+        void  back();
+        void  forward();
+        void  home();
+        void  stop();
+
+        void  moveTo(in long xPos, in long yPos);
+        void  moveBy(in long xDif, in long yDif);
+        void  resizeTo(in long width, in long height);
+        void  resizeBy(in long widthDif, in long heightDif);        
+        void  scrollTo(in long xScroll, in long yScroll);
+        void  scrollBy(in long xScrollDif, in long yScrollDif);        
+ 
+        void clearTimeout(in long timerID);
+        void clearInterval(in long timerID);
+        long setTimeout(/* ... */);
+        long setInterval(/* ... */);
+        Window open(/* ... */);
+      };
+
+      interface EventCapturer : EventReceiver {
+/* IID: { 0xa6cf906c, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+        void   captureEvent(in wstring type);
+	void   releaseEvent(in wstring type);
+      };

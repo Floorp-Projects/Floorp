@@ -71,6 +71,7 @@ public:
   // nsIDOMHTMLFormElement
   NS_IMETHOD GetElements(nsIDOMHTMLCollection** aElements);
   NS_IMETHOD GetName(nsString& aName);
+  NS_IMETHOD SetName(const nsString& aName);
   NS_IMETHOD GetAcceptCharset(nsString& aAcceptCharset);
   NS_IMETHOD SetAcceptCharset(const nsString& aAcceptCharset);
   NS_IMETHOD GetAction(nsString& aAction);
@@ -81,12 +82,12 @@ public:
   NS_IMETHOD SetMethod(const nsString& aMethod);
   NS_IMETHOD GetTarget(nsString& aTarget);
   NS_IMETHOD SetTarget(const nsString& aTarget);
+  NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Reset();
   NS_IMETHOD Submit();
 
   // nsIDOMNSHTMLFormElement
   NS_IMETHOD    GetEncoding(nsString& aEncoding);
-  NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn);
   
   // nsIScriptObjectOwner
@@ -233,7 +234,7 @@ nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
 
 // nsIDOMHTMLFormElement
 nsresult
-nsHTMLFormElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(mInner.mTag);
   if (nsnull == it) {
@@ -255,6 +256,12 @@ NS_IMETHODIMP
 nsHTMLFormElement::GetName(nsString& aValue)
 {
   return mInner.GetAttribute(nsHTMLAtoms::name, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::SetName(const nsString& aValue)
+{
+  return mInner.SetAttribute(nsHTMLAtoms::name, aValue, PR_TRUE);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset, eSetAttrNotify_None)

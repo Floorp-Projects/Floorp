@@ -80,7 +80,7 @@ nsresult nsDeleteLast()
     mText->GetData(mStr);
     mLength = mStr.Length();
     if (mLength > 0) {
-      mText->Remove(mLength-1, 1);
+      mText->DeleteData(mLength-1, 1);
     }
     NS_RELEASE(mText);
   }
@@ -92,15 +92,15 @@ nsresult nsDeleteLast()
 
 nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 {
-  PRInt32 mType;
+  PRUint16 mType;
   PRBool mCNodes;
   
   *aRetNode = nsnull;
 
   aNode->GetNodeType(&mType);
 
-  if (aNode->ELEMENT == mType) {
-    if (NS_OK == aNode->GetHasChildNodes(&mCNodes) && PR_TRUE == mCNodes) {
+  if (nsIDOMNode::ELEMENT_NODE == mType) {
+    if (NS_OK == aNode->HasChildNodes(&mCNodes) && PR_TRUE == mCNodes) {
       nsIDOMNode *mNode, *mSibNode;
 
       aNode->GetFirstChild(&mNode);
@@ -113,7 +113,7 @@ nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
       NS_IF_RELEASE(mNode);
     }
   }
-  else if (aNode->TEXT == mType) {
+  else if (nsIDOMNode::TEXT_NODE == mType) {
     *aRetNode = aNode;
     NS_ADDREF(aNode);
   }
@@ -161,7 +161,7 @@ nsresult nsAppendText(nsString *aStr)
 
   if (NS_OK == nsGetCurrentNode(&mNode) && 
       NS_OK == mNode->QueryInterface(kIDOMTextIID, (void**)&mText)) {
-    mText->Append(*aStr);
+    mText->AppendData(*aStr);
     NS_RELEASE(mText);
   }
 

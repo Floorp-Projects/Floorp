@@ -119,7 +119,7 @@ nsHTMLFontElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsresult
-nsHTMLFontElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLFontElement* it = new nsHTMLFontElement(mInner.mTag);
   if (nsnull == it) {

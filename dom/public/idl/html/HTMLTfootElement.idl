@@ -1,6 +1,0 @@
-   interface HTMLTfootElement : HTMLElement {
-     attribute wstring         align;
-     attribute wstring         ch;
-     attribute wstring         chOff;
-     attribute wstring         vAlign;
-   };

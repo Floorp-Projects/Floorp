@@ -60,25 +60,18 @@ public:
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
   // nsIDOMDocument interface
-  NS_IMETHOD    GetMasterDoc(nsIDOMDocument **aDocument)
-  { return nsDocument::GetMasterDoc(aDocument); }
-  NS_IMETHOD    GetDocumentType(nsIDOMDocumentType** aDocumentType);
-  NS_IMETHOD    GetProlog(nsIDOMNodeList** aProlog)
-  { return nsDocument::GetProlog(aProlog); }
-  NS_IMETHOD    GetEpilog(nsIDOMNodeList** aEpilog)
-  { return nsDocument::GetEpilog(aEpilog); }
+  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
+  NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation)
+  { return nsDocument::GetImplementation(aImplementation); }
   NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement)
   { return nsDocument::GetDocumentElement(aDocumentElement); }
-  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
-  { return nsDocument::CreateDocumentFragment(aReturn); }
-  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn)
-  { return nsDocument::CreateComment(aData, aReturn); }
-  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn)
-  { return nsDocument::CreateProcessingInstruction(aTarget, aData, aReturn); }
-  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMNode* aValue, nsIDOMAttribute** aReturn)
-  { return nsDocument::CreateAttribute(aName, aValue, aReturn); }
+  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
+  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
+  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn);
+  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
+  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
+  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
   NS_IMETHOD    CreateElement(const nsString& aTagName, 
-                              nsIDOMNamedNodeMap* aAttributes, 
                               nsIDOMElement** aReturn);
   NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)

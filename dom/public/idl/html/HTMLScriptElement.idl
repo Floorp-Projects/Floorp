@@ -1,9 +1,12 @@
-   interface HTMLScriptElement : HTMLElement {
-     attribute wstring         text;
-     attribute wstring         htmlFor;
-     attribute wstring         event;
-     attribute wstring         charset;
-     attribute boolean         defer;
-     attribute wstring         src;
-     attribute wstring         type;
-   };
+ interface HTMLScriptElement : HTMLElement {
+ /* IID: { 0xa6cf90b1, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  DOMString            text;
+            attribute  DOMString            htmlFor;
+            attribute  DOMString            event;
+            attribute  DOMString            charset;
+            attribute  boolean              defer;
+            attribute  DOMString            src;
+            attribute  DOMString            type;
+ };

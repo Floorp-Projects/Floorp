@@ -24,7 +24,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
-#include "nsIDOMAttribute.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -136,7 +136,7 @@ nsresult nsJSContext::InitClasses()
       NS_OK == NS_InitElementClass(this, nsnull) &&
       NS_OK == NS_InitDocumentClass(this, nsnull) &&
       NS_OK == NS_InitTextClass(this, nsnull) &&
-      NS_OK == NS_InitAttributeClass(this, nsnull) &&
+      NS_OK == NS_InitAttrClass(this, nsnull) &&
       NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
       NS_OK == NS_InitNodeListClass(this, nsnull) &&
       // XXX Temporarily here. This shouldn't be hardcoded.

@@ -23,14 +23,14 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMData.h"
+#include "nsIDOMCharacterData.h"
 
 
 #define NS_IDOMCOMMENT_IID \
-{ 0x6f7652e2,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+ { 0xa6cf9073, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMComment : public nsIDOMData {
+class nsIDOMComment : public nsIDOMCharacterData {
 public:
 };
 
