@@ -60,7 +60,7 @@ The sections that follow provide basic information you should know before using 
 About Personal Security Manager Help</FONT></h2>
 <A NAME="1045557">
 The document you are reading contains information about every Personal Security Manager window:</P></A>
-<ul><P><A NAME="1045563"><LI>If you have a question about a Personal Security Manager panel that is currently visible, click the Help button near the lower-right corner of the panel. Each Help button brings you straight to the section of this document that describes how to use that panel.</LI></A><P><A NAME="1044577"><LI>If you scroll to the top of this document, you can use the Previous, Next, Glossary, and Topics buttons to navigate to the list of topics and the glossary. <B></B></LI></A><P><A NAME="1044581"><LI>If you want to perform a specific task but aren't sure where to begin, see <a href="help.htm#1043598">What You Can Do with Personal Security Manager</a>.</LI></A></ul><A NAME="1044592">
+<ul><P><A NAME="1045563"><LI>If you have a question about a Personal Security Manager panel that is currently visible, click the Help button near the lower-right corner of the panel. Each Help button brings you straight to the section of this document that describes how to use that panel.</LI></A><P><A NAME="1044577"><LI>If you scroll to the top of this document, you can use the Previous, Next, Glossary, and Topics buttons to navigate to the list of topics and the glossary. </LI></A><P><A NAME="1044581"><LI>If you want to perform a specific task but aren't sure where to begin, see <a href="help.htm#1043598">What You Can Do with Personal Security Manager</a>.</LI></A></ul><A NAME="1044592">
 Terms in Personal Security Manager panels that are underlined and followed by a blue "i" icon are linked to glossary definitions: just click the term to see the definition. Similarly, you can click underlined terms in this help system to see a glossary definition: for example, <a href="glossary.htm#1018895">certificate</a>. To get back to the help section you were viewing before clicking a glossary definition, press the key equivalent to the Back button in your browser. For example, on Windows and most Unix machines, press and hold the Alt key and press the left arrow key. Some Unix machines use the Diamond key and the left arrow key for this shortcut.</P></A>
 <A NAME="What You Can Do with Personal Security Manager"></A><A NAME="1043598">&nbsp</A>
 <h2><FONT Face="arial, helvetica, sans-serif" size="+1">
@@ -106,7 +106,8 @@ Public-key cryptography is a set of well-established techniques and standards th
 <A NAME="1025397">
 Each public key is published, and the corresponding private key is kept secret. Data encrypted with your public key can be decrypted only with your private key. <a href="help.htm#1025405">Figure 1</a> shows a simplified view of the way public-key encryption works. </P></A>
 <A NAME="1025405">
-<P><B>Figure 1&nbsp&nbsp Public-key encryption <p><img src="06pcrypt.gif">
+<P><B>Figure 1&nbsp&nbsp Public-key encryption <br>
+<img src="helpa.gif">
 </B></P>
 </A><A NAME="1025409">
 For example, you can freely distribute your public key, but only your private key can decrypt data encrypted using your public key. To send encrypted data, you encrypt the data with that person's public key, and the person receiving the encrypted data decrypts it with the corresponding private key. </P></A>
@@ -128,7 +129,8 @@ As mentioned in <a href="help.htm#1025393">Public-Key Cryptography</a>, it's pos
 <A NAME="1025431">
 <a href="help.htm#1025436">Figure 2</a> shows a simplified view of the way a digital signature can be used to validate the integrity of signed data.</P></A>
 <A NAME="1025436">
-<P><B>Figure 2&nbsp&nbsp Using a digital signature to validate data integrity<p><img src="04digsgn.gif">
+<P><B>Figure 2&nbsp&nbsp Using a digital signature to validate data integrity<br>
+<img src="helpa1.gif">
 </B></P>
 </A><A NAME="1025440">
 <a href="help.htm#1025436">Figure 2</a> shows two items that are transferred to the recipient of some signed data: the original data and the digital signature. To create the digital signature, the sending software first creates a one-way hash of the original data, then encrypts the hash with the signer's private key.</P></A>
@@ -893,9 +895,11 @@ To view the Personal Security Manager panel described in this section, you click
 <p><b><FONT Face="arial, helvetica, sans-serif">
  
 SSL Settings</FONT></b></p><A NAME="1049127">
-The Secure Sockets Layer (SSL) protocol defines rules governing mutual <a href="glossary.htm#998782">authentication</a> between a web site and your browser software and <a href="glossary.htm#999078">encryption</a> of the information that flows between them. </P></A>
+The Secure Sockets Layer (SSL) protocol defines rules governing mutual <a href="glossary.htm#998782">authentication</a> between a web site and browser software and the <a href="glossary.htm#999078">encryption</a> of information that flows between them. The Transport Layer Security (TLS) protocol is an IETF standard based on SSL.TLS 1.0 can be thought of as SSL 3.1.</P></A>
 <A NAME="1052011">
-You should normally leave both SSL settings in the Options panel selected to ensure that both older and newer web servers can support authentication and encryption with Personal Security Manager.</P></A>
+You should normally leave both SSL checkboxes and the TLS checkbox in the Options panel selected to ensure that both older and newer web servers can support authentication and encryption with Personal Security Manager.</P></A>
+<A NAME="1057898">
+Some servers that do not implement SSL correctly cannot negotiate the SSL handshake with client software (such as Personal Security Manager) that supports TLS. To allow Personal Security Manager to use SSL with such TLS-intolerant servers, click the "Enable TLS" checkbox to deselect it.</P></A>
 <A NAME="OCSP Settings"></A><A NAME="1049128">&nbsp</A>
 <p><b><FONT Face="arial, helvetica, sans-serif">
  
@@ -921,7 +925,7 @@ View Security Certificate</FONT></b></p><A NAME="1055405">
 The View Security Certificate window displays information about the certificate you selected in one of the panels available under the Certificate tab. You can also click View More Info in the top right corner of the window to see a complete text version of the certificate (normally of interest to IS professionals only).</P></A>
 <A NAME="1049027">
 The View Security Certificate window shows the following information about the selected certificate: </P></A>
-<ul><P><A NAME="1049028"><LI>Whether the certificate has been verified, and if so for what uses. See <a href="glossary.htm#1025527">certificate verification</a> for a discussion of how Personal Security Manager verifies certificates. Uses can include any of the following: <B></B></LI></A><ul>
+<ul><P><A NAME="1049028"><LI>Whether the certificate has been verified, and if so for what uses. See <a href="glossary.htm#1025527">certificate verification</a> for a discussion of how Personal Security Manager verifies certificates. Uses can include any of the following: </LI></A><ul>
 <P><A NAME="1037565"><LI><B>SSL Client.</B> Certificate used to identify you to web sites.</LI></A><P><A NAME="1037569"><LI><B>SSL Server.</B> Certificate used to identify a web site server to browsers.</LI></A><P><A NAME="1037570"><LI><B>Email Signer.</B> Certificate used to identify you for the purposes of digitally signing email messages.</LI></A><P><A NAME="1037571"><LI><B>Email Recipient.</B> Certificate used to identify someone else, for example so you can send that person encrypted email.</LI></A><P><A NAME="1037572"><LI><B>Status Responder.</B> Certificate used to identify an on-line status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="help.htm#1049128">OCSP Settings</a>.</LI></A><P><A NAME="1037574"><LI><B>Certificate Authority.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI></A></ul>
 <P><A NAME="1037620"><LI><B>Name.</B> The name of the person or other entity that the certificate identifies.</LI></A><P><A NAME="1037684"><LI><B>Issued Under.</B> The name of the organization that issued the certificate. You can click this name to view the issuer's certificate (if it is available to Personal Security Manager) in a new View Security Certificate window. By clicking the "Issued Under" name in successive View Security Certificate windows, you can view each certificate in the original certificate's <a href="glossary.htm#1018500">certificate chain</a>.</LI></A><P><A NAME="1037628"><LI><B>Serial Number.</B> The certificate's serial number.</LI></A><P><A NAME="1037629"><LI><B>Validity.</B> The period of time during which the certificate can be used.</LI></A><P><A NAME="1037642"><LI><B>Fingerprint.</B> A unique number associated with a certificate. The number is produced by applying a mathematical function to the contents of the certificate. A certificate's fingerprint can be used to verify that the certificate has not been tampered with.</LI></A></ul><A NAME="1049045">
 For a short definition, click <a href="glossary.htm#1018895">certificate</a>. For an overview of Personal Security Manager and network security concepts, see <a href="help.htm#1057187">Introduction to Personal Security Manager</a>.</P></A>
