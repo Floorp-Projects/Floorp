@@ -1972,9 +1972,6 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
     return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
 }
 
-static const PRUnichar sARStart[] = {'S', 't', 'a', 'r', 't', ':', ' ', 0};
-static const PRUnichar sAREnd[] = {'E', 'n', 'd', ':', ' ', 0};
-
 nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
@@ -2027,9 +2024,9 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
         rv = nsServiceManager::GetGlobalServiceManager(&mgr);
         if (NS_SUCCEEDED(rv))
         {
-            nsAutoString topic;
-            topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
-            (void) observerService->Notify(mgr, topic.GetUnicode(), sARStart);
+            (void) observerService->Notify(mgr,
+                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
+                NS_ConvertASCIItoUCS2("Starting component registration").GetUnicode());
         }
     }
 
@@ -2092,6 +2089,7 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
         mLoaders->Enumerate(AutoRegister_enumerate, &closure);
         rv = closure.status;
     }
+
     if (NS_SUCCEEDED(rv))
     {
         do {
@@ -2101,14 +2099,16 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
         rv = closure.status;
 
     }
-	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
-	if (NS_SUCCEEDED(rv))
-	{
-		nsAutoString topic;
-		topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
-		(void) observerService->Notify(mgr, topic.GetUnicode(), sAREnd);
-	}
+
+  	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+  	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+  	if (NS_SUCCEEDED(rv))
+  	{
+      (void) observerService->Notify(mgr,
+          NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
+          NS_ConvertASCIItoUCS2("Component registration finished").GetUnicode());
+  	}
+  
     return rv;
 }
 
