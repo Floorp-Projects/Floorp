@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.18 $ )[1];
+$VERSION = ( qw $Revision: 1.19 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -479,9 +479,22 @@ sub status_table_legend {
            "</td></tr></thead>\n");
 
   foreach $state (TreeData::get_all_tree_states()) {
-    my ($color) = TreeData::TreeState2color($state);
-    $out .= ("\t\t<tr bgcolor=\"$color\">".
-             "<td>Tree State: $state</td></tr>\n");
+    my ($cell_color) = TreeData::TreeState2color($state);
+    my ($char) = TreeData::TreeState2char($state);
+    my $description = "Tree State: $state";
+    my $text_browser_color_string = 
+      HTMLPopUp::text_browser_color_string($cell_color, $char);
+
+    $description = (
+
+                    $text_browser_color_string.
+                    $description.
+                    $text_browser_color_string.
+                    
+                    "");
+    
+    $out .= ("\t\t<tr bgcolor=\"$cell_color\">".
+             "<td>$description</td></tr>\n");
   }
 
   $out .= "\t</table>\n";
@@ -576,12 +589,21 @@ sub status_table_row {
   # apply_db_updates().  It is possible that there are no treestates at
   # all this should not prevent the VC column from being rendered.
 
-  my ($color) = TreeData::TreeState2color($LAST_TREESTATE);
+  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
+  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
 
-  ($LAST_TREESTATE) && ($color) &&
-    ($color = "bgcolor=$color");
+  my $cell_options;
+  my $text_browser_color_string;
+  if ( ($LAST_TREESTATE) && ($cell_color) ) {
+       my ($cell_options) = "bgcolor=$cell_color ";
+
+       $text_browser_color_string = 
+         HTMLPopUp::text_browser_color_string($cell_color, $char);
+  }
   
   my ($query_links) = '';
+  $query_links.=  "\t\t".$text_browser_color_string."\n";
+
   if ( scalar(%authors) ) {
     
     # find the times which bound the cell so that we can set up a
@@ -697,7 +719,6 @@ sub status_table_row {
       # put each link on its own line and add good comments so we
       # can debug the HTML.
 
-      $query_link = "\t\t".$query_link."\n";
       my ($date_str) = localtime($mindate)."-".localtime($maxdate);
 
       $query_links .= (
@@ -708,11 +729,13 @@ sub status_table_row {
                        "  -->\n".
                        "");
 
-      $query_links .= $query_link;
+      $query_links .= "\t\t".$query_link."\n";
     }
-    
+
+    $query_links.=  "\t\t".$text_browser_color_string."\n";
+
     @outrow = (
-               "\t<td align=center $color>\n".
+               "\t<td align=center $cell_color>\n".
                $query_links.
                "\t</td>\n".
                "");
@@ -720,7 +743,7 @@ sub status_table_row {
   } else {
     
     @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
-               "<td align=center $color>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+               "<td align=center $cell_color>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
   }
   
   
