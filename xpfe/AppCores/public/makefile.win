@@ -30,7 +30,6 @@ EXPORTS=  \
 		nsIDOMWalletCore.h		\
 		nsIDOMProfileCore.h		\
 		nsIDOMRDFCore.h			\
-		nsIDOMToolbarCore.h		\
 		nsIDOMToolkitCore.h		\
 		nsIDOMBrowserAppCore.h		\
 		nsIDOMEditorAppCore.h		\

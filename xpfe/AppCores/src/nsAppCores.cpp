@@ -25,7 +25,6 @@
 #include "nsWalletCoreFactory.h"
 #include "nsProfileCoreFactory.h" 
 #include "nsRDFCoreFactory.h"
-#include "nsToolbarCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
 #include "nsEditorAppCoreFactory.h"
 #include "nsToolkitCoreFactory.h"
@@ -46,7 +45,6 @@ static NS_DEFINE_IID(kCookieCoreCID,      NS_COOKIECORE_CID);
 static NS_DEFINE_IID(kWalletCoreCID,      NS_WALLETCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,     NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
-static NS_DEFINE_IID(kToolbarCoreCID,     NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,  NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,   NS_EDITORAPPCORE_CID);
@@ -74,7 +72,6 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kWalletCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kProfileCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE); 
     nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     //nsComponentManager::RegisterComponent(kEditorAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -93,7 +90,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kWalletCoreCID, path);
     nsComponentManager::UnregisterComponent(kProfileCoreCID, path); 
     nsComponentManager::UnregisterComponent(kRDFCoreCID, path);
-    nsComponentManager::UnregisterComponent(kToolbarCoreCID, path);
     nsComponentManager::UnregisterComponent(kToolkitCoreCID, path);
     nsComponentManager::UnregisterComponent(kBrowserAppCoreCID, path);
     //nsComponentManager::UnregisterComponent(kEditorAppCoreCID, path);
@@ -145,10 +141,6 @@ NSGetFactory(nsISupports* serviceMgr,
     else if ( aClass.Equals(kRDFCoreCID) )
     {
         inst = new nsRDFCoreFactory();      
-    }
-    else if ( aClass.Equals(kToolbarCoreCID) )
-    {
-        inst = new nsToolbarCoreFactory();      
     }
     else if ( aClass.Equals(kToolkitCoreCID) )
     {

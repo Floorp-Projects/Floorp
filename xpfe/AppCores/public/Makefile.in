@@ -33,7 +33,6 @@ EXPORTS =                       \
 		nsIDOMWalletCore.h       \
 		nsIDOMProfileCore.h     \
 		nsIDOMRDFCore.h	        \
-		nsIDOMToolbarCore.h	    \
 		nsIDOMToolkitCore.h		\
 		nsIDOMBrowserAppCore.h  \
 		nsAppCoresCIDs.h        \

@@ -32,7 +32,6 @@
 #include "nsIDOMWalletCore.h"
 #include "nsIDOMProfileCore.h" 
 #include "nsIDOMRDFCore.h"
-#include "nsIDOMToolbarCore.h"
 #include "nsIDOMBrowserAppCore.h"
 #include "nsIDOMEditorAppCore.h"
 #include "nsAppCoresCIDs.h" 
@@ -47,7 +46,6 @@ static NS_DEFINE_IID(kCookieCoreCID,         NS_COOKIECORE_CID);
 static NS_DEFINE_IID(kWalletCoreCID,         NS_WALLETCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
-static NS_DEFINE_IID(kToolbarCoreCID,        NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,     NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,      NS_EDITORAPPCORE_CID);
 
@@ -78,7 +76,6 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     result = NS_InitCookieCoreClass(aScriptContext, nsnull);
     result = NS_InitWalletCoreClass(aScriptContext, nsnull);
       result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
-    result = NS_InitToolbarCoreClass(aScriptContext, nsnull);
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
     //result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
     result = NS_InitToolkitCoreClass(aScriptContext, nsnull);
@@ -139,12 +136,6 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
         result = manager->RegisterGlobalName("RDFCore", 
                                              kRDFCoreCID, 
-                                             PR_TRUE);
-
-        if (NS_OK != result) return result;
-
-        result = manager->RegisterGlobalName("ToolbarCore", 
-                                             kToolbarCoreCID, 
                                              PR_TRUE);
 
         if (NS_OK != result) return result;

@@ -76,8 +76,6 @@ OBJS = \
     .\$(OBJDIR)\nsRDFCore.obj       \
     .\$(OBJDIR)\nsRDFCoreFactory.obj       \
     .\$(OBJDIR)\nsAppCoresNameSet.obj       \
-    .\$(OBJDIR)\nsToolbarCore.obj       \
-    .\$(OBJDIR)\nsToolbarCoreFactory.obj       \
     .\$(OBJDIR)\nsToolkitCore.obj        \
     .\$(OBJDIR)\nsToolkitCoreFactory.obj \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
@@ -96,7 +94,6 @@ OBJS = \
     .\$(OBJDIR)\nsJSWalletCore.obj   \
     .\$(OBJDIR)\nsJSProfileCore.obj   \
     .\$(OBJDIR)\nsJSRDFCore.obj   \
-    .\$(OBJDIR)\nsJSToolbarCore.obj   \
     .\$(OBJDIR)\nsJSToolkitCore.obj     \
     .\$(OBJDIR)\nsJSBrowserAppCore.obj   \
     .\$(OBJDIR)\nsAppCores.obj         \
