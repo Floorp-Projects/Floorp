@@ -936,15 +936,11 @@ function makePreview(row)
 
 function getContentTypeFromHeaders(cacheEntryDescriptor)
 {
-  var headers, match;
+  if (!cacheEntryDescriptor)
+    return null;
 
-  if (cacheEntryDescriptor)
-  {  
-    headers = cacheEntryDescriptor.getMetaDataElement("response-head");
-    match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
-    return match[1];
-  }
-  return "";
+  return (/^Content-Type:\s*(.*?)\s*(?:\;|$)/mi
+          .exec(cacheEntryDescriptor.getMetaDataElement("response-head")))[1];
 }
 
 function getContentTypeFromImgRequest(item)
