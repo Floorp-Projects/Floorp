@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= wdgtos2
 
-EXTRA_DSO_LIBS	= nggfx
+EXTRA_DSO_LIBS	= gkgfx
 
 REQUIRES	= util img xpcom raptor netlib
 

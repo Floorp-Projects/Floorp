@@ -34,11 +34,7 @@ SHORT_LIBNAME	= nglayout
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= jsdom
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS	+= nggfx
-else
 EXTRA_DSO_LIBS	+= gkgfx
-endif
 
 
 CPPSRCS		= \

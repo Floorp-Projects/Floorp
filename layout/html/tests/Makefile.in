@@ -36,11 +36,7 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../style/src
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS += nggfx
-else
 EXTRA_DSO_LIBS += gkgfx
-endif
 
 EXTRA_DSO_LIBS += jsdom
 

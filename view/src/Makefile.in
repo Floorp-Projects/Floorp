@@ -31,11 +31,7 @@ LIBRARY_NAME	= gkview
 SHORT_LIBNAME	= ngview
 IS_COMPONENT    = 1
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = nggfx
-else
 EXTRA_DSO_LIBS = gkgfx
-endif
 
 CPPSRCS		= \
 		nsView.cpp \
