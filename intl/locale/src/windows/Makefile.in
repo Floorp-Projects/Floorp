@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
 		  uconv \
+		  intl \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = ../$(LIB_PREFIX)nslocale_s.$(LIB_SUFFIX)

@@ -39,23 +39,23 @@
 #ifndef nsURLProperties_h__
 #define nsURLProperties_h__
 
-#include "nsIPersistentProperties2.h"
-#include "nsString.h"
-#include "nsIIOService.h"
+#include "nsIStringBundle.h"
+#include "nsCOMPtr.h"
+#include "nsAString.h"
 
 class nsURLProperties {
 public:
-  nsURLProperties(const nsAFlatString& aUrl);
+  nsURLProperties(const nsACString& aUrl);
   virtual ~nsURLProperties();
 
   NS_IMETHOD DidLoad(PRBool&);
   NS_IMETHOD Get( const nsAString& aKey, nsAString& value);
 
 private:
-  static nsIIOService*  gIOService;    // to speed up creating URLs
+  static nsIStringBundleService*  gStringBundleService; // to speed up getting bundles
   static nsrefcnt       gRefCnt;
 
-  nsIPersistentProperties *mDelegate;
+  nsCOMPtr<nsIStringBundle> mBundle;
 
 };
 

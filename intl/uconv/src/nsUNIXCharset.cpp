@@ -97,7 +97,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
   {
     nsAutoLock guard(gLock);
     if (!gInfo_deprecated) {
-      nsURLProperties *info = new nsURLProperties(NS_LITERAL_STRING("resource:/res/unixcharset.properties"));
+      nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource:/res/unixcharset.properties"));
       NS_ASSERTION( info, "cannot create nsURLProperties");
       gInfo_deprecated = info;
     }

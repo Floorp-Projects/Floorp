@@ -39,77 +39,54 @@
 #include "nsURLProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
+#include "nsAString.h"
+#include "nsPromiseFlatString.h"
+#include "nsXPIDLString.h"
 
-static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
-static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
-
-nsIIOService*   nsURLProperties::gIOService = nsnull;
+nsIStringBundleService*   nsURLProperties::gStringBundleService = nsnull;
 nsrefcnt        nsURLProperties::gRefCnt = 0;
 
-nsURLProperties::nsURLProperties(const nsAFlatString& aUrl)
+nsURLProperties::nsURLProperties(const nsACString& aUrl)
 {
-  mDelegate = nsnull; 
   nsresult res = NS_OK;
-  nsIURI* url = nsnull;
-  nsIInputStream* in = nsnull;
 
   if (gRefCnt == 0) {
-    res = nsServiceManager::GetService(kIOServiceCID,
-                                      NS_GET_IID(nsIIOService),
-                                      (nsISupports**)&gIOService);
+    res = CallGetService(NS_STRINGBUNDLE_CONTRACTID, &gStringBundleService);
     if (NS_FAILED(res)) return;
     gRefCnt++;
   }
-
-  res = gIOService->NewURI(NS_ConvertUCS2toUTF8(aUrl), nsnull, nsnull, &url);
-  if (NS_FAILED(res)) return;
-
-  res = NS_OpenURI(&in, url);
-  NS_RELEASE(url);
-  if (NS_FAILED(res)) return;
-
-  if(NS_SUCCEEDED(res))
-    res = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
-                                             kIPersistentPropertiesIID, 
-                                             (void**)&mDelegate);
-
-  if(NS_SUCCEEDED(res)) {
-     if(in) {
-       res = mDelegate->Load(in);
-     }
-     else {
-       res = NS_ERROR_FAILURE;
-     }
+  if (NS_SUCCEEDED(res)) {
+    gStringBundleService->CreateBundle(PromiseFlatCString(aUrl).get(), getter_AddRefs(mBundle));
   }
 
-  if(NS_FAILED(res)) {
-    NS_IF_RELEASE(mDelegate);
-    mDelegate=nsnull;
-  }
-  NS_IF_RELEASE(in);
 }
 
 nsURLProperties::~nsURLProperties()
 {
-  NS_IF_RELEASE(mDelegate);
   if (--gRefCnt == 0) {
-    nsServiceManager::ReleaseService(kIOServiceCID, gIOService);
-    gIOService = nsnull;
+    NS_RELEASE(gStringBundleService);
   }
 }
 
-NS_IMETHODIMP nsURLProperties::Get(const nsAString& aKey, nsAString& oValue)
+NS_IMETHODIMP nsURLProperties::Get(const nsAString& aKey,
+                                   nsAString& oValue)
 {
-  if(mDelegate)
-     return mDelegate->GetStringProperty(aKey, oValue);
+  if(mBundle) {
+    nsXPIDLString value;
+     nsresult rv;
+
+     rv = mBundle->GetStringFromName(PromiseFlatString(aKey).get(),
+                                     getter_Copies(value));
+     if (NS_SUCCEEDED(rv))
+       oValue = value;
+     return rv;
+  }
   else 
      return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsURLProperties::DidLoad(PRBool &oDidLoad)
 {
-  oDidLoad = (mDelegate!=nsnull);
+  oDidLoad = (mBundle!=nsnull);
   return NS_OK;
 }

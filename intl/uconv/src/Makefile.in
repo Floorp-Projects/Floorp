@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  unicharutil \
-		  necko \
 		  $(NULL)
 
 CSRCS		= \

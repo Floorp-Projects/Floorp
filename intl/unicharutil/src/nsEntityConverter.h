@@ -38,8 +38,8 @@
 
 #include "nsIEntityConverter.h"
 #include "nsIFactory.h"
-#include "nsIPersistentProperties2.h"
-
+#include "nsIStringBundle.h"
+#include "nsCOMPtr.h"
 
 nsresult NS_NewEntityConverter(nsISupports** oResult);
 
@@ -48,11 +48,11 @@ nsresult NS_NewEntityConverter(nsISupports** oResult);
 class nsEntityVersionList
 {
 public:
-  nsEntityVersionList() : mEntityProperties(NULL) {}
-  ~nsEntityVersionList() {NS_IF_RELEASE(mEntityProperties);}
-  PRUint32 mVersion;
-  PRUnichar mEntityListName[kVERSION_STRING_LEN+1];
-  nsIPersistentProperties *mEntityProperties;
+    nsEntityVersionList() : mEntities(NULL) {}
+    
+    PRUint32 mVersion;
+    PRUnichar mEntityListName[kVERSION_STRING_LEN+1];
+    nsCOMPtr<nsIStringBundle> mEntities;
 };
 
 class nsEntityConverter: public nsIEntityConverter
@@ -85,11 +85,11 @@ protected:
   // map version number to version string
   const PRUnichar* GetVersionName(PRUint32 versionNumber);
 
-  // map version number to nsIPersistentProperties
-  nsIPersistentProperties* GetVersionPropertyInst(PRUint32 versionNumber);
+  // map version number to a string bundle
+  nsIStringBundle* GetVersionBundleInstance(PRUint32 versionNumber);
 
-  // load a properies file
-  nsIPersistentProperties* LoadEntityPropertyFile(PRInt32 version);
+  // load a string bundle file
+  already_AddRefed<nsIStringBundle> LoadEntityBundle(PRUint32 version);
 
 
   nsEntityVersionList *mVersionList;            // array of version number/name pairs

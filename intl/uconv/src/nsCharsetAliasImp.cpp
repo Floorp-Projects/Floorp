@@ -96,7 +96,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& 
      //load charsetalias.properties string bundle with all remaining aliases
      // we may need to protect the following section with a lock so we won't call the 
      // 'new nsURLProperties' from two different threads
-     mDelegate = new nsURLProperties( NS_LITERAL_STRING("resource:/res/charsetalias.properties") );
+     mDelegate = new nsURLProperties( NS_LITERAL_CSTRING("resource:/res/charsetalias.properties") );
      NS_ASSERTION(mDelegate, "cannot create nsURLProperties");
      if(nsnull == mDelegate)
        return NS_ERROR_OUT_OF_MEMORY;

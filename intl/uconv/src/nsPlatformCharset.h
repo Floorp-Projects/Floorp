@@ -59,7 +59,7 @@ private:
 
   nsresult InitInfo();
   nsresult MapToCharset(short script, short region, nsAString& outCharset); 
-  nsresult MapToCharset(nsString& inANSICodePage, nsAString& outCharset);
+  nsresult MapToCharset(nsAString& inANSICodePage, nsAString& outCharset);
   nsresult InitGetCharset(nsAString& oString);
   nsresult ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAString& oResult);
   nsresult VerifyCharset(nsString &aCharset);

@@ -32,7 +32,7 @@ REQUIRES	= xpcom \
 		  string \
 		  uconv \
 		  unicharutil \
-		  necko \
+		  intl \
 		  $(NULL)
 LIBRARY_NAME	= nslocale_s
 
