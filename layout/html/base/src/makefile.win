@@ -48,6 +48,7 @@ CPPSRCS=				\
 	nsBlockBandData.cpp		\
 	nsBlockFrame.cpp		\
 	nsBlockReflowContext.cpp	\
+	nsBlockReflowState.cpp          \
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsDST.cpp		\
@@ -93,6 +94,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsBlockBandData.obj			\
 	.\$(OBJDIR)\nsBlockFrame.obj			\
 	.\$(OBJDIR)\nsBlockReflowContext.obj		\
+	.\$(OBJDIR)\nsBlockReflowState.obj              \
 	.\$(OBJDIR)\nsBulletFrame.obj			\
 	.\$(OBJDIR)\nsContainerFrame.obj		\
 	.\$(OBJDIR)\nsDST.obj		\
