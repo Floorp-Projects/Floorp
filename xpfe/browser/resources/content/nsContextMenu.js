@@ -143,6 +143,7 @@ nsContextMenu.prototype = {
     setTarget : function ( node ) {
         // Initialize contextual info.
         this.onImage    = false;
+        this.imageURL   = "";
         this.onLink     = false;
         this.inFrame    = false;
         this.hasBGImage = false;
@@ -154,6 +155,7 @@ nsContextMenu.prototype = {
         if ( this.target.nodeType == 1 ) {
              if ( this.target.tagName.toUpperCase() == "IMG" ) {
                 this.onImage = true;
+                this.imageURL = this.target.src;
                 // Look for image map.
                 var mapName = this.target.getAttribute( "usemap" );
                 if ( mapName ) {
@@ -193,7 +195,25 @@ nsContextMenu.prototype = {
                         }
                     }
                 }   
-            }
+             } else if (this.target.tagName.toUpperCase() == "INPUT") {
+               if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
+                 this.onImage = true;
+                 this.imageURL = this.target.src;
+               }
+             } else if (this.target.getAttribute( "background" )) {
+               this.onImage = true;
+               this.imageURL = this.target.getAttribute( "background" );
+             } else  {
+               var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
+                             this.target.style.getPropertyValue( "list-style" ) || 
+                             this.target.style.getPropertyValue( "background-image" ) || 
+                             this.target.style.getPropertyValue( "background" );
+               if ( cssAttr ) {
+                 this.onImage = true;
+                 this.imageURL = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
+               }
+             }
+             
         }
     
         // See if the user clicked in a frame.
@@ -246,7 +266,7 @@ nsContextMenu.prototype = {
     },
     // Open new window with the URL of the image.
     viewImage : function () {
-        openNewWindowWith( this.target.src );
+        openNewWindowWith( this.imageURL );
     },
     // Save URL of clicked-on frame.
     saveFrame : function () {
