@@ -53,7 +53,7 @@ public:
                        PRBool aTruthValue,
                        nsIRDFNode **_retval);
 
-  /* nsIRDFAssertionCursor GetTargets (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
+  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
   NS_IMETHOD GetTargets(nsIRDFResource *source,
                         nsIRDFResource *aProperty,
                         PRBool aTruthValue,
