@@ -3487,7 +3487,7 @@ dnl Image decoders
 dnl ========================================================
 MOZ_IMG_DECODERS_DEFAULT="ppm png gif jpeg bmp mng xbm"
 case "$target_os" in
-cygwin*|mingw*|msvc*|mksnt*|os2)
+cygwin*|mingw*|msvc*|mksnt*|os2*)
     MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
     ;;
 esac
