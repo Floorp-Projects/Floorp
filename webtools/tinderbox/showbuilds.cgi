@@ -76,6 +76,11 @@ if ($form{'rdf'}) {
     exit();
 }
 
+if($form{'flash'}) {
+    print "Content-type: text/rdf\n\n";
+    &do_flash;
+    exit();
+}
 
 if ($nowdate eq $maxdate) {
   print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
@@ -789,6 +794,70 @@ sub do_panel {
       print "'>$buildname</td></tr>";
     }
     print "</table></body>";
+}
+
+sub do_flash {
+  my %build, %times;
+  loadquickparseinfo($form{tree}, \%build, \%times);
+
+  my @keys = keys %build;
+
+  # The Flash spec says we need to give ctime.
+  use POSIX;
+  my $tm = POSIX::ctime(time());
+  chop $tm;
+  
+  my ($mac,$unix,$win) = (0,0,0);
+
+  for (@keys) {
+    #print $_ . ' ' .  $build{$_} . "\n";
+    next if $build{$_} eq 'success';
+    $mac = 1, next if /Mac/;
+    $win = 1, next if /Win/;
+    $unix = 1;
+  }
+
+  print qq{
+    <RDF:RDF xmlns:RDF='http://www.w3.org/1999/02/22-rdf-syntax-ns#' 
+             xmlns:NC='http://home.netscape.com/NC-rdf#'>
+    <RDF:Description about='NC:FlashRoot'>
+  };
+
+  my $busted = $mac + $unix + $win;
+  if ($busted) {
+
+    # Construct a legible sentence; e.g., "Mac, Unix, and Windows
+    # are busted", "Windows is busted", etc. This is hideous. If
+    # you can think of something better, please fix it.
+
+    my $description;
+    if ($mac) {
+      $text .= 'Mac' . ($busted > 2 ? ', ' : ($busted > 1 ? ' and ' : ''));
+    }
+    if ($unix) {
+      $text .= 'Unix' . ($busted > 2 ? ', and ' : ($win ? ' and ' : ''));
+    }
+    if ($win) {
+      $text .= 'Windows';
+    }
+    $text .= ($busted > 1 ? ' are ' : ' is ') . 'busted.';
+    
+    print qq{
+      <NC:child>
+        <RDF:Description ID='flash'>
+          <NC:type resource='http://www.mozilla.org/RDF#TinderboxFlash' />
+          <NC:source>$tree</NC:source>
+          <NC:description>$text</NC:description>
+          <NC:timestamp>$tm</NC:timestamp>
+        </RDF:Description>
+      </NC:child>
+    };
+  }
+
+  print qq{
+    </RDF:Description>
+    </RDF:RDF>
+  };
 }
 
 sub loadquickparseinfo {
