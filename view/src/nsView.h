@@ -52,7 +52,6 @@ public:
                    nsWidgetInitData *aWidgetInitData = nsnull,
       						 nsNativeWidget aNative = nsnull,
       						 const nsViewClip *aClip = nsnull,
-      						 float aOpacity = 1.0f,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   NS_IMETHOD  Destroy();

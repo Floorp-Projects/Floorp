@@ -171,11 +171,14 @@ nsScrollFrame::CreateScrollingView()
 
     // Initialize the scrolling view
     view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull,
-               nsnull, color->mOpacity);
+               nsnull);
 
     // Insert the view into the view hierarchy
     viewManager->InsertChild(parentView, view, zIndex);
-  
+
+    // Set the view's opacity
+    viewManager->SetViewOpacity(view, color->mOpacity);
+
     // If the background is transparent then inform the view manager
     PRBool  isTransparent = (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags);
     if (isTransparent) {
@@ -209,15 +212,18 @@ nsScrollFrame::CreateScrollingView()
   
       // Initialize the view
       scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView, nsnull,
-                         nsnull, nsnull, nsnull, color->mOpacity);
+                         nsnull, nsnull, nsnull);
+
+      // Set it as the scrolling view's scrolled view
+      scrollingView->SetScrolledView(scrolledView);
   
       // If the background is transparent then inform the view manager
       if (isTransparent) {
         viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
       }
-  
-      // Set it as the scrolling view's scrolled view
-      scrollingView->SetScrolledView(scrolledView);
+
+      // Set the opacity
+      viewManager->SetViewOpacity(scrolledView, color->mOpacity);
 
       // We need to allow the view's position to be different than the
       // frame's position

@@ -257,8 +257,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
     nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData,
-                        nsnull, nsnull,
-                        1.0f, nsViewVisibility_kHide);
+                        nsnull, nsnull, nsViewVisibility_kHide);
     if (nsnull != initData) {
       delete(initData);
     }

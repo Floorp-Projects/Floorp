@@ -70,6 +70,7 @@ nsView :: nsView()
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
   mVFlags = ~ALL_VIEW_FLAGS;
+  mOpacity = 1.0f;
 }
 
 nsView :: ~nsView()
@@ -129,7 +130,9 @@ nsView :: ~nsView()
   }
 
   // Destroy and release the widget
-  if (nsnull != mWindow) {
+
+  if (nsnull != mWindow)
+  {
     mWindow->SetClientData(nsnull);
     mWindow->Destroy();
     NS_RELEASE(mWindow);
@@ -194,7 +197,6 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
                              nsWidgetInitData *aWidgetInitData,
                              nsNativeWidget aNative,
                              const nsViewClip *aClip,
-                             float aOpacity,
                              nsViewVisibility aVisibilityFlag)
 {
   //printf(" \n callback=%d data=%d", aWidgetCreateCallback, aCallbackData);
@@ -217,8 +219,6 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
     mClip.mTop = 0;
     mClip.mBottom = 0;
   }
-
-  mOpacity = aOpacity;
 
   SetBounds(aBounds);
 

@@ -402,13 +402,12 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
                                       nsWidgetInitData *aWidgetInitData,
                             					nsNativeWidget aNative,
                             					const nsViewClip *aClip,
-                            					float aOpacity,
                             					nsViewVisibility aVisibilityFlag)
 {
   nsresult rv;
 
   rv = nsView :: Init(aManager, aBounds, aParent, aWindowIID, aWidgetInitData,
-                      aNative, aClip, aOpacity, aVisibilityFlag);
+                      aNative, aClip, aVisibilityFlag);
 
   if (rv == NS_OK)
   {
@@ -425,8 +424,9 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
       // of 0.0f (completely transparent)
       // XXX The clip widget should be created on demand only...
       rv = mClipView->Init(mViewManager, aBounds, this, &kWidgetCID, nsnull,
-                           mWindow ? nsnull : aNative, nsnull, 0.0f);
+                           mWindow ? nsnull : aNative, nsnull);
       mViewManager->InsertChild(this, mClipView, -1);
+      mViewManager->SetViewOpacity(mClipView, 0.0f);
     }
 
     // Create a view for a corner cover
@@ -444,7 +444,7 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
       trect.y = aBounds.y + aBounds.YMost() - trect.height;
 
       rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull,
-                             nsnull, 1.0f, nsViewVisibility_kHide);
+                             nsnull, nsViewVisibility_kHide);
       mViewManager->InsertChild(this, mCornerView, -1);
     }
 
