@@ -627,7 +627,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     TreeState state;
     int rv;
     input_callback_state callback_state;
-    gboolean ok;
+    gboolean ok = TRUE;
     backend *emitter;
 
     callback_state.input_stack = NULL;
