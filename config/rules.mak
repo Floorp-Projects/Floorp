@@ -368,7 +368,7 @@ depend::
 #//
 #//------------------------------------------------------------------------
 
-MAKEDEP=$(MOZ_SRC)\mozilla\config\makedep.exe
+MAKEDEP=$(DEPTH)\config\makedep.exe
 MAKEDEPFILE=.\$(OBJDIR:/=\)\make.dep
 
 MAKEDEPDETECT=$(OBJS)
