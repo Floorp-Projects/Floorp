@@ -19,6 +19,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include "nsFont.h"
+#include "nsToolkit.h"
 
 #include "nsMacControl.h"
 #include "nsColor.h"
@@ -117,11 +118,10 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		if (mValue != mLastValue)
 		{
 			mLastValue = mValue;
-#if APPEARANCE1_1
-			::SetControl32BitValue(mControl, mValue);
-#else
-			::SetControlValue(mControl, mValue);
-#endif
+			if (nsToolkit::HasAppearanceManager())
+				::SetControl32BitValue(mControl, mValue);
+			else
+				::SetControlValue(mControl, mValue);
 		}
 
 		PRInt16 hilite;

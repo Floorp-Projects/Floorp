@@ -50,10 +50,16 @@ public:
 	
 	// Event Queue
 	static PLEventQueue*	GetEventQueue(){ return sPLEventQueue; }
+
+	// Appearance Mgr
+	static bool HasAppearanceManager();
+
 	// Repeater interface
 	virtual	void	RepeatAction(const EventRecord& inMacEvent);
+
 	// DeleteObserver
 	virtual void	NotifyDelete(void* aDeletedObject);
+
 private:
 	static nsWindow*	mFocusedWidget;
 	static PLEventQueue*	sPLEventQueue;

@@ -22,8 +22,6 @@
 #include "nsWindow.h"
 #include <Controls.h>
 
-#define APPEARANCE1_1 1
-
 class nsMacControl : public nsWindow
 {
 private:
