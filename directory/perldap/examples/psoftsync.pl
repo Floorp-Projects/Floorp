@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: psoftsync.pl,v 1.3 1998/08/13 09:11:50 leif Exp $
+# $Id: psoftsync.pl,v 1.4 1998/08/13 09:27:53 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -329,7 +329,7 @@ while ($entry)
     }
 
   $conn->update($entry) if ($changed && ! $opt_n);
-  $entry = $conn->entry();
+  $entry = $conn->nextEntry();
 }
 
 
