@@ -23,6 +23,8 @@
 #define NS_IMPL_IDS
 #include "nsBrowserWindow.h"
 #endif
+#include "prmem.h"
+
 #include "nsIStreamListener.h"
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -172,6 +174,7 @@ static NS_DEFINE_IID(kIToolbarItemIID, NS_ITOOLBARITEM_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -2485,16 +2488,22 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
 NS_IMETHODIMP_(void)
 nsBrowserWindow::Alert(const nsString &aText)
 {
-  nsAutoString str(aText);
+  char *str;
+
+  str = aText.ToNewCString();
   printf("Browser Window Alert: %s\n", str);
+  PR_Free(str);
 }
 
 //----------------------------------------
 NS_IMETHODIMP_(PRBool)
 nsBrowserWindow::Confirm(const nsString &aText)
 {
-  nsAutoString str(aText);
+  char *str;
+
+  str = aText.ToNewCString();
   printf("Browser Window Confirm: %s (returning false)\n", str);
+  PR_Free(str);
 
   return PR_FALSE;
 }
@@ -2505,9 +2514,13 @@ nsBrowserWindow::Prompt(const nsString &aText,
             const nsString &aDefault,
             nsString &aResult)
 {
-  nsAutoString str(aText);
+  char *str;
   char buf[256];
+
+  str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
+  PR_Free(str);
+
   printf("Prompt: ");
   scanf("%s", buf);
   aResult = buf;
@@ -2521,9 +2534,13 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
                      nsString &aUser,
                      nsString &aPassword)
 {
-  nsAutoString str(aText);
+  char *str;
   char buf[256];
+
+  str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
+  PR_Free(str);
+
   printf("User: ");
   scanf("%s", buf);
   aUser = buf;
@@ -2539,9 +2556,13 @@ NS_IMETHODIMP_(PRBool)
 nsBrowserWindow::PromptPassword(const nsString &aText,
                 nsString &aPassword)
 {
-  nsAutoString str(aText);
+  char *str;
   char buf[256];
+  
+  str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
+  PR_Free(str);
+
   printf("Password: ");
   scanf("%s", buf);
   aPassword = buf;
