@@ -140,7 +140,8 @@ foreach my $url (@ARGV) {                 # for each argument
 
     } elsif ( ($scheme eq "http") ||
               (($scheme eq "file") && (($extension eq ".htm") ||
-                                       ($extension eq ".html")) ) ) {
+                                       ($extension eq ".html") ||
+                                       ($extension eq ".xml")) ) ) {
 ##        print STDERR "IFRAME\n";
         print "\e{S$cookie\n";             # HTML stream escape sequence
         print "<iframe frameborder=0 width='100%' height='$height' src='$scheme://${host}$pathname'></iframe>";

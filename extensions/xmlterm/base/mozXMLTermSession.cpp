@@ -2907,6 +2907,13 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
 
   XMLT_LOG(mozXMLTermSession::ScrollToBottomLeft,70,("\n"));
 
+  nsCOMPtr<nsIPresShell> presShell;
+  result = mXMLTerminal->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(result) || !presShell)
+    return NS_ERROR_FAILURE;
+
+  presShell->FlushPendingNotifications();
+
   // Get DOM Window
   nsCOMPtr<nsIDocShell> docShell;
   result = mXMLTerminal->GetDocShell(getter_AddRefs(docShell));
@@ -2919,13 +2926,6 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
 
   if (NS_FAILED(result) || !domWindow)
     return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  result = mXMLTerminal->GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(result) || !presShell)
-    return NS_ERROR_FAILURE;
-
-  presShell->FlushPendingNotifications();
 
   // Scroll to bottom left of screen
   domWindow->ScrollBy(-99999,99999);
