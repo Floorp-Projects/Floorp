@@ -71,20 +71,23 @@ void CALLBACK FireTimeout(HWND aWindow,
   nsCOMPtr<nsITimerQueue> queue = do_QueryInterface(manager, &rv);
   if (NS_FAILED(rv)) return;
 
-  if (timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
+  MSG wmsg;
+  if (!::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE) ||
+      timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
+    
     // fire timer immediatly
     timer->Fire();
-    
+
+    // while event queue is empty, fire off waiting timers
+    while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
+      !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE)) {
+
+      queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+    }
+
   } else {
     // defer timer firing
     queue->AddReadyQueue(timer);
-  }
-
-  // while event queue is empty, fire off waiting timers
-  MSG wmsg;
-  while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-      !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE)) {
-    queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
   }
 }
 
