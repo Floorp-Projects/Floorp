@@ -690,16 +690,26 @@ PK11_GetWindow(PK11SymKey *key)
 SECStatus
 PK11_ExtractKeyValue(PK11SymKey *symKey)
 {
+    SECStatus rv;
 
-    if (symKey->data.data != NULL) return SECSuccess;
+    if (symKey->data.data != NULL) {
+	if (symKey->size == 0) {
+	   symKey->size = symKey->data.len;
+	}
+	return SECSuccess;
+    }
 
     if (symKey->slot == NULL) {
 	PORT_SetError( SEC_ERROR_INVALID_KEY );
 	return SECFailure;
     }
 
-    return PK11_ReadAttribute(symKey->slot,symKey->objectID,CKA_VALUE,NULL,
+    rv = PK11_ReadAttribute(symKey->slot,symKey->objectID,CKA_VALUE,NULL,
 				&symKey->data);
+    if (rv == SECSuccess) {
+	symKey->size = symKey->data.len;
+    }
+    return rv;
 }
 
 SECStatus
