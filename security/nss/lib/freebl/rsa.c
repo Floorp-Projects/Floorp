@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.32 2003/11/26 06:26:31 nelsonb%netscape.com Exp $
+ * $Id: rsa.c,v 1.33 2003/12/19 23:50:45 nelsonb%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -60,6 +60,9 @@
 ** for each attempt.
 */
 #define MAX_KEY_GEN_ATTEMPTS 10
+
+#define MAX_RSA_MODULUS  1024 /* bytes, 8k bits */
+#define MAX_RSA_EXPONENT    8 /* bytes, 64 bits */
 
 /*
 ** RSABlindingParamsStr
@@ -310,7 +313,7 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
                 unsigned char *output, 
                 const unsigned char *input)
 {
-    unsigned int modLen;
+    unsigned int modLen, expLen;
     mp_int n, e, m, c;
     mp_err err   = MP_OKAY;
     SECStatus rv = SECSuccess;
@@ -327,8 +330,9 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
     CHECK_MPI_OK( mp_init(&m) );
     CHECK_MPI_OK( mp_init(&c) );
     modLen = rsa_modulusLen(&key->modulus);
+    expLen = rsa_modulusLen(&key->publicExponent);
     /* 1.  Obtain public key (n, e) */
-    if (rsa_modulusLen(&key->publicExponent) > modLen) {
+    if (expLen > modLen || modLen > MAX_RSA_MODULUS || expLen > MAX_RSA_EXPONENT) {
 	/* exponent should not be greater than modulus */
     	PORT_SetError(SEC_ERROR_INVALID_KEY);
 	rv = SECFailure;
