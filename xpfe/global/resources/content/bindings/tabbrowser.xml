@@ -209,7 +209,7 @@
                 // onLocationChange, this flag also gets set to false
                 // (so we keep it while switching tabs after failed load
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  this.mBrowser.userTypedClear = true;
+                  this.mBrowser.userTypedClear++;
 
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
@@ -226,7 +226,8 @@
                 // The document is done loading, it's okay to clear
                 // the value again.
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  this.mBrowser.userTypedClear = false;
+                  if (this.mBrowser.userTypedClear > 0)
+                    this.mBrowser.userTypedClear--;
 
                 if (this.mBlank)
                   this.mBlank = false;
@@ -273,7 +274,7 @@
               }
 
               // The document loaded correctly, clear the value if we should
-              if (this.mBrowser.userTypedClear)
+              if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
 
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
@@ -510,7 +511,7 @@
             // so we don't clear the userTypedValue when just switching
             // tabs. Set it back to its old state after we're done.
             var userTypedClear = this.mCurrentBrowser.userTypedClear;
-            this.mCurrentBrowser.userTypedClear = false;
+            this.mCurrentBrowser.userTypedClear = 0;
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
               p = this.mProgressListeners[i];

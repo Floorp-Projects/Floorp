@@ -304,7 +304,7 @@ nsBrowserStatusHandler.prototype =
     var browser = getBrowser().selectedBrowser;
     if (aWebProgress.DOMWindow == content) {
       // The document loaded correctly, clear the value if we should
-      if (browser.userTypedClear)
+      if (browser.userTypedClear > 0)
         browser.userTypedValue = null;
 
       var userTypedValue = browser.userTypedValue;
@@ -386,7 +386,7 @@ nsBrowserStatusHandler.prototype =
     // set to false, if the document load ends without an
     // onLocationChange, this flag also gets set to false
     // (so we keep it while switching tabs after failed load
-    getBrowser().userTypedClear = true;
+    getBrowser().userTypedClear++;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
@@ -402,7 +402,8 @@ nsBrowserStatusHandler.prototype =
   {
     // The document is done loading, it's okay to clear
     // the value again.
-    getBrowser().userTypedClear = false;
+    if (getBrowser().userTypedClear > 0)
+      getBrowser().userTypedClear--;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
