@@ -154,10 +154,8 @@ typedef PRUcs2 PRUnichar;
 #define NS_REINTERPRET_CAST(__type, __ptr) ((__type)(__ptr))
 #endif
 
-#if defined(HAS_C_PLUS_PLUS_CASTS) && defined(HAS_RTTI)
-#define NS_DYNAMIC_CAST(__type, __ptr) dynamic_cast<__type>(__ptr)
-#else
-#define NS_DYNAMIC_CAST(__type, __ptr) ((__type)(__ptr))
-#endif
+// No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
+// the semantics. So if you want to dynamic_cast, then just use it
+// "straight", no macro.
 
 #endif /* nscore_h___ */
