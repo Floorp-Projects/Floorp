@@ -323,7 +323,7 @@ inline
 PRBool
 operator==( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
   {
-    return lhs.mPosition == rhs.mPosition;
+    return lhs.operator->() == rhs.operator->();
   }
 
 template <class CharT>
@@ -331,29 +331,9 @@ inline
 PRBool
 operator!=( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
   {
-    return lhs.mPosition != rhs.mPosition;
+    return lhs.operator->() != rhs.operator->();
   }
 
-template <class CharT>
-nsWritingIterator<CharT>
-copy_chunky( nsReadingIterator<CharT> first, nsReadingIterator<CharT> last, nsWritingIterator<CharT> result )
-  {
-    while ( first != last )
-      {
-        PRUint32 lengthToCopy = PRUint32( NS_MIN(first.size_forward(), result.size_forward()) );
-        if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
-
-        // assert(lengthToCopy > 0);
-
-        nsCharTraits<CharT>::copy(result.operator->(), first.operator->(), lengthToCopy);
-
-        first += PRInt32(lengthToCopy);
-        result += PRInt32(lengthToCopy);
-      }
-
-    return result;
-  }
 
 template <class CharT>
 nsWritingIterator<CharT>
@@ -382,7 +362,7 @@ void
 basic_nsAWritableString<CharT>::Assign( const basic_nsAReadableString<CharT>& rhs )
   {
     SetLength(rhs.Length());
-    copy_chunky<CharT>(rhs.BeginReading(), rhs.EndReading(), BeginWriting());
+    string_copy(rhs.BeginReading(), rhs.EndReading(), BeginWriting());
   }
 
 template <class CharT>
@@ -391,7 +371,7 @@ basic_nsAWritableString<CharT>::Append( const basic_nsAReadableString<CharT>& rh
   {
     PRUint32 oldLength = Length();
     SetLength(oldLength + rhs.Length());
-    copy_chunky<CharT>(rhs.BeginReading(), rhs.EndReading(), BeginWriting(oldLength));
+    string_copy(rhs.BeginReading(), rhs.EndReading(), BeginWriting(oldLength));
   }
 
 template <class CharT>
@@ -412,14 +392,14 @@ basic_nsAWritableString<CharT>::Insert( const basic_nsAReadableString<CharT>& aR
       copy_backward_chunky<CharT>(BeginReading(aPosition), BeginReading(oldLength), EndWriting());
     else
       aPosition = oldLength;
-    copy_chunky<CharT>(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting(aPosition));
+    string_copy(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting(aPosition));
   }
 
 template <class CharT>
 void
 basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
   {
-    copy_chunky<CharT>(BeginReading(cutStart+cutLength), EndReading(), BeginWriting(cutStart));
+    string_copy(BeginReading(cutStart+cutLength), EndReading(), BeginWriting(cutStart));
     SetLength(Length()-cutLength);
   }
 
@@ -439,12 +419,12 @@ basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, 
     PRUint32 newLength = oldLength - cutLength + replacementLength;
 
     if ( cutLength > replacementLength )
-      copy_chunky<CharT>(BeginReading(cutEnd), EndReading(), BeginWriting(replacementEnd));
+      string_copy(BeginReading(cutEnd), EndReading(), BeginWriting(replacementEnd));
     SetLength(newLength);
     if ( cutLength < replacementLength )
       copy_backward_chunky<CharT>(BeginReading(cutEnd), BeginReading(oldLength), BeginWriting(replacementEnd));
 
-    copy_chunky<CharT>(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting(cutStart));
+    string_copy(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting(cutStart));
   }
 
 // operator>>

@@ -71,6 +71,10 @@ template <class CharT> class basic_nsAWritableString;
 template <class CharT> class basic_nsLiteralString;
   // ...because we sometimes use them as in params to force the conversion of |CharT*|s
 
+template <class CharT> class nsPromiseConcatenation;
+template <class CharT> class nsPromiseSubstring;
+template <class CharT> PRBool SameImplementation( const basic_nsAReadableString<CharT>&, const basic_nsAReadableString<CharT>& );
+
 
 enum nsFragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
 
@@ -221,21 +225,6 @@ class nsReadingIterator
 
           return *this;
         }
-
-
-        // Damn again!  Problems with templates made me implement comparisons as members.
-
-      PRBool
-      operator==( const nsReadingIterator<CharT>& rhs ) const
-        {
-          return mPosition == rhs.mPosition;
-        }
-
-      PRBool
-      operator!=( const nsReadingIterator<CharT>& rhs ) const
-        {
-          return mPosition != rhs.mPosition;
-        }
   };
 
 
@@ -249,19 +238,20 @@ class basic_nsAReadableString
       ...
     */
   {
-    // friend class nsReadingIterator<CharT>;
+    protected:
+
+      friend PRBool SameImplementation<CharT>( const basic_nsAReadableString<CharT>&, const basic_nsAReadableString<CharT>& );
+      virtual const void* Implementation() const;
+
+      friend class nsReadingIterator<CharT>;
+      friend class nsPromiseConcatenation<CharT>;
+      friend class nsPromiseSubstring<CharT>;
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
+
 
     public:
 
       typedef nsReadingIterator<CharT> ConstIterator;
-
-    public:
-
-      virtual const void* Implementation() const;
-
-        // Damn!  Had to make |GetReadableFragment| public because the compilers suck.  Should be protected.
-      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
-
 
       nsReadingIterator<CharT>
       BeginReading( PRUint32 aOffset = 0 ) const
@@ -399,6 +389,24 @@ nsReadingIterator<CharT>::normalize_backward()
       if ( mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
         mPosition = mFragment.mEnd;
   }
+
+
+template <class CharT>
+inline
+PRBool
+operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
+  {
+    return lhs.operator->() == rhs.operator->();
+  }
+
+template <class CharT>
+inline
+PRBool
+operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
+  {
+    return lhs.operator->() != rhs.operator->();
+  }
+
 
 #define NS_DEF_1_STRING_COMPARISON_OPERATOR(comp, T1, T2) \
   inline                                        \
@@ -889,6 +897,57 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
   //
   // Global functions
   //
+
+template <class InputIterator, class OutputIterator>
+OutputIterator
+string_copy( InputIterator first, InputIterator last, OutputIterator result )
+  {
+    while ( first != last )
+      {
+        PRUint32 lengthToCopy = PRUint32( NS_MIN(first.size_forward(), result.size_forward()) );
+        if ( first.fragment().mStart == last.fragment().mStart )
+          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
+
+        // assert(lengthToCopy > 0);
+
+        nsCharTraits<InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
+
+        first += PRInt32(lengthToCopy);
+        result += PRInt32(lengthToCopy);
+      }
+
+    return result;
+  }
+
+template <class InputIterator, class CharT>
+CharT*
+string_copy( InputIterator first, InputIterator last, CharT* result )
+  {
+    while ( first != last )
+      {
+        PRUint32 lengthToCopy = PRUint32(first.size_forward());
+        if ( first.fragment().mStart == last.fragment().mStart )
+          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
+
+        // assert(lengthToCopy > 0);
+
+        nsCharTraits<CharT>::copy(result, first.operator->(), lengthToCopy);
+
+        first += PRInt32(lengthToCopy);
+        result += PRInt32(lengthToCopy);
+      }
+
+    return result;
+  }
+
+template <class CharT>
+inline
+PRBool
+SameImplementation( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    const void* imp_tag = lhs.Implementation();
+    return imp_tag && (imp_tag==rhs.Implementation());
+  }
 
 template <class CharT>
 nsPromiseSubstring<CharT>
