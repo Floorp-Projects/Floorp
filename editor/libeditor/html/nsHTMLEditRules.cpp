@@ -397,6 +397,28 @@ nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
  *  Protected rules methods 
  ********************************************************/
 
+nsresult
+nsHTMLEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  nsresult res = nsTextEditRules::WillInsert(aSelection, aCancel);
+  if (NS_FAILED(res)) return res; 
+  
+  // we need to get the doc
+  nsCOMPtr<nsIDOMDocument>doc;
+  res = mEditor->GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(res)) return res;
+  if (!doc) return NS_ERROR_NULL_POINTER;
+    
+  // for every property that is set, insert a new inline style node
+  res = CreateStyleForInsertText(aSelection, doc);
+  return res; 
+}    
+
+nsresult
+nsHTMLEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  return nsTextEditRules::DidInsert(aSelection, aResult);
+}
 
 nsresult
 nsHTMLEditRules::WillInsertText(PRInt32          aAction,
@@ -458,13 +480,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   res = mEditor->GetDocument(getter_AddRefs(doc));
   if (NS_FAILED(res)) return res;
   if (!doc) return NS_ERROR_NULL_POINTER;
-    
-  // for every property that is set, insert a new inline style node
-  res = CreateStyleForInsertText(aSelection, doc);
-  if (NS_FAILED(res)) return res; 
-  // refresh the (collapsed) selection location
-  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
-  if (NS_FAILED(res)) return res;
     
   if (aAction == kInsertTextIME) 
   { 
