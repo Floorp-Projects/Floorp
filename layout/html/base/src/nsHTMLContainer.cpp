@@ -676,7 +676,9 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       // variable: empty
       GetAttribute(nsHTMLAtoms::variable, value);
       if (value.GetUnit() == eHTMLUnit_Empty) {
-        // XXX set
+        nsStyleFont* font = (nsStyleFont*)
+          aContext->GetMutableStyleData(eStyleStruct_Font);
+        font->mFont.name = "serif";
       }
 
       // cols: int
