@@ -27,7 +27,10 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 BASEMAIL = basemail-win
-BASEMAIL_SUPP = basemail-win-supp
+
+# packaging file for the pref extension which is optional
+PREF = pref-win
+
 APP_NAME=thunderbird
 _PLATFORM = dos
 
@@ -80,6 +83,9 @@ endif
 
 mail_copy::
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEMAIL) -o $(_PLATFORM) -v
+ifneq (,$(findstring pref,$(MOZ_EXTENSIONS)))
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(PREF) -o $(_PLATFORM) -v
+endif
 	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
 	$(NSINSTALL) -t $(MOZILLA_DIR)/mail/config/installed-chrome.txt $(DIST)/$(APP_NAME)/chrome
 

@@ -109,3 +109,10 @@ locale/US/global-region,                                  US/locale/US/global-re
 #################################################################################################
 locale/en-US/pippki,                                      en-US/locale/en-US/pippki
 locale/en-US/pipnss,                                      en-US/locale/en-US/pipnss
+
+#################################################################################################
+# files for the optional pref extension
+#################################################################################################
+locale/en-US/autoconfig/contents.rdf,                 en-US/locale/en-US/autoconfig/contents.rdf
+locale/en-US/autoconfig/autoconfig.properties,        en-US/locale/en-US/autoconfig/autoconfig.properties
+

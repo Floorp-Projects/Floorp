@@ -36,6 +36,8 @@ content,install,url,jar:resource:/chrome/mail.jar!/content/pipnss/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/pipnss/
 content,install,url,jar:resource:/chrome/mail.jar!/content/pippki/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/pippki/
+content,install,url,jar:resource:/chrome/mail.jar!/content/autoconfig/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/autoconfig/
 content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-mdn/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-mdn/
 content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-views/

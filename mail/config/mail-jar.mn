@@ -75,7 +75,7 @@ content/communicator/pref/pref-languages.js,          comm/content/communicator/
 content/communicator/pref/pref-proxies.js,            comm/content/communicator/pref/pref-proxies.js
 content/communicator/pref/pref-policies.xul,          comm/content/communicator/pref/pref-policies.xul
 content/communicator/pref/pref-proxies.xul,           comm/content/communicator/pref/pref-proxies.xul
-content/communicator/pref/pref.xul,                   comm/content/communicator/pref//pref.xul
+content/communicator/pref/pref.xul,                   comm/content/communicator/pref/pref.xul
 content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
 content/communicator/pref/pref-applications-edit.xul, comm/content/communicator/pref/pref-applications-edit.xul
 content/communicator/pref/pref-calibrate-screen.xul,  comm/content/communicator/pref/pref-calibrate-screen.xul
@@ -182,3 +182,8 @@ content/pipnss/contents.rdf,                          pipnss/content/pipnss/cont
 content/pippki,                                       pippki/content/pippki
 
 
+#################################################################################################
+# files needed by the optional pref extension. These files may not necessarily exist if the extension
+# was not built. That's ok.
+#################################################################################################
+content/autoconfig/contents.rdf,                      comm/content/autoconfig/contents.rdf
