@@ -36,7 +36,11 @@ IDLSRCS =  \
 	CSSStyleRule.idl \
 	CSSStyleSheet.idl \
 	CSSUnknownRule.idl \
-	CSSValue.idl
+	CSSValue.idl \
+	CSSPrimitiveValue.idl \
+	Rect.idl \
+	Counter.idl \
+	RGBColor.idl
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\css
 JSSTUB_DESTDIR=$(DEPTH)\dom\src\css

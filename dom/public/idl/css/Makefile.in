@@ -41,6 +41,10 @@ IDLSRCS		= \
 		CSSStyleSheet.idl \
 		CSSUnknownRule.idl \
 		CSSValue.idl \
+		Rect.idl \
+		Counter.idl \
+		RGBColor.idl \
+		CSSPrimitiveValue.idl \
 		$(NULL)
 
 include $(DEPTH)/config/rules.mk
