@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.34 $ 
-# $Date: 2002/05/03 22:29:28 $ 
+# $Revision: 1.35 $ 
+# $Date: 2002/05/03 22:37:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.34 $ )[1];
+$VERSION = ( qw $Revision: 1.35 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -252,7 +252,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    trim_db_history(@_);
+    $self->trim_db_history(@_);
   }
 
   $self->savetree_db($tree);
