@@ -1351,7 +1351,7 @@ protected:
   PRBool IsDragInProgress ( ) const ;
 
   // Utility to find which view to scroll.
-  nsIScrollableView* GetViewToScroll();
+  nsIScrollableView* GetViewToScroll(nsLayoutUtils::Direction aDirection);
 
   PRBool mCaretEnabled;
 #ifdef IBMBIDI
@@ -3138,7 +3138,7 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll();
+  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
   if (scrollView) {
     scrollView->ScrollByPages(0, aForward ? 1 : -1);
   }
@@ -3148,7 +3148,7 @@ PresShell::ScrollPage(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollLine(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll();
+  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
   if (scrollView) {
 #ifdef MOZ_WIDGET_COCOA
     // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
@@ -3175,7 +3175,7 @@ PresShell::ScrollLine(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  nsIScrollableView* scrollView = GetViewToScroll();
+  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eHorizontal);
   if (scrollView) {
     scrollView->ScrollByLines(aLeft ? -1 : 1, 0);
 //NEW FOR LINES    
@@ -3195,7 +3195,7 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll();
+  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
   if (scrollView) {
     scrollView->ScrollByWhole(!aForward);//TRUE = top, aForward TRUE=bottom
   }
@@ -3654,7 +3654,7 @@ PresShell :: IsDragInProgress ( ) const
 } // IsDragInProgress
 
 nsIScrollableView*
-PresShell::GetViewToScroll()
+PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
 {
   nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
   nsIScrollableView* scrollView = nsnull;
@@ -3670,7 +3670,8 @@ PresShell::GetViewToScroll()
       } else {
         nsIView* startView = startFrame->GetClosestView();
         if (startView)
-          scrollView = nsLayoutUtils::GetNearestScrollingView(startView);
+          scrollView =
+            nsLayoutUtils::GetNearestScrollingView(startView, aDirection);
       }
     }
   }

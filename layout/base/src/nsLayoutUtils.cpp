@@ -46,6 +46,7 @@
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsPlaceholderFrame.h"
+#include "nsIScrollableFrame.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -348,16 +349,43 @@ nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
   return nsnull;
 }
 
+//static
+nsPresContext::ScrollbarStyles
+nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
+{
+  nsIView *view;
+  CallQueryInterface(aScrollableView, &view);
+  nsIFrame *frame = NS_STATIC_CAST(nsIFrame*, view->GetClientData());
+  if (frame && ((frame = frame->GetParent()))) {
+    nsIScrollableFrame *sf;
+    CallQueryInterface(frame, &sf);
+    if (sf)
+      return sf->GetScrollbarStyles();
+  }
+  return nsPresContext::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                                        NS_STYLE_OVERFLOW_HIDDEN);
+}
+
 // static
 nsIScrollableView*
-nsLayoutUtils::GetNearestScrollingView(nsIView* aView)
+nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
 {
+  // Find the first view that has a scrollable frame whose
+  // ScrollbarStyles is not NS_STYLE_OVERFLOW_HIDDEN in aDirection.
   NS_ASSERTION(aView, "GetNearestScrollingView expects a non-null view");
   nsIScrollableView* scrollableView = nsnull;
   for (; aView; aView = aView->GetParent()) {
     CallQueryInterface(aView, &scrollableView);
     if (scrollableView) {
-      break;
+      nsPresContext::ScrollbarStyles ss =
+        nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
+      // aDirection can be eHorizontal, eVertical, or eEither
+      if (aDirection != eHorizontal &&
+          ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN)
+        break;
+      if (aDirection != eVertical &&
+          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN)
+        break;
     }
   }
   return scrollableView;
