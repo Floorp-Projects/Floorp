@@ -287,7 +287,7 @@ if ($action eq 'changeform') {
 if ($action eq 'add') {
     print Bugzilla->cgi->header();
 
-    $template->process("admin/add-group.html.tmpl", $vars)
+    $template->process("admin/groups/create.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     
     exit;
