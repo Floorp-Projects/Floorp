@@ -44,25 +44,24 @@
 #include "EUCTWFreq.tab"
 #include "GB2312Freq.tab"
 
-#define SURE_YES ((float)0.99)
-#define SURE_NO  ((float)0.01)
+#define SURE_YES 0.99f
+#define SURE_NO  0.01f
 
 //return confidence base on received data
 float CharDistributionAnalysis::GetConfidence()
 { 
-  float r;
+  //if we didn't receive any character in our consideration range, return negative answer
+  if (mTotalChars <= 0)
+    return SURE_NO;
 
-  if (mTotalChars > 0)
-  {
-    r = mFreqChars / (float)(mTotalChars - mFreqChars) / mTypicalDistributionRatio;
-    //normalize confidence, (and we don't want to be 100% sure)
-    if (r >= (float)1.00)
-      r = SURE_YES;
+  if (mTotalChars != mFreqChars) {
+    float r = mFreqChars / ((mTotalChars - mFreqChars) * mTypicalDistributionRatio);
+
+    if (r < SURE_YES)
+      return r;
   }
-  else  //if we didn't receive any character in our consideration range, return negative answer
-    r = SURE_NO;
-  
-  return r;
+  //normalize confidence, (we don't want to be 100% sure)
+  return SURE_YES;
 }
 
 EUCTWDistributionAnalysis::EUCTWDistributionAnalysis()
