@@ -181,6 +181,9 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     /* reset the CERTCertificate fields */
     cert->nssCertificate = NULL;
     cert = STAN_GetCERTCertificate(c); /* will return same pointer */
+    if (!cert) {
+        return SECFailure;
+    }
     cert->istemp = PR_FALSE;
     cert->isperm = PR_TRUE;
     if (!trust) {
@@ -243,6 +246,9 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
      * below
      */
     cc = STAN_GetCERTCertificate(c);
+    if (!cc) {
+        return NULL;
+    }
     nssItem_Create(c->object.arena, 
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
     nssItem_Create(c->object.arena, 
@@ -286,6 +292,9 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	/* and use the "official" entry */
 	c = tempCert;
 	cc = STAN_GetCERTCertificate(c);
+        if (!cc) {
+            return NULL;
+        }
     } else {
 	return NULL;
     }
@@ -354,10 +363,16 @@ CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
     c = get_best_temp_or_perm(ct, cp);
     if (ct) {
 	CERTCertificate *cert = STAN_GetCERTCertificate(ct);
+        if (!cert) {
+            return NULL;
+        }
 	CERT_DestroyCertificate(cert);
     }
     if (cp) {
 	CERTCertificate *cert = STAN_GetCERTCertificate(cp);
+        if (!cert) {
+            return NULL;
+        }
 	CERT_DestroyCertificate(cert);
     }
     if (c) {
@@ -404,6 +419,9 @@ CERT_FindCertByNickname(CERTCertDBHandle *handle, char *nickname)
 	CERT_DestroyCertificate(cert);
 	if (ct) {
 	    CERTCertificate *cert2 = STAN_GetCERTCertificate(ct);
+            if (!cert2) {
+                return NULL;
+            }
 	    CERT_DestroyCertificate(cert2);
 	}
     } else {
@@ -454,6 +472,9 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
 	CERT_DestroyCertificate(cert);
 	if (ct) {
 	    CERTCertificate *cert2 = STAN_GetCERTCertificate(ct);
+            if (!cert2) {
+                return NULL;
+            }
 	    CERT_DestroyCertificate(cert2);
 	}
     } else {
@@ -519,14 +540,18 @@ CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
     ci = tSubjectCerts;
     while (ci && *ci) {
 	cert = STAN_GetCERTCertificate(*ci);
-	add_to_subject_list(certList, cert, validOnly, sorttime);
+        if (cert) {
+	    add_to_subject_list(certList, cert, validOnly, sorttime);
+        }
 	ci++;
     }
     /* Iterate over the matching perm certs.  Add them to the list */
     ci = pSubjectCerts;
     while (ci && *ci) {
 	cert = STAN_GetCERTCertificate(*ci);
-	add_to_subject_list(certList, cert, validOnly, sorttime);
+        if (cert) {
+	    add_to_subject_list(certList, cert, validOnly, sorttime);
+        }
 	ci++;
     }
     nss_ZFreeIf(tSubjectCerts);

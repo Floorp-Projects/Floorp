@@ -1200,6 +1200,7 @@ transfer_token_certs_to_collection(nssList *certList, NSSToken *token,
 	    }
 	    nssTokenArray_Destroy(tokens);
 	}
+	/* *must* be a valid CERTCertificate, came from cache */
 	CERT_DestroyCertificate(STAN_GetCERTCertificate(certs[i]));
     }
     nss_ZFreeIf(certs);
@@ -1426,7 +1427,10 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
     if (foundCerts) {
 	certList = CERT_NewCertList();
 	for (i=0, c = *foundCerts; c; c = foundCerts[++i]) {
-	    CERT_AddCertToListTail(certList, STAN_GetCERTCertificate(c));
+	    CERTCertificate *certCert = STAN_GetCERTCertificate(c);
+	    if (certCert) {
+		CERT_AddCertToListTail(certList, certCert);
+	    }
 	}
 	if (CERT_LIST_HEAD(certList) == NULL) {
 	    CERT_DestroyCertList(certList);
