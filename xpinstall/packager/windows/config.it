@@ -93,8 +93,8 @@ Message2=Click Cancel to quit Setup and then close any programs you have running
 Show Dialog=FALSE
 Title=Software License Agreement
 License File=license.txt
-Message0=
-Message1=
+Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
+Message1=Click Accept if you accept the terms of the preceeding license agreement.  If No is clicked, setup will quit.
 
 [Dialog Setup Type]
 Show Dialog=TRUE
