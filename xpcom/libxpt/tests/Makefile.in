@@ -27,7 +27,7 @@ SIMPLE_PROGRAMS	= PrimitiveTest SimpleTypeLib
 
 CSRCS		= PrimitiveTest.c SimpleTypeLib.c
 
-LDFLAGS		= 		\
+LIBS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpt 	\
 		  $(NSPR_LIBS) 	\

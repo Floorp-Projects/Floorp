@@ -45,6 +45,4 @@ ifdef MOZ_JAVA
 DIRS += jsj
 endif
 
-DIRS += tests
-
 include $(topsrcdir)/config/rules.mk

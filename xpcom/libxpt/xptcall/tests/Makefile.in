@@ -24,16 +24,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = TestXPTC
 
+SIMPLE_PROGRAMS = TestXPTCInvoke
+
 CPPSRCS = \
 	TestXPTCInvoke.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
-CFLAGS += -DJS_THREADSAFE -DJSFILE
+CFLAGS += -DJS_THREADSAFE
 
-
-LDFLAGS		= 		\
+LIBS		= 		\
 	-L$(DIST)/bin \
 	-lxpcom       \
 	-lxpt \
@@ -45,22 +46,22 @@ LDFLAGS		= 		\
 	$(NULL)
 
 
-PROGS = $(OBJDIR)/TestXPTCInvoke
+# PROGS = $(OBJDIR)/TestXPTCInvoke
 
-TARGETS= $(PROGS)
+# TARGETS= $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xptcall \
-               -I$(PUBLIC)/xptinfo -I$(PUBLIC)/libxpt -I$(PUBLIC)/raptor
+# INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xptcall \
+#                -I$(PUBLIC)/xptinfo -I$(PUBLIC)/libxpt -I$(PUBLIC)/raptor
 
 #$(PROGS): $(OBJS)
 #	@$(MAKE_OBJDIR)
 #	$(CC) -o $@ $(OBJS) $(LD_FLAGS) -L$(DIST)/lib $(LIBS) $(OS_LIBS)
 
-export:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+# export:: $(TARGETS)
+# 	$(INSTALL) $(PROGS) $(DIST)/bin
 
-clobber::
-	rm -f $(DIST)/bin/TestXPTCInvoke
-	rm -f $(PROGS) $(OBJS)
+# clobber::
+# 	rm -f $(DIST)/bin/TestXPTCInvoke
+# 	rm -f $(PROGS) $(OBJS)
