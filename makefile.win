@@ -58,7 +58,7 @@ DIRS =                         \
   modules\mpfilelocprovider    \
   modules\zlib                 \
   netwerk                      \
-!if defined(BUILD_PSM)
+!if defined(BUILD_PSM) || defined(BUILD_PSM2)
   security                     \
 !endif
   widget\timer                 \

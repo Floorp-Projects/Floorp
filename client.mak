@@ -182,6 +182,7 @@ pull_nss:
 
 pull_psm: pull_nss
 	cd $(MOZ_SRC)\.
+	$(CVSCO_PSM) mozilla/security/manager
 	$(CVSCO_PSM) mozilla/security/psm
 	$(CVSCO_PSM) mozilla/security/makefile.win
 
@@ -288,7 +289,7 @@ build_nspr:
 
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
-	nmake -f makefile.win export
+	nmake -f makefile.win 
 
 build_xpconnect: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
