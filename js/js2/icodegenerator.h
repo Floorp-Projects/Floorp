@@ -45,6 +45,8 @@ namespace JavaScript {
         LOAD_NAME,      // StringAtom &             Destination Register
         SAVE_NAME,      // StringAtom &             Source Register
 
+        NEW_OBJECT,     // Destination Register
+
         GET_PROP,       // StringAtom &             Base Register               Destination Register
         SET_PROP,       // StringAtom &             Base Register               Source Register
 
@@ -78,6 +80,12 @@ namespace JavaScript {
     class Instruction {
     public:
         Instruction(ICodeOp op) : itsOp(op) { }
+
+#ifdef DEBUG
+        // provide a virtual destructor, so we can see dynamic type in debugger.
+        virtual ~Instruction() { }
+#endif
+
         ICodeOp itsOp;
         
         ICodeOp getBranchOp()   { return ((itsOp >= COMPARE_LT) && (itsOp <= COMPARE_GT)) ? (ICodeOp)(BRANCH_LT + (itsOp - COMPARE_LT)) : NOP;  }
@@ -120,8 +128,7 @@ namespace JavaScript {
             Operand3& o3() { return itsOperand3; }
         };
 
-    typedef Instruction_3<StringAtom*, Register, Register> GetProp;
-    typedef Instruction_3<StringAtom*, Register, Register> SetProp;
+    typedef Instruction_3<StringAtom*, Register, Register> GetProp, SetProp;
     typedef Instruction_2<StringAtom*, Register> LoadName, SaveName;
     typedef Instruction_2<float64, Register> LoadImmediate;
     typedef Instruction_2<uint32, Register> LoadVar, SaveVar;
@@ -130,7 +137,16 @@ namespace JavaScript {
     typedef Instruction_3<Register, Register, Register> Arithmetic;
     typedef Instruction_3<Register, Register, Register> Compare;
     typedef Instruction_2<Register, Register> Move;
-    typedef Instruction_1<Register> Return;
+
+    class Return : public Instruction_1<Register> {
+    public:
+        Return(Register source) : Instruction_1(RETURN, source) {}
+    };
+
+    class NewObject : public Instruction_1<Register> {
+    public:
+        NewObject(Register dest) : Instruction_1(NEW_OBJECT, dest) {}
+    };
 
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
@@ -217,12 +233,16 @@ namespace JavaScript {
 
         void saveVariable(uint32 frameIndex, Register value);
 
+        Register newObject();
+
         Register loadName(StringAtom &name);
+        void saveName(StringAtom &name, Register value);
+        
         Register getProperty(StringAtom &name, Register base);
+        void setProperty(StringAtom &name, Register base, Register value);
 
         Register getRegisterBase()                          { return topRegister; }
         InstructionStream *get_iCode()                      { return iCode; }
-        LabelList& getLabels()                              { return labels; }
 
 
     // Rather than have the ICG client maniplate labels and branches, it
