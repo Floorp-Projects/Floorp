@@ -2954,7 +2954,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 #else
 	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 	if (m_nntpServer) {
-		rv = m_nntpServer->AddNewNewsgroup(line, "false", "0");
+		rv = m_nntpServer->AddNewNewsgroup(line);
 	}
 	else {
 		rv = NS_ERROR_FAILURE;

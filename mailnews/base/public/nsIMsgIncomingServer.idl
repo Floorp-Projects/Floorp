@@ -126,10 +126,9 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* do a biff */
   void PerformBiff();
-
   
-  /* this checks if a Server need's a password, implemented because of biffing Nntp, Tobias A (TAJT) */
-  boolean GetServerRequiresPasswordForBiff();
+  /* this checks if a server needs a password to do biff */
+  readonly attribute boolean serverRequiresPasswordForBiff;
   
   /* this gets called when the server is expanded in the folder pane */
   void PerformExpand();

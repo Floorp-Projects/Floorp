@@ -24,6 +24,7 @@
 #define __nsNntpIncomingServer_h
 
 #include "nsINntpIncomingServer.h"
+#include "nsIUrlListener.h"
 #include "nscore.h"
 
 #include "nsMsgIncomingServer.h"
@@ -41,12 +42,14 @@ class nsIMsgMailNewsUrl;
 
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
-                             public nsINntpIncomingServer
+                             public nsINntpIncomingServer,
+			     public nsIUrlListener
 							 
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINNTPINCOMINGSERVER
+    NS_DECL_NSIURLLISTENER
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
@@ -63,6 +66,7 @@ protected:
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 
 private:
+	nsresult SetNewsgroupAsSubscribed(const char *aName);
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
 };

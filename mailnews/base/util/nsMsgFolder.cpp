@@ -1469,6 +1469,8 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
   if (NS_SUCCEEDED(rv) && folderInfo)
   {
+      nsXPIDLString name;
+      rv = GetName(getter_Copies(name));
       folderInfo->SetFlags((PRInt32) mFlags);
       if (db)
         db->Commit(nsMsgDBCommitType::kLargeCommit);

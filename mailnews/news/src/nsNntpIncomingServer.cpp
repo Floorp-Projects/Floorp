@@ -56,9 +56,10 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
+NS_IMPL_ISUPPORTS_INHERITED2(nsNntpIncomingServer,
                             nsMsgIncomingServer,
-                            nsINntpIncomingServer);
+                            nsINntpIncomingServer,
+			    nsIUrlListener);
 
 nsNntpIncomingServer::nsNntpIncomingServer()
 {    
@@ -492,7 +493,7 @@ nsNntpIncomingServer::AddSubscribedNewsgroups()
 				rv = currFolder->GetName(getter_Copies(name));
 				if (NS_SUCCEEDED(rv) && name) {
 					nsCAutoString asciiName(name);
-					rv = AddNewNewsgroup((const char *)asciiName,"true","0");
+					rv = SetNewsgroupAsSubscribed((const char *)asciiName);
 				}
             }
         }
@@ -502,8 +503,70 @@ nsNntpIncomingServer::AddSubscribedNewsgroups()
 	return NS_OK;
 }
 
+nsresult
+nsNntpIncomingServer::SetNewsgroupAsSubscribed(const char *aName)
+{
+	nsresult rv;
+
+	NS_ASSERTION(aName,"newsgroup with no name");
+	if (!aName) return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_NEWS
+	printf("SetNewsgroupAsSubscribed(%s)\n",aName);
+#endif
+	nsXPIDLCString serverUri;
+
+	rv = GetServerURI(getter_Copies(serverUri));
+	if (NS_FAILED(rv)) return rv;
+
+	nsCAutoString groupUri;
+	groupUri = (const char *)serverUri;
+	groupUri += "/";
+	groupUri += aName;
+
+	nsCOMPtr <nsIRDFService> rdfService = do_GetService(kRDFServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!rdfService) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIRDFResource> newsgroupResource;
+	rv = rdfService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
+
+#if 0
+	nsCOMPtr<nsIRDFLiteral> totalMessagesLiteral;
+	nsAutoString totalMessagesString(aTotalMessages);
+	rv = rdfService->GetLiteral(totalMessagesString.GetUnicode(), getter_AddRefs(totalMessagesLiteral));
+	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFResource> kNC_TotalMessages;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#TotalMessages", getter_AddRefs(kNC_TotalMessages));
+	if(NS_FAILED(rv)) return rv;
+#endif
+
+	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
+	nsAutoString subscribedString("true");
+	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
+	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
+	if(NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIRDFDataSource> ds;
+	rv = rdfService->GetDataSource("rdf:subscribe",getter_AddRefs(ds));
+	if(NS_FAILED(rv)) return rv;
+	if (!ds) return NS_ERROR_FAILURE;
+
+#if 0
+	rv = ds->Assert(newsgroupResource, kNC_TotalMessages, totalMessagesLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+#endif
+
+	rv = ds->Assert(newsgroupResource, kNC_Subscribed, subscribedLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP
-nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, const char *aCount)
+nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 {
 	nsresult rv;
 
@@ -538,32 +601,12 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, con
 	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
 	if(NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
-	nsAutoString subscribedString(aState);
-	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
-	if(NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
-	if(NS_FAILED(rv)) return rv;
-
-	nsCOMPtr<nsIRDFLiteral> countLiteral;
-	nsAutoString countString(aCount);
-	rv = rdfService->GetLiteral(countString.GetUnicode(), getter_AddRefs(countLiteral));
-	if(NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIRDFResource> kNC_Count;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Count", getter_AddRefs(kNC_Count));
-	if(NS_FAILED(rv)) return rv;
-
 	nsCOMPtr<nsIRDFDataSource> ds;
 	rv = rdfService->GetDataSource("rdf:subscribe",getter_AddRefs(ds));
 	if(NS_FAILED(rv)) return rv;
 	if (!ds) return NS_ERROR_FAILURE;
 
 	rv = ds->Assert(newsgroupResource, kNC_Name, nameLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-	rv = ds->Assert(newsgroupResource, kNC_Subscribed, subscribedLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-	rv = ds->Assert(newsgroupResource, kNC_Count, countLiteral, PR_TRUE);
 	if(NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIRDFResource> kNC_Child;
@@ -585,7 +628,6 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, con
 		if(NS_FAILED(rv)) return rv;
 	}
 		
-	// if HasAssertion
 	rv = ds->Assert(parent, kNC_Child, newsgroupResource, PR_TRUE);
 	if(NS_FAILED(rv)) return rv;
 
@@ -706,3 +748,17 @@ nsNntpIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
 	return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsNntpIncomingServer::OnStartRunningUrl(nsIURI *url)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
+{
+	nsresult rv;
+	rv = AddSubscribedNewsgroups();
+	return rv;
+}

@@ -53,8 +53,9 @@ interface nsINntpIncomingServer : nsISupports {
     attribute boolean newsrcHasChanged;
 
 	attribute long maximumConnectionsNumber;
+
 	/* used when populating the subscribe dialog */
-	void addNewNewsgroup(in string name, in string state, in string count);
+	void addNewNewsgroup(in string name);
 	void addSubscribedNewsgroups();
 
 	readonly attribute long numGroupsNeedingCounts;
