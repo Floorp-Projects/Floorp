@@ -442,3 +442,30 @@ print();
 echoJS.SetReceiver(null);
 echo.SetReceiver(null);
 
+// cleanup...
+NS_ISUPPORTS_IID = null;
+NS_ITESTXPC_FOO_IID = null;
+echo = null;
+echoJS = null;
+in_out_results = null;
+in_out_results1 = null;
+in_out_results2 = null;
+inout_params = null;
+interval = null;
+iterations = null;
+lastResult = null;
+nsID = null;
+receiver = null;
+receiver2 = null;
+receiver3 = null;
+receiver_results = null;
+resend_params = null;
+send_params = null;
+start_time = null;
+test_string = null;
+test_string2 = null;
+
+gc();
+gc();
+dumpXPC(6);
+

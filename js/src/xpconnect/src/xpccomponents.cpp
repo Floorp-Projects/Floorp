@@ -986,7 +986,13 @@ XPC_IMPL_GET_OBJ_METHOD(Results);
 NS_IMETHODIMP
 nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
 {
-    return nsXPConnect::GetXPConnect()->GetCurrentJSStack(aStack);
+    nsresult rv;
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if(!xpc)
+        return NS_ERROR_FAILURE;
+    rv = xpc->GetCurrentJSStack(aStack);
+    NS_RELEASE(xpc);
+    return rv;
 }
 
 NS_IMETHODIMP

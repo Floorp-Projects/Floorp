@@ -71,7 +71,6 @@ JSContext2XPCContextMap::newMap(int size)
     return nsnull;
 }
 
-
 JSContext2XPCContextMap::JSContext2XPCContextMap(int size)
 {
     mHashtable = JS_NewHashTable(size, hash_root,
@@ -98,7 +97,6 @@ JSObject2WrappedJSMap::newMap(int size)
     delete map;
     return nsnull;
 }
-
 
 JSObject2WrappedJSMap::JSObject2WrappedJSMap(int size)
 {

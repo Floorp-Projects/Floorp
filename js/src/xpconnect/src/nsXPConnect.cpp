@@ -66,7 +66,7 @@ private:
 xpcPerThreadData::xpcPerThreadData()
     :   mException(nsnull)
 {
-    // empty
+    // empty...
 }
 
 xpcPerThreadData::~xpcPerThreadData()
@@ -155,6 +155,7 @@ nsXPConnect::GetXPConnect()
         {
             // ctor failed to create an acceptable instance
             delete gSelf;
+            gSelf = nsnull;
         }
         else
         {
@@ -176,7 +177,7 @@ nsXPConnect::FreeXPConnect()
     if (xpc) {
         nsrefcnt cnt;
         NS_RELEASE2(xpc, cnt);
-#ifdef DEBUG_kipp
+#if defined(DEBUG_kipp) || defined(DEBUG_jband)
         if (0 != cnt) {
             printf("*** dangling reference to nsXPConnect: refcnt=%d\n", cnt);
         }
@@ -569,11 +570,9 @@ nsXPConnect::SetSecurityManagerForJSContext(JSContext* aJSContext,
         return NS_ERROR_INVALID_ARG;
     }
 
-    if(aManager)
-        NS_ADDREF(aManager);
+    NS_IF_ADDREF(aManager);
     nsIXPCSecurityManager* oldManager = xpcc->GetSecurityManager();
-    if(oldManager)
-        NS_RELEASE(oldManager);
+    NS_IF_RELEASE(oldManager);
 
     xpcc->SetSecurityManager(aManager);
     xpcc->SetSecurityManagerFlags(flags);

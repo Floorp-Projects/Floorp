@@ -1031,7 +1031,6 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService
 };
 
 /***************************************************************************/
-class XPCJSStackFrame;
 
 class XPCJSStack
 {
@@ -1044,16 +1043,8 @@ public:
                                         const char* aFunctionName,
                                         PRInt32 aLineNumber,
                                         nsIJSStackFrameLocation* aCaller);
-friend class XPCJSStackFrame;
 private:
-    XPCJSStack();
-    ~XPCJSStack();
-
-    void AddRef();
-    void Release();
-
-    XPCJSStackFrame* mTopFrame;
-    int mRefCount;
+    XPCJSStack();   // not implemented
 };
 
 /***************************************************************************/
@@ -1068,8 +1059,7 @@ public:
     static nsXPCException* NewException(const char *aMessage,
                                         nsresult aResult,
                                         nsIJSStackFrameLocation *aLocation,
-                                        nsISupports *aData,
-                                        PRInt32 aLeadingFramesToTrim);
+                                        nsISupports *aData);
 
     static JSBool NameAndFormatForNSResult(nsresult rv,
                                            const char** name,

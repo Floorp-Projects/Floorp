@@ -93,6 +93,8 @@ static nsIXPConnect* GetXPConnect()
 FILE *gOutFile = NULL;
 FILE *gErrFile = NULL;
 
+JSBool gQuitting = JS_FALSE;
+
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
@@ -228,7 +230,8 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef LIVECONNECT
     JSJ_SimpleShutdown();
 #endif
-    exit(0);
+    gQuitting = JS_TRUE;
+//    exit(0);
     return JS_FALSE;
 }
 
@@ -488,7 +491,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 #endif
             JS_DestroyScript(cx, script);
         }
-    } while (!hitEOF);
+    } while (!hitEOF && !gQuitting);
     fprintf(gOutFile, "\n");
     return;
 }
@@ -592,9 +595,13 @@ main(int argc, char **argv)
     JSContext *jscontext;
     JSObject *glob;
     int result;
+    nsresult rv;
 
     gErrFile = stderr;
     gOutFile = stdout;
+
+    rv = NS_InitXPCOM(NULL, NULL, NULL);
+    NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
     SetupRegistry();
 
@@ -615,7 +622,6 @@ main(int argc, char **argv)
         return 1;
     }
 
-    nsresult rv;
     NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
     if(NS_FAILED(rv))
     {
@@ -649,6 +655,10 @@ main(int argc, char **argv)
     JS_DestroyContext(jscontext);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
+
+    rv = NS_ShutdownXPCOM( NULL );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+
     return result;
 }
 

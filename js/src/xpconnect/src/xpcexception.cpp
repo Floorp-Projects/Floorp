@@ -227,7 +227,11 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
     else
     {
         nsresult rv;
-        rv = nsXPConnect::GetXPConnect()->GetCurrentJSStack(&mLocation);
+        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+        if(!xpc)
+            return NS_ERROR_FAILURE;
+        rv = xpc->GetCurrentJSStack(&mLocation);
+        NS_RELEASE(xpc);
         if(NS_FAILED(rv))
             return rv;
     }
@@ -295,8 +299,7 @@ nsXPCException*
 nsXPCException::NewException(const char *aMessage,
                              nsresult aResult,
                              nsIJSStackFrameLocation *aLocation,
-                             nsISupports *aData,
-                             PRInt32 aLeadingFramesToTrim)
+                             nsISupports *aData)
 {
     nsresult rv;
     nsXPCException* e = new nsXPCException();
@@ -312,7 +315,14 @@ nsXPCException::NewException(const char *aMessage,
         }
         else
         {
-            rv = nsXPConnect::GetXPConnect()->GetCurrentJSStack(&location);
+            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+            if(!xpc)
+            {
+                NS_RELEASE(e);
+                return nsnull;
+            }
+            rv = xpc->GetCurrentJSStack(&location);
+            NS_RELEASE(xpc);
             if(NS_FAILED(rv) || !location)
             {
                 NS_RELEASE(e);
@@ -320,17 +330,17 @@ nsXPCException::NewException(const char *aMessage,
             }
         }
         // at this point we have non-null location with one extra addref
-        for(PRInt32 i = aLeadingFramesToTrim - 1; i >= 0; i--)
+        // We want to trim off any leading native 'dataless' frames
+        while(1)
         {
+            PRBool  isJSFrame;
+            PRInt32 lineNumber;
+            if(NS_FAILED(location->GetIsJSFrame(&isJSFrame)) || isJSFrame ||
+               NS_FAILED(location->GetLineNumber(&lineNumber)) || lineNumber)
+                break;
             nsIJSStackFrameLocation* caller;
             if(NS_FAILED(location->GetCaller(&caller)) || !caller)
-            {
-                NS_ASSERTION(0, "tried to trim too many frames");
-                NS_RELEASE(location);
-                NS_RELEASE(e);
-                return nsnull;
-            }
-            NS_ADDREF(caller);
+                break;
             NS_RELEASE(location);
             location = caller;
         }
