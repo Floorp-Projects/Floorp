@@ -25,6 +25,7 @@
 /*----------------------------------------------------------------------*/
 
 #include <Xfe/XfeTest.h>
+#include <Xfe/Chrome.h>
 
 #include <X11/Xmu/Editres.h>
 #include <X11/Xmu/Converters.h>

@@ -30,6 +30,7 @@ LIBRARY_NAME	= xfe2
 REQUIRES	=\
 			XfeWidgets \
 			XfeBm \
+			XfeToolBar \
 			Microline \
 			nspr \
 			layer \

@@ -37,9 +37,10 @@
 #include "intl_csi.h"
 #include "prefapi.h"
 
-#include <Xfe/XfeAll.h>
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
+
+#include <Xfe/Cascade.h>
 
 #include <Xm/CascadeB.h>
 #include <Xm/PushB.h>

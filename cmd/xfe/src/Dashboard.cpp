@@ -40,6 +40,8 @@
 
 #include <Xfe/XfeAll.h>
 
+#include <Xfe/DashBoard.h>
+
 #if 0
 #define D(x) x
 #else

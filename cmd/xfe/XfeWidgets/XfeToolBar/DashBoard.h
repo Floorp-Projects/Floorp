@@ -18,57 +18,72 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/Logo.h>											*/
-/* Description:	XfeLogo widget public header file.						*/
+/* Name:		<Xfe/DashBoard.h>										*/
+/* Description:	XfeDashBoard widget public header file.					*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeLogo_h_								/* start Logo.h			*/
-#define _XfeLogo_h_
+#ifndef _XfeDashBoard_h_						/* start DashBoard.h	*/
+#define _XfeDashBoard_h_
 
+#include <Xfe/Xfe.h>
 #include <Xfe/Button.h>
+#include <Xfe/Label.h>
+#include <Xfe/ProgressBar.h>
+#include <Xfe/TaskBar.h>
+#include <Xfe/ToolBar.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLogo class names													*/
+/* XfeDashBoard components												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-externalref WidgetClass xfeLogoWidgetClass;
-    
-typedef struct _XfeLogoClassRec *	XfeLogoWidgetClass;
-typedef struct _XfeLogoRec *		XfeLogoWidget;
+typedef enum
+{
+	XfeDASH_BOARD_DOCKED_TASK_BAR,
+	XfeDASH_BOARD_FLOATING_SHELL,
+	XfeDASH_BOARD_FLOATING_TASK_BAR,
+	XfeDASH_BOARD_PROGRESS_BAR,
+	XfeDASH_BOARD_STATUS_BAR,
+	XfeDASH_BOARD_TOOL_BAR
+} XfeDashBoardComponent;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLogo subclass test macro											*/
+/* XfeBox class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XfeIsLogo(w)	XtIsSubclass(w,xfeLogoWidgetClass)
+externalref WidgetClass xfeDashBoardWidgetClass;
+
+typedef struct _XfeDashBoardClassRec *		XfeDashBoardWidgetClass;
+typedef struct _XfeDashBoardRec *			XfeDashBoardWidget;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLogo public functions												*/
+/* XfeBox subclass test macro											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeIsDashBoard(w)	XtIsSubclass(w,xfeDashBoardWidgetClass)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDashBoard Public Methods											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Widget
-XfeCreateLogo				(Widget		parent,
-							 String		name,
-							 Arg *		args,
-							 Cardinal	num_args);
+XfeCreateDashBoard				(Widget		parent,
+								 String		name,
+								 Arg *		args,
+								 Cardinal	num_args);
 /*----------------------------------------------------------------------*/
-extern void
-XfeLogoAnimationStart		(Widget		w);
-/*----------------------------------------------------------------------*/
-extern void
-XfeLogoAnimationStop		(Widget		w);
-/*----------------------------------------------------------------------*/
-extern void
-XfeLogoAnimationReset		(Widget		w);
+extern Widget
+XfeDashBoardGetComponent		(Widget					dashboard,
+								 XfeDashBoardComponent	component);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION
 
-#endif											/* end Logo.h			*/
+#endif											/* end DashBoard.h		*/

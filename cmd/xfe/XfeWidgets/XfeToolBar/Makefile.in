@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,35 +15,65 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+
 ##########################################################################
 #
 # Name:			Makefile
-# Description:	Makefile for Microline widgets test programs.
+# Description:	Makefile for XfeToolBar library
 # Author:		Ramiro Estrugo <ramiro@netscape.com>
 #
 ##########################################################################
 
-DEPTH			= ../../../../..
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# XfeWidgets headers are exported to dist/public/XfeToolBar/Xfe.  We use
+# the 'Xfe' directory to avoid the hassle of having to remember yet another
+# include prefix.
+MODULE			= XfeToolBar/Xfe
+
+LIBRARY_NAME	= XfeToolBar
 
 CSRCS			= \
-				TreeTest.c \
+				Chrome.c \
+				DashBoard.c \
+				Tab.c \
+				TaskBar.c \
+				ToolBar.c \
+				ToolBox.c \
+				ToolItem.c \
+				ToolScroll.c \
 				$(NULL)
 
 REQUIRES		= \
-				XfeWidgets \
-				XfeBm \
 				XfeToolBar \
-				XfeTest \
-				Microline
+				XfeWidgets
 
-STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
-SHARED_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.shared))
 
-include $(DEPTH)/config/rules.mk
-include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
+EXPORTS			= \
+				Chrome.h \
+				ChromeP.h \
+				DashBoard.h \
+				DashBoardP.h \
+				Tab.h \
+				TabP.h \
+				TaskBar.h \
+				TaskBarP.h \
+				ToolBar.h \
+				ToolBarP.h \
+				ToolBox.h \
+				ToolBoxP.h \
+				ToolItem.h \
+				ToolItemP.h \
+				ToolScroll.h \
+				ToolScrollP.h \
+				$(NULL)
 
-all:: $(STATIC_PROGS) $(SHARED_PROGS)
-install:: $(STATIC_PROGS) $(SHARED_PROGS)
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-shared: $(SHARED_PROGS)
-static: $(STATIC_PROGS)
+include $(topsrcdir)/config/rules.mk

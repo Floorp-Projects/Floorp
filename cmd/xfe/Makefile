@@ -76,6 +76,7 @@ DIRS		= \
 REQUIRES	=\
 			XfeWidgets \
 			XfeBm \
+			XfeToolBar \
 			Microline \
 		  addr \
 		  applet \
@@ -240,9 +241,12 @@ GARBAGE		+= e_kit_resources.h cxxlink-filter
 
 ICONS_LIB	= $(DIST)/lib/lib$(LITE_PREFIX)xfeicons.a
 
-DTWIDGETS_LIB		= $(DIST)/lib/libDtWidgets.a
-XFE_WIDGETS_LIB		= $(DIST)/lib/libXfeWidgets.a
-XFE_WIDGETS_BM_LIB	= $(DIST)/lib/libXfeBm.a
+DTWIDGETS_LIB				= $(DIST)/lib/libDtWidgets.a
+XFE_WIDGETS_LIB				= $(DIST)/lib/libXfeWidgets.a
+XFE_WIDGETS_BM_LIB			= $(DIST)/lib/libXfeBm.a
+XFE_WIDGETS_COMBO_BOX_LIB	= $(DIST)/lib/libXfeComboBox.a
+XFE_WIDGETS_CAPTION_LIB		= $(DIST)/lib/libXfeCaption.a
+XFE_WIDGETS_TOOL_BAR_LIB	= $(DIST)/lib/libXfeToolBar.a
 
 ifneq ($(OS_ARCH),IRIX) 
 ifneq ($(OS_ARCH),FreeBSD)
@@ -292,6 +296,7 @@ BASIC_LIBS	= \
 		  $(ICONS_LIB) \
 		  $(DTWIDGETS_LIB) \
 		  $(XFE_WIDGETS_BM_LIB) \
+		  $(XFE_WIDGETS_TOOL_BAR_LIB) \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/libmimetype.a \
@@ -1092,6 +1097,15 @@ $(XFE_WIDGETS_LIB):
 
 $(XFE_WIDGETS_BM_LIB):
 	cd XfeWidgets/XfeBm; $(MAKE)
+
+$(XFE_WIDGETS_COMBO_BOX_LIB):
+	cd XfeWidgets/XfeComboBox; $(MAKE)
+
+$(XFE_WIDGETS_CAPTION_LIB):
+	cd XfeWidgets/XfeCaption; $(MAKE)
+
+$(XFE_WIDGETS_TOOL_BAR_LIB):
+	cd XfeWidgets/XfeToolBar; $(MAKE)
 
 $(XFE2_LIB):
 	cd src; $(MAKE)

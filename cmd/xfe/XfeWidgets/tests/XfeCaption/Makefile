@@ -29,6 +29,7 @@ REQUIRES		= \
 				XfeTest \
 				XfeCaption \
 				XfeBm \
+				XfeToolBar \
 				XfeWidgets
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))

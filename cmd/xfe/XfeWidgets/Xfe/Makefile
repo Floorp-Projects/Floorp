@@ -77,10 +77,8 @@ CSRCS			= \
 				CallProcs.c \
 				Cascade.c \
 				ChildrenUtil.c \
-				Chrome.c \
 				Converters.c \
 				Cursor.c \
-				DashBoard.c \
 				Debug.c \
 				DialogUtil.c \
 				Draw.c \
@@ -107,12 +105,6 @@ CSRCS			= \
 				SetValues.c \
 				ShellUtil.c \
 				StringUtil.c \
-				Tab.c \
-				TaskBar.c \
-				ToolBar.c \
-				ToolBox.c \
-				ToolItem.c \
-				ToolScroll.c \
 				Translations.c \
 				Util.c \
 				WmUtil.c \
@@ -133,11 +125,7 @@ EXPORTS			= \
 				Cascade.h \
 				CascadeP.h \
 				ChildrenUtil.h \
-				Chrome.h \
-				ChromeP.h \
 				Converters.h \
-				DashBoard.h \
-				DashBoardP.h \
 				Debug.h \
 				Defaults.h \
 				DialogUtil.h \
@@ -174,21 +162,8 @@ EXPORTS			= \
 				ShellUtil.h \
 				StringDefs.h \
 				StringUtil.h \
-				Tab.h \
-				TabP.h \
-				TaskBar.h \
-				TaskBarP.h \
-				ToolBar.h \
-				ToolBarP.h \
-				ToolBox.h \
-				ToolBoxP.h \
-				ToolItem.h \
-				ToolItemP.h \
-				ToolScroll.h \
-				ToolScrollP.h \
 				WmUtil.h \
 				Xfe.h \
-				XfeAll.h \
 				XfeP.h \
 				$(NULL)
 

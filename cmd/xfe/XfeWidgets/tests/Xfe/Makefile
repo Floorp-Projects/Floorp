@@ -27,7 +27,6 @@ DEPTH			= ../../../../..
 
 ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_CSRCS		= \
-				ChromeTest.c \
 				FontChooserTest.c \
 				FrameShellTest.c \
 				$(NULL)
@@ -40,7 +39,6 @@ CSRCS			= \
 				ArrowTest.c \
 				ButtonTest.c \
 				CascadeTest.c \
-				DashBoardTest.c \
 				LabelTest.c \
 				LogoTest.c \
 				PaneTestFour.c \
@@ -49,17 +47,13 @@ CSRCS			= \
 				PaneTestTwo.c \
 				PixmapTest.c \
 				ProgressBarTest.c \
-				TaskBarTestOne.c \
-				TaskBarTestTwo.c \
-				ToolBarTest.c \
-				ToolBoxTest.c \
-				ToolScrollTest.c \
 				$(NULL)
 
 REQUIRES		= \
 				XfeTest \
-				XfeWidgets \
-				XfeBm
+				XfeToolBar \
+				XfeBm \
+				XfeWidgets
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
 SHARED_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.shared))

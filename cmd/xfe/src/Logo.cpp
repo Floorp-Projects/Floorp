@@ -32,7 +32,7 @@
 #include "icondata.h"
 #include "e_kit.h"
 
-#include <Xfe/XfeAll.h>
+#include <Xfe/Logo.h>
 
 
 /* static */ Pixmap **		

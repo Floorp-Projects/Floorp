@@ -21,14 +21,18 @@
 DEPTH			= ../../../../..
 
 CSRCS			= \
-				ToolTipTest.c \
+				DashBoardTest.c \
+				TaskBarTestOne.c \
+				TaskBarTestTwo.c \
+				ToolBarTest.c \
+				ToolBoxTest.c \
+				ToolScrollTest.c \
 				$(NULL)
 
 REQUIRES		= \
 				XfeTest \
-				XfeToolTip \
-				XfeBm \
 				XfeToolBar \
+				XfeBm \
 				XfeWidgets
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))

@@ -44,6 +44,7 @@ endif
 DIRS			= \
 				Xfe \
 				XfeBm \
+				XfeToolBar \
 				$(UNUSED_DIRS) \
 				$(TEST_DIRS)
 

@@ -209,8 +209,8 @@ endif
 ##
 ## XfeComboBox Library
 ##
-XFE_STATIC_COMBO_BOX_LIB		= $(DIST)/lib/libXfeComboBox.a
-XFE_SHARED_COMBO_BOX_LIB		= $(DIST)/bin/libXfeComboBox.$(DLL_SUFFIX)
+XFE_STATIC_COMBO_BOX_LIB	= $(DIST)/lib/libXfeComboBox.a
+XFE_SHARED_COMBO_BOX_LIB	= $(DIST)/bin/libXfeComboBox.$(DLL_SUFFIX)
 XFE_COMBO_BOX_REQUIRES		= XfeComboBox
 
 ##
@@ -264,6 +264,22 @@ ifeq ($(filter $(REQUIRES),$(XFE_TEST_REQUIRES)),$(XFE_TEST_REQUIRES))
 
 XFE_SHARED_LIBS			+= $(XFE_SHARED_TEST_LIB)
 XFE_STATIC_LIBS			+= $(XFE_STATIC_TEST_LIB)
+
+endif
+
+##
+## XfeToolBar Library
+##
+XFE_STATIC_TOOL_BAR_LIB		= $(DIST)/lib/libXfeToolBar.a
+XFE_SHARED_TOOL_BAR_LIB		= $(DIST)/bin/libXfeToolBar.$(DLL_SUFFIX)
+XFE_TOOL_BAR_REQUIRES		= XfeToolBar
+
+##
+## XfeToolBar required ?
+##
+ifeq ($(filter $(REQUIRES),$(XFE_TOOL_BAR_REQUIRES)),$(XFE_TOOL_BAR_REQUIRES))
+XFE_SHARED_LIBS			+= $(XFE_SHARED_TOOL_BAR_LIB)
+XFE_STATIC_LIBS			+= $(XFE_STATIC_TOOL_BAR_LIB)
 
 endif
 

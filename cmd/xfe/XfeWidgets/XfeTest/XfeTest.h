@@ -32,11 +32,38 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <Xfe/XfeAll.h>
+#include <Xm/XmAll.h>
+
+#include <Xfe/Arrow.h>
+#include <Xfe/Button.h>
+#include <Xfe/Cascade.h>
+#include <Xfe/FrameShell.h>
+#include <Xfe/Label.h>
+#include <Xfe/Logo.h>
+#include <Xfe/Oriented.h>
+#include <Xfe/Pane.h>
+#include <Xfe/ProgressBar.h>
+
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
 
-#include <Xm/XmAll.h>
+#include <Xfe/Chrome.h>
+#include <Xfe/DashBoard.h>
+#include <Xfe/Tab.h>
+#include <Xfe/TaskBar.h>
+#include <Xfe/ToolBar.h>
+#include <Xfe/ToolBox.h>
+#include <Xfe/ToolItem.h>
+#include <Xfe/ToolScroll.h>
+
+#if defined(XFE_WIDGETS_BUILD_DEMO)
+#include <Xfe/TempTwo.h>
+#endif /* XFE_WIDGETS_BUILD_DEMO */
+
+#if defined(XFE_WIDGETS_BUILD_UNUSED)
+#include <Xfe/BypassShell.h>
+#include <Xfe/FontChooser.h>
+#endif /* XFE_WIDGETS_BUILD_UNUSED */
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
  

@@ -25,7 +25,9 @@
 /*----------------------------------------------------------------------*/
 
 #include <Xfe/LabelP.h>
+#if 0
 #include <Xfe/ToolBar.h>
+#endif
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -1015,6 +1017,7 @@ _XfeLabelEdit(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
     XfeLabelPart *	lp = _XfeLabelPart(w);
 
+#if 0
 	/* Make sure parent is XfeToolBar */
 	if (!XfeIsToolBar(_XfeParent(w)))
 	{
@@ -1030,6 +1033,7 @@ _XfeLabelEdit(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 					   lp->label_rect.y,
 					   lp->label_rect.width,
 					   lp->label_rect.height);
+#endif
 }
 /*----------------------------------------------------------------------*/
 
