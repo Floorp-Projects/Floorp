@@ -723,7 +723,6 @@ function delayedOnLoadMessenger()
   verifyAccounts(null);
     
   HideAccountCentral();
-  loadStartPage();
   InitMsgWindow();
   messenger.SetWindow(window, msgWindow);
 
