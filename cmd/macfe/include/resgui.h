@@ -426,6 +426,8 @@
 #define cmd_Select_Col                      1321
 #define cmd_Select_Cell                     1322
 #define cmd_Select_All_Cells                1323
+#define cmd_Join_With_Next_Cell             1326
+#define cmd_Split_Cell                      1327
 
 #define cmd_DisplayTables					1324
 
