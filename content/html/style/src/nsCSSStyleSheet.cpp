@@ -3385,24 +3385,18 @@ inline PRBool IsLinkPseudo(nsIAtom* aAtom)
                  (nsCSSAtoms::anyLinkPseudo == aAtom));
 }
 
-inline PRBool IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aSelectorIsGlobal)
+// Return whether we should apply a "global" (i.e., universal-tag)
+// selector for event states in quirks mode.  Note that
+// |data.mIsHTMLLink| is checked separately by the caller, so we return
+// false for |nsHTMLAtoms::a|, which here means a named anchor.
+inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 {
-  // if the selector is global, meaning it is not tied to a tag, then
-  // we restrict the application of the event pseudo to the following tags
-  if (aSelectorIsGlobal) {
-    return PRBool ((nsHTMLAtoms::a == aContentTag)      ||
-                   (nsHTMLAtoms::button == aContentTag) ||
-                   (nsHTMLAtoms::img == aContentTag)    ||
-                   (nsHTMLAtoms::input == aContentTag)  ||
-                   (nsHTMLAtoms::li == aContentTag)     ||
-                   (nsHTMLAtoms::label == aContentTag)  ||
-                   (nsHTMLAtoms::select == aContentTag) ||
-                   (nsHTMLAtoms::textarea == aContentTag));
-  } else {
-    // selector is not global, so apply the event pseudo to everything except HTML and BODY
-    return PRBool ((nsHTMLAtoms::html != aContentTag) && 
-                   (nsHTMLAtoms::body != aContentTag));
-  }
+  return PRBool ((nsHTMLAtoms::button == aContentTag) ||
+                 (nsHTMLAtoms::img == aContentTag)    ||
+                 (nsHTMLAtoms::input == aContentTag)  ||
+                 (nsHTMLAtoms::label == aContentTag)  ||
+                 (nsHTMLAtoms::select == aContentTag) ||
+                 (nsHTMLAtoms::textarea == aContentTag));
 }
 
 
@@ -3561,15 +3555,20 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       else if (IsEventPseudo(pseudoClass->mAtom)) {
         // check if the element is event-sensitive
-        // NOTE: we distinguish between global and subjected selectors so
-        //       pass that information on to the determining routine
-        // ALSO NOTE: we used to do this only in Quirks mode, but because of
-        //            performance problems we do it all the time now (bug 68821)
-        //            When style resolution due to state changes is optimized this
-        //            should go back to QuirksMode only behavour (see also bug 75559)
-        PRBool isSelectorGlobal = aSelector->mTag==nsnull ? PR_TRUE : PR_FALSE;
-        if ((data.mIsHTMLContent) &&
-            (!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
+        if (data.mIsQuirkMode &&
+            // global selector:
+            !aSelector->mTag && !aSelector->mClassList &&
+            !aSelector->mIDList && !aSelector->mAttrList &&
+            // :hover or :active
+            (nsCSSAtoms::activePseudo == pseudoClass->mAtom ||
+             nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) &&
+            // important for |IsQuirkEventSensitive|:
+            data.mIsHTMLContent && !data.mIsHTMLLink &&
+            !IsQuirkEventSensitive(data.mContentTag)) {
+          // In quirks mode, only make certain elements sensitive to
+          // selectors ":hover" and ":active".
+          // XXX Once we make ":active" work correctly (bug 65917) this
+          // quirk should apply only to ":hover" (if to anything at all).
           result = localFalse;
         } else {
           if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
