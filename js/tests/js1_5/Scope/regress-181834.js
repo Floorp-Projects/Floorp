@@ -88,7 +88,7 @@ function outer(N)
 setDynamicScope(true);
 
 /*
- * Recompile the function outer() via eval() in order to
+ * Recompile the function |outer| via eval() in order to
  * feel the effect of the dynamic scope mode we have set.
  */
 var s = outer.toString();
@@ -116,7 +116,7 @@ addThis();
 setDynamicScope(false);
 
 /*
- * Recompile the function outer() via eval() in order to
+ * Recompile the function |outer| via eval() in order to
  * feel the effect of the dynamic scope mode we have set.
  */
 eval(s);
