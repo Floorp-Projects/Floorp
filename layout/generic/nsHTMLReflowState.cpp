@@ -26,6 +26,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsLayoutAtoms.h"
 
 PRBool
 nsHTMLReflowState::HaveFixedContentWidth() const
@@ -647,7 +648,26 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // XXX Correctly handle absolutely positioned elements...
     nscoord containingBlockWidth = cbrs->computedWidth;
     nscoord containingBlockHeight = cbrs->computedHeight;
-    //NS_ASSERTION(0 != containingBlockWidth, "containing block width of 0");
+
+    // See if the containing block height is based on the size of the
+    // content
+    if (NS_AUTOHEIGHT == containingBlockHeight) {
+      // See if the containing block is a scrolled frame, i.e. it's parent is
+      // a scroll frame
+      if (cbrs->parentReflowState) {
+        nsIFrame* f = cbrs->parentReflowState->frame;
+        nsIAtom*  frameType;
+
+        f->GetFrameType(&frameType);
+        if (nsLayoutAtoms::scrollFrame == frameType) {
+          // Use the scroll frame's computed height instead
+          containingBlockHeight =
+            ((nsHTMLReflowState*)cbrs->parentReflowState)->computedHeight;
+        }
+        NS_IF_RELEASE(frameType);
+      }
+    }
+
     nsStyleUnit widthUnit = pos->mWidth.GetUnit();
     nsStyleUnit heightUnit = pos->mHeight.GetUnit();
 
