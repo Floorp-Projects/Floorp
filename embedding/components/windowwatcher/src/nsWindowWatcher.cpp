@@ -75,6 +75,9 @@
 #include "nsIWindowCreator.h"
 #include "nsIXPConnect.h"
 #include "nsPIDOMWindow.h"
+#include "nsIMarkupDocumentViewer.h"
+#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -615,6 +618,34 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   newDocShellItem->SetName(nameSpecified ? name.get() : nsnull);
 
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
+
+  // When a new window is opened through JavaScript, we want it to use the
+  // charset of its opener as a fallback in the event the document being loaded 
+  // does not specify a charset. Failing to set this charset is not fatal, so we 
+  // want to continue in the face of errors.
+  nsCOMPtr<nsIScriptGlobalObject> parentSGO(do_QueryInterface(aParent));
+  if (parentSGO) {
+    nsCOMPtr<nsIDocShell> parentDocshell;
+    parentSGO->GetDocShell(getter_AddRefs(parentDocshell));
+
+    nsCOMPtr<nsIContentViewer> parentContentViewer;
+    parentDocshell->GetContentViewer(getter_AddRefs(parentContentViewer));
+    nsCOMPtr<nsIDocumentViewer> parentDocViewer(do_QueryInterface(parentContentViewer));
+    if (parentDocViewer) {
+      nsCOMPtr<nsIDocument> doc;
+      parentDocViewer->GetDocument(*getter_AddRefs(doc));
+
+      nsCOMPtr<nsIContentViewer> newContentViewer;
+      newDocShell->GetContentViewer(getter_AddRefs(newContentViewer));
+      nsCOMPtr<nsIMarkupDocumentViewer> newMarkupDocViewer(do_QueryInterface(newContentViewer));
+      if (doc && newMarkupDocViewer) {
+        nsXPIDLString charset;
+        rv = doc->GetDocumentCharacterSet(charset);
+        if (NS_SUCCEEDED(rv))
+          newMarkupDocViewer->SetDefaultCharacterSet(charset);
+      }
+    }
+  }
 
   if (uriToLoad) { // get the script principal and pass it to docshell
 
