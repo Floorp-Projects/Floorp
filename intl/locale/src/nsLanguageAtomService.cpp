@@ -200,6 +200,7 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
   nsresult res;
   NS_ENSURE_ARG_POINTER(aCharSet);
   NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
 
   if (!mLangs) {
     NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
@@ -212,6 +213,9 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
   mCharSets->GetCharsetAtom(aCharSet, getter_AddRefs(charset));
   nsCOMPtr<nsIAtom> langGroup;
   mCharSets->GetCharsetLangGroup(charset, getter_AddRefs(langGroup));
+  if (!langGroup) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsILanguageAtom> lang;
   PRUint32 n;
   NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);
