@@ -58,9 +58,11 @@ public:
    * Note: this instance does not hold a reference to the viewobserver
    * because it holds a reference to this instance.
    * @param aContext the device context to use.
+   * @param aX X offset of the view manager's coordinate space in twips
+   * @param aY Y offset of the view manager's coordinate space in twips
    * @result The result of the initialization, NS_OK if no errors
    */
-  NS_IMETHOD  Init(nsIDeviceContext* aContext) = 0;
+  NS_IMETHOD  Init(nsIDeviceContext* aContext, nscoord aX = 0, nscoord aY = 0) = 0;
 
   /**
    * Get the root of the view tree.
@@ -460,6 +462,16 @@ public:
    */
 
   NS_IMETHOD ForceUpdate() = 0;
+
+  
+  /**
+   * Get view manager offset specified in nsIViewManager::Init
+   * @param aX x offset in twips
+   * @param aY y offset in twips
+   * @result error status
+   */
+
+  NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY) = 0;
 
 
 };

@@ -120,6 +120,8 @@ nsViewManager :: nsViewManager()
   mVMCount++;
   mUpdateBatchCnt = 0;
   mCompositeListeners = nsnull;
+  mX = 0;
+  mY = 0;
 }
 
 nsViewManager :: ~nsViewManager()
@@ -256,7 +258,7 @@ static nsresult CreateRegion(nsIComponentManager* componentManager, nsIRegion* *
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext, nscoord aX, nscoord aY)
 {
 	nsresult rv;
 
@@ -294,6 +296,9 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
 		rv = CreateRegion(componentManager, &mTRgn);
 		rv = CreateRegion(componentManager, &mRCRgn);
 	}
+
+  mX = aX;
+  mY = aY;
   
 	return rv;
 }
@@ -2544,6 +2549,15 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
   if (mRootWindow) {
     mRootWindow->Update();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager::GetOffset(nscoord *aX, nscoord *aY)
+{
+  NS_ASSERTION(aX != nsnull, "aX pointer is null");
+  NS_ASSERTION(aY != nsnull, "aY pointer is null");
+  *aX = mX;
+  *aY = mY;
   return NS_OK;
 }
 

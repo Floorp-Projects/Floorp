@@ -53,7 +53,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(nsIDeviceContext* aContext, nscoord aX = 0, nscoord aY = 0);
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
   NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget=nsnull);
@@ -140,6 +140,7 @@ public:
   NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget);
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
+  NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY);
 
 protected:
   virtual ~nsViewManager2();
@@ -287,6 +288,10 @@ public:
   nsIView           *mRootView;
   PRUint32          mFrameRate;
   PRUint32          mTrueFrameRate;
+
+protected:
+  nscoord           mX;
+  nscoord           mY;
 };
 
 #endif /* nsViewManager2_h___ */

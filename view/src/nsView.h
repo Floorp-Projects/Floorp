@@ -116,6 +116,9 @@ public:
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);
 
+   // Helper function to determine if the view instance is the root view
+  PRBool IsRoot();
+
 protected:
   virtual ~nsView();
   //

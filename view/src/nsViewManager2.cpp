@@ -122,6 +122,8 @@ nsViewManager2::nsViewManager2()
 	mVMCount++;
 	// NOTE:  we use a zeroing operator new, so all data members are
 	// assumed to be cleared here.
+  mX = 0;
+  mY = 0;
 }
 
 nsViewManager2::~nsViewManager2()
@@ -253,7 +255,7 @@ static nsresult CreateRegion(nsIComponentManager* componentManager, nsIRegion* *
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext, nscoord aX, nscoord aY)
 {
 	nsresult rv;
 
@@ -294,6 +296,9 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext)
 		rv = CreateRegion(componentManager, &mTRgn);
 		rv = CreateRegion(componentManager, &mRCRgn);
 	}
+
+  mX = aX;
+  mY = aY;
   
 	return rv;
 }
@@ -2119,6 +2124,15 @@ NS_IMETHODIMP nsViewManager2::ForceUpdate()
 		mRootWindow->Update();
 	}
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager2::GetOffset(nscoord *aX, nscoord *aY)
+{
+  NS_ASSERTION(aX != nsnull, "aX pointer is null");
+  NS_ASSERTION(aY != nsnull, "aY pointer is null");
+  *aX = mX;
+  *aY = mY;
+  return NS_OK;
 }
 
 
