@@ -32,6 +32,7 @@ FILES		= \
         createProfileWizard.xul		\
 	profileManager.js			\
 	profileManager.xul			\
+        deleteProfile.js			\
         deleteProfile.xul			\
         migrateAllProfile.xul		\
         renameProfile.xul			\

@@ -108,6 +108,7 @@ function getProfileDir(folder, showPopup)
     if(!detect) {
       var useDefault = document.createElement("titledbutton");
       useDefault.setAttribute("value",bundle.GetStringFromName("useDefaultFolder"));
+      useDefault.setAttribute("class","dialog push");
       useDefault.setAttribute("id","useDefaultButton");
       useDefault.setAttribute("onclick","UseDefaultFolder();");
       document.getElementById("folderbuttons").appendChild(useDefault);

@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger (28/10/99)
+ *   Ben Goodger (03/01/00)
  *   Seth Spitzer (28/10/99)
  */
 
@@ -33,13 +33,18 @@ var unset       = true;
 
 function StartUp()
 {
- // bundle = srGetStrBundle("chrome://profile/locale/profileSelection.properties");
- loadElements();
+  SetUpOKCancelButtons();
+  centerWindowOnScreen();
+  if( window.location.search == "?manage=true" )
+    SwitchProfileManagerMode();
+  // bundle = srGetStrBundle("chrome://profile/locale/profileSelection.properties");
+  loadElements();
+  DoEnabling();
 }
 
 // function : <profileSelection.js>::AddItem();
 // purpose  : utility function for adding items to a tree.
-function AddItem(aChildren,aCells,aIdfier)
+function AddItem( aChildren, aCells, aIdfier, aMigrate)
 {
   var kids    = document.getElementById(aChildren);
   var item    = document.createElement("treeitem");
@@ -47,9 +52,14 @@ function AddItem(aChildren,aCells,aIdfier)
   var cell    = document.createElement("treecell");
   cell.setAttribute("value",aCells);
   cell.setAttribute("align","left");
+  if( aMigrate )
+    cell.setAttribute("class", "dimmed-lowcontrast" );
   row.appendChild(cell);
   item.appendChild(row);
   item.setAttribute("profile_name", aIdfier);
+  item.setAttribute("rowName", aIdfier);
+  if( aMigrate )
+    item.setAttribute("rowMigrate", "true");
   // 23/10/99 - no roaming access yet!
   //  var roaming = document.getElementById("roamingitem");
   //  kids.insertBefore(item,roaming);
@@ -72,11 +82,21 @@ function loadElements()
       currProfile = profileList;
   }
 
+  // remove existing nodes...
+  var profilekids = document.getElementById( "profilekids" );
+  while( profilekids.hasChildNodes() )
+  {
+    profilekids.removeChild( profilekids.firstChild );
+  }
+  
   for (var i = 0; i < profileList.length; i++) {
     var pvals = profileList[i].split(" - ");
     // only add profiles that have been migrated
-    if (pvals[1] != "migrate") {
-      AddItem("profilekids",pvals[0],pvals[0]);
+    if( profileManagerMode == "selection" && pvals[1] != "migrate" ) {
+      AddItem( "profilekids", pvals[0], pvals[0], false );
+    }
+    else if( profileManagerMode == "manager" ){
+      AddItem( "profilekids", pvals[0], pvals[0], ( pvals[1] == "migrate" ) );
     }
   }
 }
@@ -85,14 +105,21 @@ function loadElements()
 // purpose  : starts mozilla given the selected profile (user choice: "Start Mozilla")
 function onStart()
 {
-  startButton = document.getElementById("start");
-  if (startButton.getAttribute("disabled") == "true")
+  var startButton = document.getElementById("ok");
+  var profileTree = document.getElementById("profiles");
+  if( startButton.getAttribute("disabled") == "true" ||
+      profileTree.selectedItems.length != 1 )
     return;
-  if (!selected)
-    return;
-
+    
+  var selected = profileTree.selectedItems[0];
+    
   var profilename = selected.getAttribute("profile_name");
-
+  if( selected.getAttribute("rowMigrate") == "true" ) {
+    if( confirm( bundle.GetStringFromName("migratebeforestart") ) ) 
+      profile.migrateProfile( profilename, true );
+    else
+      return false;
+  }
   try {
     dump("start with profile: " + profilename + "\n");
     profile.startApprunner(profilename);
@@ -128,27 +155,11 @@ function ExitApp()
   appShell.Quit();
 }
 
-// function : <profileSelection.js>::setButtonsDisabledState();
-// purpose  : sets the enabling of buttons
-function setButtonsDisabledState(state)
-{
-  startButton = document.getElementById("start");
-  startButton.setAttribute("disabled", state);
-}
-
 // function : <profileSelection.js>::showSelection();
 // purpose  : selects the profile and enables the start button
 function showSelection(node)
 {
-  // (see tree's onclick definition)
-  // Tree events originate in the smallest clickable object which is the cell.  The object
-  // originating the event is available as event.target.
-  // We want the item in the
-  // cell's row, so we got passed event.target.parentNode.parentNode
-  selected = node;
-  var tree = document.getElementById("profiles");
-  if (tree.selectedItems.length > 0)
-    setButtonsDisabledState("false");
+  DoEnabling();
 }
 
 // function : <profileSelection.js>::startWithProfile();
@@ -166,27 +177,34 @@ function onManageProfiles()
 
 function foo()
 {
-  var welcome = document.getElementById("welcometo");
-  var mozilla = document.getElementById("mozilla");
-  if (welcome.hasChildNodes() && mozilla.hasChildNodes()) {
-    if (unset) {
-      oldA = welcome.lastChild.nodeValue;
-      oldB = mozilla.lastChild.nodeValue;
-      welcome.removeChild(welcome.lastChild)
-      var text = document.createTextNode("What Is");
-      welcome.appendChild(text);
-      mozilla.removeChild(mozilla.lastChild)
-      var text = document.createTextNode("MOZOLLIA?");
-      mozilla.appendChild(text);
-      unset = false;
-    } else {
-      welcome.removeChild(welcome.lastChild)
-      var text = document.createTextNode(oldA);
-      welcome.appendChild(text);
-      mozilla.removeChild(mozilla.lastChild)
-      var text = document.createTextNode(oldB);
-      mozilla.appendChild(text);
-      unset = true;
+  if( !set ) {
+    if( profileManagerMode == "manager" )
+      oldCaptionManager = document.getElementById( "caption" ).firstChild.nodeValue;
+    else
+      oldCaptionSelection = document.getElementById( "caption" ).firstChild.nodeValue;
+    ChangeCaption( "What Is Mozollia?" ); // DO NOT LOCALIZE!
+    set = true;
+  } 
+  else {
+    var tempCaption = document.getElementById( "caption" ).firstChild.nodeValue;
+    if( profileManagerMode == "manager" ) {
+      ChangeCaption( oldCaptionManager );
+      oldCaptionManager = tempCaption;
     }
+    else {
+      ChangeCaption( oldCaptionSelection )
+      oldCaptionSelection = tempCaption;
+    }
+    set = false;
   }
+}
+
+function SetUpOKCancelButtons()
+{
+  doSetOKCancel( onStart, onExit, null, null );
+  var okButton = document.getElementById("ok");
+  var cancelButton = document.getElementById("cancel");
+  okButton.setAttribute( "value", bundle.GetStringFromName("startButton") );
+  okButton.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
+  cancelButton.setAttribute( "value", bundle.GetStringFromName("exitButton") );
 }

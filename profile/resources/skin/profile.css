@@ -1,2 +1,126 @@
-
 @import url(chrome://global/skin/);
+
+toolbar.header {
+  padding-left: 5px;
+  padding-bottom: 4px;
+  min-height: 34px;
+}
+
+toolbar.title {
+  padding: 1px 5px 1px 5px;
+  min-height: 0px ! important;
+}
+
+treeitem[rowMigrate="true"] > treerow > treecell > .tree-icon {
+  list-style-image: url("chrome://profile/skin/migrate.gif");
+}
+
+titledbutton.unMigratedProfile {
+  padding: 0px;
+  margin-bottom: -4px;
+  margin-right: 4px;
+  list-style-image: url("chrome://profile/skin/migrate.gif");
+}
+
+.dimmed-highcontrast {
+  color: #99cccc ! important;
+} 
+.dimmed-lowcontrast {
+  color: graytext ;
+}
+
+treeitem[selected="true"] > treerow > treecell {
+  color: highlighttext;
+}
+
+
+div.headertext {
+  color: white;
+}
+
+titledbutton#profileIcon {
+  list-style-image: url("chrome://profile/skin/profileicon-large.gif");
+  margin-top: 1px;
+  margin-bottom: 1px;  
+  height: 28px;
+  width: 28px;
+}
+
+titledbutton#profileIcon:hover {
+  background-image: url("chrome://global/skin/button28-bg.gif");
+}
+
+titledbutton#profileIcon:active {
+  background-image: url("chrome://global/skin/button28-bg.gif");
+}
+
+div.headertext {
+  font-size: large;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.separator {
+  margin: 0px;
+}
+
+/* display area */
+box#contentsink {
+  border-top: 2px groove threedface;
+  border-bottom: 2px groove threedface;
+  padding: 7px;
+}
+
+/* top border on status area */
+box#wizardButtons {
+  border-bottom: 1px solid threedshadow;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+/* profile selection dialog */
+div.label {
+  padding-top: 10px;
+}
+
+/* manager buttons */
+titledbutton#manage {
+  min-width: 100px;
+}
+titledbutton.padded {
+  padding-left: 10px ! important;
+  padding-right: 10px ! important;
+}
+titledbutton.padded:hover {
+  padding-left: 10px ! important;
+  padding-right: 10px ! important;
+}
+
+titledbutton.padded:active {
+  padding-left: 11px ! important;
+  padding-right: 9px ! important;
+}
+
+/* platform common dialog buttons */
+box#okCancelButtons {
+  margin: 0px ! important;
+}
+/* achieve the right spacing between buttons */
+box#okCancelButtons > spring#Button2Spring {
+  display: none;
+}
+box#okCancelButtons > spring#Button3Spring {
+  display: none;
+}
+box#okCancelButtons > spring#OKSpring {
+  display: none;
+}
+box#okCancelButtons.Button1 > spring#Button2Spring {
+  display: inherit;
+}
+box#okCancelButtons.Button1 > spring#Button3Spring {
+  display: none;
+}
+spring#Button3Spring {
+  width: 5px;
+}

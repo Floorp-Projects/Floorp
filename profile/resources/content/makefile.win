@@ -27,6 +27,7 @@ include <$(DEPTH)\config\rules.mak>
 FILES=\
 	createProfileWizard.js		\
 	createProfileWizard.xul		\
+	deleteProfile.js		\
 	deleteProfile.xul		\
 	migrateAllProfile.xul		\
 	newProfile1_1.xul		\

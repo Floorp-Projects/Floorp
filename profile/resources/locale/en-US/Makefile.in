@@ -32,6 +32,7 @@ FILES		= \
 		newProfile1_1.dtd		\
 		newProfile1_2.dtd		\
 		profileManager.dtd		\
+		profileManager.properties	\
 		profileManagerDelete.dtd	\
 		profileManagerMigrateAll.dtd	\
 		profileManagerRename.dtd	\

@@ -1,5 +1,6 @@
 <!-- extracted from cpw.xul -->
 
+<!ENTITY profileWizard.title          "Create New Profile">
 <!ENTITY window.title.label           "Mozilla Profile Manager">
 <!ENTITY newprofile.title             "Create New Profile">
 <!ENTITY dialup.title	                "Dialup">

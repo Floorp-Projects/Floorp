@@ -56,6 +56,11 @@ function Startup( startPage, frame_id )
   dump("calling loadpage...\n");
   dump("startPage:: " + startPage + "\n");
 	wizardManager.LoadPage( startPage, false );
+  // move to center of screen if no opener, otherwise, to center of opener
+  if( window.opener )
+    moveToAlertPosition();
+  else
+    centerWindowOnScreen();
 }
 
 function onCancel()
@@ -75,20 +80,27 @@ function onCancel()
 
 function onFinish()
 {
+  dump("*** IN ONFINISH\n");
   // check if we're at final stage 
   if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
     return;
 
   var tag =  wizardManager.WSM.GetTagFromURL( wizardManager.content_frame.src, "/", ".xul" );
   wizardManager.WSM.SavePageData( tag, null, null, null );
-  proceed = processCreateProfileData();
+
+  var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
+  dump("**** profName: "+ profName + "\n");
+  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
+  proceed = processCreateProfileData( profName, profDir );
 	if( proceed ) {
 		if( window.opener ) {
-			window.opener.CreateProfile();
+			window.opener.CreateProfile( profName, profDir );
 			window.close();
 		} 
-    else 
+    else {
+      profile.startApprunner( profName );
       ExitApp();
+    }
 	}
 	else
 		return;
@@ -99,12 +111,8 @@ function onFinish()
  *  - in:  nothing
  *  - out: nothing
  **/               
-function processCreateProfileData()
+function processCreateProfileData( aProfName, aProfDir )
 {
-	//Process Create Profile Data
-  var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
-  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
-  
   try {
     // note: deleted check for empty profName string here as this should be
     //       done by panel. -bmg (31/10/99)
@@ -114,11 +122,10 @@ function processCreateProfileData()
     //       or.. some sort of onblur notification. like a dialog then, or a 
     //       dropout layery thing. yeah. something like that to tell them when 
     //       it happens, not when the whole wizard is complete. blah. 
-    if( profile.profileExists( profName ) )	{
+    if( profile.profileExists( aProfName ) )	{
 			return false;
 		}
-		profile.createNewProfile( profName, profDir );
-		profile.startApprunner( profName );
+		profile.createNewProfile( aProfName, aProfDir );
 		return true;
   }
   catch(e) {

@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://profile/skin/createProfileWizard.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/wizardOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/createProfileWizard.dtd">
 
-<window title="&window.title.label;" align="vertical"
+<window title="&newprofile.title;" align="vertical"
+  class="dialog"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -18,26 +19,22 @@
 	<html:script language="javascript" src="chrome://global/content/wizardManager.js" />
 	<html:script language="javascript" src="chrome://global/content/widgetStateManager.js" />
 
-  <box id="header" align="vertical" flex="100%">
+  <toolbar class="decorated header" align="horizontal">
+    <titledbutton id="profileIcon" class="button28"/>
     <box align="vertical">
-      <html:div id="cplabel">&createprofile.heading;</html:div>
-      <html:div id="thatline"/>
-      <html:div id="cpsubl">&createprofile.subheading;</html:div>
+      <spring flex="100%"/>
+      <html:div class="headertext">&newprofile.title;</html:div>
+      <spring flex="100%"/>
     </box>
-  	<tabcontrol align="vertical"> 
-	  	<tabbox align="horizontal"> 
-  			<tab class="selected" style="margin-top: -2px;">&newprofile.title;</tab> 
-		  	<!-- <tab class="nonselected" onclick="loadPage('mailnews.xul');">&mailnews.title;</tab> -->
-        <spring flex="100%"/>
-        <html:div id="progress"/>
-	    </tabbox> 
-	    <tabpanel flex="100%"/>
-	    <!-- <tabpanel flex="100%"/> -->
-	  </tabcontrol> 
-  </box>
-  <box id="contentsink" flex="100%" style="margin-top: -2px;">
+    <spring flex="100%"/>
+  </toolbar>
+  <box id="contentsink" flex="100%">
   	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content"  id="content" scrolling="auto" flex="100%"/>
   </box>
-	<box id="wizardButtons" style="width: 450px; margin-top: -5px; margin-bottom: 3px; margin-right: -11px;"/>
-
+	<box id="wizardButtons"/>
+  <toolbar class="standard title">
+    <html:div class="dimmed-highcontrast">&window.title.label;</html:div>
+    <spring flex="100%"/>
+    <html:div id="progress" class="dimmed-highcontrast"/>
+  </toolbar>
 </window>

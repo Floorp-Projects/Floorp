@@ -28,11 +28,12 @@
 -->
 
 <?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://profile/skin/profileSelection.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/profileSelection.dtd" >
 <window 
   xmlns:html="http://www.w3.org/TR/REC-html40"
+  width="475" height="335"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	class="dialog profile"
 	title="&windowtitle.label;"
@@ -41,43 +42,72 @@
       
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
   <html:script language="javascript" src="chrome://profile/content/profileSelection.js"/>
+  <html:script language="javascript" src="chrome://profile/content/profileManager.js"/>
 
-  <box align="horizontal" id="header">
-    <box align="vertical" style="width: 245px;">
-      <html:div id="welcometo">&welcometo.label;</html:div>
-      <html:div id="mozilla">&mozilla.label;</html:div>
-      <spring style="height: 7px;"/>
-      <box align="vertical" id="prattle">
-        <html:div class="label">&introgeneral.label;</html:div>
-<!-- sspitzer roaming not supported yet 10-28-199
-       <html:div class="label">&introroaming.label;</html:div>
--->
-      </box>
+  <toolbar class="decorated header" align="horizontal">
+    <titledbutton id="profileIcon" class="button28"/>
+    <box align="vertical">
+      <spring flex="100%"/>
+      <html:div class="headertext" id="caption">&windowtitle.label;</html:div>
+      <spring flex="100%"/>
     </box>
+    <spring flex="100%"/>
+  </toolbar>
+  <spring style="height: 4px;"/>
+  <box align="horizontal" flex="100%">
+    <spring style="width: 7px;"/>
+
+    <!-- instructions -->
+    <deck id="prattle">
+      <box align="vertical" id="selection">
+        <html:div class="label" style="width: 200px;">&introgeneral.label;</html:div>
+        <!-- sspitzer roaming not supported yet 10-28-199
+          <html:div class="label">&introroaming.label;</html:div>
+        -->
+      </box>
+      <box align="vertical" id="manager">
+        <html:div class="label" style="width: 200px;">&pmTextA.label;</html:div>
+        <spring flex="30%"/>
+        <box align="horizontal" flex="100%">
+          <spring flex="100%"/>
+          <box align="vertical">
+            <titledbutton id="delbutton" class="dialog push padded" value="&deleteButton.label;" onclick="ConfirmDelete();"/>
+            <titledbutton id="renbutton" class="dialog push padded" value="&renameButton.label;" onclick="RenameProfile();"/>
+            <titledbutton id="newbutton" class="dialog push padded" value="&newButton.label;" onclick="CreateProfileWizard();"/>
+          </box>
+          <spring flex="100%"/>
+        </box>
+        
+        <html:div class="label" style="width: 200px; display: none;">
+          <titledbutton class="unMigratedProfile plain"/>
+          &pmTextB.label;
+        </html:div>
+      </box>
+    </deck>  
+      
+    <spring style="width: 7px;"/>
     <box align="vertical" flex="100%">
-      <html:div style="width: 190px; height: 172px;">
         <spring style="height: 1px;"/>
         <tree 
-              id="profiles" class="inset" style="width: 190px; height: 150px;"
-              onclick="return showSelection(event.target.parentNode.parentNode);"
-              ondblclick="return onStart();"
-              onkeypress="if (event.which == 13) return onStart();">
+              id="profiles" class="inset" style="height: 175px; width: 220px;" flex="100%"
+              onclick="if( event.clickCount == 2 ) return onStart(); else return showSelection(event.target.parentNode.parentNode);"
+              onkeypress="HandleKeyEvent( event );">
           <treehead>
             <treerow>
               <treecell value="&availprofiles.label;"/>
             </treerow>
           </treehead>
           <treechildren id="profilekids">
-<!-- sspitzer roaming not supported yet 10-28-199
+          <!-- sspitzer roaming not supported yet 10-28-199
             <treeitem id="roamingitem">
               <treerow>
                 <treecell id="roamingcell" value="Roaming Access Profile"/>
               </treerow>
             </treeitem>
--->
+          -->
           </treechildren>
         </tree>    
-<!-- sspitzer workoffline not supported yet 10-28-199
+        <!-- sspitzer workoffline not supported yet 10-28-199
         <html:table>
           <html:tr>
             <html:td valign="middle"><html:input type="checkbox" id="offline"/></html:td>
@@ -86,25 +116,32 @@
             </html:td>
           </html:tr>
         </html:table>
--->
-      </html:div>
+        -->
+      <spring style="height: 3px"/>
+      <box id="managementbox" align="vertical" style="display: none;"/>
     </box>
-    <box align="vertical">
-      <spring style="width: 15px; height: 58px;"/>    
-      <spring id="makeup"/>
-    </box>
+    <spring style="width: 7px;"/>
   </box>
-  <spring style="height: 10px;"/>
   <html:div class="separator" align="horizontal"/>
-  <spring style="height: 5px;"/>
   <box class="selection" align="horizontal">
-    <titledbutton class="dialog push padded" id="manage" value="&manage.label;" onclick="onManageProfiles();"/>
+    <spring style="width: 5px;"/>
+    <titledbutton class="dialog push padded" id="manage" value="&manage.label;" onclick="SwitchProfileManagerMode();"/>
     <spring flex="100%"/>
-    <titledbutton class="dialog push" id="exit" value="&exit.label;" onclick="onExit();"/>
+
+    <box id="okCancelButtons"/>
+    <!-- older, but nonetheless prettier buttons.
+    <titledbutton class="dialog push padded" id="exit" value="&exit.label;" onclick="onExit();"/>
     <spring style="width: 5px;"/>
     <titledbutton class="dialog push padded" id="start" value="&start.label;" onclick="onStart();"/>
-    <spring style="width: 19px;"/>
+    -->
+    <spring style="width: 5px;"/>
   </box>
+  <spring style="height: 4px;"/>
+  <toolbar class="standard title">
+    <html:div class="dimmed-highcontrast">&profilemanager.label;</html:div>
+    <spring flex="100%"/>
+    <html:div id="progress"/>
+  </toolbar>
 
   <keyset>
     <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
