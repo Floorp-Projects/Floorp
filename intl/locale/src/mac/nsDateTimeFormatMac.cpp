@@ -80,6 +80,7 @@ static Intl1Hndl GetItl1Resource(short scriptcode, short regioncode)
 	// get itl1 resource 
 	Intl1Hndl Itl1RecordHandle;
 	Itl1RecordHandle = (Intl1Hndl)::GetResource('itl1', itl1num);
+	NS_ASSERTION(Itl1RecordHandle, "failed to get itl1 handle");
 	return Itl1RecordHandle;
 }
 
@@ -112,9 +113,10 @@ static Intl0Hndl GetItl0Resource(short scriptcode, short regioncode)
 		}
 	}
 	
-	// get itl1 resource 
+	// get itl0 resource 
 	Intl0Hndl Itl0RecordHandle;
 	Itl0RecordHandle = (Intl0Hndl)::GetResource('itl0', itl0num);
+	NS_ASSERTION(Itl0RecordHandle, "failed to get itl0 handle");
 	return Itl0RecordHandle;
 }
 
@@ -249,28 +251,33 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   mScriptcode = smSystemScript;
   mLangcode = langEnglish;
   mRegioncode = verUS;
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.AssignWithConversion("x-mac-roman");
   
 
-  // get locale string, use app default if no locale specified
-  if (NULL == locale) {
-    NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &res);
+  // get application locale
+  NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &res);
+  if (NS_SUCCEEDED(res)) {
+    nsILocale *appLocale;
+    res = localeService->GetApplicationLocale(&appLocale);
     if (NS_SUCCEEDED(res)) {
-      nsILocale *appLocale;
-      res = localeService->GetApplicationLocale(&appLocale);
-      if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-        if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-          mAppLocale.Assign(aLocaleUnichar); // cache app locale name
-        }
-        appLocale->Release();
+      res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+      if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+        mAppLocale.Assign(aLocaleUnichar); // cache app locale name
       }
+      appLocale->Release();
     }
   }
+  
+  // use app default if no locale specified
+  if (NULL == locale) {
+    mUseDefaultLocale = true;
+  }
   else {
+    mUseDefaultLocale = false;
+    nsMemory::Free(aLocaleUnichar);
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
   }
-
+    
   // Get a script code and charset name from locale, if available
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
     mLocale.Assign(aLocaleUnichar); // cache locale name
@@ -289,6 +296,9 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
         mCharset.Assign(mappedCharset);
         nsMemory::Free(mappedCharset);
       }
+      
+      // get a system charset (used when getting date/time strings as default)
+      res = platformCharset->GetCharset(kPlatformCharsetSel_FileName, mSystemCharset);      
     }
   }
   
@@ -352,9 +362,9 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
   ::DateToSeconds( &macDateTime, (unsigned long *) &dateTime);
   
-  Handle itl1Handle = (Handle) GetItl1Resource(mScriptcode, mRegioncode);
-  Handle itl0Handle = (Handle) GetItl0Resource(mScriptcode, mRegioncode);
-  NS_ASSERTION(itl1Handle && itl0Handle, "failed to get itl handle");
+  // specify itl if not using a default locale
+  Handle itl1Handle = mUseDefaultLocale ? nil : (Handle) GetItl1Resource(mScriptcode, mRegioncode);
+  Handle itl0Handle = mUseDefaultLocale ? nil : (Handle) GetItl0Resource(mScriptcode, mRegioncode);
 
   // get time string
   if (timeFormatSelector != kTimeFormatNone) {
@@ -411,7 +421,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
   if(NS_SUCCEEDED(res) && ccm) {
     nsCOMPtr <nsIUnicodeDecoder> decoder;
-    res = ccm->GetUnicodeDecoder(&mCharset, getter_AddRefs(decoder));
+    res = ccm->GetUnicodeDecoder(mUseDefaultLocale ? &mSystemCharset : &mCharset, getter_AddRefs(decoder));
     if(NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = (PRInt32) PL_strlen(aBuffer);

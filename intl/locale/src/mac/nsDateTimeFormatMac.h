@@ -70,9 +70,11 @@ private:
   nsString    mLocale;
   nsString    mAppLocale;
   nsString    mCharset;
+  nsString    mSystemCharset;
   short       mScriptcode;
   short       mLangcode;
   short       mRegioncode;
+  bool        mUseDefaultLocale;
 };
 
 #endif  /* nsDateTimeFormatMac_h__ */
