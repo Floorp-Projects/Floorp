@@ -92,13 +92,6 @@ static nsModuleComponentInfo components[] =
   },
   
   {
-    NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME,
-    NS_SECURE_BROWSER_DOCOBSERVER_CID,
-    NS_SECURE_BROWSER_DOCOBSERVER_CONTRACTID,
-    nsSecureBrowserUIImplConstructor
-  },
-  
-  {
     NS_ISSLSOCKETPROVIDER_CLASSNAME,
     NS_SSLSOCKETPROVIDER_CID,
     NS_ISSLSOCKETPROVIDER_CONTRACTID,
@@ -128,7 +121,7 @@ static nsModuleComponentInfo components[] =
 
   {
     "Entropy Collector",
-    NS_ENTROPYCOLLECTOR_CID,
+    NS_NSSCOMPONENT_CID,
     NS_ENTROPYCOLLECTOR_CONTRACTID,
     nsNSSComponentConstructor
   },
