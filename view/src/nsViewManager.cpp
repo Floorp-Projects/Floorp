@@ -2181,8 +2181,8 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
 {
   nscoord oldWidth, oldHeight;
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  PRInt32 width = aRect.width;
-  PRInt32 height = aRect.height;
+  PRInt32 width = aRect.XMost();
+  PRInt32 height = aRect.YMost();
 
   view->GetDimensions(&oldWidth, &oldHeight);
   if ((width != oldWidth) || (height != oldHeight)) {
