@@ -219,8 +219,8 @@ protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
 	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
 												PRUint32 newValue);
-	nsresult NotifyItemAdded(nsISupports *item);
-	nsresult NotifyItemDeleted(nsISupports *item);
+	nsresult NotifyItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString);
+	nsresult NotifyItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString);
 
 	nsresult NotifyFolderLoaded();
 	// this is a little helper function that is not part of the public interface. 

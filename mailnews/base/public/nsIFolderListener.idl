@@ -27,8 +27,8 @@ interface nsIFolder;
 [scriptable, uuid(1c5ef9f0-d1c0-11d2-94CA-006097222B83)]    /* XXX regenerate */
 interface nsIFolderListener : nsISupports {
 
-	void OnItemAdded(in nsIFolder parentFolder, in nsISupports item);
-	void OnItemRemoved(in nsIFolder parentFolder, in nsISupports item);
+	void OnItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
+	void OnItemRemoved(in nsISupports parentItem, in nsISupports item, in string viewString);
 	void OnItemPropertyChanged(in nsISupports item, in string property, in string oldValue, in string newValue);
 	void OnItemPropertyFlagChanged(in nsISupports item, in string property, in unsigned long oldFlag,
 									in unsigned long newFlag);

@@ -61,6 +61,8 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 
 	nsCOMPtr<nsISupportsArray> kEmptyArray;
 	PRBool m_shuttingDown;
+    nsresult  GetIsThreaded(PRBool *threaded);
+	nsresult GetViewType(PRUint32 *viewType);
 
  private:
   nsIRDFService *mRDFService;

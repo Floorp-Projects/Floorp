@@ -198,7 +198,7 @@ nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
 
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item)
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -209,14 +209,14 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsIFolder *folder, nsISupp
 	for(PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
-		listener->OnItemAdded(folder, item);
+		listener->OnItemAdded(parentItem, item, viewString);
 	}
 
 	return NS_OK;
 
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item)
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -227,7 +227,7 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsIFolder *folder, nsISu
 	for(PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
-		listener->OnItemRemoved(folder, item);
+		listener->OnItemRemoved(parentItem, item, viewString);
 	}
 	return NS_OK;
 

@@ -322,12 +322,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
     else if ((kNC_MessageChild == property))
     {
 		PRBool showThreads;
-		nsCOMPtr<nsIMessageView> messageView;
-		rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-		if(NS_FAILED(rv)) return rv;
-
-		rv = messageView->GetShowThreads(&showThreads);
-		if(NS_FAILED(rv)) return rv;
+		GetIsThreaded(&showThreads);
 
 		if(showThreads)
 		{
@@ -349,12 +344,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 			if (NS_SUCCEEDED(rv))
 			{
 				PRUint32 viewType;
-				nsCOMPtr<nsIMessageView> messageView;
-				rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-				if(NS_FAILED(rv)) return rv;
+				rv = GetViewType(&viewType);
+				if(NS_FAILED(rv))
+					return rv;
 
-				rv = messageView->GetViewType(&viewType);
-				if(NS_FAILED(rv)) return rv;
 				nsMessageViewMessageEnumerator * messageEnumerator = 
 					new nsMessageViewMessageEnumerator(messages, viewType);
 				if(!messageEnumerator)
@@ -656,67 +649,63 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
+{
+	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_TRUE);
+}
+
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString)
+{
+	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_FALSE);
+}
+
+nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString, PRBool added)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMessage> message;
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIRDFResource> parentResource;
+	nsCOMPtr<nsIMsgFolder> parentFolder;
 
-	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
+	parentFolder = do_QueryInterface(parentItem);
+	//If the parent isn't a folder then we don't handle it.
+	if(!parentFolder)
+		return NS_OK;
+
+	parentResource = do_QueryInterface(parentItem);
+	//If it's not a resource, we don't handle it either
+	if(!parentResource)
+		return NS_OK;
+
+	//If it is a message
+	if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
 	{
-		//If we are adding a message
-		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
+		//If we're in a threaded view only do this if the view passed in is the thread view. Or if we're in 
+		//a non threaded view only do this if the view passed in is the flat view.
+
+		PRBool isThreaded, isThreadNotification;
+		GetIsThreaded(&isThreaded);
+		isThreadNotification = PL_strcmp(viewString, "threadMessageView") == 0;
+		
+		if((isThreaded && isThreadNotification) ||
+			(!isThreaded && !isThreadNotification))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
 			{
-				//Notify folders that a message was added.
-				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_TRUE);
-			}
-		}
-		//If we are adding a folder
-		else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), getter_AddRefs(folder))))
-		{
-			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				//Notify folders that a message was added.
-				NotifyObservers(parentResource, kNC_Child, itemNode, PR_TRUE);
+				//Notify folders that a message was added or deleted.
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added);
 			}
 		}
 	}
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
-{
-	nsresult rv;
-	nsCOMPtr<nsIMessage> message;
-	nsCOMPtr<nsIMsgFolder> folder;
-	nsCOMPtr<nsIRDFResource> parentResource;
-
-	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
+	//If we are doing this to a folder
+	else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), getter_AddRefs(folder))))
 	{
-		//If we are removing a message
-		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
+		nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+		if(NS_SUCCEEDED(rv))
 		{
-			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				//Notify folders that a message was deleted.
-				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_FALSE);
-			}
-		}
-		//If we are removing a folder
-		else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), getter_AddRefs(folder))))
-		{
-			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				//Notify folders that a message was deleted.
-				NotifyObservers(parentResource, kNC_Child, itemNode, PR_FALSE);
-			}
+			//Notify folders that a message was added or deleted.
+			NotifyObservers(parentResource, kNC_Child, itemNode, added);
 		}
 	}
   return NS_OK;

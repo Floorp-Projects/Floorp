@@ -157,6 +157,9 @@ protected:
 
 	nsresult CreateArcsOutEnumerator();
 
+	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item,
+		const char* viewString, PRBool added);
+
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
   static nsIRDFResource* kNC_Folder;

@@ -327,52 +327,95 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
-	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
-	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
-	{
-		nsCOMPtr<nsIMessage> message;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
-		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				NotifyItemDeleted(msgSupports);
-			}
-			UpdateSummaryTotals(PR_TRUE);
-		}
-	}
-
-	return NS_OK;
+	//Do both flat and thread notifications
+	return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_FALSE, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
-	nsresult rv;
+	//Do both flat and thread notifications
+	return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_TRUE, PR_TRUE, PR_TRUE);
+}
+
+nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
+                        nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread)
+{
 	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-	rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
-	if(NS_SUCCEEDED(rv) && msgDBHdr)
+	nsCOMPtr<nsIMsgDBHdr> parentDBHdr;
+	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = mDatabase->GetMsgHdrForKey(aParentKey, getter_AddRefs(parentDBHdr));
+	if(NS_FAILED(rv))
+		return rv;
+
+	if(msgDBHdr)
 	{
 		nsCOMPtr<nsIMessage> message;
 		rv = CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
-		if(NS_SUCCEEDED(rv))
+		if(NS_FAILED(rv))
+			return rv;
+
+		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message));
+		nsCOMPtr<nsISupports> folderSupports;
+		rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+		if(msgSupports && NS_SUCCEEDED(rv) && doFlat)
 		{
-			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message));
-			if(msgSupports)
-			{
-				NotifyItemAdded(msgSupports);
-			}
-			UpdateSummaryTotals(PR_TRUE);
+			if(added)
+				NotifyItemAdded(folderSupports, msgSupports, "flatMessageView");
+			else
+				NotifyItemDeleted(folderSupports, msgSupports, "flatMessageView");
 		}
+		if(doThread)
+		{
+			if(parentDBHdr)
+			{
+				nsCOMPtr<nsIMessage> parentMessage;
+				rv = CreateMessageFromMsgDBHdr(parentDBHdr, getter_AddRefs(parentMessage));
+				if(NS_FAILED(rv))
+					return rv;
+
+				nsCOMPtr<nsISupports> parentSupports(do_QueryInterface(parentMessage));
+				if(msgSupports && NS_SUCCEEDED(rv))
+				{
+					if(added)
+						NotifyItemAdded(parentSupports, msgSupports, "threadMessageView");
+					else
+						NotifyItemDeleted(parentSupports, msgSupports, "threadMessageView");
+
+				}
+			}
+			//if there's not a header then in threaded view the folder is the parent.
+			else
+			{
+				if(msgSupports && folderSupports)
+				{
+					if(added)
+						NotifyItemAdded(folderSupports, msgSupports, "threadMessageView");
+					else
+						NotifyItemDeleted(folderSupports, msgSupports, "threadMessageView");
+				}
+			}
+		}
+		UpdateSummaryTotals(PR_TRUE);
 	}
 	return NS_OK;
+
 }
+
 
 NS_IMETHODIMP nsMsgDBFolder::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, 
 						nsIDBChangeListener * aInstigator)
 {
+	//In reality we probably want to just change the parent because otherwise we will lose things like
+	//selection.
+
+	//First delete the child from the old threadParent
+	OnKeyAddedOrDeleted(aKeyChanged, oldParent, 0, aInstigator, PR_FALSE, PR_FALSE, PR_TRUE);
+	//Then add it to the new threadParent
+	OnKeyAddedOrDeleted(aKeyChanged, newParent, 0, aInstigator, PR_TRUE, PR_FALSE, PR_TRUE);
 	return NS_OK;
 }
 

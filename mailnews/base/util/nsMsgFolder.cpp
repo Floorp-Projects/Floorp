@@ -706,8 +706,10 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 					//Remove self as parent
 					child->SetParent(nsnull);
 					nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-					if(childSupports)
-						NotifyItemDeleted(childSupports);
+					nsCOMPtr<nsISupports> folderSupports;
+					rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+					if(childSupports && NS_SUCCEEDED(rv))
+						NotifyItemDeleted(folderSupports, childSupports, "folderView");
 					break;
 				}
 			}
@@ -744,8 +746,10 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 			mSubFolders->RemoveElement(child);  // unlink it from this's child list
 			child->SetParent(nsnull);
 			nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-			if(childSupports)
-				NotifyItemDeleted(childSupports);
+			nsCOMPtr<nsISupports> folderSupports;
+			rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+			if(childSupports && NS_SUCCEEDED(rv))
+				NotifyItemDeleted(folderSupports, childSupports, "folderView");
 		}
 		cnt--;
 	}
@@ -1707,7 +1711,7 @@ nsresult nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, char *propert
 	return NS_OK;
 }
 
-nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
+nsresult nsMsgFolder::NotifyItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	static PRBool notify = PR_TRUE;
 
@@ -1719,20 +1723,20 @@ nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
 	{
 		//Folderlistener's aren't refcounted.
 		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-		listener->OnItemAdded(this, item);
+		listener->OnItemAdded(parentItem, item, viewString);
 	}
 
 	//Notify listeners who listen to every folder
 	nsresult rv;
 	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderItemAdded(this, item);
+		mailSession->NotifyFolderItemAdded(parentItem, item, viewString);
 
 	return NS_OK;
 
 }
 
-nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
+nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 
 	PRInt32 i;
@@ -1740,13 +1744,13 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
 	{
 		//Folderlistener's aren't refcounted.
 		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-		listener->OnItemRemoved(this, item);
+		listener->OnItemRemoved(parentItem, item, viewString);
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		mailSession->NotifyFolderItemDeleted(this, item);
+		mailSession->NotifyFolderItemDeleted(parentItem, item, viewString);
 
 	return NS_OK;
 

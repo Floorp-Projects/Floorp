@@ -586,11 +586,15 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 	}
 	if(NS_SUCCEEDED(rv) && child)
 	{
-		nsCOMPtr<nsISupports> folderSupports = do_QueryInterface(child, &rv);
-		if(NS_SUCCEEDED(rv))
-			NotifyItemAdded(folderSupports);
-	}
+		nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+		nsCOMPtr<nsISupports> folderSupports;
+		rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+		if(childSupports && NS_SUCCEEDED(rv))
+		{
 
+			NotifyItemAdded(folderSupports, childSupports, "folderView");
+		}
+	}
 	return rv;
 }
     

@@ -72,6 +72,8 @@ protected:
 	virtual nsresult GetDatabase() = 0;
 	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
 	nsresult ReadFromFolderCache(nsIMsgFolderCacheElement *element);
+	nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
+                        nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  

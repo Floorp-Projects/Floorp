@@ -25,7 +25,7 @@
 
 
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
-msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);		
+msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
 var accountManager = mailSession.accountManager;
 
@@ -182,11 +182,13 @@ function ChangeFolderByDOMNode(folderNode)
   var uri = folderNode.getAttribute('id');
   dump(uri + "\n");
   
+  var isThreaded = folderNode.getAttribute('threaded');
+
   if (uri)
-	  ChangeFolderByURI(uri);
+	  ChangeFolderByURI(uri, isThreaded == "true", "");
 }
 
-function ChangeFolderByURI(uri)
+function ChangeFolderByURI(uri, isThreaded, sortID)
 {
   dump('In ChangeFolderByURI\n');
   var resource = RDF.GetResource(uri);
@@ -205,6 +207,8 @@ function ChangeFolderByURI(uri)
 	try
 	{
 		gCurrentLoadingFolderURI = uri;
+		gCurrentLoadingFolderIsThreaded = isThreaded;
+		gCurrentLoadingFolderSortID = sortID;
 		msgfolder.startFolderLoading();
 		msgfolder.updateFolder(msgWindow);
 	}
@@ -215,19 +219,24 @@ function ChangeFolderByURI(uri)
   else
   {
 	gCurrentLoadingFolderURI = "";
+	gCurrentLoadingFolderIsThreaded = false;
+	gCurrentLoadingFolderSortID = "";
 	msgfolder.updateFolder(msgWindow);
-	RerootFolder(uri, msgfolder);
+	RerootFolder(uri, msgfolder, isThreaded, sortID);
   }
 }
 
-function RerootFolder(uri, newFolder)
+function RerootFolder(uri, newFolder, isThreaded, sortID)
 {
-	dump('In reroot folder\n');
+  dump('In reroot folder\n');
   var folder = GetThreadTreeFolder();
   ClearThreadTreeSelection();
 
   //Set the window's new open folder.
   msgWindow.openFolder = newFolder;
+
+  //Set threaded state
+  ShowThreads(isThreaded);
 
   folder.setAttribute('ref', uri);
   
@@ -438,6 +447,8 @@ function IsSpecialFolderSelected(folderName)
 
 function ChangeThreadView()
 {
+   var folder = GetSelectedFolder();
+
 	var threadColumn = document.getElementById('ThreadColumnHeader');
 	if(threadColumn)
 	{
@@ -445,10 +456,14 @@ function ChangeThreadView()
 		if(currentView== 'threaded')
 		{
 			ShowThreads(false);
+			if(folder)
+				folder.setAttribute('threaded', "");
 		}
 		else if(currentView == 'unthreaded')
 		{
 			ShowThreads(true);
+			if(folder)
+				folder.setAttribute('threaded', "true");
 		}
 		RefreshThreadTreeView();
 	}

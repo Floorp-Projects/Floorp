@@ -113,7 +113,6 @@ public:
 protected:
 
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
-  nsresult  GetIsThreaded(PRBool *threaded);
 
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
 							 nsIRDFNode **target);
@@ -167,6 +166,9 @@ protected:
   
 	nsresult CreateLiterals(nsIRDFService *rdf);
 	nsresult CreateArcsOutEnumerators();
+
+	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString,
+								  PRBool added);
 
 	static nsIRDFResource* kNC_Subject;
 	static nsIRDFResource* kNC_SubjectCollation;

@@ -339,11 +339,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 					nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
 					NS_NewMessageFromMsgHdrEnumerator(messages, msgfolder, getter_AddRefs(converter));
 					PRUint32 viewType;
-					nsCOMPtr<nsIMessageView> messageView;
-					rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-					if(NS_FAILED(rv)) return rv;
-
-					rv = messageView->GetViewType(&viewType);
+					rv = GetViewType(&viewType);
 					if(NS_FAILED(rv)) return rv;
 
 					nsMessageViewMessageEnumerator * messageEnumerator = 
@@ -569,14 +565,55 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString)
 {
-  return NS_OK;
+	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_TRUE);
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString)
 {
-  return NS_OK;
+	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_FALSE);
+}
+
+nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString, PRBool added)
+{
+
+	nsresult rv;
+	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIRDFResource> parentResource;
+	nsCOMPtr<nsIMessage> parentMessage;
+
+	parentMessage = do_QueryInterface(parentItem);
+	//If the parent isn't a message then we don't handle it.
+	if(!parentMessage)
+		return NS_OK;
+
+	parentResource = do_QueryInterface(parentItem);
+	//If it's not a resource, we don't handle it either
+	if(!parentResource)
+		return NS_OK;
+
+	//If we are removing a message
+	if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
+	{
+		//We only handle threaded views
+
+		PRBool isThreaded, isThreadNotification;
+		GetIsThreaded(&isThreaded);
+		isThreadNotification = PL_strcmp(viewString, "threadMessageView") == 0;
+		
+		if((isThreaded && isThreadNotification))
+		{
+			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+			if(NS_SUCCEEDED(rv))
+			{
+				//Notify folders that a message was deleted.
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added);
+			}
+		}
+	}
+	return NS_OK;
+
 }
 
 NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
@@ -1009,17 +1046,6 @@ nsMsgMessageDataSource::createMessageMessageChildNode(nsIMessage *message,
 }
 
 
-nsresult
-nsMsgMessageDataSource::GetIsThreaded(PRBool *threaded)
-{
-  nsresult rv;
-  nsCOMPtr<nsIMessageView> messageView;
-  rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-  if (NS_FAILED(rv)) return rv;
-
-  return messageView->GetShowThreads(threaded);
-}
-
 nsresult nsMsgMessageDataSource::GetMessageFolderAndThread(nsIMessage *message,
 															nsIMsgFolder **folder,
 															nsIMsgThread **thread)
@@ -1142,13 +1168,47 @@ nsresult nsMsgMessageDataSource::DoMessageHasAssertion(nsIMessage *message, nsIR
 	if(!hasAssertion)
 		return NS_ERROR_NULL_POINTER;
 
+	*hasAssertion = PR_FALSE;
+
 	//We're not keeping track of negative assertions on messages.
 	if(!tv)
 	{
-		*hasAssertion = PR_FALSE;
 		return NS_OK;
 	}
 
+	//first check to see if message child property
+	if(kNC_MessageChild == property)
+	{
+		PRBool isThreaded;
+		GetIsThreaded(&isThreaded);
+
+		//We only care if we're in the threaded view.  Otherwise just say we don't have the assertion.
+		if(isThreaded)
+		{
+			//If the message is the threadParent of the target then it has the assertion.  Otherwise it doesn't
+
+			nsCOMPtr<nsIMessage> childMessage = do_QueryInterface(target);
+			if(!childMessage)
+				return NS_OK;
+
+			nsMsgKey threadParent, msgKey;
+			rv = message->GetMessageKey(&msgKey);
+			if(NS_FAILED(rv))
+				return rv;
+
+			rv = childMessage->GetThreadParent(&threadParent);
+			if(NS_FAILED(rv))
+				return rv;
+
+			*hasAssertion = (msgKey == threadParent);
+			return NS_OK;
+		}
+		else
+		{
+			return NS_OK;
+		}
+
+	}
 	nsCOMPtr<nsIRDFResource> messageResource(do_QueryInterface(message, &rv));
 
 	if(NS_FAILED(rv))

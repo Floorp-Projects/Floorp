@@ -35,7 +35,9 @@ var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 
 var gFolderTree;
 var gThreadTree;
-var gCurrentLoadingFolderURI
+var gCurrentLoadingFolderURI;
+var gCurrentLoadingFolderIsThreaded = false;
+var gCurrentLoadingFolderSortID ="";
 
 // get the messenger instance
 var messenger = Components.classes[messengerProgID].createInstance();
@@ -60,9 +62,9 @@ msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
 // the folderListener object
 var folderListener = {
-    OnItemAdded: function(parentFolder, item) {},
+    OnItemAdded: function(parentItem, item, view) {},
 
-	OnItemRemoved: function(parentFolder, item){},
+	OnItemRemoved: function(parentItem, item, view){},
 
 	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
 
@@ -85,7 +87,9 @@ var folderListener = {
 					{
 						msgFolder.endFolderLoading();
 						dump("before reroot in OnFolderLoaded\n");
-						RerootFolder(uri, msgFolder);
+						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID);
+						gCurrentLoadingFolderIsThreaded = FALSE;
+						gCurrentLoadingFolderSortID = "";
 					}
 				}
 			}
@@ -204,7 +208,7 @@ function loadStartFolder()
         var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
         
         var startFolder = pref.CopyCharPref("mailnews.start_folder");
-        ChangeFolderByURI(startFolder);
+        //ChangeFolderByURI(startFolder);
 		//	var folder = OpenFolderTreeToFolder(startFolder);
     }
     catch(ex) {
@@ -391,4 +395,14 @@ function StopUrls()
 	msgWindow.StopUrls();
 }
 
+function GetSelectedFolder()
+{
+	var tree = GetFolderTree();
+	var selection = tree.selectedItems;
+	if(selection.length > 0)
+		return selection[0];
+	else
+		return null;
+
+}
 

@@ -671,11 +671,13 @@ nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	}
 	if(rv == NS_OK && child)
 	{
-		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(child, &rv));
-
-		if(NS_SUCCEEDED(rv))
+		nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+		nsCOMPtr<nsISupports> folderSupports;
+		rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+		if(childSupports && NS_SUCCEEDED(rv))
 		{
-			NotifyItemAdded(folderSupports);
+
+			NotifyItemAdded(folderSupports, childSupports, "folderView");
 		}
 	}
 	return rv;

@@ -148,12 +148,12 @@ nsresult nsMsgNotificationManager::Init()
 
 }
 
-NS_IMETHODIMP nsMsgNotificationManager::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
+NS_IMETHODIMP nsMsgNotificationManager::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNotificationManager::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
+NS_IMETHODIMP nsMsgNotificationManager::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString)
 {
 	return NS_OK;
 }

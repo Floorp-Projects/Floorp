@@ -40,7 +40,8 @@
 			  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 			  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+			  persist="threaded">
 		  	  <treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>
 					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
