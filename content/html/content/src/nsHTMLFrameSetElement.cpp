@@ -142,7 +142,7 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   } 
   else if (aAttribute == nsHTMLAtoms::border) {
-    nsGenericHTMLElement::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel);
+    nsGenericHTMLElement::ParseValue(aValue, 0, 100, aResult, eHTMLUnit_Pixel);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return NS_CONTENT_ATTR_NOT_THERE;

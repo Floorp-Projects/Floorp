@@ -904,6 +904,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   PRInt32*   childTypes;                   // frameset/frame distinction of children  
   nsFrameborder* childFrameborder;         // the frameborder attr of children 
   nsFrameborder frameborder;
+  frameborder = GetFrameBorder(PR_FALSE);
   nsBorderColor* childBorderColors;             
   nscolor borderColor;
   if (firstTime) {
@@ -926,7 +927,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
     }
     childTypes = new PRInt32[numCells]; 
     childFrameborder  = new nsFrameborder[numCells]; 
-    frameborder = GetFrameBorder(PR_FALSE);
     childBorderColors  = new nsBorderColor[numCells]; 
     borderColor = GetBorderColor();
   }
