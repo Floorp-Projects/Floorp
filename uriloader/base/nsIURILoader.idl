@@ -121,7 +121,8 @@ interface nsIURILoader : nsISupports
 					   in nsISupports aCtxt,
 					   in nsIURIContentListener aContentListener,
 					   out string aDesiredContentType,
-					   out nsIURIContentListener aTargetListener);
+					   out nsIURIContentListener aTargetListener,
+					   out boolean abortDispatch);
   /* this command should become obsolete once we get rid of the old layout "verb" command
      string and replace it with the enumerated type nsURILoaderCommand
   */
