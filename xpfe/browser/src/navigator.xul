@@ -293,6 +293,9 @@
   <broadcaster id="canPrint"/>
   
   <menubar>
+      <menu name="About">
+      <menuitem name="Release Notes" onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+      </menu>
       <menu name="File">
       <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
       	<menu name="New">
