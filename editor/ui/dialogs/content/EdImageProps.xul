@@ -46,12 +46,14 @@
   <xul:broadcaster id="args" value=""/>
   <xul:keyset id="keyset"/>
 
-<fieldset>
-  <legend
+<xul:titledbox orient="vertical">
+  <xul:title
     class = "dialog"
     align = "left">
-    &locationFieldset.label;
-  </legend>
+    <xul:text value="&locationFieldset.label;"/>
+  </xul:title>
+
+  <div style="width: 50px; height: 50px">
   <table>
 
     <!--/////// Src URL and ALT Text //////-->
@@ -95,8 +97,9 @@
       </td>
       <td/> 
     </tr>  
-  </table>  
-</fieldset>
+  </table> 
+  </div> 
+</xul:titledbox>
 
 <xul:box align="horizontal">
   <xul:titledbutton 
@@ -114,12 +117,13 @@
 <xul:box id="MoreSection" align="vertical" flex="100%">
   <xul:box align="horizontal" flex="100%">
     <!-- //////// Image Dimensions //////// -->
-    <fieldset flex="100%">
-      <legend 
+    <xul:titledbox orient="vertical" flex="100%">
+      <xul:title
         class="dialog"
         id="dimensionsLabel">
-        &dimensionsFieldset.label; 
-      </legend>
+        <xul:text value="&dimensionsFieldset.label;"/>
+      </xul:title>
+	  <div>
       <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
       <input 
         type    = "radio" 
@@ -134,6 +138,8 @@
         &originalSizeRadio.label;
       </label>
       <br/>
+	  </div>
+	  <div>
       <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
       <input 
         type    ="radio" 
@@ -146,7 +152,9 @@
         for     = "customsizeRadio"> 
         &customSizeRadio.label;
       </label>
-
+      </div>
+	  <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
+	  <div style="width: 50px; height: 50px">
       <table>
         <!--//////  IMAGE WIDTH  //////-->
         <tr>
@@ -206,8 +214,10 @@
           </td>
         </tr>
       </table>
+	  </div>
 
       <!--////// CONSTRAIN DIMENSIONS //////-->
+	  <div>
       <input type="checkbox" id="constrainCheckbox"/>
       <label 
         class = "dialog" 
@@ -215,18 +225,20 @@
         for   = "constrainCheckbox">
         &constrainCheckbox.label;
       </label>
-    </fieldset>
+	  </div>
+    </xul:titledbox>
     <!-- End of Bottom Left Region -->
     <xul:box align="vertical" flex="100%">
       <!-- Bottom Right Region -->
       <!--//////// Alignment ////////-->
-      <fieldset flex="100%">
-        <legend
+      <xul:titledbox flex="100%" orient="vertical">
+        <xul:title
           class = "dialog" 
           id    = "alignLabel"
           for   = "alignTypeSelect">
-          &alignment.label;
-        </legend>
+          <xul:text value="&alignment.label;"/>
+        </xul:title>
+		<div>
         <!-- BUG: Select contents can be nothing but text! -->
         <select
           id   = "alignTypeSelect" 
@@ -265,7 +277,8 @@
           </option>
   -->
         </select>
-      </fieldset>
+		</div>
+      </xul:titledbox>
   <!--
         <xul:titledbutton 
           id          = "alignTypeSelect" 
@@ -277,13 +290,14 @@
           onchange    = "doOverallEnabling()" />
   -->
       <!--//////// Borders and Spacing ////////-->
-      <fieldset flex="100%">
-        <legend
+      <xul:titledbox orient="vertical" flex="100%">
+        <xul:title
           class = "dialog"
-          id    = "spacingLabel"
-          align = "left"> 
-          &spacingFieldset.label; 
-        </legend>
+          id    = "spacingLabel"> 
+          <xul:text value="&spacingFieldset.label;"/>
+        </xul:title>
+        <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
+	    <div style="width: 50px; height: 50px">
         <table>
           <tr>
             <td align="right">
@@ -370,7 +384,8 @@
             </td>
           </tr>
         </table>
-      </fieldset>
+		</div>
+      </xul:titledbox>
     </xul:box> <!-- Bottom Right region -->
   </xul:box> <!-- The horizontal box -->
   

@@ -95,9 +95,9 @@
           </tree>
           <box align="vertical">
             <spring class="spacer"/>
-            <html:fieldset>
-              <html:legend>&AddHTMLAttributeLabel.label;</html:legend>
-              <box align="horizontal" style="width: 100%">
+            <titledbox orient="vertical">
+              <title><text value="&AddHTMLAttributeLabel.label;"/></title>
+              <box align="horizontal">
                 <html:label for="AddHTMLAttributeNameInput"> &AttName.label;</html:label>
                 <html:input type="text" flex="100%" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
                 <spring class="spacer"/>
@@ -105,7 +105,7 @@
           	    <html:input type="text" flex="100%" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.which)"/>
                 <titledbutton class="push" id="AddHTMLAttribute" onclick="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
-            </html:fieldset>
+            </titledbox>
           </box>
         </box>
       <!-- ============================================================== -->
@@ -125,9 +125,9 @@
           </tree>
           <box align="vertical">
             <spring class="spacer"/>
-            <html:fieldset>
-              <html:legend>&AddCSSAttributeLabel.label;</html:legend>
-              <box align="horizontal" style="width: 100%">
+            <titledbox orient="vertical">
+              <title><text value="&AddCSSAttributeLabel.label;"/></title>
+              <box align="horizontal">
                 <html:label for="AddCSSAttributeNameInput"> &AttName.label;</html:label>
                 <html:input type="text" flex="100%" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
                 <spring class="spacer"/>
@@ -135,7 +135,7 @@
           	    <html:input type="text" flex="100%" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.which)"/>
                 <titledbutton class="push" id="AddCSSAttribute" onclick="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
-            </html:fieldset>
+            </titledbox>
           </box>
         </box>
       <!-- ============================================================== -->
@@ -155,9 +155,9 @@
           </tree>
           <box align="vertical">
             <spring class="spacer"/>
-            <html:fieldset>
-              <html:legend>&AddJSEAttributeLabel.label;</html:legend>
-              <box align="horizontal" style="width: 100%">
+            <titledbox orient="vertical">
+              <title><text value="&AddJSEAttributeLabel.label;"/></title>
+              <box align="horizontal">
                 <html:label for="AddJSEAttributeNameInput"> &AttName.label;</html:label>
                 <html:input type="text" flex="100%" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
                 <spring class="spacer"/>
@@ -165,7 +165,7 @@
           	    <html:input type="text" flex="100%" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.which)"/>
                 <titledbutton class="push" id="AddJSEAttribute" onclick="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
-            </html:fieldset>
+            </titledbox>
           </box>
         </box>
       <!-- ============================================================== -->

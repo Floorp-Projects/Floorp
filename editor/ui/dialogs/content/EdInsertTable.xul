@@ -44,7 +44,9 @@
   <xul:broadcaster id="args" value=""/>
   <xul:keyset id="keyset"/>
 
-  <table>
+    <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
+	<div style="width: 50px; height: 50px">
+    <table>
     <tr>
       <td align="right">
         <label for="rows"> &numRowsEditField.label; </label>
@@ -90,6 +92,7 @@
       </td>
     </tr>
   </table>
+  </div>
   <xul:spring class="spacer"/>
   <!-- from EdDialogOverlay -->
   <xul:box id="AdvancedEdit"/>
