@@ -50,6 +50,7 @@ class nsIStyleSet;
 class nsIStyleContext;
 class nsILayoutHistoryState;
 class nsStyleChangeList;
+class nsPlaceholderFrame;
 
 #define NS_IFRAMEMANAGER_IID     \
 { 0xa6cf9107, 0x15b3, 0x11d2, \
@@ -115,8 +116,8 @@ public:
   // Placeholder frame functions
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const = 0;
-  NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
-                                    nsIFrame* aPlaceholderFrame) = 0;
+  NS_IMETHOD RegisterPlaceholderFrame(nsPlaceholderFrame *aPlaceholderFrame) = 0;
+  NS_IMETHOD UnregisterPlaceholderFrame(nsPlaceholderFrame *aPlaceholderFrame) = 0;
   NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
   // Mapping undisplayed content

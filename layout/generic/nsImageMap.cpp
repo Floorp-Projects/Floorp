@@ -97,6 +97,7 @@ public:
   PRBool mSuppressFeedback;
   PRBool mHasURL;
   PRBool mHasFocus;
+  nsIFrame* mImageFrame;
 };
 
 MOZ_DECL_CTOR_COUNTER(Area)
@@ -804,7 +805,6 @@ nsImageMap::FreeAreas()
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
-    frameManager->SetPrimaryFrameFor(area->mArea, nsnull);
     delete area;
   }
   mAreas.Clear();
@@ -871,7 +871,6 @@ nsImageMap::UpdateAreas()
   // Get rid of old area data
   FreeAreas();
 
-  nsresult rv = NS_OK;
   PRInt32 i, n;
   PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;
 
@@ -924,10 +923,6 @@ nsImageMap::AddArea(nsIContent* aArea)
     rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
   }
 
-  nsCOMPtr<nsIFrameManager> frameManager;
-  mPresShell->GetFrameManager(getter_AddRefs(frameManager));
-  frameManager->SetPrimaryFrameFor(aArea, mImageFrame);
-
   Area* area;
   if ((0 == shape.Length()) ||
       shape.EqualsIgnoreCase("rect") ||
@@ -945,6 +940,7 @@ nsImageMap::AddArea(nsIContent* aArea)
   else {
     area = new DefaultArea(aArea, suppress, hasURL);
   }
+  area->mImageFrame = mImageFrame;
   area->ParseCoords(coords);
   mAreas.AppendElement(area);
   return NS_OK;
@@ -1284,14 +1280,12 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
               nsCOMPtr<nsIPresShell> presShell;
               doc->GetShellAt(0, getter_AddRefs(presShell));
               if (presShell) {
-                nsIFrame* imgFrame;
-                if (NS_SUCCEEDED(presShell->GetPrimaryFrameFor(targetContent, &imgFrame)) && imgFrame) {
-                  nsCOMPtr<nsIPresContext> presContext;
-                  if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(presContext))) && presContext) {
-                    nsRect dmgRect;
-                    area->GetRect(presContext, dmgRect);
-                    Invalidate(presContext, imgFrame, dmgRect);
-                  }
+                nsIFrame* imgFrame = area->mImageFrame;
+                nsCOMPtr<nsIPresContext> presContext;
+                if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(presContext))) && presContext) {
+                  nsRect dmgRect;
+                  area->GetRect(presContext, dmgRect);
+                  Invalidate(presContext, imgFrame, dmgRect);
                 }
               }
             }

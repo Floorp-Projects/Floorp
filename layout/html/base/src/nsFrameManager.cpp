@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:cindent:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -40,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "prthread.h"
 #include "plhash.h"
-#include "nsDST.h"
+#include "pldhash.h"
 #include "nsPlaceholderFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -99,34 +100,90 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 //----------------------------------------------------------------------
 
-// Thin veneer around an NSPR hash table. Provides a map from a key that's
-// a pointer to a value that's also a pointer.
-class FrameHashTable {
-public:
-  FrameHashTable(PRUint32 aNumBuckets = 16);
-  ~FrameHashTable();
-
-  // Gets the value associated with the specified key
-  void* Get(void* aKey);
-
-  // Creates an association between the key and value. Returns the previous
-  // value associated with the key, or NULL if there was none
-  void* Put(void* aKey, void* aValue);
-
-  // Removes association for the key, and returns its associated value
-  void* Remove(void* aKey);
-
-  // Removes all entries from the hash table
-  void  Clear();
-
-#ifdef NS_DEBUG
-  void  Dump(FILE* fp);
-#endif
-
-protected:
-  PLHashTable* mTable;
+struct PlaceholderMapEntry : public PLDHashEntryHdr {
+  // key (the out of flow frame) can be obtained through placeholder frame
+  nsPlaceholderFrame *placeholderFrame;
 };
 
+PR_STATIC_CALLBACK(const void *)
+PlaceholderMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  PlaceholderMapEntry *entry = NS_STATIC_CAST(PlaceholderMapEntry*, hdr);
+  return entry->placeholderFrame->GetOutOfFlowFrame();
+}
+
+PR_STATIC_CALLBACK(PRBool)
+PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                         const void *key)
+{
+  const PlaceholderMapEntry *entry =
+    NS_STATIC_CAST(const PlaceholderMapEntry*, hdr);
+  return entry->placeholderFrame->GetOutOfFlowFrame() == key;
+}
+
+static PLDHashTableOps PlaceholderMapOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PlaceholderMapGetKey,
+  PL_DHashVoidPtrKeyStub,
+  PlaceholderMapMatchEntry,
+  PL_DHashMoveEntryStub,
+  PL_DHashClearEntryStub,
+  PL_DHashFinalizeStub,
+  NULL
+};
+
+//----------------------------------------------------------------------
+
+struct PropertyListMapEntry : public PLDHashEntryHdr {
+  nsIFrame *key;
+  void *value;
+};
+
+//----------------------------------------------------------------------
+
+struct PrimaryFrameMapEntry : public PLDHashEntryHdr {
+  // key (the content node) can be obtained through the frame
+  nsIFrame *frame;
+};
+
+PR_STATIC_CALLBACK(const void *)
+PrimaryFrameMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*, hdr);
+  nsCOMPtr<nsIContent> content;
+  entry->frame->GetContent(getter_AddRefs(content));
+  return content;
+  // and then release it, but we know the frame still owns it :-)
+}
+
+PR_STATIC_CALLBACK(PRBool)
+PrimaryFrameMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                         const void *key)
+{
+  const PrimaryFrameMapEntry *entry =
+    NS_STATIC_CAST(const PrimaryFrameMapEntry*, hdr);
+  nsCOMPtr<nsIContent> content;
+  entry->frame->GetContent(getter_AddRefs(content));
+  return content == key;
+}
+
+static PLDHashTableOps PrimaryFrameMapOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PrimaryFrameMapGetKey,
+  PL_DHashVoidPtrKeyStub,
+  PrimaryFrameMapMatchEntry,
+  PL_DHashMoveEntryStub,
+  PL_DHashClearEntryStub,
+  PL_DHashFinalizeStub,
+  NULL
+};
+
+//----------------------------------------------------------------------
+
+// XXXldb This seems too complicated for what I think it's doing, and it
+// should also be using pldhash rather than plhash to use less memory.
 MOZ_DECL_CTOR_COUNTER(UndisplayedNode)
 
 class UndisplayedNode {
@@ -233,8 +290,8 @@ public:
   // Placeholder frame functions
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
-  NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
-                                    nsIFrame* aPlaceholderFrame);
+  NS_IMETHOD RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
+  NS_IMETHOD UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
   NS_IMETHOD ClearPlaceholderFrameMap();
 
   // Undisplayed content functions
@@ -324,32 +381,30 @@ public:
   NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame);
 #endif
 
-private:
   struct PropertyList {
     nsCOMPtr<nsIAtom>    mName;          // property name
-    nsDST*               mFrameValueMap; // map of frame/value pairs
+    PLDHashTable         mFrameValueMap; // map of frame/value pairs
     NSFMPropertyDtorFunc mDtorFunc;      // property specific value dtor function
     PropertyList*        mNext;
 
     PropertyList(nsIAtom*             aName,
-                 NSFMPropertyDtorFunc aDtorFunc,
-                 nsDST::NodeArena*    aDSTNodeArena);
+                 NSFMPropertyDtorFunc aDtorFunc);
     ~PropertyList();
 
     // Removes the property associated with the given frame, and destroys
     // the property value
     PRBool RemovePropertyForFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
-    // Remove and destroy all remaining properties
-    void   RemoveAllProperties(nsIPresContext* aPresContext);
+    // Destroy all remaining properties (without removing them)
+    void Destroy(nsIPresContext* aPresContext);
   };
+private:
 
   nsIPresShell*                   mPresShell;    // weak link, because the pres shell owns us
   nsIStyleSet*                    mStyleSet;     // weak link. pres shell holds a reference
   nsIFrame*                       mRootFrame;
-  nsDST::NodeArena*               mDSTNodeArena; // weak link. DST owns
-  nsDST*                          mPrimaryFrameMap;
-  FrameHashTable*                 mPlaceholderMap;
+  PLDHashTable                    mPrimaryFrameMap;
+  PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
   PropertyList*                   mPropertyList;
@@ -416,12 +471,6 @@ FrameManager::Init(nsIPresShell* aPresShell,
   mPresShell = aPresShell;
   mStyleSet = aStyleSet;
 
-  // Allocate the node arena that's shared by all the DST objects
-  mDSTNodeArena = nsDST::NewMemoryArena();
-  if (!mDSTNodeArena) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // Force the forms and form control content lists to be added as
   // document observers *before* us (pres shell) so they will be
   // up to date when we try to use them.
@@ -459,8 +508,14 @@ FrameManager::Destroy()
     mRootFrame = nsnull;
   }
   
-  delete mPrimaryFrameMap;
-  delete mPlaceholderMap;
+  if (mPrimaryFrameMap.ops) {
+    PL_DHashTableFinish(&mPrimaryFrameMap);
+    mPrimaryFrameMap.ops = nsnull;
+  }
+  if (mPlaceholderMap.ops) {
+    PL_DHashTableFinish(&mPlaceholderMap);
+    mPlaceholderMap.ops = nsnull;
+  }
   delete mUndisplayedMap;
   DestroyPropertyList(presContext);
 
@@ -544,9 +599,12 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
   *aResult = nsnull;  // initialize out param
 
   nsresult rv;
-  if (mPrimaryFrameMap) {
-    mPrimaryFrameMap->Search(aContent, 0, (void**)aResult);
-    if (!*aResult) {
+  if (mPrimaryFrameMap.ops) {
+    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+        PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      *aResult = entry->frame;
+    } else {
       // XXX: todo:  Add a lookup into the undisplay map to skip searches 
       //             if we already know the content has no frame.
       //             nsCSSFrameConstructor calls SetUndisplayedContent() for every
@@ -585,7 +643,11 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
           rv = parent->ChildAt(index-1, *getter_AddRefs(prevSibling));
           if (NS_SUCCEEDED(rv) && prevSibling)
           {
-            mPrimaryFrameMap->Search(prevSibling.get(), 0, (void**)&hint.mPrimaryFrameForPrevSibling);
+            entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+                PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling.get(),
+                                     PL_DHASH_LOOKUP));
+            if (PL_DHASH_ENTRY_IS_BUSY(entry))
+              hint.mPrimaryFrameForPrevSibling = entry->frame;
           }
         }
       }
@@ -610,20 +672,34 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
 
   // If aPrimaryFrame is NULL, then remove the mapping
   if (!aPrimaryFrame) {
-    if (mPrimaryFrameMap) {
-      mPrimaryFrameMap->Remove(aContent);
+    if (mPrimaryFrameMap.ops) {
+      PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_REMOVE);
     }
   } else {
-    // Create a new DST if necessary
-    if (!mPrimaryFrameMap) {
-      mPrimaryFrameMap = new nsDST(mDSTNodeArena);
-      if (!mPrimaryFrameMap) {
+#ifdef DEBUG
+    nsCOMPtr<nsIContent> content;
+    aPrimaryFrame->GetContent(getter_AddRefs(content));
+    NS_PRECONDITION(content == aContent, "wrong content");
+#endif
+
+    // Create a new hashtable if necessary
+    if (!mPrimaryFrameMap.ops) {
+      if (!PL_DHashTableInit(&mPrimaryFrameMap, &PrimaryFrameMapOps, nsnull,
+                             sizeof(PrimaryFrameMapEntry), 16)) {
+        mPrimaryFrameMap.ops = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
 
     // Add a mapping to the hash table
-    mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame, nsnull);
+    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+        PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
+#ifdef DEBUG
+    if (entry->frame) {
+      NS_WARNING("already have primary frame for content");
+    }
+#endif
+    entry->frame = aPrimaryFrame;
   }
     
   return NS_OK;
@@ -633,8 +709,9 @@ NS_IMETHODIMP
 FrameManager::ClearPrimaryFrameMap()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  if (mPrimaryFrameMap) {
-    mPrimaryFrameMap->Clear();
+  if (mPrimaryFrameMap.ops) {
+    PL_DHashTableFinish(&mPrimaryFrameMap);
+    mPrimaryFrameMap.ops = nsnull;
   }
   return NS_OK;
 }
@@ -645,55 +722,66 @@ FrameManager::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                      nsIFrame** aResult) const
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_ARG_POINTER(aFrame);
-  if (!aResult || !aFrame) {
-    return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aFrame, "null param unexpected");
+  NS_PRECONDITION(aResult, "null out param unexpected");
+
+  if (mPlaceholderMap.ops) {
+    PlaceholderMapEntry *entry = NS_STATIC_CAST(PlaceholderMapEntry*,
+           PL_DHashTableOperate(NS_CONST_CAST(PLDHashTable*, &mPlaceholderMap),
+                                aFrame, PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      *aResult = entry->placeholderFrame;
+      return NS_OK;
+    }
   }
 
-  if (mPlaceholderMap) {
-    *aResult = (nsIFrame*)mPlaceholderMap->Get(aFrame);
-  } else {
-    *aResult = nsnull;
-  }
-
+  *aResult = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FrameManager::SetPlaceholderFrameFor(nsIFrame* aFrame,
-                                     nsIFrame* aPlaceholderFrame)
+FrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG_POINTER(aFrame);
-#ifdef NS_DEBUG
-  // Verify that the placeholder frame is of the correct type
-  if (aPlaceholderFrame) {
-    nsIAtom*  frameType;
-  
-    aPlaceholderFrame->GetFrameType(&frameType);
-    NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType, "unexpected frame type");
-    NS_IF_RELEASE(frameType);
+  NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
+#ifdef DEBUG
+  nsCOMPtr<nsIAtom> frameType;
+  aPlaceholderFrame->GetFrameType(getter_AddRefs(frameType));
+  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType,
+                  "unexpected frame type");
+#endif
+  if (!mPlaceholderMap.ops) {
+    if (!PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps, nsnull,
+                           sizeof(PlaceholderMapEntry), 16)) {
+      mPlaceholderMap.ops = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
+  PlaceholderMapEntry *entry = NS_STATIC_CAST(PlaceholderMapEntry*, 
+         PL_DHashTableOperate(&mPlaceholderMap,
+                              aPlaceholderFrame->GetOutOfFlowFrame(),
+                              PL_DHASH_ADD));
+  if (!entry)
+    return NS_ERROR_OUT_OF_MEMORY;
+  entry->placeholderFrame = aPlaceholderFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
+{
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
+  NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
+#ifdef DEBUG
+  nsCOMPtr<nsIAtom> frameType;
+  aPlaceholderFrame->GetFrameType(getter_AddRefs(frameType));
+  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType,
+                  "unexpected frame type");
 #endif
 
-  // If aPlaceholderFrame is NULL, then remove the mapping
-  if (!aPlaceholderFrame) {
-    if (mPlaceholderMap) {
-      mPlaceholderMap->Remove(aFrame);
-    }
-  } else {
-    // Create a new hash table if necessary
-    if (!mPlaceholderMap) {
-      mPlaceholderMap = new FrameHashTable;
-      if (!mPlaceholderMap) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    
-    // Add a mapping to the hash table
-    mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
-  }
+  PL_DHashTableOperate(&mPlaceholderMap,
+                       aPlaceholderFrame->GetOutOfFlowFrame(),
+                       PL_DHASH_REMOVE);
   return NS_OK;
 }
 
@@ -701,8 +789,9 @@ NS_IMETHODIMP
 FrameManager::ClearPlaceholderFrameMap()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  if (mPlaceholderMap) {
-    mPlaceholderMap->Clear();
+  if (mPlaceholderMap.ops) {
+    PL_DHashTableFinish(&mPlaceholderMap);
+    mPlaceholderMap.ops = nsnull;
   }
   return NS_OK;
 }
@@ -712,9 +801,8 @@ FrameManager::ClearPlaceholderFrameMap()
 NS_IMETHODIMP
 FrameManager::GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aResult)
 {
-  if (!aContent || !aResult) {
+  if (!aContent)
     return NS_ERROR_NULL_POINTER;
-  }
   *aResult = nsnull;  // initialize out param
 
   if (mUndisplayedMap)
@@ -2432,92 +2520,6 @@ CompareKeys(void* key1, void* key2)
   return key1 == key2;
 }
 
-MOZ_DECL_CTOR_COUNTER(FrameHashTable)
-
-FrameHashTable::FrameHashTable(PRUint32 aNumBuckets)
-{
-  MOZ_COUNT_CTOR(FrameHashTable);
-  mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
-                           (PLHashComparator)CompareKeys,
-                           (PLHashComparator)nsnull,
-                           nsnull, nsnull);
-}
-
-FrameHashTable::~FrameHashTable()
-{
-  MOZ_COUNT_DTOR(FrameHashTable);
-  PL_HashTableDestroy(mTable);
-}
-
-void*
-FrameHashTable::Get(void* aKey)
-{
-  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
-  PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
-  PLHashEntry* he = *hep;
-  if (he) {
-    return he->value;
-  }
-  return nsnull;
-}
-
-void*
-FrameHashTable::Put(void* aKey, void* aData)
-{
-  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
-  PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
-  PLHashEntry* he = *hep;
-  if (he) {
-    void* oldValue = he->value;
-    he->value = aData;
-    return oldValue;
-  }
-  PL_HashTableRawAdd(mTable, hep, hashCode, aKey, aData);
-  return nsnull;
-}
-
-void*
-FrameHashTable::Remove(void* aKey)
-{
-  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
-  PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
-  PLHashEntry* he = *hep;
-  void* oldValue = nsnull;
-  if (he) {
-    oldValue = he->value;
-    PL_HashTableRawRemove(mTable, hep, he);
-  }
-  return oldValue;
-}
-
-static PRIntn PR_CALLBACK
-RemoveEntry(PLHashEntry* he, PRIntn i, void* arg)
-{
-  // Remove and free this entry and continue enumerating
-  return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
-}
-
-void
-FrameHashTable::Clear()
-{
-  PL_HashTableEnumerateEntries(mTable, RemoveEntry, 0);
-}
-
-#ifdef NS_DEBUG
-static PRIntn PR_CALLBACK
-EnumEntries(PLHashEntry* he, PRIntn i, void* arg)
-{
-  // Continue enumerating
-  return HT_ENUMERATE_NEXT;
-}
-
-void
-FrameHashTable::Dump(FILE* fp)
-{
-  PL_HashTableDump(mTable, EnumEntries, fp);
-}
-#endif
-
 void
 FrameManager::DestroyPropertyList(nsIPresContext* aPresContext)
 {
@@ -2526,7 +2528,7 @@ FrameManager::DestroyPropertyList(nsIPresContext* aPresContext)
       PropertyList* tmp = mPropertyList;
 
       mPropertyList = mPropertyList->mNext;
-      tmp->RemoveAllProperties(aPresContext);
+      tmp->Destroy(aPresContext);
       delete tmp;
     }
   }
@@ -2562,19 +2564,25 @@ FrameManager::GetFrameProperty(nsIFrame* aFrame,
                                void**    aPropertyValue)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG_POINTER(aPropertyName);
+  NS_PRECONDITION(aPropertyName && aFrame, "unexpected null param");
+
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
-  nsresult      result;
-
   if (propertyList) {
-    result = propertyList->mFrameValueMap->Search(aFrame, aOptions, aPropertyValue);
-
-  } else {
-    *aPropertyValue = 0;
-    result = NS_IFRAME_MGR_PROP_NOT_THERE;
+    PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,
+        PL_DHashTableOperate(&propertyList->mFrameValueMap, aFrame,
+                             PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      *aPropertyValue = entry->value;
+      if (aOptions & NS_IFRAME_MGR_REMOVE_PROP) {
+        // don't call propertyList->mDtorFunc.  That's the caller's job now.
+        PL_DHashTableRawRemove(&propertyList->mFrameValueMap, entry);
+      }
+      return NS_OK;
+    }
   }
 
-  return result;
+  *aPropertyValue = 0;
+  return NS_IFRAME_MGR_PROP_NOT_THERE;
 }
 
 NS_IMETHODIMP
@@ -2584,9 +2592,9 @@ FrameManager::SetFrameProperty(nsIFrame*            aFrame,
                                NSFMPropertyDtorFunc aPropDtorFunc)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG_POINTER(aPropertyName);
+  NS_PRECONDITION(aPropertyName && aFrame, "unexpected null param");
+
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
-  nsresult      result = NS_OK;
 
   if (propertyList) {
     // Make sure the dtor function matches
@@ -2595,8 +2603,11 @@ FrameManager::SetFrameProperty(nsIFrame*            aFrame,
     }
 
   } else {
-    propertyList = new PropertyList(aPropertyName, aPropDtorFunc, mDSTNodeArena);
-    if (!propertyList) {
+    propertyList = new PropertyList(aPropertyName, aPropDtorFunc);
+    if (!propertyList)
+      return NS_ERROR_OUT_OF_MEMORY;
+    if (!propertyList->mFrameValueMap.ops) {
+      delete propertyList;
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2606,16 +2617,19 @@ FrameManager::SetFrameProperty(nsIFrame*            aFrame,
 
   // The current property value (if there is one) is replaced and the current
   // value is destroyed
-  void* oldValue;
-  result = propertyList->mFrameValueMap->Insert(aFrame, aPropertyValue, &oldValue);
-  if (NS_DST_VALUE_OVERWRITTEN == result) {
-    if (propertyList->mDtorFunc) {
-      nsCOMPtr<nsIPresContext> presContext;
-      mPresShell->GetPresContext(getter_AddRefs(presContext));
-
-      propertyList->mDtorFunc(presContext, aFrame, aPropertyName, oldValue);
-    }
+  nsresult result = NS_OK;
+  PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,
+    PL_DHashTableOperate(&propertyList->mFrameValueMap, aFrame, PL_DHASH_ADD));
+  // A NULL entry->key is the sign that the entry has just been allocated
+  // for us.  If it's non-NULL then we have an existing entry.
+  if (entry->key && propertyList->mDtorFunc) {
+    nsCOMPtr<nsIPresContext> presContext;
+    mPresShell->GetPresContext(getter_AddRefs(presContext));
+    propertyList->mDtorFunc(presContext, aFrame, aPropertyName, entry->value);
+    result = NS_IFRAME_MGR_PROP_OVERWRITTEN;
   }
+  entry->key = aFrame;
+  entry->value = aPropertyValue;
 
   return result;
 }
@@ -2625,20 +2639,18 @@ FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
                                   nsIAtom*  aPropertyName)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG_POINTER(aPropertyName);
-  PropertyList* propertyList = GetPropertyListFor(aPropertyName);
-  nsresult      result = NS_IFRAME_MGR_PROP_NOT_THERE;
+  NS_PRECONDITION(aPropertyName && aFrame, "unexpected null param");
 
+  PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   if (propertyList) {
     nsCOMPtr<nsIPresContext> presContext;
     mPresShell->GetPresContext(getter_AddRefs(presContext));
     
-    if (propertyList->RemovePropertyForFrame(presContext, aFrame)) {
-      result = NS_OK;
-    }
+    if (propertyList->RemovePropertyForFrame(presContext, aFrame))
+      return NS_OK;
   }
 
-  return result;
+  return NS_IFRAME_MGR_PROP_NOT_THERE;
 }
 
 //----------------------------------------------------------------------
@@ -2810,66 +2822,53 @@ UndisplayedMap::Clear(void)
 //----------------------------------------------------------------------
     
 FrameManager::PropertyList::PropertyList(nsIAtom*             aName,
-                                         NSFMPropertyDtorFunc aDtorFunc,
-                                         nsDST::NodeArena*    aDSTNodeArena)
-  : mName(aName), mFrameValueMap(new nsDST(aDSTNodeArena)),
-    mDtorFunc(aDtorFunc), mNext(nsnull)
+                                         NSFMPropertyDtorFunc aDtorFunc)
+  : mName(aName), mDtorFunc(aDtorFunc), mNext(nsnull)
 {
+  PL_DHashTableInit(&mFrameValueMap, PL_DHashGetStubOps(), this,
+                    sizeof(PropertyListMapEntry), 16);
 }
 
 FrameManager::PropertyList::~PropertyList()
 {
-  delete mFrameValueMap;
+  PL_DHashTableFinish(&mFrameValueMap);
 }
 
-class DestroyPropertyValuesFunctor : public nsDSTNodeFunctor {
-public:
-  DestroyPropertyValuesFunctor(nsIPresContext*      aPresContext,
-                               nsIAtom*             aPropertyName,
-                               NSFMPropertyDtorFunc aDtorFunc)
-    : mPresContext(aPresContext), mPropertyName(aPropertyName), mDtorFunc(aDtorFunc) {}
+PR_STATIC_CALLBACK(PLDHashOperator)
+DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                          PRUint32 number, void *arg)
+{
+  FrameManager::PropertyList *propList =
+      NS_STATIC_CAST(FrameManager::PropertyList*, table->data);
+  nsIPresContext *presContext = NS_STATIC_CAST(nsIPresContext*, arg);
+  PropertyListMapEntry* entry = NS_STATIC_CAST(PropertyListMapEntry*, hdr);
 
-  virtual void operator () (void *aKey, void *aValue) {
-    mDtorFunc(mPresContext, (nsIFrame*)aKey, mPropertyName, aValue);
-  }
-
-  nsIPresContext*      mPresContext;
-  nsIAtom*             mPropertyName;
-  NSFMPropertyDtorFunc mDtorFunc;
-};
+  propList->mDtorFunc(presContext, entry->key, propList->mName, entry->value);
+  return PL_DHASH_NEXT;
+}
 
 void
-FrameManager::PropertyList::RemoveAllProperties(nsIPresContext* aPresContext)
+FrameManager::PropertyList::Destroy(nsIPresContext* aPresContext)
 {
-  if (mDtorFunc) {
-    DestroyPropertyValuesFunctor  functor(aPresContext, mName, mDtorFunc);
-
-    // Enumerate any remaining frame/value pairs and destroy the value object
-    mFrameValueMap->Enumerate(functor);
-  }
+  // Enumerate any remaining frame/value pairs and destroy the value object
+  if (mDtorFunc)
+    PL_DHashTableEnumerate(&mFrameValueMap, DestroyPropertyEnumerator,
+                           aPresContext);
 }
 
 PRBool
 FrameManager::PropertyList::RemovePropertyForFrame(nsIPresContext* aPresContext,
                                                    nsIFrame*       aFrame)
 {
-  void*     value;
-  nsresult  result;
-   
-  // If the property exists, then we need to run the dtor function so
-  // do a search with the option to remove the key/value pair
-  result = mFrameValueMap->Search(aFrame, NS_DST_REMOVE_KEY_VALUE, &value);
+  PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,
+      PL_DHashTableOperate(&mFrameValueMap, aFrame, PL_DHASH_LOOKUP));
+  if (!PL_DHASH_ENTRY_IS_BUSY(entry))
+    return PR_FALSE;
 
-  if (NS_OK == result) {
-    // The property was set
-    if (mDtorFunc) {
-      // Destroy the property value
-      mDtorFunc(aPresContext, aFrame, mName, value);
-    }
+  if (mDtorFunc)
+    mDtorFunc(aPresContext, aFrame, mName, entry->value);
 
-    return PR_TRUE;
-  }
+  PL_DHashTableRawRemove(&mFrameValueMap, entry);
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
-

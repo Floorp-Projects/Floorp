@@ -155,7 +155,7 @@
 #include "nsIDocumentViewer.h"
 
 // SubShell map
-#include "nsDST.h"
+#include "pldhash.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -799,26 +799,11 @@ DummyLayoutRequest::Cancel(nsresult status)
 }
 
 // ----------------------------------------------------------------------------
-//   A generic nsDSTNodeFunctor to look for a specific value in the map
 
-class nsSearchEnumerator : public nsDSTNodeFunctor
-{
-public:
-  nsSearchEnumerator(void* aTargetValue)
-    : mTargetValue(aTargetValue) { 
-    mResultKey = nsnull;
-  }
-  
-  void operator() (void* aKey, void* aValue) {
-    if (aValue == mTargetValue)
-      mResultKey = aKey;
-  }
-  
-  void* GetResult() { return mResultKey; }
-
-private:
-  void* mResultKey;
-  void* mTargetValue;
+class SubShellMapEntry : public PLDHashEntryHdr {
+  public:
+    nsIContent *key; // must be first, to look like PLDHashEntryStub
+    nsISupports *subShell;
 };
 
 // ----------------------------------------------------------------------------
@@ -1238,8 +1223,7 @@ protected:
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell); // A callback for the timer.
 
   // subshell map
-  nsDST*            mSubShellMap;  // map of content/subshell pairs
-  nsDST::NodeArena* mDSTNodeArena; // weak link. DST owns (mSubShellMap object)
+  PLDHashTable*     mSubShellMap;  // map of content/subshell pairs
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation 
@@ -1680,7 +1664,7 @@ PresShell::Destroy()
   // kill subshell map, if any.  It holds only weak references
   if (mSubShellMap)
   {
-    delete mSubShellMap;
+    PL_DHashTableDestroy(mSubShellMap);
     mSubShellMap = nsnull;
   }
 
@@ -4537,10 +4521,10 @@ GetLastChildFrame(nsIPresContext* aPresContext,
 
   // Get the last in flow frame
   nsIFrame* lastInFlow;
-  while (aFrame)  {
+  do {
     lastInFlow = aFrame;
     lastInFlow->GetNextInFlow(&aFrame);
-  }
+  } while (aFrame);
 
   // Get the last child frame
   nsIFrame* firstChildFrame;
@@ -5378,16 +5362,17 @@ PresShell::GetSubShellFor(nsIContent*   aContent,
                           nsISupports** aResult) const
 {
   NS_ENSURE_ARG_POINTER(aContent);
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nsnull;
 
   if (mSubShellMap) {
-    mSubShellMap->Search(aContent, 0, (void**)aResult);
-    if (*aResult) {
-      NS_ADDREF(*aResult);
+    SubShellMapEntry *entry = NS_STATIC_CAST(SubShellMapEntry*,
+                PL_DHashTableOperate(mSubShellMap, aContent, PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      NS_ADDREF(*aResult = entry->subShell);
+      return NS_OK;
     }
   }
 
+  *aResult = nsnull;
   return NS_OK;
 }
 
@@ -5399,28 +5384,46 @@ PresShell::SetSubShellFor(nsIContent*  aContent,
 
   // If aSubShell is NULL, then remove the mapping
   if (!aSubShell) {
-    if (mSubShellMap) {
-      mSubShellMap->Remove(aContent);
-    }
+    if (mSubShellMap)
+      PL_DHashTableOperate(mSubShellMap, aContent, PL_DHASH_REMOVE);
   } else {
-    // Create a new DST if necessary
+    // Create a new hashtable if necessary
     if (!mSubShellMap) {
-      if (!mDSTNodeArena) {
-        mDSTNodeArena = nsDST::NewMemoryArena();
-        if (!mDSTNodeArena) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      mSubShellMap = new nsDST(mDSTNodeArena);
-      if (!mSubShellMap) {
+      mSubShellMap = PL_NewDHashTable(PL_DHashGetStubOps(), nsnull,
+                                      sizeof(SubShellMapEntry), 16);
+      if (!mSubShellMap)
         return NS_ERROR_OUT_OF_MEMORY;
-      }
     }
 
     // Add a mapping to the hash table
-    mSubShellMap->Insert(aContent, (void*)aSubShell, nsnull);
+    SubShellMapEntry *entry = NS_STATIC_CAST(SubShellMapEntry*,
+                   PL_DHashTableOperate(mSubShellMap, aContent, PL_DHASH_ADD));
+    entry->key = aContent;
+    entry->subShell = aSubShell;
   }
   return NS_OK;
+}
+
+struct FindContentData {
+  FindContentData(nsISupports *aSubShell)
+    : subShell(aSubShell), result(nsnull) {}
+
+  nsISupports *subShell;
+  nsIContent *result;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                      PRUint32 number, void *arg)
+{
+  SubShellMapEntry *entry = NS_STATIC_CAST(SubShellMapEntry*, hdr);
+  FindContentData *data = NS_STATIC_CAST(FindContentData*, arg);
+
+  if (entry->subShell == data->subShell) {
+    data->result = entry->key;
+    return PL_DHASH_STOP;
+  }
+  return PL_DHASH_NEXT;
 }
   
 NS_IMETHODIMP
@@ -5428,16 +5431,15 @@ PresShell::FindContentForShell(nsISupports* aSubShell,
                                nsIContent** aContent) const
 {
   NS_ENSURE_ARG_POINTER(aSubShell);
-  NS_ENSURE_ARG_POINTER(aContent);
-  *aContent = nsnull;
   
-  if (!mSubShellMap)
+  if (!mSubShellMap) {
+    *aContent = nsnull;
     return NS_OK;
+  }
   
-  nsSearchEnumerator enumerator(NS_STATIC_CAST(void*, aSubShell));
-  mSubShellMap->Enumerate(enumerator);
-  *aContent = NS_STATIC_CAST(nsIContent*, enumerator.GetResult());
-  NS_IF_ADDREF(*aContent);
+  FindContentData data(aSubShell);
+  PL_DHashTableEnumerate(mSubShellMap, FindContentEnumerator, &data);
+  NS_IF_ADDREF(*aContent = data.result);
 
   return NS_OK;
 }
@@ -5446,18 +5448,13 @@ NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                   nsIFrame** aResult) const
 {
-  nsresult  rv;
-
-  if (mFrameManager) {
-    rv = mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
-
-  } else {
+  if (!mFrameManager) {
     *aResult = nsnull;
-    rv = NS_OK;
+    return NS_OK;
   }
-
-  return rv;
+  return mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
 }
+
 #ifdef IBMBIDI
 NS_IMETHODIMP
 PresShell::SetCaretBidiLevel(PRUint8 aLevel)

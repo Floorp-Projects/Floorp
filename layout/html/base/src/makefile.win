@@ -79,7 +79,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsBlockReflowState.obj \
 	.\$(OBJDIR)\nsBulletFrame.obj \
 	.\$(OBJDIR)\nsContainerFrame.obj \
-	.\$(OBJDIR)\nsDST.obj \
 	.\$(OBJDIR)\nsFirstLetterFrame.obj \
 	.\$(OBJDIR)\nsFrame.obj \
 	.\$(OBJDIR)\nsFrameManager.obj \
