@@ -21,20 +21,28 @@
 #include "nsIWidget.h"
 #include "nsRect.h"
 #include "nsIScrollableView.h"
-class nsIDocument;
+
+// Forward declarations... 
 class nsIPostData;
-class nsIScriptContext;
-class nsIStreamListener;
+class nsIStreamObserver;
 class nsString;
+
+// IID for the nsIDocumentWidget interface
+// a7d1b8b0-0b1c-11d2-beba-00805f8a66dc
+#define NS_IDOCUMENTWIDGET_IID      \
+ { 0xa7d1b8b0, 0x0b1c, 0x11d2, \
+   {0xbe, 0xba, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
 // Interface to the web widget. The web widget is a container for web
 // content.
 class nsIDocumentWidget : public nsISupports {
 public:
   // Create a native window for this web widget; may be called once
-  virtual nsresult Init(nsNativeWidget aNativeParent,
-                        const nsRect& aBounds,
-                        nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
+  NS_IMETHOD Init(nsNativeWidget aNativeParent,
+                  const nsRect& aBounds,
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
+
+  NS_IMETHOD BindToDocument(nsISupports *aDoc, const char *aCommand) = 0;
 
   virtual nsRect GetBounds() = 0;
 
@@ -47,7 +55,7 @@ public:
   virtual void Hide() = 0;
 
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIStreamListener* aListener,
+                     nsIStreamObserver* aListener,
                      nsIPostData* aPostData = 0) = 0;
 
   virtual nsIWidget* GetWWWindow() = 0;
