@@ -34,10 +34,11 @@ Rights Reserved.
 	<box id="addressingWidget"
 		 align="vertical"
 		 onclick="AddressingWidgetClick()"
-		 style="background-color:white; border:solid black 1px">
+		 style="border:solid black 1px">
 
 		<!-- for fixed height:  height:5em;  -->
 		<tree id="addressingWidgetTree"		
+			  style="background-color:inherit"
 			  treeallowevents="true">
 			  
 			<treecol style="width:15%"/>
