@@ -71,10 +71,13 @@ NS_IMPL_ISUPPORTS1(nsRegionWin, nsIRegion)
 nsresult nsRegionWin :: Init(void)
 {
   if (NULL != mRegion) {
-    ::DeleteObject(mRegion);
+    ::SetRectRgn(mRegion, 0, 0, 0, 0);
     FreeRects(nsnull);
   }
-  mRegion = ::CreateRectRgn(0, 0, 0, 0);
+  else {
+    mRegion = ::CreateRectRgn(0, 0, 0, 0);
+  }
+  
   mRegionType = NULLREGION;
 
   return NS_OK;
@@ -90,9 +93,9 @@ void nsRegionWin :: SetTo(const nsIRegion &aRegion)
 void nsRegionWin :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   if (NULL != mRegion)
-    ::DeleteObject(mRegion);
-
-  mRegion = ::CreateRectRgn(aX, aY, aX + aWidth, aY + aHeight);
+    ::SetRectRgn(mRegion, aX, aY, aX + aWidth, aY + aHeight);
+  else
+    mRegion = ::CreateRectRgn(aX, aY, aX + aWidth, aY + aHeight);
 
   if ((aWidth == 0) || (aHeight == 0))
     mRegionType = NULLREGION;
