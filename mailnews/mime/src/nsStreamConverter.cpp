@@ -185,12 +185,12 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
         {
           if ((urlString) && (*urlString))
           {
-            PR_FREEIF(*url_name);
+            CRTFREEIF(*url_name);
             *url_name = nsCRT::strdup(urlString);
             if (!(*url_name))
               return NS_ERROR_OUT_OF_MEMORY;
 
-            PR_FREEIF(urlString);
+            CRTFREEIF(urlString);
           }
         }
       }
@@ -278,6 +278,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   // Do sanity checking...
   if ( (!url) || (!*url) )
   {
+    CRTFREEIF(mOutputFormat);
     mOutputFormat = nsCRT::strdup("text/html");
     return NS_OK;
   }
@@ -302,8 +303,9 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     if ((format) && (*format))
     {
       char *ptr;
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup(format);
+      CRTFREEIF(mOverrideFormat);
       mOverrideFormat = nsCRT::strdup("raw");
       ptr = mOutputFormat;
       do
@@ -349,43 +351,43 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       char *ptr8 = PL_strcasestr ("src", (header+lenOfHeader));
       if (ptr5)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
       else if (ptr2)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/xml");
         *aNewType = nsMimeOutput::nsMimeMessageHeaderDisplay;
       }
       else if (ptr3)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageQuoting;
       }
       else if (ptr4)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageBodyQuoting;
       }
       else if (ptr6)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessagePrintOutput;
       }
       else if (ptr7)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageSaveAs;
       }
       else if (ptr8)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/plain");
         *aNewType = nsMimeOutput::nsMimeMessageSource;
       }
@@ -399,13 +401,13 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
 
       if (mDesiredOutputType && nsCRT::strcasecmp(mDesiredOutputType, "text/xul") == 0)
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/xul");
         *aNewType = nsMimeOutput::nsMimeMessageXULDisplay;
       }
       else
       {
-        PR_FREEIF(mOutputFormat);
+        CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
@@ -427,11 +429,13 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
         if (mRealContentType.Equals("message/rfc822"))
         {
           mRealContentType = "text/plain";
+          CRTFREEIF(mOutputFormat);
           mOutputFormat = nsCRT::strdup("raw");
           *aNewType = nsMimeOutput::nsMimeMessageRaw;
         }
         else
         {
+          CRTFREEIF(mOutputFormat);
           mOutputFormat = nsCRT::strdup("raw");
           *aNewType = nsMimeOutput::nsMimeMessageRaw;
         }
@@ -439,7 +443,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       }
     }
 
-    PR_FREEIF(mOutputFormat);
+    CRTFREEIF(mOutputFormat);
     mOutputFormat = nsCRT::strdup("raw");
     *aNewType = nsMimeOutput::nsMimeMessageRaw;
   }
@@ -450,15 +454,15 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
 nsresult 
 nsStreamConverter::InternalCleanup(void)
 {
-  PR_FREEIF(mOutputFormat);
-  nsCRT::free(mDesiredOutputType);
+  CRTFREEIF(mOutputFormat);
+  CRTFREEIF(mDesiredOutputType);
+  CRTFREEIF(mOverrideFormat);
   if (mBridgeStream)
   {
     bridge_destroy_stream(mBridgeStream);
     mBridgeStream = nsnull;
   }
 
-  PR_FREEIF(mOverrideFormat);
   return NS_OK;
 }
 
@@ -500,7 +504,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   nsresult rv = NS_OK;
   
   mOutListener = aOutListener;
-  mDesiredOutputType = nsnull;
+  CRTFREEIF(mDesiredOutputType);
   
   // mscott --> we need to look at the url and figure out what the correct output type is...
   nsMimeOutputType newType;
@@ -519,20 +523,20 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   switch (newType)
   {
     case nsMimeOutput::nsMimeMessageXULDisplay:
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/xul");
     break;
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
       mWrapperOutput = PR_TRUE;
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/html");
       break;
     case nsMimeOutput::nsMimeMessageHeaderDisplay:   // the split header/body display
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/xml");
       break;
     case nsMimeOutput::nsMimeMessageBodyDisplay:   // the split header/body display
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/html");
       break;
       
@@ -540,29 +544,29 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
     case nsMimeOutput::nsMimeMessageSaveAs:   		// Save as operation
     case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
     case nsMimeOutput::nsMimeMessagePrintOutput:  // all Printing output
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/html");
       break;
       
     case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("raw");
       break;
       
     case nsMimeOutput::nsMimeMessageSource:    // the raw RFC822 data (view source) and attachments
-      PR_FREEIF(mOutputFormat);
-      PR_FREEIF(mOverrideFormat);
+      CRTFREEIF(mOutputFormat);
+      CRTFREEIF(mOverrideFormat);
       mOutputFormat = nsCRT::strdup("text/plain");
       mOverrideFormat = nsCRT::strdup("raw");
       break;
       
     case nsMimeOutput::nsMimeMessageDraftOrTemplate:       // Loading drafts & templates
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("message/draft");
       break;
       
     case nsMimeOutput::nsMimeMessageEditorTemplate:       // Loading templates into editor
-      PR_FREEIF(mOutputFormat);
+      CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/html");
       break;
     default:
@@ -1024,7 +1028,10 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
   }
 
   if (aToType)
-      mDesiredOutputType = nsCRT::strdup(aToType);
+  {  
+    CRTFREEIF(mDesiredOutputType);
+    mDesiredOutputType = nsCRT::strdup(aToType);
+  }
 
 	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
 	if (NS_FAILED(rv)) return rv;
