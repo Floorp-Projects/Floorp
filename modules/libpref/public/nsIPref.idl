@@ -21,6 +21,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsILocalFile.idl"
 
 %{C++
 #include "jsapi.h"
@@ -49,7 +50,7 @@ typedef void (*PrefEnumerationFunc)(const char *, void *);
 native PrefChangedFunc(PrefChangedFunc);
 native PrefEnumerationFunc(PrefEnumerationFunc);
 
-interface nsIFileSpec; 
+interface nsIFileSpec;
 
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
@@ -123,6 +124,8 @@ interface nsIPref : nsISupports {
 
   nsIFileSpec GetFilePref(in string pref);
   void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
+    nsILocalFile getFileXPref(in string pref);
+    void setFileXPref(in string pref, in nsILocalFile value);
 
   /* pref attributes */
   boolean PrefIsLocked(in string pref);

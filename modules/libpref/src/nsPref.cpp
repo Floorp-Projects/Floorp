@@ -557,6 +557,7 @@ NS_IMETHODIMP nsPref::ResetPrefs()
 NS_IMETHODIMP nsPref::ShutDown()
 //----------------------------------------------------------------------------------------
 {
+    printf("PREF_Cleanup()\n");
     PREF_Cleanup();
     return NS_OK;
 } // nsPref::ShutDown
@@ -716,17 +717,7 @@ NS_IMETHODIMP nsPref::SetCharPref(const char *pref,const char* value)
 NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
 {
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
-    nsresult rv;
-    nsAutoString str(value);
-
-    char *utf8String = str.ToNewUTF8String();
-
-    if (!utf8String) return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = SetCharPref(pref, utf8String);
-    nsCRT::free(utf8String);
-
-    return rv;
+    return SetCharPref(pref, NS_ConvertUCS2toUTF8(value));
 }
 
 NS_IMETHODIMP nsPref::SetIntPref(const char *pref,PRInt32 value)
@@ -789,17 +780,7 @@ NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref,
                                             const PRUnichar *value)
 {
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
-    nsresult rv;
-    nsAutoString str(value);
-
-    char *utf8String = str.ToNewUTF8String();
-
-    if (!utf8String) return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = SetDefaultCharPref(pref, utf8String);
-    nsCRT::free(utf8String);
-
-    return NS_OK;
+    return SetDefaultCharPref(pref, NS_ConvertUCS2toUTF8(value));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,PRInt32 value)
@@ -1042,6 +1023,40 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
     }
     PR_FREEIF(encodedString); // Allocated by nsOutputStringStream
     return _convertRes(rv);
+}
+
+NS_IMETHODIMP
+nsPref::GetFileXPref(const char *aPref, nsILocalFile ** aResult)
+{
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> file = do_CreateInstance(NS_LOCAL_FILE_PROGID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLCString descriptorString;
+    rv = CopyCharPref(aPref, getter_Copies(descriptorString));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = file->SetPersistentDescriptor(descriptorString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aResult = file;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPref::SetFileXPref(const char *aPref, nsILocalFile *aValue)
+{
+    nsresult rv;
+    nsXPIDLCString descriptorString;
+
+    rv = aValue->GetPersistentDescriptor(getter_Copies(descriptorString));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetCharPref(aPref, descriptorString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
 }
 
 /*
