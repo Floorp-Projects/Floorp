@@ -178,6 +178,7 @@ nsresult nsAppShell::Run()
             }
          }
 
+#ifdef 0
       // process timer queue.
       } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
 
@@ -185,7 +186,7 @@ nsresult nsAppShell::Run()
             queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
          } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
                   !WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_NOREMOVE));
-      
+#endif      
       } else {
          // Block and wait for any posted application message
          WinWaitMsg((HAB)0, 0, 0);
@@ -252,6 +253,7 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 
         gotMessage = PR_TRUE;
 
+#ifdef 0
       // process timer queue.
       } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
 
@@ -259,7 +261,7 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
             queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
          } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
                   !WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_NOREMOVE));
-
+#endif
       } else {
          // Block and wait for any posted application message
          WinWaitMsg((HAB)0, 0, 0);
