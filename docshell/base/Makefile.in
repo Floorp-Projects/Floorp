@@ -63,6 +63,12 @@ REQUIRES	= xpcom \
 		  editor \
 		  $(NULL)
 
+ifdef MOZ_PHOENIX
+REQUIRES += history
+else
+REQUIRES += appcomps
+endif
+
 XPIDLSRCS	= \
 		nsCDocShell.idl			\
 		nsCDefaultURIFixup.idl		\
