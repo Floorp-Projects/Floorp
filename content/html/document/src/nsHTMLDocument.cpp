@@ -1362,8 +1362,8 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
   nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
 
   nsCOMPtr<nsIContent> content;
-  rv = nsDocument::CreateElement(name, nsnull, GetDefaultNamespaceID(),
-                                 mDefaultElementType, getter_AddRefs(content));
+  rv = CreateElem(name, nsnull, GetDefaultNamespaceID(), PR_TRUE,
+                  getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);

@@ -526,9 +526,6 @@ protected:
   virtual nsStyleSet::sheetType GetAttrSheetType();
   void FillStyleSet(nsStyleSet* aStyleSet);
 
-  nsresult CreateElement(nsIAtom *aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, PRInt32 aElementType,
-                         nsIContent** aResult);
   nsresult CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
                          nsIContent** aResult);
 
