@@ -97,8 +97,10 @@ js1_5/Exceptions/regress-50447.js
 js1_2/version120/regress-99663.js
 #This test uses the gc() function of SpiderMonkey
 ecma_3/Function/regress-104584.js
-# This test uses the Error.stack property of SpiderMonkey (non-ECMA)
+#This test uses the Error.stack property of SpiderMonkey (non-ECMA)
 js1_5/Exceptions/errstack-001.js
+#This test uses the clone() function in SpiderMonkey's js.c file
+js1_5/Regress/regress-127557.js
 #These tests break with new Unicode in JDK 1.4
 ecma/String/15.5.4.11-2.js
 ecma/String/15.5.4.11-5.js
