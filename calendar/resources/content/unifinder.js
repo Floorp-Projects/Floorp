@@ -539,6 +539,32 @@ function unifinderClearSearchCommand()
    refreshEventTree( eventTable );
 }
 
+function focusFirstItemIfNoSelection()
+{
+   if( gCalendarWindow.EventSelection.selectedEvents.length == 0 )
+   {
+      //select the first event in the list.
+      var ListBox = document.getElementById( "unifinder-search-results-listbox" );
+
+      if( ListBox.childNodes.length > 0 )
+      {
+         var SelectedEvent = ListBox.childNodes[0].event;
+
+         var ArrayOfEvents = new Array();
+   
+         ArrayOfEvents[ ArrayOfEvents.length ] = SelectedEvent;
+         
+         gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
+      
+         /*start date is either the next or last occurence, or the start date of the event */
+         var eventStartDate = getNextOrPreviousRecurrence( SelectedEvent );
+            
+         /* you need this in case the current day is not visible. */
+         gCalendarWindow.currentView.goToDay( eventStartDate, true);
+      }
+   }
+}
+
 
 function getNextOrPreviousRecurrence( calendarEvent )
 {
