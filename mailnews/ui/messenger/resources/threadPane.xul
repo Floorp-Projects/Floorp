@@ -8,7 +8,8 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
- <tree datasources="rdf:mailnews">
+
+<tree rdf:datasources="rdf:mailnews">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
@@ -20,11 +21,9 @@
     </treeitem>
   </treehead>
   
+
   <treebody id="mailbox:/Inbox" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
     <treeitem  open="true">
-      <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/ClosedRead.gif"/>Local Mail</treecell>
-      <treecell></treecell>
-      <treecell></treecell>
     </treeitem>
   </treebody>
 </tree>

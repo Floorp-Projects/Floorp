@@ -27,6 +27,10 @@ treecell {
  display: table-cell; 
 } 
 
+treecell[selectedcell] { 
+    background-color: blue; 
+} 
+
 treehead treeitem treecell { 
  background-color: #a0a0a0; 
  border: thin black solid; 
