@@ -1709,6 +1709,13 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     slot->protectedAuthPath =
     		((tokenInfo.flags & CKF_PROTECTED_AUTHENTICATION_PATH) 
 							? PR_TRUE : PR_FALSE);
+    /* on some platforms Active Card incorrectly sets the 
+     * CKF_PROTECTED_AUTHENTICATION_PATH bit when it doesn't mean to. */
+#define ACTIVE_CARD "ActivCard SA"
+    if (PORT_Strncmp(tokenInfo.manufacturerID,ACTIVE_CARD,
+						sizeof(ACTIVE_CARD)-1) == 0) {
+	slot->protectedAuthPath = PR_FALSE;
+    }
     tmp = PK11_MakeString(NULL,slot->token_name,
 			(char *)tokenInfo.label, sizeof(tokenInfo.label));
     slot->minPassword = tokenInfo.ulMinPinLen;
