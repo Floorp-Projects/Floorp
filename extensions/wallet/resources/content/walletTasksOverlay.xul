@@ -45,11 +45,17 @@
   <script type="application/x-javascript">
   <![CDATA[
 
-    // expire master password
-    function walletPasswordExpire() {
-      var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
-      wallet = wallet.getService();
-      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+    // First clears the HTTP auth, then the Wallet
+    function expireHTTPAuthAndWallet() {
+      // Queries the HTTP Auth Manager and clears all sessions
+      Components.classes['@mozilla.org/network/http-auth-manager;1']
+                .getService(Components.interfaces.nsIHttpAuthManager)
+                .clearAll();
+
+      // Expires the master password
+      var wallet =
+        Components.classes['@mozilla.org/wallet/wallet-service;1']
+                  .getService(Components.interfaces.nsIWalletService);
       var strings = document.getElementById("menu_passwordManager");
 
       if (wallet.WALLET_ExpirePassword()) {
@@ -79,7 +85,7 @@
       <menupopup>
         <menuitem label="&walletExpirePasswordCmd.label;"
                   accesskey="&walletExpirePasswordCmd.accesskey;"
-                  oncommand="walletPasswordExpire();"/>
+                  oncommand="expireHTTPAuthAndWallet();"/>
         <menuitem label="&walletDisplaySignonsCmd.label;"
                   accesskey="&walletDisplaySignonsCmd.accesskey;"
                   oncommand="walletPasswordDialog();"/> 
