@@ -181,3 +181,17 @@ NS_IMETHODIMP nsImapMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDB
 	return nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
 }
 
+nsresult nsImapMailDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)
+{
+  PRUint32 msgFlags;
+  msgHdr->GetFlags(&msgFlags);
+  if (msgFlags & MSG_FLAG_OFFLINE && m_dbFolderInfo)
+  {
+    PRUint32 size = 0;
+    (void)msgHdr->GetOfflineMessageSize(&size);
+    return m_dbFolderInfo->ChangeExpungedBytes (size);
+  }
+  return NS_OK;
+}
+
+

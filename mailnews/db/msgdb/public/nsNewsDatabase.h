@@ -67,6 +67,8 @@ public:
   virtual PRBool        SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead);
  
   virtual nsNewsDatabase 	*GetNewsDB() ;
+
+  virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   
   virtual PRBool		PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
   PRBool				IsCategory();

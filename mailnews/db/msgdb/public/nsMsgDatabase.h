@@ -177,6 +177,7 @@ protected:
 
 	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
   virtual nsresult    RemoveHeaderFromThread(nsMsgHdr *msgHdr);
+virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 
 
 	static nsVoidArray/*<nsMsgDatabase>*/* GetDBCache();

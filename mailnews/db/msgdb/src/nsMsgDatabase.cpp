@@ -1390,6 +1390,13 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 	return err;
 }
 
+nsresult nsMsgDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)
+{
+  PRUint32 size = 0;
+  (void)msgHdr->GetMessageSize(&size);
+  return m_dbFolderInfo->ChangeExpungedBytes (size);
+}
+
 
 NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener *instigator, PRBool commit, PRBool notify)
 {
@@ -1411,11 +1418,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 		IsRead(key, &isRead);
 		if (!isRead)
 			m_dbFolderInfo->ChangeNumNewMessages(-1);
-
-        PRUint32 size;
-        (void)msg->GetMessageSize(&size);
-		m_dbFolderInfo->ChangeExpungedBytes (size);
-
+        AdjustExpungedBytesOnDelete(msg);
 	}	
 
     PRUint32 flags;
