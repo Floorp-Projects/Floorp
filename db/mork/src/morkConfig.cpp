@@ -34,12 +34,13 @@
 #ifdef MORK_OBSOLETE
 
 #include <Types.h>
+#include "plstr.h"
   
   static void // copied almost verbatim from the IronDoc debugger sources:
   mork_mac_break_string(register const char* inMessage) /*i*/
   {
     Str255 pascalStr; // to hold Pascal string version of inMessage
-    mork_u4 length = XP_STRLEN(inMessage);
+    mork_u4 length = PL_strlen(inMessage);
     
     // if longer than maximum 255 bytes, just copy 255 bytes worth
     pascalStr[ 0 ] = (length > 255)? 255 : length;
