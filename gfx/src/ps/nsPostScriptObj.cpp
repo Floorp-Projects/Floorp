@@ -1946,12 +1946,15 @@ FILE *f;
   // axis increasing downwards.
   fprintf(f, "%g -%g scale\n",
     1.0 / TWIPS_PER_POINT_FLOAT, 1.0 / TWIPS_PER_POINT_FLOAT);
-  if (mPrintContext->prSetup->landscape){
-    fprintf(f, "%d 0 translate 90 rotate\n", mPrintContext->prSetup->height);
-  }
   // Move the origin to the top left of the printable area.
-  fprintf(f, "%d -%d translate\n", mPrintContext->prSetup->left,
-    mPrintContext->prSetup->bottom + mPrintContext->prSetup->height);
+  if (mPrintContext->prSetup->landscape){
+    fprintf(f, "-90 rotate %d %d translate\n",
+      mPrintContext->prSetup->left, mPrintContext->prSetup->top);
+  }
+  else {
+    fprintf(f, "%d -%d translate\n", mPrintContext->prSetup->left,
+      mPrintContext->prSetup->bottom + mPrintContext->prSetup->height);
+  }
   // Try to turn on automatic stroke adjust
   fputs("true Msetstrokeadjust\n", f);
   fprintf(f, "%%%%EndPageSetup\n");
