@@ -395,17 +395,76 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
   AppendToString(PRUnichar(' '), aStr);
   if (!aPrefix.IsEmpty()) {
     AppendToString(aPrefix, aStr);
-    AppendToString(NS_LITERAL_STRING(":"), aStr);
+    AppendToString(PRUnichar(':'), aStr);
   }
   AppendToString(aName, aStr);
   
-  AppendToString(NS_LITERAL_STRING("=\""), aStr);
+  if ( aDoEscapeEntities ) {
+    // if problem characters are turned into character entity references
+    // then there will be no problem with the value delimiter characters
+    AppendToString(NS_LITERAL_STRING("=\""), aStr);
 
-  mInAttribute = PR_TRUE;
-  AppendToString(aValue, aStr, aDoEscapeEntities);
-  mInAttribute = PR_FALSE;
+    mInAttribute = PR_TRUE;
+    AppendToString(aValue, aStr, PR_TRUE);
+    mInAttribute = PR_FALSE;
 
-  AppendToString(NS_LITERAL_STRING("\""), aStr);
+    AppendToString(PRUnichar('"'), aStr);
+  }
+  else {
+    // Depending on whether the attribute value contains quotes or apostrophes we
+    // need to select the delimiter character and escape characters using
+    // character entity references, ignoring the value of aDoEscapeEntities.
+    // See http://www.w3.org/TR/REC-html40/appendix/notes.html#h-B.3.2.2 for
+    // the standard on character entity references in values. 
+    PRBool bIncludesSingle = PR_FALSE;
+    PRBool bIncludesDouble = PR_FALSE;
+    nsAString::const_iterator iCurr, iEnd;
+    PRUint32 uiSize, i;
+    aValue.BeginReading(iCurr);
+    aValue.EndReading(iEnd);
+    for ( ; iCurr != iEnd; iCurr.advance(uiSize) ) {
+      const PRUnichar * buf = iCurr.get();
+      uiSize = iCurr.size_forward();
+      for ( i = 0; i < uiSize; i++, buf++ ) {
+        if ( *buf == PRUnichar('\'') )
+        {
+          bIncludesSingle = PR_TRUE;
+          if ( bIncludesDouble ) break;
+        }
+        else if ( *buf == PRUnichar('"') )
+        {
+          bIncludesDouble = PR_TRUE;
+          if ( bIncludesSingle ) break;
+        }
+      }
+      // if both have been found we don't need to search further
+      if ( bIncludesDouble && bIncludesSingle ) break;
+    }
+
+    // Delimiter and escaping is according to the following table
+    //    bIncludesDouble     bIncludesSingle     Delimiter       Escape Double Quote
+    //    FALSE               FALSE               "               FALSE
+    //    FALSE               TRUE                "               FALSE
+    //    TRUE                FALSE               '               FALSE
+    //    TRUE                TRUE                "               TRUE
+    PRUnichar cDelimiter = 
+        (bIncludesDouble && !bIncludesSingle) ? PRUnichar('\'') : PRUnichar('"');
+    AppendToString(PRUnichar('='), aStr);
+    AppendToString(cDelimiter, aStr);
+    if (bIncludesDouble && bIncludesSingle) {
+      nsAutoString sValue(aValue);
+      sValue.ReplaceSubstring(NS_LITERAL_STRING("\"").get(), NS_LITERAL_STRING("&quot;").get());
+      mInAttribute = PR_TRUE;
+      AppendToString(sValue, aStr, PR_FALSE);
+      mInAttribute = PR_FALSE;
+    }
+    else {
+      mInAttribute = PR_TRUE;
+      AppendToString(aValue, aStr, PR_FALSE);
+      mInAttribute = PR_FALSE;
+    }
+    AppendToString(cDelimiter, aStr);
+  }
 }
 
 NS_IMETHODIMP 
