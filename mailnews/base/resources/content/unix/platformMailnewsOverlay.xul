@@ -1,6 +1,8 @@
 <?xml version="1.0"?> 
 <!-- unix version of platformMailnewsOverlay.xul -->
 
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/messenger.dtd">
+
 <overlay id="platformMailnewsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -9,6 +11,10 @@
 
     <!-- Select Thread -->
     <key id="key_selectThread" modifiers="alt,shift"/>
+
+    <!-- We have to override the keybinding for mark all read since GTK2
+         doesn't allow any Ctrl+Shift+[0-9][A-F] shortcuts. -->
+    <key id="key_markAllRead" key="&markAllReadCmdUnix.key;"/>
 
     <!-- Find -->
     <keyset id="mailKeys">
