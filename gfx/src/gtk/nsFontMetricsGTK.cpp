@@ -1243,15 +1243,17 @@ DumpTree(void)
 #endif /* DEBUG_DUMP_TREE */
 
 static PLHashNumber
-HashKey(const nsString* aString)
+HashKey(const void* aString)
 {
-  return (PLHashNumber) nsCRT::HashValue(aString->GetUnicode());
+  return (PLHashNumber)
+    nsCRT::HashValue(((const nsString*) aString)->GetUnicode());
 }
 
 static PRIntn
-CompareKeys(const nsString* aStr1, const nsString* aStr2)
+CompareKeys(const void* aStr1, const void* aStr2)
 {
-  return nsCRT::strcmp(aStr1->GetUnicode(), aStr2->GetUnicode()) == 0;
+  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
+    ((const nsString*) aStr2)->GetUnicode()) == 0;
 }
 
 struct nsFontSearch
