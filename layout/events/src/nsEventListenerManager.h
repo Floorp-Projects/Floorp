@@ -34,9 +34,7 @@ public:
   nsEventListenerManager();
   virtual ~nsEventListenerManager();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS
 
   nsVoidArray** GetListenersByIID(const nsIID& aIID);
   
@@ -76,8 +74,6 @@ public:
 
 protected:
   nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);
-
-  PRUint32 mRefCnt : 31;
 
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;

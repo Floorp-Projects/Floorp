@@ -4,6 +4,12 @@
 	readonly attribute  Document document;
 	readonly attribute  Navigator navigator;
 	readonly attribute  Window opener;
+        readonly attribute  Window parent;
+        readonly attribute  Window top;
+	readonly attribute  boolean closed;
+	attribute  wstring status;
+	attribute  wstring defaultStatus;
+	attribute  wstring name;
 	void  dump(in wstring str);
 	void  alert(in wstring str);
  

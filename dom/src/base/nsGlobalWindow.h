@@ -68,6 +68,19 @@ public:
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetLocation(nsIDOMLocation** aLocation);
+  NS_IMETHOD    GetParent(nsIDOMWindow** aOpener);
+  NS_IMETHOD    GetTop(nsIDOMWindow** aTop);
+  NS_IMETHOD    GetClosed(PRBool* aClosed);
+
+  NS_IMETHOD    GetStatus(nsString& aStatus);
+  NS_IMETHOD    SetStatus(const nsString& aStatus);
+
+  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus);
+  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus);
+
+  NS_IMETHOD    GetName(nsString& aName);
+  NS_IMETHOD    SetName(const nsString& aName);
+
   NS_IMETHOD    Dump(const nsString& aStr);
   NS_IMETHOD    Alert(const nsString& aStr);
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
@@ -119,6 +132,7 @@ protected:
   nsresult      GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser);
   nsresult      CheckWindowName(JSContext *cx, nsString& aName);
   int32         WinHasOption(char *options, char *name);
+  PRBool        CheckForEventListener(JSContext *aContext, nsString& aPropName);
 
   nsIScriptContext *mContext;
   void *mScriptObject;

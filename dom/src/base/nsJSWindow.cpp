@@ -49,7 +49,13 @@ enum Window_slots {
   WINDOW_SELF = -12,
   WINDOW_DOCUMENT = -13,
   WINDOW_NAVIGATOR = -14,
-  WINDOW_OPENER = -15
+  WINDOW_OPENER = -15,
+  WINDOW_PARENT = -16,
+  WINDOW_TOP = -17,
+  WINDOW_CLOSED = -18,
+  WINDOW_STATUS = -19,
+  WINDOW_DEFAULTSTATUS = -110,
+  WINDOW_NAME = -111
 };
 
 /***********************************************************************/
@@ -203,6 +209,110 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case WINDOW_PARENT:
+      {
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetParent(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_TOP:
+      {
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetTop(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_CLOSED:
+      {
+        PRBool prop;
+        if (NS_OK == a->GetClosed(&prop)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_STATUS:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetStatus(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_DEFAULTSTATUS:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetDefaultStatus(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_NAME:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetName(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -244,7 +354,51 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case WINDOW_STATUS:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetStatus(prop);
+        
+        break;
+      }
+      case WINDOW_DEFAULTSTATUS:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetDefaultStatus(prop);
+        
+        break;
+      }
+      case WINDOW_NAME:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetName(prop);
+        
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -612,6 +766,12 @@ static JSPropertySpec WindowProperties[] =
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
+  {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
+  {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
   {0}
 };
 

@@ -32,9 +32,7 @@ public:
   nsEventStateManager();
   virtual ~nsEventStateManager();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetEventTarget(nsISupports **aResult);
   NS_IMETHOD SetEventTarget(nsISupports *aSupports);
@@ -45,8 +43,6 @@ public:
   NS_IMETHOD GetActiveLink(nsIContent **aLink);
   NS_IMETHOD SetActiveLink(nsIContent *aLink);
 protected:
-
-  PRUint32 mRefCnt : 31;
 
   nsISupports* mEventTarget;
   nsIContent* mLastMouseOverContent;
