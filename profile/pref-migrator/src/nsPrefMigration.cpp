@@ -131,11 +131,15 @@
 
 #define NEW_DIR_SUFFIX "5"
 
+/* sspitzer:  
+ * TODO: these should come from the messenger back end, which gets them
+ * from a string bundle somewhere 
+ */
 /* these are the same for all platforms */
 #define NEW_MAIL_DIR_NAME "Mail"
 #define NEW_NEWS_DIR_NAME "News"
 #define NEW_IMAPMAIL_DIR_NAME "ImapMail"
-#define NEW_LOCAL_MAIL_DIR_NAME "Local Mail"
+#define NEW_LOCAL_MAIL_DIR_NAME "Local Folders"
 
 /* who's going to win the file name battle? */
 #if defined(XP_UNIX)
@@ -503,7 +507,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     rv = NS_NewFileSpec(getter_AddRefs(oldIMAPLocalMailPath));
     if (NS_FAILED(rv)) return rv;
       
-    /* First get the actual local mail files location */
+    /* First get the actual 4.x "Local Mail" files location */
     rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_MAIL_DIR_NAME, PREF_MAIL_DIRECTORY, newIMAPLocalMailPath, oldIMAPLocalMailPath);
     if (NS_FAILED(rv)) {
       /* default paths */
@@ -531,7 +535,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       
     }
     
-    /* Now create the new "Mail/Local Mail" directory */
+    /* Now create the new "Mail/Local Folders" directory */
 	rv = newIMAPLocalMailPath->Exists(&exists);
 	if (NS_FAILED(rv)) return rv;
 	if (!exists)  {

@@ -97,10 +97,11 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 #define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
 #define PREF_MAIL_DEFAULT_SENDLATER_URI "mail.default_sendlater_uri"
 
-/* TODO:  these need to be put into a string bundle
+/* 
+ * TODO:  these need to be put into a string bundle
  * see bug #18364
  */
-#define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
+#define LOCAL_MAIL_FAKE_HOST_NAME "Local Folders"
 #define LOCAL_MAIL_FAKE_USER_NAME "nobody"
 #ifdef HAVE_MOVEMAIL
 #define MOVEMAIL_FAKE_HOST_NAME "movemail"
@@ -1402,21 +1403,29 @@ nsMsgAccountManager::UpgradePrefs()
       // in 4.x, you could only have one pop account
       rv = MigratePopAccount(identity);
       if (NS_FAILED(rv)) return rv;
-	}
+
+      // everyone gets a local mail account in 5.0
+      rv = CreateLocalMailAccount(identity);
+      if (NS_FAILED(rv)) return rv;
+    }
     else if (oldMailType == IMAP_4X_MAIL_TYPE) {
       rv = MigrateImapAccounts(identity);
       if (NS_FAILED(rv)) return rv;
       
-      // if they had IMAP, they also had one "Local Mail"
+      // if they had IMAP in 4.x, they also had "Local Mail"
       // we need to migrate that, too.  
       rv = MigrateLocalMailAccount(identity);
       if (NS_FAILED(rv)) return rv;
-	}
+    }
 #ifdef HAVE_MOVEMAIL
     else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
 	// if 4.x, you could only have one movemail account
 	rv = MigrateMovemailAccount(identity);
 	if (NS_FAILED(rv)) return rv;
+
+        // everyone gets a local mail account in 5.0
+        rv = CreateLocalMailAccount(identity);
+        if (NS_FAILED(rv)) return rv;
     }
 #endif /* HAVE_MOVEMAIL */
     else {
@@ -1769,12 +1778,12 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
   rv = CreateIncomingServer("none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  // "none" is the type we use for migrate Local Mail
+  // "none" is the type we use for migrate 4.x "Local Mail"
   server->SetType("none");
   server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
 
-  // we don't want "nobody at Local Mail" to show up in the
-  // folder pane, so we set the pretty name to "Local Mail"
+  // we don't want "nobody at Local Folders" to show up in the
+  // folder pane, so we set the pretty name to "Local Folders"
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
 
@@ -1821,8 +1830,8 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
    
   // create the directory structure for old 4.x "Local Mail"
-  // under <profile dir>/Mail/Local Mail or
-  // <"mail.directory" pref>/Local Mail
+  // under <profile dir>/Mail/Local Folders or
+  // <"mail.directory" pref>/Local Folders 
   nsCOMPtr <nsIFileSpec> mailDir;
   nsFileSpec dir;
   PRBool dirExists;
@@ -1856,8 +1865,8 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
 
   // set the local path for this "none" server
   //
-  // we need to set this to <profile>/Mail/Local Mail, because that's where
-  // the 4.x local mail (when using imap) got copied.
+  // we need to set this to <profile>/Mail/Local Folders, because that's where
+  // the 4.x "Local Mail" (when using imap) got copied.
   // it would be great to use the server key, but we don't know it
   // when we are copying of the mail.
   rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
@@ -1887,7 +1896,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = CreateIncomingServer("none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
-  // "none" is the type we use for migrate Local Mail
+  // "none" is the type we use for migrating 4.x "Local Mail"
   server->SetType("none");
   server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
 
@@ -1917,14 +1926,14 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   noServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // we don't want "nobody at Local Mail" to show up in the
-  // folder pane, so we set the pretty name to "Local Mail"
+  // we don't want "nobody at Local Folders" to show up in the
+  // folder pane, so we set the pretty name to "Local Folders"
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
   
   // create the directory structure for old 4.x "Local Mail"
-  // under <profile dir>/Mail/Local Mail or
-  // <"mail.directory" pref>/Local Mail
+  // under <profile dir>/Mail/Local Folders or
+  // <"mail.directory" pref>/Local Folders 
   nsCOMPtr <nsIFileSpec> mailDir;
   nsFileSpec dir;
   PRBool dirExists;
@@ -1952,8 +1961,8 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
 
   // set the local path for this "none" server
   //
-  // we need to set this to <profile>/Mail/Local Mail, because that's where
-  // the 4.x local mail (when using imap) got copied.
+  // we need to set this to <profile>/Mail/Local Folders, because that's where
+  // the 4.x "Local Mail" (when using imap) got copied.
   // it would be great to use the server key, but we don't know it
   // when we are copying of the mail.
   rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
@@ -1966,8 +1975,8 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
   
-  // pass the "Local Mail" server so the send later uri pref 
-  // will be "mailbox://nobody@Local Mail/Unsent Messages"
+  // pass the "Local Folders" server so the send later uri pref 
+  // will be "mailbox://nobody@Local Folders/Unsent Messages"
   rv = SetSendLaterUriPref(server);
   return rv;
 }
@@ -1988,7 +1997,7 @@ nsMsgAccountManager::MigrateMovemailAccount(nsIMsgIdentity *identity)
   rv = CreateIncomingServer("none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  // "none" is the type we use for migrate Local Mail
+  // "none" is the type we use for migrating 4.x "Local Mail"
   server->SetType("none");
   server->SetHostName(MOVEMAIL_FAKE_HOST_NAME);  
 
@@ -2178,7 +2187,7 @@ nsMsgAccountManager::SetSendLaterUriPref(nsIMsgIncomingServer *server)
 	nsresult rv;
 
 	// set "mail.default_sendlater_uri" to something like
-	// mailbox://nobody@Local Mail/Unsent Messages"
+	// mailbox://nobody@Local Folders/Unsent Messages"
 	// mailbox://sspitzer@tintin/Unsent Messages"
 	//
 	// note, the schema is mailbox:/ 

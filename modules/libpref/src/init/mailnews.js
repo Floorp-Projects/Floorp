@@ -352,7 +352,7 @@ pref("mail.identity.default.compose_html", true);
 pref("mail.update_compose_title_as_you_type", true);
 
 pref("mail.collect_email_address", true);
-pref("mail.default_sendlater_uri","mailbox://nobody@Local Mail/Unsent Messages");
+pref("mail.default_sendlater_uri","mailbox://nobody@Local Folders/Unsent Messages");
 
 pref("mail.server.default.port", -1);
 pref("mail.server.default.leave_on_server", false);

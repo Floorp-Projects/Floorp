@@ -247,10 +247,8 @@ function createAccount(hash) {
     account.incomingServer = server;
     account.addIdentity(identity);
 
-    // if we are creating an IMAP account,
-    // check if there already is a "none" account. (aka "Local Mail")
+    // check if there already is a "none" account. (aka "Local Folders")
     // if not, create it.
-    if (serverType == "imap") {
 	var localMailServer = null;
 	try {
 		// look for anything that is of type "none".
@@ -265,7 +263,6 @@ function createAccount(hash) {
 		// creates a copy of the identity you pass in
 		am.createLocalMailAccount(identity);
         }
-    }
 
     return true;
     
