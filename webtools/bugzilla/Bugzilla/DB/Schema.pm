@@ -146,11 +146,14 @@ use constant ABSTRACT_SCHEMA => {
             target_milestone    => {TYPE => 'varchar(20)',
                                     NOTNULL => 1, DEFAULT => "'---'"},
             qa_contact          => {TYPE => 'INT3', NOTNULL => 1},
-            status_whiteboard   => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
-            votes               => {TYPE => 'INT3', NOTNULL => 1},
+            status_whiteboard   => {TYPE => 'MEDIUMTEXT', NOTNULL => 1,
+                                    DEFAULT => "''"},
+            votes               => {TYPE => 'INT3', NOTNULL => 1,
+                                    DEFAULT => '0'},
             # Note: keywords field is only a cache; the real data
             # comes from the keywords table
-            keywords            => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
+            keywords            => {TYPE => 'MEDIUMTEXT', NOTNULL => 1,
+                                    DEFAULT => "''"},
             lastdiffed          => {TYPE => 'DATETIME', NOTNULL => 1},
             everconfirmed       => {TYPE => 'BOOLEAN', NOTNULL => 1},
             reporter_accessible => {TYPE => 'BOOLEAN',

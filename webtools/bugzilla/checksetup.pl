@@ -3649,6 +3649,12 @@ if (!$dbh->bz_get_field_def('fielddefs', 'obsolete')) {
 }
 
 
+$dbh->bz_change_field_type('bugs', 'status_whiteboard', 
+                           q{mediumtext not null default ''});
+$dbh->bz_change_field_type('bugs', 'keywords',
+                           q{mediumtext not null default ''});
+$dbh->bz_change_field_type('bugs', 'votes', 'mediumint not null default 0');
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
