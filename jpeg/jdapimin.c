@@ -22,12 +22,12 @@
 
 #ifdef HAVE_MMX_INTEL_MNEMONICS
 int MMXAvailable;
-int mmxsupport();
+static int mmxsupport();
 #endif
 
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
 int SSE2Available = 0;
-int sse2support();
+static int sse2support();
 #endif
 
 
@@ -426,7 +426,7 @@ jpeg_finish_decompress (j_decompress_ptr cinfo)
 #ifdef HAVE_MMX_INTEL_MNEMONICS
 
 
-int mmxsupport()
+static int mmxsupport()
 {
 	int mmx_supported = 0;
 
@@ -447,8 +447,7 @@ int mmxsupport()
 
 		xor eax, eax			//Set eax to zero
 					
-		_asm _emit 0x0f			//CPUID instruction  (two bytes opcode)
-		_asm _emit 0xa2 
+		cpuid
 		
 		cmp eax, 1				//make sure eax return non-zero value
 		jl NOT_SUPPORTED		//If eax is zero, mmx not supported
@@ -457,8 +456,7 @@ int mmxsupport()
 		inc eax					//Now increment eax to 1.  This instruction is 
 								//faster than the instruction "mov eax, 1"
 		
-		_asm _emit 0x0f			//CPUID instruction
-		_asm _emit 0xa2 
+		cpuid
 
 		and edx, 0x00800000		//mask out all bits but mmx bit(24)
 		cmp edx, 0				// 0 = mmx not supported
@@ -477,7 +475,7 @@ NOT_SUPPORTED:
 
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
 
-int sse2support()
+static int sse2support()
 {
 	int sse2available = 0;
 	int my_edx;
