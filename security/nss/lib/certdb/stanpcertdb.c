@@ -335,8 +335,14 @@ CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
     cp = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
                                                      NULL, &usage, NULL);
     c = get_best_temp_or_perm(ct, cp);
-    if (ct) NSSCertificate_Destroy(ct);
-    if (cp) NSSCertificate_Destroy(cp);
+    if (ct) {
+	CERTCertificate *cert = STAN_GetCERTCertificate(ct);
+	CERT_DestroyCertificate(cert);
+    }
+    if (cp) {
+	CERTCertificate *cert = STAN_GetCERTCertificate(cp);
+	CERT_DestroyCertificate(cert);
+    }
     if (c) {
 	return STAN_GetCERTCertificate(c);
     } else {
@@ -379,7 +385,10 @@ CERT_FindCertByNickname(CERTCertDBHandle *handle, char *nickname)
     if (cert) {
 	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
 	CERT_DestroyCertificate(cert);
-	if (ct) NSSCertificate_Destroy(ct);
+	if (ct) {
+	    CERTCertificate *cert2 = STAN_GetCERTCertificate(ct);
+	    CERT_DestroyCertificate(cert2);
+	}
     } else {
 	c = ct;
     }
@@ -426,7 +435,10 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
     if (cert) {
 	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
 	CERT_DestroyCertificate(cert);
-	if (ct) NSSCertificate_Destroy(ct);
+	if (ct) {
+	    CERTCertificate *cert2 = STAN_GetCERTCertificate(ct);
+	    CERT_DestroyCertificate(cert2);
+	}
     } else {
 	c = ct;
     }
@@ -536,8 +548,6 @@ CERT_DestroyCertificate(CERTCertificate *cert)
         }
 #else
 	if (tmp) {
-	    /* delete the NSSCertificate */
-	    PK11SlotInfo *slot = cert->slot;
 	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
 	    refCount = (int)tmp->object.refCount;
 	    /* This is a hack.  For 3.4, there are persistent references
@@ -559,8 +569,8 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 		} else {
 		    nssTrustDomain_RemoveCertFromCache(td, tmp);
 		}
-		refCount = (int)tmp->object.refCount;
 	    }
+	    /* delete the NSSCertificate */
 	    NSSCertificate_Destroy(tmp);
 	} 
 #endif

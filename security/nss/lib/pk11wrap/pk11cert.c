@@ -116,13 +116,11 @@ static PRStatus convert_and_cache_cert(NSSCertificate *c, void *arg)
      * destroy the reference to the copy, the callback will use the reference
      * to the cached entry, and everyone should be happy.
      */
-    if (cp == c) {
-	/* However, if the call to add c to the cache was successful, cp is
-	 * now an extra copy within this function and needs to be destroyed.
-	 */
-	NSSCertificate_Destroy(cp);
-    }
     nssrv = convert_cert(c, arg);
+    /* This function owns a reference to the cert, either from the AddRef
+     * or by getting it from the cache.
+     */
+    CERT_DestroyCertificate(STAN_GetCERTCertificate(c));
     return nssrv;
 }
 
@@ -1245,7 +1243,7 @@ get_newest_cert(NSSCertificate *c, void *arg)
     dc = nssCertificate_GetDecoding(c);
     founddc = nssCertificate_GetDecoding(*cfound);
     if (!founddc->isNewerThan(founddc, dc)) {
-	NSSCertificate_Destroy(*cfound);
+	CERT_DestroyCertificate(STAN_GetCERTCertificate(*cfound));
 	*cfound = nssCertificate_AddRef(c);
     }
     return PR_SUCCESS;
@@ -2667,7 +2665,7 @@ filter_list_for_token_certs(nssList *certList, NSSToken *token)
 	if (!isToken) {
 	    /* safe since iterator is copied */
 	    nssList_Remove(certList, c);
-	    NSSCertificate_Destroy(c);
+	    CERT_DestroyCertificate(STAN_GetCERTCertificate(c));
 	}
     }
     nssListIterator_Finish(certs);
