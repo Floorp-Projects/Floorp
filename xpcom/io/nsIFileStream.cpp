@@ -474,7 +474,8 @@ NS_IMETHODIMP FileImpl::Flush()
         }
     }
 
-    mOutBuffer.Empty();
+    if (mGotBuffers)
+        mOutBuffer.Empty();
     mWriteCursor = nsnull;
     mWriteLimit  = nsnull;
 
