@@ -665,11 +665,7 @@ write_type(IDL_tree type_tree, gboolean is_out, FILE *outfile)
       case IDLN_IDENT:
         if (UP_IS_NATIVE(type_tree)) {
             if (IDL_tree_property_get(type_tree, "domstring")) {
-                if (is_out) {
-                    fputs("nsAWritableString", outfile);
-                } else {
-                    fputs("nsAReadableString", outfile);
-                }
+                fputs("nsAString", outfile);
             } else {
                 fputs(IDL_NATIVE(IDL_NODE_UP(type_tree)).user_type, outfile);
             }
