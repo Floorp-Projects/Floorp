@@ -1946,7 +1946,7 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
     if (sizeInMB)
       units = NS_LITERAL_STRING(" MB");
     else
-      units = NS_LITERAL_STRING(" kb");
+      units = NS_LITERAL_STRING(" KB");
     sizeString.Append(units);
     createNode(sizeString.get(), aNode, getRDFService());
   }
