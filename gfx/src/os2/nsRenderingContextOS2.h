@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -34,9 +33,8 @@
 #include "nsCRT.h"
 #include "nsTransform2D.h"
 #include "nscoord.h"
-#include "nsImageOS2.h"
-#include "nsVoidArray.h"
 #include "nsDrawingSurfaceOS2.h"
+#include "nsImageOS2.h"
 #include "nsRenderingContextImpl.h"
 
 class nsIDeviceContext;
@@ -160,24 +158,25 @@ public:
                       PRInt32*         aFontID);
 #endif
  
-  NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
+  NS_IMETHOD DrawString( const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing = nsnull);
-  NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+  NS_IMETHOD DrawString( const PRUnichar *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull);
-  NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
+  NS_IMETHOD DrawString( const nsString& aString,
+                        nscoord aX, nscoord aY,
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull);
  
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                       nscoord aWidth, nscoord aHeight); 
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+   NS_IMETHOD DrawImage( nsIImage *aImage, nscoord aX, nscoord aY);
+   NS_IMETHOD DrawImage( nsIImage *aImage, nscoord aX, nscoord aY,
+                         nscoord aWidth, nscoord aHeight); 
+   NS_IMETHOD DrawImage( nsIImage *aImage, const nsRect& aRect);
+   NS_IMETHOD DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
-  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                         nscoord aWidth,nscoord aHeight);
  
 
@@ -233,8 +232,6 @@ private:
   void PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled);
   void PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFull, float start=0, float end=0);
 
-  void PushClipState(void);
-
 protected:
 
   ~nsRenderingContextOS2();
@@ -247,26 +244,24 @@ protected:
   virtual PRBool CanTile(nscoord aWidth,nscoord aHeight);
 #endif
 
-   nscolor              mColor;           // current colour
-   nsIFontMetrics      *mFontMetrics;     // current font
-   HDC                  mDC;  
-   nsDrawingSurfaceOS2 *mSurface;         // draw things here
-   nsDrawingSurfaceOS2 *mMainSurface;    // if offscreen, this is onscreen
-   nsIWidget           *mDCOwner;
    nsIDeviceContext    *mContext;         // device context
-   float                mP2T;             // cache pix-2-app factor from DC
+   nsDrawingSurfaceOS2 *mSurface;         // draw things here
+   nsDrawingSurfaceOS2 *mFrontSurface;    // if offscreen, this is onscreen
+   nscolor              mColor;           // current colour
    nsLineStyle          mLineStyle;       // current line style
    nsTransform2D        mTMatrix;         // current xform matrix
-   //state management
-   GraphicsState       *mStates;
-   nsVoidArray         *mStateCache;
+   float                mP2T;             // cache pix-2-app factor from DC
+   GraphicsState       *mStateStack;      // stack of graphics states
+   nsIFontMetrics      *mFontMetrics;     // current font
    nsIFontMetrics      *mCurrFontMetrics; // currently selected font
    nscolor              mCurrDrawingColor;// currently selected drawing color
    PRBool               mAlreadySetDrawingColor;
    PRBool               mAlreadySetTextColor;
-   PRUint8             *mGammaTable;
+  PRUint8           *mGammaTable;
    nscolor              mCurrTextColor;   // currently selected text color
    nsLineStyle          mCurrLineStyle;   // currently selected line style
+   HDC                  mDC;  
+   nsIWidget            *mDCOwner;
 
 };
 
@@ -274,9 +269,9 @@ inline void nsRenderingContextOS2::GetTargetHeight( PRUint32 &ht)
 {
    PRUint32 on, dummy, off;
    mSurface->GetDimensions( &dummy, &on);
-   if( mSurface != mMainSurface)
+   if( mSurface != mFrontSurface)
    {
-      mMainSurface->GetDimensions( &dummy, &off);
+      mFrontSurface->GetDimensions( &dummy, &off);
       if( off < on) on = off;
    }
    ht = on;
