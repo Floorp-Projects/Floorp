@@ -113,10 +113,19 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   EnsureHandlers();
   
   if (!mElement) {
-    WalkHandlersInternal(aKeyEvent, aEventType, mPlatformHandler);
-    evt->GetPreventDefault(&prevent);
-    if (prevent)
-      return NS_OK; // Handled by the platform. Our work here is done.
+    if (mUserHandler) {
+      WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler);
+      evt->GetPreventDefault(&prevent);
+      if (prevent)
+        return NS_OK; // Handled by the platform. Our work here is done.
+    }
+
+    if (mPlatformHandler) {
+      WalkHandlersInternal(aKeyEvent, aEventType, mPlatformHandler);
+      evt->GetPreventDefault(&prevent);
+      if (prevent)
+        return NS_OK; // Handled by the platform. Our work here is done.
+    }
   }
 
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);

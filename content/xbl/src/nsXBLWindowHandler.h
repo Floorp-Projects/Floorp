@@ -66,8 +66,9 @@ protected:
                                           nsIXBLPrototypeHandler* aHandler);
 
     // create the event handler list from the given document/URI
-  void GetHandlers(nsIXBLDocumentInfo* aInfo, const nsAReadableCString& aDocURI, 
-                    const nsAReadableCString& aRef, nsIXBLPrototypeHandler** aResult) ;
+  void GetHandlers(nsIXBLDocumentInfo* aInfo,
+                   const nsAReadableCString& aRef,
+                   nsIXBLPrototypeHandler** aResult) ;
 
     // does the handler care about the particular event?
   virtual PRBool EventMatched ( nsIXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
@@ -78,6 +79,7 @@ protected:
 
   nsCOMPtr<nsIXBLPrototypeHandler> mHandler;            // XP bindings
   nsCOMPtr<nsIXBLPrototypeHandler> mPlatformHandler;    // platform-specific bindings
+  nsCOMPtr<nsIXBLPrototypeHandler> mUserHandler;        // user-specific bindings
 
   static nsXBLSpecialDocInfo* sXBLSpecialDocInfo;       // holds document info about bindings
     

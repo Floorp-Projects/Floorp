@@ -20,6 +20,7 @@
  * Contributor(s):
  *  - David W. Hyatt (hyatt@netscape.com)
  *  - Mike Pinkerton (pinkerton@netscape.com)
+ *  - Akkana Peck (akkana@netscape.com)
  */
 
 
@@ -46,15 +47,132 @@
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 
-
-struct nsXBLSpecialDocInfo {
+class nsXBLSpecialDocInfo
+{
+public:
   nsCOMPtr<nsIXBLDocumentInfo> mHTMLBindings;
   nsCOMPtr<nsIXBLDocumentInfo> mPlatformHTMLBindings;
-  PRBool mFilesPresent;
+  nsCOMPtr<nsIXBLDocumentInfo> mUserHTMLBindings;
 
-  nsXBLSpecialDocInfo() :mFilesPresent(PR_TRUE) {};
+  nsCString mHTMLBindingStr;
+  nsCString mPlatformHTMLBindingStr;
+  nsCString mUserHTMLBindingStr;
+
+  static char* sHTMLBindingStr;
+  static char* sPlatformHTMLBindingStr;
+  static char* sUserHTMLBindingStr;
+
+  PRBool mInitialized;
+
+public:
+  void LoadDocInfo();
+  void GetAllHandlers(const char* aType,
+                      nsIXBLPrototypeHandler** handler,
+                      nsIXBLPrototypeHandler** platformHandler,
+                      nsIXBLPrototypeHandler** userHandler);
+  void GetHandlers(nsIXBLDocumentInfo* aInfo,
+                   const nsAReadableCString& aRef,
+                   nsIXBLPrototypeHandler** aResult);
+
+  nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
 };
 
+char* nsXBLSpecialDocInfo::sHTMLBindingStr = "resource:///res/builtin/htmlBindings.xml";
+char* nsXBLSpecialDocInfo::sPlatformHTMLBindingStr = "resource:///res/builtin/platformHTMLBindings.xml";
+// Allow for a userHTMLBindings.xml.
+// XXX Should be in the user profile directory, when we have a urlspec for that
+char* nsXBLSpecialDocInfo::sUserHTMLBindingStr = "resource:///res/builtin/userHTMLBindings.xml";
+
+void nsXBLSpecialDocInfo::LoadDocInfo()
+{
+  if (mInitialized)
+    return;
+  mInitialized = PR_TRUE;
+
+  mHTMLBindingStr = sHTMLBindingStr;
+  mPlatformHTMLBindingStr = sPlatformHTMLBindingStr;
+  mUserHTMLBindingStr = sUserHTMLBindingStr;
+
+  if (mHTMLBindings && mPlatformHTMLBindings && mUserHTMLBindings)
+    return;
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+  if (NS_FAILED(rv) || !xblService)
+    return;
+
+  // Obtain the XP and platform doc infos
+  xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
+                                      mHTMLBindingStr,
+                                      nsCAutoString(""), PR_TRUE, 
+                                      getter_AddRefs(mHTMLBindings));
+  xblService->LoadBindingDocumentInfo(nsnull, nsnull,
+                                      mPlatformHTMLBindingStr,
+                                      nsCAutoString(""), PR_TRUE, 
+                                      getter_AddRefs(mPlatformHTMLBindings));
+  xblService->LoadBindingDocumentInfo(nsnull, nsnull,
+                                      mUserHTMLBindingStr,
+                                      nsCAutoString(""), PR_TRUE, 
+                                      getter_AddRefs(mUserHTMLBindings));
+}
+
+//
+// GetHandlers
+//
+// 
+void
+nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
+                                 const nsAReadableCString& aRef,
+                                 nsIXBLPrototypeHandler** aResult)
+{
+  nsCOMPtr<nsIXBLPrototypeBinding> binding;
+  aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
+  if (!binding) {
+    nsCOMPtr<nsIDocument> doc;
+    aInfo->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+    PRInt32 childCount;
+    root->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount; i++) {
+      nsCOMPtr<nsIContent> child;
+      root->ChildAt(i, *getter_AddRefs(child));
+      nsAutoString id;
+      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
+      if (id.EqualsWithConversion(nsPromiseFlatCString(aRef))) {
+        NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
+        aInfo->SetPrototypeBinding(aRef, binding);
+        break;
+      }
+    }
+  }
+
+  if (binding) {
+    nsCOMPtr<nsIXBLPrototypeHandler> dummy;
+    binding->GetPrototypeHandlers(aResult, getter_AddRefs(dummy)); // Addref happens here.
+  }
+} // GetHandlers
+
+void
+nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
+                                    nsIXBLPrototypeHandler** aHandler,
+                                    nsIXBLPrototypeHandler** aPlatformHandler,
+                                    nsIXBLPrototypeHandler** aUserHandler)
+{
+  if (mUserHTMLBindings) {
+    nsCAutoString type(aType);
+    type.Append("User");
+    GetHandlers(mUserHTMLBindings, type, aUserHandler);
+  }
+  if (mPlatformHTMLBindings) {
+    nsCAutoString type(aType);
+    GetHandlers(mPlatformHTMLBindings, type, aPlatformHandler);
+  }
+  if (mHTMLBindings) {
+    nsCAutoString type(aType);
+    type.Append("Base");
+    GetHandlers(mHTMLBindings, type, aHandler);
+  }
+}
 
 // Init statics
 nsXBLSpecialDocInfo* nsXBLWindowHandler::sXBLSpecialDocInfo = nsnull;
@@ -177,39 +295,6 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
 } // WalkHandlersInternal
 
 
-//
-// GetHandlers
-//
-// 
-void
-nsXBLWindowHandler::GetHandlers(nsIXBLDocumentInfo* aInfo, const nsAReadableCString& aDocURI, 
-                                    const nsAReadableCString& aRef, nsIXBLPrototypeHandler** aResult)
-{
-  nsCOMPtr<nsIXBLPrototypeBinding> binding;
-  aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
-  if (!binding) {
-    nsCOMPtr<nsIDocument> doc;
-    aInfo->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
-    PRInt32 childCount;
-    root->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount; i++) {
-      nsCOMPtr<nsIContent> child;
-      root->ChildAt(i, *getter_AddRefs(child));
-      nsAutoString id;
-      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-      if (id.EqualsWithConversion(nsPromiseFlatCString(aRef))) {
-        NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
-        aInfo->SetPrototypeBinding(aRef, binding);
-        break;
-      }
-    }
-  }
-
-  nsCOMPtr<nsIXBLPrototypeHandler> dummy;
-  binding->GetPrototypeHandlers(aResult, getter_AddRefs(dummy)); // Addref happens here.
-} // GetHandlers
-
 
 //
 // EnsureHandlers
@@ -223,51 +308,20 @@ nsXBLWindowHandler::EnsureHandlers()
     sXBLSpecialDocInfo = new nsXBLSpecialDocInfo();    
   if (!sXBLSpecialDocInfo)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  if (!sXBLSpecialDocInfo->mFilesPresent)
-    return NS_OK;
-
-  if (!sXBLSpecialDocInfo->mHTMLBindings || !sXBLSpecialDocInfo->mPlatformHTMLBindings) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-    if (xblService) {
-      // Obtain the two doc infos we need.
-      xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
-                                          nsCAutoString("resource:///res/builtin/htmlBindings.xml"),
-                                          nsCAutoString(""), PR_TRUE, 
-                                          getter_AddRefs(sXBLSpecialDocInfo->mHTMLBindings));
-      xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
-                                          nsCAutoString("resource:///res/builtin/platformHTMLBindings.xml"),
-                                          nsCAutoString(""), PR_TRUE, 
-                                          getter_AddRefs(sXBLSpecialDocInfo->mPlatformHTMLBindings));
-
-      if (!sXBLSpecialDocInfo->mHTMLBindings || !sXBLSpecialDocInfo->mPlatformHTMLBindings) {
-        sXBLSpecialDocInfo->mFilesPresent = PR_FALSE;
-        return NS_OK;
-      }
-    }
-  }
+  sXBLSpecialDocInfo->LoadDocInfo();
 
   // Now determine which handlers we should be using.
   if (IsEditor()) {
-    GetHandlers(sXBLSpecialDocInfo->mPlatformHTMLBindings, 
-                nsCAutoString("resource:///res/builtin/platformHTMLBindings.xml"),
-                nsCAutoString("editor"), 
-                getter_AddRefs(mPlatformHandler));
-    GetHandlers(sXBLSpecialDocInfo->mHTMLBindings, 
-                nsCAutoString("resource:///res/builtin/htmlBindings.xml"),
-                nsCAutoString("editorBase"), 
-                getter_AddRefs(mHandler));
+    sXBLSpecialDocInfo->GetAllHandlers("editor",
+                                       getter_AddRefs(mHandler),
+                                       getter_AddRefs(mPlatformHandler),
+                                       getter_AddRefs(mUserHandler));
   }
   else {
-    GetHandlers(sXBLSpecialDocInfo->mPlatformHTMLBindings, 
-                nsCAutoString("resource:///res/builtin/platformHTMLBindings.xml"),
-                nsCAutoString("browser"), 
-                getter_AddRefs(mPlatformHandler));
-    GetHandlers(sXBLSpecialDocInfo->mHTMLBindings, 
-                nsCAutoString("resource:///res/builtin/htmlBindings.xml"),
-                nsCAutoString("browserBase"), 
-                getter_AddRefs(mHandler));
+    sXBLSpecialDocInfo->GetAllHandlers("browser",
+                                       getter_AddRefs(mHandler),
+                                       getter_AddRefs(mPlatformHandler),
+                                       getter_AddRefs(mUserHandler));
   }
 
   return NS_OK;
