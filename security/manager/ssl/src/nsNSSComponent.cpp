@@ -26,6 +26,7 @@
 
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
+#include "nsNSSIOLayer.h"
 
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -119,6 +120,8 @@ nsNSSComponent::~nsNSSComponent()
 
   if (mNSSInitialized)
     NSS_Shutdown();  
+
+  nsSSLIOLayerFreeTLSIntolerantSites();
 }
 
 #ifdef XP_MAC
