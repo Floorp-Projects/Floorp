@@ -33,6 +33,7 @@
 
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
+#include "nsIFrameSelection.h"
 
 /**
  * nsFrame logging constants. We redefine the nspr
@@ -418,13 +419,15 @@ protected:
   static void GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
 
   // Test if we are selecting a table object:
-  //  First test if Ctrl (Cmd on Mac) key is down during a mouse click or drag
-  //  If yes, get the parent content node and offset of the frame 
+  //  Most table/cell selection requires that Ctrl (Cmd on Mac) key is down 
+  //   during a mouse click or drag. Exception is using Shift+click when
+  //   already in "table/cell selection mode" to extend a block selection
+  //  Get the parent content node and offset of the frame 
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
-  NS_IMETHOD GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParentContent, 
-                                      PRInt32 *aContentOffset, PRUint32 *aTarget);
+  NS_IMETHOD GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEvent *aMouseEvent, 
+                                      nsIContent **aParentContent, PRInt32 *aContentOffset, PRUint32 *aTarget);
 
   static void XMLQuote(nsString& aString);
 
