@@ -582,7 +582,9 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
   if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
   {
     PRInt32 offsetInParent=0;
-    if (aBlockParentTag.EqualsIgnoreCase("body"))
+    PRBool canContain;
+    CanContainBlock(aParentTag, aBlockParentTag, canContain);
+    if (PR_TRUE==canContain)
     {
       result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
       NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
@@ -650,6 +652,22 @@ nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange, nsString &aParentTag)
   return result;
 }
 
+// this should probably get moved into rules?  is this an app-level choice, or 
+// a restriction of HTML itself?
+NS_IMETHODIMP 
+nsHTMLEditor::CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRBool &aCanContain)
+{
+  if (aBlockParent.EqualsIgnoreCase("body") ||
+      aBlockParent.EqualsIgnoreCase("td")   ||
+      aBlockParent.EqualsIgnoreCase("th")   ||
+      aBlockParent.EqualsIgnoreCase("blockquote") )  
+  {
+    aCanContain = PR_TRUE;
+    return NS_OK;
+  }
+  aCanContain = PR_FALSE;
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveBlockParent()

@@ -425,6 +425,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // hard-coded ChangeTextAttributes test -- font color red
       case nsIDOMEvent::VK_1:
+        case nsIDOMEvent::VK_F:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
