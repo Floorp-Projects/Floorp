@@ -98,7 +98,7 @@ protected:
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsval id,
                                      PRBool *aIsNumber = nsnull);
 
-  static inline IsReadonlyReplaceable(JSString *str)
+  static inline PRBool IsReadonlyReplaceable(JSString *str)
   {
     return (str == sTop_id          ||
             str == sScrollbars_id   ||
@@ -114,7 +114,7 @@ protected:
             str == sLength_id);
   }
 
-  static inline IsWritableReplaceable(JSString *str)
+  static inline PRBool IsWritableReplaceable(JSString *str)
   {
     return (str == sInnerHeight_id  ||
             str == sInnerWidth_id   ||
