@@ -1494,7 +1494,7 @@ AddExtKeyUsage (void *extHandle)
     fprintf(stdout, "%-25s 2 - Code Signing\n", "");
     fprintf(stdout, "%-25s 3 - Email Protection\n", "");
     fprintf(stdout, "%-25s 4 - Timestamp\n", "");
-    fprintf(stdout, "%-25s 5 - OSCP Responder\n", "");
+    fprintf(stdout, "%-25s 5 - OCSP Responder\n", "");
 #ifdef DEBUG_NSSTEAM_ONLY
     fprintf(stdout, "%-25s 6 - Step-up\n", "");
 #endif /* DEBUG_NSSTEAM_ONLY */
