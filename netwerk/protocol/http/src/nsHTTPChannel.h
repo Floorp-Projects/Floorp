@@ -162,6 +162,7 @@ protected:
     
     // Called mOpenObserver->OnStartRequest
     PRBool                              mFiredOpenOnStartRequest;
+    PRBool                              mFiredOpenOnStopRequest;
 
     // Auth related stuff-
     /* 
@@ -183,6 +184,7 @@ protected:
     PRBool                              mPipeliningAllowed;
     nsHTTPPipelinedRequest*             mPipelinedRequest;
     nsCOMPtr<nsISupports>               mSecurityInfo;
+    nsHTTPFinalListener*                mFinalListener;
 };
 
 #endif /* _nsHTTPChannel_h_ */

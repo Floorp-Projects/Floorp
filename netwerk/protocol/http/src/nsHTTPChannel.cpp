@@ -91,6 +91,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mCachedContentIsValid(PR_FALSE),
     mFiredOnHeadersAvailable(PR_FALSE),
     mFiredOpenOnStartRequest(PR_FALSE),
+    mFiredOpenOnStopRequest (PR_FALSE),
     mAuthTriedWithPrehost(PR_FALSE),
     mProxy(0),
     mProxyPort(-1),
@@ -98,7 +99,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mBufferMaxSize(0),
     mStatus(NS_OK),
     mPipeliningAllowed (PR_TRUE),
-    mPipelinedRequest (nsnull)
+    mPipelinedRequest (nsnull),
+    mFinalListener (nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -174,7 +176,17 @@ nsHTTPChannel::Cancel(nsresult status)
     rv = mHandler->CancelPendingChannel(this);
   }
   mStatus = status;
-  return mRequest->Cancel(status);
+  rv = mRequest->Cancel(status);
+
+  if (mResponseDataListener)
+      mFinalListener -> FireNotifications ();
+
+  if (mOpenObserver && !mFiredOpenOnStopRequest)
+  {
+    mFiredOpenOnStopRequest = PR_TRUE;
+    mOpenObserver->OnStopRequest(this, mOpenContext, status, nsnull);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -228,9 +240,15 @@ nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
     nsresult rv;
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
 
+    nsCOMPtr<nsIStreamListener> listener;
+
     rv = NS_NewSyncStreamListener(o_Stream,
                                   getter_AddRefs(mBufOutputStream),
-                                  getter_AddRefs(mResponseDataListener));
+                                  getter_AddRefs(listener));
+
+    mFinalListener = new nsHTTPFinalListener (this, listener, nsnull);
+    mResponseDataListener = mFinalListener;
+
     if (NS_FAILED(rv)) return rv;
 
     mBufOutputStream = 0;
@@ -283,7 +301,14 @@ nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
         return NS_ERROR_NULL_POINTER;
     }
 
-    mResponseDataListener = listener;
+    if (listener)
+    {
+        mFinalListener = new nsHTTPFinalListener (this, listener, aContext);
+        mResponseDataListener = mFinalListener;
+    }
+    else
+        mResponseDataListener = listener;
+
     mResponseContext = aContext;
 
     if (!mOpenObserver)
@@ -1570,8 +1595,11 @@ nsresult nsHTTPChannel::ResponseCompleted(
     //
     // Finally, notify the OpenObserver that the request has completed.
     //
-    if (mOpenObserver)
+    if (mOpenObserver && !mFiredOpenOnStopRequest)
+    {
+        mFiredOpenOnStopRequest = PR_TRUE;
         mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
+    }
 
     // Null out pointers that are no longer needed...
 
