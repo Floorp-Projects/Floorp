@@ -277,6 +277,7 @@ void nsToolkit::SetupQuartzRendering()
     kQDUseCGTextMetrics = (1 << 2)
   };
 #endif
+  const int kFlagsWeUse = kQDUseCGTextRendering | kQDUseCGTextMetrics;
   
   // turn on quartz rendering if we find the symbol in the app framework. Just turn
   // on the bits that we need, don't turn off what someone else might have wanted. If
@@ -293,9 +294,9 @@ void nsToolkit::SetupQuartzRendering()
     nsresult rv = prefs->GetBoolPref(gQuartzRenderingPref, &enableQuartz);
     UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
     if ( NS_FAILED(rv) || enableQuartz )
-      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering);
+      SwapQDTextFlags(oldFlags | kFlagsWeUse);
     else 
-      SwapQDTextFlags(oldFlags & !kQDUseCGTextRendering);
+      SwapQDTextFlags(oldFlags & !kFlagsWeUse);
   }
 }
 #endif
