@@ -273,21 +273,6 @@ protected:
  */
 #define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.93"
 
-class nsServiceEntry {
-public:
-    nsServiceEntry(nsISupports* service, nsFactoryEntry* factEntry);
-    ~nsServiceEntry();
-
-    nsresult AddListener(nsIShutdownListener* listener);
-    nsresult RemoveListener(nsIShutdownListener* listener);
-    nsresult NotifyListeners(void);
-
-    nsISupports* mObject;
-    nsVoidArray* mListeners;
-    PRBool mShuttingDown;
-    nsFactoryEntry* mFactoryEntry; // non-owning back pointer
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Class: nsFactoryEntry()
@@ -338,9 +323,9 @@ public:
     nsCID cid;
     char *location;
     nsCOMPtr<nsIFactory> factory;
-    nsServiceEntry *mServiceEntry;
     // This is an index into the mLoaderData array that holds the type string and the loader 
     int typeIndex;
+    nsCOMPtr<nsISupports> mServiceObject;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
