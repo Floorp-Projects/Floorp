@@ -478,7 +478,7 @@ nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal)
             DUMP(currArchivePath);
             
             if (0 != stat(currArchivePath, &dummy))
-                return FALSE;
+                bAllExist = FALSE;
 
             (*aTotal)++;
         }
