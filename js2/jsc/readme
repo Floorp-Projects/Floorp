@@ -1,0 +1,71 @@
+J S C   R E A D M E   F I L E
+Jeff Dyer, Nov-30-2000
+
+OVERVIEW
+
+JSC (JavaScript Compiler) is a stand-alone front-end implementation
+of the JS2 language specification. Its purpose is to demonstrate how
+JS2 programs are statically prepared for execution by a JS2 interpreter. 
+Its output is a psuedo intermediate language suitable for reading by
+human beings.
+
+RUNNING JSC
+
+With a Java Runtime Environment installed, go to the directory ./bin
+and issue the command:
+
+	java -classpath jsc.jar Main program.js
+
+program.js is the name of the file to compile. JSC will
+produce a new file given the name of the original source file
+with the suffix .jsil appended to it. Errors are written to a 
+file with the suffix .err appended to it.
+
+BUILDING JSC
+
+Go to the directory ./build/java, and run your favorite make
+utility. Such as with the command:
+
+	nmake
+
+If all goes well, the file ./bin/jsc.jar will be updated.
+
+
+STATUS OF JSC
+
+ Input Buffer
+ Lexer
+ Parser
+ Block Evaluator
+ Flow Analyzer
+ Type System
+ Expressions
+ Statements
+ Definitions
+ Variables
+ Functions
+ Classes
+ Namespaces
+ Packages
+ Language Declarations
+ Unit Parser
+ Operator Overloading
+ Errors
+
+ISSUES
+
+* Intermediate form of references, classes, and interfaces.
+
+CHANGES
+
+Nov-30-2000
+-----------
+* Folded definition evaluation into constant evaluation since annotated
+  definitions cannot be evaluated until the constant attribute values
+  have been computed. Now there is a BlockEvaluator and a ConstantEvaluator.
+* Added an error handler to the constant evaluator.
+* Simplified the type system.
+
+Nov-16-2000
+-----------
+* Original release.
