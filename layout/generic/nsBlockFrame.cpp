@@ -48,6 +48,9 @@
 #include "nsITextContent.h"
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 
+// XXX for IsEmptyLine
+#include "nsTextFragment.h"
+
 #ifdef NS_DEBUG
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
@@ -575,6 +578,106 @@ nsBaseIBFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
+#if 0
+NS_IMETHODIMP
+nsBaseIBFrame::ComputeCollapsedMargins(nsIPresContext& aPresContext,
+                                       const nsReflowState* aParentReflowState,
+                                       nscoord* aTopMarginResult,
+                                       nscoord* aBottomMarginResult)
+{
+  NS_PRECONDITION((nsnull != aTopMarginResult) &&
+                  (nsnull != aBottomMarginResult), "null ptr");
+  if ((nsnull != aTopMarginResult) || (nsnull != aBottomMarginResult)) {
+    nsMargin myMargin(0, 0, 0, 0);
+    if (0 == (BLOCK_IS_INLINE & mFlags)) {
+      nsHTMLReflowState::ComputeMarginFor(this, aParentReflowState, myMargin);
+    }
+
+    // Find the first appropriate line (skipping over an empty line if
+    // present) that contains a block that can be used for a
+    // parent-child margin collapse.
+    nsLineBox* firstLine = nsnull;
+    nscoord firstLineTopMargin = 0;
+    if (nsnull != aTopMarginResult) {
+      nsLineBox* line = mLines;
+      if (nsnull != line) {
+        if (line->IsEmptyLine()) {
+          line = line->mNext;
+        }
+        if ((nsnull != line) && line->IsBlock()) {
+          firstLine = line;
+        }
+      }
+    }
+
+    // Find the last appropriate line (skipping over an empty line)...
+    nsLineBox* lastLine = nsnull;
+    nscoord lastLineBottomMargin = 0;
+    if (nsnull != aBottomMarginResult) {
+      // Find the last line (line) and the previous to the last line
+      // (prevLine)
+      nsLineBox* line = mLines;
+      nsLineBox* prevLine = nsnull;
+      while (nsnull != line) {
+        nsLineBox* next = line->mNext;
+        if (nsnull == next) {
+          break;
+        }
+        prevLine = line;
+        line = next;
+      }
+      if (nsnull != line) {
+        if (line->IsEmptyLine()) {
+          line = prevLine;
+        }
+        if ((nsnull != line) && line->IsBlock()) {
+          lastLine = line;
+        }
+      }
+    }
+
+    if (nsnull != firstLine) {
+      if (lastLine == firstLine) {
+        ComputeCollapsedMargins(aPresContext, nsnull,
+                                &firstLineTopMargin,
+                                &lastLineBottomMargin);
+      }
+      else {
+        ComputeCollapsedMargins(aPresContext, nsnull,
+                                &firstLineTopMargin,
+                                nsnull);
+      }
+      firstLineTopMargin
+    }
+    else if (nsnull != lastLine) {
+      ComputeCollapsedMargins(aPresContext, nsnull,
+                              nsnull,
+                              &lastLineBottomMargin);
+    }
+
+    if ((nsnull != aTopMarginResult) && (nsnull != aBottomMarginResult)) {
+      nscoord topMargin =
+        nsBlockReflowContext::MaxMargin(myMargin.top, firstLineTopMargin);
+      *aTopMarginResult = topMargin;
+      nscoord bottomMargin =
+        nsBlockReflowContext::MaxMargin(myMargin.bottom, lastLineBottomMargin);
+      *aBottomMarginResult = bottomMargin;
+    }
+    else if (nsnull != aTopMarginResult) {
+      nscoord topMargin =
+        nsBlockReflowContext::MaxMargin(myMargin.top, firstLineTopMargin);
+      *aTopMarginResult = topMargin;
+    }
+    else {
+      nscoord bottomMargin =
+        nsBlockReflowContext::MaxMargin(myMargin.bottom, lastLineBottomMargin);
+      *aBottomMarginResult = bottomMargin;
+    }
+  }
+  return NS_OK;
+}
+#endif
+
 NS_IMETHODIMP
 nsBaseIBFrame::Reflow(nsIPresContext&          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
@@ -922,7 +1025,9 @@ nsBaseIBFrame::PrepareFrameInsertedReflow(nsBlockReflowState& aState)
   aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
 
   // Insert the frame. This marks the affected lines dirty
-  InsertNewFrame(aState.mPresContext, this, newFrame, prevSibling);
+  InsertNewFrame(aState.mPresContext, newFrame, prevSibling);
+  // XXX temporary: incremental reflow doesn't (yet) work in this case
+  PrepareResizeReflow(aState);
   return NS_OK;
 }
 
@@ -938,12 +1043,11 @@ nsBaseIBFrame::PrepareFrameRemovedReflow(nsBlockReflowState& aState)
   nsIFrame* deletedFrame;
   aState.reflowCommand->GetChildFrame(deletedFrame);
 
-  // Get the previous sibling frame
-  nsIFrame* prevSibling;
-  aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
-
   // Remove the frame. This marks the affected lines dirty.
-  DoRemoveFrame(aState, this, deletedFrame, prevSibling);
+  DoRemoveFrame(aState, deletedFrame);
+
+  // XXX temporary: incremental reflow doesn't (yet) work in this case
+  PrepareResizeReflow(aState);
   return NS_OK;
 }
 
@@ -2264,6 +2368,14 @@ nsBaseIBFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE | NS_INLINE_BREAK |
           NS_INLINE_BREAK_AFTER | NS_INLINE_MAKE_BREAK_TYPE(breakType);
       }
+      else {
+        // Mark next line dirty in case SplitLine didn't end up
+        // pushing any frames.
+        nsLineBox* next = aLine->mNext;
+        if ((nsnull != next) && !next->IsBlock()) {
+          next->MarkDirty();
+        }
+      }
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
@@ -2298,6 +2410,14 @@ nsBaseIBFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       rv = SplitLine(aState, aLine, aFrame);
       if (NS_FAILED(rv)) {
         return rv;
+      }
+      if (0 == (BLOCK_IS_INLINE & mFlags)) {
+        // Mark next line dirty in case SplitLine didn't end up
+        // pushing any frames.
+        nsLineBox* next = aLine->mNext;
+        if ((nsnull != next) && !next->IsBlock()) {
+          next->MarkDirty();
+        }
       }
     }
   }
@@ -2352,8 +2472,8 @@ nsBaseIBFrame::CreateContinuationFor(nsBlockReflowState& aState,
 
 nsresult
 nsBaseIBFrame::SplitLine(nsBlockReflowState& aState,
-                        nsLineBox* aLine,
-                        nsIFrame* aFrame)
+                         nsLineBox* aLine,
+                         nsIFrame* aFrame)
 {
   PRInt32 pushCount = aLine->ChildCount() -
     aState.mInlineReflow->GetCurrentFrameNum();
@@ -2949,13 +3069,12 @@ nsBaseIBFrame::AppendNewFrames(nsIPresContext& aPresContext,
     lastLine->MarkDirty();
   }
 
-//XXX  RemoveEmptyLines(aPresContext);
+  MarkEmptyLines(aPresContext);
   return NS_OK;
 }
 
 nsresult
 nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
-                              nsBaseIBFrame*   aParentFrame,
                               nsIFrame*       aNewFrame,
                               nsIFrame*       aPrevSibling)
 {
@@ -2965,16 +3084,21 @@ nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
   }
 
   const nsStyleDisplay* display;
-  aNewFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  aNewFrame->GetStyleData(eStyleStruct_Display,
+                          (const nsStyleStruct*&) display);
   const nsStylePosition* position;
-  aNewFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
-  PRUint16 newFrameIsBlock = nsLineLayout::TreatFrameAsBlock(display, position)
-                               ? LINE_IS_BLOCK : 0;
+  aNewFrame->GetStyleData(eStyleStruct_Position,
+                          (const nsStyleStruct*&) position);
+  PRUint16 newFrameIsBlock =
+    nsLineLayout::TreatFrameAsBlock(display, position)
+    ? LINE_IS_BLOCK
+    : 0;
 
   // See if we need to move the frame outside of the flow, and insert a
   // placeholder frame in its place
   nsIFrame* placeholder;
-  if (MoveFrameOutOfFlow(aPresContext, aNewFrame, display, position, placeholder)) {
+  if (MoveFrameOutOfFlow(aPresContext, aNewFrame, display, position,
+                         placeholder)) {
     // Add the placeholder frame to the flow
     aNewFrame = placeholder;
     newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
@@ -2992,7 +3116,7 @@ nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
 
   // Insert/append the frame into flows line list at the right spot
   nsLineBox* newLine;
-  nsLineBox* line = aParentFrame->mLines;
+  nsLineBox* line = mLines;
   if (nsnull == aPrevSibling) {
     // Insert new frame into the sibling list
     aNewFrame->SetNextSibling(line->mFirstChild);
@@ -3003,8 +3127,8 @@ nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
       if (nsnull == newLine) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      newLine->mNext = aParentFrame->mLines;
-      aParentFrame->mLines = newLine;
+      newLine->mNext = mLines;
+      mLines = newLine;
     } else {
       // Insert frame at the front of the line
       line->mFirstChild = aNewFrame;
@@ -3092,32 +3216,48 @@ nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
     aPrevSibling->SetNextSibling(aNewFrame);
   }
 
-//XXX  RemoveEmptyLines(aPresContext);
+  MarkEmptyLines(aPresContext);
   return NS_OK;
 }
 
-// XXX this code can't work...rewrite it!
+// XXX need code in here to join two inline lines together if a block
+// is deleted between them.
 nsresult
 nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
-                             nsBaseIBFrame* aParentFrame,
-                             nsIFrame* aDeletedFrame,
-                             nsIFrame* aPrevSibling)
+                             nsIFrame* aDeletedFrame)
 {
-  // Find the line that contains deletedFrame; we also find the pointer to
-  // the line.
+  // Find the line and the previous sibling that contains
+  // deletedFrame; we also find the pointer to the line.
   nsBaseIBFrame* flow = this;
   nsLineBox** linep = &flow->mLines;
   nsLineBox* line = flow->mLines;
+  nsLineBox* prevLine = nsnull;
+  nsIFrame* prevSibling = nsnull;
   while (nsnull != line) {
-    if (line->Contains(aDeletedFrame)) {
-      break;
+    nsIFrame* frame = line->mFirstChild;
+    PRInt32 n = line->ChildCount();
+    while (--n >= 0) {
+      if (frame == aDeletedFrame) {
+        goto found_frame;
+      }
+      prevSibling = frame;
+      frame->GetNextSibling(frame);
     }
     linep = &line->mNext;
+    prevLine = line;
     line = line->mNext;
   }
+ found_frame:;
+#ifdef NS_DEBUG
   NS_ASSERTION(nsnull != line, "can't find deleted frame in lines");
+  if (nsnull != prevSibling) {
+    nsIFrame* tmp;
+    prevSibling->GetNextSibling(tmp);
+    NS_ASSERTION(tmp == aDeletedFrame, "bad prevSibling");
+  }
+#endif
 
-  // Remove frame and its continuations
+  // Remove frame and all of its continuations
   while (nsnull != aDeletedFrame) {
     while ((nsnull != line) && (nsnull != aDeletedFrame)) {
 #ifdef NS_DEBUG
@@ -3151,18 +3291,26 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
         }
       }
 
+      // Get the deleted frames next sibling
+      nsIFrame* nextFrame;
+      aDeletedFrame->GetNextSibling(nextFrame);
+
       // Remove aDeletedFrame from the line
       if (line->mFirstChild == aDeletedFrame) {
-        nsIFrame* nextFrame;
-        aDeletedFrame->GetNextSibling(nextFrame);
         line->mFirstChild = nextFrame;
+        if (!line->IsBlock() && (nsnull != prevLine) && !prevLine->IsBlock()) {
+          // Make sure the previous line (if it's an inline line) gets
+          // a reflow too so that it can pullup from the line where we
+          // just removed the frame.
+          prevLine->MarkDirty();
+        }
       }
 
-      // Take aDeletedFrame out of the sibling list
-      if (nsnull != aPrevSibling) {
-        nsIFrame* nextFrame;
-        aDeletedFrame->GetNextSibling(nextFrame);
-        aPrevSibling->SetNextSibling(nextFrame);
+      // Take aDeletedFrame out of the sibling list. Note that
+      // prevSibling will only be nsnull when we are deleting the very
+      // first frame.
+      if (nsnull != prevSibling) {
+        prevSibling->SetNextSibling(nextFrame);
       }
 
       // Destroy frame; capture its next-in-flow first in case we need
@@ -3174,8 +3322,6 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
       }
       aDeletedFrame->DeleteFrame(aState.mPresContext);
       aDeletedFrame = nextInFlow;
-      // XXX If next-in-flow is != next-sibling then we need to break
-      // out of this loop
 
       // If line is empty, remove it now
       nsLineBox* next = line->mNext;
@@ -3185,29 +3331,41 @@ nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
         delete line;
       }
       else {
+        line->MarkDirty();
         linep = &line->mNext;
       }
+      prevLine = line;
       line = next;
+
+      // See if we should keep looking in the current flow's line list.
+      if (nsnull != aDeletedFrame) {
+        if (aDeletedFrame != nextFrame) {
+          // The deceased frames continuation is not the next frame in
+          // the current flow's frame list. Therefore we know that the
+          // continuation is in a different parent. So break out of
+          // the loop so that we advance to the next parent.
+#ifdef NS_DEBUG
+          nsIFrame* contParent;
+          aDeletedFrame->GetContentParent(contParent);
+          NS_ASSERTION(contParent != flow, "strange continuation");
+#endif
+          break;
+        }
+      }
     }
 
     // Advance to next flow block if the frame has more continuations
     if (nsnull != aDeletedFrame) {
       flow = (nsBaseIBFrame*) flow->mNextInFlow;
       NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
+      prevLine = nsnull;
       line = flow->mLines;
-      aPrevSibling = nsnull;
+      prevSibling = nsnull;
     }
   }
+  MarkEmptyLines(aState.mPresContext);
   return NS_OK;
 }
-
-// XXX UNUSED code to remove "empty lines" from line list.
-#if XXX_use_this_hack
-// XXX
-#define XP_IS_SPACE(_ch) \
-  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
-
-#include "nsTextFragment.h"
 
 static PRBool
 IsEmptyLine(nsIPresContext& aPresContext, nsLineBox* aLine)
@@ -3276,17 +3434,13 @@ IsEmptyLine(nsIPresContext& aPresContext, nsLineBox* aLine)
   return PR_TRUE;
 }
 
-PRInt32 gDeletedFrameCount;
-PRInt32 gDeletedLineCount;
-
 void
-nsBaseIBFrame::RemoveEmptyLines(nsIPresContext& aPresContext)
+nsBaseIBFrame::MarkEmptyLines(nsIPresContext& aPresContext)
 {
   // Inline frames do not have empty lines, so don't bother
   if (BLOCK_IS_INLINE & mFlags) return;
 
-  // PRE-formatted content considers whitespace significant, so don't
-  // remove the empty frames either.
+  // PRE-formatted content considers whitespace significant
   const nsStyleText* text;
   GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) text);
   if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
@@ -3294,13 +3448,10 @@ nsBaseIBFrame::RemoveEmptyLines(nsIPresContext& aPresContext)
   }
 
   PRBool afterBlock = PR_TRUE;
-  nsLineBox* prevLine = nsnull;
   nsLineBox* line = mLines;
-  nsIFrame* prevFrame = nsnull;
   while (nsnull != line) {
     if (line->IsBlock()) {
       afterBlock = PR_TRUE;
-      prevFrame = line->mFirstChild;
     }
     else if (afterBlock) {
       afterBlock = PR_FALSE;
@@ -3308,45 +3459,15 @@ nsBaseIBFrame::RemoveEmptyLines(nsIPresContext& aPresContext)
       // This is an inline line and it is immediately after a block
       // (or its our first line). See if it contains nothing but
       // collapsible text.
-      if (IsEmptyLine(aPresContext, line)) {
-        // Take line out of the list
-        nsLineBox* next = line->mNext;
-        if (nsnull == prevLine) {
-          mLines = next;
-        }
-        else {
-          prevLine->mNext = next;
-        }
-
-        // Delete the frames on the line
-        nsIFrame* frame = line->mFirstChild;
-        PRInt32 n = line->ChildCount();
-        while (--n >= 0) {
-          nsIFrame* next;
-          frame->GetNextSibling(next);
-          frame->DeleteFrame(aPresContext);
-          frame = next;
-          gDeletedFrameCount++;
-          if ((0 == n) && (nsnull != prevFrame)) {
-            prevFrame->SetNextSibling(next);
-          }
-        }
-
-        // And delete the line
-        gDeletedLineCount++;
-        delete line;
-        line = next;
-        continue;
-      }
+      PRBool isEmpty = IsEmptyLine(aPresContext, line);
+      line->SetIsEmptyLine(isEmpty);
     }
     else {
-      prevFrame = line->LastChild();
+      line->SetIsEmptyLine(PR_FALSE);
     }
-    prevLine = line;
     line = line->mNext;
   }
 }
-#endif
 
 PRBool
 nsBaseIBFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
@@ -4177,7 +4298,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     const nsStyleList* styleList;
     GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
-      InsertNewFrame(aPresContext, this, mBullet, nsnull);
+      InsertNewFrame(aPresContext, mBullet, nsnull);
     }
   }
 

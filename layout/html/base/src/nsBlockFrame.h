@@ -122,19 +122,16 @@ protected:
   virtual void ComputeFinalSize(nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
-  void RemoveEmptyLines(nsIPresContext& aPresContext);
+  void MarkEmptyLines(nsIPresContext& aPresContext);
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
   nsresult InsertNewFrame(nsIPresContext&  aPresContext,
-                          nsBaseIBFrame* aParentFrame,
                           nsIFrame* aNewFrame,
                           nsIFrame* aPrevSibling);
 
   nsresult DoRemoveFrame(nsBlockReflowState& aState,
-                         nsBaseIBFrame* aParentFrame,
-                         nsIFrame* aDeletedFrame,
-                         nsIFrame* aPrevSibling);
+                         nsIFrame* aDeletedFrame);
 
   virtual nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
