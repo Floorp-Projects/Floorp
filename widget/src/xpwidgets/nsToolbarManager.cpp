@@ -205,7 +205,9 @@ nsToolbarManager::HandleEvent(nsGUIEvent *aEvent)
     case NS_MOUSE_EXIT:
       OnMouseExit();
       break;
-      
+
+    default:
+      break;
   } // switch on event
   
   return nsEventStatus_eIgnore;
