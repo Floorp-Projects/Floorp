@@ -34,7 +34,7 @@
 
 <!ENTITY bz-ver "2.17.5">
 <!ENTITY bz-nextver "2.18">
-<!ENTITY bz-date "2003-10-31">
+<!ENTITY bz-date "2003-11-01">
 <!ENTITY % bz-devel "INCLUDE">
 
 <!ENTITY bz "http://www.bugzilla.org/">
@@ -130,6 +130,12 @@ try to avoid clutter and feel free to waste space in the code to make it more re
         (which will correspond with the &bz-nextver; release of Bugzilla).
         </para>
       ]]>
+
+      <para>
+        The most current version of this document can always be found on the
+        <ulink url="http://www.bugzilla.org/documentation.html">Bugzilla Documentation Page</ulink>.
+      </para>
+
     </abstract>
 
     <keywordset>
