@@ -66,9 +66,24 @@
 #include "gdksuperwin.h"
 #endif /* MOZ_WIDGET_GTK */
 
+#ifdef MOZ_WIDGET_GTK2
+#include <pango/pango.h>
+#endif
+
+#ifdef MOZ_ENABLE_XFT
+#include "nsFontMetricsUtils.h"
+#include <X11/Xlib.h>
+#include <X11/Xdefs.h>
+#include <X11/Xft/Xft.h>
+
+static PRInt32 GetXftDPI(void);
+#endif
+
 #include <X11/Xatom.h>
 
 #include "nsDeviceContextSpecG.h"
+
+static PRInt32 GetOSDPI(void);
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -95,7 +110,7 @@ class nsSystemFontsGTK {
     const nsFont& GetButtonFont() { return mButtonFont; }
 
   private:
-    nsresult GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont,
+    nsresult GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
                                float aPixelsToTwips) const;
 
     /*
@@ -604,9 +619,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDepth(PRUint32& aDepth)
 nsresult
 nsDeviceContextGTK::SetDPI(PRInt32 aPrefDPI)
 {
-  // Set OSVal to what the operating system thinks the logical resolution is.
-  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-  PRInt32 OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
+  PRInt32 OSVal = GetOSDPI();
 
   if (aPrefDPI > 0) {
     // If there's a valid pref value for the logical resolution,
@@ -689,8 +702,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(parent);
   gtk_widget_realize(label);
 
-  GtkStyle *style = gtk_widget_get_style(label);
-  GetSystemFontInfo(style, &mDefaultFont, aPixelsToTwips);
+  GetSystemFontInfo(label, &mDefaultFont, aPixelsToTwips);
 
   gtk_widget_destroy(window);  // no unref, windows are different
 
@@ -705,8 +717,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_set_rc_style(entry);
   gtk_widget_realize(entry);
 
-  style = gtk_widget_get_style(entry);
-  GetSystemFontInfo(style, &mFieldFont, aPixelsToTwips);
+  GetSystemFontInfo(entry, &mFieldFont, aPixelsToTwips);
 
   gtk_widget_destroy(window);  // no unref, windows are different
 
@@ -725,8 +736,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(menu);
   gtk_widget_realize(accel_label);
 
-  style = gtk_widget_get_style(accel_label);
-  GetSystemFontInfo(style, &mMenuFont, aPixelsToTwips);
+  GetSystemFontInfo(accel_label, &mMenuFont, aPixelsToTwips);
 
   gtk_widget_unref(menu);
 
@@ -746,8 +756,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(button);
   gtk_widget_realize(label);
 
-  style = gtk_widget_get_style(label);
-  GetSystemFontInfo(style, &mButtonFont, aPixelsToTwips);
+  GetSystemFontInfo(label, &mButtonFont, aPixelsToTwips);
 
   gtk_widget_destroy(window);  // no unref, windows are different
 
@@ -784,7 +793,9 @@ ListFontProps(XFontStruct *aFont, Display *aDisplay)
    if (pos < 0) \
      return ; \
   }  
- 
+
+#ifdef MOZ_WIDGET_GTK
+
 static void
 AppendFontFFREName(nsString& aString, const char* aXLFDName)
 {
@@ -819,12 +830,7 @@ AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
 {
   unsigned long pr = 0;
   // we first append the FFRE name to reconstruct font more faithfully
-#ifdef MOZ_WIDGET_GTK
   unsigned long font_atom = gdk_atom_intern("FONT", FALSE);
-#endif
-#ifdef MOZ_WIDGET_GTK2
-  unsigned long font_atom = gdk_x11_get_xatom_by_name("FONT");
-#endif
   ::XGetFontProperty(aFontStruct, font_atom, &pr);
   if(pr) {
     char* xlfdName = ::XGetAtomName(aDisplay, pr);
@@ -884,15 +890,12 @@ GetFontSize(XFontStruct *aFontStruct, float aPixelsToTwips)
 }
 
 nsresult
-nsSystemFontsGTK::GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont, float aPixelsToTwips) const
+nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
+                                    float aPixelsToTwips) const
 {
-#ifdef MOZ_WIDGET_GTK
-  GdkFont *theFont = aStyle->font;
-#endif /* MOZ_WIDGET_GTK */
+  GtkStyle *style = gtk_widget_get_style(aWidget);
 
-#ifdef MOZ_WIDGET_GTK2
-  GdkFont *theFont = gtk_style_get_font(aStyle);
-#endif /* MOZ_WIDGET_GTK2 */
+  GdkFont *theFont = style->font;
 
   aFont->style       = NS_FONT_STYLE_NORMAL;
   aFont->weight      = NS_FONT_WEIGHT_NORMAL;
@@ -901,10 +904,8 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont, float aPixe
   // do we have the default_font defined by GTK/GDK then
   // we use it, if not then we load helvetica, if not then
   // we load fixed font else we error out.
-#ifdef MOZ_WIDGET_GTK
   if (!theFont)
     theFont = default_font; // GTK default font
-#endif
 
   if (!theFont)
     theFont = ::gdk_font_load( GDK_DEFAULT_FONT1 );
@@ -953,3 +954,111 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont, float aPixe
   }
   return NS_OK;
 }
+#endif /* MOZ_WIDGET_GTK */
+
+#ifdef MOZ_WIDGET_GTK2
+nsresult
+nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
+                                    float aPixelsToTwips) const
+{
+  GtkSettings *settings = gtk_widget_get_settings(aWidget);
+
+  aFont->style       = NS_FONT_STYLE_NORMAL;
+  aFont->decorations = NS_FONT_DECORATION_NONE;
+
+  gchar *fontname;
+  g_object_get(settings, "gtk-font-name", &fontname, NULL);
+
+  PangoFontDescription *desc;
+  desc = pango_font_description_from_string(fontname);
+
+  aFont->name.Truncate();
+  aFont->name.AppendWithConversion(pango_font_description_get_family(desc));
+  aFont->weight = pango_font_description_get_weight(desc);
+
+  gint size;
+  size = pango_font_description_get_size(desc);
+
+  aFont->size = NSIntPointsToTwips(size / PANGO_SCALE);
+
+  return NS_OK;
+}
+#endif /* MOZ_WIDGET_GTK2 */
+
+#ifdef MOZ_WIDGET_GTK
+/* static */
+PRInt32
+GetOSDPI(void)
+{
+
+#ifdef MOZ_ENABLE_XFT
+  // try to get it from xft
+  if (NS_IsXftEnabled()) {
+    PRInt32 xftdpi = GetXftDPI();
+    if (xftdpi)
+      return xftdpi;
+  }
+#endif /* MOZ_ENABLE_XFT */
+
+  // Set OSVal to what the operating system thinks the logical resolution is.
+  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+  return NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
+}
+#endif /* MOZ_WIDGET_GTK */
+
+#ifdef MOZ_WIDGET_GTK2
+/* static */
+PRInt32
+GetOSDPI(void)
+{
+  GtkSettings *settings = gtk_settings_get_default();
+
+  // first try to get the gtk2 dpi
+  gint dpi = 0;
+
+  // See if there's a gtk-xft-dpi object on the settings object - note
+  // that we don't have to free the spec since it isn't addrefed
+  // before being returned.  It's just part of an internal object.
+  // The gtk-xft-dpi setting is included in rh8 and might be included
+  // in later versions of gtk, so we conditionally check for it.
+  GParamSpec *spec;
+  spec = g_object_class_find_property(G_OBJECT_GET_CLASS(G_OBJECT(settings)),
+                                      "gtk-xft-dpi");
+  if (spec) {
+    g_object_get(G_OBJECT(settings),
+                 "gtk-xft-dpi", &dpi,
+                 NULL);
+  }
+
+  if (dpi)
+    return NSToCoordRound(dpi / PANGO_SCALE);
+
+  // try to get it from xft
+  PRInt32 xftdpi = GetXftDPI();
+
+  if (xftdpi)
+    return xftdpi;
+  
+  // fall back to the physical resolution
+  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+  return NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
+}
+#endif /* MOZ_WIDGET_GTK2 */
+
+#ifdef MOZ_ENABLE_XFT
+/* static */
+PRInt32
+GetXftDPI(void)
+{
+  char *val = XGetDefault(GDK_DISPLAY(), "Xft", "dpi");
+  if (val) {
+    char *e;
+    double d = strtod(val, &e);
+
+    if (e != val)
+      return NSToCoordRound(d);
+  }
+
+  return 0;
+}
+#endif /* MOZ_ENABLE_XFT */
