@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_pixels.h              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Pixel-row management routines (definition)                 * */
 /* *                                                                        * */
@@ -24,6 +24,9 @@
 /* *             0.5.2 - 06/05/2000 - G.Juyn                                * */
 /* *             - added support for RGB8_A8 canvasstyle                    * */
 /* *                                                                        * */
+/* *             0.5.3 - 06/16/2000 - G.Juyn                                * */
+/* *             - changed progressive-display processing                   * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -35,6 +38,22 @@
 
 #include "libmng.h"
 #include "mng_data.h"
+
+/* ************************************************************************** */
+/* *                                                                        * */
+/* * Progressive display check - checks to see if progressive display is    * */
+/* * in order & indicates so                                                * */
+/* *                                                                        * */
+/* * The routine is called after a call to one of the display_xxx routines  * */
+/* * if appropriate                                                         * */
+/* *                                                                        * */
+/* * The refresh is warrented in the read_chunk routine (mng_read.c)        * */
+/* * and only during read&display processing, since there's not much point  * */
+/* * doing it from memory!                                                  * */
+/* *                                                                        * */
+/* ************************************************************************** */
+
+mng_retcode display_progressive_check (mng_datap pData);
 
 /* ************************************************************************** */
 /* *                                                                        * */

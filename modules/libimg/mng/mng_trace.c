@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_trace.c               copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.1                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (implementation)                           * */
 /* *                                                                        * */
@@ -35,6 +35,13 @@
 /* *             - added tracestring for RGB8_A8 canvasstyle                * */
 /* *             0.5.2 - 06/06/2000 - G.Juyn                                * */
 /* *             - added tracestring for mng_read_resume HLAPI function     * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added tracestrings for get/set speedtype                 * */
+/* *             - added tracestring for get imagelevel                     * */
+/* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
+/* *             - added tracestring for delta-image processing             * */
+/* *             - added tracestrings for PPLT chunk processing             * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -146,6 +153,7 @@
     {MNG_FN_SET_JPEG_PROGRESSIVE,      "set_jpeg_progressive"},
     {MNG_FN_SET_JPEG_OPTIMIZED,        "set_jpeg_optimized"},
     {MNG_FN_SET_JPEG_MAXJDAT,          "set_jpeg_maxjdat"},
+    {MNG_FN_SET_SPEED,                 "set_speed"},
 
     {MNG_FN_GET_USERDATA,              "get_userdata"},
     {MNG_FN_GET_SIGTYPE,               "get_sigtype"},
@@ -179,6 +187,8 @@
     {MNG_FN_GET_JPEG_PROGRESSIVE,      "get_jpeg_progressive"},
     {MNG_FN_GET_JPEG_OPTIMIZED,        "get_jpeg_optimized"},
     {MNG_FN_GET_JPEG_MAXJDAT,          "get_jpeg_maxjdat"},
+    {MNG_FN_GET_SPEED,                 "get_speed"},
+    {MNG_FN_GET_IMAGELEVEL,            "get_imagelevel"},
 
     {MNG_FN_ITERATE_CHUNKS,            "iterate_chunks"},
 
@@ -326,6 +336,7 @@
     {MNG_FN_SAVE_STATE,                "save_state"},
     {MNG_FN_RESTORE_STATE,             "restore_state"},
     {MNG_FN_DROP_SAVEDATA,             "drop_savedata"},
+    {MNG_FN_EXECUTE_DELTA_IMAGE,       "execute_delta_image"},
 
     {MNG_FN_DISPLAY_RGB8,              "display_rgb8"},
     {MNG_FN_DISPLAY_RGBA8,             "display_rgba8"},
@@ -498,6 +509,7 @@
     {MNG_FN_CREATE_ANI_PROM,           "create_ani_prom"},
     {MNG_FN_CREATE_ANI_IPNG,           "create_ani_ipng"},
     {MNG_FN_CREATE_ANI_IJNG,           "create_ani_ijng"},
+    {MNG_FN_CREATE_ANI_PPLT,           "create_ani_pplt"},
 
     {MNG_FN_CREATE_ANI_IMAGE,          "create_ani_image"},
 
@@ -527,6 +539,7 @@
     {MNG_FN_FREE_ANI_PROM,             "free_ani_prom"},
     {MNG_FN_FREE_ANI_IPNG,             "free_ani_ipng"},
     {MNG_FN_FREE_ANI_IJNG,             "free_ani_ijng"},
+    {MNG_FN_FREE_ANI_PPLT,             "free_ani_pplt"},
 
     {MNG_FN_FREE_ANI_IMAGE,            "free_ani_image"},
 
@@ -556,6 +569,7 @@
     {MNG_FN_PROCESS_ANI_PROM,          "process_ani_prom"},
     {MNG_FN_PROCESS_ANI_IPNG,          "process_ani_ipng"},
     {MNG_FN_PROCESS_ANI_IJNG,          "process_ani_ijng"},
+    {MNG_FN_PROCESS_ANI_PPLT,          "process_ani_pplt"},
 
     {MNG_FN_PROCESS_ANI_IMAGE,         "process_ani_image"},
 

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_objects.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Internal object structures (definition)                    * */
 /* *                                                                        * */
@@ -32,6 +32,11 @@
 /* *             - added ani-objects for delta-image processing             * */
 /* *             - added compression/filter/interlace fields to             * */
 /* *               object-buffer for delta-image processing                 * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/17/2000 - G.Juyn                                * */
+/* *             - changed definition of aTRNSentries                       * */
+/* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
+/* *             - added definition for PPLT animation-processing           * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -100,7 +105,7 @@ typedef struct {                                 /* MNG specification "object-bu
            mng_uint16        iTRNSgreen;
            mng_uint16        iTRNSblue;
            mng_uint32        iTRNScount;
-           mng_uint8         aTRNSentries[256];
+           mng_uint8arr      aTRNSentries;
 
            mng_uint32        iGamma;             /* gAMA fields */
 
@@ -432,6 +437,18 @@ typedef struct {                                 /* IJNG object */
            mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
         } mng_ani_ijng;
 typedef mng_ani_ijng * mng_ani_ijngp;
+
+/* ************************************************************************** */
+
+typedef struct {                                 /* PPLT object */
+           mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
+           mng_uint8         iType;
+           mng_uint32        iCount;
+           mng_rgbpaltab     aIndexentries;
+           mng_uint8arr      aAlphaentries;
+           mng_uint8arr      aUsedentries;
+        } mng_ani_pplt;
+typedef mng_ani_pplt * mng_ani_ppltp;
 
 /* ************************************************************************** */
 

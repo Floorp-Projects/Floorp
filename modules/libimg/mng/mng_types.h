@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_types.h               copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : type specifications                                        * */
 /* *                                                                        * */
@@ -44,6 +44,9 @@
 /* *             0.5.2 - 06/02/2000 - G.Juyn                                * */
 /* *             - removed SWAP_ENDIAN reference (contributed by Tim Rowley)* */
 /* *             - added getalphaline callback for RGB8_A8 canvasstyle      * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
+/* *             - added speedtype to facilitate testing                    * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -269,6 +272,10 @@ typedef LPGAMMATABLE        mng_gammatabp;
                                        /* enumeration of known graphics types */
 enum mng_imgtypes {mng_it_unknown, mng_it_png, mng_it_mng, mng_it_jng};
 typedef enum mng_imgtypes mng_imgtype;
+
+                                       /* enumeration of animation speed-types */
+enum mng_speedtypes {mng_st_normal, mng_st_fast, mng_st_slow, mng_st_slowest};
+typedef enum mng_speedtypes mng_speedtype;
 
 /* ************************************************************************** */
 
