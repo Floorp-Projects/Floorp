@@ -524,6 +524,8 @@ sub BuildLayoutProjects()
 
 	BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",							"gfx$D.shlb", "gfx.toc", 1, $main::ALIAS_SYM_FILES);
 
+	BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",							"plugin$D.shlb", "plugin.toc", 1, $main::ALIAS_SYM_FILES);
+
 	BuildOneProject(":mozilla:layout:macbuild:layout.mcp",						"layout$D.shlb", "layout.toc", 1, $main::ALIAS_SYM_FILES);
 	
 	BuildOneProject(":mozilla:view:macbuild:view.mcp",							"view$D.shlb", "view.toc", 1, $main::ALIAS_SYM_FILES);
