@@ -23,11 +23,13 @@ include <$(DEPTH)/config/config.mak>
 
 MODULE=pyloader
 LIBRARY_NAME=pyloader
+DLLNAME=$(MODULE)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPP_OBJS= \
 	.\$(OBJDIR)\pyloader.obj \
 	$(NULL)
-    
+
 
 CPPSRCS = \
 	pyloader.cpp \
@@ -52,6 +54,9 @@ LCFLAGS = \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+		$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components\.
 
 #clobber::
 #    echo write me
