@@ -205,6 +205,12 @@ nsString& GetIdentChars(void) {
   return gIdentChars;
 }
 
+static
+nsString& GetNumericChars(void) {
+  static nsString gNumChars("0123456789ABCDEFabcdef");
+  return gNumChars;
+}
+
 /*
  *  Consume the identifier portion of the start tag
  *  
@@ -1280,31 +1286,40 @@ PRInt32 CEntityToken::GetTokenType(void) {
  *  @return  error result
  */
 PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner){
-
-  PRInt32 result=aScanner.Peek(aChar);
+  PRUnichar theChar=0;
+  PRInt32 result=aScanner.Peek(theChar);
   if(NS_OK==result) {
-    if(kLeftBrace==aChar) {
+    if(kLeftBrace==theChar) {
       //you're consuming a script entity...
       static nsAutoString terminals("}>");
       result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
       if(NS_OK==result) {
-        result=aScanner.Peek(aChar);
+        result=aScanner.Peek(theChar);
         if(NS_OK==result) {
-          if(kRightBrace==aChar) {
+          if(kRightBrace==theChar) {
             aString+=kRightBrace;   //append rightbrace, and...
-            result=aScanner.GetChar(aChar);//yank the closing right-brace
+            result=aScanner.GetChar(theChar);//yank the closing right-brace
           }
         }
       }
     } //if
     else {
-      result=aScanner.ReadWhile(aString,GetIdentChars(),PR_TRUE,PR_FALSE);
+      if(kHashsign==aChar) {
+        if('X'==(toupper((char)theChar))) {
+          result=aScanner.GetChar(theChar);
+          aString+=theChar;
+        }
+        if(NS_OK==result){
+          result=aScanner.ReadWhile(aString,GetNumericChars(),PR_TRUE,PR_FALSE);
+        }
+      }
+      else result=aScanner.ReadWhile(aString,GetIdentChars(),PR_TRUE,PR_FALSE);
       if(NS_OK==result) {
-        result=aScanner.Peek(aChar);
+        result=aScanner.Peek(theChar);
         if(NS_OK==result) {
-          if (kSemicolon == aChar) {
+          if (kSemicolon == theChar) {
             // consume semicolon that stopped the scan
-            result=aScanner.GetChar(aChar);
+            result=aScanner.GetChar(theChar);
           }
         }
       }//if
@@ -1375,28 +1390,30 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
     PRUnichar theChar0=mTextValue[0];
     PRBool    isDigit0=nsString::IsDigit(theChar0);
 
-    char cbuf[30];
-    mTextValue.ToCString(cbuf, sizeof(cbuf)-1);
-    value = NS_EntityToUnicode(cbuf);
-    if(-1<value) {
-      //we found a named entity...
-      aString=PRUnichar(value);
-    }
-    else {
-
-      if(isDigit0 || ('x'==theChar0) || ('X'==theChar0)) {
-        PRInt32 err=0;
-        value=mTextValue.ToInteger(&err,theRadix[isDigit0]);
-        if(0==err) {
-    #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
-          /* for some illegal, but popular usage */
-          if ((value >= 0x0080) && (value <= 0x009f)) {
-            value = PA_HackTable[value - 0x0080];
-          }
-    #endif
-          aString.Append(PRUnichar(value));
-        }//if
+    if(kHashsign==theChar0) {
+      PRInt32 err=0;
+      
+      PRUnichar theChar1=mTextValue[1];
+      PRBool    isDigit1=nsString::IsDigit(theChar1);
+      value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
+      if(0==err) {
+  #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
+        /* for some illegal, but popular usage */
+        if ((value >= 0x0080) && (value <= 0x009f)) {
+          value = PA_HackTable[value - 0x0080];
+        }
+  #endif
+        aString.Append(PRUnichar(value));
       }//if
+    }
+    else{
+      char cbuf[30];
+      mTextValue.ToCString(cbuf, sizeof(cbuf)-1);
+      value = NS_EntityToUnicode(cbuf);
+      if(-1<value) {
+        //we found a named entity...
+        aString=PRUnichar(value);
+      }
     }//else
   }//if
 
