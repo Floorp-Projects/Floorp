@@ -233,6 +233,18 @@ function ViewSourceSavePage()
   saveURL(window.content.location.href.substring(12), null, "SaveLinkTitle");
 }
 
+function onEnterPP()
+{
+  var toolbox = document.getElementById("viewSource-toolbox");
+  toolbox.hidden = true;
+}
+
+function onExitPP()
+{
+  var toolbox = document.getElementById("viewSource-toolbox");
+  toolbox.hidden = false;
+}
+
 function ViewSourceGoToLine()
 {
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]

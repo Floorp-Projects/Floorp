@@ -1,8 +1,9 @@
 toolkit.jar:
-* content/global/viewSource.xul             (content/viewSource.xul)
+* content/global/viewSource.css             (content/viewSource.css)
 * content/global/viewSource.js              (content/viewSource.js)
-* content/global/viewPartialSource.xul      (content/viewPartialSource.xul)
+* content/global/viewSource.xul             (content/viewSource.xul)
 * content/global/viewPartialSource.js       (content/viewPartialSource.js)
+* content/global/viewPartialSource.xul      (content/viewPartialSource.xul)
 
 en-US.jar:
   locale/en-US/global/viewSource.dtd        (locale/viewSource.dtd)

@@ -39,6 +39,8 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
+var  XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 var PrintUtils = {
 
   showPageSetup: function ()
@@ -213,8 +215,10 @@ var PrintUtils = {
     getBrowser().parentNode.insertBefore(printPreviewTB, getBrowser());
 
     // Tab browser...
-    this._chromeState.hadTabStrip = getBrowser().getStripVisibility();
-    getBrowser().setStripVisibilityTo(false);
+    if ("getStripVisibility" in getBrowser()) {
+      this._chromeState.hadTabStrip = getBrowser().getStripVisibility();
+      getBrowser().setStripVisibilityTo(false);
+    }
 
     // disable chrome shortcuts...
     window.addEventListener("keypress", this.onKeyPressPP, true);
@@ -230,7 +234,8 @@ var PrintUtils = {
   {
     window.removeEventListener("keypress", this.onKeyPressPP, true);
 
-    getBrowser().setStripVisibilityTo(this._chromeState.hadTabStrip);
+    if ("getStripVisibility" in getBrowser())
+      getBrowser().setStripVisibilityTo(this._chromeState.hadTabStrip);
     var webBrowserPrint = this.getWebBrowserPrint();
     webBrowserPrint.exitPrintPreview(); 
 
