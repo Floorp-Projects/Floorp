@@ -158,7 +158,7 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
   nsresult  validateEngineNow(nsIRDFResource *engine);
   nsresult  webSearchFinalize(nsIChannel *channel, nsIInternetSearchContext *context);
-  nsresult  ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const PRUnichar *htmlPage);
+  nsresult  ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const PRUnichar *htmlPage, PRInt32 htmlPageSize);
   nsresult  SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
   nsresult  ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
   nsresult  saveContents(nsIChannel* channel, nsIInternetSearchContext *context, PRUint32 contextType);

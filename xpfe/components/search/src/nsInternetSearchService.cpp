@@ -81,6 +81,7 @@
 
 #ifdef	XP_MAC
 #include <Files.h>
+#include <Timer.h>
 #endif
 
 #ifdef	XP_WIN
@@ -93,7 +94,7 @@
 // #define	DEBUG_SEARCH_UPDATES	1
 #endif
 
-
+#define MAX_SEARCH_RESULTS_ALLOWED  100
 
 #define POSTHEADER_PREFIX "Content-type: application/x-www-form-urlencoded\r\nContent-Length: "
 #define POSTHEADER_SUFFIX "\r\n\r\n"
@@ -4733,7 +4734,11 @@ InternetSearchDataSource::webSearchFinalize(nsIChannel* channel, nsIInternetSear
 		}
 
 		// parse up HTML results
-		rv = ParseHTML(aURL, mParent, mEngine, uniBuf);
+		PRInt32 uniBufLen = 0L;
+		if (NS_SUCCEEDED(rv = context->GetBufferLength(&uniBufLen)))
+		{
+			rv = ParseHTML(aURL, mParent, mEngine, uniBuf, uniBufLen);
+		}
 	}
 	else
 	{
@@ -4767,8 +4772,8 @@ InternetSearchDataSource::webSearchFinalize(nsIChannel* channel, nsIInternetSear
 
 
 nsresult
-InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *mEngine,
-				const PRUnichar *htmlPage)
+InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
+				nsIRDFResource *mEngine, const PRUnichar *htmlPage, PRInt32 htmlPageSize)
 {
 	// get data out of graph
 	nsresult	rv;
@@ -4829,6 +4834,16 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		skipLocalFlag = PR_TRUE;
 	}
 
+#ifdef	DEBUG
+	PRTime		now;
+#ifdef	XP_MAC
+	Microseconds((UnsignedWide *)&now);
+#else
+	now = PR_Now();
+#endif
+	printf("\nStart processing search results:   %lu bytes \n", htmlPageSize); 
+#endif
+
 	// need to handle multiple <interpret> sections, per spec
 	for (PRUint32 interpretSectionNum=0; interpretSectionNum < numInterpretSections; interpretSectionNum++)
 	{
@@ -4843,8 +4858,10 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		nsAutoString	browserResultTypeStr;
 		browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));		// default to "result"
 
-		// need an original copy of the HTML every time through the loop
-		nsAutoString	htmlResults(htmlPage);
+		// use a CBufDescriptor so that "htmlPage" data isn't copied
+		CBufDescriptor	htmlPageDecriptor( htmlPage, PR_TRUE, htmlPageSize);
+		nsAutoString		htmlResults(htmlPageDecriptor);
+		PRUint32        startIndex = 0L, stopIndex = htmlPageSize;
 
 		if (useAllHREFsFlag == PR_FALSE)
 		{
@@ -4877,7 +4894,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 			// special browser support
 			GetData(dataUni, "interpret", interpretSectionNum, "browserResultType", browserResultTypeStr);
-			if (browserResultTypeStr.Length() < 1)
+			if (browserResultTypeStr.IsEmpty())
 			{
 				browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));	// default to "result"
 			}
@@ -4885,17 +4902,21 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 		// look for banner
 		nsCOMPtr<nsIRDFLiteral>	bannerLiteral;
-		if ((bannerStartStr.Length() > 0) && (bannerEndStr.Length() > 0))
+		if ((!bannerStartStr.IsEmpty()) && (!bannerEndStr.IsEmpty()))
 		{
 			PRInt32	bannerStart = htmlResults.Find(bannerStartStr, PR_TRUE);
 			if (bannerStart >= 0)
 			{
+				startIndex = bannerStart;
+
 				PRInt32	bannerEnd = htmlResults.Find(bannerEndStr, PR_TRUE, bannerStart + bannerStartStr.Length());
 				if (bannerEnd > bannerStart)
 				{
+					stopIndex = bannerEnd - 1;
+
 					nsAutoString	htmlBanner;
 					htmlResults.Mid(htmlBanner, bannerStart, bannerEnd - bannerStart - 1);
-					if (htmlBanner.Length() > 0)
+					if (!htmlBanner.IsEmpty())
 					{
 						const PRUnichar	*bannerUni = htmlBanner.get();
 						if (bannerUni)
@@ -4907,27 +4928,27 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 		}
 
-		if (resultListStartStr.Length() > 0)
+		if (!resultListStartStr.IsEmpty())
 		{
 			PRInt32	resultListStart = htmlResults.Find(resultListStartStr, PR_TRUE);
 			if (resultListStart >= 0)
 			{
-				htmlResults.Cut(0, resultListStart + resultListStartStr.Length());
+        startIndex = resultListStart + resultListStartStr.Length();
 			}
 			else if (useAllHREFsFlag == PR_FALSE)
 			{
-				// if we have multiple <INTERPRET> sections but can't find the start
+				// if we have multiple <INTERPRET> sections but can't find the startIndex
 				// of a result list block, just continue on with the the next block
 				continue;
 			}
 		}
-		if (resultListEndStr.Length() > 0)
+		if (!resultListEndStr.IsEmpty())
 		{
 			// rjc note: use RFind to find the LAST occurrence of resultListEndStr
 			PRInt32	resultListEnd = htmlResults.RFind(resultListEndStr, PR_TRUE);
 			if (resultListEnd >= 0)
 			{
-				htmlResults.Truncate(resultListEnd);
+				stopIndex = resultListEnd;
 			}
 		}
 
@@ -4935,52 +4956,54 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		PRBool	trimItemEnd = PR_FALSE;		// rjc note: testing shows we should NEVER trim end???
 
 		// if resultItemStartStr is not specified, try making it just be "HREF="
-		if (resultItemStartStr.Length() < 1)
+		if (resultItemStartStr.IsEmpty())
 		{
 			resultItemStartStr.Assign(NS_LITERAL_STRING("HREF="));
 			trimItemStart = PR_FALSE;
 		}
 
 		// if resultItemEndStr is not specified, try making it the same as resultItemStartStr
-		if (resultItemEndStr.Length() < 1)
+		if (resultItemEndStr.IsEmpty())
 		{
 			resultItemEndStr = resultItemStartStr;
 			trimItemEnd = PR_TRUE;
 		}
 
-		while(PR_TRUE)
+		while(startIndex < stopIndex)
 		{
 			PRInt32	resultItemStart;
-			resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE);
+			resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE, startIndex);
 			if (resultItemStart < 0)	break;
 
 			PRInt32	resultItemEnd;
 			if (trimItemStart == PR_TRUE)
 			{
-				htmlResults.Cut(0, resultItemStart + resultItemStartStr.Length());
-				resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE );
+				resultItemStart += resultItemStartStr.Length();
+				resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE, resultItemStart);
 			}
 			else
 			{
-				htmlResults.Cut(0, resultItemStart);
-				resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE, resultItemStartStr.Length() );
+				resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE, resultItemStart + resultItemStartStr.Length());
 			}
 
 			if (resultItemEnd < 0)
 			{
-				resultItemEnd = htmlResults.Length()-1;
+				resultItemEnd = stopIndex;
 			}
 			else if ((trimItemEnd == PR_FALSE) && (resultItemEnd >= 0))
 			{
 				resultItemEnd += resultItemEndStr.Length();
 			}
 
-			nsAutoString	resultItem;
-			htmlResults.Left(resultItem, resultItemEnd);
+			// use a CBufDescriptor so that "htmlResults" data isn't copied
+			CBufDescriptor	htmlResultDecriptor( &htmlPage[resultItemStart], PR_TRUE,
+						resultItemEnd - resultItemStart - 1);
+			nsAutoString		resultItem(htmlResultDecriptor);
 
-			if (resultItem.Length() < 1)	break;
+			if (resultItem.IsEmpty())	break;
 
-			htmlResults.Cut(0, resultItemEnd);
+			// advance startIndex here so that, from this point onward, "continue" can be used
+			startIndex = resultItemEnd;
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 			char	*results = ToNewCString(resultItem);
@@ -5029,13 +5052,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			resultItem.Mid(hrefStr, quoteStartOffset + 1, quoteEndOffset - quoteStartOffset - 1);
 
 			// strip out any bogus CRs or LFs from the HREF URL
-			PRInt32		crlfOffset;
-			while ((crlfOffset = hrefStr.FindCharInSet("\n\r", 0)) >= 0)
-			{
-				hrefStr.Cut(crlfOffset, 1);
-			}
+			hrefStr.StripChars("\n\r");
 
-			if (hrefStr.Length() < 1)	continue;
+			if (hrefStr.IsEmpty())	continue;
 
 			char		*absURIStr = nsnull;
 			nsCAutoString	hrefstrC;
@@ -5067,7 +5086,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 						if (pathsMatchFlag == PR_TRUE)	continue;
 					}
 
-					if (hostStr.Length() > 0)
+					if (!hostStr.IsEmpty())
 					{
 						char		*absHost = nsnull;
 						absURI->GetHost(&absHost);
@@ -5157,7 +5176,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					{
 						site.Truncate(slashOffset);
 					}
-					if (site.Length() > 0)
+					if (!site.IsEmpty())
 					{
 						const PRUnichar	*siteUni = site.get();
 						if (siteUni)
@@ -5178,7 +5197,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			// look for name
 			nsAutoString	nameStr;
 
-			if ((nameStartStr.Length() > 0) && (nameEndStr.Length() > 0))
+			if ((!nameStartStr.IsEmpty()) && (!nameEndStr.IsEmpty()))
 			{
 				PRInt32		nameStart;
 				if ((nameStart = resultItem.Find(nameStartStr, PR_TRUE)) >= 0)
@@ -5192,7 +5211,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 			}
 
-			if (nameStr.Length() < 1)
+			if (nameStr.IsEmpty())
 			{
 				PRInt32	anchorEnd = resultItem.FindCharInSet(">", quoteEndOffset);
 				if (anchorEnd < quoteEndOffset)
@@ -5222,7 +5241,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 #endif
 			if (!oldNameRes)
 			{
-				if (nameStr.Length() > 0)
+				if (!nameStr.IsEmpty())
 				{
 					const PRUnichar	*nameUni = nameStr.get();
 					if (nameUni)
@@ -5240,7 +5259,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 
 			// look for date
-			if (dateStartStr.Length() > 0)
+			if (!dateStartStr.IsEmpty())
 			{
 				nsAutoString	dateItem;
 				PRInt32		dateStart;
@@ -5266,7 +5285,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				// strip out whitespace and any CR/LFs
 				dateItem.Trim("\n\r\t ");
 
-				if (dateItem.Length() > 0)
+				if (!dateItem.IsEmpty())
 				{
 					const PRUnichar		*dateUni = dateItem.get();
 					nsCOMPtr<nsIRDFLiteral>	dateLiteral;
@@ -5282,7 +5301,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 
 			// look for price
-			if (priceStartStr.Length() > 0)
+			if (!priceStartStr.IsEmpty())
 			{
 				nsAutoString	priceItem;
 				PRInt32		priceStart;
@@ -5296,7 +5315,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 						ConvertEntities(priceItem);
 					}
 				}
-				if (priceItem.Length() > 0)
+				if (!priceItem.IsEmpty())
 				{
 					const PRUnichar		*priceUni = priceItem.get();
 					nsCOMPtr<nsIRDFLiteral>	priceLiteral;
@@ -5326,35 +5345,33 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 							}
 						}
 					}
-					
 				}
-			}
-
-			// look for availability
-			if (availStartStr.Length() > 0)
-			{
-				nsAutoString	availItem;
-				PRInt32		availStart;
-				if ((availStart = resultItem.Find(availStartStr, PR_TRUE)) >= 0)
+				// look for availability (if we looked for price)
+				if (!availStartStr.IsEmpty())
 				{
-					availStart += availStartStr.Length();
-					PRInt32	availEnd = resultItem.Find(availEndStr, PR_TRUE, availStart);
-					if (availEnd > availStart)
+					nsAutoString	availItem;
+					PRInt32		availStart;
+					if ((availStart = resultItem.Find(availStartStr, PR_TRUE)) >= 0)
 					{
-						resultItem.Mid(availItem, availStart, availEnd - availStart);
-						ConvertEntities(availItem);
-					}
-				}
-				if (availItem.Length() > 0)
-				{
-					const PRUnichar		*availUni = availItem.get();
-					nsCOMPtr<nsIRDFLiteral>	availLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(availUni, getter_AddRefs(availLiteral))))
-					{
-						if (availLiteral)
+						availStart += availStartStr.Length();
+						PRInt32	availEnd = resultItem.Find(availEndStr, PR_TRUE, availStart);
+						if (availEnd > availStart)
 						{
-							mInner->Assert(res, kNC_Availability, availLiteral, PR_TRUE);
-							hasAvailabilityFlag = PR_TRUE;
+							resultItem.Mid(availItem, availStart, availEnd - availStart);
+							ConvertEntities(availItem);
+						}
+					}
+					if (!availItem.IsEmpty())
+					{
+						const PRUnichar		*availUni = availItem.get();
+						nsCOMPtr<nsIRDFLiteral>	availLiteral;
+						if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(availUni, getter_AddRefs(availLiteral))))
+						{
+							if (availLiteral)
+							{
+								mInner->Assert(res, kNC_Availability, availLiteral, PR_TRUE);
+								hasAvailabilityFlag = PR_TRUE;
+							}
 						}
 					}
 				}
@@ -5380,7 +5397,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 #endif
 			if (!oldRelRes)
 			{
-				if (relItem.Length() > 0)
+				if (!relItem.IsEmpty())
 				{
 					// save real relevance
 					const PRUnichar	*relUni = relItem.get();
@@ -5418,7 +5435,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 						}
 					}
 				}
-				if (relItem.Length() < 1)
+				if (relItem.IsEmpty())
 				{
 					relItem.Assign(NS_LITERAL_STRING("-"));
 				}
@@ -5475,7 +5492,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 #endif
 			if (!oldEngineRes)
 			{
-				if (engineStr.Length() > 0)
+				if (!engineStr.IsEmpty())
 				{
 					const PRUnichar		*engineUni = engineStr.get();
 					nsCOMPtr<nsIRDFLiteral>	engineLiteral;
@@ -5501,7 +5518,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			else if ((browserResultTypeStr.EqualsIgnoreCase("result")) && (!engineIconNode))
 				iconChromeDefault.Assign(NS_LITERAL_STRING("chrome://communicator/skin/search/result.gif"));
 
-			if (iconChromeDefault.Length() > 0)
+			if (!iconChromeDefault.IsEmpty())
 			{
 				const PRUnichar		*iconUni = iconChromeDefault.get();
 				nsCOMPtr<nsIRDFLiteral>	iconLiteral;
@@ -5526,7 +5543,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 
 			// set the result type
-			if (browserResultTypeStr.Length() > 0)
+			if (!browserResultTypeStr.IsEmpty())
 			{
 				const PRUnichar		*resultTypeUni = browserResultTypeStr.get();
 				nsCOMPtr<nsIRDFLiteral>	resultTypeLiteral;
@@ -5566,6 +5583,10 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 			++numResults;
 
+			// place a cap on the # of results we can process
+			if (numResults >= MAX_SEARCH_RESULTS_ALLOWED)
+				break;
+
 		}
 	}
 
@@ -5577,6 +5598,20 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		if (hasRelevanceFlag == PR_TRUE)	SetHint(mParent, kNC_Relevance);
 		if (hasDateFlag == PR_TRUE)		SetHint(mParent, kNC_Date);
 	}
+
+#ifdef	DEBUG
+	PRTime		now2;
+#ifdef	XP_MAC
+	Microseconds((UnsignedWide *)&now2);
+#else
+	now2 = PR_Now();
+#endif
+	PRUint64	loadTime64;
+	LL_SUB(loadTime64, now2, now);
+	PRUint32	loadTime32;
+	LL_L2UI(loadTime32, loadTime64);
+	printf("Finished processing search results  (%u microseconds)\n", loadTime32);
+#endif
 
 	return(NS_OK);
 }
