@@ -276,7 +276,12 @@ CalendarWindow.prototype.goToToday = function calWin_goToToday( )
 {
    this.clearSelectedEvent( );
 
-   this.currentView.goToDay( new Date() )
+   var Today = new Date();
+
+   this.currentView.goToDay( Today );
+
+   document.getElementById( "lefthandcalendar" ).value = Today;
+
 }
 
 
