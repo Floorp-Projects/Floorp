@@ -498,10 +498,14 @@ nsHttpChannel::ProcessResponse()
     case 302:
     case 307:
         // these redirects can be cached (don't store the response body)
-        if (mCacheEntry)
-            CloseCacheEntry(InitCacheEntry());
+        if (mCacheEntry) {
+            rv = InitCacheEntry();
+            if (NS_FAILED(rv))
+                CloseCacheEntry(rv);
+        }
 
         rv = ProcessRedirection(httpStatus);
+        CloseCacheEntry(rv);
         if (NS_FAILED(rv)) {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
             rv = ProcessNormal();
@@ -1239,6 +1243,14 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         rv = ioService->NewURI(nsDependentCString(location), nsnull, mURI,
                                getter_AddRefs(newURI));
         if (NS_FAILED(rv)) return rv;
+
+        // Kill the current cache entry if we are redirecting
+        // back to ourself.
+        PRBool redirectingBackToSameURI = PR_FALSE;
+        if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
+            NS_SUCCEEDED(mURI->Equals(newURI, &redirectingBackToSameURI)) &&
+            redirectingBackToSameURI)
+                mCacheEntry->Doom();
 
         // move the reference of the old location to the new one if the new
         // one has none.
