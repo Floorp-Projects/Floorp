@@ -303,18 +303,11 @@ public:
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData();
-  nsresult InitDialogVars(void);
 
   nsIEventQueue* mThreadEventQueue;
 
   nsIWebShellContainer* mContainer;
   nsIDocumentLoader* mDocLoader;
-
-  nsCOMPtr<nsIPrompt> mPrompter;
-  nsCOMPtr<nsIStringBundle> mStringBundle;
-
-  nsString mDefaultCharacterSet;
-
 
   PRBool mFiredUnloadEvent;
 
@@ -330,7 +323,6 @@ protected:
                         const char* aContentType,
                         const char* aCommand,
                         nsIStreamListener** aResult);
-  PRBool mProcessedEndDocumentLoad;
 
   MOZ_TIMER_DECLARE(mTotalTime)
 
@@ -403,7 +395,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   mThreadEventQueue = nsnull;
   InitFrameData();
   mItemType = typeContent;
-  mProcessedEndDocumentLoad = PR_FALSE;
   mCharsetReloadState = eCharsetReloadInit;
   mHistoryState = nsnull;
   mFiredUnloadEvent = PR_FALSE;
@@ -748,352 +739,6 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
   return rv;
 }
 
-#if 0
-nsresult
-nsWebShell::DoLoadURL(nsIURI * aUri,
-                      const char* aCommand,
-                      nsIInputStream* aPostDataStream,
-                      nsLoadFlags aType,
-                      const PRUnichar* aReferrer,
-                      const char * aWindowTarget,
-                      PRBool aKickOffLoad)
-{
-  if (!aUri)
-    return NS_ERROR_NULL_POINTER;
-
-  nsXPIDLCString urlSpec;
-  nsresult rv = NS_OK;
-  rv = aUri->GetSpec(getter_Copies(urlSpec));
-  if (NS_FAILED(rv)) return rv;
-
-  // If it's a normal reload that uses the cache, look at the destination anchor
-  // and see if it's an element within the current document
-  // We don't have a reload loadtype yet in necko. So, check for just history
-  // loadtype
-  if ((aType == nsISessionHistory::LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
-      (nsnull == aPostDataStream))
-   {
-    nsCOMPtr<nsIDocumentViewer> docViewer;
-    if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
-                                                    getter_AddRefs(docViewer))))
-      {
-      // Get the document object
-      nsCOMPtr<nsIDocument> doc;
-      docViewer->GetDocument(*getter_AddRefs(doc));
-
-      // Get the URL for the document
-      nsCOMPtr<nsIURI>  docURL = getter_AddRefs(doc->GetDocumentURL());
-
-      if (aUri && docURL && EqualBaseURLs(docURL, aUri))
-         {
-         // See if there's a destination anchor
-         nsXPIDLCString ref;
-         nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aUri);
-         if (aUrl)
-            rv = aUrl->GetRef(getter_Copies(ref));
-
-         nsCOMPtr<nsIPresShell> presShell;
-         rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
-
-         if (NS_SUCCEEDED(rv) && presShell)
-            {
-            /* Pass OnStartDocument notifications to the docloaderobserver
-            * so that urlbar, forward/back buttons will
-            * behave properly when going to named anchors
-            */
-            nsIInterfaceRequestor * interfaceRequestor = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
-            nsCOMPtr<nsIChannel> dummyChannel;
-            // creating a channel is expensive...don't create it unless we know we have to
-            // so move the creation down into each of the if clauses...
-            if (nsnull != (const char *) ref)
-               {
-               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, nsnull,
-                               interfaceRequestor);
-               if (NS_FAILED(rv)) return rv;
-               if (!mProcessedEndDocumentLoad)
-                  rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
-               // Go to the anchor in the current document
-               rv = presShell->GoToAnchor(nsAutoString(ref));                      
-               // Set the URL & referrer if the anchor was successfully visited
-               if (NS_SUCCEEDED(rv))
-                  {
-                  SetCurrentURI(aUri);
-                  SetReferrer(aReferrer);
-                  }
-               // Pass on status of scrolling/anchor visit to docloaderobserver
-               if (!mProcessedEndDocumentLoad)
-                  {
-                  rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-                  }
-               return rv;       
-               }
-            else if (aType == nsISessionHistory::LOAD_HISTORY)
-               {
-               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, nsnull,
-                               interfaceRequestor);
-               if (NS_FAILED(rv)) return rv;
-               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
-               // Go to the top of the current document
-               nsCOMPtr<nsIViewManager> viewMgr;
-               rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
-               if (NS_SUCCEEDED(rv) && viewMgr)
-                  {
-                  nsIScrollableView* view;
-                  rv = viewMgr->GetRootScrollableView(&view);
-                  if (NS_SUCCEEDED(rv) && view)
-                  rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
-                  if(NS_SUCCEEDED(rv))
-                     {
-                     SetCurrentURI(aUri);
-                     SetReferrer(aReferrer);
-                     }
-                  mProcessedEndDocumentLoad = PR_FALSE;
-                  // Pass on status of scrolling/anchor visit to docloaderobserver
-                  rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-                  return rv;       
-                  }
-               }
-#if 0              
-            mProcessedEndDocumentLoad = PR_FALSE;
-            // Pass on status of scrolling/anchor visit to docloaderobserver
-            rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-            return rv;      
-#endif /* 0 */
-            }  // NS_SUCCEEDED(rv) && presShell
-         } // EqualBaseURLs(docURL, url)
-      }
-   }
-
-  // Stop loading the current document (if any...).  This call may result in
-  // firing an EndLoadURL notification for the old document...
-  if (aKickOffLoad)
-    StopLoad();
-  
-  mProcessedEndDocumentLoad = PR_FALSE;
-
- /* WebShell was primarily passing the buck when it came to streamObserver.
-  * So, pass on the observer which is already a streamObserver to DocLoder.
-  */
-  if (aKickOffLoad) {
-
-#ifdef MOZ_PERF_METRICS
-    {
-       char* url;
-       nsresult rv = NS_OK;
-       rv = aUri->GetSpec(&url);
-       if (NS_SUCCEEDED(rv)) {
-         MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', webshell: %p\n", url, this));
-         delete [] url;
-       }
-    }
-  
-    MOZ_TIMER_DEBUGLOG(("Reset and start: nsWebShell::DoLoadURL(), this=%p\n", this));
-    MOZ_TIMER_RESET(mTotalTime);
-    MOZ_TIMER_START(mTotalTime);
-#endif
-
-    // Create a referrer URI
-    nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID));
-    nsCOMPtr<nsIURI> referrer;
-    if(aReferrer)
-      {
-      nsAutoString tempReferrer(aReferrer);
-      char* referrerStr = tempReferrer.ToNewCString();
-      pNetService->NewURI(referrerStr, nsnull, getter_AddRefs(referrer));
-      Recycle(referrerStr);
-      }
-
-    // now let's pass the channel into the uri loader
-    nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
-    if(nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
-       loadCmd = nsIURILoader::viewUserClick;
-
-    NS_ENSURE_SUCCESS(DoURILoad(aUri, referrer, loadCmd, aWindowTarget, 
-      aPostDataStream), NS_ERROR_FAILURE);
-    return NS_OK; 
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP 
-nsWebShell::LoadURI(nsIURI * aUri,
-                    const char * aCommand,
-                    nsIInputStream* aPostDataStream,
-                    PRBool aModifyHistory,
-                    nsLoadFlags aType,
-                    nsISupports * aHistoryState,
-                    const PRUnichar* aReferrer,
-                    const char * aWindowTarget)
-{
-   return DoLoadURL(aUri, aCommand, aPostDataStream, aType, aReferrer, aWindowTarget);
-}
-
-
-NS_IMETHODIMP
-nsWebShell::LoadURL(const PRUnichar *aURLSpec,
-                    const char* aCommand,
-                    nsIInputStream* aPostDataStream,
-                    PRBool aModifyHistory,
-                    nsLoadFlags aType,
-                    nsISupports * aHistoryState,
-                    const PRUnichar* aReferrer,
-                    const char * aWindowTarget)
-{
-   nsresult rv = NS_OK;
-
-   nsAutoString urlStr(aURLSpec);
-   nsXPIDLCString  spec;
-
-   // no dice.
-   urlStr.Trim(" ");
-
-   nsCOMPtr<nsIURI> uri;
-   rv = CreateFixupURI(urlStr.GetUnicode(), getter_AddRefs(uri));
-
-   if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
-      {
-      PRInt32 colon=urlStr.FindChar(':');
-      // we weren't able to find a protocol handler
-      rv = InitDialogVars();
-      if (NS_FAILED(rv)) 
-         return rv;
-
-      nsXPIDLString messageStr;
-      nsAutoString name("protocolNotFound");
-      rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
-      if (NS_FAILED(rv)) 
-         return rv;
-
-      NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
-
-      // extract the scheme
-      nsAutoString scheme;
-      urlStr.Left(scheme, colon);
-
-      nsAutoString dnsMsg(scheme);
-      dnsMsg.Append(' ');
-      dnsMsg.Append(messageStr);
-
-      (void)mPrompter->Alert(dnsMsg.GetUnicode());
-      } // end unknown protocol
-
-   if(!uri)
-      return rv;
-
-   rv = uri->GetSpec(getter_Copies(spec));
-   if(NS_FAILED(rv))
-      return rv;
-
-   // Get hold of Root webshell
-   nsCOMPtr<nsIWebShell>  root;
-   nsCOMPtr<nsISessionHistory> shist;
-   PRBool  isLoadingHistory=PR_FALSE; // Is SH currently loading an entry from history?
-   rv = GetRootWebShell(*getter_AddRefs(root));
-   // Get hold of session History
-   if (NS_SUCCEEDED(rv) && root)
-      {    
-      root->GetSessionHistory(*getter_AddRefs(shist));
-      }
-   if (shist)
-      shist->GetLoadingFlag(&isLoadingHistory);
-
-
-   /* 
-   * Save the history state for the current index iff this loadurl() request
-   * is not from SH. When the request comes from SH, aModifyHistory will
-   * be false and nsSessionHistory.cpp takes of this.
-   */
-   if (shist)
-      {
-      PRInt32  indix;
-      shist->GetCurrentIndex(&indix);
-      if(indix >= 0 && (aModifyHistory))
-         {
-         nsCOMPtr<nsILayoutHistoryState>  historyState;
-         //XXX For now don't do it when we have frames
-         if(mChildren.Count())
-            {
-            nsCOMPtr<nsIPresShell> presShell;
-            GetPresShell(getter_AddRefs(presShell));
-            if(presShell)
-               rv = presShell->CaptureHistoryState(getter_AddRefs(historyState));
-            if(NS_SUCCEEDED(rv) && historyState)
-               shist->SetHistoryObjectForIndex(indix, historyState);
-            }
-         }
-      }
-   /* Set the History state object for the current page in the
-   * presentation shell. If it is a new page being visited,
-   * aHistoryState is null. If the load is coming from
-   * session History, it will be set to the cached history object by
-   * session History.
-   */
-   SetHistoryState(aHistoryState);
-
-   /* If the current Uri is the same as the one to be loaded
-    * don't add it to session history. This avoids multiple
-   * entries for the same url in the  go menu 
-   */
-   nsCOMPtr<nsIURI> currentURI;
-   nsresult res = GetCurrentURI(getter_AddRefs(currentURI));
-   if(NS_SUCCEEDED(res) && currentURI)
-      {
-      nsXPIDLCString currentUriSpec;
-      rv = currentURI->GetSpec(getter_Copies(currentUriSpec));
-      if(NS_FAILED(rv))
-         return rv;
-      nsAutoString currentURIString(currentUriSpec);
-      if(currentURIString.Equals(spec))
-         {
-         /* The url to be loaded is the same as the 
-	     * url already in the page. Don't add it to session history
-	     */
-	     aModifyHistory = PR_FALSE;
-         }
-      }
-
-
-   /* Add the page to session history */
-   if(aModifyHistory && shist)
-      {
-      PRInt32  ret;
-      nsCAutoString referrer(aReferrer);
-      ret = shist->Add(spec, referrer, this);
-      }
-
-   nsCOMPtr<nsIWebShell> parent;
-   res = GetParent(*getter_AddRefs(parent));
-   nsCOMPtr<nsIURI> newURI;
-
-   if ((isLoadingHistory))
-      {
-      /* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
-      * to a frame page,SH  will change the current uri to the right value
-      * for smoother redraw. 
-      */
-      res = GetCurrentURI(getter_AddRefs(newURI));
-      }
-   else
-      {
-      /* If the call is not from SH, use the url passed by the caller
-      * so that things like JS will work right. This is for bug # 1646.
-      * May regress in other situations.
-      * What a hack
-      */
-      nsAutoString urlstr = (const char *) spec;
-      res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
-      }
-
-
-   if(NS_SUCCEEDED(res))
-      {
-      // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
-      return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aHistoryState, aReferrer, aWindowTarget);
-      }
-   return rv;
-}
-#endif
 //----------------------------------------
 
 // History methods
@@ -1411,29 +1056,26 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 NS_IMETHODIMP
 nsWebShell::GetLinkState(const nsString& aLinkURI, nsLinkState& aState)
 {
-  aState = eLinkState_Unvisited;
+   aState = eLinkState_Unvisited;
 
-  nsresult rv;
+   if(mGlobalHistory)
+      {
+      nsCAutoString url;
+      url.AssignWithConversion(aLinkURI.GetUnicode());
 
-  EnsureGlobalHistory();
+      PRInt64 lastVisitDate;
+      NS_ENSURE_SUCCESS(mGlobalHistory->GetLastVisitDate(url.GetBuffer(),
+         &lastVisitDate), NS_ERROR_FAILURE);
 
-  if (mGlobalHistory) {
-    nsCAutoString url;
-    url.AssignWithConversion(aLinkURI.GetUnicode());
+      // a last-visit-date of zero means we've never seen it before; so
+      // if it's not zero, we must've seen it.
+      if(!LL_IS_ZERO(lastVisitDate))
+         aState = eLinkState_Visited;
 
-    PRInt64 lastVisitDate;
-    rv = mGlobalHistory->GetLastVisitDate(url.GetBuffer(), &lastVisitDate);
-    if (NS_FAILED(rv)) return rv;
+      // XXX how to tell if eLinkState_OutOfDate?
+      }
 
-    // a last-visit-date of zero means we've never seen it before; so
-    // if it's not zero, we must've seen it.
-    if (! LL_IS_ZERO(lastVisitDate))
-      aState = eLinkState_Visited;
-
-    // XXX how to tell if eLinkState_OutOfDate?
-  }
-
-  return NS_OK;
+   return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1442,55 +1084,51 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
                                 nsIURI* aURL,
                                 const char* aCommand)
 {
-  nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
 
-  if ((mScriptGlobal) &&
-      (loader == mDocLoader)) {
-    if (nsnull != mContentViewer &&
-        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
-      nsIPresContext *presContext;
-      if (NS_OK == docViewer->GetPresContext(presContext)) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_UNLOAD;
-        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-        NS_RELEASE(presContext);
+   if(mScriptGlobal && (loader == mDocLoader))
+      {
+      if(mContentViewer)
+         {
+         nsCOMPtr<nsIPresContext> presContext;
+         GetPresContext(getter_AddRefs(presContext));
+         if(presContext) 
+            {
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsMouseEvent event;
+            event.eventStructType = NS_EVENT;
+            event.message = NS_PAGE_UNLOAD;
+            rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            }
+         }
       }
-      NS_RELEASE(docViewer);
-    }
-  }
 
-  if (loader == mDocLoader) {
-    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
+   if(loader == mDocLoader)
+      {
+      nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
-    if (!mDocLoaderObserver && mParent) {
-      /* If this is a frame (in which case it would have a parent && doesn't
-       * have a documentloaderObserver, get it from the rootWebShell
+      if(!mDocLoaderObserver && mParent)
+         {
+         /* If this is a frame (in which case it would have a parent && doesn't
+          * have a documentloaderObserver, get it from the rootWebShell
+          */
+         nsCOMPtr<nsIDocShellTreeItem> rootItem;
+         GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+         nsCOMPtr<nsIDocShell> rootDocShell(do_QueryInterface(rootItem));
+
+         if(rootDocShell)
+            rootDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver));
+         }
+      else
+         dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
+      /*
+       * Fire the OnStartDocumentLoad of the webshell observer
        */
-      nsCOMPtr<nsIDocShellTreeItem> rootItem;
-      GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
-      nsCOMPtr<nsIDocShell> rootDocShell(do_QueryInterface(rootItem));
+      if(mContainer && dlObserver)
+         dlObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
+      }
 
-      if (rootDocShell)
-        rootDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver));
-    }
-    else
-    {
-      dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
-    }
-    /*
-     * Fire the OnStartDocumentLoad of the webshell observer
-     */
-    if ((nsnull != mContainer) && (nsnull != dlObserver))
-    {
-       dlObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
-    }
-  }
-
-  return rv;
+   return rv;
 }
 
 
@@ -1500,6 +1138,9 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsIChannel* channel,
                               nsresult aStatus)
 {
+   if(loader != mDocLoader)
+      return NS_OK;
+
 #ifdef MOZ_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
   MOZ_TIMER_STOP(mTotalTime);
@@ -1507,53 +1148,47 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   MOZ_TIMER_PRINT(mTotalTime);
 #endif
 
-  nsresult rv = NS_ERROR_FAILURE;
-  if (!channel) {
-    return NS_ERROR_NULL_POINTER;
-  }
+   nsresult rv = NS_ERROR_FAILURE;
+   if(!channel)
+      return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
+   nsCOMPtr<nsIURI> aURL;
+   NS_ENSURE_SUCCESS(channel->GetURI(getter_AddRefs(aURL)), NS_ERROR_FAILURE);
   
-  // clean up reload state for meta charset
-  if(eCharsetReloadRequested == mCharsetReloadState)
+   // clean up reload state for meta charset
+   if(eCharsetReloadRequested == mCharsetReloadState)
       mCharsetReloadState = eCharsetReloadStopOrigional;
-  else 
+   else 
       mCharsetReloadState = eCharsetReloadInit;
 
-  /* one of many safeguards that prevent death and destruction if
-     someone is so very very rude as to bring this window down
-     during this load handler. */
-  nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
+   /* one of many safeguards that prevent death and destruction if
+      someone is so very very rude as to bring this window down
+      during this load handler. */
+   nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
 
-//if (!mProcessedEndDocumentLoad) {
-  if (loader == mDocLoader) {
-    mProcessedEndDocumentLoad = PR_TRUE;
-
-    if (mScriptGlobal && !mEODForCurrentDocument) {
-      nsIDocumentViewer* docViewer;
-      if (nsnull != mContentViewer &&
-          NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
-        nsIPresContext *presContext;
-        if (NS_OK == docViewer->GetPresContext(presContext)) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_EVENT;
-          event.message = NS_PAGE_LOAD;
-          rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-          NS_RELEASE(presContext);
-        }
-        NS_RELEASE(docViewer);
+   if(mScriptGlobal && !mEODForCurrentDocument)
+      {
+      if(mContentViewer)
+         {
+         nsCOMPtr<nsIPresContext> presContext;
+         GetPresContext(getter_AddRefs(presContext));
+         if(presContext)
+            {
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsMouseEvent event;
+            event.eventStructType = NS_EVENT;
+            event.message = NS_PAGE_LOAD;
+            rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            }
+         }
       }
-    }
 
-    mEODForCurrentDocument = PR_TRUE;
+   mEODForCurrentDocument = PR_TRUE;
 
-    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
+   nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
-    if (!mDocLoaderObserver && mParent) {
+   if(!mDocLoaderObserver && mParent)
+      {
       /* If this is a frame (in which case it would have a parent && doesn't
        * have a documentloaderObserver, get it from the rootWebShell
        */
@@ -1561,150 +1196,161 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
       GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
       nsCOMPtr<nsIDocShell> rootDocShell(do_QueryInterface(rootItem));
 
-      if (rootDocShell)
-        rootDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver));
-    }
-    else
-    {
+      if(rootDocShell)
+         rootDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver));
+      }
+   else
       dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
-    }
 
-    /*
-     * Fire the OnEndDocumentLoad of the DocLoaderobserver
-     */
-    if (dlObserver && (nsnull != aURL)) {
-       dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus);
-    }
+   /*
+    * Fire the OnEndDocumentLoad of the DocLoaderobserver
+    */
+   if(dlObserver && aURL)
+      dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus);
 
-    if (mDocLoader == loader && NS_FAILED(aStatus)) {
-        nsAutoString errorMsg;
-        nsXPIDLCString host;
-        rv = aURL->GetHost(getter_Copies(host));
-        if (NS_FAILED(rv)) return rv;
+   if(mDocLoader == loader && NS_FAILED(aStatus))
+      {
+      nsAutoString errorMsg;
+      nsXPIDLCString host;
+      NS_ENSURE_SUCCESS(aURL->GetHost(getter_Copies(host)), NS_ERROR_FAILURE);
 
-        CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
-        nsCAutoString hostStr(buf);
-        PRInt32 dotLoc = hostStr.FindChar('.');
+      CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
+      nsCAutoString hostStr(buf);
+      PRInt32 dotLoc = hostStr.FindChar('.');
 
 
-        if (aStatus == NS_ERROR_UNKNOWN_HOST
-            || aStatus == NS_ERROR_CONNECTION_REFUSED
-            || aStatus == NS_ERROR_NET_TIMEOUT) {
-            // First see if we should throw it to the keyword server.
-            NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
-            PRBool keywordsEnabled = PR_FALSE;
-            rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-            if (NS_FAILED(rv)) return rv;
+      if(aStatus == NS_ERROR_UNKNOWN_HOST ||
+         aStatus == NS_ERROR_CONNECTION_REFUSED ||
+         aStatus == NS_ERROR_NET_TIMEOUT)
+         {
+         PRBool keywordsEnabled = PR_FALSE;
+         NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled),
+            NS_ERROR_FAILURE);
 
-            if (keywordsEnabled && (-1 == dotLoc)) {
-                // only send non-qualified hosts to the keyword server
-                nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
-                keywordSpec.AppendWithConversion(host);
-                return LoadURI(keywordSpec.GetUnicode());
+         if(keywordsEnabled && (-1 == dotLoc))
+            {
+            // only send non-qualified hosts to the keyword server
+            nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
+            keywordSpec.AppendWithConversion(host);
+            return LoadURI(keywordSpec.GetUnicode());
             } // end keywordsEnabled
-        }
+         }
 
-        // Doc failed to load because the host was not found.
-        if (aStatus == NS_ERROR_UNKNOWN_HOST) {
-            // Try our www.*.com trick.
-            nsCAutoString retryHost;
-            nsXPIDLCString scheme;
-            rv = aURL->GetScheme(getter_Copies(scheme));
-            if (NS_FAILED(rv)) return rv;
+      // Doc failed to load because the host was not found.
+      if(aStatus == NS_ERROR_UNKNOWN_HOST)
+         {
+         // Try our www.*.com trick.
+         nsCAutoString retryHost;
+         nsXPIDLCString scheme;
+         NS_ENSURE_SUCCESS(aURL->GetScheme(getter_Copies(scheme)), 
+            NS_ERROR_FAILURE);
 
-            PRUint32 schemeLen = PL_strlen((const char*)scheme);
-            CBufDescriptor schemeBuf((const char*)scheme, PR_TRUE, schemeLen+1, schemeLen);
-            nsCAutoString schemeStr(schemeBuf);
+         PRUint32 schemeLen = PL_strlen((const char*)scheme);
+         CBufDescriptor schemeBuf((const char*)scheme, PR_TRUE, schemeLen+1, schemeLen);
+         nsCAutoString schemeStr(schemeBuf);
 
-            if (schemeStr.Find("http") == 0) {
-                if (-1 == dotLoc) {
-                    retryHost = "www.";
-                    retryHost += hostStr;
-                    retryHost += ".com";
-                } else {
-                    PRInt32 hostLen = hostStr.Length();
-                    if ( ((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4) ) {
-                        retryHost = "www.";
-                        retryHost += hostStr;
-                    }
-                }
+         if(schemeStr.Find("http") == 0)
+            {
+            if(-1 == dotLoc)
+               {
+               retryHost = "www.";
+               retryHost += hostStr;
+               retryHost += ".com";
+               } 
+            else 
+               {
+               PRInt32 hostLen = hostStr.Length();
+               if(((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4))
+                  {
+                  retryHost = "www.";
+                  retryHost += hostStr;
+                  }
+               }
             }
 
-            if (!retryHost.IsEmpty()) {
-                rv = aURL->SetHost(retryHost.GetBuffer());
-                if (NS_FAILED(rv)) return rv;
-                nsXPIDLCString aSpec;
-                rv = aURL->GetSpec(getter_Copies(aSpec));
-                if (NS_FAILED(rv)) return rv;
-                // reload the url
-                return LoadURI(NS_ConvertASCIItoUCS2(aSpec).GetUnicode());
+         if(!retryHost.IsEmpty())
+            {
+            NS_ENSURE_SUCCESS(aURL->SetHost(retryHost.GetBuffer()), 
+               NS_ERROR_FAILURE);
+            nsXPIDLCString aSpec;
+            NS_ENSURE_SUCCESS(aURL->GetSpec(getter_Copies(aSpec)),
+               NS_ERROR_FAILURE);
+            // reload the url
+            return LoadURI(NS_ConvertASCIItoUCS2(aSpec).GetUnicode());
             } // retry
 
-            // throw a DNS failure dialog
-            rv = InitDialogVars();
-            if (NS_FAILED(rv)) return rv;
+         // throw a DNS failure dialog
+         nsCOMPtr<nsIPrompt> prompter;
+         nsCOMPtr<nsIStringBundle> stringBundle;
+         GetPromptAndStringBundle(getter_AddRefs(prompter), 
+            getter_AddRefs(stringBundle));
+         NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
-            nsXPIDLString messageStr;
-            rv = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("dnsNotFound").GetUnicode(), getter_Copies(messageStr));
-            if (NS_FAILED(rv)) return rv;
+         nsXPIDLString messageStr;
+         NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
+            NS_ConvertASCIItoUCS2("dnsNotFound").GetUnicode(), 
+            getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-            errorMsg.AssignWithConversion(host);
-            errorMsg.AppendWithConversion(' ');
-            errorMsg.Append(messageStr);
+         errorMsg.AssignWithConversion(host);
+         errorMsg.AppendWithConversion(' ');
+         errorMsg.Append(messageStr);
 
-            (void)mPrompter->Alert(errorMsg.GetUnicode());
-        } else // unknown host
+         prompter->Alert(errorMsg.GetUnicode());
+         } 
+      else if(aStatus == NS_ERROR_CONNECTION_REFUSED)
+         {// Doc failed to load because we couldn't connect to the server.
+         // throw a connection failure dialog
+         PRInt32 port = -1;
+         NS_ENSURE_SUCCESS(aURL->GetPort(&port), NS_ERROR_FAILURE);
+         
+         nsCOMPtr<nsIPrompt> prompter;
+         nsCOMPtr<nsIStringBundle> stringBundle;
+         GetPromptAndStringBundle(getter_AddRefs(prompter), 
+            getter_AddRefs(stringBundle));
+         NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
-        // Doc failed to load because we couldn't connect to the server.
-        if (aStatus == NS_ERROR_CONNECTION_REFUSED) {
-            // throw a connection failure dialog
-            PRInt32 port = -1;
-            rv = aURL->GetPort(&port);
-            if (NS_FAILED(rv)) return rv;
-            
-            rv = InitDialogVars();
-            if (NS_FAILED(rv)) return rv;
+         nsXPIDLString messageStr;
+         NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
+            NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(), 
+            getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-            nsXPIDLString messageStr;
-            rv = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(), getter_Copies(messageStr));
-            if (NS_FAILED(rv)) return rv;
-
-            errorMsg.Assign(messageStr);
-            errorMsg.AppendWithConversion(' ');
-            errorMsg.AppendWithConversion(host);
-            if (port > 0) {
-                errorMsg.AppendWithConversion(':');
-                errorMsg.AppendInt(port);
+         errorMsg.Assign(messageStr);
+         errorMsg.AppendWithConversion(' ');
+         errorMsg.AppendWithConversion(host);
+         if(port > 0)
+            {
+            errorMsg.AppendWithConversion(':');
+            errorMsg.AppendInt(port);
             }
-            errorMsg.AppendWithConversion('.');
+         errorMsg.AppendWithConversion('.');
 
-            (void)mPrompter->Alert(errorMsg.GetUnicode());
-        } else // end NS_ERROR_CONNECTION_REFUSED
+         prompter->Alert(errorMsg.GetUnicode());
+         } 
+      else if(aStatus == NS_ERROR_NET_TIMEOUT)
+         {// Doc failed to load because the socket function timed out.
+         // throw a timeout dialog
+         nsCOMPtr<nsIPrompt> prompter;
+         nsCOMPtr<nsIStringBundle> stringBundle;
+         GetPromptAndStringBundle(getter_AddRefs(prompter), 
+            getter_AddRefs(stringBundle));
+         NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
-        // Doc failed to load because the socket function timed out.
-        if (aStatus == NS_ERROR_NET_TIMEOUT) {
-            // throw a timeout dialog
-            rv = InitDialogVars();
-            if (NS_FAILED(rv)) return rv;
 
-            nsXPIDLString messageStr;
-            rv = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(), getter_Copies(messageStr));
-            if (NS_FAILED(rv)) return rv;
+         nsXPIDLString messageStr;
+         NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
+            NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(), 
+            getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-            errorMsg.Assign(messageStr);
-            errorMsg.AppendWithConversion(' ');
-            errorMsg.AppendWithConversion(host);
-            errorMsg.AppendWithConversion('.');
+         errorMsg.Assign(messageStr);
+         errorMsg.AppendWithConversion(' ');
+         errorMsg.AppendWithConversion(host);
+         errorMsg.AppendWithConversion('.');
 
-            (void)mPrompter->Alert(errorMsg.GetUnicode());            
-        } // end NS_ERROR_NET_TIMEOUT
-    } // end mDocLoader == loader
-  } //!mProcessedEndDocumentLoad
-  else {
-    rv = NS_OK;
-  }
+         prompter->Alert(errorMsg.GetUnicode());            
+         } // end NS_ERROR_NET_TIMEOUT
+      } // end mDocLoader == loader
 
-  return rv;
+   return rv;
 }
 
 NS_IMETHODIMP
@@ -1955,33 +1601,6 @@ nsWebShell::OnStatus(nsIChannel* channel, nsISupports* ctxt,
     return NS_OK;
 }
 
-#define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"
-
-nsresult nsWebShell::InitDialogVars(void)
-{
-    nsresult rv = NS_OK;
-    if (!mPrompter) {
-        // Get an nsIPrompt so we can throw dialogs.
-      mPrompter = do_GetInterface(NS_STATIC_CAST(nsIDocShell*, this));
-    }
-
-    if (!mStringBundle) {
-        // Get a string bundle so we can retrieve dialog strings
-        nsCOMPtr<nsILocale> locale;
-        NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = localeServ->GetSystemLocale(getter_AddRefs(locale));
-        if (NS_FAILED(rv)) return rv;
-
-        NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = service->CreateBundle(DIALOG_STRING_URI, locale, getter_AddRefs(mStringBundle));
-    }
-    return rv;
-}
-
 //*****************************************************************************
 // nsWebShell::nsIBaseWindow
 //*****************************************************************************   
@@ -2158,7 +1777,6 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   }
 
   // (7) fire end document load notification
-  mProcessedEndDocumentLoad = PR_FALSE;
   nsresult rv = NS_OK;
   NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
