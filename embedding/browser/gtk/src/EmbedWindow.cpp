@@ -431,15 +431,5 @@ EmbedWindow::OnHideTooltip(void)
 NS_IMETHODIMP
 EmbedWindow::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-  nsresult rv;
-  
-  rv = QueryInterface(aIID, aInstancePtr);
-
-  // pass it up to the web browser object
-  if (NS_FAILED(rv) || !*aInstancePtr) {
-    nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(mWebBrowser);
-    return ir->GetInterface(aIID, aInstancePtr);
-  }
-
-  return rv;
+  return QueryInterface(aIID, aInstancePtr);
 }
