@@ -47,6 +47,7 @@
 #include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
 #include "nsBinaryStream.h"
+#include "nsStorageStream.h"
 
 #include "nsMemoryImpl.h"
 #include "nsDebugImpl.h"
@@ -178,6 +179,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinaryOutputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinaryInputStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageStream)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant)
 
@@ -290,6 +292,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create),
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor),
     COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor),
+    COMPONENT(STORAGESTREAM, nsStorageStreamConstructor),
 
 #define NS_PROPERTIES_CLASSNAME  "Properties"
     COMPONENT(PROPERTIES, nsProperties::Create),
