@@ -35,6 +35,8 @@
 #include "nsIBlender.h"
 #include "nsIRegion.h"
 
+//mmptemp
+
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -65,17 +67,8 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
-PRInt32 nsView::gNumViews = 0;
-PRInt32 nsView::gOffScreenWidth = 0;
-PRInt32 nsView::gOffScreenHeight = 0;
-nsDrawingSurface nsView::gOffScreen = nsnull;
-nsDrawingSurface nsView::gRedSurf = nsnull;
-nsDrawingSurface nsView::gBlueSurf = nsnull;
-
 nsView :: nsView()
 {
-  gNumViews++;
-
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
   mVFlags = ~ALL_VIEW_FLAGS;
@@ -146,43 +139,7 @@ nsView :: ~nsView()
     mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
-
   NS_IF_RELEASE(mDirtyRegion);
-
-  --gNumViews;
-
-  NS_ASSERTION(!(gNumViews < 0), "underflow of views");
-
-  if (0 == gNumViews)
-  {
-    nsIRenderingContext *rc;
-
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-    nsresult rv = nsRepository::CreateInstance(kRenderingContextCID, 
-                                       nsnull, 
-                                       kIRenderingContextIID, 
-                                       (void **)&rc);
-
-    if (NS_OK == rv)
-    {
-      if (nsnull != gOffScreen)
-        rc->DestroyDrawingSurface(gOffScreen);
-
-      if (nsnull != gRedSurf)
-        rc->DestroyDrawingSurface(gRedSurf);
-
-      if (nsnull != gBlueSurf)
-        rc->DestroyDrawingSurface(gBlueSurf);
-
-      NS_RELEASE(rc);
-    }
-    
-    gOffScreen = nsnull;
-    gRedSurf = nsnull;
-    gBlueSurf = nsnull;
-  }
 }
 
 nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -300,14 +257,12 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   PRBool  clipres = PR_FALSE;
   PRBool  clipwasset = PR_FALSE;
   float   opacity;
-  PRBool  hasTransparency;
 
   mViewManager->GetRootView(pRoot);
 
   rc.PushState();
 
   GetOpacity(opacity);
-  HasTransparency(hasTransparency);
 
   if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
   {
@@ -316,8 +271,8 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   }
   else if (mVis == nsViewVisibility_kShow)
   {
-//    if (!(aPaintFlags & (NS_VIEW_FLAG_FRONT_TO_BACK | NS_VIEW_FLAG_BACK_TO_FRONT)))
-//    {
+    if (opacity == 1.0f)
+    {
       nsRect brect;
 
       GetBounds(brect);
@@ -335,7 +290,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       }
       else if (this != pRoot)
         rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
-//    }
+    }
   }
 
   if (clipres == PR_FALSE)
@@ -417,12 +372,14 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       if ((opacity > 0.0f) && (mBounds.width > 1) && (mBounds.height > 1))
       {
         nsIRenderingContext *localcx = nsnull;
+        nsDrawingSurface    surf = nsnull;
+        nsDrawingSurface    redsurf = nsnull;
+        PRBool              hasTransparency;
         PRBool              clipState;      //for when we want to throw away the clip state
-        nsRect              offscrRect = nsRect(0, 0, 0, 0);
-        PRBool              useBlueSurf = PR_FALSE;
-        PRBool              useBlendingSurfs = PR_FALSE;
 
         rc.PushState();
+
+        HasTransparency(hasTransparency);
 
         if (opacity < 1.0f)
         {
@@ -450,20 +407,13 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
               width = NSToCoordRound(mBounds.width * t2p);
               height = NSToCoordRound(mBounds.height * t2p);
 
-              offscrRect = nsRect(0, 0, width, height);
+              nsRect bitrect = nsRect(0, 0, width, height);
 
-              CreateOffscreenSurfaces(*localcx, width, height);
+              localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, surf);
+              localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, redsurf);
 
-              if ((PR_TRUE == hasTransparency) && (nsnull != gBlueSurf))
-                useBlueSurf = PR_TRUE;
-
-              if (nsnull != gOffScreen)
-              {
-                localcx->SelectOffScreenDrawingSurface(gOffScreen);
-
-                if (nsnull != gRedSurf)
-                  useBlendingSurfs = PR_TRUE;
-              }
+              if (nsnull != surf)
+                localcx->SelectOffScreenDrawingSurface(surf);
             }
 
             NS_RELEASE(dx);
@@ -473,8 +423,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         if (nsnull == localcx)
           localcx = &rc;
 
-        if (((PR_TRUE == hasTransparency) || (opacity < 1.0f)) &&
-            !(aPaintFlags & (NS_VIEW_FLAG_FRONT_TO_BACK | NS_VIEW_FLAG_BACK_TO_FRONT)))
+        if (hasTransparency || (opacity < 1.0f))
         {
           //overview of algorithm:
           //1. clip is set to intersection of this view and whatever is
@@ -619,6 +568,9 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           localcx->PopState(clipState);
         }
 
+        if (nsnull != redsurf)
+          localcx->SelectOffScreenDrawingSurface(redsurf);
+
         //now draw ourself...
 
         if (nsnull != mClientData)
@@ -627,35 +579,14 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
           if (NS_OK == mViewManager->GetViewObserver(obs))
           {
-            if (nsnull != gRedSurf)
-            {
-              localcx->SelectOffScreenDrawingSurface(gRedSurf);
-
-              if (PR_TRUE == useBlueSurf)
-              {
-                localcx->SetColor(NS_RGB(255, 0, 0));
-                localcx->FillRect(0, 0, mBounds.width, mBounds.height);
-              }
-            }
-
             obs->Paint((nsIView *)this, *localcx, rect);
-
-            if (PR_TRUE == useBlueSurf)
-            {
-              localcx->SelectOffScreenDrawingSurface(gBlueSurf);
-
-              localcx->SetColor(NS_RGB(0, 0, 255));
-              localcx->FillRect(0, 0, mBounds.width, mBounds.height);
-
-              obs->Paint((nsIView *)this, *localcx, rect);
-            }
-
             NS_RELEASE(obs);
           }
         }
 
         if (localcx != &rc)
         {
+//          localcx->SelectOffScreenDrawingSurface(nsnull);
           NS_RELEASE(localcx);
         }
         else
@@ -663,7 +594,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         //kill offscreen buffer
 
-        if (PR_TRUE == useBlendingSurfs)
+        if ((nsnull != surf) && (nsnull != redsurf))
         {
           nsRect brect;
 
@@ -685,17 +616,29 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
             mViewManager->GetDeviceContext(dx);
 
+            float   t2p;
+            nscoord width, height;
+
+            dx->GetAppUnitsToDevUnits(t2p);
+
+            width = NSToCoordRound(mBounds.width * t2p);
+            height = NSToCoordRound(mBounds.height * t2p);
+
             blender->Init(dx);
-            blender->Blend(0, 0, offscrRect.width, offscrRect.height, gRedSurf,
-                           gOffScreen, 0, 0, opacity, PR_FALSE,
-                           (PR_TRUE == useBlueSurf) ? gBlueSurf : nsnull,
-                           NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+            blender->Blend(0, 0, width, height,surf,redsurf, 0, 0, opacity, PR_FALSE);
 
             NS_RELEASE(blender);
             NS_RELEASE(dx);
 
-            rc.CopyOffScreenBits(gOffScreen, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+//            rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+            rc.CopyOffScreenBits(redsurf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
           }
+
+          rc.DestroyDrawingSurface(surf);
+          rc.DestroyDrawingSurface(redsurf);
+
+          surf = nsnull;
+          redsurf = nsnull;
         }
 
 #ifdef SHOW_VIEW_BORDERS
@@ -738,10 +681,9 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   //paint process. only do this if this view is actually
   //visible and if there is no widget (like a scrollbar) here.
 
-  if ((PR_FALSE == clipwasset) && (PR_FALSE == clipres) &&
+  if (!clipwasset && (clipres == PR_FALSE) &&
       (mVis == nsViewVisibility_kShow) && (nsnull == mWindow) &&
-      (((opacity == 1.0f) && (PR_FALSE == hasTransparency)) ||
-      !(aPaintFlags & (NS_VIEW_FLAG_BACK_TO_FRONT | NS_VIEW_FLAG_BACK_TO_FRONT))))
+      (opacity > 0.0f))
   {
     nsRect  brect;
 
@@ -1348,43 +1290,3 @@ NS_IMETHODIMP nsView :: SetDirtyRegion(nsIRegion *aRegion)
   return NS_OK;
 }
 
-#ifndef NS_MAX
-#define NS_MAX(x, y) (((x) > (y)) ? (x) : (y))
-#endif
-
-nsresult nsView ::CreateOffscreenSurfaces(nsIRenderingContext &aRC, PRInt32 aWidth, PRInt32 aHeight)
-{
-  nsresult  res = NS_ERROR_OUT_OF_MEMORY;
-
-  if ((aWidth > gOffScreenWidth) || (aHeight > gOffScreenHeight))
-  {
-    if (nsnull != gOffScreen)
-      aRC.DestroyDrawingSurface(gOffScreen);
-
-    if (nsnull != gRedSurf)
-      aRC.DestroyDrawingSurface(gRedSurf);
-
-    if (nsnull != gBlueSurf)
-      aRC.DestroyDrawingSurface(gBlueSurf);
-
-    gOffScreen = nsnull;
-    gRedSurf = nsnull;
-    gBlueSurf = nsnull;
-
-    gOffScreenWidth = NS_MAX(aWidth, gOffScreenWidth);
-    gOffScreenHeight = NS_MAX(aHeight, gOffScreenHeight);
-
-    nsRect trect = nsRect(0, 0, gOffScreenWidth, gOffScreenHeight);
-
-    aRC.CreateDrawingSurface(&trect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
-    aRC.CreateDrawingSurface(&trect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRedSurf);
-    aRC.CreateDrawingSurface(&trect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlueSurf);
-
-    if ((nsnull != gOffScreen) && (nsnull != gRedSurf) && (nsnull != gBlueSurf))
-      res = NS_OK;
-  }
-  else
-    res = NS_OK;
-
-  return res;
-}
