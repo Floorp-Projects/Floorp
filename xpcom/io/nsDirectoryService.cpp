@@ -995,6 +995,10 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
                     rv = localMacFile->InitWithFSRef(&fsRef);
             }
         }
+        
+        // Don't cache the DL directory as the user may change it while we're running.
+        // Negligible perf hit as this directory is only requested for downloads
+        *persistent = PR_FALSE;
     }
 #elif defined (XP_WIN)
     else if (inAtom == nsDirectoryService::sSystemDirectory)
