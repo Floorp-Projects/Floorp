@@ -41,7 +41,7 @@
 #define _nsAccessible_H_
 
 #include "nsCOMPtr.h"
-#include "nsGenericAccessible.h"
+#include "nsAccessNodeWrap.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIDOMNode.h"
@@ -65,7 +65,7 @@ class nsIWebShell;
 
 enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2};  // Used in sibling index field as flags
 
-class nsAccessible : public nsGenericAccessible
+class nsAccessible : public nsAccessNodeWrap, public nsIAccessible
 {
 public:
   // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
@@ -76,24 +76,11 @@ public:
   nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   virtual ~nsAccessible();
 
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccId(PRInt32 *_retval);
-  NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
-  NS_IMETHOD GetAccDescription(nsAString& _retval);
-  NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFocused(nsIAccessible **_retval); 
-  NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval); 
-  NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height); 
-  NS_IMETHOD AccRemoveSelection(void); 
-  NS_IMETHOD AccTakeSelection(void); 
-  NS_IMETHOD AccTakeFocus(void); 
-  NS_IMETHOD AccGetDOMNode(nsIDOMNode **_retval); 
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLE
+
+  // nsIAccessNode
+  NS_IMETHOD Shutdown();
 
   NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
 
@@ -105,7 +92,7 @@ protected:
   virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
-  virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
+  virtual void GetPresContext(nsIPresContext **aContext);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
   NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval);
   NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel);
@@ -114,8 +101,6 @@ protected:
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
-  NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
-  NS_IMETHOD HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData);
   // helper method to verify frames
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
@@ -125,13 +110,11 @@ protected:
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
 
   // Data Members
-  nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIWeakReference> mPresShell;
   nsCOMPtr<nsIAccessible> mParent;
   nsCOMPtr<nsIDOMNodeList> mSiblingList; // If some of our computed siblings are anonymous content nodes, cache node list
   PRInt32 mSiblingIndex; // Cache where we are in list of kids that we got from nsIBindingManager::GetContentList(parentContent)
 
-  static PRUint32 gInstanceCount;
   static nsIStringBundle *gStringBundle;
   static nsIStringBundle *gKeyStringBundle;
 };

@@ -38,7 +38,6 @@
 #ifndef __nsCaretAccessible_h__
 #define __nsCaretAccessible_h__
 
-#include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIWeakReference.h"
 #include "nsIDOMNode.h"

@@ -42,15 +42,12 @@
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibleCaret.h"
 #include "nsIAccessibleHyperText.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -59,22 +56,17 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScrollableView.h"
 #include "nsIServiceManager.h"
 #include "nsITreeSelection.h"
-#include "nsIURI.h"
 #include "nsIViewManager.h"
-#include "nsIWebNavigation.h"
-#include "nsIXULDocument.h"
 #include "nsLayoutAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
 #include "nsXULTreeAccessible.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
-  NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
@@ -83,15 +75,14 @@ NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener) 
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
-NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
+NS_INTERFACE_MAP_END_INHERITING(nsDocAccessible)
 
 
-NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsAccessible);
-NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsAccessible);
+NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsDocAccessible);
+NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible);
 
 nsIDOMNode * nsRootAccessible::gLastFocusedNode = 0; // Strong reference
-
-PRUint32 nsRootAccessible::gInstanceCount = 0;
+PRUint32 nsRootAccessible::gActiveRootAccessibles = 0;
 
 //#define DEBUG_LEAKS 1 // aaronl debug
 
@@ -99,21 +90,18 @@ PRUint32 nsRootAccessible::gInstanceCount = 0;
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull,aShell), 
-  nsDocAccessibleMixin(aShell), mListener(nsnull), 
+nsRootAccessible::nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
+  nsDocAccessibleWrap(aDOMNode, aShell), 
+  mListener(nsnull), 
   mScrollWatchTimer(nsnull), mDocLoadTimer(nsnull), mWebProgress(nsnull),
   mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
   mBusy(eBusyStateUninitialized), mIsNewDocument(PR_FALSE), 
   mScrollPositionChangedTicks(0)
 {
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  if (shell) {
-    shell->GetDocument(getter_AddRefs(mDocument));
-    mDOMNode = do_QueryInterface(mDocument);
-  }
-  ++gInstanceCount;
+  ++gActiveRootAccessibles;
+
 #ifdef DEBUG_LEAKS
-  printf("=====> %d nsRootAccessible's %x\n", gInstanceCount, (PRUint32)this); 
+  printf("=====> %d nsRootAccessible's %x\n", gActiveRootAccessibles, (PRUint32)this); 
 #endif
 }
 
@@ -122,40 +110,18 @@ nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull
 //-----------------------------------------------------
 nsRootAccessible::~nsRootAccessible()
 {
-  if (--gInstanceCount == 0) 
-    NS_IF_RELEASE(gLastFocusedNode);
 #ifdef DEBUG_LEAKS
-  printf("======> %d nsRootAccessible's %x\n", gInstanceCount, (PRUint32)this); 
+  printf("======> %d nsRootAccessible's %x\n", gActiveRootAccessibles, (PRUint32)this); 
 #endif
-
-  RemoveAccessibleEventListener();
 }
 
-  /* attribute wstring accName; */
+/* attribute wstring accName; */
 NS_IMETHODIMP nsRootAccessible::GetAccName(nsAString& aAccName) 
 { 
   return GetTitle(aAccName);
 }
 
 // helpers
-nsIFrame* nsRootAccessible::GetFrame()
-{
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-
-  nsIFrame* root = nsnull;
-  if (shell) 
-    shell->GetRootFrame(&root);
-
-  return root;
-}
-
-void nsRootAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
-{
-  *aRelativeFrame = GetFrame();
-  if (*aRelativeFrame)
-    (*aRelativeFrame)->GetRect(aBounds);
-}
-
 /* readonly attribute nsIAccessible accParent; */
 NS_IMETHODIMP nsRootAccessible::GetAccParent(nsIAccessible * *aAccParent) 
 { 
@@ -166,36 +132,6 @@ NS_IMETHODIMP nsRootAccessible::GetAccParent(nsIAccessible * *aAccParent)
 /* readonly attribute unsigned long accRole; */
 NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole) 
 { 
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  if (!shell) {
-    *aAccRole = 0;
-    return NS_ERROR_FAILURE;
-  }
-
-  /*
-  // Commenting this out for now.
-  // It was requested that we always use MSAA ROLE_PANE objects instead of client objects.
-  // However, it might be asked that we put client objects back.
-
-  nsCOMPtr<nsIPresContext> context; 
-  shell->GetPresContext(getter_AddRefs(context));
-  nsCOMPtr<nsISupports> container;
-  context->GetContainer(getter_AddRefs(container));
-  if (container) {
-    nsCOMPtr<nsIDocShellTreeItem> parentTreeItem, docTreeItem(do_QueryInterface(container));
-    if (docTreeItem) {
-      docTreeItem->GetSameTypeParent(getter_AddRefs(parentTreeItem));
-      // Basically, if this docshell has a parent of the same type, it's a frame
-      if (parentTreeItem) {
-        *aAccRole = ROLE_PANE;
-        return NS_OK;
-      }
-    }
-  }
-
-  *aAccRole = ROLE_CLIENT;
-  */
-
   *aAccRole = ROLE_PANE;
 
   // If it's a <dialog>, use ROLE_DIALOG instead
@@ -443,14 +379,14 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   if (mListener) {
     // optionTargetNode is set to current option for HTML selects
     nsCOMPtr<nsIDOMNode> targetNode, optionTargetNode; 
-    nsresult rv = GetTargetNode(aEvent, targetNode);
-    if (NS_FAILED(rv))
-      return rv;
+    GetTargetNode(aEvent, getter_AddRefs(targetNode));
+    if (!targetNode)
+      return NS_ERROR_FAILURE;
 
     // Check to see if it's a select element. If so, need the currently focused option
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(targetNode));
     if (selectElement)     // ----- Target Node is an HTML <select> element ------
-      nsHTMLSelectOptionAccessible::GetFocusedOptionNode(targetNode, optionTargetNode);
+      nsHTMLSelectOptionAccessible::GetFocusedOptionNode(targetNode, getter_AddRefs(optionTargetNode));
 
     // for focus events on Radio Groups we give the focus to the selected button
     nsCOMPtr<nsIDOMXULSelectControlElement> selectControl(do_QueryInterface(targetNode));
@@ -471,7 +407,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #endif
 
     nsCOMPtr<nsIAccessible> accessible;
-    if (NS_FAILED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible))))
+    if (targetNode == mDOMNode) {
+      QueryInterface(NS_GET_IID(nsIAccessible), getter_AddRefs(accessible));
+    }
+    else if (NS_FAILED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible))))
       return NS_OK;
 
     // If it's a tree element, need the currently selected item
@@ -607,19 +546,18 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsCOMPtr<nsIDOMNode>& aTargetNode)
+void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode)
 {
+  *aTargetNode = nsnull;
+
   nsCOMPtr<nsIDOMEventTarget> domEventTarget;
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
 
   if (nsevent) {
     nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
+    nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(domEventTarget));
+    NS_IF_ADDREF(*aTargetNode = targetNode);
   }
-
-  nsresult rv;
-  aTargetNode = do_QueryInterface(domEventTarget, &rv);
-
-  return rv;
 }
 
 NS_IMETHODIMP nsRootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
@@ -692,38 +630,6 @@ NS_IMETHODIMP nsRootAccessible::Command(nsIDOMEvent* aEvent) { return NS_OK; }
 NS_IMETHODIMP nsRootAccessible::Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
 
 NS_IMETHODIMP nsRootAccessible::CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
-
-// ------- nsIAccessibleDocument Methods (5) ---------------
-
-NS_IMETHODIMP nsRootAccessible::GetURL(nsAString& aURL)
-{
-  return nsDocAccessibleMixin::GetURL(aURL);
-}
-
-NS_IMETHODIMP nsRootAccessible::GetTitle(nsAString& aTitle)
-{
-  return nsDocAccessibleMixin::GetTitle(aTitle);
-}
-
-NS_IMETHODIMP nsRootAccessible::GetMimeType(nsAString& aMimeType)
-{
-  return nsDocAccessibleMixin::GetMimeType(aMimeType);
-}
-
-NS_IMETHODIMP nsRootAccessible::GetDocType(nsAString& aDocType)
-{
-  return nsDocAccessibleMixin::GetDocType(aDocType);
-}
-
-NS_IMETHODIMP nsRootAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAString& aNameSpaceURI)
-{
-  return nsDocAccessibleMixin::GetNameSpaceURIForID(aNameSpaceID, aNameSpaceURI);
-}
-
-NS_IMETHODIMP nsRootAccessible::GetDocument(nsIDocument **doc)
-{
-  return nsDocAccessibleMixin::GetDocument(doc);
-}
 
 void nsRootAccessible::RemoveContentDocListeners()
 {
@@ -883,123 +789,34 @@ NS_IMETHODIMP nsRootAccessible::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-//-----------------------------------------------------
-// nsDocAccessibleMixin 
-//-----------------------------------------------------
-nsDocAccessibleMixin::nsDocAccessibleMixin(nsIDocument *aDoc):mDocument(aDoc)
+
+NS_IMETHODIMP nsRootAccessible::Shutdown()
 {
-}
-
-nsDocAccessibleMixin::nsDocAccessibleMixin(nsIWeakReference *aPresShell)
-{
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aPresShell));
-  if (shell)
-    shell->GetDocument(getter_AddRefs(mDocument));
-}
-
-nsDocAccessibleMixin::~nsDocAccessibleMixin()
-{
-}
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAString& aURL)
-{ 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShellFromPS(presShell, getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(docShell));
-  nsCAutoString theURL;
-  if (webNav) {
-    nsCOMPtr<nsIURI> pURI;
-    webNav->GetCurrentURI(getter_AddRefs(pURI));
-    if (pURI) 
-      pURI->GetSpec(theURL);
-  }
-  //XXXaaronl Need to use CopyUTF8toUCS2(nsDependentCString(theURL), aURL); when it's written
-  aURL.Assign(NS_ConvertUTF8toUCS2(theURL)); 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAString& aTitle)
-{
-  return mDocument->GetDocumentTitle(aTitle);
-}
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAString& aMimeType)
-{
-  nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(mDocument));
-  if (domnsDocument) {
-    return domnsDocument->GetContentType(aMimeType);
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAString& aDocType)
-{
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
-  nsCOMPtr<nsIDOMDocumentType> docType;
-
-  if (xulDoc) {
-    aDocType = NS_LITERAL_STRING("window"); // doctype not implemented for XUL at time of writing - causes assertion
-    return NS_OK;
-  }
-  else if (domDoc && NS_SUCCEEDED(domDoc->GetDoctype(getter_AddRefs(docType))) && docType) {
-    return docType->GetName(aDocType);
+  // Called manually or by nsAccessNode::~nsAccessNode()
+  if (mDOMNode) {
+    RemoveAccessibleEventListener();
+    if (--gActiveRootAccessibles == 0)   // Last root accessible. 
+      ShutdownAll();
   }
 
-  return NS_ERROR_FAILURE;
+  return nsDocAccessibleWrap::Shutdown();
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAString& aNameSpaceURI)
+void nsRootAccessible::ShutdownAll()
 {
-  if (mDocument) {
-    nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
-        do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
-    if (nameSpaceManager) 
-      return nameSpaceManager->GetNameSpaceURI(aNameSpaceID, aNameSpaceURI);
+  // Turn accessibility support off and destroy all objects rather 
+  // than waiting until shutdown otherwise there will be crashes when 
+  // releases occur in modules that are no longer loaded
+
+  NS_IF_RELEASE(gLastFocusedNode);
+  NS_IF_RELEASE(nsAccessible::gStringBundle);
+  NS_IF_RELEASE(nsAccessible::gKeyStringBundle);
+
+  // Shutdown accessibility service
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (accService) {
+    accService->Shutdown();
   }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetDocument(nsIDocument **doc)
-{
-  *doc = mDocument;
-  if (mDocument) {
-    NS_IF_ADDREF(*doc);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell)
-{
-  *aDocShell = nsnull;
-  if (aPresShell) {
-    nsCOMPtr<nsIDocument> doc;
-    aPresShell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIScriptGlobalObject> scriptObj;
-      doc->GetScriptGlobalObject(getter_AddRefs(scriptObj));
-      if (scriptObj) {
-        scriptObj->GetDocShell(aDocShell);
-        if (*aDocShell)
-          return NS_OK;
-      }
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocAccessibleMixin::GetCaretAccessible(nsIAccessibleCaret **aCaretAccessible)
-{
-  // Caret only owned by top level window's document
-  *aCaretAccessible = nsnull;
-  return NS_OK;
 }
 

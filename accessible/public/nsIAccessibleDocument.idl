@@ -37,6 +37,6 @@ interface nsIAccessibleDocument : nsISupports
   readonly attribute AString mimeType;
   readonly attribute AString docType;
   AString getNameSpaceURIForID(in short nameSpaceID);
-  [noscript] nsIDocument getDocument();
   readonly attribute nsIAccessibleCaret caretAccessible;
+  [noscript] attribute voidPtr window;
 };

@@ -985,7 +985,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::AccTakeFocus()
 // ---------- nsXULTreeColumnsAccessible ----------
 
 nsXULTreeColumnsAccessible::nsXULTreeColumnsAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
-nsAccessible(aDOMNode, aShell)
+nsAccessibleWrap(aDOMNode, aShell)
 {
   mCaption = nsnull;
 }

@@ -47,16 +47,16 @@
   *   widgets. Designed to be a base class for the impls of XUL
   *   and HTML form widget Accessibles
   */
-class nsFormControlAccessible : public nsAccessible
+class nsFormControlAccessible : public nsAccessibleWrap
 {
 public:
   nsFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-
 };
 
 /**

@@ -81,7 +81,7 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccState(PRUint32 *aResult)
 
 nsHTMLTableCaptionAccessible::nsHTMLTableCaptionAccessible
 (nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsAccessible(aDomNode, aShell)
+nsAccessibleWrap(aDomNode, aShell)
 {
 }
 

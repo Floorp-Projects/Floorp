@@ -37,10 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGenericAccessible.h"
 #include "nsHTMLImageAccessible.h"
 #include "nsReadableUtils.h"
-#include "nsAccessible.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"

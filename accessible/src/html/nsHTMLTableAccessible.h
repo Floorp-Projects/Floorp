@@ -40,7 +40,7 @@
 #ifndef _nsHTMLTableAccessible_H_
 #define _nsHTMLTableAccessible_H_
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleTable.h"
 #include "nsIServiceManager.h"
@@ -69,7 +69,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *aResult); 
 };
 
-class nsHTMLTableCaptionAccessible : public nsAccessible
+class nsHTMLTableCaptionAccessible : public nsAccessibleWrap
 {
 public:
   nsHTMLTableCaptionAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);

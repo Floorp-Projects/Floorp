@@ -63,7 +63,7 @@ public:
   *    entity with relationships between tabs and content to
   *    be displayed in the tabpanels object
   */
-class nsXULTabBoxAccessible : public nsAccessible
+class nsXULTabBoxAccessible : public nsAccessibleWrap
 {
 public:
   nsXULTabBoxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -76,7 +76,7 @@ public:
   * Represents the content area associated with the tabs object (when
   *   used together)
   */
-class nsXULTabPanelsAccessible : public nsAccessible
+class nsXULTabPanelsAccessible : public nsAccessibleWrap
 {
 public:
   nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

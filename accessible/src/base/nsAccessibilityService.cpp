@@ -41,7 +41,6 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
-#include "nsAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
@@ -84,6 +83,7 @@
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessible.h"
+#include "nsRootAccessibleWrap.h"
 #include "nsCaretAccessible.h"
 #include "nsIAccessibleCaret.h"
 
@@ -94,7 +94,8 @@
 
 // IFrame
 #include "nsIDocShell.h"
-#include "nsHTMLIFrameRootAccessible.h"
+#include "nsDocAccessible.h"
+#include "nsOuterDocAccessible.h"
 
 /**
   * nsAccessibility Service
@@ -241,31 +242,7 @@ NS_IMETHODIMP nsAccessibilityService::Shutdown()
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateAccessible(nsIDOMNode* aDOMNode, nsISupports* aDocument, nsIAccessible **_retval)
-{
-  nsCOMPtr<nsIDocument> document (do_QueryInterface(aDocument));
-  if (!document)
-    return NS_ERROR_FAILURE;
-
-#ifdef DEBUG
-  PRInt32 shells = document->GetNumberOfShells();
-  NS_ASSERTION(shells > 0,"Error no shells!");
-#endif
-
-  nsCOMPtr<nsIPresShell> tempShell;
-  document->GetShellAt(0, getter_AddRefs(tempShell));
-  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(tempShell);
-
-  *_retval = new nsAccessible(aDOMNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessible **_retval)
+nsAccessibilityService::CreateOuterDocAccessible(nsIDOMNode* aDOMNode, nsIAccessible **_retval)
 {
   NS_ENSURE_ARG_POINTER(aDOMNode);
   
@@ -295,8 +272,9 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
   if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc) {
     nsCOMPtr<nsIDocument> sub_doc;
     doc->GetSubDocumentFor(content, getter_AddRefs(sub_doc));
+    nsCOMPtr<nsIDOMNode> innerNode(do_QueryInterface(sub_doc));
 
-    if (sub_doc) {
+    if (sub_doc && innerNode) {
       nsCOMPtr<nsIPresShell> innerPresShell;
       sub_doc->GetShellAt(0, getter_AddRefs(innerPresShell));
 
@@ -304,25 +282,26 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
         nsCOMPtr<nsIWeakReference> innerWeakShell =
           do_GetWeakReference(innerPresShell);
 
-        // In these variable names, "outer" relates to the nsHTMLIFrameAccessible,
-        // as opposed to the nsHTMLIFrameRootAccessible which is "inner".
+        // In these variable names, "outer" relates to the nsOuterDocAccessible
+        // as opposed to the nsDocAccessibleWrap which is "inner".
         // The outer node is a <browser> or <iframe> tag, whereas the inner node
         // corresponds to the inner document root.
-        nsHTMLIFrameRootAccessible *innerRootAccessible =
-          new nsHTMLIFrameRootAccessible(innerWeakShell);
+        nsDocAccessibleWrap *innerDocAccessible =
+          new nsDocAccessibleWrap(innerNode, innerWeakShell);
 
-        if (innerRootAccessible) {
-          nsHTMLIFrameAccessible *outerRootAccessible =
-            new nsHTMLIFrameAccessible(aDOMNode, innerRootAccessible,
-                                       outerWeakShell, sub_doc);
+        if (innerDocAccessible) {
+          nsOuterDocAccessible *outerDocAccessible =
+            new nsOuterDocAccessible(aDOMNode, innerDocAccessible,
+                                     outerWeakShell);
 
-          if (outerRootAccessible) {
-            *_retval = outerRootAccessible;
+          if (outerDocAccessible) {
+            innerDocAccessible->CacheOptimizations(outerDocAccessible, -1, nsnull); // Save parent
+            *_retval = outerDocAccessible;
             NS_ADDREF(*_retval);
             return NS_OK;
           }
           // don't leak the innerRoot
-          delete innerRootAccessible;
+          delete innerDocAccessible;
         }
       }
     }
@@ -332,7 +311,7 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISupports* aFrame, nsIAccessible **_retval)
+nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsIAccessible **_retval)
 {
   static PRBool alreadyHere = PR_FALSE;
 
@@ -360,21 +339,22 @@ nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISuppo
 
   nsCOMPtr<nsIDocShellTreeItem> treeItemParent;
   treeItem->GetParent(getter_AddRefs(treeItemParent));
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIContent> rootContent;
+  presShell->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(document));
+  if (!rootNode) {
+    return NS_ERROR_FAILURE;
+  }
   if (treeItemParent) {
     // We only create root accessibles for the true root, othewise create an iframe/iframeroot accessible
-    nsCOMPtr<nsIDocument> document;
-    nsCOMPtr<nsIContent> rootContent;
-    presShell->GetDocument(getter_AddRefs(document));
-    nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(document));
-    if (rootNode) {
-      alreadyHere = PR_TRUE;
-      GetAccessibleFor(rootNode, _retval);
-      alreadyHere = PR_FALSE;
-    }
+    alreadyHere = PR_TRUE;
+    GetAccessibleFor(rootNode, _retval);
+    alreadyHere = PR_FALSE;
   }
   else {
     nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-    *_retval = new nsRootAccessible(weakShell);
+    *_retval = new nsRootAccessibleWrap(rootNode, weakShell);
     NS_IF_ADDREF(*_retval);
   }
 
@@ -631,7 +611,7 @@ nsAccessibilityService::CreateHTMLPluginAccessible(nsIDOMNode *aDOMNode, nsIWeak
 
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLNativeWindowAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                                                         PRInt32 aHwnd, nsIAccessible **_retval)
+                                                         void *aHwnd, nsIAccessible **_retval)
 {
 #ifdef XP_WIN
   *_retval = new nsHTMLWin32ObjectAccessible(aDOMNode, aShell, aHwnd);
@@ -1436,7 +1416,7 @@ nsAccessibilityService::GetHTMLObjectAccessibleFor(nsIDOMNode *aNode,
   else
     domDoc = do_QueryInterface(aNode);
   if (domDoc)
-    return CreateIFrameAccessible(aNode, _retval);
+    return CreateOuterDocAccessible(aNode, _retval);
 
   // 2) for plugins
   nsCOMPtr<nsIPluginInstance> pluginInstance ;
@@ -1613,7 +1593,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
         return NS_ERROR_FAILURE;
       nsCOMPtr<nsIPresContext> presContext;
       shell->GetPresContext(getter_AddRefs(presContext));
-      return CreateRootAccessible(presContext, frame, _retval);
+      return CreateRootAccessible(presContext, _retval);
     }
   }
 

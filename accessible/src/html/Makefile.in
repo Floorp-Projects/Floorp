@@ -53,14 +53,12 @@ REQUIRES = \
 CPPSRCS = \
   nsHTMLAreaAccessible.cpp \
   nsHTMLFormControlAccessible.cpp \
-  nsHTMLIFrameRootAccessible.cpp \
   nsHTMLImageAccessible.cpp \
   nsHTMLLinkAccessible.cpp \
   nsHTMLPluginAccessible.cpp \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   nsHTMLTextAccessible.cpp \
-  nsHTMLWin32ObjectAccessible.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

@@ -40,7 +40,7 @@
 #ifndef _nsBaseWidgetAccessible_H_
 #define _nsBaseWidgetAccessible_H_
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
@@ -55,10 +55,11 @@
 /**
   * Special Accessible that knows how to handle hit detection for flowing text
   */
-class nsBlockAccessible : public nsAccessible
+class nsBlockAccessible : public nsAccessibleWrap
 {
 public:
   nsBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
 };
 
@@ -66,10 +67,11 @@ public:
   * Special Accessible that just contains other accessible objects
   *   no actions, no name, no state, no value
   */
-class nsContainerAccessible : public nsAccessible
+class nsContainerAccessible : public nsAccessibleWrap
 {
 public:
   nsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
@@ -81,10 +83,11 @@ public:
 /** 
   * Leaf version of DOM Accessible -- has no children
   */
-class nsLeafAccessible : public nsAccessible
+class nsLeafAccessible : public nsAccessibleWrap
 {
 public:
   nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
@@ -95,10 +98,11 @@ public:
   *  It knows how to report the state of the link ( traveled or not )
   *  and can activate ( click ) the link programmatically.
   */
-class nsLinkableAccessible : public nsAccessible
+class nsLinkableAccessible : public nsAccessibleWrap
 {
 public:
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);

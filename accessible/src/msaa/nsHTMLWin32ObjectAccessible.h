@@ -41,7 +41,7 @@
 #define _nsHTMLWin32ObjectAccessible_H_
 
 #include "nsIAccessibleWin32Object.h"
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 
 struct IAccessible;
 
@@ -54,18 +54,16 @@ struct IAccessible;
   *   object returned by us in Accessible::NewAccessible() that gets the IAccessible
   *   from the windows system from the window handle.
   */
-class nsHTMLWin32ObjectAccessible : public nsAccessible,
+class nsHTMLWin32ObjectAccessible : public nsAccessibleWrap,
                                     public nsIAccessibleWin32Object
 {
 public:
 
-  nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRInt32 aHwnd);
+  nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd);
   virtual ~nsHTMLWin32ObjectAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  // ---- nsIAccessibleWin32Object ----
-  NS_IMETHOD GetHwnd(PRInt32 *aHwnd);
+  NS_DECL_NSIACCESSIBLEWIN32OBJECT
 
 protected:
   // ---- Data Members ----
@@ -73,7 +71,7 @@ protected:
     * A handle to the native plugin window (hopefully), given to 
     *   Accessible::NewAccessible() so the actual IAccessible can be retrieved.
     */
-  PRInt32       mHwnd;
+  void* mHwnd;
 };
 
 #endif  

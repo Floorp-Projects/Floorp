@@ -74,7 +74,7 @@
 // Helper methos
 nsXULSelectableAccessible::nsXULSelectableAccessible(nsIDOMNode* aDOMNode, 
                                                      nsIWeakReference* aShell):
-nsAccessible(aDOMNode, aShell)
+nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
@@ -267,7 +267,7 @@ NS_IMETHODIMP nsXULSelectableAccessible::SelectAllSelection(PRBool *_retval)
 /** Default Constructor */
 nsXULSelectListAccessible::nsXULSelectListAccessible(nsIDOMNode* aDOMNode, 
                                                      nsIWeakReference* aShell)
-:nsAccessible(aDOMNode, aShell)
+:nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
@@ -408,7 +408,7 @@ nsXULMenuitemAccessible(aDOMNode, aShell)
 }
 
 /** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsXULMenuitemAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsAccessible)
 
 /**
   * If there is a Listcell as a child ( not anonymous ) use it, otherwise

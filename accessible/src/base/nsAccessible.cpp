@@ -72,7 +72,6 @@
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIAtom.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsGUIEvent.h"
 
@@ -113,7 +112,6 @@
 
 //#define DEBUG_LEAKS
 
-PRUint32 nsAccessible::gInstanceCount = 0;
 nsIStringBundle *nsAccessible::gStringBundle = 0;
 nsIStringBundle *nsAccessible::gKeyStringBundle = 0;
 
@@ -432,7 +430,11 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNode(aNode), mPresShell(aShell), mSiblingIndex(eSiblingsUninitialized)
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccessible, nsAccessNode, nsIAccessible)
+
+nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAccessNodeWrap(aNode),
+  mPresShell(aShell), mSiblingIndex(eSiblingsUninitialized)
 {
 #ifdef NS_DEBUG_X
    {
@@ -452,15 +454,10 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNod
    }
 #endif
 
-   ++gInstanceCount;
-#ifdef DEBUG_LEAKS
-  printf("nsAccessibles=%d\n", gInstanceCount);
-#endif
-
-  if (gInstanceCount == 1) {
-    nsresult rv;
-    nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID, &rv));
+  if (!gStringBundle) {
+    nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID));
     if (stringBundleService) {
+      // Static variables are released in nsRootAccessible::ShutdownAll();
       stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, &gStringBundle);
       NS_IF_ADDREF(gStringBundle);
       stringBundleService->CreateBundle(PLATFORM_KEYS_BUNDLE_URL, &gKeyStringBundle);
@@ -474,16 +471,15 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNod
 //-----------------------------------------------------
 nsAccessible::~nsAccessible()
 {
-  if (--gInstanceCount == 0) {
-    NS_IF_RELEASE(gStringBundle);
-    NS_IF_RELEASE(gKeyStringBundle);
-  }
-
-#ifdef DEBUG_LEAKS
-  printf("nsAccessibles=%d\n", gInstanceCount);
-#endif
 }
 
+NS_IMETHODIMP nsAccessible::Shutdown()
+{
+  mPresShell = nsnull;
+  mParent = nsnull;
+  mSiblingList = nsnull;
+  return nsAccessNodeWrap::Shutdown();
+}
 
 NS_IMETHODIMP nsAccessible::GetAccName(nsAString& _retval)
 {
@@ -1003,9 +999,6 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
   if (!firstFrame)
     return;
 
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(presContext);
-
   // Find common relative parent
   // This is an ancestor frame that will incompass all frames for this content node.
   // We need the relative parent so we can get absolute screen coordinates
@@ -1056,6 +1049,8 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
     if (IsCorrectFrameType(iterFrame, nsLayoutAtoms::inlineFrame)) {
       // Only do deeper bounds search if we're on an inline frame
       // Inline frames can contain larger frames inside of them
+      nsCOMPtr<nsIPresContext> presContext;
+      GetPresContext(getter_AddRefs(presContext));
       iterFrame->FirstChild(presContext, nsnull, &iterNextFrame);
     }
 
@@ -1096,7 +1091,7 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
 
   float t2p;
   nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(presContext);
+  GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
   {
     *x = *y = *width = *height = 0;
@@ -1122,9 +1117,10 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   if (presContext) {
     nsRect orgRectPixels, pageRectPixels;
     GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
-    nsCOMPtr<nsIAccessibleEventReceiver> accessibleEventReceiver(do_QueryInterface(this));
-    if (!accessibleEventReceiver)        // Only the root accessible object supports this interface
-      GetScrollOffset(&pageRectPixels);  // Don't add scroll offsets for the root accessible
+    nsCOMPtr<nsIAccessible> accessibleParent;
+    GetAccParent(getter_AddRefs(accessibleParent));
+    if (accessibleParent)     // The root accessible object has no parent
+      GetScrollOffset(&pageRectPixels);  // Add scroll offsets if not the root accessible
     *x += orgRectPixels.x - pageRectPixels.x;
     *y += orgRectPixels.y - pageRectPixels.y;
   }
@@ -1168,12 +1164,12 @@ nsIFrame* nsAccessible::GetFrame()
   return frame;
 }
 
-void nsAccessible::GetPresContext(nsCOMPtr<nsIPresContext>& aContext)
+void nsAccessible::GetPresContext(nsIPresContext **aContext)
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
 
   if (shell) {
-    shell->GetPresContext(getter_AddRefs(aContext));
+    shell->GetPresContext(aContext);
   } else
     aContext = nsnull;
 }
@@ -1631,6 +1627,104 @@ NS_IMETHODIMP nsAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget,
   return parent ? parent->HandleEvent(aEvent, aTarget, aData) : NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// Not implemented by this class
+
+/* DOMString getAccValue (); */
+NS_IMETHODIMP nsAccessible::GetAccValue(nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void setAccName (in DOMString name); */
+NS_IMETHODIMP nsAccessible::SetAccName(const nsAString& name)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* DOMString getKeybinding (); */
+NS_IMETHODIMP nsAccessible::GetAccKeybinding(nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* unsigned long getAccRole (); */
+NS_IMETHODIMP nsAccessible::GetAccRole(PRUint32 *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* PRUint8 getAccNumActions (); */
+NS_IMETHODIMP nsAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* DOMString getAccActionName (in PRUint8 index); */
+NS_IMETHODIMP nsAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void accDoAction (in PRUint8 index); */
+NS_IMETHODIMP nsAccessible::AccDoAction(PRUint8 index)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* DOMString getAccHelp (); */
+NS_IMETHODIMP nsAccessible::GetAccHelp(nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIAccessible accNavigateRight (); */
+NS_IMETHODIMP nsAccessible::AccNavigateRight(nsIAccessible **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIAccessible accNavigateLeft (); */
+NS_IMETHODIMP nsAccessible::AccNavigateLeft(nsIAccessible **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIAccessible accNavigateUp (); */
+NS_IMETHODIMP nsAccessible::AccNavigateUp(nsIAccessible **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIAccessible accNavigateDown (); */
+NS_IMETHODIMP nsAccessible::AccNavigateDown(nsIAccessible **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void accAddSelection (); */
+NS_IMETHODIMP nsAccessible::AccAddSelection()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void accExtendSelection (); */
+NS_IMETHODIMP nsAccessible::AccExtendSelection()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* unsigned long getAccExtState (); */
+NS_IMETHODIMP nsAccessible::GetAccExtState(PRUint32 *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void getNativeInterface(out voidPtr aOutAccessible); */
+NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #ifdef MOZ_ACCESSIBILITY_ATK
 // static helper function
 nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode)
@@ -1672,3 +1766,6 @@ nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode *
   return NS_OK;
 }
 #endif  //MOZ_ACCESSIBILITY_ATK
+
+
+

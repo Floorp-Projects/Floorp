@@ -71,7 +71,7 @@
 /*
  * The basic implemetation of nsIAccessibleSelectable.
  */
-class nsHTMLSelectableAccessible : public nsAccessible,
+class nsHTMLSelectableAccessible : public nsAccessibleWrap,
                                    public nsIAccessibleSelectable
 {
 public:
@@ -148,7 +148,7 @@ public:
   NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
   NS_IMETHOD GetAccParent(nsIAccessible **aParent);
   NS_IMETHOD GetAccName(nsAString& aName);
-  static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
+  static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsIDOMNode **aFocusedOptionNode);
 };
 
 /*

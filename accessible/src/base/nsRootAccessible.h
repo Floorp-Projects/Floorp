@@ -39,7 +39,7 @@
 #ifndef _nsRootAccessible_H_
 #define _nsRootAccessible_H_
 
-#include "nsAccessible.h"
+#include "nsDocAccessibleWrap.h"
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIAccessibleEventListener.h"
 #include "nsIAccessibleDocument.h"
@@ -58,38 +58,21 @@
 
 const PRInt32 SCROLL_HASH_START_SIZE = 6;
 
-class nsDocAccessibleMixin
-{
-  public:
-    nsDocAccessibleMixin(nsIDocument *doc);
-    nsDocAccessibleMixin(nsIWeakReference *aShell);
-    virtual ~nsDocAccessibleMixin();
-    
-    NS_DECL_NSIACCESSIBLEDOCUMENT
-
-  protected:
-    NS_IMETHOD GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell);
-    nsCOMPtr<nsIDocument> mDocument;
-};
-
-class nsRootAccessible : public nsAccessible,
-                         public nsDocAccessibleMixin,
-                         public nsIAccessibleDocument,
-                         public nsIAccessibleEventReceiver,
+class nsRootAccessible : public nsDocAccessibleWrap,
                          public nsIDOMFocusListener,
                          public nsIDOMFormListener,
                          public nsIDOMXULListener,
                          public nsIWebProgressListener,
                          public nsIScrollPositionListener,
                          public nsSupportsWeakReference
-
 {
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEEVENTRECEIVER
 
   public:
     enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
 
-    nsRootAccessible(nsIWeakReference* aShell);
+    nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
     virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
@@ -99,10 +82,6 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
     NS_IMETHOD GetAccState(PRUint32 *aAccState);
     NS_IMETHOD HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData);
-
-    // ----- nsIAccessibleEventReceiver -------------------
-    NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
-    NS_IMETHOD RemoveAccessibleEventListener();
 
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -132,24 +111,28 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
     NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
-    NS_DECL_NSIACCESSIBLEDOCUMENT
     NS_DECL_NSIWEBPROGRESSLISTENER
 
+    // nsIAccessibleDocument
+    NS_IMETHOD GetCaretAccessible(nsIAccessibleCaret **aAccessibleCaret);
+
+    // nsIAccessNode
+    NS_IMETHOD Shutdown();
+
   protected:
-    NS_IMETHOD GetTargetNode(nsIDOMEvent *aEvent, nsCOMPtr<nsIDOMNode>& aTargetNode);
-    virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
-    virtual nsIFrame* GetFrame();
+    void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
     void AddScrollListener(nsIPresShell *aPresShell);
     void RemoveScrollListener(nsIPresShell *aPresShell);
     void AddContentDocListeners();
     void RemoveContentDocListeners();
     void FireDocLoadFinished();
+    void ShutdownAll();
 
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
-    static PRUint32 gInstanceCount;
+    static PRUint32 gActiveRootAccessibles;
 
     // mListener is not a com pointer. We don't own the listener
     // it is the callers responsibility to remove the listener

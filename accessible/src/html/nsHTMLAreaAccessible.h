@@ -41,7 +41,6 @@
 #define _nsHTMLAreaAccessible_H_
 
 #include "nsBaseWidgetAccessible.h"
-#include "nsAccessible.h"
 
 /* Accessible for image map areas - must be child of image
  */

@@ -40,12 +40,12 @@
 #ifndef _nsXULMenuAccessible_H_
 #define _nsXULMenuAccessible_H_
 
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 
 /* Accessible for supporting XUL menus
  */
 
-class nsXULMenuitemAccessible : public nsAccessible
+class nsXULMenuitemAccessible : public nsAccessibleWrap
 {
 public:
   nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
@@ -74,7 +74,7 @@ public:
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
 };
 
-class nsXULMenupopupAccessible : public nsAccessible
+class nsXULMenupopupAccessible : public nsAccessibleWrap
 {
 public:
   nsXULMenupopupAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };
 
-class nsXULMenubarAccessible : public nsAccessible
+class nsXULMenubarAccessible : public nsAccessibleWrap
 {
 public:
   nsXULMenubarAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);

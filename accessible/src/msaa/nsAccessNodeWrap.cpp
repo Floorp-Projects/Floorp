@@ -1,11 +1,11 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -14,108 +14,83 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  * Original Author: Aaron Leventhal (aaronl@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIAccessible.h"
-#include "nsIAccessibleDocument.h"
-#include "Accessible.h"
-#include "SimpleDOMNode.h"
-#include "ISimpleDOMNode_iid.h"
-#include "ISimpleDOMDocument_iid.h"
-#include "nsIWidget.h"
-#include "nsWindow.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
-#include "nsIAccessibleEventReceiver.h"
-#include "nsReadableUtils.h"
-#include "nsITextContent.h"
+#include "nsAccessNodeWrap.h"
+#include "ISimpleDOMNode_i.c"
+#include "ISimpleDOMDocument_i.c"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsILink.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
-#include "nsIWeakReference.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIPresContext.h"
-#include "nsPromiseFlatString.h"
 #include "nsINameSpaceManager.h"
+#include "nsAccessibleWrap.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-//#define DEBUG_LEAKS
-
-#ifdef DEBUG_LEAKS
-static gSimpleDOMNodes = 0;
-#endif
-
 /*
- * Class Accessible
+ * Class nsAccessNodeWrap
  */
-
 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
 
-SimpleDOMNode::SimpleDOMNode(nsIAccessible* aNSAcc, nsIDOMNode *aNode, HWND aWnd): mWnd(aWnd), m_cRef(0)
+nsAccessNodeWrap::nsAccessNodeWrap(nsIDOMNode *aNode): nsAccessNode(aNode)
 {
-  MOZ_COUNT_CTOR(SimpleDOMNode); // For catching leaks on tinderbox
-  mDOMNode = aNode;
-  if (!aNode && aNSAcc)
-    aNSAcc->AccGetDOMNode(getter_AddRefs(mDOMNode));
- 
-#ifdef DEBUG_LEAKS
-  printf("SimpleDOMNodes=%d\n", ++gSimpleDOMNodes);
-#endif
 }
 
 //-----------------------------------------------------
 // destruction
 //-----------------------------------------------------
-SimpleDOMNode::~SimpleDOMNode()
+nsAccessNodeWrap::~nsAccessNodeWrap()
 {
-  mDOMNode = nsnull;
-  MOZ_COUNT_DTOR(SimpleDOMNode);  // For catching leaks on tinderbox
-  m_cRef = 0;
-#ifdef DEBUG_LEAKS
-  printf("SimpleDOMNodes=%d\n", --gSimpleDOMNodes);
-#endif
 }
 
 
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-STDMETHODIMP SimpleDOMNode::QueryInterface(REFIID iid, void** ppv)
+
+STDMETHODIMP_(ULONG) nsAccessNodeWrap::AddRef()
+{
+  return nsAccessNode::AddRef();
+}
+
+STDMETHODIMP_(ULONG) nsAccessNodeWrap::Release()
+{
+  return nsAccessNode::Release();
+}
+
+STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = nsnull;
 
@@ -129,30 +104,12 @@ STDMETHODIMP SimpleDOMNode::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 }
 
-//-----------------------------------------------------
-STDMETHODIMP_(ULONG) SimpleDOMNode::AddRef()
-{
-  return ++m_cRef;
-}
-
-
-//-----------------------------------------------------
-STDMETHODIMP_(ULONG) SimpleDOMNode::Release()
-{
-  if (0 != --m_cRef)
-    return m_cRef;
-
-  delete this;
-
-  return 0;
-}
-
 
 //-----------------------------------------------------
 // ISimpleDOMNode methods
 //-----------------------------------------------------
 
-STDMETHODIMP SimpleDOMNode::get_nodeInfo( 
+STDMETHODIMP nsAccessNodeWrap::get_nodeInfo( 
     /* [out] */ BSTR __RPC_FAR *aNodeName,
     /* [out] */ short __RPC_FAR *aNameSpaceID,
     /* [out] */ BSTR __RPC_FAR *aNodeValue,
@@ -161,9 +118,8 @@ STDMETHODIMP SimpleDOMNode::get_nodeInfo(
     /* [out] */ unsigned short __RPC_FAR *aNodeType)
 {
   *aNodeName = nsnull;
-  nsCOMPtr<nsIDOMElement> domElement;
-  nsCOMPtr<nsIContent> content;
-  GetElementAndContentFor(domElement, content);
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
   PRUint16 nodeType = 0;
   mDOMNode->GetNodeType(&nodeType);
@@ -203,20 +159,20 @@ STDMETHODIMP SimpleDOMNode::get_nodeInfo(
 
 
        
-STDMETHODIMP SimpleDOMNode::get_attributes( 
+STDMETHODIMP nsAccessNodeWrap::get_attributes( 
     /* [in] */ unsigned short aMaxAttribs,
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aAttribNames,
     /* [length_is][size_is][out] */ short __RPC_FAR *aNameSpaceIDs,
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aAttribValues,
     /* [out] */ unsigned short __RPC_FAR *aNumAttribs)
 {
-  nsCOMPtr<nsIDOMElement> domElement;
-  nsCOMPtr<nsIContent> content;
-  GetElementAndContentFor(domElement, content);
   *aNumAttribs = 0;
 
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content || !domElement) 
     return E_FAIL;
+
   PRInt32 numAttribs;
   content->GetAttrCount(numAttribs);
   if (numAttribs > aMaxAttribs)
@@ -244,15 +200,14 @@ STDMETHODIMP SimpleDOMNode::get_attributes(
 }
         
 
-STDMETHODIMP SimpleDOMNode::get_attributesForNames( 
+STDMETHODIMP nsAccessNodeWrap::get_attributesForNames( 
     /* [in] */ unsigned short aNumAttribs,
     /* [length_is][size_is][in] */ BSTR __RPC_FAR *aAttribNames,
     /* [length_is][size_is][in] */ short __RPC_FAR *aNameSpaceID,
     /* [length_is][size_is][retval] */ BSTR __RPC_FAR *aAttribValues)
 {
-  nsCOMPtr<nsIDOMElement> domElement;
-  nsCOMPtr<nsIContent> content;
-  GetElementAndContentFor(domElement, content);
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
   if (!domElement || !content) 
     return E_FAIL;
@@ -290,11 +245,10 @@ STDMETHODIMP SimpleDOMNode::get_attributesForNames(
 }
 
 
-NS_IMETHODIMP SimpleDOMNode::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclaration **aCssDecl, PRUint32 *aLength)
+NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclaration **aCssDecl, PRUint32 *aLength)
 {
-  nsCOMPtr<nsIDOMElement> domElement;
-  nsCOMPtr<nsIContent> content;
-  GetElementAndContentFor(domElement, content);
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!domElement || !content) 
     return NS_ERROR_FAILURE;   
 
@@ -321,9 +275,8 @@ NS_IMETHODIMP SimpleDOMNode::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclarati
   return NS_ERROR_FAILURE;
 }
 
-
 /* To do: use media type if not null */
-STDMETHODIMP SimpleDOMNode::get_computedStyle( 
+STDMETHODIMP nsAccessNodeWrap::get_computedStyle( 
     /* [in] */ unsigned short aMaxStyleProperties,
     /* [in] */ boolean aUseAlternateView,
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aStyleProperties,
@@ -353,7 +306,7 @@ STDMETHODIMP SimpleDOMNode::get_computedStyle(
 }
 
 
-STDMETHODIMP SimpleDOMNode::get_computedStyleForProperties( 
+STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties( 
     /* [in] */ unsigned short aNumStyleProperties,
     /* [in] */ boolean aUseAlternateView,
     /* [length_is][size_is][in] */ BSTR __RPC_FAR *aStyleProperties,
@@ -376,8 +329,11 @@ STDMETHODIMP SimpleDOMNode::get_computedStyleForProperties(
   return S_OK;
 }
 
-STDMETHODIMP SimpleDOMNode::scrollTo(/* [in] */ boolean aScrollTopLeft)
+STDMETHODIMP nsAccessNodeWrap::scrollTo(/* [in] */ boolean aScrollTopLeft)
 {
+  // XXX aaronl - we could move nsIAccessible::GetFrame down and
+  // save some code by using that
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
   nsCOMPtr<nsIDocument> doc;
@@ -404,12 +360,13 @@ STDMETHODIMP SimpleDOMNode::scrollTo(/* [in] */ boolean aScrollTopLeft)
 }
 
 
-ISimpleDOMNode* SimpleDOMNode::MakeSimpleDOMNode(nsIDOMNode *node)
+ISimpleDOMNode* nsAccessNodeWrap::MakeSimpleDOMNode(nsIDOMNode *node)
 {
+  // aaronl this needs to be rewritten for new accessibility architecture
   if (!node) 
     return NULL;
 
-  ISimpleDOMNode *newNode = NULL;
+  nsAccessNodeWrap *newNode = NULL;
   
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   nsCOMPtr<nsIDocument> doc;
@@ -431,33 +388,42 @@ ISimpleDOMNode* SimpleDOMNode::MakeSimpleDOMNode(nsIDOMNode *node)
   nsCOMPtr<nsIAccessible> nsAcc;
   accService->GetAccessibleFor(node, getter_AddRefs(nsAcc));
   if (nsAcc) {
-    nsCOMPtr<nsIAccessibleDocument> nsAccDoc(do_QueryInterface(nsAcc));
-    if (nsAccDoc) 
-      newNode = new DocAccessible(nsAcc, node, mWnd);
-    else 
-      newNode = new Accessible(nsAcc, node, mWnd);
+    IAccessible *msaaAccessible;
+    nsAcc->GetNativeInterface((void**)&msaaAccessible); // addrefs
+    ISimpleDOMNode *iNode;
+    msaaAccessible->QueryInterface(IID_ISimpleDOMNode, (void**)&iNode); // addrefs
+    msaaAccessible->Release(); // Release IAccessible
+
+    return iNode;
   }
   else if (!content) {  // We're on a the root frame
+    // We'll have to use the root dom node to get this accessible
+    /*
     IAccessible * pAcc = NULL;
-    HRESULT hr = Accessible::AccessibleObjectFromWindow(  mWnd, OBJID_CLIENT, IID_IAccessible, (void **) &pAcc );
+    HRESULT hr = AccessibleObjectFromWindow(  mWnd, OBJID_CLIENT, IID_IAccessible, (void **) &pAcc );
     if (pAcc) {
       ISimpleDOMNode *testNode;
       pAcc->QueryInterface(IID_ISimpleDOMNode, (void**)&testNode);
-      newNode = testNode;
+      newNode = NS_STATIC_CAST(nsAccessNodeWrap*, testNode);
       pAcc->Release();
     }
+    */
   }
   else 
-    newNode = new SimpleDOMNode(nsnull, node, mWnd);
+    newNode = new nsAccessNodeWrap(node);
 
-  if (newNode)
-    newNode->AddRef();
+  if (newNode) {
+    newNode->Init(mRootAccessibleDoc);
+    ISimpleDOMNode *iNode = NS_STATIC_CAST(ISimpleDOMNode*, newNode);
+    iNode->AddRef();
+    return iNode;
+  }
 
-  return newNode;
+  return NULL;
 }
 
 
-STDMETHODIMP SimpleDOMNode::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP nsAccessNodeWrap::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetParentNode(getter_AddRefs(node));
@@ -466,7 +432,7 @@ STDMETHODIMP SimpleDOMNode::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *
   return S_OK;
 }
 
-STDMETHODIMP SimpleDOMNode::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP nsAccessNodeWrap::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetFirstChild(getter_AddRefs(node));
@@ -475,7 +441,7 @@ STDMETHODIMP SimpleDOMNode::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *
   return S_OK;
 }
 
-STDMETHODIMP SimpleDOMNode::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetLastChild(getter_AddRefs(node));
@@ -484,7 +450,7 @@ STDMETHODIMP SimpleDOMNode::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *a
   return S_OK;
 }
 
-STDMETHODIMP SimpleDOMNode::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP nsAccessNodeWrap::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetPreviousSibling(getter_AddRefs(node));
@@ -493,7 +459,7 @@ STDMETHODIMP SimpleDOMNode::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_
   return S_OK;
 }
 
-STDMETHODIMP SimpleDOMNode::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetNextSibling(getter_AddRefs(node));
@@ -502,18 +468,3 @@ STDMETHODIMP SimpleDOMNode::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR 
   return S_OK;
 }
 
-
-        
-//------- Helper methods ---------
-
-void SimpleDOMNode::GetElementAndContentFor(nsCOMPtr<nsIDOMElement>& aElement, nsCOMPtr<nsIContent> &aContent)
-{
-  aElement = do_QueryInterface(mDOMNode);
-  aContent = do_QueryInterface(mDOMNode);
-}
-
-
-nsIDOMNode* SimpleDOMNode::GetRealDOMNode()
-{
-  return mDOMNode;
-}

@@ -40,7 +40,6 @@
 #ifndef _nsHTMLImageAccessible_H_
 #define _nsHTMLImageAccessible_H_
 
-#include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 #include "nsIFrame.h"

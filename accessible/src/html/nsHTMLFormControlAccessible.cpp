@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
-#include "nsAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMHTMLButtonElement.h"
@@ -430,7 +430,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
  */
 
 nsHTMLGroupboxAccessible::nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
