@@ -1212,6 +1212,10 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
     return NS_ERROR_NULL_POINTER;
   }
 
+  // child sheets should always start out enabled, even if they got
+  // cloned off of top-level sheets which were disabled
+  aSheet->SetEnabled(PR_TRUE);
+  
   nsVoidKey key(aParentSheet);
   nsAutoVoidArray*  sheetMap = (nsAutoVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
