@@ -37,6 +37,7 @@
 #include "nsIImageManager.h"
 #include "nsDeviceContextGTK.h"
 #include "nsImageGTK.h"
+#include "nsPrintOptionsGTK.h"
 
 // objects that just require generic constructors
 
@@ -50,6 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsGTK)
 
 // our custom constructors
 
@@ -161,6 +163,11 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/image_manager;1",
     "@mozilla.org/gfx/imagemanager;1",
     nsImageManagerConstructor },
+  { "Print Options",
+    NS_PRINTOPTIONS_CID,
+    //    "@mozilla.org/gfx/print_options;1",
+    "@mozilla.org/gfx/print_options;1",
+    nsPrintOptionsGTKConstructor },
   { "GTK Font Enumerator",
     NS_FONT_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/font_enumerator/gtk;1",
