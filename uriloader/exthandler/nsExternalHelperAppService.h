@@ -26,6 +26,7 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
 
+#include "nsIMIMEInfo.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -39,7 +40,6 @@
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
-class nsIMIMEInfo;
 
 class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, public nsIExternalProtocolService
 {
@@ -54,10 +54,10 @@ public:
   nsresult Init();
 
   // CreateNewExternalHandler is implemented only by the base class...
-  // create an external app handler and bind it with a cookie that came from the OS specific
-  // helper app service subclass.
+  // create an external app handler and binds it with a mime info object which represents
+  // how we want to dispose of this content
   // aFileExtension --> the extension we need to append to our temp file INCLUDING the ".". i.e. .mp3
-  nsExternalAppHandler * CreateNewExternalHandler(nsISupports * aAppCookie, const char * aFileExtension);
+  nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension);
  
   // GetMIMEInfoForMimeType --> this will eventually be part of an interface but for now
   // it's only used internally. Given a content type, look up the user override information to 
@@ -69,12 +69,6 @@ public:
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
   // aFile --> an nsIFile representation of that platform application path.
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile) = 0;
-
-  // CreateStreamListenerWithApp --> must be implemented by each platform.
-  // aApplicationToUse --> the application the user wishes to launch with the incoming data
-  // aFileExtensionForData --> the extension we are going to use for the temp file in the external app handler
-  // aStreamListener --> the stream listener (really a external app handler) we're going to use for retrieving the data
-  virtual nsresult CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtensionForData, nsIStreamListener ** aStreamListener) = 0;
 
 protected:
   nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
@@ -111,27 +105,41 @@ protected:
 // to write the data into the output stream representing the temp file...
 #define DATA_BUFFER_SIZE (4096*2) 
 
-class nsExternalAppHandler : public nsIStreamListener
+class nsExternalAppHandler : public nsIStreamListener, public nsIHelperAppLauncher
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIHELPERAPPLAUNCHER
 
   nsExternalAppHandler();
   virtual ~nsExternalAppHandler();
 
-  // initialize the handler with a cookie that represents the external
-  // application associated with this handler.
-  virtual nsresult Init(nsISupports * aExternalApplicationCookie, const char * aFileExtension);
+  virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
   nsCString mTempFileExtension;
-  nsCOMPtr<nsISupports> mExternalApplication;
+  nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
 
+  // the canceled flag is set if the user canceled the launching of this application before we finished
+  // saving the data to a temp file...
+  PRBool mCanceled;
+
+  // have we received information from the user about how they want to dispose of this content...
+  PRBool mReceivedDispostionInfo;
+  PRBool mStopRequestIssued; 
+
+  // when we are told to save the temp file to disk (in a more permament location) before we are done
+  // writing the content to a temp file, then we need to remember the final destination until we are ready to
+  // use it.
+  nsCOMPtr<nsIFile> mFinalFileDestination;
+
   char * mDataBuffer;
+
+  nsresult SetUpTempFile(nsIChannel * aChannel);
 };
 
 #endif // nsExternalHelperAppService_h__
