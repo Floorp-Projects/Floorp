@@ -910,8 +910,6 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
                    aBaseURI, nsHTMLUtils::IOService);
 }
 
-#define JAVA_CLASS_ID "8AD9C840-044E-11D1-B3E9-00805F499D93"
-
 NS_IMETHODIMP
 nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
@@ -956,28 +954,17 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
     mContent->GetNameSpaceID(nameSpaceID);
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(nameSpaceID, nsHTMLAtoms::classid, classid)) {
-      PRBool bJavaObject = PR_FALSE;
-      PRBool bJavaPluginClsid = PR_FALSE;
+      PRBool bJavaObject;
 
-      if (classid.Find("java:") != -1) {
-        classid.Cut(0, 5); // Strip off the "java:". What's left is the class file.
-        bJavaObject = PR_TRUE;
-      }
+      bJavaObject = !nsCRT::strncmp(classid.get(), NS_LITERAL_STRING("java:").get(), 5);
 
-      if (classid.Find("clsid:") != -1) {
-        classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
-        bJavaPluginClsid = (classid.EqualsWithConversion(JAVA_CLASS_ID));
-      }
-
-      // if we find "java:" in the class id, or we match the Java
-      // classid number, we have a java applet
-      if(bJavaObject || bJavaPluginClsid) {
+      // if we find "java:" in the class id, we have a java applet
+      if(bJavaObject) {
         if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) return rv;
 
         nsAutoString codeBase;
         if ((NS_CONTENT_ATTR_HAS_VALUE == 
-             mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) && 
-            !bJavaPluginClsid) {
+          mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase))) {          
           nsCOMPtr<nsIURI> codeBaseURL;
           rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
           if (NS_SUCCEEDED(rv)) {
@@ -985,11 +972,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           }
         }
 
-        // Create an absolute URL
-        if(bJavaPluginClsid) {
-          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), classid, baseURL);
-        }
-        else fullURL = baseURL;
+        fullURL = baseURL;
 
         // get the nsIPluginHost interface
         pluginHost = do_GetService(kCPluginManagerCID);
