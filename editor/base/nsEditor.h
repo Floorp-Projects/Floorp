@@ -143,6 +143,8 @@ public:
 
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
+  NS_IMETHOD PostCreate();
+
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
 
   NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);

@@ -82,7 +82,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
   /**
-   * Init tells is to tell the implementation of nsIEditor to begin its services
+   * Init is to tell the implementation of nsIEditor to begin its services
    * @param aDoc            The dom document interface being observed
    * @param aPresShell      TEMP: The presentation shell displaying the document
    *                        once events can tell us from what pres shell they originated, 
@@ -90,6 +90,12 @@ public:
    *                        linked to a single pres shell.
    */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell )=0;
+
+  /**
+   * PostCreate should be called after Init, and is the time that the editor tells
+   * its documentStateObservers that the document has been created.
+   */
+  NS_IMETHOD PostCreate()=0;
 
   /**
    * return the DOM Document this editor is associated with
