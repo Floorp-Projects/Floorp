@@ -1432,14 +1432,17 @@ mips-sony-newsos*)
         LD='$(CC)'
         IMPLIB='emximp -o'
         FILTER='emxexp'
+        OS_DLLFLAGS='$(DSO_LDOPTS) -o $@'
         _OPTIMIZE_FLAGS=-O3
         _DEBUG_FLAGS=-g
         if test -n "$MOZ_DEBUG"; then
           DLLFLAGS='-g'
           EXEFLAGS='-g $(OMF_FLAG) -Zmtd -L$(DIST)/lib -o $@'
+          DSO_LDOPTS='-g -Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
         else
           DLLFLAGS=
           EXEFLAGS='-Zmtd -o $@'
+          DSO_LDOPTS='-Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
         fi
         ;;
     *-os2_vacpp)
