@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.2 $ $Date: 2001/09/20 20:40:03 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.3 $ $Date: 2001/10/11 16:34:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -52,38 +52,59 @@ static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.2 $ $D
 #include "baset.h"
 #endif /* BASET_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11t.h"
+#define NSSCKT_H
+#include "ckt.h"
+#else
 #ifndef NSSCKT_H
 #include "nssckt.h"
 #endif /* NSSCKT_H */
+#endif /* NSS_3_4_CODE */
 
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
 #endif /* NSSPKIT_H */
 
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
-
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
+#ifndef NSSDEVT_H
+#include "nssdevt.h"
+#endif /* NSSDEVT_H */
 
 PR_BEGIN_EXTERN_C
 
-#define NSSPTR_ADD_REF(p) ((p)->refCount++)
+typedef enum {
+    NSSCertificateType_Unknown = 0,
+    NSSCertificateType_PKIX = 1,
+} NSSCertificateType;
+
+typedef struct nssDecodedCertStr nssDecodedCert;
+
+struct NSSTrustStr 
+{
+    CK_TRUST serverAuth;
+    CK_TRUST emailProtection;
+    CK_TRUST codeSigning;
+};
 
 struct NSSCertificateStr
 {
     PRInt32 refCount;
     NSSArena *arena;
+    NSSCertificateType type;
     NSSItem id;
-    NSSItem der;
-    NSSItem label;
-    CK_OBJECT_HANDLE handle;
+    NSSBER encoding;
+    NSSDER issuer;
+    NSSDER subject;
+    NSSDER serial;
+    NSSUTF8 *nickname;
+    NSSASCII7 *email;
     NSSSlot *slot;
+    NSSToken *token;
     NSSTrustDomain *trustDomain;
     NSSCryptoContext *cryptoContext;
-    NSSTrust *trust;
+    NSSTrust trust;
+    CK_OBJECT_HANDLE handle;
+    nssDecodedCert *decoding;
 };
 
 struct NSSPrivateKeyStr;
@@ -92,13 +113,15 @@ struct NSSPublicKeyStr;
 
 struct NSSSymmetricKeyStr;
 
+typedef struct nssTDCertificateCacheStr nssTDCertificateCache;
+
 struct NSSTrustDomainStr {
     PRInt32 refCount;
     NSSArena *arena;
     NSSCallback defaultCallback;
-    nssList *moduleList;
-    nssListIterator *modules;
-    nssHash *certCache;
+    nssList *tokenList;
+    nssListIterator *tokens;
+    nssTDCertificateCache *cache;
 };
 
 struct NSSCryptoContextStr
@@ -109,15 +132,11 @@ struct NSSCryptoContextStr
 
 struct NSSTimeStr;
 
-struct NSSTrustStr;
-
 struct NSSUsageStr;
 
 struct NSSPoliciesStr;
 
 struct NSSAlgorithmAndParametersStr;
-
-struct NSSCallbackStr;
 
 struct NSSPKIXCertificateStr;
 

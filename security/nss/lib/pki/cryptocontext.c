@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.3 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -421,6 +421,36 @@ NSSCryptoContext_FindSymmetricKeyByAlgorithmAndKeyID
     return NULL;
 }
 
+struct token_session_str {
+    NSSToken *token;
+    nssSession *session;
+};
+
+static nssSession *
+get_token_session(NSSCryptoContext *cc, NSSToken *tok)
+{
+#if 0
+    struct token_session_str *ts;
+    for (ts  = (struct token_session_str *)nssListIterator_Start(cc->sessions);
+         ts != (struct token_session_str *)NULL;
+         ts  = (struct token_session_str *)nssListIterator_Next(cc->sessions))
+    {
+	if (ts->token == tok) { /* will this need to be more general? */
+	    break;
+	}
+    }
+    nssListIterator_Finish(cc->sessions);
+    if (!ts) {
+	/* need to create a session for this token. */
+	ts = nss_ZNEW(NULL, struct token_session_str);
+	ts->token = nssToken_AddRef(tok);
+	ts->session = nssSlot_CreateSession(tok->slot, cc->arena, PR_FALSE);
+	nssList_AddElement(cc->sessionList, (void *)ts);
+    }
+    return ts->session;
+#endif
+}
+
 NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Decrypt
 (
@@ -432,8 +462,58 @@ NSSCryptoContext_Decrypt
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+#if 0
+    NSSToken *tok;
+    nssSession *session;
+    NSSItem *rvData;
+    PRUint32 dataLen;
+    NSSAlgorithmAndParameters *ap;
+    CK_RV ckrv;
+    ap = (apOpt) ? apOpt : cc->defaultAlgorithm;
+    /* Get the token for this operation */
+    tok = nssTrustDomain_GetCryptoToken(cc->trustDomain, ap);
+    if (!tok) {
+	return (NSSItem *)NULL;
+    }
+    /* Get the local session for this token */
+    session = get_token_session(cc, tok);
+    /* Get the key needed to decrypt */
+    keyHandle = get_decrypt_key(cc, ap);
+    /* Set up the decrypt operation */
+    ckrv = CKAPI(tok)->C_DecryptInit(session->handle,
+                                     &ap->mechanism, keyHandle);
+    if (ckrv != CKR_OK) {
+	/* handle PKCS#11 error */
+	return (NSSItem *)NULL;
+    }
+    /* Get the length of the output buffer */
+    ckrv = CKAPI(tok)->C_Decrypt(session->handle,
+                                 (CK_BYTE_PTR)encryptedData->data,
+                                 (CK_ULONG)encryptedData->size,
+                                 (CK_BYTE_PTR)NULL,
+                                 (CK_ULONG_PTR)&dataLen);
+    if (ckrv != CKR_OK) {
+	/* handle PKCS#11 error */
+	return (NSSItem *)NULL;
+    }
+    /* Alloc return value memory */
+    rvData = nssItem_Create(NULL, NULL, dataLen, NULL);
+    if (!rvItem) {
+	return (NSSItem *)NULL;
+    }
+    /* Do the decryption */
+    ckrv = CKAPI(tok)->C_Decrypt(cc->session->handle,
+                                 (CK_BYTE_PTR)encryptedData->data,
+                                 (CK_ULONG)encryptedData->size,
+                                 (CK_BYTE_PTR)rvData->data,
+                                 (CK_ULONG_PTR)&dataLen);
+    if (ckrv != CKR_OK) {
+	/* handle PKCS#11 error */
+	nssItem_ZFreeIf(rvData);
+	return (NSSItem *)NULL;
+    }
+    return rvData;
+#endif
 }
 
 NSS_IMPLEMENT PRStatus
