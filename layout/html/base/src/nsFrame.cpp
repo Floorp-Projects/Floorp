@@ -1871,7 +1871,7 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
 {
   if (!aResultContent || !aContentOffset ||!aTracker || !aResultFrame)
     return NS_ERROR_NULL_POINTER;
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult result = NS_ERROR_FAILURE; 
   switch (aAmount){
     case eSelectLine :
     {
@@ -1884,6 +1884,7 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
       PRInt32   thisLine;
 
       while (NS_FAILED(result)){
+        thisBlock = blockFrame;
         result = blockFrame->GetParent(&blockFrame);
         if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
           return result;
@@ -1900,7 +1901,7 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
         if (NS_FAILED(result) || !it || !blockFrame || !thisBlock)
           return result;
         result = it->FindLineContaining(thisBlock, &thisLine);
-        if (NS_FAILED(result))
+        if (NS_FAILED(result) || thisLine <0)
           return result;
         int edgeCase = 0;//no edge case. this should look at thisLine
         PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
