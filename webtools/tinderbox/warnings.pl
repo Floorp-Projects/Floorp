@@ -204,7 +204,7 @@ sub build_blame {
     while (my ($line, $warn_rec) = each %{$lines_hash}) {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
-      my $source_text = join '', @text[$line-4..$line+2];
+      my $source_text = join '', @text[$line-3..$line+1];
       chomp $source_text;
       
       $who = "$who%netscape.com" unless $who =~ /[%]/;
@@ -233,6 +233,10 @@ sub print_warnings_as_html {
   <html>
     <head>
       <title>Blamed Build Warnings</title>
+    <style>
+      td { background-color: #ededed }
+    </style>
+    <base target="_other">
     </head>
     <body>
       <font size="+2" face="Helvetica,Arial"><b>
@@ -249,28 +253,30 @@ __END_HEADER
                    || $a cmp $b } keys %who_count) {
     push @who_list, $who;
   }
+
   # Summary Table (name, count)
   #
-  print "<table border=0 cellpadding=1 cellspacing=0>";
+  use POSIX;
+  print "<table border=0 cellpadding=1 cellspacing=0>\n";
   my $num_columns = 6;
-  my $num_per_column = $#who_list / $num_columns;
-  for (my $ii=0; $ii <= $num_per_column; $ii++) {
+  my $num_rows = ceil($#who_list / $num_columns);
+  for (my $ii=0; $ii < $num_rows; $ii++) {
     print "<tr>";
     for (my $jj=0; $jj < $num_columns; $jj++) {
-      my $index = $ii+$jj*$num_per_column + 1;
+      my $index = $ii + $jj * $num_rows;
       next if $index > $#who_list;
-      my $who = $who_list[$index];
-      my $count = $who_count{$who};
-      my $name = $who;
+      my $name = $who_list[$index];
+      my $count = $who_count{$name};
       $name =~ s/%.*//;
+      print "  " x $jj;
       print "<td><a href='#$name'>$name</a>";
       print "</td><td>";
       print "$count";
-      print "</td><td>&nbsp;</td>";
+      print "</td><td>&nbsp;</td>\n";
     }
-    print "</tr>";
+    print "</tr>\n";
   }
-  print "</table><p>";
+  print "</table><p>\n";
 
   # Print all the warnings
   #
@@ -280,11 +286,11 @@ __END_HEADER
     ($name = $who) =~ s/%.*//;
     ($email = $who) =~ s/%/@/;
     
-    print "<font size='+1' face='Helvetica,Arial'><b>";
+    print "<h2>";
     print "<a name='$name' href='mailto:$email'>$name</a>";
     print " (1 warning)"       if $count == 1;
     print " ($count warnings)" if $count > 1;
-    print "</b></font>";
+    print "</h2>";
 
     print "\n<ol>\n";
     for $file (sort keys %{$warnings_by_who{$who}}) {
@@ -306,9 +312,9 @@ __END_HEADER
       $total_unblamed_warnings++;
     }
   }
-  print "<font size='+1' face='Helvetica,Arial'><b>";
+  print "<h2>"
   print "Unblamed ($total_unblamed_warnings warnings)";
-  print "</b></font>";
+  print "</h2>";
   print "<ul>";
   for my $file (sort keys %unblamed) {
     for my $linenum (sort keys %{$warnings{$file}}) {
@@ -339,14 +345,14 @@ sub print_warning {
   # File link
   if ($file =~ /\[multiple\]/) {
     $file =~ s/\[multiple\]//;
-    print   "<a target='_other' href='http://lxr.mozilla.org/seamonkey/find?string=$file'>";
+    print   "<a href='http://lxr.mozilla.org/seamonkey/find?string=$file'>";
     print   "$file:$linenum";
     print "</a> (multiple file matches)";
   } elsif ($file =~ /\[no_match\]/) {
-    $file =~ s/.\[no_match\]//;
+    $file =~ s/\[no_match\]//;
     print   "$file:$linenum (no file match)";
   } else {
-    print "<a target='_other' href='"
+    print "<a href='"
       .file_url($file,$linenum)."'>";
     print   "$file:$linenum";
     print "</a> ";
@@ -358,9 +364,9 @@ sub print_warning {
   my $log_line = $warn_rec->{first_seen_line};
   print " (<a href='"
     .build_url($tree, $br, $log_line)
-      ."'target='_other'>";
+      ."'>";
   if ($warn_rec->{count} == 1) {
-    print "See build log";
+    print "See build log excerpt";
   } else {
     print "See 1st of $warn_rec->{count} occurrences in build log";
   }
@@ -374,12 +380,12 @@ sub print_source_code {
   # Source code fragment
   #
   my ($keyword) = $warning =~ /\`([^\']*)\'/;
-  print "<table cellpadding=4><tr><td bgcolor='#ededed'>";
+  print "<table><tr><td>";
   print "<pre><font size='-1'>";
   
   my $source_text = $warn_rec->{source};
   my @source_lines = split /\n/, $source_text;
-  my $line_index = $linenum - 3;
+  my $line_index = $linenum - 2;
   for $line (@source_lines) {
     $line =~ s/&/&amp;/g;
     $line =~ s/</&lt;/g;
@@ -390,7 +396,8 @@ sub print_source_code {
     print "</font>" if $line_index == $linenum;
     $line_index++;
   }
-  print "</font>"; #</pre>";
+  print "</font>";
+  #print "</pre>";
   print "</td></tr></table>\n";
 }
 
@@ -400,19 +407,13 @@ sub build_url {
   my $name = $br->{buildname};
   $name =~ s/ /%20/g;
 
-  return "http://tinderbox.mozilla.org/showlog.cgi?tree=$tree"
-        ."&logfile=$br->{logfile}"
-        ."&errorparser=$br->{errorparser}"
-        ."&buildname=$name"
-        ."&buildtime=$br->{buildtime}"
-        ."&line=$linenum"
-        ."&numlines=50";
+  return "../showlog.cgi?exerpt=$tree/$br->{logfile}:$linenum";
 }
 
 sub file_url {
   my ($file, $linenum) = @_;
 
-  return "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi"
+  return "../bonsai/cvsblame.cgi"
         ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
 
 }
