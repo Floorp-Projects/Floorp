@@ -407,7 +407,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
         aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
         connection = do_QueryInterface(aSupport);
 		if (connection)
-			rv = connection->CanHandleUrl(aImapUrl, canRunUrl, hasToWait);
+			rv = connection->CanHandleUrl(aImapUrl, &canRunUrl, &hasToWait);
         if (NS_FAILED(rv)) 
         {
             connection = null_nsCOMPtr();
@@ -415,7 +415,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
         }
         if (!freeConnection && !canRunUrl && !hasToWait && connection)
         {
-            rv = connection->IsBusy(isBusy, isInboxConnection);
+            rv = connection->IsBusy(&isBusy, &isInboxConnection);
             if (NS_FAILED(rv)) continue;
             if (!isBusy && !isInboxConnection)
                 freeConnection = connection;
@@ -498,7 +498,7 @@ NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
             rv = connection->GetSelectedMailboxName(getter_Copies(curFolderName));
             if (PL_strcmp(curFolderName,folderName) == 0)
             {
-                rv = connection->IsBusy(isBusy, isInbox);
+                rv = connection->IsBusy(&isBusy, &isInbox);
                 if (!isBusy)
                     rv = connection->ResetToAuthenticatedState();
                 break; // found it, end of the loop

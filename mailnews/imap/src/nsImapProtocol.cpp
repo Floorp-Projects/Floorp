@@ -1325,13 +1325,15 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   return rv;
 }
 
-NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool &aIsConnectionBusy,
-                                     PRBool &isInboxConnection)
+NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool *aIsConnectionBusy,
+                                     PRBool *isInboxConnection)
 {
+	if (!aIsConnectionBusy || !isInboxConnection)
+		return NS_ERROR_NULL_POINTER;
   NS_LOCK_INSTANCE();
     nsresult rv = NS_OK;
-  aIsConnectionBusy = PR_FALSE;
-    isInboxConnection = PR_FALSE;
+  *aIsConnectionBusy = PR_FALSE;
+    *isInboxConnection = PR_FALSE;
     if (!m_channel)
     {
         // ** jt -- something is really wrong kill the thread
@@ -1342,11 +1344,11 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool &aIsConnectionBusy,
     {
         if (m_runningUrl) // do we have a url? That means we're working on
                           // it... 
-            aIsConnectionBusy = PR_TRUE;
+            *aIsConnectionBusy = PR_TRUE;
         if (GetServerStateParser().GetSelectedMailboxName() && 
             PL_strcasecmp(GetServerStateParser().GetSelectedMailboxName(),
                           "Inbox") == 0)
-            isInboxConnection = PR_TRUE;
+            *isInboxConnection = PR_TRUE;
         
     }
   NS_UNLOCK_INSTANCE();
@@ -1354,14 +1356,16 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool &aIsConnectionBusy,
 }
 
 NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl, 
-                                           PRBool & aCanRunUrl,
-                                           PRBool & hasToWait)
+                                           PRBool * aCanRunUrl,
+                                           PRBool * hasToWait)
 {
+  if (!aCanRunUrl || !hasToWait)
+    return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
   NS_LOCK_INSTANCE();
 
-  aCanRunUrl = PR_FALSE; // assume guilty until proven otherwise...
-    hasToWait = PR_FALSE;
+  *aCanRunUrl = PR_FALSE; // assume guilty until proven otherwise...
+    *hasToWait = PR_FALSE;
 
     PRBool isBusy = PR_FALSE;
     PRBool isInboxConnection = PR_FALSE;
@@ -1376,7 +1380,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     }
     else
     {
-        IsBusy(isBusy, isInboxConnection);
+        IsBusy(&isBusy, &isInboxConnection);
         
         PRBool inSelectedState = GetServerStateParser().GetIMAPstate() ==
             nsImapServerResponseParser::kFolderSelected;
@@ -1452,9 +1456,9 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
                                 if (matched)
                                 {
                                     if (isBusy)
-                                        hasToWait = PR_TRUE;
+                                        *hasToWait = PR_TRUE;
                                     else
-                                        aCanRunUrl = PR_TRUE;
+                                        *aCanRunUrl = PR_TRUE;
                                 }
                             }
                         }
@@ -1465,7 +1469,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
                     // authenticated or selected state
                 {
                     if (!isBusy)
-                        aCanRunUrl = PR_TRUE;
+                        *aCanRunUrl = PR_TRUE;
                 }
                 
                 PR_FREEIF(urlHostName);

@@ -81,9 +81,9 @@ public:
 	// we support the nsIImapProtocol interface
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
-	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy, PRBool &isInboxConnection);
-	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl,
-                            PRBool & hasToWait);
+	NS_IMETHOD IsBusy(PRBool * aIsConnectionBusy, PRBool *isInboxConnection);
+	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool * aCanRunUrl,
+                            PRBool * hasToWait);
 	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue);
     NS_IMETHOD GetThreadEventQueue(nsIEventQueue **aEventQueue);
     // Notify FE Event has been completed

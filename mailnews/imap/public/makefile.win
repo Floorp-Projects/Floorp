@@ -28,6 +28,7 @@ XPIDLSRCS =	\
 			.\nsIImapIncomingServer.idl \
 			.\nsIImapFlagAndUidState.idl \
             .\nsIImapMockChannel.idl	\
+            .\nsIImapProtocol.idl	\
 			$(NULL)
 
 ################################################################################
@@ -35,7 +36,6 @@ XPIDLSRCS =	\
 
 EXPORTS =								\
 			nsIImapUrl.h				\
-			nsIImapProtocol.h			\
 			nsIImapLog.h				\
 			nsIIMAPHostSessionList.h	\
 			nsIImapMailfolderSink.h		\

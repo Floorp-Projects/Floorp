@@ -30,7 +30,6 @@ MODULE		= msgimap
 
 EXPORTS		= \
 		nsIImapUrl.h \
-		nsIImapProtocol.h \
 		nsIImapLog.h \
 		nsIIMAPHostSessionList.h \
 		nsIImapMailFolderSink.h \
@@ -45,6 +44,7 @@ XPIDLSRCS	= \
 		nsIImapIncomingServer.idl \
 		nsIImapFlagAndUidState.idl \
 		nsIImapMockChannel.idl \
+		nsIImapProtocol.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
