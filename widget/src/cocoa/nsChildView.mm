@@ -1924,7 +1924,13 @@ nsChildView::GetQuickDrawPort()
 
 - (void)mouseDragged:(NSEvent*)theEvent
 {
-  [self mouseMoved: theEvent];
+    nsMouseEvent geckoEvent;
+    geckoEvent.eventStructType = NS_MOUSE_EVENT;
+    [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
+    
+    // send event into Gecko by going directly to the
+    // the widget.
+    mGeckoChild->DispatchMouseEvent(geckoEvent);    
 }
 
 - (void)mouseEntered:(NSEvent*)theEvent
