@@ -35,7 +35,7 @@
 #include "nsURLFetcher.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
-#include "nsIHTTPChannel.h"
+#include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -262,18 +262,18 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIChannel> channel;
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
+
   // let's try uri dispatching...
-  NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
-  if (NS_SUCCEEDED(rv)) 
-  {
-    nsCOMPtr<nsISupports> openContext;
-    nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
-    rv = pURILoader->OpenURI(aURL, nsIURILoader::viewNormal, nsnull /* window target */, 
-                             cntListener,
-                             nsnull /* refferring URI */, 
-                             /* group */ nsnull, 
-                             getter_AddRefs(openContext));
-   }
+  nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID));
+  NS_ENSURE_TRUE(pURILoader, NS_ERROR_FAILURE);
+  nsCOMPtr<nsISupports> openContext;
+  nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
+  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull /* window target */, 
+                           cntListener,
+                           /* group */ nsnull, 
+                           getter_AddRefs(openContext));
 
   mURL = dont_QueryInterface(aURL);
   mOutStream = fOut;
