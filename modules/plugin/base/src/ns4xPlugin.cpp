@@ -76,6 +76,112 @@ static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_IID(kIMemoryIID, NS_IMEMORY_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
+XP_BEGIN_PROTOS
+
+  ////////////////////////////////////////////////////////////////////////
+  // Static stub functions that are exported to the 4.x plugin as entry
+  // points via the CALLBACKS variable.
+  //
+  static NPError NP_EXPORT
+  _requestread(NPStream *pstream, NPByteRange *rangeList);
+
+  static NPError NP_EXPORT
+  _geturlnotify(NPP npp, const char* relativeURL, const char* target, void* notifyData);
+
+  static NPError NP_EXPORT
+  _getvalue(NPP npp, NPNVariable variable, void *r_value);
+
+  static NPError NP_EXPORT
+  _setvalue(NPP npp, NPPVariable variable, void *r_value);
+
+  static NPError NP_EXPORT
+  _geturl(NPP npp, const char* relativeURL, const char* target);
+
+  static NPError NP_EXPORT
+  _posturlnotify(NPP npp, const char* relativeURL, const char *target,
+                    uint32 len, const char *buf, NPBool file, void* notifyData);
+
+  static NPError NP_EXPORT
+  _posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
+              const char *buf, NPBool file);
+
+  static NPError NP_EXPORT
+  _newstream(NPP npp, NPMIMEType type, const char* window, NPStream** pstream);
+
+  static int32 NP_EXPORT
+  _write(NPP npp, NPStream *pstream, int32 len, void *buffer);
+
+  static NPError NP_EXPORT
+  _destroystream(NPP npp, NPStream *pstream, NPError reason);
+
+  static void NP_EXPORT
+  _status(NPP npp, const char *message);
+
+#if 0
+
+  static void NP_EXPORT
+  _registerwindow(NPP npp, void* window);
+
+  static void NP_EXPORT
+  _unregisterwindow(NPP npp, void* window);
+
+  static int16 NP_EXPORT
+  _allocateMenuID(NPP npp, NPBool isSubmenu);
+
+#endif
+
+  static void NP_EXPORT
+  _memfree (void *ptr);
+
+  static uint32 NP_EXPORT
+  _memflush(uint32 size);
+
+  static void NP_EXPORT
+  _reloadplugins(NPBool reloadPages);
+
+  static void NP_EXPORT
+  _invalidaterect(NPP npp, NPRect *invalidRect);
+
+  static void NP_EXPORT
+  _invalidateregion(NPP npp, NPRegion invalidRegion);
+
+  static void NP_EXPORT
+  _forceredraw(NPP npp);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Anything that returns a pointer needs to be _HERE_ for 68K Mac to
+  // work.
+  //
+
+#if defined(XP_MAC) && !defined(powerc)
+#pragma pointers_in_D0
+#endif
+
+  static const char* NP_EXPORT
+  _useragent(NPP npp);
+
+  static void* NP_EXPORT
+  _memalloc (uint32 size);
+
+  static JRIEnv* NP_EXPORT
+  _getJavaEnv(void);
+
+#if 1
+
+  static jref NP_EXPORT
+  _getJavaPeer(NPP npp);
+
+  static java_lang_Class* NP_EXPORT
+  _getJavaClass(void* handle);
+
+#endif
+
+#if defined(XP_MAC) && !defined(powerc)
+#pragma pointers_in_A0
+#endif
+
+XP_END_PROTOS
+
 
 ////////////////////////////////////////////////////////////////////////
 // Globals
