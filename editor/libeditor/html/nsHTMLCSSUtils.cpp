@@ -307,6 +307,10 @@ nsHTMLCSSUtils::nsHTMLCSSUtils()
 {
 }
 
+nsHTMLCSSUtils::~nsHTMLCSSUtils()
+{
+}
+
 nsresult
 nsHTMLCSSUtils::Init(nsHTMLEditor *aEditor)
 {
