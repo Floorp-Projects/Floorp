@@ -69,12 +69,3 @@ interface nsIURIDispatcher : nsISupports
                in nsIURI aReferringURI);          
 };
 
-%{C++
-#define NS_URIDISPATCHER_CID				              \
-{ /* EBBBBFE1-8BE8-11d3-989D-001083010E9B */      \
- 0xebbbbfe1, 0x8be8, 0x11d3,                      \
- {0x98, 0x9d, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b}}
-
-#define NS_URIDISPATCHER_PROGID \
-  "component://netscape/network/uri-dispatcher-service"
-%}
