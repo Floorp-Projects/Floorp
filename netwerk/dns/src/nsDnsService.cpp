@@ -755,8 +755,8 @@ nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code,
                  // set flag to iterate outstanding lookups and cancel
                  break;
 
-        default: // or else we don't handle the event
 #if DEBUG
+        default: // or else we don't handle the event
 	        DebugStr("\punknown OT event in nsDnsServiceNotifier!");
 #endif
     }
