@@ -43,9 +43,9 @@ package org.mozilla.javascript;
  *
  *  ECMA 15.11
  */
-public class NativeError extends IdScriptable {
+final class NativeError extends IdScriptable {
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeError obj = new NativeError();
         obj.prototypeFlag = true;
         obj.messageValue = "";

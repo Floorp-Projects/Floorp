@@ -62,7 +62,7 @@ public class NativeArray extends IdScriptable {
      * always gets at least an object back, even when Array == null.
      */
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeArray obj = new NativeArray();
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
@@ -71,7 +71,7 @@ public class NativeArray extends IdScriptable {
     /**
      * Zero-parameter constructor: just used to create Array.prototype
      */
-    public NativeArray() {
+    private NativeArray() {
         dense = null;
         this.length = 0;
     }

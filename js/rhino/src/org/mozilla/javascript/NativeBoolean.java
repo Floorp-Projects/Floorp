@@ -42,21 +42,15 @@ package org.mozilla.javascript;
  * See ECMA 15.6.
  * @author Norris Boyd
  */
-public class NativeBoolean extends IdScriptable {
+final class NativeBoolean extends IdScriptable {
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
-        NativeBoolean obj = new NativeBoolean();
+    static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeBoolean obj = new NativeBoolean(false);
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    /**
-     * Zero-parameter constructor: just used to create Boolean.prototype
-     */
-    public NativeBoolean() {
-    }
-
-    public NativeBoolean(boolean b) {
+    private NativeBoolean(boolean b) {
         booleanValue = b;
     }
 

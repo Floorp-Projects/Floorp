@@ -44,11 +44,11 @@ package org.mozilla.javascript;
  *
  * @author Norris Boyd
  */
-public class NativeNumber extends IdScriptable {
+final class NativeNumber extends IdScriptable {
 
     private static final int MAX_PRECISION = 100;
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeNumber obj = new NativeNumber();
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
@@ -57,11 +57,11 @@ public class NativeNumber extends IdScriptable {
     /**
      * Zero-parameter constructor: just used to create Number.prototype
      */
-    public NativeNumber() {
+    private NativeNumber() {
         doubleValue = defaultValue;
     }
 
-    public NativeNumber(double number) {
+    private NativeNumber(double number) {
         doubleValue = number;
     }
 

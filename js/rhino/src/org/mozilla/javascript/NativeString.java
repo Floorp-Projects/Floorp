@@ -52,22 +52,15 @@ import java.util.Vector;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-public class NativeString extends IdScriptable {
+final class NativeString extends IdScriptable {
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
-        NativeString obj = new NativeString();
+    static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeString obj = new NativeString(defaultValue);
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    /**
-     * Zero-parameter constructor: just used to create String.prototype
-     */
-    public NativeString() {
-        string = defaultValue;
-    }
-
-    public NativeString(String s) {
+    private NativeString(String s) {
         string = s;
     }
 

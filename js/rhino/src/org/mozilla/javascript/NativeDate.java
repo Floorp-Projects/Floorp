@@ -48,9 +48,9 @@ import java.text.SimpleDateFormat;
  * See ECMA 15.9.
  * @author Mike McCabe
  */
-public class NativeDate extends IdScriptable {
+final class NativeDate extends IdScriptable {
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeDate obj = new NativeDate();
         obj.prototypeFlag = true;
         
@@ -60,7 +60,7 @@ public class NativeDate extends IdScriptable {
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
     
-    public NativeDate() {
+    private NativeDate() {
         if (thisTimeZone == null) {
             // j.u.TimeZone is synchronized, so setting class statics from it
             // should be OK.

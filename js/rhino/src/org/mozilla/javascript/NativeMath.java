@@ -42,9 +42,9 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  */
 
-public class NativeMath extends IdScriptable
+final class NativeMath extends IdScriptable
 {
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeMath obj = new NativeMath();
         obj.setSealFunctionsFlag(sealed);
         obj.setFunctionParametrs(cx);

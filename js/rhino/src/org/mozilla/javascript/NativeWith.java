@@ -43,9 +43,9 @@ import java.lang.reflect.Method;
  * It simply delegates every action to its prototype except
  * for operations on its parent.
  */
-public class NativeWith implements Scriptable, IdFunctionMaster { 
+public final class NativeWith implements Scriptable, IdFunctionMaster { 
     
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeWith obj = new NativeWith();
         obj.prototypeFlag = true;
 
@@ -60,10 +60,10 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
                                         ScriptableObject.DONTENUM);
     }
 
-    public NativeWith() {
+    private NativeWith() {
     }
 
-    public NativeWith(Scriptable parent, Scriptable prototype) {
+    NativeWith(Scriptable parent, Scriptable prototype) {
         this.parent = parent;
         this.prototype = prototype;
     }
