@@ -27,9 +27,13 @@
 #include "dialogs.h"
 #include "ifuncns.h"
 #include "time.h"
+#include <winver.h>
 
-ULONG (PASCAL *NS_GetDiskFreeSpace)(LPCTSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD);
-ULONG (PASCAL *NS_GetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
+#define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
+#define LODWORD(l)   ((DWORD) (l))
+
+ULONG  (PASCAL *NS_GetDiskFreeSpace)(LPCTSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD);
+ULONG  (PASCAL *NS_GetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
 
 BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
@@ -2539,6 +2543,8 @@ HRESULT CheckInstances()
   HWND  hwndFW;
   LPSTR szWN;
   LPSTR szCN;
+  DWORD dwRv0;
+  DWORD dwRv1;
 
   bContinue = TRUE;
   iIndex    = -1;
@@ -2553,8 +2559,10 @@ HRESULT CheckInstances()
     lstrcpy(szSection, "Check Instance");
     lstrcat(szSection, szIndex);
 
-    if((GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniConfig) == 0L) &&
-       (GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniConfig) == 0L))
+    dwRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniConfig);
+    dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniConfig);
+    if((dwRv0 == 0L) &&
+       (dwRv1 == 0L))
     {
       bContinue = FALSE;
     }
@@ -2583,6 +2591,161 @@ HRESULT CheckInstances()
     }
   }
 
+  return(FALSE);
+}
+
+BOOL GetFileVersion(LPSTR szFile, verBlock *vbVersion)
+{
+  UINT              uLen;
+  UINT              dwLen;
+  BOOL              bRv;
+  DWORD             dwHandle;
+  LPVOID            lpData;
+  LPVOID            lpBuffer;
+  VS_FIXEDFILEINFO  *lpBuffer2;
+
+  vbVersion->ullMajor   = 0;
+  vbVersion->ullMinor   = 0;
+  vbVersion->ullRelease = 0;
+  vbVersion->ullBuild   = 0;
+  if(FileExists(szFile))
+  {
+    bRv    = TRUE;
+    dwLen  = GetFileVersionInfoSize(szFile, &dwHandle);
+    lpData = (LPVOID)malloc(sizeof(long)*dwLen);
+    uLen   = 0;
+
+    if(GetFileVersionInfo(szFile, dwHandle, dwLen, lpData) != 0)
+    {
+      if(VerQueryValue(lpData, "\\", &lpBuffer, &uLen) != 0)
+      {
+        lpBuffer2             = (VS_FIXEDFILEINFO *)lpBuffer;
+        vbVersion->ullMajor   = HIWORD(lpBuffer2->dwFileVersionMS);
+        vbVersion->ullMinor   = LOWORD(lpBuffer2->dwFileVersionMS);
+        vbVersion->ullRelease = HIWORD(lpBuffer2->dwFileVersionLS);
+        vbVersion->ullBuild   = LOWORD(lpBuffer2->dwFileVersionLS);
+      }
+    }
+    free(lpData);
+  }
+  else
+    /* File does not exist */
+    bRv = FALSE;
+
+  return(bRv);
+}
+
+void TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion)
+{
+  LPSTR szNum1 = NULL;
+  LPSTR szNum2 = NULL;
+  LPSTR szNum3 = NULL;
+  LPSTR szNum4 = NULL;
+
+  szNum1 = strtok(szVersion, ".");
+  szNum2 = strtok(NULL,      ".");
+  szNum3 = strtok(NULL,      ".");
+  szNum4 = strtok(NULL,      ".");
+
+  vbVersion->ullMajor   = _atoi64(szNum1);
+  vbVersion->ullMinor   = _atoi64(szNum2);
+  vbVersion->ullRelease = _atoi64(szNum3);
+  vbVersion->ullBuild   = _atoi64(szNum4);
+}
+
+int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
+{
+  if(vbVersionOld.ullMajor > vbVersionNew.ullMajor)
+    return(4);
+  else if(vbVersionOld.ullMajor < vbVersionNew.ullMajor)
+    return(-4);
+
+  if(vbVersionOld.ullMinor > vbVersionNew.ullMinor)
+    return(3);
+  else if(vbVersionOld.ullMinor < vbVersionNew.ullMinor)
+    return(-3);
+
+  if(vbVersionOld.ullRelease > vbVersionNew.ullRelease)
+    return(2);
+  else if(vbVersionOld.ullRelease < vbVersionNew.ullRelease)
+    return(-2);
+
+  if(vbVersionOld.ullBuild > vbVersionNew.ullBuild)
+    return(1);
+  else if(vbVersionOld.ullBuild < vbVersionNew.ullBuild)
+    return(-1);
+
+  /* the versions are all the same */
+  return(0);
+}
+
+BOOL CheckLegacy()
+{
+  char      szSection[MAX_BUF];
+  char      szFilename[MAX_BUF];
+  char      szMessage[MAX_BUF];
+  char      szIndex[MAX_BUF];
+  char      szVersionNew[MAX_BUF];
+  char      szDecryptedFilePath[MAX_BUF];
+  int       iIndex;
+  BOOL      bContinue;
+  DWORD     dwRv0;
+  DWORD     dwRv1;
+  verBlock  vbVersionNew;
+  verBlock  vbVersionOld;
+
+  bContinue = TRUE;
+  iIndex    = -1;
+  while(bContinue)
+  {
+    ZeroMemory(szFilename,      sizeof(szFilename));
+    ZeroMemory(szVersionNew,    sizeof(szVersionNew));
+    ZeroMemory(szMessage,       sizeof(szMessage));
+
+    ++iIndex;
+    itoa(iIndex, szIndex, 10);
+    lstrcpy(szSection, "Legacy Check");
+    lstrcat(szSection, szIndex);
+
+    dwRv0 = GetPrivateProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniConfig);
+    dwRv1 = GetPrivateProfileString(szSection, "Version", "", szVersionNew, MAX_BUF, szFileIniConfig);
+    if(dwRv0 == 0L)
+    {
+      bContinue = FALSE;
+    }
+    else if(*szFilename != '\0')
+    {
+      GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniConfig);
+      if(*szMessage == '\0')
+        /* no message string input. so just continue with the next check */
+        continue;
+
+      DecryptString(szDecryptedFilePath, szFilename);
+      if((dwRv1 == 0L) || (*szVersionNew == '\0'))
+      {
+        if(FileExists(szDecryptedFilePath))
+        {
+          if(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
+            return(TRUE);
+        }
+        /* file does not exist, so it's okay.  Continue with the next check */
+        continue;
+      }
+
+      if(GetFileVersion(szDecryptedFilePath, &vbVersionOld))
+      {
+        TranslateVersionStr(szVersionNew, &vbVersionNew);
+        if(CompareVersion(vbVersionOld, vbVersionNew) < 0)
+        {
+          if(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
+            return(TRUE);
+        }
+      }
+    }
+  }
+  /* returning TRUE means the user wants to go back and choose a different destination path
+   * returning FALSE means the user is ignoring the warning
+   */
   return(FALSE);
 }
 

@@ -34,6 +34,14 @@ struct diskSpaceNode
   dsN             *Prev;
 };
 
+typedef struct structVer
+{
+  ULONGLONG ullMajor;
+  ULONGLONG ullMinor;
+  ULONGLONG ullRelease;
+  ULONGLONG ullBuild;
+} verBlock;
+
 BOOL              InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitInstance(HINSTANCE hInstance, DWORD dwCmdShow);
 void              PrintError(LPSTR szMsg, DWORD dwErrorCodeSH);
@@ -136,6 +144,10 @@ void              UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullInstall
 HRESULT           InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement);
 HRESULT           CheckInstances();
 long              RandomSelect(void);
+void              TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
+BOOL              GetFileVersion(LPSTR szFile, verBlock *vbVersion);
+BOOL              CheckLegacy(void);
+int               CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
 
 BOOL              bSDInit;
 

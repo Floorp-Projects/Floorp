@@ -538,6 +538,13 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath, MAX_PATH);
           lstrcpy(sgProduct.szPath, szTempSetupPath);
 
+          /* check for legacy file.  We're trying not to install over an old incompatible version */
+          if(CheckLegacy() == TRUE)
+          {
+            SetForegroundWindow(hDlg);
+            break;
+          }
+
           /* append a backslash to the path because CreateDirectoriesAll()
              uses a backslash to determine directories */
           lstrcpy(szBuf, sgProduct.szPath);
