@@ -120,7 +120,17 @@
 	#define NSCAP_FEATURE_DEBUG_PTR_TYPES
 #endif
 
-#ifndef NS_DEBUG
+	/*
+		|...TEST_DONTQUERY_CASES| and |...DEBUG_PTR_TYPES| introduce some code that is 
+		problematic on a select few of our platforms, e.g., QNX.  Therefore, I'm providing
+		a mechanism by which these features can be explicitly disabled from the command-line.
+	*/
+
+#ifdef NSCAP_DISABLE_TEST_DONTQUERY_CASES
+	#undef NSCAP_FEATURE_TEST_DONTQUERY_CASES
+#endif
+
+#if defined(NSCAP_DISABLE_DEBUG_PTR_TYPES) || !defined(NS_DEBUG)
 	#undef NSCAP_FEATURE_DEBUG_PTR_TYPES
 #endif
 
