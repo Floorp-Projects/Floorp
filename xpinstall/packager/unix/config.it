@@ -4,6 +4,8 @@
 Default Location=/usr/local/mozilla
 ; *** LOCALIZE ME BABY ***
 Title=Mozilla Installer
+; The Default Setup Type value must exactly match the "Description Short"
+; value of the desired setup type.
 ; *** LOCALIZE ME BABY ***
 Default Setup Type=Typical
 
@@ -52,6 +54,7 @@ C4=Component5
 C5=Component6
 C6=Component7
 C7=Component8
+C8=Component11
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
