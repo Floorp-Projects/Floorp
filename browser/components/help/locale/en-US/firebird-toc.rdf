@@ -183,8 +183,9 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="prefs-general" nc:name="General" nc:link="prefs.xhtml#general_options"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-privacy" nc:name="Privacy" nc:link="prefs.xhtml#privacy_options"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-web-features" nc:name="Web Features" nc:link="prefs.xhtml#web_features_options"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-download" nc:name="Downloads" nc:link="prefs.xhtml#downloads_options"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-content" nc:name="Content" nc:link="prefs.xhtml#content_options"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-tabs"    nc:name="Tabs"    nc:link="prefs.xhtml#tabs_options"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-downloads" nc:name="Downloads" nc:link="prefs.xhtml#downloads_options"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-advanced" nc:name="Advanced" nc:link="prefs.xhtml#advanced_options"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -194,8 +195,6 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="prefs-home-page" nc:name="Home Page" nc:link="prefs.xhtml#home_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-default-browser" nc:name="Default Browser" nc:link="prefs.xhtml#default_browser"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/> </rdf:li>
       </rdf:Seq>
@@ -205,29 +204,31 @@
   <rdf:Description about="#prefs-privacy">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-history" nc:name="History" nc:link="prefs.xhtml#history"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-saved-form-information" nc:name="Saved Form Information" nc:link="prefs.xhtml#saved_form_information"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-saved-passwords" nc:name="Saved Passwords" nc:link="prefs.xhtml#saved_passwords"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-download-manager-history" nc:name="Download Manager History" nc:link="prefs.xhtml#download_manager_history"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-cookies" nc:name="Cookies" nc:link="prefs.xhtml#cookies"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-cache" nc:name="Cache" nc:link="prefs.xhtml#cache"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-history" nc:name="History" nc:link="prefs.xhtml#privacy_history"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-saved-forms" nc:name="Saved Forms" nc:link="prefs.xhtml#privacy_saved_forms"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-passwords" nc:name="Passwords" nc:link="prefs.xhtml#privacy_passwords"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-download-history" nc:name="Download History" nc:link="prefs.xhtml#privacy_download_history"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-cookies" nc:name="Cookies" nc:link="prefs.xhtml#privacy_cookies"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-cache" nc:name="Cache" nc:link="prefs.xhtml#privacy_cache"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-sanitize" nc:name="Sanitize Settings" nc:link="prefs.xhtml#sanitize"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-  <rdf:Description about="#prefs-web-features">
+  <rdf:Description about="#prefs-content">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-allow-scripts-to" nc:name="Allow Scripts to:" nc:link="prefs.xhtml#allow_scripts_to"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-  <rdf:Description about="#prefs-download">
+  <rdf:Description about="#prefs-downloads">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="prefs-download-folder" nc:name="Download Folder" nc:link="prefs.xhtml#download_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-file-types" nc:name="File Types" nc:link="prefs.xhtml#file_types"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-download-manager" nc:name="Download Manager" nc:link="prefs.xhtml#download_manager"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-download-actions" nc:name="Download Actions" nc:link="prefs.xhtml#download_actions"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -235,13 +236,9 @@
   <rdf:Description about="#prefs-advanced">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-accessibility" nc:name="Accessibility" nc:link="prefs.xhtml#accessibility"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-browsing" nc:name="Browsing" nc:link="prefs.xhtml#browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-tabbed-browsing" nc:name="Tabbed Browsing" nc:link="prefs.xhtml#tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-updates" nc:name="Software Update" nc:link="prefs.xhtml#software_update"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-security" nc:name="Security" nc:link="prefs.xhtml#security"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-certificates" nc:name="Certificates" nc:link="prefs.xhtml#certificates"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-validation" nc:name="Validation" nc:link="prefs.xhtml#validation"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-advanced-general" nc:name="General" nc:link="prefs.xhtml#advanced_general"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-advanced-update" nc:name="Update" nc:link="prefs.xhtml#advanced_update"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-advanced-security" nc:name="Security" nc:link="prefs.xhtml#advanced_security"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -360,7 +357,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-view-page-style-no-style" nc:name="No Style" nc:link="menu_reference.xhtml#no_style"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-view-page-style-basic-page-style" nc:name="Basic Page Style" nc:link="menu_reference.xhtml#basic_page_style"/> </rdf:li>      
+        <rdf:li> <rdf:Description ID="menu-view-page-style-basic-page-style" nc:name="Basic Page Style" nc:link="menu_reference.xhtml#basic_page_style"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -395,6 +392,7 @@
         <rdf:li> <rdf:Description ID="menu-tools-themes" nc:name="Themes" nc:link="menu_reference.xhtml#themes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="JavaScript Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-page-info" nc:name="Page Info" nc:link="menu_reference.xhtml#page_info"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-sanitize" nc:name="Sanitize &brandShortName;..." nc:link="menu_reference.xhtml#sanitize"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options" nc:link="menu_reference.xhtml#options"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
