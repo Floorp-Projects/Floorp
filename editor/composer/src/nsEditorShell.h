@@ -147,7 +147,6 @@ class nsEditorShell :   public nsIEditorShell,
     nsresult        ResetEditingState();
     nsresult        InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
     nsresult        PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl);
-    nsresult        ScrollSelectionIntoView();
     nsresult        TransferDocumentStateListeners();
     nsresult        RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     nsresult        DoFind(PRBool aFindNext);
