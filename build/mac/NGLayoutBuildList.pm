@@ -261,6 +261,7 @@ sub Checkout()
 	{
 		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed\n";		
 		$session->checkout("mozilla/security",	"SeaMonkey_M14_BRANCH")		|| print "checkout of security failed\n";		
+		$session->checkout("mozilla/themes")	                            || print "checkout of themes failed\n";		
 		$session->checkout("SeaMonkeyAll")									|| 
 			print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
 	}
@@ -355,6 +356,69 @@ sub BuildFolderResourceAliases($$)
 	}
 }
 
+
+#//--------------------------------------------------------------------------------------------------
+#// Recurse into the skin directories
+#//--------------------------------------------------------------------------------------------------
+
+sub ScanForManifestFiles($$$$)
+{
+	my($dir, $theme_root, $theme_name, $dist_dir) = @_;
+
+	opendir(DIR, $dir) or die "Cannot open dir $dir\n";
+	my @files = readdir(DIR);
+	closedir DIR;
+
+	my $file;
+
+	foreach $file (@files)
+	{        
+		my $filepath = $dir.":".$file;
+
+		if (-d $filepath)
+		{
+			# print "Looking for MANIFEST files in $filepath\n";            
+			ScanForManifestFiles($filepath, $theme_root, $theme_name, $dist_dir);
+		}
+		elsif ($file eq "MANIFEST")
+		{
+			# print "Doing manifest file $filepath\n";
+
+			# Get the dest path from the first line of the file
+
+			open(MANIFEST, $filepath) || die "Could not open file $file";
+			# Read in the path if available
+			my($dest_line) = <MANIFEST>;
+			chomp $dest_line;
+			close MANIFEST;
+
+			$dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
+
+			my($dest_path) = $dist_dir."chrome:$theme_name:$dest_line";
+			# print " Destination is $dest_path\n";
+
+			InstallResources($filepath, "$dest_path", 0);
+		}
+	}
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Install skin files
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallSkinFiles($)
+{
+	my($theme_name) = @_;
+
+	unless( $main::build{resources} ) { return; }
+	_assertRightDirectory();
+
+	my($dist_dir) = _getDistDirectory();
+	my($themes_dir) = ":mozilla:themes:".$theme_name;
+
+	print "Installing skin files from $themes_dir\n";
+	ScanForManifestFiles($themes_dir, $themes_dir, $theme_name, $dist_dir);
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Make resource aliases
@@ -748,6 +812,9 @@ sub MakeResourceAliases()
 
 	# QA Menu
 	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
+
+	# Install skin files
+	# InstallSkinFiles("modern");     # fix me
 
 	print("--- Resource copying complete ----\n");
 }
