@@ -65,5 +65,6 @@ public:
 #define NS_EVENT_STATE_ACTIVE       0x0001 // mouse is down on content
 #define NS_EVENT_STATE_FOCUS        0x0002 // content has focus
 #define NS_EVENT_STATE_HOVER        0x0004 // mouse is hovering over content
+#define NS_EVENT_STATE_DRAGOVER     0x0008 // drag  is hovering over content
 
 #endif // nsIEventStateManager_h__
