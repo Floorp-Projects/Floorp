@@ -509,12 +509,14 @@ nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent *)
 
-<PresShell>
+# The frame arena
+<FrameArena>
 PR_Malloc
 PL_ArenaAllocate
 FrameArena::AllocateFrame(unsigned int, void **)
 
-<PresShell>
+# The anonymous content table in the PresShell
+<PresShell.mAnonymousContentTable>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
@@ -522,14 +524,14 @@ nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 PresShell::SetAnonymousContentFor(nsIContent *, nsISupportsArray *)
 
-<PresShell>
+<PresShell.mAnonymousContentTable>
 __builtin_new
 nsISupportsKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 PresShell::SetAnonymousContentFor(nsIContent *, nsISupportsArray *)
 
-<PresShell>
+<PresShell.mAnonymousContentTable>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
