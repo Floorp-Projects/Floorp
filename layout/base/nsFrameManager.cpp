@@ -144,10 +144,17 @@ struct PropertyListMapEntry : public PLDHashEntryHdr {
 //----------------------------------------------------------------------
 
 struct PrimaryFrameMapEntry : public PLDHashEntryHdr {
-  // key (the content node) can be obtained through the frame
+  // key (the content node) can almost always be obtained through the
+  // frame.  If it weren't for the way image maps (mis)used the primary
+  // frame map, we'd be able to have a 2 word entry instead of a 3 word
+  // entry.
+  nsIContent *content;
   nsIFrame *frame;
 };
 
+  // These ops should be used if/when we switch back to a 2-word entry.
+  // See comment in |PrimaryFrameMapEntry| above.
+#if 0
 PR_STATIC_CALLBACK(const void *)
 PrimaryFrameMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
@@ -180,6 +187,7 @@ static PLDHashTableOps PrimaryFrameMapOps = {
   PL_DHashFinalizeStub,
   NULL
 };
+#endif /* 0 */
 
 //----------------------------------------------------------------------
 
@@ -677,7 +685,10 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
       PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_REMOVE);
     }
   } else {
-#ifdef DEBUG
+  // This code should be used if/when we switch back to a 2-word entry
+  // in the primary frame map.
+#if 0
+//#ifdef DEBUG
     nsCOMPtr<nsIContent> content;
     aPrimaryFrame->GetContent(getter_AddRefs(content));
     NS_PRECONDITION(content == aContent, "wrong content");
@@ -685,7 +696,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
 
     // Create a new hashtable if necessary
     if (!mPrimaryFrameMap.ops) {
-      if (!PL_DHashTableInit(&mPrimaryFrameMap, &PrimaryFrameMapOps, nsnull,
+      if (!PL_DHashTableInit(&mPrimaryFrameMap, PL_DHashGetStubOps(), nsnull,
                              sizeof(PrimaryFrameMapEntry), 16)) {
         mPrimaryFrameMap.ops = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -701,6 +712,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
     }
 #endif
     entry->frame = aPrimaryFrame;
+    entry->content = aContent;
   }
     
   return NS_OK;
@@ -981,7 +993,7 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
     PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
         PL_DHashTableOperate(&mPrimaryFrameMap, content, PL_DHASH_LOOKUP));
     NS_ASSERTION(!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->frame != aFrame,
-                 "frame was not removed from primary frame map before"
+                 "frame was not removed from primary frame map before "
                  "destruction or was readded to map after being removed");
   }
 #endif
