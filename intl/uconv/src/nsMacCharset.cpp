@@ -36,10 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <Script.h>
+#include <TextCommon.h>
 #include "nsIPlatformCharset.h"
 #include "pratom.h"
 #include "nsURLProperties.h"
-#include <Script.h>
 #include "nsUConvDll.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
@@ -118,14 +119,27 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsAString& 
 NS_IMETHODIMP 
 nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
 {
+  nsresult rv;
   if (mCharset.IsEmpty()) {
-    nsresult rv = MapToCharset((short)(0x0000FFFF & ::GetScriptManagerVariable(smSysScript)), 
-                               (short)(0x0000FFFF & ::GetScriptManagerVariable(smRegionCode)), 
-                               mCharset);
+    rv = MapToCharset(
+           (short)(0x0000FFFF & ::GetScriptManagerVariable(smSysScript)),
+           (short)(0x0000FFFF & ::GetScriptManagerVariable(smRegionCode)),
+           mCharset);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-   oResult = mCharset; 
+
+  switch (selector) {
+    case  kPlatformCharsetSel_KeyboardInput:
+      rv = MapToCharset(
+             (short) (0x0000FFFF & ::GetScriptManagerVariable(smKeyScript)),
+             kTextRegionDontCare, oResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+    default:
+      oResult = mCharset;
+      break;
+  }
+
    return NS_OK;
 }
 
