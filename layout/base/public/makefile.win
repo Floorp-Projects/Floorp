@@ -26,6 +26,7 @@ EXPORTS =				\
 	nsIDiskDocument.h	\
 	nsIDocument.h			\
 	nsIDocumentContainer.h		\
+	nsIDocumentEncoder.h		\
 	nsIDocumentObserver.h		\
 	nsIDocumentViewer.h		\
 	nsIFocusTracker.h		\
