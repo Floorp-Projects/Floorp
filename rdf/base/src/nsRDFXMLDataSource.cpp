@@ -466,6 +466,9 @@ rdf_BlockingParse(nsIURL* aURL, nsIStreamListener* aConsumer)
         return rv;
     }
 
+    NS_ASSERTION(in != nsnull, "no input stream");
+    if (! in) return NS_ERROR_FAILURE;
+
     rv = NS_ERROR_OUT_OF_MEMORY;
     ProxyStream* proxy = new ProxyStream();
     if (! proxy)
