@@ -1,3 +1,5 @@
+#ifndef HAVE_SNPRINTF
+
 #include "watcomfx.h"
 #include <sys/types.h>
 #include <stddef.h>
@@ -64,3 +66,5 @@ vsnprintf(str, n, fmt, ap)
 	return (vsprintf(str, fmt, ap));
 #endif
 }
+
+#endif /* HAVE_SNPRINTF */
