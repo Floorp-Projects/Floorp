@@ -1869,7 +1869,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
 				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
-				INFOPLIST_FILE = "Info-Camino__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-Camino.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
@@ -4819,7 +4819,7 @@
 		3F44AD8705BDFB9F00CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-Camino__Upgraded_.plist";
+			path = "Info-Camino.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -4850,7 +4850,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
 				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/";
-				INFOPLIST_FILE = "Info-AppearancePrefPane__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-AppearancePrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -4998,7 +4998,7 @@
 		3F44AD9E05BDFB9F00CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-AppearancePrefPane__Upgraded_.plist";
+			path = "Info-AppearancePrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -5029,7 +5029,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
-				INFOPLIST_FILE = "Info-NavigationPrefPane__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-NavigationPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -5169,7 +5169,7 @@
 		3F44ADB205BDFBA000CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-NavigationPrefPane__Upgraded_.plist";
+			path = "Info-NavigationPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -5184,7 +5184,7 @@
 		3F44ADC105BDFBA000CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-PersonalPrefPane__Upgraded_.plist";
+			path = "Info-PersonalPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -5208,7 +5208,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
 				HEADER_SEARCH_PATHS = "../dist/include/necko ../dist/include/pref ../dist/include/nspr ../dist/include/cookie ../dist/include/nkcache ../dist/include/string ../dist/include/xpcom ../dist/include/";
-				INFOPLIST_FILE = "Info-PrivacyPrefPane__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-PrivacyPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -5370,7 +5370,7 @@
 		3F44ADD905BDFBA000CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-PrivacyPrefPane__Upgraded_.plist";
+			path = "Info-PrivacyPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -5402,7 +5402,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
 				HEADER_SEARCH_PATHS = "../dist/include/pref ../dist/include/nspr ../dist/include/xpcom ../dist/include/";
-				INFOPLIST_FILE = "Info-SecurityPrefPane__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-SecurityPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -5558,7 +5558,7 @@
 		3F44ADF005BDFBA000CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-SecurityPrefPane__Upgraded_.plist";
+			path = "Info-SecurityPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -5590,7 +5590,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
 				HEADER_SEARCH_PATHS = "../dist/include/necko ../dist/include/string ../dist/include/cookie ../dist/include/pref ../dist/include/nspr ../dist/include/xpcom ../dist/include/";
-				INFOPLIST_FILE = "Info-WebFeaturesPrefPane__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-WebFeaturesPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../string/obsolete ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -5746,7 +5746,7 @@
 		3F44AE0705BDFBA000CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-WebFeaturesPrefPane__Upgraded_.plist";
+			path = "Info-WebFeaturesPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -5797,7 +5797,7 @@
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin _BUILD_STATIC_BIN";
 				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
-				INFOPLIST_FILE = "Info-CaminoStatic__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-CaminoStatic.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader ../extensions/transformiix/build";
 				OTHER_CFLAGS = "-fshort-wchar";
@@ -8778,7 +8778,7 @@
 		3F44AFC505BDFBA100CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-CaminoStatic__Upgraded_.plist";
+			path = "Info-CaminoStatic.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -8801,7 +8801,7 @@
 			buildRules = (
 			);
 			buildSettings = {
-				INFOPLIST_FILE = "Info-AddressBookManager__Upgraded_.plist";
+				INFOPLIST_FILE = "Info-AddressBookManager.plist";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -8885,7 +8885,7 @@
 		3F44AFD305BDFBA100CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			path = "Info-AddressBookManager__Upgraded_.plist";
+			path = "Info-AddressBookManager.plist";
 			refType = 4;
 			sourceTree = "<group>";
 		};

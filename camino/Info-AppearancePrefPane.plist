@@ -5,28 +5,28 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>WebFeatures</string>
+	<string>Appearance</string>
 	<key>CFBundleGetInfoString</key>
 	<string></string>
 	<key>CFBundleIconFile</key>
-	<string>WebFeatures.tiff</string>
+	<string>Appearance.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.chimera.preference.webfeatures</string>
+	<string>org.mozilla.chimera.preference.appearance</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Web Features</string>
+	<string>Appearance</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
 	<string></string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>CHIM</string>
 	<key>CFBundleVersion</key>
 	<string>0.0.1d1</string>
 	<key>NSMainNibFile</key>
-	<string>WebFeatures</string>
+	<string>Appearance</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaChimeraPreferenceWebFeatures</string>
+	<string>OrgMozillaChimeraPreferenceAppearance</string>
 </dict>
 </plist>

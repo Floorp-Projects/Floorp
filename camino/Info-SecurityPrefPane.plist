@@ -5,28 +5,28 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Appearance</string>
+	<string>Security</string>
 	<key>CFBundleGetInfoString</key>
 	<string></string>
 	<key>CFBundleIconFile</key>
-	<string>Appearance.tiff</string>
+	<string>Security.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.chimera.preference.appearance</string>
+	<string>org.mozilla.chimera.preference.security</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Appearance</string>
+	<string>Security</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
 	<string></string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>CHIM</string>
 	<key>CFBundleVersion</key>
 	<string>0.0.1d1</string>
 	<key>NSMainNibFile</key>
-	<string>Appearance</string>
+	<string>Security</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaChimeraPreferenceAppearance</string>
+	<string>OrgMozillaChimeraPreferenceSecurity</string>
 </dict>
 </plist>
