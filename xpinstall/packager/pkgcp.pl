@@ -36,6 +36,7 @@
 # load modules
 use Getopt::Long;
 use File::Basename;
+use Cwd;
 
 # initialize variables
 %components        = ();	# list of components to copy
@@ -85,6 +86,13 @@ if ( $os eq "dos" ) {
 push(@INC, dirname($top_path));
 require Packager;
 
+if ( $os eq "os2" ) {
+  $cwd = cwd();
+  if ($srcdir !~ /^.:+/) {
+    $srcdir = $cwd."/".$srcdir;
+  }
+  $os = "unix";
+}
 Packager::Copy($srcdir, $destdir, $package, $os, $flat, $help, $debug, @components);
 
 #
