@@ -1091,10 +1091,11 @@ nsHTTPChannel::CheckCache()
         // Determine if this is the first time that this cache entry has been
         // accessed in this session.
         PRBool firstAccessThisSession;
-        PRTime lastAccessTime, sessionStartTime;
+        PRTime lastAccessTime, sessionStartTime, lastUpdateTime;
         mCacheEntry->GetLastAccessTime(&lastAccessTime);
         sessionStartTime = mHandler->GetSessionStartTime();
-        firstAccessThisSession = LL_UCMP(lastAccessTime, < , sessionStartTime);
+        mCacheEntry->GetLastUpdateTime(&lastUpdateTime);
+        firstAccessThisSession = LL_UCMP(lastUpdateTime, >= ,lastAccessTime);
 
         // Check to see if we can use the cache data without revalidating 
         // it with the server.

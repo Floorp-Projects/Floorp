@@ -134,8 +134,8 @@ nsCacheEntryChannel::OpenOutputStream(nsIOutputStream* *aOutputStream)
     rv = mChannel->OpenOutputStream(getter_AddRefs(baseOutputStream));
     if (NS_FAILED(rv)) return rv;
 
-    mCacheEntry->NoteUpdate();
     mCacheEntry->NoteAccess();
+    mCacheEntry->NoteUpdate();
 
     *aOutputStream = new CacheOutputStream(baseOutputStream, mCacheEntry);
     if (!*aOutputStream)

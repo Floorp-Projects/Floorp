@@ -38,6 +38,8 @@
 #include "nsCRT.h"
 #include "nsString.h"
 
+extern PRBool gCacheManagerNeedToEvict;
+extern nsCacheManager* gCacheManager;
 // Version of the cache record meta-data format.  If this version doesn't match
 // the one in the database, an error is signaled when the record is read.
 #define CACHE_MANAGER_VERSION 1
@@ -529,6 +531,9 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
     rv = binaryStream->Read32(&mLastUpdateTime);
     if (NS_FAILED(rv)) return rv;
 
+    rv = binaryStream->Read32(&mLastModifiedTime);
+    if (NS_FAILED(rv)) return rv;
+
     rv = binaryStream->Read32(&mExpirationTime);
     if (NS_FAILED(rv)) return rv;
 
@@ -730,6 +735,15 @@ nsCachedNetData::GetLastAccessTime(PRTime *aLastAccessTime)
 }
 
 NS_IMETHODIMP
+nsCachedNetData::GetLastUpdateTime(PRTime *aLastUpdateTime)
+{
+    CHECK_AVAILABILITY();
+    NS_ENSURE_ARG_POINTER(aLastUpdateTime);
+    *aLastUpdateTime = convertSecondsToPRTime(mLastUpdateTime);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCachedNetData::GetNumberAccesses(PRUint16 *aNumberAccesses)
 {
     CHECK_AVAILABILITY();
@@ -812,6 +826,9 @@ nsCachedNetData::Commit(void)
     }
 
     rv = binaryStream->Write32(mLastUpdateTime);
+    if (NS_FAILED(rv)) goto error;
+
+    rv = binaryStream->Write32(mLastModifiedTime);
     if (NS_FAILED(rv)) goto error;
 
     rv = binaryStream->Write32(mExpirationTime);
@@ -1157,7 +1174,9 @@ public:
     
         mCacheEntry->ClearFlag(nsCachedNetData::VESTIGIAL);
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
-				
+        
+        gCacheManager->LimitDiskCacheSize(gCacheManagerNeedToEvict);
+
         if (mCacheStream )
             mCacheStream->Close();
         // Tell any stream-as-file observers that the file has been completely written

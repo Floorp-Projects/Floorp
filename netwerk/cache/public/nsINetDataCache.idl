@@ -131,11 +131,6 @@ interface nsINetDataCache : nsISupports
      * database files will be deleted.
 	 */
     void removeAll();
-
-	/**
-	 * This routine will called periodically to cleanup a corrupted database.
-	 */
-	void recoveryCleanup();
 };
 
 %{ C++
