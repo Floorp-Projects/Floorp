@@ -132,15 +132,19 @@ CFGFILE=$(OBJDIR)\cmd.cfg
 INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 
 !ifdef MOZ_TRACK_MODULE_DEPS
-# use perl to translate REQUIRES into a proper include line
-# using \1 instead of $1 because nmake barfs on $1
-!if [echo.$(REQUIRES) | perl -pe "s/(\w+)/-I$(XPDIST:\=\\)\\include\\\1/g; print \"REQINCS=$_\";" > reqincs.inc]
+
+!ifdef REQUIRES
+
+REQINCS1=REQINCS=-I $(XPDIST)/include/$(REQUIRES: = -I$(XPDIST^)/include/)
+
+!if [echo.$(REQINCS1) > reqincs.inc]
 !endif
 
 !include reqincs.inc
 
-# delete the temporary file
 !if [del reqincs.inc]
+!endif
+
 !endif
 
 INCS=$(INCS) -I$(XPDIST)\include $(REQINCS)
