@@ -17,6 +17,7 @@
  */
 
 /* Test the structure creation and serialization APIs from xpt_struct.c */
+#include <stdio.h>
 
 #include "xpt_xdr.h"
 #include "xpt_struct.h"
