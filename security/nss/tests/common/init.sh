@@ -169,10 +169,10 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
             PATH=`perl ../path_uniq -d ':' "$PATH"`
         fi
 
-        LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
-        SHLIB_PATH=${DIST}/${OBJDIR}/lib
-        LIBPATH=${DIST}/${OBJDIR}/lib
-        DYLD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
+        LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib:$LD_LIBRARY_PATH
+        SHLIB_PATH=${DIST}/${OBJDIR}/lib:$SHLIB_PATH
+        LIBPATH=${DIST}/${OBJDIR}/lib:$LIBPATH
+        DYLD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib:$DYLD_LIBRARY_PATH
     fi
 
     if [ ! -d "${TESTDIR}" ]; then
