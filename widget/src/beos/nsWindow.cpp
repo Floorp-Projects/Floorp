@@ -35,16 +35,11 @@
 #include "resource.h"
 #include "prtime.h"
 
-#include "nsIMenu.h"
-#include "nsMenu.h"
-#include "nsIMenuItem.h"
-#include "nsIMenuListener.h"
-#include "nsMenuItem.h"
-
 #include <InterfaceDefs.h>
 #include <Region.h>
 #include <Debug.h>
 #include <MenuBar.h>
+#include <app/Message.h>
 
 #ifdef DRAG_DROP
 //#include "nsDropTarget.h"
@@ -54,9 +49,6 @@
 #endif
 
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIMenuIID,         NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID,     NS_IMENUITEM_IID);
-//static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 
 //-------------------------------------------------------------------------
 //
@@ -1369,36 +1361,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 				((int32 *)info->args)[4]);
 			break;
 
-		case nsWindow::MENU :
-			NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
-			{
-				nsIMenuListener *menuListener = nsnull;
-				nsIMenuItem *menuItem = (nsIMenuItem *)(info->args[0]);
-
-				nsMenuEvent mevent;
-				mevent.message = NS_MENU_SELECTED;
-				mevent.eventStructType = NS_MENU_EVENT;
-				mevent.point.x = 0;
-				mevent.point.y = 0;
-				menuItem->GetTarget(mevent.widget);
-				menuItem->GetCommand(mevent.mCommand);
-
-				mevent.mMenuItem = menuItem;
-				mevent.time = PR_IntervalNow();
-
-				//nsEventStatus status;
-				// FIXME - THIS SHOULD WORK.  FIX EVENTS FOR XP CODE!!!!! (pav)
-				//    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
-
-				menuItem->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
-				if(menuListener)
-				{
-					menuListener->MenuSelected(mevent);
-					NS_IF_RELEASE(menuListener);
-				}
-			}
-			break;
-
         default:
             bRet = FALSE;
             break;
@@ -2533,26 +2495,6 @@ void nsWindowBeOS::MessageReceived(BMessage *msg)
 {
 	switch(msg->what)
 	{
-		case 'menu' :
-			{
-			nsIMenuItem *menuItem;
-			if(msg->FindPointer("nsMenuItem", (void **)&menuItem) == B_OK &&
-				menuItem != NULL)
-			{
-				nsWindow	*w = (nsWindow *)GetMozillaWidget();
-				nsToolkit	*t;
-				if(w && (t = w->GetToolkit()) != 0)
-				{
-					uint32	args[1];
-					args[0] = (uint32)menuItem;
-					MethodInfo *info = new MethodInfo(w, w, nsWindow::MENU, 1, args);
-					t->CallMethodAsync(info);
-					NS_RELEASE(t);
-				}
-			}
-			}
-			break;
-
 		default :
 			BWindow::MessageReceived(msg);
 			break;
