@@ -39,7 +39,7 @@
 #sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker
   {
     padding-left            : 4px;
-    list-style-image        : url("chrome://global/skin/menu-arrow.gif");
+    list-style-image        : url("chrome://global/skin/menu-arrow-hover.gif");
   }
 
 .sidebar-header-text  

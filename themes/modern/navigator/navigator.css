@@ -35,6 +35,10 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
+.toolbarbutton-1 {
+  min-width: 0px;
+}
+
 #back-button {
   list-style-image: url("chrome://navigator/skin/btn1/back.gif");
 }
