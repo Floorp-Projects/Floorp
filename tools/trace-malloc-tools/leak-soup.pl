@@ -63,6 +63,11 @@ if ($::opt_help) {
 # stack.
 %::Objects = %{0};
 
+# This will be a list of addresses in Objects, that is sorted
+# It gets used to evaluate overlaps, and chase parent->child
+# (interior) pointers.
+@::SortedAddresses = [];
+
 # This is the table that keeps track of memory usage on a per-type basis.
 # It is indexed by the type name (string), and keeps a tally of the 
 # total number of such objects, and the memory usage of such objects.
@@ -92,6 +97,9 @@ sub read_boehm() {
           $::Objects{$addr} =
               $object =
               { 'type' => $type, 'size' => $size };
+      } else {
+	  print "Duplicate address $addr contains $object->{'type'} and $type\n";
+	  $object->{'dup_addr_count'}++;
       }
 
       # Record the object's slots
@@ -151,6 +159,9 @@ sub read_trace_malloc() {
           $::Objects{$addr} =
               $object =
               { 'type' => $type, 'size' => $size };
+      } else {
+	  print "Duplicate address $addr contains $object->{'type'} and $type\n";
+	  $object->{'dup_addr_count'}++;
       }
 
       # Record the object's slots
@@ -215,15 +226,19 @@ sub init_type_table() {
 
     OBJECT: foreach my $addr (keys %::Objects) {
 	my $obj = $::Objects{$addr};
-	my ($type, $size, $swept_in) = 
-	    ($obj->{'type'}, $obj->{'size'}, $obj->{'swept_in'});
+	my ($type, $size, $swept_in, $overlap_count, $dup_addr_count) = 
+	    ($obj->{'type'}, $obj->{'size'}, 
+	     $obj->{'swept_in'}, 
+	     $obj->{'overlap_count'},$obj->{'dup_addr_count'});
 
 	my $type_data = $::Types{$type};
 	if (! defined $type_data) {
 	    $::Types{$type} =
 		$type_data = {'count' => 0, 'size' => 0, 
 			      'max' => $size, 'min' => $size,
-			      'swept_in' => 0, 'swept' => 0};
+			      'swept_in' => 0, 'swept' => 0,
+			      'overlap_count' => 0,
+			      'dup_addr_count' => 0};
 	}
 
 	if (!$size) {
@@ -236,6 +251,13 @@ sub init_type_table() {
 	$type_data->{'size'} += $size;
 	if (defined $swept_in) {
 	    $type_data->{'swept_in'} += $swept_in;
+	}
+	if (defined $overlap_count) {
+	    $type_data->{'overlap_count'} += $overlap_count;
+	}
+
+	if (defined $dup_addr_count) {
+	    $type_data->{'dup_addr_count'} += $dup_addr_count;
 	}
 
 	if ($type_data->{'max'} < $size) {
@@ -279,13 +301,21 @@ sub print_type_table(){
 	    print "\t", $type_data->{'count'}, 
 	    " x ";
 	}
-	print $type, "\t";
+	print $type;
+
 	if ($type_data->{'swept_in'}) {	    
-	    print $type_data->{'swept_in'}, " sub-objs absorbed ";
+	    print ", $type_data->{'swept_in'} sub-objs absorbed";
 	}
-	if (0 < $type_data->{'swept'}) {
-	    print $type_data->{'swept'}, " swept away";
+	if ($type_data->{'swept'}) {
+	    print ", $type_data->{'swept'} swept away";
 	}
+	if ($type_data->{'overlap_count'}) {	    
+	    print ", $type_data->{'overlap_count'} range overlaps";
+	}
+	if ($type_data->{'dup_addr_count'}) {	    
+	    print ", $type_data->{'dup_addr_count'} duplicated addresses";
+	}
+
 	print "\n" ;
     }
     if ($bytes_printed_tally != $::TotalSize) {
@@ -297,14 +327,46 @@ sub print_type_table(){
 
 #----------------------------------------------------------------------
 #
+# Check for duplicate address ranges is Objects table, and 
+# create list of sorted addresses for doing pointer-chasing
+
+sub validate_addresses() {
+    # Build sorted list of address for validating interior pointers
+    @::SortedAddresses = sort {$a <=> $b} keys %::Objects;
+
+    # Validate non-overlap of memory
+    my $prev_addr_end = -1;
+    my $prev_addr = -1;
+    my $index = 0;
+    while ($index <= $#::SortedAddresses) {
+	my $address = $::SortedAddresses[$index];
+	if ($prev_addr_end > $address) {
+	    print "Overlap from $::Objects{$prev_addr}->{'type'}:$prev_addr-$prev_addr_end into";
+	    my $test_index = $index;
+	    while ($test_index <=  $#::SortedAddresses) {
+		$::Objects{$address}->{'overlap_count'}++;
+		my $testaddress = $::SortedAddresses[$test_index];
+		last if ($prev_addr_end < $testaddress);
+		print " $::Objects{$testaddress}->{'type'}:$testaddress";
+		$::Objects{$testaddress}->{'overlap_count'}++;
+		$test_index++;
+	    }
+	    print "\n";
+	} 
+	$prev_addr = $address;
+	$prev_addr_end = $prev_addr + $::Objects{$prev_addr}->{'size'} - 1;
+	$index++;
+    }
+}
+
+#----------------------------------------------------------------------
+#
 # Now thread the parents and children together by looking through the
 # slots for each object.
 #
 sub create_parent_links(){
-    # Build sorted list of address for validating interior pointers
-    my @addrs = sort {$a <=> $b} keys %::Objects;
-    my $min_addr = $addrs[0];
-    my $max_addr = $addrs[ $#addrs]; #allow one beyond each object
+    my $min_addr = $::SortedAddresses[0];
+    my $max_addr = $::SortedAddresses[ $#::SortedAddresses]; #allow one beyond each object
     $max_addr += $::Objects{$max_addr}->{'size'};
 
     # Gather stats as we try to convert slots to children
@@ -335,18 +397,18 @@ sub create_parent_links(){
 				  $child >= $min_addr);
 
 		# Do binary search to find object below this address
-		my ($min_index, $beyond_index) = (0, $#addrs + 1);
+		my ($min_index, $beyond_index) = (0, $#::SortedAddresses + 1);
 		my $test_index;
 		while ($min_index != 
 		       ($test_index = int (($beyond_index+$min_index)/2)))  {
-		    if ($child >= $addrs[$test_index]) {
+		    if ($child >= $::SortedAddresses[$test_index]) {
 			$min_index = $test_index;
 		    } else {
 			$beyond_index = $test_index;
 		    }
 		}
 		# See if pointer is within extent of this object
-		my $address = $addrs[$test_index];
+		my $address = $::SortedAddresses[$test_index];
 		next SLOT unless ($child < 
 				  $address + $::Objects{$address}->{'size'});
 
@@ -387,8 +449,8 @@ sub create_parent_links(){
 	    $::Leafs[$#::Leafs + 1] = $parent;
 	} 
     }
-    print "Scanning $#addrs objects linked $parent_child_count pointers by chasing $slot_count addresses.\n",
-    "This required $fixed_addr_count interior pointer fixups, skipping $child_dup_count duplicates, ",
+    print "Scanning $#::SortedAddresses objects linked $parent_child_count pointers by chasing $slot_count addresses.\n",
+    "This required $fixed_addr_count interior pointer fixups, skipping $child_dup_count duplicate pointers, ",
     "and $self_pointer_count self pointers\nAlso discarded ", 
     $slot_count - $parent_child_count -$self_pointer_count - $child_dup_count, 
     " out-of-range pointers\n";
@@ -489,7 +551,9 @@ sub expand_type_names($) {
 
 #----------------------------------------------------------------------
 # Provide a nice summary of the types during the process
-print "Before doing any work on types:\n";
+validate_addresses();
+
+print "\nBefore doing any work on types:\n";
 init_type_table();
 print_type_table();
 print "\n\n";
