@@ -196,7 +196,7 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
       else if (aProperty == kNC_Type) {
         PRUint16 type;
         node->GetNodeType(&type);
-        str.Append(type);
+        str.Append(PRInt32(type));
       }        
     }
   }
