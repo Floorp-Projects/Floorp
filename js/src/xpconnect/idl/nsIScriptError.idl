@@ -43,7 +43,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(fc9e5a94-1dd1-11b2-888b-d8907b2c6996)]
+[scriptable, uuid(b0196fc7-1913-441a-882a-453c0d8b89b8)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -59,8 +59,16 @@ interface nsIScriptError : nsIConsoleMessage
     /** error or warning is due to strict option */
     const unsigned long strictFlag = 0x4;
 
-    readonly attribute wstring sourceName;
-    readonly attribute wstring sourceLine;
+    /**
+     * The error message without any context/line number information.
+     *
+     * @note nsIConsoleMessage.message will return the error formatted
+     *       with file/line information.
+     */
+    readonly attribute AString errorMessage;
+
+    readonly attribute AString sourceName;
+    readonly attribute AString sourceLine;
     readonly attribute PRUint32 lineNumber;
     readonly attribute PRUint32 columnNumber;
     readonly attribute PRUint32 flags;
@@ -81,7 +89,7 @@ interface nsIScriptError : nsIConsoleMessage
               in PRUint32 flags,
               in string category);
 
-    string toString();
+    AUTF8String toString();
 };
 
 %{ C++

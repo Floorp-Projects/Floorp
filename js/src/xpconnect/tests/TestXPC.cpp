@@ -622,13 +622,11 @@ static void ShowXPCException()
                         nsCOMPtr<nsIScriptError> report = do_QueryInterface(data);
                         if(report)
                         {
-                            char* str2;
-                            rv = report->ToString(&str2);
-                            if(NS_SUCCEEDED(rv) && str2)
+                            nsCAutoString str2;
+                            rv = report->ToString(str2);
+                            if(NS_SUCCEEDED(rv))
                             {
-                                printf(str2);
-                                printf("\n");
-                                nsMemory::Free(str2);
+                                printf("%s\n", str2.get());
                             }                            
                         }                            
                     }                            
