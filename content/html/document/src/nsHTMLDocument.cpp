@@ -2199,17 +2199,23 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
   if (nsnull == aForm) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (!mForms) {
-    nsIDOMHTMLCollection* forms = nsnull;
-    GetForms(&forms);
-  }
+
   nsIContent* iContent = nsnull;
   nsresult result = aForm->QueryInterface(kIContentIID, (void**)&iContent);
   if ((NS_OK == result) && iContent) {
-    if (mForms->Add(iContent)) {
-      NS_RELEASE(iContent);
-      return NS_OK;
+    nsIDOMHTMLCollection* forms = nsnull;
+    
+    // Initialize mForms if necessary...
+    if (nsnull == mForms) {
+      nsIDOMHTMLCollection* forms = nsnull;
+      result = GetForms(&forms);
+      NS_IF_RELEASE(forms);
     }
+
+    if (NS_SUCCEEDED(result)) {
+      mForms->Add(iContent);
+    }
+    NS_RELEASE(iContent);
   }
   return result;
 }
@@ -2223,6 +2229,7 @@ nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
     if (nsnull == mForms) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    NS_ADDREF(mForms);
   }
 
   *aForms = (nsIDOMHTMLCollection *)mForms;
