@@ -22,5 +22,6 @@
 
 extern const nsIID kIHTMLContentIID;
 extern const nsIID kBlockFrameCID;
+extern const nsIID kIInlineFrameIID;
 
 #endif /* nsHTMLIIDs_h___ */
