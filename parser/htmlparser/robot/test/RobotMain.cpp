@@ -16,9 +16,11 @@ extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebShell * ww);
 int main(int argc, char **argv)
 {
   nsVoidArray * gWorkList = new nsVoidArray();
-  int i;
-  for (i = 1; i < argc; i++) {
-    gWorkList->AppendElement(new nsString(argv[i]));
+  if(gWorkList) {
+    int i;
+    for (i = 1; i < argc; i++) {
+      gWorkList->AppendElement(new nsString(argv[i]));
+    }
   }
 
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
