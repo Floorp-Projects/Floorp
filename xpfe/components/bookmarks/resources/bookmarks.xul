@@ -96,7 +96,7 @@
   <key id="bm_key_properties" xulkey="true"
     key="&edit.properties.keybinding;"/>
 </keyset>
-<toolbox class="toolbox-top">
+<toolbox>
 <menubar>
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
