@@ -60,14 +60,16 @@ function Startup()
   if (ListElement)
     globalElement = ListElement.cloneNode(false);
 
-  // Radio button index is persistent
-  if (ListElement && gDialog.RadioGroup.getAttribute("index") == "1")
-    gDialog.RadioGroup.selectedItem = gDialog.ChangeSelectedRadio;
-  else
-    gDialog.RadioGroup.selectedItem = gDialog.ChangeAllRadio;
-
-  // Show extra options for changing entire list only if we already have a list
+  // Show extra options for changing entire list if we have one already.
   gDialog.RadioGroup.setAttribute("collapsed", ListElement ? "false" : "true");
+  if (ListElement)
+  {
+    // Radio button index is persistant
+    if (gDialog.RadioGroup.getAttribute("index") == "1")
+      gDialog.RadioGroup.selectedItem = gDialog.ChangeSelectedRadio;
+    else
+      gDialog.RadioGroup.selectedItem = gDialog.ChangeAllRadio;
+  }
 
   InitDialog();
 
