@@ -59,7 +59,7 @@
 #include "nsAbBaseCID.h"
 #include "nsIAddrDatabase.h"
 #include "nsIAddrBookSession.h"
-#include "nsIMimeService.h"
+#include "nsIMIMEService.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
