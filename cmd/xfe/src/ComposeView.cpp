@@ -1479,7 +1479,7 @@ XDEBUG(	printf ("Do Command: %s \n", Command::getString(command));)
   }
   else if (command == xfeCmdToggleFormatToolbar)
   {
-	m_format_toolbar->toggle();
+	m_format_toolbar->toggleShowingState();
   }
   else if (command == xfeCmdToggleAddressArea)
   {

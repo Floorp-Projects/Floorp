@@ -332,11 +332,7 @@ XFE_BrowserFrame::doCommand(CommandType cmd,
     {
       if (m_urlBar)
         {
-          if (m_urlBar->isShown())
-            m_urlBar->hide();
-          else
-            m_urlBar->show();
-          
+          m_urlBar->toggleShowingState();
 		  
 		  // Configure the logo
 		  configureLogo();
@@ -352,10 +348,7 @@ XFE_BrowserFrame::doCommand(CommandType cmd,
     {
       if (m_personalToolbar)
         {
-          if (m_personalToolbar->isShown())
-            m_personalToolbar->hide();
-          else
-            m_personalToolbar->show();
+          m_personalToolbar->toggleShowingState();
 
 		  // Configure the logo
 		  configureLogo();
@@ -464,19 +457,15 @@ XFE_BrowserFrame::respectChrome(Chrome * chrome)
 //  XFE_Frame::respectChrome(chrome);
   
   // URL Bar - aka - alias - used-to-be - location bar
-  if (m_urlBar) {
-	if (chrome->show_url_bar)
-	    m_urlBar->show();
-	else
-	    m_urlBar->hide();
+  if (m_urlBar) 
+  {
+    m_urlBar->setShowingState(chrome->show_url_bar);
   }
 
   // Personal Toolbar - aka - alias - used-to-be - directory buttons
-  if (m_personalToolbar) {
-	if (chrome->show_directory_buttons)
-	    m_personalToolbar->show();
-	else
-	    m_personalToolbar->hide();
+  if (m_personalToolbar) 
+  {
+    m_personalToolbar->setShowingState(chrome->show_directory_buttons);
   }
 
   // Chain respectChrome() _AFTER_ doing urlbar and personal toolbar, 

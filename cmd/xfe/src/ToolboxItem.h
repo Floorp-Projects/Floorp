@@ -78,7 +78,6 @@ public:
 	virtual void		setToolbarSpec(ToolbarSpec *) {};
 	virtual void		hideButton(const char*, EChromeTag) {};
 	virtual void		showButton(const char*, EChromeTag) {};
-    virtual void		toggle();
 
 	// Position index methods
 	virtual int			getPosition		();

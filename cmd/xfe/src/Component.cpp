@@ -127,15 +127,29 @@ XFE_Component::hide()
 }
 
 void
-XFE_Component::setManagedState(XP_Bool state)
+XFE_Component::setShowingState(XP_Bool showing)
 {
-  XfeSetManagedState(m_widget,state);
+  if (showing)
+  {
+    show();
+  }
+  else
+  {
+    hide();
+  }
 }
 
 void
-XFE_Component::toggleManagedState()
+XFE_Component::toggleShowingState()
 {
-  XfeToggleManagedState(m_widget);
+  if (isShown())
+  {
+    hide();
+  }
+  else
+  {
+    show();
+  }
 }
 
 fe_colormap *

@@ -45,15 +45,6 @@ XFE_ToolboxItem::XFE_ToolboxItem(XFE_Component *	top,
 	XP_ASSERT( m_parentToolbox != NULL );
 }
 //////////////////////////////////////////////////////////////////////////
-void
-XFE_ToolboxItem::toggle()
-{
-  if (isShown())
-    hide();
-  else
-    show();
-}
-//////////////////////////////////////////////////////////////////////////
 int
 XFE_ToolboxItem::getPosition()
 {

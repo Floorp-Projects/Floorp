@@ -834,7 +834,7 @@ XFE_EditorFrame::doCommand(CommandType cmd,
 
 	if (cmd == xfeCmdToggleFormatToolbar) {
 			// Toggle the showing state
-			m_format_toolbar->toggle();
+			m_format_toolbar->toggleShowingState();
 
 			//
 			// The toolboxItemChangeShowing() call is needed to make the 

@@ -1133,7 +1133,7 @@ XFE_Dashboard::setShowSecurityIcon(XP_Bool state)
 
 	if (m_securityIcon && m_securityIcon->isAlive())
 	{
-		m_securityIcon->setManagedState(state);
+		m_securityIcon->setShowingState(state);
 	}
 
 	// Configure the secutiry bar
@@ -1199,7 +1199,7 @@ XFE_Dashboard::setShowSignedIcon(XP_Bool state)
 
 	if (m_signedIcon && m_signedIcon->isAlive())
 	{
-		m_signedIcon->setManagedState(state);
+		m_signedIcon->setShowingState(state);
 	}
 
 	// Configure the secutiry bar

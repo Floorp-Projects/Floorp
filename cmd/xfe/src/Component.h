@@ -50,8 +50,8 @@ public:
 
   virtual void show();
   virtual void hide();
-  virtual void setManagedState(XP_Bool state);
-  virtual void toggleManagedState();
+  virtual void setShowingState(XP_Bool showing);
+  virtual void toggleShowingState();
 
   virtual XP_Bool isShown();
   virtual XP_Bool isAlive();

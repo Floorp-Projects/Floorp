@@ -878,7 +878,7 @@ XFE_ThreadFrame::doCommand(CommandType cmd,
 		if (m_banner)
         {
 			// Toggle the showing state
-			m_banner->toggle();
+			m_banner->toggleShowingState();
 			
 			// Configure the logo
 			configureLogo();

@@ -2671,25 +2671,19 @@ XFE_Frame::respectChrome(Chrome * chrome)
 
 
   // Respect the tool bar - aka button bar - chrome
-  if (m_toolbar) {
-	if (chrome->show_button_bar)
-	    m_toolbar->show();
-	else
-	    m_toolbar->hide();
+  if (m_toolbar) 
+  {
+    m_toolbar->setShowingState(chrome->show_button_bar);
   }
 
-  if (m_dashboard) {
-	if (chrome->show_bottom_status_bar)
-	    m_dashboard->show();
-	else
-	    m_dashboard->hide();
+  if (m_dashboard) 
+  {
+    m_dashboard->setShowingState(chrome->show_bottom_status_bar);
   }
 
-  if (m_menubar) {
-	if (chrome->show_menu)
-	    m_menubar->show();
-	else
-	    m_menubar->hide();
+  if (m_menubar) 
+  {
+    m_menubar->setShowingState(chrome->show_menu);
   }
 
   if (chrome->location_is_chrome){
@@ -3339,10 +3333,7 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 			{
 				if (m_menubar)
 					{
-						if (m_menubar->isShown())
-							m_menubar->hide();
-						else
-							m_menubar->show();
+						m_menubar->toggleShowingState();
 
                         notifyInterested(XFE_View::chromeNeedsUpdating);
 					}
@@ -3351,7 +3342,7 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 			{
 				if (m_toolbar)
 					{
-                      m_toolbar->toggle();
+                      m_toolbar->toggleShowingState();
                       
 					  // Configure the logo
 					  configureLogo();
