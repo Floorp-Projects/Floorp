@@ -225,16 +225,6 @@ private:
      *******************************************/
 
     /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    virtual PRInt32 ConsumeToken(CToken*& aToken);
-
-    /**
      *  Part of the code sandwich, this gets called right before
      *  the tokenization process begins. The main reason for
      *  this call is to allow the delegate to do initialization.
@@ -299,41 +289,14 @@ protected:
     // And now, some data members...
     //*********************************************
 
-  /*****************************************************
-    All of these moved into the parse-context object:
-
-    PRInt32             mMajorIteration;
-    PRInt32             mMinorIteration;
-
-    nsIURL*             mURL;
-    nsString            mSourceType;
-    nsString            mTargetType;
-    eAutoDetectResult   mAutoDetectStatus;
-
-    nsDequeIterator*    mCurrentPos;
-    nsDequeIterator*    mMarkPos;
-    nsDeque             mTokenDeque;
-    CScanner*           mScanner;
-    nsIDTD*             mDTD;
-
-    eParseMode          mParseMode;
-    char*               mTransferBuffer;
-   *****************************************************/
-
 
     CParserContext*     mParserContext;
     PRInt32             mMajorIteration;
     PRInt32             mMinorIteration;
 
-  /*****************************************************
-    The above fields are moving into parse-context 
-   *****************************************************/
-
-
     nsIStreamObserver*  mObserver;
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
-
 
 	  nsIDTDDebug*		    mDTDDebug;
 

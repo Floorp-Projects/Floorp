@@ -257,7 +257,11 @@ nsresult CScanner::Eof() {
  *  @return  error code reflecting read status
  */
 nsresult CScanner::GetChar(PRUnichar& aChar) {
-  nsresult result=Eof();
+  nsresult result=NS_OK;
+  
+  if(mOffset>=mBuffer.Length()) 
+    result=Eof();
+
   if(NS_OK == result) {
     aChar=mBuffer[mOffset++];
   }
@@ -274,7 +278,11 @@ nsresult CScanner::GetChar(PRUnichar& aChar) {
  *  @return  
  */
 nsresult CScanner::Peek(PRUnichar& aChar) {
-  nsresult result=Eof();
+  nsresult result=NS_OK;
+  
+  if(mOffset>=mBuffer.Length()) 
+    result=Eof();
+
   if(NS_OK == result) {
     aChar=mBuffer[mOffset];        
   }
