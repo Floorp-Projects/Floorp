@@ -38,11 +38,16 @@
 #include "prprf.h"
 #include "nsRepository.h"
 
-#ifdef USE_NSREG
-#define XP_BEGIN_PROTOS extern "C" {
-#define XP_END_PROTOS }
+/**
+ * When using the registry we put a version number in it.
+ * If the version number that is in the registry doesn't match
+ * the following, we ignore the registry. This lets news versions
+ * of the software deal with old formats of registry and not
+ */
+#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.20"
+
 #include "NSReg.h"
-#endif
+
 
 #if 0
 #ifdef XP_MAC
@@ -209,6 +214,110 @@ public:
 #ifdef USE_NSREG
 #define USE_REGISTRY
 
+/*
+ * platformDeleteKey()
+ *
+ * Deletes a key sub tree entirely.
+ */
+static nsresult platformDeleteKey(HREG hreg, RKEY rootkey, const char *hierarchy)
+{
+    REGENUM state = 0;
+    RKEY key;
+    char keyname[MAXREGPATHLEN+1];
+    int n = sizeof(keyname);
+
+    REGERR err = NR_RegGetKey(hreg, rootkey, (char *)hierarchy, &key);
+
+    if (err != REGERR_OK)
+        return (err);
+
+    keyname[0] = '\0';
+    while (NR_RegEnumSubkeys(hreg, key, &state, keyname, n, REGENUM_DEPTH_FIRST) == REGERR_OK)
+    {
+        PR_LOG(logmodule, PR_LOG_ALWAYS,
+               ("nsRepository: ...enum %s", keyname));
+        err = NR_RegDeleteKey(hreg, key, keyname);
+        if (err != REGERR_OK)
+        {
+            // Couldn't delete a key. We wont be able to delete the entire
+            // hierarchy. ABORT.
+            break;
+        }
+        keyname[0] = '\0';
+
+        // buf in NR_RegEnumSubKeys() causes it to return ./libxpcom.so first then
+        // subsequently libraptor.so (NOTE without the initial ./ which was there in
+        // the key). Hence continuing thought the enum and delete will fail with
+        // not found. Hence, restarting the enum everytime.
+        state = 0;
+    }
+
+    if (err == REGERR_OK)
+        err = NR_RegDeleteKey(hreg, rootkey, (char *)hierarchy);
+    return (err);
+}
+
+
+/**
+ * platformVersionCheck()
+ *
+ * Checks to see if the XPCOM hierarchy in the registry is the same as that of
+ * the software as defined by NS_XPCOM_REPOSITORY_VERSION_STRING
+ */
+static nsresult platformVersionCheck()
+{
+	HREG hreg;
+    REGERR err = NR_RegOpen(NULL, &hreg);
+	
+	if (err != REGERR_OK)
+	{
+		return (NS_ERROR_FAILURE);
+	}
+	
+	RKEY xpcomKey;
+	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM", &xpcomKey) != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+	
+    char buf[MAXREGNAMELEN];
+	uint32 len = sizeof(buf);
+    buf[0] = '\0';
+
+	err = NR_RegGetEntryString(hreg, xpcomKey, "VersionString", buf, len);
+
+    // If there is a version mismatch or no version string, we got an old registry.
+    // Delete the old repository hierarchies and recreate version string
+    if (err != REGERR_OK || PL_strcmp(buf, NS_XPCOM_REPOSITORY_VERSION_STRING))
+    {
+        PR_LOG(logmodule, PR_LOG_ALWAYS,
+               ("nsRepository: Registry version mismatch (%s vs %s). Nuking xpcom "
+                "registry hierarchy.", buf, NS_XPCOM_REPOSITORY_VERSION_STRING));
+
+        // Delete the XPCOM and CLSID hierarchy
+        platformDeleteKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM");
+        platformDeleteKey(hreg, ROOTKEY_COMMON, "Classes/CLSID");
+
+        // Recreate XPCOM and CLSID keys
+        NR_RegAddKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM", &xpcomKey);
+        NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes/CLSID", NULL);
+
+        NR_RegSetEntryString(hreg, xpcomKey, "VersionString", NS_XPCOM_REPOSITORY_VERSION_STRING);
+    }
+
+    NR_RegClose(hreg);
+    return (NS_OK);
+}
+
+
+/**
+ * platformCreateDll(const char *fullname)
+ *
+ * Creates a nsDll from the registry representation of dll 'fullname'.
+ * Looks under
+ *		ROOTKEY_COMMON/Software/Netscape/XPCOM/fullname
+ */
 static nsDll *platformCreateDll(const char *fullname)
 {
 	HREG hreg;
@@ -234,22 +343,19 @@ static nsDll *platformCreateDll(const char *fullname)
 	}
 
 	PRTime lastModTime = LL_ZERO;
-	PRUint64 fileSize64 = LL_ZERO;
+	PRUint32 fileSize = 0;
 	uint32 n = sizeof(lastModTime);
 	NR_RegGetEntry(hreg, key, "LastModTimeStamp", &lastModTime, &n);
-	n = sizeof(fileSize64);
-	NR_RegGetEntry(hreg, key, "FileSize", &fileSize64, &n);
+	n = sizeof(fileSize);
+	NR_RegGetEntry(hreg, key, "FileSize", &fileSize, &n);
 
-    PRUint32 fileSize32;
-    LL_L2UI(fileSize32, fileSize64);
-    
-	nsDll *dll = new nsDll(fullname, lastModTime, fileSize32);
+	nsDll *dll = new nsDll(fullname, lastModTime, fileSize);
 
 	return (dll);
 }
 
 /**
- * platformMarkNoComponents(nsDll)
+ * platformMarkNoComponents(nsDll *dll)
  *
  * Stores the dll name, last modified time, size and 0 for number of
  * components in dll in the registry at location
@@ -285,14 +391,12 @@ static nsresult platformMarkNoComponents(nsDll *dll)
 	}
 	
 	PRTime lastModTime = dll->GetLastModifiedTime();
-    PRUint32 fileSize32 = dll->GetSize();
-	PRUint64 fileSize64;
-    LL_UI2L(fileSize64, fileSize32);
-    
+	PRUint32 fileSize = dll->GetSize();
+
 	NR_RegSetEntry(hreg, key, "LastModTimeStamp", REGTYPE_ENTRY_BYTES,
 		&lastModTime, sizeof(lastModTime));
 	NR_RegSetEntry(hreg, key, "FileSize",  REGTYPE_ENTRY_BYTES,
-		&fileSize64, sizeof(fileSize64));
+		&fileSize, sizeof(fileSize));
 	
 	char *ncomponentsString = "0";
 	
@@ -358,15 +462,12 @@ static nsresult platformRegister(NSQuickRegisterData regd, nsDll *dll)
 	NR_RegAddKey(hreg, xpcomKey, (char *)dll->GetFullPath(), &key);
 
 	PRTime lastModTime = dll->GetLastModifiedTime();
-    PRUint32 fileSize32 = dll->GetSize();
-    
-	PRUint64 fileSize64;
-    LL_UI2L(fileSize64,fileSize32);
+	PRUint32 fileSize = dll->GetSize();
 
 	NR_RegSetEntry(hreg, key, "LastModTimeStamp", REGTYPE_ENTRY_BYTES,
 		&lastModTime, sizeof(lastModTime));
 	NR_RegSetEntry(hreg, key, "FileSize",  REGTYPE_ENTRY_BYTES,
-		&fileSize64, sizeof(fileSize64));
+		&fileSize, sizeof(fileSize));
 
 	unsigned int nComponents = 0;
 	char buf[MAXREGNAMELEN];
@@ -486,7 +587,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 
 	// Get the library name, modifiedtime and size
 	PRTime lastModTime = LL_ZERO;
-	PRUint64 fileSize64 = LL_ZERO;
+	PRUint32 fileSize = 0;
 
 	char buf[MAXREGNAMELEN];
 	uint32 len = sizeof(buf);
@@ -511,15 +612,13 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 			uint32 n = sizeof(lastModTime);
 			NR_RegGetEntry(hreg, key, "LastModTimeStamp", &lastModTime, &n);
 			PR_ASSERT(n == sizeof(lastModTime));
-			n = sizeof(fileSize64);
-			NR_RegGetEntry(hreg, key, "FileSize", &fileSize64, &n);
-			PR_ASSERT(n == sizeof(fileSize64));
+			n = sizeof(fileSize);
+			NR_RegGetEntry(hreg, key, "FileSize", &fileSize, &n);
+			PR_ASSERT(n == sizeof(fileSize));
 		}
 	}
 
-    PRUint32 fileSize32;
-    LL_L2UI(fileSize32, fileSize64);
-	res = new FactoryEntry(aCID, library, lastModTime, fileSize32);
+	res = new FactoryEntry(aCID, library, lastModTime, fileSize);
 
 	NR_RegClose(hreg);
 
@@ -821,7 +920,9 @@ nsresult nsRepository::Initialize(void)
 #ifdef USE_NSREG
 	NR_StartupRegistry();
 #endif
-	
+	// Check the version of registry. Nuke old versions.
+    platformVersionCheck();
+
 	// Initiate autoreg
 	AutoRegister(NS_Startup, NULL);
 
@@ -1368,7 +1469,12 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 #else
 	//XXX get default pathlist from registry
 	//XXX Temporary hack. Registering components from current directory
+#ifdef XP_UNIX
+    // XXX This will change to ./components very soon
 	const char *defaultPathList = ".";
+#else
+	const char *defaultPathList = ".";
+#endif
 	SyncComponentsInPathList(defaultPathList);
 #endif
 	return (NS_OK);
@@ -1377,7 +1483,7 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 
 nsresult nsRepository::AddToDefaultPathList(const char *pathlist)
 {
-	//XXX add pathlist to the defaultpathlist in the registrys
+	//XXX add pathlist to the defaultpathlist in the registry
 	return (NS_ERROR_FAILURE);
 }
 
