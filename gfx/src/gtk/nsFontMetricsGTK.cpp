@@ -1681,6 +1681,13 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
 {
   aBoundingMetrics.Clear();               
 
+  if (!mFont) {
+    LoadFont();
+    if (!mFont) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   if (aString && 0 < aLength) {
     XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
     XChar2b buf[512]; // XXX watch buffer length !!!
