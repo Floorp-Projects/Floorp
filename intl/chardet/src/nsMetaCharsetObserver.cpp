@@ -19,6 +19,8 @@
 #include "nsICharsetAlias.h"
 #undef NS_IMPL_IDS
 
+#define DONT_INFORM_WEBSHELL
+
 #include "nsMetaCharsetObserver.h"
 #include "nsIMetaCharsetService.h"
 #include "nsIElementObserver.h"
@@ -317,6 +319,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
    if(nsnull == urlCStr) 
      goto done;
 
+#ifndef DONT_INFORM_WEBSHELL
    // ask the webshellservice to load the URL
    if(NS_FAILED( res = wss->SetRendering(PR_TRUE) ))
      goto done;
@@ -327,6 +330,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
    if(NS_FAILED(res = wss->LoadDocument(urlCStr, charset, source)))
      goto done;
  
+#endif
 done:
    if(urlCStr) {
       delete [] (char*) urlCStr;
