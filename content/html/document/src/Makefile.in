@@ -51,7 +51,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  chardet \
 		  nkcache \
-		  appcomps \
 		  lwbrk \
 		  imglib2 \
 		  xpconnect \
@@ -60,6 +59,12 @@ REQUIRES	= xpcom \
 		  composer \
 		  plugin \
 		  $(NULL)
+
+ifdef MOZ_PHOENIX
+REQUIRES	+= browsercomps
+else
+REQUIRES	+= appcomps
+endif
 
 CPPSRCS		= \
 		nsHTMLContentSink.cpp \
