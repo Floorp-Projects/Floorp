@@ -23,6 +23,7 @@ LIBRARY_NAME = nglhtmlcon_s
 CPPSRCS =				\
 	nsHTMLApplet.cpp		\
 	nsHTMLComment.cpp		\
+	nsHTMLEmbed.cpp			\
 	nsHTMLHead.cpp			\
 	nsHTMLMeta.cpp			\
 	nsHTMLObject.cpp		\

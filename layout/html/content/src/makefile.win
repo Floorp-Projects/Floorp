@@ -25,6 +25,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=				\
 	nsHTMLApplet.cpp		\
 	nsHTMLComment.cpp		\
+	nsHTMLEmbed.cpp			\
 	nsHTMLHead.cpp			\
 	nsHTMLMeta.cpp			\
 	nsHTMLObject.cpp		\
@@ -34,6 +35,7 @@ CPPSRCS=				\
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLApplet.obj		\
 	.\$(OBJDIR)\nsHTMLComment.obj		\
+	.\$(OBJDIR)\nsHTMLEmbed.obj		\
 	.\$(OBJDIR)\nsHTMLHead.obj		\
 	.\$(OBJDIR)\nsHTMLMeta.obj		\
 	.\$(OBJDIR)\nsHTMLObject.obj		\
