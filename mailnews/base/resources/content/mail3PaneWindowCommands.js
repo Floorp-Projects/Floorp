@@ -915,12 +915,14 @@ function MsgDeleteFolder()
         var specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
         if (specialFolder != "Inbox" && specialFolder != "Trash")
         {
+          var parentResource;
+
             var folder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
             if (folder.flags & MSG_FOLDER_FLAG_VIRTUAL)
             {
                 if (gCurrentVirtualFolderUri == folderResource.Value)
                   gCurrentVirtualFolderUri = null;
-                var parentResource = selectedFolder.parent.QueryInterface(Components.interfaces.nsIRDFResource);
+                parentResource = selectedFolder.parent.QueryInterface(Components.interfaces.nsIRDFResource);
                 messenger.DeleteFolders(GetFolderDatasource(), parentResource, folderResource);
                 continue;
             }
@@ -947,7 +949,7 @@ function MsgDeleteFolder()
             }
             else
             {
-                var parentResource = selectedFolder.parent.QueryInterface(Components.interfaces.nsIRDFResource);
+                parentResource = selectedFolder.parent.QueryInterface(Components.interfaces.nsIRDFResource);
                 messenger.DeleteFolders(GetFolderDatasource(), parentResource, folderResource);
             }
         }
