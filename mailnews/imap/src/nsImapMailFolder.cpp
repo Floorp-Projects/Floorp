@@ -70,7 +70,7 @@ nsImapMailFolder::nsImapMailFolder() :
 	nsMsgFolder(), m_pathName(""), m_mailDatabase(nsnull),
     m_initialized(PR_FALSE), m_haveReadNameFromDB(PR_FALSE),
     m_msgParser(nsnull), m_curMsgUid(0), m_nextMessageByteLength(0),
-    m_urlRunning(PR_FALSE)
+    m_urlRunning(PR_FALSE), m_haveDiscoverAllFolders(PR_FALSE)
 {
     //XXXX This is a hack for the moment.  I'm assuming the only listener is
     //our rdf:mailnews datasource. 
@@ -483,26 +483,6 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 	if (result)
 		*result = nsnull;
 
-	rv = GetDatabase();
-
-	if(NS_SUCCEEDED(rv))
-	{
-		nsIEnumerator *msgHdrEnumerator = nsnull;
-		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-		rv = m_mailDatabase->EnumerateMessages(&msgHdrEnumerator);
-		if(NS_SUCCEEDED(rv))
-			rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
-												   this, &messageEnumerator);
-		*result = messageEnumerator;
-		NS_IF_RELEASE(msgHdrEnumerator);
-	}
-	else
-		return rv;
-
-
-	if (!NS_SUCCEEDED(rv))
-		return rv;
-
     nsIImapService* imapService = nsnull;
 
     rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(),
@@ -513,26 +493,45 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
             nsServiceManager::ReleaseService(kCImapService, imapService);
         return rv;
     }
-    if (imapService && m_eventQueue)
+
+    if (mDepth == 0)
     {
-        if (mDepth == 0)
+        if (!m_haveDiscoverAllFolders)
         {
             rv = imapService->DiscoverAllFolders(m_eventQueue, this, this,
                                                  nsnull);
+            m_haveDiscoverAllFolders = PR_TRUE;
+#if 0
             mSubFolders->EnumerateForwards(FindAndSelectFolder, 
                                            (void*) "Inbox");
+#endif 
+        }
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    else
+    {
+        rv = GetDatabase();
+        
+        if(NS_SUCCEEDED(rv))
+        {
+            nsIEnumerator *msgHdrEnumerator = nsnull;
+            nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+            rv = m_mailDatabase->EnumerateMessages(&msgHdrEnumerator);
+            if(NS_SUCCEEDED(rv))
+                rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
+                                                       this,
+                                                       &messageEnumerator);
+            *result = messageEnumerator;
+            NS_IF_RELEASE(msgHdrEnumerator);
         }
         else
-        {
-            rv = imapService->DiscoverChildren(m_eventQueue, this, this,
-                                               nsnull);
-            rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
-        }
-        m_urlRunning = PR_TRUE;
-    }
-    if (imapService)
-            nsServiceManager::ReleaseService(kCImapService, imapService);
+            return rv;
 
+        rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+    }
+
+    m_urlRunning = PR_TRUE;
+    nsServiceManager::ReleaseService(kCImapService, imapService);
 	return rv;
 }
 
@@ -890,7 +889,10 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
             char* aName = nsnull;
             aFolder->GetName(&aName);
             NS_RELEASE (aFolder);
-            if (PL_strcmp(aName, aSpec->allocatedPathName) == 0)
+            PRBool isInbox = 
+                PL_strcasecmp("inbox", aSpec->allocatedPathName) == 0;
+            if (PL_strcmp(aName, aSpec->allocatedPathName) == 0 || 
+                (isInbox && PL_strcasecmp(aName, aSpec->allocatedPathName)))
             {
                 found = PR_TRUE;
                 break;
@@ -982,7 +984,12 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
 			rv = mailDBFactory->Open(dbName, PR_TRUE, &m_mailDatabase, PR_FALSE);
-			if (NS_SUCCEEDED(rv))
+			if (NS_FAILED(rv) && m_mailDatabase)
+			{
+				m_mailDatabase->ForceClosed();
+				m_mailDatabase = nsnull;
+			}
+			else if (NS_SUCCEEDED(rv) && m_mailDatabase)
 			{
 #if TRANSFER_INFO
 				if (originalInfo)
@@ -993,9 +1000,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 				SummaryChanged();
                 m_mailDatabase->AddListener(this);
 #endif
+				rv = m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
 			}
 			// store the new UIDVALIDITY value
-			rv = m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
 
 			if (NS_SUCCEEDED(rv) && dbFolderInfo)
     			dbFolderInfo->SetImapUidValidity(aSpec->folder_UIDVALIDITY);
