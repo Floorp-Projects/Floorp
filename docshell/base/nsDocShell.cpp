@@ -6542,6 +6542,26 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aHidden)
 
     NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec.get()), NS_ERROR_FAILURE);
 
+    // Only save last page visited if it is not a frame and one of the
+    // startup, new window or new tab prefs is set to last page visited.
+    // See bug 58613 for more details.
+    if (mPrefs && !IsFrame()) {
+      PRInt32 choice = 0;
+      if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.startup.page", &choice))) {
+        if (choice != 2) {
+          if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.windows.loadOnNewWindow", &choice))) {
+            if (choice != 2)
+              mPrefs->GetIntPref("browser.tabs.loadOnNewTab", &choice);
+          }
+        }
+      }
+      if (choice == 2) {
+        browserHistory = do_QueryInterface(mGlobalHistory);
+        if (browserHistory)
+          browserHistory->SetLastPageVisited(spec.get());
+      }
+    }
+
     // this is a redirect, hide the page from
     // being enumerated in history
     if (aHidden && browserHistory) {                

@@ -106,9 +106,6 @@ nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
-#define PREF_BROWSER_STARTUP_PAGE               "startup.page"
-#define PREF_BROWSER_TABS_LOADONNEWTAB          "tabs.loadOnNewTab"
-#define PREF_BROWSER_WINDOWS_LOADONNEWWINDOW    "windows.loadOnNewWindow"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 
@@ -614,20 +611,6 @@ nsGlobalHistory::AddPage(const char *aURL)
 
   nsresult rv = AddPageToDatabase(aURL, GetNow());
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (gPrefBranch) {
-    PRInt32 choice = 0;
-    gPrefBranch->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
-    if (choice != 2) {
-      gPrefBranch->GetIntPref(PREF_BROWSER_WINDOWS_LOADONNEWWINDOW, &choice);
-      if (choice != 2)
-        gPrefBranch->GetIntPref(PREF_BROWSER_TABS_LOADONNEWTAB, &choice);
-    }
-    if (choice == 2) {
-      rv = SaveLastPageVisited(aURL);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
 
   return NS_OK;
 }
@@ -1195,8 +1178,8 @@ nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
   return NS_OK;
 }
 
-nsresult
-nsGlobalHistory::SaveLastPageVisited(const char *aURL)
+NS_IMETHODIMP
+nsGlobalHistory::SetLastPageVisited(const char *aURL)
 {
   NS_ENSURE_TRUE(aURL, NS_ERROR_FAILURE);
   NS_ENSURE_STATE(mMetaRow);
