@@ -612,15 +612,18 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
     }
   }
 #endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
-    if (nsnull != mMetrics.maxElementSize) {
-      printf("  ");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(": maxElementSize=%d,%d wh=%d,%d\n",
-             mMetrics.maxElementSize->width,
-             mMetrics.maxElementSize->height,
-             mMetrics.width, mMetrics.height);
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyMaxElementSize) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+    if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+      if (nsnull != mMetrics.maxElementSize) {
+        printf("  ");
+        nsFrame::ListTag(stdout, aFrame);
+        printf(": maxElementSize=%d,%d wh=%d,%d\n",
+               mMetrics.maxElementSize->width,
+               mMetrics.maxElementSize->height,
+               mMetrics.width, mMetrics.height);
+      }
     }
   }
 #endif

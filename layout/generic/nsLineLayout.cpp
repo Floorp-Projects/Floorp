@@ -1259,15 +1259,18 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
   }
 #endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
-    if (mComputeMaxElementSize) {
-      printf("  ");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(": maxElementSize=%d,%d wh=%d,%d,\n",
-             metrics.maxElementSize->width,
-             metrics.maxElementSize->height,
-             metrics.width, metrics.height);
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyMaxElementSize) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+    if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+      if (mComputeMaxElementSize) {
+        printf("  ");
+        nsFrame::ListTag(stdout, aFrame);
+        printf(": maxElementSize=%d,%d wh=%d,%d,\n",
+               metrics.maxElementSize->width,
+               metrics.maxElementSize->height,
+               metrics.width, metrics.height);
+      }
     }
   }
 #endif
@@ -1937,7 +1940,7 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
   PRBool strictMode = InStrictMode();
   PRBool inUnconstrainedTable = InUnconstrainedTableCell(*mBlockReflowState);
 #endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
+#ifdef DEBUG
   int frameCount = 0;
 #endif
 
@@ -1961,7 +1964,8 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
 
 #ifdef HACK_MEW
 
-#ifdef NOISY_MAX_ELEMENT_SIZE
+#ifdef DEBUG
+      if (nsBlockFrame::gNoisyMaxElementSize) 
         frameCount++;
 #endif
         // if in Quirks mode and in a table cell with an unconstrained width, then emulate an IE
@@ -1988,9 +1992,12 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
           // now update the prevFrame
           prevFrameAccumulates = curFrameAccumulates;
         
-#ifdef NOISY_MAX_ELEMENT_SIZE
-          printf("(%d) last frame's MEW=%d | Accumulated MEW=%d\n", frameCount, mw, accumulatedWidth);
-#endif // NOISY_MAX_ELEMENT_SIZE
+#ifdef DEBUG
+          if (nsBlockFrame::gNoisyMaxElementSize) {
+            nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+            printf("(%d) last frame's MEW=%d | Accumulated MEW=%d\n", frameCount, mw, accumulatedWidth);
+          }
+#endif 
 
           mw = accumulatedWidth;
         }
