@@ -22,7 +22,7 @@
  */
 
 #include "nsISupports.h"
-#include "nsIEnumerator.h"
+//#include "nsIEnumerator.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
 #include "nsIContent.h"
@@ -36,7 +36,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 /*
  *  A simple iterator class for traversing the content in "close tag" order
  */
-class nsContentIterator : public nsIContentIterator, public nsIEnumerator
+class nsContentIterator : public nsIContentIterator //, public nsIEnumerator
 {
 public:
   NS_DECL_ISUPPORTS
@@ -64,7 +64,7 @@ public:
 
   // nsIEnumertor interface methods ------------------------------
   
-  NS_IMETHOD CurrentItem(nsISupports **aItem);
+  //NS_IMETHOD CurrentItem(nsISupports **aItem);
 
 protected:
 
@@ -115,11 +115,11 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEnumerator::IID())) {
+/*  if (aIID.Equals(nsIEnumerator::IID())) {
     *aInstancePtrResult = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
-  }
+  }  */
   if (aIID.Equals(nsIContentIterator::IID())) {
     *aInstancePtrResult = (void*)(nsIContentIterator*)this;
     NS_ADDREF_THIS();
@@ -346,10 +346,10 @@ nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
  * Enumerator routines
  ******************************************************/
 
-nsresult nsContentIterator::CurrentItem(nsISupports **aNode)
+/*nsresult nsContentIterator::CurrentItem(nsISupports **aNode)
 {
   if (!mCurNode) return NS_ERROR_FAILURE;
   if (mIsDone) return NS_ERROR_FAILURE;
   return mCurNode->QueryInterface(kISupportsIID, (void**) aNode);
 }
-
+*/
