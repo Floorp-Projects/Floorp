@@ -76,8 +76,6 @@ imgRequestProxy::~imgRequestProxy()
        be cached even if no one is using it currently.
      */
     NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, NS_OK);
-
-    mOwner = nsnull;
   }
 
   PR_DestroyLock(mLock);
@@ -166,8 +164,6 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   PR_Unlock(mLock);
 
   NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, status);
-
-  mOwner = nsnull;
 
   return NS_OK;
 }

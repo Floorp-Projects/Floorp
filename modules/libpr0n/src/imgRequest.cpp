@@ -169,7 +169,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
   // make sure that observer gets an OnStopDecode message sent to it
   if (!(mState & onStopDecode)) {
-    proxy->OnStopDecode(nsnull, nsnull, NS_IMAGELIB_ERROR_FAILURE, nsnull);
+    proxy->OnStopDecode(nsnull, nsnull, aStatus, nsnull);
   }
 
   // make sure that observer gets an OnStopRequest message sent to it
@@ -191,6 +191,8 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
      */
     if (mChannel && mLoading && NS_FAILED(aStatus)) {
       LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
+
+      mStatus |= STATUS_LOAD_PARTIAL;
 
       this->Cancel(NS_BINDING_ABORTED);
     }
@@ -249,7 +251,7 @@ NS_IMETHODIMP imgRequest::GetStatus(nsresult *aStatus)
 }
 
 /* void cancel (in nsresult status); */
-NS_IMETHODIMP imgRequest::Cancel(nsresult status)
+NS_IMETHODIMP imgRequest::Cancel(nsresult aStatus)
 {
   /* The Cancel() method here should only be called by this class. */
 
@@ -261,12 +263,13 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
     mImage->StopAnimation();
   }
 
-  mStatus |= imgIRequest::STATUS_ERROR;
+  if (!(mStatus & imgIRequest::STATUS_LOAD_PARTIAL))
+    mStatus |= imgIRequest::STATUS_ERROR;
 
   RemoveFromCache();
 
   if (mChannel && mLoading)
-    mChannel->Cancel(status);
+    mChannel->Cancel(aStatus);
 
   return NS_OK;
 }
@@ -513,8 +516,9 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
 
   mState |= onStopDecode;
 
-  if (NS_FAILED(aStatus))
+  if (NS_FAILED(aStatus) && !(mStatus & imgIRequest::STATUS_LOAD_PARTIAL)) {
     mStatus |= imgIRequest::STATUS_ERROR;
+  }
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
@@ -688,7 +692,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
                ("[this=%p] imgRequest::OnDataAvailable -- Content type unavailable from the channel\n",
                 this));
 
-        this->Cancel(NS_BINDING_ABORTED);
+        this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
 
         return NS_BINDING_ABORTED;
       }
@@ -710,7 +714,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
              ("[this=%p] imgRequest::OnDataAvailable -- Decoder not available\n", this));
 
       // no image decoder for this mimetype :(
-      this->Cancel(NS_BINDING_ABORTED);
+      this->Cancel(NS_IMAGELIB_ERROR_NO_DECODER);
 
       return NS_IMAGELIB_ERROR_NO_DECODER;
     }
@@ -720,7 +724,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       PR_LOG(gImgLog, PR_LOG_WARNING,
              ("[this=%p] imgRequest::OnDataAvailable -- mDecoder->Init failed\n", this));
 
-      this->Cancel(NS_BINDING_ABORTED);
+      this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
 
       return NS_BINDING_ABORTED;
     }
@@ -730,7 +734,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- no decoder\n", this));
 
-    this->Cancel(NS_BINDING_ABORTED);
+    this->Cancel(NS_IMAGELIB_ERROR_NO_DECODER);
 
     return NS_BINDING_ABORTED;
   }
@@ -742,7 +746,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- mDecoder->WriteFrom failed\n", this));
 
-    this->Cancel(NS_BINDING_ABORTED);
+    this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
 
     return NS_BINDING_ABORTED;
   }
