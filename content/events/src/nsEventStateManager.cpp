@@ -4379,7 +4379,7 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
       if (aContent) 
         aContent->SetFocus(mPresContext);
       else
-        SendFocusBlur(mPresContext, nsnull, PR_TRUE);
+        SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
     }
     return;
   }
