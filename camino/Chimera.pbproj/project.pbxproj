@@ -253,11 +253,12 @@
 				29B9732DFDCFA39411CA2CEA,
 			);
 			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = ../embedding/browser/cocoa/src/build;
 				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/unicharutil ../dist/include/xpcom";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
-				OPTIMIZATION_CFLAGS = "-O0";
+				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" ";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
@@ -420,7 +421,6 @@
 				F5568A8F0217C7F5010001CA,
 				F5568A910217CA82010001CA,
 				F5247C2E02289FD9013DD99A,
-				F5571934022B3C3B010001CA,
 				F53F2206022B7C78010001CA,
 				F53F2207022B7C78010001CA,
 				F53F2208022B7C78010001CA,
@@ -1429,7 +1429,6 @@
 		F53F21EB022B7C77010001CA = {
 			children = (
 				F585677D02382E97010001CA,
-				F5571933022B3C3B010001CA,
 				F53F21EC022B7C77010001CA,
 				F53F21ED022B7C77010001CA,
 				F53F21EE022B7C77010001CA,
@@ -1804,12 +1803,6 @@
 		};
 		F55714A2023B4899010001CA = {
 			fileRef = F55714A1023B4898010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5571934022B3C3B010001CA = {
-			fileRef = F5571933022B3C3B010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -2215,6 +2208,8 @@
 				F58581B3022B8D62010001CA,
 			);
 			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
+				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-bundle";
 				OTHER_REZFLAGS = "";
