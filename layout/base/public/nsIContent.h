@@ -259,6 +259,13 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   /**
+   * Dump the content (and anything it contains) out to the given
+   * file stream. Use aIndent as the base indent during formatting.
+   * Returns NS_OK unless a file error occurs.
+   */
+  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
+
+  /**
    * Translate the content object into the (XIF) XML Interchange Format
    * XIF is an intermediate form of the content model, the buffer
    * will then be parsed into any number of formats including HTML, TXT, etc.
