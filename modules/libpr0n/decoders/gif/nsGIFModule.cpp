@@ -41,6 +41,7 @@
 #include "nsIGenericFactory.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
+#include "nsGifAllocator.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIFDecoder2)
 
@@ -52,5 +53,12 @@ static nsModuleComponentInfo components[] =
      nsGIFDecoder2Constructor, },
 };
 
-NS_IMPL_NSGETMODULE(nsGIFModule2, components)
+// GIF module shutdown hook
+static void PR_CALLBACK nsGifShutdown(nsIModule *module)
+{
+    // Release cached buffers from zlib allocator
+    delete gGifAllocator;
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGIFModule2, components, nsGifShutdown);
 

@@ -76,6 +76,11 @@ mailing address.
 #include "prlog.h"
 #include "GIF2.h"
 #include "nsCRT.h"
+#include "nsGifAllocator.h"
+#include "nsAutoLock.h"
+
+// Global gif allocator
+nsGifAllocator *gGifAllocator = nsnull;
 
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
@@ -446,6 +451,159 @@ PRBool gif_create(gif_struct **gs)
 
   return PR_TRUE;
 }
+
+/*******************************************************************************
+ * Gif decoder allocator
+ *
+ * For every image that gets loaded, we allocate
+ *     4097 x 2 : gs->prefix
+ *     4097 x 1 : gs->suffix
+ *     4097 x 1 : gs->stack
+ * for lzw to operate on the data. These are held for a very short interval
+ * and freed. This allocator tries to keep one set of these around
+ * and reuses them; automatically fails over to use calloc/free when all
+ * buckets are full.
+ */
+
+void
+nsGifAllocator::ClearBuckets()
+{
+  nsAutoLock autolock(mLock);
+
+  for (PRUint32 i = 0; i < kNumBuckets; i++)
+  {
+    if (mMemBucket[i])
+    {
+      // If the bucket is in use, then we will leak that memory.
+      PR_ASSERT(!IsUsed(i));
+      if (!IsUsed(i))
+      {
+        free(mMemBucket[i]);
+      }
+      mMemBucket[i] = nsnull;
+      mSize[i] = 0;
+    }
+  }
+
+  // Clear the in use flag of all buckets
+  mFlag = 0;
+}
+
+void * 
+nsGifAllocator::Calloc(PRUint32 items, PRUint32 size)
+{
+  PRUint32 totalsize = items * size;
+  PRInt32 freeAllocatedBucket = -1;
+  nsAutoLock autolock(mLock);
+
+  for (PRUint32 i = 0; i < kNumBuckets; i++) {
+    // if bucket is in use or has no memory, dont touch it.
+    if (IsUsed(i) || !mMemBucket[i])
+      continue;
+
+    // See if we have the memory already allocated. This is the
+    // most common case.
+    if (mSize[i] == totalsize) {
+      // Exact match. zero out memory, increase refcnt and return it
+      memset(mMemBucket[i], 0, totalsize);
+      MarkUsed(i);
+      return mMemBucket[i];
+    }
+
+    // Meanwhile, remember a free bucket that has enough memory
+    if (mSize[i] >= totalsize)
+      freeAllocatedBucket = i;
+  }
+  
+  // See if we have an allocated bucket
+  if (freeAllocatedBucket >= 0) {
+    // Clear it, Mark it used and return ptr
+    // We need to clear only the size that was requested although
+    // the bucket may be larger
+    memset(mMemBucket[freeAllocatedBucket], 0, totalsize);
+    MarkUsed(freeAllocatedBucket);
+    return mMemBucket[freeAllocatedBucket];
+  }
+
+  // Make sure we are not holding on to a lock
+  autolock.unlock();
+
+  void *ptr = calloc(items, size);
+
+  // Reaquire the lock
+  autolock.lock();
+
+  // Find a free bucket and store allocation
+  for (i = 0; i < kNumBuckets; i++)
+    if (!mMemBucket[i]) {
+      // Found free slot. Store it
+      PR_ASSERT(!IsUsed(i));
+      mMemBucket[i] = ptr;
+      mSize[i] = totalsize;
+      MarkUsed(i);
+      return ptr;
+    }
+#ifdef DEBUG_dp
+  // Warn if we are failing over to calloc and not storing it
+  // This says we have a misdesigned memory pool. The intent was
+  // once the pool was full, we would never fail over to calloc.
+  printf("0x%p - Calloc %d [%dx%d] - FAILOVER 0x%p Memory pool has sizes: ",
+         this, items*size, items, size, ptr);
+  for (i = 0; i < kNumBuckets; i++)
+  {
+    printf("%d ", mSize[i]);
+  }
+  printf("\n");
+#endif
+
+  return ptr;
+}
+
+void nsGifAllocator::Free(void *ptr)
+{
+  nsAutoLock autolock(mLock);
+
+  for (PRUint32 i = 0; i < kNumBuckets; i++)
+  {
+    if (mMemBucket[i] == ptr)
+    {
+      // Ah ha. One of the slots we allocated.
+      // Nothing to do. Mark it unused.
+      ClearUsed(i);
+      return;
+    }
+  }
+
+  // Release lock before calling free
+  autolock.unlock();
+
+  // Failover to free
+  free(ptr);
+  return;
+}
+
+static inline void *
+gif_calloc(size_t n, size_t s)
+{
+  if (!gGifAllocator)
+    gGifAllocator = new nsGifAllocator;
+  if (gGifAllocator)
+    return gGifAllocator->Calloc(n, s);
+  else
+    return calloc(n, s);
+}
+
+static inline void
+gif_free(void *ptr)
+{
+  if (!ptr)
+    return;
+  if (gGifAllocator)
+    gGifAllocator->Free(ptr);
+  else
+    free(ptr);
+}
+
 
 /*******************************************************************************
  * setup for gif_struct decoding
@@ -883,14 +1041,12 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             gs->codemask = (1 << gs->codesize) - 1;
 
             gs->datum = gs->bits = 0;
-
-            if (!gs->prefix)        
-                gs->prefix = (PRUint16 *)PR_Calloc(sizeof(PRUint16), MAX_BITS);
+            if (!gs->prefix)
+                gs->prefix = (PRUint16 *)gif_calloc(sizeof(PRUint16), MAX_BITS);
             if (!gs->suffix)
-                gs->suffix = ( PRUint8 *)PR_Calloc(sizeof(PRUint8),  MAX_BITS);
+                gs->suffix = ( PRUint8 *)gif_calloc(sizeof(PRUint8),  MAX_BITS);
             if (!gs->stack)
-                gs->stack  = ( PRUint8 *)PR_Calloc(sizeof(PRUint8),  MAX_BITS);
-                    
+                gs->stack  = ( PRUint8 *)gif_calloc(sizeof(PRUint8),  MAX_BITS);
             if( !gs->prefix || !gs->suffix || !gs->stack)
             {
                 /* complete from abort will free prefix & suffix */
@@ -1020,6 +1176,8 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         {
             GIF_RGB* map;
             int i;
+            printf("DEBUG: global_colormap - %d [%d x %d]\n", gs->global_colormap_size * sizeof(GIF_RGB),
+                   gs->global_colormap_size, sizeof(GIF_RGB));
 
             if(!(map = (GIF_RGB*)PR_Calloc(gs->global_colormap_size,
                                           sizeof(GIF_RGB))))
@@ -1684,10 +1842,10 @@ gif_destroy(gif_struct *gs)
   gif_destroy_transparency(gs);
 
   PR_FREEIF(gs->rowbuf);
-  PR_FREEIF(gs->prefix);
-  PR_FREEIF(gs->suffix);
-  PR_FREEIF(gs->stack);
-  PR_FREEIF(gs->hold);
+  gif_free(gs->prefix);
+  gif_free(gs->suffix);
+  gif_free(gs->stack);
+  gif_free(gs->hold);
 
   /* Free the colormap that is not in use.  The other one, if
    * present, will be freed when the image container is
