@@ -469,16 +469,14 @@ protected:
     PRInt32             mMajorIteration;
     PRInt32             mMinorIteration;
     PRInt32             mCharsetSource;
+    
+    PRUint16            mFlags;
 
     nsString            mUnusedInput;
     nsString            mCharset;
     nsString            mCommandStr;
-        
-    PRPackedBool        mDTDVerification;
-    PRPackedBool        mParserEnabled;
-    PRPackedBool        mObserversEnabled;
-    PRPackedBool        mPendingContinueEvent;
-    PRPackedBool        mCanInterrupt;
+
+    
    
 public:  
    

@@ -360,7 +360,6 @@ protected:
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
 
     eHTMLTags           mSkipTarget;
-    nsresult            mDTDState;
     PRInt32             mLineNumber;
     PRInt32             mOpenHeadCount;
     PRInt32             mOpenMapCount;

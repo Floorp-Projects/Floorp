@@ -487,10 +487,10 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
   return result; 
 }  
 
-nsresult  
-COtherDTD::Terminate(nsIParser* aParser) 
+NS_IMETHODIMP_(void)  
+COtherDTD::Terminate() 
 { 
-  return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; 
+  mDTDState = NS_ERROR_HTMLPARSER_STOPPARSING; 
 }
 
 /** 
