@@ -135,7 +135,7 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
     PRBool val;
     nsresult rv = GetEnabled(&val);
 
-    if (NS_FAILED(rv) && !val)
+    if (NS_FAILED(rv) || !val)
     {
         // was not set or not enabled.  
         // no problems.  just return okay.
