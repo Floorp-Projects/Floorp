@@ -2060,9 +2060,11 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     rv = dstServer->Equals(srcServer, &sameServer);
     if(NS_FAILED(rv)) return rv;
 
-    if (!sameServer) {
+    if (!sameServer) 
+    {
+      NS_ASSERTION(PR_FALSE, "can't use this method to copy across servers");
         // *** can only take message from the same imap host and user accnt
-        return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsIImapUrl> imapUrl;
