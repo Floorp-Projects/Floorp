@@ -1247,8 +1247,11 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 #else
         isLocalFile = IsFileURI(urlClone);
 #endif
-        nsLoadFlags loadAttributes = (isLocalFile ? nsIChannel::LOAD_NORMAL
-                                                  : nsIChannel::FORCE_RELOAD);
+        nsLoadFlags loadAttributes;
+        if (isLocalFile)
+          loadAttributes = (nsLoadFlags)nsIChannel::LOAD_NORMAL;
+        else
+          loadAttributes = (nsLoadFlags)nsIChannel::FORCE_RELOAD;
         result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup,
                                       nsnull, loadAttributes);
 #ifdef NS_DEBUG
