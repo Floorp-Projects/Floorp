@@ -52,20 +52,99 @@ class CScanner;
  */
 class CToken {
   public:
-                          CToken(const nsString& aName);
-                          ~CToken();
+
+    /**
+     * Default constructor
+     * @update	gess5/11/98
+     * @param   aName is the given name of the token 
+     */
+    CToken(const nsString& aName);
+
+    /**
+     * destructor
+     * @update	gess5/11/98
+     */
+    ~CToken();
     
-    virtual  nsString&    GetStringValue(void);
-    virtual  nsString&    GetText(void);
-    virtual  void         SetStringValue(const char* name);
-    virtual  void         SetOrdinal(PRInt32 value);
-    virtual  PRInt32      GetOrdinal(void);
-    virtual  PRInt32      Consume(PRUnichar aChar,CScanner& aScanner);
-    virtual  void         DebugDumpToken(ostream& out);
-    virtual  void         DebugDumpSource(ostream& out);
-    virtual  PRInt32      GetTokenType(void);
-    virtual const char*   GetClassName(void);
-    virtual   void        SelfTest(void);
+    /**
+     * Retrieve string value of the token
+     * @update	gess5/11/98
+     * @return  reference to string containing string value
+     */
+    virtual nsString& GetStringValue(void);
+
+    /**
+     * Get text of this token
+     * @update	gess5/11/98
+     * @return  string ref containing text value of this token
+     */
+    virtual nsString& GetText(void);
+
+    /**
+     * Setter method that changes the string value of this token
+     * @update	gess5/11/98
+     * @param   name is a char* value containing new string value
+     */
+    virtual void SetStringValue(const char* name);
+    
+    /**
+     * Sets the ordinal value of this token (not currently used)
+     * @update	gess5/11/98
+     * @param   value is the new ord value for this token
+     */
+    virtual void SetOrdinal(PRInt32 value);
+
+    /**
+     * Getter which retrieves the current ordinal value for this token
+     * @update	gess5/11/98
+     * @return  current ordinal value 
+     */
+    virtual PRInt32 GetOrdinal(void);
+
+    /**
+     * Causes token to consume data from given scanner.
+     * Note that behavior varies wildly between CToken subclasses.
+     * @update	gess5/11/98
+     * @param   aChar -- most recent char consumed
+     * @param   aScanner -- input source where token should get data
+     * @return  error code (0 means ok)
+     */
+    virtual PRInt32 Consume(PRUnichar aChar,CScanner& aScanner);
+
+    /**
+     * Causes token to dump itself in debug form to given output stream
+     * @update	gess5/11/98
+     * @param   out is the output stream where token should write itself
+     */
+    virtual void DebugDumpToken(ostream& out);
+
+    /**
+     * Causes token to dump itself in source form to given output stream
+     * @update	gess5/11/98
+     * @param   out is the output stream where token should write itself
+     */
+    virtual void DebugDumpSource(ostream& out);
+
+    /**
+     * Getter which retrieves type of token
+     * @update	gess5/11/98
+     * @return  int containing token type
+     */
+    virtual PRInt32 GetTokenType(void);
+
+    /**
+     * Getter which retrieves the class name for this token 
+     * This method is only used for debug purposes.
+     * @update	gess5/11/98
+     * @return  const char* containing class name
+     */
+    virtual const char* GetClassName(void);
+
+    /**
+     * perform self test.
+     * @update	gess5/11/98
+     */
+    virtual void SelfTest(void);
 
 protected:
             PRInt32       mOrdinalValue;

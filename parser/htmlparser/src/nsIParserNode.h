@@ -118,7 +118,7 @@ class nsIParserNode {
      * @param   aString will contain the resulting unicode string value
      * @return  int (unicode char or unicode index from table)
      */
-  virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
+    virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
 };
 
 #endif
