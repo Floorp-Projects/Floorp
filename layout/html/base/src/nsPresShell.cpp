@@ -136,6 +136,76 @@ static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 #undef NOISY
 
+//========================================================================
+#ifdef MOZ_REFLOW_PERF
+class ReflowCountMgr;
+
+static const char * kGrandTotalsStr = "Grand Totals";
+#define NUM_REFLOW_TYPES 5
+
+// Counting Class
+class ReflowCounter {
+public:
+  ReflowCounter(ReflowCountMgr * aMgr);
+  ~ReflowCounter();
+
+  void ClearTotals();
+  void DisplayTotals(const char * aStr);
+  void DisplayHTMLTotals(const char * aStr);
+
+  void Add(nsReflowReason aType)                  { mTotals[aType]++; mTotal++; }
+  void Add(nsReflowReason aType, PRUint32 aTotal) { mTotals[aType] += aTotal; mTotal += aTotal; }
+
+protected:
+  void DisplayTotals(PRUint32 * aArray, const char * aTitle);
+  void DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle);
+
+  PRUint32 mTotals[NUM_REFLOW_TYPES];
+  PRUint32 mTotal;
+  ReflowCountMgr * mMgr;
+};
+
+// Manager Class
+class ReflowCountMgr {
+public:
+  ReflowCountMgr();
+  //static ReflowCountMgr * GetInstance() { return &gReflowCountMgr; } 
+
+  ~ReflowCountMgr();
+
+  void ClearTotals();
+  void DisplayTotals(const char * aStr);
+  void DisplayHTMLTotals(const char * aStr);
+
+  void Add(const char * aName, nsReflowReason aType);
+  ReflowCounter * LookUp(const char * aName);
+
+  FILE * GetOutFile() { return mFD; }
+
+protected:
+  void DisplayTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
+  void DisplayHTMLTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
+
+  static PRIntn RemoveItems(PLHashEntry *he, PRIntn i, void *arg);
+  void CleanUp();
+
+  // stdout Output Methods
+  static PRIntn DoSingleTotal(PLHashEntry *he, PRIntn i, void *arg);
+  void DoGrandTotals();
+
+  // HTML Output Methods
+  static PRIntn DoSingleHTMLTotal(PLHashEntry *he, PRIntn i, void *arg);
+  void DoGrandHTMLTotals();
+
+  PLHashTable * mCounts;
+  FILE * mFD;
+
+  // ReflowCountMgr gReflowCountMgr;
+};
+#endif
+//========================================================================
+
+
 // comment out to hide caret
 #define SHOW_CARET
 
@@ -632,6 +702,10 @@ public:
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
+#ifdef MOZ_REFLOW_PERF
+  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
+#endif
+
 protected:
   virtual ~PresShell();
 
@@ -695,6 +769,10 @@ protected:
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation 
+
+#ifdef MOZ_REFLOW_PERF
+  ReflowCountMgr * mReflowCountMgr;
+#endif
 
 private:  
   void FreeDynamicStack();
@@ -820,6 +898,10 @@ PresShell::PresShell():mStackArena(nsnull)
   mPendingReflowEvent = PR_FALSE;    
   mBatchReflows = PR_FALSE;
   mSubShellMap = nsnull;
+
+#ifdef MOZ_REFLOW_PERF
+  mReflowCountMgr = new ReflowCountMgr();
+#endif
 }
 
 NS_IMPL_ADDREF(PresShell)
@@ -867,6 +949,23 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
+#ifdef MOZ_REFLOW_PERF
+  char * uriStr = nsnull;
+  if (mDocument) {
+    nsIURI * uri = mDocument->GetDocumentURL();
+    if (uri) {
+      uri->GetPath(&uriStr);
+      NS_RELEASE(uri);
+    }
+  }
+  mReflowCountMgr->DisplayTotals(uriStr);
+  mReflowCountMgr->DisplayHTMLTotals(uriStr);
+
+  delete mReflowCountMgr;
+  mReflowCountMgr = nsnull;
+  if (uriStr) delete [] uriStr;
+#endif
+
   // if we allocated any stack memory free it.
   FreeDynamicStack();
 
@@ -917,6 +1016,7 @@ PresShell::~PresShell()
     mPendingReflowEvent = PR_FALSE;
     mEventQueue->RevokeEvents(this);
   }
+
 }
 
 /**
@@ -4160,3 +4260,282 @@ nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
   return rv;  
 }
 
+
+//-------------------------------------------------------------
+//-- Reflow counts
+//-------------------------------------------------------------
+#ifdef MOZ_REFLOW_PERF
+//-------------------------------------------------------------
+NS_IMETHODIMP
+PresShell::CountReflows(const char * aName, PRUint32 aType)
+{
+  if (mReflowCountMgr) {
+    mReflowCountMgr->Add(aName, (nsReflowReason)aType);
+  }
+  return NS_OK;
+}
+
+//------------------------------------------------------------------
+//-- Reflow Counter Classes Impls
+//------------------------------------------------------------------
+//ReflowCountMgr ReflowCountMgr::gReflowCountMgr;
+
+//------------------------------------------------------------------
+ReflowCounter::ReflowCounter(ReflowCountMgr * aMgr) :
+  mMgr(aMgr)
+{
+  ClearTotals();
+}
+
+//------------------------------------------------------------------
+ReflowCounter::~ReflowCounter()
+{
+  //DisplayTotals(mTotals, "Grand Totals");
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::ClearTotals()
+{
+  mTotal = 0;
+  for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
+    mTotals[i] = 0;
+  }
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::DisplayTotals(const char * aStr)
+{
+  DisplayTotals(mTotals,aStr?aStr:"Totals");
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::DisplayHTMLTotals(const char * aStr)
+{
+  DisplayHTMLTotals(mTotals, aStr?aStr:"Totals");
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::DisplayTotals(PRUint32 * aArray, const char * aTitle)
+{
+  if (mTotal == 0) {
+    return;
+  }
+  ReflowCounter * gTots = (ReflowCounter *)mMgr->LookUp(kGrandTotalsStr);
+
+  printf("%25s\t", aTitle);
+  PRUint32 i;
+  for (i=0;i<NUM_REFLOW_TYPES;i++) {
+    printf("%d\t", aArray[i]);
+    if (gTots != this &&  aArray[i] > 0) {
+      gTots->Add((nsReflowReason)i, aArray[i]);
+      //ReflowCountMgr * staticMgr = ReflowCountMgr::GetInstance();
+      //if (staticMgr != mMgr) {
+      //  staticMgr->Add(aTitle, (nsReflowReason)aArray[i]);
+      //}
+    }
+  }
+  printf("%d\n", mTotal);
+}
+
+//------------------------------------------------------------------
+void ReflowCounter::DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle)
+{
+  if (mTotal == 0) {
+    return;
+  }
+  ReflowCounter * gTots = (ReflowCounter *)mMgr->LookUp(kGrandTotalsStr);
+  FILE * fd = mMgr->GetOutFile();
+  if (!fd) {
+    return;
+  }
+  PRUint32 i;
+
+  fprintf(fd, "<tr><td><center>%s</center></td>", aTitle);
+  for (i=0;i<NUM_REFLOW_TYPES;i++) {
+    fprintf(fd, "<td><center>");
+    if (aArray[i]) {
+      fprintf(fd, "%d", aArray[i]);
+    } else {
+      fprintf(fd, "&nbsp;");
+    }
+    fprintf(fd, "</center></td>");
+    if (gTots != this &&  aArray[i] > 0) {
+      gTots->Add((nsReflowReason)i, aArray[i]);
+    }
+  }
+  fprintf(fd, "<td><center>%d</center></td></tr>\n", mTotal);
+}
+
+//------------------------------------------------------------------
+ReflowCountMgr::ReflowCountMgr()
+{
+  mCounts = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
+                                PL_CompareValues, nsnull, nsnull);
+}
+
+//------------------------------------------------------------------
+ReflowCountMgr::~ReflowCountMgr()
+{
+  //if (GetInstance() == this) {
+  //  DoGrandTotals();
+  //}
+  CleanUp();
+}
+
+//------------------------------------------------------------------
+ReflowCounter * ReflowCountMgr::LookUp(const char * aName)
+{
+  if (nsnull != mCounts) {
+    ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
+    return counter;
+  }
+  return nsnull;
+
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::Add(const char * aName, nsReflowReason aType)
+{
+  if (nsnull != mCounts) {
+    ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
+    if (counter == nsnull) {
+      counter = new ReflowCounter(this);
+      NS_ASSERTION(counter != nsnull, "null ptr");
+      char * name = nsCRT::strdup(aName);
+      NS_ASSERTION(name != nsnull, "null ptr");
+      PL_HashTableAdd(mCounts, name, counter);
+    }
+    counter->Add(aType);
+  }
+}
+
+//------------------------------------------------------------------
+PRIntn ReflowCountMgr::RemoveItems(PLHashEntry *he, PRIntn i, void *arg)
+{
+  char *str = (char *)he->key;
+  ReflowCounter * counter = (ReflowCounter *)he->value;
+  delete counter;
+  delete [] str;
+
+  return HT_ENUMERATE_REMOVE;
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::CleanUp()
+{
+  if (nsnull != mCounts) {
+    PL_HashTableEnumerateEntries(mCounts, RemoveItems, nsnull);
+    PL_HashTableDestroy(mCounts);
+    mCounts = nsnull;
+  }
+}
+
+//------------------------------------------------------------------
+PRIntn ReflowCountMgr::DoSingleTotal(PLHashEntry *he, PRIntn i, void *arg)
+{
+  char *str = (char *)he->key;
+  ReflowCounter * counter = (ReflowCounter *)he->value;
+
+  counter->DisplayTotals(str);
+
+  return HT_ENUMERATE_NEXT;
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::DoGrandTotals()
+{
+  if (nsnull != mCounts) {
+    ReflowCounter * gTots = (ReflowCounter *)PL_HashTableLookup(mCounts, kGrandTotalsStr);
+    if (gTots == nsnull) {
+      gTots = new ReflowCounter(this);
+      PL_HashTableAdd(mCounts, nsCRT::strdup(kGrandTotalsStr), gTots);
+    } else {
+      gTots->ClearTotals();
+    }
+
+    static const char * title[] = {"Init", "Incrm", "Resze", "Style", "Dirty", "Total"};
+    printf("\t\t\t");
+    PRUint32 i;
+    for (i=0;i<NUM_REFLOW_TYPES+1;i++) {
+      printf("\t%s", title[i]);
+    }
+    printf("\n");
+    for (i=0;i<78;i++) {
+      printf("-");
+    }
+    printf("\n");
+    PL_HashTableEnumerateEntries(mCounts, DoSingleTotal, this);
+  }
+}
+
+//------------------------------------------------------------------
+PRIntn ReflowCountMgr::DoSingleHTMLTotal(PLHashEntry *he, PRIntn i, void *arg)
+{
+  char *str = (char *)he->key;
+  ReflowCounter * counter = (ReflowCounter *)he->value;
+
+  counter->DisplayHTMLTotals(str);
+
+  return HT_ENUMERATE_NEXT;
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::DoGrandHTMLTotals()
+{
+  if (nsnull != mCounts) {
+    ReflowCounter * gTots = (ReflowCounter *)PL_HashTableLookup(mCounts, kGrandTotalsStr);
+    if (gTots == nsnull) {
+      gTots = new ReflowCounter(this);
+      PL_HashTableAdd(mCounts, nsCRT::strdup(kGrandTotalsStr), gTots);
+    } else {
+      gTots->ClearTotals();
+    }
+
+    static const char * title[] = {"Class", "Init", "Incrm", "Resze", "Style", "Dirty", "Total"};
+    fprintf(mFD, "<tr>");
+    PRUint32 i;
+    for (i=0;i<NUM_REFLOW_TYPES+2;i++) {
+      fprintf(mFD, "<td><center><b>%s<b></center></td>", title[i]);
+    }
+    fprintf(mFD, "</tr>\n");
+    PL_HashTableEnumerateEntries(mCounts, DoSingleHTMLTotal, this);
+  }
+}
+
+//------------------------------------
+void ReflowCountMgr::DisplayTotals(const char * aStr)
+{
+  printf("%s\n", aStr?aStr:"No name");
+  DoGrandTotals();
+
+}
+//------------------------------------
+void ReflowCountMgr::DisplayHTMLTotals(const char * aStr)
+{
+#ifdef WIN32 // XXX NOT XP!
+  char name[1024];
+  
+  char * sptr = strrchr(aStr, '/');
+  if (sptr) {
+    sptr++;
+    strcpy(name, sptr);
+    char * eptr = strrchr(name, '.');
+    if (eptr) {
+      *eptr = 0;
+    }
+    strcat(name, "_stats.html");
+  }
+  mFD = fopen(name, "w");
+  if (mFD) {
+    fprintf(mFD, "<html><head><title>Reflow Stats</title></head><body>\n");
+    const char * title = aStr?aStr:"No name";
+    fprintf(mFD, "<center><b>%s</b><br><table border=1 style=\"background-color:#e0e0e0\">", title);
+    DoGrandHTMLTotals();
+    fprintf(mFD, "</center></table>\n");
+    fprintf(mFD, "</body></html>\n");
+    fclose(mFD);
+    mFD = nsnull;
+  }
+#endif // not XP!
+}
+#endif // MOZ_REFLOW_PERF

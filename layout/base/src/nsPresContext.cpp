@@ -1060,3 +1060,14 @@ nsPresContext::SetDefaultDirection(PRUint8 aDirection)
   mDefaultDirection = aDirection;
   return NS_OK;
 }
+
+#ifdef MOZ_REFLOW_PERF
+NS_IMETHODIMP
+nsPresContext::CountReflows(const char * aName, PRUint32 aType)
+{
+  if (mShell) {
+    mShell->CountReflows(aName, aType);
+  }
+  return NS_OK;
+}
+#endif

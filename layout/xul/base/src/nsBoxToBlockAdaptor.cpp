@@ -344,6 +344,7 @@ nsBoxToBlockAdaptor::Reflow(nsIPresContext*   aPresContext,
                      nscoord aHeight,
                      PRBool aMoveFrame)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsBoxToBlockAdaptor", aReflowState.reason);
 
   //printf("width=%d, height=%d\n", aWidth, aHeight);
 

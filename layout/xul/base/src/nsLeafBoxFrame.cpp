@@ -139,6 +139,7 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame", aReflowState.reason);
    NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
 
   aStatus = NS_FRAME_COMPLETE;

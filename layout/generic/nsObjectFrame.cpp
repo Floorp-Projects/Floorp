@@ -510,6 +510,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsObjectFrame", aReflowState.reason);
   nsresult rv = NS_OK;
   char* mimeType = nsnull;
   PRUint32 buflen;

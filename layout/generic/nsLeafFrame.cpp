@@ -67,6 +67,7 @@ nsLeafFrame::Reflow(nsIPresContext* aPresContext,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsLeafFrame", aReflowState.reason);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));

@@ -68,6 +68,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext*          aPresContext,
 							   const nsHTMLReflowState& aReflowState,
 							   nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTreeIndentationFrame", aReflowState.reason);
   aStatus = NS_FRAME_COMPLETE;
 
   // By default, we have no area

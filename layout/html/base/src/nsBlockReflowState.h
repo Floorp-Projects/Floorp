@@ -1420,6 +1420,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsBlockFrame", aReflowState.reason);
 #ifdef DEBUG
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);

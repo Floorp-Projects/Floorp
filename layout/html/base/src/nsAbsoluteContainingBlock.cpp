@@ -180,6 +180,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
                                   nscoord                  aContainingBlockHeight,
                                   nsRect&                  aChildBounds)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsAbsoluteContainingBlock", aReflowState.reason);
   // Initialize OUT parameter
   aChildBounds.SetRect(0, 0, 0, 0);
 

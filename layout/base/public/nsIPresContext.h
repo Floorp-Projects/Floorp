@@ -312,6 +312,10 @@ public:
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
   NS_IMETHOD GetDefaultDirection(PRUint8* aDirection) = 0;
   NS_IMETHOD SetDefaultDirection(PRUint8 aDirection) = 0;
+
+#ifdef MOZ_REFLOW_PERF
+  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType) = 0;
+#endif
 };
 
 // Bit values for StartLoadImage's aImageStatus
@@ -333,5 +337,13 @@ extern NS_LAYOUT nsresult
 // printing
 extern NS_LAYOUT nsresult
   NS_NewPrintContext(nsIPresContext** aInstancePtrResult);
+
+
+#ifdef MOZ_REFLOW_PERF
+#define DO_GLOBAL_REFLOW_COUNT(_name, _type) \
+  aPresContext->CountReflows((_name), (_type)); 
+#else
+#define DO_GLOBAL_REFLOW_COUNT(_name, _type)
+#endif // MOZ_REFLOW_PERF
 
 #endif /* nsIPresContext_h___ */

@@ -474,6 +474,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
       mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
       DamageRepairFrames(nsnull);
     }
+    NotifyFrames(PR_FALSE);
     break;
 
   case nsImageNotification_kFrameComplete:

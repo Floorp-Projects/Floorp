@@ -35,6 +35,7 @@
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 #include "nsTreeFrame.h"
+#include "nsIPresContext.h"
 
 //
 // NS_NewTreeOuterFrame
@@ -110,6 +111,7 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTreeOuterFrame", aReflowState.reason);
     
     // XXX at the moment we don't handle non incremental dirty reflow commands. So just convert them
     // to style changes for now.

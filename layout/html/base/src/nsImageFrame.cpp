@@ -319,6 +319,7 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsImageFrame", aReflowState.reason);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsImageFrame::Reflow: aMaxSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));

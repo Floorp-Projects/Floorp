@@ -140,6 +140,7 @@ NS_IMETHODIMP nsTreeCellFrame::Reflow(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus& aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTreeCellFrame", aReflowState.reason);
   //printf("Tree Cell Width: %d, Tree Cell Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
 	nsresult rv = nsTableCellFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);

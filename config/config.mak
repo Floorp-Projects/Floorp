@@ -263,6 +263,10 @@ CFLAGS=$(CFLAGS) -DMOZ_MATHML
 CFLAGS=$(CFLAGS) -DMOZ_SVG
 !endif
 
+!ifdef MOZ_REFLOW_PERF
+CFLAGS=$(CFLAGS) -DMOZ_REFLOW_PERF
+!endif
+
 
 #//-----------------------------------------------------------------------
 #//
