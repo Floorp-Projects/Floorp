@@ -80,7 +80,9 @@ CPPSRCS		= \
 		nsUTF8ConverterService.cpp \
 		$(NULL)
 
-ifndef MOZ_USE_NATIVE_UCONV
+ifdef MOZ_USE_NATIVE_UCONV
+REQUIRES	+= ucnative
+else
 CPPSRCS         += \
 		nsScriptableUConv.cpp \
 		nsUnicodeDecodeHelper.cpp \
@@ -95,8 +97,6 @@ CPPSRCS         += \
 		nsUnicodeToMacRoman.cpp \
 		nsUnicodeToUTF8.cpp \
 		$(NULL)
-
-REQUIRES	+= ucnative
 
 endif
 
