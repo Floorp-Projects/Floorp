@@ -59,6 +59,7 @@ for $br (last_successful_builds($tree)) {
   $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
   &print_warnings_as_html($fh, $br);
   $fh->close;
+  warn "Wrote output to $warn_file\n";
 
   last;
 }
@@ -211,6 +212,7 @@ sub build_blame {
 
       $warnings_by_who{$who}{$file}{$line} = $warn_rec;
 
+      $total_who_count++ unless exists $who_count{$who};
       $who_count{$who} += $warn_rec->{count};
     }
   }
@@ -243,6 +245,36 @@ __END_HEADER
 
   for $who (sort { $who_count{$b} <=> $who_count{$a}
                    || $a cmp $b } keys %who_count) {
+    push @who_list, $who;
+  }
+  # Summary Table (name, count)
+  #
+  print "<table border=0 cellpadding=1 cellspacing=0>";
+  for (my $ii=0; $ii <= $#who_list / 2; $ii++) {
+    my $who1 = $who_list[$ii];
+    my $who2 = $who_list[$ii + $#who_list/2 + 1];
+    my $count1 = $who_count{$who1};
+    my $count2 = $who_count{$who2};
+    my $name1 = $who1;
+    my $name2 = $who2;
+    $name1 =~ s/%.*//;
+    $name2 =~ s/%.*//;
+
+    print "<tr><td>";
+    print "<a href='#$name1'>$name1</a>";
+    print "</td><td>";
+    print "$count1";
+    print "</td><td>&nbsp;</td><td>";
+    print "<a href='#$name2'>$name2</a>" unless $name2 eq '';
+    print "</td><td>";
+    print "$count2" if $count2;
+    print "</td></tr>";
+  }
+  print "</table><p>";
+
+  # Print all the warnings
+  #
+  for $who (@who_list) {
     my $count = $who_count{$who};
     my ($name, $email);
     ($name = $who) =~ s/%.*//;
