@@ -34,6 +34,7 @@
 #include "nsDeviceContextSpecFactoryW.h"
 #include "nsScriptableRegion.h"
 #include "nsIImageManager.h"
+#include "nsScreenManagerWin.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -46,6 +47,7 @@ static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
 static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
+static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -207,6 +209,9 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
     nsFontEnumeratorWin* fe;
     NS_NEWXPCOM(fe, nsFontEnumeratorWin);
     inst = (nsISupports *)fe;
+  } 
+	else if (mClassID.Equals(kCScreenManager)) {
+		NS_NEWXPCOM(inst, nsScreenManagerWin);
   } 
 
 
