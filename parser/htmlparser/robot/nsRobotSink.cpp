@@ -334,8 +334,10 @@ void RobotSink::ProcessLink(const nsString& aLink)
     rv = mDocumentURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
     if (NS_FAILED(rv)) return;
 
-    const char *uriStr = aLink.GetBuffer();
+    char *uriStr = aLink.ToNewCString();
+    if (!uriStr) return;
     rv = service->NewURI(uriStr, baseUri, &uri);
+    nsCRT::free(uriStr);
     NS_RELEASE(baseUri);
     if (NS_FAILED(rv)) return;
 

@@ -217,8 +217,10 @@ extern "C" NS_EXPORT int DebugRobot(
     if (NS_FAILED(rv)) return rv;
 
     nsIURI *uri = nsnull;
-    const char *uriStr = urlName->GetBuffer();
+    char *uriStr = urlName->ToNewCString();
+    if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
     rv = service->NewURI(uriStr, nsnull, &uri);
+    nsCRT::free(uriStr);
     if (NS_FAILED(rv)) return rv;
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
