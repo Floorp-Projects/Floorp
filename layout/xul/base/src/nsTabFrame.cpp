@@ -35,6 +35,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIReflowCommand.h"
+#include <stdio.h>
 
 //
 // NS_NewToolbarFrame
@@ -76,7 +77,7 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
 
    // set the panels index
    char value[100];
-   itoa(index, value, 100);
+   sprintf(value, "%d", index);
 
    tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_TRUE);
 }
