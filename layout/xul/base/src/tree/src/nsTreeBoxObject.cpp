@@ -234,6 +234,14 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetRowHeight(PRInt32* _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBoxObject::GetColumnIndex(const PRUnichar *aColID, PRInt32 *_retval)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->GetColumnIndex(aColID, _retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBoxObject::GetFirstVisibleRow(PRInt32 *_retval)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
@@ -300,6 +308,14 @@ NS_IMETHODIMP nsOutlinerBoxObject::Invalidate()
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
     return body->Invalidate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::InvalidateColumn(const PRUnichar *aColID)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->InvalidateColumn(aColID);
   return NS_OK;
 }
 

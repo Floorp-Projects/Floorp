@@ -164,6 +164,7 @@ class nsOutlinerColumn {
   nsIFrame* mColFrame;
   nsIContent* mColElement;
 
+  PRInt32 mColIndex;
 public:
   nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame);
   virtual ~nsOutlinerColumn() { delete mNext; };
@@ -183,6 +184,8 @@ public:
   PRBool IsCycler() { return mIsCyclerCol; };
 
   PRInt32 GetCropStyle() { return mCropStyle; };
+
+  PRInt32 GetColIndex() { return mColIndex; };
 };
 
 #ifdef USE_IMG2
@@ -342,10 +345,6 @@ protected:
   nsresult GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, PRInt32 aRowIndex,
                                nsOutlinerColumn* aColumn, PRUnichar** aChildElt);
 
-  // timer for opening spring-loaded folders
-  nsCOMPtr<nsITimer> mOpenTimer;
-  PRInt32 mOpenTimerRow;
-
 #ifdef USE_IMG2
   // Fetch an image from the image cache.
   nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, 
@@ -375,8 +374,8 @@ protected:
   // Update the curpos of the scrollbar.
   void UpdateScrollbar();
 
-  // Update the visibility of the scrollbar.
-  nsresult SetVisibleScrollbar(PRBool aSetVisible);
+  // Check vertical overflow.
+  nsresult CheckVerticalOverflow();
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
@@ -463,5 +462,11 @@ protected: // Data Members
   
   nsCOMPtr<nsIDragSession> mDragSession;
   nsCOMPtr<nsIRenderingContext> mRenderingContext;
+  
+  // timer for opening spring-loaded folders
+  nsCOMPtr<nsITimer> mOpenTimer;
+  PRInt32 mOpenTimerRow;
+
+  PRPackedBool mVerticalOverflow;
 
 }; // class nsOutlinerBodyFrame

@@ -52,11 +52,11 @@ Contributors:
     <description class="desc">&MsgSelectDesc.label;</description>
 
     <outliner flex="1" id="synchronizeOutliner">
-      <outlinerbody flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" onclick="onSynchronizeClick(event);">
+      <outlinerbody flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content" onclick="onSynchronizeClick(event);">
         <template>
           <rule>
             <conditions>
-              <outlinerrow uri="?container"/>
+              <outlineritem uri="?container"/>
               <member container="?container" child="?member"/>
               <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
             </conditions>
@@ -86,17 +86,15 @@ Contributors:
             </bindings>
              
             <action>
-              <outlinerrow uri="?member">
-               <outlinercell ref="folderNameCol"
-                             label="?folderTreeName"
-                             properties="specialFolder-?specialFolder
-                                         isServer-?isServer
-                                         isSecure-?isSecure
-                                         serverType-?serverType"/>
-               <outlinercell ref="syncCol"
-                             properties="synchronize-?synchronize
-                                         isServer-?isServer"/>
-              </outlinerrow>
+              <outlinerchildren>
+                <outlineritem uri="?member">
+                  <outlinerrow>
+                    <outlinercell label="?folderTreeName"
+                                  properties="specialFolder-?specialFolder isServer-?isServer isSecure-?isSecure serverType-?serverType"/>
+                    <outlinercell properties="synchronize-?synchronize isServer-?isServer"/>
+                  </outlinerrow>
+                </outlineritem>
+              </outlinerchildren>
             </action>
           </rule>
         </template>

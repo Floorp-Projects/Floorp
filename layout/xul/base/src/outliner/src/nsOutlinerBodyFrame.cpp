@@ -56,6 +56,7 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsIBoxObject.h"
+#include "nsGUIEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
@@ -79,6 +80,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIDragService.h"
 #include "nsOutlinerContentView.h"
+#include "nsOutlinerUtils.h"
 
 #ifdef USE_IMG2
 #include "imgIRequest.h"
@@ -220,6 +222,27 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::cycler, cycler);
   if (cycler.EqualsIgnoreCase("true"))
     mIsCyclerCol = PR_TRUE;
+
+  // Cache our index.
+  mColIndex = -1;
+  nsCOMPtr<nsIContent> parent;
+  mColElement->GetParent(*getter_AddRefs(parent));
+  PRInt32 count;
+  parent->ChildCount(count);
+  PRInt32 j = 0;
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    parent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (tag == nsXULAtoms::outlinercol) {
+      if (child == mColElement) {
+        mColIndex = j;
+        break;
+      }
+      j++;
+    }
+  }
 }
 
 inline nscoord nsOutlinerColumn::GetWidth()
@@ -269,12 +292,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE), mImageCache(nsnull),
- mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0),
+ mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mColumnsDirty(PR_TRUE),
  mDropRow(kIllegalRow), mDropOrient(kNoOrientation), mDropAllowed(PR_FALSE), mIsSortRectDrawn(PR_FALSE),
- mAlreadyUndrewDueToScroll(PR_FALSE), mOpenTimer(nsnull), mOpenTimerRow(-1)
+ mAlreadyUndrewDueToScroll(PR_FALSE), mOpenTimer(nsnull), mOpenTimerRow(-1),
+ mVerticalOverflow(PR_FALSE)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
-  mColumnsDirty = PR_TRUE;
 }
 
 // Destructor
@@ -326,7 +349,7 @@ nsOutlinerBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
   nsIView* ourView;
   nsLeafBoxFrame::GetView(aPresContext, &ourView);
 
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+  static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
   ourView->CreateWidget(kWidgetCID);
   ourView->GetWidget(*getter_AddRefs(mOutlinerWidget));
@@ -423,8 +446,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
       xulele->GetBuilder(getter_AddRefs(builder));
       if (builder)
         view = do_QueryInterface(builder);
-      else {
-        // No builder, create a outliner content model view.
+
+      if (!view) {
+        // No outliner builder, create a outliner content view.
         nsCOMPtr<nsIOutlinerContentView> contentView;
         NS_NewOutlinerContentView(getter_AddRefs(contentView));
         if (contentView) {
@@ -450,11 +474,12 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
       ScrollToRow(lastPageTopRow);
 
     InvalidateScrollbar();
-    SetVisibleScrollbar((rowCount >= mPageCount));
+    CheckVerticalOverflow();
   }
 
   return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
 }
+
 
 static void 
 AdjustForBorderPadding(nsIStyleContext* aContext, nsRect& aRect)
@@ -522,9 +547,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     // Reset scrollbar position.
     UpdateScrollbar();
 
-    PRInt32 rowCount;
-    mView->GetRowCount(&rowCount);
-    SetVisibleScrollbar((rowCount >= mPageCount));
+    CheckVerticalOverflow();
   }
  
   return NS_OK;
@@ -582,6 +605,19 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetRowHeight(PRInt32* _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBodyFrame::GetColumnIndex(const PRUnichar *aColID, PRInt32 *_retval)
+{
+  *_retval = -1;
+  for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    if (nsCRT::strcmp(currCol->GetID(), aColID) == 0) {
+      *_retval = currCol->GetColIndex();
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::GetFirstVisibleRow(PRInt32 *_retval)
 {
   *_retval = mTopRowIndex;
@@ -609,6 +645,22 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateColumn(const PRUnichar *aColID)
+{
+  nscoord currX = mInnerBox.x;
+  for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
+       currCol = currCol->GetNext()) {
+    if (nsCRT::strcmp(currCol->GetID(), aColID) == 0) {
+      nsRect columnRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
+      nsLeafBoxFrame::Invalidate(mPresContext, columnRect, PR_FALSE);
+      break;
+    }
+    currX += currCol->GetWidth();
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRow(PRInt32 aIndex)
 {
   if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
@@ -630,9 +682,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnicha
   nscoord yPos = mInnerBox.y+mRowHeight*(aIndex-mTopRowIndex);
   for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
        currCol = currCol->GetNext()) {
-    nsRect cellRect(currX, yPos, currCol->GetWidth(), mRowHeight);
-
     if (nsCRT::strcmp(currCol->GetID(), aColID) == 0) {
+      nsRect cellRect(currX, yPos, currCol->GetWidth(), mRowHeight);
       nsLeafBoxFrame::Invalidate(mPresContext, cellRect, PR_FALSE);
       break;
     }
@@ -681,29 +732,33 @@ nsOutlinerBodyFrame::UpdateScrollbar()
   scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 }
 
-nsresult nsOutlinerBodyFrame::SetVisibleScrollbar(PRBool aSetVisible)
+nsresult nsOutlinerBodyFrame::CheckVerticalOverflow()
 {
-  NS_ASSERTION(mScrollbar, "no scroll bar");
-  if (!mScrollbar)
-    return NS_OK;
+  PRBool verticalOverflowChanged = PR_FALSE;
 
-  nsCOMPtr<nsIContent> scrollbarContent;
-  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
+  if (!mVerticalOverflow && rowCount >= mPageCount) {
+    mVerticalOverflow = PR_TRUE;
+    verticalOverflowChanged = PR_TRUE;
+  }
+  else if (mVerticalOverflow && rowCount < mPageCount) {
+    mVerticalOverflow = PR_FALSE;
+    verticalOverflowChanged = PR_TRUE;
+  }
+ 
+  if (verticalOverflowChanged) {
+    nsScrollPortEvent* event = new nsScrollPortEvent();
+    event->eventStructType = NS_SCROLLPORT_EVENT;  
+    event->widget = nsnull;
+    event->orient = nsScrollPortEvent::vertical;
+    event->nativeMsg = nsnull;
+    event->message = mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW;
 
-  nsAutoString isCollapsed;
-  scrollbarContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
-                            isCollapsed);
-  
-  if (!isCollapsed.IsEmpty() && aSetVisible)
-    scrollbarContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, 
-                                PR_TRUE);
-  else if (isCollapsed.IsEmpty() && !aSetVisible)
-    scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
-                              NS_LITERAL_STRING("true"), PR_TRUE);
-  else
-    return NS_OK;
-
-  Invalidate();
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    shell->PostDOMEvent(mContent, event);
+  }
 
   return NS_OK;
 }
@@ -938,10 +993,6 @@ nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
       mView->GetLevel(aRow, &level);
       cellX += mIndentation * level;
       remainWidth -= mIndentation * level;
-
-      // Start the Twisty Rect as the full width of the cell, and gradually decrement its width
-      // as we figure out the size of other elements. 
-      nsRect twistyRect(cellX, cellRect.y, remainWidth, cellRect.height);
 
       PRBool hasTwisty = PR_FALSE;
       PRBool isContainer = PR_FALSE;
@@ -1283,7 +1334,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   if (mTopRowIndex == 0) {    
     // Just update the scrollbar and return.
     InvalidateScrollbar();
-    SetVisibleScrollbar((rowCount >= mPageCount));
+    CheckVerticalOverflow();
     return NS_OK;
   }
 
@@ -1312,7 +1363,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   }
 
   InvalidateScrollbar();
-  SetVisibleScrollbar((rowCount >= mPageCount));
+  CheckVerticalOverflow();
   return NS_OK;
 }
 
@@ -1894,7 +1945,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
       style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);
       aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
-      PRInt32 x;
+      nsRect imageSize(0,0,0,0);
+
+      PRInt32 x = currX;
       PRInt32 y = (aRowIndex - mTopRowIndex) * mRowHeight;
 
       // Compute the maximal level to paint.
@@ -1912,12 +1965,16 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
           nsCOMPtr<nsIStyleContext> imageContext;
           GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
 
-          nsRect imageSize = GetImageSize(currentParent, aColumn->GetID(), imageContext);
+          imageSize = GetImageSize(currentParent, aColumn->GetID(), imageContext);
 
           const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
           nsMargin imageMargin;
           imageMarginData->GetMargin(imageMargin);
           imageSize.Inflate(imageMargin);
+
+          // Use default indentation if no parent image
+          if (!imageSize.width)
+            imageSize.width = mIndentation;
 
           // Line up line with the parent image.
           x = currX + twistySize.width + imageSize.width / 2;
@@ -1940,7 +1997,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
 
       // Don't paint off our cell.
       if (level == maxLevel)
-        aRenderingContext.DrawLine(x - mIndentation + 16, y + mRowHeight / 2, x, y + mRowHeight /2);
+        aRenderingContext.DrawLine(x - mIndentation + 16, y + mRowHeight / 2, x - imageSize.width / 2, y + mRowHeight / 2);
 
       PRBool clipState;
       aRenderingContext.PopState(clipState);
@@ -2508,66 +2565,38 @@ nsOutlinerBodyFrame::EnsureColumns()
 
     nsCOMPtr<nsIContent> parent;
     mContent->GetParent(*getter_AddRefs(parent));
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
-
-    nsCOMPtr<nsIDOMNodeList> cols;
-    elt->GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-                                NS_LITERAL_STRING("outlinercol"),
-                                getter_AddRefs(cols));
+    nsCOMPtr<nsIContent> colsContent;
+    nsOutlinerUtils::GetImmediateChild(parent, nsXULAtoms::outlinercols, getter_AddRefs(colsContent));
+    if (!colsContent)
+      return;
 
     nsCOMPtr<nsIPresShell> shell; 
     mPresContext->GetShell(getter_AddRefs(shell));
-
-    PRUint32 count;
-    cols->GetLength(&count);
-
-    if (count == 0)
-      return; // Nothing to do.
-
-    nsIFrame* frame = nsnull;
-    nsIFrame* colContainer = nsnull;
-    PRInt32 i = 0;
-    do {
-      // Get a column, and get the parent frame.  We need to use its box direction
-      // to find out the order in which we should iterate the columns.
-      nsCOMPtr<nsIDOMNode> node;
-      cols->Item(i++, getter_AddRefs(node));
-      nsCOMPtr<nsIContent> child(do_QueryInterface(node));
-        
-      // Get the frame for this column.
-      shell->GetPrimaryFrameFor(child, &frame);
-      if (frame)
-        frame->GetParent(&colContainer);
-    } while (!frame);
-          
-    if (!colContainer)
+    nsIFrame* colsFrame = nsnull;
+    shell->GetPrimaryFrameFor(colsContent, &colsFrame);
+    if (!colsFrame)
       return;
 
-    nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
+    nsCOMPtr<nsIBox> colsBox(do_QueryInterface(colsFrame));
     nsIBox* colBox = nsnull;
-    colContainerBox->GetChildBox(&colBox);
-    
+    colsBox->GetChildBox(&colBox);
     nsOutlinerColumn* currCol = nsnull;
     while (colBox) {
       nsIFrame* frame = nsnull;
       colBox->GetFrame(&frame);
       nsCOMPtr<nsIContent> content;
       frame->GetContent(getter_AddRefs(content));
-      nsCOMPtr<nsIDOMElement> colElt(do_QueryInterface(content));
-      nsCOMPtr<nsIDOMNode> colParentElt;
-      colElt->GetParentNode(getter_AddRefs(colParentElt));
-      if (colParentElt) {
-        nsCOMPtr<nsIDOMNode> colGrandParentElt;
-        colParentElt->GetParentNode(getter_AddRefs(colGrandParentElt));
-        if (colGrandParentElt == elt) {
-          // Create a new column structure.
-          nsOutlinerColumn* col = new nsOutlinerColumn(content, frame);
-          if (currCol)
-            currCol->SetNext(col);
-          else mColumns = col;
-          currCol = col;
-        }
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag == nsXULAtoms::outlinercol) {
+        // Create a new column structure.
+        nsOutlinerColumn* col = new nsOutlinerColumn(content, frame);
+        if (currCol)
+          currCol->SetNext(col);
+        else mColumns = col;
+        currCol = col;
       }
+
       colBox->GetNextBox(&colBox);
     }
   }
@@ -2843,7 +2872,6 @@ nsOutlinerBodyFrame :: ComputeDropPosition ( nsIDOMEvent* inEvent, PRInt32* outR
       PRInt32 yTwips, xTwips;
       AdjustEventCoordsToBoxCoordSpace ( x, y, &xTwips, &yTwips );
       PRInt32 rowTop = mRowHeight * (row - mTopRowIndex);
-      PRInt32 rowBottom = rowTop + mRowHeight;
       PRInt32 yOffset = yTwips - rowTop;
    
       PRBool isContainer = PR_FALSE;
@@ -3042,7 +3070,7 @@ nsOutlinerBodyFrame::Notify(nsITimer* aTimer)
     mOpenTimer = nsnull;
     if (mOpenTimerRow >= 0) {
       mView->ToggleOpenState(mOpenTimerRow);
-      mOpenTimerRow = 0;
+      mOpenTimerRow = -1;
     }
   }
 }

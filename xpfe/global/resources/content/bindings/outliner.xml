@@ -578,6 +578,20 @@
       </xul:hbox>
       <xul:scrollbar orient="vertical" class="outliner-scrollbar"/>
     </content>
+    <handlers>
+      <handler event="underflow">
+        <![CDATA[
+          document.getAnonymousNodes(this)[1].collapsed = true;
+          event.preventBubble();
+        ]]>
+      </handler>
+      <handler event="overflow">
+        <![CDATA[
+          document.getAnonymousNodes(this)[1].collapsed = false;
+          event.preventBubble();
+        ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="outlinerbody" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
@@ -746,14 +760,18 @@
           if (col.mTargetCol == targetCol && col.mTargetDir == pos.value)
             return;
 
+          var outliner = col.parentNode.parentNode;
           var sib;
           if (col.mTargetCol) {
             // remove previous insertbefore/after attributes
             col.mTargetCol.removeAttribute("insertbefore");
             col.mTargetCol.removeAttribute("insertafter");
+            outliner.outlinerBoxObject.invalidateColumn(col.mTargetCol.id);
             sib = col.mTargetCol._previousVisibleColumn;
-            if (sib)
+            if (sib) {
               sib.removeAttribute("insertafter");
+              outliner.outlinerBoxObject.invalidateColumn(sib.id);
+            }
             col.mTargetCol = null;
             col.mTargetDir = null;
           }
@@ -765,16 +783,15 @@
             } else {
               targetCol.setAttribute("insertbefore", "true");
               sib = targetCol._previousVisibleColumn;
-              if (sib)
+              if (sib) {
                 sib.setAttribute("insertafter", "true");
+                outliner.outlinerBoxObject.invalidateColumn(sib.id);
+              }
             }
+            outliner.outlinerBoxObject.invalidateColumn(targetCol.id);
             col.mTargetCol = targetCol;
             col.mTargetDir = pos.value;
           }
-          
-          // XXX should really just invalidate columns
-          // XXX need to implement nsIOutlinerBoxObject::invalidateColumn(in long column)
-          col.parentNode.parentNode.outlinerBoxObject.invalidate();
         ]]></body>        
       </method>
 

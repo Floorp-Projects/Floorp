@@ -174,10 +174,6 @@ class nsOutlinerContentView : public nsIOutlinerView,
     void UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt32 aCount);
 
     // Content helpers.
-    nsresult GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult);
-
-    nsresult GetColIndex(const PRUnichar* aColID, PRInt32* aResult);
-
     nsresult GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult);
 
     nsresult ParseProperties(nsIContent* aContent, Property** aProperty);

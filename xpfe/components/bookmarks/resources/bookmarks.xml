@@ -1658,24 +1658,32 @@
         <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner"
                            class="plain" enableColumnDrag="true"
                            onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, true);">
-          <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
+          <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot" flags="dont-build-content"
                         ondblclick="this.parentNode.parentNode.parentNode.openItem(event, false);"
                         ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.parentNode.DNDObserver);"
                         onselect="this.parentNode.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
             <template>
               <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-                <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+                <outlinerchildren>
+                  <outlineritem uri="rdf:*">
+                    <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator"/>
+                  </outlineritem>
+                </outlinerchildren>
               </rule>
               <rule>
-                <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                  <outlinercell ref="URL" label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                  <outlinercell ref="ShortcutURL" label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                  <outlinercell ref="Description" label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                  <outlinercell ref="LastVisitDate" label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  <outlinercell ref="AddDate" label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                  <outlinercell ref="LastModDate" label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
-                </outlinerrow>
+                <outlinerchildren>
+                  <outlineritem uri="rdf:*">
+                    <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                      <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                      <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                      <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                      <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                      <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                      <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                      <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                    </outlinerrow>
+                  </outlineritem>
+                </outlinerchildren>
               </rule>
             </template>
           </outlinerbody>
@@ -1710,18 +1718,26 @@
                  onpopupshowing="this.parentNode.createContextMenu(event);"/>
       <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true"
                          onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);">
-        <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
+        <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot" flags="dont-build-content"
                       ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
                       onclick="if (this.parentNode.parentNode.validOpenClickConditions(event)) this.parentNode.parentNode.openItem(event, false);"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-              <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+              <outlinerchildren>
+                <outlineritem uri="rdf:*">
+                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+                </outlineritem>
+              </outlinerchildren>
             </rule>
             <rule>
-              <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-              </outlinerrow>
+              <outlinerchildren>
+                <outlineritem uri="rdf:*">
+                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  </outlinerrow>
+                </outlineritem>
+              </outlinerchildren>
             </rule>
           </template>
         </outlinerbody>
@@ -1736,13 +1752,17 @@
   <binding id="bookmarks-outliner-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
       <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner">
-        <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
+        <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot" flags="dont-build-content"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
             <rule iscontainer="true">
-              <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-              </outlinerrow>
+              <outlinerchildren>
+                <outlineritem uri="rdf:*">
+                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  </outlinerrow>
+                </outlineritem>
+              </outlinerchildren>
             </rule>
           </template>
         </outlinerbody>

@@ -44,39 +44,39 @@
   </groupbox>
 
   <!-- category tree entries for mail/news -->
-  <treechildren id="panelChildren">
-    <treeitem container="true" open="true" id="mailnews" position="3">
-      <treerow>       
-        <treecell class="treecell-indent" url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
-      </treerow>
-      <treechildren id="messengerChildren">
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </treeitem>
-  </treechildren>
+  <outlinerchildren id="panelChildren">
+    <outlineritem container="true" open="true" id="mailnews" position="3">
+      <outlinerrow>       
+        <outlinercell url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
+      </outlinerrow>
+      <outlinerchildren id="messengerChildren">
+        <outlineritem>
+          <outlinerrow>
+            <outlinercell url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
+          </outlinerrow>
+        </outlineritem>
+        <outlineritem>
+          <outlinerrow>
+            <outlinercell url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/> 
+          </outlinerrow>
+        </outlineritem>
+        <outlineritem>
+          <outlinerrow>
+            <outlinercell url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/> 
+          </outlinerrow>
+        </outlineritem>
+        <outlineritem>
+          <outlinerrow>
+            <outlinercell url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
+          </outlinerrow>
+        </outlineritem>
+        <outlineritem>
+          <outlinerrow>
+            <outlinercell url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
+          </outlinerrow>
+        </outlineritem>
+      </outlinerchildren>
+    </outlineritem>
+  </outlinerchildren>
            
 </overlay>         

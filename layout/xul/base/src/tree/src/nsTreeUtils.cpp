@@ -78,3 +78,23 @@ nsOutlinerUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArr
 
   return NS_OK;
 }
+
+nsresult
+nsOutlinerUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
+{
+  PRInt32 childCount;
+  aContainer->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContainer->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (tag == aTag) {
+      NS_ADDREF(*aResult = child);
+      return NS_OK;
+    }
+  }
+
+  *aResult = nsnull;
+  return NS_OK;
+}

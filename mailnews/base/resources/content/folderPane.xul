@@ -35,12 +35,13 @@
     <outlinerbody flex="1"
                   datasources="rdf:null"
                   statedatasource="rdf:mailnewsfolders"
+                  flags="dont-build-content"
                   ondraggesture="BeginDragFolderOutliner(event);"
                   onselect="FolderPaneSelectionChange();">
       <template>
         <rule>
           <conditions>
-            <outlinerrow uri="?container"/>
+            <outlineritem uri="?container"/>
             <member container="?container" child="?member" />
           </conditions>
 
@@ -90,28 +91,19 @@
           </bindings>
 
           <action>
-            <outlinerrow uri="?member">
-               <outlinercell id="folderNameCell"
-                             ref="folderNameCol"
-                             label="?folderTreeName"
-                             properties="specialFolder-?specialFolder
-                                         biffState-?biffState
-                                         isServer-?isServer
-                                         newMessages-?newMessages
-                                         hasUnreadMessages-?hasUnreadMessages
-                                         subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages
-                                         isSecure-?isSecure
-                                         serverType-?serverType
-                                         noSelect-?noSelect"/>
-               <outlinercell ref="folderUnreadCol"
-                             label="?unreadCount"
-			     properties="hasUnreadMessages-?hasUnreadMessages
-                                         subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
-               <outlinercell ref="folderTotalCol"
-                             label="?totalCount"
-			     properties="hasUnreadMessages-?hasUnreadMessages
-                                         subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
-            </outlinerrow>
+            <outlinerchildren>
+              <outlineritem uri="?member">
+                <outlinerrow>
+                  <outlinercell id="folderNameCell"
+                                label="?folderTreeName"
+                                properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType noSelect-?noSelect"/>
+                  <outlinercell label="?unreadCount"
+                                properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+                  <outlinercell label="?totalCount"
+                                properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+                </outlinerrow>
+              </outlineritem>
+            </outlinerchildren>
           </action>
         </rule>
       </template>
