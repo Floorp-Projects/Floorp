@@ -36,7 +36,7 @@ Getopt::Long::Configure("auto_abbrev");
 sub PrintUsage {
   die <<END_USAGE
   Prints out required modules for specified directories.
-  usage: module-graph.pl [--list-only] [--start-module <mod> ] [--force-order <file> ] [--file <file> | <dir1> <dir2> ...]
+  usage: module-graph.pl [--start-module <mod> ] [--force-order <file> ] [--file <file> | <dir1> <dir2> ...] [--list-only] [--skip-tree] [--skip-dep-map] [--skip-list]
 END_USAGE
 }
 
@@ -55,6 +55,7 @@ my $curdir = getcwd();
 my $opt_list_only = 0;          # --list-only: only print out module names
 my $opt_dont_print_tree = 0;    # --skip-tree: don't print dependency tree
 my $opt_dont_print_dep_map = 0; # --skip-dep-map: don't print dependency map
+my $opt_dont_print_list = 0;    # --skip-list: don't print dependency list
 
 my $load_file = 0;       # --file
 my $opt_start_module;    # --start-module optionally print out dependencies    
@@ -70,6 +71,7 @@ sub parse_args() {
   PrintUsage() if !GetOptions('list-only' => \$opt_list_only,
 							  'skip-dep-map' => \$opt_dont_print_dep_map,
 							  'skip-tree' => \$opt_dont_print_tree,
+							  'skip-list' => \$opt_dont_print_list,
 							  'start-module=s' => \$opt_start_module,
 							  'file=s' => \$load_file,
 							  'force-order=s' => \$force_order);
@@ -441,11 +443,13 @@ sub print_module_deps {
   @visited_nodes_leaf_first_order = possibly_force_order(@visited_nodes_leaf_first_order);
 
   # Post-recursion version.
-  my $visited_mod;
-  foreach $visited_mod (@visited_nodes_leaf_first_order) {
-	print "$visited_mod ";
+  unless ($opt_dont_print_list) {
+	my $visited_mod;
+	foreach $visited_mod (@visited_nodes_leaf_first_order) {
+	  print "$visited_mod ";
+	}
+	print "\n";
   }
-  print "\n";
 
   if($debug) {
 	my @total_visited = (sort keys %visited_nodes);
