@@ -108,6 +108,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"x-viet-vps", "", CS_VIET_VPS},
 			{"x-viet-tcvn", "", CS_VIET_TCVN},
 			{"x-viet-vni", "", CS_VIET_VNI},
+			{"T.61-8bit", "", CS_T61},
 
 	/* Additional OS/2 codepages. These are IANA primary names */
 			{"ibm850", "Cp850", CS_CP_850},         /* PC Latin 1 */
@@ -335,7 +336,12 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 	/* aliases for TIS-620:	*/
 			{"x-tis-620", "", CS_TIS620},
 
-			{"", 	"", CS_UNKNOWN}
+	/* aliases for T.61-8bit:	*/
+			{"T.61", "", CS_T61},
+			{"iso-ir-103", "", CS_T61},
+			{"csISO103T618bit", "", CS_T61},
+
+			{"", 	"", CS_UNKNOWN},
 };
 
 
