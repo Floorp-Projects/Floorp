@@ -448,6 +448,9 @@ nsXMLMIMEDataSource::InitFromHack() {
     rv = AddMapping(TEXT_XML, "xml", "Extensible Markup Language", nsnull, 'TEXT','ttxt');
     if (NS_FAILED(rv)) return rv;
 
+    rv = AppendExtension(TEXT_XML, "xsl");
+    if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping(TEXT_CSS, "css", "Style Sheet", nsnull, 'TEXT','ttxt');
     if (NS_FAILED(rv)) return rv;
 
