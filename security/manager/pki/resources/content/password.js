@@ -156,9 +156,9 @@ function process()
   checkPasswords();
 }
 
-function onP12Load()
+function onP12Load(disableOkButton)
 {
-  document.documentElement.getButton("accept").disabled = true;
+  document.documentElement.getButton("accept").disabled = disableOkButton;
   pw1 = document.getElementById("pw1");
   params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
   // Select first password field
