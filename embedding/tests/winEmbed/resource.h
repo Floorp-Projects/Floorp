@@ -18,6 +18,7 @@
 #define IDC_WINEMBED                    109
 #define IDR_MAINFRAME                   128
 #define IDD_BROWSER                     130
+#define IDD_CHOOSEPROFILE               132
 #define MOZ_EDIT_URI                    1001
 #define IDC_GO                          1003
 #define IDC_BROWSER                     1004
@@ -28,6 +29,7 @@
 #define IDC_FORWARD                     1009
 #define IDC_PROGRESS                    1010
 #define IDC_RELOAD                      1011
+#define IDC_PROFILELIST                 1011
 #define MOZ_Open                        32771
 #define MOZ_Print                       32772
 #define MOZ_NewBrowser                  32773
@@ -43,15 +45,16 @@
 #define MOZ_GoForward                   32783
 #define MOZ_About                       32784
 #define ID_DEBUG_THISSPACEFORRENT       32786
+#define MOZ_SwitchProfile               32787
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        132
-#define _APS_NEXT_COMMAND_VALUE         32787
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_RESOURCE_VALUE        133
+#define _APS_NEXT_COMMAND_VALUE         32788
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

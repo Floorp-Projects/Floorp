@@ -45,6 +45,8 @@ BEGIN
     BEGIN
         MENUITEM "New Browser...",              MOZ_NewBrowser
         MENUITEM SEPARATOR
+        MENUITEM "Switch Profile...",           MOZ_SwitchProfile
+        MENUITEM SEPARATOR
         MENUITEM "&Save As...",                 MOZ_Save
         MENUITEM "Print Page",                  MOZ_Print
         MENUITEM "E&xit",                       IDM_EXIT
@@ -193,6 +195,55 @@ END
 #endif    // APSTUDIO_INVOKED
 
 #endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Ireland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENI)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_EIRE
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CHOOSEPROFILE DIALOG DISCARDABLE  0, 0, 186, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Choose Profile"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Available Profiles:",IDC_STATIC,7,7,56,8
+    LISTBOX         IDC_PROFILELIST,7,18,117,129,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Select",IDOK,129,18,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,36,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_CHOOSEPROFILE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (Ireland) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

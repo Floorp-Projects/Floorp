@@ -67,10 +67,10 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-//   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -281,117 +281,60 @@ WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 //*****************************************************************************
-// WebBrowserChrome::nsIBaseWindow
+// WebBrowserChrome::nsIWebBrowserSiteWindow
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowserChrome::InitWindow(nativeWindow aParentNativeWindow,
-   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebBrowserChrome::Create()
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
-}
-
+/* void destroy (); */
 NS_IMETHODIMP WebBrowserChrome::Destroy()
 {
    NS_ASSERTION(PR_FALSE, "You can't call this");
    return NS_ERROR_UNEXPECTED;
 }
 
+/* void setPosition (in long x, in long y); */
 NS_IMETHODIMP WebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
 {
     return mBaseWindow->SetPosition(x, y);
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
+/* void getPosition (out long x, out long y); */
+NS_IMETHODIMP WebBrowserChrome::GetPosition(PRInt32 *x, PRInt32 *y)
 {
     return mBaseWindow->GetPosition(x, y);
 }
 
+/* void setSize (in long cx, in long cy, in boolean fRepaint); */
 NS_IMETHODIMP WebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
     return mBaseWindow->SetSize(cx, cy, fRepaint);
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
+/* void getSize (out long cx, out long cy); */
+NS_IMETHODIMP WebBrowserChrome::GetSize(PRInt32 *cx, PRInt32 *cy)
 {
     return mBaseWindow->GetSize(cx, cy);
 }
 
+/* void setPositionAndSize (in long x, in long y, in long cx, in long cy, in boolean fRepaint); */
 NS_IMETHODIMP WebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
     return mBaseWindow->SetPositionAndSize(x, y, cx, cy, fRepaint);
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx, PRInt32* cy)
+/* void getPositionAndSize (out long x, out long y, out long cx, out long cy); */
+NS_IMETHODIMP WebBrowserChrome::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
     return mBaseWindow->GetPositionAndSize(x, y, cx, cy);
 }
 
-NS_IMETHODIMP WebBrowserChrome::Repaint(PRBool aForce)
-{
-   return mBaseWindow->Repaint(aForce);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetParentWidget(nsIWidget** aParentWidget)
-{
-   NS_ENSURE_ARG_POINTER(aParentWidget);
-
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetParentWidget(nsIWidget* aParentWidget)
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
-{
-   NS_ENSURE_ARG_POINTER(aParentNativeWindow);
-
-   *aParentNativeWindow = mNativeWindow;
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
-{
-   mNativeWindow = aParentNativeWindow;
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool* aVisibility)
-{
-   return mBaseWindow->GetVisibility(aVisibility);
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
-{   
-   return mBaseWindow->SetVisibility(aVisibility);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
+/* void setFocus (); */
 NS_IMETHODIMP WebBrowserChrome::SetFocus()
 {
    return mBaseWindow->SetFocus();
 }
 
-NS_IMETHODIMP WebBrowserChrome::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
-{
-   return mBaseWindow->FocusAvailable(aCurrentFocus, aTookFocus);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar** aTitle)
+/* attribute wstring title; */
+NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar * *aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
 
@@ -399,8 +342,75 @@ NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar** aTitle)
    
    return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP WebBrowserChrome::SetTitle(const PRUnichar* aTitle)
+NS_IMETHODIMP WebBrowserChrome::SetTitle(const PRUnichar * aTitle)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nativeSiteWindow siteWindow */
+NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
+{
+   NS_ENSURE_ARG_POINTER(aSiteWindow);
+
+   *aSiteWindow = mNativeWindow;
+   return NS_OK;
+}
+
+
+//*****************************************************************************
+// WebBrowserChrome::nsIPrompt
+//*****************************************************************************   
+
+/* void alert (in wstring dialogTitle, in wstring text); */
+NS_IMETHODIMP WebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void alertCheck (in wstring dialogTitle, in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP WebBrowserChrome::AlertCheck(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirm (in wstring dialogTitle, in wstring text); */
+NS_IMETHODIMP WebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirmCheck (in wstring dialogTitle, in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP WebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean prompt (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, in wstring defaultText, out wstring result); */
+NS_IMETHODIMP WebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptUsernameAndPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring user, out wstring pwd); */
+NS_IMETHODIMP WebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring pwd); */
+NS_IMETHODIMP WebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **pwd, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean select (in wstring dialogTitle, in wstring text, in PRUint32 count, [array, size_is (count)] in wstring selectList, out long outSelection); */
+NS_IMETHODIMP WebBrowserChrome::Select(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 count, const PRUnichar **selectList, PRInt32 *outSelection, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void universalDialog (in wstring titleMessage, in wstring dialogTitle, in wstring text, in wstring checkboxMsg, in wstring button0Text, in wstring button1Text, in wstring button2Text, in wstring button3Text, in wstring editfield1Msg, in wstring editfield2Msg, inout wstring editfield1Value, inout wstring editfield2Value, in wstring iconURL, inout boolean checkboxState, in PRInt32 numberButtons, in PRInt32 numberEditfields, in PRInt32 editField1Password, out PRInt32 buttonPressed); */
+NS_IMETHODIMP WebBrowserChrome::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text, const PRUnichar *button1Text, const PRUnichar *button2Text, const PRUnichar *button3Text, const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg, PRUnichar **editfield1Value, PRUnichar **editfield2Value, const PRUnichar *iconURL, PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields, PRInt32 editField1Password, PRInt32 *buttonPressed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

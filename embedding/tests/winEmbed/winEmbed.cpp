@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *  Doug Turner <dougt@netscape.com> 
+ *  Adam Lock <adamlock@netscape.com>
  */
 
 #include <stdio.h>
@@ -34,6 +35,7 @@
 #include "nsIClipboardCommands.h"
 #include "nsXPIDLString.h"
 #include "nsIWebBrowserPersist.h"
+#include "nsIProfile.h"
 
 // Local header files
 #include "WebBrowserChrome.h"
@@ -47,9 +49,14 @@ const TCHAR *szWindowClass = _T("WINEMBED");
 static ATOM             MyRegisterClass(HINSTANCE hInstance);
 static LRESULT CALLBACK BrowserWndProc(HWND, UINT, WPARAM, LPARAM);
 static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT CALLBACK GetURI(HWND, UINT, WPARAM, LPARAM);
+static LRESULT CALLBACK GetURIDlgProc(HWND, UINT, WPARAM, LPARAM);
+
 static nsresult OpenWebPage(const char * url);
 static nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome);
+
+// Profile chooser stuff
+static BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly);
+static LRESULT CALLBACK ChooseProfileDlgProc(HWND, UINT, WPARAM, LPARAM);
 
 // Global variables
 static char gLastURI[100];
@@ -84,9 +91,8 @@ int main(int argc, char *argv[])
     // Open the initial browser window
     OpenWebPage(szFirstURL);
 
-	MSG msg;
-
 	// Main message loop:
+	MSG msg;
 	HANDLE hFakeEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     while (1)
     {
@@ -174,9 +180,9 @@ HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
     {
         return NULL;
     }
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(aChrome);
+	nsCOMPtr<nsIWebBrowserSiteWindow> baseWindow = do_QueryInterface(aChrome);
     HWND hwnd = NULL;
-    baseWindow->GetParentNativeWindow((void**)&hwnd);
+	baseWindow->GetSiteWindow((void **) & hwnd);
     return hwnd;
 }
 
@@ -282,10 +288,9 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     if (!chrome)
         return NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(chrome);
-    
+    nsCOMPtr<nsIWebBrowserSiteWindow> baseWindow = do_QueryInterface(chrome);
     HWND hWnd;
-    baseWindow->GetParentNativeWindow((void**)&hWnd);
+	baseWindow->GetSiteWindow((void **) & hWnd);
     
     if (!hWnd)
         return NS_ERROR_NULL_POINTER;
@@ -304,8 +309,16 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
                                    rect.right - rect.left, 
                                    rect.bottom - rect.top,
                                    PR_TRUE);
-    
-    baseWindow->SetVisibility(PR_TRUE);
+
+	// Make sure the browser is visible
+	nsCOMPtr<nsIWebBrowser> webBrowser;
+	chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+	nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
+	if (webBrowserAsWin)
+	{
+		webBrowserAsWin->SetVisibility(PR_TRUE);
+	}
+
     return NS_OK;
 }
 
@@ -477,10 +490,14 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case MOZ_NewBrowser:
             gLastURI[0] = 0;
-            if (DialogBox(ghInstanceResources, (LPCTSTR)MOZ_GetURI, hwndDlg, (DLGPROC)GetURI) == IDOK)
+            if (DialogBox(ghInstanceResources, (LPCTSTR)MOZ_GetURI, hwndDlg, (DLGPROC)GetURIDlgProc) == IDOK)
             {
                 OpenWebPage(gLastURI);
             }
+            break;
+
+        case MOZ_SwitchProfile:
+            ChooseNewProfile(FALSE);
             break;
 
         case MOZ_Save:
@@ -708,11 +725,11 @@ LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 
 //
-//  FUNCTION: GetURI(HWND, unsigned, WORD, LONG)
+//  FUNCTION: GetURIDlgProc(HWND, unsigned, WORD, LONG)
 //
 //  PURPOSE:  Dialog handler procedure for the open uri dialog.
 //
-LRESULT CALLBACK GetURI(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK GetURIDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -730,6 +747,130 @@ LRESULT CALLBACK GetURI(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     return FALSE;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Profile chooser dialog
+
+
+//
+//  FUNCTION: ChooseNewProfile()
+//
+//  PURPOSE: Allows the user to select a new profile from a list.
+//           The bShowForMultipleProfilesOnly argument specifies whether the
+//           function should automatically select the first profile and return
+//           without displaying a dialog box if there is only one profile to
+//           select.
+//
+BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+    {
+        return FALSE;
+    }
+                                                                                 
+    PRInt32 profileCount = 0;
+    rv = profileService->GetProfileCount(&profileCount);
+    if (profileCount == 0)
+    {
+        // TODO ask them if they wish to create a default profile
+        // NS_NAMED_LITERAL_STRING(newProfileName, "default");
+        // rv = profileService->CreateNewProfile(newProfileName, nsnull, nsnull, PR_FALSE);
+        // rv = profileService->SetCurrentProfile(newProfileName);
+        return TRUE;
+    }
+    else if (profileCount == 1 && bShowForMultipleProfilesOnly)
+    {
+        // TODO Select the one and only profile and return
+        return TRUE;
+    }
+
+    INT nResult;
+    nResult = DialogBox(ghInstanceResources, (LPCTSTR)IDD_CHOOSEPROFILE, NULL, (DLGPROC)ChooseProfileDlgProc);
+
+    return TRUE;
+}
+
+
+//
+//  FUNCTION: ChooseProfileDlgProc(HWND, unsigned, WORD, LONG)
+//
+//  PURPOSE:  Dialog handler procedure for the open uri dialog.
+//
+LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    nsresult rv;
+	switch (message)
+	{
+	case WM_INITDIALOG:
+        {
+            HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
+
+            NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+
+            // Get the list of profile names and add them to the list box
+            PRUint32 listLen = 0;
+            PRUnichar **profileList = nsnull;
+            rv = profileService->GetProfileList(&listLen, &profileList);
+            for (PRUint32 index = 0; index < listLen; index++)
+            {
+#ifdef UNICODE
+                SendMessageW(hwndProfileList, LB_ADDSTRING, 0, (LPARAM) profileList[index]);
+#else
+                nsCAutoString profile; profile.AssignWithConversion(profileList[index]);
+                SendMessageA(hwndProfileList, LB_ADDSTRING, 0, (LPARAM) profile.get());
+#endif
+            }
+
+            // Select the current profile (if there is one)
+
+            // Get the current profile
+#ifdef UNICODE
+            nsXPIDLString currProfile;
+            profileService->GetCurrentProfile(getter_Copies(currProfile));
+#else
+            nsXPIDLString currProfileUnicode;
+            profileService->GetCurrentProfile(getter_Copies(currProfileUnicode));
+            nsCAutoString currProfile; currProfile.AssignWithConversion(currProfileUnicode);
+#endif
+
+            // Now find and select it
+            INT currentProfileIndex = LB_ERR;
+            currentProfileIndex = SendMessage(hwndProfileList, LB_FINDSTRINGEXACT, -1, (LPARAM) currProfile.get());
+            if (currentProfileIndex != LB_ERR)
+            {
+                SendMessage(hwndProfileList, LB_SETCURSEL, currentProfileIndex, 0);
+            }
+        }
+		return TRUE;
+
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK)
+        {
+            HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
+
+            // Get the selected profile from the list box and make it current
+            INT currentProfileIndex = SendMessage(hwndProfileList, LB_GETCURSEL, 0, 0);
+            if (currentProfileIndex != LB_ERR)
+            {
+                NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+                // Convert TCHAR name to unicode and make it current
+                INT profileNameLen = SendMessage(hwndProfileList, LB_GETTEXTLEN, currentProfileIndex, 0);
+                TCHAR *profileName = new TCHAR[profileNameLen + 1];
+                SendMessage(hwndProfileList, LB_GETTEXT, currentProfileIndex, (LPARAM) profileName);
+                nsAutoString newProfile; newProfile.AssignWithConversion(profileName);
+                rv = profileService->SetCurrentProfile(newProfile.GetUnicode());
+            }
+        }
+        EndDialog(hDlg, LOWORD(wParam));
+        return TRUE;
+	}
+
+    return FALSE;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -778,6 +919,9 @@ nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.shockwave.com/"));
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.slashdot.org/"));
     SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.quicken.com/"));
+    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.hotmail.com/"));
+    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.cnn.com/"));
+    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.javasoft.com/"));
 
     // Fetch the browser window handle
     HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
