@@ -63,36 +63,36 @@ PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
 
 TARGETS = $(PROGS) $(OBJS)
 
-INCLUDES = -I$(includedir)
+INCLUDES = -I$(dist_includedir)
 
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.
-LDOPTS = -L$(libdir)
-NSPR_VERSION = $(MOD_VERSION)
-GC_VERSION = $(MOD_VERSION)
+LDOPTS = -L$(dist_libdir)
+NSPR_VERSION = $(MOD_MAJOR_VERSION)
+GC_VERSION = $(MOD_MAJOR_VERSION)
 LIBPR = -lnspr$(NSPR_VERSION)
 LIBPLC = -lplc$(NSPR_VERSION)
 LIBGC = -lmsgc$(GC_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
-  LIBPR = $(libdir)/nspr$(NSPR_VERSION).lib
-  LIBPLC = $(libdir)/plc$(NSPR_VERSION).lib
-  LIBGC= $(libdir)/msgc$(GC_VERSION).lib
+  LIBPR = $(dist_libdir)/nspr$(NSPR_VERSION).lib
+  LIBPLC = $(dist_libdir)/plc$(NSPR_VERSION).lib
+  LIBGC= $(dist_libdir)/msgc$(GC_VERSION).lib
 else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-  LIBPR = $(libdir)/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
-  LIBPLC = $(libdir)/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
-  LIBGC= $(libdir)/libmsgc$(GC_VERSION).$(LIB_SUFFIX)
+  LIBPR = $(dist_libdir)/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
+  LIBPLC = $(dist_libdir)/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
+  LIBGC= $(dist_libdir)/libmsgc$(GC_VERSION).$(LIB_SUFFIX)
 endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
   LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
-  LIBPR = $(libdir)/nspr$(NSPR_VERSION).lib
-  LIBPLC = $(libdir)/plc$(NSPR_VERSION).lib
-  LIBGC= $(libdir)/msgc$(GC_VERSION).lib
+  LIBPR = $(dist_libdir)/nspr$(NSPR_VERSION).lib
+  LIBPLC = $(dist_libdir)/plc$(NSPR_VERSION).lib
+  LIBGC= $(dist_libdir)/msgc$(GC_VERSION).lib
 else
   LDOPTS += -Zomf -Zlinker /PM:VIO
 endif
@@ -103,7 +103,7 @@ PWD = $(shell pwd)
 endif
 
 ifeq ($(OS_ARCH), IRIX)
-LDOPTS += -rpath $(PWD)/$(libdir) -rdata_shared
+LDOPTS += -rpath $(PWD)/$(dist_libdir) -rdata_shared
 
 # For 6.x machines, include this flag
 ifeq ($(basename $(OS_RELEASE)),6)
@@ -120,22 +120,22 @@ ifeq ($(OS_ARCH), OSF1)
 # I haven't figured out how to pass -rpath to cc on OSF1 V3.2, so
 # we do static linking.
 ifeq ($(OS_RELEASE), V3.2)
-  LIBPR = $(libdir)/libnspr$(NSPR_VERSION).a
-  LIBPLC = $(libdir)/libplc$(NSPR_VERSION).a
-  LIBGC = $(libdir)/libmsgc$(GC_VERSION).a
+  LIBPR = $(dist_libdir)/libnspr$(NSPR_VERSION).a
+  LIBPLC = $(dist_libdir)/libplc$(NSPR_VERSION).a
+  LIBGC = $(dist_libdir)/libmsgc$(GC_VERSION).a
   EXTRA_LIBS = -lc_r
 else
-  LDOPTS += -rpath $(PWD)/$(libdir)
+  LDOPTS += -rpath $(PWD)/$(dist_libdir)
 endif
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
-LDOPTS += -z -Wl,+s,+b,$(PWD)/$(libdir)
+LDOPTS += -z -Wl,+s,+b,$(PWD)/$(dist_libdir)
 endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
-LDOPTS += -blibpath:$(PWD)/$(libdir):/usr/lib:/lib
+LDOPTS += -blibpath:$(PWD)/$(dist_libdir):/usr/lib:/lib
 ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
 LIBPR = -lnspr$(NSPR_VERSION)_shr
 LIBPLC = -lplc$(NSPR_VERSION)_shr
@@ -150,9 +150,9 @@ endif
 ifeq ($(OS_ARCH), SunOS)
 ifneq ($(OS_RELEASE), 4.1.3_U1)
 ifdef NS_USE_GCC
-LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(libdir)
+LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(dist_libdir)
 else
-LDOPTS += -R $(PWD)/$(libdir)
+LDOPTS += -R $(PWD)/$(dist_libdir)
 endif
 endif
 
@@ -179,16 +179,16 @@ EXTRA_LIBS = $(OS_LIBS)
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(libdir)
+export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
 ifeq ($(OS_ARCH), NCR)
 # XXX: We see some strange problems when we link with libnspr.so.
 # So for now we use static libraries on NCR.  The shared library
 # stuff below is commented out.
-LIBPR = $(libdir)/libnspr$(NSPR_VERSION).a
-LIBPLC = $(libdir)/libplc$(NSPR_VERSION).a
-LIBGC = $(libdir)/libmsgc$(GC_VERSION).a
+LIBPR = $(dist_libdir)/libnspr$(NSPR_VERSION).a
+LIBPLC = $(dist_libdir)/libplc$(NSPR_VERSION).a
+LIBGC = $(dist_libdir)/libmsgc$(GC_VERSION).a
 EXTRA_LIBS = -lsocket -lnsl -ldl
 
 # NCR needs to link against -lsocket -lnsl (and -lc, which is linked
@@ -198,7 +198,7 @@ EXTRA_LIBS = -lsocket -lnsl -ldl
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-#export LD_RUN_PATH = $(PWD)/$(libdir)
+#export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
 ifeq ($(OS_ARCH), Linux)
@@ -214,7 +214,7 @@ EXTRA_LIBS = -lsocket
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(libdir)
+export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
 ifeq ($(OS_ARCH),SINIX)
@@ -222,11 +222,11 @@ EXTRA_LIBS = -lsocket -lnsl -lresolv -ldl
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(libdir)
+export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
-export LD_RUN_PATH = $(PWD)/$(libdir)
+export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
 ifeq ($(OS_ARCH),BSD_OS)
@@ -267,7 +267,7 @@ ifeq ($(AIX_PRE_4_2),1)
 $(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
-	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(libdir)/libnspr$(NSPR_VERSION).a
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(dist_libdir)/libnspr$(NSPR_VERSION).a
 	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
 	rm -f $(AIX_TMP)
 
