@@ -49,8 +49,6 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../base
 
-DEFINES		+= -D_IMPL_NS_DOM
-
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif

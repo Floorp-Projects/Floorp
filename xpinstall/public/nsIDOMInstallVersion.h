@@ -121,6 +121,6 @@ public:
 
 extern nsresult NS_InitInstallVersionClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMInstallVersion_h__

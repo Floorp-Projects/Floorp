@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
-DEFINES=-D_IMPL_NS_DOM
 LINCS=-I..\base
 
 CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
