@@ -47,11 +47,18 @@
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
 
+#include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
+
 #define MAX_BUFFER_SIZE 1024
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 
+#if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
+#define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))
+#else
+#define LITTLE_TO_NATIVE16(x) x
+#endif
 
 nsUnknownDecoder::nsUnknownDecoder()
 {
@@ -398,6 +405,97 @@ void nsUnknownDecoder::SniffForImageMimeType(const char *buf, PRUint32 len)
    ((unsigned char) buf[4])==0x00 )
   {
     mContentType = NS_LITERAL_CSTRING("image/x-jg");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  // ALWAYS KEEP THIS SNIFF AT THE END OF THE FILE!
+  if (len >= 4 && 
+      ((PRUint16*)buf)[0]==0 &&
+      (LITTLE_TO_NATIVE16(((PRUint16*)buf)[1]))==1) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
     return;
   }
 

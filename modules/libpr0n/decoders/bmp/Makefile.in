@@ -17,10 +17,33 @@
 # Rights Reserved.
 # 
 # Contributor(s):
+#  Christian Biesinger <cbiesinger@web.de>
 #
 
-DEPTH=..\..\..
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-DIRS = ppm gif png jpeg icon\win icon bmp
+include $(DEPTH)/config/autoconf.mk
 
-!include $(DEPTH)\config\rules.mak
+MODULE		= imgbmp
+LIBRARY_NAME	= imgbmp
+EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsBMPModule
+
+REQUIRES	= xpcom \
+                  necko \
+                  gfx \
+                  gfx2 \
+                  imglib2 \
+                  string \
+                  $(NULL)
+
+CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp nsBMPModule.cpp
+
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS) \
+                   $(NULL)
+
+include $(topsrcdir)/config/rules.mk

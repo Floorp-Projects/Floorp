@@ -492,6 +492,16 @@ nsXMLMIMEDataSource::InitFromHack() {
     rv = AppendExtension(IMAGE_JPG, "jpg");
     if (NS_FAILED(rv)) return rv;
 
+    rv = AddMapping(IMAGE_BMP, "bmp", "BMP Image", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(IMAGE_BMP, "bmp");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = AddMapping(IMAGE_ICO, "ico", "ICO Image", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(IMAGE_ICO, "ico");
+    if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping(IMAGE_PNG, "png", "PNG Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 

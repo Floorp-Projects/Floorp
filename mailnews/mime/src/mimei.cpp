@@ -448,7 +448,9 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
       !nsCRT::strcasecmp(content_type,			IMAGE_PNG) ||
       !nsCRT::strcasecmp(content_type,			IMAGE_XBM)  ||
       !nsCRT::strcasecmp(content_type,			IMAGE_XBM2) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_XBM3))
+      !nsCRT::strcasecmp(content_type,			IMAGE_XBM3) ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_BMP) ||
+      !nsCRT::strcasecmp(content_type,      IMAGE_ICO))
       clazz = (MimeObjectClass *)&mimeInlineImageClass;
     
 #ifdef ENABLE_SMIME
