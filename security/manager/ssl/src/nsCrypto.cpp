@@ -1769,6 +1769,21 @@ nsCertAlreadyExists(SECItem *derCert)
   return retVal;
 }
 
+static PRInt32
+nsCertListCount(CERTCertList *certList)
+{
+  PRInt32 numCerts = 0;
+  CERTCertListNode *node;
+
+  node = CERT_LIST_HEAD(certList);
+  while (!CERT_LIST_END(node, certList)) {
+    numCerts++;
+    node = CERT_LIST_NEXT(node);
+  }
+  return numCerts;
+}
+
+
 //Import user certificates that arrive as a CMMF base64 encoded
 //string.
 NS_IMETHODIMP
@@ -1792,6 +1807,7 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
   char *localNick;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsresult rv = NS_OK;
+  CERTCertList *caPubs = nsnull;
 
   nickname = ToNewCString(aNickname);
   cmmfResponse = ToNewCString(aCmmfResponse);
@@ -1889,6 +1905,32 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
     nsMemory::Free(nickname);
 
   retString = "";
+
+  //Import the root chain into the cert db.
+  caPubs = CMMF_CertRepContentGetCAPubs(certRepContent);
+  if (caPubs) {
+    PRInt32 numCAs = nsCertListCount(caPubs);
+    
+    NS_ASSERTION(numCAs > 0, "Invalid number of CA's");
+    if (numCAs > 0) {
+      CERTCertListNode *node;
+      SECItem *derCerts;
+
+      derCerts = NS_STATIC_CAST(SECItem*,
+                                nsMemory::Alloc(sizeof(SECItem)*numCAs));
+      if (!derCerts) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto loser;
+      }
+      for (node = CERT_LIST_HEAD(caPubs), i=0; 
+           !CERT_LIST_END(node, caPubs);
+           node = CERT_LIST_NEXT(node), i++) {
+        derCerts[i] = node->cert->derCert;
+      }
+      CERT_ImportCAChain(derCerts, numCAs, certUsageUserCertImport);
+      nsMemory::Free(derCerts);
+    }
+  }
 
   if (aDoForcedBackup) {
     // I can't pop up a file picker from the depths of JavaScript,
