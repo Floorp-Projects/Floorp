@@ -1220,6 +1220,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSVersion currentVersion, originalVersion;
     JSBranchCallback onbranch;
     JSBool ok, cond;
+    JSTrapHandler interruptHandler;
     jsint depth, len;
     jsval *sp, *newsp;
     void *mark;
@@ -1291,6 +1292,17 @@ js_Interpret(JSContext *cx, jsval *result)
         }                                                                     \
     JS_END_MACRO
 
+    /*
+     * Load the debugger's interrupt hook here and after calling out to native
+     * functions (but not to getters, setters, or other native hooks), so we do
+     * not have to reload it each time through the interpreter loop -- we hope
+     * the compiler can keep it in a register.
+     * XXX if it spills, we still lose
+     */
+#define LOAD_INTERRUPT_HANDLER(rt)  (interruptHandler = (rt)->interruptHandler)
+
+    LOAD_INTERRUPT_HANDLER(rt);
+
     pc = script->code;
     endpc = pc + script->length;
     len = -1;
@@ -1346,29 +1358,26 @@ js_Interpret(JSContext *cx, jsval *result)
         }
 #endif
 
-        {
-            JSTrapHandler handler = rt->interruptHandler;
-            if (handler) {
-                SAVE_SP(fp);
-                switch (handler(cx, script, pc, &rval,
-                                rt->interruptHandlerData)) {
-                  case JSTRAP_ERROR:
-                    ok = JS_FALSE;
-                    goto out;
-                  case JSTRAP_CONTINUE:
-                    break;
-                  case JSTRAP_RETURN:
-                    fp->rval = rval;
-                    goto out;
+        if (interruptHandler) {
+            SAVE_SP(fp);
+            switch (interruptHandler(cx, script, pc, &rval,
+                                     rt->interruptHandlerData)) {
+              case JSTRAP_ERROR:
+                ok = JS_FALSE;
+                goto out;
+              case JSTRAP_CONTINUE:
+                break;
+              case JSTRAP_RETURN:
+                fp->rval = rval;
+                goto out;
 #if JS_HAS_EXCEPTIONS
-                  case JSTRAP_THROW:
-                    cx->throwing = JS_TRUE;
-                    cx->exception = rval;
-                    ok = JS_FALSE;
-                    goto out;
+              case JSTRAP_THROW:
+                cx->throwing = JS_TRUE;
+                cx->exception = rval;
+                ok = JS_FALSE;
+                goto out;
 #endif /* JS_HAS_EXCEPTIONS */
-                  default:;
-                }
+              default:;
             }
         }
 
@@ -2403,6 +2412,7 @@ js_Interpret(JSContext *cx, jsval *result)
             SAVE_SP(fp);
             ok = js_Invoke(cx, argc, JSINVOKE_CONSTRUCT);
             RESTORE_SP(fp);
+            LOAD_INTERRUPT_HANDLER(rt);
             if (!ok) {
                 cx->newborn[GCX_OBJECT] = NULL;
                 goto out;
@@ -2790,6 +2800,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
+            LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
             JS_RUNTIME_METER(rt, nonInlineCalls);
@@ -2826,6 +2837,7 @@ js_Interpret(JSContext *cx, jsval *result)
             SAVE_SP(fp);
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
+            LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
             if (!cx->rval2set) {
