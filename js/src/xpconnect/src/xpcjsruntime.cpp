@@ -98,12 +98,14 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if(mMapLock)
         PR_DestroyLock(mMapLock);
+    NS_IF_RELEASE(mJSRuntimeService);
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
-                           JSRuntime*   aJSRuntime)
+                           nsIJSRuntimeService* aJSRuntimeService)
  : mXPConnect(aXPConnect),
-   mJSRuntime(aJSRuntime),
+   mJSRuntime(nsnull),
+   mJSRuntimeService(aJSRuntimeService),
    mContextMap(JSContext2XPCContextMap::newMap(XPC_CONTEXT_MAP_SIZE)),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
@@ -112,22 +114,29 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
 {
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = 0;
-}
+
+    if(mJSRuntimeService)
+    {
+        NS_ADDREF(mJSRuntimeService);
+        mJSRuntimeService->GetRuntime(&mJSRuntime);
+    } 
+} 
 
 // static
 XPCJSRuntime*
 XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect,
-                              JSRuntime*   aJSRuntime)
+                              nsIJSRuntimeService* aJSRuntimeService)
 {
     NS_PRECONDITION(aXPConnect,"bad param");
-    NS_PRECONDITION(aJSRuntime,"bad param");
+    NS_PRECONDITION(aJSRuntimeService,"bad param");
 
     XPCJSRuntime* self;
 
     self = new XPCJSRuntime(aXPConnect, 
-                            aJSRuntime);
+                            aJSRuntimeService);
 
     if(self                             &&
+       self->GetJSRuntime()             &&
        self->GetContextMap()            &&
        self->GetWrappedJSMap()          &&
        self->GetWrappedJSClassMap()     &&

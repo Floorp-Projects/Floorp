@@ -58,9 +58,9 @@ PR_STATIC_CALLBACK(void)
 xpcModuleDtor(nsIModule* self)
 {
     // Release our singletons
+    nsXPConnect::ReleaseXPConnectSingleton();
     nsXPCThreadJSContextStackImpl::FreeSingleton();
     nsJSRuntimeServiceImpl::FreeSingleton();
-    nsXPConnect::ReleaseXPConnectSingleton();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR("xpconnect", components, xpcModuleDtor)
