@@ -440,6 +440,14 @@ CHECKOUT_STANDALONE_COMPOSER:= true
 endif
 
 ####################################
+# CVS defines for Sunbird (pulled and built if MOZ_SUNBIRD is set)
+#
+
+ifdef MOZ_SUNBIRD
+MOZ_XUL_APP = 1
+endif
+
+####################################
 # CVS defines for mozilla/toolkit (pulled and built if MOZ_XUL_APP is set)
 #
 

@@ -338,6 +338,10 @@ ifdef MOZ_STANDALONE_COMPOSER
 tier_99_dirs	+= composer
 endif
 
+ifdef MOZ_SUNBIRD
+tier_99_dirs	+= calendar/sunbird
+endif
+
 ifdef MOZ_XUL_APP
 ifdef MOZ_INSTALLER
 tier_99_dirs     +=  toolkit/mozapps/installer
