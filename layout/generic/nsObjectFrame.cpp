@@ -2812,7 +2812,10 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
               parent = temp;
             }
             if (domapplet || domobject) {
-              parent = domapplet ? do_QueryInterface(domapplet) : do_QueryInterface(domobject);
+              if (domapplet)
+                parent = do_QueryInterface(domapplet);
+              else
+                parent = do_QueryInterface(domobject);
               // now check to see if this PARAM's parent is us. if so, cache it for later
               if (parent.get() == mydomNode.get()) {
                 nsCOMPtr<nsISupports> sup = do_QueryInterface(pnode);
