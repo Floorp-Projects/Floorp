@@ -208,7 +208,7 @@ function booleanChanged(event) {
         (event.target.getAttribute("data") == "and") ? true : false;
     for (var i=0; i<gSearchTerms.length; i++) {
         var searchTerm = gSearchTerms[i];
-        gSearchTerms.booleanAnd = newBoolValue;
+        searchTerm.booleanAnd = newBoolValue;
     }
     dump("Boolean is now " + event.target.data + "\n");
 }
