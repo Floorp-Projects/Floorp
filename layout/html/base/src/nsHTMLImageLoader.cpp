@@ -107,7 +107,7 @@ nsHTMLImageLoader::StopLoadImage(nsIPresContext* aPresContext)
 void
 nsHTMLImageLoader::StopAllLoadImages(nsIPresContext* aPresContext)
 {
-  aPresContext->StopAllLoadImagesFor(mFrame);
+  aPresContext->StopAllLoadImagesFor(mFrame, mFrame);
 }
 
 nsresult
@@ -203,7 +203,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
   nsresult rv = aPresContext->StartLoadImage(*urlSpec, nsnull,
                                              sizeToLoadWidth,
                                              mFrame, ImageLoadCB, (void*)this,
-                                             &mImageLoader);
+                                             mFrame, &mImageLoader);
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, mFrame);
   printf(": loading image '");

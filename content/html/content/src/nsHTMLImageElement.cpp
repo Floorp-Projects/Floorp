@@ -50,8 +50,10 @@
 #include "nsIWebShell.h"
 #include "nsIFrame.h"
 #include "nsImageFrame.h"
+#include "nsFrameImageLoader.h"
 #include "nsLayoutAtoms.h"
 #include "nsNodeInfoManager.h"
+#include "nsIFrameImageLoader.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -137,6 +139,14 @@ public:
 protected:
   nsGenericHTMLLeafElement mInner;
   nsIDocument* mOwnerDocument;  // Only used if this is a script constructed image
+
+  static nsresult ImageLibCallBack(nsIPresContext* aPresContext,
+                                   nsIFrameImageLoader* aLoader,
+                                   nsIFrame* aFrame,
+                                   void* aClosure,
+                                   PRUint32 aStatus);
+
+  nsCOMPtr<nsIFrameImageLoader> mLoader;
 };
 
 nsresult
@@ -181,6 +191,9 @@ nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)
 nsHTMLImageElement::~nsHTMLImageElement()
 {
   NS_IF_RELEASE(mOwnerDocument);
+
+  if (mLoader)
+    mLoader->RemoveFrame(this);
 }
 
 NS_IMPL_ADDREF(nsHTMLImageElement)
@@ -309,8 +322,12 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   nsImageFrame* imageFrame;
 
   result = GetImageFrame(&imageFrame);
-  if (NS_SUCCEEDED(result)) {
+  if (NS_SUCCEEDED(result) && imageFrame) {
     result = imageFrame->IsImageComplete(aComplete);
+  } else {
+    result = NS_OK;
+
+    *aComplete = !mLoader;
   }
 
   return NS_OK;
@@ -849,13 +866,70 @@ nsHTMLImageElement::GetSrc(nsAWritableString& aSrc)
   return rv;
 }
 
+nsresult nsHTMLImageElement::ImageLibCallBack(nsIPresContext* aPresContext,
+                                              nsIFrameImageLoader* aLoader,
+                                              nsIFrame* aFrame,
+                                              void* aClosure,
+                                              PRUint32 aStatus)
+{
+  nsHTMLImageElement *img = (nsHTMLImageElement *)aClosure;
+
+  if (!img || !img->mLoader)
+    return NS_OK;
+
+  if ((aStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE) &&
+      !(aStatus & NS_IMAGE_LOAD_STATUS_ERROR)) {
+    nsCOMPtr<nsIPresContext> cx;
+    aLoader->GetPresContext(getter_AddRefs(cx));
+
+    float t2p;
+    cx->GetTwipsToPixels(&t2p);
+
+    nsSize size;
+    aLoader->GetSize(size);
+
+    nsAutoString tmpStr;
+    tmpStr.AppendInt(NSTwipsToIntPixels(size.width, t2p));
+    img->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, tmpStr,
+                      PR_FALSE);
+
+    tmpStr.Truncate();
+    tmpStr.AppendInt(NSTwipsToIntPixels(size.height, t2p));
+    img->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, tmpStr,
+                      PR_FALSE);
+  }
+
+  if (aStatus & (NS_IMAGE_LOAD_STATUS_IMAGE_READY |
+                 NS_IMAGE_LOAD_STATUS_ERROR)) {
+    // We set mLoader = nsnull to indicate that we're complete.
+    img->mLoader->RemoveFrame(img);
+    img->mLoader = nsnull;
+
+    // Fire the onload event.
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+
+    if (aStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
+      event.message = NS_IMAGE_LOAD;
+    } else {
+      event.message = NS_IMAGE_ERROR;
+    }
+
+    img->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, 
+                        &status);
+  }
+
+  return NS_OK;
+}
+
+
 nsresult
 nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc)
 {
   nsresult result = NS_OK;
 
   if (nsnull != mOwnerDocument) {
-    
     PRInt32 i, count = mOwnerDocument->GetNumberOfShells();
     nsIPresShell* shell;
 
@@ -902,11 +976,17 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc)
             specifiedSize = &size;
           }
 
-          // Start the image loading. We don't care about notification
-          // or holding on to the image loader.
+          // If we have a loader we're in the middle of loading a image,
+          // we'll cancel that load and start a new one.
+          if (mLoader) {
+            mLoader->RemoveFrame(this);
+          }
+
+          // Start the image loading. We don't care about holding on to
+          // the image loader.
           result = context->StartLoadImage(url, nsnull, specifiedSize,
-                                           nsnull, nsnull, nsnull,
-                                           nsnull);
+                                           nsnull, ImageLibCallBack, this, this,
+                                           getter_AddRefs(mLoader));
 
           NS_RELEASE(context);
         }

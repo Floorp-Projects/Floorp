@@ -59,7 +59,7 @@ public:
                   nsIFrame* aTargetFrame,
                   nsImageAnimation aAnimationMode,
                   nsIFrameImageLoaderCB aCallBack,
-                  void* aClosure);
+                  void* aClosure, void* aKey);
 
   NS_IMETHOD StopImageLoad();
 
@@ -71,9 +71,9 @@ public:
                                 PRBool* aResult);
 
   NS_IMETHOD AddFrame(nsIFrame* aFrame, nsIFrameImageLoaderCB aCallBack,
-                      void* aClosure);
+                      void* aClosure, void* aKey);
 
-  NS_IMETHOD RemoveFrame(nsIFrame* aFrame);
+  NS_IMETHOD RemoveFrame(void* aKey);
 
   // See if its safe to destroy this image loader. Its safe if there
   // are no more frames using the loader and we aren't in the middle
@@ -122,6 +122,7 @@ protected:
     nsIFrame* mFrame;
     nsIFrameImageLoaderCB mCallBack;
     void* mClosure;
+    void* mKey;
     PRBool mNeedSizeUpdate;
   };
   PerFrameData* mFrames;
