@@ -8,12 +8,8 @@
 <!ENTITY mainWindow.titlemodifierseparator " - ">
 <!ENTITY mainWindow.preface "Source of: ">
 
-<!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
-<!ENTITY menu_wrapLongLines.accesskey "W">
-
-<!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
-<!ENTITY menu_highlightSyntax.accesskey "H">
-
+<!ENTITY fileMenu.label "File">
+<!ENTITY fileMenu.accesskey "F">
 <!ENTITY savePageCmd.label "Save Page As...">
 <!ENTITY savePageCmd.accesskey "A">
 <!ENTITY savePageCmd.commandkey "S">
@@ -24,9 +20,13 @@
 <!ENTITY closeCmd.accesskey "C">
 <!ENTITY closeCmd.commandkey "W">
 
-<!ENTITY findNextCmd.label "Find Next">
-<!ENTITY findNextCmd.accesskey "n">
-<!ENTITY fileMenu.label           "File">
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY goToLineCmd.label "Go to Line...">
+<!ENTITY goToLineCmd.accesskey "G">
+<!ENTITY goToLineCmd.commandkey "l">
+
 <!ENTITY viewMenu.label           "View">
 <!ENTITY viewMenu.accesskey       "V">
+<!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
+<!ENTITY menu_wrapLongLines.accesskey "W">
+<!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
+<!ENTITY menu_highlightSyntax.accesskey "H">
