@@ -1,18 +1,3 @@
-{
-import java.io.*;
-// Test program
-class Main {
-	public static void main(String[] args) {
-		try {
-			JSLexer lexer = new JSLexer(new DataInputStream(System.in));
-			JSParser parser = new JSParser(lexer);
-			parser.expression(true, true);
-		} catch(Exception e) {
-			System.err.println("exception: "+e);
-		}
-	}
-}
-}
 
 class JSParser extends Parser;
 
@@ -39,15 +24,16 @@ options {
 }
 
 // ********* Identifiers **********
-identifier
-	:	IDENT
-	|	"version"
-	|	"override"
-	|	"method"
-	|	"getter"
-	|	"setter"
-	|	"traditional"
-	|	"constructor"
+identifier returns [ExpressionNode e]
+    { e = null; }
+	:	opI:IDENT       { e = new JSValue("object", opI.getText()); }
+	|	"version"       { e = new JSValue("object", "version"); }
+	|	"override"      { e = new JSValue("object", "override"); }
+	|	"method"        { e = new JSValue("object", "method"); }
+	|	"getter"        { e = new JSValue("object", "getter"); }
+	|	"setter"        { e = new JSValue("object", "setter"); }
+	|	"traditional"   { e = new JSValue("object", "traditional"); }
+	|	"constructor"   { e = new JSValue("object", "constructor"); }
 	;
 
 qualified_identifier
@@ -55,35 +41,39 @@ qualified_identifier
 	|	identifier ("::" identifier)*
 	;
 
-qualified_identifier_or_parenthesized_expression
-	:	(parenthesized_expression | identifier) ("::" identifier)* 
+qualified_identifier_or_parenthesized_expression returns [ExpressionNode e]
+    { e = null; }
+	:	(e = parenthesized_expression | e = identifier) ("::" identifier)*
 	;
 
 // ********* Primary Expressions **********
-primary_expression[boolean initial]
+primary_expression[boolean initial] returns [ExpressionNode e]
+    { e = null; }
 	:	{initial}?
 		(
 			function_expression
 		|	object_literal
 		)
-	|	simple_expression
+	|	e = simple_expression
 	;
 
-simple_expression
-	:	"null"
-	|	"true"
-	|	"false"
-	|	NUMBER
-	|	STRING
-	|	"this"
-	|	"super"
-	|	qualified_identifier_or_parenthesized_expression
+simple_expression returns [ExpressionNode e]
+    { e = null; }
+	:	"null"      { e = new JSValue("object", "null"); }
+	|	"true"      { e = new JSValue("boolean", "true"); }
+	|	"false"     { e = new JSValue("boolean", "false"); }
+	|	opN:NUMBER  { e = new JSValue("number", opN.getText()); }
+	|	opS:STRING  { e = new JSValue("number", opS.getText()); }
+	|	"this"      { e = new JSValue("object", "this"); }
+	|	"super"     { e = new JSValue("object", "super"); }
+	|	e = qualified_identifier_or_parenthesized_expression
 	|	REGEXP
-	|	array_literal
+	|	e = array_literal
 	;
 
-parenthesized_expression
-	:	"(" expression[false, true] ")"	;
+parenthesized_expression returns [ExpressionNode e]
+    { e = null; }
+	:	"(" e = expression[false, true] ")"	;
 
 // ********* Function Expressions **********
 function_expression
@@ -102,7 +92,8 @@ literal_field
 	;
 
 // ********* Array Literals **********
-array_literal
+array_literal returns [ExpressionNode e]
+    { e = null; }
 	:	"[" (element_list)? "]"	;
 
 element_list
@@ -112,26 +103,28 @@ literal_element
 	:	assignment_expression[false, true] ;
 
 // ********* Postfix Unary Operators **********
-postfix_expression[boolean initial]
+postfix_expression[boolean initial] returns [ExpressionNode e]
+    { e = null; ExpressionNode r = null; }
 	:
-	(	primary_expression[initial]
-	|	new_expression
+	(	e = primary_expression[initial]
+	|	e = new_expression
 	)
 	(
-		member_operator
-	|	arguments
-	|	"++"
-	|	"--"
+		r = member_operator { e = new BinaryNode(".", e, r); }
+	|	r = arguments { e = new BinaryNode("()", e, r); }
+	|	"++" { e = new UnaryNode("++", e); }
+	|	"--" { e = new UnaryNode("--", e); }
 	)*
-	;	
+	;
 
-new_expression
-	:	"new" 
+new_expression returns [ExpressionNode e]
+    { e = null; }
+	:	"new"
 		(
 			new_expression
 		|	(
 				primary_expression[false]
-				(	
+				(
 					// There's an ambiguity here:
 					//  Consider the input 'new f.x'.  Is that equivalent to '(new f).x' or 'new (f.x)' ?
 					//  Assume the latter by using ANTLR's default behavior of consuming input as
@@ -156,48 +149,63 @@ new_expression
 		)*
 	;
 
-member_operator
-	:	"[" argument_list "]"
-	|	DOT qualified_identifier_or_parenthesized_expression
-	|	"@" qualified_identifier_or_parenthesized_expression
+member_operator returns [ExpressionNode e]
+    { e = null; }
+	:	"[" e = argument_list "]" { e = new UnaryNode("[]", e); }
+	|	DOT e = qualified_identifier_or_parenthesized_expression { e = new UnaryNode(".", e); }
+	|	"@" e = qualified_identifier_or_parenthesized_expression { e = new UnaryNode("@", e); }
 	;
 
-arguments
+arguments returns [ExpressionNode e]
+    { e = null; }
 	:	"(" argument_list ")" ;
 
-argument_list
+argument_list returns [ExpressionNode e]
+    { e = null; }
 	:	(assignment_expression[false, true] ("," assignment_expression[false, true])*)? ;
 
 // ********* Prefix Unary Operators **********
-unary_expression[boolean initial]
-	:	postfix_expression[initial]
-	|	"delete" postfix_expression[false]
-	|	"typeof" unary_expression[false]
-	|	"eval" unary_expression[false]
-	| 	"++" postfix_expression[false]
-	|	"--" postfix_expression[false]
-	|	"+" unary_expression[false]
-	|	"-" unary_expression[false]
-	|	"~" unary_expression[false]
-	|	"!" unary_expression[false]
+unary_expression[boolean initial] returns [ExpressionNode e]
+    { e = null; }
+	:	e = postfix_expression[initial]
+	|	"delete" e = postfix_expression[false] { e = new UnaryNode("delete", e); }
+	|	"typeof" e = unary_expression[false] { e = new UnaryNode("typeof", e); }
+	|	"eval" e = unary_expression[false] { e = new UnaryNode("eval", e); }
+	| 	"++" e = postfix_expression[false] { e = new UnaryNode("++", e); }
+	|	"--" e = postfix_expression[false] { e = new UnaryNode("--", e); }
+	|	"+" e = unary_expression[false] { e = new UnaryNode("+", e); }
+	|	"-" e = unary_expression[false] { e = new UnaryNode("-", e); }
+	|	"~" e = unary_expression[false] { e = new UnaryNode("~", e); }
+	|	"!" e = unary_expression[false] { e = new UnaryNode("!", e); }
 	;
- 
+
 // ********* Multiplicative Operators **********
-multiplicative_expression[boolean initial]
-	:	unary_expression[initial]
-		(("*" | "/" | "%") unary_expression[false])*
+multiplicative_expression[boolean initial] returns [ExpressionNode e]
+    { e = null;  ExpressionNode r = null; }
+	:	e = unary_expression[initial] (
+	    ("*" r = unary_expression[false] { e = new ArithmeticNode("*", e, r); } )
+	|	("/" r = unary_expression[false] { e = new ArithmeticNode("/", e, r); } )
+    |	("%" r = unary_expression[false] { e = new ArithmeticNode("%", e, r); } )
+        )*
 	;
 
 // ********* Additive Operators **********
-additive_expression[boolean initial]
-	:	multiplicative_expression[initial]
-		(("+" | "-") multiplicative_expression[false])* 
+additive_expression[boolean initial] returns [ExpressionNode e]
+    { e = null; ExpressionNode r = null; }
+	:	e = multiplicative_expression[initial] (
+	    ("+" r = multiplicative_expression[false] { e = new ArithmeticNode("+", e, r); } )
+	|	("-" r = multiplicative_expression[false] { e = new ArithmeticNode("-", e, r); } )
+	    )*
 	;
-	
+
 // ********* Bitwise Shift Operators **********
-shift_expression[boolean initial]
-	:	additive_expression[initial]
-		(("<<" | ">>" | ">>>") additive_expression[false])*
+shift_expression[boolean initial] returns [ExpressionNode e]
+    { e = null;  ExpressionNode r = null; }
+	:	e = additive_expression[initial] (
+	    ("<<" r = additive_expression[false] { e = new ArithmeticNode("<<", e, r); } )
+	|	(">>" r = additive_expression[false] { e = new ArithmeticNode(">>", e, r); } )
+	|	(">>>" r = additive_expression[false] { e = new ArithmeticNode(">>>", e, r); } )
+	    )*
 	;
 
 // ********* Relational Operators **********
@@ -210,8 +218,9 @@ relational_operator[boolean allowIn]
 	| 	"instanceof"
 	;
 
-relational_expression[boolean initial, boolean allowIn]
-	:	shift_expression[initial]
+relational_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = shift_expression[initial]
 		(
 			// ANTLR reports an ambiguity here because the FOLLOW set of a relational_expression
 			// includes the "in" token (from the for-in statement), but there's no real ambiguity
@@ -223,39 +232,46 @@ relational_expression[boolean initial, boolean allowIn]
 	;
 
 // ********* Equality Operators **********
-equality_expression[boolean initial, boolean allowIn]
-	:	relational_expression[initial, allowIn]
+equality_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = relational_expression[initial, allowIn]
 		(("==" | "!=" | "===" | "!==") relational_expression[false, allowIn])*
 	;
 
 // ********* Binary Bitwise Operators **********
-bitwise_and_expression[boolean initial, boolean allowIn]
-	:	equality_expression[initial, allowIn]
+bitwise_and_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = equality_expression[initial, allowIn]
 		("&" equality_expression[false, allowIn])*
 	;
 
-bitwise_xor_expression[boolean initial, boolean allowIn]
-	:	bitwise_and_expression[initial, allowIn]
+bitwise_xor_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = bitwise_and_expression[initial, allowIn]
 		("^" (bitwise_and_expression[false, allowIn] | "*" | "?"))*
 	;
 
-bitwise_or_expression[boolean initial, boolean allowIn]
-	:	bitwise_xor_expression[initial, allowIn]
+bitwise_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = bitwise_xor_expression[initial, allowIn]
 		("|" (bitwise_xor_expression[false, allowIn] | "*" | "?"))*
 	;
 
 // ********* Binary Logical Operators **********
-logical_and_expression[boolean initial, boolean allowIn]
-	:	bitwise_or_expression[initial, allowIn] ("&&" bitwise_or_expression[false, allowIn])*
+logical_and_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = bitwise_or_expression[initial, allowIn] ("&&" bitwise_or_expression[false, allowIn])*
 	;
 
-logical_or_expression[boolean initial, boolean allowIn]
-	:	logical_and_expression[initial, allowIn] ("||" logical_and_expression[false, allowIn])*
+logical_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = logical_and_expression[initial, allowIn] ("||" logical_and_expression[false, allowIn])*
 	;
 
 // ********* Conditional Operators **********
-conditional_expression[boolean initial, boolean allowIn]
-	:	logical_or_expression[initial, allowIn]
+conditional_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = logical_or_expression[initial, allowIn]
 		// There's an ambiguity here:
 		//  Consider the input 'a ? b : c ? d : e'.  Is that equivalent to '(a ? b : c) ? d : e' or
 		//  should it be interpreted as 'a ? b : (c ? d : e)' ?
@@ -267,8 +283,9 @@ conditional_expression[boolean initial, boolean allowIn]
 		)*
 	;
 
-non_assignment_expression[boolean initial, boolean allowIn]
-	:	logical_or_expression[initial, allowIn]
+non_assignment_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = logical_or_expression[initial, allowIn]
 		// There's an ambiguity here:
 		//  Consider the input 'a ? b : c ? d : e'.  Is that equivalent to '(a ? b : c) ? d : e' or
 		//  should it be interpreted as 'a ? b : (c ? d : e)' ?
@@ -285,10 +302,11 @@ non_assignment_expression[boolean initial, boolean allowIn]
 // ********* Assignment Operators **********
 
 // FIXME - Can we get rid of lookahead ?
-assignment_expression[boolean initial, boolean allowIn]
+assignment_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
 	:	(postfix_expression[initial] ("=" | compound_assignment)) =>
 		postfix_expression[initial] ("=" | compound_assignment) assignment_expression[false, allowIn]
-	|	conditional_expression[false, allowIn]
+	|	e = conditional_expression[false, allowIn]
 	;
 
 compound_assignment
@@ -306,8 +324,9 @@ compound_assignment
 	;
 
 // ********* Expressions **********
-expression[boolean initial, boolean allowIn]
-	:	assignment_expression[initial, allowIn] ("," assignment_expression[false, allowIn])*
+expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
+    { e = null; }
+	:	e = assignment_expression[initial, allowIn] ("," assignment_expression[false, allowIn] { e = new UnaryNode(",", e); })*
 	;
 
 optional_expression
@@ -376,7 +395,6 @@ labeled_statement[boolean non_empty]
 	:	identifier ":" code_statement[non_empty]
 	;
 
-// ********* If statement **********
 if_statement[boolean non_empty]
 	:	"if" parenthesized_expression code_statement[non_empty]
 		(
@@ -592,7 +610,7 @@ named_function
 	;
 
 function[boolean nameRequired]
-	:	"function" 
+	:	"function"
 		(
 			{nameRequired}? identifier
 		|	identifier
@@ -620,7 +638,7 @@ parameter
 rest_parameter
 	:	"..." (identifier)?
 	;
-	
+
 
 result_signature
 	:	(
@@ -666,7 +684,7 @@ constructor_definition
 
 // ********* Class Definition **********
 class_definition
-	:	"class" 
+	:	"class"
 		(
 			"extends" type_expression[true, true]
 		|	identifier ("extends" type_expression[true, true])?
@@ -696,49 +714,49 @@ OPERATORS
 	options {testLiterals=true;}
 	:	'?'
 	|	'('
-	|	')' 
-	|	'[' 
-	|	']' 
-	|	'{' 
-	|	'}' 
-	|	':' 
-	|	',' 
+	|	')'
+	|	'['
+	|	']'
+	|	'{'
+	|	'}'
+	|	':'
+	|	','
 //	|	'.' FIXME - conflict w/ NUMBER
-	|	'=' 
-	|	"==" 
-	|	'!' 
-	|	'~' 
-	|	"!=" 
+	|	'='
+	|	"=="
+	|	'!'
+	|	'~'
+	|	"!="
 //	|	'/' 	FIXME - conflict w/ REGEXP
-//	|	"/=" 
-	|	'+' 
-	|	"+=" 
-	|	"++" 
-	|	'-' 
-	|	"-=" 
-	|	"--" 
-	|	'*' 
-	|	"*=" 
-	|	'%' 
-	|	"%=" 
-	|	">>" 
-	|	">>=" 
-	|	">>>" 
-	|	">>>=" 
-	|	">=" 
-	|	">" 
-	|	"<<" 
-	|	"<<=" 
-	|	"<=" 
-	|	'<' 
-	|	'^' 
-	|	"^=" 
-	|	'|' 
-	|	"|=" 
-	|	"||" 
-	|	'&' 
-	|	"&=" 
-	|	"&&" 
+//	|	"/="
+	|	'+'
+	|	"+="
+	|	"++"
+	|	'-'
+	|	"-="
+	|	"--"
+	|	'*'
+	|	"*="
+	|	'%'
+	|	"%="
+	|	">>"
+	|	">>="
+	|	">>>"
+	|	">>>="
+	|	">="
+	|	">"
+	|	"<<"
+	|	"<<="
+	|	"<="
+	|	'<'
+	|	'^'
+	|	"^="
+	|	'|'
+	|	"|="
+	|	"||"
+	|	'&'
+	|	"&="
+	|	"&&"
 	|	";"
 //	|	"..."
 	;
@@ -820,14 +838,14 @@ ESC
 		|	'"'
 		|	'\''
 		|	'\\'
-		|	'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT 
+		|	'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 		|	('0'..'3')
 			(
 				options {
 					warnWhenFollowAmbig = false;
 				}
 			:	('0'..'7')
-				(	
+				(
 					options {
 						warnWhenFollowAmbig = false;
 					}
@@ -872,7 +890,7 @@ NUMBER
 			)?
 		|	('1'..'9') ('0'..'9')*  {isDecimal=true;}		// non-zero decimal
 		)
-		
+
 		// only check to see if it's a float if looks like decimal so far
 		(	{isDecimal}?
 				(	'.' ('0'..'9')* (EXPONENT)?
