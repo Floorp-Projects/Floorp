@@ -229,8 +229,8 @@ protected:
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
   PRUint32 mFlags;
   PRUint32 mActionNesting;
-  PRBool mLockRulesSniffing;
-
+  PRBool   mLockRulesSniffing;
+  PRInt32  mTheAction;    // the top level editor action
   // friends
   friend class nsAutoLockRulesSniffing;
 

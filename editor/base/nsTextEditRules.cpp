@@ -60,6 +60,7 @@ nsTextEditRules::nsTextEditRules()
 , mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
 , mActionNesting(0)
 , mLockRulesSniffing(PR_FALSE)
+, mTheAction(0)
 {
 }
 
@@ -144,6 +145,11 @@ nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
   nsAutoLockRulesSniffing lockIt(this);
   
+  if (!mActionNesting)
+  {
+    // let rules remember the top level action
+    mTheAction = action;
+  }
   mActionNesting++;
   return NS_OK;
 }
@@ -406,7 +412,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     // since they're probably quoted text.
     // For now, do this for all plaintext since mail is our main customer
     // and we don't currently set eEditorMailMask for plaintext mail.
-    //if (mFlags & nsIHTMLEditor::eEditorMailMask)
+    if (mTheAction != nsHTMLEditor::kOpInsertQuotation) // && mFlags & nsIHTMLEditor::eEditorMailMask)
     {
       nsCOMPtr<nsIDOMNode> preNode, selNode;
       PRInt32 selOffset, newOffset;
@@ -418,12 +424,26 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
       res = GetTopEnclosingPre(selNode, getter_AddRefs(preNode));
       if (NS_SUCCEEDED(res) && preNode)
       {
-        res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset);
-        if (NS_SUCCEEDED(res))
+        // Only split quote nodes: see if it has the attribute _moz_quote
+        nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
+        if (preElement)
         {
-          res = preNode->GetParentNode(getter_AddRefs(selNode));
-          if (NS_SUCCEEDED(res))
-            res = aSelection->Collapse(selNode, newOffset);
+          nsString mozQuote ("_moz_quote");
+          nsString mozQuoteVal;
+          PRBool isMozQuote = PR_FALSE;
+          if (NS_SUCCEEDED(mEditor->GetAttributeValue(preElement, mozQuote,
+                                                      mozQuoteVal, isMozQuote))
+              && isMozQuote)
+          {
+            printf("It's a moz quote -- splitting\n");
+            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset);
+            if (NS_FAILED(res)) return res;
+            res = preNode->GetParentNode(getter_AddRefs(selNode));
+            if (NS_FAILED(res)) return res;
+            nsCOMPtr<nsIDOMNode> brNode;
+            // last ePrevious param causes selection to be set before the break
+            res = mEditor->CreateBR(selNode, newOffset, &brNode, nsIEditor::ePrevious);
+          }
         }
       }
     }  
@@ -466,23 +486,6 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       res = aSelection->Collapse(selNode,selOffset+1);
       if (NS_FAILED(res)) return res;
-    }
-    else
-    {
-      // ok, the br inst the last child.  But it might be second-to-last
-      // with a mozBR already exiting after it.  In this case we have to
-      // move the selection to after the mozBR so it will show up on the
-      // empty line.
-      nsCOMPtr<nsIDOMNode> nextNode;
-      res = GetNextHTMLNode(nearNode, &nextNode);
-      if (NS_FAILED(res)) return res;
-      if (nsHTMLEditUtils::IsMozBR(nextNode))
-      {
-        res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
-        if (NS_FAILED(res)) return res;
-        res = aSelection->Collapse(selNode,selOffset+1);
-        if (NS_FAILED(res)) return res;
-      }
     }
   }
   return res;

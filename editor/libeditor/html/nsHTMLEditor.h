@@ -68,7 +68,8 @@ public:
     kOpAlign               = 3004,
     kOpMakeBasicBlock      = 3005,
     kOpRemoveList          = 3006,
-    kOpInsertElement       = 3008
+    kOpInsertElement       = 3008,
+    kOpInsertQuotation     = 3009
   };
 
 
@@ -323,7 +324,8 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
-  NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
+  NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
+                      nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
   NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
 // Table Editing (implemented in nsTableEditor.cpp)

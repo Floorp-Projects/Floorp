@@ -138,6 +138,7 @@ nsHTMLEditUtils::HasMozAttr(nsIDOMNode *node)
   return PR_FALSE;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
 // InBody: true if node is a descendant of the body
 //                  
@@ -324,6 +325,42 @@ nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
   if (tag == "blockquote")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsPre: true if node an html pre node
+//                  
+PRBool 
+nsHTMLEditUtils::IsPre(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsPre");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "pre")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsAddress: true if node an html address node
+//                  
+PRBool 
+nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsAddress");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "address")
   {
     return PR_TRUE;
   }

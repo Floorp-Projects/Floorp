@@ -75,6 +75,10 @@ protected:
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
 
+  nsresult AlignTableElement(nsIDOMNode *aNode, const nsString *alignType);
+  nsresult AlignTableCellContents(nsIDOMNode *aNode, const nsString *alignType);
+  nsresult GetTableContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+
   nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
 
   nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
@@ -127,6 +131,7 @@ protected:
                                   nsIEditor::EDirection aDirection,
                                   nsCOMPtr<nsIDOMNode> *outSelectableNode);
   nsresult RemoveEmptyNodes();
+  nsresult SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult);
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
 
