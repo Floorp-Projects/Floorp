@@ -22,11 +22,11 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input type="radio" id="pref:1:int:mail.html_compose" checked="true"/>
+			<html:input name="formatting" type="radio" id="pref:1:int:mail.html_compose" checked="true"/>
 			&useHtml.label;
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="radio" id="pref:0:int:mail.html_compose"/>
+			<html:input name="formatting" type="radio" id="pref:0:int:mail.html_compose"/>
 			&usePlain.label;
 		</html:td></html:tr>
 	</html:table>
@@ -37,19 +37,19 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input type="radio" id="pref:0:int:mail.default_html_action" checked="true"/>
+			<html:input name="recipients" type="radio" id="pref:0:int:mail.default_html_action" checked="true"/>
 			&askMe.label;
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="radio" id="pref:1:int:mail.default_html_action"/>
+			<html:input name="recipients" type="radio" id="pref:1:int:mail.default_html_action"/>
 			&convertPlain.label;
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="radio" id="pref:2:int:mail.default_html_action"/>
+			<html:input name="recipients" type="radio" id="pref:2:int:mail.default_html_action"/>
 			&sendHTML.label;
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="radio" id="pref:3:int:mail.default_html_action"/>
+			<html:input name="recipients" type="radio" id="pref:3:int:mail.default_html_action"/>
 			&sendBoth.label;
 		</html:td></html:tr>
 	</html:table>
