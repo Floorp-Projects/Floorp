@@ -63,6 +63,7 @@
 #include "nsIParser.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIContentViewer.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFContentModelBuilder.h"
@@ -3922,18 +3923,20 @@ XULDocumentImpl::StartLayout(void)
       shell->GetPresContext(getter_AddRefs(cx));
 
       PRBool intrinsic = PR_FALSE;
+      nsCOMPtr<nsIWebShell> webShell;
+      nsCOMPtr<nsIBrowserWindow> browser;
+
 		  if (cx) {
 			  nsCOMPtr<nsISupports> container;
 			  cx->GetContainer(getter_AddRefs(container));
 			  if (container) {
-			    nsCOMPtr<nsIWebShell> webShell;
 			    webShell = do_QueryInterface(container);
 			    if (webShell) {
 					  webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
             nsCOMPtr<nsIWebShellContainer> webShellContainer;
             webShell->GetContainer(*getter_AddRefs(webShellContainer));
             if (webShellContainer) {
-              nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(webShellContainer);
+              browser = do_QueryInterface(webShellContainer);
               if (browser)
                 browser->IsIntrinsicallySized(intrinsic);
             }
@@ -3949,15 +3952,73 @@ XULDocumentImpl::StartLayout(void)
         r.height = NS_UNCONSTRAINEDSIZE;
       }
 
+      if (browser) {
+        // We're top-level.
+        // See if we have attributes on our root tag that set the width and height.
+        // read "height" attribute// Convert r.width and r.height to twips.
+        float p2t;
+        cx->GetPixelsToTwips(&p2t);
+        
+        nsCOMPtr<nsIDOMElement> windowElement = do_QueryInterface(mRootContent);
+        nsString sizeString;
+        PRInt32 specSize;
+        PRInt32 errorCode;
+        if (NS_SUCCEEDED(windowElement->GetAttribute("height", sizeString))) {
+          specSize = sizeString.ToInteger(&errorCode);
+          if (NS_SUCCEEDED(errorCode) && specSize > 0)
+            r.height = NSIntPixelsToTwips(specSize, p2t);
+        }
+
+        // read "width" attribute
+        if (NS_SUCCEEDED(windowElement->GetAttribute("width", sizeString))) {
+          specSize = sizeString.ToInteger(&errorCode);
+          if (NS_SUCCEEDED(errorCode) || specSize > 0)
+            r.width = NSIntPixelsToTwips(specSize, p2t);
+        }
+      }
+
+      cx->SetVisibleArea(r);
+      
       shell->InitialReflow(r.width, r.height);
 
+      if (browser) {
+        // We're top level.
+        // Retrieve the answer.
+        cx->GetVisibleArea(r);
+
+        // Perform the resize
+        PRInt32 chromeX,chromeY,chromeWidth,chromeHeight;
+        webShell->GetBounds(chromeX,chromeY,chromeWidth,chromeHeight);
+
+        float t2p;
+        cx->GetTwipsToPixels(&t2p);
+        PRInt32 width = PRInt32((float)r.width*t2p);
+        PRInt32 height = PRInt32((float)r.height*t2p);
+      
+        PRInt32 widthDelta = width - chromeWidth;
+        PRInt32 heightDelta = height - chromeHeight;
+
+        nsRect windowBounds;
+        browser->GetWindowBounds(windowBounds);
+        browser->SizeWindowTo(windowBounds.width + widthDelta, 
+                              windowBounds.height + heightDelta);
+      }
+      
       // Now trigger a refresh
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-          vm->EnableRefresh();
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        nsresult rv = webShell->GetContentViewer(getter_AddRefs(contentViewer));
+        if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+          PRBool enabled;
+          contentViewer->GetEnableRendering(&enabled);
+          if (enabled) {
+            vm->EnableRefresh();
+          }
+        }
       }
-
+ 
       // Start observing the document _after_ we do the initial
       // reflow. Otherwise, we'll get into an trouble trying to
       // create kids before the root frame is established.
