@@ -56,7 +56,7 @@ public:
     NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                PRUint32 aPosition, PRUint32 aLineIncrement);
 
-    virtual  PRBool   OnScroll( MPARAM mp1, MPARAM mp2);
+    virtual  PRBool   OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2);
     NS_IMETHOD        GetBounds(nsRect &aRect);
 
  protected:

@@ -222,7 +222,7 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 // Deal with scrollbar messages (actually implemented only in nsScrollbar)
 //
 //-------------------------------------------------------------------------
-PRBool nsScrollbar::OnScroll( MPARAM mp1, MPARAM mp2)
+PRBool nsScrollbar::OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2)
 {
     PRBool result = PR_TRUE;
 
