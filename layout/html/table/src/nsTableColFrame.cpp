@@ -97,3 +97,40 @@ nsresult nsTableColFrame::NewFrame(nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
+/* ----- debugging methods ----- */
+NS_METHOD nsTableColFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+{
+  // if a filter is present, only output this frame if the filter says we should
+  // since this could be any "tag" with the right display type, we'll
+  // just pretend it's a cell
+  if (nsnull==aFilter)
+    return nsFrame::List(out, aIndent, aFilter);
+
+  nsAutoString tagString("col");
+  if (PR_TRUE==aFilter->OutputTag(&tagString))
+  {
+    // Indent
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+
+    // Output the tag and rect
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      nsAutoString buf;
+      tag->ToString(buf);
+      fputs(buf, out);
+      NS_RELEASE(tag);
+    }
+    PRInt32 contentIndex;
+
+    GetContentIndex(contentIndex);
+    fprintf(out, "(%d)", contentIndex);
+    out << mRect;
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
+    fputs("\n", out);
+  }
+
+  return NS_OK;
+}

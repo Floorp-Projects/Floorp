@@ -185,6 +185,8 @@ private:
   void CalculateMargins(nsTableFrame* aTableFrame,
                         nsVoidArray*  aBoundaryCells[4]);
 
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
+
 protected:
 
   /** protected constructor.

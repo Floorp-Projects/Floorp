@@ -1030,48 +1030,138 @@ void nsTableCellFrame::RecalcLayoutData(nsTableFrame* aTableFrame,
   mCalculated = NS_OK;
 }
 
+/* ----- debugging methods ----- */
+NS_METHOD nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+{
+  // if a filter is present, only output this frame if the filter says we should
+  // since this could be any "tag" with the right display type, we'll
+  // just pretend it's a cell
+  if (nsnull==aFilter)
+    return nsContainerFrame::List(out, aIndent, aFilter);
+
+  nsAutoString tagString("td");
+  PRBool outputMe = aFilter->OutputTag(&tagString);
+  if (PR_TRUE==outputMe)
+  {
+    // Indent
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+
+    // Output the tag and rect
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      nsAutoString buf;
+      tag->ToString(buf);
+      fputs(buf, out);
+      NS_RELEASE(tag);
+    }
+    PRInt32 contentIndex;
+
+    GetContentIndex(contentIndex);
+    fprintf(out, "(%d)", contentIndex);
+    out << mRect;
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
+    fputs("\n", out);
+  }
+  // Output the children
+  if (mChildCount > 0) {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]\n", mState);
+      }
+    }
+    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+      child->List(out, aIndent + 1, aFilter);
+    }
+  } else {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]\n", mState);
+      }
+    }
+  }
+  return NS_OK;
+}
+
 #if 0       //QQQ
 void nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
-  PRInt32 indent;
-
-  nsIContent* cell;
-
-  this->GetContent(cell);
-  if (cell != nsnull)
+// if a filter is present, only output this frame if the filter says we should
+  nsIAtom* tag;
+  nsAutoString tagString;
+  mContent->GetTag(tag);
+  if (tag != nsnull) 
+    tag->ToString(tagString);
+  if ((nsnull==aFilter) || (PR_TRUE==aFilter->OutputTag(&tagString)))
   {
-    /*
-    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
-    fprintf(out,"RowSpan = %d ColSpan = %d \n",cell->GetRowSpan(),cell->GetColSpan());
-    */
-    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
-    fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                NSTwipsToIntPoints(mMargin.top),
-                NSTwipsToIntPoints(mMargin.left),
-                NSTwipsToIntPoints(mMargin.bottom),
-                NSTwipsToIntPoints(mMargin.right));
+    PRInt32 indent;
+
+    nsIContent* cell;
+
+    this->GetContent(cell);
+    if (cell != nsnull)
+    {
+      /*
+      for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+      fprintf(out,"RowSpan = %d ColSpan = %d \n",cell->GetRowSpan(),cell->GetColSpan());
+      */
+      for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+      fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
+                  NSTwipsToIntPoints(mMargin.top),
+                  NSTwipsToIntPoints(mMargin.left),
+                  NSTwipsToIntPoints(mMargin.bottom),
+                  NSTwipsToIntPoints(mMargin.right));
 
 
-    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
+      for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
-    nscoord top,left,bottom,right;
+      nscoord top,left,bottom,right;
     
-    top = (mBorderFrame[NS_SIDE_TOP] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_TOP], NS_SIDE_TOP) : 0);
-    left = (mBorderFrame[NS_SIDE_LEFT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_LEFT], NS_SIDE_LEFT) : 0);
-    bottom = (mBorderFrame[NS_SIDE_BOTTOM] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_BOTTOM], NS_SIDE_BOTTOM) : 0);
-    right = (mBorderFrame[NS_SIDE_RIGHT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
+      top = (mBorderFrame[NS_SIDE_TOP] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_TOP], NS_SIDE_TOP) : 0);
+      left = (mBorderFrame[NS_SIDE_LEFT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_LEFT], NS_SIDE_LEFT) : 0);
+      bottom = (mBorderFrame[NS_SIDE_BOTTOM] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_BOTTOM], NS_SIDE_BOTTOM) : 0);
+      right = (mBorderFrame[NS_SIDE_RIGHT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
 
 
-    fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                NSTwipsToIntPoints(top),
-                NSTwipsToIntPoints(left),
-                NSTwipsToIntPoints(bottom),
-                NSTwipsToIntPoints(right));
+      fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
+                  NSTwipsToIntPoints(top),
+                  NSTwipsToIntPoints(left),
+                  NSTwipsToIntPoints(bottom),
+                  NSTwipsToIntPoints(right));
 
 
 
-    cell->List(out,aIndent);
-    NS_RELEASE(cell);
+      cell->List(out,aIndent);
+      NS_RELEASE(cell);
+    }
+  }
+
+  // Output the children
+  if (mChildCount > 0) {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]", mState);
+      }
+    }
+    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+      child->List(out, aIndent + 1, aFilter);
+    }
+    if (PR_TRUE==outputMe)
+    {
+      for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+    }
+  } else {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]", mState);
+      }
+    }
   }
 }
 

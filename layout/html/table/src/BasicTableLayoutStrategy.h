@@ -92,7 +92,12 @@ public:
                                      const nsReflowState& aReflowState,
                                      nscoord              aMaxWidth);
 
+  // these accessors are mostly for debugging purposes
+  nscoord GetTableMinWidth() const;
   nscoord GetTableMaxWidth() const;
+  nscoord GetTableFixedWidth() const;
+  nscoord GetCOLSAttribute() const;
+  nscoord GetNumCols() const;
 
 protected:
 
@@ -253,8 +258,22 @@ protected:
 
 };
 
+// these accessors are mostly for debugging purposes
+inline nscoord BasicTableLayoutStrategy::GetTableMinWidth() const
+{ return mMinTableWidth; };
+
 inline nscoord BasicTableLayoutStrategy::GetTableMaxWidth() const
 { return mMaxTableWidth; };
+
+inline nscoord BasicTableLayoutStrategy::GetTableFixedWidth() const
+{ return mFixedTableWidth; };
+
+inline nscoord BasicTableLayoutStrategy::GetCOLSAttribute() const
+{ return mCols; };
+
+inline nscoord BasicTableLayoutStrategy::GetNumCols() const
+{ return mNumCols; };  
+
 
 #endif
 

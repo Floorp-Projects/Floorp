@@ -1210,45 +1210,68 @@ nsresult nsTableRowGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
-
-
-
-// For Debugging ONLY
-NS_METHOD nsTableRowGroupFrame::MoveTo(nscoord aX, nscoord aY)
+/* ----- debugging methods ----- */
+NS_METHOD nsTableRowGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
-  if ((aX != mRect.x) || (aY != mRect.y)) {
-    mRect.x = aX;
-    mRect.y = aY;
+  // if a filter is present, only output this frame if the filter says we should
+  // since this could be any "tag" with the right display type, we'll
+  // just pretend it's a tbody
+  if (nsnull==aFilter)
+    return nsContainerFrame::List(out, aIndent, aFilter);
 
-    nsIView* view;
-    GetView(view);
+  nsAutoString tagString("tbody");
+  PRBool outputMe = aFilter->OutputTag(&tagString);
+  if (PR_TRUE==outputMe)
+  {
+    // Indent
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
 
-    // Let the view know
-    if (nsnull != view) {
-      // Position view relative to it's parent, not relative to our
-      // parent frame (our parent frame may not have a view).
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
-      view->SetPosition(origin.x, origin.y);
+    // Output the tag and rect
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      nsAutoString buf;
+      tag->ToString(buf);
+      fputs(buf, out);
+      NS_RELEASE(tag);
+    }
+    PRInt32 contentIndex;
+
+    GetContentIndex(contentIndex);
+    fprintf(out, "(%d)", contentIndex);
+    out << mRect;
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
+    fputs("\n", out);
+  }
+
+  // Output the children
+  if (mChildCount > 0) {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]\n", mState);
+      }
+    }
+    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+      child->List(out, aIndent + 1, aFilter);
+    }
+  } else {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]\n", mState);
+      }
     }
   }
 
+
   return NS_OK;
 }
 
-NS_METHOD nsTableRowGroupFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  mRect.width = aWidth;
-  mRect.height = aHeight;
 
-  nsIView* view;
-  GetView(view);
 
-  // Let the view know
-  if (nsnull != view) {
-    view->SetDimensions(aWidth, aHeight);
-  }
-  return NS_OK;
-}
+
+
 

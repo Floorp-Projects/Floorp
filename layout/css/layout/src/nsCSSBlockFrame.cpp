@@ -77,6 +77,8 @@
 // XXX Tuneup: if mNoWrap is true and we are given a ResizeReflow we
 // can just return because there's nothing to do!; this is true in
 // nsCSSInlineFrame too!
+// Except that noWrap is ignored if the containers width is too small
+// (like a table cell with a fixed width.)
 
 //----------------------------------------------------------------------
 // XXX It's really important that blocks strip out extra whitespace;
@@ -144,7 +146,7 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
 #endif
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter = nsnull) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
   // XXX implement regular reflow method too!
@@ -302,7 +304,8 @@ struct LineData {
 
   ~LineData();
 
-  void List(FILE* out, PRInt32 aIndent) const;
+  void List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter = nsnull,
+            PRBool aOutputMe=PR_TRUE) const;
 
   nsIFrame* LastChild() const;
 
@@ -432,30 +435,39 @@ LineData::StateToString(char* aBuf, PRInt32 aBufSize) const
 }
 
 void
-LineData::List(FILE* out, PRInt32 aIndent) const
+LineData::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter,
+               PRBool aOutputMe) const
 {
+  // if a filter is present, only output this frame if the filter says we should
   PRInt32 i;
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  char cbuf[100];
-  fprintf(out, "line %p: count=%d state=%s {%d,%d,%d,%d} ibm=%d obm=%d <\n",
-          this, mChildCount, StateToString(cbuf, sizeof(cbuf)),
-          mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-          mInnerBottomMargin, mOuterBottomMargin);
+
+  if (PR_TRUE==aOutputMe)
+  {
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    char cbuf[100];
+    fprintf(out, "line %p: count=%d state=%s {%d,%d,%d,%d} ibm=%d obm=%d <\n",
+            this, mChildCount, StateToString(cbuf, sizeof(cbuf)),
+            mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+            mInnerBottomMargin, mOuterBottomMargin);
+  }
 
   nsIFrame* frame = mFirstChild;
   PRInt32 n = mChildCount;
   while (--n >= 0) {
-    frame->List(out, aIndent + 1);
+    frame->List(out, aIndent + 1, aFilter);
     frame->GetNextSibling(frame);
   }
 
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  if (PR_TRUE==aOutputMe)
+  {
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
 
-  if (nsnull != mFloaters) {
-    fputs("> bcl-floaters=<", out);
-    ListFloaters(out, mFloaters);
+    if (nsnull != mFloaters) {
+      fputs("> bcl-floaters=<", out);
+      ListFloaters(out, mFloaters);
+    }
+    fputs(">\n", out);
   }
-  fputs(">\n", out);
 }
 
 nsIFrame*
@@ -1053,73 +1065,95 @@ nsCSSBlockFrame::ListTag(FILE* out) const
 }
 
 NS_METHOD
-nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
+nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
+  // if a filter is present, only output this frame if the filter says we should
+  nsIAtom* tag;
+  nsAutoString tagString;
+  mContent->GetTag(tag);
+  if (tag != nsnull) 
+  {
+    tag->ToString(tagString);
+    NS_RELEASE(tag);
+  }
+
   PRInt32 i;
-
-  // Indent
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
-
-  // Output the tag
-  ListTag(out);
-  nsIView* view;
-  GetView(view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
-  }
-
-  // Output the first/last content offset
-  fprintf(out, "[%d,%d,%c] ",
-          GetFirstContentOffset(), GetLastContentOffset(),
-          (GetLastContentIsComplete() ? 'T' : 'F'));
-  if (nsnull != mPrevInFlow) {
-    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
-  }
-  if (nsnull != mNextInFlow) {
-    fprintf(out, "next-in-flow=%p ", mNextInFlow);
-  }
-
-  // Output the rect and state
-  out << mRect;
-  if (0 != mState) {
-    fprintf(out, " [state=%08x]", mState);
-  }
-
-#if XXX
-  // Dump run-in floaters
-  if (nsnull != mRunInFloaters) {
-    fputs(" run-in-floaters=<", out);
-    ListFloaters(out, mRunInFloaters);
+  PRBool outputMe = (PRBool)((nsnull==aFilter) || ((PR_TRUE==aFilter->OutputTag(&tagString)) && (!IsPseudoFrame())));
+  if (PR_TRUE==outputMe)
+  {
+    // Indent
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">", out);
+
+    // Output the tag
+    ListTag(out);
+    nsIView* view;
+    GetView(view);
+    if (nsnull != view) {
+      fprintf(out, " [view=%p]", view);
+    }
+
+    // Output the first/last content offset
+    fprintf(out, "[%d,%d,%c] ",
+            GetFirstContentOffset(), GetLastContentOffset(),
+            (GetLastContentIsComplete() ? 'T' : 'F'));
+    if (nsnull != mPrevInFlow) {
+      fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+    }
+    if (nsnull != mNextInFlow) {
+      fprintf(out, "next-in-flow=%p ", mNextInFlow);
+    }
+
+    // Output the rect and state
+    out << mRect;
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
+
+  #if XXX
+    // Dump run-in floaters
+    if (nsnull != mRunInFloaters) {
+      fputs(" run-in-floaters=<", out);
+      ListFloaters(out, mRunInFloaters);
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">", out);
+    }
+  #endif
   }
-#endif
+
 
   // Output the children, one line at a time
   if (nsnull != mLines) {
-    fputs("<\n", out);
+    if (PR_TRUE==outputMe)
+      fputs("<\n", out);
     aIndent++;
     LineData* line = mLines;
     while (nsnull != line) {
-      line->List(out, aIndent);
+      line->List(out, aIndent, aFilter, outputMe);
       line = line->mNext;
     }
     aIndent--;
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">", out);
+    if (PR_TRUE==outputMe)
+    {
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">", out);
+    }
   }
   else {
-    fputs("<>", out);
+    if (PR_TRUE==outputMe)
+      fputs("<>", out);
   }
 
-  // Output the text-runs
-  if (nsnull != mTextRuns) {
-    fputs(" text-runs=<\n", out);
-    ListTextRuns(out, aIndent + 1, mTextRuns);
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">", out);
+  if (PR_TRUE==outputMe)
+  {
+    // Output the text-runs
+    if (nsnull != mTextRuns) {
+      fputs(" text-runs=<\n", out);
+      ListTextRuns(out, aIndent + 1, mTextRuns);
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">", out);
+    }
+    fputs("\n", out);
   }
-  fputs("\n", out);
 
   return NS_OK;
 }
