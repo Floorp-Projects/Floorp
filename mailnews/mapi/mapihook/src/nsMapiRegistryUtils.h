@@ -106,6 +106,9 @@ public :
     nsresult unsetDefaultMailClient(); // Removes Mozilla as the default Mail client and restores the previous setting
     nsresult saveDefaultMailClient(); // Save default mail client settings in HKEY_LOCAL_MACHINE\\Software\\Mozilla\\Desktop   
     nsresult saveUserDefaultMailClient(); // save default 
+    PRBool IsDefaultFeedClient();
+    nsresult setDefaultFeedClient();
+    nsresult unsetDefaultFeedClient();
        
     PRBool IsDefaultNewsClient();      // Returns TRUE if the current application is default news client.  
     nsresult setDefaultNewsClient();   // Sets Mozilla as the default News Client    

@@ -85,6 +85,15 @@ nsMapiRegistry::GetIsDefaultNewsClient(PRBool * retval) {
 }
 
 NS_IMETHODIMP
+nsMapiRegistry::GetIsDefaultFeedClient(PRBool * retval) {
+    // we need to get the value from registry everytime
+    // because the registry settings can be changed from
+    // other applications.
+    *retval = m_registryUtils.IsDefaultFeedClient();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMapiRegistry::GetShowDialog(PRBool * retval) {
     *retval = m_ShowDialog;
     return NS_OK;
@@ -139,6 +148,13 @@ nsMapiRegistry::SetIsDefaultNewsClient(PRBool aIsDefaultNewsClient)
     }
 
     return rv ;
+}
+
+NS_IMETHODIMP
+nsMapiRegistry::SetIsDefaultFeedClient(PRBool aIsDefaultFeedClient) 
+{
+    nsresult rv = NS_OK;
+    return aIsDefaultFeedClient ? m_registryUtils.setDefaultFeedClient() : m_registryUtils.unsetDefaultFeedClient();
 }
 
 NS_IMETHODIMP nsMapiRegistry::RegisterMailAndNewsClient()

@@ -56,7 +56,7 @@
 #include "nsEmbedCID.h"
 #include <mbstring.h>
 
-#define EXE_EXTENSION ".exe" 
+#define EXE_EXTENSION ".EXE" 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_CLIENT_MAIL_KEY "Software\\Clients\\Mail"
 #define MOZ_CLIENT_NEWS_KEY "Software\\Clients\\News"
@@ -356,7 +356,6 @@ PRBool nsMapiRegistryUtils::IsDefaultMailClient()
              nsCAutoString strExtension;
              strExtension.Assign(EXE_EXTENSION);
              ToUpperCase(result);
-             ToUpperCase(strExtension);
              PRInt32 index = result.RFind(strExtension.get());
              if (index != kNotFound) {
                  result.Truncate(index + strExtension.Length());
@@ -374,7 +373,6 @@ PRBool nsMapiRegistryUtils::IsDefaultMailClient()
                   nsCAutoString strExtension;
                   strExtension.Assign(EXE_EXTENSION);
                   ToUpperCase(result);
-                  ToUpperCase(strExtension);
                   PRInt32 index = result.RFind(strExtension.get());
                   if (index != kNotFound)
                     result.Truncate(index + strExtension.Length());    
@@ -410,7 +408,6 @@ PRBool nsMapiRegistryUtils::IsDefaultNewsClient()
              nsCAutoString strExtension;
              strExtension.Assign(EXE_EXTENSION);
              ToUpperCase(result);
-             ToUpperCase(strExtension);
              PRInt32 index = result.RFind(strExtension.get());
              if (index != kNotFound) {
                  result.Truncate(index + strExtension.Length());
@@ -683,7 +680,6 @@ nsresult nsMapiRegistryUtils::setupDefaultProtocolKey(const char * aDefaultAppRe
 {
     nsCAutoString keyName;
     keyName = aDefaultAppRegKey;
-    keyName.AppendLiteral("\\Protocols\\");
     keyName.Append(aProtocol);
 
     nsCAutoString temp; 
@@ -777,7 +773,7 @@ nsresult nsMapiRegistryUtils::registerMailApp(PRBool aForceRegistration)
         SetRegistryKey(HKEY_LOCAL_MACHINE, keyName.get(), "DLLPath", (char *)dllPath.get());
         
         // (3) now that we have added Software\\Clients\\Mail\\<app name> add subkeys for each protocol mail supports
-        setupDefaultProtocolKey(keyName.get(), "mailto", "URL:MailTo Protocol", "-compose");
+        setupDefaultProtocolKey(nsCString(keyName + NS_LITERAL_CSTRING("\\Protocols\\")).get(), "mailto", "URL:MailTo Protocol", "-compose");
 
         // (4) Software\Clients\News\<app name>\shell\open\command value 
         nsCAutoString appKeyName;
@@ -876,9 +872,10 @@ nsresult nsMapiRegistryUtils::registerNewsApp(PRBool aForceRegistration)
 
             // (3) now that we have added Software\\Clients\\News\\<app name>
             //     add subkeys for each protocol news supports
-            setupDefaultProtocolKey(keyName.get(), "news", "URL:News Protocol", "-mail");
-            setupDefaultProtocolKey(keyName.get(), "nntp", "URL:NNTP Protocol", "-mail");
-            setupDefaultProtocolKey(keyName.get(), "snews", "URL:Snews Protocol", "-mail");
+            nsCString protocolKeyName(keyName + NS_LITERAL_CSTRING("\\Protocols\\"));
+            setupDefaultProtocolKey(protocolKeyName.get(), "news", "URL:News Protocol", "-mail");
+            setupDefaultProtocolKey(protocolKeyName.get(), "nntp", "URL:NNTP Protocol", "-mail");
+            setupDefaultProtocolKey(protocolKeyName.get(), "snews", "URL:Snews Protocol", "-mail");
 
             // (4) Software\Clients\News\<app name>\shell\open\command value 
             nsCAutoString appKeyName;
@@ -952,7 +949,39 @@ nsresult nsMapiRegistryUtils::setDefaultNewsClient()
                           MOZ_HWND_BROADCAST_MSG_TIMEOUT,
                           NULL);
     return rv;
-        }
+}
+
+nsresult nsMapiRegistryUtils::setDefaultFeedClient()
+{
+    return setupDefaultProtocolKey("Software\\Classes\\", "feed", "URL:Feed Protocol", "-mail");
+}
+
+nsresult nsMapiRegistryUtils::unsetDefaultFeedClient()
+{
+    // delete the existing mail related protocol keys from HKEY_LOCAL_MACHINE\Software\Classes
+    return recursiveDeleteKey(HKEY_LOCAL_MACHINE, "Software\\Classes\\feed"); 
+}
+
+PRBool nsMapiRegistryUtils::IsDefaultFeedClient()
+{  
+    //first try to get the users default news client
+    nsCAutoString result; 
+    GetRegistryKey(HKEY_LOCAL_MACHINE, "Software\\Classes\\feed\\shell\\open\\command", "", result);     
+
+    if (!result.IsEmpty()) {
+       nsCAutoString strExtension;
+       strExtension.Assign(EXE_EXTENSION);
+       ToUpperCase(result);
+       PRInt32 index = result.RFind(strExtension.get());
+       if (index != kNotFound) 
+           result.Truncate(index + strExtension.Length());
+
+       nsCAutoString thisApp (thisApplication()) ;
+       return (result == thisApp);
+    }
+
+    return PR_FALSE;
+}
 
 /** Sets Mozilla as default Mail Client
  */
