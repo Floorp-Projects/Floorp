@@ -893,9 +893,11 @@ nsLocalFile::Remove(PRBool recursive)
     InvalidateCache();
     if (isDir) {
         if (recursive) {
-            nsCOMPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
+            nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
             if (!dir)
                 return NS_ERROR_OUT_OF_MEMORY;
+
+            nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
 
             rv = dir->Init(this, PR_FALSE);
             if (NS_FAILED(rv))
@@ -1498,17 +1500,20 @@ nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
 {
-    nsCOMPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
+    nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
     if (!dir)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(dir);
     nsresult rv = dir->Init(this, PR_FALSE);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) {
+        *entries = nsnull;
+        NS_RELEASE(dir);
+    } else {
+        *entries = dir; // transfer reference
+    }
 
-    /* QI needed? If not, need to ADDREF. */
-    return dir->QueryInterface(NS_GET_IID(nsISimpleEnumerator),
-                                 (void **)entries);
+    return rv;
 }
 
 NS_IMETHODIMP
