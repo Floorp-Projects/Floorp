@@ -257,15 +257,6 @@ nsListControlFrame::~nsListControlFrame()
 {
   REFLOW_COUNTER_DUMP("nsLCF");
 
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
-
-  // we shouldn't have to unregister this listener because when
-  // our frame goes away all these content node go away as well
-  // because our frame is the only one who references them.
-  reciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-  reciever->RemoveEventListenerByIID((nsIDOMMouseMotionListener *)this, kIDOMMouseMotionListenerIID);
-  reciever->RemoveEventListenerByIID((nsIDOMKeyListener *)this, kIDOMKeyListenerIID);
-
   mComboboxFrame = nsnull;
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
@@ -281,6 +272,21 @@ nsListControlFrame::~nsListControlFrame()
 NS_IMETHODIMP
 nsListControlFrame::Destroy(nsIPresContext *aPresContext)
 {
+  // get the reciever interface from the browser button's content node
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
+
+  nsCOMPtr<nsIDOMMouseListener> mouseListener = do_QueryInterface(mEventListener);
+  if (!mouseListener) { return NS_ERROR_NO_INTERFACE; }
+  reciever->RemoveEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
+
+  nsCOMPtr<nsIDOMMouseMotionListener> mouseMotionListener = do_QueryInterface(mEventListener);
+  if (!mouseMotionListener) { return NS_ERROR_NO_INTERFACE; }
+  reciever->RemoveEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
+
+  nsCOMPtr<nsIDOMKeyListener> keyListener = do_QueryInterface(mEventListener);
+  if (!keyListener) { return NS_ERROR_NO_INTERFACE; }
+  reciever->RemoveEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
+
   if (IsInDropDownMode() == PR_FALSE) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   }
