@@ -2025,6 +2025,9 @@ function HandleMDNResponse(aUrl)
   if (!msgFolder || !msgURI)
     return;
 
+	if (IsNewsMessage(msgURI))
+		return;
+
   var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
   var mimeHdr = aUrl.mimeHeaders;
     
