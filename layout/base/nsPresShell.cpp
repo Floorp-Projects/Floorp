@@ -1020,8 +1020,6 @@ PresShell::~PresShell()
   // if we allocated any stack memory free it.
   FreeDynamicStack();
 
-  mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
-
   mIsDestroying = PR_TRUE;
 
   // Clobber weak leaks in case of re-entrancy during tear down
@@ -1063,7 +1061,6 @@ PresShell::~PresShell()
   if (mPresContext) {
     mPresContext->SetShell(nsnull);
   }
-  mRefCnt = 0;
 
   if (mViewEventListener) {
     mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
