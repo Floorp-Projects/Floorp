@@ -279,8 +279,10 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
   mIsInitialized = PR_TRUE;
   mIsSelected = aValue;
 
-  if (aNotify && mDocument)
+  if (aNotify && mDocument) {
+    mozAutoDocUpdate(mDocument, UPDATE_CONTENT_STATE, aNotify);
     mDocument->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+  }
 
   return NS_OK;
 }

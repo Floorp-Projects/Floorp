@@ -234,11 +234,11 @@ public:
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIRadioControlElement
-  NS_IMETHOD RadioSetChecked();
+  NS_IMETHOD RadioSetChecked(PRBool aNotify);
   NS_IMETHOD SetCheckedChanged(PRBool aCheckedChanged);
   NS_IMETHOD SetCheckedChangedInternal(PRBool aCheckedChanged);
   NS_IMETHOD GetCheckedChanged(PRBool* aCheckedChanged);
-  NS_IMETHOD AddedToRadioGroup();
+  NS_IMETHOD AddedToRadioGroup(PRBool aNotify = PR_TRUE);
   NS_IMETHOD WillRemoveFromRadioGroup();
 
 protected:
@@ -296,10 +296,16 @@ protected:
   nsresult VisitGroup(nsIRadioVisitor* aVisitor);
 
   /**
+   * Do all the work that |SetChecked| does (radio button handling, etc.), but
+   * take an |aNotify| parameter.
+   */
+  nsresult DoSetChecked(PRBool aValue, PRBool aNotify = PR_TRUE);
+
+  /**
    * Actually set checked and notify the frame of the change.
    * @param aValue the value of checked to set
    */
-  nsresult SetCheckedInternal(PRBool aValue);
+  nsresult SetCheckedInternal(PRBool aValue, PRBool aNotify);
 
   /**
    * Get the radio group container for this button (form or document)
@@ -442,7 +448,7 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
         // checked state on the clone.
         PRBool checked;
         GetChecked(&checked);
-        it->SetChecked(checked);
+        it->DoSetChecked(checked, PR_FALSE);
       }
       break;
     default:
@@ -525,7 +531,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     } else {
       PRBool defaultChecked;
       GetDefaultChecked(&defaultChecked);
-      SetChecked(defaultChecked);
+      DoSetChecked(defaultChecked);
       SetCheckedChanged(PR_FALSE);
     }
   }
@@ -916,6 +922,12 @@ nsHTMLInputElement::GetCheckedChanged(PRBool* aCheckedChanged)
 NS_IMETHODIMP
 nsHTMLInputElement::SetChecked(PRBool aChecked)
 {
+  return DoSetChecked(aChecked);
+}
+
+nsresult
+nsHTMLInputElement::DoSetChecked(PRBool aChecked, PRBool aNotify)
+{
   nsresult rv = NS_OK;
 
   //
@@ -944,9 +956,9 @@ nsHTMLInputElement::SetChecked(PRBool aChecked)
     // For radio button, we need to do some extra fun stuff
     //
     if (aChecked) {
-      rv = RadioSetChecked();
+      rv = RadioSetChecked(aNotify);
     } else {
-      rv = SetCheckedInternal(PR_FALSE);
+      rv = SetCheckedInternal(PR_FALSE, aNotify);
       nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
       if (container) {
         nsAutoString name;
@@ -956,14 +968,14 @@ nsHTMLInputElement::SetChecked(PRBool aChecked)
       }
     }
   } else {
-    rv = SetCheckedInternal(aChecked);
+    rv = SetCheckedInternal(aChecked, aNotify);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::RadioSetChecked()
+nsHTMLInputElement::RadioSetChecked(PRBool aNotify)
 {
   nsresult rv = NS_OK;
 
@@ -986,16 +998,18 @@ nsHTMLInputElement::RadioSetChecked()
   // Deselect the currently selected radio button
   //
   if (currentlySelected) {
+    // Pass PR_TRUE for the aNotify parameter since the currently selected
+    // button is already in the document.
     rv = NS_STATIC_CAST(nsHTMLInputElement*,
                         NS_STATIC_CAST(nsIDOMHTMLInputElement*, currentlySelected)
-         )->SetCheckedInternal(PR_FALSE);
+         )->SetCheckedInternal(PR_FALSE, PR_TRUE);
   }
 
   //
   // Actually select this one
   //
   if (NS_SUCCEEDED(rv)) {
-    rv = SetCheckedInternal(PR_TRUE);
+    rv = SetCheckedInternal(PR_TRUE, aNotify);
   }
 
   //
@@ -1087,7 +1101,7 @@ nsHTMLInputElement::MaybeSubmitForm(nsIPresContext* aPresContext)
 }
 
 nsresult
-nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
+nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
 {
   //
   // Set the value
@@ -1098,34 +1112,29 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
   // Notify the frame
   //
   nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
-  if (!frame) {
-    return NS_OK;
-  }
+  if (frame) {
+    nsCOMPtr<nsIPresContext> presContext;
+    GetPresContext(this, getter_AddRefs(presContext));
 
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
-
-  if (mType == NS_FORM_INPUT_CHECKBOX) {
-    nsICheckboxControlFrame* checkboxFrame = nsnull;
-    CallQueryInterface(frame, &checkboxFrame);
-    if (checkboxFrame) {
-      checkboxFrame->OnChecked(presContext, aChecked);
-    }
-  } else if (mType == NS_FORM_INPUT_RADIO) {
-    nsIRadioControlFrame* radioFrame = nsnull;
-    CallQueryInterface(frame, &radioFrame);
-    if (radioFrame) {
-      radioFrame->OnChecked(presContext, aChecked);
+    if (mType == NS_FORM_INPUT_CHECKBOX) {
+      nsICheckboxControlFrame* checkboxFrame = nsnull;
+      CallQueryInterface(frame, &checkboxFrame);
+      if (checkboxFrame) {
+        checkboxFrame->OnChecked(presContext, aChecked);
+      }
+    } else if (mType == NS_FORM_INPUT_RADIO) {
+      nsIRadioControlFrame* radioFrame = nsnull;
+      CallQueryInterface(frame, &radioFrame);
+      if (radioFrame) {
+        radioFrame->OnChecked(presContext, aChecked);
+      }
     }
   }
 
   // Notify the document that the CSS :checked pseudoclass for this element
   // has changed state.
-  // XXX HACK Only do this if there is a frame.  Otherwise for some reason
-  // ContentStatesChanged() is creating an extra bogus frame at this point.
-  // Probably ContentStatesChanged() needs to be told not to worry if there is
-  // no frame in some cases.  Bug 134560.
-  if (mDocument && frame) {
+  if (mDocument && aNotify) {
+    mozAutoDocUpdate(mDocument, UPDATE_CONTENT_STATE, aNotify);
     mDocument->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
   }
 
@@ -1436,7 +1445,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_FORM_INPUT_CHECKBOX:
         {
           GetChecked(&originalCheckedValue);
-          SetChecked(!originalCheckedValue);
+          DoSetChecked(!originalCheckedValue);
           checkWasSet = PR_TRUE;
         }
         break;
@@ -1454,7 +1463,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
           GetChecked(&originalCheckedValue);
           if (!originalCheckedValue) {
-            SetChecked(PR_TRUE);
+            DoSetChecked(PR_TRUE);
             checkWasSet = PR_TRUE;
           }
         }
@@ -1526,10 +1535,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // If this one is no longer a radio button we must reset it back to
         // false to cancel the action.  See how the web of hack grows?
         if (mType != NS_FORM_INPUT_RADIO) {
-          SetChecked(PR_FALSE);
+          DoSetChecked(PR_FALSE);
         }
       } else if (oldType == NS_FORM_INPUT_CHECKBOX) {
-        SetChecked(originalCheckedValue);
+        DoSetChecked(originalCheckedValue);
       }
     } else {
       FireOnChange();
@@ -2181,7 +2190,7 @@ nsHTMLInputElement::Reset()
     {
       PRBool resetVal;
       GetDefaultChecked(&resetVal);
-      rv = SetChecked(resetVal);
+      rv = DoSetChecked(resetVal);
       SetCheckedChanged(PR_FALSE);
       break;
     }
@@ -2541,7 +2550,7 @@ nsHTMLInputElement::DoneCreatingElement()
   if (!restored && GET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED)) {
     PRBool resetVal;
     GetDefaultChecked(&resetVal);
-    SetChecked(resetVal);
+    DoSetChecked(resetVal, PR_FALSE);
     SetCheckedChanged(PR_FALSE);
   }
 
@@ -2552,7 +2561,7 @@ nsHTMLInputElement::DoneCreatingElement()
   // radio group in document here, otherwise we will miss it.
   //
   if (!mForm && mType == NS_FORM_INPUT_RADIO)
-    AddedToRadioGroup();
+    AddedToRadioGroup(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -2567,7 +2576,7 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
         nsAutoString checked;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
         if (rv == NS_STATE_PROPERTY_EXISTS) {
-          SetChecked(checked.Equals(NS_LITERAL_STRING("t")));
+          DoSetChecked(checked.Equals(NS_LITERAL_STRING("t")), PR_FALSE);
         }
         break;
       }
@@ -2606,8 +2615,11 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
  */
 
 NS_IMETHODIMP
-nsHTMLInputElement::AddedToRadioGroup()
+nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
 {
+  if (aNotify)
+    aNotify = GET_BOOLBIT(mBitField, BF_PARSER_CREATING) != 0;
+
   //
   //  If the input element is not in a form and
   //  not in a document, we just need to return.
@@ -2630,7 +2642,7 @@ nsHTMLInputElement::AddedToRadioGroup()
     // should not be that common an occurrence, I think we can live with
     // that.
     //
-    RadioSetChecked();
+    RadioSetChecked(aNotify);
   }
 
   //

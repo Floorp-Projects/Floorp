@@ -62,7 +62,7 @@ public:
    * trigger "value changed".  This is for experts only.  Do not try this
    * at home.  Well, OK, try it at home, but not late at night.
    */
-  NS_IMETHOD RadioSetChecked() = 0;
+  NS_IMETHOD RadioSetChecked(PRBool aNotify) = 0;
 
   /**
    * Let this radio button know that the radio group's "checked" property has
@@ -98,7 +98,7 @@ public:
    * Let this radio button know that state has been changed such that it has
    * been added to a group.
    */
-  NS_IMETHOD AddedToRadioGroup() = 0;
+  NS_IMETHOD AddedToRadioGroup(PRBool aNotify = PR_TRUE) = 0;
 
   /**
    * Let this radio button know that it is about to be removed from the radio
