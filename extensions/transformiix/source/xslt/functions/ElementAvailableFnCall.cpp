@@ -99,7 +99,7 @@ ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext,
                   qname.mLocalName == txXSLTAtoms::copyOf ||
                   qname.mLocalName == txXSLTAtoms::decimalFormat ||
                   qname.mLocalName == txXSLTAtoms::element ||
-                  //qname.mLocalName == txXSLTAtoms::fallback ||
+                  qname.mLocalName == txXSLTAtoms::fallback ||
                   qname.mLocalName == txXSLTAtoms::forEach ||
                   qname.mLocalName == txXSLTAtoms::_if ||
                   qname.mLocalName == txXSLTAtoms::import ||
