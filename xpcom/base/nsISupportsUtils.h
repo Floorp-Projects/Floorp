@@ -1436,7 +1436,7 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE4_CI(_class, _i1, _i2, _i3, _i4)               \
@@ -1460,8 +1460,8 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE5_CI(_class, _i1, _i2, _i3, _i4, _i5)          \
@@ -1486,9 +1486,9 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i5)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i6)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(5, _i6)                                        \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE6_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6)     \
@@ -1515,10 +1515,10 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i5)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i6)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i7)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(5, _i6)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(6, _i7)                                        \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE7_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6,     \
@@ -1547,11 +1547,11 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i5)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i6)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i7)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i8)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(5, _i6)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(6, _i7)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(7, _i8)                                        \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE8_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6,     \
@@ -1581,12 +1581,12 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i5)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i6)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i7)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i8)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i9)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(5, _i6)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(6, _i7)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(7, _i8)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(8, _i9)                                        \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE9_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6,     \
@@ -1620,13 +1620,13 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i4)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i5)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i6)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i7)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i8)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i9)                                        \
-     NS_CLASSINFO_HELPER_ENTRY(2, _i10)                                       \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(5, _i6)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(6, _i7)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(7, _i8)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(8, _i9)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(9, _i10)                                       \
    NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE10_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6,    \
