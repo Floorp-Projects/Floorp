@@ -3805,7 +3805,7 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, const nsSty
 {
   PRBool result = PR_FALSE;
   // Walk up the reflow state chain until we find a cell or the root
-  const nsReflowState* rs = aReflowState.parentReflowState; // this is for the outer frame
+  const nsHTMLReflowState* rs = aReflowState.parentReflowState; // this is for the outer frame
   if (rs)
     rs = rs->parentReflowState;  // and this is the parent of the outer frame
   while (nsnull != rs) 
@@ -3923,7 +3923,7 @@ nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDispl
 }
 
 PRBool
-nsTableFrame::IsFinalPass(const nsReflowState& aState) 
+nsTableFrame::IsFinalPass(const nsHTMLReflowState& aState) 
 {
   return (NS_UNCONSTRAINEDSIZE != aState.availableWidth) ||
          (NS_UNCONSTRAINEDSIZE != aState.availableHeight);

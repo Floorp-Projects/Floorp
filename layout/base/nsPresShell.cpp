@@ -939,7 +939,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsReflowStatus        status;
-    nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
     CreateRenderingContext(rootFrame, &rcx);
@@ -947,18 +946,16 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
 
-    if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
-      mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+    rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
       
 #ifdef NS_DEBUG
-      if (nsIFrame::GetVerifyTreeEnable()) {
-        rootFrame->VerifyTree();
-      }
-#endif
-      VERIFY_STYLE_TREE;
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      rootFrame->VerifyTree();
     }
+#endif
+    VERIFY_STYLE_TREE;
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
     RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Reflow: PresShell::InitialReflow(), this=%p\n", this));
@@ -1019,7 +1016,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsReflowStatus        status;
-    nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
     CreateRenderingContext(rootFrame, &rcx);
@@ -1027,16 +1023,14 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
 
-    if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-      if (nsIFrame::GetVerifyTreeEnable()) {
-        rootFrame->VerifyTree();
-      }
-#endif
-      VERIFY_STYLE_TREE;
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      rootFrame->VerifyTree();
     }
+#endif
+    VERIFY_STYLE_TREE;
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
@@ -1198,7 +1192,6 @@ PresShell::StyleChangeReflow()
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsReflowStatus        status;
-    nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
     CreateRenderingContext(rootFrame, &rcx);
@@ -1207,16 +1200,14 @@ PresShell::StyleChangeReflow()
     nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
 
-    if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-      if (nsIFrame::GetVerifyTreeEnable()) {
-        rootFrame->VerifyTree();
-      }
-#endif
-      VERIFY_STYLE_TREE;
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      rootFrame->VerifyTree();
     }
+#endif
+    VERIFY_STYLE_TREE;
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
   }

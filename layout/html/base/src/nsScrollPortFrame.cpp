@@ -172,10 +172,8 @@ nsScrollPortFrame::DidReflow(nsIPresContext&   aPresContext,
     
     // Send the DidReflow notification to the scrolled frame's view
     nsIFrame* frame = mFrames.FirstChild();
-    nsIHTMLReflow*  htmlReflow;
 
-    frame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-    htmlReflow->DidReflow(aPresContext, aStatus);
+    frame->DidReflow(aPresContext, aStatus);
 
     // Size the scrolled frame's view. Leave its position alone
     nsSize          size;

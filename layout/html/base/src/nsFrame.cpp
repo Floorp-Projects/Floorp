@@ -220,10 +220,7 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kClassIID, kIFrameIID);
-  if (aIID.Equals(kIHTMLReflowIID)) {
-    *aInstancePtr = (void*)(nsIHTMLReflow*)this;
-    return NS_OK;
-  } else if (aIID.Equals(kClassIID) || aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(kClassIID) || aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)this;
     return NS_OK;
   }

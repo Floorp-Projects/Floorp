@@ -588,16 +588,13 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
       nsHTMLReflowState captionReflowState(aPresContext, aReflowState.reflowState, mCaptionFrame,
                                            nsSize(innerSize.width, aReflowState.reflowState.availableHeight),
                                            eReflowReason_Resize);
-      nsIHTMLReflow* htmlReflow;
-      if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) { 
-        // reflow the caption
-        htmlReflow->WillReflow(aPresContext);
-        rv = htmlReflow->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
-        captionWasReflowed = PR_TRUE;
-        if ((oldCaptionRect.height!=captionSize.height) || 
-            (oldCaptionRect.width!=captionSize.width)) {
-          captionDimChanged=PR_TRUE;
-        }
+      // reflow the caption
+      mCaptionFrame->WillReflow(aPresContext);
+      rv = mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
+      captionWasReflowed = PR_TRUE;
+      if ((oldCaptionRect.height!=captionSize.height) || 
+          (oldCaptionRect.width!=captionSize.width)) {
+        captionDimChanged=PR_TRUE;
       }
     }
     // XXX: should just call SizeAndPlaceChildren regardless
@@ -680,42 +677,35 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
   nsHTMLReflowState   captionReflowState(aPresContext, aReflowState.reflowState, mCaptionFrame,
                                          nsSize(mRect.width, aReflowState.reflowState.availableHeight),
                                          eReflowReason_Initial);
-  nsIHTMLReflow*      htmlReflow;
-
-  if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) { 
-    // initial reflow of the caption
-    htmlReflow->WillReflow(aPresContext);
-    rv = htmlReflow->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    mMinCaptionWidth = maxElementSize.width;
-    // XXX: caption align = left|right ignored here!
-    // if the caption's MES > table width, reflow the inner table
-    nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-    if (mMinCaptionWidth > mRect.width) {
-      nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
-                                         nsSize(mMinCaptionWidth, aReflowState.reflowState.availableHeight),
-                                         eReflowReason_Resize);
-      rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
-    }
-    else { // set innerSize as if the inner table were reflowed
-      innerSize.height = mRect.height;
-      innerSize.width  = mRect.width;
-    }
-    // set maxElementSize width if requested
-    if (nsnull != aDesiredSize.maxElementSize) {
-      ((nsTableFrame *)mInnerTableFrame)->SetMaxElementSize(aDesiredSize.maxElementSize);
-      if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
-        aDesiredSize.maxElementSize->width = mMinCaptionWidth;
-      }
-    }
-
-    rv = SizeAndPlaceChildren(&aPresContext,
-                              nsSize (innerSize.width, innerSize.height), 
-                              nsSize (captionSize.width, captionSize.height), 
-                              aReflowState);
+  // initial reflow of the caption
+  mCaptionFrame->WillReflow(aPresContext);
+  rv = mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
+  mMinCaptionWidth = maxElementSize.width;
+  // XXX: caption align = left|right ignored here!
+  // if the caption's MES > table width, reflow the inner table
+  nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
+  if (mMinCaptionWidth > mRect.width) {
+    nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
+                                       nsSize(mMinCaptionWidth, aReflowState.reflowState.availableHeight),
+                                       eReflowReason_Resize);
+    rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
   }
+  else { // set innerSize as if the inner table were reflowed
+    innerSize.height = mRect.height;
+    innerSize.width  = mRect.width;
+  }
+  // set maxElementSize width if requested
+  if (nsnull != aDesiredSize.maxElementSize) {
+    ((nsTableFrame *)mInnerTableFrame)->SetMaxElementSize(aDesiredSize.maxElementSize);
+    if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
+      aDesiredSize.maxElementSize->width = mMinCaptionWidth;
+    }
+  }
+
+  rv = SizeAndPlaceChildren(&aPresContext,
+                            nsSize (innerSize.width, innerSize.height), 
+                            nsSize (captionSize.width, captionSize.height), 
+                            aReflowState);
   return rv;
 }
 
@@ -869,13 +859,10 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
         nsHTMLReflowState   captionReflowState(aPresContext, aReflowState, mCaptionFrame,
                                                nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
                                                eReflowReason_Initial);
-        nsIHTMLReflow*      htmlReflow;
 
-        if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-          htmlReflow->WillReflow(aPresContext);
-          rv = htmlReflow->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
-          mMinCaptionWidth = maxElementSize.width;
-        }
+        mCaptionFrame->WillReflow(aPresContext);
+        rv = mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
+        mMinCaptionWidth = maxElementSize.width;
       }
     }
 
@@ -938,23 +925,20 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
                                              nsSize(innerSize.width, NS_UNCONSTRAINEDSIZE),
                                              eReflowReason_Resize);
       nsHTMLReflowMetrics captionSize(nsnull);
-      nsIHTMLReflow*      htmlReflow;
       nsRect captionRect(captionMargin.left, captionY, 0, 0);
+      nsReflowStatus  captionStatus;
 
-      if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        nsReflowStatus  captionStatus;
-        htmlReflow->WillReflow(aPresContext);
-        htmlReflow->Reflow(aPresContext, captionSize, captionReflowState,
-                           captionStatus);
-        NS_ASSERTION(NS_FRAME_IS_COMPLETE(captionStatus), "unexpected reflow status");
+      mCaptionFrame->WillReflow(aPresContext);
+      mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState,
+                            captionStatus);
+      NS_ASSERTION(NS_FRAME_IS_COMPLETE(captionStatus), "unexpected reflow status");
 
-        // XXX If the height is constrained then we need to check whether the inner
-        // table still fits...
+      // XXX If the height is constrained then we need to check whether the inner
+      // table still fits...
 
-        // Place the caption
-        captionRect.SizeTo(captionSize.width, captionSize.height);
-        mCaptionFrame->SetRect(&aPresContext, captionRect);
-      }
+      // Place the caption
+      captionRect.SizeTo(captionSize.width, captionSize.height);
+      mCaptionFrame->SetRect(&aPresContext, captionRect);
 
       // Place the inner table
       nscoord innerY;

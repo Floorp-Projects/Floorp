@@ -6380,14 +6380,10 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   availSize.height = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState reflowState(*aState.mPresContext, aState.mReflowState,
                                 mBullet, availSize);
-  nsIHTMLReflow* htmlReflow;
-  nsresult rv = mBullet->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (NS_SUCCEEDED(rv)) {
-    nsReflowStatus  status;
-    htmlReflow->WillReflow(*aState.mPresContext);
-    htmlReflow->Reflow(*aState.mPresContext, aMetrics, reflowState, status);
-    htmlReflow->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
-  }
+  nsReflowStatus  status;
+  mBullet->WillReflow(*aState.mPresContext);
+  mBullet->Reflow(*aState.mPresContext, aMetrics, reflowState, status);
+  mBullet->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
@@ -6452,12 +6448,9 @@ nsBlockFrame::ComputeTextRuns(nsIPresContext* aPresContext)
       nsIFrame* frame = line->mFirstChild;
       PRInt32 n = line->GetChildCount();
       while (--n >= 0) {
-        nsIHTMLReflow* hr;
-        if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&hr)) {
-          nsresult rv = hr->FindTextRuns(textRunThingy);
-          if (NS_OK != rv) {
-            return rv;
-          }
+        nsresult rv = frame->FindTextRuns(textRunThingy);
+        if (NS_OK != rv) {
+          return rv;
         }
         else {
           // A frame that doesn't implement nsIHTMLReflow isn't text

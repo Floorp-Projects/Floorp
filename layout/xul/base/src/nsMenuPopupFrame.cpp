@@ -271,13 +271,7 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
       nsIFrame* kid;
       FirstChild(listName, &kid);
       while (nsnull != kid) {
-        static NS_DEFINE_IID(kIHTMLReflowIID, NS_IHTMLREFLOW_IID);
-        nsIHTMLReflow* htmlReflow;
-        nsresult rv;
-        rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-        if (NS_SUCCEEDED(rv)) {
-          htmlReflow->DidReflow(aPresContext, aStatus);
-        }
+        kid->DidReflow(aPresContext, aStatus);
         kid->GetNextSibling(&kid);
       }
       NS_IF_RELEASE(listName);

@@ -153,11 +153,7 @@ nsFirstLetterFrame::FindTextRuns(nsLineLayout& aLineLayout)
 {
   nsIFrame* frame = mFrames.FirstChild();
   while (nsnull != frame) {
-    nsIHTMLReflow* ihr;
-    nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
-    if (NS_SUCCEEDED(rv)) {
-      ihr->FindTextRuns(aLineLayout);
-    }
+    frame->FindTextRuns(aLineLayout);
     frame->GetNextSibling(&frame);
   }
   return NS_OK;
@@ -209,13 +205,8 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
     rs.mLineLayout = &ll;
     ll.SetFirstLetterStyleOK(PR_TRUE);
 
-    nsIHTMLReflow* htmlReflow;
-    rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    htmlReflow->WillReflow(aPresContext);
-    htmlReflow->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
+    kid->WillReflow(aPresContext);
+    kid->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
 
     ll.EndLineReflow();
   }

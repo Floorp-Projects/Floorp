@@ -19,7 +19,6 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLParts.h"
 #include "nsIFrame.h"
-#include "nsIHTMLReflow.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
@@ -129,13 +128,9 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
 
     nsHTMLReflowState reflowState(aPresContext, root, *this,
                                   &aRendContext, aMaxSize);
-
-    nsIHTMLReflow*    htmlReflow;
     nsReflowStatus    status;
 
-    if (NS_OK == root->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, status);
-    }
+    root->Reflow(aPresContext, aDesiredSize, reflowState, status);
   }
 
   return NS_OK;

@@ -221,12 +221,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mY = y;
 
   // Let frame know that we are reflowing it
-  nsIHTMLReflow* htmlReflow;
-  rv = aFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  htmlReflow->WillReflow(*mPresContext);
+  aFrame->WillReflow(*mPresContext);
 
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);
@@ -249,8 +244,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mOuterReflowState.mSpaceManager->Translate(tx, ty);
-  rv = htmlReflow->Reflow(*mPresContext, mMetrics, reflowState,
-                          aFrameReflowStatus);
+  rv = aFrame->Reflow(*mPresContext, mMetrics, reflowState,
+                      aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
 
 #ifdef DEBUG

@@ -63,7 +63,6 @@
 #include "nsIDTD.h"
 #include "nsIDocumentObserver.h"
 #include "nsIFormControl.h"
-#include "nsIFrameReflow.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLElementFactory.h"
 #include "nsIInputStream.h"
@@ -112,6 +111,7 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "nsIFrame.h"
 
 //----------------------------------------------------------------------
 //
