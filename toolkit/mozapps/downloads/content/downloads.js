@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 # 
 # The contents of this file are subject to the Mozilla Public License Version
@@ -20,6 +20,7 @@
 # Contributor(s):
 #   Blake Ross <blakeross@telocity.com> (Original Author) 
 #   Ben Goodger <ben@bengoodger.com> (v2.0) 
+#   Dan Mosedale <dmose@mozilla.org>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +36,6 @@
 # 
 # ***** END LICENSE BLOCK *****
 
- 
 ///////////////////////////////////////////////////////////////////////////////
 // Globals
 
@@ -284,23 +284,16 @@ function onDownloadShow(aEvent)
   f.initWithPath(aEvent.target.id);
 
   if (f.exists()) {
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-    // on unix, open a browser window rooted at the parent
-    var parent = f.parent;
-    if (parent) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-      var browserURL = pref.getCharPref("browser.chromeURL");                          
-      window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
+    try {
+      f.reveal();
+    } catch (ex) {
+      // if reveal failed for some reason (eg on unix it's not currently
+      // implemented), open a browser window rooted at the parent
+      var parent = f.parent;
+      if (parent) {
+        openExternal(parent.path);
+      }
     }
-#else
-    // MacOS X identifies as Unix.
-    f.reveal();
-#endif
-#else
-    f.reveal();
-#endif
   }
   else {
     var brandStrings = document.getElementById("brandStrings");
@@ -354,7 +347,13 @@ function onDownloadOpen(aEvent)
               pref.setBoolPref(PREF_BDM_ALERTONEXEOPEN, !checkbox.value);              
           }        
         }
-        f.launch();
+        try {
+          f.launch();
+        } catch (ex) {
+          // if launch fails, try sending it through the system's external
+          // file: URL handler
+          openExternal(f.path);
+        }
       }
       else {
         var brandStrings = document.getElementById("brandStrings");
@@ -820,6 +819,26 @@ function onDownloadShowFolder()
   dir.initWithPath(folderName.getAttribute("path"));
   if (!dir.exists())
    dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
-  
-  dir.reveal();
+
+  try {
+    dir.reveal();
+  } catch (ex) {
+    // if nsILocalFile::Reveal failed (eg it currently just returns an
+    // error on unix), just open the folder in a browser window
+    openExternal(dir.path);
+  }
+}
+
+function openExternal(aPath)
+{
+  var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+    .createInstance(Components.interfaces.nsIURI);
+  uri.spec = "file:///" + aPath;
+
+  var protocolSvc = Components.classes
+    ["@mozilla.org/uriloader/external-protocol-service;1"]
+    .getService(Components.interfaces.nsIExternalProtocolService);
+  protocolSvc.loadUrl(uri);
+
+  return;
 }
