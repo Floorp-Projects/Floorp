@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssldef.c,v 1.1 2000/03/31 19:34:20 relyea%netscape.com Exp $
+ * $Id: ssldef.c,v 1.2 2000/10/07 02:22:22 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -90,6 +90,10 @@ int ssl_DefRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     if (rv < 0) {
 	PRErrorCode err = PR_GetError();
 	MAP_ERROR(PR_SOCKET_SHUTDOWN_ERROR, PR_CONNECT_RESET_ERROR)
+    } else if (rv > len) {
+	PORT_Assert(rv <= len);
+	PORT_SetError(PR_BUFFER_OVERFLOW_ERROR);
+	rv = SECFailure;
     }
     return rv;
 }
