@@ -491,7 +491,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   nsAutoString urlString;
   char *urlCString = nsnull;
   nsCOMPtr<nsIURI> aURL;
-  nsCAutoString fullMessageUri = messageUri;
+  nsCAutoString fullMessageUri(messageUri);
   nsresult rv = NS_OK;
   
   NS_WITH_SERVICE(nsIStreamConverterService,
@@ -921,7 +921,7 @@ nsresult
 nsMessenger::Alert(const char *stringName)
 {
     nsresult rv = NS_OK;
-    nsString errorMessage = GetString(NS_ConvertASCIItoUCS2(stringName).GetUnicode());
+    nsString errorMessage(GetString(NS_ConvertASCIItoUCS2(stringName)));
     if (mDocShell)
     {
         nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));

@@ -147,7 +147,7 @@ nsMsgSearchAdapter::TryToConvertCharset(const PRUnichar *sourceStr,
 		return nsnull;
 
   // Convert from unicode to a destination charset.
-  if (NS_FAILED(ConvertFromUnicode(destCharset, sourceStr, &result))) {
+  if (NS_FAILED(ConvertFromUnicode(nsAutoString(destCharset), nsAutoString(sourceStr), &result))) {
     PR_FREEIF(result);
     result = nsnull;
   }

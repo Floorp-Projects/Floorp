@@ -157,7 +157,7 @@ nsMsgStatusFeedback::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 {
-	nsAutoString statusMsg = status;
+	nsAutoString statusMsg(status);
   if (mStatusFeedback)
     mStatusFeedback->ShowStatusString(status);
 	return NS_OK;
@@ -360,6 +360,6 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIChannel* channel, nsISupports* ct
   nsXPIDLString str;
   rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
   if (NS_FAILED(rv)) return rv;
-  nsAutoString msg = (const PRUnichar*)str;
+  nsAutoString msg(NS_STATIC_CAST(const PRUnichar*, str));
   return ShowStatusString(msg.GetUnicode());
 }
