@@ -82,6 +82,7 @@ public:
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aInputURL,
+                   PRUint32               aLineNumber,
                    nsICSSStyleSheet*&     aResult) = 0;
 
   // Parse HTML style attribute or its equivalent in other markup

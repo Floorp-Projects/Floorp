@@ -107,6 +107,7 @@ public:
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aInputURL,
+                   PRUint32               aLineNumber,
                    nsICSSStyleSheet*&     aResult);
 
   NS_IMETHOD ParseStyleAttribute(const nsAString&  aAttributeValue,
@@ -133,7 +134,8 @@ public:
   void AppendRule(nsICSSRule* aRule);
 
 protected:
-  nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI);
+  nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI,
+                       PRUint32 aLineNumber);
   nsresult ReleaseScanner(void);
 
   PRBool GetToken(nsresult& aErrorCode, PRBool aSkipWS);
@@ -506,7 +508,8 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
 }
 
 nsresult
-CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI)
+CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI,
+                           PRUint32 aLineNumber)
 {
   NS_ASSERTION(! mScanner, "already have scanner");
 
@@ -514,7 +517,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI)
   if (! mScanner) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mScanner->Init(aInput, aURI);
+  mScanner->Init(aInput, aURI, aLineNumber);
   mURL = aURI;
 
   mHavePushBack = PR_FALSE;
@@ -537,6 +540,7 @@ CSSParserImpl::ReleaseScanner(void)
 NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURI*                aInputURL,
+                     PRUint32               aLineNumber,
                      nsICSSStyleSheet*&     aResult)
 {
   NS_ASSERTION(nsnull != aInputURL, "need base URL");
@@ -560,7 +564,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   nsresult errorCode = NS_OK;
 
-  nsresult result = InitScanner(aInput, aInputURL);
+  nsresult result = InitScanner(aInput, aInputURL, aLineNumber);
   if (! NS_SUCCEEDED(result)) {
     return result;
   }
@@ -639,7 +643,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL);
+  rv = InitScanner(input, aBaseURL, 1); // XXX line number
   NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
@@ -704,7 +708,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL);
+  rv = InitScanner(input, aBaseURL, 1); // XXX line number
   NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
@@ -762,7 +766,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL);
+  rv = InitScanner(input, aBaseURL, 1); // XXX line number
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -821,7 +825,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL);
+  rv = InitScanner(input, aBaseURL, 1); // XXX line number
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -181,7 +181,6 @@ nsCSSScanner::nsCSSScanner()
   mPushback = mLocalPushback;
   mPushbackCount = 0;
   mPushbackSize = 4;
-  mLineNumber = 1;
   mLastRead = 0;
 }
 
@@ -198,7 +197,8 @@ nsCSSScanner::~nsCSSScanner()
   }
 }
 
-void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
+void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
+                        PRUint32 aLineNumber)
 {
   NS_PRECONDITION(nsnull != aInput, "Null input stream pointer");
   Close();
@@ -213,7 +213,7 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
   }
   mColNumber = 0;
 #endif // CSS_REPORT_PARSE_ERRORS
-
+  mLineNumber = aLineNumber;
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -274,11 +274,6 @@ void nsCSSScanner::OutputError()
 #else
 #define REPORT_UNEXPECTED_EOF(err_)
 #endif // CSS_REPORT_PARSE_ERRORS
-
-PRUint32 nsCSSScanner::GetLineNumber()
-{
-  return mLineNumber;
-}
 
 void nsCSSScanner::Close()
 {

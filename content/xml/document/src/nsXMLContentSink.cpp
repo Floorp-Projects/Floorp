@@ -488,6 +488,9 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     if (ssle) {
       ssle->InitStyleLinkElement(mParser, PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
+      if (!aNodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML)) {
+        ssle->SetLineNumber(aLineNumber);
+      }
     }
   } 
   else if (aNodeInfo->Equals(nsHTMLAtoms::img, kNameSpaceID_XHTML) ||
