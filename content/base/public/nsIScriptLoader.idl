@@ -73,4 +73,20 @@ interface nsIScriptLoader : nsISupports {
    */
   void processScriptElement(in nsIDOMHTMLScriptElement aElement,
                             in nsIScriptLoaderObserver aObserver);
+
+  /**
+   * Suspend processing of new script elements. Any call to 
+   * processScriptElement() will fail with a return code of
+   * NS_ERROR_NOT_AVAILABLE. Note that this DOES NOT suspend
+   * currently loading or executing scripts. All calls to 
+   * suspend() must be matched with an equal number of calls 
+   * to resume() before processing of new script elements 
+   * continues. 
+   */
+  void suspend();
+
+  /**
+   * Resume processing of new script elements. 
+   */
+  void resume();
 };
