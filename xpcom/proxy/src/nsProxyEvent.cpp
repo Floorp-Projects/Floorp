@@ -32,7 +32,6 @@
  * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
 
-
 #include "nsProxyEvent.h"
 #include "nsProxyEventPrivate.h"
 #include "nsIProxyObjectManager.h"
@@ -283,7 +282,7 @@ nsProxyObject::Release(void)
       // need to do something special here so that
       // the real object will always be deleted on
       // the correct thread..
-      
+
         PLEvent *event = PR_NEW(PLEvent);
         if (event == nsnull)
         {
