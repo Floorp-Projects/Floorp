@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Mike Shaver <shaver@off.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,7 +40,8 @@
 #define nsProperties_h___
 
 #include "nsIProperties.h"
-#include "nsHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "nsHashKeys.h"
 #include "nsAgg.h"
 
 #define NS_PROPERTIES_CID                            \
@@ -52,21 +54,23 @@
 
 class nsIUnicharInputStream;
 
-class nsProperties : public nsIProperties, public nsHashtable {
+typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
+        nsProperties_HashBase;
+
+class nsProperties : public nsIProperties,
+                     public nsProperties_HashBase {
 public:
 
   NS_DECL_AGGREGATED
   NS_DECL_NSIPROPERTIES
 
-  nsProperties(nsISupports* outer);
+  nsProperties(nsISupports *aOuter) { NS_INIT_AGGREGATED(aOuter); }
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
-
 private:
-  ~nsProperties();
+  ~nsProperties() { }
 };
 
 #endif /* nsProperties_h___ */
