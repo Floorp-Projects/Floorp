@@ -20,7 +20,7 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
-   -   Ryan Cassin (kidteckco@hotmail.com)
+   -   Ryan Cassin (rcassin@supernova.org)
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
@@ -128,7 +128,7 @@ editor.xul has these - do we need them?
       <button id="openButton"/>
       <button id="saveButton"/>
       <spring class="separator_small"/>
-      <button id="printButton"/>
+      <menubutton id="printButton"/>
       <button id="spellingButton"/>
       <spring flex="1"/>
     </toolbar>    
