@@ -4,111 +4,81 @@
 # Format is:
 # 
 # <destination in en-US.jar>,<source in unzipped chrome>
+#
+# NOTE: directories don't recursively pick up subdirectories, 
+# you have to manually specify them 
+#
 
 #################################################################################################
 # mail
 #################################################################################################
-locale/en-US/messenger,                                   en-US/locale/en-US/messenger
-locale/en-US/messenger-mdn,                               en-US/locale/en-US/messenger-mdn
-locale/en-US/messenger/addressbook,                       en-US/locale/en-US/messenger/addressbook
-locale/en-US/messenger/messengercompose,                  en-US/locale/en-US/messenger/messengercompose
-locale/en-US/messenger/migration,                         en-US/locale/en-US/messenger/migration
-locale/en-US/messenger-smime,                             en-US/locale/en-US/messenger-smime
-locale/en-US/messenger-mapi,                              en-US/locale/en-US/messenger-mapi
-locale/en-US/messenger-offline,                           en-US/locale/en-US/messenger-offline
-locale/en-US/messenger-newsblog,                          en-US/locale/en-US/messenger-newsblog
+locale/en-US/messenger,                                         en-US/locale/en-US/messenger
+locale/en-US/messenger/addressbook,                             en-US/locale/en-US/messenger/addressbook
+locale/en-US/messenger/messengercompose,                        en-US/locale/en-US/messenger/messengercompose
+locale/en-US/messenger/migration,                               en-US/locale/en-US/messenger/migration
+locale/en-US/messenger-smime,                                   en-US/locale/en-US/messenger-smime
+locale/en-US/messenger-mapi,                                    en-US/locale/en-US/messenger-mapi
+locale/en-US/messenger-mdn,                                     en-US/locale/en-US/messenger-mdn
+locale/en-US/messenger-offline,                                 en-US/locale/en-US/messenger-offline
+locale/en-US/messenger-newsblog,                                en-US/locale/en-US/messenger-newsblog
+locale/en-US/messenger-region,                                  en-US/locale/en-US/messenger-region
 
 #################################################################################################
-# xpfe extensions (ldap, wallet, etc)
+# xpfe extensions (ldap, etc)
 #################################################################################################
-locale/en-US/mozldap,                                     en-US/locale/en-US/mozldap
-locale/en-US/necko,                                       en-US/locale/en-US/necko
-locale/en-US/mozapps/downloads,                           en-US/locale/en-US/mozapps/downloads
-locale/en-US/mozapps/profile,                             en-US/locale/en-US/mozapps/profile
-locale/en-US/mozapps/extensions,                          en-US/locale/en-US/mozapps/extensions
-locale/en-US/mozapps/update,                              en-US/locale/en-US/mozapps/update
-locale/en-US/mozapps/xpinstall,                           en-US/locale/en-US/mozapps/xpinstall
-locale/en-US/mozapps/contents.rdf,                        en-US/locale/en-US/mozapps/contents.rdf
+locale/en-US/mozldap,                                           en-US/locale/en-US/mozldap
+locale/en-US/necko,                                             en-US/locale/en-US/necko
 
-locale/en-US/navigator/contents.rdf,                      en-US/locale/en-US/navigator/contents.rdf
-locale/en-US/navigator/navigator.properties,              en-US/locale/en-US/navigator/navigator.properties
+locale/en-US/mozapps,                                           en-US/locale/en-US/mozapps
+locale/en-US/mozapps/downloads,                                 en-US/locale/en-US/mozapps/downloads
+locale/en-US/mozapps/extensions,                                en-US/locale/en-US/mozapps/extensions
+locale/en-US/mozapps/profile,                                   en-US/locale/en-US/mozapps/profile
+locale/en-US/mozapps/update,                                    en-US/locale/en-US/mozapps/update
+locale/en-US/mozapps/xpinstall,                                 en-US/locale/en-US/mozapps/xpinstall
+
+locale/en-US/navigator,                                         en-US/locale/en-US/navigator
 
 #################################################################################################
 # global
 #################################################################################################
-locale/en-US/global,                                      en-US/locale/en-US/global
+locale/en-US/global,                                            en-US/locale/en-US/global
+locale/en-US/global/dom,                                        en-US/locale/en-US/global/dom
+locale/en-US/global/history,                                    en-US/locale/en-US/global/history
+locale/en-US/global/layout,                                     en-US/locale/en-US/global/layout
+locale/en-US/global/security,                                   en-US/locale/en-US/global/security
+locale/en-US/global/webservices,                                en-US/locale/en-US/global/webservices
+locale/en-US/global/xml,                                        en-US/locale/en-US/global/xml
+locale/en-US/global/xpinstall,                                  en-US/locale/en-US/global/xpinstall
+locale/en-US/global-platform,                                   en-US/locale/en-US/global-platform
+locale/en-US/global-platform/win,                               en-US/locale/en-US/global-platform/win
+locale/en-US/global-platform/mac,                               en-US/locale/en-US/global-platform/mac
+locale/en-US/global-platform/unix,                              en-US/locale/en-US/global-platform/unix
+locale/en-US/global-region,                                     en-US/locale/en-US/global-region
 
 #################################################################################################
 # communicator
 #################################################################################################
-locale/en-US/communicator/dom,                            en-US/locale/en-US/communicator/dom
-locale/en-US/communicator/layout,                        en-US/locale/en-US/communicator/layout
-
-locale/en-US/communicator/contentAreaCommands.dtd,        en-US/locale/en-US/communicator/contentAreaCommands.dtd
-locale/en-US/communicator/contentAreaCommands.properties, en-US/locale/en-US/communicator/contentAreaCommands.properties
-locale/en-US/communicator/contents.rdf,                   en-US/locale/en-US/communicator/contents.rdf
-locale/en-US/communicator/utilityOverlay.dtd,             en-US/locale/en-US/communicator/utilityOverlay.dtd
-locale/en-US/communicator/utilityOverlay.properties,      en-US/locale/en-US/communicator/utilityOverlay.properties
-locale/en-US/communicator/wallet/wallet.properties,       en-US/locale/en-US/communicator/wallet/wallet.properties
-locale/en-US/communicator/pref/pref-fonts.dtd,            en-US/locale/en-US/communicator/pref/pref-fonts.dtd
-locale/en-US/communicator/pref/pref-themes.dtd,           en-US/locale/en-US/communicator/pref/pref-themes.dtd
-locale/en-US/communicator/pref/pref-extensions.dtd,       en-US/locale/en-US/communicator/pref/pref-extensions.dtd
-locale/en-US/communicator/pref/pref.dtd,                  en-US/locale/en-US/communicator/pref/pref.dtd
-locale/en-US/communicator/pref/prefutilities.properties,  en-US/locale/en-US/communicator/pref/prefutilities.properties
-
-locale/en-US/communicator/xpinstall,                      en-US/locale/en-US/communicator/xpinstall
-
-locale/en-US/communicator/wallet/SignonViewer.properties, en-US/locale/en-US/communicator/wallet/SignonViewer.properties
-locale/en-US/communicator/wallet/SignonViewer.dtd,        en-US/locale/en-US/communicator/wallet/SignonViewer.dtd
+locale/en-US/communicator,                                      en-US/locale/en-US/communicator
+locale/en-US/communicator/pref,                                 en-US/locale/en-US/communicator/pref
+locale/en-US/communicator/wallet,                               en-US/locale/en-US/communicator/wallet
+locale/en-US/communicator-platform,                             en-US/locale/en-US/communicator-platform
+locale/en-US/communicator-platform/win,                         en-US/locale/en-US/communicator-platform/win
+locale/en-US/communicator-platform/mac,                         en-US/locale/en-US/communicator-platform/mac
+locale/en-US/communicator-platform/unix,                        en-US/locale/en-US/communicator-platform/unix
 
 #################################################################################################
 # editor
 #################################################################################################
-locale/en-US/editor/editorOverlay.dtd,                    en-US/locale/en-US/editor/editorOverlay.dtd
-locale/en-US/editor/editorSmileyOverlay.dtd,              en-US/locale/en-US/editor/editorSmileyOverlay.dtd
-locale/en-US/editor/contents.rdf,                         en-US/locale/en-US/editor/contents.rdf
-locale/en-US/editor/EditorHLineProperties.dtd,            en-US/locale/en-US/editor/EditorHLineProperties.dtd 
-locale/en-US/editor/EditorImageProperties.dtd,            en-US/locale/en-US/editor/EditorImageProperties.dtd
-locale/en-US/editor/EditorInsertChars.dtd,                en-US/locale/en-US/editor/EditorInsertChars.dtd
-locale/en-US/editor/EditorInsertSource.dtd,               en-US/locale/en-US/editor/EditorInsertSource.dtd
-locale/en-US/editor/EditorInsertTOC.dtd,                  en-US/locale/en-US/editor/EditorInsertTOC.dtd
-locale/en-US/editor/EditorInsertTable.dtd,                en-US/locale/en-US/editor/EditorInsertTable.dtd
-locale/en-US/editor/EditorLinkProperties.dtd,             en-US/locale/en-US/editor/EditorLinkProperties.dtd
-locale/en-US/editor/EditorListProperties.dtd,             en-US/locale/en-US/editor/EditorListProperties.dtd
-locale/en-US/editor/EditorReplace.dtd,                    en-US/locale/en-US/editor/EditorReplace.dtd
-locale/en-US/editor/EditorColorProperties.dtd,            en-US/locale/en-US/editor/EditorColorProperties.dtd
-locale/en-US/editor/EditorSpellCheck.dtd,                 en-US/locale/en-US/editor/EditorSpellCheck.dtd
-locale/en-US/editor/EditorTableProperties.dtd,            en-US/locale/en-US/editor/EditorTableProperties.dtd
-locale/en-US/editor/EdColorPicker.dtd,                    en-US/locale/en-US/editor/EdColorPicker.dtd
-locale/en-US/editor/editor.properties,                    en-US/locale/en-US/editor/editor.properties
-locale/en-US/editor/EdNamedAnchorProperties.dtd,          en-US/locale/en-US/editor/EdNamedAnchorProperties.dtd
-locale/en-US/editor/EdAdvancedEdit.dtd,                   en-US/locale/en-US/editor/EdAdvancedEdit.dtd
-locale/en-US/editor/EdDialogOverlay.dtd,                  en-US/locale/en-US/editor/EdDialogOverlay.dtd
-locale/en-US/editor/EditorSpellCheck.dtd,                 en-US/locale/en-US/editor/EditorSpellCheck.dtd
-locale/en-US/editor/EditorPersonalDictionary.dtd,         en-US/locale/en-US/editor/EditorPersonalDictionary.dtd
-locale/en-US/editor/EdConvertToTable.dtd,                 en-US/locale/en-US/editor/EdConvertToTable.dtd
-
-#################################################################################################
-# US
-#################################################################################################
-locale/en-US/messenger-region,                            US/locale/US/messenger-region
-locale/en-US/global-region,                               US/locale/US/global-region
+locale/en-US/editor,                                            en-US/locale/en-US/editor
 
 #################################################################################################
 # crypto
 #################################################################################################
-locale/en-US/pippki/certManager.dtd,                      en-US/locale/en-US/pippki/certManager.dtd
-locale/en-US/pippki/contents.rdf,                         en-US/locale/en-US/pippki/contents.rdf
-locale/en-US/pippki/deviceManager.dtd,                    en-US/locale/en-US/pippki/deviceManager.dtd
-locale/en-US/pippki/newserver.dtd,                        en-US/locale/en-US/pippki/newserver.dtd
-locale/en-US/pippki/newserver.properties,                 en-US/locale/en-US/pippki/newserver.properties
-locale/en-US/pippki/pippki.dtd,                           en-US/locale/en-US/pippki/pippki.dtd
-locale/en-US/pippki/pippki.properties,                    en-US/locale/en-US/pippki/pippki.properties
-locale/en-US/pipnss,                                      en-US/locale/en-US/pipnss
+locale/en-US/pippki,                                            en-US/locale/en-US/pippki
+locale/en-US/pipnss,                                            en-US/locale/en-US/pipnss
 
 #################################################################################################
 # files for the optional pref extension
 #################################################################################################
-locale/en-US/autoconfig/contents.rdf,                 en-US/locale/en-US/autoconfig/contents.rdf
-locale/en-US/autoconfig/autoconfig.properties,        en-US/locale/en-US/autoconfig/autoconfig.properties
+locale/en-US/autoconfig,                                        en-US/locale/en-US/autoconfig
 

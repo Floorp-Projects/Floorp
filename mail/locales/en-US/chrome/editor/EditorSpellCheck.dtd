@@ -1,0 +1,56 @@
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+  -->
+
+<!-- Window title -->
+<!ENTITY windowTitle.label "Check Spelling">
+
+<!ENTITY misspelledWord.label "Misspelled word:">
+<!ENTITY wordEditField.label "Replace with:">
+<!ENTITY wordEditField.accessKey "w">
+<!ENTITY checkwordButton.label "Check Word">
+<!ENTITY checkwordButton.accessKey "k">
+<!ENTITY suggestions.label "Suggestions:">
+<!ENTITY suggestions.accessKey "u">
+<!ENTITY ignoreButton.label "Ignore">
+<!ENTITY ignoreButton.accessKey "I">
+<!ENTITY ignoreAllButton.label "Ignore All">
+<!ENTITY ignoreAllButton.accessKey "n">
+<!ENTITY replaceButton.label "Replace">
+<!ENTITY replaceButton.accessKey "R">
+<!ENTITY replaceAllButton.label "Replace All">
+<!ENTITY replaceAllButton.accessKey "A">
+<!ENTITY stopButton.label "Stop">
+<!ENTITY stopButton.accessKey "t">
+<!ENTITY userDictionary.label "Personal Dictionary:">
+<!ENTITY moreDictionaries.label "Download More">
+<!ENTITY addToUserDictionaryButton.label "Add Word">
+<!ENTITY addToUserDictionaryButton.accessKey "d">
+<!ENTITY editUserDictionaryButton.label "Edit...">
+<!ENTITY editUserDictionaryButton.accessKey "E">
+<!ENTITY recheckButton.label "Recheck Page">
+<!ENTITY recheckButton.accessKey "P">
+<!ENTITY closeButton.label "Close">
+<!ENTITY closeButton.accessKey "C">
+<!ENTITY sendButton.label "Send">
+<!ENTITY sendButton.accessKey "S">
+<!ENTITY languagePopup.label "Language:">
+<!ENTITY languagePopup.accessKey "L">

@@ -1,0 +1,52 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+LOCALIZATION NOTE : 'Communicator 4.x' is the used for previous versions of Netscape Communicator,
+	Please translate using the brandname in respective languages for Netscape Communicator 4 releases.
+LOCALIZATION NOTE : Do not translate any of the occurances of the word "&brandShortName;" below.
+--> 
+
+<!ENTITY importDialog.windowTitle "Import">
+<!ENTITY importDialog.mailTitle   "Mail">
+<!ENTITY importDialog.addressbookTitle "Address Books">
+<!ENTITY importDialog.settingsTitle "Settings">
+
+<!ENTITY importTitle.label        "&brandShortName; Mail Import Wizard">
+<!ENTITY importDesc.label         "Import Mail, Address Books and Settings from other programs">
+
+<!ENTITY importDescription.label  "This wizard will import mail messages, address book entries, and/or preferences from other mail programs and common address book formats into &brandShortName; Mail.">
+<!ENTITY importDescription2.label "Once they have been imported, you will be able to access them from within &brandShortName; Mail and/or Address Book.">
+
+<!ENTITY selectDescription.label  "Please select the program from which you would like to import:">
+
+<!ENTITY back.label               "&lt; Back">
+<!ENTITY forward.label            "Next &gt;">
+<!ENTITY finish.label             "Finish">
+<!ENTITY cancel.label             "Cancel">
+
+<!ENTITY select.label             "Select the type of material to import:">
+
+<!ENTITY title.label              "Title">
+<!ENTITY processing.label         "Importing...">
+
+<!ENTITY FieldDiscInputText1.label  "Netscape Communicator 4.x has one mailing address for each card, while &brandShortName; has two (Home and Work).">
+<!ENTITY FieldDiscInputText2.label  "Select the category in which you want to store the imported mailing addresses:">
+<!ENTITY FieldDiscWarning.label  "This category will be used for all the entries of the selected address book: ">
+<!ENTITY importDialog.homeTitle  "Home">
+<!ENTITY importDialog.workTitle  "Work">

@@ -1,0 +1,70 @@
+<!ENTITY pane.title                    "Advanced">
+
+<!-- Privacy Settings -->
+<!ENTITY privacyTitle.label            "Privacy">
+<!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages.">
+<!ENTITY disableImageInMailNews.accesskey "B">
+<!ENTITY allowRemoteImagesForFriends.label  "Allow remote images if the sender is in my:">
+<!ENTITY allowRemoteImagesForFriends.accesskey "A">
+<!ENTITY enbJsCheckMailNews.label      "Enable JavaScript in mail messages.">
+<!ENTITY enbJsCheckMailNews.accesskey  "J">
+
+<!-- Password Manager -->
+<!ENTITY signonHeader.label            "Saved Passwords">
+<!ENTITY signonDescription.label       "Manage stored mail server passwords.">
+<!ENTITY viewSignons.label             "View Saved Passwords...">
+<!ENTITY viewSignons.accesskey         "e">
+<!ENTITY masterPasswordDesc.label      "Manage master password settings.">
+<!ENTITY masterPassword.label          "Master Password...">
+<!ENTITY masterPassword.accesskey      "m">
+
+<!-- General -->
+<!ENTITY generalSettings.label         "General Settings">
+<!ENTITY showCondensedAddresses.label  "Show only display name for people in my address book.">
+<!ENTITY markAsRead.label              "Mark message read after displaying for">
+<!ENTITY markAsReadEnd.label           "second(s).">
+<!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane.">
+<!ENTITY emailCollectionPicker.label   "Automatically add outgoing e-mail addresses to my:">
+
+
+<!-- Return Receipts -->
+<!ENTITY receiptSettings.label         "Return Receipts">
+<!ENTITY requestReceipt.label          "When sending messages, always request a return receipt">
+<!ENTITY requestReceipt.accesskey      "W">
+<!ENTITY receiptArrive.label           "When a receipt arrives:">
+<!ENTITY leaveIt.label                 "Leave it in my Inbox">
+<!ENTITY leaveIt.accesskey             "i">
+<!ENTITY moveToSent.label              "Move it to my &quot;Sent&quot; folder">
+<!ENTITY moveToSent.accesskey          "m">
+<!ENTITY requestMDN.label              "When I receive a request for a return receipt:">
+<!ENTITY never.label                   "Never send a return receipt">
+<!ENTITY never.accesskey               "n">
+<!ENTITY returnSome.label              "Allow return receipts for some messages">
+<!ENTITY returnSome.accesskey          "r">
+<!ENTITY notInToCc.label               "If I'm not in the To or Cc of the message:">
+<!ENTITY notInToCc.accesskey           "f">
+<!ENTITY outsideDomain.label           "If the sender is outside my domain:">
+<!ENTITY outsideDomain.accesskey       "t">
+<!ENTITY otherCases.label              "In all other cases:">
+<!ENTITY otherCases.accesskey          "a">
+<!ENTITY askMe.label                   "Ask me">
+<!ENTITY alwaysSend.label              "Always send">
+<!ENTITY neverSend.label               "Never send">
+
+<!ENTITY lHeader.label                 "Connection">
+<!ENTITY connectionDesc.label          "Set up Proxies for accessing the internet.">
+<!ENTITY connectionButton.label        "Connection Settings...">
+<!ENTITY connectionButton.accesskey    "C">
+
+<!-- Software Update -->
+<!ENTITY softwareupdate.label             "Software Update">
+<!ENTITY softwareupdateinfo.label         "Check for updates to My Extensions and Themes:">
+<!ENTITY enableSmartUpdate.label          "&brandShortName;">
+<!ENTITY enableSmartUpdate.accesskey      "T">
+<!ENTITY enableExtensionUpdate.label      "My Extensions and Themes">
+<!ENTITY enableExtensionUpdate.accesskey  "y">
+<!ENTITY enableAutoInstall.label          "Automatically download and install updates to Extensions and Themes.">
+<!ENTITY enableAutoInstall.accesskey      "d">
+<!ENTITY checkNow.label                   "Check Now">
+<!ENTITY checkNow.accesskey               "N">
+

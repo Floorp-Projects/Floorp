@@ -1,0 +1,35 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY pane.title                       "Windows">
+<!ENTITY windowSettings.label             "Windows">
+<!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail:">
+<!ENTITY selectWindowLayout.accesskey     "l">
+<!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
+<!ENTITY warnOnSendAccelKey.label         "Confirm when using keyboard shortcut to send message">
+<!ENTITY warnOnSendAccelKey.accesskey     "o">
+
+<!ENTITY reuseExp.label                   "When opening messages, display them in:">
+<!ENTITY reuseExpRadio0.label             "A new message window">
+<!ENTITY reuseExpRadio0.accesskey         "n">
+<!ENTITY reuseExpRadio1.label             "An existing message window">
+<!ENTITY reuseExpRadio1.accesskey         "e">
+<!ENTITY reuseExpRadio2.label             "A tab in an existing message window">
+<!ENTITY reuseExpRadio2.accesskey         "t">

@@ -43,9 +43,6 @@ mail_chrome: mail-jar.mn
 	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/en-US
 	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/en-US $(DIST)/bin/chrome/en-US.jar
 
-	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/US
-	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/US $(DIST)/bin/chrome/US.jar
-
 ifdef MOZ_PSM
 	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/pipnss
 	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/pipnss $(DIST)/bin/chrome/pipnss.jar

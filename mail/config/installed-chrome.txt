@@ -45,25 +45,13 @@ locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/necko/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/editor/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/mozldap/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/mozapps/
-locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/navigator/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/navigator/ 
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/communicator/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/global/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/global-region/
-#ifdef XP_WIN
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/global-platform/
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/navigator-platform/
-#else
-#ifdef XP_OS2
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/global-platform/
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/
-locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/navigator-platform/
-#else
-locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/global-platform/
-locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/communicator-platform/
-locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/navigator-platform/
-#endif
-#endif
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/global-platform/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/navigator-platform/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/communicator-platform/
 skin,install,select,classic/1.0
 
 # optional registration for dom inspector which may or may not be installed

@@ -1,0 +1,56 @@
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is Mozilla Communicator.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp. Portions created by Netscape Communications
+   - Corp. are Copyright (C) 2000 Netscape Communications Corp. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): David Bienvenu <bienvenu@netscape.com>
+   -                 Mohan Bhamidipati <mohanb@netscape.com>
+   -                 Lorenzo Colitti   <lorenzo@colitti.com>
+  --> 
+
+<!ENTITY folderProps.windowtitle.label  "Properties">
+
+<!ENTITY generalInfo.label            "General Information">
+<!ENTITY generalInfo.accesskey        "G">
+<!ENTITY folderCharsetTab.label       "Default Character Encoding:">
+<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
+
+<!ENTITY folderOfflineTab.label                             "Offline">
+<!ENTITY folderOfflineTab.accesskey                         "O">
+<!ENTITY folderCheckForNewMessages.label                    "Check this folder for new messages">
+
+<!ENTITY offlineFolder.check.label                          "Select this folder for offline use">
+<!ENTITY offlineFolder.button.label                         "Download Now">
+
+<!ENTITY selectofflineNewsgroup.check.label                 "Select this newsgroup for offline use">
+<!ENTITY UseDefaultofflineNewsgroup.check.label             "Use the default from account settings ">
+<!ENTITY offlineNewsgroup.button.label                      "Download Now">
+
+<!ENTITY folderProps.information.label  "Information:">
+<!ENTITY folderProps.name.label	        "Name:">
+
+<!ENTITY folderSharingTab.label                             "Sharing">
+<!ENTITY folderSharingTab.accesskey                         "S">
+<!ENTITY privilegesDesc.label  "Share this and other folders with network users and display and set access privileges">
+<!ENTITY privileges.button.label                      "Privileges...">
+<!ENTITY permissionsDesc.label                            "You have the following permissions:">
+<!ENTITY folderType.label                             "Folder Type:">
+
+<!ENTITY folderQuotaTab.label                               "Quota">
+<!ENTITY folderQuotaTab.accesskey                           "Q">
+<!ENTITY folderQuotaRoot.label                              "Quota Root:">
+<!ENTITY folderQuotaUsage.label                             "Usage:">
+<!ENTITY folderQuotaStatus.label                            "Status:">

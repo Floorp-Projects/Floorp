@@ -7,6 +7,3 @@ messenger.jar:
 *+  content/messenger/am-smime.xul                                   (content/am-smime.xul)
 *+  content/messenger/am-smime.js                                    (content/am-smime.js)
 *+  content/messenger-smime/contents.rdf                             (content/contents.rdf)
-
-en-US.jar:
-+   locale/en-US/messenger/am-smime.dtd                              (locale/am-smime.dtd)

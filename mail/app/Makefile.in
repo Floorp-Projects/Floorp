@@ -42,7 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DTHUNDERBIRD_ICO=\"$(DIST)/branding/thunderbird.ico\"
+AB_CD = $(MOZ_UI_LOCALE) 
+
+DEFINES += -DTHUNDERBIRD_ICO=\"$(DIST)/branding/thunderbird.ico\" -DAB_CD=$(AB_CD)
 
 DIRS		= profile
 

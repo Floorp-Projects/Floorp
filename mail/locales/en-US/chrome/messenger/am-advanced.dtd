@@ -1,0 +1,9 @@
+<!-- extracted from am-advanced.xul -->
+
+<!-- LOCALIZATION NOTE (smtpServer.label): do not translate "SMTP" in below line -->
+<!ENTITY smtpServer.label "Outgoing Server (SMTP) Settings">
+<!-- LOCALIZATION NOTE (smtpDesc.label): do not translate "SMTP" in below line -->
+<!ENTITY smtpDesc.label "Only one outgoing server (SMTP) needs to be specified, even if you have several mail accounts. Enter the name of the server for outgoing messages.">
+<!ENTITY advanced.label "Advanced...">
+<!ENTITY advanced.accesskey "v">
+

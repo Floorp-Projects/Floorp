@@ -13,11 +13,3 @@ newsblog.jar:
 *  content/messenger-newsblog/am-newsblog.xul                   (content/am-newsblog.xul)
 *  content/messenger-newsblog/am-newsblog.js                    (content/am-newsblog.js)
 *  content/messenger-newsblog/contents.rdf                      (content/contents.rdf)
-
-en-US.jar:
-   locale/en-US/messenger-newsblog/newsblog.dtd                 (locale/newsblog.dtd)
-   locale/en-US/messenger-newsblog/newsblog.properties          (locale/newsblog.properties)
-   locale/en-US/messenger-newsblog/feed-properties.dtd          (locale/feed-properties.dtd)
-   locale/en-US/messenger-newsblog/am-newsblog.properties       (locale/am-newsblog.properties)
-   locale/en-US/messenger-newsblog/am-newsblog.dtd              (locale/am-newsblog.dtd)
-*  locale/en-US/messenger-newsblog/contents.rdf                 (locale/contents.rdf)

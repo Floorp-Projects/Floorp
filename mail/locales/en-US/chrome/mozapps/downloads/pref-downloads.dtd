@@ -1,0 +1,27 @@
+<!ENTITY lHeader                      "Attachments">
+
+<!ENTITY askOnSave.label              "Attachment Folder">
+<!ENTITY alwaysAsk.label              "Ask me where to save every attachment">
+<!ENTITY neverAsk.label               "Save all attachments to this folder:">
+<!ENTITY desktop.label                "Desktop">
+<!ENTITY downloads.label              "My Downloads">
+<!ENTITY choose.label                 "Other...">
+<!ENTITY showFolder.label             "Show Folder">
+
+<!ENTITY downloadManagerWindow.label  "Attachment Manager">
+<!ENTITY showWhenStarting.label       "Show Attachment Manager window when a download begins.">
+<!ENTITY closeWhenDone.label          "Close the Attachment Manager when all attachments are complete.">
+
+<!ENTITY fileTypes.label              "File Types">
+<!-- XXX this text string could improve --> 
+<!ENTITY fileTypesDescription.label   "Automatically perform the associated action with each of the following file types:">
+<!ENTITY fileTypeColName.label        "File Type">
+<!ENTITY fileHandlerColName.label     "Application">
+<!ENTITY editFileHandler.label        "Change Action...">
+<!ENTITY editFileHandler.accesskey    "a">
+<!ENTITY removeFileHandler.label      "Remove">
+<!ENTITY removeFileHandler.accesskey  "r">
+
+<!ENTITY plugins.label                "Plug-Ins...">
+<!ENTITY plugins.accesskey            "p">
+

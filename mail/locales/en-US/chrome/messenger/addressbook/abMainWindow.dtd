@@ -40,7 +40,7 @@
 <!ENTITY quitApplicationCmdWin.accesskey                "x">
 <!ENTITY quitApplicationCmd.label                       "Quit"> 
 <!ENTITY quitApplicationCmd.accesskey                   "Q">
-<!ENTITY quitApplicationCmd.key                         "Q">
+<!ENTITY quitApplicationCmd.key "Q">
 
 <!-- Edit Menu -->
 <!ENTITY editMenu.label                                 "Edit">

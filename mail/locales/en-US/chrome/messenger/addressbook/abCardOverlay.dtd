@@ -1,0 +1,112 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY chooseAddressBook.label                "Add to: ">
+<!ENTITY chooseAddressBook.accesskey            "A">
+
+<!ENTITY Contact.tab                     "Contact"> 
+<!ENTITY Name.box                        "Name"> 
+
+<!-- LOCALIZATION NOTE: 
+ NameField1, NameField2, PhoneticField1, PhoneticField2
+ those fields are either LN or FN depends on the target country.
+ "FirstName" and "LastName" can be swapped for id to change the order
+ but they should not be translated (same applied to phonetic id).
+ Make sure the translation of label corresponds to the order of id.
+-->
+
+<!-- LOCALIZATION NOTE (NameField1.id) : DONT_TRANSLATE -->
+<!ENTITY NameField1.id                  "FirstName"> 
+<!-- LOCALIZATION NOTE (NameField2.id) : DONT_TRANSLATE -->
+<!ENTITY NameField2.id                  "LastName"> 
+<!-- LOCALIZATION NOTE (PhoneticField1.id) : DONT_TRANSLATE -->
+<!ENTITY PhoneticField1.id              "PhoneticFirstName"> 
+<!-- LOCALIZATION NOTE (PhoneticField2.id) : DONT_TRANSLATE -->
+<!ENTITY PhoneticField2.id              "PhoneticLastName"> 
+
+<!ENTITY NameField1.label               "First:">
+<!ENTITY NameField1.accesskey           "F">
+<!ENTITY NameField2.label               "Last:">
+<!ENTITY NameField2.accesskey           "L">
+<!ENTITY PhoneticField1.label           "Phonetic:">
+<!ENTITY PhoneticField2.label           "Phonetic:">
+<!ENTITY DisplayName.label              "Display:">
+<!ENTITY DisplayName.accesskey          "D">
+<!ENTITY NickName.label                 "Nickname:">
+<!ENTITY NickName.accesskey             "N">
+
+<!ENTITY Internet.box                   "Internet">
+<!ENTITY PrimaryEmail.label             "Email:">
+<!ENTITY PrimaryEmail.accesskey         "E">
+<!ENTITY SecondEmail.label              "Additional Email:">
+<!ENTITY SecondEmail.accesskey          "o">
+<!ENTITY PreferMailFormat.label         "Prefers to receive messages formatted as:">
+<!ENTITY PreferMailFormat.accesskey     "r">
+<!ENTITY PlainText.label                "Plain Text">
+<!ENTITY HTML.label                     "HTML">
+<!ENTITY Unknown.label                  "Unknown">
+<!ENTITY ScreenName.label               "Screen Name:">
+<!ENTITY ScreenName.accesskey           "S">
+
+<!ENTITY Phones.box                     "Phones">
+<!ENTITY WorkPhone.label                "Work:">
+<!ENTITY WorkPhone.accesskey            "W">
+<!ENTITY HomePhone.label                "Home:">
+<!ENTITY HomePhone.accesskey            "H">
+<!ENTITY FaxNumber.label                "Fax:">
+<!ENTITY FaxNumber.accesskey            "x">
+<!ENTITY PagerNumber.label              "Pager:">
+<!ENTITY PagerNumber.accesskey          "P">
+<!ENTITY CellularNumber.label           "Mobile:">
+<!ENTITY CellularNumber.accesskey       "M">
+
+
+<!ENTITY Address.tab                    "Address"> 
+<!ENTITY Home.box                       "Home"> 
+<!ENTITY HomeAddress.label              "Address:"> 
+<!ENTITY HomeAddress2.label             ""> 
+<!ENTITY HomeCity.label                 "City:"> 
+<!ENTITY HomeState.label                "State/Province:"> 
+<!ENTITY HomeZipCode.label              "ZIP/Postal Code:"> 
+<!ENTITY HomeCountry.label              "Country:">
+<!ENTITY HomeWebPage.label              "Web Page:"> 
+<!ENTITY Work.box                       "Work"> 
+<!ENTITY JobTitle.label                 "Title:"> 
+<!ENTITY Department.label               "Department:"> 
+<!ENTITY Company.label                  "Organization:"> 
+<!ENTITY WorkAddress.label              "Address:"> 
+<!ENTITY WorkAddress2.label             ""> 
+<!ENTITY WorkCity.label                 "City:"> 
+<!ENTITY WorkState.label                "State/Province:"> 
+<!ENTITY WorkZipCode.label              "ZIP/Postal Code:"> 
+<!ENTITY WorkCountry.label              "Country:">
+<!ENTITY WorkWebPage.label              "Web Page:"> 
+
+
+<!ENTITY Other.tab                      "Other">
+<!ENTITY Custom1.label                  "Custom 1:">
+<!ENTITY Custom1.accesskey              "1">
+<!ENTITY Custom2.label                  "Custom 2:">
+<!ENTITY Custom2.accesskey              "2">
+<!ENTITY Custom3.label                  "Custom 3:">
+<!ENTITY Custom3.accesskey              "3">
+<!ENTITY Custom4.label                  "Custom 4:">
+<!ENTITY Custom4.accesskey              "4">
+<!ENTITY Notes.box                      "Notes">
