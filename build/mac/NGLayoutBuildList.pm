@@ -123,6 +123,9 @@ sub Checkout()
 		$session->checkout("mozilla/js") || die "checkout failure";
 		$session->checkout("mozilla/modules/security/freenav") || die "checkout failure";
 		$session->checkout("mozilla/modules/libpref") || die "checkout failure";
+		$session->checkout("mozilla/lib/libparse") || die "checkout failure";
+		$session->checkout("mozilla/lib/layout") || die "checkout failure";
+		$session->checkout("mozilla/lib/libstyle") || die "checkout failure";
 	}
 	if ($main::pull{xpcom})
 	{
@@ -162,6 +165,7 @@ sub Checkout()
 		$session->checkout("mozilla/lib/mac/NSStdLib") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MoreFiles") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSRuntime") || die "checkout failure";
+		$session->checkout("mozilla/lib/mac/Misc") || die "checkout failure";
 	}
 }
 
