@@ -24,7 +24,6 @@
  *     Ben Bucksch <mozilla@bucksch.org>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  *     Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
- *
  */
 
 /**
@@ -282,7 +281,7 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
   {
     mCacheLine = PR_TRUE;
   }
-    
+
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows/mail
@@ -495,10 +494,9 @@ PRBool nsHTMLToTXTSinkStream::DoOutput()
 
     
 /**
-  * This method is used to a general container. 
+  * This method is used to open a general container. 
   * This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
   *
-  * @update 07/12/98 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
@@ -598,6 +596,27 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_p || type == eHTMLTag_pre)
     EnsureVerticalSpace(1); // Should this be 0 in unformatted case?
+
+  else if (type == eHTMLTag_td || type == eHTMLTag_th)
+  {
+    // We must make sure that the content of two table cells get a
+    // space between them.
+    
+    // Fow now, I will only add a SPACE. Could be a TAB or something
+    // else but I'm not sure everything can handle the TAB so SPACE
+    // seems like a better solution.
+    if(!mInWhitespace) {
+      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
+      if(mCacheLine) {
+        AddToLine(NS_ConvertToString(" ").GetUnicode(), 1);
+      } else {
+        nsAutoString space(NS_ConvertToString(" "));
+        WriteSimple(space);
+      }
+      mInWhitespace = PR_TRUE;
+    }
+  }
+
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
   else if (IsBlockLevel(type))
@@ -677,28 +696,10 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     EnsureVerticalSpace(1);
   else if (type == eHTMLTag_dd)
     mIndent += gIndentSizeDD;
-  else if (type == eHTMLTag_td || type == eHTMLTag_th)
-  {
-    // We must make sure that the content of two table cells get a
-    // space between them.
-    
-    // Fow now, I will only add a SPACE. Could be a TAB or something
-    // else but I'm not sure everything can handle the TAB so SPACE
-    // seems like a better solution.
-    if(!mInWhitespace) {
-      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
-      if(mCacheLine) {
-        AddToLine(NS_ConvertToString(" ").GetUnicode(), 1);
-      } else {
-        nsAutoString space(NS_ConvertToString(" "));
-        WriteSimple(space);
-      }
-      mInWhitespace = PR_TRUE;
-    }
-  }
   else if (type == eHTMLTag_blockquote)
   {
-    EnsureVerticalSpace(0);
+    EnsureVerticalSpace(1);
+
     // Find out whether it's a type=cite, and insert "> " instead.
     // Eventually we should get the value of the pref controlling citations,
     // and handle AOL-style citations as well.
@@ -716,6 +717,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     else
       mIndent += gTabSize; // Check for some maximum value?
   }
+
   else if (type == eHTMLTag_img)
   {
     /* Output (in decreasing order of preference)
@@ -752,6 +754,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     if (!temp.IsEmpty())
       Write(temp);
   }
+
   else if (type == eHTMLTag_a && !IsConverted(aNode))
   {
     nsAutoString url;
@@ -797,31 +800,36 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     --mTagStackIndex;
 
   // End current line if we're ending a block level tag
-  if (IsBlockLevel(type)) {
-    if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {
-      // We want the output to end with a new line,
-      // but in preformatted areas like text fields,
-      // we can't emit newlines that weren't there.
-      // So add the newline only in the case of formatted output.
-      if (mFlags & nsIDocumentEncoder::OutputFormatted)
-        EnsureVerticalSpace(0);
-      else
-        FlushLine();
-    } else if ((type == eHTMLTag_tr) ||
-               (type == eHTMLTag_li) ||
-               (type == eHTMLTag_dt) ||
-               (type == eHTMLTag_dd) ||
-               (type == eHTMLTag_pre) ||
-               (type == eHTMLTag_blockquote)) {
+  if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {
+    // We want the output to end with a new line,
+    // but in preformatted areas like text fields,
+    // we can't emit newlines that weren't there.
+    // So add the newline only in the case of formatted output.
+    if (mFlags & nsIDocumentEncoder::OutputFormatted)
       EnsureVerticalSpace(0);
-    } else if (type != eHTMLTag_script) {
-      // All other blocks get 1 vertical space after them
-      // in formatted mode, otherwise 0.
-      // This is hard. Sometimes 0 is a better number, but
-      // how to know?
-      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted)
-                          ? 1 : 0);
-    }
+    else
+      FlushLine();
+    // We won't want to do anything with these in formatted mode either,
+    // so just return now:
+    return NS_OK;
+  } else if ((type == eHTMLTag_tr) ||
+             (type == eHTMLTag_li) ||
+             (type == eHTMLTag_pre) ||
+             (type == eHTMLTag_dd) ||
+             (type == eHTMLTag_dt)) {
+    // Items that should always end a line, but get no more whitespace
+    EnsureVerticalSpace(0);
+  } else if (IsBlockLevel(type)
+             && type != eHTMLTag_blockquote
+             && type != eHTMLTag_script
+             && type != eHTMLTag_markupDecl)
+  {
+    // All other blocks get 1 vertical space after them
+    // in formatted mode, otherwise 0.
+    // This is hard. Sometimes 0 is a better number, but
+    // how to know?
+    EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted)
+                        ? 1 : 0);
   }
 
   // The rest of this routine is formatted output stuff,
@@ -859,7 +867,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_blockquote)
   {
-    FlushLine();
+    FlushLine();    // Is this needed?
+
     nsString value;
     nsresult rv = GetValueOfAttribute(aNode, "type", value);
     if ( NS_SUCCEEDED(rv) )
@@ -869,6 +878,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       mCiteQuoteLevel--;
     else
       mIndent -= gTabSize;
+
+    EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_a && !IsConverted(aNode) && !mURL.IsEmpty())
   {
@@ -1014,7 +1025,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
 }
 
 void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
-{  
+{
   if (mBufferSize < aNewSize)
   {
     nsMemory::Free(mBuffer);
@@ -1259,9 +1270,10 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         mCurrentLine.Truncate();
         // Space stuff new line?
         if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-          if((restOfLine[0] == '>') ||
-             (restOfLine[0] == ' ') ||
-             (!restOfLine.CompareWithConversion("From ",PR_FALSE,5))) {
+          if((restOfLine.Length()>0) &&
+             ((restOfLine[0] == '>') ||
+              (restOfLine[0] == ' ') ||
+              (!restOfLine.CompareWithConversion("From ",PR_FALSE,5)))) {
             // Space stuffing a la RFC 2646 (format=flowed).
             mCurrentLine.AppendWithConversion(' ');
           }
@@ -1292,8 +1304,10 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     }
     WriteQuotesAndIndent();
     // Remove SPACE from the end of the line.
-    while(' ' == mCurrentLine[mCurrentLine.Length()-1])
-      mCurrentLine.SetLength(mCurrentLine.Length()-1);
+    PRUint32 linelength = mCurrentLine.Length();
+    while(linelength > 0 &&
+          ' ' == mCurrentLine[--linelength])
+      mCurrentLine.SetLength(linelength);
     if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
       // Add the soft part of the soft linebreak (RFC 2646 4.1)
       mCurrentLine.AppendWithConversion(' ');
