@@ -1,69 +1,138 @@
 #!/usr/bin/perl
 
+# List of chrome files and directories that the embedding manifest will be
+# generated from.
+#
+# Format is:
+#
+# "<destination path in jar>", "<source path relative to the base chrome dir>"
+#
+# Use XXXX if a file or directory is locale specific.
+
+%embed_files = ();
+
+#################################################################
+# Rest of program
+
 use Getopt::Long;
 use File::stat;
 
 # Configuration
 $win32 = ($^O eq "MSWin32") ? 1 : 0; # ActiveState Perl
 if ($win32) {
-  print ("This may not work on Win32!\n");
   $moz = "$ENV{'MOZ_SRC'}/mozilla";
+  if ($ENV{'MOZ_DEBUG'}) {
+    $chrome = "$moz/dist/WIN32_D.OBJ/Embed/tmpchrome";
+  }
+  else
+  {
+    $chrome = "$moz/dist/WIN32_O.OBJ/Embed/tmpchrome";
+  }
 }
 else {
   $moz = "~/mozilla";
+  $chrome = "$moz/dist/Embed/tmpchrome";
 }
 
-$chrome = "$moz/dist/Embed/tmpchrome";
+$verbose = 0;
 $locale = "en-US";
 
-GetOptions('mozpath=s' => \$moz,
+GetOptions('verbose!' => \$verbose,
+           'mozpath=s' => \$moz,
+           'manifest=s' => \$manifest,
 	   'chrome=s' => \$chrome,
 	   'locale=s' => \$locale,
            'help' => \$showhelp);
 
+if ($win32) {
+  # Fix those pesky backslashes
+  $moz =~ s/\\/\//g;
+  $chrome =~ s/\\/\//g;
+}
+
 if ($showhelp) {
-  print STDERR "Embedding manifest generator\n",
+  print STDERR "Embedding manifest generator.\n",
                "Usage:\n",
                "  -help            Show this help.\n",
+               "  -manifest <file> Specify the input manifest.\n",
                "  -mozpath <path>  Specify the path to Mozilla.\n",
                "  -chrome <path>   Specify the path to the chrome.\n",
-               "  -locale <value>  Specify the locale to use. (e.g. en-US)\n";
+               "  -locale <value>  Specify the locale to use. (e.g. en-US)\n",
+               "  -verbose         Print extra information\n";
   exit 1;
 }
 
-%embed_files = (
-  "content/global/", "toolkit/content/global/",
-  "skin/clasic/global/", "classic/skin/classic/global/",
-  "skin/classic/communicator/contents.rdf", "classic/skin/classic/communicator/contents.rdf",
-  "skin/classic/communicator/dialogOverlay.css", "classic/skin/classic/communicator/dialogOverlay.css",
-  "skin/classic/communicator/smallheader-bg.gif", "classic/skin/classic/communicator/smallheader-bg.gif",
-  # Locale stuff
-  "locale/$locale/global/", "$locale/local/$locale/global/",
-  "locale/$locale/necko/contents.rdf", "$locale/locale/$locale/necko/contents.rdf",
-  "locale/$locale/necko/necko.properties", "$locale/locale/$locale/necko/necko.properties",
-  "locale/$locale/necko/redirect_loop.dtd", "$locale/locale/$locale/necko/redirect_loop.dtd",
-  "locale/$locale/communicator/contents.rdf", "$locale/locale/$locale/communicator/contents.rdf",
-  "locale/$locale/communicator/security.properties", "$locale/locale/$locale/communicator/security.properties",
-  "locale/$locale/navigator-platform/", "en-unix/locale/$locale/navigator-platform/",
-  "locale/$locale/global-platform/", "en-unix/locale/$locale/global-platform/",
-  # Help stuff
-  "content/help/", "help/content/help/",
-  "skin/classic/communicator/help.css", "classic/skin/classic/communicator/help.css",
-);
+if ($manifest eq "") {
+  die("Error: No input manifest file was specified.\n");
+}
 
-dump_manifest();
+if ($verbose) {
+  print STDERR "Mozilla path  = \"$moz\"\n",
+               "Chrome path   = \"$chrome\"\n",
+               "Manifest file = \"$manifest\"\n";
+}
 
-sub dump_manifest() {
+parse_input_manifest();
+dump_output_manifest();
+
+exit 0;
+
+sub parse_input_manifest() {
+
+  print STDERR "Parsing \"$manifest\"\n" unless !$verbose;
+
+  open(MANIFEST, "<$manifest") or die ("Error: Cannot open manifest \"$manifest\".\n");
+  while(<MANIFEST>) {
+    chomp;
+    s/^\s+//;
+
+    # Skip comments
+    next if ($_[0] eq "#");
+
+    # Read key & data
+    ($key, $value) = split(/,/, $_);
+    
+    # Strip out whitespace and brackets
+    for ($key) {
+        s/^\s+//;
+        s/\s+$//;
+    }
+    for ($value) {
+        s/^\s+//;
+        s/\s+$//;
+    }
+    $embed_files{$key} = $value;
+  }
+}
+
+sub dump_output_manifest() {
   print "embed.jar:\n";
   while (($key, $value) = each %embed_files) {
+
+    $key =~ s/XXXX/$locale/g;
+    $value =~ s/XXXX/$locale/g;
+
     # Run ls on the dir/file to ensure it's there and to get a file list back
-    open (FILES, "ls -1 $chrome/$value 2>/dev/null |") or die("Cannot list \"$value\"\n");
+    $ls_path = "$chrome/$value";
+    $is_dir = (-d $ls_path) ? 1 : 0;
+    $is_file = (-f $ls_path) ? 1 : 0;
+
+    print STDERR "Listing $ls_path\n" unless !$verbose;
+
+    if (!$is_dir && !$is_file) {
+      print STDERR "Warning: File or directory \"$ls_path\" does not exist.\n";
+      next;
+    }
+
+    if (!open(FILES, "ls -1 $ls_path |")) {
+      print STDERR "Warning: Cannot run ls on contents of \"$ls_path\".\n";
+      next;
+    }
     while (<FILES>) {
       chomp;
-      # If the value ends in a '/' it's a whole dir
-      if (substr($value, $#value) eq '/') {
-	$chrome_file = "$key$_";
-	$real_file = "$value$_";
+      if ($is_dir) {
+	$chrome_file = "$key/$_";
+	$real_file = "$value/$_";
       }
       else {
 	$chrome_file = $key;
@@ -76,4 +145,3 @@ sub dump_manifest() {
     }
   }
 }
-
