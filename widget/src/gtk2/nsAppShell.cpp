@@ -112,8 +112,6 @@ nsAppShell::Create(int *argc, char **argv)
 
     // XXX add all of the command line handling
 
-    gtk_init(argc, &argv);
-
 #ifdef ACCESSIBILITY
     nsAccessibilityInterface::Init();
 #endif
