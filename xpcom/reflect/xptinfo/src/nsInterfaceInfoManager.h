@@ -36,7 +36,7 @@
 
 class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 {
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     // nsIInformationInfo management services
     NS_IMETHOD GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** info);

@@ -34,7 +34,7 @@
 
 class nsInterfaceInfo : public nsIInterfaceInfo
 {
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD GetName(char** name); // returns IAllocatator alloc'd copy
     NS_IMETHOD GetIID(nsIID** iid);  // returns IAllocatator alloc'd copy
