@@ -44,6 +44,7 @@ CSRCS		= \
 
 CPPSRCS		= \
 		nsAutoLock.cpp \
+		nsEnvironment.cpp \
 		nsEventQueue.cpp \
 		nsEventQueueService.cpp \
 		nsThread.cpp \
@@ -68,6 +69,7 @@ XPIDLSRCS	= \
 		nsIEventTarget.idl \
 		nsIEventQueue.idl \
 		nsIEventQueueService.idl \
+		nsIEnvironment.idl \
 		nsIProcess.idl \
 		$(NULL)
 

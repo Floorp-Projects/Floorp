@@ -79,6 +79,7 @@
 
 #include "nsThread.h"
 #include "nsProcess.h"
+#include "nsEnvironment.h"
 
 #include "nsEmptyEnumerator.h"
 
@@ -128,6 +129,8 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEventQueueServiceImpl, Init)
+
+#define NS_ENVIRONMENT_CLASSNAME "Environment Service"
 
 #include "nsXPCOM.h"
 // ds/nsISupportsPrimitives
@@ -341,6 +344,7 @@ static const nsModuleComponentInfo components[] = {
 #define NS_DIRECTORY_SERVICE_CLASSNAME  "nsIFile Directory Service"
     COMPONENT(DIRECTORY_SERVICE, nsDirectoryService::Create),
     COMPONENT(PROCESS, nsProcessConstructor),
+    COMPONENT(ENVIRONMENT, nsEnvironment::Create),
 
     COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor),
     COMPONENT(MULTIPLEXINPUTSTREAM, nsMultiplexInputStreamConstructor),
