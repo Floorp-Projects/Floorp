@@ -90,6 +90,8 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   NS_ADDREF(aTransaction);
 
+  // XXX: POSSIBLE OPTIMIZATION
+  //      We could use a factory that pre-allocates/recycles transaction items.
   tx = new nsTransactionItem(aTransaction);
 
   if (!tx) {
