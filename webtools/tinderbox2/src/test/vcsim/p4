@@ -2,13 +2,14 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# p4 - simulate the output of the command:
+# p4 - simulate the output of the sequence of commands:
+# 		p4 changes -s submitted  @2003/05/11,@now
 #		p4 describe -s 567 568 569
 # So that I can debug tinderbox on machines where this
 # program is not installed.
 
-# $Revision: 1.1 $ 
-# $Date: 2003/05/12 13:51:20 $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/05/12 16:05:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/p4,v $ 
 # $Name:  $ 
@@ -41,7 +42,18 @@
 
 use Time::Local;
 use Getopt::Long;
+use Data::Dumper;
 
+# Load the tinderbox specific libraries
+use lib '#tinder_libdir#';
+
+use TinderConfig;
+use Utils;
+use HTMLPopUp;
+use Persistence;
+
+
+$STATE_FILE = '/tmp/p4sim_statefile.txt';
 
 # the list of types which can appear with a file update
 
@@ -287,6 +299,22 @@ sub time2perforceFormat {
   return $date_str;
 }
 
+sub perforce_date_str2time {      
+    my ($perforce_date_str) = @_;
+    
+    my ($year, $mon, $mday,) = split('/', $perforce_date_str);
+    my ($hour, $min, $sec) = 0;
+
+    # The perl conventions for these variables is 0 origin while
+    # the "display" convention for these variables is 1 origin.
+    
+    $mon--;
+    
+    my ($time) = timelocal($sec,$min,$hour,$mday,$mon,$year);    
+    
+    return $time;
+}
+
 # generate numbers which look like perforce revision numbers.
 
 sub simulate_perforce_version {
@@ -359,8 +387,15 @@ sub parse_args {
     while (scalar(@ARGV)) {
 	my $arg = shift(@ARGV);
 
-	($arg eq 'describe') &&
+	if ($arg eq 'changes') {
+            $CHANGES = 1;
 	    next;
+        }
+
+	if ($arg eq 'describe') {
+            $DESCRIBE = 1;
+	    next;
+        }
 
 	($arg eq '-s') &&
 	    (@CHANGE_NUMBERS =  @ARGV);
@@ -442,10 +477,70 @@ sub simulate_jobs{
     return ;
 }
 
-
+set_static_vars();
+get_env();
 parse_args();
 
-my $time = $DATE;
+
+# We need to associate date/times with change numbers and have these
+# be persistent between calls.  If these pairs were randomly generated
+# it would totally destroy the data structures used in VC_Perforce.
+# WE do not need to keep the same user/comments between calls.  Just
+# fudge up something which looks good to the eye.
+
+if ($CHANGES) {
+
+    my $date;
+    if ( "@CHANGE_NUMBERS" =~  m!\@(\d\d\d\d/\d\d/\d\d)\,!) {
+        $date = $1;
+        $date = perforce_date_str2time($date);
+    }
+
+    # Make date/time and Changeset pairs. Start far in the past so
+    # that current numbers are big and we test perforces ability to
+    # skip processing changeset 1.
+
+    my $time = $TIME_NOW - $main::SECONDS_PER_YEAR;
+    my $i=0;
+    my $start_here;
+    while ($time < $TIME_NOW) {
+        $i++;
+        my $next_checkin = rand (60*60*2);
+        $next_checkin =~ s/\..*//;
+
+        if ( 
+             ($time >= $date)
+             && 
+             (!($start_here))
+             ) {
+            $start_here = $i;
+            $start_here--;
+        }
+
+        $time += $next_checkin;
+        $CHANGE_NUMS[$i] = $time;
+    }
+
+    # now print the output.
+
+    foreach $i ($start_here .. $#CHANGE_NUMS) {
+        my ($day, $time)= time2perforceFormat($CHANGE_NUMS[$i]);
+        my $author = pickone(@AUTHORS);
+        print "Change $i on $day by $author ".
+            "'some generic truncated comment'\n";
+    }
+
+    
+#    Persistence::save_structure( 
+#                                 \@CHANGE_NUMS,
+#                                 $STATE_FILE,
+#                                 );
+
+#  my ($record) = Persistence::load_structure($STATE_FILE);
+
+    exit 0;
+}
+
 
 foreach $CHANGE_NUMBER (@CHANGE_NUMBERS) {
 
@@ -455,21 +550,6 @@ foreach $CHANGE_NUMBER (@CHANGE_NUMBERS) {
     }
 
 
-
-    if (0) {
-	
-	if( $CHANGE_NUMBER == 1 ) {
-	}
-	
-	while ($time < $TIME_NOW) {
-	    
-	    my $next_checkin = rand (60*60*2);
-	    $next_checkin =~ s/\..*//;
-	    
-	    $time += $next_checkin;
-	    
-	}
-    }
 
 
     my $num = rand 10;
@@ -488,7 +568,8 @@ foreach $CHANGE_NUMBER (@CHANGE_NUMBERS) {
     
     print "Change $CHANGE_NUMBER by $author on $date\n";
     print "\n";
-    print "$comment\n";
+    print "$comment";
+    print "\n";
     
     simulate_jobs();
     simulate_files();
@@ -497,10 +578,6 @@ foreach $CHANGE_NUMBER (@CHANGE_NUMBERS) {
 exit 0;
 
 __END__
-
-The new 'p4 logger' command tracks updates to jobs and
-            changelists, enabling external scripting to export such
-            changes.  See 'p4 help logger' for more info.
 
 
 -------------------------------------------------
