@@ -108,7 +108,13 @@ nsProxyAutoConfig.prototype = {
         var mypac = pacUtils + pac;
         // evaluate loded js file
         evalInSandbox(mypac, ProxySandBox, pacURL);
-        ProxySandBox.myIP = dns.myIPAddress;
+        try {
+            ProxySandBox.myIP = dns.myIPAddress;
+        } catch (e) {
+            // Well, theres nothing better.
+            // see bugs 80363 and 92516.
+            ProxySandBox.myIP = "127.0.0.1";
+        }
         LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
     },
 
