@@ -139,5 +139,5 @@ private:
 #define NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2          NS_MSG_GENERATE_FAILURE(12569)
 
 #define NS_MSG_ERROR_ATTACHING_FILE                 NS_MSG_GENERATE_FAILURE(12570)
-
+#define NS_MSG_ERROR_DOING_FCC                      NS_MSG_GENERATE_FAILURE(12571)
 #endif /* _nsMsgComposeStringBundle_H_ */

@@ -3895,6 +3895,16 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
   nsCOMPtr<nsIPrompt> prompt;
   GetDefaultPrompt(getter_AddRefs(prompt));
 
+  if (NS_FAILED(aStatus))
+  {
+    PRBool retry = PR_FALSE;
+    nsMsgAskBooleanQuestionByID(prompt, NS_MSG_ERROR_DOING_FCC, &retry, nsnull /* what title */);
+    if (retry)
+    {
+      return DoFcc();
+    }
+
+  }
   // Ok, now to support a second copy operation, we need to figure
   // out which copy request just finished. If the user has requested
   // a second copy operation, then we need to fire that off, but if they
