@@ -455,13 +455,13 @@ nsJSChannel::Cancel(nsresult aStatus)
 NS_IMETHODIMP
 nsJSChannel::Suspend()
 {
-    return NS_OK;
+    return mStreamChannel->Suspend();
 }
 
 NS_IMETHODIMP
 nsJSChannel::Resume()
 {
-    return NS_OK;
+    return mStreamChannel->Resume();
 }
 
 //
