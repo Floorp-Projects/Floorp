@@ -23,6 +23,12 @@
 use strict;
 use diagnostics;
 
+
+# a few configurables
+#
+my $despotOwnerMailTo = "mailto:dmose\@mozilla.org";
+my $despotOwner = "dmose";
+
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
@@ -34,6 +40,9 @@ sub sillyness {
     $zz = $F::newpassword2;
     $zz = $F::files;
     $zz = $F::partition;
+    $zz = $F::doclinks;
+    $zz = $F::file;
+    $zz = $F::newsgroups;
 }
 
 
@@ -66,7 +75,7 @@ print start_html(-Title=>"Despot -- configure mozilla users$extra",
 
 if (!param()) {
     print h1("Despot -- access control for mozilla.org.");
-    if ($ENV{"HTTPS"} ne "ON") {
+    if (!exists $ENV{"HTTPS"} || $ENV{"HTTPS"} ne "ON") {
         my $fixedurl = "https://$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}";
         print b("<font color=red>If possible, please use the " .
                 a({href=>$fixedurl}, "secure version of this form") .
@@ -86,7 +95,7 @@ if (!param()) {
     print submit(-name=>"Log in");
     print hr();
     print p("If you think you should be able to use this system, but you haven't been issued a login, please send mail to " .
-            a({href=>"mailto:dmose\@mozilla.org"}, "dmose") . ".");
+            a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
 #     print p("If you do not yet have a mozilla.org account, or you have one " .
 #             "but have forgotten your password, please fill in your e-mail " .
 #             "address above, and click <nobr>here: " .
@@ -165,7 +174,7 @@ if ($row[0]) {
     print "<PRE>";
     if (!open(DOSYNC, "./syncit.pl -user $F::loginname|")) {
         print p("Can't do sync (error $?).  Please send mail to " .
-                a({href=>"mailto:terry\@mozilla.org"}, "terry") . ".");
+                a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
     } else {
         while (<DOSYNC>) {
             if ($::despot) {
