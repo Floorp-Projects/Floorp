@@ -187,7 +187,7 @@ function InitDialog()
   gDialog.imagetbInput.value = globalElement.getAttribute("vspace");
 
   // dialog.border.value       = globalElement.getAttribute("border");
-  bv = GetHTMLOrCSSStyleValue(globalElement, "border", "border-top-width");
+  var bv = GetHTMLOrCSSStyleValue(globalElement, "border", "border-top-width");
   var pxIndex = bv.search(/px/);
   if (pxIndex  > 0)
   {
