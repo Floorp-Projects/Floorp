@@ -224,7 +224,8 @@ function pasteFromClipboard()
                calendarEventArray[i].start.setTime( startDate );
                calendarEventArray[i].end.setTime( endDateTime );
             }
-            addEventsToCalendar( calendarEventArray );
+	    // LINAGORA (We don't want to have to edit the event again)
+            addEventsToCalendar( calendarEventArray, 1 );
             break;
 	 case "text/unicode":
             if ( data.indexOf("BEGIN:VEVENT") == -1 )
@@ -250,7 +251,8 @@ function pasteFromClipboard()
                   calendarEventArray[i].end.setTime( endDateTime );
                }
                
-               addEventsToCalendar( calendarEventArray );
+               // LINAGORA (We don't want to have to edit the event again)
+               addEventsToCalendar( calendarEventArray, 1 );
             }
             break;            
 	 default: 

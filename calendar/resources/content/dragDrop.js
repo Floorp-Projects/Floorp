@@ -250,7 +250,9 @@ var calendarViewDNDObserver = {
                calendarEvent.start.setTime(gDropzoneStartTime.getTime() );
                calendarEvent.end.setTime ( calendarEvent.start.getTime() + eventDuration );
 
-               gICalLib.modifyEvent( calendarEvent );
+               // LINAGORA: Needed to update remote calendar
+               modifyEventDialogResponse( calendarEvent, calendarEvent.parent.server );
+               // gICalLib.modifyEvent( calendarEvent );
             } 
             else
                alert(" Event with id: " + dropEvent.id + " not found");
@@ -373,8 +375,8 @@ var calendarViewDNDObserver = {
             var fileObj = dataObj.value.QueryInterface(Components.interfaces.nsIFile);
             var aDataStream = readDataFromFile( fileObj.path );
             var calendarEventArray = parseIcalData( aDataStream );
-            // TODO Move to calendarImportExport to have the option to turn off dialogs
-            addEventsToCalendar( calendarEventArray );
+            // LINAGORA (- TODO Move to calendarImportExport to have the option to turn off dialogs)
+            addEventsToCalendar( calendarEventArray, 1 );
          }
          catch(ex) {
             alert(ex.message);

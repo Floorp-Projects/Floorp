@@ -1056,7 +1056,9 @@ var monthViewEventDragAndDropObserver  = {
             eventToCopy.recurWeekdays = eventToCopy.recurWeekdays << Difference;
           }
         
-        gICalLib.addEvent( eventToCopy, gEventBeingDragged.parent.server );  
+        // LINAGORA: Needed to update remote calendar
+        addEventDialogResponse( eventToCopy, gEventBeingDragged.parent.server );
+        //gICalLib.addEvent( eventToCopy, gEventBeingDragged.parent.server );  
     }
     else
     {
@@ -1067,7 +1069,9 @@ var monthViewEventDragAndDropObserver  = {
       {
         gEventBeingDragged.recurWeekdays = gEventBeingDragged.recurWeekdays << Difference;
       }
-      gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
+      // LINAGORA: Needed to update remote calendar
+      modifyEventDialogResponse( gEventBeingDragged, gEventBeingDragged.parent.server );
+      //gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
     }
   }
 };

@@ -264,7 +264,9 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
                ServerName = gCalendarWindow.calendarManager.getDefaultServer();
             }
          }
-         gICalLib.addEvent( calendarEvent, ServerName );
+         // LINAGORA (We need to see the new added event in the window and to update remote cal)
+         addEventDialogResponse( calendarEvent, ServerName );
+         /* gICalLib.addEvent( calendarEvent, ServerName ); */
       }
       else
          editNewEvent( calendarEvent );
