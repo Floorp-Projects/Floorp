@@ -17,6 +17,7 @@
  */
 
 #include "nsRepository.h"
+#include "nsITimer.h"
 #include "nsNetService.h"
 #include "nsNetStream.h"
 #include "net.h"
@@ -36,6 +37,9 @@ extern "C" {
 #include "nsINetContainerApplication.h"
 
 /* XXX: Legacy definitions... */
+// Global count of active urls from mkgeturl.c
+extern "C" int NET_TotalNumberOfProcessingURLs;
+
 MWContext *new_stub_context(URL_Struct *URL_s);
 void free_stub_context(MWContext *window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
@@ -118,7 +122,8 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
                                            NULL,
                                            NET_ChunkedDecoderStream);
 
-   
+    mPollingTimer = nsnull;
+    
     RL_Init();
     
     mContainer = aContainerApp;
@@ -174,7 +179,8 @@ nsNetlibService::~nsNetlibService()
         m_stubContext = NULL;
       }
     */
-    
+   
+    NS_IF_RELEASE(mPollingTimer);
     NS_IF_RELEASE(mContainer);
     NET_ShutdownNetLib();
 }
@@ -249,6 +255,11 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
     /* Remember, the URL_s may have been freed ! */
 
+    /* 
+     * Start the network timer to call NET_PollSockets(...) until the
+     * URL has been completely loaded...
+     */
+    SchedulePollingTimer();
     return NS_OK;
 }
 
@@ -341,6 +352,12 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
                     bam_exit_routine);          /* Exit routine... */
 
         /* Remember, the URL_s may have been freed ! */
+
+        /* 
+         * Start the network timer to call NET_PollSockets(...) until the
+         * URL has been completely loaded...
+         */
+        SchedulePollingTimer();
 
         *aNewStream = pBlockingStream;
         return NS_OK;
@@ -439,6 +456,46 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     free_stub_context(stubContext);
     return NS_OK;
 }
+
+
+void nsNetlibService::SchedulePollingTimer()
+{
+    // If a timer is already active, then do not create another...
+    if (nsnull == mPollingTimer) {
+        if (NS_OK == NS_NewTimer(&mPollingTimer)) {
+            mPollingTimer->Init(nsNetlibService::NetPollSocketsCallback, this, 1000 / 50);
+        }
+    }
+}
+
+
+void nsNetlibService::CleanupPollingTimer(nsITimer* aTimer) 
+{
+    NS_PRECONDITION((aTimer == mPollingTimer), "Unknown Timer...");
+
+    NS_RELEASE(mPollingTimer);
+}
+
+
+void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
+{
+    nsNetlibService* inet = (nsNetlibService*)aClosure;
+
+    NS_PRECONDITION((nsnull != inet), "Null pointer");
+    if (nsnull != inet) {
+        (void) NET_PollSockets();
+
+        inet->CleanupPollingTimer(aTimer);
+        // Keep scheduling callbacks as long as there are URLs to process...
+        if (0 < NET_TotalNumberOfProcessingURLs) {
+            inet->SchedulePollingTimer();
+        }
+    }
+}
+
+
+
+
 
 extern "C" {
 
