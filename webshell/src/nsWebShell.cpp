@@ -1175,7 +1175,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
 
   rv = mDocLoader->LoadDocument(urlSpec,       // URL string
-                                nsnull,         // Command
+                                "View",         // Command
                                 this,           // Container
                                 aPostData,      // Post Data
                                 nsnull,         // Extra Info...
@@ -1279,7 +1279,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     }
 
     rv = mDocLoader->LoadDocument(urlSpec,        // URL string
-                                  nsnull,         // Command
+                                  "View",         // Command
                                   this,           // Container
                                   nsnull,         // Post Data
                                   nsnull,         // Extra Info...
