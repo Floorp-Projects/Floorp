@@ -21,6 +21,20 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 
+// CellData 
+
+CellData::CellData()
+{
+  mOrigCell    = nsnull;
+  mRowSpanData = nsnull;
+  mColSpanData = nsnull;
+}
+
+CellData::~CellData()
+{}
+
+// nsCellMap
+
 nsCellMap::nsCellMap(int aRowCount, int aColCount)
   : mRowCount(0),
     mNumCollapsedRows(0),
@@ -248,10 +262,10 @@ void nsCellMap::Dump() const
           nsTableCellFrame* cell = nsnull;
           int rr, cc;
           if (cd->mRowSpanData) {
-            nsTableCellFrame* cell = cd->mRowSpanData->mOrigCell;
-            nsTableRowFrame* row;
-            cell->GetParent((nsIFrame**)&row);
-            rr = row->GetRowIndex();
+            cell = cd->mRowSpanData->mOrigCell;
+            nsTableRowFrame* rowFrame;
+            cell->GetParent((nsIFrame**)&rowFrame);
+            rr = rowFrame->GetRowIndex();
             cell->GetColIndex(cc);
             printf("r%d,%d  ", rr, cc);
           }

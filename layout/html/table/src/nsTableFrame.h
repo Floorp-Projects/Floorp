@@ -47,11 +47,14 @@ struct nsStyleSpacing;
 #define NS_TABLE_FRAME_COLGROUP_LIST_INDEX 0
 #define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_COLGROUP_LIST_INDEX
 
-static PRBool DEBUG_REFLOW_TABLE  = PR_FALSE;
-static PRBool DEBUG_REFLOW_ROWGRP = PR_FALSE;
-static PRBool DEBUG_REFLOW_ROW    = PR_FALSE;
-static PRBool DEBUG_REFLOW_CELL   = PR_FALSE;
-static PRBool DEBUG_REFLOW_AREA   = PR_FALSE;
+struct nsDebugTable
+{
+  static PRBool gRflTable;
+  static PRBool gRflRowGrp;
+  static PRBool gRflRow;
+  static PRBool gRflCell;
+  static PRBool gRflArea;
+};
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)

@@ -59,19 +59,19 @@ static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
 
 static const PRInt32 kColumnWidthIncrement=100;
 
-/* ----------- CellData ---------- */
-
-/* CellData is the info stored in the cell map */
-CellData::CellData()
-{
-  mOrigCell    = nsnull;
-  mRowSpanData = nsnull;
-  mColSpanData = nsnull;
-}
-
-CellData::~CellData()
-{}
-
+#if 1
+PRBool nsDebugTable::gRflTable   = PR_FALSE;
+PRBool nsDebugTable::gRflRowGrp  = PR_FALSE;
+PRBool nsDebugTable::gRflRow     = PR_FALSE;
+PRBool nsDebugTable::gRflCell    = PR_FALSE;
+PRBool nsDebugTable::gRflArea    = PR_FALSE;
+#else
+PRBool nsDebugTable::gRflTable   = PR_TRUE;
+PRBool nsDebugTable::gRflRowGrp  = PR_TRUE;
+PRBool nsDebugTable::gRflRow     = PR_TRUE;
+PRBool nsDebugTable::gRflCell    = PR_TRUE;
+PRBool nsDebugTable::gRflArea    = PR_TRUE;
+#endif
 /* ----------- InnerTableReflowState ---------- */
 
 struct InnerTableReflowState {
@@ -2010,7 +2010,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
-  if (DEBUG_REFLOW_TABLE) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
+  if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -2122,7 +2122,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     Invalidate(damageRect);
   }
 
-  if (DEBUG_REFLOW_TABLE) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
 
@@ -5334,11 +5334,11 @@ void nsTableFrame::DebugGetIndent(const nsIFrame* aFrame,
   while (parent) {
     nsIAtom* frameType = nsnull;
     parent->GetFrameType(&frameType);
-    if ((DEBUG_REFLOW_TABLE  && (nsLayoutAtoms::tableFrame         == frameType)) ||
-        (DEBUG_REFLOW_ROWGRP && (nsLayoutAtoms::tableRowGroupFrame == frameType)) ||
-        (DEBUG_REFLOW_ROW    && (nsLayoutAtoms::tableRowFrame      == frameType)) ||
-        (DEBUG_REFLOW_CELL   && (nsLayoutAtoms::tableCellFrame     == frameType)) ||
-        (DEBUG_REFLOW_AREA   && (nsLayoutAtoms::areaFrame          == frameType))) {
+    if ((nsDebugTable::gRflTable  && (nsLayoutAtoms::tableFrame         == frameType)) ||
+        (nsDebugTable::gRflRowGrp && (nsLayoutAtoms::tableRowGroupFrame == frameType)) ||
+        (nsDebugTable::gRflRow    && (nsLayoutAtoms::tableRowFrame      == frameType)) ||
+        (nsDebugTable::gRflCell   && (nsLayoutAtoms::tableCellFrame     == frameType)) ||
+        (nsDebugTable::gRflArea   && (nsLayoutAtoms::areaFrame          == frameType))) {
       numLevels++;
     }
     NS_IF_RELEASE(frameType);

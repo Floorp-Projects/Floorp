@@ -496,7 +496,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
 {
-  if (DEBUG_REFLOW_CELL) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
+  if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
 
   nsresult rv = NS_OK;
   // this should probably be cached somewhere
@@ -564,7 +564,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
         aReflowState.reflowCommand->GetType(type);
         if (nsIReflowCommand::StyleChanged==type)
         {
-          nsresult rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
+          rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
           aStatus = NS_FRAME_COMPLETE;
           return rv;
         }
@@ -588,9 +588,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
 
-  if (DEBUG_REFLOW_AREA) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
+  if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
-  if (DEBUG_REFLOW_AREA) nsTableFrame::DebugReflow("Area::Rfl ex", firstKid, nsnull, &kidSize);
+  if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl ex", firstKid, nsnull, &kidSize);
 
 #ifdef NS_DEBUG
   DebugCheckChildSize(firstKid, kidSize, availSize, (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth));
@@ -681,7 +681,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent=aDesiredSize.height;
   aDesiredSize.descent=0;
 
-  if (DEBUG_REFLOW_CELL) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
 
   return NS_OK;
 }
@@ -858,13 +858,13 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   }
 
   // if the padding is not already set, set it to the table's cellpadding
-  if (eHTMLUnit_Null == spacingData->mPadding.GetTopUnit()) 
+  if (eStyleUnit_Null == spacingData->mPadding.GetTopUnit()) 
     spacingData->mPadding.SetTop(defaultPadding);
-  if (eHTMLUnit_Null == spacingData->mPadding.GetRightUnit()) 
+  if (eStyleUnit_Null == spacingData->mPadding.GetRightUnit()) 
     spacingData->mPadding.SetRight(defaultPadding); 
-  if (eHTMLUnit_Null == spacingData->mPadding.GetBottomUnit())
+  if (eStyleUnit_Null == spacingData->mPadding.GetBottomUnit())
     spacingData->mPadding.SetBottom(defaultPadding);
-  if (eHTMLUnit_Null == spacingData->mPadding.GetLeftUnit()) 
+  if (eStyleUnit_Null == spacingData->mPadding.GetLeftUnit()) 
     spacingData->mPadding.SetLeft(defaultPadding);
 
   // get border information from the table

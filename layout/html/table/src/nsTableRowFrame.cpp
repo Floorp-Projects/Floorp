@@ -283,7 +283,6 @@ nsTableRowFrame::InitChildren()
       mInitializedChildren=PR_TRUE;
       PRInt32 rowIndex = table->GetNextAvailRowIndex();
       SetRowIndex(rowIndex);
-      PRInt32   colIndex = 0;
       for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
       {
         const nsStyleDisplay *kidDisplay;
@@ -1388,7 +1387,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
 {
-  if (DEBUG_REFLOW_ROW) nsTableFrame::DebugReflow("TR::Rfl en", this, &aReflowState, nsnull);
+  if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl en", this, &aReflowState, nsnull);
   nsresult rv = NS_OK;
 
   // Initialize 'out' parameters (aStatus set below, undefined if rv returns an error)
@@ -1444,7 +1443,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     break;
   }
 
-  if (DEBUG_REFLOW_ROW) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
 
