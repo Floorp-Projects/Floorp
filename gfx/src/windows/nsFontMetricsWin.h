@@ -55,8 +55,9 @@ public:
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength) = 0;
 #ifdef MOZ_MATHML
-  NS_IMETHOD
+  virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
+                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
@@ -90,6 +91,9 @@ public:
                    nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
+#ifdef MOZ_MATHML
+  NS_IMETHOD  GetItalicSlope(float& aResult);
+#endif
   NS_IMETHOD  GetXHeight(nscoord& aResult);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
@@ -128,7 +132,7 @@ public:
   int                 mTriedAllGenerics;
   nsCOMPtr<nsIAtom>   mLangGroup;
 
-  nscoord						  mSpaceWidth;
+  nscoord             mSpaceWidth;
 
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
@@ -174,6 +178,9 @@ protected:
   nscoord             mMaxAscent;
   nscoord             mMaxDescent;
   nscoord             mMaxAdvance;
+#ifdef MOZ_MATHML
+  float               mItalicSlope;
+#endif
   nscoord             mXHeight;
   nscoord             mSuperscriptOffset;
   nscoord             mSubscriptOffset;
@@ -213,6 +220,15 @@ public:
                            PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC, 
+                     float              aItalicSlope,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
+
   int Load(nsFontWinA* aFont);
 
   BYTE     mCharSet;
@@ -228,6 +244,15 @@ public:
                            PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC, 
+                     float              aItalicSlope,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
+
   int GetSubsets(HDC aDC);
 
   LOGFONT        mLogFont;

@@ -1950,7 +1950,7 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
   aBoundingMetrics.Clear();
   if (!mFontMetrics)
     return NS_ERROR_FAILURE;
-  else if (0 < aLength) {
+  else if (aString && 0 < aLength) {
     SetupFontAndColor();
 
     // set glyph transform matrix to identity
@@ -1962,12 +1962,14 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
     mat2.eM11 = mat2.eM22 = one; 
   
     // measure the string
+    nscoord descent;
     GLYPHMETRICS gm;
     DWORD len = GetGlyphOutline(mDC, aString[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
     else {
+      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
@@ -1983,10 +1985,11 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
           return NS_ERROR_UNEXPECTED;
         }
         else {
+          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-          if (aBoundingMetrics.descent > nscoord(gm.gmptGlyphOrigin.y - gm.gmBlackBoxY))
-            aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+          if (aBoundingMetrics.descent > descent)
+            aBoundingMetrics.descent = descent;
         }
       }
       // get the final rightBearing and width. Possible kerning is taken into account.
@@ -1995,6 +1998,35 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
       aBoundingMetrics.width = size.cx;
       aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
     }
+
+    // italic correction
+    float aItalicSlope;
+    mFontMetrics->GetItalicSlope(aItalicSlope);
+    if (aItalicSlope) {
+      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      ABC abc;
+      if (GetCharABCWidths(mDC, aString[aLength-1], aString[aLength-1], &abc)) {
+        if (abc.abcC < 0) {
+          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
+        }
+      }
+      if (GetCharABCWidths(mDC, aString[0], aString[0], &abc)) {
+        if (abc.abcA < 0) {
+          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
+        }
+      }
+    }
+
+    // convert to app units
+    aBoundingMetrics.leftBearing = NSToCoordRound(float(aBoundingMetrics.leftBearing) * mP2T);
+    aBoundingMetrics.rightBearing = NSToCoordRound(float(aBoundingMetrics.rightBearing) * mP2T);
+    aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
+    aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
+    aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
+    aBoundingMetrics.subItalicCorrection = NSToCoordRound(float(aBoundingMetrics.subItalicCorrection) * mP2T);
+    aBoundingMetrics.supItalicCorrection = NSToCoordRound(float(aBoundingMetrics.supItalicCorrection) * mP2T);
+    aBoundingMetrics.leftItalicCorrection = NSToCoordRound(float(aBoundingMetrics.leftItalicCorrection) * mP2T);
+
   }
   return NS_OK;
 }
@@ -2010,11 +2042,14 @@ nsRenderingContextWin::GetBoundingMetrics(const PRUnichar*   aString,
   aBoundingMetrics.Clear();
   if (!mFontMetrics)
     return NS_ERROR_FAILURE;
-  else if (0 < aLength) {
+  else if (aString && 0 < aLength) {
     nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
     nsFontWin* prevFont = nsnull;
 
     SetupFontAndColor();
+
+    float italicSlope;
+    mFontMetrics->GetItalicSlope(italicSlope);
 
     nsBoundingMetrics rawbm;
     PRBool firstTime = PR_TRUE;
@@ -2036,7 +2071,7 @@ FoundFont:
       // XXX avoid this test by duplicating code
       if (prevFont) {
         if (currFont != prevFont) {
-          rv = prevFont->GetBoundingMetrics(mDC, &aString[start], i - start, rawbm);
+          rv = prevFont->GetBoundingMetrics(mDC, italicSlope, &aString[start], i - start, rawbm);
           if (NS_FAILED(rv)) return rv;
           if (firstTime) {
 	    firstTime = PR_FALSE;
@@ -2056,7 +2091,7 @@ FoundFont:
     }
 
     if (prevFont) {
-      rv = prevFont->GetBoundingMetrics(mDC, &aString[start], i - start, rawbm);
+      rv = prevFont->GetBoundingMetrics(mDC, italicSlope, &aString[start], i - start, rawbm);
       if (NS_FAILED(rv)) return rv;
       if (firstTime)
         aBoundingMetrics = rawbm;
@@ -2070,6 +2105,10 @@ FoundFont:
     aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
     aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
     aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
+    aBoundingMetrics.subItalicCorrection = NSToCoordRound(float(aBoundingMetrics.subItalicCorrection) * mP2T);
+    aBoundingMetrics.supItalicCorrection = NSToCoordRound(float(aBoundingMetrics.supItalicCorrection) * mP2T);
+    aBoundingMetrics.leftItalicCorrection = NSToCoordRound(float(aBoundingMetrics.leftItalicCorrection) * mP2T);
+
   }
   if (nsnull != aFontID)
     *aFontID = 0;

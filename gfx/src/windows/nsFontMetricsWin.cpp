@@ -852,8 +852,9 @@ public:
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength);
 #ifdef MOZ_MATHML
-  NS_IMETHOD
-  GetBoundingMetrics(HDC                aDC, 
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC,
+                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
@@ -870,8 +871,9 @@ public:
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength);
 #ifdef MOZ_MATHML
-  NS_IMETHOD
-  GetBoundingMetrics(HDC                aDC, 
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC,
+                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
@@ -1720,6 +1722,11 @@ HDC   dc1 = NULL;
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
     mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
     mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
+
+#ifdef MOZ_MATHML
+    mItalicSlope = float(oMetrics.otmsCharSlopeRun)/float(oMetrics.otmsCharSlopeRise);
+    if (oMetrics.otmItalicAngle > 0) mItalicSlope = -mItalicSlope; // back-slanted font
+#endif
   }
   else {
     // Make a best-effort guess at extended metrics
@@ -1733,6 +1740,15 @@ HDC   dc1 = NULL;
     mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0f); // 50% of xHeight
     mUnderlineSize = onePixel; // XXX this is a guess
     mUnderlineOffset = -NSToCoordRound((float)metrics.tmDescent * dev2app * 0.30f); // 30% of descent
+
+#ifdef MOZ_MATHML
+    mItalicSlope = 0.0f;
+    if (0 != metrics.tmItalic) { // Italic fonts are usually slanted between 10-20 degrees.
+      // e.g. for a slant of 10 degrees, the slope is 0.176f 
+      mItalicSlope = float(metrics.tmMaxCharWidth )/float(metrics.tmHeight);
+      // XXX what about a back-slanted font
+    }
+#endif
   }
 
   mHeight = NSToCoordRound(metrics.tmHeight * dev2app);
@@ -1756,6 +1772,15 @@ HDC   dc1 = NULL;
     ::ReleaseDC(win,dc1);
   }
 }
+
+#ifdef MOZ_MATHML
+NS_IMETHODIMP
+nsFontMetricsWin :: GetItalicSlope(float& aResult)
+{
+  aResult = mItalicSlope;
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP
 nsFontMetricsWin :: GetXHeight(nscoord& aResult)
@@ -1903,14 +1928,15 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 }
 
 #ifdef MOZ_MATHML
-NS_IMETHODIMP
+nsresult
 nsFontWinUnicode::GetBoundingMetrics(HDC                aDC, 
+                                     float              aItalicSlope,
                                      const PRUnichar*   aString,
                                      PRUint32           aLength,
                                      nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (0 < aLength) {
+  if (aString && 0 < aLength) {
     HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
    
     // set glyph transform matrix to identity
@@ -1922,16 +1948,18 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
     mat2.eM11 = mat2.eM22 = one; 
    
     // measure the string
+    nscoord descent;
     GLYPHMETRICS gm;
     DWORD len = GetGlyphOutline(aDC, aString[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
     else {
+      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-      aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+      aBoundingMetrics.descent = descent;
       aBoundingMetrics.width = gm.gmCellIncX;
     }
     if (1 < aLength) {
@@ -1943,19 +1971,36 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
           return NS_ERROR_UNEXPECTED;
         }
         else {
+          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-          if (aBoundingMetrics.descent > nscoord(gm.gmptGlyphOrigin.y - gm.gmBlackBoxY))
-            aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+          if (aBoundingMetrics.descent > descent)
+            aBoundingMetrics.descent = descent;
         }
       }
       // get the final rightBearing and width. Possible kerning is taken into account.
       SIZE size;
       ::GetTextExtentPointW(aDC, aString, aLength, &size);
       aBoundingMetrics.width = size.cx;
-      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
     }
-   
+
+    // italic correction
+    if (aItalicSlope) {
+      ABC abc;
+      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      if (GetCharABCWidths(aDC, aString[aLength-1], aString[aLength-1], &abc)) {
+        if (abc.abcC < 0) {
+          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
+        }
+      }
+      if (GetCharABCWidths(aDC, aString[0], aString[0], &abc)) {
+        if (abc.abcA < 0) {
+          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
+        }
+      }
+    }
+
     ::SelectObject(aDC, oldFont);
   }
   return NS_OK;
@@ -2029,14 +2074,15 @@ nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 }
 
 #ifdef MOZ_MATHML
-NS_IMETHODIMP
+nsresult
 nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC, 
+                                        float              aItalicSlope,
                                         const PRUnichar*   aString,
                                         PRUint32           aLength,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (mConverter && 0 < aLength) {
+  if (mConverter && aString && 0 < aLength) {
     HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
 
     // set glyph transform matrix to identity
@@ -2048,16 +2094,18 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     mat2.eM11 = mat2.eM22 = one; 
 
     // measure the string
+    nscoord descent;
     GLYPHMETRICS gm;
     DWORD len = GetGlyphOutline(aDC, mConverter[aString[0]], GGO_METRICS, &gm, 0, nsnull, &mat2);
     if (GDI_ERROR == len) {
       return NS_ERROR_UNEXPECTED;
     }
     else {
+      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-      aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+      aBoundingMetrics.descent = descent;
       aBoundingMetrics.width = gm.gmCellIncX;
     }
     if (1 < aLength) {
@@ -2069,10 +2117,11 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
           return NS_ERROR_UNEXPECTED;
         }
         else {
+          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-          if (aBoundingMetrics.descent > nscoord(gm.gmptGlyphOrigin.y - gm.gmBlackBoxY))
-            aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+          if (aBoundingMetrics.descent > descent)
+            aBoundingMetrics.descent = descent;
         }
       }
       // get the final rightBearing and width. Possible kerning is taken into account.
@@ -2091,6 +2140,22 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
       aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
       if (pstr != str) {
         delete[] pstr;
+      }
+    }
+
+    // italic correction
+    if (aItalicSlope) {
+      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      ABC abc;
+      if (GetCharABCWidths(aDC, mConverter[aString[aLength-1]], mConverter[aString[aLength-1]], &abc)) {
+        if (abc.abcC < 0) {
+          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
+        }
+      }
+      if (GetCharABCWidths(aDC, mConverter[aString[0]], mConverter[aString[0]], &abc)) {
+        if (abc.abcA < 0) {
+          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
+        }
       }
     }
 
@@ -2655,6 +2720,109 @@ nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   }
 }
 
+#ifdef MOZ_MATHML
+nsresult
+nsFontSubset::GetBoundingMetrics(HDC                aDC, 
+                                 float              aItalicSlope,
+                                 const PRUnichar*   aString,
+                                 PRUint32           aLength,
+                                 nsBoundingMetrics& aBoundingMetrics)
+{
+  aBoundingMetrics.Clear();
+  if (aString && 0 < aLength) {
+    char str[CHAR_BUFFER_SIZE];
+    char* pstr = str;
+    // Get number of bytes to needed for the conversion
+    int nb;
+    nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
+                             pstr, 0, nsnull, nsnull);
+    if (!nb) return NS_ERROR_UNEXPECTED;
+    if (nb > CHAR_BUFFER_SIZE) {
+      pstr = new char[nb];
+      if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+    }
+    // Convert the string Unicode to ANSI
+    nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
+                             pstr, nb, nsnull, nsnull);
+    if (!nb) return NS_ERROR_UNEXPECTED;
+    nb--; //ignore the null terminator
+
+    HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
+
+    // set glyph transform matrix to identity
+    MAT2 mat2;
+    FIXED zero, one;
+    zero.fract = 0; one.fract = 0;
+    zero.value = 0; one.value = 1; 
+    mat2.eM12 = mat2.eM21 = zero; 
+    mat2.eM11 = mat2.eM22 = one; 
+
+    // measure the string
+    nscoord descent;
+    GLYPHMETRICS gm;
+    DWORD len = GetGlyphOutline(aDC, pstr[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
+    if (GDI_ERROR == len) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    else {
+      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+      aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+      aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+      aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      aBoundingMetrics.descent = descent;
+      aBoundingMetrics.width = gm.gmCellIncX;
+    }
+    if (1 < nb) {
+      // loop over each glyph to get the ascent and descent
+      int i;
+      for (i = 1; i < nb; i++) {
+        len = GetGlyphOutline(aDC, pstr[i], GGO_METRICS, &gm, 0, nsnull, &mat2);
+        if (GDI_ERROR == len) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        else {
+          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+          if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+            aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+          if (aBoundingMetrics.descent > descent)
+            aBoundingMetrics.descent = descent;
+        }
+      }
+      // get the final rightBearing and width. Possible kerning is taken into account.
+
+      SIZE size;
+      ::GetTextExtentPointA(aDC, pstr, aLength, &size);
+      aBoundingMetrics.width = size.cx;
+      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+
+    }
+
+    // italic correction
+    if (aItalicSlope) {
+      aBoundingMetrics.subItalicCorrection = nscoord(aItalicSlope * float(descent));
+      ABC abc;
+      if (GetCharABCWidths(aDC, pstr[nb-1], pstr[nb-1], &abc)) {
+        if (abc.abcC < 0) {
+          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
+        }
+      }
+      if (GetCharABCWidths(aDC, pstr[0], pstr[0], &abc)) {
+        if (abc.abcA < 0) {
+          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
+        }
+      }
+    }
+
+    if (pstr != str) {
+      delete[] pstr;
+    }
+
+    ::SelectObject(aDC, oldFont);
+  }
+  return NS_OK;
+}
+#endif
+
 nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint8* aMap)
   : nsFontWin(aLogFont, aFont, aMap)
 {
@@ -2691,6 +2859,19 @@ nsFontWinA::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 {
   NS_ASSERTION(0, "must call nsFontSubset's DrawString");
 }
+
+#ifdef MOZ_MATHML
+nsresult
+nsFontWinA::GetBoundingMetrics(HDC                aDC, 
+                               float              aItalicSlope,
+                               const PRUnichar*   aString,
+                               PRUint32           aLength,
+                               nsBoundingMetrics& aBoundingMetrics)
+{
+  NS_ASSERTION(0, "must call nsFontSubset's GetBoundingMetrics");
+  return NS_ERROR_FAILURE;
+}
+#endif
 
 nsFontWin*
 nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
