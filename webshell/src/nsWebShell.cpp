@@ -1610,17 +1610,20 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
            if (nsnull != (const char *) ref) {
               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
               if (NS_FAILED(rv)) return rv;
-              rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
+              if (!mProcessedEndDocumentLoad)
+                rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
               // Go to the anchor in the current document
-              rv = presShell->GoToAnchor(nsAutoString(ref));            
-		          mProcessedEndDocumentLoad = PR_FALSE;
+              rv = presShell->GoToAnchor(nsAutoString(ref));                      
               // Set the URL & referrer if the anchor was successfully visited
               if (NS_SUCCEEDED(rv)) {
                   mURL = urlSpec;
                   mReferrer = aReferrer;
               }
 		          // Pass on status of scrolling/anchor visit to docloaderobserver
-              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
+              if (!mProcessedEndDocumentLoad)
+              {
+                rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
+              }
 		          return rv;		   
            }
            else if (aType == nsISessionHistory::LOAD_HISTORY)
@@ -1770,6 +1773,17 @@ nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandl
    return mContentListener->GetProtocolHandler(aURI, aProtocolHandler);
 }
 
+NS_IMETHODIMP nsWebShell::IsPreferred(const char * aContentType,
+                                      nsURILoadCommand aCommand,
+                                      const char * aWindowTarget,
+                                      char ** aDesiredContentType,
+                                      PRBool * aCanHandleContent)
+{
+  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+  return mContentListener->IsPreferred(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
+                                       aCanHandleContent);
+}
+
 NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
                                            nsURILoadCommand aCommand,
                                            const char * aWindowTarget,
@@ -1777,21 +1791,9 @@ NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
                                            PRBool * aCanHandleContent)
 
 {
-  // the webshell knows nothing about content policy....pass this
-  // up to our parent content handler...
-  nsCOMPtr<nsIURIContentListener> parentListener;
-  nsresult rv = GetParentContentListener(getter_AddRefs(parentListener));
-  if (parentListener)
-    rv = parentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
-                                          aCanHandleContent);
-  else
-    // i'm going to try something interesting...if we don't have a parent to dictate whether we
-    // can handle the content, let's say that we CAN handle the content instead of saying that we 
-    // can't. I was running into the scenario where we were running a chrome url to bring up the first window
-    // in the top level webshell. We didn't have a parent content listener yet because it was too early in
-    // the start up process...so we'd fail to load the url....
-    *aCanHandleContent = PR_TRUE;
-  return NS_OK;
+  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+  return mContentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
+                                       aCanHandleContent);
 } 
 
 NS_IMETHODIMP 
