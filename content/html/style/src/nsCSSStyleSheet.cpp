@@ -1878,6 +1878,8 @@ CSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
   mDisabled = !aEnabled;
 
   if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    ClearRuleCascades();
+
     mDocument->BeginUpdate(UPDATE_STYLE);
     mDocument->SetStyleSheetApplicableState(this, !mDisabled);
     mDocument->EndUpdate(UPDATE_STYLE);

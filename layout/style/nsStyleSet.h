@@ -70,10 +70,6 @@ class nsStyleSet
   // clear out all of the computed style data
   void ClearStyleData(nsIPresContext *aPresContext);
 
-  // notification that a style sheet (of any type) has become enabled
-  // or disabled
-  nsresult StyleSheetApplicableStateChanged();
-
   // enable / disable the Quirk style sheet
   void EnableQuirkStyleSheet(PRBool aEnable);
 

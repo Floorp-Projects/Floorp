@@ -1509,18 +1509,6 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
     } else {
       RemoveStyleSheetFromStyleSets(aSheet);
     }
-  } else {
-    // We still need to notify the style set of the state change, because
-    // this will invalidate some of the rule processor data.  We do this
-    // here instead of in the pres shell because we _don't_ want to do this
-    // for document style sheets.
-
-    PRInt32 count = mPresShells.Count();
-    PRInt32 indx;
-    for (indx = 0; indx < count; ++indx) {
-      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
-        StyleSheetApplicableStateChanged();
-    }
   }
 
   // We have to always notify, since this will be called for sheets
