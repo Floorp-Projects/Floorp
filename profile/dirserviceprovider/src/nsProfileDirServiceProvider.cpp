@@ -250,11 +250,8 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
   }
   else if (inAtom == sApp_UserChromeDirectory) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(USER_CHROME_DIR_50_NAME);
-      if (NS_SUCCEEDED(rv))
-        rv = EnsureProfileFileExists(localFile, domainDir);
-    }
   }
   else if (inAtom == sApp_LocalStore50) {
     rv = domainDir->Clone(getter_AddRefs(localFile));

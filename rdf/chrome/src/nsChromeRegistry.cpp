@@ -2928,9 +2928,9 @@ nsChromeRegistry::GetProfileRoot(nsACString& aFileURL)
        if (NS_FAILED(rv))
          return(rv);
        defaultUserContentFile->AppendNative(NS_LITERAL_CSTRING("chrome"));
-       defaultUserContentFile->AppendNative(NS_LITERAL_CSTRING("userContent.css"));
+       defaultUserContentFile->AppendNative(NS_LITERAL_CSTRING("userContent-example.css"));
        defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("chrome"));
-       defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("userChrome.css"));
+       defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("userChrome-example.css"));
 
        // copy along
        // It aint an error if these files dont exist
