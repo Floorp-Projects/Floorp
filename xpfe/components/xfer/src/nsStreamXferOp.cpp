@@ -332,11 +332,6 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
                                const PRUnichar *aMsg ) {
     nsresult rv = NS_OK;
 
-#ifdef DEBUG_law
-    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStopRequest notified of input completion, status=0x%08X\n",
-                  (int)aStatus );
-#endif
-
     // Close the output stream.
     if ( mOutputStream ) {
         rv = mOutputStream->Close();
