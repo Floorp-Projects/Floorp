@@ -23,66 +23,56 @@
 
 PR_BEGIN_EXTERN_C
 
-extern void   NET_CleanupCache (char * filename);
-extern int    NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt);
-extern void   NET_RefreshCacheFileExpiration(URL_Struct * URL_s);
-
-extern void NET_CacheInit(void);
-
-extern void NET_InitMemCacProtocol(void);
-
-
-extern PRBool NET_IsCacheTraceOn(void);
-
-/* remove a URL from the cache
- */
-extern void NET_RemoveURLFromCache(URL_Struct *URL_s);
+/* Initialization */
+extern void     NET_CacheInit(void);
+/* Shutdown */
+extern void     NET_CleanupCache(void); 
 
 /* create an HTML stream and push a bunch of HTML about
  * the cache
  */
-extern void NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry);
-
-/* return TRUE if the URL is in the cache and
- * is a partial cache file
- */ 
-extern PRBool NET_IsPartialCacheFile(URL_Struct *URL_s);
-
-/* encapsulated access to the first object in cache_database */
-extern int NET_FirstCacheObject(DBT *key, DBT *data);
-
-/* encapsulated access to the next object in the cache_database */
-extern int NET_NextCacheObject(DBT *key, DBT *data);
-
-/* Max size for displaying in the cache browser */
-extern int32 NET_GetMaxDiskCacheSize();
-
-extern void
-NET_OpenExtCacheFAT(MWContext *ctxt, char * cache_name, char * instructions);
-
-extern void
-CACHE_CloseAllOpenSARCache();
-
-extern void
-CACHE_OpenAllSARCache();
+extern void     NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry);
 
 /* create an HTML stream and push a bunch of HTML about
- * the memory cache
+ * the memory cache - TODO consolidate these two into one function! - Gagan
  */
-extern void
-NET_DisplayMemCacheInfoAsHTML(ActiveEntry * cur_entry);
+extern void     NET_DisplayMemCacheInfoAsHTML(ActiveEntry * cur_entry);
 
-extern int
-NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
+extern int      NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt);
 
+#ifdef NU_CACHE
+extern void     NET_InitNuCacheProtocol(void);
+#else
+extern void     NET_InitMemCacProtocol(void);
+#endif
+
+/* Will go away later */
+extern PRBool   NET_IsCacheTraceOn(void);
+
+/* return TRUE if the URL is in the cache and
+ * is a partial cache file - TODO- only used in HTTP- cleanup - Gagan 
+ */ 
+extern PRBool   NET_IsPartialCacheFile(URL_Struct *URL_s);
+
+/* Update cache entry on a 304 return*/
+extern void     NET_RefreshCacheFileExpiration(URL_Struct * URL_s);
+
+/* remove a URL from the cache */
+extern void     NET_RemoveURLFromCache(URL_Struct *URL_s);
+
+/* Removed in NU_Cache, SAR should go through new api. - Gagan */
+#ifndef NU_CACHE
+extern void     NET_OpenExtCacheFAT(MWContext *ctxt, char * cache_name, char * instructions);
+extern void     CACHE_CloseAllOpenSARCache();
+extern void     CACHE_OpenAllSARCache();
+extern int      NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
 /* lookup routine
  *
- * builds a key and looks for it in
- * the database.  Returns an access
- * method and sets a filename in the
- * URL struct if found
+ * builds a key and looks for it in the database.  Returns an access
+ * method and sets a filename in the URL struct if found
  */
-extern int NET_FindURLInExtCache(URL_Struct * URL_s, MWContext *ctxt);
+extern int      NET_FindURLInExtCache(URL_Struct * URL_s, MWContext *ctxt);
+#endif
 
 PR_END_EXTERN_C
 

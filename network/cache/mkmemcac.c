@@ -52,6 +52,10 @@ extern void IL_SetCacheSize(uint32 new_size);
 #include "secnav.h"
 #include "timing.h"
 
+#ifdef NU_CACHE
+#include "CacheStubs.h"
+#endif
+
 /* exported error ints */
 extern int MK_OUT_OF_MEMORY;
 
@@ -1176,6 +1180,12 @@ NET_IsURLInMemCache(URL_Struct *URL_s)
  */
 MODULE_PRIVATE int
 NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt)
+#ifdef NU_CACHE
+{
+	PR_ASSERT(0); /* Should not be getting called */
+	return 0;
+}
+#else
 {
 	net_MemoryCacheObject *found_cache_obj;
 
@@ -1253,6 +1263,7 @@ NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt)
 
     return(0);
 }
+#endif
 
 /*****************************************************************
  *  Memory cache output module routine
@@ -1292,6 +1303,12 @@ IMAP_URLFinished(URL_Struct *URL_s);
 
 PRIVATE int32
 net_MemoryCacheLoad (ActiveEntry * cur_entry)
+#ifdef NU_CACHE
+{
+	PR_ASSERT(0); /* Should not be getting called */
+	return 0;
+}
+#else
 {
     /* get memory for Connection Data */
     MemCacheConData * connection_data = PR_NEW(MemCacheConData);
@@ -1467,12 +1484,19 @@ net_MemoryCacheLoad (ActiveEntry * cur_entry)
     return(CE_STATUS);
 	
 }
+#endif /* NU_CACHE */
 
 /* called repeatedly from NET_ProcessNet to push all the
  * data up the stream
  */
 PRIVATE int32
 net_ProcessMemoryCache (ActiveEntry * cur_entry)
+#ifdef NU_CACHE
+{
+	PR_ASSERT(0); /* Should not be getting called */
+	return 0;
+}
+#else
 {
 	MemCacheConData * connection_data = (MemCacheConData *)cur_entry->con_data;
 	net_MemorySegment * mem_seg;
@@ -1635,12 +1659,19 @@ net_ProcessMemoryCache (ActiveEntry * cur_entry)
 	return(CE_STATUS);
 
 }
+#endif /* NU_CACHE */
 
 /* called by functions in mkgeturl to interrupt the loading of
  * an object.  (Usually a user interrupt) 
  */
 PRIVATE int32
 net_InterruptMemoryCache (ActiveEntry * cur_entry)
+#ifdef NU_CACHE
+{
+	PR_ASSERT(0); /* Should not be getting called */
+	return 0;
+}
+#else
 {
 	MemCacheConData * connection_data = (MemCacheConData *)cur_entry->con_data;
 
@@ -1682,6 +1713,7 @@ net_InterruptMemoryCache (ActiveEntry * cur_entry)
 
 	return(CE_STATUS);
 }
+#endif
 
 /* create an HTML stream and push a bunch of HTML about
  * the memory cache
@@ -1709,9 +1741,17 @@ NET_DisplayMemCacheInfoAsHTML(ActiveEntry * cur_entry)
 	if(PL_strcasestr(cur_entry->URL_s->address, "?long"))
 		long_form = TRUE;
 	else if(PL_strcasestr(cur_entry->URL_s->address, "?traceon"))
+#ifdef NU_CACHE
+		CacheTrace_Enable(TRUE);
+#else
 		NET_CacheTraceOn = TRUE;
+#endif
 	else if(PL_strcasestr(cur_entry->URL_s->address, "?traceoff"))
+#ifdef NU_CACHE
+		CacheTrace_Enable(FALSE);
+#else
 		NET_CacheTraceOn = FALSE;
+#endif
 
 	StrAllocCopy(cur_entry->URL_s->content_type, TEXT_HTML);
 
@@ -1931,6 +1971,12 @@ NET_StreamClass *
 net_CloneWysiwygMemCacheEntry(MWContext *window_id, URL_Struct *URL_s,
 			      uint32 nbytes, const char * wysiwyg_url,
 			      const char * base_href)
+#ifdef NU_CACHE
+{
+	PR_ASSERT(0);
+	return NULL;
+}
+#else
 {
 	net_MemoryCacheObject *memory_copy;
 	PRCList *link;
@@ -1983,6 +2029,7 @@ found:
 	  }
 	return stream;
 }
+#endif
 
 PRIVATE void
 net_CleanupMemoryCacheProtocol(void)

@@ -46,6 +46,9 @@ OBJS=   \
 	.\$(OBJDIR)\mkcache.obj		\
 	.\$(OBJDIR)\mkextcac.obj		\
 	.\$(OBJDIR)\mkmemcac.obj		\
+!ifdef NU_CACHE
+	.\$(OBJDIR)\nucacheproto.obj		\
+!endif
 	$(NULL)
 	
 
@@ -55,6 +58,9 @@ CSRCS =	\
 	mkcache.c	\
 	mkextcac.c	\
 	mkmemcac.c	\
+!ifdef NU_CACHE
+	nucacheproto.c	\
+!endif
 	$(NULL)
 
 
@@ -65,7 +71,12 @@ DEPTH=..\..
 
 EXTRA_LIBS=
 
+!ifdef NU_CACHE
+REQUIRES= network nspr2 cachelib
+!else
 REQUIRES= network nspr2
+!endif
+
 EXPORTS= netcache.h
 
 C_OBJS = \
@@ -84,6 +95,9 @@ LINCS= \
     -I$(XPDIST)\public\java 	\
     -I$(XPDIST)\public\fileurl 	\
     -I$(XPDIST)\public\security \
+!ifdef NU_CACHE
+    -I$(XPDIST)\public\cache 	\
+!endif
     -I$(XPDIST)\public\jtools
 #!endif
 
