@@ -1303,6 +1303,13 @@ function MsgMarkAsFlagged(markFlagged)
     MarkSelectedMessagesFlagged(markFlagged);
 }
 
+function MsgMarkReadByDate()
+{
+    window.openDialog( "chrome://messenger/content/markByDate.xul","",
+                       "chrome,modal,titlebar,centerscreen",
+                       GetLoadedMsgFolder() );
+}
+
 function MsgMarkAllRead()
 {
     var compositeDataSource = GetCompositeDataSource("MarkAllMessagesRead");
@@ -1716,7 +1723,6 @@ function MsgSynchronizeOffline()
 }
 
 
-function MsgMarkByDate() {}
 function MsgOpenAttachment() {}
 function MsgUpdateMsgCount() {}
 function MsgImport() {}

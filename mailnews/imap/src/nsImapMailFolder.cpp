@@ -1849,9 +1849,9 @@ static int PR_CALLBACK CompareKey (const void *v1, const void *v2, void *)
 }
 
 /* static */nsresult
-nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds)
+nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRUint32 numKeys, nsCString &msgIds)
 {
-  if (numKeys <= 0)
+  if (!numKeys)
     return NS_ERROR_INVALID_ARG;
   nsresult rv = NS_OK;
   PRUint32 startSequence;
@@ -3004,7 +3004,7 @@ NS_IMETHODIMP nsImapMailFolder::PlaybackOfflineFolderCreate(const PRUnichar *aFo
                                        aFolderName, this, url);
 }
 
-NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRInt32 numKeys, PRBool isMove, nsIMsgFolder *aDstFolder,
+NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRUint32 numKeys, PRBool isMove, nsIMsgFolder *aDstFolder,
                          nsIUrlListener *aUrlListener, nsIMsgWindow *aWindow)
 {
   nsresult rv;
@@ -3036,7 +3036,7 @@ NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRInt32
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, nsMsgKey *keys, PRInt32 numKeys)
+NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, nsMsgKey *keys, PRUint32 numKeys)
 {
   nsresult rv = NS_OK;
   if (!WeAreOffline())
@@ -7181,7 +7181,7 @@ nsImapMailFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aU
 
 NS_IMETHODIMP
 nsImapMailFolder::StoreCustomKeywords(nsIMsgWindow *aMsgWindow, const char *aFlagsToAdd, 
-                                      const char *aFlagsToSubtract, nsMsgKey *aKeysToStore, PRInt32 aNumKeys, nsIURI **_retval)
+                                      const char *aFlagsToSubtract, nsMsgKey *aKeysToStore, PRUint32 aNumKeys, nsIURI **_retval)
 {
   nsresult rv;
   nsCOMPtr<nsIImapService> imapService(do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv)); 

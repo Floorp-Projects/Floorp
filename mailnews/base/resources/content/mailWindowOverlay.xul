@@ -254,6 +254,7 @@ Rights Reserved.
     <command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markReadByDate" oncommand="goDoCommand('cmd_markReadByDate');" disabled="true"/>
     <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAsJunk" oncommand="goDoCommand('cmd_markAsJunk'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAsNotJunk" oncommand="goDoCommand('cmd_markAsNotJunk'); event.preventBubble()" disabled="true"/>
@@ -303,6 +304,7 @@ Rights Reserved.
   <key id="key_toggleRead" key="&markAsReadCmd.key;"                 oncommand="goDoCommand('cmd_markAsRead');"/>
   <key id="key_markAllRead" key="&markAllReadCmd.key;"               oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
   <key id="key_markThreadAsRead" key="&markThreadAsReadCmd.key;"     oncommand="goDoCommand('cmd_markThreadAsRead')"/>
+  <key id="key_markReadByDate" key="&markReadByDateCmd.key;"         oncommand="goDoCommand('cmd_markReadByDate')"/>
   <key id="key_nextMsg" key="&nextMsgCmd.key;"                       oncommand="goDoCommand('cmd_nextMsg')"/>
   <key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"           oncommand="goDoCommand('cmd_nextUnreadMsg')"/>
   <key id="key_expandAllThreads" key="&expandAllThreadsCmd.key;"     oncommand="goDoCommand('cmd_expandAllThreads')"/>
@@ -581,6 +583,10 @@ Rights Reserved.
                   key="key_markThreadAsRead"
                   accesskey="&markThreadAsReadCmd.accesskey;"
                   observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markReadByDateCmd.label;"
+                  key="key_markReadByDate"
+                  accesskey="&markReadByDateCmd.accesskey;"
+                  command="cmd_markReadByDate"/>
         <menuitem label="&markAllReadCmd.label;"
                   key="key_markAllRead"
                   accesskey="&markAllReadCmd.accesskey;"
@@ -915,6 +921,10 @@ Rights Reserved.
                   key="key_markThreadAsRead"
                   accesskey="&markThreadAsReadCmd.accesskey;"
                   observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markReadByDateCmd.label;"
+                  key="key_markReadByDate"
+                  accesskey="&markReadByDateCmd.accesskey;"
+                  command="cmd_markReadByDate"/>
         <menuitem label="&markAllReadCmd.label;"
                   key="key_markAllRead"
                   accesskey="&markAllReadCmd.accesskey;"
@@ -1501,6 +1511,10 @@ Rights Reserved.
                   key="key_markThreadAsRead"
                   accesskey="&markThreadAsReadCmd.accesskey;"
                   observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markReadByDateCmd.label;"
+                  key="key_markReadByDate"
+                  accesskey="&markReadByDateCmd.accesskey;"
+                  command="cmd_markReadByDate"/>
         <menuitem label="&markAllReadCmd.label;"
                   key="key_markAllRead"
                   accesskey="&markAllReadCmd.accesskey;"
@@ -1700,6 +1714,7 @@ Rights Reserved.
             <menupopup onpopupshowing="InitMessageMark()">
                 <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
                 <menuitem label="&markThreadAsReadCmd.label;" key="key_markThreadAsRead" accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
+                <menuitem label="&markReadByDateCmd.label;" key="key_markReadByDate" accesskey="&markReadByDateCmd.accesskey;" command="cmd_markReadByDate"/>
                 <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
                 <menuseparator/>
                 <menuitem type="checkbox" id="markFlaggedToolbarItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>

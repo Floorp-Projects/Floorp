@@ -88,9 +88,9 @@ interface nsIMsgImapMailFolder : nsISupports {
   void renameClient(in nsIMsgWindow msgWindow, in nsIMsgFolder msgFolder, in string oldName, in string newName);
 
   // these are used for offline synchronization
-  void storeImapFlags(in long flags, in boolean addFlags, out nsMsgKey keysToFlag, in long numKeys);
+  void storeImapFlags(in long flags, in boolean addFlags, [array, size_is (numKeys)] in nsMsgKey keysToFlag, in unsigned long numKeys);
   void setImapFlags(in string uids, in long flags, out nsIURI url);
-  void replayOfflineMoveCopy(out nsMsgKey keys, in long numKeys, in boolean isMove, in nsIMsgFolder aDstFolder,
+  void replayOfflineMoveCopy([array, size_is (numKeys)] in nsMsgKey keys, in unsigned long numKeys, in boolean isMove, in nsIMsgFolder aDstFolder,
                          in nsIUrlListener aUrlListener, in nsIMsgWindow aWindow);
   void playbackOfflineFolderCreate(in wstring folderName, in nsIMsgWindow aWindow, out nsIURI url);
   void liteSelect(in nsIUrlListener aUrlListener);
@@ -108,8 +108,8 @@ interface nsIMsgImapMailFolder : nsISupports {
   nsIURI storeCustomKeywords(in nsIMsgWindow aMsgWindow,
                       in string aFlagsToAdd,
                       in string aFlagsToSubtract,
-                      out nsMsgKey aKeysToStore,
-                      in long aNumKeys);
+                      [array, size_is (aNumKeys)] in nsMsgKey aKeysToStore,
+                      in unsigned long aNumKeys);
 
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;

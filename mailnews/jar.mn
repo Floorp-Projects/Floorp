@@ -180,6 +180,9 @@ messenger.jar:
     content/messenger/mime.js                                                  (mime/resources/content/mime.js)
     content/messenger/downloadheaders.js                                       (news/resources/content/downloadheaders.js)
     content/messenger/downloadheaders.xul                                      (news/resources/content/downloadheaders.xul)
+    content/messenger/markByDate.js                                            (base/resources/content/markByDate.js)
+    content/messenger/markByDate.xul                                           (base/resources/content/markByDate.xul)
+    content/messenger/dateFormat.js                                            (base/resources/content/dateFormat.js)
 
 en-US.jar:
     locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)
@@ -277,6 +280,7 @@ en-US.jar:
     locale/en-US/messenger/mimeheader.properties                        (mime/resources/mimeheader.properties)
     locale/en-US/messenger/vcard.properties                             (mime/cthandlers/resources/vcard.properties)
     locale/en-US/messenger/smime.properties                             (mime/cthandlers/resources/smime.properties)  
+    locale/en-US/messenger/markByDate.dtd                               (base/resources/locale/en-US/markByDate.dtd)
 
 US.jar:
     locale/US/messenger-region/contents.rdf                             (base/resources/locale/en-US/contents-region.rdf)
