@@ -472,17 +472,13 @@ AC_ARG_WITH(mozilla,
 	fi])
 
 AC_CHECK_LIB(pthread, pthread_attr_init, 
-             _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread")
-
-dnl 
-dnl If the above test failed, try lib c_r
-dnl 
-if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
-"x$ac_cv_lib_c_r_gethostbyname_r" = "xno"
-then
-  AC_CHECK_LIB(c_r, pthread_attr_init,
-               _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r")
-fi
+             _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+    AC_CHECK_LIB(c_r, pthread_attr_init,
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+        AC_CHECK_LIB(c, pthread_attr_init,
+            _HAVE_PTHREADS=1 )
+        )
+    )
 
 AC_ARG_WITH(pthreads,
     [  --with-pthreads         Use system pthreads library as thread subsystem],
@@ -640,7 +636,7 @@ if test "$enable_shared" = no; then
   EXTRA_LIBS="$OS_LIBS"
 fi
 
-if test -n "$MOZ_OPTIMZE"; then
+if test -n "$MOZ_OPTIMIZE"; then
     CFLAGS="$CFLAGS $_OPTIMIZE_FLAGS"
     CXXFLAGS="$CXXFLAGS $_OPTIMIZE_FLAGS"
 fi
