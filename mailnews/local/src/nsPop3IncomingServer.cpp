@@ -309,7 +309,9 @@ nsresult nsPop3IncomingServer::GetInbox(nsIMsgWindow *msgWindow, nsIMsgFolder **
       rv = db->GetSummaryValid(&valid);
       if (!valid)
       {
+        (*inbox)->SetMsgDatabase(nsnull);
         (void) localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+        (*inbox)->GetMsgDatabase(msgWindow, getter_AddRefs(db));
         return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
       }
     }
@@ -346,7 +348,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
     nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
     if (localInbox && NS_SUCCEEDED(rv))
     {
-      PRBool valid =PR_FALSE;
+      PRBool valid = PR_FALSE;
       nsCOMPtr <nsIMsgDatabase> db;
       rv = inbox->GetMsgDatabase(aMsgWindow, getter_AddRefs(db));
       if (NS_SUCCEEDED(rv) && db)
