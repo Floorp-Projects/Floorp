@@ -107,7 +107,7 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 }
 
 nsXBLPrototypeProperty::nsXBLPrototypeProperty(nsIXBLPrototypeBinding * aPrototypeBinding)
-: mJSMethod(nsnull), mJSGetterObject(nsnull), mJSSetterObject(nsnull), mPropertyIsCompiled(PR_FALSE)
+: mJSMethodObject(nsnull), mJSGetterObject(nsnull), mJSSetterObject(nsnull), mPropertyIsCompiled(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mClassObject = nsnull;
@@ -132,8 +132,8 @@ nsXBLPrototypeProperty::nsXBLPrototypeProperty(nsIXBLPrototypeBinding * aPrototy
 
 nsXBLPrototypeProperty::~nsXBLPrototypeProperty()
 {
-  if (mJSMethod)
-    RemoveJSGCRoot(&mJSMethod);
+  if (mJSMethodObject)
+    RemoveJSGCRoot(&mJSMethodObject);
   if (mJSGetterObject)
     RemoveJSGCRoot(&mJSGetterObject);
   if (mJSSetterObject)
@@ -232,13 +232,16 @@ nsXBLPrototypeProperty::InstallProperty(nsIScriptContext * aContext, nsIContent 
 
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSObject * scriptObject = (JSObject *) aScriptObject;
+  NS_ASSERTION(scriptObject, "uhoh, script Object should NOT be null or bad things will happen");
+
   JSObject * targetClassObject = (JSObject *) aTargetClassObject;
+  JSObject * globalObject = ::JS_GetGlobalObject(cx);
 
   // now we want to re-evaluate our property using aContext and the script object for this window...
 
-  if (mJSMethod && targetClassObject)
+  if (mJSMethodObject && targetClassObject)
   {
-    JSObject * method = ::JS_CloneFunctionObject(cx, (JSObject *) mJSMethod, JS_GetGlobalObject(cx));
+    JSObject * method = ::JS_CloneFunctionObject(cx, mJSMethodObject, globalObject);
     ::JS_DefineUCProperty(cx, targetClassObject, NS_REINTERPRET_CAST(const jschar*, mName.get()),  mName.Length(), OBJECT_TO_JSVAL(method),
                           NULL, NULL, JSPROP_ENUMERATE);
 
@@ -253,11 +256,11 @@ nsXBLPrototypeProperty::InstallProperty(nsIScriptContext * aContext, nsIContent 
     
     JSObject * getter = nsnull;
     if (mJSGetterObject)
-      getter = ::JS_CloneFunctionObject(cx, (JSObject *) mJSGetterObject, JS_GetGlobalObject(cx));
+      getter = ::JS_CloneFunctionObject(cx, mJSGetterObject, globalObject);
     
     JSObject * setter = nsnull;
     if (mJSSetterObject)
-      setter = ::JS_CloneFunctionObject(cx, (JSObject *) mJSSetterObject, JS_GetGlobalObject(cx));
+      setter = ::JS_CloneFunctionObject(cx, mJSSetterObject, globalObject);
 
     ::JS_DefineUCProperty(cx, targetClassObject, NS_REINTERPRET_CAST(const jschar*, mName.get()), 
                           mName.Length(), JSVAL_VOID,  (JSPropertyOp) getter, 
@@ -269,9 +272,9 @@ nsXBLPrototypeProperty::InstallProperty(nsIScriptContext * aContext, nsIContent 
     jsval result = nsnull;
     PRBool undefined;
     aContext->EvaluateStringWithValue(mLiteralPropertyString, 
-                                           scriptObject,
-                                           nsnull, nsnull, 0, nsnull,
-                                           (void*) &result, &undefined);
+                                      scriptObject,
+                                      nsnull, nsnull, 0, nsnull,
+                                      (void*) &result, &undefined);
               
     if (!undefined) 
     {
@@ -419,7 +422,7 @@ nsresult nsXBLPrototypeProperty::ParseProperty(nsIScriptContext * aContext, nsIC
                                     functionUri.get(),
                                     0,
                                     PR_FALSE,
-                                    &mJSGetterObject);
+                                    (void **) &mJSGetterObject);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
       mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
       if (mJSGetterObject) 
@@ -471,7 +474,7 @@ nsresult nsXBLPrototypeProperty::ParseProperty(nsIScriptContext * aContext, nsIC
                                     functionUri.get(),
                                     0,
                                     PR_FALSE,
-                                    &mJSSetterObject);
+                                    (void **) &mJSSetterObject);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
       mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
       if (mJSSetterObject) 
@@ -589,17 +592,16 @@ nsresult nsXBLPrototypeProperty::ParseMethod(nsIScriptContext * aContext, nsICon
                                   functionUri.get(),
                                   0,
                                   PR_FALSE,
-                                  &mJSMethod);
+                                  (void **) &mJSMethodObject);
 
-    if (mJSMethod) 
+    if (mJSMethodObject) 
     {
       // Root the compiled prototype script object.
       JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                           aContext->GetNativeContext());
       if (!cx) return NS_ERROR_UNEXPECTED;
 
-      rv = AddJSGCRoot(&mJSMethod, "nsXBLPrototypeProperty::mJSMethod");
-      if (NS_FAILED(rv)) return rv;
+      rv = AddJSGCRoot(&mJSMethodObject, "nsXBLPrototypeProperty::mJSMethod");
     }
   }
   

@@ -36,6 +36,8 @@
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
+class nsIXBLPrototypeBinding;
+class nsIXBLPrototypeProperty;
 class nsINameSpaceManager;
 class nsIContent;
 class nsIDocument;
@@ -102,6 +104,7 @@ public:
   // that contain only whitespace.
   static nsresult StripWhitespaceNodes(nsIContent* aContent);
   static nsresult BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult);
+  static nsresult BuildPropertyChain(nsIXBLPrototypeBinding * aPrototypeBinding, nsIContent * aContent, nsIXBLPrototypeProperty ** aResult);
 
 // MEMBER VARIABLES
 public:

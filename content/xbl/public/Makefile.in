@@ -36,6 +36,7 @@ EXPORTS		= \
 	nsIXBLInsertionPoint.h \
     nsIXBLPrototypeBinding.h \
     nsIXBLPrototypeHandler.h \
+    nsIXBLPrototypeProperty.h \
     nsIXBLService.h \
 		$(NULL)
 
