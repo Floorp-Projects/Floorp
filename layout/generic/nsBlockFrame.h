@@ -20,6 +20,7 @@
 #define nsBlockFrame_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsHTMLParts.h"
 
 class nsBlockReflowState;
 class nsBulletFrame;
@@ -36,11 +37,12 @@ class nsFirstLineFrame;
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX    NS_BLOCK_FRAME_BULLET_LIST_INDEX
 
 /**
- * Additional frame-state bits
+ * Additional frame-state bits. There are more of these bits
+ * defined in nsHTMLParts.h (XXX: note: this should be cleaned up)
  */
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x80000000
 #define NS_BLOCK_IS_HTML_PARAGRAPH        0x40000000
-#define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x10000000
+#define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x20000000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
@@ -144,7 +146,8 @@ protected:
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
 
   void SetFlags(PRUint32 aFlags) {
-    mFlags = aFlags;
+    mState &= ~NS_BLOCK_FLAGS_MASK;
+    mState |= aFlags;
   }
 
   PRBool HaveOutsideBullet() const {
@@ -345,9 +348,6 @@ protected:
 #endif
 
   nsLineBox* mLines;
-
-  // XXX subclass!
-  PRUint32 mFlags;
 
   // Text run information
   nsTextRun* mTextRuns;

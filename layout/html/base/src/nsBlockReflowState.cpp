@@ -1195,9 +1195,6 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  if (0 != mFlags) {
-    fprintf(out, " [flags=%x]", mFlags);
-  }
   PRInt32 numInlineLines = 0;
   PRInt32 numBlockLines = 0;
   if (nsnull != mLines) {
@@ -1393,7 +1390,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Should we create a space manager?
   nsCOMPtr<nsISpaceManager> spaceManager;
-  if (mFlags & NS_BLOCK_SPACE_MGR) {
+  if (NS_BLOCK_SPACE_MGR & mState) {
     nsSpaceManager* rawPtr = new nsSpaceManager(this);
     if (!rawPtr) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1407,7 +1404,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   nsBlockReflowState state(aReflowState, &aPresContext, this, aMetrics);
-  if (NS_BLOCK_MARGIN_ROOT & mFlags) {
+  if (NS_BLOCK_MARGIN_ROOT & mState) {
     state.mIsTopMarginRoot = PR_TRUE;
     state.mIsBottomMarginRoot = PR_TRUE;
   }
@@ -1505,7 +1502,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
 
-  if (mFlags & NS_BLOCK_WRAP_SIZE) {
+  if (NS_BLOCK_WRAP_SIZE & mState) {
     // When the area frame is supposed to wrap around all in-flow
     // children, make sure its big enough to include those that stick
     // outside the box.
@@ -1767,7 +1764,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // There are two options here. We either shrink wrap around our
       // contents or we fluff out to the maximum block width. Note:
       // We always shrink wrap when given an unconstrained width.
-      if ((0 == (NS_BLOCK_SHRINK_WRAP & mFlags)) &&
+      if ((0 == (NS_BLOCK_SHRINK_WRAP & mState)) &&
           !aState.mUnconstrainedWidth &&
           !compact) {
         // Set our width to the max width if we aren't already that
@@ -5804,10 +5801,10 @@ nsBlockFrame::Init(nsIPresContext&  aPresContext,
                    nsIFrame*        aPrevInFlow)
 {
   if (aPrevInFlow) {
-    // Copy over the block/area frame flags
+    // Copy over the block/area frame type flags
     nsBlockFrame*  blockFrame = (nsBlockFrame*)aPrevInFlow;
 
-    SetFlags(blockFrame->mFlags);
+    SetFlags(blockFrame->mState & NS_BLOCK_FLAGS_MASK);
   }
 
   nsresult rv = nsBlockFrameSuper::Init(aPresContext, aContent, aParent,

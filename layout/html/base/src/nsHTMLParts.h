@@ -241,12 +241,12 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 // policies.
 
 // Flags for block/area frames
-#define NS_BLOCK_SHRINK_WRAP     0x1
-#define NS_BLOCK_NO_AUTO_MARGINS 0x2
-#define NS_BLOCK_MARGIN_ROOT     0x4
-#define NS_BLOCK_DOCUMENT_ROOT   0x8
-#define NS_BLOCK_SPACE_MGR       0x10
-#define NS_BLOCK_WRAP_SIZE       0x20
+#define NS_BLOCK_SHRINK_WRAP     0x00010000
+#define NS_BLOCK_NO_AUTO_MARGINS 0x00020000
+#define NS_BLOCK_MARGIN_ROOT     0x00040000
+#define NS_BLOCK_SPACE_MGR       0x00080000
+#define NS_BLOCK_WRAP_SIZE       0x00100000
+#define NS_BLOCK_FLAGS_MASK      0x00ff0000
 
 // Create a frame that supports "display: block" layout behavior
 extern nsresult NS_NewBlockFrame(nsIFrame** aNewFrame,
@@ -261,7 +261,7 @@ NS_NewAttributeContent(nsIContent ** aResult);
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 extern nsresult NS_NewSelectsAreaFrame(nsIFrame** aNewFrame,
-                                PRUint32 aFlags = NS_BLOCK_WRAP_SIZE);
+                                       PRUint32 aFlags = NS_BLOCK_WRAP_SIZE);
 
 // Create a basic area frame. By default, area frames will extend
 // their height to cover any children that "stick out".
@@ -279,7 +279,7 @@ inline nsresult NS_NewTableCaptionFrame(nsIFrame** aNewFrame) {
 // This type of AreaFrame is the document root, a margin root, and the
 // initial containing block for absolutely positioned elements
 inline nsresult NS_NewDocumentElementFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
+  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is a margin root, but does not shrink wrap
