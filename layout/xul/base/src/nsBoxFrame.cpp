@@ -1319,6 +1319,9 @@ nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
     else if (aAttribute == nsXULAtoms::mousethrough) {
       UpdateMouseThrough();
     }
+
+    nsBoxLayoutState state(aPresContext);
+    MarkDirty(state);
   }
   else if (aAttribute == nsXULAtoms::ordinal) {
     nsBoxLayoutState state(aPresContext->PresShell());
@@ -1338,11 +1341,6 @@ nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
   else if (aAttribute == nsXULAtoms::accesskey) {
     RegUnregAccessKey(aPresContext, PR_TRUE);
   }
-
-  nsBoxLayoutState state(aPresContext);
-  // XXX This causes us to reflow for any attribute change (e.g.,
-  // flipping through menus).
-  MarkDirty(state);
 
   return rv;
 }
