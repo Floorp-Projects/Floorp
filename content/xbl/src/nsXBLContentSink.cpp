@@ -59,6 +59,7 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIStringBundle.h"
 
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
@@ -226,6 +227,58 @@ nsXBLContentSink::ReportError(const PRUnichar* aErrorText,
   return nsXMLContentSink::ReportError(aErrorText, aSourceText);
 }
 
+nsresult
+nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
+                                          PRUint32 aLineNumber)
+{
+  // XXX we should really somehow stop the parse and drop the binding
+  // instead of just letting the XML sink build the content model like
+  // we do...
+  mState = eXBL_Error;
+  nsAutoString elementName;
+  aElementName->ToString(elementName);
+
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = stringBundleService->CreateBundle(
+           "chrome://global/locale/xbl.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const PRUnichar* params[] = { elementName.get() };
+  
+  nsXPIDLString errorText;
+  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("UnexpectedElement").get(),
+                                    params, NS_ARRAY_LENGTH(params),
+                                    getter_Copies(errorText));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString documentURI;
+  mDocumentURL->GetSpec(documentURI);
+  
+  rv = errorObject->Init(errorText.get(),
+                         NS_ConvertUTF8toUCS2(documentURI).get(),
+                         NS_LITERAL_STRING("").get(), /* source line */
+                         aLineNumber,
+                         0,  /* column number */
+                         nsIScriptError::errorFlag,
+                         "XBL Content Sink");
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  consoleService->LogMessage(errorObject);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsXBLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
@@ -302,15 +355,16 @@ nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
           mSecondaryState = eXBL_InMethod;
         return NS_OK;
       }
-
+      else if (mState == eXBL_InBindings && tagAtom == nsXBLAtoms::bindings) {
+        mState = eXBL_InDocument;
+      }
+      
       nsresult rv = nsXMLContentSink::HandleEndElement(aName);
       if (NS_FAILED(rv))
         return rv;
 
-      if (mState == eXBL_InImplementation && tagAtom == nsXBLAtoms::implementation)
-        mState = eXBL_InBinding;
-      else if (mState == eXBL_InBinding && tagAtom == nsXBLAtoms::binding) {
-        mState = eXBL_InDocument;
+      if (mState == eXBL_InBinding && tagAtom == nsXBLAtoms::binding) {
+        mState = eXBL_InBindings;
         mBinding->Initialize();
         mBinding = nsnull; // Clear our current binding ref.
       }
@@ -338,12 +392,23 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
                                   nsIAtom* aTagName,
                                   PRUint32 aLineNumber)
 {
+  if (mState == eXBL_Error) {
+    return PR_TRUE;
+  }
+  
   PRBool ret = PR_TRUE;
   if (aNameSpaceID == kNameSpaceID_XBL) {
     if (aTagName == nsXBLAtoms::bindings) {
+      if (mState != eXBL_InDocument) {
+        ReportUnexpectedElement(aTagName, aLineNumber);
+        return PR_TRUE;
+      }
+      
       NS_NewXBLDocumentInfo(mDocument, &mDocInfo);
-      if (!mDocInfo)
-        return NS_ERROR_FAILURE;
+      if (!mDocInfo) {
+        mState = eXBL_Error;
+        return PR_TRUE;
+      }
 
       mDocument->GetBindingManager()->PutXBLDocumentInfo(mDocInfo);
 
@@ -358,19 +423,37 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       
       nsIXBLDocumentInfo* info = mDocInfo;
       NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
+      mState = eXBL_InBindings; 
     }
-    else if (aTagName == nsXBLAtoms::binding)
+    else if (aTagName == nsXBLAtoms::binding) {
+      if (mState != eXBL_InBindings) {
+        ReportUnexpectedElement(aTagName, aLineNumber);
+        return PR_TRUE;
+      }
       mState = eXBL_InBinding;
+    }
     else if (aTagName == nsXBLAtoms::handlers) {
+      if (mState != eXBL_InBinding) {
+        ReportUnexpectedElement(aTagName, aLineNumber);
+        return PR_TRUE;
+      }
       mState = eXBL_InHandlers;
       ret = PR_FALSE; // The XML content sink should not do anything with <handlers>.
     }
     else if (aTagName == nsXBLAtoms::handler) {
+      if (mState != eXBL_InHandlers) {
+        ReportUnexpectedElement(aTagName, aLineNumber);
+        return PR_TRUE;
+      }
       mSecondaryState = eXBL_InHandler;
       ConstructHandler(aAtts, aLineNumber);
       ret = PR_FALSE;
     }
     else if (aTagName == nsXBLAtoms::resources) {
+      if (mState != eXBL_InBinding) {
+        ReportUnexpectedElement(aTagName, aLineNumber);
+        return PR_TRUE;
+      }
       mState = eXBL_InResources;
       ret = PR_FALSE; // The XML content sink should ignore all <resources>.
     }
@@ -380,6 +463,10 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       ret = PR_FALSE; // The XML content sink should ignore everything within a <resources> block.
     }
     else if (aTagName == nsXBLAtoms::implementation) {
+      if (mState != eXBL_InBinding) {
+        ReportUnexpectedElement(aTagName, aLineNumber);
+        return PR_TRUE;
+      }
       mState = eXBL_InImplementation;
       ConstructImplementation(aAtts);
       ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
