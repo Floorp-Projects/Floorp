@@ -60,6 +60,7 @@ typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
 typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
 typedef class nsXULTreeAccessible          nsXULTreeAccessibleWrap;
 typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
+typedef class nsXULTreeitemAccessible      nsXULTreeitemAccessibleWrap;
 typedef class nsXULProgressMeterAccessible nsXULProgressMeterAccessibleWrap;
 
 #endif

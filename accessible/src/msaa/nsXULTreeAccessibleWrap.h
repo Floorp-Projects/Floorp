@@ -14,14 +14,14 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Sun Microsystems, Inc.
- * Portions created by Sun Microsystems are Copyright (C) 2002 Sun
- * Microsystems, Inc. All Rights Reserved.
+ * The Initial Developer of the Original Code is Netscape Corp.
+ * Portions created by Netscape Corp.are Copyright (C) 2003 Netscape
+ * Corp. All Rights Reserved.
  *
- * Original Author: Pete Zha (pete.zha@sun.com)
+ * Original Author: Aaron Leventhal
  *
  * Contributor(s):
- *   Kyle Yuan (kyle.yuan@sun.com)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,39 +40,15 @@
 #ifndef __nsXULTreeAccessibleWrap_h__
 #define __nsXULTreeAccessibleWrap_h__
 
-#include "nsIAccessibleTable.h"
 #include "nsXULTreeAccessible.h"
 
-typedef class nsXULTreeitemAccessible nsXULTreeitemAccessibleWrap;
-
-class nsXULTreeAccessibleWrap : public nsXULTreeAccessible,
-                                public nsIAccessibleTable
+class nsXULTreeitemAccessibleWrap : public nsXULTreeitemAccessible
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETABLE
-
-  nsXULTreeAccessibleWrap(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULTreeAccessibleWrap() {}
-
-private:
-  nsCOMPtr<nsIAccessible> mCaption;
-  nsString mSummary;
-};
-
-class nsXULTreeColumnsAccessibleWrap : public nsXULTreeColumnsAccessible,
-                                       public nsIAccessibleTable
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETABLE
-
-  nsXULTreeColumnsAccessibleWrap(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULTreeColumnsAccessibleWrap() {}
-
-private:
-  nsCOMPtr<nsIAccessible> mCaption;
-  nsString mSummary;
+  nsXULTreeitemAccessibleWrap(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, 
+    PRInt32 aRow, nsITreeColumn* aColumn);
+  virtual ~nsXULTreeitemAccessibleWrap() {}
+  NS_IMETHOD GetDescription(nsAString &aDescription);
 };
 
 #endif

@@ -41,7 +41,11 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsITreeSelection.h"
 #include "nsITreeColumns.h"
+#if defined(MOZ_ACCESSIBILITY_ATK) || defined(XP_WIN)
+#include "nsXULTreeAccessibleWrap.h"
+#else
 #include "nsXULTreeAccessible.h"
+#endif
 #include "nsArray.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
@@ -383,7 +387,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsI
   GetCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), getter_AddRefs(accessNode));
   if (!accessNode)
   {
-    accessNode = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, aRow, col);
+    accessNode = new nsXULTreeitemAccessibleWrap(this, mDOMNode, mWeakShell, aRow, col);
     if (! accessNode)
       return NS_ERROR_OUT_OF_MEMORY;
     PutCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), accessNode);
@@ -572,9 +576,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
   }
 
   nsresult rv = NS_OK;
-#ifdef MOZ_ACCESSIBILITY_ATK
   PRInt32 row = mRow;
   nsCOMPtr<nsITreeColumn> column;
+#ifdef MOZ_ACCESSIBILITY_ATK
   rv = mColumn->GetNext(getter_AddRefs(column));
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -585,9 +589,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
     if (cols)
       cols->GetFirstColumn(getter_AddRefs(column));
   }
+#else
+  if (++row >= rowCount) {
+    return NS_ERROR_FAILURE;
+  }
+#endif //MOZ_ACCESSIBILITY_ATK
 
   rv = treeCache->GetCachedTreeitemAccessible(row, column, aNextSibling);
-#endif //MOZ_ACCESSIBILITY_ATK
   
   return rv;
 }
@@ -609,9 +617,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
   nsresult rv = NS_OK;
 
 
-#ifdef MOZ_ACCESSIBILITY_ATK
   PRInt32 row = mRow;
   nsCOMPtr<nsITreeColumn> column;
+#ifdef MOZ_ACCESSIBILITY_ATK
   rv = mColumn->GetPrevious(getter_AddRefs(column));
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -622,10 +630,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
     if (cols)
       cols->GetLastColumn(getter_AddRefs(column));
   }
+#else
+  if (--row < 0) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
 
   rv = treeCache->GetCachedTreeitemAccessible(row, column, aPreviousSibling);
-
-#endif //MOZ_ACCESSIBILITY_ATK
 
   return rv;
 }

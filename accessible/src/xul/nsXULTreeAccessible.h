@@ -113,7 +113,7 @@ public:
   /* ------ nsIAccessNode ----- */
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
-private:
+protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
   PRInt32 mRow;

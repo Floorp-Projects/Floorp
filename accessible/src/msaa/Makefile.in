@@ -71,6 +71,7 @@ CPPSRCS = \
   nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
+  nsXULTreeAccessibleWrap.cpp \
   $(NULL)
 
 EXPORTS = \
@@ -80,6 +81,7 @@ EXPORTS = \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
   nsHTMLWin32ObjectAccessible.h \
+  nsXULTreeAccessibleWrap.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
