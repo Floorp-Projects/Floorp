@@ -41,7 +41,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 ifndef NECKO
-EXTRA_DSO_LDOPTS = \
+EXTRA_DSO_LDOPTS += \
 		-lnetlib 	\
 		$(NULL)
 endif
