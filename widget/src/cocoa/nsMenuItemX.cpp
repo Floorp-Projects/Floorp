@@ -345,7 +345,7 @@ nsMenuItemX :: UncheckRadioSiblings(nsIContent* inCheckedContent)
   parent->ChildCount(count);
   for ( PRInt32 i = 0; i < count; ++i ) {
     nsCOMPtr<nsIContent> sibling;
-    parent->ChildAt(i, *getter_AddRefs(sibling));
+    parent->ChildAt(i, getter_AddRefs(sibling));
     if ( sibling ) {      
       if ( sibling.get() != inCheckedContent ) {                    // skip this node
         // if the current sibling is in the same group, clear it
