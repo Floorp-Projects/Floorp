@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -60,8 +60,7 @@ typedef	struct	_findTokenStruct
 class FindDataSource : public nsIRDFFindDataSource
 {
 private:
-	char			*mURI;
-	nsVoidArray		*mObservers;
+	nsCOMPtr<nsISupportsArray> mObservers;
 
 	static PRInt32		gRefCnt;
 
@@ -94,7 +93,6 @@ public:
 
 	// nsIRDFDataSource methods
 
-	NS_IMETHOD	Init(const char *uri);
 	NS_IMETHOD	GetURI(char **uri);
 	NS_IMETHOD	GetSource(nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -119,6 +117,14 @@ public:
 	NS_IMETHOD	Unassert(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target);
+	NS_IMETHOD	Change(nsIRDFResource* aSource,
+				nsIRDFResource* aProperty,
+				nsIRDFNode* aOldTarget,
+				nsIRDFNode* aNewTarget);
+	NS_IMETHOD	Move(nsIRDFResource* aOldSource,
+				nsIRDFResource* aNewSource,
+				nsIRDFResource* aProperty,
+				nsIRDFNode* aTarget);
 	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -131,7 +137,6 @@ public:
 	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aCursor);
 	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-	NS_IMETHOD	Flush();
 	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
 	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -176,8 +181,6 @@ isFindURI(nsIRDFResource *r)
 
 
 FindDataSource::FindDataSource(void)
-	: mURI(nsnull),
-	  mObservers(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -207,10 +210,6 @@ FindDataSource::~FindDataSource (void)
 {
 	gRDFService->UnregisterDataSource(this);
 
-	PL_strfree(mURI);
-
-        delete mObservers; // we only hold a weak ref to each observer
-
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_Child);
@@ -231,28 +230,6 @@ FindDataSource::~FindDataSource (void)
 
 NS_IMPL_ISUPPORTS(FindDataSource, nsIRDFDataSource::GetIID());
 
-
-
-NS_IMETHODIMP
-FindDataSource::Init(const char *uri)
-{
-    NS_PRECONDITION(uri != nsnull, "null ptr");
-    if (! uri)
-        return NS_ERROR_NULL_POINTER;
-
-	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
-
-	if ((mURI = PL_strdup(uri)) == nsnull)
-		return rv;
-
-	// register this as a named data source with the service manager
-	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
-		return rv;
-	return NS_OK;
-}
-
-
-
 NS_IMETHODIMP
 FindDataSource::GetURI(char **uri)
 {
@@ -260,10 +237,10 @@ FindDataSource::GetURI(char **uri)
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+    if ((*uri = nsXPIDLCString::Copy("rdf:find")) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    else
-        return NS_OK;
+
+    return NS_OK;
 }
 
 
@@ -439,7 +416,7 @@ FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchTe
 	else if (!PL_strcmp(matchMethod, "endswith"))
 	{
 		PRInt32 pos = value.RFind(matchText, PR_TRUE);
-		if ((pos >= 0) && (pos == (value.Length() - strlen(matchText))))
+		if ((pos >= 0) && (pos == (value.Length() - PRInt32(strlen(matchText)))))
 			found = PR_TRUE;
 	}
 	else if (!PL_strcmp(matchMethod, "is"))
@@ -689,8 +666,7 @@ FindDataSource::Assert(nsIRDFResource *source,
                        nsIRDFNode *target,
                        PRBool tv)
 {
-//	PR_ASSERT(0);
-	return NS_RDF_ASSERTION_REJECTED;
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -700,7 +676,25 @@ FindDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFResource *property,
                          nsIRDFNode *target)
 {
-//	PR_ASSERT(0);
+    return NS_RDF_ASSERTION_REJECTED;
+}
+
+NS_IMETHODIMP
+FindDataSource::Change(nsIRDFResource* aSource,
+                       nsIRDFResource* aProperty,
+                       nsIRDFNode* aOldTarget,
+                       nsIRDFNode* aNewTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+FindDataSource::Move(nsIRDFResource* aOldSource,
+                     nsIRDFResource* aNewSource,
+                     nsIRDFResource* aProperty,
+                     nsIRDFNode* aTarget)
+{
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
@@ -819,10 +813,11 @@ FindDataSource::AddObserver(nsIRDFObserver *n)
     if (! n)
         return NS_ERROR_NULL_POINTER;
 
-	if (nsnull == mObservers)
+	if (! mObservers)
 	{
-		if ((mObservers = new nsVoidArray()) == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
+        nsresult rv;
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
 	}
 	return mObservers->AppendElement(n) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -836,22 +831,12 @@ FindDataSource::RemoveObserver(nsIRDFObserver *n)
     if (! n)
         return NS_ERROR_NULL_POINTER;
 
-	if (nsnull == mObservers)
+	if (! mObservers)
 		return NS_OK;
 
 	NS_VERIFY(mObservers->RemoveElement(n), "observer not present");
 	return NS_OK;
 }
-
-
-
-NS_IMETHODIMP
-FindDataSource::Flush()
-{
-    NS_NOTYETIMPLEMENTED("write me");
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 
 NS_IMETHODIMP

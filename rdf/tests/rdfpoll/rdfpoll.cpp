@@ -39,7 +39,7 @@ NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
 #endif // NECKO
 #include "nsIGenericFactory.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFXMLDataSource.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -97,9 +97,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 // IIDs
 
 NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
-NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
-NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 
 #include "nsIAllocator.h" // for the CID
 
@@ -157,6 +154,16 @@ public:
     NS_IMETHOD OnUnassert(nsIRDFResource* aSource,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aTarget);
+
+    NS_IMETHOD OnChange(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
+                      nsIRDFResource* aNewSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget);
 };
 
 Observer::Observer()
@@ -166,10 +173,11 @@ Observer::Observer()
 
 NS_IMPL_ISUPPORTS(Observer, nsIRDFObserver::GetIID());
 
-NS_IMETHODIMP
-Observer::OnAssert(nsIRDFResource* aSource,
-                   nsIRDFResource* aProperty,
-                   nsIRDFNode* aTarget)
+static nsresult
+rdf_WriteOp(const char* aOp,
+            nsIRDFResource* aSource,
+            nsIRDFResource* aProperty,
+            nsIRDFNode* aTarget)
 {
     nsresult rv;
 
@@ -184,7 +192,7 @@ Observer::OnAssert(nsIRDFResource* aSource,
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
 
-    printf("  assert [%s]\n", (const char*) source);
+    printf("%.8s [%s]\n", aOp, (const char*) source);
     printf("       --[%s]--\n", (const char*) property);
 
     if ((resource = do_QueryInterface(aTarget)) != nsnull) {
@@ -210,6 +218,14 @@ Observer::OnAssert(nsIRDFResource* aSource,
 
     printf("\n");
     return NS_OK;
+}
+
+NS_IMETHODIMP
+Observer::OnAssert(nsIRDFResource* aSource,
+                   nsIRDFResource* aProperty,
+                   nsIRDFNode* aTarget)
+{
+    return rdf_WriteOp("assert", aSource, aProperty, aTarget);
 }
 
 
@@ -218,46 +234,42 @@ Observer::OnUnassert(nsIRDFResource* aSource,
                      nsIRDFResource* aProperty,
                      nsIRDFNode* aTarget)
 {
+    return rdf_WriteOp("unassert", aSource, aProperty, aTarget);
+}
+
+
+NS_IMETHODIMP
+Observer::OnChange(nsIRDFResource* aSource,
+                   nsIRDFResource* aProperty,
+                   nsIRDFNode* aOldTarget,
+                   nsIRDFNode* aNewTarget)
+{
     nsresult rv;
-
-    nsXPIDLCString source;
-    rv = aSource->GetValue(getter_Copies(source));
+    rv = rdf_WriteOp("chg-from", aSource, aProperty, aOldTarget);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString property;
-    rv = aProperty->GetValue(getter_Copies(property));
+    rv = rdf_WriteOp("chg-to", aSource, aProperty, aNewTarget);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFResource> resource;
-    nsCOMPtr<nsIRDFLiteral> literal;
-
-    printf("unassert [%s]\n", (const char*) source);
-    printf("       --[%s]--\n", (const char*) property);
-
-    if ((resource = do_QueryInterface(aTarget)) != nsnull) {
-        nsXPIDLCString target;
-        rv = resource->GetValue(getter_Copies(target));
-        if (NS_FAILED(rv)) return rv;
-
-        printf("       ->[%s]\n", (const char*) target);
-    }
-    else if ((literal = do_QueryInterface(aTarget)) != nsnull) {
-        nsXPIDLString target;
-        rv = literal->GetValue(getter_Copies(target));
-        if (NS_FAILED(rv)) return rv;
-
-        char* p = nsAutoString(target).ToNewCString();
-        if (! p)
-            return NS_ERROR_OUT_OF_MEMORY;
-        
-        printf("       ->\"%s\"\n", p);
-
-        delete[] p;
-    }
-
-    printf("\n");
     return NS_OK;
 }
+
+NS_IMETHODIMP
+Observer::OnMove(nsIRDFResource* aOldSource,
+                 nsIRDFResource* aNewSource,
+                 nsIRDFResource* aProperty,
+                 nsIRDFNode* aTarget)
+{
+    nsresult rv;
+    rv = rdf_WriteOp("mv-from", aOldSource, aProperty, aTarget);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdf_WriteOp("mv-to", aNewSource, aProperty, aTarget);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -284,16 +296,22 @@ main(int argc, char** argv)
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
     // URL, but only a "file:" URL will be written back to disk.)
-    nsCOMPtr<nsIRDFXMLDataSource> ds;
+    nsCOMPtr<nsIRDFDataSource> ds;
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            kIRDFXMLDataSourceIID,
+                                            nsIRDFDataSource::GetIID(),
                                             getter_AddRefs(ds));
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create RDF/XML data source");
     if (NS_FAILED(rv)) return rv;
 
-    rv = ds->Init(argv[1]);
+    nsCOMPtr<nsIRDFRemoteDataSource> remote
+        = do_QueryInterface(ds);
+
+    if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    rv = remote->Init(argv[1]);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to initialize data source");
     if (NS_FAILED(rv)) return rv;
 
@@ -308,7 +326,7 @@ main(int argc, char** argv)
 
     while (1) {
         // Okay, this should load the XML file...
-        rv = ds->Open(PR_TRUE);
+        rv = remote->Refresh(PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open datasource");
         if (NS_FAILED(rv)) return rv;
 

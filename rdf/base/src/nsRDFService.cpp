@@ -35,7 +35,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
-#include "nsIRDFXMLDataSource.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
@@ -48,7 +48,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,    NS_RDFXMLDATASOURCE_CID);
 
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
@@ -844,6 +844,8 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 NS_IMETHODIMP
 ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 {
+    nsresult rv;
+
     // First, check the cache to see if we already have this
     // datasource loaded and initialized.
     {
@@ -851,6 +853,12 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
             NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
         if (cached) {
+            nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(cached);
+            if (remote) {
+                rv = remote->Refresh(PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+            }
+
             NS_ADDREF(cached);
             *aDataSource = cached;
             return NS_OK;
@@ -858,7 +866,6 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     }
 
     // Nope. So go to the repository to try to create it.
-    nsresult rv;
     nsCOMPtr<nsIRDFDataSource> ds;
 	nsAutoString rdfName(uri);
     static const char kRDFPrefix[] = "rdf:";
@@ -898,8 +905,11 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         ds = do_QueryInterface(isupports, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = ds->Init(uri);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(ds);
+        if (remote) {
+            rv = remote->Init(uri);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
     else {
         // Try to load this as an RDF/XML data source
@@ -910,17 +920,17 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
         if (NS_FAILED(rv)) return rv;
 
-        rv = ds->Init(uri);
-        if (NS_FAILED(rv)) return rv;
-
         // Start the datasource load asynchronously. If you wanted it
         // loaded synchronously, then you should've tried to do it
         // yourself.
-        nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(ds));
-        NS_ASSERTION(rdfxmlDataSource, "not an RDF/XML data source!");
-        if (! rdfxmlDataSource) return NS_ERROR_UNEXPECTED;
+        nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(ds));
+        NS_ASSERTION(remote, "not a remote RDF/XML data source!");
+        if (! remote) return NS_ERROR_UNEXPECTED;
 
-        rv = rdfxmlDataSource->Open(PR_FALSE);
+        rv = remote->Init(uri);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = remote->Refresh(PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 

@@ -78,8 +78,23 @@ public:
 				PRBool isUnique, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
     // nsIRDFObserver interface
-    NS_IMETHOD OnAssert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObject);
-    NS_IMETHOD OnUnassert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObjetct);
+    NS_IMETHOD OnAssert(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aTarget);
+
+    NS_IMETHOD OnUnassert(nsIRDFResource* aSource,
+                          nsIRDFResource* aProperty,
+                          nsIRDFNode* aTarget);
+
+    NS_IMETHOD OnChange(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
+                      nsIRDFResource* aNewSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget);
 
     // nsIDOMNodeObserver interface
     NS_DECL_IDOMNODEOBSERVER

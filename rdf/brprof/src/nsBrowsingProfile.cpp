@@ -57,7 +57,9 @@ struct nsCategory {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBrowsingProfile : public nsIBrowsingProfile, public nsIRDFObserver {
+class nsBrowsingProfile : public nsIBrowsingProfile,
+                          public nsIRDFObserver
+{
 public:
     NS_DECL_ISUPPORTS
 
@@ -71,12 +73,21 @@ public:
     NS_IMETHOD CountPageVisit(const char* url);
 
     // nsIRDFObserver methods:
-    NS_IMETHOD OnAssert(nsIRDFResource* subject,
-                        nsIRDFResource* predicate,
-                        nsIRDFNode* object);
-    NS_IMETHOD OnUnassert(nsIRDFResource* subject,
-                          nsIRDFResource* predicate,
-                          nsIRDFNode* object);
+    NS_IMETHOD OnAssert(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aTarget);
+    NS_IMETHOD OnUnassert(nsIRDFResource* aSource,
+                          nsIRDFResource* aProperty,
+                          nsIRDFNode* aTarget);
+    NS_IMETHOD OnChange(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget);
+    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
+                      nsIRDFResource* aNewSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget);
+                        
 
     // nsBrowsingProfile methods:
     nsBrowsingProfile();
@@ -586,6 +597,27 @@ nsBrowsingProfile::OnUnassert(nsIRDFResource* subject,
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsBrowsingProfile::OnChange(nsIRDFResource* aSource,
+                            nsIRDFResource* aProperty,
+                            nsIRDFNode* aOldTarget,
+                            nsIRDFNode* aNewTarget)
+{
+    // XXX Do we care?
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowsingProfile::OnMove(nsIRDFResource* aOldSource,
+                          nsIRDFResource* aNewSource,
+                          nsIRDFResource* aProperty,
+                          nsIRDFNode* aTarget)
+{
+    // XXX Do we care?
+    return NS_OK;
+}
 
 void
 nsBrowsingProfile::Uint8ToHex(PRUint8 aNum, char aBuf[2])

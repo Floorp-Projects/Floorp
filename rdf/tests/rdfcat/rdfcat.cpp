@@ -38,7 +38,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIPostToServer.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFXMLDataSource.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -96,9 +96,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
-NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
-NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
-NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 
 #include "nsIAllocator.h" // for the CID
 
@@ -201,21 +198,27 @@ main(int argc, char** argv)
 
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL.
-    nsCOMPtr<nsIRDFXMLDataSource> ds;
+    nsCOMPtr<nsIRDFDataSource> ds;
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            kIRDFXMLDataSourceIID,
+                                            nsIRDFDataSource::GetIID(),
                                             getter_AddRefs(ds));
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create RDF/XML data source");
     if (NS_FAILED(rv)) return rv;
 
-    rv = ds->Init(argv[1]);
+    nsCOMPtr<nsIRDFRemoteDataSource> remote
+        = do_QueryInterface(ds);
+
+    if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    rv = remote->Init(argv[1]);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to initialize data source");
     if (NS_FAILED(rv)) return rv;
 
     // Okay, this should load the XML file...
-    rv = ds->Open(PR_TRUE);
+    rv = remote->Refresh(PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open datasource");
     if (NS_FAILED(rv)) return rv;
 

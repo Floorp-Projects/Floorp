@@ -239,8 +239,24 @@ public:
 
 
     // nsIRDFObserver interface
-    NS_IMETHOD OnAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
-    NS_IMETHOD OnUnassert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aObjetct);
+    NS_IMETHOD OnAssert(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aTarget);
+    
+    NS_IMETHOD OnUnassert(nsIRDFResource* aSource,
+                          nsIRDFResource* aProperty,
+                          nsIRDFNode* aObjetct);
+
+    NS_IMETHOD OnChange(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
+                      nsIRDFResource* aNewSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget);
+
 
     // nsIDOMNodeObserver interface
     NS_DECL_IDOMNODEOBSERVER
@@ -1175,6 +1191,29 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
     }
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
+                            nsIRDFResource* aProperty,
+                            nsIRDFNode* aOldTarget,
+                            nsIRDFNode* aNewTarget)
+{
+	NS_NOTYETIMPLEMENTED("write me");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OnMove(nsIRDFResource* aOldSource,
+                          nsIRDFResource* aNewSource,
+                          nsIRDFResource* aProperty,
+                          nsIRDFNode* aTarget)
+{
+	NS_NOTYETIMPLEMENTED("write me");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////

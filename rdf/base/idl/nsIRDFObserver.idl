@@ -27,14 +27,24 @@ interface nsIRDFObserver : nsISupports {
     // This method is called whenever a new assertion is made
     // in the data source
     void OnAssert(in nsIRDFResource aSource,
-                  in nsIRDFResource aLabel,
+                  in nsIRDFResource aProperty,
                   in nsIRDFNode     aTarget);
 
     // This method is called whenever an assertion is removed
     // from the data source
     void OnUnassert(in nsIRDFResource aSource,
-                    in nsIRDFResource aLabel,
+                    in nsIRDFResource aProperty,
                     in nsIRDFNode     aTarget);
+
+    void OnChange(in nsIRDFResource aSource,
+                  in nsIRDFResource aProperty,
+                  in nsIRDFNode     aOldTarget,
+                  in nsIRDFNode     aNewTarget);
+
+    void OnMove(in nsIRDFResource aOldSource,
+                in nsIRDFResource aNewSource,
+                in nsIRDFResource aProperty,
+                in nsIRDFNode     aTarget);
 };
 
 

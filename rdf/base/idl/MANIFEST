@@ -6,8 +6,9 @@ nsIRDFLiteral.idl
 nsIRDFNode.idl
 nsIRDFObserver.idl
 nsIRDFPurgeableDataSource.idl
+nsIRDFRemoteDataSource.idl
 nsIRDFResource.idl
 nsIRDFService.idl
-nsIRDFXMLDataSource.idl
+nsIRDFXMLSink.idl
 nsIRDFXMLSource.idl
 xulstubs.idl

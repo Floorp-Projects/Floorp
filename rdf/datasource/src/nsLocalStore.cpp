@@ -27,7 +27,7 @@
 #include "nsIComponentManager.h"
 #include "nsILocalStore.h"
 #include "nsIRDFDataSource.h"
-#include "nsIRDFXMLDataSource.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
@@ -42,13 +42,16 @@ class LocalStoreImpl : public nsILocalStore,
                        public nsIRDFDataSource
 {
 private:
-    nsIRDFXMLDataSource* mInner;
-    char* mURI;
+    nsCOMPtr<nsIRDFDataSource> mInner;
 
-public:
     LocalStoreImpl();
     virtual ~LocalStoreImpl();
+    nsresult Init();
 
+    friend nsresult
+    NS_NewLocalStore(nsILocalStore** aResult);
+
+public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
@@ -56,8 +59,6 @@ public:
 
     // nsIRDFDataSource interface. Most of these are just delegated to
     // the inner, in-memory datasource.
-    NS_IMETHOD Init(const char* aURI);
-
     NS_IMETHOD GetURI(char* *aURI);
 
     NS_IMETHOD GetSource(nsIRDFResource* aProperty,
@@ -101,6 +102,20 @@ public:
         return mInner->Unassert(aSource, aProperty, aTarget);
     }
 
+    NS_IMETHOD Change(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aOldTarget,
+                      nsIRDFNode* aNewTarget) {
+        return mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
+    }
+
+    NS_IMETHOD Move(nsIRDFResource* aOldSource,
+                    nsIRDFResource* aNewSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aTarget) {
+        return mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
+    }
+
     NS_IMETHOD HasAssertion(nsIRDFResource* aSource,
                             nsIRDFResource* aProperty,
                             nsIRDFNode* aTarget,
@@ -131,10 +146,6 @@ public:
         return mInner->GetAllResources(aResult);
     }
 
-    NS_IMETHOD Flush(void) {
-        return mInner->Flush();
-    }
-
     NS_IMETHOD GetAllCommands(nsIRDFResource* aSource,
                               nsIEnumerator/*<nsIRDFResource>*/** aCommands);
 
@@ -154,20 +165,16 @@ public:
 
 
 LocalStoreImpl::LocalStoreImpl(void)
-    : mInner(nsnull), mURI(nsnull)
 {
     NS_INIT_ISUPPORTS();
 }
 
 LocalStoreImpl::~LocalStoreImpl(void)
 {
-    Flush();
-    NS_IF_RELEASE(mInner);
-    PL_strfree(mURI);
 }
 
 
-PR_IMPLEMENT(nsresult)
+nsresult
 NS_NewLocalStore(nsILocalStore** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
@@ -177,6 +184,13 @@ NS_NewLocalStore(nsILocalStore** aResult)
     LocalStoreImpl* impl = new LocalStoreImpl();
     if (! impl)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = impl->Init();
+    if (NS_FAILED(rv)) {
+        delete impl;
+        return rv;
+    }
 
     NS_ADDREF(impl);
     *aResult = impl;
@@ -221,8 +235,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // nsIRDFDataSource interface
 
-NS_IMETHODIMP
-LocalStoreImpl::Init(const char* aURI)
+nsresult
+LocalStoreImpl::Init()
 {
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
@@ -242,17 +256,15 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
         os << "</RDF:RDF>" << nsEndl;
     }
 
-    mURI = PL_strdup(aURI);
-    if (! mURI)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            nsIRDFXMLDataSource::GetIID(),
+                                            nsIRDFDataSource::GetIID(),
                                             (void**) &mInner);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mInner->Init((const char*) nsFileURL(spec));
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+
+    rv = remote->Init((const char*) nsFileURL(spec));
     if (NS_FAILED(rv)) return rv;
 
     // register this as a named data source with the RDF service
@@ -279,7 +291,7 @@ LocalStoreImpl::GetURI(char* *aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    *aURI = nsXPIDLCString::Copy(mURI);
+    *aURI = nsXPIDLCString::Copy("rdf:localstore");
     if (! *aURI)
         return NS_ERROR_OUT_OF_MEMORY;
 

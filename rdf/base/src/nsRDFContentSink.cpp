@@ -61,7 +61,7 @@
 #include "nsIRDFContentSink.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
-#include "nsIRDFXMLDataSource.h"
+#include "nsIRDFXMLSink.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIXMLContentSink.h"
@@ -173,8 +173,8 @@ public:
 
     // nsIRDFContentSink
     NS_IMETHOD Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager);
-    NS_IMETHOD SetDataSource(nsIRDFXMLDataSource* ds);
-    NS_IMETHOD GetDataSource(nsIRDFXMLDataSource*& ds);
+    NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource*& aDataSource);
 
 protected:
     // pseudo constants
@@ -239,9 +239,11 @@ protected:
     virtual nsresult OpenMember(const nsIParserNode& aNode);
     virtual nsresult OpenValue(const nsIParserNode& aNode);
 
-    // Miscellaneous RDF junk
-    nsIRDFXMLDataSource*   mDataSource;
-    RDFContentSinkState    mState;
+    // The datasource in which we're assigning assertions
+    nsCOMPtr<nsIRDFDataSource> mDataSource;
+
+    // The current state of the content sink
+    RDFContentSinkState mState;
 
     // content stack management
     PRInt32         PushContext(nsIRDFResource *aContext, RDFContentSinkState aState);
@@ -325,8 +327,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 RDFContentSinkImpl::~RDFContentSinkImpl()
 {
     NS_IF_RELEASE(mDocumentURL);
-
-    NS_IF_RELEASE(mDataSource);
 
     NS_IF_RELEASE(mNameSpaceManager);
     if (mNameSpaceStack) {
@@ -431,25 +431,45 @@ RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP 
 RDFContentSinkImpl::WillBuildModel(void)
 {
-    return (mDataSource != nsnull) ? mDataSource->BeginLoad() : NS_OK;
+    if (mDataSource) {
+        nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+        if (sink) 
+            return sink->BeginLoad();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
 {
-    return (mDataSource != nsnull) ? mDataSource->EndLoad() : NS_OK;
+    if (mDataSource) {
+        nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+        if (sink)
+            return sink->EndLoad();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::WillInterrupt(void)
 {
-    return (mDataSource != nsnull) ? mDataSource->Interrupt() : NS_OK;
+    if (mDataSource) {
+        nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+        if (sink)
+            return sink->Interrupt();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::WillResume(void)
 {
-    return (mDataSource != nsnull) ? mDataSource->Resume() : NS_OK;
+    if (mDataSource) {
+        nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+        if (sink)
+            return sink->Resume();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -730,20 +750,18 @@ RDFContentSinkImpl::Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager)
 }
 
 NS_IMETHODIMP
-RDFContentSinkImpl::SetDataSource(nsIRDFXMLDataSource* ds)
+RDFContentSinkImpl::SetDataSource(nsIRDFDataSource* aDataSource)
 {
-    NS_IF_RELEASE(mDataSource);
-    mDataSource = ds;
-    NS_IF_ADDREF(mDataSource);
+    mDataSource = dont_QueryInterface(aDataSource);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-RDFContentSinkImpl::GetDataSource(nsIRDFXMLDataSource*& ds)
+RDFContentSinkImpl::GetDataSource(nsIRDFDataSource*& aDataSource)
 {
-    ds = mDataSource;
-    NS_IF_ADDREF(mDataSource);
+    aDataSource = mDataSource;
+    NS_IF_ADDREF(aDataSource);
     return NS_OK;
 }
 
@@ -1457,7 +1475,9 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
                 }
 
                 // Add it to the set of namespaces used in the RDF/XML document.
-                mDataSource->AddNameSpace(prefixAtom, uri);
+                nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+                if (sink)
+                    sink->AddNameSpace(prefixAtom, uri);
       
                 NS_IF_RELEASE(prefixAtom);
             }

@@ -16,30 +16,19 @@
  * Reserved.
  */
 
-/*
+#include "nsISupports.idl"
 
-  This header file just contains prototypes for the factory methods
-  for "builtin" data sources that are included in rdf.dll.
+[scriptable, uuid(1D297320-27F7-11d3-BE01-000064657374)]
+interface nsIRDFRemoteDataSource : nsISupports
+{
+    // Specify the URI for the data source: this is the prefix
+    // that will be used to register the data source in the
+    // data source registry.
+    void Init(in string uri);
 
-  Each of these data sources is exposed to the external world via its
-  CID in ../include/nsRDFCID.h.
+    void Refresh(in boolean aBlocking);
 
-*/
-
-#ifndef nsBaseDataSources_h__
-#define nsBaseDataSources_h__
-
-#include "nsError.h"
-class nsIRDFDataSource;
-
-// in nsInMemoryDataSource.cpp
-NS_IMETHODIMP
-NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
-
-// in nsRDFXMLDataSource.cpp
-extern nsresult
-NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult);
-
-#endif // nsBaseDataSources_h__
-
-
+    // Request that a data source write it's contents out to 
+    // permanent storage if applicable.
+    void Flush();
+};

@@ -45,6 +45,7 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "rdf.h"
@@ -74,8 +75,6 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFDataSource interface
-    NS_IMETHOD Init(const char* uri);
-
     NS_IMETHOD GetURI(char* *uri);
 
     NS_IMETHOD GetSource(nsIRDFResource* property,
@@ -107,15 +106,25 @@ public:
                         nsIRDFResource* property,
                         nsIRDFNode* target);
 
+    NS_IMETHOD Change(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aOldTarget,
+                      nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD Move(nsIRDFResource* aOldSource,
+                    nsIRDFResource* aNewSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aTarget);
+
     NS_IMETHOD HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
                             PRBool tv,
                             PRBool* hasAssertion);
 
-    NS_IMETHOD AddObserver(nsIRDFObserver* n);
+    NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
 
-    NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
                            nsISimpleEnumerator** labels);
@@ -152,13 +161,23 @@ public:
                           nsIRDFResource* predicate,
                           nsIRDFNode* object);
 
+    NS_IMETHOD OnChange(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
+                      nsIRDFResource* aNewSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget);
+
     // Implementation methods
     PRBool HasAssertionN(int n, nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
                             PRBool tv);
 protected:
-    nsVoidArray*  mObservers;
+    nsCOMPtr<nsISupportsArray> mObservers;
         
     virtual ~CompositeDataSourceImpl(void);
 };
@@ -545,7 +564,6 @@ NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result)
 
 
 CompositeDataSourceImpl::CompositeDataSourceImpl(void)
-    : mObservers(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -558,19 +576,42 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 
 CompositeDataSourceImpl::~CompositeDataSourceImpl(void)
 {
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
-        ds->RemoveObserver(this);
-        NS_IF_RELEASE(ds);
-    }
-    delete mObservers;
 }
 
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
 NS_IMPL_ADDREF(CompositeDataSourceImpl);
-NS_IMPL_RELEASE(CompositeDataSourceImpl);
+
+NS_IMETHODIMP_(nsrefcnt)
+CompositeDataSourceImpl::Release()
+{
+    // We need a special implementation of Release() because the
+    // composite datasource holds a reference to each datasource that
+    // it "composes", and each database that the composite datasource
+    // observes holds a reference _back_ to the composite datasource.
+    NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
+    --mRefCnt;
+
+    // When the number of references == the number of datasources,
+    // then we know that all that remains are the circular
+    // references from those datasources back to us. Release them.
+    if (PRInt32(mRefCnt) == mDataSources.Count()) {
+        for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+            nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+            ds->RemoveObserver(this);
+            NS_RELEASE(ds);
+        }
+        return 0;
+    }
+    else if (mRefCnt == 0) {
+        delete this;
+        return 0;
+    }
+    else {
+        return mRefCnt;
+    }
+}
 
 NS_IMETHODIMP
 CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
@@ -602,17 +643,10 @@ CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFDataSource interface
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::Init(const char* uri)
-{
-    NS_NOTREACHED("CompositeDataSourceImpl::Init");
-    return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
-}
-
-NS_IMETHODIMP
 CompositeDataSourceImpl::GetURI(char* *uri)
 {
-    NS_NOTREACHED("CompositeDataSourceImpl::GetURI");
-    return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
+    *uri = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -872,6 +906,27 @@ CompositeDataSourceImpl::Unassert(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
+CompositeDataSourceImpl::Change(nsIRDFResource* aSource,
+                                nsIRDFResource* aProperty,
+                                nsIRDFNode* aOldTarget,
+                                nsIRDFNode* aNewTarget)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::Move(nsIRDFResource* aOldSource,
+                              nsIRDFResource* aNewSource,
+                              nsIRDFResource* aProperty,
+                              nsIRDFNode* aTarget)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
 CompositeDataSourceImpl::HasAssertion(nsIRDFResource* aSource,
                                       nsIRDFResource* aProperty,
                                       nsIRDFNode* aTarget,
@@ -926,8 +981,9 @@ CompositeDataSourceImpl::AddObserver(nsIRDFObserver* aObserver)
         return NS_ERROR_NULL_POINTER;
 
     if (!mObservers) {
-        if ((mObservers = new nsVoidArray()) == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
+        nsresult rv;
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
     }
 
     // XXX ensure uniqueness?
@@ -1007,7 +1063,9 @@ CompositeDataSourceImpl::Flush()
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
-        ds->Flush();
+        nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(ds);
+        if (remote)
+            remote->Flush();
     }
     return NS_OK;
 }
@@ -1162,9 +1220,14 @@ CompositeDataSourceImpl::OnAssert(nsIRDFResource* aSource,
         return NS_OK;
 
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+        PRUint32 count;
+        rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnAssert(aSource, aProperty, aTarget);
+            NS_RELEASE(obs);
             // XXX ignore return value?
         }
     }
@@ -1183,8 +1246,6 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
     // datasource actually served up the OnAssert(): we could use
     // HasAssertionN() to only search datasources _before_ the
     // datasource that coughed up the assertion.
-    //
-    // XXX What if the unassertion
     nsresult rv;
     PRBool hasAssertion;
     rv = HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
@@ -1194,14 +1255,78 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
         return NS_OK;
 
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+        PRUint32 count;
+        rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnUnassert(aSource, aProperty, aTarget);
+            NS_RELEASE(obs);
             // XXX ignore return value?
         }
     }
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::OnChange(nsIRDFResource* aSource,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFNode* aOldTarget,
+                                  nsIRDFNode* aNewTarget)
+{
+    // Make sure that the change is actually visible, and not hidden
+    // by an assertion in a different datasource.
+    //
+    // XXX Because of aggregation, this could actually mutate into a
+    // variety of OnAssert or OnChange notifications, which we'll
+    // ignore for now :-/.
+    if (mObservers) {
+        PRUint32 count;
+        nsresult rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+            NS_RELEASE(obs);
+            // XXX ignore return value?
+        }
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::OnMove(nsIRDFResource* aOldSource,
+                                nsIRDFResource* aNewSource,
+                                nsIRDFResource* aProperty,
+                                nsIRDFNode* aTarget)
+{
+    // Make sure that the move is actually visible, and not hidden
+    // by an assertion in a different datasource.
+    //
+    // XXX Because of aggregation, this could actually mutate into a
+    // variety of OnAssert or OnMove notifications, which we'll
+    // ignore for now :-/.
+    if (mObservers) {
+        PRUint32 count;
+        nsresult rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+            NS_RELEASE(obs);
+            // XXX ignore return value?
+        }
+    }
+    return NS_OK;
+}
+
+
+
 
 
 
