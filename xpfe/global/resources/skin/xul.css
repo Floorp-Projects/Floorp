@@ -281,13 +281,14 @@ xpmenu {
   background-color:inherit;
   color: inherit;
   border: 1px white outset;
+  width: 150px;
 }
 
 xpmenuchildren:-moz-dropdown-menu {
   visibility:hidden;
 }
 
-xpmenuchildren[menuactive]:-moz-dropdown-menu {
+xpmenuchildren[menuactive="true"]:-moz-dropdown-menu {
   visibility: visible;
 }
 
