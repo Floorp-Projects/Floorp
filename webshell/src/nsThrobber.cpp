@@ -118,7 +118,6 @@ public:
   PRInt32        mWidth;
   PRInt32        mHeight;
   nsIWidget*     mWidget;
-  nsISupports*   mInnerWidget;
   nsVoidArray*   mImages;
   PRInt32        mNumImages;
   PRInt32        mIndex;
@@ -171,9 +170,6 @@ public:
       *aInstancePtr = (void*)(nsISupports*)(nsIThrobber*)this;
       NS_ADDREF_THIS();
       return NS_OK;
-    }
-    if (nsnull != mInnerWidget) {
-      return mInnerWidget->QueryInterface(aIID, aInstancePtr);
     }
     return NS_NOINTERFACE;
   }
@@ -329,7 +325,7 @@ nsThrobber::nsThrobber(nsISupports* aOuter)
 
 nsThrobber::~nsThrobber()
 {
-  NS_IF_RELEASE(mInnerWidget);
+  NS_IF_RELEASE(mWidget);
   RemoveThrobber(this);
   DestroyThrobberImages();
 }
@@ -368,24 +364,11 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFil
   mNumImages = aNumImages;
 
   // Create widget
-  nsresult rv = nsRepository::CreateInstance(kChildCID,
-                                             (nsIThrobber *)this,
-                                             kISupportsIID,
-                                             (void**)&mInnerWidget);
+  nsresult rv = nsRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWidget);
   if (NS_OK != rv) {
     return rv;
   }
-  mInnerWidget->QueryInterface(kIWidgetIID, (void**) &mWidget);
-  if (NS_OK != rv) {
-    NS_RELEASE(mInnerWidget);
-  }
-  else {
-    // Get rid of extra reference count
-	// XXX FIX ME...
-    mWidget->Release();
-    mWidget->Create(aParent, aBounds, HandleThrobberEvent, NULL);
-  }
-
+  mWidget->Create(aParent, aBounds, HandleThrobberEvent, NULL);
   return LoadThrobberImages(aFileNameMask, aNumImages);
 }
 
