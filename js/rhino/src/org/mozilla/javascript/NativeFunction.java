@@ -89,10 +89,9 @@ public class NativeFunction extends BaseFunction
 
     public int getLength()
     {
-        Context cx = Context.getContext();
-        if (cx != null && cx.getLanguageVersion() != Context.VERSION_1_2)
+        if (version != Context.VERSION_1_2)
             return argCount;
-        NativeCall activation = getActivation(cx);
+        NativeCall activation = getActivation(Context.getContext());
         if (activation == null)
             return argCount;
         return activation.getOriginalArguments().length;
