@@ -38,11 +38,11 @@
         ondialogaccept="return Commit();">
  
   <stringbundleset>
-    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   </stringbundleset>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
  
   <keyset id="keyset"/>  
@@ -83,7 +83,7 @@
                 <label value="&bookmarks.shortcut.label;" control="shortcut"/>
     		      	<textbox id="shortcut" />
               </row>
-              <row>
+              <row id="descriptionrow">
                 <label value="&bookmarks.description.label;" control="description"/>
                 <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
               </row>

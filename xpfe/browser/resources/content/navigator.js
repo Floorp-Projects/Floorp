@@ -184,7 +184,7 @@ const gPopupPrefListener =
         popupIcon.hidden = true;
       }
     } else { // whitelist
-      for (var i = 0; i < browsers.length; i++) {
+      for (i = 0; i < browsers.length; i++) {
         if (browsers[i].popupDomain in hosts) {
           browsers[i].popupDomain = null;
           popupIcon.hidden = true;
@@ -615,16 +615,15 @@ function Startup()
 
 function LoadBookmarksCallback()
 {
-  try {
-    if (!gBookmarksService)
-      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                                    .getService(Components.interfaces.nsIBookmarksService);
-    gBookmarksService.ReadBookmarks();
-    // tickle personal toolbar to load personal toolbar items
-    var personalToolbar = document.getElementById("NC:PersonalToolbarFolder");
-    personalToolbar.builder.rebuild();
-  } catch (e) {
-  }
+  // loads the services
+  initServices();
+  initBMService();
+  var hasRead = BMSVC.readBookmarks();  
+  var bt = document.getElementById("bookmarks-ptf");
+  if (bt && hasRead) 
+    bt.builder.rebuild();
+  controllers.appendController(BookmarksMenuController);
+
 }
 
 function WindowFocusTimerCallback(element)
@@ -783,87 +782,6 @@ function BrowserHome()
     for (var i in homePage)
       gBrowser.addTab(homePage[i]);
   }
-}
-
-function OpenBookmarkGroup(element, datasource)
-{
-  if (!datasource)
-    return;
-    
-  var id = element.getAttribute("id");
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                          .getService(Components.interfaces.nsIRDFService);
-  var resource = rdf.GetResource(id, true);
-  OpenBookmarkGroupFromResource(resource, datasource, rdf);
-}
-
-function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
-  var urlResource = rdf.GetResource("http://home.netscape.com/NC-rdf#URL");
-  var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
-  rdfContainer.Init(datasource, resource);
-  var containerChildren = rdfContainer.GetElements();
-  var tabPanels = gBrowser.mPanelContainer.childNodes;
-  var tabCount = tabPanels.length;
-  var index = 0;
-  for (; containerChildren.hasMoreElements(); ++index) {
-    var res = containerChildren.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    var target = datasource.GetTarget(res, urlResource, true);
-    if (target) {
-      var uri = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-      gBrowser.addTab(uri);
-    }
-  }  
-  
-  if (index == 0)
-    return; // If the bookmark group was completely invalid, just bail.
-     
-  // Select the first tab in the group if we aren't loading in the background.
-  if (!pref.getBoolPref("browser.tabs.loadInBackground")) {
-    var tabs = gBrowser.mTabContainer.childNodes;
-    gBrowser.selectedTab = tabs[tabCount];
-  }
-}
-
-function OpenBookmarkURL(node, datasources)
-{
-  if (node.getAttribute("group") == "true")
-    OpenBookmarkGroup(node, datasources);
-    
-  if (node.getAttribute("container") == "true")
-    return;
-
-  var url = node.getAttribute("id");
-  if (!url) // if empty url (most likely a normal menu item like "Manage Bookmarks",
-    return; // don't bother loading it
-  try {
-    // add support for IE favorites under Win32, and NetPositive URLs under BeOS
-    if (datasources) {
-      var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                          .getService(Components.interfaces.nsIRDFService);
-      var src = rdf.GetResource(url, true);
-      var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-      var target = datasources.GetTarget(src, prop, true);
-      if (target) {
-        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-        if (target)
-          url = target;
-      }
-    }
-  } catch (ex) {
-    return;
-  }
-
-  // Ignore "NC:" urls.
-  if (url.substring(0, 3) == "NC:")
-    return;
-
-  // Check if we have a browser window
-  if (_content) {
-    loadURI(url);
-    _content.focus();
-  }
-  else
-    openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
 
 function addBookmarkAs()
@@ -1169,7 +1087,7 @@ function BrowserEditBookmarks()
     if (!gDisableBookmarks) {
       gDisableBookmarks = true;
 
-      open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank",
+      open("chrome://communicator/content/bookmarks/bookmarksManager.xul", "_blank",
         "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
       setTimeout(enableBookmarks, 2000);
     }
@@ -2022,38 +1940,6 @@ function showHideTabbar()
   const visibility = gBrowser.getStripVisibility();
   pref.setBoolPref("browser.tabs.forceHide", visibility);
   gBrowser.setStripVisibilityTo(!visibility);
-}
-
-// Fill in tooltips for personal toolbar
-function FillInPTTooltip(tipElement)
-{
-
-  var title = tipElement.label;
-  var url = tipElement.statusText;
-
-  if (!title && !url) {
-    // bail out early if there is nothing to show
-    return false;
-  }
-
-  var tooltipTitle = document.getElementById("ptTitleText");
-  var tooltipUrl = document.getElementById("ptUrlText"); 
-
-  if (title && title != url) {
-    tooltipTitle.removeAttribute("hidden");
-    tooltipTitle.setAttribute("value", title);
-  } else  {
-    tooltipTitle.setAttribute("hidden", "true");
-  }
-
-  if (url) {
-    tooltipUrl.removeAttribute("hidden");
-    tooltipUrl.setAttribute("value", url);
-  } else {
-    tooltipUrl.setAttribute("hidden", "true");
-  }
-
-  return true; // show tooltip
 }
 
 function BrowserFullScreen()

@@ -18,28 +18,26 @@
 # Contributor(s): 
 
 comm.jar:
+	content/communicator/bookmarks/bookmarks.js
+	content/communicator/bookmarks/bookmarks.css
+	content/communicator/bookmarks/bookmarksMenu.js
+	content/communicator/bookmarks/bookmarksTree.xml
 	content/communicator/bookmarks/addBookmark.xul
 	content/communicator/bookmarks/addBookmark.js
 	content/communicator/bookmarks/bm-props.js
 	content/communicator/bookmarks/bm-props.xul
-	content/communicator/bookmarks/bookmarks.xul
-	content/communicator/bookmarks/bookmarks.js
-	content/communicator/bookmarks/bookmarks.css
-	content/communicator/bookmarks/bookmarks.xml
+	content/communicator/bookmarks/bookmarksManager.xul
+	content/communicator/bookmarks/bookmarksManager.js
 	content/communicator/bookmarks/bookmarksOverlay.xul
-	content/communicator/bookmarks/bookmarksOverlay.js
 	content/communicator/bookmarks/bm-panel.xul
-	content/communicator/bookmarks/bookmarksPanel.js
-	content/communicator/bookmarks/findBookmark.js
+	content/communicator/bookmarks/bm-panel.js
 	content/communicator/bookmarks/findBookmark.xul
-	content/communicator/bookmarks/pref-bookmarks.xul
-	content/communicator/bookmarks/oTest.xul
+	content/communicator/bookmarks/findBookmark.js
 
 en-US.jar:
 	locale/en-US/communicator/bookmarks/addBookmark.dtd         (locale/en-US/addBookmark.dtd)
 	locale/en-US/communicator/bookmarks/bm-props.dtd            (locale/en-US/bm-props.dtd)
 	locale/en-US/communicator/bookmarks/bookmarks.dtd           (locale/en-US/bookmarks.dtd)
-	locale/en-US/communicator/bookmarks/bookmark.properties     (locale/en-US/bookmark.properties)
+	locale/en-US/communicator/bookmarks/bookmarks.properties     (locale/en-US/bookmarks.properties)
 	locale/en-US/communicator/bookmarks/bookmarksOverlay.dtd    (locale/en-US/bookmarksOverlay.dtd)
 	locale/en-US/communicator/bookmarks/findBookmark.dtd	    (locale/en-US/findBookmark.dtd)
-	locale/en-US/communicator/bookmarks/pref-bookmarks.dtd	    (locale/en-US/pref-bookmarks.dtd)

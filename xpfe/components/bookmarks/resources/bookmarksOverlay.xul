@@ -30,22 +30,17 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   </stringbundleset>
-         
-  <popupset id="bookmarksPopupset">
-    <!-- the toolbar buttons in the personal toolbar have -moz-user-focus:ignore
-         we have to focus them manually -->
-    <popup id="bmContext" 
-           onpopupshowing="gBookmarksShell.doFocus(); gBookmarksShell.createContextMenu(event);"
-           onpopuphidden="if (content) content.focus()"/>
-  </popupset>
 
   <commands id="commands">
     <commandset id="bookmarksItems">
       <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
-      <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
+      <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
+      <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
+      <command id="cmd_bm_expandfolder"              oncommand="goDoCommand('cmd_bm_expandfolder');"/>
+      <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
       <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
       <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
       <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
@@ -55,11 +50,9 @@
       <command id="cmd_bm_setnewsearchfolder"        oncommand="goDoCommand('cmd_bm_setnewsearchfolder');"/>
       <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
       <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
-      <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
-      <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
       <command id="cmd_bm_import"                    oncommand="goDoCommand('cmd_bm_import');"/>
       <command id="cmd_bm_export"                    oncommand="goDoCommand('cmd_bm_export');"/>
-      <command id="cmd_bm_fileBookmark"           oncommand="goDoCommand('cmd_bm_fileBookmark');"/>
+      <command id="cmd_bm_movebookmark"              oncommand="goDoCommand('cmd_bm_movebookmark');"/>
 
       <command id="cmd_bm_cut"                    oncommand="goDoCommand('cmd_bm_cut');"/>
       <command id="cmd_bm_copy"                   oncommand="goDoCommand('cmd_bm_copy');"/>

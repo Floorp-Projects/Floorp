@@ -21,7 +21,6 @@ comm.jar:
         content/navigator/linkToolbarItem.js           (resources/content/linkToolbarItem.js)
         content/navigator/linkToolbarOverlay.js        (resources/content/linkToolbarOverlay.js)
         content/navigator/linkToolbarOverlay.xul       (resources/content/linkToolbarOverlay.xul)
-        content/navigator/personalToolbar.js           (resources/content/personalToolbar.js)
         content/navigator/turboDialog.xul              (resources/content/turboDialog.xul)
         content/navigator/viewsource.js                (resources/content/viewsource.js)
         content/navigator/viewSource.xul               (resources/content/viewSource.xul)

@@ -52,12 +52,11 @@
 <!ENTITY button.rename.accesskey      "R">
 <!ENTITY command.delete.label          "Delete">
 <!ENTITY button.delete.accesskey      "D">
-<!ENTITY command.fileBookmark.label    "File Bookmark(s)...">
-<!ENTITY button.fileBookmark.accesskey "B">
-<!ENTITY command.fileBookmark.accesskey "l">
+<!ENTITY command.moveBookmark.label    "Move Bookmark(s)...">
+<!ENTITY command.moveBookmarkShort.label "Move...">
+<!ENTITY command.moveBookmark.accesskey "M">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
-
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">
@@ -93,5 +92,5 @@
 
 <!ENTITY bookmarksWindowTitle.label     "Bookmark Manager">
 
-<!ENTITY find.label                     "Search">
-<!ENTITY find.accesskey                 "S">
+<!ENTITY search.label                     "Search">
+<!ENTITY search.accesskey                 "S">

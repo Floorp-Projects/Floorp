@@ -1,4 +1,6 @@
-bm-find.dtd
+addBookmark.dtd
 bm-props.dtd
-bookmark.properties
 bookmarks.dtd
+bookmarksOverlay.dtd
+bookmarks.properties
+findBookmark.dtd

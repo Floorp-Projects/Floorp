@@ -51,8 +51,8 @@ interface nsIBookmarksService : nsISupports
     const unsigned long BOOKMARK_SEARCH_TYPE    = 1;
     const unsigned long BOOKMARK_FIND_TYPE      = 2;
 
-    boolean ReadBookmarks();
-    boolean IsBookmarked(in string aURI);
+    boolean readBookmarks();
+    boolean isBookmarked(in string aURL);
 
     void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
@@ -64,20 +64,29 @@ interface nsIBookmarksService : nsISupports
     nsIRDFResource createGroupInContainer(in wstring aName, in nsIRDFResource aParentFolder, 
                                           in long aIndex);
 
-    nsIRDFResource createBookmark(in wstring aName, in string aURL, in wstring docCharSet);
-    nsIRDFResource createBookmarkInContainer(in wstring aName, in string aURI, in wstring docCharSet, 
-                                             in nsIRDFResource aFolder, in long aIndex);
+    nsIRDFResource createBookmark(in wstring aName,
+                                  in string aURL,
+                                  in wstring aShortcutURL,
+                                  in wstring aDescription,
+                                  in wstring aDocCharSet);
+    nsIRDFResource createBookmarkInContainer(in wstring aName,
+                                             in string aURL,
+                                             in wstring aShortcutURL,
+                                             in wstring aDescription,
+                                             in wstring aDocCharSet, 
+                                             in nsIRDFResource aFolder,
+                                             in long aIndex);
 
     nsIRDFResource createSeparator();
 
-    void updateBookmarkIcon(in string aURL, in wstring iconURL);
-    void removeBookmarkIcon(in string aURL, in wstring iconURL);
+    void updateBookmarkIcon(in string aURL, in wstring aIconURL);
+    void removeBookmarkIcon(in string aURL, in wstring aIconURL);
 
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
     
     string resolveKeyword(in wstring aName);
     
-    wstring getLastCharset(in string aURI);
+    wstring getLastCharset(in string aURL);
 
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
 };

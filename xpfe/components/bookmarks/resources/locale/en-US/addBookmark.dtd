@@ -20,27 +20,17 @@
    -   Ben Goodger <ben@netscape.com> (Original Author)
   --> 
   
-<!ENTITY newBookmark.title          "Add Bookmark">
-<!ENTITY newbookmark.label          "&brandShortName; will add a bookmark to this page.">
+<!ENTITY newBookmark.title          "File Bookmark">
+<!ENTITY selectFolder.title         "Choose Folder">
 <!ENTITY name.label                 "Name:">
-<!ENTITY name.accesskey             "n">
+<!ENTITY name.accesskey             "N">
 <!ENTITY url.label                  "Location:">
-<!ENTITY url.accesskey              "l">
-<!ENTITY button.createin.label      "Create In &gt;&gt;">
-<!ENTITY button.createin.accesskey  "c">
-<!ENTITY button.createin2.label     "Create In &lt;&lt;">
-<!ENTITY createin.label             "Create in:">
-<!ENTITY createin.accesskey         "i">
-<!ENTITY button.newfolder.label     "New Folder...">
-<!ENTITY button.newfolder.accesskey "w">
-<!ENTITY alwayscreateinfolder.label "Don't show this dialog again">
-<!ENTITY alwayscreateinfolder.accesskey "a">
-<!ENTITY dontshowmessage.tooltip    "When this option is selected, new Bookmarks will be added using the title provided by the page.">
-<!ENTITY button.defaultfolder.label "Use Default">
-<!ENTITY button.defaultfolder.accesskey "d">
-<!ENTITY selectFolder.label         "Choose Folder">
+<!ENTITY url.accesskey              "L">
+<!ENTITY shortcutURL.label          "Keyword:">
+<!ENTITY shortcutURL.accesskey      "K">
+<!ENTITY destination.label          "Destination:">
+<!ENTITY destination.accesskey      "D">
+<!ENTITY newFolder.label            "New Folder...">
+<!ENTITY newFolder.accesskey        "w">
 <!ENTITY addGroup.label             "Bookmark this group of tabs">
 <!ENTITY addGroup.accesskey         "B">
-
-
-
