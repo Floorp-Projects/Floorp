@@ -100,21 +100,30 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSValue mStretch; // NEW
 };
 
+struct nsCSSValueList {
+  nsCSSValueList(void);
+  ~nsCSSValueList(void);
+
+  nsCSSValue      mValue;
+  nsCSSValueList* mNext;
+};
+
 struct nsCSSColor : public nsCSSStruct  {
+  nsCSSColor(void);
+  ~nsCSSColor(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  nsCSSValue mColor;
-  nsCSSValue mBackColor;
-  nsCSSValue mBackImage;
-  nsCSSValue mBackRepeat;
-  nsCSSValue mBackAttachment;
-  nsCSSValue mBackPositionX;
-  nsCSSValue mBackPositionY;
-  nsCSSValue mBackFilter;
-  nsCSSValue mCursor;
-  nsCSSValue mCursorImage;
-  nsCSSValue mOpacity;
+  nsCSSValue      mColor;
+  nsCSSValue      mBackColor;
+  nsCSSValue      mBackImage;
+  nsCSSValue      mBackRepeat;
+  nsCSSValue      mBackAttachment;
+  nsCSSValue      mBackPositionX;
+  nsCSSValue      mBackPositionY;
+  nsCSSValue      mBackFilter;
+  nsCSSValueList* mCursor;
+  nsCSSValue      mOpacity;
 };
 
 struct nsCSSShadow {
@@ -220,7 +229,8 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   nsCSSValue mBorderCollapse;
-  nsCSSValue mBorderSpacing;
+  nsCSSValue mBorderSpacingX;
+  nsCSSValue mBorderSpacingY;
   nsCSSValue mCaptionSide;
   nsCSSValue mEmptyCells;
   nsCSSValue mLayout;
@@ -243,18 +253,39 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   nsCSSValue mMarks;
-  nsCSSValue mSize;
+  nsCSSValue mSizeWidth;
+  nsCSSValue mSizeHeight;
+};
+
+struct nsCSSCounterData {
+  nsCSSCounterData(void);
+  ~nsCSSCounterData(void);
+
+  nsCSSValue        mCounter;
+  nsCSSValue        mValue;
+  nsCSSCounterData* mNext;
+};
+
+struct nsCSSQuotes {
+  nsCSSQuotes(void);
+  ~nsCSSQuotes(void);
+
+  nsCSSValue    mOpen;
+  nsCSSValue    mClose;
+  nsCSSQuotes*  mNext;
 };
 
 struct nsCSSContent : public nsCSSStruct  { // NEW
+  nsCSSContent(void);
+  ~nsCSSContent(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  nsCSSValue mContent;
-  nsCSSValue mCounterIncrement;
-  nsCSSValue mCounterReset;
-  nsCSSValue mMarkerOffset;
-  nsCSSValue mQuotes;
+  nsCSSValueList*   mContent;
+  nsCSSCounterData* mCounterIncrement;
+  nsCSSCounterData* mCounterReset;
+  nsCSSValue        mMarkerOffset;
+  nsCSSQuotes*      mQuotes;
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW
@@ -270,6 +301,7 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSValue mPitch;
   nsCSSValue mPitchRange;
   nsCSSValue mPlayDuring;
+  nsCSSValue mPlayDuringFlags;
   nsCSSValue mRichness;
   nsCSSValue mSpeak;
   nsCSSValue mSpeakHeader;

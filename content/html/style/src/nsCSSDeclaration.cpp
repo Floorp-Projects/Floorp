@@ -28,159 +28,6 @@
 //#define DEBUG_REFS
 
 
-struct CSSColorEntry{
-	PRUint8 r;
-	PRUint8 g;
-	PRUint8 b;
-	char *name;
-}; 
-
-static CSSColorEntry css_rgb_table[] = 
-{
-  {  0,   0,   0,  "black" },
-  {  0,   0, 128,  "navy" },
-  {  0,   0, 139,  "darkblue" },
-  {  0,   0, 205,  "mediumblue" },
-  {  0,   0, 255,  "blue" },
-  {  0, 100,   0,  "darkgreen" },
-  {  0, 128,   0,  "green" },
-  {  0, 128, 128,  "teal" },
-  {  0, 139, 139,  "darkcyan" },
-  {  0, 191, 255,  "deepskyblue" },
-  {  0, 206, 209,  "darkturquoise" },
-  {  0, 250, 154,  "mediumspringgreen" },
-  {  0, 255,   0,  "lime" },
-  {  0, 255, 127,  "springgreen" },
-  {  0, 255, 255,  "aqua" },
-  {  0, 255, 255,  "cyan" },
-  { 25,  25, 112,  "midnightblue" },
-  { 30, 144, 255,  "dodgerblue" },
-  { 32, 178, 170,  "lightseagreen" },
-  { 34, 139,  34,  "forestgreen" },
-  { 46, 139,  87,  "seagreen" },
-  { 47,  79,  79,  "darkslategray" },
-  { 50, 205,  50,  "limegreen" },
-  { 60, 179, 113,  "mediumseagreen" },
-  { 64, 224, 208,  "turquoise" },
-  { 65, 105, 225,  "royalblue" },
-  { 70, 130, 180,  "steelblue" },
-  { 72,  61, 139,  "darkslateblue" },
-  { 72, 209, 204,  "mediumturquoise" },
-  { 75,   0, 130,  "indigo" },
-  { 85, 107,  47,  "darkolivegreen" },
-  { 95, 158, 160,  "cadetblue" },
-  {100, 149, 237,  "cornflowerblue" },
-  {102, 205, 170,  "mediumaquamarine" },
-  {105, 105, 105,  "dimgray" },
-  {106,  90, 205,  "slateblue" },
-  {107, 142,  35,  "olivedrab" },
-  {112, 128, 144,  "slategray" },
-  {119, 136, 153,  "lightslategray" },
-  {123, 104, 238,  "mediumslateblue" },
-  {124, 252,   0,  "lawngreen" },
-  {127, 255,   0,  "chartreuse" },
-  {127, 255, 212,  "aquamarine" },
-  {128,   0,   0,  "maroon" },
-  {128,   0, 128,  "purple" },
-  {128, 128,   0,  "olive" },
-  {128, 128, 128,  "gray" },
-  {135, 206, 235,  "skyblue" },
-  {135, 206, 250,  "lightskyblue" },
-  {138,  43, 226,  "blueviolet" },
-  {139,   0,   0,  "darkred" },
-  {139,   0, 139,  "darkmagenta" },
-  {139,  69,  19,  "saddlebrown" },
-  {143, 188, 143,  "darkseagreen" },
-  {144, 238, 144,  "lightgreen" },
-  {147, 112, 219,  "mediumpurple" },
-  {148,   0, 211,  "darkviolet" },
-  {152, 251, 152,  "palegreen" },
-  {153,  50, 204,  "darkorchid" },
-  {154, 205,  50,  "yellowgreen" },
-  {160,  82,  45,  "sienna" },
-  {165,  42,  42,  "brown" },
-  {169, 169, 169,  "darkgray" },
-  {173, 216, 230,  "lightblue" },
-  {173, 255,  47,  "greenyellow" },
-  {175, 238, 238,  "paleturquoise" },
-  {176, 196, 222,  "lightsteelblue" },
-  {176, 224, 230,  "powderblue" },
-  {178,  34,  34,  "firebrick" },
-  {184, 134,  11,  "darkgoldenrod" },
-  {186,  85, 211,  "mediumorchid" },
-  {188, 143, 143,  "rosybrown" },
-  {189, 183, 107,  "darkkhaki" },
-  {192, 192, 192,  "silver" },
-  {199,  21, 133,  "mediumvioletred" },
-  {205,  92,  92,  "indianred" },
-  {205, 133,  63,  "peru" },
-  {210, 105,  30,  "chocolate" },
-  {210, 180, 140,  "tan" },
-  {211, 211, 211,  "lightgrey" },
-  {216, 191, 216,  "thistle" },
-  {218, 112, 214,  "orchid" },
-  {218, 165,  32,  "goldenrod" },
-  {219, 112, 147,  "palevioletred" },
-  {220,  20,  60,  "crimson" },
-  {220, 220, 220,  "gainsboro" },
-  {221, 160, 221,  "plum" },
-  {222, 184, 135,  "burlywood" },
-  {224, 255, 255,  "lightcyan" },
-  {230, 230, 250,  "lavender" },
-  {233, 150, 122,  "darksalmon" },
-  {238, 130, 238,  "violet" },
-  {238, 232, 170,  "palegoldenrod" },
-  {240, 128, 128,  "lightcoral" },
-  {240, 230, 140,  "khaki" },
-  {240, 248, 255,  "aliceblue" },
-  {240, 255, 240,  "honeydew" },
-  {240, 255, 255,  "azure" },
-  {244, 164,  96,  "sandybrown" },
-  {245, 222, 179,  "wheat" },
-  {245, 245, 220,  "beige" },
-  {245, 245, 245,  "whitesmoke" },
-  {245, 255, 250,  "mintcream" },
-  {248, 248, 255,  "ghostwhite" },
-  {250, 128, 114,  "salmon" },
-  {250, 235, 215,  "antiquewhite" },
-  {250, 240, 230,  "linen" },
-  {250, 250, 210,  "lightgoldenrodyellow" },
-  {253, 245, 230,  "oldlace" },
-  {255,   0,   0,  "red" },
-  {255,   0, 255,  "fuchsia" },
-  {255,   0, 255,  "magenta" },
-  {255,  20, 147,  "deeppink" },
-  {255,  69,   0,  "orangered" },
-  {255,  99,  71,  "tomato" },
-  {255, 105, 180,  "hotpink" },
-  {255, 127,  80,  "coral" },
-  {255, 140,   0,  "darkorange" },
-  {255, 160, 122,  "lightsalmon" },
-  {255, 165,   0,  "orange" },
-  {255, 182, 193,  "lightpink" },
-  {255, 192, 203,  "pink" },
-  {255, 215,   0,  "gold" },
-  {255, 218, 185,  "peachpuff" },
-  {255, 222, 173,  "navajowhite" },
-  {255, 228, 181,  "moccasin" },
-  {255, 228, 196,  "bisque" },
-  {255, 228, 225,  "mistyrose" },
-  {255, 235, 205,  "blanchedalmond" },
-  {255, 239, 213,  "papayawhip" },
-  {255, 240, 245,  "lavenderblush" },
-  {255, 245, 238,  "seashell" },
-  {255, 248, 220,  "cornsilk" },
-  {255, 250, 205,  "lemonchiffon" },
-  {255, 250, 240,  "floralwhite" },
-  {255, 250, 250,  "snow" },
-  {255, 255,   0,  "yellow" },
-  {255, 255, 224,  "lightyellow" },
-  {255, 255, 240,  "ivory" },
-  {255, 255, 255,  "white" },
-};
-
-
-
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
 static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
@@ -195,6 +42,8 @@ static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
 static NS_DEFINE_IID(kCSSAuralSID, NS_CSS_AURAL_SID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 
+
+#define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
 
 // --- nsCSSFont -----------------
 
@@ -219,8 +68,30 @@ void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
   fputs(buffer, out);
 }
 
+// --- support -----------------
+
+nsCSSValueList::nsCSSValueList(void)
+  : mValue(),
+    mNext(nsnull)
+{
+}
+
+nsCSSValueList::~nsCSSValueList(void)
+{
+  CSS_IF_DELETE(mNext);
+}
 
 // --- nsCSSColor -----------------
+
+nsCSSColor::nsCSSColor(void)
+  : mCursor(nsnull)
+{
+}
+
+nsCSSColor::~nsCSSColor(void)
+{
+  CSS_IF_DELETE(mCursor);
+}
 
 const nsID& nsCSSColor::GetID(void)
 {
@@ -241,13 +112,16 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
   mBackPositionX.AppendToString(buffer, PROP_BACKGROUND_X_POSITION);
   mBackPositionY.AppendToString(buffer, PROP_BACKGROUND_Y_POSITION);
   mBackFilter.AppendToString(buffer, PROP_BACKGROUND_FILTER);
-  mCursor.AppendToString(buffer, PROP_CURSOR);
-  mCursorImage.AppendToString(buffer, PROP_CURSOR_IMAGE);
+  nsCSSValueList*  cursor = mCursor;
+  while (nsnull != cursor) {
+    cursor->mValue.AppendToString(buffer, PROP_CURSOR);
+    cursor = cursor->mNext;
+  }
   mOpacity.AppendToString(buffer, PROP_OPACITY);
   fputs(buffer, out);
 }
 
-// --- nsCSSText -----------------
+// --- nsCSSText support -----------------
 
 nsCSSShadow::nsCSSShadow(void)
   : mNext(nsnull)
@@ -256,9 +130,7 @@ nsCSSShadow::nsCSSShadow(void)
 
 nsCSSShadow::~nsCSSShadow(void)
 {
-  if (nsnull != mNext) {
-    delete mNext;
-  }
+  CSS_IF_DELETE(mNext);
 }
 
 // --- nsCSSText -----------------
@@ -270,9 +142,7 @@ nsCSSText::nsCSSText(void)
 
 nsCSSText::~nsCSSText(void)
 {
-  if (nsnull != mTextShadow) {
-    delete mTextShadow;
-  }
+  CSS_IF_DELETE(mTextShadow);
 }
 
 const nsID& nsCSSText::GetID(void)
@@ -294,7 +164,7 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mTextAlign.AppendToString(buffer, PROP_TEXT_ALIGN);
   mTextIndent.AppendToString(buffer, PROP_TEXT_INDENT);
   if (nsnull != mTextShadow) {
-    if (eCSSUnit_Color == mTextShadow->mColor.GetUnit()) {
+    if (mTextShadow->mXOffset.IsLengthUnit()) {
       nsCSSShadow*  shadow = mTextShadow;
       while (nsnull != shadow) {
         shadow->mColor.AppendToString(buffer, PROP_TEXT_SHADOW_COLOR);
@@ -305,7 +175,7 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
       }
     }
     else {
-      mTextShadow->mColor.AppendToString(buffer, PROP_TEXT_SHADOW);
+      mTextShadow->mXOffset.AppendToString(buffer, PROP_TEXT_SHADOW);
     }
   }
   mUnicodeBidi.AppendToString(buffer, PROP_UNICODE_BIDI);
@@ -373,9 +243,7 @@ nsCSSDisplay::nsCSSDisplay(void)
 
 nsCSSDisplay::~nsCSSDisplay(void)
 {
-  if (nsnull != mClip) {
-    delete mClip;
-  }
+  CSS_IF_DELETE(mClip);
 }
 
 const nsID& nsCSSDisplay::GetID(void)
@@ -414,21 +282,11 @@ nsCSSMargin::nsCSSMargin(void)
 
 nsCSSMargin::~nsCSSMargin(void)
 {
-  if (nsnull != mMargin) {
-    delete mMargin;
-  }
-  if (nsnull != mPadding) {
-    delete mPadding;
-  }
-  if (nsnull != mBorderWidth) {
-    delete mBorderWidth;
-  }
-  if (nsnull != mBorderColor) {
-    delete mBorderColor;
-  }
-  if (nsnull != mBorderStyle) {
-    delete mBorderStyle;
-  }
+  CSS_IF_DELETE(mMargin);
+  CSS_IF_DELETE(mPadding);
+  CSS_IF_DELETE(mBorderWidth);
+  CSS_IF_DELETE(mBorderColor);
+  CSS_IF_DELETE(mBorderStyle);
 }
 
 const nsID& nsCSSMargin::GetID(void)
@@ -490,9 +348,7 @@ nsCSSPosition::nsCSSPosition(void)
 
 nsCSSPosition::~nsCSSPosition(void)
 {
-  if (nsnull != mOffset) {
-    delete mOffset;
-  }
+  CSS_IF_DELETE(mOffset);
 }
 
 const nsID& nsCSSPosition::GetID(void)
@@ -560,7 +416,8 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
 
   mBorderCollapse.AppendToString(buffer, PROP_BORDER_COLLAPSE);
-  mBorderSpacing.AppendToString(buffer, PROP_BORDER_SPACING);
+  mBorderSpacingX.AppendToString(buffer, PROP_BORDER_X_SPACING);
+  mBorderSpacingY.AppendToString(buffer, PROP_BORDER_Y_SPACING);
   mCaptionSide.AppendToString(buffer, PROP_CAPTION_SIDE);
   mEmptyCells.AppendToString(buffer, PROP_EMPTY_CELLS);
   mLayout.AppendToString(buffer, PROP_TABLE_LAYOUT);
@@ -605,12 +462,51 @@ void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
 
   mMarks.AppendToString(buffer, PROP_MARKS);
-  mSize.AppendToString(buffer, PROP_SIZE);
+  mSizeWidth.AppendToString(buffer, PROP_SIZE_WIDTH);
+  mSizeHeight.AppendToString(buffer, PROP_SIZE_HEIGHT);
 
   fputs(buffer, out);
 }
 
+// --- nsCSSContent support -----------------
+
+nsCSSCounterData::nsCSSCounterData(void)
+  : mNext(nsnull)
+{
+}
+
+nsCSSCounterData::~nsCSSCounterData(void)
+{
+  CSS_IF_DELETE(mNext);
+}
+
+nsCSSQuotes::nsCSSQuotes(void)
+  : mNext(nsnull)
+{
+}
+
+nsCSSQuotes::~nsCSSQuotes(void)
+{
+  CSS_IF_DELETE(mNext);
+}
+
 // --- nsCSSContent -----------------
+
+nsCSSContent::nsCSSContent(void)
+  : mContent(nsnull),
+    mCounterIncrement(nsnull),
+    mCounterReset(nsnull),
+    mQuotes(nsnull)
+{
+}
+
+nsCSSContent::~nsCSSContent(void)
+{
+  CSS_IF_DELETE(mContent);
+  CSS_IF_DELETE(mCounterIncrement);
+  CSS_IF_DELETE(mCounterReset);
+  CSS_IF_DELETE(mQuotes);
+}
 
 const nsID& nsCSSContent::GetID(void)
 {
@@ -623,11 +519,30 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString buffer;
 
-  mContent.AppendToString(buffer, PROP_CONTENT);
-  mCounterIncrement.AppendToString(buffer, PROP_COUNTER_INCREMENT);
-  mCounterReset.AppendToString(buffer, PROP_COUNTER_RESET);
+  nsCSSValueList*  content = mContent;
+  while (nsnull != content) {
+    content->mValue.AppendToString(buffer, PROP_CONTENT);
+    content = content->mNext;
+  }
+  nsCSSCounterData* counter = mCounterIncrement;
+  while (nsnull != counter) {
+    counter->mCounter.AppendToString(buffer, PROP_COUNTER_INCREMENT);
+    counter->mValue.AppendToString(buffer, -1);
+    counter = counter->mNext;
+  }
+  counter = mCounterReset;
+  while (nsnull != counter) {
+    counter->mCounter.AppendToString(buffer, PROP_COUNTER_RESET);
+    counter->mValue.AppendToString(buffer, -1);
+    counter = counter->mNext;
+  }
   mMarkerOffset.AppendToString(buffer, PROP_MARKER_OFFSET);
-  mQuotes.AppendToString(buffer, PROP_QUOTES);
+  nsCSSQuotes*  quotes = mQuotes;
+  while (nsnull != quotes) {
+    quotes->mOpen.AppendToString(buffer, PROP_QUOTES_OPEN);
+    quotes->mClose.AppendToString(buffer, PROP_QUOTES_CLOSE);
+    quotes = quotes->mNext;
+  }
 
   fputs(buffer, out);
 }
@@ -654,6 +569,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   mPitch.AppendToString(buffer, PROP_PITCH);
   mPitchRange.AppendToString(buffer, PROP_PITCH_RANGE);
   mPlayDuring.AppendToString(buffer, PROP_PLAY_DURING);
+  mPlayDuringFlags.AppendToString(buffer, PROP_PLAY_DURING_FLAGS);
   mRichness.AppendToString(buffer, PROP_RICHNESS);
   mSpeak.AppendToString(buffer, PROP_SPEAK);
   mSpeakHeader.AppendToString(buffer, PROP_SPEAK_HEADER);
@@ -755,8 +671,6 @@ CSSDeclarationImpl::CSSDeclarationImpl(void)
 #endif
 }
 
-#define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  delete ptr;
-
 CSSDeclarationImpl::~CSSDeclarationImpl(void)
 {
   CSS_IF_DELETE(mFont);
@@ -773,9 +687,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
   CSS_IF_DELETE(mAural);
 
   NS_IF_RELEASE(mImportant);
-  if (nsnull != mOrder) {
-    delete mOrder;
-  }
+  CSS_IF_DELETE(mOrder);
   if (nsnull != mComments) {
     PRInt32 index = mComments->Count();
     while (0 < --index) {
@@ -874,6 +786,15 @@ nsresult CSSDeclarationImpl::AppendValue(const char* aProperty, const nsCSSValue
   }                                   \
   else
 
+#define CSS_ENSURE_DATA(data,type)    \
+  if (nsnull == data) {               \
+    data = new type();                \
+  }                                   \
+  if (nsnull == data) {               \
+    result = NS_ERROR_OUT_OF_MEMORY;  \
+  }                                   \
+  else
+
 nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
 {
   nsresult result = NS_OK;
@@ -910,7 +831,6 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
     case PROP_BACKGROUND_Y_POSITION:
     case PROP_BACKGROUND_FILTER:
     case PROP_CURSOR:
-    case PROP_CURSOR_IMAGE:
     case PROP_OPACITY:
       CSS_ENSURE(Color) {
         switch (aProperty) {
@@ -922,8 +842,12 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
           case PROP_BACKGROUND_X_POSITION:  mColor->mBackPositionX = aValue;   break;
           case PROP_BACKGROUND_Y_POSITION:  mColor->mBackPositionY = aValue;   break;
           case PROP_BACKGROUND_FILTER:      mColor->mBackFilter = aValue;      break;
-          case PROP_CURSOR:                 mColor->mCursor = aValue;          break;
-          case PROP_CURSOR_IMAGE:           mColor->mCursorImage = aValue;     break;
+          case PROP_CURSOR:
+            CSS_ENSURE_DATA(mColor->mCursor, nsCSSValueList) {
+              mColor->mCursor->mValue = aValue;
+              CSS_IF_DELETE(mColor->mCursor->mNext);
+            }
+            break;
           case PROP_OPACITY:                mColor->mOpacity = aValue;         break;
         }
       }
@@ -952,6 +876,23 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
           case PROP_UNICODE_BIDI:     mText->mUnicodeBidi = aValue;    break;
           case PROP_LINE_HEIGHT:      mText->mLineHeight = aValue;     break;
           case PROP_WHITE_SPACE:      mText->mWhiteSpace = aValue;     break;
+        }
+      }
+      break;
+
+    case PROP_TEXT_SHADOW_COLOR:
+    case PROP_TEXT_SHADOW_RADIUS:
+    case PROP_TEXT_SHADOW_X:
+    case PROP_TEXT_SHADOW_Y:
+      CSS_ENSURE(Text) {
+        CSS_ENSURE_DATA(mText->mTextShadow, nsCSSShadow) {
+          switch (aProperty) {
+            case PROP_TEXT_SHADOW_COLOR:  mText->mTextShadow->mColor = aValue;    break;
+            case PROP_TEXT_SHADOW_RADIUS: mText->mTextShadow->mRadius = aValue;   break;
+            case PROP_TEXT_SHADOW_X:      mText->mTextShadow->mXOffset = aValue;  break;
+            case PROP_TEXT_SHADOW_Y:      mText->mTextShadow->mYOffset = aValue;  break;
+          }
+          CSS_IF_DELETE(mText->mTextShadow->mNext);
         }
       }
       break;
@@ -1140,14 +1081,16 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
 
       // nsCSSTable
     case PROP_BORDER_COLLAPSE:
-    case PROP_BORDER_SPACING:
+    case PROP_BORDER_X_SPACING:
+    case PROP_BORDER_Y_SPACING:
     case PROP_CAPTION_SIDE:
     case PROP_EMPTY_CELLS:
     case PROP_TABLE_LAYOUT:
       CSS_ENSURE(Table) {
         switch (aProperty) {
           case PROP_BORDER_COLLAPSE:  mTable->mBorderCollapse = aValue; break;
-          case PROP_BORDER_SPACING:   mTable->mBorderSpacing = aValue;  break;
+          case PROP_BORDER_X_SPACING: mTable->mBorderSpacingX = aValue; break;
+          case PROP_BORDER_Y_SPACING: mTable->mBorderSpacingY = aValue; break;
           case PROP_CAPTION_SIDE:     mTable->mCaptionSide = aValue;    break;
           case PROP_EMPTY_CELLS:      mTable->mEmptyCells = aValue;     break;
           case PROP_TABLE_LAYOUT:     mTable->mLayout = aValue;         break;
@@ -1176,11 +1119,13 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
 
       // nsCSSPage
     case PROP_MARKS:
-    case PROP_SIZE:
+    case PROP_SIZE_WIDTH:
+    case PROP_SIZE_HEIGHT:
       CSS_ENSURE(Page) {
         switch (aProperty) {
-          case PROP_MARKS:  mPage->mMarks = aValue; break;
-          case PROP_SIZE:   mPage->mSize = aValue;  break;
+          case PROP_MARKS:        mPage->mMarks = aValue; break;
+          case PROP_SIZE_WIDTH:   mPage->mSizeWidth = aValue;  break;
+          case PROP_SIZE_HEIGHT:  mPage->mSizeHeight = aValue;  break;
         }
       }
       break;
@@ -1190,14 +1135,41 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
     case PROP_COUNTER_INCREMENT:
     case PROP_COUNTER_RESET:
     case PROP_MARKER_OFFSET:
-    case PROP_QUOTES:
+    case PROP_QUOTES_OPEN:
+    case PROP_QUOTES_CLOSE:
       CSS_ENSURE(Content) {
         switch (aProperty) {
-          case PROP_CONTENT:            mContent->mContent = aValue;          break;
-          case PROP_COUNTER_INCREMENT:  mContent->mCounterIncrement = aValue; break;
-          case PROP_COUNTER_RESET:      mContent->mCounterReset = aValue;     break;
+          case PROP_CONTENT:
+            CSS_ENSURE_DATA(mContent->mContent, nsCSSValueList) {
+              mContent->mContent->mValue = aValue;          
+              CSS_IF_DELETE(mContent->mContent->mNext);
+            }
+            break;
+          case PROP_COUNTER_INCREMENT:
+            CSS_ENSURE_DATA(mContent->mCounterIncrement, nsCSSCounterData) {
+              mContent->mCounterIncrement->mCounter = aValue; 
+              CSS_IF_DELETE(mContent->mCounterIncrement->mNext);
+            }
+            break;
+          case PROP_COUNTER_RESET:
+            CSS_ENSURE_DATA(mContent->mCounterReset, nsCSSCounterData) {
+              mContent->mCounterReset->mCounter = aValue;
+              CSS_IF_DELETE(mContent->mCounterReset->mNext);
+            }
+            break;
           case PROP_MARKER_OFFSET:      mContent->mMarkerOffset = aValue;     break;
-          case PROP_QUOTES:             mContent->mQuotes = aValue;           break;
+          case PROP_QUOTES_OPEN:
+            CSS_ENSURE_DATA(mContent->mQuotes, nsCSSQuotes) {
+              mContent->mQuotes->mOpen = aValue;          
+              CSS_IF_DELETE(mContent->mQuotes->mNext);
+            }
+            break;
+          case PROP_QUOTES_CLOSE:
+            CSS_ENSURE_DATA(mContent->mQuotes, nsCSSQuotes) {
+              mContent->mQuotes->mClose = aValue;          
+              CSS_IF_DELETE(mContent->mQuotes->mNext);
+            }
+            break;
         }
       }
       break;
@@ -1212,6 +1184,7 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
     case PROP_PITCH:
     case PROP_PITCH_RANGE:
     case PROP_PLAY_DURING:
+    case PROP_PLAY_DURING_FLAGS:
     case PROP_RICHNESS:
     case PROP_SPEAK:
     case PROP_SPEAK_HEADER:
@@ -1232,6 +1205,7 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
           case PROP_PITCH:              mAural->mPitch = aValue;            break;
           case PROP_PITCH_RANGE:        mAural->mPitchRange = aValue;       break;
           case PROP_PLAY_DURING:        mAural->mPlayDuring = aValue;       break;
+          case PROP_PLAY_DURING_FLAGS:  mAural->mPlayDuringFlags = aValue;  break;
           case PROP_RICHNESS:           mAural->mRichness = aValue;         break;
           case PROP_SPEAK:              mAural->mSpeak = aValue;            break;
           case PROP_SPEAK_HEADER:       mAural->mSpeakHeader = aValue;      break;
@@ -1248,6 +1222,7 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
       // Shorthands
     case PROP_BACKGROUND:
     case PROP_BORDER:
+    case PROP_BORDER_SPACING:
     case PROP_CLIP:
     case PROP_CUE:
     case PROP_FONT:
@@ -1256,6 +1231,8 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
     case PROP_OUTLINE:
     case PROP_PADDING:
     case PROP_PAUSE:
+    case PROP_QUOTES:
+    case PROP_SIZE:
     case PROP_TEXT_SHADOW:
     case PROP_BACKGROUND_POSITION:
     case PROP_BORDER_TOP:
@@ -1356,8 +1333,6 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
       case PROP_BACKGROUND_X_POSITION:
       case PROP_BACKGROUND_Y_POSITION:
       case PROP_BACKGROUND_FILTER:
-      case PROP_CURSOR:
-      case PROP_CURSOR_IMAGE:
       case PROP_OPACITY:
         if (nsnull != mColor) {
           CSS_ENSURE_IMPORTANT(Color) {
@@ -1370,9 +1345,19 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
               CSS_CASE_IMPORTANT(PROP_BACKGROUND_X_POSITION,  mColor->mBackPositionX);
               CSS_CASE_IMPORTANT(PROP_BACKGROUND_Y_POSITION,  mColor->mBackPositionY);
               CSS_CASE_IMPORTANT(PROP_BACKGROUND_FILTER,      mColor->mBackFilter);
-              CSS_CASE_IMPORTANT(PROP_CURSOR,                 mColor->mCursor);
-              CSS_CASE_IMPORTANT(PROP_CURSOR_IMAGE,           mColor->mCursorImage);
               CSS_CASE_IMPORTANT(PROP_OPACITY,                mColor->mOpacity);
+            }
+          }
+        }
+        break;
+
+      case PROP_CURSOR:
+        if (nsnull != mColor) {
+          if (nsnull != mColor->mCursor) {
+            CSS_ENSURE_IMPORTANT(Color) {
+              CSS_IF_DELETE(mImportant->mColor->mCursor);
+              mImportant->mColor->mCursor = mColor->mCursor;
+              mColor->mCursor = nsnull;
             }
           }
         }
@@ -1411,9 +1396,7 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
         if (nsnull != mText) {
           if (nsnull != mText->mTextShadow) {
             CSS_ENSURE_IMPORTANT(Text) {
-              if (nsnull != mImportant->mText->mTextShadow) {
-                delete mImportant->mText->mTextShadow;
-              }
+              CSS_IF_DELETE(mImportant->mText->mTextShadow);
               mImportant->mText->mTextShadow = mText->mTextShadow;
               mText->mTextShadow = nsnull;
             }
@@ -1641,7 +1624,8 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
 
         // nsCSSTable
       case PROP_BORDER_COLLAPSE:
-      case PROP_BORDER_SPACING:
+      case PROP_BORDER_X_SPACING:
+      case PROP_BORDER_Y_SPACING:
       case PROP_CAPTION_SIDE:
       case PROP_EMPTY_CELLS:
       case PROP_TABLE_LAYOUT:
@@ -1649,7 +1633,8 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
           CSS_ENSURE_IMPORTANT(Table) {
             switch (aProperty) {
               CSS_CASE_IMPORTANT(PROP_BORDER_COLLAPSE,  mTable->mBorderCollapse);
-              CSS_CASE_IMPORTANT(PROP_BORDER_SPACING,   mTable->mBorderSpacing);
+              CSS_CASE_IMPORTANT(PROP_BORDER_X_SPACING, mTable->mBorderSpacingX);
+              CSS_CASE_IMPORTANT(PROP_BORDER_Y_SPACING, mTable->mBorderSpacingY);
               CSS_CASE_IMPORTANT(PROP_CAPTION_SIDE,     mTable->mCaptionSide);
               CSS_CASE_IMPORTANT(PROP_EMPTY_CELLS,      mTable->mEmptyCells);
               CSS_CASE_IMPORTANT(PROP_TABLE_LAYOUT,     mTable->mLayout);
@@ -1681,12 +1666,14 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
 
         // nsCSSPage
       case PROP_MARKS:
-      case PROP_SIZE:
+      case PROP_SIZE_WIDTH:
+      case PROP_SIZE_HEIGHT:
         if (nsnull != mPage) {
           CSS_ENSURE_IMPORTANT(Page) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(PROP_MARKS,  mPage->mMarks);
-              CSS_CASE_IMPORTANT(PROP_SIZE,   mPage->mSize);
+              CSS_CASE_IMPORTANT(PROP_MARKS,        mPage->mMarks);
+              CSS_CASE_IMPORTANT(PROP_SIZE_WIDTH,   mPage->mSizeWidth);
+              CSS_CASE_IMPORTANT(PROP_SIZE_HEIGHT,  mPage->mSizeHeight);
             }
           }
         }
@@ -1694,18 +1681,58 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
 
         // nsCSSContent
       case PROP_CONTENT:
+        if (nsnull != mContent) {
+          if (nsnull != mContent->mContent) {
+            CSS_ENSURE_IMPORTANT(Content) {
+              CSS_IF_DELETE(mImportant->mContent->mContent);
+              mImportant->mContent->mContent = mContent->mContent;
+              mContent->mContent = nsnull;
+            }
+          }
+        }
+        break;
+
       case PROP_COUNTER_INCREMENT:
+        if (nsnull != mContent) {
+          if (nsnull != mContent->mCounterIncrement) {
+            CSS_ENSURE_IMPORTANT(Content) {
+              CSS_IF_DELETE(mImportant->mContent->mCounterIncrement);
+              mImportant->mContent->mCounterIncrement = mContent->mCounterIncrement;
+              mContent->mCounterIncrement = nsnull;
+            }
+          }
+        }
+        break;
+
       case PROP_COUNTER_RESET:
+        if (nsnull != mContent) {
+          if (nsnull != mContent->mCounterReset) {
+            CSS_ENSURE_IMPORTANT(Content) {
+              CSS_IF_DELETE(mImportant->mContent->mCounterReset);
+              mImportant->mContent->mCounterReset = mContent->mCounterReset;
+              mContent->mCounterReset = nsnull;
+            }
+          }
+        }
+        break;
+
       case PROP_MARKER_OFFSET:
-      case PROP_QUOTES:
         if (nsnull != mContent) {
           CSS_ENSURE_IMPORTANT(Content) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(PROP_CONTENT,            mContent->mContent);
-              CSS_CASE_IMPORTANT(PROP_COUNTER_INCREMENT,  mContent->mCounterIncrement);
-              CSS_CASE_IMPORTANT(PROP_COUNTER_RESET,      mContent->mCounterReset);
-              CSS_CASE_IMPORTANT(PROP_MARKER_OFFSET,      mContent->mMarkerOffset);
-              CSS_CASE_IMPORTANT(PROP_QUOTES,             mContent->mQuotes);
+              CSS_CASE_IMPORTANT(PROP_MARKER_OFFSET,  mContent->mMarkerOffset);
+            }
+          }
+        }
+        break;
+
+      case PROP_QUOTES:
+        if (nsnull != mContent) {
+          if (nsnull != mContent->mQuotes) {
+            CSS_ENSURE_IMPORTANT(Content) {
+              CSS_IF_DELETE(mImportant->mContent->mQuotes);
+              mImportant->mContent->mQuotes = mContent->mQuotes;
+              mContent->mQuotes = nsnull;
             }
           }
         }
@@ -1720,7 +1747,6 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
       case PROP_PAUSE_BEFORE:
       case PROP_PITCH:
       case PROP_PITCH_RANGE:
-      case PROP_PLAY_DURING:
       case PROP_RICHNESS:
       case PROP_SPEAK:
       case PROP_SPEAK_HEADER:
@@ -1741,7 +1767,6 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
               CSS_CASE_IMPORTANT(PROP_PAUSE_BEFORE,       mAural->mPauseBefore);
               CSS_CASE_IMPORTANT(PROP_PITCH,              mAural->mPitch);
               CSS_CASE_IMPORTANT(PROP_PITCH_RANGE,        mAural->mPitchRange);
-              CSS_CASE_IMPORTANT(PROP_PLAY_DURING,        mAural->mPlayDuring);
               CSS_CASE_IMPORTANT(PROP_RICHNESS,           mAural->mRichness);
               CSS_CASE_IMPORTANT(PROP_SPEAK,              mAural->mSpeak);
               CSS_CASE_IMPORTANT(PROP_SPEAK_HEADER,       mAural->mSpeakHeader);
@@ -1752,6 +1777,17 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
               CSS_CASE_IMPORTANT(PROP_VOICE_FAMILY,       mAural->mVoiceFamily);
               CSS_CASE_IMPORTANT(PROP_VOLUME,             mAural->mVolume);
             }
+          }
+        }
+        break;
+
+      case PROP_PLAY_DURING:
+        if (nsnull != mAural) {
+          CSS_ENSURE_IMPORTANT(Aural) {
+            mImportant->mAural->mPlayDuring = mAural->mPlayDuring;
+            mAural->mPlayDuring.Reset();
+            mImportant->mAural->mPlayDuringFlags = mAural->mPlayDuringFlags;
+            mAural->mPlayDuringFlags.Reset();
           }
         }
         break;
@@ -1780,6 +1816,9 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
         SetValueImportant(PROP_BORDER_BOTTOM_COLOR);
         SetValueImportant(PROP_BORDER_LEFT_COLOR);
         break;
+      case PROP_BORDER_SPACING:
+        SetValueImportant(PROP_BORDER_X_SPACING);
+        SetValueImportant(PROP_BORDER_Y_SPACING);
       case PROP_CLIP:
         SetValueImportant(PROP_CLIP_TOP);
         SetValueImportant(PROP_CLIP_RIGHT);
@@ -1823,6 +1862,10 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
       case PROP_PAUSE:
         SetValueImportant(PROP_PAUSE_AFTER);
         SetValueImportant(PROP_PAUSE_BEFORE);
+        break;
+      case PROP_SIZE:
+        SetValueImportant(PROP_SIZE_WIDTH);
+        SetValueImportant(PROP_SIZE_HEIGHT);
         break;
       case PROP_BACKGROUND_POSITION:
         SetValueImportant(PROP_BACKGROUND_X_POSITION);
@@ -1936,7 +1979,6 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_BACKGROUND_Y_POSITION:
     case PROP_BACKGROUND_FILTER:
     case PROP_CURSOR:
-    case PROP_CURSOR_IMAGE:
     case PROP_OPACITY:
       if (nsnull != mColor) {
         switch (aProperty) {
@@ -1948,8 +1990,11 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_BACKGROUND_X_POSITION:  aValue = mColor->mBackPositionX;   break;
           case PROP_BACKGROUND_Y_POSITION:  aValue = mColor->mBackPositionY;   break;
           case PROP_BACKGROUND_FILTER:      aValue = mColor->mBackFilter;      break;
-          case PROP_CURSOR:                 aValue = mColor->mCursor;          break;
-          case PROP_CURSOR_IMAGE:           aValue = mColor->mCursorImage;     break;
+          case PROP_CURSOR:
+            if (nsnull != mColor->mCursor) {
+              aValue = mColor->mCursor->mValue;
+            }
+            break;
           case PROP_OPACITY:                aValue = mColor->mOpacity;         break;
         }
       }
@@ -2205,14 +2250,16 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
 
       // nsCSSTable
     case PROP_BORDER_COLLAPSE:
-    case PROP_BORDER_SPACING:
+    case PROP_BORDER_X_SPACING:
+    case PROP_BORDER_Y_SPACING:
     case PROP_CAPTION_SIDE:
     case PROP_EMPTY_CELLS:
     case PROP_TABLE_LAYOUT:
       if (nsnull != mTable) {
         switch (aProperty) {
           case PROP_BORDER_COLLAPSE:  aValue = mTable->mBorderCollapse; break;
-          case PROP_BORDER_SPACING:   aValue = mTable->mBorderSpacing;  break;
+          case PROP_BORDER_X_SPACING: aValue = mTable->mBorderSpacingX; break;
+          case PROP_BORDER_Y_SPACING: aValue = mTable->mBorderSpacingY; break;
           case PROP_CAPTION_SIDE:     aValue = mTable->mCaptionSide;    break;
           case PROP_EMPTY_CELLS:      aValue = mTable->mEmptyCells;     break;
           case PROP_TABLE_LAYOUT:     aValue = mTable->mLayout;         break;
@@ -2247,11 +2294,13 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
 
       // nsCSSPage
     case PROP_MARKS:
-    case PROP_SIZE:
+    case PROP_SIZE_WIDTH:
+    case PROP_SIZE_HEIGHT:
       if (nsnull != mPage) {
         switch (aProperty) {
-          case PROP_MARKS:  aValue = mPage->mMarks; break;
-          case PROP_SIZE:   aValue = mPage->mSize;  break;
+          case PROP_MARKS:        aValue = mPage->mMarks;       break;
+          case PROP_SIZE_WIDTH:   aValue = mPage->mSizeWidth;   break;
+          case PROP_SIZE_HEIGHT:  aValue = mPage->mSizeHeight;  break;
         }
       }
       else {
@@ -2264,14 +2313,36 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_COUNTER_INCREMENT:
     case PROP_COUNTER_RESET:
     case PROP_MARKER_OFFSET:
-    case PROP_QUOTES:
+    case PROP_QUOTES_OPEN:
+    case PROP_QUOTES_CLOSE:
       if (nsnull != mContent) {
         switch (aProperty) {
-          case PROP_CONTENT:            aValue = mContent->mContent;          break;
-          case PROP_COUNTER_INCREMENT:  aValue = mContent->mCounterIncrement; break;
-          case PROP_COUNTER_RESET:      aValue = mContent->mCounterReset;     break;
+          case PROP_CONTENT:
+            if (nsnull != mContent->mContent) {
+              aValue = mContent->mContent->mValue;
+            }
+            break;
+          case PROP_COUNTER_INCREMENT:  
+            if (nsnull != mContent->mCounterIncrement) {
+              aValue = mContent->mCounterIncrement->mCounter;
+            }
+            break;
+          case PROP_COUNTER_RESET:
+            if (nsnull != mContent->mCounterReset) {
+              aValue = mContent->mCounterReset->mCounter;
+            }
+            break;
           case PROP_MARKER_OFFSET:      aValue = mContent->mMarkerOffset;     break;
-          case PROP_QUOTES:             aValue = mContent->mQuotes;           break;
+          case PROP_QUOTES_OPEN:
+            if (nsnull != mContent->mQuotes) {
+              aValue = mContent->mQuotes->mOpen;
+            }
+            break;
+          case PROP_QUOTES_CLOSE:
+            if (nsnull != mContent->mQuotes) {
+              aValue = mContent->mQuotes->mClose;
+            }
+            break;
         }
       }
       else {
@@ -2289,6 +2360,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_PITCH:
     case PROP_PITCH_RANGE:
     case PROP_PLAY_DURING:
+    case PROP_PLAY_DURING_FLAGS:
     case PROP_RICHNESS:
     case PROP_SPEAK:
     case PROP_SPEAK_HEADER:
@@ -2309,6 +2381,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_PITCH:              aValue = mAural->mPitch;            break;
           case PROP_PITCH_RANGE:        aValue = mAural->mPitchRange;       break;
           case PROP_PLAY_DURING:        aValue = mAural->mPlayDuring;       break;
+          case PROP_PLAY_DURING_FLAGS:  aValue = mAural->mPlayDuringFlags;  break;
           case PROP_RICHNESS:           aValue = mAural->mRichness;         break;
           case PROP_SPEAK:              aValue = mAural->mSpeak;            break;
           case PROP_SPEAK_HEADER:       aValue = mAural->mSpeakHeader;      break;
@@ -2329,6 +2402,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
       // Shorthands
     case PROP_BACKGROUND:
     case PROP_BORDER:
+    case PROP_BORDER_SPACING:
     case PROP_CLIP:
     case PROP_CUE:
     case PROP_FONT:
@@ -2337,6 +2411,8 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_OUTLINE:
     case PROP_PADDING:
     case PROP_PAUSE:
+    case PROP_QUOTES:
+    case PROP_SIZE:
     case PROP_TEXT_SHADOW:
     case PROP_BACKGROUND_POSITION:
     case PROP_BORDER_TOP:
@@ -2350,39 +2426,6 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     default:
       result = NS_ERROR_ILLEGAL_VALUE;
       break;
-  }
-  return result;
-}
-
-
-// XXX shouldn't this get moved to color code?
-static const char* RGBToCSSString(nscolor aColor)
-{
-  const char* result = nsnull;
-
-  PRInt32 r = NS_GET_R(aColor);
-  PRInt32 g = NS_GET_G(aColor);
-  PRInt32 b = NS_GET_B(aColor);
-
-  PRInt32         index = 0;
-  PRInt32         count = sizeof(css_rgb_table)/sizeof(CSSColorEntry);
-  CSSColorEntry*  entry = nsnull;
-  
-  for (index = 0; index < count; index++)
-  {
-    entry = &css_rgb_table[index];
-    if (entry->r == r)
-    {
-      if (entry->g == g && entry->b == b)
-      {
-        result = entry->name;
-        break;
-      }
-    }
-    else if (entry->r > r)
-    {
-      break;
-    }
   }
   return result;
 }
@@ -2411,7 +2454,14 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
     return PR_FALSE;
   }
 
-  if (eCSSUnit_String == unit) {
+  if ((eCSSUnit_String <= unit) && (unit <= eCSSUnit_Counters)) {
+    switch (unit) {
+      case eCSSUnit_URL:      aResult.Append("url(");       break;
+      case eCSSUnit_Attr:     aResult.Append("attr(");      break;
+      case eCSSUnit_Counter:  aResult.Append("counter(");   break;
+      case eCSSUnit_Counters: aResult.Append("counters(");  break;
+      default:  break;
+    }
     nsAutoString  buffer;
     aValue.GetStringValue(buffer);
     aResult.Append(buffer);
@@ -2440,6 +2490,26 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
         aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_TEXT_DECORATION_NONE));
       }
     }
+    else if (PROP_AZIMUTH == aProperty) {
+      PRInt32 intValue = aValue.GetIntValue();
+      aResult.Append(nsCSSProps::LookupProperty(aProperty, (intValue & ~NS_STYLE_AZIMUTH_BEHIND)));
+      if ((NS_STYLE_AZIMUTH_BEHIND & intValue) != 0) {
+        aResult.Append(' ');
+        aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_AZIMUTH_BEHIND));
+      }
+    }
+    else if (PROP_PLAY_DURING_FLAGS == aProperty) {
+      PRInt32 intValue = aValue.GetIntValue();
+      if ((NS_STYLE_PLAY_DURING_MIX & intValue) != 0) {
+        aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_PLAY_DURING_MIX));
+      }
+      if ((NS_STYLE_PLAY_DURING_REPEAT & intValue) != 0) {
+        if (NS_STYLE_PLAY_DURING_REPEAT != intValue) {
+          aResult.Append(' ');
+        }
+        aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_PLAY_DURING_REPEAT));
+      }
+    }
     else {
       const char* name = nsCSSProps::LookupProperty(aProperty, aValue.GetIntValue());
       if (name != nsnull) {
@@ -2449,20 +2519,13 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
   }
   else if (eCSSUnit_Color == unit){
     nscolor color = aValue.GetColorValue();
-    const char* name = RGBToCSSString(color);
-
-    if (name != nsnull)
-      aResult.Append(name);
-    else
-    {
-      aResult.Append("rgb(");
-      aResult.Append(NS_GET_R(color), 10);
-      aResult.Append(",");
-      aResult.Append(NS_GET_G(color), 10);
-      aResult.Append(",");
-      aResult.Append(NS_GET_B(color), 10);
-      aResult.Append(')');
-    }
+    aResult.Append("rgb(");
+    aResult.Append(NS_GET_R(color), 10);
+    aResult.Append(",");
+    aResult.Append(NS_GET_G(color), 10);
+    aResult.Append(",");
+    aResult.Append(NS_GET_B(color), 10);
+    aResult.Append(')');
   }
   else if (eCSSUnit_Percent == unit) {
     aResult.Append(aValue.GetPercentValue() * 100.0f);
@@ -2472,33 +2535,51 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
   }
 
   switch (unit) {
-    case eCSSUnit_Null:       break;
-    case eCSSUnit_Auto:       aResult.Append("auto");     break;
-    case eCSSUnit_Inherit:    aResult.Append("inherit");  break;
-    case eCSSUnit_None:       aResult.Append("none");     break;
-    case eCSSUnit_Normal:     aResult.Append("normal");   break;
-    case eCSSUnit_String:     break;
-    case eCSSUnit_Integer:    break;
-    case eCSSUnit_Enumerated: break;
-    case eCSSUnit_Color:      break;
-    case eCSSUnit_Percent:    aResult.Append("%");    break;
-    case eCSSUnit_Number:     break;
-    case eCSSUnit_Inch:       aResult.Append("in");   break;
-    case eCSSUnit_Foot:       aResult.Append("ft");   break;
-    case eCSSUnit_Mile:       aResult.Append("mi");   break;
-    case eCSSUnit_Millimeter: aResult.Append("mm");   break;
-    case eCSSUnit_Centimeter: aResult.Append("cm");   break;
-    case eCSSUnit_Meter:      aResult.Append("m");    break;
-    case eCSSUnit_Kilometer:  aResult.Append("km");   break;
-    case eCSSUnit_Point:      aResult.Append("pt");   break;
-    case eCSSUnit_Pica:       aResult.Append("pc");   break;
-    case eCSSUnit_Didot:      aResult.Append("dt");   break;
-    case eCSSUnit_Cicero:     aResult.Append("cc");   break;
-    case eCSSUnit_EM:         aResult.Append("em");   break;
-    case eCSSUnit_EN:         aResult.Append("en");   break;
-    case eCSSUnit_XHeight:    aResult.Append("ex");   break;
-    case eCSSUnit_CapHeight:  aResult.Append("cap");  break;
-    case eCSSUnit_Pixel:      aResult.Append("px");   break;
+    case eCSSUnit_Null:         break;
+    case eCSSUnit_Auto:         aResult.Append("auto");     break;
+    case eCSSUnit_Inherit:      aResult.Append("inherit");  break;
+    case eCSSUnit_None:         aResult.Append("none");     break;
+    case eCSSUnit_Normal:       aResult.Append("normal");   break;
+
+    case eCSSUnit_String:       break;
+    case eCSSUnit_URL:
+    case eCSSUnit_Attr:
+    case eCSSUnit_Counter:
+    case eCSSUnit_Counters:     aResult.Append(')');    break;
+    case eCSSUnit_Integer:      break;
+    case eCSSUnit_Enumerated:   break;
+    case eCSSUnit_Color:        break;
+    case eCSSUnit_Percent:      aResult.Append("%");    break;
+    case eCSSUnit_Number:       break;
+
+    case eCSSUnit_Inch:         aResult.Append("in");   break;
+    case eCSSUnit_Foot:         aResult.Append("ft");   break;
+    case eCSSUnit_Mile:         aResult.Append("mi");   break;
+    case eCSSUnit_Millimeter:   aResult.Append("mm");   break;
+    case eCSSUnit_Centimeter:   aResult.Append("cm");   break;
+    case eCSSUnit_Meter:        aResult.Append("m");    break;
+    case eCSSUnit_Kilometer:    aResult.Append("km");   break;
+    case eCSSUnit_Point:        aResult.Append("pt");   break;
+    case eCSSUnit_Pica:         aResult.Append("pc");   break;
+    case eCSSUnit_Didot:        aResult.Append("dt");   break;
+    case eCSSUnit_Cicero:       aResult.Append("cc");   break;
+
+    case eCSSUnit_EM:           aResult.Append("em");   break;
+    case eCSSUnit_EN:           aResult.Append("en");   break;
+    case eCSSUnit_XHeight:      aResult.Append("ex");   break;
+    case eCSSUnit_CapHeight:    aResult.Append("cap");  break;
+
+    case eCSSUnit_Pixel:        aResult.Append("px");   break;
+
+    case eCSSUnit_Degree:       aResult.Append("deg");  break;
+    case eCSSUnit_Grad:         aResult.Append("grad"); break;
+    case eCSSUnit_Radian:       aResult.Append("rad");  break;
+
+    case eCSSUnit_Hertz:        aResult.Append("Hz");   break;
+    case eCSSUnit_Kilohertz:    aResult.Append("kHz");  break;
+
+    case eCSSUnit_Seconds:      aResult.Append("s");    break;
+    case eCSSUnit_Milliseconds: aResult.Append("ms");   break;
   }
 
   return PR_TRUE;
@@ -2535,6 +2616,12 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
       if (AppendValueToString(PROP_BORDER_TOP_STYLE, aValue)) aValue.Append(' ');
       AppendValueToString(PROP_BORDER_TOP_COLOR, aValue);
       break;
+    case PROP_BORDER_SPACING:
+      if (AppendValueToString(PROP_BORDER_X_SPACING, aValue)) {
+        aValue.Append(' ');
+        AppendValueToString(PROP_BORDER_Y_SPACING, aValue);
+      }
+      break;
     case PROP_CLIP:
       if (HAS_RECT(mDisplay,mClip)) {
         aValue.Append("rect(");
@@ -2550,6 +2637,18 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
         AppendValueToString(PROP_CUE_AFTER, aValue);
         aValue.Append(' ');
         AppendValueToString(PROP_CUE_BEFORE, aValue);
+      }
+      break;
+    case PROP_CURSOR:
+      if ((nsnull != mColor) && (nsnull != mColor->mCursor)) {
+        nsCSSValueList* cursor = mColor->mCursor;
+        do {
+          AppendValueToString(PROP_CURSOR, cursor->mValue, aValue);
+          cursor = cursor->mNext;
+          if (nsnull != cursor) {
+            aValue.Append(' ');
+          }
+        } while (nsnull != cursor);
       }
       break;
     case PROP_FONT:
@@ -2599,9 +2698,16 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
         AppendValueToString(PROP_PAUSE_BEFORE, aValue);
       }
       break;
+    case PROP_SIZE:
+      if (HAS_VALUE(mPage,mSizeWidth) && HAS_VALUE(mPage,mSizeHeight)) {
+        AppendValueToString(PROP_SIZE_WIDTH, aValue);
+        aValue.Append(' ');
+        AppendValueToString(PROP_SIZE_HEIGHT, aValue);
+      }
+      break;
     case PROP_TEXT_SHADOW:
       if ((nsnull != mText) && (nsnull != mText->mTextShadow)) {
-        if (eCSSUnit_Color == mText->mTextShadow->mColor.GetUnit()) {
+        if (mText->mTextShadow->mXOffset.IsLengthUnit()) {
           nsCSSShadow*  shadow = mText->mTextShadow;
           while (nsnull != shadow) {
             if (AppendValueToString(PROP_TEXT_SHADOW_COLOR, shadow->mColor, aValue)) aValue.Append(' ');
@@ -2615,7 +2721,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
           }
         }
         else {  // none or inherit
-          AppendValueToString(PROP_TEXT_SHADOW_COLOR, aValue);
+          AppendValueToString(PROP_TEXT_SHADOW_X, aValue);
         }
       }
       break;
@@ -2668,6 +2774,75 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
         AppendValueToString(PROP_BORDER_RIGHT_WIDTH, aValue);   aValue.Append(' ');
         AppendValueToString(PROP_BORDER_BOTTOM_WIDTH, aValue);  aValue.Append(' ');
         AppendValueToString(PROP_BORDER_LEFT_WIDTH, aValue);
+      }
+      break;
+    case PROP_CONTENT:
+      if ((nsnull != mContent) && (nsnull != mContent->mContent)) {
+        nsCSSValueList* content = mContent->mContent;
+        do {
+          AppendValueToString(PROP_CONTENT, content->mValue, aValue);
+          content = content->mNext;
+          if (nsnull != content) {
+            aValue.Append(' ');
+          }
+        } while (nsnull != content);
+      }
+      break;
+    case PROP_COUNTER_INCREMENT:
+      if ((nsnull != mContent) && (nsnull != mContent->mCounterIncrement)) {
+        nsCSSCounterData* data = mContent->mCounterIncrement;
+        do {
+          if (AppendValueToString(PROP_COUNTER_INCREMENT, data->mCounter, aValue)) {
+            if (HAS_VALUE(data, mValue)) {
+              aValue.Append(' ');
+              AppendValueToString(PROP_COUNTER_INCREMENT, data->mValue, aValue);
+            }
+          }
+          data = data->mNext;
+          if (nsnull != data) {
+            aValue.Append(' ');
+          }
+        } while (nsnull != data);
+      }
+      break;
+    case PROP_COUNTER_RESET:
+      if ((nsnull != mContent) && (nsnull != mContent->mCounterReset)) {
+        nsCSSCounterData* data = mContent->mCounterReset;
+        do {
+          if (AppendValueToString(PROP_COUNTER_RESET, data->mCounter, aValue)) {
+            if (HAS_VALUE(data, mValue)) {
+              aValue.Append(' ');
+              AppendValueToString(PROP_COUNTER_RESET, data->mValue, aValue);
+            }
+          }
+          data = data->mNext;
+          if (nsnull != data) {
+            aValue.Append(' ');
+          }
+        } while (nsnull != data);
+      }
+      break;
+    case PROP_PLAY_DURING:
+      if (HAS_VALUE(mAural, mPlayDuring)) {
+        AppendValueToString(PROP_PLAY_DURING, aValue);
+        if (HAS_VALUE(mAural, mPlayDuringFlags)) {
+          aValue.Append(' ');
+          AppendValueToString(PROP_PLAY_DURING_FLAGS, aValue);
+        }
+      }
+      break;
+    case PROP_QUOTES:
+      if ((nsnull != mContent) && (nsnull != mContent->mQuotes)) {
+        nsCSSQuotes* quotes = mContent->mQuotes;
+        do {
+          AppendValueToString(PROP_QUOTES_OPEN, quotes->mOpen, aValue);
+          aValue.Append(' ');
+          AppendValueToString(PROP_QUOTES_CLOSE, quotes->mClose, aValue);
+          quotes = quotes->mNext;
+          if (nsnull != quotes) {
+            aValue.Append(' ');
+          }
+        } while (nsnull != quotes);
       }
       break;
     default:

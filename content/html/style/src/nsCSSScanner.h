@@ -24,40 +24,43 @@ class nsIUnicharInputStream;
 // Token types
 enum nsCSSTokenType {
   // A css identifier (e.g. foo)
-  eCSSToken_Ident = 0,
+  eCSSToken_Ident = 0,          // mIdent
 
   // A css at keyword (e.g. @foo)
-  eCSSToken_AtKeyword = 1,
+  eCSSToken_AtKeyword = 1,      // mIdent
 
   // A css number without a percentage or dimension; with percentage;
   // without percentage but with a dimension
-  eCSSToken_Number = 2,
-  eCSSToken_Percentage = 3,
-  eCSSToken_Dimension = 4,
+  eCSSToken_Number = 2,         // mNumber
+  eCSSToken_Percentage = 3,     // mNumber
+  eCSSToken_Dimension = 4,      // mNumber + mIdent
 
   // A css string (e.g. "foo" or 'foo')
-  eCSSToken_String = 5,
+  eCSSToken_String = 5,         // mSymbol + mIdent + mSymbol
 
   // Whitespace (e.g. " " or "/* abc */" or "// foo <eol>")
-  eCSSToken_WhiteSpace = 6,
+  eCSSToken_WhiteSpace = 6,     // mIdent
 
   // A css symbol (e.g. ':', ';', '+', etc.)
-  eCSSToken_Symbol = 7,
-
-  eCSSToken_URL = 8,            // use getString
-  eCSSToken_InvalidURL = 9,     // doesn't matter
+  eCSSToken_Symbol = 7,         // mSymbol
 
   // A css1 id (e.g. #foo3)
-  eCSSToken_ID = 10,            // use getString()
+  eCSSToken_ID = 8,             // mIdent
+
+  eCSSToken_Function = 9,       // mIdent
+
+  eCSSToken_URL = 10,            // mIdent
+  eCSSToken_InvalidURL = 11,    // doesn't matter
+
 };
 
 struct nsCSSToken {
-  nsCSSTokenType mType;
-  nsAutoString mIdent;
-  float mNumber;
-  PRInt32 mInteger;
-  PRUnichar mSymbol;
-  PRBool mIntegerValid;
+  nsCSSTokenType  mType;
+  nsAutoString    mIdent;
+  float           mNumber;
+  PRInt32         mInteger;
+  PRBool          mIntegerValid;
+  PRUnichar       mSymbol;
 
   nsCSSToken();
 
@@ -82,31 +85,34 @@ class nsCSSScanner {
 
   // Get the next token. Return nsfalse on EOF or ERROR. aTokenResult
   // is filled in with the data for the token.
-  PRBool Next(PRInt32* aErrorCode, nsCSSToken* aTokenResult);
+  PRBool Next(PRInt32& aErrorCode, nsCSSToken& aTokenResult);
+
+  // Get the next token that may be a string or unquoted URL or whitespace
+  PRBool NextURL(PRInt32& aErrorCode, nsCSSToken& aTokenResult);
 
 protected:
   void Close();
-  PRInt32 Read(PRInt32* aErrorCode);
-  PRInt32 Peek(PRInt32* aErrorCode);
+  PRInt32 Read(PRInt32& aErrorCode);
+  PRInt32 Peek(PRInt32& aErrorCode);
   void Unread();
   void Pushback(PRUnichar aChar);
-  PRBool LookAhead(PRInt32* aErrorCode, PRUnichar aChar);
-  PRBool EatWhiteSpace(PRInt32* aErrorCode);
-  PRBool EatNewline(PRInt32* aErrorCode);
+  PRBool LookAhead(PRInt32& aErrorCode, PRUnichar aChar);
+  PRBool EatWhiteSpace(PRInt32& aErrorCode);
+  PRBool EatNewline(PRInt32& aErrorCode);
 
-  PRInt32 ParseEscape(PRInt32* aErrorCode);
-  PRBool ParseIdent(PRInt32* aErrorCode, PRInt32 aChar, nsCSSToken* aResult);
-  PRBool ParseAtKeyword(PRInt32* aErrorCode, PRInt32 aChar,
-                        nsCSSToken* aResult);
-  PRBool ParseNumber(PRInt32* aErrorCode, PRInt32 aChar, nsCSSToken* aResult);
-  PRBool ParseID(PRInt32* aErrorCode, PRInt32 aChar, nsCSSToken* aResult);
-  PRBool ParseString(PRInt32* aErrorCode, PRInt32 aChar, nsCSSToken* aResult);
-  PRBool ParseEOLComment(PRInt32* aErrorCode, nsCSSToken* aResult);
-  PRBool ParseCComment(PRInt32* aErrorCode, nsCSSToken* aResult);
+  PRInt32 ParseEscape(PRInt32& aErrorCode);
+  PRBool ParseIdent(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseAtKeyword(PRInt32& aErrorCode, PRInt32 aChar,
+                        nsCSSToken& aResult);
+  PRBool ParseNumber(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseID(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseString(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aResult);
+  PRBool ParseCComment(PRInt32& aErrorCode, nsCSSToken& aResult);
 
-  PRBool GatherString(PRInt32* aErrorCode, PRInt32 aStop,
+  PRBool GatherString(PRInt32& aErrorCode, PRInt32 aStop,
                       nsString& aString);
-  PRBool GatherIdent(PRInt32* aErrorCode, PRInt32 aChar, nsString& aIdent);
+  PRBool GatherIdent(PRInt32& aErrorCode, PRInt32 aChar, nsString& aIdent);
 
   nsIUnicharInputStream* mInput;
   PRUnichar* mBuffer;
