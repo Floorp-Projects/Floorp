@@ -281,3 +281,11 @@ OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 11,  JOF_UINT16
  */
 OPDEF(JSOP_TRY,         133,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  0,  0,  JOF_BYTE)
+
+/*
+ * Swap the top two stack elements.
+ * N.B. JSOP_SWAP doesn't swap the corresponding pc stack generating pcs, as
+ * they're not needed for the current use of preserving the top-of-stack return
+ * value when popping scopes while returning from catch blocks.
+ */
+OPDEF(JSOP_SWAP,        135,"swap",       NULL,       1,  2,  2,  0,  JOF_BYTE)

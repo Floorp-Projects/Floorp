@@ -306,11 +306,16 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
 
 /* Emit additional bytecode(s) for non-local jumps. */
 static JSBool
-EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
+EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
+                      JSBool preserveTop)
 {
     JSStmtInfo *stmt;
     ptrdiff_t jmp;
 
+    /*
+     * If we're here as part of processing a return, emit JSOP_SWAP to preserve
+     * the top element.
+     */
     for (stmt = cg->treeContext.topStmt; stmt != toStmt; stmt = stmt->down) {
         switch (stmt->type) {
           case STMT_FINALLY:
@@ -322,6 +327,10 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
             break;
           case STMT_WITH:
           case STMT_CATCH:
+            if (preserveTop) {
+                if (js_Emit1(cx, cg, JSOP_SWAP) < 0)
+                    return JS_FALSE;
+            }
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
             cg->stackDepth++;
@@ -329,11 +338,21 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
                 return JS_FALSE;
             break;
           case STMT_FOR_IN_LOOP:
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                return JS_FALSE;
             cg->stackDepth += 2;
-            if (js_Emit1(cx, cg, JSOP_POP2) < 0)
-                return JS_FALSE;
+            if (preserveTop) {
+                if (js_Emit1(cx, cg, JSOP_SWAP) < 0 ||
+                    js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                    js_Emit1(cx, cg, JSOP_POP) < 0 ||
+                    js_Emit1(cx, cg, JSOP_SWAP) < 0 ||
+                    js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                    js_Emit1(cx, cg, JSOP_POP) < 0) {
+                    return JS_FALSE;
+                }
+            } else {
+                /* JSOP_POP2 isn't decompiled, and doesn't need a src note. */
+                if (js_Emit1(cx, cg, JSOP_POP2) < 0)
+                    return JS_FALSE;
+            }
             break;
           default:;
         }
@@ -349,7 +368,7 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
     intN index;
     ptrdiff_t jmp;
 
-    if (!EmitNonLocalJumpFixup(cx, cg, toStmt))
+    if (!EmitNonLocalJumpFixup(cx, cg, toStmt, JS_FALSE))
         return -1;
 
     if (label) {
@@ -1822,8 +1841,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_RETURN:
-        if (!EmitNonLocalJumpFixup(cx, cg, NULL))
-            return JS_FALSE;
+        /* Push a return value */
         pn2 = pn->pn_kid;
         if (pn2) {
             if (!js_EmitTree(cx, cg, pn2))
@@ -1832,6 +1850,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
                 return JS_FALSE;
         }
+
+        /* 
+         * EmitNonLocalJumpFixup emits JSOP_SWAPs to maintain the return value
+         * at the top of the stack, so the return still executes OK. 
+         */
+        if (!EmitNonLocalJumpFixup(cx, cg, NULL, JS_TRUE))
+            return JS_FALSE;
         if (js_Emit1(cx, cg, JSOP_RETURN) < 0)
             return JS_FALSE;
         break;
