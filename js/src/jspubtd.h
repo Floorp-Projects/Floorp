@@ -29,7 +29,8 @@
 #  ifdef _WIN32
 #       define PR_INLINE __inline
 #  elif defined(__GNUC__)
-#       define PR_INLINE inline
+#       define PR_INLINE 
+        /* XXXMLM - was define PR_INLINE inline */
 #  else
 #       define PR_INLINE
 #  endif
