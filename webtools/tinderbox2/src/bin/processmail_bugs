@@ -1,0 +1,401 @@
+#!#perl# -T --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# processmail - the mail processing engine for tinderbox.  The build
+# machines (clients) send their build logs to the server to report on
+# the status of the builds and this program accepts the mail (via an
+# MTA like sendmail) and acts as the MDA (mail delivery agent).  This
+# program process the build logs for the tinderbox server (tinder.cgi)
+# and enforms the server of any status updates.  It also stores the
+# logs in compressed form for future reference.
+
+
+# $Revision: 1.1 $ 
+# $Date: 2000/09/22 15:17:14 $ 
+# $Author: kestes%staff.mail.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
+# $Name:  $ 
+
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# Contributor(s): 
+
+
+# Standard perl libraries
+use File::Basename;
+use Sys::Hostname;
+use File::stat;
+use Getopt::Long;
+
+# Tinderbox libraries
+use lib '#tinder_libdir#';
+
+use TinderConfig;
+use Utils;
+use FileStructure;
+use Persistence;
+use MailProcess;
+use BTData;
+use TinderDB::BT_Generic;
+
+
+
+=pod
+
+# Sample Bugzilla mail.
+# notice that mail is a diff either -u or -c format
+
+# There are other format that mail can be sent: "prettyasciimail",
+# "newemailtech". I have not recieved any mail in these formats so I
+# have not written a parser yet.
+
+# The first example comes from redhat.com the second from bugzilla.org
+
+
++Bug#: 1999
++Product: Red Hat Contrib|Net
++Version: 1.0
++Platform: All
++OS/Version: 
++Status: NEW   
++Resolution: 
++Severity: low
+-Priority: high
++Priority: normal
++Component: rhcn
++AssignedTo: adevries@redhat.com                            
++ReportedBy: kestes@staff.mail.com               
++URL: 
++Cc: bugzilla-owner@redhat.com
++Summary: RPM 2.5.6 BUG
+
+
+
+*** shadow/38305	Mon May 22 17:17:36 2000
+--- shadow/38305.tmp.25956	Fri May 26 17:37:48 2000
+***************
+*** 11,17 ****
+  AssignedTo: slamm@netscape.com                            
+  ReportedBy: kestes@staff.mail.com               
+  QAContact: matty@box.net.au
+! TargetMilestone: ---
+  URL: 
+  Summary: new version of Tinderbox
+  
+--- 11,17 ----
+  AssignedTo: slamm@netscape.com                            
+  ReportedBy: kestes@staff.mail.com               
+  QAContact: matty@box.net.au
+! TargetMilestone: M20
+  URL: 
+  Summary: new version of Tinderbox
+  
+
+
+# this sample is from the Bugzilla 'new email technology' format
+
+
+http://bugzilla.mozilla.org/show_bug.cgi?id=48679
+
+mcafee@netscape.com changed:
+
+           What    |Old Value                   |New Value
+----------------------------------------------------------------------------
+         OS/Version|All                         |FreeBSD
+           Platform|All                         |Other
+
+
+
+------- Additional Comments From mcafee@netscape.com  2000-09-22 02:41 -------
+test, ignore
+
+
+
+
+# AIM has blocks like this.  The blocks are not contiguious and the
+# names have spaces.  It is true that the names which are displayed in
+# the mail message are configurable this shows the defaults.
+
+
+-----------------------------------------------------
+USER/SUBMITTOR INFORMATION
+-----------------------------------------------------
+User Login: hfung
+E-Mail: hfung@staff.mail.com
+
+-----------------------------------------------------
+DEVELOPMENT STAFF INFORMATION
+-----------------------------------------------------
+Support Staff Login: mzhang
+Support Staff E-Mail: mzhang@staff.mail.com
+
+-----------------------------------------------------
+BUG/DEFECT/FEATURE INFORMATION
+-----------------------------------------------------
+Ticket #: 1116
+Date Open: 5/10/00
+Last Modified Date: 05/18/2000
+Product Sub System: Admin
+Product Version: 1.1
+Severity: 3 - Minor
+Status: Closed
+Closed Date: *
+Short Description: the "C" in the Cancel Button on Mailing List Delete
+Confirm page should be caps.
+
+Bug/Defect/Feature Description:
+
+the "C" in the Cancel Button on Mailing List Delete Confirm page should be
+caps.
+[-Open- 05/10/2000 12:00:05 PM - hfung - Submit Bug/Defect/Feature-]
+[-Assigned- 05/11/2000 02:11:05 PM - admin - Assign Bug/Defect/Feature(s)-]
+[-Pending- 05/17/2000 04:17:12 PM - WIG - Modify Bug/Defect/Feature-]
+[-Assigned- 05/18/2000 06:12:32 PM - mzhang - Confirm Reception of
+Bug/Defect/Feature(s)-]
+[-Closed- 05/18/2000 06:26:58 PM - mzhang - Modify Bug/Defect/Feature-]
+
+
+=cut
+
+
+# untaint the variable and values parsed from trouble ticket mail.
+
+sub clean_bug_input {
+  my ($var, $value) = @_;
+
+  # Single quotes seem to always break the popup window, even if they
+  # are HTML escaped.  I wonder if this is a bug in netscape or if the
+  # javascript requires the expansion of metacharacters before
+  # interpretation.
+
+  $value =~ s/\'/\"/g;
+
+  # untaint data for safety
+
+  $var = main::extract_printable_chars($var);
+
+  # the input is HTML so it is a good idea to escape it
+  
+  $value = main::extract_html_chars($value);
+  $value = HTMLPopUp::escapeHTML($value);
+
+  # remove spaces at beginning and end of lines
+
+  $value =~ s/\s+$//;
+  $value =~ s/^\s+//;
+
+  $var =~ s/\s+$//;
+  $var =~ s/^\s+//;
+
+
+  # The AIM bug tracker has spaces in some of the variable names,
+  # convert these to underlines to make processing easier.
+
+  $var =~ s/\s+/_/g;
+
+  return ($var, $value);
+}
+
+
+
+sub parse_bt_vars {
+
+  # Ignore all lines in the mail till we find the tinderbox lines, so
+  # the lines we want should be at the top of the mail.  We parse the
+  # whole mail message because some formats are hard to tell when we
+  # are done AND we do not need to keep the long descriptions anyway.
+
+  # Lines will be diffs, and this will cause the variables to appear
+  # twice in the data with different vaules.  We keep the LAST
+  # assignment of each variable.  This means that long varaibles can
+  # not be split up to multiple lines.
+
+  # This function does not use any other functions and failures are
+  # expected to be rare.
+  
+  my ($found_vars)= 0;
+  my ($line) = '';
+
+  while(defined($line = <>)) {
+    
+    my ($num_colons) = scalar($line =~ tr/://);
+    my ($num_pipes) = scalar($line =~ tr/|//);
+
+    # Note: there are some standard bugzilla variables with unusual
+    # characters in them:
+    #
+    #       Bug#: 1999
+    #       OS/Version: 
+    
+    if ( 
+        ($num_colons == 1) && 
+        ($line =~ m/^[ \t\+\!]*[A-Z]/) && 
+        ($line =~ m/:\s+\w/) 
+       ) {
+
+      # Capture one of the bug variables
+      
+      # We make a quick test to eliminate lines we do not want.
+      
+      # The lines we want:
+      # 1)  begin with a capital letter (but may be preceeded by 
+      #     diff characters).
+      # 2)  have a colon followed by a space followed by data in them.
+      
+      if ( $line =~ m!
+	   ^[ \t\+\!]*                # line may begin with 'diff characters'
+                                      #       (skip diff deletions)
+	   ([a-zA-Z0-9._/ \#\-]+)     # variable identifier
+	   \s*\:\s+                   # followed by a colon-space separator
+	   (.+)                       # value of the variable
+	   \n$                        # go till end of line 
+	   !x ) {
+	
+	my ($var, $value) = ($1, $2);
+
+        ($var, $value) = clean_bug_input($var, $value);
+
+	($value) || next;
+	($var) || next;
+
+	$tinderbox{$var} = $value;
+      }
+ 
+    } elsif ( 
+               ($num_pipes == 2) && 
+               ($line =~ m/^[ \t]*[A-Z]/)
+              ) {
+
+      # Capture one of the bug variables
+      
+      # We make a quick test to eliminate lines we do not want.
+      
+      # The lines we want:
+      # 1)  begin with a capital letter (but may be preceeded by 
+      #     white space).
+      # 2)  have exactly two pipes in them.
+      
+      if ( $line =~ m!
+	   ^[ \t]*                    # line may begin with white space
+	   ([a-zA-Z0-9._/ \#\-]+)     # variable identifier
+	   \s*\|\s*                   # followed by a pipe-space separator
+	   ([^|]+)                    # old value of the variable
+	   \s*\|\s*                   # followed by a pipe-space separator
+	   ([^|]+)                    # new value of the variable
+	   \n$                        # go till end of line 
+	   !x ) {
+	
+	my ($var, $value) = ($1, $3);
+
+        ($var, $value) = clean_bug_input($var, $value);
+
+	($value) || next;
+	($var) || next;
+
+	$tinderbox{$var} = $value;
+      }
+
+    }
+  } # while
+
+  return %tinderbox;
+} # parse_tinderbox_vars
+
+
+
+sub set_tinderbox_variables {
+
+  # set known tinderbox fields based on the bug trackers variables.
+
+  $TINDERBOX{'tinderbox_timenow'} = MailProcess::mailstring2time($MAIL_HEADER{'Date'});
+
+  $TINDERBOX{'tinderbox_status'} = $TINDERBOX{$BTData::STATUS_FIELD_NAME};
+
+  # the validity of this value is tested in BTData::update2tree if need be.
+
+  $TINDERBOX{'tinderbox_tree'} = BTData::update2tree(\%TINDERBOX);
+
+  $TINDERBOX{'tinderbox_bug_id'} = $TINDERBOX{$BTData::BUGID_FIELD_NAME};
+  $TINDERBOX{'tinderbox_bug_url'} = BTData::update2bug_url(\%TINDERBOX);
+
+  return 1;
+}
+
+
+
+sub check_required_vars {
+
+  is_time_valid($TINDERBOX{'tinderbox_timenow'}) ||
+    die("Mail Header: Date is not a valid time. Date: $MAIL_HEADER{'Date'}\n");
+
+  BTData::is_status_valid($TINDERBOX{'tinderbox_status'}) ||
+    die("Status: $TINDERBOX{'tinderbox_status'} is not a valid bug status\n");
+
+  # the validity of tree is tested in BTData::update2tree if need be.
+
+
+  return 1;
+} # check_required_vars
+
+
+
+# --------------------main-------------------------
+{
+  set_static_vars();
+  get_env();
+  MailProcess::parse_mailprocess_args();
+
+  $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
+
+  %MAIL_HEADER = MailProcess::parse_mail_header();
+  %TINDERBOX = parse_bt_vars();
+  set_tinderbox_variables();
+
+  # BTData::update2tree says to ignore this record.
+
+  ($TINDERBOX{'tinderbox_tree'}) ||
+    exit 0;
+
+  # when we are testing turn off the checks
+
+  ($SKIP_CHECK) ||
+    check_required_vars();
+
+  # Testing is easier if the update files appear at the top of the
+  # status page, even though they are checked out of CVS.
+
+  if ($FORCE_TIME) {
+    $TINDERBOX{'tinderbox_timenow'} = time() - 10;
+  }
+
+  my ($uniq_id) = join('.', 
+                       $TINDERBOX{'tinderbox_tree'},
+                       $TINDERBOX{'tinderbox_bug_id'},
+                       $TINDERBOX{'tinderbox_timenow'},
+                      );
+
+  MailProcess::write_update_file('BT', $uniq_id, 
+                                 $TINDERBOX{'tinderbox_tree'}, %TINDERBOX );
+
+
+  exit 0;
+}
