@@ -582,17 +582,15 @@ if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{massc
     }
 
     if ($cc_add) {
-        foreach my $person (split(/[ ,]/, $cc_add)) {
-            # Ignore blanks
-            next unless $person;
+        $cc_add =~ s/^[\s,]+//; # Remove leading delimiters.
+        foreach my $person ( split(/[\s,]+/, $cc_add) ) {
             my $pid = DBNameToIdAndCheck($person);
             $cc_add{$pid} = $person;
         }
     }
     if ($cc_remove) {
-        foreach my $person (split(/[ ,]/, $cc_remove)) {
-            # Ignore blanks
-            next unless $person;
+        $cc_remove =~ s/^[\s,]+//; # Remove leading delimiters.
+        foreach my $person ( split(/[\s,]+/, $cc_remove) ) {
             my $pid = DBNameToIdAndCheck($person);
             $cc_remove{$pid} = $person;
         }
