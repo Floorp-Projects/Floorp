@@ -152,7 +152,11 @@ public:
 
     // Output the content of noscript elements (only for serializing
     // to plaintext).
-    OutputNoScriptContent = 2048
+    OutputNoScriptContent = 2048,
+
+    // Output the content of noframes elements (only for serializing
+    // to plaintext).
+    OutputNoFramesContent = 4096
   };
 
   /**
