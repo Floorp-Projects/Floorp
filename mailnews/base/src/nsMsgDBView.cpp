@@ -5503,7 +5503,8 @@ nsresult nsMsgDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMess
   aNewMsgDBView->m_sortType = m_sortType;
   aNewMsgDBView->m_db = m_db;
   aNewMsgDBView->mDateFormater = mDateFormater;
-  aNewMsgDBView->m_db->AddListener(aNewMsgDBView);
+  if (m_db)
+    aNewMsgDBView->m_db->AddListener(aNewMsgDBView);
   aNewMsgDBView->mIsNews = mIsNews;
   aNewMsgDBView->mHeaderParser = mHeaderParser;
   aNewMsgDBView->mDeleteModel = mDeleteModel;
