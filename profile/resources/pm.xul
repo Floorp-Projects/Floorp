@@ -32,7 +32,7 @@ function MigrateProfile(override)
 	var name = selected.getAttribute("rowName");
 	var migrate = selected.getAttribute("rowMigrate");
 
-	if (migrate == "false")
+	if (migrate != "true")
 	{
 		dump("This profile doesn't need migration.\n");
 		return;
@@ -184,6 +184,20 @@ function loadElements()
 setTimeout("loadElements()", 0);
 // -------------------------------------------- end   Hack for OnLoad handling
 
+function openRename()
+{
+	if (!selected)
+		dump("Select a profile to rename.\n");
+	else
+	{
+		var migrate = selected.getAttribute("rowMigrate");
+		if (migrate == "true")
+			dump("Migrate the profile before renaming it.\n");
+		else
+			var win = window.openDialog('pmrename.xul', 'Renamer', 'chrome');
+	}
+}
+
 </html:script>
 
 <popup id="deletePopup">
@@ -244,7 +258,7 @@ bookmarks, and stored messages in your personal profile.
 
 <titledbutton value="New" class="push" onclick="CreateProfile();" />
 <titledbutton value="Migrate" class="push" onclick="MigrateProfile();" />
-<titledbutton value="Rename" class="push" onclick="window.openDialog('pmrename.xul', 'Renamer', 'chrome');" />
+<titledbutton value="Rename" class="push" onclick="openRename();" />
 <titledbutton value="Delete" class="push" popup="deletePopup" />
 </html:center>
 
