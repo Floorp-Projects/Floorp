@@ -447,10 +447,6 @@ if ($action eq Param("move-button-text")) {
 }
 
 
-if (!defined $::FORM{'who'}) {
-    $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
-}
-
 # the common updates to all bugs in @idlist start here
 #
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
@@ -780,7 +776,7 @@ SWITCH: for ($::FORM{'knob'}) {
                          "is a duplicate.  The bug has not been changed.")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
+            PuntTryAgain("Nice try, $::COOKIE{'Bugzilla_login'}.  But it doesn't really ".
                          "make sense to mark a bug as a duplicate of " .
                          "itself, does it?");
         }
@@ -1134,7 +1130,7 @@ The changes made were:
     $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
-        AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
+        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'});
     }
     
     my $removedCcString = "";
@@ -1357,7 +1353,7 @@ The changes made were:
     if ( $origQaContact ne "") { 
         push @ARGLIST, ( "-forceqacontact", $origQaContact);
     }
-    push @ARGLIST, ($id, $::FORM{'who'});
+    push @ARGLIST, ($id, $::COOKIE{'Bugzilla_login'});
     system ("./processmail",@ARGLIST);
 
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
@@ -1376,19 +1372,19 @@ The changes made were:
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
-        AppendComment($duplicate, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
         }
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         print "<TABLE BORDER=1><TD><H2>Duplicate notation added to bug $duplicate</H2>\n";
-        system("./processmail", $duplicate, $::FORM{'who'});
+        system("./processmail", $duplicate, $::COOKIE{'Bugzilla_login'});
         print "<TD><A HREF=\"show_bug.cgi?id=$duplicate\">Go To BUG# $duplicate</A></TABLE>\n";
     }
 
     foreach my $k (keys(%dependencychanged)) {
         print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
-        system("./processmail", $k, $::FORM{'who'});
+        system("./processmail", $k, $::COOKIE{'Bugzilla_login'});
         print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
     }
 
