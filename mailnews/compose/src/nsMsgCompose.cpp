@@ -477,9 +477,9 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
   TranslateLineEnding(aBuf);
   TranslateLineEnding(aSignature);
 
-  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsresult rv = aEditorShell->GetEditor(getter_AddRefs(editor));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (editor)
     editor->EnableUndo(PR_FALSE);
 
   // Ok - now we need to figure out the charset of the aBuf we are going to send
@@ -497,6 +497,7 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
         aEditorShell->InsertSource(aPrefix.get());
       else
         aEditorShell->InsertText(aPrefix.get());
+      editor->EndOfDocument();
     }
 
     if (!aBuf.IsEmpty())
@@ -510,6 +511,7 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
       else
         aEditorShell->InsertAsQuotation(aBuf.get(),
                                         getter_AddRefs(nodeInserted));
+      editor->EndOfDocument();
     }
 
     (void)TagEmbeddedObjects(aEditorShell);
@@ -547,7 +549,11 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
           }
         }
 
+      {
         aEditorShell->InsertSource(aBuf.get());
+        editor->EndOfDocument();
+      }
+
         SetBodyAttributes(bodyAttributes);
       }
       if (!aSignature.IsEmpty())
@@ -556,7 +562,10 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
     else
     {
       if (!aBuf.IsEmpty())
+      {
         aEditorShell->InsertText(aBuf.get());
+        editor->EndOfDocument();
+      }
 
       if (!aSignature.IsEmpty())
         aEditorShell->InsertText(aSignature.get());
