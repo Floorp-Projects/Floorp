@@ -129,6 +129,9 @@ struct nsInputEvent : public nsGUIEvent {
 struct nsMouseEvent : public nsInputEvent {
                 /// The number of mouse clicks
     PRUint32        clickCount;          
+                /// Special return code for MOUSE_ACTIVATE to signal
+                /// if the target accepts activation (1), or denies it (0)
+    PRBool          acceptActivation;           
 };
 
 /**
@@ -244,6 +247,10 @@ enum nsDragDropEventStatus {
 #define NS_GOTFOCUS                     (NS_WINDOW_START + 3)
 // Widget lost focus
 #define NS_LOSTFOCUS                    (NS_WINDOW_START + 4)
+// Widget got activated
+#define NS_ACTIVATE                     (NS_WINDOW_START + 5)
+// Widget got deactivated
+#define NS_DEACTIVATE                   (NS_WINDOW_START + 6)
 // Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window
@@ -290,6 +297,7 @@ enum nsDragDropEventStatus {
 #define NS_MOUSE_LEFT_CLICK             (NS_MOUSE_MESSAGE_START + 27)
 #define NS_MOUSE_MIDDLE_CLICK           (NS_MOUSE_MESSAGE_START + 28)
 #define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 29)
+#define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
 
 #define NS_SCROLLBAR_MESSAGE_START      1000
 #define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
