@@ -69,8 +69,10 @@ public:
 
   static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult);
   static nsIDOMScriptObjectFactory *gScriptObjectFactory;
+  static nsIPrincipal* GetScriptPrincipal(JSContext *cx);
 
  private:
+
   nsIPSMComponent *mPSM;
   nsString         mVersionString;
   PRBool           mVersionStringSet;
