@@ -2120,6 +2120,14 @@ nsDocument::Load(const nsAReadableString& aUrl)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::EvaluateFIXptr(const nsAReadableString& aExpression, nsIDOMRange **aRange)
+{
+  NS_ERROR("nsDocument::EvaluateFIXptr() should be overriden by subclass!");
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 {

@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+*/
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,14 +15,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Johnny Stenback <jst@netscape.com> (original author)
- *
+ *   Heikki Toivonen <heikki@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,20 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMDocument.idl"
 
-[scriptable, uuid(8816d003-e7c8-4065-8827-829b8d07b6e0)]
-interface nsIDOMXMLDocument : nsIDOMDocument
-{
-  void                      load(in DOMString url);
+/**
+ * Implementation for FIXptr, a W3C NOTE.
+ *
+ * http://lists.w3.org/Archives/Public/www-xml-linking-comments/2001AprJun/att-0074/01-NOTE-FIXptr-20010425.htm
+ *
+ */
+#ifndef nsFIXptr_h__
+#define nsFIXptr_h__
 
- /**
-  * Evaluate FIXptr expression. FIXptr is a W3C NOTE, see
-  *
-  * http://lists.w3.org/Archives/Public/www-xml-linking-comments/2001AprJun/att-0074/01-NOTE-FIXptr-20010425.htm
-  *
-  * @param  expression FIXptr string.
-  * @return            The range object that results from evaluation
-  */
-  nsIDOMRange               evaluateFIXptr(in DOMString expression);
+class nsIDOMDocument;
+class nsIDOMRange;
+class nsISelection;
+
+#include "nsString.h"
+
+class nsFIXptr {
+  nsFIXptr();  // Use the static members for now
+  ~nsFIXptr();
+
+public:
+  /**
+   * Evaluate a FIXptr expression.
+   *
+   * @param aDocument   The document in which to evaluate.
+   * @param aExpression The FIXptr expression string to evaluate.
+   * @param aRange      The range.
+   */
+  static nsresult Evaluate(nsIDOMDocument *aDocument,
+                           const nsAString& aExpression,
+                           nsIDOMRange **aRange);
 };
+
+#endif
