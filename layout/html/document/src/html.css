@@ -929,10 +929,10 @@ label {
 }
 
 /* Combo box style */
-select *:-moz-display-comboboxcontrol-frame {
+:-moz-display-comboboxcontrol-frame {
   cursor: default !important;
   user-select: none !important;
-  overflow:hidden !important
+  overflow:hidden !important;
 	white-space:nowrap !important;
 	background-color: inherit !important;
 	color: inherit !important;
