@@ -42,7 +42,7 @@ pref("startup.homepage_override_url","chrome://navigator-region/locale/region.pr
 pref("browser.chromeURL","chrome://browser/content/");
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.google.com/search?hl=en&lr=&ie=UTF-8&oe=UTF-8&q=");
+pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=");
 
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
