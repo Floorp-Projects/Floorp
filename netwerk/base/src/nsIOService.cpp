@@ -315,6 +315,17 @@ nsIOService::GetLanguage(PRUnichar* *aLanguage)
 }
 
 NS_IMETHODIMP
+nsIOService::SetLanguage(PRUnichar* aLanguage)
+{
+    char *lang = nsnull;
+    nsString2 langStr(aLanguage);
+    lang = langStr.ToNewCString();
+    mAppLanguage->SetString(lang);
+    nsAllocator::Free(lang);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsIOService::GetPlatform(PRUnichar* *aPlatform)
 {
     *aPlatform = mAppPlatform->ToNewUnicode();
