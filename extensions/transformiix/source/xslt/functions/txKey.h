@@ -40,10 +40,10 @@
 #define txKey_h__
 
 #include "nsDoubleHashtable.h"
-#include "XMLUtils.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "List.h"
 #include "txXSLTPatterns.h"
+#include "XMLUtils.h"
 
 class txPattern;
 class Expr;
@@ -70,7 +70,7 @@ struct txKeyValueHashEntry : public PLDHashEntryHdr
 {
     txKeyValueHashEntry(const void* aKey)
         : mKey(*NS_STATIC_CAST(const txKeyValueHashKey*, aKey)),
-          mNodeSet(new NodeSet(nsnull))
+          mNodeSet(new txNodeSet(nsnull))
     {
     }
 
@@ -80,7 +80,7 @@ struct txKeyValueHashEntry : public PLDHashEntryHdr
     static PLDHashNumber HashKey(const void* aKey);
     
     txKeyValueHashKey mKey;
-    nsRefPtr<NodeSet> mNodeSet;
+    nsRefPtr<txNodeSet> mNodeSet;
 };
 
 DECL_DHASH_WRAPPER(txKeyValueHash, txKeyValueHashEntry, txKeyValueHashKey&)
@@ -207,7 +207,7 @@ public:
                          const nsAString& aKeyValue,
                          PRBool aIndexIfNotFound,
                          txExecutionState& aEs,
-                         NodeSet** aResult);
+                         txNodeSet** aResult);
 
 private:
     // Hash of all indexed key-values
@@ -220,7 +220,7 @@ private:
     const txExpandedNameMap& mKeys;
     
     // Empty nodeset returned if no key is found
-    nsRefPtr<NodeSet> mEmptyNodeSet;
+    nsRefPtr<txNodeSet> mEmptyNodeSet;
 };
 
 

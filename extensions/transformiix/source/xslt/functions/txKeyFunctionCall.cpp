@@ -77,20 +77,21 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     else
         contextDoc = contextNode->getOwnerDocument();
 
-    nsRefPtr<NodeSet> res;
-    NodeSet* nodeSet;
+    nsRefPtr<txNodeSet> res;
+    txNodeSet* nodeSet;
     if (exprResult->getResultType() == txAExprResult::NODESET &&
-        (nodeSet = NS_STATIC_CAST(NodeSet*,
+        (nodeSet = NS_STATIC_CAST(txNodeSet*,
                                   NS_STATIC_CAST(txAExprResult*,
                                                  exprResult)))->size() > 1) {
         rv = aContext->recycler()->getNodeSet(getter_AddRefs(res));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        int i;
+        PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {
             nsAutoString val;
             XMLDOMUtils::getNodeValue(nodeSet->get(i), val);
-            nsRefPtr<NodeSet> nodes;
+
+            nsRefPtr<txNodeSet> nodes;
             rv = es->getKeyNodes(keyName, contextDoc, val, i == 0,
                                  getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -192,7 +193,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
                        const nsAString& aKeyValue,
                        PRBool aIndexIfNotFound,
                        txExecutionState& aEs,
-                       NodeSet** aResult)
+                       txNodeSet** aResult)
 {
     NS_ENSURE_TRUE(mKeyValues.mHashTable.ops && mIndexedKeys.mHashTable.ops,
                    NS_ERROR_OUT_OF_MEMORY);
@@ -203,6 +204,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
     if (valueEntry) {
         *aResult = valueEntry->mNodeSet;
         NS_ADDREF(*aResult);
+
         return NS_OK;
     }
 
@@ -215,6 +217,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
         // indexed, so don't bother investigating.
         *aResult = mEmptyNodeSet;
         NS_ADDREF(*aResult);
+
         return NS_OK;
     }
 
@@ -265,7 +268,7 @@ txKeyHash::init()
     rv = mIndexedKeys.Init(1);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    mEmptyNodeSet = new NodeSet(nsnull);
+    mEmptyNodeSet = new txNodeSet(nsnull);
     NS_ENSURE_TRUE(mEmptyNodeSet, NS_ERROR_OUT_OF_MEMORY);
     
     return NS_OK;
@@ -366,18 +369,19 @@ nsresult txXSLKey::indexTree(Node* aNode, txKeyValueHashKey& aKey,
  * @param aKeyValueHash Hash to add values to
  * @param aEs           txExecutionState to use for XPath evaluation
  */
-nsresult txXSLKey::testNode(Node* aNode, txKeyValueHashKey& aKey,
-                            txKeyValueHash& aKeyValueHash, txExecutionState& aEs)
+nsresult txXSLKey::testNode(Node* aNode,
+                            txKeyValueHashKey& aKey,
+                            txKeyValueHash& aKeyValueHash,
+                            txExecutionState& aEs)
 {
-    nsresult rv = NS_OK;
     nsAutoString val;
     txListIterator iter(&mKeys);
     while (iter.hasNext())
     {
-        Key* key=(Key*)iter.next();
+        Key* key = (Key*)iter.next();
         if (key->matchPattern->matches(aNode, &aEs)) {
             txSingleNodeContext evalContext(aNode, &aEs);
-            rv = aEs.pushEvalContext(&evalContext);
+            nsresult rv = aEs.pushEvalContext(&evalContext);
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsRefPtr<txAExprResult> exprResult;
@@ -388,9 +392,9 @@ nsresult txXSLKey::testNode(Node* aNode, txKeyValueHashKey& aKey,
             aEs.popEvalContext();
 
             if (exprResult->getResultType() == txAExprResult::NODESET) {
-                NodeSet* res = NS_STATIC_CAST(NodeSet*,
-                                              NS_STATIC_CAST(txAExprResult*,
-                                                             exprResult));
+                txNodeSet* res = NS_STATIC_CAST(txNodeSet*,
+                                                NS_STATIC_CAST(txAExprResult*,
+                                                               exprResult));
                 for (int i=0; i<res->size(); i++) {
                     val.Truncate();
                     XMLDOMUtils::getNodeValue(res->get(i), val);

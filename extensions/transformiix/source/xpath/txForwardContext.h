@@ -41,15 +41,16 @@
 
 #include "txIXPathContext.h"
 #include "nsAutoPtr.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 
 class txForwardContext : public txIEvalContext
 {
 public:
     txForwardContext(txIMatchContext* aContext, Node* aContextNode,
-                     NodeSet* aContextNodeSet) : mContext(aContextNode),
-                                                 mContextSet(aContextNodeSet),
-                                                 mInner(aContext)
+                     txNodeSet* aContextNodeSet)
+        : mInner(aContext),
+          mContextNode(aContextNode),
+          mContextSet(aContextNodeSet)
     {}
     ~txForwardContext()
     {}
@@ -57,9 +58,9 @@ public:
     TX_DECL_EVAL_CONTEXT;
 
 private:
-    Node* mContext;
-    nsRefPtr<NodeSet> mContextSet;
     txIMatchContext* mInner;
+    Node* mContextNode;
+    nsRefPtr<txNodeSet> mContextSet;
 };
 
 #endif // __TX_XPATH_CONTEXT

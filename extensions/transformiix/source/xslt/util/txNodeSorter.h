@@ -47,8 +47,8 @@
 class Element;
 class Expr;
 class Node;
-class NodeSet;
 class txExecutionState;
+class txNodeSet;
 class TxObject;
 class txXPathResultComparator;
 class txIEvalContext;
@@ -67,8 +67,8 @@ public:
     nsresult addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
                             Expr* aDataTypeExpr, Expr* aOrderExpr,
                             Expr* aCaseOrderExpr, txIEvalContext* aContext);
-    nsresult sortNodeSet(NodeSet* aNodes, txExecutionState* aEs,
-                         NodeSet** aResult);
+    nsresult sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
+                         txNodeSet** aResult);
 
 private:
     struct SortData

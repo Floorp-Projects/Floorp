@@ -33,7 +33,7 @@
  */
 
 #include "FunctionLib.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txTokenizer.h"
@@ -63,14 +63,14 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     *aResult = nsnull;
     nsresult rv = NS_OK;
     txListIterator iter(&params);
-    
+
     switch (mType) {
         case COUNT:
         {
             if (!requireParams(1, 1, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            nsRefPtr<NodeSet> nodes;
+            nsRefPtr<txNodeSet> nodes;
             rv = evaluateToNodeSet((Expr*)iter.next(), aContext,
                                    getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -88,7 +88,7 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                                                 getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<NodeSet> resultSet;
+            nsRefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -100,11 +100,11 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 contextDoc = contextNode->getOwnerDocument();
             
             if (exprResult->getResultType() == txAExprResult::NODESET) {
-                NodeSet* nodes = NS_STATIC_CAST(NodeSet*,
-                                                NS_STATIC_CAST(txAExprResult*,
-                                                               exprResult));
-                int i;
-                for (i = 0; i < nodes->size(); i++) {
+                txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*,
+                                                  NS_STATIC_CAST(txAExprResult*,
+                                                                 exprResult));
+                PRInt32 i;
+                for (i = 0; i < nodes->size(); ++i) {
                     nsAutoString idList;
                     XMLDOMUtils::getNodeValue(nodes->get(i), idList);
                     txTokenizer tokenizer(idList);
@@ -145,13 +145,14 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         case NAME:
         case NAMESPACE_URI:
         {
-            if (!requireParams(0, 1, aContext))
+            if (!requireParams(0, 1, aContext)) {
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
+            }
 
             Node* node = 0;
             // Check for optional arg
             if (iter.hasNext()) {
-                nsRefPtr<NodeSet> nodes;
+                nsRefPtr<txNodeSet> nodes;
                 rv = evaluateToNodeSet((Expr*)iter.next(), aContext,
                                        getter_AddRefs(nodes));
                 NS_ENSURE_SUCCESS(rv, rv);

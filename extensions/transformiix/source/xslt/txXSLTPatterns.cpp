@@ -413,7 +413,7 @@ MBool txKeyPattern::matches(Node* aNode, txIMatchContext* aContext)
         contextDoc = (Document*)aNode;
     else
         contextDoc = aNode->getOwnerDocument();
-    nsRefPtr<NodeSet> nodes;
+    nsRefPtr<txNodeSet> nodes;
     nsresult rv = es->getKeyNodes(mName, contextDoc, mValue, PR_TRUE,
                                   getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
@@ -493,7 +493,7 @@ MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
      */
 
     // Create the context node set for evaluating the predicates
-    nsRefPtr<NodeSet> nodes;
+    nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -520,7 +520,7 @@ MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
 
     txListIterator iter(&predicates);
     Expr* predicate = (Expr*)iter.next();
-    nsRefPtr<NodeSet> newNodes;
+    nsRefPtr<txNodeSet> newNodes;
     rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
     NS_ENSURE_SUCCESS(rv, rv);
 

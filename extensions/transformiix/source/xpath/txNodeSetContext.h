@@ -40,13 +40,13 @@
 #define __TX_XPATH_SET_CONTEXT
 
 #include "txIXPathContext.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "nsAutoPtr.h"
 
 class txNodeSetContext : public txIEvalContext
 {
 public:
-    txNodeSetContext(NodeSet* aContextNodeSet, txIMatchContext* aContext)
+    txNodeSetContext(txNodeSet* aContextNodeSet, txIMatchContext* aContext)
         : mContextSet(aContextNodeSet), mPosition(0), mInner(aContext)
     {
     }
@@ -74,7 +74,7 @@ public:
     TX_DECL_EVAL_CONTEXT;
 
 protected:
-    nsRefPtr<NodeSet> mContextSet;
+    nsRefPtr<txNodeSet> mContextSet;
     PRUint32 mPosition;
     txIMatchContext* mInner;
 };

@@ -38,7 +38,7 @@
 
 #include "txResultRecycler.h"
 #include "ExprResult.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 
 txResultRecycler::txResultRecycler()
     : mEmptyStringResult(nsnull),
@@ -55,7 +55,7 @@ txResultRecycler::~txResultRecycler()
     }
     txStackIterator nodesetIter(&mNodeSetResults);
     while (nodesetIter.hasNext()) {
-        delete NS_STATIC_CAST(NodeSet*, nodesetIter.next());
+        delete NS_STATIC_CAST(txNodeSet*, nodesetIter.next());
     }
     txStackIterator numberIter(&mNumberResults);
     while (numberIter.hasNext()) {
@@ -111,7 +111,7 @@ txResultRecycler::recycle(txAExprResult* aResult)
         }
         case txAExprResult::NODESET:
         {
-            rv = mNodeSetResults.push(NS_STATIC_CAST(NodeSet*, aResult));
+            rv = mNodeSetResults.push(NS_STATIC_CAST(txNodeSet*, aResult));
             if (NS_FAILED(rv)) {
                 delete aResult;
             }
@@ -177,14 +177,14 @@ txResultRecycler::getEmptyStringResult(txAExprResult** aResult)
 }
 
 nsresult
-txResultRecycler::getNodeSet(NodeSet** aResult)
+txResultRecycler::getNodeSet(txNodeSet** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
-        *aResult = new NodeSet(this);
+        *aResult = new txNodeSet(this);
         NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
-        *aResult = NS_STATIC_CAST(NodeSet*, mNodeSetResults.pop());
+        *aResult = NS_STATIC_CAST(txNodeSet*, mNodeSetResults.pop());
         (*aResult)->clear();
         (*aResult)->mRecycler = this;
     }
@@ -194,14 +194,14 @@ txResultRecycler::getNodeSet(NodeSet** aResult)
 }
 
 nsresult
-txResultRecycler::getNodeSet(NodeSet* aNodeSet, NodeSet** aResult)
+txResultRecycler::getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
-        *aResult = new NodeSet(*aNodeSet, this);
+        *aResult = new txNodeSet(*aNodeSet, this);
         NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
-        *aResult = NS_STATIC_CAST(NodeSet*, mNodeSetResults.pop());
+        *aResult = NS_STATIC_CAST(txNodeSet*, mNodeSetResults.pop());
         (*aResult)->clear();
         (*aResult)->append(aNodeSet);
         (*aResult)->mRecycler = this;
@@ -215,11 +215,11 @@ nsresult
 txResultRecycler::getNodeSet(Node* aNode, txAExprResult** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
-        *aResult = new NodeSet(aNode, this);
+        *aResult = new txNodeSet(aNode, this);
         NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
-        NodeSet* nodes = NS_STATIC_CAST(NodeSet*, mNodeSetResults.pop());
+        txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*, mNodeSetResults.pop());
         nodes->clear();
         nodes->append(aNode);
         nodes->mRecycler = this;
@@ -231,14 +231,14 @@ txResultRecycler::getNodeSet(Node* aNode, txAExprResult** aResult)
 }
 
 nsresult
-txResultRecycler::getNodeSet(Node* aNode, NodeSet** aResult)
+txResultRecycler::getNodeSet(Node* aNode, txNodeSet** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
-        *aResult = new NodeSet(aNode, this);
+        *aResult = new txNodeSet(aNode, this);
         NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
-        *aResult = NS_STATIC_CAST(NodeSet*, mNodeSetResults.pop());
+        *aResult = NS_STATIC_CAST(txNodeSet*, mNodeSetResults.pop());
         (*aResult)->clear();
         (*aResult)->append(aNode);
         (*aResult)->mRecycler = this;
@@ -275,7 +275,7 @@ txResultRecycler::getBoolResult(PRBool aValue, txAExprResult** aResult)
 }
 
 nsresult
-txResultRecycler::getNonSharedNodeSet(NodeSet* aNodeSet, NodeSet** aResult)
+txResultRecycler::getNonSharedNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult)
 {
     if (aNodeSet->mRefCnt > 1) {
         return getNodeSet(aNodeSet, aResult);
