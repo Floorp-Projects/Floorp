@@ -263,8 +263,7 @@ txKeyHash::init()
     nsresult rv = mKeyValues.Init(8);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mIndexedKeys.Init(1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    return mIndexedKeys.Init(1);
 }
 
 /**
