@@ -231,7 +231,7 @@ eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aC
        aContentType.Equals(kHTMLTextContentType) ||
        aContentType.Equals(kPlainTextContentType) ||
        aContentType.Equals(kXULTextContentType)) {
-      result=eValidDetect;
+      result=ePrimaryDetect;
     }
   }
   return result;

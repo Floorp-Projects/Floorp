@@ -25,6 +25,7 @@
 #define nshtmlpars_h___
 
 #include "nscore.h"
+#include "nsError.h"
 
 #ifdef _IMPL_NS_HTMLPARS
 #define NS_HTMLPARS NS_EXPORT

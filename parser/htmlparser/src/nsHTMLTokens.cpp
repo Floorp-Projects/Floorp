@@ -311,7 +311,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
     //Instead, we only look at the first word.
     int theBufPos=-1;
     while(buffer[++theBufPos]){
-      if(kSpace==buffer[theBufPos]){ 
+      if(' '==buffer[theBufPos]){ 
         buffer[theBufPos]=0;
         break;
       }
@@ -693,6 +693,8 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
    *********************************************************/
 
   aString="<!";
+  nsAutoString theRightChars;
+
   result=aScanner.GetChar(aChar);
   if(NS_OK==result) {
     aString+=aChar;
@@ -706,8 +708,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           PRInt32 findpos=kNotFound;
           result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
           findpos=aString.RFind("-->");
-          //nsAutoString temp("");
-          //nsAutoString ws("");
+
           while((kNotFound==findpos) && (NS_OK==result)) {
             result=aScanner.ReadUntil(aString,kMinus,PR_TRUE);
 
@@ -721,10 +722,14 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
               result=aScanner.GetChar(aChar);
               aString+=aChar;
             }
-
-            findpos=aString.RFind("-->");
+          
+            theRightChars.Truncate(0);
+            aString.Right(theRightChars,5);
+            theRightChars.StripChars(" ");
+            
+            findpos=theRightChars.RFind("-->");
             if(kNotFound==findpos)
-              findpos=aString.RFind("!>");
+              findpos=theRightChars.RFind("!>");
           } //while
           return result;
         } //if

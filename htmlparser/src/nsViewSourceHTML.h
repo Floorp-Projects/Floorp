@@ -40,7 +40,6 @@
 
 class nsIDTDDebug;
 class nsIParserNode;
-class CITokenHandler;
 class nsParser;
 class nsITokenizer;
 
