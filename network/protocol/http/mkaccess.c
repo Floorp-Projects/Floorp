@@ -46,6 +46,7 @@
 #include "shist.h"
 #include "jscookie.h"
 #include "prmon.h"
+#include "edt.h" /* for EDT_SavePublishUsernameAndPassword */
 
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
@@ -586,28 +587,32 @@ NET_AskForAuthString(MWContext *context,
 		return NET_AUTH_FAILED_DISPLAY_DOCUMENT;
 	}
 
-	unamePwd=NET_ParseURL(address, GET_USERNAME_PART | GET_PASSWORD_PART);
-	/* get the username & password out of the combo string */
-	if( (colon = PL_strchr(unamePwd, ':')) != NULL ) {
-		*colon='\0';
-		username=PL_strdup(unamePwd);
-		password=PL_strdup(colon+1);
-		*colon=':';
-		PR_Free(unamePwd);
-	} else {
-		username=unamePwd;
-	}
+    /* get the username and password from the URL struct */
+    if( URL_s->password && *URL_s->password ) {
+        password = PL_strdup(URL_s->password);
+    }
 
-	if(username && !(*username) )
-	{
-		PR_FREEIF(username);
-		username = NULL;
-	}
-	if(password && !(*password) )
-	{
-		PR_FREEIF(password);
-		password = NULL;
-	}
+    if( URL_s->username && *URL_s->username ) {
+        username = PL_strdup(URL_s->username);
+    } else {
+	    /* See if username and password are still in the address */
+        unamePwd=NET_ParseURL(address, GET_USERNAME_PART | GET_PASSWORD_PART);
+	    /* get the username & password out of the combo string */
+	    if( (colon = PL_strchr(unamePwd, ':')) != NULL ) {
+		    *colon='\0';
+		    username=PL_strdup(unamePwd);
+            /* Use password we found above? */
+            if( password == NULL ) {
+    		    password=PL_strdup(colon+1);
+            }
+
+		    *colon=':';
+		    PR_Free(unamePwd);
+	    } else {
+		    username=unamePwd;
+	    }
+    }
+
 
 	/*if last char is not a slash then */
 	if (new_address[PL_strlen(new_address)-1] != '/')
@@ -807,9 +812,16 @@ NET_AskForAuthString(MWContext *context,
 
 			NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST) );
 #if defined(SingleSignon)
-			/* prefill prompt with previous username/passwords if any */
+			/* prefill prompt with previous username/passwords if any 
+             * this returns 1 if user pressed OK, or 0 if they Canceled
+            */
 			status = SI_PromptUsernameAndPassword
 			    (context, buf, &username, &password, URL_s->address);
+
+            /* Tell the Editor the correct username */
+            if( status > 0 ) {
+                EDT_SavePublishUsername(context, address, username);
+            }
 #else
 			status = PC_PromptUsernameAndPassword
 			    (context, buf, &username, &password,
