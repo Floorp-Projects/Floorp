@@ -32,7 +32,7 @@ Rights Reserved.
 
 <html:div flex="100%">
 <tree style="height: 100%" datasources="rdf:null" id="threadTree"
-	  		  onchange="top.ThreadPaneSelectionChange()"
+	  		  onselect="top.ThreadPaneSelectionChange(event.target)"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 
   <template>

@@ -18,6 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<!ENTITY threadColumn.label "Thread">
 <!ENTITY senderColumn.label "Sender">
 <!ENTITY subjectColumn.label "Subject">
 <!ENTITY dateColumn.label "Date">

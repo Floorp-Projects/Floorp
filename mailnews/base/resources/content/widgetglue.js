@@ -76,7 +76,7 @@ function MsgDeleteMessage(fromToolbar)
 	}
 	dump("tree is valid\n");
 	//get the selected elements
-	var messageList = tree.getElementsByAttribute("selected", "true");
+	var messageList = tree.selectedItems;
 	//get the current folder
 	messenger.DeleteMessages(tree, srcFolder, messageList);
   }
@@ -86,7 +86,7 @@ function MsgDeleteFolder()
 {
 	//get the selected elements
 	var tree = GetFolderTree();
-	var folderList = tree.getElementsByAttribute("selected", "true");
+	var folderList = tree.selectedItems;
 	var i;
 	var folder, parent;
 	for(i = 0; i < folderList.length; i++)
@@ -148,9 +148,11 @@ function MsgCopyMessage(destFolder)
 	if(tree)
 	{
 		//Get the selected messages to copy
-		var messageList = tree.getElementsByAttribute("selected", "true");
+		var messageList = tree.selectedItems;
 		//get the current folder
 
+	//	dump('In copy messages.  Num Selected Items = ' + messageList.length);
+	//	dump('\n');
 		var srcFolder = GetThreadTreeFolder();
 		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, false);
 	}	
@@ -166,7 +168,7 @@ function MsgMoveMessage(destFolder)
 	if(tree)
 	{
 		//Get the selected messages to copy
-		var messageList = tree.getElementsByAttribute("selected", "true");
+		var messageList = tree.selectedItems;
 		//get the current folder
 		var srcFolder = GetThreadTreeFolder();
 		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, true);
@@ -236,7 +238,7 @@ function MsgSortBySubject()
 function MsgNewFolder()
 {
     var folderTree = GetFolderTree(); 
-	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolderList = folderTree.selectedItems;
 	var selectedFolder = selectedFolderList[0];
     if (selectedFolder)
     {
@@ -252,7 +254,7 @@ function MsgNewFolder()
 function NewFolder(name)
 {
     var folderTree = GetFolderTree(); 
-	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolderList = folderTree.selectedItems;
 	var selectedFolder = selectedFolderList[0];
 
 	messenger.NewFolder(folderTree.database, selectedFolder, name);
@@ -294,7 +296,7 @@ function MsgRenameFolder()
     var tree = GetFolderTree();
     if (tree)
     {
-        var folderList = tree.getElementsByAttribute("selected", "true");
+        var folderList = tree.selectedItems;
         if (folderList && folderList.length == 1)
         {
             var folder = folderList[0];
@@ -316,7 +318,7 @@ function RenameFolder(name)
     var tree = GetFolderTree();
     if (tree)
     {
-        var folderList = tree.getElementsByAttribute("selected", "true");
+        var folderList = tree.selectedItems;
         if (folderList && folderList.length == 1)
         {
             var folder = folderList[0];
@@ -331,7 +333,7 @@ function MsgEmptyTrash()
     var tree = GetFolderTree();
     if (tree)
     {
-        var folderList = tree.getElementsByAttribute("selected", "true");
+        var folderList = tree.selectedItems;
         if (folderList)
         {
             var folder;
@@ -354,7 +356,7 @@ function MsgCompactFolder()
 	var tree = GetFolderTree();
     if (tree)
     {
-        var folderList = tree.getElementsByAttribute("selected", "true");
+        var folderList = tree.selectedItems;
         if (folderList)
         {
             var i;
@@ -469,7 +471,7 @@ function MsgMarkMsgAsRead(markRead)
   dump("\MsgMarkMsgAsRead from XUL\n");
   var tree = GetThreadTree();
   //get the selected elements
-  var messageList = tree.getElementsByAttribute("selected", "true");
+  var messageList = tree.selectedItems;
   messenger.MarkMessagesRead(tree.database, messageList, markRead);
 }
 
@@ -478,7 +480,7 @@ function MsgMarkByDate() {}
 function MsgMarkAllRead()
 {
 	var folderTree = GetFolderTree();; 
-	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolderList = folderTree.selectedItems;
 	if(selectedFolderList.length > 0)
 	{
 		var selectedFolder = selectedFolderList[0];

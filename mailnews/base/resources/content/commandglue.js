@@ -120,7 +120,7 @@ function ComposeMessage(type, format)
 	var tree = GetThreadTree();
 	if (tree)
 	{
-		var nodeList = tree.getElementsByAttribute("selected", "true");
+		var nodeList = tree.selectedItems;
 		var appCore = FindMessenger();
 		if (appCore)
 			appCore.SetWindow(window, statusFeedback);
@@ -172,7 +172,7 @@ function NewMessage()
 function GetNewMessages()
 {
 	var folderTree = GetFolderTree();; 
-	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolderList = folderTree.selectedItems;
 	if(selectedFolderList.length > 0)
 	{
 		var selectedFolder = selectedFolderList[0];
@@ -263,7 +263,7 @@ function MsgPreferences()
 function GetSelectedFolderResource()
 {
 	var folderTree = GetFolderTree();
-	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolderList = folderTree.selectedItems;
 	var selectedFolder = selectedFolderList[0];
 	var uri = selectedFolder.getAttribute('id');
 
@@ -316,11 +316,13 @@ function ToggleMessageRead(treeItem)
 	messenger.MarkMessageRead(tree.database, treeItem, unread);
 }
 
-function ThreadPaneSelectionChange()
+function ThreadPaneSelectionChange(selectedElement)
 {
-	var doc = GetThreadPane().document;
+	var tree = GetThreadTree();
 	
-	var selArray = doc.getElementsByAttribute('selected', 'true');
+	var selArray = tree.selectedItems;
+	dump('In ThreadPaneSelectionChange().  Num Selected Items = ' + selArray.length);
+	dump('\n');
 	if ( selArray && (selArray.length == 1) )
 		LoadMessage(selArray[0]);
 	else
@@ -336,38 +338,32 @@ function ClearMessagePane()
 
 function GoNextMessage()
 {
-	var doc = GetThreadPane().document;
+	var tree = GetThreadTree();
 	
-	var selArray = doc.getElementsByAttribute('selected', 'true');
+	var selArray = tree.selectedItems;
 	if ( selArray && (selArray.length == 1) )
 	{
 		var nextMessage = GetNextMessage(selArray[0]);
 		if(nextMessage)
 		{
-			var selectedVal = selArray[0].getAttribute('selected');
-			dump('selectedVal = ' + selectedVal);
-
-			selArray[0].removeAttribute('selected');
-			nextMessage.setAttribute('selected', 'true');
+			tree.clearItemSelection();
+			tree.selectItem(nextMessage);
 		}
 	}
 }
 
 function GoNextUnreadMessage()
 {
-	var doc = GetThreadPane().document;
+	var tree = GetThreadTree();
 	
-	var selArray = doc.getElementsByAttribute('selected', 'true');
+	var selArray = tree.selectedItems;
 	if ( selArray && (selArray.length == 1) )
 	{
 		var nextMessage = GetNextUnreadMessage(selArray[0]);
 		if(nextMessage)
 		{
-			var selectedVal = selArray[0].getAttribute('selected');
-			dump('selectedVal = ' + selectedVal);
-
-			selArray[0].removeAttribute('selected');
-			nextMessage.setAttribute('selected', 'true');
+			tree.clearItemSelection();
+			tree.selectItem(nextMessage);
 		}
 	}
 }
