@@ -1,0 +1,133 @@
+@import url(chrome://communicator/skin/communicator.css);
+@import url(chrome://communicator/content/sidebar/sidebarOverlay.css);
+@import url(chrome://communicator/skin/sidebar/sidebar.css);
+
+/* ADDED FROM KOMODO */
+
+/* Separator classes taken from formatting.css */
+/* groovy separators (50% size) */
+  separator.groovy,
+  separator.groovy[orient="horizontal"] 
+    {
+      border-top: 1px solid threedshadow;
+      border-bottom: 1px solid threedhighlight;
+      height: 0px;
+      margin-top: 0.4em;
+      margin-bottom: 0.4em;
+    }
+  
+  separator.groovy[orient="vertical"] 
+    {
+      border-left: 1px solid threedshadow;
+      border-right: 1px solid threedhighlight;
+      margin-left: 0.4em;
+      margin-right: 0.4em;
+    }
+  
+/* groovy separators (0 padding, for dividing effects) */  
+  separator.groovy-thin 
+    {
+      border-top: 1px solid threedshadow;
+      border-bottom: 1px solid threedhighlight;
+      height: 0px;
+    }
+  
+  separator[orient="vertical"].groovy-thin 
+    {
+      border-left: 1px solid threedshadow;
+      border-right: 1px solid threedhighlight;
+    }
+
+
+/* END ADDED FROM KOMODO */
+
+browser, editor, iframe {
+  display: inline;
+}
+
+#print {
+	list-style-image: url("chrome://global/skin/print.gif"); 
+}
+
+#helpBackButton {
+	list-style-image: url("chrome://navigator/skin/back.gif"); 
+}
+#helpBackButton[disabled="true"] {
+	list-style-image: url("chrome://navigator/skin/back-disabled.gif");
+}
+
+#helpBackButton[disabled="true"]:hover {
+	list-style-image: url("chrome://navigator/skin/back-disabled.gif");
+}
+
+#helpBackButton:hover
+  {
+    list-style-image      : url("chrome://navigator/skin/back-hover.gif");
+  }
+#helpBackButton:active
+  {
+    list-style-image      : url("chrome://navigator/skin/back-clicked.gif");
+  }
+
+#helpForwardButton {
+	list-style-image: url("chrome://navigator/skin/forward.gif"); 
+}
+#helpForwardButton[disabled="true"] {
+	list-style-image: url("chrome://navigator/skin/forward-disabled.gif");
+}	
+
+#helpForwardButton[disabled="true"]:hover {
+	list-style-image: url("chrome://navigator/skin/forward-disabled.gif");
+}	
+
+#helpForwardButton:hover
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
+  }
+#helpForwardButton:active
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-clicked.gif");
+  }
+
+#toc {
+	background-color: lightgrey;
+}
+
+#marquee {
+ 	color: white;
+ 	font-size: 14pt;
+ 	font-weight: bold;
+}
+
+.item {
+	margin-top: .07in;
+	margin-bottom: .125in;
+	padding-top: .075in;
+	margin-left: .025in;
+	// background-color: #336699;
+  	color: gray;
+}
+
+
+.item:selected {
+	font-weight: bold;
+}
+
+.subitem {
+	font-weight: normal;
+	padding-top: .075in;
+	margin-left: .075in;
+}
+
+
+box .subitem:hover {
+	background-color: #336699;
+  	color: white;
+}
+
+#nav-bar, #nav {
+	background-color: lightgrey;
+}
+
+
+

@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://help/skin/help.css" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="ns_help"
+        windowtype="mozilla:help"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Help"
+        width="640"
+        height="650"
+        persist="width height screenX screenY"
+        onload="init();" >
+
+  <script type="text/javascript" src="chrome://help/content/help.js"/>
+
+  <box orient="vertical" flex="1">
+
+    <!-- button bar -->
+    <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
+      <toolbar class="toolbar-primary" id="helpToolbar" grippytooltip="aTooltip" grippytooltiptext="The Help Toolbar"
+               tbautostretch="always" persist="collapsed">
+
+        <button id="helpBackButton"
+                class="button-toolbar-1 top"
+                value="Back"
+                tooltiptext="Back"
+                tooltip="aTooltip"
+                oncommand="goBack();"/>
+        <button id="helpForwardButton"
+                class="button-toolbar-1 top"
+                value="Forward"
+                tooltiptext="Forward"
+                tooltip="aTooltip"
+                oncommand="goForward();"/>
+        <button id="helpHomeButton"
+                class="button-toolbar-1 top"
+                value="Home"
+                tooltiptext="Home"
+                tooltip="aTooltip"
+                oncommand="goHome();"/>
+
+        <spring flex="1"/>
+
+        <button class="button-toolbar" id="print" onclick="print()"/>
+
+      </toolbar>
+    </toolbox>
+
+    <separator class="groovy-thin"/>
+
+    <!-- the two help panes (sidebar & content) -->
+    <box flex="1">
+
+      <box id="helpsidebar-box" orient="vertical">
+
+        <box orient="vertical" id="help-subset">
+          <text value="What part of Netscape"/>
+          <text value="do you need help with?"/>
+          <text value="  Click one:"/>
+        </box>
+
+        <tabcontrol orient="vertical" flex="1">
+          <tabbox orient="horizontal">
+            <tab value="Contents"/>
+            <tab value="Index"/>
+          </tabbox>
+          <tabpanel flex="1">
+            <box id="help-toc">
+              <tree id="help-toc-tree" ref="urn:root" flex="1*"
+                    datasources="chrome://help/locale/help-toc.rdf"
+                    containment="http://home.netscape.com/NC-rdf#subheadings">
+                <template>
+                  <rule>
+                    <conditions>
+                      <content uri="?uri"/>
+                      <triple subject="?uri"
+                              predicate="http://home.netscape.com/NC-rdf#subheadings"
+                              object="?subheadings" />
+                      <member container="?subheadings" child="?subheading"/>
+                    </conditions>
+                    <bindings>
+                      <binding subject="?subheading"
+                               predicate="http://home.netscape.com/NC-rdf#name"
+                               object="?name" />
+
+                      <binding subject="?subheading"
+                               predicate="http://home.netscape.com/NC-rdf#link"
+                               object="?link" />
+                    </bindings>
+
+                    <action>
+                      <treechildren>
+                        <treeitem uri="?subheading">
+                          <treerow>
+                            <treecell class="treecell-indent"
+                                      value="?name"
+                                      helplink="?link"
+                                      onclick="loadURI(this.getAttribute('helplink'));"/>
+                          </treerow>
+                        </treeitem>
+                      </treechildren>
+                    </action>
+                  </rule>
+                </template>
+
+                <treecolgroup>
+                  <treecol flex="1*" />
+                </treecolgroup>
+
+                <!-- because the outermost treechildren needs "flex='1'" -->
+                <treechildren flex="1*"/>
+
+              </tree>
+            </box>
+
+            <box id="help-index">
+              <!-- right now this makes the toc as wide as the content area -->
+              <!-- iframe flex="1" src="chrome://help/locale/ref_index.html" /-->
+            </box>
+
+          </tabpanel>
+        </tabcontrol>
+      </box>
+
+      <splitter id="helpsidebar-splitter"
+                collapse="before"
+                persist="state hidden"
+                autostretch="never"
+                orient="vertical"
+                state="open">
+        <grippy/>
+      </splitter>
+
+      <!-- this stuff lifted from navigator.xul -->
+      <box id="appcontent" align="vertical" flex="3">
+        <!-- this box is temporary, pending XBLified <browser> -->
+        <box id="browser" flex="1">
+          <!-- type attribute is used by frame construction to locate iframes
+               intended to hold (html) content -->
+          <browser context="context" type="content-primary" id="help-content"
+                   src="about:blank" flex="1"/>
+        </box>
+      </box>
+    </box>
+  </box>
+</window>
