@@ -764,6 +764,9 @@ nsHTTPHandler::Init()
     if (!mPrefs)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    rv = InitUserAgentComponents();
+    if (NS_FAILED(rv)) return rv;
+
     mPrefs->RegisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(INTL_ACCEPT_LANGUAGES, 
@@ -773,9 +776,6 @@ nsHTTPHandler::Init()
     mPrefs->RegisterCallback(UA_PREF_PREFIX "misc",
                 HTTPPrefsCallback, (void *)this);
     PrefsChanged();
-
-    rv = InitUserAgentComponents();
-    if (NS_FAILED(rv)) return rv;
 
 #if defined (PR_LOGGING)
     gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
