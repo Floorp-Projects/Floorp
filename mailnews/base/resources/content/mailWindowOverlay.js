@@ -518,7 +518,7 @@ function MsgHome(url)
   window.open( url, "_blank", "chrome,dependent=yes,all" );
 }
 
-function MsgNewFolder()
+function MsgNewFolder(callBackFunctionName)
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
     var dualUseFolders = true;
@@ -543,7 +543,7 @@ function MsgNewFolder()
         }
     }
 
-    CreateNewSubfolder("chrome://messenger/content/newFolderDialog.xul", destinationFolder, dualUseFolders);
+    CreateNewSubfolder("chrome://messenger/content/newFolderDialog.xul", destinationFolder, dualUseFolders, callBackFunctionName);
 }
 
 

@@ -382,7 +382,7 @@ Rights Reserved.
 		<menuitem id="folderPaneContext-new"
 			  value="&folderContextNew.label;"
 			  accesskey="&folderContextNew.accesskey;"
-			  oncommand="MsgNewFolder();"/>
+			  oncommand="MsgNewFolder(NewFolder);"/>
 		<menuitem id="folderPaneContext-rename"
 			  value="&folderContextRename.label;"
 			  accesskey="&folderContextRename.accesskey;"
@@ -641,7 +641,7 @@ Rights Reserved.
 			<menu id="menu_New">
 				<menupopup id="menu_NewPopup">
 					<menuitem value="&newFolderCmd.label;"
-                     oncommand="MsgNewFolder();"
+                     oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
 					<menuitem value="&newAccountCmd.label;"
                      accesskey="&newAccountCmd.accesskey;"

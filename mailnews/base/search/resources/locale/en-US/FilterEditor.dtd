@@ -32,3 +32,5 @@
 
 <!ENTITY conditionDesc.label "When new messages arrive in my Inbox, watch for messages that:">
 <!ENTITY conditions.label "Conditions">
+
+<!ENTITY newFolderButton.label "New Folder">

@@ -290,7 +290,7 @@ function GetNextNMessages(folder)
 }
 
 function CreateNewSubfolder(chromeWindowURL, preselectedMsgFolder,
-                            dualUseFolders)
+                            dualUseFolders, callBackFunctionName)
 {
 	var preselectedURI;
 
@@ -308,7 +308,7 @@ function CreateNewSubfolder(chromeWindowURL, preselectedMsgFolder,
 				"chrome,titlebar,modal",
 				{preselectedURI:preselectedURI,
 	                         dualUseFolders:dualUseFolders,
-	                         okCallback:NewFolder});
+	                         okCallback:callBackFunctionName});
 }
 
 function NewFolder(name,uri)

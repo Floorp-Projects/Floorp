@@ -255,3 +255,20 @@ function showActionElementFor(menuitem)
     if (!menuitem) return;
     gActionValueDeck.setAttribute("index", menuitem.getAttribute("actionvalueindex"));
 }
+
+function GetFirstSelectedMsgFolder()
+{
+    var selectedFolder = gActionTargetElement.selectedItem.getAttribute("data");
+
+    var msgFolder = GetMsgFolderFromUri(selectedFolder);
+    return msgFolder;
+}
+
+function SearchNewFolderOkCallback(name,uri)
+{
+    var msgFolder = GetMsgFolderFromUri(uri);
+    msgFolder.createSubfolder(name, null);
+
+    var curFolder = uri+"/"+name;
+    SetFolderPicker(curFolder, gActionTargetElement.id);
+}
