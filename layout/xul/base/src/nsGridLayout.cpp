@@ -96,8 +96,8 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
 
     // must find a temple that is not our requestor and is a monument.
     if (layout != aRequestor) {
-       nsIMonument* monument = nsnull;
-       if (NS_SUCCEEDED(layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
+       nsCOMPtr<nsIMonument> monument( do_QueryInterface(layout) );
+       if (monument)
        {
          nsTempleLayout* temple = nsnull;
          monument->CastToTemple(&temple);
@@ -105,6 +105,7 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
             // yes its a temple. 
             *aTemple = temple;
             *aTempleBox = child;
+            NS_ADDREF(temple);
             return NS_OK;
          }
        }
