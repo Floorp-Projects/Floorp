@@ -78,7 +78,7 @@ interface mozIStorageStatement : mozIStorageValueArray {
 
   void bindNullParameter (in unsigned long aParamIndex);
 
-  void bindDataParameter (in unsigned long aParamIndex, [array,size_is(aValueSize)] in octet aValue, in unsigned long aValueSize);
+  void bindDataParameter (in unsigned long aParamIndex, [array,const,size_is(aValueSize)] in octet aValue, in unsigned long aValueSize);
 
   // void bindParameters (in string aFormatString, ...);
 

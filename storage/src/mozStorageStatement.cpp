@@ -347,9 +347,9 @@ mozStorageStatement::BindNullParameter(PRUint32 aParamIndex)
     return NS_OK;
 }
 
-/* void bindDataParameter (in unsigned long aParamIndex, [array, size_is (aValueSize)] in octet aValue, in unsigned long aValueSize); */
+/* void bindDataParameter (in unsigned long aParamIndex, [array, const, size_is (aValueSize)] in octet aValue, in unsigned long aValueSize); */
 NS_IMETHODIMP
-mozStorageStatement::BindDataParameter(PRUint32 aParamIndex, PRUint8 *aValue, PRUint32 aValueSize)
+mozStorageStatement::BindDataParameter(PRUint32 aParamIndex, const PRUint8 *aValue, PRUint32 aValueSize)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
