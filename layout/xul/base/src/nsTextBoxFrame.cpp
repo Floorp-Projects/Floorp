@@ -611,67 +611,64 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
 
         case CropCenter:
         {
-            nsAutoString ellipsisLeft; ellipsisLeft.AssignWithConversion(ELLIPSIS);
-
-            if (ellipsisWidth >= aWidth)
-                ellipsisLeft.SetLength(0);
-            else
-                aWidth -= ellipsisWidth;
-
-            nscoord cwidth;
-            nscoord twidth;
-            aRenderingContext.GetWidth(mTitle, twidth);
-
-            int length = mTitle.Length();
-            int i;
-            int i2 = length-1;
-            for (i = 0; i < length;) {
-                PRUnichar ch;
-
-                ch = mTitle.CharAt(i);
-                aRenderingContext.GetWidth(ch,cwidth);
-                twidth -= cwidth;
-                ++i;
-
-                if (twidth <= aWidth)
-                    break;
-
-#ifdef IBMBIDI
-                if (CHAR_IS_BIDI(ch) ) {
-                  mState |= NS_FRAME_IS_BIDI;
-                }
-#endif // IBMBIDI
-                ch = mTitle.CharAt(i2);
-                aRenderingContext.GetWidth(ch,cwidth);
-                twidth -= cwidth;
-                --i2;
-
-                if (twidth <= aWidth)
-                    break;
-
-#ifdef IBMBIDI
-                if (CHAR_IS_BIDI(ch) ) {
-                  mState |= NS_FRAME_IS_BIDI;
-                }
-#endif // IBMBIDI
+            nscoord stringWidth = 0;
+            aRenderingContext.GetWidth(mTitle, stringWidth);
+            if (stringWidth <= aWidth) {
+                // the entire string will fit in the maximum width
+                mCroppedTitle.Insert(mTitle, 0);
+                break;
             }
 
-            nsAutoString copy;
+            // determine how much of the string will fit in the max width
+            nscoord charWidth = 0;
+            nscoord totalWidth = 0;
+            PRUnichar ch;
+            int leftPos, rightPos;
+            nsAutoString leftString, rightString;
 
-            if (i2 >= i)
-                mTitle.Mid(copy, i, i2+1-i);
+            rightPos = mTitle.Length() - 1;
+            for (leftPos = 0; leftPos <= rightPos;) {
+                // look at the next character on the left end
+                ch = mTitle.CharAt(leftPos);
+                aRenderingContext.GetWidth(ch, charWidth);
+                totalWidth += charWidth;
+                if (totalWidth > aWidth)
+                    // greater than the allowable width
+                    break;
+                leftString.Insert(ch, leftString.Length());
 
-            /*
-            char cht[100];
-            mTitle.ToCString(cht,100);
+#ifdef IBMBIDI
+                if (CHAR_IS_BIDI(ch))
+                    mState |= NS_FRAME_IS_BIDI;
+#endif
 
-            char chc[100];
-            copy.ToCString(chc,100);
+                // look at the next character on the right end
+                if (rightPos > leftPos) {
+                    // haven't looked at this character yet
+                    ch = mTitle.CharAt(rightPos);
+                    aRenderingContext.GetWidth(ch, charWidth);
+                    totalWidth += charWidth;
+                    if (totalWidth > aWidth)
+                        // greater than the allowable width
+                        break;
+                    rightString.Insert(ch, 0);
 
-            printf("i=%d, i2=%d, diff=%d, old='%s', new='%s', aWidth=%d\n", i, i2, i2-i, cht,chc, aWidth);
-            */
+#ifdef IBMBIDI
+                    if (CHAR_IS_BIDI(ch))
+                        mState |= NS_FRAME_IS_BIDI;
+#endif
+                }
 
-            mCroppedTitle.Insert(ellipsisLeft + copy, 0);
+                // look at the next two characters
+                leftPos++;
+                rightPos--;
+            }
+
+            // form the new cropped string
+            nsAutoString ellipsisString;
+            ellipsisString.AssignWithConversion(ELLIPSIS);
+
+            mCroppedTitle = leftString + ellipsisString + rightString;
         }
         break;
     }
