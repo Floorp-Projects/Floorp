@@ -36,8 +36,8 @@
  * It is used by the script runtime to collect information about an object
  */
 class nsIJSScriptObject : public nsISupports {
-  static const nsIID& GetIID() { static nsIID iid = NS_IJSSCRIPTOBJECT_IID; return iid; }
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IJSSCRIPTOBJECT_IID; return iid; }
   virtual PRBool    AddProperty(JSContext *aContext, jsval aID, 
                                 jsval *aVp) = 0;
   virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, 

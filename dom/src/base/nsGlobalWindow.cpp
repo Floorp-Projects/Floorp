@@ -2591,36 +2591,32 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool
 GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+  PRBool result = PR_TRUE;
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsString mPropName;
     nsAutoString mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
-      return CheckForEventListener(aContext, mPropName);
+      result = CheckForEventListener(aContext, mPropName);
     }
   }
   else if (JSVAL_IS_STRING(aID)) {
     char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
     
     if (PL_strcmp("location", cString) == 0) {
-      JSString *jsstring = JS_ValueToString(aContext, *aVp);
-
-      if (nsnull != jsstring) {
-        nsIDOMLocation *location;
-        nsAutoString locationStr;
+      nsCOMPtr<nsIDOMLocation> location;
       
-        locationStr.SetString(JS_GetStringChars(jsstring));
-        if (NS_OK == GetLocation(&location)) {
-          if (NS_OK != location->SetHref(locationStr)) {
-            NS_RELEASE(location);
-            return PR_FALSE;
-          }
-          NS_RELEASE(location);
+      if (NS_OK == GetLocation(getter_AddRefs(location))) {
+        nsCOMPtr<nsIJSScriptObject> scriptObj = do_QueryInterface(location);
+        JSString* str = JS_NewStringCopyZ(aContext, "href");
+        
+        if (scriptObj && str) {
+          result = scriptObj->SetProperty(aContext, STRING_TO_JSVAL(str), aVp);
         }
-        else {
-          return PR_FALSE;
-        }
+      }
+      else {
+        result = PR_FALSE;
       }
     }
     else if (PL_strcmp("title", cString) == 0) {
@@ -2633,17 +2629,20 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
             // We got a browser window interface
             JSString *jsString = JS_ValueToString(aContext, *aVp);
-            if (!jsString)
-              return PR_FALSE;
-            const PRUnichar* uniTitle = JS_GetStringChars(jsString);
-            browser->SetTitle(uniTitle);
+            if (!jsString) {
+              result = PR_FALSE;
+            }
+            else {
+              const PRUnichar* uniTitle = JS_GetStringChars(jsString);
+              browser->SetTitle(uniTitle);
+            }
           }
         }
       }
     }
   }
 
-  return PR_TRUE;
+  return result;
 }
 
 PRBool    

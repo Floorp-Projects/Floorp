@@ -28,6 +28,7 @@ EXPORTS =			 \
 	nsIDOMWindow.h 		 \
 	nsIDOMNavigator.h 	 \
 	nsIDOMLocation.h \
+	nsIDOMNSLocation.h \
 	nsIDOMWindowCollection.h \
 	nsIDOMScreen.h \
 	nsIDOMHistory.h \
