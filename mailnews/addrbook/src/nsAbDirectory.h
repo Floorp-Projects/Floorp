@@ -45,11 +45,27 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsICollection methods:
-  NS_IMETHOD_(PRUint32) Count(void) const;
-  NS_IMETHOD AppendElement(nsISupports *aElement);
-  NS_IMETHOD RemoveElement(nsISupports *aElement);
-  NS_IMETHOD Enumerate(nsIEnumerator* *result);
-  NS_IMETHOD Clear(void);
+  NS_IMETHOD Count(PRUint32 *result) {
+    return mSubDirectories->Count(result);
+  }
+  NS_IMETHOD GetElementAt(PRUint32 i, nsISupports* *result) {
+    return mSubDirectories->GetElementAt(i, result);
+  }
+  NS_IMETHOD SetElementAt(PRUint32 i, nsISupports* value) {
+    return mSubDirectories->SetElementAt(i, value);
+  }
+  NS_IMETHOD AppendElement(nsISupports *aElement) {
+    return mSubDirectories->AppendElement(aElement);
+  }
+  NS_IMETHOD RemoveElement(nsISupports *aElement) {
+    return mSubDirectories->RemoveElement(aElement);
+  }
+  NS_IMETHOD Enumerate(nsIEnumerator* *result) {
+    return mSubDirectories->Enumerate(result);
+  }
+  NS_IMETHOD Clear(void) {
+    return mSubDirectories->Clear();
+  }
 
   // nsIABBase methods:
   NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }

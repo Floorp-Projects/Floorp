@@ -390,36 +390,6 @@ NS_IMETHODIMP nsABCard::SetNickname(char * aNickname)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP_(PRUint32) nsABCard::Count(void) const
-{
-	PRUint32 count;
-	nsresult rv = mSubDirectories->Count(&count);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-	return count;
-}
-
-NS_IMETHODIMP nsABCard::AppendElement(nsISupports *aElement)
-{
-  return mSubDirectories->AppendElement(aElement);
-}
-
-NS_IMETHODIMP nsABCard::RemoveElement(nsISupports *aElement)
-{
-  return mSubDirectories->RemoveElement(aElement);
-}
-
-
-NS_IMETHODIMP nsABCard::Enumerate(nsIEnumerator* *result)
-{
-  // nsABCard only have subfolders, no message elements
-  return mSubDirectories->Enumerate(result);
-}
-
-NS_IMETHODIMP nsABCard::Clear(void)
-{
-  return mSubDirectories->Clear();
-}
-
 NS_IMETHODIMP nsABCard::GetName(char **name)
 {
   SetName("Personal Address Book");

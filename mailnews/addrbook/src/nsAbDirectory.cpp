@@ -304,44 +304,6 @@ NS_IMETHODIMP nsABDirectory::RemoveAddrBookListener(nsIAbListener * listener)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP_(PRUint32) nsABDirectory::Count(void) const
-{
-	PRUint32 count;
-	nsresult rv = mSubDirectories->Count(&count);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-	return count;
-}
-
-NS_IMETHODIMP nsABDirectory::AppendElement(nsISupports *aElement)
-{
-  return mSubDirectories->AppendElement(aElement);
-}
-
-NS_IMETHODIMP nsABDirectory::RemoveElement(nsISupports *aElement)
-{
-  return mSubDirectories->RemoveElement(aElement);
-}
-
-
-NS_IMETHODIMP nsABDirectory::Enumerate(nsIEnumerator* *result)
-{
-  // nsABDirectory only have subfolders, no message elements
- /* nsCOMPtr<nsIEnumerator> directories;
-  nsCOMPtr<nsIEnumerator> cards;
-  nsresult rv = GetChildNodes(getter_AddRefs(directories));
-  if (NS_FAILED(rv)) return rv;
-  rv = GetChildCards(getter_AddRefs(cards));
-  if (NS_FAILED(rv)) return rv;
-  return NS_NewConjoiningEnumerator(directories, cards, 
-                                   (nsIBidirectionalEnumerator**)result);*/
-  return mSubDirectories->Enumerate(result);
-}
-
-NS_IMETHODIMP nsABDirectory::Clear(void)
-{
-  return mSubDirectories->Clear();
-}
-
 NS_IMETHODIMP nsABDirectory::GetName(char **name)
 {
   if(!name)
