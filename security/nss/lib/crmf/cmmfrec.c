@@ -197,7 +197,7 @@ CMMF_KeyRecRepContentSetCertifiedKeyPair(CMMFKeyRecRepContent *inKeyRecRep,
     }
     dummy = crmf_create_encrypted_value_wrapped_privkey(inPrivKey, inPubKey, 
 							keyPair->privateKey);
-    PORT_Assert(dummy = keyPair->privateKey);
+    PORT_Assert(dummy == keyPair->privateKey);
     if (dummy != keyPair->privateKey) {
         crmf_destroy_encrypted_value(dummy, PR_TRUE);
 	goto loser;
