@@ -513,7 +513,8 @@ PresShell::ContentChanged(nsIContent* aContent,
                           nsISupports* aSubContent)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-  NS_PRECONDITION(0 != mReflowLockCount, "unlocked reflow");
+
+  EnterReflowLock();
 
   // Notify the first frame that maps the content. It will generate a reflow
   // command
@@ -524,6 +525,8 @@ PresShell::ContentChanged(nsIContent* aContent,
   if (1 == mReflowLockCount) {
     ProcessReflowCommands();
   }
+
+  ExitReflowLock();
 }
 
 void
