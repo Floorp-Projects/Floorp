@@ -393,6 +393,8 @@ bin\PalmSyncProxy.dll
 bin\PalmSyncInstall.exe
 bin\components\palmsync.dll
 bin\components\palmsync.xpt
+bin\components\msgmailviews.dll
+bin\components\msgmailviews.xpt
 
 
 [chatzilla]
