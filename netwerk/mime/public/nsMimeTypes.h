@@ -83,6 +83,7 @@
 #define APPLICATION_X509_USER_CERT          "application/x-x509-user-cert"
 #define APPLICATION_X509_CRL                "application/x-pkcs7-crl"
 #define APPLICATION_XPKCS7_MIME             "application/x-pkcs7-mime"
+#define APPLICATION_PKCS7_MIME              "application/pkcs7-mime"
 #define APPLICATION_XPKCS7_SIGNATURE        "application/x-pkcs7-signature"
 #define APPLICATION_WWW_FORM_URLENCODED     "application/x-www-form-urlencoded"
 #define APPLICATION_OLEOBJECT               "application/oleobject"
