@@ -331,11 +331,11 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
 			if (pAccName) {
-				prettyName = (const char *)pAccName;
+				prettyName.AssignWithConversion((const char *)pAccName);
 				nsOERegUtil::FreeValueBytes( pAccName);
 			}
 			else
-				prettyName = (const char *)pServerName;
+				prettyName.AssignWithConversion((const char *)pServerName);
 
 			PRUnichar *pretty = prettyName.ToNewUnicode();
 			
@@ -396,11 +396,11 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
 			if (pAccName) {
-				prettyName = (const char *)pAccName;
+				prettyName.AssignWithConversion((const char *)pAccName);
 				nsOERegUtil::FreeValueBytes( pAccName);
 			}
 			else
-				prettyName = (const char *)pServerName;
+				prettyName.AssignWithConversion((const char *)pServerName);
 
 			PRUnichar *pretty = prettyName.ToNewUnicode();
 			
@@ -495,7 +495,8 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = pMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			nsString fullName = pName;
+			nsString fullName;
+			fullName.AssignWithConversion(pName);
 			id->SetFullName( fullName.GetUnicode());
 			id->SetIdentityName( fullName.GetUnicode());
 			id->SetEmail( pEmail);
