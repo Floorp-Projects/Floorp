@@ -19,7 +19,11 @@ DEPTH=../..
 
 DEFINES =-D_IMPL_NS_BASE
 
+ifeq ($(OS_TARGET),Rhapsody)
+DIRS = rhapsody
+else
 DIRS = unix
+endif
 
 LIBRARY_NAME = raptorbase
 
@@ -70,3 +74,6 @@ include $(DEPTH)/config/config.mk
 TARGET = $(LIBARY)
 
 include $(DEPTH)/config/rules.mk
+
+test:
+	@echo OS_ARCH = $(OS_ARCH)
