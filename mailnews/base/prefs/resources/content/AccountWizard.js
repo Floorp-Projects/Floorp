@@ -76,7 +76,7 @@ var smtpService;
 var am;
 var accountm = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-
+var gMailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
 var accounts = accountm.accounts;
 
 //accountCount indicates presence or absense of accounts
@@ -453,6 +453,22 @@ function finishAccount(account, accountData) {
         copyObjectToInterface(destIdentity,
                               accountData.identity);
         destIdentity.valid=true;
+    }
+
+    /**
+     * If signature file need to be set, get the path to the signature file.
+     * Signature files, if exist, are placed under default location. Get
+     * default files location for messenger using directory service. Signature 
+     * file name should be extracted from the account data to build the complete
+     * path for signature file. Once the path is built, set the identity's signature pref.
+     */
+    if (destIdentity.attachSignature)
+    {
+        var sigFileName = accountData.signatureFileName;
+      
+        var sigFile = gMailSession.getDataFilesDir("messenger");
+        sigFile.appendUnicode(sigFileName);
+        destIdentity.signature = sigFile;
     }
 
     // don't try to create an smtp server if we already have one.
