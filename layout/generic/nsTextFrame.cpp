@@ -1618,9 +1618,19 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
       PRInt32 i;
       if (nsnull != indexp) {
         // Point mapping indicies at each content index in the word
-        i = contentLen;
-        while (--i >= 0) {
-          *indexp++ = strInx++;
+        if (1 == wordLen && contentLen == 2 && IS_CJ_CHAR(*bp)) {
+          // if all these condition meets, we have a '\n' between CJK chars, 
+          // and this '\n' should be removed.
+          i = contentLen;
+          while (--i >= 0) {
+            *indexp++ = strInx;
+          }
+          strInx++;
+        } else {
+          i = contentLen;
+          while (--i >= 0) {
+            *indexp++ = strInx++;
+          }
         }
       }
       // Nonbreaking spaces count as spaces, not letters

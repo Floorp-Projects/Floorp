@@ -46,6 +46,7 @@
 #include "nsIWordBreaker.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtilCIID.h"
+#include "nsUnicharUtils.h"
 #include "nsICaseConversion.h"
 #include "prenv.h"
 #include "nsIPref.h"
@@ -824,6 +825,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
   PRBool prevBufferPos;
+  PRBool skippedWhitespace = PR_FALSE;
 
   // Initialize OUT parameter
   *aWasTransformed = PR_FALSE;
@@ -855,6 +857,22 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
       case eNormal:
         if (XP_IS_SPACE(firstChar)) {
           offset = ScanNormalWhiteSpace_F();
+
+          // if this is just a '\n', and characters before and after it are CJK chars, 
+          // we will skip this one.
+          if (firstChar == '\n' && 
+              offset - mOffset == 1 && 
+              mOffset > 0 &&
+              offset < fragLen) 
+          {
+            PRUnichar lastChar = frag->CharAt(mOffset - 1);
+            PRUnichar nextChar = frag->CharAt(offset);
+            if (IS_CJ_CHAR(lastChar) && IS_CJ_CHAR(nextChar)) {
+              skippedWhitespace = PR_TRUE;
+              --mBufferPos;
+              mOffset = offset;
+              continue;            }
+          }
           if (firstChar != ' ') {
             *aWasTransformed = PR_TRUE;
           }
@@ -1023,9 +1041,12 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
     break;
   }
 
+  *aIsWhiteSpaceResult = isWhitespace;
   *aWordLenResult = wordLen;
   *aContentLenResult = offset - mOffset;
-  *aIsWhiteSpaceResult = isWhitespace;
+
+  // we need to adjust the length if a '\n' has been skip between CJK chars
+  *aContentLenResult += (skippedWhitespace ? 1 : 0);
 
   // If the word length doesn't match the content length then we transformed
   // the text
