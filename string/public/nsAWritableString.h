@@ -462,7 +462,8 @@ basic_nsAWritableString<CharT>::AssignFromPromise( const nsPromiseReadable<CharT
     */
   {
     PRUint32 length = aReadable.Length();
-    if ( CharT* buffer = new CharT[length] )
+    CharT* buffer = new CharT[length];
+    if ( buffer )
       {
         // Note: not exception safe.  We need something to manage temporary buffers like this
 
@@ -524,7 +525,8 @@ void
 basic_nsAWritableString<CharT>::AppendFromPromise( const nsPromiseReadable<CharT>& aReadable )
   {
     PRUint32 length = aReadable.Length();
-    if ( CharT* buffer = new CharT[length] )
+    CharT* buffer = new CharT[length];
+    if ( buffer )
       {
         copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
         do_AppendFromElementPtrLength(buffer, length);
@@ -592,7 +594,8 @@ void
 basic_nsAWritableString<CharT>::InsertFromPromise( const nsPromiseReadable<CharT>& aReadable, PRUint32 atPosition )
   {
     PRUint32 length = aReadable.Length();
-    if ( CharT* buffer = new CharT[length] )
+    CharT* buffer = new CharT[length];
+    if ( buffer )
       {
         copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
         do_InsertFromElementPtrLength(buffer, atPosition, length);
@@ -674,7 +677,8 @@ void
 basic_nsAWritableString<CharT>::ReplaceFromPromise( PRUint32 cutStart, PRUint32 cutLength, const nsPromiseReadable<CharT>& aReadable )
   {
     PRUint32 length = aReadable.Length();
-    if ( CharT* buffer = new CharT[length] )
+    CharT* buffer = new CharT[length];
+    if ( buffer )
       {
         copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
         do_ReplaceFromReadable(cutStart, cutLength, basic_nsLiteralString<CharT>(buffer, length));
