@@ -1987,10 +1987,9 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:rdf:macbuild:rdf.xml",                            "RDFLibrary$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.xml",                "xpinstall$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    if (!$main::options{carbon}) {
-        BuildOneProject(":mozilla:xpinstall:cleanup:macbuild:XPICleanup.xml",       "XPICleanup$D", 1, $main::ALIAS_SYM_FILES, 0);
-        InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST_CMESSAGE",         "$resource_dir");
-    }
+    BuildOneProjectWithOutput(":mozilla:xpinstall:cleanup:macbuild:XPICleanup.xml",       "XPICleanup$D$C", "XPICleanup$D", 1, $main::ALIAS_SYM_FILES, 0);
+    InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST_CMESSAGE",         "$resource_dir");
+
     BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.xml",                  "xpistub$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:xpinstall:wizard:libxpnet:macbuild:xpnet.xml",    "xpnet$D.Lib", 0, 0, 0);
     if (!($main::PROFILE)) {

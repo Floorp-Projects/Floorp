@@ -462,8 +462,10 @@ void main(void)
     HREG reg;
     int rv = DONE;
 
+#if !TARGET_CARBON
     // initialize QuickDraw globals
     InitGraf(&qd.thePort);
+#endif
 
     // initialize application globals
     gQuitFlag = false;
