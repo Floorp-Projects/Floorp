@@ -95,10 +95,11 @@ class Parser {
      * parse failure will result in a call to the current Context's
      * ErrorReporter.)
      */
-    public ScriptOrFnNode parse(TokenStream ts, IRFactory nf)
+    public ScriptOrFnNode parse(TokenStream ts, IRFactory nf, 
+                                Decompiler decompiler)
         throws IOException
     {
-        this.decompiler = new Decompiler();
+        this.decompiler = decompiler;
         decompiler.startScript();
 
         this.nf = nf;
@@ -1396,16 +1397,6 @@ class Parser {
 
         }
         return null;    // should never reach here
-    }
-
-    static String decompile(Object encodedSourcesTree,
-                            int indent, boolean justbody)
-    {
-        final int INDENT_GAP = 4;
-        final int CASE_GAP = 2; // less how much for case labels
-
-        return Decompiler.decompile(encodedSourcesTree,
-                                    justbody, indent, INDENT_GAP, CASE_GAP);
     }
 
     private IRFactory nf;

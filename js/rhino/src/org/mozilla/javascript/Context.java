@@ -854,8 +854,9 @@ public class Context {
         Interpreter compiler = new Interpreter();
         IRFactory irf = compiler.createIRFactory(this, ts);
         Parser p = createParser();
+        Decompiler decompiler = new Decompiler();
         try {
-            p.parse(ts, irf);
+            p.parse(ts, irf, decompiler);
         } catch (IOException ioe) {
             errorseen = true;
         } catch (EvaluatorException ee) {
@@ -1926,7 +1927,8 @@ public class Context {
 
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(this, ts);
-        ScriptOrFnNode tree = p.parse(ts, irf);
+        Decompiler decompiler = new Decompiler();
+        ScriptOrFnNode tree = p.parse(ts, irf, decompiler);
         if (tree == null)
             return null;
 
