@@ -62,6 +62,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL,
     mBufferMaxSize(bufferMaxSize),
     mPipelinedRequest(nsnull),
     mDoingProxySSLConnect(PR_FALSE),
+    mSSLConnected(PR_FALSE),
     mVersion(HTTP_ONE_ZERO),
     mKeepAliveTimeout(0),
     mRequestSpec(0),
@@ -282,7 +283,7 @@ nsHTTPRequest::SetOverrideRequestSpec(const char* i_Spec)
     if (i_Spec)
     {
         // proxy case
-        if (!PL_strcasecmp(mSpec, "https") && mProxySSLConnectAllowed)
+        if (mProxySSLConnectAllowed && !PL_strncasecmp(mSpec, "https", 5))
             mDoingProxySSLConnect = PR_TRUE;
     }
     
@@ -411,7 +412,25 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
     nsString methodString;
     nsCString cp;
 
-    if (mDoingProxySSLConnect)
+    
+    if (mDoingProxySSLConnect) 
+    { 
+            nsCOMPtr<nsIChannel> trans;
+            PRUint32 reuse = 0;
+            GetTransport(getter_AddRefs(trans));
+            nsCOMPtr<nsISocketTransport> sockTrans = 
+                do_QueryInterface(trans, &rv);
+            if (NS_SUCCEEDED(rv))
+                sockTrans->GetReuseCount(&reuse);
+            if (reuse > 0) 
+                {
+                    mSSLConnected = PR_TRUE;
+                    mDoingProxySSLConnect = PR_FALSE;
+                }
+    }
+    
+
+    if (mDoingProxySSLConnect && !mSSLConnected)
     {
         requestBuffer->Append("CONNECT ");
         requestBuffer->Append(mHost);
@@ -419,9 +438,10 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
 
         char tmp[20];
         sprintf(tmp, "%u",(mPort == -1) ? 
-            ((!PL_strcasecmp(mSpec, "https")) ? 443 : 80) 
+            ((!PL_strncasecmp(mSpec, "https", 5)) ? 443 : 80) 
                     : mPort);
         requestBuffer->Append(tmp);
+        mSSLConnected = PR_TRUE;
     }
     else
     {
@@ -432,7 +452,8 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
         requestBuffer->Append(" ");
 
         // Request spec gets set for proxied cases-
-        if (!mRequestSpec)
+        // for proxied SSL form request just like non-proxy case
+        if (!mRequestSpec || mSSLConnected)
         {
             rv = mURI->GetPath(getter_Copies(autoBuffer));
             requestBuffer->Append(autoBuffer);
@@ -906,7 +927,9 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
     {
         mTotalWritten = 0;
         mMustCommit   = PR_TRUE;
-        mListener     =  nsnull;
+        // We don't have to do it, as this listener should get 
+        // data on the second stage of proxy SSL connection as far
+        // mListener     =  nsnull;
 
         // in case of SSL proxies we can't pipeline
         nsHTTPRequest * req =(nsHTTPRequest *) mRequests->ElementAt(0);

@@ -224,7 +224,8 @@ protected:
     nsCOMPtr<nsISupports>           mSecurityInfo;
     PRInt32                         mProxyPort;
     char*                           mProxyHost;
-    PRBool			    mProxyTransparent;
+    PRBool                          mProxyTransparent;
+    PRBool                          mSSLProxy;
     nsCOMPtr<nsISupports>           mReadContext;
     nsCOMPtr<nsIStreamListener>     mReadListener;
     nsCOMPtr<nsIInputStream>        mReadPipeIn;
