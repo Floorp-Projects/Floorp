@@ -159,9 +159,9 @@ private:
   nsresult SetMailCcAndFccValues(nsIMsgIdentity *identity);
    
   nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname);
+  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort);
   
-  nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostname);
+  nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostAndPort);
   
   nsresult MigratePopAccount(nsIMsgIdentity *identity);
   
@@ -170,8 +170,8 @@ private:
   nsresult MigrateOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
   nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
-  nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec &newsrcfile);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
+  nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
 
   nsresult ProceedWithMigration(PRInt32 oldMailType);
   

@@ -56,7 +56,7 @@
 
 #define BUF_STR_LEN 1024
 
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_ACCOUNTMANAGER)
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
@@ -1782,16 +1782,31 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   PRBool dirExists;
 
   server->SetType("pop3");
-  char *hostname=nsnull;
-  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &hostname);
-  if (NS_SUCCEEDED(rv)) {
-    server->SetHostName(hostname);
-  }
-  else {
-    return rv;
-  }
+  char *hostAndPort=nsnull;
+  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &hostAndPort);
+  if (NS_FAILED(rv)) return rv;
 
-  rv = MigrateOldPopPrefs(server, hostname);
+  nsCString hostname(hostAndPort);
+  PRInt32 colonPos = hostname.FindChar(':');
+  if (colonPos != -1) {
+        nsCString portStr(hostAndPort + colonPos);
+        hostname.Truncate(colonPos);
+        PRInt32 err;
+        PRInt32 port = portStr.ToInteger(&err);
+        NS_ASSERTION(err == 0, "failed to get the port\n");
+        if (NS_SUCCEEDED(rv)) {
+                server->SetPort(port);
+        }
+  }
+#ifdef DEBUG_ACCOUNTMANAGER
+  PRInt32 portValue;
+  rv = server->GetPort(&portValue);
+  printf("HOSTNAME = %s\n", (const char *)hostname);
+  printf("PORT = %d\n", portValue);
+#endif /* DEBUG_ACCOUNTMANAGER */
+  server->SetHostName((const char *)hostname);
+
+  rv = MigrateOldPopPrefs(server, hostAndPort);
   if (NS_FAILED(rv)) return rv;
 
   // if they used -installer, this pref will point to where their files got copied
@@ -1820,8 +1835,8 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   }
 
   // we want .../Mail/<hostname>, not .../Mail
-  rv = mailDir->AppendRelativeUnixPath(hostname);
-  PR_FREEIF(hostname);
+  rv = mailDir->AppendRelativeUnixPath(hostAndPort);
+  PR_FREEIF(hostAndPort);
   if (NS_FAILED(rv)) return rv;
   
   // set the local path for this "pop3" server
@@ -1940,14 +1955,14 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 	PRInt32 port = portStr.ToInteger(&err);
 	NS_ASSERTION(err == 0, "failed to get the port\n");
 	if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_ACCOUNTMANAGER
-		printf("PORT = %d\n", port);
-#endif /* DEBUG_ACCOUNTMANAGER */
 		server->SetPort(port);
 	}
   }
 #ifdef DEBUG_ACCOUNTMANAGER
+  PRInt32 portValue;
+  rv = server->GetPort(&portValue);
   printf("HOSTNAME = %s\n", (const char *)hostname);
+  printf("PORT = %d\n", portValue);
 #endif /* DEBUG_ACCOUNTMANAGER */
   server->SetHostName((const char *)hostname);
 
@@ -2015,7 +2030,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 }
 
 nsresult
-nsMsgAccountManager::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostname)
+nsMsgAccountManager::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostAndPort)
 {
   nsresult rv;
 
@@ -2025,30 +2040,30 @@ nsMsgAccountManager::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   if (NS_FAILED(rv)) return rv;
 
   // upgrade the msg incoming server prefs
-  MIGRATE_STR_PREF("mail.imap.server.%s.userName",hostname,server,SetUsername)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostname,server,SetRememberPassword)
+  MIGRATE_STR_PREF("mail.imap.server.%s.userName",hostAndPort,server,SetUsername)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostAndPort,server,SetRememberPassword)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
-  MIGRATE_STR_PREF("mail.imap.server.%s.password",hostname,server,SetPassword)
+  MIGRATE_STR_PREF("mail.imap.server.%s.password",hostAndPort,server,SetPassword)
 #else 
   rv = server->SetPassword(nsnull);
   if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
   // upgrade the imap incoming server specific prefs
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.check_new_mail",hostname,server,SetDoBiff)
-  MIGRATE_INT_PREF("mail.imap.server.%s.check_time",hostname,server,SetBiffMinutes)
-  MIGRATE_STR_PREF("mail.imap.server.%s.admin_url",hostname,imapServer,SetAdminUrl)
-  MIGRATE_INT_PREF("mail.imap.server.%s.capability",hostname,imapServer,SetCapabilityPref)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.cleanup_inbox_on_exit",hostname,imapServer,SetCleanupInboxOnExit)
-  MIGRATE_INT_PREF("mail.imap.server.%s.delete_model",hostname,imapServer,SetDeleteModel)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.dual_use_folders",hostname,imapServer,SetDualUseFolders)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.empty_trash_on_exit",hostname,imapServer,SetEmptyTrashOnExit)
-  MIGRATE_INT_PREF("mail.imap.server.%s.empty_trash_threshhold",hostname,imapServer,SetEmptyTrashThreshhold)
-  MIGRATE_STR_PREF("mail.imap.server.%s.namespace.other_users",hostname,imapServer,SetOtherUsersNamespace)
-  MIGRATE_STR_PREF("mail.imap.server.%s.namespace.personal",hostname,imapServer,SetPersonalNamespace)
-  MIGRATE_STR_PREF("mail.imap.server.%s.namespace.public",hostname,imapServer,SetPublicNamespace)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.offline_download",hostname,imapServer,SetOfflineDownload)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.override_namespaces",hostname,imapServer,SetOverrideNamespaces)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.using_subscription",hostname,imapServer,SetUsingSubscription)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.check_new_mail",hostAndPort,server,SetDoBiff)
+  MIGRATE_INT_PREF("mail.imap.server.%s.check_time",hostAndPort,server,SetBiffMinutes)
+  MIGRATE_STR_PREF("mail.imap.server.%s.admin_url",hostAndPort,imapServer,SetAdminUrl)
+  MIGRATE_INT_PREF("mail.imap.server.%s.capability",hostAndPort,imapServer,SetCapabilityPref)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.cleanup_inbox_on_exit",hostAndPort,imapServer,SetCleanupInboxOnExit)
+  MIGRATE_INT_PREF("mail.imap.server.%s.delete_model",hostAndPort,imapServer,SetDeleteModel)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.dual_use_folders",hostAndPort,imapServer,SetDualUseFolders)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.empty_trash_on_exit",hostAndPort,imapServer,SetEmptyTrashOnExit)
+  MIGRATE_INT_PREF("mail.imap.server.%s.empty_trash_threshhold",hostAndPort,imapServer,SetEmptyTrashThreshhold)
+  MIGRATE_STR_PREF("mail.imap.server.%s.namespace.other_users",hostAndPort,imapServer,SetOtherUsersNamespace)
+  MIGRATE_STR_PREF("mail.imap.server.%s.namespace.personal",hostAndPort,imapServer,SetPersonalNamespace)
+  MIGRATE_STR_PREF("mail.imap.server.%s.namespace.public",hostAndPort,imapServer,SetPublicNamespace)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.offline_download",hostAndPort,imapServer,SetOfflineDownload)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.override_namespaces",hostAndPort,imapServer,SetOverrideNamespaces)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.using_subscription",hostAndPort,imapServer,SetUsingSubscription)
 
   return NS_OK;
 }
@@ -2255,12 +2270,12 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
-nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec & newsrcfile, nsFileSpec & newsHostsDir)
+nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec & newsrcfile, nsFileSpec & newsHostsDir)
 {  
 	nsresult rv;
 	nsFileSpec thisNewsHostsDir = newsHostsDir;
     if (!identity) return NS_ERROR_NULL_POINTER;
-	if (!hostname) return NS_ERROR_NULL_POINTER;
+	if (!hostAndPort) return NS_ERROR_NULL_POINTER;
 
     // create the account
 	nsCOMPtr<nsIMsgAccount> account;
@@ -2273,8 +2288,26 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	if (NS_FAILED(rv)) return rv;
 	// now upgrade all the prefs
 	server->SetType("nntp");
-    server->SetHostName((char *)hostname);
 
+	nsCString hostname(hostAndPort);
+	PRInt32 colonPos = hostname.FindChar(':');
+	if (colonPos != -1) {
+		nsCString portStr(hostAndPort + colonPos);
+		hostname.Truncate(colonPos);
+		PRInt32 err;
+		PRInt32 port = portStr.ToInteger(&err);
+		NS_ASSERTION(err == 0, "failed to get the port\n");
+		if (NS_SUCCEEDED(rv)) {
+			server->SetPort(port);
+		}
+	}
+#ifdef DEBUG_ACCOUNTMANAGER
+	PRInt32 portValue;
+	rv = server->GetPort(&portValue);
+	printf("HOSTNAME = %s\n", (const char *)hostname);
+	printf("PORT = %d\n", portValue);
+#endif /* DEBUG_ACCOUNTMANAGER */
+    server->SetHostName((const char *)hostname);
 
     // we only need to do this once
     if (!m_alreadySetNntpDefaultLocalPath) {
@@ -2323,14 +2356,14 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	account->SetIncomingServer(server);
 	account->AddIdentity(copied_identity);
 	
-    rv = MigrateOldNntpPrefs(server, hostname, newsrcfile);
+    rv = MigrateOldNntpPrefs(server, hostAndPort, newsrcfile);
     if (NS_FAILED(rv)) return rv;
 		
 	// can't do dir += "host-"; dir += hostname; 
 	// because += on a nsFileSpec inserts a separator
 	// so we'd end up with host-/<hostname> and not host-<hostname>
 	nsCAutoString alteredHost ((const char *) "host-");
-	alteredHost += hostname;
+	alteredHost += hostAndPort;
 	NS_MsgHashIfNecessary(alteredHost);	
 	thisNewsHostsDir += (const char *) alteredHost;
 
@@ -2352,7 +2385,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 }
 
 nsresult
-nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec & newsrcfile)
+nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec & newsrcfile)
 {
   nsresult rv;
   
@@ -2369,9 +2402,9 @@ nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
     
 #ifdef SUPPORT_SNEWS
 #error THIS_CODE_ISNT_DONE_YET
-  MIGRATE_STR_PREF("???nntp.server.%s.userName",hostname,server,SetUsername)
+  MIGRATE_STR_PREF("???nntp.server.%s.userName",hostAndPort,server,SetUsername)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
-  MIGRATE_STR_PREF("???nntp.server.%s.password",hostname,server,SetPassword)
+  MIGRATE_STR_PREF("???nntp.server.%s.password",hostAndPort,server,SetPassword)
 #else
   rv = server->SetPassword(nsnull);
   if (NS_FAILED(rv)) return rv;
