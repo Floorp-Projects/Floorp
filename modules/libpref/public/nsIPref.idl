@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsILocalFile.idl"
+#include "nsIObserver.idl"
 
 %{C++
 #include "jsapi.h"
@@ -76,15 +77,12 @@ interface nsIPref : nsISupports {
   void ReadUserJSFile(in nsIFileSpec filename);
   void SavePrefFileAs(in nsIFileSpec filename);
 
-  // Commenting out: #ifdef MOZ_OLD_LI_STUFF
-  // void ReadLIJSFile(in nsIFileSpec filename);
-  // void SaveLIPrefFile(in nsIFileSpec filename);
-  
   /* Getters */
   long GetPrefType(in string pref);
   long GetIntPref(in string pref);
   boolean GetBoolPref(in string pref);
-  [noscript] void GetBinaryPref(in string pref, in voidPtr buf, inout long buf_length);
+  [noscript] void GetBinaryPref(in string pref, in voidPtr buf,
+                                inout long buf_length);
 
   unsigned long GetColorPrefDWord(in string pref);
   /* set preferences */
@@ -92,7 +90,8 @@ interface nsIPref : nsISupports {
   void SetUnicharPref(in string pref, in wstring value);
   void SetIntPref(in string pref, in long value);
   void SetBoolPref(in string pref, in boolean value);
-  [noscript] void SetBinaryPref(in string pref, in voidPtr value, in unsigned long size);
+  [noscript] void SetBinaryPref(in string pref, in voidPtr value,
+                                in unsigned long size);
 
     
   void ClearUserPref(in string pref_name);
@@ -108,16 +107,17 @@ interface nsIPref : nsISupports {
   void SetDefaultUnicharPref(in string pref, in wstring value);
   void SetDefaultIntPref(in string pref, in long value);
   void SetDefaultBoolPref(in string pref, in boolean value);
-  [noscript] void SetDefaultBinaryPref(in string pref, in voidPtr value, in unsigned long size);
+  [noscript] void SetDefaultBinaryPref(in string pref, in voidPtr value,
+                                       in unsigned long size);
   
-    // these are eventually changing from Copy->get
+  // these are eventually changing from Copy->get
   string CopyCharPref(in string pref);
   wstring CopyUnicharPref(in string pref);
   [noscript] voidPtr CopyBinaryPref(in string pref, out long size);
     
-    // "localized" prefs - stored in the properties files
-    wstring getLocalizedUnicharPref(in string pref);
-    wstring getDefaultLocalizedUnicharPref(in string pref);
+  // "localized" prefs - stored in the properties files
+  wstring getLocalizedUnicharPref(in string pref);
+  wstring getDefaultLocalizedUnicharPref(in string pref);
   
   string CopyDefaultCharPref(in string pref);
   wstring CopyDefaultUnicharPref(in string pref);
@@ -125,8 +125,8 @@ interface nsIPref : nsISupports {
 
   nsIFileSpec GetFilePref(in string pref);
   void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
-    nsILocalFile getFileXPref(in string pref);
-    void setFileXPref(in string pref, in nsILocalFile value);
+  nsILocalFile getFileXPref(in string pref);
+  void setFileXPref(in string pref, in nsILocalFile value);
 
   /* pref attributes */
   boolean PrefIsLocked(in string pref);
@@ -141,6 +141,13 @@ interface nsIPref : nsISupports {
   [noscript] void UnregisterCallback(in string domain,
                           in PrefChangedFunc callback,
                           in voidPtr closure);
+  /*
+   * The observers have their |Observe| methods called with
+   * ([the observer], "nsPref:changed", [pref name]).
+   */
+  void addObserver(in string domain, in nsIObserver observer);
+  void removeObserver(in string domain, in nsIObserver observer);
+
 
   
   /* void CopyPrefsTree(in string srcRoot, in string destRoot); */
