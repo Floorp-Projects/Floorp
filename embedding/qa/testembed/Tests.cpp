@@ -64,6 +64,7 @@
 #include "nsIFile.h"
 #include "nsIWebBrow.h"
 #include "nsIWebProg.h"
+#include "nsIWebBrowFind.h"
 #include "QaUtils.h"
 #include <stdio.h>
 
@@ -228,6 +229,21 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER, OnInterfacesNsiwebprogress)
 	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER, OnInterfacesNsiwebprogress)
 	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_GETDOMWINDOW, OnInterfacesNsiwebprogress)
+
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_RUNALLTESTS, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETSEARCHSTRINGTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETSEARCHSTRINGTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_FINDNEXTTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETFINDBACKWARDSTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETFINDBACKWARDSTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETWRAPFINDTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETWRAPFINDTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETENTIREWORDTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETENTIREWORDTEST, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETMATCHCASE, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETMATCHCASE, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_SETSEARCHFRAMES, OnInterfacesNsiwebbrowfind)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSERFIND_GETSEARCHFRAMES, OnInterfacesNsiwebbrowfind)
 
 	//}}AFX_MSG_MAP
 
@@ -532,7 +548,7 @@ void CTests::OnToolsTestYourMethod()
 		searchString.AssignWithConversion(myDialog.m_urlfield);
 		rv = qaWBFind->SetSearchString(searchString.get());
 		RvTestResult(rv, "nsIWebBrowserFind::SetSearchString() test", 2);
-
+	}
 		// GetSearchString()
 		nsXPIDLString stringBuf;
 		CString csSearchStr;
@@ -540,7 +556,7 @@ void CTests::OnToolsTestYourMethod()
 		RvTestResult(rv, "nsIWebBrowserFind::GetSearchString() test", 2);
 		csSearchStr = stringBuf.get();
 		FormatAndPrintOutput("The searched string value = ", csSearchStr, 2);
-	}
+
 	// FindNext()
 	didFind = PR_TRUE;
 	rv = qaWBFind->FindNext(&didFind);
@@ -810,4 +826,10 @@ void CTests::OnInterfacesNsiwebprogress()
 {
 	CnsiWebProg oWebProgress(qaWebBrowser, qaBrowserImpl);
 	oWebProgress.OnStartTests(nCommandID);
+}
+
+void CTests::OnInterfacesNsiwebbrowfind()
+{
+	CNsIWebBrowFind oWebBrowFind(qaWebBrowser, qaBrowserImpl);
+	oWebBrowFind.OnStartTests(nCommandID);
 }
