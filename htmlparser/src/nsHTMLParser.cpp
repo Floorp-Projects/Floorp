@@ -934,15 +934,23 @@ PRInt32 nsHTMLParser::HandleStartToken(CToken* aToken) {
           result=HandleScriptToken(st); break;
       
 
-        case eHTMLTag_map:
-          // Put map into the head section
-          result=OpenHead(attrNode);
-          if(kNoError==result)
-            result=OpenContainer(attrNode);
-          break;
-
         case eHTMLTag_head:
           break; //ignore head tags...
+
+        case eHTMLTag_base:
+          result=OpenHead(attrNode);
+          if(kNoError==result) {
+            result=AddLeaf(attrNode);
+            if(kNoError==result)
+              result=CloseHead(attrNode);
+          }
+          break;
+
+        case eHTMLTag_nobr:
+          result=PR_TRUE;
+
+        case eHTMLTag_map:
+          result=PR_TRUE;
 
         default:
           result=HandleDefaultStartToken(aToken,tokenTagType,attrNode);
@@ -992,8 +1000,6 @@ PRInt32 nsHTMLParser::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_map:
       result=CloseContainer(theNode);
-      if(kNoError==result)
-        result=CloseHead(theNode);
       break;
 
     case eHTMLTag_form:

@@ -163,7 +163,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
   PRBool result=PR_FALSE;
 
-    //tagset1 has 64 members...
+    //tagset1 has 65 members...
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
     eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,
@@ -176,7 +176,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_input,     eHTMLTag_isindex,   
     
     eHTMLTag_kbd,       eHTMLTag_label,
-    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline, //JUST ADDED!
+    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_noframes,  eHTMLTag_noscript,
     eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_paragraph, eHTMLTag_pre,
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,
@@ -188,7 +188,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_whitespace,  //JUST ADDED!
     0};
 
-    //tagset2 has 43 members...
+    //tagset2 has 44 members...
   static char  gTagSet2[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
@@ -196,7 +196,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        eHTMLTag_italic,    
     eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     eHTMLTag_kbd,       
 
-    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,    //JUST ADDED!
+    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_object,    eHTMLTag_paragraph, 
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,    
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
@@ -424,6 +424,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       // XXX kipp was here
       result=PRBool(!strchr(gHeadingTags,aChild)); break;
 
+    case eHTMLTag_nobr:
+      result=PR_TRUE; break;
+
     case eHTMLTag_noframes:
       if(eHTMLTag_body==aChild)
         result=PR_TRUE;
@@ -439,7 +442,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_option:
-      result=PR_TRUE; break; //for now, allow select to contain anything...
+      //for now, allow an option to contain anything but another option...
+      result=PRBool(eHTMLTag_option!=aChild); break;
 
     case eHTMLTag_paragraph:
       if(eHTMLTag_paragraph==aChild)
@@ -630,7 +634,7 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
       switch((eHTMLTags)aParent) {
         case eHTMLTag_tr:       case eHTMLTag_table:  
         case eHTMLTag_thead:    case eHTMLTag_tfoot:  
-        case eHTMLTag_tbody:    case eHTMLTag_col:    
+        case eHTMLTag_tbody:    
           result=PR_TRUE;
         default:
           break;

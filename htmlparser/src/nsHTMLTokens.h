@@ -73,6 +73,7 @@ enum eHTMLTags
   eHTMLTag_label,       eHTMLTag_layer,       eHTMLTag_legend,    eHTMLTag_listitem, 
   eHTMLTag_link,        eHTMLTag_listing,     eHTMLTag_map,       eHTMLTag_marquee,
   eHTMLTag_math,        eHTMLTag_menu,        eHTMLTag_meta,      eHTMLTag_newline,
+  eHTMLTag_nobr,
   eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  //74
   eHTMLTag_note,        eHTMLTag_object,      eHTMLTag_ol,
   eHTMLTag_option,      eHTMLTag_paragraph,   eHTMLTag_param,     eHTMLTag_plaintext,   
