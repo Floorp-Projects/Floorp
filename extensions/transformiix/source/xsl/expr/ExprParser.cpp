@@ -24,7 +24,7 @@
  *   -- fixed a bug in CreateExpr (@xxx=/yyy was parsed as
  *      @xxx=@xxx/yyy)
  *
- * $Id: ExprParser.cpp,v 1.5 2000/03/29 08:56:07 kvisco%ziplink.net Exp $
+ * $Id: ExprParser.cpp,v 1.6 2000/03/31 07:08:44 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -32,7 +32,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.5 $ $Date: 2000/03/29 08:56:07 $
+ * @version $Revision: 1.6 $ $Date: 2000/03/31 07:08:44 $
 **/
 
 #include "ExprParser.h"
@@ -59,8 +59,6 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
 
     AttributeValueTemplate* avt = new AttributeValueTemplate();
     Int32 size = attValue.length();
-    char* chars = new char[size+1];
-    attValue.toChar(chars);
     int cc = 0;
     String buffer;
     MBool inExpr    = MB_FALSE;
@@ -69,7 +67,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     char prevCh = '\0';
 
     while ( cc < size) {
-        char ch = chars[cc++];
+        UNICODE_CHAR ch = attValue.charAt(cc++);
         // if in literal just add ch to buffer
         if ( inLiteral && (ch != endLiteral) ) {
                 buffer.append(ch);
@@ -134,10 +132,6 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
         }
         else avt->addExpr(new StringExpr(buffer));
     }
-
-    //-- cleanup
-    delete chars;
-
     return avt;
 
 } //-- createAttributeValueTemplate
