@@ -491,8 +491,12 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     }
 
     DWORD extendedStyle = WindowExStyle();
-    if (nsnull != aInitData && aInitData->mBorderStyle == eBorderStyle_dialog) {
-      extendedStyle = 0;
+    if (nsnull != aInitData) {
+      if (aInitData->mBorderStyle == eBorderStyle_dialog) {
+        extendedStyle = 0;
+      } else if (aInitData->mBorderStyle == eBorderStyle_3DChildWindow) {
+        extendedStyle |= WS_EX_CLIENTEDGE;
+      }
     }
 
     mWnd = ::CreateWindowEx(extendedStyle,

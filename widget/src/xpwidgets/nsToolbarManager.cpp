@@ -512,7 +512,7 @@ NS_METHOD nsToolbarManager::DoLayout()
 {
   PRInt32 i;
   PRInt32 x = 0;
-  PRInt32 y = 0;
+  PRInt32 y = 1;
 
   nsRect tbRect;
   GetBounds(tbRect);
