@@ -85,31 +85,22 @@
     </hbox>
     <vbox align="start">
       <description>&pref.daysoff.label;</description>
-      <grid id="daysoffgrid">
-        <columns>
-          <column /> <column /> <column /> <column /> <column /> <column /> <column />
-        </columns>
-        <rows>
-          <row>
-            <caption label="&day.1.Ddd;" />
-            <caption label="&day.2.Ddd;" />
-            <caption label="&day.3.Ddd;" />
-            <caption label="&day.4.Ddd;" />
-            <caption label="&day.5.Ddd;" />
-            <caption label="&day.6.Ddd;" />
-            <caption label="&day.7.Ddd;" />
-          </row>
-          <row>
-            <checkbox id="sundaysoff"    prefstring="calendar.week.d0sundaysoff" />
-            <checkbox id="mondaysoff"    prefstring="calendar.week.d1mondaysoff" />
-            <checkbox id="tuesdaysoff"   prefstring="calendar.week.d2tuesdaysoff"/>
-            <checkbox id="wednesdaysoff" prefstring="calendar.week.d3wednesdaysoff"/>
-            <checkbox id="thursdaysoff"  prefstring="calendar.week.d4thursdaysoff"/>
-            <checkbox id="fridaysoff"    prefstring="calendar.week.d5fridaysoff"/>
-            <checkbox id="saturdaysoff"  prefstring="calendar.week.d6saturdaysoff"/>
-          </row>
-        </rows>
-      </grid>
+      <hbox id="daysoffbox">
+        <checkbox id="sundaysoff"    label="&day.1.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d0sundaysoff"/>
+        <checkbox id="mondaysoff"    label="&day.2.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d1mondaysoff"/>
+        <checkbox id="tuesdaysoff"   label="&day.3.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d2tuesdaysoff"/>
+        <checkbox id="wednesdaysoff" label="&day.4.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d3wednesdaysoff"/>
+        <checkbox id="thursdaysoff"  label="&day.5.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d4thursdaysoff"/>
+        <checkbox id="fridaysoff"    label="&day.6.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d5fridaysoff"/>
+        <checkbox id="saturdaysoff"  label="&day.7.Ddd;" orient="vertical"
+                  prefstring="calendar.week.d6saturdaysoff"/>
+      </hbox>
     </vbox>
 </groupbox>
 
