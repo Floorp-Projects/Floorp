@@ -118,7 +118,7 @@
 #include "baseutils.h"
 #include <iostream.h>
 
-#ifdef MOZILLA
+#ifdef MOZ_XSL
 #include "nsString.h"
 typedef PRUnichar UNICODE_CHAR;
 #else
@@ -143,7 +143,7 @@ class String : public MITREObject
     String(const char* source);   //Create a string from the characters
     String(const UNICODE_CHAR* source);
     String(const UNICODE_CHAR* source, Int32 length);
-#ifdef MOZILLA
+#ifdef MOZ_XSL
     String(nsString* theNSString);
 #endif
 
@@ -256,7 +256,7 @@ class String : public MITREObject
 
     virtual void reverse();               //Reverse the string
 
-#ifdef MOZILLA
+#ifdef MOZ_XSL
     virtual nsString& getNSString();
     virtual const nsString& getConstNSString() const;
 #endif
@@ -270,7 +270,7 @@ class String : public MITREObject
     Int32 UnicodeLength(const UNICODE_CHAR* data);
 
   private:
-#ifdef MOZILLA
+#ifdef MOZ_XSL
     nsString* ptrNSString;
 #else
     Int32     strLength;
