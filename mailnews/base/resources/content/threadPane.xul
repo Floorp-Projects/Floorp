@@ -37,7 +37,7 @@ Rights Reserved.
 <tree datasources="rdf:null" id="threadTree"
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 			  onblur="goOnEvent(this,'blur')"
-			  containment="http://home.netscape.com/NC-rdf#MessageChild">
+			  containment="http://home.netscape.com/NC-rdf#MessageChild"
 			  allownegativeassertions="false"
 			coalesceduplicatearcs="false">
 
