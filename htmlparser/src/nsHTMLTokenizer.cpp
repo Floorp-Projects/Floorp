@@ -455,11 +455,14 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
           consume all the content itself.
        */
-      if(NS_SUCCEEDED(result) && (eHTMLTag_script==theTag)) {
-        nsAutoString endTag("</script>");
+      if(NS_SUCCEEDED(result))
+        if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
+        nsAutoString endTag("</");
+        endTag.Append(NS_EnumToTag(theTag));
+        endTag.Append(">");
         CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
         CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag,endTag);
-        result=((CTextToken*)textToken)->ConsumeUntil(0,aScanner,endTag);  //tell new token to finish consuming text...    
+        result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(eHTMLTag_style==theTag),aScanner,endTag);  //tell new token to finish consuming text...    
         AddToken(textToken,result,mTokenDeque,theRecycler);
         CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag);
         AddToken(endToken,result,mTokenDeque,theRecycler);
