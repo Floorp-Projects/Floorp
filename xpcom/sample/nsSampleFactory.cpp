@@ -297,7 +297,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 
     rv = compMgr->RegisterComponent(kSampleCID,
                                     "Sample World Component",
-                                    "component://netscape/sample/sample-world",
+                                    "component://mozilla/sample/sample-world",
                                     aPath, PR_TRUE, PR_TRUE);
 
     if (NS_FAILED(rv)) return rv;
