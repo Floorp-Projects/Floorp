@@ -50,8 +50,8 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
 
-    NS_IMETHOD GetImapMailfolder(nsIImapMailfolder** aImapMailfolder);
-    NS_IMETHOD SetImapMailfolder(nsIImapMailfolder* aImapMailfolder);
+    NS_IMETHOD GetImapMailFolder(nsIImapMailFolder** aImapMailFolder);
+    NS_IMETHOD SetImapMailFolder(nsIImapMailFolder* aImapMailFolder);
 
     NS_IMETHOD GetImapMessage(nsIImapMessage** aImapMessage);
     NS_IMETHOD SetImapMessage(nsIImapMessage* aImapMessage);
@@ -113,7 +113,10 @@ public:
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
 
-
+	// for enabling or disabling mime parts on demand. Setting this to TRUE says we
+	// can use mime parts on demand, if we chose.
+	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
+	NS_IMETHOD  GetAllowContentChange(PRBool *results);
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();
@@ -164,12 +167,13 @@ protected:
 	PRBool					m_runningUrl;
 	PRBool					m_idsAreUids;
 	PRBool					m_mimePartSelectorDetected;
+	PRBool					m_allowContentChange;	// if FALSE, we can't use Mime parts on demand
 	PRInt32					m_discoveryDepth;
 
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
 	nsIImapLog  * m_imapLog;
-    nsIImapMailfolder* m_imapMailfolder;
+    nsIImapMailFolder* m_imapMailFolder;
     nsIImapMessage* m_imapMessage;
     nsIImapExtension* m_imapExtension;
     nsIImapMiscellaneous* m_imapMiscellaneous;

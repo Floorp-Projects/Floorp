@@ -61,7 +61,7 @@ nsImapUrl::nsImapUrl()
     m_search = nsnull;
 	
 	m_imapLog = nsnull;
-    m_imapMailfolder = nsnull;
+    m_imapMailFolder = nsnull;
     m_imapMessage = nsnull;
     m_imapExtension = nsnull;
     m_imapMiscellaneous = nsnull;
@@ -74,6 +74,7 @@ nsImapUrl::nsImapUrl()
 	m_runningUrl = PR_FALSE;
 	m_idsAreUids = PR_FALSE;
 	m_mimePartSelectorDetected = PR_FALSE;
+	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
@@ -83,7 +84,7 @@ nsImapUrl::nsImapUrl()
 nsImapUrl::~nsImapUrl()
 {
 	NS_IF_RELEASE(m_imapLog);
-    NS_IF_RELEASE(m_imapMailfolder);
+    NS_IF_RELEASE(m_imapMailFolder);
     NS_IF_RELEASE(m_imapMessage);
     NS_IF_RELEASE(m_imapExtension);
     NS_IF_RELEASE(m_imapMiscellaneous);
@@ -221,25 +222,25 @@ NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapMailfolder(nsIImapMailfolder **
-                                           aImapMailfolder)
+NS_IMETHODIMP nsImapUrl::GetImapMailFolder(nsIImapMailFolder **
+                                           aImapMailFolder)
 {
-	if (aImapMailfolder)
+	if (aImapMailFolder)
 	{
-		*aImapMailfolder = m_imapMailfolder;
-		NS_IF_ADDREF(m_imapMailfolder);
+		*aImapMailFolder = m_imapMailFolder;
+		NS_IF_ADDREF(m_imapMailFolder);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapMailfolder(nsIImapMailfolder  * aImapMailfolder)
+NS_IMETHODIMP nsImapUrl::SetImapMailFolder(nsIImapMailFolder  * aImapMailFolder)
 {
-	if (aImapMailfolder)
+	if (aImapMailFolder)
 	{
-		NS_IF_RELEASE(m_imapMailfolder);
-		m_imapMailfolder = aImapMailfolder;
-		NS_ADDREF(m_imapMailfolder);
+		NS_IF_RELEASE(m_imapMailFolder);
+		m_imapMailFolder = aImapMailFolder;
+		NS_ADDREF(m_imapMailFolder);
 	}
 
 	return NS_OK;
@@ -1328,6 +1329,27 @@ NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
 	*result = PL_strdup(m_sourceCanonicalFolderPathSubString ? m_sourceCanonicalFolderPathSubString : "");
     NS_UNLOCK_INSTANCE();
 	return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+// for enabling or disabling mime parts on demand. Setting this to TRUE says we
+// can use mime parts on demand, if we chose.
+NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
+{
+	NS_LOCK_INSTANCE();
+	m_allowContentChange = allowContentChange;
+    NS_UNLOCK_INSTANCE();
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
+{
+	if (!result)
+	    return NS_ERROR_NULL_POINTER;
+	NS_LOCK_INSTANCE();
+	*result = m_allowContentChange;
+    NS_UNLOCK_INSTANCE();
+	return NS_OK;
 }
 
 

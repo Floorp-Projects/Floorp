@@ -159,31 +159,31 @@ nsImapLogProxyEvent::HandleEvent()
 		return res;
 }
 
-// ***** class implementation of nsImapMailfolderProxy *****
+// ***** class implementation of nsImapMailFolderProxy *****
 
-nsImapMailfolderProxy::nsImapMailfolderProxy(
-    nsIImapMailfolder* aImapMailfolder,
+nsImapMailFolderProxy::nsImapMailFolderProxy(
+    nsIImapMailFolder* aImapMailFolder,
     nsIImapProtocol* aProtocol,
     PLEventQueue* aEventQ,
     PRThread* aThread) : nsImapProxyBase(aProtocol, aEventQ, aThread)
 {
-    NS_ASSERTION (aImapMailfolder, 
-                  "nsImapMailfolderProxy: invalid aImapMailfolder");
+    NS_ASSERTION (aImapMailFolder, 
+                  "nsImapMailFolderProxy: invalid aImapMailFolder");
     NS_INIT_REFCNT ();
-    m_realImapMailfolder = aImapMailfolder;
-    NS_IF_ADDREF (m_realImapMailfolder);
+    m_realImapMailFolder = aImapMailFolder;
+    NS_IF_ADDREF (m_realImapMailFolder);
 }
 
-nsImapMailfolderProxy::~nsImapMailfolderProxy()
+nsImapMailFolderProxy::~nsImapMailFolderProxy()
 {
-    NS_IF_RELEASE (m_realImapMailfolder);
+    NS_IF_RELEASE (m_realImapMailFolder);
 }
 
-static NS_DEFINE_IID(kIImapMailfolderIID, NS_IIMAPMAILFOLDER_IID);
-NS_IMPL_THREADSAFE_ISUPPORTS(nsImapMailfolderProxy, kIImapMailfolderIID);
+static NS_DEFINE_IID(kIImapMailFolderIID, NS_IIMAPMAILFOLDER_IID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsImapMailFolderProxy, kIImapMailFolderIID);
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::PossibleImapMailbox(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                            mailbox_spec* aSpec)
 {
     nsresult res = NS_OK;
@@ -203,7 +203,7 @@ nsImapMailfolderProxy::PossibleImapMailbox(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->PossibleImapMailbox(aProtocol,
+        res = m_realImapMailFolder->PossibleImapMailbox(aProtocol,
                                                         aSpec);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -211,7 +211,7 @@ nsImapMailfolderProxy::PossibleImapMailbox(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
+nsImapMailFolderProxy::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
 {
     nsresult res = NS_OK;
     NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
@@ -227,14 +227,14 @@ nsImapMailfolderProxy::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
     }
     else
     {
-        res = m_realImapMailfolder->MailboxDiscoveryDone(aProtocol);
+        res = m_realImapMailFolder->MailboxDiscoveryDone(aProtocol);
         aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                              mailbox_spec* aSpec)
 {
     nsresult res = NS_OK;
@@ -254,7 +254,7 @@ nsImapMailfolderProxy::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->UpdateImapMailboxInfo(aProtocol,
+        res = m_realImapMailFolder->UpdateImapMailboxInfo(aProtocol,
                                                         aSpec);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -262,7 +262,7 @@ nsImapMailfolderProxy::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
                                                mailbox_spec* aSpec)
 {
     nsresult res = NS_OK;
@@ -282,7 +282,7 @@ nsImapMailfolderProxy::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->UpdateImapMailboxStatus(aProtocol,
+        res = m_realImapMailFolder->UpdateImapMailboxStatus(aProtocol,
                                                         aSpec);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -290,7 +290,7 @@ nsImapMailfolderProxy::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
+nsImapMailFolderProxy::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
 {
     nsresult res = NS_OK;
     NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
@@ -306,14 +306,14 @@ nsImapMailfolderProxy::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
     }
     else
     {
-        res = m_realImapMailfolder->ChildDiscoverySucceeded(aProtocol);
+        res = m_realImapMailFolder->ChildDiscoverySucceeded(aProtocol);
         aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::OnlineFolderDelete(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::OnlineFolderDelete(nsIImapProtocol* aProtocol,
                                           const char* folderName)
 {
     nsresult res = NS_OK;
@@ -333,7 +333,7 @@ nsImapMailfolderProxy::OnlineFolderDelete(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->OnlineFolderDelete(aProtocol,
+        res = m_realImapMailFolder->OnlineFolderDelete(aProtocol,
                                                        folderName);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -341,7 +341,7 @@ nsImapMailfolderProxy::OnlineFolderDelete(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
                                                 const char* folderName)
 {
     nsresult res = NS_OK;
@@ -361,7 +361,7 @@ nsImapMailfolderProxy::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->OnlineFolderCreateFailed(aProtocol,
+        res = m_realImapMailFolder->OnlineFolderCreateFailed(aProtocol,
                                                              folderName);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -369,7 +369,7 @@ nsImapMailfolderProxy::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::OnlineFolderRename(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::OnlineFolderRename(nsIImapProtocol* aProtocol,
                                           folder_rename_struct* aStruct)
 {
     nsresult res = NS_OK;
@@ -389,7 +389,7 @@ nsImapMailfolderProxy::OnlineFolderRename(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->OnlineFolderRename(aProtocol,
+        res = m_realImapMailFolder->OnlineFolderRename(aProtocol,
                                                        aStruct);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -397,7 +397,7 @@ nsImapMailfolderProxy::OnlineFolderRename(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
                                      EIMAPSubscriptionUpgradeState* aState)
 {
     nsresult res = NS_OK;
@@ -417,7 +417,7 @@ nsImapMailfolderProxy::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->SubscribeUpgradeFinished(aProtocol,
+        res = m_realImapMailFolder->SubscribeUpgradeFinished(aProtocol,
                                                              aState);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -425,7 +425,7 @@ nsImapMailfolderProxy::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::PromptUserForSubscribeUpdatePath(
+nsImapMailFolderProxy::PromptUserForSubscribeUpdatePath(
     nsIImapProtocol* aProtocol, PRBool* aBool)
 {
     nsresult res = NS_OK;
@@ -445,7 +445,7 @@ nsImapMailfolderProxy::PromptUserForSubscribeUpdatePath(
     }
     else
     {
-        res = m_realImapMailfolder->PromptUserForSubscribeUpdatePath
+        res = m_realImapMailFolder->PromptUserForSubscribeUpdatePath
                                                          (aProtocol, aBool);
         aProtocol->NotifyFEEventCompletion();
     }
@@ -453,7 +453,7 @@ nsImapMailfolderProxy::PromptUserForSubscribeUpdatePath(
 }
 
 NS_IMETHODIMP
-nsImapMailfolderProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
+nsImapMailFolderProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
                                         FolderQueryInfo* aInfo)
 {
     nsresult res = NS_OK;
@@ -473,7 +473,7 @@ nsImapMailfolderProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMailfolder->FolderIsNoSelect(aProtocol, aInfo);
+        res = m_realImapMailFolder->FolderIsNoSelect(aProtocol, aInfo);
         aProtocol->NotifyFEEventCompletion();
     }
     return res;
@@ -1563,7 +1563,7 @@ nsImapMiscellaneousProxy::ProcessTunnel(nsIImapProtocol* aProtocol,
     return res;
 }
 
-nsImapMailfolderProxyEvent::nsImapMailfolderProxyEvent(nsImapMailfolderProxy*
+nsImapMailFolderProxyEvent::nsImapMailFolderProxyEvent(nsImapMailFolderProxy*
                                                        aProxy)
 {
     NS_ASSERTION (aProxy, "fatal null proxy object");
@@ -1571,14 +1571,14 @@ nsImapMailfolderProxyEvent::nsImapMailfolderProxyEvent(nsImapMailfolderProxy*
     NS_IF_ADDREF (m_proxy);
 }
 
-nsImapMailfolderProxyEvent::~nsImapMailfolderProxyEvent()
+nsImapMailFolderProxyEvent::~nsImapMailFolderProxyEvent()
 {
     NS_IF_RELEASE (m_proxy);
 }
 
 PossibleImapMailboxProxyEvent::PossibleImapMailboxProxyEvent(
-    nsImapMailfolderProxy* aProxy, mailbox_spec* aSpec) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, mailbox_spec* aSpec) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aSpec, "PossibleImapMailboxProxyEvent: null aSpec");
     if (aSpec)
@@ -1612,15 +1612,15 @@ NS_IMETHODIMP
 PossibleImapMailboxProxyEvent::HandleEvent()
 {
     nsresult res =
-        m_proxy->m_realImapMailfolder->PossibleImapMailbox(
+        m_proxy->m_realImapMailFolder->PossibleImapMailbox(
             m_proxy->m_protocol, &m_mailboxSpec);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 MailboxDiscoveryDoneProxyEvent::MailboxDiscoveryDoneProxyEvent(
-    nsImapMailfolderProxy* aProxy) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
 }
 
@@ -1631,15 +1631,15 @@ MailboxDiscoveryDoneProxyEvent::~MailboxDiscoveryDoneProxyEvent()
 NS_IMETHODIMP
 MailboxDiscoveryDoneProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->MailboxDiscoveryDone(
+    nsresult res = m_proxy->m_realImapMailFolder->MailboxDiscoveryDone(
         m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 UpdateImapMailboxInfoProxyEvent::UpdateImapMailboxInfoProxyEvent(
-    nsImapMailfolderProxy* aProxy, mailbox_spec* aSpec) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, mailbox_spec* aSpec) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aSpec, "PossibleImapMailboxProxyEvent: null aSpec");
     if (aSpec)
@@ -1672,15 +1672,15 @@ UpdateImapMailboxInfoProxyEvent::~UpdateImapMailboxInfoProxyEvent()
 NS_IMETHODIMP
 UpdateImapMailboxInfoProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->UpdateImapMailboxInfo(
+    nsresult res = m_proxy->m_realImapMailFolder->UpdateImapMailboxInfo(
         m_proxy->m_protocol, &m_mailboxSpec);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 UpdateImapMailboxStatusProxyEvent::UpdateImapMailboxStatusProxyEvent(
-    nsImapMailfolderProxy* aProxy, mailbox_spec* aSpec) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, mailbox_spec* aSpec) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aSpec, "PossibleImapMailboxProxyEvent: null aSpec");
     if (aSpec)
@@ -1713,15 +1713,15 @@ UpdateImapMailboxStatusProxyEvent::~UpdateImapMailboxStatusProxyEvent()
 NS_IMETHODIMP
 UpdateImapMailboxStatusProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->UpdateImapMailboxStatus(
+    nsresult res = m_proxy->m_realImapMailFolder->UpdateImapMailboxStatus(
         m_proxy->m_protocol, &m_mailboxSpec);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 ChildDiscoverySucceededProxyEvent::ChildDiscoverySucceededProxyEvent(
-    nsImapMailfolderProxy* aProxy) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
 }
 
@@ -1732,15 +1732,15 @@ ChildDiscoverySucceededProxyEvent::~ChildDiscoverySucceededProxyEvent()
 NS_IMETHODIMP
 ChildDiscoverySucceededProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->ChildDiscoverySucceeded(
+    nsresult res = m_proxy->m_realImapMailFolder->ChildDiscoverySucceeded(
         m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 OnlineFolderDeleteProxyEvent::OnlineFolderDeleteProxyEvent(
-    nsImapMailfolderProxy* aProxy, const char* folderName) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, const char* folderName) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (folderName, "Oops, null folderName");
     if (folderName)
@@ -1758,15 +1758,15 @@ OnlineFolderDeleteProxyEvent::~OnlineFolderDeleteProxyEvent()
 NS_IMETHODIMP
 OnlineFolderDeleteProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->OnlineFolderDelete(
+    nsresult res = m_proxy->m_realImapMailFolder->OnlineFolderDelete(
         m_proxy->m_protocol, m_folderName); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 OnlineFolderCreateFailedProxyEvent::OnlineFolderCreateFailedProxyEvent(
-    nsImapMailfolderProxy* aProxy, const char* folderName) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, const char* folderName) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (folderName, "Oops, null folderName");
     if (folderName)
@@ -1784,15 +1784,15 @@ OnlineFolderCreateFailedProxyEvent::~OnlineFolderCreateFailedProxyEvent()
 NS_IMETHODIMP
 OnlineFolderCreateFailedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->OnlineFolderCreateFailed(
+    nsresult res = m_proxy->m_realImapMailFolder->OnlineFolderCreateFailed(
         m_proxy->m_protocol, m_folderName);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 OnlineFolderRenameProxyEvent::OnlineFolderRenameProxyEvent(
-    nsImapMailfolderProxy* aProxy, folder_rename_struct* aStruct) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, folder_rename_struct* aStruct) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aStruct, "Oops... null folder_rename_struct");
     if (aStruct)
@@ -1822,15 +1822,15 @@ OnlineFolderRenameProxyEvent::~OnlineFolderRenameProxyEvent()
 NS_IMETHODIMP
 OnlineFolderRenameProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->OnlineFolderRename(
+    nsresult res = m_proxy->m_realImapMailFolder->OnlineFolderRename(
         m_proxy->m_protocol, &m_folderRenameStruct);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 SubscribeUpgradeFinishedProxyEvent::SubscribeUpgradeFinishedProxyEvent(
-    nsImapMailfolderProxy* aProxy, EIMAPSubscriptionUpgradeState* aState) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, EIMAPSubscriptionUpgradeState* aState) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aState, "Oops... null aState");
     if (aState)
@@ -1846,15 +1846,15 @@ SubscribeUpgradeFinishedProxyEvent::~SubscribeUpgradeFinishedProxyEvent()
 NS_IMETHODIMP
 SubscribeUpgradeFinishedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->SubscribeUpgradeFinished(
+    nsresult res = m_proxy->m_realImapMailFolder->SubscribeUpgradeFinished(
         m_proxy->m_protocol, &m_state);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 PromptUserForSubscribeUpdatePathProxyEvent::PromptUserForSubscribeUpdatePathProxyEvent(
-    nsImapMailfolderProxy* aProxy, PRBool* aBool) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, PRBool* aBool) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aBool, "Oops... null aBool");
     if (aBool)
@@ -1871,15 +1871,15 @@ NS_IMETHODIMP
 PromptUserForSubscribeUpdatePathProxyEvent::HandleEvent()
 {
     nsresult res =
-        m_proxy->m_realImapMailfolder->PromptUserForSubscribeUpdatePath(
+        m_proxy->m_realImapMailFolder->PromptUserForSubscribeUpdatePath(
             m_proxy->m_protocol, &m_bool); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
 FolderIsNoSelectProxyEvent::FolderIsNoSelectProxyEvent(
-    nsImapMailfolderProxy* aProxy, FolderQueryInfo* aInfo) :
-    nsImapMailfolderProxyEvent(aProxy)
+    nsImapMailFolderProxy* aProxy, FolderQueryInfo* aInfo) :
+    nsImapMailFolderProxyEvent(aProxy)
 {
     NS_ASSERTION (aInfo, "Ooops... null folder query info");
     if (aInfo)
@@ -1907,7 +1907,7 @@ FolderIsNoSelectProxyEvent::~FolderIsNoSelectProxyEvent()
 NS_IMETHODIMP
 FolderIsNoSelectProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->m_realImapMailfolder->FolderIsNoSelect(
+    nsresult res = m_proxy->m_realImapMailFolder->FolderIsNoSelect(
         m_proxy->m_protocol, &m_folderQueryInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

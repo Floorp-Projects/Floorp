@@ -29,7 +29,7 @@
 { 0x3b2dd7e0, 0xe72c, 0x11d2, \
     { 0xab, 0x7b, 0x00, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
 
-class nsIImapMailfolder : public nsISupports
+class nsIImapMailFolder : public nsISupports
 {
 public:
     static const nsIID& GetIID()

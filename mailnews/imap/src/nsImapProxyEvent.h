@@ -59,15 +59,15 @@ public:
 	nsIImapLog* m_realImapLog;
 };
 
-class nsImapMailfolderProxy : public nsIImapMailfolder, 
+class nsImapMailFolderProxy : public nsIImapMailFolder, 
                               public nsImapProxyBase
 {
 public:
-    nsImapMailfolderProxy(nsIImapMailfolder* aImapMailfolder,
+    nsImapMailFolderProxy(nsIImapMailFolder* aImapMailFolder,
                           nsIImapProtocol* aProtocol,
                           PLEventQueue* aEventQ,
                           PRThread* aThread);
-    virtual ~nsImapMailfolderProxy();
+    virtual ~nsImapMailFolderProxy();
     
     NS_DECL_ISUPPORTS
 
@@ -94,7 +94,7 @@ public:
     NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
                                 FolderQueryInfo* aInfo);
 
-    nsIImapMailfolder* m_realImapMailfolder;
+    nsIImapMailFolder* m_realImapMailFolder;
 };
 
 class nsImapMessageProxy : public nsIImapMessage, 
@@ -251,16 +251,16 @@ struct nsImapLogProxyEvent : public nsImapEvent
 	nsImapLogProxy *m_proxy;
 };
 
-struct nsImapMailfolderProxyEvent : public nsImapEvent
+struct nsImapMailFolderProxyEvent : public nsImapEvent
 {
-    nsImapMailfolderProxyEvent(nsImapMailfolderProxy* aProxy);
-    virtual ~nsImapMailfolderProxyEvent();
-    nsImapMailfolderProxy* m_proxy;
+    nsImapMailFolderProxyEvent(nsImapMailFolderProxy* aProxy);
+    virtual ~nsImapMailFolderProxyEvent();
+    nsImapMailFolderProxy* m_proxy;
 };
 
-struct PossibleImapMailboxProxyEvent : public nsImapMailfolderProxyEvent
+struct PossibleImapMailboxProxyEvent : public nsImapMailFolderProxyEvent
 {
-    PossibleImapMailboxProxyEvent(nsImapMailfolderProxy* aProxy,
+    PossibleImapMailboxProxyEvent(nsImapMailFolderProxy* aProxy,
                                   mailbox_spec* aSpec);
     virtual ~PossibleImapMailboxProxyEvent();
     NS_IMETHOD HandleEvent();
@@ -268,68 +268,68 @@ struct PossibleImapMailboxProxyEvent : public nsImapMailfolderProxyEvent
     mailbox_spec m_mailboxSpec;
 };
 
-struct MailboxDiscoveryDoneProxyEvent : public nsImapMailfolderProxyEvent
+struct MailboxDiscoveryDoneProxyEvent : public nsImapMailFolderProxyEvent
 {
-    MailboxDiscoveryDoneProxyEvent(nsImapMailfolderProxy* aProxy);
+    MailboxDiscoveryDoneProxyEvent(nsImapMailFolderProxy* aProxy);
     virtual ~MailboxDiscoveryDoneProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct UpdateImapMailboxInfoProxyEvent : public nsImapMailfolderProxyEvent
+struct UpdateImapMailboxInfoProxyEvent : public nsImapMailFolderProxyEvent
 {
-    UpdateImapMailboxInfoProxyEvent(nsImapMailfolderProxy* aProxy,
+    UpdateImapMailboxInfoProxyEvent(nsImapMailFolderProxy* aProxy,
                                     mailbox_spec* aSpec);
     virtual ~UpdateImapMailboxInfoProxyEvent();
     NS_IMETHOD HandleEvent();
     mailbox_spec m_mailboxSpec;
 };
 
-struct UpdateImapMailboxStatusProxyEvent : public nsImapMailfolderProxyEvent
+struct UpdateImapMailboxStatusProxyEvent : public nsImapMailFolderProxyEvent
 {
-    UpdateImapMailboxStatusProxyEvent(nsImapMailfolderProxy* aProxy,
+    UpdateImapMailboxStatusProxyEvent(nsImapMailFolderProxy* aProxy,
                                       mailbox_spec* aSpec);
     virtual ~UpdateImapMailboxStatusProxyEvent();
     NS_IMETHOD HandleEvent();
     mailbox_spec m_mailboxSpec;
 };
 
-struct ChildDiscoverySucceededProxyEvent : public nsImapMailfolderProxyEvent
+struct ChildDiscoverySucceededProxyEvent : public nsImapMailFolderProxyEvent
 {
-    ChildDiscoverySucceededProxyEvent(nsImapMailfolderProxy* aProxy);
+    ChildDiscoverySucceededProxyEvent(nsImapMailFolderProxy* aProxy);
     virtual ~ChildDiscoverySucceededProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct OnlineFolderDeleteProxyEvent : public nsImapMailfolderProxyEvent
+struct OnlineFolderDeleteProxyEvent : public nsImapMailFolderProxyEvent
 {
-    OnlineFolderDeleteProxyEvent(nsImapMailfolderProxy* aProxy,
+    OnlineFolderDeleteProxyEvent(nsImapMailFolderProxy* aProxy,
                                  const char* folderName);
     virtual ~OnlineFolderDeleteProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_folderName;
 };
 
-struct OnlineFolderCreateFailedProxyEvent : public nsImapMailfolderProxyEvent
+struct OnlineFolderCreateFailedProxyEvent : public nsImapMailFolderProxyEvent
 {
-    OnlineFolderCreateFailedProxyEvent(nsImapMailfolderProxy* aProxy,
+    OnlineFolderCreateFailedProxyEvent(nsImapMailFolderProxy* aProxy,
                                        const char* folderName);
     virtual ~OnlineFolderCreateFailedProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_folderName;
 };
 
-struct OnlineFolderRenameProxyEvent : public nsImapMailfolderProxyEvent
+struct OnlineFolderRenameProxyEvent : public nsImapMailFolderProxyEvent
 {
-    OnlineFolderRenameProxyEvent(nsImapMailfolderProxy* aProxy,
+    OnlineFolderRenameProxyEvent(nsImapMailFolderProxy* aProxy,
                                  folder_rename_struct* aStruct);
     virtual ~OnlineFolderRenameProxyEvent();
     NS_IMETHOD HandleEvent();
     folder_rename_struct m_folderRenameStruct;
 };
 
-struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailfolderProxyEvent
+struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailFolderProxyEvent
 {
-    SubscribeUpgradeFinishedProxyEvent(nsImapMailfolderProxy* aProxy,
+    SubscribeUpgradeFinishedProxyEvent(nsImapMailFolderProxy* aProxy,
                                        EIMAPSubscriptionUpgradeState* aState);
     virtual ~SubscribeUpgradeFinishedProxyEvent();
     NS_IMETHOD HandleEvent();
@@ -337,18 +337,18 @@ struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailfolderProxyEvent
 };
 
 struct PromptUserForSubscribeUpdatePathProxyEvent : 
-    public nsImapMailfolderProxyEvent 
+    public nsImapMailFolderProxyEvent 
 {
-    PromptUserForSubscribeUpdatePathProxyEvent(nsImapMailfolderProxy* aProxy,
+    PromptUserForSubscribeUpdatePathProxyEvent(nsImapMailFolderProxy* aProxy,
                                                PRBool* aBool);
     virtual ~PromptUserForSubscribeUpdatePathProxyEvent();
     NS_IMETHOD HandleEvent();
     PRBool m_bool;
 };
 
-struct FolderIsNoSelectProxyEvent : public nsImapMailfolderProxyEvent
+struct FolderIsNoSelectProxyEvent : public nsImapMailFolderProxyEvent
 {
-    FolderIsNoSelectProxyEvent(nsImapMailfolderProxy* aProxy,
+    FolderIsNoSelectProxyEvent(nsImapMailFolderProxy* aProxy,
                                FolderQueryInfo* aInfo);
     virtual ~FolderIsNoSelectProxyEvent();
     NS_IMETHOD HandleEvent();

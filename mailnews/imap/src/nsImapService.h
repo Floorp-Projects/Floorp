@@ -38,7 +38,7 @@ public:
 
 	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, nsIImapProtocol ** aImapConnection);
 
-	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailfolder *, nsIUrlListener * aUrlListener, nsIURL ** aURL);	
+	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolder *, nsIUrlListener * aUrlListener, nsIURL ** aURL);	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsISmtpService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

@@ -94,6 +94,7 @@ public:
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
 	// used to start fetching a message.
+	static	PRBool HandlingMultipleMessages(char *messageIdString);
     PRBool GetShouldDownloadArbitraryHeaders();
     char *GetArbitraryHeadersToDownload();
     virtual void AdjustChunkSize();
@@ -196,6 +197,8 @@ public:
 	void GetACLForFolder(const char *mailboxName);
 	void StatusForFolder(const char *mailboxName);
 	void AutoSubscribeToMailboxIfNecessary(const char *mailboxName);
+	void Bodystructure(const char *messageId, PRBool idIsUid);
+	void PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts);
 
 
 	nsIImapUrl		*GetCurrentUrl() {return m_runningUrl;}
@@ -261,7 +264,7 @@ private:
     nsIMsgIncomingServer * m_server;
 
     nsImapLogProxy *m_imapLog;
-    nsImapMailfolderProxy *m_imapMailfolder;
+    nsImapMailFolderProxy *m_imapMailFolder;
     nsImapMessageProxy *m_imapMessage;
     nsImapExtensionProxy *m_imapExtension;
     nsImapMiscellaneousProxy *m_imapMiscellaneous;
@@ -277,6 +280,11 @@ private:
     virtual void ProcessCurrentURL();
 	void ProcessSelectedStateURL();
     virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
+
+	// biff
+	void	PeriodicBiff();
+	void	SendSetBiffIndicatorEvent(nsMsgBiffState newState);
+	PRBool	CheckNewMail();
 
 	// folder opening and listing header functions
 	void UpdatedMailboxSpec(mailbox_spec *aSpec);
@@ -311,7 +319,7 @@ private:
 	PRBool					m_active;
 	PRBool					m_threadShouldDie;
 	nsImapFlagAndUidState	m_flagState;
-
+	nsMsgBiffState			m_currentBiffState;
     // manage the IMAP server command tags
     char m_currentServerCommandTag[10];   // enough for a billion
     int  m_currentServerCommandTagNumber;
@@ -332,11 +340,17 @@ private:
     TLineDownloadCache m_downloadLineCache;
     PRBool m_fromHeaderSeen;
 
+	// progress stuff
+	PRInt32	m_progressStringId;
+	PRInt32	m_progressIndex;
+	PRInt32 m_progressCount;
+
+	PRBool m_mailToFetch;
+	PRBool m_checkForNewMailDownloadsHeaders;
 	PRBool m_needNoop;
 	PRInt32 m_noopCount;
 	PRInt32 m_promoteNoopToCheckCount;
     PRBool m_closeNeededBeforeSelect;
-
     enum EMailboxHierarchyNameState {
         kNoOperationInProgress,
         kDiscoverBaseFolderInProgress,

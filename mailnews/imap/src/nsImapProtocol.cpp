@@ -180,7 +180,7 @@ nsImapProtocol::nsImapProtocol() :
     // imap protocol sink interfaces
     m_server = nsnull;
     m_imapLog = nsnull;
-    m_imapMailfolder = nsnull;
+    m_imapMailFolder = nsnull;
     m_imapMessage = nsnull;
     m_imapExtension = nsnull;
     m_imapMiscellaneous = nsnull;
@@ -201,10 +201,13 @@ nsImapProtocol::nsImapProtocol() :
 	m_needNoop = PR_FALSE;
 	m_noopCount = 0;
 	m_promoteNoopToCheckCount = 0;
+	m_mailToFetch = PR_FALSE;
 
+	m_checkForNewMailDownloadsHeaders = PR_TRUE;	// this should be on by default
     m_hierarchyNameState = kNoOperationInProgress;
     m_onlineBaseFolderExists = PR_FALSE;
     m_discoveryStatus = eContinue;
+	m_currentBiffState = nsMsgBiffState_Unknown;
 
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
@@ -234,7 +237,7 @@ nsImapProtocol::~nsImapProtocol()
 	NS_IF_RELEASE(m_transport);
     NS_IF_RELEASE(m_server);
     NS_IF_RELEASE(m_imapLog);
-    NS_IF_RELEASE(m_imapMailfolder);
+    NS_IF_RELEASE(m_imapMailFolder);
     NS_IF_RELEASE(m_imapMessage);
     NS_IF_RELEASE(m_imapExtension);
     NS_IF_RELEASE(m_imapMiscellaneous);
@@ -332,18 +335,18 @@ nsImapProtocol::SetupSinkProxy()
             }
         }
                 
-        if (!m_imapMailfolder)
+        if (!m_imapMailFolder)
         {
-            nsIImapMailfolder *aImapMailfolder;
-            res = m_runningUrl->GetImapMailfolder(&aImapMailfolder);
-            if (NS_SUCCEEDED(res) && aImapMailfolder)
+            nsIImapMailFolder *aImapMailFolder;
+            res = m_runningUrl->GetImapMailFolder(&aImapMailFolder);
+            if (NS_SUCCEEDED(res) && aImapMailFolder)
             {
-                m_imapMailfolder = new nsImapMailfolderProxy(aImapMailfolder,
+                m_imapMailFolder = new nsImapMailFolderProxy(aImapMailFolder,
                                                              this,
                                                              m_sinkEventQueue,
                                                              m_thread);
-                NS_IF_ADDREF(m_imapMailfolder);
-                NS_RELEASE(aImapMailfolder);
+                NS_IF_ADDREF(m_imapMailFolder);
+                NS_RELEASE(aImapMailFolder);
             }
         }
         if (!m_imapMessage)
@@ -889,56 +892,44 @@ void nsImapProtocol::ProcessSelectedStateURL()
 			switch (imapAction)
 			{
 			case nsIImapUrl::nsImapLiteSelectFolder:
-        	{
-				if (GetServerStateParser().LastCommandSuccessful())
+				if (GetServerStateParser().LastCommandSuccessful() && m_imapMiscellaneous)
 				{
-#ifdef HAVE_PORT
-					TImapFEEvent *liteselectEvent = 
-						new TImapFEEvent(LiteSelectEvent,       // function to call
-										 (void *) this,
-										 NULL, TRUE);
+					m_imapMiscellaneous->LiteSelectUIDValidity(this, GetServerStateParser().FolderUID());
 
-					if (liteselectEvent)
-					{
-						fFEEventQueue->AdoptEventToEnd(liteselectEvent);
-						WaitForFEEventCompletion();
-					}
-					else
-						HandleMemoryFailure();
-#endif
+					WaitForFEEventCompletion();
 					// need to update the mailbox count - is this a good place?
 					ProcessMailboxUpdate(FALSE);	// handle uidvalidity change
 				}
-			}
-			break;
+				break;
             case nsIImapUrl::nsImapMsgFetch:
             {
                 char *messageIdString;
-#ifdef HAVE_PORT							
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                 if (messageIdString)
                 {
+#ifdef HAVE_PORT
 					// we dont want to send the flags back in a group
 					// GetServerStateParser().ResetFlagInfo(0);
 					if (HandlingMultipleMessages(messageIdString))
 					{
 						// multiple messages, fetch them all
-						fProgressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
+						m_progressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
 						
-						fProgressIndex = 0;
-						fProgressCount = CountMessagesInIdString(messageIdString);
+						m_progressIndex = 0;
+						m_progressCount = CountMessagesInIdString(messageIdString);
 						
 	                    FetchMessage(messageIdString, 
 									 kEveryThingRFC822Peek,
 									 bMessageIdsAreUids);
-						fProgressStringId = 0;
+						m_progressStringId = 0;
 					}
 					else
 					{
 						// A single message ID
 
 						// First, let's see if we're requesting a specific MIME part
-						char *imappart = m_runningUrl->GetIMAPPartToFetch();
+						char *imappart = nsnull;
+						m_runningUrl->GetImapPartToFetch(&imappart);
 						if (imappart)
 						{
 							if (bMessageIdsAreUids)
@@ -950,7 +941,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 									IMAP_CONTENT_MODIFIED_VIEW_INLINE :
 									IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
 
-								TIMAPBodyShell *foundShell = TIMAPHostInfo::FindShellInCacheForHost(m_runningUrl->GetUrlHost(),
+								nsIMAPBodyShell *foundShell = TIMAPHostInfo::FindShellInCacheForHost(m_runningUrl->GetUrlHost(),
 									GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType);
 								if (!foundShell)
 								{
@@ -982,13 +973,12 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						else
 						{
 							// downloading a single message: try to do it by bodystructure, and/or do it by chunks
-							uint32 messageSize = GetMessageSize(messageIdString,
+							PRUint32 messageSize = GetMessageSize(messageIdString,
 								bMessageIdsAreUids);
 							// We need to check the format_out bits to see if we are allowed to leave out parts,
 							// or if we are required to get the whole thing.  Some instances where we are allowed
 							// to do it by parts:  when viewing a message, or its source
 							// Some times when we're NOT allowed:  when forwarding a message, saving it, moving it, etc.
-							ActiveEntry *ce = GetActiveEntry();
 							XP_Bool allowedToBreakApart = (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : FALSE;
 
 							if (gMIMEOnDemand &&
@@ -1002,7 +992,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
 								// Before fetching the bodystructure, let's check our body shell cache to see if
 								// we already have it around.
-								TIMAPBodyShell *foundShell = NULL;
+								nsIMAPBodyShell *foundShell = NULL;
 								IMAP_ContentModifiedType modType = GetShowAttachmentsInline() ? 
 									IMAP_CONTENT_MODIFIED_VIEW_INLINE :
 									IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
@@ -1036,11 +1026,11 @@ void nsImapProtocol::ProcessSelectedStateURL()
 							}
 						}
 					}
-                    FREEIF( messageIdString);
+                    PR_FREEIF( messageIdString);
+#endif // HAVE_PORT
                 }
                 else
                     HandleMemoryFailure();
-#endif // HAVE_PORT				
             }
 			break;
 			case nsIImapUrl::nsImapExpungeFolder:
@@ -1581,6 +1571,102 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
 	   	ProcessMailboxUpdate(PR_FALSE);	
 	}
 }
+
+// Please call only with a single message ID
+void nsImapProtocol::Bodystructure(const char *messageId, PRBool idIsUid)
+{
+    IncrementCommandTagNumber();
+    
+    nsString2 commandString(GetServerCommandTag(), eOneByte);
+    if (idIsUid)
+    	commandString.Append(" UID");
+   	commandString.Append(" fetch ");
+
+	commandString.Append(messageId);
+	commandString.Append("  (BODYSTRUCTURE)" CRLF);
+
+	            
+    int ioStatus = SendData(commandString.GetBuffer());
+	    
+
+	ParseIMAPandCheckForNewMail(commandString.GetBuffer());
+}
+
+void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts)
+{
+	// assumes no chunking
+
+	// build up a string to fetch
+#ifdef HAVE_PORT
+	char *stringToFetch = NULL, *what = NULL;
+	int32 currentPartNum = 0;
+	while ((parts->GetNumParts() > currentPartNum) && !DeathSignalReceived())
+	{
+		nsIMAPMessagePartID *currentPart = parts->GetPart(currentPartNum);
+		if (currentPart)
+		{
+			// Do things here depending on the type of message part
+			// Append it to the fetch string
+			if (currentPartNum > 0)
+				StrAllocCat(stringToFetch, " ");
+
+			switch (currentPart->GetFields())
+			{
+			case kMIMEHeader:
+				what = PR_smprintf("BODY[%s.MIME]",currentPart->GetPartNumberString());
+				if (what)
+				{
+					StrAllocCat(stringToFetch, what);
+					PR_Free(what);
+				}
+				else
+					HandleMemoryFailure();
+				break;
+			case kRFC822HeadersOnly:
+				if (currentPart->GetPartNumberString())
+				{
+					what = PR_smprintf("BODY[%s.HEADER]", currentPart->GetPartNumberString());
+					if (what)
+					{
+						StrAllocCat(stringToFetch, what);
+						PR_Free(what);
+					}
+					else
+						HandleMemoryFailure();
+				}
+				else
+				{
+					// headers for the top-level message
+					StrAllocCat(stringToFetch, "BODY[HEADER]");
+				}
+				break;
+			default:
+				NS_ASSERTION(FALSE, "we should only be pipelining MIME headers and Message headers");
+				break;
+			}
+
+		}
+		currentPartNum++;
+	}
+
+	// Run the single, pipelined fetch command
+	if ((parts->GetNumParts() > 0) && !DeathSignalReceived() && !GetPseudoInterrupted() && stringToFetch)
+	{
+	    IncrementCommandTagNumber();
+
+		nsString2 commandString(GetServerCommandTag(), eOneByte); 
+		commandString.Append(" UID fetch ");
+		commandString.Append(uid, 10);
+		commandString.Append(" (");
+		commandString.Append(stringToFetch);
+		commandString.Append(")" CRLF);
+		int ioStatus = SendData(commandString.GetBuffer());
+		ParseIMAPandCheckForNewMail(commandString.GetBuffer());
+		PR_Free(stringToFetch);
+	}
+#endif // HAVE_PORT
+}
+
 
 
 
@@ -2203,7 +2289,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 
 void nsImapProtocol::UpdatedMailboxSpec(mailbox_spec *aSpec)
 {
-	m_imapMailfolder->UpdateImapMailboxInfo(this, aSpec);
+	m_imapMailFolder->UpdateImapMailboxInfo(this, aSpec);
 }
 
 void nsImapProtocol::FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount)
@@ -2296,8 +2382,77 @@ void nsImapProtocol::HeaderFetchCompleted()
     if (m_imapMiscellaneous)
         m_imapMiscellaneous->HeaderFetchCompleted(this);
 	WaitForFEEventCompletion();
-	// need to block until this finishes - Jeff, how does that work?
 }
+
+
+// Use the noop to tell the server we are still here, and therefore we are willing to receive
+// status updates. The recent or exists response from the server could tell us that there is
+// more mail waiting for us, but we need to check the flags of the mail and the high water mark
+// to make sure that we do not tell the user that there is new mail when perhaps they have
+// already read it in another machine.
+
+void nsImapProtocol::PeriodicBiff()
+{
+	
+	nsMsgBiffState startingState = m_currentBiffState;
+	
+	if (GetServerStateParser().GetIMAPstate() == nsImapServerResponseParser::kFolderSelected)
+    {
+		Noop();	// check the latest number of messages
+		PRInt32 numMessages = 0;
+		m_flagState.GetNumberOfMessages(&numMessages);
+        if (GetServerStateParser().NumberOfMessages() != numMessages)
+        {
+			PRUint32 id = GetServerStateParser().HighestRecordedUID() + 1;
+			nsString2 fetchStr(eOneByte);						// only update flags
+			PRUint32 added = 0, deleted = 0;
+			
+			deleted = m_flagState.GetNumberOfDeletedMessages();
+			added = numMessages;
+			if (!added || (added == deleted))	// empty keys, get them all
+				id = 1;
+
+			//sprintf(fetchStr, "%ld:%ld", id, id + GetServerStateParser().NumberOfMessages() - fFlagState->GetNumberOfMessages());
+			fetchStr.Append(id, 10);
+			fetchStr.Append(":*"); 
+			FetchMessage(fetchStr, kFlags, TRUE);
+
+			if (((PRUint32) m_flagState.GetHighestNonDeletedUID() >= id) && m_flagState.IsLastMessageUnseen())
+				m_currentBiffState = nsMsgBiffState_NewMail;
+			else
+				m_currentBiffState = nsMsgBiffState_NoMail;
+        }
+        else
+            m_currentBiffState = nsMsgBiffState_NoMail;
+    }
+    else
+    	m_currentBiffState = nsMsgBiffState_Unknown;
+    
+    if (startingState != m_currentBiffState)
+    	SendSetBiffIndicatorEvent(m_currentBiffState);
+}
+
+void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
+{
+    m_imapMiscellaneous->SetBiffStateAndUpdate(this, newState);
+
+ 	if (newState == nsMsgBiffState_NewMail)
+		m_mailToFetch = TRUE;
+	else
+		m_mailToFetch = FALSE;
+    WaitForFEEventCompletion();
+}
+
+
+
+// We get called to see if there is mail waiting for us at the server, even if it may have been
+// read elsewhere. We just want to know if we should download headers or not.
+
+PRBool nsImapProtocol::CheckNewMail()
+{
+	return m_checkForNewMailDownloadsHeaders;
+}
+
 
 
 void nsImapProtocol::AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString)
@@ -2466,6 +2621,12 @@ PRBool	nsImapProtocol::GetShowAttachmentsInline()
         return *rv;
     }
     return PR_FALSE;
+}
+
+/* static */PRBool nsImapProtocol::HandlingMultipleMessages(char *messageIdString)
+{
+	return (PL_strchr(messageIdString,',') != nsnull ||
+		    PL_strchr(messageIdString,':') != nsnull);
 }
 
 
@@ -2861,9 +3022,9 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                 
 				boxNameCopy = adoptedBoxSpec->allocatedPathName;
 
-                if (m_imapMailfolder)
+                if (m_imapMailFolder)
                 {
-                    m_imapMailfolder->PossibleImapMailbox(this,
+                    m_imapMailFolder->PossibleImapMailbox(this,
                                                           adoptedBoxSpec);
                     WaitForFEEventCompletion();
                 
@@ -3176,10 +3337,8 @@ void nsImapProtocol::StatusForFolder(const char *mailboxName)
     ParseIMAPandCheckForNewMail();
 
     mailbox_spec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
-#ifdef HAVE_PORT
-	if (new_spec)
-		UpdateMailboxStatus(new_spec);
-#endif
+	if (new_spec && m_imapMailFolder)
+		m_imapMailFolder->UpdateImapMailboxStatus(this, new_spec);
 }
 
 

@@ -44,7 +44,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 
 class nsIImapProtocol;
-class nsIImapMailfolder;
+class nsIImapMailFolder;
 class nsIUrlListener;
 class nsIURL;
 struct PLEventQueue;
@@ -68,7 +68,7 @@ public:
 	// aClientEventQueue is the event queue of the event sinks. We post events into this queue.
 	// mscott -- eventually this function will take in the account (identity/incoming server) associated with 
 	// the request
-	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailfolder * aImapUrl, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolder * aImapUrl, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 };
 

@@ -580,6 +580,9 @@ char *nsIMAPGenericParser::CreateLiteral()
 // closing paren, and leave the parser in the right place afterwards.
 char *nsIMAPGenericParser::CreateParenGroup()
 {
+#ifdef DEBUG_bienvenu
+	NS_ASSERTION(fNextToken[0] == '(', "we don't have a paren group!");
+#endif
 	int numOpenParens = 1;
 	// count the number of parens in the current token
 	int count, tokenLen = PL_strlen(fNextToken);
@@ -592,9 +595,19 @@ char *nsIMAPGenericParser::CreateParenGroup()
 	}
 
 	// build up a buffer with the paren group.
+	int bytesUsed = 0;
 	nsString2 buf;
+	nsString2 returnString;
 	if ((numOpenParens > 0) && ContinueParse())
 	{
+		// flush buf
+//		if (bytesUsed > 0)
+//		{
+//			buf[bytesUsed] = 0;
+//			StrAllocCat(rv, buf);
+//			bytesUsed = 0;
+//		}
+		
 		// First, copy that first token from before
 		buf += fNextToken;
 

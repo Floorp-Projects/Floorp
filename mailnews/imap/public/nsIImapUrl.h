@@ -112,8 +112,8 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
-    NS_IMETHOD GetImapMailfolder(nsIImapMailfolder** aImapMailfolder) = 0;
-    NS_IMETHOD SetImapMailfolder(nsIImapMailfolder* aImapMailfolder) = 0;
+    NS_IMETHOD GetImapMailFolder(nsIImapMailFolder** aImapMailFolder) = 0;
+    NS_IMETHOD SetImapMailFolder(nsIImapMailFolder* aImapMailFolder) = 0;
 
     NS_IMETHOD GetImapMessage(nsIImapMessage** aImapMessage) = 0;
     NS_IMETHOD SetImapMessage(nsIImapMessage* aImapMessage) = 0;
@@ -139,6 +139,10 @@ public:
 	NS_IMETHOD	CreateListOfMessageIdsString(char **result) = 0;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result) = 0;
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result) = 0;	// kAddMsgFlags or kSubtractMsgFlags only
+
+	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange) = 0;
+	NS_IMETHOD  GetAllowContentChange(PRBool *results) = 0;
+
 };
 
 #endif /* nsIImapUrl_h___ */

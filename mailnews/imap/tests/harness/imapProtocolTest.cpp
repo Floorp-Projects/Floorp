@@ -97,7 +97,7 @@ static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 
 class nsIMAP4TestDriver  : public nsIUrlListener, 
                            public nsIImapLog,
-                           public nsIImapMailfolder,
+                           public nsIImapMailFolder,
                            public nsIImapMessage,
                            public nsIImapExtension, 
                            public nsIImapMiscellaneous
@@ -112,7 +112,7 @@ public:
 	// nsIImapLog support
 	NS_IMETHOD HandleImapLogData (const char * aLogData);
 
-    // nsIImapMailfolder support
+    // nsIImapMailFolder support
     NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                    mailbox_spec* aSpec);
     NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol);
@@ -309,9 +309,9 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     {
         *aInstancePtr = (void*)(nsIImapLog*)this;
     }
-    else if (aIID.Equals(nsIImapMailfolder::GetIID()))
+    else if (aIID.Equals(nsIImapMailFolder::GetIID()))
     {
-        *aInstancePtr = (void*)(nsIImapMailfolder*)this;
+        *aInstancePtr = (void*)(nsIImapMailFolder*)this;
     }
     else if (aIID.Equals(nsIImapMessage::GetIID()))
     {
@@ -336,7 +336,7 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
 }
 
-    // nsIImapMailfolder support
+    // nsIImapMailFolder support
 NS_IMETHODIMP
 nsIMAP4TestDriver::PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec)
@@ -1240,7 +1240,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
-        m_url->SetImapMailfolder(this);
+        m_url->SetImapMailFolder(this);
         m_url->SetImapMessage(this);
         m_url->SetImapExtension(this);
         m_url->SetImapMiscellaneous(this);
