@@ -57,9 +57,6 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
  */
 class RootFrame : public nsHTMLContainerFrame {
 public:
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -101,15 +98,6 @@ NS_NewRootFrame(nsIFrame*& aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RootFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                               nsIAtom*        aListName,
-                               nsIFrame*       aChildList)
-{
-  mFrames.SetFrames(aChildList);
   return NS_OK;
 }
 
