@@ -54,6 +54,7 @@ public:
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
 
   nsresult InitializeExternalClasses();
+  nsresult InitializeLiveConnectClasses();
 };
 
 class nsJSEnvironment {
