@@ -33,16 +33,12 @@ char *sux_PromptPassword(MWContext *pContext, const char *pMessage)	{
     
     char *pWinMessage = FE_Windowsify(pMessage);
     if(pWinMessage)  {
-        CWnd desktop;
-        desktop.Attach(::GetDesktopWindow());
-        CDialogPASS dlgPass(&desktop);
+        CDialogPASS dlgPass;
         theApp.m_splash.SafeHide();
         
         pRetval = dlgPass.DoModal(pWinMessage);
         
         XP_FREE(pWinMessage);
-        pWinMessage = NULL;
-        desktop.Detach();
     }
     
     return(pRetval);
