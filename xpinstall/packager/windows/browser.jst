@@ -44,7 +44,11 @@ function createShortcuts()
   var fTemp;
   var fProgram;
   var fileExe;
+  var fileReadme;
+  var fileLicense;
   var scExeDesc;
+  var scReadmeDesc;
+  var scLicenseDesc;
   var scProfileDesc;
   var scProfileDescParam;
   var scFolderName;
@@ -61,7 +65,11 @@ function createShortcuts()
   fProgram             = getFolder("Program");
   fTemp                = fProgram + "$MainExeFile$";
   fileExe              = getFolder("file:///", fTemp);
+  fileReadme           = getFolder("file:///", fProgram + "readme.txt");
+  fileLicense          = getFolder("file:///", fProgram + "license.txt");
   scExeDesc            = "$ProductName$";
+  scReadmeDesc         = "Readme";
+  scLicenseDesc        = "License";
   scProfileDesc        = "Profile Manager";
   scProfileDescParam   = "-ProfileManager";
   scFolderName         = "$ProductName$";
@@ -169,6 +177,8 @@ function createShortcuts()
     File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
+    File.windowsShortcut(fileReadme,  fFolderPath, scReadmeDesc,  fProgram, "",                 fileReadme, 0);
+    File.windowsShortcut(fileLicense, fFolderPath, scLicenseDesc, fProgram, "",                 fileLicense, 0);
 
     // create shortcut in the Quick Launch folder
     if(folderQuickLaunchExists)
