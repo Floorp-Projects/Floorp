@@ -12,8 +12,13 @@
 /* 32-bit stuff here */
 #include <windows.h>
 #include <stdlib.h>
+#ifdef __MINGW32__
+#include <sys/types.h>
+#include <sys/stat.h>
+#else
 #include <sys\types.h>
 #include <sys\stat.h>
+#endif
 
 typedef struct DIR_Struct {
     void            * directoryPtr;
@@ -22,7 +27,7 @@ typedef struct DIR_Struct {
 
 #define _ST_FSTYPSZ 16
 
-#ifndef __BORLANDC__
+#if !defined(__BORLANDC__) && !defined(__GNUC__)
  typedef unsigned long mode_t;
  typedef          long uid_t;
  typedef          long gid_t;
@@ -43,7 +48,7 @@ struct dirent {                                 /* data from readdir() */
         char            d_name[_MAX_FNAME];     /* name of file */
 };
 
-#ifndef __BORLANDC__
+#if !defined(__BORLANDC__) && !defined (__GNUC__)
 #define S_ISDIR(s)  ((s) & _S_IFDIR)
 #endif
 
