@@ -10,6 +10,7 @@ box[name=header-attachment] { background-color: #EFEFEF; border: 0px solid #EFEF
 box[name=header-part1]      { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
 box[name=header-part2]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 box[name=header-part3]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+box[name=header-seamonkey]  { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 
 menubar[name=attachment-menubar]  { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
 menu[name=attachment-menu]        { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
@@ -41,6 +42,8 @@ header[field=BCC] { display: block; text-align:left; }
 header[field=NEWSGROUPS] { display: block; text-align:left; }
 
 header[field=ORGANIZATION] { display: block; text-align:left; }
+
+header[field=USER-AGENT]   { display: block; text-align:left; }
 
 /**************************************************
  * These are all the headers that are NOT displayed

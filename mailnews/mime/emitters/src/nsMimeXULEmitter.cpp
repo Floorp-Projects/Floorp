@@ -751,7 +751,28 @@ nsMimeXULEmitter::DumpRestOfHeaders()
   PRInt32     i;
 
   if (mHeaderDisplayType != nsMimeHeaderDisplayTypes::AllHeaders)
+  {
+    // For now, lets advertise the fact that 5.0 sent this message.
+    char  *userAgent = nsMimeXULEmitter::GetHeaderValue(HEADER_USER_AGENT);
+
+    if (userAgent)
+    {
+      char  *compVal = "Mozilla 5.0";
+      if (!nsCRT::strncasecmp(userAgent, compVal, nsCRT::strlen(compVal)))
+      {
+        UtilityWriteCRLF("<toolbar>");
+        UtilityWriteCRLF("<box name=\"header-seamonkey\" align=\"vertical\" flex=\"1\">");
+        UtilityWriteCRLF("<box>");
+        WriteXULTag(HEADER_USER_AGENT, userAgent);
+        UtilityWriteCRLF("</box>");
+        UtilityWriteCRLF("</box>");        
+        UtilityWriteCRLF("</toolbar>");
+      }
+    }
+
     return NS_OK;
+  }
+
 
   UtilityWriteCRLF("<toolbar>");
 
