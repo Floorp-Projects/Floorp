@@ -93,9 +93,10 @@ public:
     static nsIAtom *sOS_TemporaryDirectory;
     static nsIAtom *sOS_CurrentProcessDirectory;
     static nsIAtom *sOS_CurrentWorkingDirectory;
+    static nsIAtom *sOS_DesktopDirectory;
+    static nsIAtom *sOS_HomeDirectory;
 #if defined (XP_MACOSX)
     static nsIAtom *sDirectory;
-    static nsIAtom *sDesktopDirectory;
     static nsIAtom *sTrashDirectory;
     static nsIAtom *sStartupDirectory;
     static nsIAtom *sShutdownDirectory;
@@ -107,7 +108,6 @@ public:
     static nsIAtom *sDocumentsDirectory;
     static nsIAtom *sInternetSearchDirectory;
     static nsIAtom *sUserLibDirectory;
-    static nsIAtom *sHomeDirectory;
     static nsIAtom *sDefaultDownloadDirectory;
     static nsIAtom *sUserDesktopDirectory;
     static nsIAtom *sLocalDesktopDirectory;
@@ -128,7 +128,6 @@ public:
 #elif defined (XP_WIN) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
-    static nsIAtom *sHomeDirectory;
     static nsIAtom *sDesktop;
     static nsIAtom *sPrograms;
     static nsIAtom *sControls;
@@ -156,16 +155,11 @@ public:
 #elif defined (XP_UNIX)
     static nsIAtom *sLocalDirectory;
     static nsIAtom *sLibDirectory;
-    static nsIAtom *sHomeDirectory;
 #elif defined (XP_OS2)
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sOS2Directory;
-    static nsIAtom *sHomeDirectory;
-    static nsIAtom *sDesktopDirectory;
 #elif defined (XP_BEOS)
     static nsIAtom *sSettingsDirectory;
-    static nsIAtom *sHomeDirectory;
-    static nsIAtom *sDesktopDirectory;
     static nsIAtom *sSystemDirectory;
 #endif
 

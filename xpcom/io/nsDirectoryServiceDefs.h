@@ -57,6 +57,10 @@
 #define NS_OS_HOME_DIR                          "Home"
 #define NS_OS_TEMP_DIR                          "TmpD"
 #define NS_OS_CURRENT_WORKING_DIR               "CurWorkD"
+/* Files stored in this directory will appear on the user's desktop,
+ * if there is one, otherwise it's just the same as "Home"
+ */
+#define NS_OS_DESKTOP_DIR                       "Desk"
 
 /* Property returns the directory in which the procces was started from.  
  * On Unix this will be the path in the MOZILLA_FIVE_HOME env var and if 
@@ -115,7 +119,7 @@
 #endif
 
 #if defined (XP_MACOSX)
-    #define NS_MAC_DESKTOP_DIR                  "Desk"
+    #define NS_MAC_DESKTOP_DIR                  NS_OS_DESKTOP_DIR
     #define NS_MAC_TRASH_DIR                    "Trsh"
     #define NS_MAC_STARTUP_DIR                  "Strt"
     #define NS_MAC_SHUTDOWN_DIR                 "Shdwn"
@@ -126,8 +130,8 @@
     #define NS_MAC_PREFS_DIR                    "Prfs"
     #define NS_MAC_DOCUMENTS_DIR                "Docs"
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"
-    #define NS_OSX_HOME_DIR                     "Home"
-    #define NS_MAC_HOME_DIR                     NS_OSX_HOME_DIR
+    #define NS_OSX_HOME_DIR                     NS_OS_HOME_DIR
+    #define NS_MAC_HOME_DIR                     NS_OS_HOME_DIR
     #define NS_MAC_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
     #define NS_MAC_USER_LIB_DIR                 "ULibDir"   // Only available under OS X
     #define NS_OSX_DEFAULT_DOWNLOAD_DIR         NS_MAC_DEFAULT_DOWNLOAD_DIR
@@ -149,7 +153,7 @@
     #define NS_OSX_INTERNET_SITES_DIR           "IntrntSts"
 #elif defined (XP_WIN)
     #define NS_WIN_WINDOWS_DIR                  "WinD"
-    #define NS_WIN_HOME_DIR                     "Home"
+    #define NS_WIN_HOME_DIR                     NS_OS_HOME_DIR
     #define NS_WIN_DESKTOP_DIR                  "DeskV" // virtual folder at the root of the namespace
     #define NS_WIN_PROGRAMS_DIR                 "Progs"
     #define NS_WIN_CONTROLS_DIR                 "Cntls"
@@ -161,6 +165,7 @@
     #define NS_WIN_SEND_TO_DIR                  "SndTo"
     #define NS_WIN_BITBUCKET_DIR                "Buckt"
     #define NS_WIN_STARTMENU_DIR                "Strt"
+// This gives the same thing as NS_OS_DESKTOP_DIR
     #define NS_WIN_DESKTOP_DIRECTORY            "DeskP" // file sys dir which physically stores objects on desktop
     #define NS_WIN_DRIVES_DIR                   "Drivs"
     #define NS_WIN_NETWORK_DIR                  "NetW"
@@ -177,15 +182,15 @@
 #elif defined (XP_UNIX)
     #define NS_UNIX_LOCAL_DIR                   "Locl"
     #define NS_UNIX_LIB_DIR                     "LibD"
-    #define NS_UNIX_HOME_DIR                    "Home" 
+    #define NS_UNIX_HOME_DIR                    NS_OS_HOME_DIR
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "OS2Dir"
-    #define NS_OS2_HOME_DIR                     "Home"
-    #define NS_OS2_DESKTOP_DIR                  "Desk"    
+    #define NS_OS2_HOME_DIR                     NS_OS_HOME_DIR
+    #define NS_OS2_DESKTOP_DIR                  NS_OS_DESKTOP_DIR
 #elif defined (XP_BEOS)
     #define NS_BEOS_SETTINGS_DIR                "Setngs"
-    #define NS_BEOS_HOME_DIR                    "Home"
-    #define NS_BEOS_DESKTOP_DIR                 "Desk"
+    #define NS_BEOS_HOME_DIR                    NS_OS_HOME_DIR
+    #define NS_BEOS_DESKTOP_DIR                 NS_OS_DESKTOP_DIR
 #endif
 
 /* Deprecated */

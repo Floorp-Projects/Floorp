@@ -258,6 +258,28 @@ GetBeOSFolder( directory_which which, dev_t volume, nsILocalFile** aFile)
 }
 #endif // XP_BEOS
 
+#if defined(XP_UNIX)
+static nsresult
+GetUnixHomeDir(nsILocalFile** aFile)
+{
+#ifdef VMS
+    char *pHome;
+    pHome = getenv("HOME");
+    if (*pHome == '/') {
+        return NS_NewNativeLocalFile(nsDependentCString(pHome), 
+                                     PR_TRUE, 
+                                     aFile);
+    } else {
+        return NS_NewNativeLocalFile(nsDependentCString(decc$translate_vms(pHome)), 
+                                     PR_TRUE, 
+                                     aFile);
+    }
+#else
+    return NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), 
+                                 PR_TRUE, aFile);
+#endif
+}
+#endif
 
 nsresult
 GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
@@ -639,31 +661,28 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                          aFile);
 
         case Unix_HomeDirectory:
-#ifdef VMS
+            return GetUnixHomeDir(aFile);
+
+        case Unix_DesktopDirectory:
         {
-            char *pHome;
-            pHome = getenv("HOME");
-            if (*pHome == '/') {
-                return NS_NewNativeLocalFile(nsDependentCString(pHome), 
-                                             PR_TRUE, 
-                                             aFile);
-
-            }
-            else
-            {
-                return NS_NewNativeLocalFile(nsDependentCString(decc$translate_vms(pHome)), 
-                                             PR_TRUE, 
-                                             aFile);
-            } 
+            nsCOMPtr<nsILocalFile> home;
+            nsresult rv = GetUnixHomeDir(getter_AddRefs(home));
+            if (NS_FAILED(rv))
+                return rv;
+            rv = home->AppendNative(NS_LITERAL_CSTRING("Desktop"));
+            if (NS_FAILED(rv))
+                return rv;
+            PRBool exists;
+            rv = home->Exists(&exists);
+            if (NS_FAILED(rv))
+                return rv;
+            if (!exists)
+                return GetUnixHomeDir(aFile);
+              
+            NS_ADDREF(*aFile = home);
+            return NS_OK;
         }
-#else
-            return NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), 
-                                             PR_TRUE, 
-                                             aFile);
-
 #endif
-
-#endif        
 
 #ifdef XP_BEOS
         case BeOS_SettingsDirectory:
