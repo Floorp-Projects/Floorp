@@ -623,6 +623,7 @@ case "$target" in
 
 *-*linux*)
     AC_DEFINE(_POSIX_SOURCE)
+    AC_DEFINE(_SVID_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     case "${host_cpu}" in
