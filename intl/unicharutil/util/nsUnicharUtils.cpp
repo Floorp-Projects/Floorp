@@ -103,7 +103,11 @@ public:
 
     PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
     {
-        gCaseConv->ToLower(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
+        if (gCaseConv)
+            gCaseConv->ToLower(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
+        else
+            NS_WARNING("No case converter: no conversion done");
+
         return aSourceLength;
     }
 };
@@ -146,7 +150,12 @@ class CopyToLowerCase
         {
           PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
           PRUnichar* dest = NS_CONST_CAST(PRUnichar*, mIter.get());
-          gCaseConv->ToLower(aSource, dest, len);
+          if (gCaseConv)
+              gCaseConv->ToLower(aSource, dest, len);
+          else {
+              NS_WARNING("No case converter: only copying");
+              memcpy((void*)aSource, (void*)dest, len * sizeof(*aSource));
+          }
           mIter.advance(len);
           return len;
         }
@@ -177,7 +186,11 @@ public:
     
     PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
     {
-        gCaseConv->ToUpper(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
+        if (gCaseConv)
+            gCaseConv->ToUpper(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
+        else
+            NS_WARNING("No case converter: no conversion done");
+        
         return aSourceLength;
     }
 };
@@ -220,7 +233,12 @@ class CopyToUpperCase
         {
           PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
           PRUnichar* dest = NS_CONST_CAST(PRUnichar*, mIter.get());
-          gCaseConv->ToUpper(aSource, dest, len);
+          if (gCaseConv)
+              gCaseConv->ToUpper(aSource, dest, len);
+          else {
+              NS_WARNING("No case converter: only copying");
+              memcpy((void*)aSource, (void*)dest, len * sizeof(*aSource));
+          }
           mIter.advance(len);
           return len;
         }
@@ -251,7 +269,14 @@ nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUni
   {
       NS_InitCaseConversion();
       PRInt32 result;
-      gCaseConv->CaseInsensitiveCompare(lhs, rhs, aLength, &result);
+      if (gCaseConv) {
+          gCaseConv->CaseInsensitiveCompare(lhs, rhs, aLength, &result);
+      }
+      else {
+          NS_WARNING("No case converter: using default");
+          nsDefaultStringComparator comparator;
+          result = comparator(lhs, rhs, aLength);
+      }
       return result;
   }
 
@@ -263,9 +288,17 @@ nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) co
       
       NS_InitCaseConversion();
 
-      gCaseConv->ToLower(lhs, &lhs);
-      gCaseConv->ToLower(rhs, &rhs);
-
+      if (gCaseConv) {
+          gCaseConv->ToLower(lhs, &lhs);
+          gCaseConv->ToLower(rhs, &rhs);
+      } else {
+          if (lhs < 256)
+              lhs = tolower(char(lhs));
+          if (rhs < 256)
+              rhs = tolower(char(rhs));
+          NS_WARNING("No case converter: no conversion done");
+      }
+      
       if (lhs == rhs) return 0;
       if (lhs < rhs) return -1;
       return 1;
@@ -277,8 +310,16 @@ ToLowerCase(PRUnichar aChar)
     PRUnichar result;
     if (NS_FAILED(NS_InitCaseConversion()))
         return aChar;
-    
-    gCaseConv->ToLower(aChar, &result);
+
+    if (gCaseConv)
+        gCaseConv->ToLower(aChar, &result);
+    else {
+        NS_WARNING("No case converter: no conversion done");
+        if (aChar < 256)
+            result = tolower(char(aChar));
+        else
+            result = aChar;
+    }
     return result;
 }
 
@@ -288,8 +329,16 @@ ToUpperCase(PRUnichar aChar)
     PRUnichar result;
     if (NS_FAILED(NS_InitCaseConversion()))
         return aChar;
-        
-    gCaseConv->ToUpper(aChar, &result);
+
+    if (gCaseConv)
+        gCaseConv->ToUpper(aChar, &result);
+    else {
+        NS_WARNING("No case converter: no conversion done");
+        if (aChar < 256)
+            result = toupper(char(aChar));
+        else
+            result = aChar;
+    }
     return result;
 }
 
