@@ -46,21 +46,21 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 class ImageNetContextSyncImpl : public ilINetContext {
 public:
-  ImageNetContextSyncImpl(NET_ReloadMethod aReloadPolicy);
+  ImageNetContextSyncImpl(ImgCachePolicy aReloadPolicy);
   virtual ~ImageNetContextSyncImpl();
 
   NS_DECL_ISUPPORTS
 
   virtual ilINetContext* Clone();
 
-  virtual NET_ReloadMethod GetReloadPolicy();
+  virtual ImgCachePolicy GetReloadPolicy();
 
   virtual void AddReferer(ilIURL* aUrl);
 
   virtual void Interrupt();
 
   virtual ilIURL* CreateURL(const char*      aUrl, 
-			                      NET_ReloadMethod aReloadMethod);
+			                      ImgCachePolicy aReloadMethod);
 
   virtual PRBool IsLocalFileURL(char* aAddress);
 #ifdef NU_CACHE
@@ -72,13 +72,13 @@ public:
 #endif /* NU_CACHE */
 
   virtual int GetURL(ilIURL*          aUrl,
-                     NET_ReloadMethod aLoadMethod,
+                     ImgCachePolicy aLoadMethod,
 		                 ilINetReader*    aReader);
 
-  NET_ReloadMethod mReloadPolicy;
+  ImgCachePolicy mReloadPolicy;
 };
 
-ImageNetContextSyncImpl::ImageNetContextSyncImpl(NET_ReloadMethod aReloadPolicy)
+ImageNetContextSyncImpl::ImageNetContextSyncImpl(ImgCachePolicy aReloadPolicy)
 {
   NS_INIT_REFCNT();
   mReloadPolicy = aReloadPolicy;
@@ -102,7 +102,7 @@ ImageNetContextSyncImpl::Clone()
   return nsnull;
 }
 
-NET_ReloadMethod 
+ImgCachePolicy 
 ImageNetContextSyncImpl::GetReloadPolicy()
 {
   return mReloadPolicy;
@@ -120,7 +120,7 @@ ImageNetContextSyncImpl::Interrupt()
 
 ilIURL* 
 ImageNetContextSyncImpl::CreateURL(const char*      aURL, 
-			                             NET_ReloadMethod aReloadMethod)
+			                             ImgCachePolicy aReloadMethod)
 {
   ilIURL *url;
 
@@ -164,7 +164,7 @@ ImageNetContextSyncImpl::IsURLInDiskCache(ilIURL *aUrl)
 
 int 
 ImageNetContextSyncImpl::GetURL(ilIURL*          aURL, 
-			                          NET_ReloadMethod aLoadMethod,
+			                          ImgCachePolicy aLoadMethod,
 			                          ilINetReader*    aReader)
 {
   NS_PRECONDITION(nsnull != aURL, "null URL");
@@ -294,7 +294,8 @@ nsresult NS_NewImageNetContextSync(ilINetContext **aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilINetContext *cx = new ImageNetContextSyncImpl(IMG_NTWK_SERVER);
+  //Note default of USE_IMG_CACHE used.
+  ilINetContext *cx = new ImageNetContextSyncImpl(USE_IMG_CACHE);
   if (cx == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

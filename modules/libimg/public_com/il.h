@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *   il.h --- Exported image library interface
  *
- *   $Id: il.h,v 1.3 1999/11/06 03:31:23 dmose%mozilla.org Exp $
+ *   $Id: il.h,v 1.4 2000/07/20 01:51:20 pnunn%netscape.com Exp $
  */
 
 
@@ -34,7 +34,6 @@
 #ifndef _IL_H
 #define _IL_H
 
-#include "ntypes.h"
 
 /* attr values */
 #define IL_ATTR_RDONLY	      0

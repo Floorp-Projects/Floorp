@@ -28,7 +28,6 @@
 #define _DUMMY_NC_H
 
 #include "prtypes.h"
-#include "net.h"
 
 typedef void* IL_NetContext;
 

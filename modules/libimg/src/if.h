@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.20 2000/05/18 22:17:02 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.21 2000/07/20 01:51:46 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -40,9 +40,6 @@
 #include "prtime.h"
 #include "prlong.h"
 #include "nsIPresContext.h"
-
-#include "ntypes.h"             /* typedefs for commonly used Netscape data
-                                   structures */
 
 typedef struct _IL_GroupContext IL_GroupContext;
 typedef struct _IL_ImageReq IL_ImageReq;
@@ -115,7 +112,7 @@ extern PRLogModuleInfo *il_log_module;
 #endif
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
-//ptn test
+
 /* Conversion of imglib errors to XPCOM errors */
 #define NS_CONVERT_ERROR_CODE(e)  \
       (NS_ERROR_GENERATE((e) ? NS_ERROR_SEVERITY_ERROR : NS_ERROR_SEVERITY_SUCCESS, NS_ERROR_MODULE_IMGLIB, (e) & 0xFFFF))
@@ -163,7 +160,7 @@ enum icstate {
 
 /* Force memory cache to be flushed ? */
 #define FORCE_RELOAD(reload_method)                                           \
-    (reload_method > IMG_NTWK_SERVER)
+    (reload_method = DONT_USE_IMG_CACHE)
 
 /* Simple list of image contexts. */
 struct il_context_list {
@@ -432,7 +429,7 @@ extern void il_abort_reconnect(void);
    then create and return a new container. */
 extern il_container
 *il_get_container(IL_GroupContext *image_context,
-                  NET_ReloadMethod reload_cache_policy,
+                  ImgCachePolicy reload_cache_policy,
                   const char *image_url,
                   IL_IRGB *background_color,
                   IL_DitherMode dither_mode,

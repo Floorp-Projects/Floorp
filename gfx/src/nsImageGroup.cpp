@@ -73,12 +73,19 @@ public:
   IL_GroupContext *GetGroupContext() { return mGroupContext; }
   nsVoidArray *GetObservers() { return mObservers; }
 
+  NS_IMETHOD SetImgLoadAttributes(PRUint32 a_grouploading_attribs);
+  NS_IMETHOD GetImgLoadAttributes(PRUint32 *a_grouploading_attribs);
+
   nsIImageManager *mManager;
   IL_GroupContext *mGroupContext;
   nsVoidArray *mObservers;
   nsIDeviceContext *mDeviceContext;
   ilINetContext* mNetContext;
   nsIStreamListener** mListenerRequest;
+  
+  //ptn 
+  PRUint32 m_grouploading_attribs;
+
 };
 
 ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
@@ -151,6 +158,9 @@ static void ns_observer_proc (XP_Observable aSource,
     }
   }
 }
+
+
+
 
 static PRBool
 ReconnectHack(void* arg, nsIStreamListener* aListener)
@@ -260,7 +270,14 @@ ImageGroupImpl::GetImage(const char* aUrl,
   if (nsnull != image_req) {
     nsresult  result;
 
-    // Ask the image request object to get the image.
+  // Ask the image request object to get the image.
+
+  PRUint32 groupload_attrib = 0;
+  GetImgLoadAttributes(&groupload_attrib);
+
+  if(!aFlags)
+    aFlags = groupload_attrib;
+
     mListenerRequest = nsnull;
     result = image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
                              aWidth, aHeight, aFlags, mNetContext);
@@ -296,6 +313,14 @@ ImageGroupImpl::GetImageFromStream(const char* aUrl,
   // Ask the image request object to get the image.
   nsIStreamListener* listener = nsnull;
   mListenerRequest = &listener;
+
+
+  PRUint32 groupload_attrib = 0;
+  GetImgLoadAttributes(&groupload_attrib);
+
+  if(!aFlags)
+    aFlags = groupload_attrib;
+
   result = image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
                            aWidth, aHeight, aFlags, mNetContext);
   aListenerResult = listener;
@@ -319,6 +344,19 @@ ImageGroupImpl::Interrupt(void)
     IL_InterruptContext(mGroupContext);
   }
 }
+
+NS_IMETHODIMP 
+ImageGroupImpl::SetImgLoadAttributes(PRUint32 a_grouploading_attribs){
+    m_grouploading_attribs = a_grouploading_attribs;
+    return NS_OK;
+}
+  
+NS_IMETHODIMP 
+ImageGroupImpl::GetImgLoadAttributes(PRUint32 *a_grouploading_attribs){
+        *a_grouploading_attribs = m_grouploading_attribs;
+        return NS_OK;
+}
+
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageGroup(nsIImageGroup **aInstancePtrResult)

@@ -23,13 +23,12 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.7 1999/11/13 22:37:41 cls%seawood.org Exp $
+ *   $Id: il_util.cpp,v 3.8 2000/07/20 01:52:02 pnunn%netscape.com Exp $
  */
 
 
 #include "nsCRT.h"
-#include "ntypes.h"             /* typedefs for commonly used Netscape data
-                                   structures. */
+
 #include "prtypes.h"
 #include "prmem.h"
 

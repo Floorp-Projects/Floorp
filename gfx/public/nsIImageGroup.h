@@ -44,6 +44,7 @@ class nsILoadGroup;
 /** Don't load if image cache misses.     */
 #define nsImageLoadFlags_kOnlyFromCache 0x08   
 
+
 // IID for the nsIImageGroup interface
 #define NS_IIMAGEGROUP_IID    \
 { 0xbe927e40, 0xaeaa, 0x11d1,  \
@@ -131,6 +132,10 @@ public:
    *  are interrupted.
    */
   virtual void Interrupt(void) = 0;
+
+  NS_IMETHOD SetImgLoadAttributes(PRUint32 a_grouploading_attribs)=0;
+  NS_IMETHOD GetImgLoadAttributes(PRUint32 *a_grouploading_attribs)=0;
+
 };
 
 /// Factory method for creating an image group

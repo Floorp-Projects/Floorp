@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #include "nsISupports.h"
-#include "ntypes.h"
 
 // IID for the ilINetContext interface
 #define IL_INETCONTEXT_IID    \
@@ -42,14 +41,14 @@ public:
 
   virtual ilINetContext* Clone()=0;
 
-  virtual NET_ReloadMethod GetReloadPolicy()=0;
+  virtual ImgCachePolicy GetReloadPolicy()=0;
 
   virtual void AddReferer(ilIURL *aUrl)=0;
 
   virtual void Interrupt()=0;
 
   virtual ilIURL* CreateURL(const char *aUrl, 
-			    NET_ReloadMethod aReloadMethod)=0;
+			    ImgCachePolicy aReloadMethod)=0;
 
   virtual PRBool IsLocalFileURL(char *aAddress)=0;
 
@@ -61,7 +60,7 @@ public:
   virtual PRBool IsURLInDiskCache(ilIURL *aUrl)=0;
 #endif /* NU_CACHE */
 
-  virtual int GetURL (ilIURL * aUrl, NET_ReloadMethod aLoadMethod,
+  virtual int GetURL (ilIURL * aUrl, ImgCachePolicy aLoadMethod,
 		      ilINetReader *aReader)=0;
 };
 

@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 #include "nsISupports.h"
-#include "ntypes.h"
+
 
 // IID for the ilINetReader interface
 #define IL_INETREADER_IID    \

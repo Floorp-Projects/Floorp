@@ -224,12 +224,17 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
       nsIImageGroup* group = nsnull;
       cx->GetImageGroup(&group);
       if (nsnull != group) {
+
         char* spec;
         (void)aURL->GetSpec(&spec);
         nsIStreamListener* listener = nsnull;
         rv = group->GetImageFromStream(spec, nsnull, nsnull,
                                        0, 0, 0,
                                        mImageRequest, listener);
+
+        //set flag to indicate view-image needs to use imgcache
+        group->SetImgLoadAttributes(nsImageLoadFlags_kSticky);
+
         nsCRT::free(spec);
         aListener = listener;
         NS_RELEASE(group);
@@ -238,6 +243,7 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
     NS_RELEASE(shell);
   }
 
+  
   // Finally, start the layout going
   StartLayout();
 
