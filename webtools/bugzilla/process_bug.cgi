@@ -1143,7 +1143,7 @@ foreach my $id (@idlist) {
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if (!CanEditProductId($oldhash{'product_id'})) {
         ThrowUserError("product_edit_denied",
-                      { product => $oldhash{'product'} });
+                      { product => $oldhash{'product'} }, "abort");
     }
 
     if (defined $::FORM{'product'} 
@@ -1151,7 +1151,7 @@ foreach my $id (@idlist) {
         && $::FORM{'product'} ne $oldhash{'product'}
         && !CanEnterProduct($::FORM{'product'})) {
         ThrowUserError("entry_access_denied",
-                       { product => $::FORM{'product'} });
+                       { product => $::FORM{'product'} }, "abort");
     }
     if ($requiremilestone) {
         my $value = $::FORM{'target_milestone'};
@@ -1161,7 +1161,6 @@ foreach my $id (@idlist) {
         SendSQL("SELECT defaultmilestone FROM products WHERE name = " .
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
-            SendSQL("UNLOCK TABLES");
             ThrowUserError("milestone_required",
                            { bug_id => $id },
                            "abort");
