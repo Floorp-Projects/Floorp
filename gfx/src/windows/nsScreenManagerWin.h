@@ -24,10 +24,13 @@
 #define nsScreenManagerWin_h___
 
 #include "nsIScreenManager.h"
+
 #include <windows.h>
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 
 class nsIScreen;
+
 
 //------------------------------------------------------------------------
 
@@ -42,10 +45,20 @@ public:
 
 private:
 
-  nsIScreen* CreateNewScreenObject ( HDC inScreen ) ;
+  nsIScreen* CreateNewScreenObject ( HDC inContext, void* inScreen ) ;
 
-    // cache the primary screen object to avoid memory allocation every time
-  nsCOMPtr<nsIScreen> mCachedMainScreen;
+  PRBool mHasMultiMonitorAPIs;
+  PRUint32 mNumberOfScreens;
+
+    // function pointers for multi-monitor API system calls that we use. Not
+    // valid unless |mHasMultiMonitorAPIs| is true
+  FARPROC mGetMonitorInfoProc;
+  FARPROC mMonitorFromRectProc;
+  FARPROC mEnumDisplayMonitorsProc;
+
+    // cache the screens to avoid the memory allocations
+  nsAutoVoidArray mScreenList;
+
 };
 
 #endif  // nsScreenManagerWin_h___ 

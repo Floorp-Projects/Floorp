@@ -20,13 +20,60 @@
  * Contributor(s): 
  */
 
+//
+// We have to do this in order to have access to the multiple-monitor
+// APIs that are only defined when WINVER is >= 0x0500. Don't worry,
+// these won't actually be called unless they are present.
+//
+#undef WINVER
+#define WINVER 0x0500
+
 #include "nsScreenManagerWin.h"
 #include "nsScreenWin.h"
 
+// needed because there are unicode/ansi versions of this routine
+// and we need to make sure we get the correct one.
+#ifdef UNICODE
+#define GetMonitorInfoQuoted "GetMonitorInfoW"
+#else
+#define GetMonitorInfoQuoted "GetMonitorInfoA"
+#endif
+
+
+typedef HMONITOR (*MonitorFromRectProc)(LPCRECT inRect, DWORD inFlag); 
+typedef BOOL (*EnumDisplayMonitorsProc)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
+
+BOOL CALLBACK CountMonitors ( HMONITOR, HDC, LPRECT, LPARAM ioCount ) ;
+
+
+class ScreenListItem
+{
+public:
+  ScreenListItem ( HMONITOR inMon, nsIScreen* inScreen )
+    : mMon(inMon), mScreen(inScreen) { } ;
+  
+  HMONITOR mMon;
+  nsCOMPtr<nsIScreen> mScreen;
+};
+
 
 nsScreenManagerWin :: nsScreenManagerWin ( )
+: mHasMultiMonitorAPIs(PR_FALSE), mGetMonitorInfoProc(nsnull), mMonitorFromRectProc(nsnull),
+    mEnumDisplayMonitorsProc(nsnull), mNumberOfScreens(0)
 {
   NS_INIT_REFCNT();
+
+  // figure out if we can call the multiple monitor APIs that are only
+  // available on Win98/2000.
+  HMODULE lib = GetModuleHandle("user32.dll");
+  if ( lib ) {
+    mGetMonitorInfoProc = GetProcAddress ( lib, GetMonitorInfoQuoted );
+    mMonitorFromRectProc = GetProcAddress ( lib, "MonitorFromRect" );
+    mEnumDisplayMonitorsProc = GetProcAddress ( lib, "EnumDisplayMonitors" );
+    if ( mGetMonitorInfoProc && mMonitorFromRectProc && mEnumDisplayMonitorsProc )
+      mHasMultiMonitorAPIs = PR_TRUE;
+  }
+  printf("has multiple monitor apis is %ld\n", mHasMultiMonitorAPIs);
 
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -36,7 +83,11 @@ nsScreenManagerWin :: nsScreenManagerWin ( )
 
 nsScreenManagerWin :: ~nsScreenManagerWin()
 {
-  // nothing to see here.
+  // walk our list of cached screens and delete them.
+  for ( int i = 0; i < mScreenList.Count(); ++i ) {
+    ScreenListItem* item = NS_REINTERPRET_CAST(ScreenListItem*, mScreenList[i]);
+    delete item;
+  }
 }
 
 
@@ -53,14 +104,26 @@ NS_IMPL_ISUPPORTS(nsScreenManagerWin, NS_GET_IID(nsIScreenManager))
 //        screen. This should change when a multi-monitor impl is done.
 //
 nsIScreen* 
-nsScreenManagerWin :: CreateNewScreenObject ( HDC inScreen )
+nsScreenManagerWin :: CreateNewScreenObject ( HDC inContext, void* inScreen )
 {
-  nsIScreen* retval = nsnull;
-  if ( !mCachedMainScreen )
-    mCachedMainScreen = new nsScreenWin ( inScreen );
-  NS_IF_ADDREF(retval = mCachedMainScreen.get());
+  nsIScreen* retScreen = nsnull;
   
-  return retval;
+  // look through our screen list, hoping to find it. If it's not there,
+  // add it and return the new one.
+  for ( int i = 0; i < mScreenList.Count(); ++i ) {
+    ScreenListItem* curr = NS_REINTERPRET_CAST(ScreenListItem*, mScreenList[i]);
+    if ( inScreen == curr->mMon ) {
+      NS_IF_ADDREF(retScreen = curr->mScreen.get());
+      return retScreen;
+    }
+  } // for each screen.
+ 
+  retScreen = new nsScreenWin(inContext, inScreen);
+  ScreenListItem* listItem = new ScreenListItem ( (HMONITOR)inScreen, retScreen );
+  mScreenList.AppendElement ( listItem );
+
+  NS_IF_ADDREF(retScreen);
+  return retScreen;
 }
 
 
@@ -78,23 +141,24 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
 {
   if ( !(inWidth || inHeight) ) {
     NS_WARNING ( "trying to find screen for sizeless window, using primary monitor" );
-    *outScreen = CreateNewScreenObject ( ::GetDC(nsnull) );    // addrefs
+    *outScreen = CreateNewScreenObject ( ::GetDC(nsnull), nsnull );    // addrefs
     return NS_OK;
   }
 
   RECT globalWindowBounds = { inLeft, inTop, inLeft + inWidth, inTop + inHeight };
 
-  // we want to use ::MonitorFromRect() but it doesn't exist under 95/NT. For now, just 
-  // always return the primary monitor.
+  void* genScreen = nsnull;
+  if ( mHasMultiMonitorAPIs ) {
+    MonitorFromRectProc proc = (MonitorFromRectProc)mMonitorFromRectProc;
+    HMONITOR screen = (*proc)( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
+printf("*** found screen %x\n", screen);
+    genScreen = screen;
+
+    //XXX find the DC for this screen??
+  }
+
+  *outScreen = CreateNewScreenObject ( ::GetDC(nsnull), genScreen );    // addrefs
   
-  *outScreen = CreateNewScreenObject ( ::GetDC(nsnull) );    // addrefs
-  
-#if 0
-  HMONITOR screen = ::MonitorFromRect ( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
-  
-  
-  *outScreen = CreateNewScreenObject ( deviceWindowIsOn );    // addrefs
-#endif
   return NS_OK;
     
 } // ScreenForRect
@@ -109,10 +173,28 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
 NS_IMETHODIMP 
 nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen) 
 {
-  *aPrimaryScreen = CreateNewScreenObject ( ::GetDC(nsnull) );    // addrefs  
+  *aPrimaryScreen = CreateNewScreenObject ( ::GetDC(nsnull), nsnull );    // addrefs  
   return NS_OK;
   
 } // GetPrimaryScreen
+
+
+//
+// CountMonitors
+//
+// Will be called once for every monitor in the system. Just 
+// increments the parameter, which holds a ptr to a PRUin32 holding the
+// count up to this point.
+//
+BOOL CALLBACK
+CountMonitors ( HMONITOR, HDC, LPRECT, LPARAM ioParam )
+{
+  PRUint32* countPtr = NS_REINTERPRET_CAST(PRUint32*, ioParam);
+  ++(*countPtr);
+
+  return TRUE; // continue the enumeration
+
+} // CountMonitors
 
 
 //
@@ -123,7 +205,21 @@ nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen)
 NS_IMETHODIMP
 nsScreenManagerWin :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
 {
-  *aNumberOfScreens = 1;
+  if ( mNumberOfScreens )
+    *aNumberOfScreens = mNumberOfScreens;
+  else {
+    if ( mHasMultiMonitorAPIs ) {
+      // use a rect that spans a HUGE area to pick up all screens
+      RECT largeArea = { -32767, -32767, 32767, 32767 };
+      PRUint32 count = 0;
+      EnumDisplayMonitorsProc proc = (EnumDisplayMonitorsProc)mEnumDisplayMonitorsProc;
+      BOOL result = (*proc)(nsnull, &largeArea, (MONITORENUMPROC)CountMonitors, (LPARAM)&count);
+      *aNumberOfScreens = mNumberOfScreens = count;      
+    } // if there can be > 1 screen
+    else
+      *aNumberOfScreens = mNumberOfScreens = 1;
+  } 
+  printf("****** number of sceens %ld\n", mNumberOfScreens);
   return NS_OK;
   
 } // GetNumberOfScreens

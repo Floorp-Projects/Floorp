@@ -20,17 +20,48 @@
  * Contributor(s): 
  */
 
+//
+// We have to do this in order to have access to the multiple-monitor
+// APIs that are only defined when WINVER is >= 0x0500. Don't worry,
+// these won't actually be called unless they are present.
+//
+#undef WINVER
+#define WINVER 0x0500
+
 #include "nsScreenWin.h"
 
 
-nsScreenWin :: nsScreenWin ( HDC inScreen )
-  : mScreen(inScreen)
+// needed because there are unicode/ansi versions of this routine
+// and we need to make sure we get the correct one.
+#ifdef UNICODE
+#define GetMonitorInfoQuoted "GetMonitorInfoW"
+#else
+#define GetMonitorInfoQuoted "GetMonitorInfoA"
+#endif
+
+
+typedef BOOL (*GetMonitorInfoProc)(HMONITOR inMon, LPMONITORINFO ioInfo); 
+
+
+nsScreenWin :: nsScreenWin ( HDC inContext, void* inScreen )
+  : mContext(inContext), mScreen(inScreen), mHasMultiMonitorAPIs(PR_FALSE),
+      mGetMonitorInfoProc(nsnull)
 {
   NS_INIT_REFCNT();
 
-  NS_ASSERTION ( inScreen, "Passing null device to nsScreenWin" );
-  NS_ASSERTION ( ::GetDeviceCaps(inScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
+  NS_ASSERTION ( inContext, "Passing null device to nsScreenWin" );
+  NS_ASSERTION ( ::GetDeviceCaps(inContext, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
   
+  // figure out if we can call the multiple monitor APIs that are only
+  // available on Win98/2000.
+  HMODULE lib = GetModuleHandle("user32.dll");
+  if ( lib ) {
+    mGetMonitorInfoProc = GetProcAddress ( lib, GetMonitorInfoQuoted );
+    if ( mGetMonitorInfoProc )
+      mHasMultiMonitorAPIs = PR_TRUE;
+  }
+  printf("has multiple monitor apis is %ld\n", mHasMultiMonitorAPIs);
+
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.
@@ -50,7 +81,16 @@ NS_IMPL_ISUPPORTS(nsScreenWin, NS_GET_IID(nsIScreen))
 NS_IMETHODIMP 
 nsScreenWin :: GetWidth(PRInt32 *aWidth)
 {
-  *aWidth = ::GetDeviceCaps(mScreen, HORZRES);
+  if ( mScreen && mHasMultiMonitorAPIs ) {
+    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+    MONITORINFO info;
+    info.cbSize = sizeof(MONITORINFO);
+    BOOL success = (*proc)( (HMONITOR)mScreen, &info );
+    if ( success ) 
+      *aWidth = info.rcMonitor.right - info.rcMonitor.left;
+  }
+  else
+    *aWidth = ::GetDeviceCaps(mContext, HORZRES);
   return NS_OK;
 
 } // GetWidth
@@ -59,7 +99,16 @@ nsScreenWin :: GetWidth(PRInt32 *aWidth)
 NS_IMETHODIMP 
 nsScreenWin :: GetHeight(PRInt32 *aHeight)
 {
-  *aHeight = ::GetDeviceCaps(mScreen, VERTRES);
+  if ( mScreen && mHasMultiMonitorAPIs ) {
+    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+    MONITORINFO info;
+    info.cbSize = sizeof(MONITORINFO);
+    BOOL success = (*proc)( (HMONITOR)mScreen, &info );
+    if ( success ) 
+      *aHeight = info.rcMonitor.bottom - info.rcMonitor.top;
+  }
+  else
+    *aHeight = ::GetDeviceCaps(mContext, VERTRES);
   return NS_OK;
 
 } // GetHeight
@@ -68,7 +117,8 @@ nsScreenWin :: GetHeight(PRInt32 *aHeight)
 NS_IMETHODIMP 
 nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
-  *aPixelDepth = ::GetDeviceCaps(mScreen, BITSPIXEL);
+  //XXX not sure how to get this info for multiple monitors, this might be ok...
+  *aPixelDepth = ::GetDeviceCaps(mContext, BITSPIXEL);
   return NS_OK;
 
 } // GetPixelDepth
@@ -85,10 +135,19 @@ nsScreenWin :: GetColorDepth(PRInt32 *aColorDepth)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailWidth(PRInt32 *aAvailWidth)
 {
-  // XXX Needs to be rewritten for a non-primary monitor?
-  RECT workArea;
-  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-  *aAvailWidth = workArea.right - workArea.left;
+  if ( mScreen && mHasMultiMonitorAPIs ) {
+    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+    MONITORINFO info;
+    info.cbSize = sizeof(MONITORINFO);
+    BOOL success = (*proc)( (HMONITOR)mScreen, &info );
+    if ( success ) 
+      *aAvailWidth = info.rcWork.right - info.rcWork.left;
+  }
+  else {
+    RECT workArea;
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    *aAvailWidth = workArea.right - workArea.left;
+  }
   return NS_OK;
 
 } // GetAvailWidth
@@ -97,9 +156,19 @@ nsScreenWin :: GetAvailWidth(PRInt32 *aAvailWidth)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailHeight(PRInt32 *aAvailHeight)
 {
-  RECT workArea;
-  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-  *aAvailHeight = workArea.bottom - workArea.top;
+  if ( mScreen && mHasMultiMonitorAPIs ) {
+    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+    MONITORINFO info;
+    info.cbSize = sizeof(MONITORINFO);
+    BOOL success = (*proc)( (HMONITOR)mScreen, &info );
+    if ( success ) 
+      *aAvailHeight = info.rcWork.bottom - info.rcWork.top;
+  }
+  else {
+    RECT workArea;
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    *aAvailHeight = workArea.bottom - workArea.top;
+  }
   return NS_OK;
 
 } // GetAvailHeight
@@ -108,9 +177,19 @@ nsScreenWin :: GetAvailHeight(PRInt32 *aAvailHeight)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailLeft(PRInt32 *aAvailLeft)
 {
-  RECT workArea;
-  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-  *aAvailLeft = workArea.left;
+  if ( mScreen && mHasMultiMonitorAPIs ) {
+    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+    MONITORINFO info;
+    info.cbSize = sizeof(MONITORINFO);
+    BOOL success = (*proc)( (HMONITOR)mScreen, &info );
+    if ( success ) 
+      *aAvailLeft = info.rcWork.left;
+  }
+  else {
+    RECT workArea;
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    *aAvailLeft = workArea.left;
+  }
   return NS_OK;
 
 } // GetAvailLeft
@@ -119,10 +198,19 @@ nsScreenWin :: GetAvailLeft(PRInt32 *aAvailLeft)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailTop(PRInt32 *aAvailTop)
 {
-  RECT workArea;
-  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-  *aAvailTop = workArea.top;
-  
+  if ( mScreen && mHasMultiMonitorAPIs ) {
+    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+    MONITORINFO info;
+    info.cbSize = sizeof(MONITORINFO);
+    BOOL success = (*proc)( (HMONITOR)mScreen, &info );
+    if ( success ) 
+      *aAvailTop = info.rcWork.top;
+  }
+  else {
+    RECT workArea;
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    *aAvailTop = workArea.top;
+  }
   return NS_OK;
 
 } // GetAvailTop
