@@ -135,7 +135,8 @@ WeekView.prototype.refreshEvents = function( )
    var allDayEventList = new Array();
    var normalEventList = new Array();   
    var eventList = new Array();
-   
+
+   var i;   
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       // get the events for the day and loop through them
       var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
@@ -159,7 +160,7 @@ WeekView.prototype.refreshEvents = function( )
          HighestEndHour = limits.endHour;
       }
       //divide events into allday and normal (non-allday) events
-      for ( var i = 0; i < eventList[dayIndex].length; i++ ) {
+      for ( i = 0; i < eventList[dayIndex].length; i++ ) {
          if( eventList[dayIndex][i].event.allDay == true ) {
             allDayEventList[dayIndex].push(eventList[dayIndex][i]); 
             allDayExist = true;
@@ -201,9 +202,9 @@ WeekView.prototype.refreshEvents = function( )
       this.setDrawProperties(normalEventList[dayIndex]);
       
       // Add non-allday events to DOM
-      for ( var i = 0; i < normalEventList[dayIndex].length; ++i )
+      for ( i = 0; i < normalEventList[dayIndex].length; ++i )
       {
-         eventBox = this.createEventBox( normalEventList[dayIndex][i] );
+         var eventBox = this.createEventBox( normalEventList[dayIndex][i] );
          document.getElementById( "week-view-content-board" ).appendChild( eventBox );
          this.kungFooDeathGripOnEventBoxes.push( eventBox );
       }
@@ -218,7 +219,7 @@ WeekView.prototype.refreshEvents = function( )
       }
       
       for ( var eventIndex = 0; eventIndex < eventList[dayIndex].length; ++eventIndex ) {
-         calendarEventDisplay = eventList[dayIndex][ eventIndex ];
+         var calendarEventDisplay = eventList[dayIndex][ eventIndex ];
          
          // get the day box for the calendarEvent's day
          var weekBoxItem = gHeaderDateItemArray[ dayIndex ];
@@ -304,7 +305,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay )
    top = top - ElementOfRef.parentNode.boxObject.y - 2;
    eventBox.setAttribute( "top", top );
    
-   dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
+   var dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
    
    var index = displayDateObject.getDay( ) - dayIndex.getDay( );
    if( index < 0 ) {

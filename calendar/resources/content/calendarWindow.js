@@ -707,7 +707,8 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
   var currEventSlotsIsEmpty
   var done = false;
 
-  for( var i = 0; i < dayEventList.length; i++ )
+  var i;
+  for( i = 0; i < dayEventList.length; i++ )
     if( !dayEventList[i].event.allDay) {
       dayEventStartList.push(dayEventList[i]);
       dayEventEndList.push(dayEventList[i]);
@@ -719,7 +720,7 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
     dayEventEndList.sort(this.calendarWindow.compareDisplayEventEnd);
     
     //init (horizontal) event draw slots .
-    for ( var i = 0; i < dayEventStartList.length; i++ ) 
+    for ( i = 0; i < dayEventStartList.length; i++ ) 
     {
       dayEventStartList[i].startDrawSlot  = -1;
       dayEventStartList[i].drawSlotCount  = -1;
@@ -730,7 +731,7 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
       if( nextEventIsStarting ) { 
         
         //find a slot for the event
-        for( var i = 0; i <currEventSlots.length; i++ )
+        for( i = 0; i <currEventSlots.length; i++ )
           if( currEventSlots[i] == null ) {            
             // found empty slot, set event here
             // also check if there is room for event wider than 1 slot.
@@ -793,7 +794,7 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
         nextEventIsStarting = ( dayEventStartList[eventStartListIndex].displayDate <  dayEventEndList[eventEndListIndex].displayEndDate );     
     }
     //  set totalSlotCount for the last contiguous group of events
-    for ( var i = groupStartIndex; i < dayEventStartList.length; i++ )
+    for ( i = groupStartIndex; i < dayEventStartList.length; i++ )
       dayEventStartList[i].totalSlotCount = currEventSlots.length;
   }
 }
@@ -835,11 +836,12 @@ CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawP
   
   var usedSlotMatrix = new Array(); //all-day rows 
   usedSlotMatrix.push( new Array() ); //first row, one column per day between startDate and endDate
-  for( var i = 0; i < dayCount; i++ ) {
+  var i;
+  for( i = 0; i < dayCount; i++ ) {
     usedSlotMatrix[0].push( false );
   }
   
-  for( var i = 0; i < eventList.length; i++ ) {
+  for( i = 0; i < eventList.length; i++ ) {
     if( eventList[i].event.allDay) {
       
       if( eventList[i].event.recur ) {
@@ -876,10 +878,11 @@ CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawP
       
       rowFound = false;
       row=0;
+      var k;
       while( ( !rowFound ) && ( row < usedSlotMatrix.length ) ) {
         //check if there is room for the event on the row
         rowFound = true;
-        for( var k = eventList[i].startDrawSlot; k < (eventList[i].startDrawSlot + eventList[i].drawSlotCount); k++) {
+        for( k = eventList[i].startDrawSlot; k < (eventList[i].startDrawSlot + eventList[i].drawSlotCount); k++) {
           if( usedSlotMatrix[row][k] ) {
             rowFound = false;
             break;
@@ -892,7 +895,7 @@ CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawP
       if(!rowFound) {
         //add new all-day-row
         var newArray = new Array(); 
-        for( var k = 0; k < dayCount; k++ ) {
+        for( k = 0; k < dayCount; k++ ) {
           newArray.push( false );
         }
         usedSlotMatrix.push(newArray);
@@ -900,7 +903,7 @@ CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawP
       }
       
       eventList[i].drawRow = row;
-      for( var k = eventList[i].startDrawSlot; k < (eventList[i].startDrawSlot + eventList[i].drawSlotCount); k++) {
+      for( k = eventList[i].startDrawSlot; k < (eventList[i].startDrawSlot + eventList[i].drawSlotCount); k++) {
         usedSlotMatrix[row][k] = true;
       }
     }

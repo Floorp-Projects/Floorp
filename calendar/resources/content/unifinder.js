@@ -548,15 +548,16 @@ var treeView =
             var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
             var eventLength = calendarEvent.end.getTime() - calendarEvent.start.getTime();
             var actualEndDate = eventEndDate.getTime() + eventLength;
+            var endDate, endTime;
             eventEndDate = new Date( actualEndDate );
             if( calendarEvent.allDay ) {
                //user-enddate is ical-enddate - 1
                eventEndDate.setDate( eventEndDate.getDate() - 1 );
-               var endDate = formatUnifinderEventDate( eventEndDate );
+               endDate = formatUnifinderEventDate( eventEndDate );
                return(gCalendarBundle.getFormattedString("unifinderAlldayEventDate", [endDate]));
             } else {
-               var endTime = formatUnifinderEventTime( eventEndDate );
-               var endDate = formatUnifinderEventDate( eventEndDate );
+               endTime = formatUnifinderEventTime( eventEndDate );
+               endDate = formatUnifinderEventDate( eventEndDate );
                return(gCalendarBundle.getFormattedString("unifinderNormalEventDate", [endDate, endTime]));
             }
          

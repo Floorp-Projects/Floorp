@@ -128,6 +128,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
    
    // set view limits for the day
    var limits = this.getViewLimits(dayEventList,this.calendarWindow.getSelectedDate());
+   var i;
    for( i = 0; i < 24; i++ ) {
       if( ( i < limits.startHour ) || ( i > limits.endHour ) )
          document.getElementById( "day-tree-item-"+i ).setAttribute( "collapsed", "true" );
@@ -136,7 +137,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
    }
    
    // Divide events into all day and other events
-   for( var i = 0; i < dayEventList.length; i++ ) {
+   for( i = 0; i < dayEventList.length; i++ ) {
       if ( dayEventList[i].event.allDay == true )
          allDayEvents.push(dayEventList[i]);
       else
@@ -163,7 +164,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
       allDayLabel.value = calendarStringBundle.GetStringFromName( "AllDayEvents" );
       allDayLabel.setAttribute("width", kDayViewHourLeftStart - 10);
       
-      for( var i = 0; i < allDayEvents.length; i++ ) {
+      for( i = 0; i < allDayEvents.length; i++ ) {
          eventBox = this.createAllDayEventBox( allDayEvents[i] );
          this.insertAllDayEventBox(eventBox, allDayBox);
          
@@ -172,7 +173,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
    }
    
    // Add non-allday events to DOM
-   for ( var i = 0; i < normalEvents.length; ++i )
+   for ( i = 0; i < normalEvents.length; ++i )
    {
       eventBox = this.createEventBox( normalEvents[i] );
       document.getElementById( "day-view-content-board" ).appendChild( eventBox );
