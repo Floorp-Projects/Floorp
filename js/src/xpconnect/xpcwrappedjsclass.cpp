@@ -97,7 +97,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                         mDescriptors = NULL;
                         break;
                     }
-                }            
+                }
             }
         }
         else
@@ -110,7 +110,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
 nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 {
     if(mDescriptors && mDescriptors != &zero_methods_descriptor)
-        delete [] mDescriptors;   
+        delete [] mDescriptors;
     mXPCContext->GetWrappedJSClassMap()->Remove(this);
     NS_RELEASE(mInfo);
 }
@@ -195,6 +195,7 @@ public:
 
 /***************************************************************************/
 
+// static
 JSBool
 nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
 {
@@ -317,7 +318,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             if(type.IsPointer())
                 pv = (nsXPCMiniVariant*) pv->val.p;
 
-            if(!XPCConvert::NativeData2JS(&val, &pv->val, type))
+            if(!XPCConvert::NativeData2JS(cx, &val, &pv->val, type, NULL))
             {
                 retval = NS_ERROR_FAILURE;
                 goto done;

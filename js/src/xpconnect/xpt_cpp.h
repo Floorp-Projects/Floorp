@@ -30,7 +30,7 @@ class nsXPTType : public XPTTypeDescriptorPrefix
 {
 // NO DATA - this a flyweight wrapper
 public:
-    nsXPTType() 
+    nsXPTType()
         {}    // random contents
     nsXPTType(const XPTTypeDescriptorPrefix& prefix)
         {*(XPTTypeDescriptorPrefix*)this = prefix;}
@@ -38,10 +38,10 @@ public:
     nsXPTType(const uint8& prefix)
         {*(uint8*)this = prefix;}
 
-    nsXPTType& operator=(uint8 val) 
+    nsXPTType& operator=(uint8 val)
         {flags = val; return *this;}
 
-    operator uint8() const 
+    operator uint8() const
         {return flags;}
 
     JSBool IsPointer() const
@@ -57,7 +57,7 @@ public:
         {return flags <= T_WCHAR;}
 
     JSBool IsInterfacePointer() const
-        {return (JSBool) (TagPart() == T_INTERFACE || 
+        {return (JSBool) (TagPart() == T_INTERFACE ||
                           TagPart() == T_INTERFACE_IS);}
 
     uint8 TagPart() const
@@ -117,6 +117,9 @@ public:
     // find (or build) the appropriate nsIInterfaceInfo. Simple :)
     nsIInterfaceInfo* GetInterface() const ;
 
+    // a *little* simpler than the above
+    nsIID* GetInterfaceIID() const ;
+
 private:
     nsXPTParamInfo();   // no implementation
 // NO DATA - this a flyweight wrapper
@@ -141,7 +144,7 @@ public:
             NS_PRECONDITION(index < GetParamCount(),"bad arg");
             return params[index];
         }
-    const nsXPTParamInfo GetResult() const 
+    const nsXPTParamInfo GetResult() const
         {return *result;}
 private:
     nsXPTMethodInfo();  // no implementation
@@ -159,14 +162,14 @@ public:
     nsXPTConstant(const XPTConstDescriptor& desc)
         {*(XPTConstDescriptor*)this = desc;}
 
-    const char* GetName() const 
+    const char* GetName() const
         {return name;}
 
     const nsXPTType GetType() const
         {return type.prefix;}
 
     // XXX this is ugly
-    const nsXPCMiniVariant* GetValue() const 
+    const nsXPCMiniVariant* GetValue() const
         {return (nsXPCMiniVariant*) &value;}
 private:
     nsXPTConstant();    // no implementation

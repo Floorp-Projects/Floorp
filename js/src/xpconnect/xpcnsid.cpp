@@ -215,4 +215,4 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
         return NULL;
 
     return &data->GetID();
-}        
+}

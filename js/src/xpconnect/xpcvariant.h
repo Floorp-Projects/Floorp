@@ -57,13 +57,15 @@ struct nsXPCVariant : public nsXPCMiniVariant
 
     enum
     {
-        PTR_IS_DATA  = 0x1,   // used for OUT params of Arithmetic types, 
-                              // ptr points to data in val
-        VAL_IS_OWNED = 0x2    // val.p holds an alloced ptr that must be freed
+        // these are bitflags!
+        PTR_IS_DATA  = 0x1, // ptr points to 'real' data in val
+        VAL_IS_OWNED = 0x2, // val.p holds alloced ptr that must be freed
+        VAL_IS_IFACE = 0x4  // val.p holds interface ptr that must be released
     };
 
-    JSBool IsPtrData()  const {return (JSBool) (flags & PTR_IS_DATA);}
-    JSBool IsValOwned() const {return (JSBool) (flags & VAL_IS_OWNED);}
+    JSBool IsPtrData()      const {return (JSBool) (flags & PTR_IS_DATA);}
+    JSBool IsValOwned()     const {return (JSBool) (flags & VAL_IS_OWNED);}
+    JSBool IsValInterface() const {return (JSBool) (flags & VAL_IS_IFACE);}
 };
 
 #endif /* xpcvariant_h___ */

@@ -33,7 +33,7 @@ class nsXPTConstant;
 class nsIInterfaceInfo : public nsISupports
 {
 public:
-    
+
     NS_IMETHOD GetName(char** name) = 0; // returns IAllocatator alloc'd copy
     NS_IMETHOD GetIID(nsIID** iid) = 0;  // returns IAllocatator alloc'd copy
 

@@ -20,8 +20,10 @@
 
 #include "xpcprivate.h"
 
-// static 
-JSBool 
+static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID);
+
+// static
+JSBool
 XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 {
     if(info.IsHidden())
@@ -166,7 +168,7 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
         }
     }
     return JS_TRUE;
-}        
+}
 
 // XXX these conversion functions need to be finished.
 // XXX conversion functions may still need paramInfo to handle the additional
@@ -178,10 +180,10 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 // Win32 can't handle uint64 to double conversion
 #define JAM_DOUBLE_U64(v,d) JAM_DOUBLE(((int64)v),d)
 
-// static 
+// static
 JSBool
-XPCConvert::NativeData2JS(jsval* d, const void* s, 
-                          const nsXPTType& type)
+XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
+                          const nsXPTType& type, const nsID* iid)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -209,40 +211,96 @@ XPCConvert::NativeData2JS(jsval* d, const void* s,
             NS_ASSERTION(0,"unsupported type");
             return JS_FALSE;
         }
+
+        // set the default result
+        *d = JSVAL_NULL;
+
         switch(type.TagPart())
         {
         case nsXPTType::T_VOID:
-            // XXX implement void*
+            // XXX implement void* ?
             NS_ASSERTION(0,"void* params not supported");
             return JS_FALSE;
+
         case nsXPTType::T_IID:
-            // XXX implement IID
-            NS_ASSERTION(0,"iid params not supported");
-            return JS_FALSE;
+            {
+                nsID* iid = *((nsID**)s);
+                if(!iid)
+                    break;
+                JSObject* obj;
+                if(!(obj = xpc_NewIDObject(cx, *iid)))
+                    break;
+                *d = OBJECT_TO_JSVAL(obj);
+                break;
+            }
+
         case nsXPTType::T_BSTR:
-            // XXX implement BSTR
-            NS_ASSERTION(0,"string params not supported");
+            // XXX implement BSTR ?
+            NS_ASSERTION(0,"'BSTR' string params not supported");
             return JS_FALSE;
+
         case nsXPTType::T_CHAR_STR:
-            // XXX implement CHAR_STR
-            NS_ASSERTION(0,"string params not supported");
-            return JS_FALSE;
+            {
+                char* p = *((char**)s);
+                if(!p)
+                    break;
+                JSString* str;
+                if(!(str = JS_NewStringCopyZ(cx, p)))
+                    break;
+                *d = STRING_TO_JSVAL(str);
+                break;
+            }
+
         case nsXPTType::T_WCHAR_STR:
-            // XXX implement WCHAR_STR
-            NS_ASSERTION(0,"string params not supported");
-            return JS_FALSE;
+            {
+                jschar* p = *((jschar**)s);
+                if(!p)
+                    break;
+                JSString* str;
+                if(!(str = JS_NewUCStringCopyZ(cx, p)))
+                    break;
+                *d = STRING_TO_JSVAL(str);
+                break;
+            }
+
         case nsXPTType::T_INTERFACE:
-            // XXX implement INTERFACE
-            // make sure 'src' is an object
-            // get the nsIInterfaceInfo* from the param and
-            // build a wrapper and then hand over the wrapper.
-            // XXX remember to release the wrapper in cleanup below
-            NS_ASSERTION(0,"interface params not supported");
-            return JS_FALSE;
         case nsXPTType::T_INTERFACE_IS:
-            // XXX implement INTERFACE_IS
-            NS_ASSERTION(0,"interface_is params not supported");
-            return JS_FALSE;
+            {
+                nsISupports* iface = *((nsISupports**)s);
+                if(!iface)
+                    break;
+                JSObject* aJSObj;
+                // is this a wrapped JS object?
+                if(nsXPCWrappedJSClass::IsWrappedJS(iface))
+                {
+                    nsIXPConnectWrappedJSMethods* methods;
+                    if(NS_SUCCEEDED(iface->QueryInterface(kWrappedJSMethodsIID,
+                                                          (void**)&methods)) &&
+                       NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
+                    {
+                        NS_RELEASE(methods);
+                        *d = OBJECT_TO_JSVAL(aJSObj);
+                    }
+                }
+                else
+                {
+                    // we need to build a wrapper
+                    nsXPCWrappedNative* wrapper;
+                    XPCContext* xpcc;
+                    if(!iid || !(xpcc = nsXPConnect::GetContext(cx)) ||
+                       !(wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
+                                                                iface, *iid)))
+                    {
+                        break;
+                    }
+                    aJSObj = wrapper->GetJSObject();
+                    NS_RELEASE(wrapper);
+                    if(aJSObj)
+                        *d = OBJECT_TO_JSVAL(aJSObj);
+                }
+
+                break;
+            }
         default:
             NS_ASSERTION(0, "bad type");
             return JS_FALSE;
@@ -251,10 +309,10 @@ XPCConvert::NativeData2JS(jsval* d, const void* s,
     return JS_TRUE;
 }
 
-// static 
+// static
 JSBool
 XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
-                          const nsXPTType& type, 
+                          const nsXPTType& type,
                           nsIAllocator* al, const nsID* iid)
 {
     NS_PRECONDITION(d, "bad param");
@@ -430,17 +488,47 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         }
 
         case nsXPTType::T_INTERFACE:
-            // XXX implement INTERFACE
-            // make sure 'src' is an object
-            // get the nsIInterfaceInfo* from the param and
-            // build a wrapper and then hand over the wrapper.
-            // XXX remember to release the wrapper in cleanup below
-            NS_ASSERTION(0,"interface params not supported");
-            return JS_FALSE;
         case nsXPTType::T_INTERFACE_IS:
-            // XXX implement INTERFACE_IS
-            NS_ASSERTION(0,"interface_is params not supported");
+        {
+            NS_ASSERTION(iid,"can't do interface conversions without iid");
+            JSObject* obj;
+            nsISupports* iface = NULL;
+
+            // only wrpa JSObjects
+            if(!JSVAL_IS_OBJECT(s) ||
+               (!(obj = JSVAL_TO_OBJECT(s))))
+            {
+                // XXX should report error
+                return JS_FALSE;
+            }
+
+            // is this really a native xpcom object with a wrapper?
+            nsXPCWrappedNative* wrapper;
+            if(NULL != (wrapper =
+               nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,obj)))
+            {
+                iface = wrapper->GetNative();
+                // is the underlying object the right interface?
+                if(wrapper->GetIID().Equals(*iid))
+                    NS_ADDREF(iface);
+                else
+                    iface->QueryInterface(*iid, (void**)&iface);
+            }
+            else
+            {
+                // lets try to build a wrapper around the JSObject
+                XPCContext* xpcc;
+                if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+                    iface = nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj, *iid);
+            }
+            if(iface)
+            {
+                // one AddRef has already been done
+                *((nsISupports**)d) = iface;
+                return JS_TRUE;
+            }
             return JS_FALSE;
+        }
         default:
             NS_ASSERTION(0, "bad type");
             return JS_FALSE;
