@@ -118,9 +118,9 @@ class nsInstall
             INSTALL_NOT_STARTED         = -211,
             SILENT_MODE_DENIED          = -212,
             NO_SUCH_COMPONENT           = -213,
-            FILE_DOES_NOT_EXIST         = -214,
-            FILE_READ_ONLY              = -215,
-            FILE_IS_DIRECTORY           = -216,
+            DESTINATION_DOES_NOT_EXIST  = -214,
+            DESTINATION_READ_ONLY       = -215,
+            DESTINATION_IS_DIRECTORY    = -216,
             NETWORK_FILE_IS_IN_USE      = -217,
             APPLE_SINGLE_ERR            = -218,
             INVALID_PATH_ERR            = -219,
@@ -134,10 +134,12 @@ class nsInstall
             ABORT_INSTALL               = -227,
             DOWNLOAD_ERROR              = -228,
             SCRIPT_ERROR                = -229,
+
             DESTINATION_ALREADY_EXISTS  = -230,
-            DESTINATION_DOES_NOT_EXIST  = -231,
-            DESTINATION_IS_FILE         = -232,
-            DIRECTORY_IS_FILE           = -233,
+            DESTINATION_IS_FILE         = -231,
+            SOURCE_DOES_NOT_EXIST       = -232,
+            SOURCE_IS_DIRECTORY         = -233,
+            SOURCE_IS_FILE              = -234,
             
             OUT_OF_MEMORY               = -299,
 

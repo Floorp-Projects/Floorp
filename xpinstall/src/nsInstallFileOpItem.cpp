@@ -491,7 +491,7 @@ nsInstallFileOpItem::NativeFileOpDirRemovePrepare()
       return nsInstall::DESTINATION_IS_FILE;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::DESTINATION_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -523,10 +523,10 @@ nsInstallFileOpItem::NativeFileOpFileRenamePrepare()
         return nsInstall::SUCCESS;
     }
     else
-      return nsInstall::FILE_IS_DIRECTORY;
+      return nsInstall::SOURCE_IS_DIRECTORY;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::SOURCE_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -558,10 +558,10 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
         return nsInstall::DESTINATION_ALREADY_EXISTS;
     }
     else
-      ret = nsInstall::FILE_IS_DIRECTORY;
+      ret = nsInstall::SOURCE_IS_DIRECTORY;
   }
   else  
-    ret = nsInstall::FILE_DOES_NOT_EXIST;
+    ret = nsInstall::SOURCE_DOES_NOT_EXIST;
 
   return ret;
 }
@@ -607,10 +607,10 @@ nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
       return nsInstall::SUCCESS;
     }
     else
-      return nsInstall::FILE_IS_DIRECTORY;
+      return nsInstall::SOURCE_IS_DIRECTORY;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::SOURCE_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -653,10 +653,10 @@ nsInstallFileOpItem::NativeFileOpFileDeletePrepare()
     if(mTarget->IsFile())
       return nsInstall::SUCCESS;
     else
-      return nsInstall::FILE_IS_DIRECTORY;
+      return nsInstall::DESTINATION_IS_DIRECTORY;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::DESTINATION_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -667,10 +667,10 @@ nsInstallFileOpItem::NativeFileOpFileDeleteComplete(nsFileSpec *aTarget)
     if(aTarget->IsFile())
       return DeleteFileNowOrSchedule(*aTarget);
     else
-      return nsInstall::FILE_IS_DIRECTORY;
+      return nsInstall::DESTINATION_IS_DIRECTORY;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::DESTINATION_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -687,10 +687,10 @@ nsInstallFileOpItem::NativeFileOpFileExecutePrepare()
     if(mTarget->IsFile())
       return nsInstall::SUCCESS;
     else
-      return nsInstall::FILE_IS_DIRECTORY;
+      return nsInstall::DESTINATION_IS_DIRECTORY;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::DESTINATION_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -716,7 +716,7 @@ nsInstallFileOpItem::NativeFileOpFileMovePrepare()
       return NativeFileOpFileCopyPrepare();
   }
 
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::SOURCE_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -747,7 +747,7 @@ nsInstallFileOpItem::NativeFileOpFileMoveComplete()
     }
   }
   else
-    ret = nsInstall::FILE_DOES_NOT_EXIST;
+    ret = nsInstall::SOURCE_DOES_NOT_EXIST;
 
   return ret;
 }
@@ -786,7 +786,7 @@ nsInstallFileOpItem::NativeFileOpFileMoveAbort()
       }
     }
     else
-      ret = nsInstall::FILE_DOES_NOT_EXIST;
+      ret = nsInstall::DESTINATION_DOES_NOT_EXIST;
   }
 
   return ret;
@@ -817,7 +817,7 @@ nsInstallFileOpItem::NativeFileOpDirRenamePrepare()
       return nsInstall::DESTINATION_IS_FILE;
   }
     
-  return nsInstall::FILE_DOES_NOT_EXIST;
+  return nsInstall::SOURCE_DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -849,10 +849,10 @@ nsInstallFileOpItem::NativeFileOpDirRenameComplete()
         return nsInstall::DESTINATION_ALREADY_EXISTS;
     }
     else
-      ret = nsInstall::DIRECTORY_IS_FILE;
+      ret = nsInstall::SOURCE_IS_FILE;
   }
   else  
-    ret = nsInstall::FILE_DOES_NOT_EXIST;
+    ret = nsInstall::SOURCE_DOES_NOT_EXIST;
 
   return ret;
 }
