@@ -249,6 +249,11 @@ function EditorSharedStartup()
 function GetDefaultBrowserColors()
 {
   var colors = new Object();
+  if (!colors) return null;
+  //Initialize to avoid JS warnings
+  colors.TextColor = "";
+  colors.BackgroundColor = "";
+
   var useWinColors = false;
   if (gIsWindows)
   {
@@ -1026,20 +1031,18 @@ function SetEditMode(mode)
       source = gSourceContentWindow.value;
       editorShell.RebuildDocumentFromSource(source);
 
-      // Must handle <title> here to make sure new value is updated
-      //  everwhere (also covers bug in RebuildDocumentFromSource that strips it out!)
-      var titleStart = source.search(/<title>/i);
-      if (titleStart != -1)
+      // Get the text for the <title> from the newly-parsed document
+      // (must do this for proper conversion of "escaped" characters)
+      var title = "";
+      var titlenodelist = window.editorShell.editorDocument.getElementsByTagName("title");
+      if (titlenodelist)
       {
-        // Skip over tag name
-        titleStart += 7;
-        var titleEnd = source.indexOf("<",titleStart);
-        if (titleEnd > titleStart)
-        {
-          var title = source.slice(titleStart, titleEnd);
-          editorShell.SetDocumentTitle(title);
-        }
+        var titleNode = titlenodelist.item(0);
+        if (titleNode && titleNode.firstChild && titleNode.firstChild.data)
+          title = titleNode.firstChild.data;
       }
+      window.editorShell.editorDocument.title = title;
+
       // Clear out the string buffers
       source = null;
       gSourceContentWindow.value = null;
