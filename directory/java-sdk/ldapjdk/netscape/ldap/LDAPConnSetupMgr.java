@@ -129,6 +129,12 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
     private transient int m_attemptCnt = 0;
 
     /**
+     * Connection IDs for ldap trace messages
+     */
+    private static int m_nextId;
+    private int m_id;
+    
+    /**
      * Constructor
      * @param host list of host names to which to connect
      * @param port list of port numbers corresponding to the host list
@@ -140,6 +146,7 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
             m_dsList[i] = new ServerEntry(hosts[i], ports[i], NEVER_USED);
         }
         m_factory = factory;
+        m_id = m_nextId++;
     }
 
     /**
@@ -509,6 +516,15 @@ class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
         return str;
     }    
 
+    int getID() {
+        return m_id;
+    }
+    
+    String getLDAPUrl() {
+        return ((m_factory == null) ? "ldap" : "ldaps")  +
+               "://" + getHost() + ":" + getPort();
+    }
+    
     public Object clone() {
         try {
             LDAPConnSetupMgr cloneMgr = (LDAPConnSetupMgr) super.clone();

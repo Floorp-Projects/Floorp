@@ -869,7 +869,8 @@ public class LDAPSchema implements java.io.Serializable {
 
     private static LDAPEntry readSchema( LDAPConnection ld, String dn )
                                          throws LDAPException {
-        return readSchema( ld, dn, new String[] { "*", "ldapsyntaxes" } );
+        return readSchema( ld, dn, new String[] { "*", "ldapSyntaxes",
+                        "matchingRules", "attributeTypes", "objectClasses" } );        
     }
 
     /**

@@ -45,12 +45,12 @@ class LdapReferralException extends javax.naming.ldap.LdapReferralException {
     }
     
     public Object getReferralInfo() {
-        return m_ldapEx.getURLs();
+        return m_ldapEx.getURLs()[m_referralIdx].toString();
     }
     
     public Context getReferralContext() throws NamingException{
         Hashtable env = m_srcCtx.getEnv().getAllProperties();
-        env.put(ContextEnv.P_PROVIDER_URL, m_ldapEx.getURLs()[m_referralIdx]);
+        env.put(ContextEnv.P_PROVIDER_URL, m_ldapEx.getURLs()[m_referralIdx].toString());
         return new LdapContextImpl(env);
     }
 
@@ -59,7 +59,8 @@ class LdapReferralException extends javax.naming.ldap.LdapReferralException {
     }
     
     public Context getReferralContext(Hashtable env, Control[] reqCtls) throws NamingException{
-        env.put(ContextEnv.P_PROVIDER_URL, m_ldapEx.getURLs()[m_referralIdx]);
+        
+        env.put(ContextEnv.P_PROVIDER_URL, m_ldapEx.getURLs()[m_referralIdx].toString());
         if (reqCtls != null) {
              env.put(ContextEnv.P_CONNECT_CTRLS, reqCtls);
         }             

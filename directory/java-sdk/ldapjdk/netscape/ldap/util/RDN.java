@@ -65,7 +65,11 @@ public final class RDN implements java.io.Serializable {
      * @param rdn DN component
      */
     public RDN( String rdn ) {
-        int index = rdn.indexOf( "=" );
+        String neutralRDN = neutralizeEscapes(rdn);
+        if (neutralRDN == null) {
+            return; // malformed RDN
+        }
+        int index = neutralRDN.indexOf( "=" );
         int next_plus;
 
         // if the rdn doesnt have = or = positions right at the beginning of the rdn
@@ -76,17 +80,17 @@ public final class RDN implements java.io.Serializable {
         Vector types = new Vector();
 
         types.addElement( rdn.substring( 0, index ).trim() );
-        next_plus = findNextMVSeparator( rdn, index ); 
+        next_plus = neutralRDN.indexOf( '+', index ); 
         while ( next_plus != -1 ) {
             m_ismultivalued = true;
-            values.addElement( rdn.substring( index + 1, next_plus - 1 ).trim() );
-            index = rdn.indexOf( "=", next_plus + 1 );
+            values.addElement( rdn.substring( index + 1, next_plus).trim() );
+            index = neutralRDN.indexOf( "=", next_plus + 1 );
             if ( index == -1 ) {
                 // malformed RDN?
                 return;
             }
             types.addElement( rdn.substring( next_plus + 1, index ).trim() );
-            next_plus = findNextMVSeparator( rdn, index );
+            next_plus = neutralRDN.indexOf('+', index );
         }    
         values.addElement( rdn.substring( index + 1 ).trim() );
         
@@ -95,47 +99,102 @@ public final class RDN implements java.io.Serializable {
 
         for( int i = 0; i < types.size(); i++ ) {
             m_type[i] = (String)types.elementAt( i );
+            if (!isValidType(m_type[i])) {
+                m_type = m_value = null;
+                return; // malformed
+            }
             m_value[i] = (String)values.elementAt( i );
+            if (!isValidValue(m_value[i])) {
+                m_type = m_value = null;
+                return; // malformed
+            }
         }
     }
     
-    /* find the next '+' that isn't escaped or in quotes */
-    int findNextMVSeparator( String str, int offset ) {
-        int next_plus = str.indexOf( '+', offset );
-        int next_open_q = str.indexOf( '"', offset );
-        int next_close_q = -1;
-
-        if ( next_plus == offset ) {
-            return offset;
-        }
-        
-        if ( next_open_q > -1 ) {
-            next_close_q = str.indexOf( '"', next_open_q + 1 );
-        }
-
-        while ( next_plus != -1 ) {
-            if ( str.charAt( next_plus - 1 ) != '\\' &&
-                 !( next_open_q < next_plus && next_plus < next_close_q ) ) {
-                return next_plus;
-            }
-
-            next_plus = str.indexOf( '+', next_plus + 1 );
-            if ( next_open_q > -1 && next_close_q > -1 ) {
-                if ( next_close_q < next_plus ) {
-                    next_open_q = str.indexOf( '"', next_close_q + 1 );
+    /**
+     * Neutralize backslash escapes and quoted sequences for easy parsing.
+     * @return rdn string with disabled escapes or null if malformed rdn
+     */
+     static String neutralizeEscapes(String rdn) {
+        if (rdn == null) {
+            return null;
+        }        
+        StringBuffer sb = new StringBuffer(rdn);
+        boolean quoteOn = false;
+        // first pass, disable backslash escapes
+        for (int i=0; i < sb.length(); i++) {
+            if (sb.charAt(i) =='\\') {
+                sb.setCharAt(i, 'x');
+                if (i < sb.length()-1) {
+                    sb.setCharAt(i+1, 'x');
                 }
-            } else {
-                next_open_q = -1;
+                else {
+                    return null;
+                }
             }
-
-            next_close_q = next_open_q > -1 ? str.indexOf( '"', next_open_q + 1 )
-                           : -1;
         }
-        
-        return -1;
-                    
+        // second pass, disable quoted sequences
+        for (int i=0; i < sb.length(); i++) {
+            if (sb.charAt(i) == '"') {
+                quoteOn = !quoteOn;
+                continue;
+            }
+            if (quoteOn) {
+                sb.setCharAt(i, 'x');
+            }
+        }        
+        return quoteOn ? null : sb.toString();
     }
-        
+
+    /**
+     * Type names can not contain any DN special characters
+     */
+    private boolean isValidType(String type) {
+        if (type == null || type.length() < 1) {
+            return false;
+        }
+        for (int i=0; i< type.length(); i++) {
+            for (int j=0; j < DN.ESCAPED_CHAR.length; j++) {
+                if (type.charAt(i) == DN.ESCAPED_CHAR[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Values can contain only single quote sequence, where quotes are
+     * at the beginning and the end of the sequence
+     */
+    private boolean isValidValue(String val) {
+        if (val == null || val.length() < 1) {
+            return false;
+        }
+        // count unescaped '"'
+        int cnt=0, i=0;
+        while (i >=0 && i < val.length()) {
+            i = val.indexOf('"', i);
+            if (i >= 0) {
+                if (i==0 || (val.charAt(i-1) != '\\')) {
+                    cnt++;
+                }
+                i++;
+            }
+        }
+        if (cnt == 0) {
+            return true;
+        }
+        else if (cnt != 2) { // can have only two of them surrounding the value
+            return false;
+        }
+        else if (val.charAt(0) != '"' || val.charAt(val.length()-1) != '"') {
+            return false;
+        }
+    
+        return true;
+    }
+    
     /**
      * Returns the DN component as the first element in an
      * array of strings.
@@ -162,7 +221,10 @@ public final class RDN implements java.io.Serializable {
      * @deprecated use <code>getTypes()</code> instead.
      */
     public String getType() {
-        return m_type[0];
+        if (m_type != null && m_type.length > 0) {
+            return m_type[0];
+        }
+        return null;
     }
 
     /**
@@ -179,7 +241,10 @@ public final class RDN implements java.io.Serializable {
      * @deprecated use <code>getValues()</code> instead.
      */
     public String getValue() {
-        return m_value[0];
+        if (m_value != null && m_value.length > 0) {
+            return m_value[0];
+        }
+        return null;
     }
 
     /**
@@ -203,10 +268,13 @@ public final class RDN implements java.io.Serializable {
      * @return the string representation of the DN component.
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer( m_type[0] + "=" + m_value[0] );
-        
-        for ( int i = 1; i < m_type.length; i++ ) {
-            buf.append( " + " + m_type[i] + "=" + m_value[i] );
+        StringBuffer buf = new StringBuffer();
+                
+        for ( int i = 0; m_type != null  && i < m_type.length; i++ ) {
+            if ( i != 0) {
+                buf.append(" + ");
+            }
+            buf.append( m_type[i] + "=" + m_value[i]);
         }
 
         return buf.toString();

@@ -85,11 +85,11 @@ public class LDAPSearchListener extends LDAPMessageQueue {
 
         // Notify LDAPConnThread to wake up if backlog limit has been reached
         if (result instanceof LDAPSearchResult || result instanceof LDAPSearchResultReference) {
-            LDAPConnection ld = getConnection(result.getMessageID());
-            if (ld != null) {
-                ld.resultRetrieved();
-            }                
-        }            
+            LDAPConnThread connThread = getConnThread(result.getMessageID());
+            if (connThread != null) {
+                connThread.resultRetrieved();
+            }
+        }
         
         return result;
     }
@@ -143,6 +143,23 @@ public class LDAPSearchListener extends LDAPMessageQueue {
         return m_constraints;
     }
 
+    /**
+     * Set new search constraints object.
+     * @param cons LDAP search constraints
+     */
+     void setSearchConstraints(LDAPSearchConstraints cons) {
+        m_constraints = cons;
+    }
+
+    /**
+     * Resets the state of this object, so it can be recycled.
+     * Used by LDAPConnection synchronous operations.
+     */
+    void reset () {
+        super.reset();
+        m_constraints = null;
+    }
+    
     /**
      * Set the key of the cache entry. The listener needs to know this value
      * when the results get processed in the queue. After the results have been

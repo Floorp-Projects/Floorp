@@ -80,12 +80,8 @@ public abstract class JDAPFilter {
     public static JDAPFilter getFilter(String filter) {
         String f = new String(filter);
         f.trim();
-        if (f.startsWith("(") || f.endsWith(")")) {
-            if (f.startsWith("(") && f.endsWith(")")) {
-                return getFilterComp(f.substring(1,f.length()-1));
-            }
-            //unbalanced parentheses
-            throw new IllegalArgumentException("Bad search filter");
+        if (f.startsWith("(") && f.endsWith(")")) {
+            return getFilterComp(f.substring(1,f.length()-1));
         }
         return getFilterComp(filter);
     }

@@ -38,7 +38,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
     private int maxRes;
     private int batch;
     private int serverTimeLimit;
-    private int m_maxBacklog = 100;
+    private int maxBacklog = 100;
 
     /**
      * Constructs an <CODE>LDAPSearchConstraints</CODE> object that specifies
@@ -280,20 +280,20 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * Set the maximum number of unread entries any search listener can
      * have before we stop reading from the server.
      * @param backlog the maximum number of unread entries per listener
-     * @deprecated Use <CODE>LDAPConnection.getOption()</CODE>
+     * @deprecated Use <CODE>LDAPConnection.setOption()</CODE>
      */
     public void setMaxBacklog( int backlog ) {
-        m_maxBacklog = backlog;
+        maxBacklog = backlog;
     }
 
     /**
      * Get the maximum number of unread entries any search listener can
      * have before we stop reading from the server.
      * @return the maximum number of unread entries per listener.
-     * @deprecated Use <CODE>LDAPConnection.setOption()</CODE>
+     * @deprecated Use <CODE>LDAPConnection.getOption()</CODE>
      */
     public int getMaxBacklog() {
-        return m_maxBacklog;
+        return maxBacklog;
     }
 
     /**
@@ -307,6 +307,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
         o.deref = this.deref;
         o.maxRes = this.maxRes;
         o.batch = this.batch;
+        o.maxBacklog = this.maxBacklog;
         
         o.setHopLimit(this.getHopLimit());
         o.setReferrals(this.getReferrals());
@@ -354,7 +355,8 @@ public class LDAPSearchConstraints extends LDAPConstraints
         sb.append("size limit " + maxRes + ", ");
         sb.append("server time limit " + serverTimeLimit + ", ");
         sb.append("aliases " + deref + ", ");
-        sb.append("batch size " + batch);
+        sb.append("batch size " + batch + ", ");
+        sb.append("max backlog " + maxBacklog);
         sb.append('}');
 
         return sb.toString();

@@ -549,7 +549,8 @@ public class LDAPUrl implements java.io.Serializable {
             // the default one.
             try {
                 //  First try iPlanet JSSSocketFactory
-                m_factory = new JSSSocketFactory();
+                Class c = Class.forName("netscape.ldap.factory.JSSSocketFactory");
+                m_factory = (LDAPSocketFactory) c.newInstance();
             }
             catch (Throwable e) {
             }

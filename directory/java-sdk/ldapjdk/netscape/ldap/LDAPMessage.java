@@ -26,7 +26,6 @@ import netscape.ldap.client.opers.*;
 import netscape.ldap.ber.stream.*;
 import java.io.*;
 import java.net.*;
-import java.text.SimpleDateFormat;
 
 
 /**
@@ -81,9 +80,6 @@ public class LDAPMessage implements java.io.Serializable {
     private JDAPProtocolOp m_protocolOp = null;
     private LDAPControl m_controls[] = null;
 
-    // Time Stemp format Hour(0-23):Minute:Second.Milliseconds used for trace msgs
-    static SimpleDateFormat m_timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-    
     /**
      * Constructs a ldap message.
      * @param msgid message identifier
@@ -269,10 +265,8 @@ public class LDAPMessage implements java.io.Serializable {
      * the time stamp. Used for message trace
      * @return ldap message with the time stamp
      */
-    String toTraceString() {
-        String timeStamp = m_timeFormat.format(new Date());
-        StringBuffer sb = new StringBuffer(timeStamp);
-        sb.append(" ");
+    StringBuffer toTraceString() {
+        StringBuffer sb = new StringBuffer(" op=");
         sb.append(m_msgid);
         sb.append(" ");
         sb.append(m_protocolOp.toString());
@@ -281,6 +275,6 @@ public class LDAPMessage implements java.io.Serializable {
             sb.append(" ");
             sb.append(m_controls[i].toString());
         }
-        return sb.toString();
+        return sb;
     }
 }

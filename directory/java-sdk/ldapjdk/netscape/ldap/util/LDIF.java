@@ -136,7 +136,7 @@ public class LDIF implements Serializable {
             m_version = Integer.parseInt(
                 line.substring("version:".length()).trim() );
             if ( m_version != 1 ) {
-                throw( new IOException( "Unexpected " + line ) );
+                throwLDIFException( "Unexpected " + line );
             }
             // Do the next record
             line = d.readLine();
@@ -150,7 +150,7 @@ public class LDIF implements Serializable {
         }
 
         if (!line.startsWith("dn:"))
-            throw new IOException("no dn found in <" + line + ">");
+            throwLDIFException("expecting dn:");
         dn = line.substring(3).trim();
         if (dn.startsWith(":") && (dn.length() > 1)) {
             String substr = dn.substring(1).trim();
@@ -194,7 +194,7 @@ public class LDIF implements Serializable {
                        changetype.equals("modrdn")) {
                 lc = parse_moddn_spec(d);
             } else {
-                throw new IOException("change type not supported");
+                throwLDIFException("change type not supported");
             }
             return lc;
         }
@@ -222,8 +222,7 @@ public class LDIF implements Serializable {
                 int idx = line.indexOf(':');
                 /* Must have a colon */
                 if (idx == -1)
-                    throw new IOException("no ':' found in <" +
-                                          line + ">");
+                    throwLDIFException("no ':' found");
                 /* attribute type */
                 newtype = line.substring(0,idx).toLowerCase();
                 val = "";
@@ -241,7 +240,7 @@ public class LDIF implements Serializable {
                             String filename = url.getFile();
                             val = getFileContent(filename);
                         } catch (MalformedURLException ex) {
-                            throw new IOException(
+                            throwLDIFException(
                                 ex +
                                 ": cannot construct url "+
                                 line.substring(idx+1).trim());
@@ -350,7 +349,7 @@ public class LDIF implements Serializable {
                 }
                 controlVector.addElement( parse_control_spec( line ) );
             } else {
-                throw new IOException("invalid SEP" );
+                throwLDIFException("invalid SEP" );
             }
             line = d.readLine();
         } 
@@ -384,7 +383,7 @@ public class LDIF implements Serializable {
             } else if (line.startsWith("replace:")) {
                 oper = LDAPModification.REPLACE;
             } else
-                throw new IOException("unknown modify type");
+                throwLDIFException("unknown modify type");
 
             LDIFAttributeContent ac =
                 (LDIFAttributeContent)parse_ldif_content(d);
@@ -407,12 +406,12 @@ public class LDIF implements Serializable {
             } else {
                 int index = line.indexOf(":");
                 if (index == -1)
-                    throw new IOException("colon missing in "+line);
+                    throwLDIFException("colon missing in "+line);
 
                 String attrName = line.substring(index+1).trim();
 
                 if (oper == LDAPModification.ADD)
-                    throw new IOException("add operation needs the value for attribute "+attrName);
+                    throwLDIFException("add operation needs the value for attribute "+attrName);
                 LDAPAttribute attr = new LDAPAttribute(attrName);
                 LDAPModification mod = new LDAPModification(oper, attr);
                 mc.addElement(mod);
@@ -456,7 +455,7 @@ public class LDIF implements Serializable {
                 else if (str.equals("1"))
                     mc.setDeleteOldRDN(true);
                 else
-                    throw new IOException("Incorrect input for deleteOldRdn ");
+                    throwLDIFException("Incorrect input for deleteOldRdn ");
             } else if (line.startsWith("newsuperior:") &&
                        (line.length() > ("newsuperior:".length()+1))) {
                 mc.setNewParent(line.substring(
@@ -518,7 +517,7 @@ public class LDIF implements Serializable {
         int idx = line.indexOf(':') + 2;
         /* OID, must be present */
         if ( idx >= len ) {
-            throw new IOException("OID required for control");
+            throwLDIFException("OID required for control");
         }
         line = line.substring(idx).trim();
         idx = line.indexOf(' ');
@@ -540,7 +539,7 @@ public class LDIF implements Serializable {
             } else if ( criticalVal.compareTo("false") == 0 ) {
                 criticality = false;
             } else {
-                throw new IOException(
+                throwLDIFException(
                     "Criticality for control must be true" +
                     " or false, not " + criticalVal);
             }
@@ -560,7 +559,7 @@ public class LDIF implements Serializable {
                             String filename = url.getFile();
                             val = getFileContent(filename);
                         } catch (MalformedURLException ex) {
-                            throw new IOException(
+                            throwLDIFException(
                                 ex + ": cannot construct url "+
                                 urlString);
                         }
@@ -641,6 +640,15 @@ public class LDIF implements Serializable {
     }
 
     /**
+     * Throws a LDIF file exception including the current line number.
+     * @param msg Error message
+     */
+    protected void throwLDIFException(String msg)throws IOException {
+        throw new IOException ("line " +
+            (m_currLineNum-m_continuationLength) + ": " + msg);
+    }      
+    
+    /**
      * Internal variables
      */
     private int m_version = 1;
@@ -649,6 +657,8 @@ public class LDIF implements Serializable {
     private String m_source = null;
     private MimeBase64Decoder m_decoder = null;
     private boolean m_currEntryDone = false;
+    private int m_currLineNum;
+    private int m_continuationLength;
 
     /* Concatenate continuation lines, if present */
     class LineReader {
@@ -662,6 +672,7 @@ public class LDIF implements Serializable {
         String readLine() throws IOException {
             String line = null;
             String result = null;
+            int readCnt = 0, continuationLength = 0;
             do {
                 /* Leftover line from last time? */
                 if ( _next != null ) {
@@ -671,6 +682,7 @@ public class LDIF implements Serializable {
                     line = _d.readLine();
                 }
                 if (line != null) {
+                    readCnt++;
                     /* Empty line means end of record */
                     if( line.length() < 1 ) {
                         if ( result == null )
@@ -691,19 +703,28 @@ public class LDIF implements Serializable {
                         }
                     } else {
                         /* Continuation line */
-                        if ( result == null )
-                            throw new IOException("continuation out of " +
-                                                  "nowhere <" +
-                                                  line + ">");
+                        if ( result == null ) {
+                            m_currLineNum += readCnt;
+                            throwLDIFException("continuation out of nowhere");
+                        }
                         result += line.substring(1);
+                        continuationLength++;
                     }
                 } else {
                     /* End of file */
                     break;
                 }
             } while ( true );
-            if ( line == null )
-                m_done = true;
+
+            m_done = ( line == null );
+            
+            m_currLineNum += readCnt;
+            if (_next != null) {
+                // read one line ahead
+                m_currLineNum--;
+            }            
+            m_continuationLength = continuationLength;
+            
             return result;
         }
         private BufferedReader _d;

@@ -163,7 +163,7 @@ public class JDAPBindRequest implements JDAPProtocolOp {
      */
     public String getParamString() {
         return "{version=" + m_version + ", name=" + m_name +
-          ", authentication=" + m_password + "}";
+               ", authentication=" + ((m_password == null) ? m_password : "********") + "}";
     }
 
     /**

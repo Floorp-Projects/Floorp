@@ -93,56 +93,17 @@ public final class DN implements Serializable {
      * @param dn string representation of the distinguished name
      */
     public DN(String dn) {
-        if (dn == null)
-            return;
-        int index;
 
+        String neutralDN = neutralizeEscapes(dn);
+        if (neutralDN == null) {
+            return; // malformed
+        }
+        
         // RFC1485
-        if (isRFC(dn)) {
-            StringBuffer buffer = new StringBuffer(dn);
-
-            int i=0;
-            StringBuffer rbuffer = new StringBuffer();
-            boolean openQuotes = false;
-            while (i < buffer.length()) {
-                rbuffer.append(buffer.charAt(i));
-                if (buffer.charAt(i) == '\\') {
-                    char c = buffer.charAt(i+1);
-                    for (int j=0; j<ESCAPED_CHAR.length; j++) {
-                        if (c == ESCAPED_CHAR[j]) {
-                            i++;
-                            rbuffer.append(buffer.charAt(i));
-                            break;
-                        }
-                    }
-                } else if (buffer.charAt(i) == '"') {
-                    // this is the second "
-                    if (openQuotes) {
-                        openQuotes = false;
-                    } else
-                        // this is the first "
-                        openQuotes = true;
-                } else if (buffer.charAt(i) == ',') {
-                    // the content is not within the double quotes
-                    if (!openQuotes) {
-                        rbuffer.setLength(rbuffer.length()-1);
-                        if (!appendRDN(rbuffer))
-                            return;
-                        rbuffer = new StringBuffer();
-                    }
-                }
-                i++;
-            }
-
-            // if we cannot find the second ", then the DN is not in proper format
-            if (openQuotes) {
-                m_rdns.removeAllElements();
-                return;
-            }
-
-            if (!appendRDN(rbuffer))
-                return;
-        } else if (dn.indexOf('/') != -1) { /* OSF */
+        if (neutralDN.indexOf(',') != -1 || neutralDN.indexOf(';') != -1) {
+            parseRDNs(neutralDN, dn, ",;");
+        }
+        else if (dn.indexOf('/') != -1) { /* OSF */
             m_dnType = OSF;
             StringTokenizer st = new StringTokenizer(dn, "/");
             Vector rdns = new Vector();
@@ -156,10 +117,57 @@ public final class DN implements Serializable {
             /* reverse the RDNs order */
             for (int i = rdns.size() - 1; i >= 0; i--) {
                 m_rdns.addElement(rdns.elementAt(i));
-            }
-        } else if (RDN.isRDN(dn)) {
+            }        
+        }        
+        else if (RDN.isRDN(dn)) {
             m_rdns.addElement(new RDN(dn));
         }
+    }
+
+    /**
+     * Neutralize backslash escapes and quoted sequences for easy parsing.
+     * @return dn string with disabled escapes or null if malformed dn
+     */    
+    private String neutralizeEscapes(String dn) {
+        String neutralDN = RDN.neutralizeEscapes(dn);
+        if (neutralDN == null) {
+            return null; // malformed
+        }
+        
+        String dn2 = neutralDN.trim();
+        if (dn2.length() == 0) {
+            return neutralDN;
+        }
+        if (dn2.charAt(0) == ';' || dn2.charAt(0)  == ',') {
+            return null; // malformed
+        }
+        int lastIdx = dn2.length() -1;
+        if (dn2.charAt(lastIdx) == ';' || dn2.charAt(lastIdx) == ',') {
+            return null; // malformed
+        }
+        return neutralDN;
+    }
+    
+    /**
+     * Parse RDNs in the DN
+     */
+    private void parseRDNs(String neutralDN, String dn, String sep) {
+        int startIdx=0, endIdx=0;
+        RDN rdn = null;
+        StringTokenizer tok = new StringTokenizer(neutralDN, sep);
+        while (tok.hasMoreElements()) {
+            String neutralRDN = tok.nextToken();
+            endIdx = startIdx + neutralRDN.length();
+            rdn = new RDN (dn.substring(startIdx, endIdx));
+            if (rdn.getTypes() != null) {
+                m_rdns.addElement(rdn);
+            }
+            else { // malformed rdn
+                m_rdns.removeAllElements();
+                return;
+            }
+            startIdx = endIdx + 1;
+        }        
     }
 
     /**
@@ -448,32 +456,8 @@ public final class DN implements Serializable {
         return true;
     }
 
-    private boolean isRFC(String dn) {
-        int index =dn.indexOf(',');
-        /* Can't have the first or last character be the first unescaped comma */
-        while ((index > 0) && (index < (dn.length() -1))) {
-            /* Found an unescaped comma */
-            if (dn.charAt(index-1) != '\\') {
-                return true;
-            }
-            /* Found an escaped comma, keep searching */
-            index=dn.indexOf(',',index+1);
-        }
-        return false;
-    }
-
-    private boolean appendRDN(StringBuffer buffer) {
-        String rdn = new String(buffer);
-        if (RDN.isRDN(rdn)) {
-            m_rdns.addElement(new RDN(rdn));
-            return true;
-        }
-        m_rdns.removeAllElements();
-        return false;
-    }
-
     /**
      * Array of the characters that may be escaped in a DN.
      */
-    public static final char[] ESCAPED_CHAR = {',', '+', '"', '\\', ';'};
+    public static final char[] ESCAPED_CHAR = {',', '+', '"', '\\', '<', '>', ';'};
 }

@@ -260,11 +260,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.13f);
+    private final static Float SdkVersion = new Float(4.14f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.13f);
+    private final static Float MinorVersion = new Float(0.14f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -1746,10 +1746,10 @@ public class LDAPConnection
 
         LDAPResponseListener myListener = getResponseListener ();
         try {
-            if (m_referralConnection != null) {
+            if (m_referralConnection != null && m_referralConnection.isConnected()) {
                 m_referralConnection.disconnect();
-                m_referralConnection = null;
             }
+            m_referralConnection = null;
             m_bound = false;
             sendRequest(new JDAPBindRequest(m_protocolVersion, m_boundDN,
                                             m_boundPasswd),
@@ -1883,25 +1883,26 @@ public class LDAPConnection
      * @see netscape.ldap.LDAPConnection#connect(java.lang.String, int, java.lang.String, java.lang.String)
      */
     public synchronized void disconnect() throws LDAPException {
-        if (m_referralConnection != null) {
-            m_referralConnection.disconnect();
-            m_referralConnection = null;
-        }
-
         if (!isConnected())
             throw new LDAPException ( "unable to disconnect() without connecting",
                                       LDAPException.OTHER );
         
         // Clone the Connection Setup Manager if the connection is shared
-        if (m_thread.getClientCount() > 1) {
+        if (m_thread.isRunning() && m_thread.getClientCount() > 1) {
             m_connMgr = (LDAPConnSetupMgr) m_connMgr.clone();
             m_connMgr.disconnect();
         }
-    
+
+        if (m_referralConnection != null && m_referralConnection.isConnected()) {
+            m_referralConnection.disconnect();
+        }
+        m_referralConnection = null;
+
         if (m_cache != null) {
             m_cache.removeReference();
             m_cache = null;
         }
+
         deleteThreadConnEntry();
         deregisterConnection();
     }
@@ -1934,7 +1935,9 @@ public class LDAPConnection
      * Remove the association between this object and the connection thread
      */
     synchronized void deregisterConnection() {
-        m_thread.deregister(this);
+        if (m_thread != null && m_thread.isRunning()) {
+            m_thread.deregister(this);
+        }
         m_thread = null;
         m_bound = false;
     }
@@ -4165,7 +4168,7 @@ public class LDAPConnection
      * Modifying this option sets the <CODE>LDAPv2.BIND</CODE> option to null.
      * <P>By default, the value of this option is <CODE>null</CODE>.</TD></TR>
      * <TR VALIGN=BASELINE><TD>
-     * <CODE>LDAPv2.BIND>/CODE></TD>
+     * <CODE>LDAPv2.BIND</CODE></TD>
      * <TD><CODE>LDAPBind</CODE></TD>
      * <TD>Specifies an object with a class that implements the
      * <CODE>LDAPBind</CODE>
@@ -4207,7 +4210,8 @@ public class LDAPConnection
      * <TD><CODE>Integer</CODE></TD>
      * <TD>Specifies the maximum number of search results to accumulate in an
      * LDAPSearchResults before suspending the reading of input from the server.
-     * <P>By default, the value of this option is 100.</TD></TR>
+     * <P>By default, the value of this option is 100. The value 0 means there
+     *  is no limit.</TD></TR>
      * </TABLE><P>
      * @return the value for the option wrapped in an object.  (You
      * need to cast the returned value as its appropriate type. For
@@ -4363,7 +4367,7 @@ public class LDAPConnection
      * Modifying this option sets the <CODE>LDAPv2.BIND</CODE> option to null.
      * <P>By default, the value of this option is <CODE>null</CODE>.</TD></TR>
      * <TR VALIGN=BASELINE><TD>
-     * <CODE>LDAPv2.BIND>/CODE></TD>
+     * <CODE>LDAPv2.BIND</CODE></TD>
      * <TD><CODE>LDAPBind</CODE></TD>
      * <TD>Specifies an object with a class that implements the
      * <CODE>LDAPBind</CODE>
@@ -4405,7 +4409,8 @@ public class LDAPConnection
      * <TD><CODE>Integer</CODE></TD>
      * <TD>Specifies the maximum number of search results to accumulate in an
      * LDAPSearchResults before suspending the reading of input from the server.
-     * <P>By default, the value of this option is 100.</TD></TR>
+     * <P>By default, the value of this option is 100. The value 0 means there
+     *  is no limit.</TD></TR>
      * </TABLE><P>
      * @param value the value to assign to the option.  The value must be
      * the java.lang object wrapper for the appropriate parameter
@@ -4481,14 +4486,8 @@ public class LDAPConnection
                                       LDAPException.PARAM_ERROR );
           return;
         case MAXBACKLOG:
-            int val = ((Integer)value).intValue();
-            if ( val < 1 ) {
-                throw new LDAPException ( "MAXBACKLOG must be at least 1",
-                                          LDAPException.PARAM_ERROR );
-            } else {
-                cons.setMaxBacklog(((Integer)value).intValue());
-            }
-            return;
+          cons.setMaxBacklog(((Integer)value).intValue());
+          return;
         default:
           throw new LDAPException ("invalid option",
                                    LDAPException.PARAM_ERROR );
@@ -4808,6 +4807,7 @@ public class LDAPConnection
         else {
             l = (LDAPSearchListener)m_searchListeners.elementAt (0);
             m_searchListeners.removeElementAt (0);
+            l.setSearchConstraints(cons);
         }
         return l;
     }
@@ -5010,7 +5010,7 @@ public class LDAPConnection
     }
     
     
-    private String createReferralConnectList(LDAPUrl[] urls, boolean allowEmptyHost) {
+    private String createReferralConnectList(LDAPUrl[] urls) {
         String connectList = "";
         String host = null;
         int port =0;
@@ -5019,11 +5019,9 @@ public class LDAPConnection
             host = urls[i].getHost();
             port = urls[i].getPort();
             if ( (host == null) || (host.length() < 1) ) {
-                if (allowEmptyHost) {
-                    // If no host:port was specified, use the latest (hop-wise) parameters                    
-                    host = getHost();
-                    port = getPort();
-                }
+                // If no host:port was specified, use the latest (hop-wise) parameters                    
+                host = getHost();
+                port = getPort();
             }
             connectList += (i==0 ? "" : " ") + host+":"+port;
         }
@@ -5035,7 +5033,13 @@ public class LDAPConnection
         String connHost = ldc.getHost();
         int    connPort = ldc.getPort();
         for (int i = 0; i < urls.length; i++) {
-            if (connHost.equals(urls[i].getHost()) && connPort == urls[i].getPort()) {
+            if (urls[i].getHost() == null || urls[i].getHost().length() < 1) {
+                // No host:port specified, compare with the latest (hop-wise) parameters 
+                if (connHost.equals(getHost()) && connPort == getPort()) {
+                    return urls[i];
+                }
+            }
+            else if (connHost.equals(urls[i].getHost()) && connPort == urls[i].getPort()) {
                 return urls[i];
             }
         }
@@ -5061,7 +5065,7 @@ public class LDAPConnection
         }
 
         String connectList = 
-            createReferralConnectList(e.getURLs(), /*allowEmptyHost=*/false);
+            createReferralConnectList(e.getURLs());
         // If there are no referrals (because the server isn't set up for
         // them), give up here
         if (connectList == null) {
@@ -5071,7 +5075,17 @@ public class LDAPConnection
 
         LDAPConnection connection = null;
         connection = prepareReferral(connectList, cons);
-        connection.authenticate(m_protocolVersion, m_boundDN, m_boundPasswd);
+        try {
+            connection.authenticate(m_protocolVersion, m_boundDN, m_boundPasswd);
+        }
+        catch (LDAPException authEx) {
+            // Disconnect needed to terminate the LDAPConnThread
+            try  {                
+                connection.disconnect();
+            }
+            catch (LDAPException ignore) {}
+            throw authEx;
+        }
         return connection;
     }
 
@@ -5117,14 +5131,14 @@ public class LDAPConnection
         LDAPUrl referralURL = null;
         LDAPConnection connection = null;
 
-        if (m_referralConnection != null) {
+        if (m_referralConnection != null && m_referralConnection.isConnected()) {
             referralURL = findReferralURL(m_referralConnection, urls);
         }
         if (referralURL != null) {
             connection = m_referralConnection;
         }
         else {
-            String connectList = createReferralConnectList(urls, /*allowEmptyHost=*/true);
+            String connectList = createReferralConnectList(urls);
             connection = prepareReferral( connectList, cons );
                 
             // which one did we connect to...
@@ -5240,7 +5254,7 @@ public class LDAPConnection
             return null;
         }
 
-        String connectList = createReferralConnectList(u, /*allowEmptyHost=*/false);
+        String connectList = createReferralConnectList(u);
         LDAPConnection connection = prepareReferral( connectList, cons);
         referralRebind(connection, cons);
         LDAPExtendedOperation results =
@@ -5301,17 +5315,6 @@ public class LDAPConnection
         } catch (Exception e) {
         }
         return null;
-    }
-
-    /**
-     * This is called when a search result has been retrieved from the incoming
-     * queue. We use the notification to unblock the listener thread, if it
-     * is waiting for the backlog to lighten.
-     */
-    void resultRetrieved() {
-        if ( m_thread != null ) {
-            m_thread.resultRetrieved();
-        }
     }
 
     /**

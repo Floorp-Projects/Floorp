@@ -17,7 +17,8 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *     bugzilla 62700: Joe Rank (joer@trapdoor.net)
  */
 package netscape.ldap.util;
 
@@ -92,7 +93,12 @@ public class LDIFWriter extends LDAPWriter {
 		/* Loop on values for this attribute */
 		Enumeration enumVals = attr.getByteValues();
 
-		if ( enumVals != null ) {
+		if ( enumVals == null ) {
+			printString( attrName + m_sep + ' ' );
+			return;
+		}
+        
+		while (enumVals.hasMoreElements()) {            
 			if ( m_toFiles ) {
 				try {
 					FileOutputStream f = getTempFile( attrName );
@@ -122,8 +128,6 @@ public class LDIFWriter extends LDAPWriter {
 					}
 				}
 			}
-		} else {
-			printString( attrName + m_sep + ' ' );
 		}
 	}
 

@@ -26,7 +26,6 @@ import java.net.*;
 import java.io.*; 
 import javax.net.ssl.*; 
 import netscape.ldap.*;
-import com.sun.net.ssl.*; 
 
 /**
  * Creates an SSL socket connection to a server, using the JSSE package
@@ -74,10 +73,16 @@ public class JSSESocketFactory
             SSLSocketFactory factory =
                 (SSLSocketFactory)SSLSocketFactory.getDefault();
             sock = (SSLSocket)factory.createSocket(host, port);
+
             if (suites != null) {
                 sock.setEnabledCipherSuites(suites);
-                sock.startHandshake();
             }
+            
+            // Start handshake manually to immediately expose potential
+            // SSL errors as exceptions. Otherwise, handshake will take
+            // place first time the data are written to the socket.
+            sock.startHandshake();
+
         } catch (UnknownHostException e) {
             throw new LDAPException("SSL connection to " + host +
                                     ":" + port + ", " + e.getMessage(),
@@ -87,7 +92,7 @@ public class JSSESocketFactory
                                     ":" + port + ", " + f.getMessage(),
                                     LDAPException.CONNECT_ERROR);
         }
-  
+
         return sock;
     }
 }

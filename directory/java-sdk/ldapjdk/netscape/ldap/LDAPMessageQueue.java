@@ -235,22 +235,34 @@ class LDAPMessageQueue implements java.io.Serializable {
      * new request with the existing one.
      * @param mq2 message queue to merge with this one
      */
-    synchronized void merge(LDAPMessageQueue mq2) {
-        synchronized (mq2) {
-            for (int i=0; i < mq2.m_requestList.size(); i++) {
-                m_requestList.addElement(mq2.m_requestList.elementAt(i));
-            }
-            for (int i=0; i < mq2.m_messageQueue.size(); i++) {
-                m_messageQueue.addElement(mq2.m_messageQueue.elementAt(i));
-            }
-            if (mq2.m_exception != null) {
-                m_exception = mq2.m_exception;
-            }
+    void merge(LDAPMessageQueue mq2) {
+        
+        // Yield just in case the LDAPConnThread is in the process of
+        // dispatching a message
+        Thread.yield();
+        
+        synchronized(this) {
             
-            mq2.reset();
-            notifyAll(); // notify for mq2
+            synchronized (mq2) {
+                for (int i=0; i < mq2.m_messageQueue.size(); i++) {
+                    m_messageQueue.addElement(mq2.m_messageQueue.elementAt(i));
+                }
+                if (mq2.m_exception != null) {
+                    m_exception = mq2.m_exception;
+                }
+                for (int i=0; i < mq2.m_requestList.size(); i++) {
+                    RequestEntry entry = (RequestEntry)mq2.m_requestList.elementAt(i);
+                    m_requestList.addElement(entry);
+                    // Notify LDAPConnThread to redirect mq2 designated responses to this mq
+                    entry.connThread.changeListener(entry.id, this);
+                }
+                    
+                mq2.reset();
+                notifyAll(); // notify for mq2
+            }
+
+            notifyAll();  // notify this mq
         }
-        notifyAll();  // notify this mq
     }
 
 
@@ -278,7 +290,7 @@ class LDAPMessageQueue implements java.io.Serializable {
                 getConnection(msg.getMessageID()).markConnAsBound();
             }                
         }
-        
+                
         notifyAll ();
     }
 

@@ -71,15 +71,9 @@ public class JDAPAbandonRequest implements JDAPProtocolOp {
          *     0x50 (implicit tagged integer)
          *     0x01 (length)
          *     0x01 (message id)
-         * [*] umich-ldap-v3.0:
-         *     0x50 (tag APPLICATION|CONSTRUCTED)
-         *     0x85 0x00 0x00 0x00 0x07 (tag length)
-         *     0x02 (integer tag)
-         *     0x85 0x00 0x00 0x00 0x01 0x01 (message id)
          */
         BERInteger i = new BERInteger(m_msgid);
-        BERTag element = new BERTag(BERTag.APPLICATION|BERTag.CONSTRUCTED|16,
-          i, true);
+        BERTag element = new BERTag(BERTag.APPLICATION|16, i, true);
         return element;
     }
 
