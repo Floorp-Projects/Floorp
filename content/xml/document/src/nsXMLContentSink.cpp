@@ -96,6 +96,8 @@
 #include "nsXMLPrettyPrinter.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
@@ -666,6 +668,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Do security check
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->
       CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), url,
@@ -674,6 +677,22 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
     rv = secMan->CheckSameOriginURI(mDocumentURI, url);
     NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    // Do content policy check
+    PRInt16 decision = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                   url,
+                                   mDocument->GetDocumentURI(),
+                                   aElement,
+                                   type,
+                                   nsnull,
+                                   &decision);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (NS_CP_REJECTED(decision)) {
+      return NS_OK;
+    }
 
     return LoadXSLStyleSheet(url);
   }
