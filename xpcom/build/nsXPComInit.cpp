@@ -135,6 +135,22 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService);
 #endif
 
+static NS_METHOD
+nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer, 
+                                       const nsIID& aIID, 
+                                       void* *aInstancePtr)
+{
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+    NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+    
+    nsCOMPtr<nsIInterfaceInfoManager> iim(dont_AddRef(XPTI_GetInterfaceInfoManager()));
+    if (!iim) {
+        return NS_ERROR_FAILURE;
+    }
+
+    return iim->QueryInterface(aIID, aInstancePtr);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
 //
@@ -254,7 +270,8 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor),
 
     COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create),
-    COMPONENT(VARIANT, nsVariantConstructor)
+    COMPONENT(VARIANT, nsVariantConstructor),
+    COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton)
 };
 
 #undef COMPONENT
