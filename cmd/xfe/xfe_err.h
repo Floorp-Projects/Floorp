@@ -479,7 +479,7 @@ ResDef(XFE_HELPERS_UNKNOWN, XFE_ERR_OFFSET + 204, "Unknown:Prompt User")
 ResDef(XFE_HELPERS_SAVE, XFE_ERR_OFFSET + 205, "Save To Disk")
 ResDef(XFE_HELPERS_PLUGIN, XFE_ERR_OFFSET + 206, "Plug In : %s")
 ResDef(XFE_HELPERS_EMPTY_MIMETYPE, XFE_ERR_OFFSET + 207,
-"Mime type cannot be emtpy.")
+"Mime type cannot be empty.")
 ResDef(XFE_HELPERS_LIST_HEADER, XFE_ERR_OFFSET + 208, "Description|Handled By")
 ResDef(XFE_MOVEMAIL_CANT_DELETE_LOCK, XFE_ERR_OFFSET + 209,
 "Can't get new mail; a lock file %s exists.")
@@ -756,7 +756,7 @@ ResDef(XFE_AB_SECUR_YES, XFE_ERR_OFFSET + 322,
 	   "\n"
 	   "This means that when you send this person email, it can be encrypted.\n"
 	   "Encrypting a message is like sending it in an envelope, rather than a\n"
-	   "postcard. It makes it difficult for other peope to view your message.\n"
+	   "postcard. It makes it difficult for other people to view your message.\n"
 	   "\n"
 	   "This person's Security Certificate will expire on %s. When it\n"
 	   "expires, you will no longer be able to send encrypted mail to this\n"
@@ -795,10 +795,10 @@ ResDef(XFE_AB_SECUR_YOU_YES, XFE_ERR_OFFSET + 326,
 	   "This means that you can receive encrypted mail. In order to be able to\n"
 	   "do this, you must first send mail to a person and sign the message. By\n"
 	   "doing so, you send them your certificate, which makes it possible for\n"
-	   "them to send you encryped mail.\n"
+	   "them to send you encrypted mail.\n"
 	   "\n"
 	   "Encrypting a message is like sending it in a envelope, rather than a\n"
-	   "postcard. It makes it difficult for other peope to eavesdrop on your\n"
+	   "postcard. It makes it difficult for other people to eavesdrop on your\n"
 	   "message.\n"
 	   "\n"
 	   "Your Security Certificate will expire on %s. Before it expires,\n"
@@ -1102,7 +1102,7 @@ ResDef(XFE_SPLASH_INITIALIZING_SECURITY_LIBRARY, XFE_ERR_OFFSET + 456, "Initiali
 ResDef(XFE_SPLASH_INITIALIZING_NETWORK_LIBRARY, XFE_ERR_OFFSET + 457, "Initializing Network Library")
 ResDef(XFE_SPLASH_INITIALIZING_MESSAGE_LIBRARY, XFE_ERR_OFFSET + 458, "Initializing Message Library")
 ResDef(XFE_SPLASH_INITIALIZING_IMAGE_LIBRARY, XFE_ERR_OFFSET + 459, "Initializing Image Library")
-ResDef(XFE_SPLASH_INITIALIZING_MOCHA, XFE_ERR_OFFSET + 460, "Initializing Javascript")
+ResDef(XFE_SPLASH_INITIALIZING_MOCHA, XFE_ERR_OFFSET + 460, "Initializing JavaScript")
 ResDef(XFE_SPLASH_INITIALIZING_PLUGINS, XFE_ERR_OFFSET + 461, "Initializing Plugins")
 
 
@@ -1255,7 +1255,7 @@ ResDef(XFE_MOZILLA_INVALID_REMOTE_OPTION, XFE_ERR_OFFSET + 508,
 	   "%s: invalid `-remote' option \"%s\"\n")
 
 ResDef(XFE_MOZILLA_ID_OPTION_MUST_PRECEED_REMOTE_OPTIONS, XFE_ERR_OFFSET + 509,
-	   "%s: the `-id' option must preceed all `-remote' options.\n")
+	   "%s: the `-id' option must precede all `-remote' options.\n")
 
 ResDef(XFE_MOZILLA_ONLY_ONE_ID_OPTION_CAN_BE_USED, XFE_ERR_OFFSET + 510,
 	   "%s: only one `-id' option may be used.\n")
@@ -1310,7 +1310,7 @@ ResDef(XFE_COMMANDS_HTML_HELP_USAGE, XFE_ERR_OFFSET + 525,
 	   "%s: usage: htmlHelp(map-file, id, search-text)\n")
 
 ResDef(XFE_COMMANDS_UNPARSABLE_ENCODING_FILTER_SPEC, XFE_ERR_OFFSET + 526,
-	   "%s: unparsable encoding filter spec: %s\n")
+	   "%s: encoding filter spec not parsable: %s\n")
 
 ResDef(XFE_COMMANDS_UPLOAD_FILE, XFE_ERR_OFFSET + 527,
 	   "Upload File")
@@ -1377,7 +1377,7 @@ ResDef(XFE_REMOTE_S_509_INTERNAL_ERROR, XFE_ERR_OFFSET + 546,
 	   "window 0x%x to a widget")
 
 ResDef(XFE_REMOTE_S_500_UNPARSABLE_COMMAND, XFE_ERR_OFFSET + 547,
-	   "500 unparsable command: %s")
+	   "500 command not parsable: %s")
 
 ResDef(XFE_REMOTE_S_501_UNRECOGNIZED_COMMAND, XFE_ERR_OFFSET + 548,
 	   "501 unrecognized command: %s")

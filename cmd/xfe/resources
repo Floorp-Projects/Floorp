@@ -5679,7 +5679,7 @@ Reuse message window \n\
 *prefs*mailnewsMessages*wrapToggle.labelString: Wrap incoming, plain text messages to window width
 *prefs*mailnewsMessages*wrapLengthLabel.labelString: Wrap outgoing, plain text messages at:
 *prefs*mailnewsMessages*wrapLengthAfterLabel.labelString: characters
-*prefs*mailnewsMessages*eightbitLabel.labelString: Send messages that use 8-bit charaters:
+*prefs*mailnewsMessages*eightbitLabel.labelString: Send messages that use 8-bit characters:
 *prefs*mailnewsMessages*eightbitAsIsToggle.labelString: As is (does not work well with some mail servers)
 *prefs*mailnewsMessages*eightbitQuotedToggle.labelString: \
 Using the "quoted printable" MIME encoding \n\
