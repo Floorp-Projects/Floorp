@@ -96,7 +96,6 @@
 #endif
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -171,6 +170,8 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 #define PREF_4X_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_4X_NEWS_NOTIFY_ON "news.notify.on"
 #define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
+#define PREF_4X_MAIL_ATTACH_VCARD "mail.attach_vcard"
+#define PREF_4X_MAIL_IDENTITY_VCARD_ROOT "mail.identity.vcard"
 
 #define PREF_4X_AUTOCOMPLETE_ON_LOCAL_AB "ldap_2.autoComplete.useAddressBooks"
 #define PREF_MOZILLA_AUTOCOMPLETE_ON_LOCAL_AB "mail.enable_autocomplete"
@@ -211,8 +212,7 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
   nsXPIDLCString macro_oldStr; \
   nsresult macro_rv; \
   macro_rv = IDENTITY->MACRO_GETTER(getter_Copies(macro_oldStr));	\
-  if (NS_FAILED(macro_rv)) return macro_rv;	\
-  if (!macro_oldStr) { \
+  if (NS_FAILED(macro_rv) || !macro_oldStr) { \
     IDENTITY->MACRO_SETTER("");	\
   }\
   else {	\
@@ -788,9 +788,23 @@ nsMessengerMigrator::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
   MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
-  MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetSignature);
-  MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetAttachSignature);
-  MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_SIGNATURE_DATE,identity,SetSignatureDate);
+  MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetSignature)
+  MIGRATE_SIMPLE_FILE_PREF_TO_BOOL_PREF(PREF_4X_MAIL_SIGNATURE_FILE,identity,SetAttachSignature)
+  MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_SIGNATURE_DATE,identity,SetSignatureDate)
+
+  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_ATTACH_VCARD, identity, SetAttachVCard)
+  nsCOMPtr <nsIAddressBook> ab = do_CreateInstance(NS_ADDRESSBOOK_CONTRACTID);
+  if (ab) 
+  {
+      nsXPIDLCString escapedVCardStr;
+      rv = ab->Convert4xVCardPrefs(PREF_4X_MAIL_IDENTITY_VCARD_ROOT, getter_Copies(escapedVCardStr));
+      if (NS_SUCCEEDED(rv) && !escapedVCardStr.IsEmpty()) 
+      {
+          rv = identity->SetEscapedVCard(escapedVCardStr.get());
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set escaped vCard string");
+      }
+  }    
+
   /* NOTE:  if you add prefs here, make sure you update nsMsgIdentity::Copy() */
   return NS_OK;
 }
@@ -2000,7 +2014,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to append filename");
   if (NS_FAILED(rv)) return;
      
-  nsCOMPtr <nsIAddressBook> ab = do_CreateInstance(kAddressBookCID, &rv);
+  nsCOMPtr <nsIAddressBook> ab = do_CreateInstance(NS_ADDRESSBOOK_CONTRACTID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv) && ab, "failed to get address book");
   if (NS_FAILED(rv) || !ab) return;
 

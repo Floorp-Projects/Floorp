@@ -2295,6 +2295,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
  "ldap_2.server.*.description"
  "intl.font*.fixed_font"
  "intl.font*.prop_font"
+ "mail.identity.vcard.*"
  */
 
 static const char *prefsToConvert[] = {
@@ -2443,6 +2444,21 @@ void ldapPrefEnumerationFunction(const char *name, void *data)
   }
 }
 
+static
+void vCardPrefEnumerationFunction(const char *name, void *data)
+{
+  nsCStringArray *arr;
+  arr = (nsCStringArray *)data;
+#ifdef DEBUG_UTF8_CONVERSION
+  printf("vCardPrefEnumerationFunction: %s\n", name);
+#endif 
+
+  // the 4.x vCard prefs might need converting
+  nsCString str(name);
+  arr->AppendCString(str);
+}
+
+
 typedef struct {
     nsIPref *prefs;
     const char* charSet;
@@ -2481,6 +2497,7 @@ nsPrefConverter::ConvertPrefsToUTF8()
 
   prefs->EnumerateChildren("intl.font",fontPrefEnumerationFunction,(void *)(&prefsToMigrate));
   prefs->EnumerateChildren("ldap_2.servers",ldapPrefEnumerationFunction,(void *)(&prefsToMigrate));
+  prefs->EnumerateChildren("mail.identity.vcard",vCardPrefEnumerationFunction,(void *)(&prefsToMigrate));
 
   PrefEnumerationClosure closure;
 

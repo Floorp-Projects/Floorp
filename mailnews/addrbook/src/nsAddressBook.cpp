@@ -2041,5 +2041,97 @@ NS_IMETHODIMP nsAddressBook::AbCardToEscapedVCard(nsIAbCard *aCard, char **aEsca
     return rv;
 }
 
+static nsresult addProperty(char **currentVCard, const char *currentRoot, const char *mask)
+{
+    // keep in mind as we add properties that we want to filter out any begin and end vcard types....because
+    // we add those automatically...
+    
+    const char *beginPhrase = "begin";
+    char *children = nsnull;
+    
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (currentVCard && prefBranch)
+    {
+        PRUint32 childCount;
+        char **childArray;
+        nsresult rv = prefBranch->GetChildList(currentRoot, &childCount, &childArray);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        for (PRUint32 i = 0; i < childCount; ++i) 
+        {
+            char *child = childArray[i];
+
+            if (!strcmp(child, currentRoot))
+                continue;
+                
+            // first iterate over the child in case the child has children    
+            addProperty(currentVCard, child, mask);
+               
+            // child length should be greater than the mask....
+            if (strlen(child) > strlen(mask) + 1)  // + 1 for the '.' in .property
+            {
+                nsXPIDLCString value;
+                prefBranch->GetCharPref(child, getter_Copies(value));
+                if (mask)
+                    child += strlen(mask) + 1;  // eat up the "mail.identity.vcard" part...
+                // turn all '.' into ';' which is what vcard format uses
+                char * marker = strchr(child, '.');
+                while (marker)
+                {
+                    *marker = ';';
+                    marker = strchr(child, '.');
+                }
+                
+                // filter property to make sure it is one we want to add.....
+                if ((PL_strncasecmp(child, beginPhrase, strlen(beginPhrase)) != 0) && (PL_strncasecmp(child, VCEndProp, strlen(VCEndProp)) != 0))
+                {
+                    if (!value.IsEmpty()) // only add the value is not an empty string...
+                        if (*currentVCard)
+                        {
+                            char * tempString = *currentVCard;
+                            *currentVCard = PR_smprintf ("%s%s:%s%s", tempString, child, value.get(), "\n");
+                            PR_FREEIF(tempString);
+                        }
+                        else
+                            *currentVCard = PR_smprintf ("%s:%s%s", child, value.get(), "\n");
+                }
+            }
+            else {
+                NS_ASSERTION(0, "child length should be greater than the mask");
+            }
+        }     
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+    } 
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAddressBook::Convert4xVCardPrefs(const char *prefRoot, char **escapedVCardStr)
+{
+    NS_ENSURE_ARG_POINTER(prefRoot);
+    NS_ENSURE_ARG_POINTER(escapedVCardStr);
+    
+    char *vCardString = nsnull;
+    vCardString = PL_strdup("begin:vcard \n");
+    
+    nsresult rv = addProperty(&vCardString, prefRoot, prefRoot);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    char *vcard = PR_smprintf("%send:vcard\n", vCardString);
+    PR_FREEIF(vCardString);
+    
+    VObject *vObj = parse_MIME(vcard, strlen(vcard));
+    PR_FREEIF(vcard);
+    
+    nsCOMPtr<nsIAbCard> cardFromVCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID);
+    convertFromVObject(vObj, cardFromVCard);
+    
+    if (vObj)
+        cleanVObject(vObj);
+    
+    rv = cardFromVCard->ConvertToEscapedVCard(escapedVCardStr);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
+}
+
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
 

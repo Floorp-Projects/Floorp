@@ -655,7 +655,7 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
   
   // get the old folder, and clear the special folder flag on it
   rv = getFolderPref(prefname, getter_Copies(oldpref), PR_FALSE);
-  if (NS_SUCCEEDED(rv) && (const char*)oldpref)
+  if (NS_SUCCEEDED(rv) && !oldpref.IsEmpty())
   {
     rv = rdf->GetResource(oldpref, getter_AddRefs(res));
     if (NS_SUCCEEDED(rv) && res)
@@ -668,7 +668,7 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
   
   // set the new folder, and set the special folder flags on it
   rv = setCharPref(prefname, value);
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && value && *value)
   {
     rv = rdf->GetResource(nsDependentCString(value), getter_AddRefs(res));
     if (NS_SUCCEEDED(rv) && res)
@@ -726,8 +726,8 @@ NS_IMETHODIMP nsMsgIdentity::GetIntAttribute(const char *aName, PRInt32 *val)
 		nsresult macro_rv;	\
 		nsCOMPtr <nsILocalFile>macro_spec;   \
         	macro_rv = SRC_ID->MACRO_GETTER(getter_AddRefs(macro_spec)); \
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	this->MACRO_SETTER(macro_spec);     \
+        	if (NS_SUCCEEDED(macro_rv)) \
+        	  this->MACRO_SETTER(macro_spec);     \
 	}
 
 #define COPY_IDENTITY_INT_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
@@ -735,8 +735,8 @@ NS_IMETHODIMP nsMsgIdentity::GetIntAttribute(const char *aName, PRInt32 *val)
 		    nsresult macro_rv;	\
         	PRInt32 macro_oldInt;	\
         	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldInt);	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	this->MACRO_SETTER(macro_oldInt);     \
+        	if (NS_SUCCEEDED(macro_rv)) \
+        	  this->MACRO_SETTER(macro_oldInt);     \
 	}
 
 #define COPY_IDENTITY_BOOL_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
@@ -744,8 +744,8 @@ NS_IMETHODIMP nsMsgIdentity::GetIntAttribute(const char *aName, PRInt32 *val)
 		    nsresult macro_rv;	\
         	PRBool macro_oldBool;	\
         	macro_rv = SRC_ID->MACRO_GETTER(&macro_oldBool);	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	this->MACRO_SETTER(macro_oldBool);     \
+        	if (NS_SUCCEEDED(macro_rv)) \
+        	  this->MACRO_SETTER(macro_oldBool);     \
 	}
 
 #define COPY_IDENTITY_STR_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
@@ -753,13 +753,14 @@ NS_IMETHODIMP nsMsgIdentity::GetIntAttribute(const char *aName, PRInt32 *val)
         	nsXPIDLCString macro_oldStr;	\
 		    nsresult macro_rv;	\
         	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	if (!macro_oldStr) {	\
+            if (NS_SUCCEEDED(macro_rv)) { \
+        	  if (!macro_oldStr) {	\
                 	this->MACRO_SETTER("");	\
-        	}	\
-        	else {	\
-                	this->MACRO_SETTER(macro_oldStr);	\
-        	}	\
+              }	\
+        	  else {	\
+                  	this->MACRO_SETTER(macro_oldStr);	\
+              }	\
+            } \
 	}
 
 static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
@@ -768,14 +769,15 @@ static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
 	{	\
         	nsXPIDLString macro_oldStr;	\
 		    nsresult macro_rv;	\
-        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
-        	if (NS_FAILED(macro_rv)) return macro_rv;	\
-        	if (!macro_oldStr) {	\
+        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr)); \
+        	if (NS_SUCCEEDED(macro_rv)) { \
+        	  if (!macro_oldStr) {	\
                 	this->MACRO_SETTER(unicharEmptyString);	\
-        	}	\
-        	else {	\
+              }	\
+        	  else {	\
                 	this->MACRO_SETTER(macro_oldStr);	\
-        	}	\
+              }	\
+            } \
 	}
 
 NS_IMETHODIMP
@@ -794,7 +796,8 @@ nsMsgIdentity::Copy(nsIMsgIdentity *identity)
     COPY_IDENTITY_INT_VALUE(identity,GetReplyOnTop,SetReplyOnTop)
     COPY_IDENTITY_BOOL_VALUE(identity,GetSigBottom,SetSigBottom)
     COPY_IDENTITY_INT_VALUE(identity,GetSignatureDate,SetSignatureDate)
-
+    COPY_IDENTITY_BOOL_VALUE(identity,GetAttachVCard,SetAttachVCard)
+    COPY_IDENTITY_STR_VALUE(identity,GetEscapedVCard,SetEscapedVCard)
     return NS_OK;
 }
 

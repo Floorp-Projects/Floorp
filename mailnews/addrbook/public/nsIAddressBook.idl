@@ -59,5 +59,6 @@ interface nsIAddressBook : nsISupports
   boolean mailListNameExists(in wstring name);
   nsIAbCard escapedVCardToAbCard(in string escapedVCardStr);
   string abCardToEscapedVCard(in nsIAbCard aCard);
+  void convert4xVCardPrefs(in string prefRoot, out string escapedVCardStr);
 };
 
