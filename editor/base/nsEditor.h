@@ -394,8 +394,15 @@ protected:
   // called after the document has been saved
   NS_IMETHOD DoAfterDocumentSave();
   
+  
+  typedef enum {
+    eDocumentCreated,
+    eDocumentToBeDestroyed,
+    eDocumentStateChanged
+  } TDocumentListenerNotification;
+  
   // tell the doc state listeners that the doc state has changed
-  NS_IMETHOD NotifyDocumentStateListeners();
+  NS_IMETHOD NotifyDocumentListeners(TDocumentListenerNotification aNotificationType);
   
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);

@@ -340,6 +340,8 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
+  // not sure if this needs to be called earlier.
+  NotifyDocumentListeners(eDocumentToBeDestroyed);
 
   if (mActionListeners)
   {
@@ -595,7 +597,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   BeginningOfDocument();
 
   // update the UI with our state
-  NotifyDocumentStateListeners();
+  NotifyDocumentListeners(eDocumentCreated);
+  NotifyDocumentListeners(eDocumentStateChanged);
   
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
 
@@ -894,7 +897,7 @@ NS_IMETHODIMP
 nsEditor::DoAfterDocumentSave()
 {
   // the mod count is reset by nsIDiskDocument.
-  NotifyDocumentStateListeners();
+  NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
 }
 
@@ -1604,6 +1607,11 @@ nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
   
   nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aListener, &rv);
   if (NS_FAILED(rv)) return rv;
+    
+  // is it already in the list?
+  PRInt32 foundIndex;
+  if (NS_SUCCEEDED(mDocStateListeners->GetIndexOf(iSupports, &foundIndex)) && foundIndex != -1)
+    return NS_OK;
 
   return mDocStateListeners->AppendElement(iSupports);
 }
@@ -1623,31 +1631,74 @@ nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 }
 
 NS_IMETHODIMP
-nsEditor::NotifyDocumentStateListeners()
+nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
   if (!mDocStateListeners)
     return NS_OK;		// maybe there just aren't any.
  
-  PRBool docIsDirty;
-  nsresult rv = GetDocumentModified(&docIsDirty);
+  PRUint32 numListeners;
+  nsresult rv = mDocStateListeners->Count(&numListeners);
   if (NS_FAILED(rv)) return rv;
-  
-  if (docIsDirty == mDocDirtyState)
-    return NS_OK;
-  
-  mDocDirtyState = (PRInt8)docIsDirty;
-  
-  PRUint32 cnt;
-  rv = mDocStateListeners->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt;i++)
+
+  switch (aNotificationType)
   {
-    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
-    nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
-    if (thisListener)
-    	thisListener->NotifyDocumentStateChanged(mDocDirtyState);
+    case eDocumentCreated:
+      for (PRUint32 i = 0; i < numListeners;i++)
+      {
+        nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
+        nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+        if (thisListener)
+        {
+          rv = thisListener->NotifyDocumentCreated();
+          if (NS_FAILED(rv))
+            break;
+        }
+      }
+      break;
+      
+    case eDocumentToBeDestroyed:
+      for (PRUint32 i = 0; i < numListeners;i++)
+      {
+        nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
+        nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+        if (thisListener)
+        {
+          rv = thisListener->NotifyDocumentWillBeDestroyed();
+          if (NS_FAILED(rv))
+            break;
+        }
+      }
+      break;
+  
+    case eDocumentStateChanged:
+      {
+        PRBool docIsDirty;
+        rv = GetDocumentModified(&docIsDirty);
+        if (NS_FAILED(rv)) return rv;
+        
+        if (docIsDirty == mDocDirtyState)
+          return NS_OK;
+        
+        mDocDirtyState = (PRInt8)docIsDirty;
+        
+        for (PRUint32 i = 0; i < numListeners;i++)
+        {
+          nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
+          nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+          if (thisListener)
+          {
+            rv = thisListener->NotifyDocumentStateChanged(mDocDirtyState);
+            if (NS_FAILED(rv))
+              break;
+          }
+        }
+      }
+    
+    default:
+      NS_NOTREACHED("Unknown notification");
   }
-	return NS_OK;
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3495,11 +3546,11 @@ NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
 {
   if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
   
-	nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
-	if (diskDoc)
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+  if (diskDoc)
     diskDoc->IncrementModCount(inNumMods);
 
-  NotifyDocumentStateListeners();
+  NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
 }
 
@@ -3508,9 +3559,9 @@ NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
 {
   if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
   
-	nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
-	if (diskDoc)
-	  diskDoc->GetModCount(&outModCount);
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+  if (diskDoc)
+    diskDoc->GetModCount(&outModCount);
 
   return NS_OK;
 }
@@ -3520,11 +3571,11 @@ NS_IMETHODIMP nsEditor::ResetDocModCount()
 {
   if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
   
-	nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
-	if (diskDoc)
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+  if (diskDoc)
     diskDoc->ResetModCount();
 
-  NotifyDocumentStateListeners();
+  NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
 }
 
@@ -3538,14 +3589,14 @@ void nsEditor::HACKForceRedraw()
   // BEGIN HACK!!!
   nsCOMPtr<nsIPresShell> shell;
   
- 	GetPresShell(getter_AddRefs(shell));
+   GetPresShell(getter_AddRefs(shell));
   if (shell) {
     nsCOMPtr<nsIViewManager> viewmgr;
 
     shell->GetViewManager(getter_AddRefs(viewmgr));
     if (viewmgr) {
       nsIView* view;
-      viewmgr->GetRootView(view);			// views are not refCounted
+      viewmgr->GetRootView(view);      // views are not refCounted
       if (view) {
         viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
       }
