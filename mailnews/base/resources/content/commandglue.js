@@ -256,15 +256,22 @@ function setTitleFromFolder(msgfolder, subject)
             middle = Bundle.GetStringFromName("titleNewsPreHost");
             end = server.hostName;
         } else {
-            var identities = accountManager.GetIdentitiesForServer(server);
-            var identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+            var identity;
+            try {
+                var identities = accountManager.GetIdentitiesForServer(server);
+
+                identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+                // <folder> for <email>
+                middle = Bundle.GetStringFromName("titleMailPreHost");
+                end = identity.email;
+            } catch (ex) {
+            }
             
-            // <folder> for <email>
-            middle = Bundle.GetStringFromName("titleMailPreHost");
-            end = identity.email;
         }
 
-        title += msgfolder.prettyName + " " + middle + " " + end;
+        title += msgfolder.prettyName;
+        if (middle) title += " " + middle;
+        if (end) title += " " + end;
     }
 
     title += " - " + BrandBundle.GetStringFromName("brandShortName");
