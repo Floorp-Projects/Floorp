@@ -425,14 +425,15 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
     {
       char szECreateTempDir[MAX_BUF];
 
-      if(GetPrivateProfileString("Messages", "ERROR_CREATE_TEMP_DIR", "", szECreateTempDir, sizeof(szECreateTempDir), szFileIniInstall))
+      if(GetPrivateProfileString("Messages", "ERROR_CREATE_TEMP_DIR", "",
+                                 szECreateTempDir, sizeof(szECreateTempDir),
+                                 szFileIniInstall))
       {
         sprintf(szBuf, szECreateTempDir, szTempDir);
         PrintError(szBuf, ERROR_CODE_HIDE);
       }
       return(1);
     }
-    RemoveBackSlash(szTempDir);
   }
 
   DeleteIdiGetConfigIni();

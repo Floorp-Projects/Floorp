@@ -201,13 +201,13 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
   // determine the system's TEMP path
   tempEnvVar = getenv("TMP");
   if ((tempEnvVar) && (!(isFAT(tempEnvVar)))) {
-    strcpy(szOSTempDir, tempEnvVar);
+    strcpy(szTempDir, tempEnvVar);
   }
   else
   {
     tempEnvVar = getenv("TEMP");
     if (tempEnvVar)
-      strcpy(szOSTempDir, tempEnvVar);
+      strcpy(szTempDir, tempEnvVar);
   }
   if ((!tempEnvVar) || (isFAT(tempEnvVar)))
   {
@@ -242,8 +242,8 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
          }
        }
     }
-    strcpy(szOSTempDir, buffer);
-    strcat(szOSTempDir, "TEMP");
+    strcpy(szTempDir, buffer);
+    strcat(szTempDir, "TEMP");
   }
   strcpy(szOSTempDir, szTempDir);
   AppendBackSlash(szTempDir, MAX_BUF);
@@ -253,6 +253,7 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
   {
     AppendBackSlash(szTempDir, MAX_BUF);
     CreateDirectoriesAll(szTempDir);
+    RemoveBackSlash(szTempDir);
     if(!FileExists(szTempDir))
     {
       char szECreateTempDir[MAX_BUF];
@@ -266,7 +267,6 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
       }
       return(1);
     }
-    RemoveBackSlash(szTempDir);
   }
 
   ugUninstall.bVerbose = FALSE;
