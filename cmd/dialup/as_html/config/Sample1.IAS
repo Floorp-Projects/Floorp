@@ -22,9 +22,10 @@ Password=YWg0ZrhvamYLZix1ADRvdWpttnp3
 Name=mozillarama
 Description=Internet Account Server (New UI)
 SiteName=Internet Account Server (New UI)
+LocalMode=yes
 
 [IP]
-RegCGI=https://reggie.netscape.com/DUE/reg.cgi
+RegCGI=https://reggie.netscape.com/IAS5/docs/reg.cgi
 DNSAddress2=205.217.225.20
 DNSAddress=205.217.225.10
 DomainName=netscape.com
@@ -33,6 +34,7 @@ Enabled=Yes
 
 [Configuration]
 REG_SCRIPTING=
+RegRoot=https://reggie.netscape.com/IAS5/docs/ISP/
 
 [Security]
 SecurityDevice=No
