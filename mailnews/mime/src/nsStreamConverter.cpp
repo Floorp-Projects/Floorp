@@ -351,7 +351,9 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       char * typeField   = PL_strcasestr(url, "&type=");
       if (typeField)
       {
-        mOutputFormat = nsCRT::strdup(typeField + nsCRT::strlen("&type="));
+        // store the real content type...mOutputFormat gets deleted later on...
+        mRealContentType = typeField + nsCRT::strlen("&type=");
+        mOutputFormat = nsCRT::strdup("raw");
         *aNewType = nsMimeOutput::nsMimeMessageRaw;
         return NS_OK;
       }
@@ -463,8 +465,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       break;
       
     case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
-      if (!mOutputFormat)
-        mOutputFormat = nsCRT::strdup("raw");
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("raw");
       break;
       
     case nsMimeOutput::nsMimeMessageSource:    // the raw RFC822 data (view source) and attachments
@@ -490,7 +492,9 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   
 	// the following output channel stream is used to fake the content type for people who later
 	// call into us..
-  rv = NS_NewInputStreamChannel(getter_AddRefs(mOutgoingChannel), aURI, nsnull, mOutputFormat, -1);
+  nsXPIDLCString contentTypeToUse;
+  GetContentType(getter_Copies(contentTypeToUse));
+  rv = NS_NewInputStreamChannel(getter_AddRefs(mOutgoingChannel), aURI, nsnull, contentTypeToUse, -1);
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -625,7 +629,10 @@ NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
 
 	// since this method passes a string through an IDL file we need to use nsMemory to allocate it 
 	// and not nsCRT::strdup!
-	if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
+  //  (1) check to see if we have a real content type...use it first...
+  if (!mRealContentType.IsEmpty())
+    *aOutputContentType = mRealContentType.ToNewCString();
+  else if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
 		*aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, nsCRT::strlen(UNKNOWN_CONTENT_TYPE) + 1);
 	else
 		*aOutputContentType = (char *) nsMemory::Clone(mOutputFormat, nsCRT::strlen(mOutputFormat) + 1);

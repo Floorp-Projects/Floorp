@@ -30,6 +30,7 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIChannel.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 #define NS_STREAM_CONVERTER_SEGMENT_SIZE   (4*1024)
@@ -81,6 +82,8 @@ private:
 
   // Type of output, entire message, header only, body only
   char                          *mOutputFormat;
+  nsCString                     mRealContentType; // if we know the content type for real, this will be set (used by attachments)
+
   char                          *mOverrideFormat; // this is a possible override for emitter creation
   PRBool                        mWrapperOutput;   // Should we output the frame split message display 
   PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
