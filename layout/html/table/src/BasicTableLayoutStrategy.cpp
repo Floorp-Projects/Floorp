@@ -454,6 +454,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       specifiedFixedColWidth=effectiveMinColumnWidth;
     // do all the global bookkeeping, factoring in margins
     nscoord colInset = mTableFrame->GetCellSpacing();
+    if (PR_TRUE==gsDebug) printf("* cellSpacing=%d\n", colInset);
     // keep a running total of the amount of space taken up by all fixed-width columns
     if ((PR_TRUE==haveColWidth) && (nsTableColFrame::eWIDTH_SOURCE_CELL==colFrame->GetWidthSource()))
     {

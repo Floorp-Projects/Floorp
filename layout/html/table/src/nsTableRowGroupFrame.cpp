@@ -638,7 +638,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
    * 1. optimization, if (PR_TRUE==atLeastOneRowSpanningCell) ... otherwise skip this step entirely
    */
   PRInt32 rowGroupHeight;
-  for (PRInt32 counter; counter<2; counter++)
+  for (PRInt32 counter=0; counter<2; counter++)
   {
     rowGroupHeight = 0;
     rowFrame = mFirstChild;
