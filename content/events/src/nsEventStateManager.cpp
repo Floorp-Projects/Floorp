@@ -1580,7 +1580,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
 
   nsMouseEvent mouseOutEvent;
   mouseOutEvent.eventStructType = NS_MOUSE_EVENT;
-  mouseOutEvent.message = NS_MOUSE_EXIT_SYNTH;
+  mouseOutEvent.message = NS_MOUSE_EXIT;
   mouseOutEvent.widget = msEvent->widget;
   mouseOutEvent.clickCount = 0;
   mouseOutEvent.point = nsPoint(0,0);
@@ -1645,9 +1645,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   PRBool passToParent = PR_FALSE;
 
   if (sv) {
-    if (targetContent)
-      targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
-                                    NS_EVENT_FLAG_INIT, &mouseoutStatus);
+    GenerateMouseEnterExit(aPresContext, &mouseOutEvent);
 
     // Check the scroll position before and after calling ScrollBy[Page|Line]s.
     // This allows us to detect whether the view is not scrollable
