@@ -1322,6 +1322,7 @@ extern "C" JSBool pref_InitInitialObjects()
 {
     JSBool funcResult;
     nsresult rv;
+    JSBool worked = PR_FALSE;
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv))
     	return JS_TRUE;
@@ -1359,7 +1360,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		funcResult = JS_FALSE;
 		goto done;
 	}
-    JSBool worked = (JSBool)(pref_OpenFileSpec(
+    worked = (JSBool)(pref_OpenFileSpec(
     	specialChild,
     	PR_FALSE,
     	PR_FALSE,
