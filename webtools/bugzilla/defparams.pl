@@ -232,8 +232,8 @@ sub check_netmask {
 
   {
    name => 'timezone',
-   desc => 'The timezone that your SQL server lives in. If set to "" then' .
-           'the timezone can\'t be displayed with the timestamps.',
+   desc => 'The timezone that your database server lives in. If set to "", ' .
+           'then the timezone won\'t be displayed with the timestamps.',
    type => 't',
    default => '',
   },
