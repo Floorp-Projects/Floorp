@@ -29,7 +29,7 @@ open OUTFILE, ">$menufile.new" or die "menuhack: Unable to create $menufile.new\
 while (<INFILE>) {
     print OUTFILE unless m/XMLterm/;
 
-    if (s%(.*)"&editorCmd.label;"(.*)"toEditor\(\);"%$1"XMLterm"          $2"window.open('chrome://xmlterm/content/xmlterm.xul','XMLterm','chrome,dialog=no,resizable');"%) {
+    if (s%(.*)"&editorCmd.label;"(.*)"toEditor\(\);"%$1"XMLterm"          $2"window.open('chrome://xmlterm/content/xmlterm.xul','_blank','chrome,dialog=no,resizable');"%) {
         print OUTFILE;
     }
 }
