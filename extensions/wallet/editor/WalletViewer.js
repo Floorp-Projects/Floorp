@@ -130,13 +130,9 @@ nsWalletViewer.prototype =
             var menuPopup = menuList.firstChild;
 
             /* visit each menuItem */
-            var menuItem = menuPopup.lastChild; /* obtain the list in backwards order */
-            while (menuItem.previousSibling) { /* skip empty item at end of list */
-              menuItem = menuItem.previousSibling;
-              /* would have like to write "while (menuItem = menuItem.previousSibling)"
-               * but that generates a warning message saying that I meant to use == and
-               * it is interpreting it as such
-               */
+            for (var menuItem = menuPopup.firstChild;
+                 menuItem != menuPopup.lastChild; /* skip empty item at end of list */
+                 menuItem = menuItem.nextSibling) {
               values += (menuItem.getAttribute("value") + BREAK);
             }
             schemaToValue[tag+elementIDs[i]] = values;
@@ -194,7 +190,7 @@ nsWalletViewer.prototype =
                 if (menuItem) {
                   menuItem.setAttribute("value", strings[j]);
                   menuItem.setAttribute("len", strings[j].length);
-                  menuPopup.insertBefore(menuItem, menuPopup.firstChild);
+                  menuPopup.insertBefore(menuItem, menuPopup.lastChild);
                 }
               }
             };
