@@ -1206,7 +1206,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
       sprintf(str, "%s %d", "List Item", i);
       nsString listStr1(str);
-      comboBox->AddItemAt(listStr1, 1);
+      comboBox->AddItemAt(listStr1, i);
     }
     listSelfTest(gFD, "ComboBox", comboBox);
     NS_RELEASE(comboBox);
