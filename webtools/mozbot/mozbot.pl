@@ -60,7 +60,7 @@ use Net::FTP;
 
 $|++;
 
-my $VERSION = "1.35"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.62"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
