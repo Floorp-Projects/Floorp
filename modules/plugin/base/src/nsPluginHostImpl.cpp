@@ -1681,7 +1681,7 @@ nsPluginCacheListener::~nsPluginCacheListener()
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS2(nsPluginCacheListener, nsIStreamListener, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS1(nsPluginCacheListener, nsIStreamListener)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginCacheListener::OnStartRequest(nsIRequest *request, nsISupports* ctxt)
@@ -2644,7 +2644,7 @@ NS_IMPL_ISUPPORTS8(nsPluginHostImpl,
                    nsICookieStorage,
                    nsIObserver,
                    nsPIPluginHost,
-                   nsIWeakReference);
+                   nsISupportsWeakReference);
 ////////////////////////////////////////////////////////////////////////
 NS_METHOD
 nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
