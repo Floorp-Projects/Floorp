@@ -150,6 +150,8 @@ public:
   nsPluginPort* GetPluginPort();
   void ReleasePluginPort();//~~~
 
+  void SetPluginHost(nsIPluginHost* aHost);
+
 private:
   nsPluginWindow    mPluginWindow;
   nsIPluginInstance *mInstance;
@@ -162,7 +164,8 @@ private:
   char              **mParamVals;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
-  nsITimer			*mPluginTimer;
+  nsITimer			    *mPluginTimer;
+  nsIPluginHost     *mPluginHost;
 };
 
 #define nsObjectFrameSuper nsHTMLContainerFrame
@@ -244,7 +247,7 @@ private:
   nsPluginInstanceOwner *mInstanceOwner;
   nsIURL                *mFullURL;
   nsIFrame              *mFirstChild;
-  nsIWidget				*mWidget;
+  nsIWidget				      *mWidget;
 };
 
 nsObjectFrame::~nsObjectFrame()
@@ -888,8 +891,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
     {
       nsCID widgetCID;
-      
-      classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
 
       // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
       if((classid.Find("java:") != -1) || classid == JAVA_CLASS_ID)
@@ -949,6 +950,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           return rv;
         }
 
+        mInstanceOwner->SetPluginHost(pluginHost);
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
       }
       else // otherwise, we're either an ActiveX control or an internal widget
@@ -1004,6 +1006,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             return rv;
           }
 
+          mInstanceOwner->SetPluginHost(pluginHost);
           if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
 	          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
           else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
@@ -1057,6 +1060,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       NS_RELEASE(cv); 
       return rv;
     }
+
+    mInstanceOwner->SetPluginHost(pluginHost);
 
     mContent->GetTag(atom);
 	  // check if it's an applet
@@ -1138,9 +1143,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		    if(extension)
 			    ++extension;
 
-		    delete [] cString;
-
 		    pluginHost->IsPluginEnabledForExtension((const char *)extension, (const char *&)mimeType);
+
+      delete [] cString;
 	    }
 
 	    rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
@@ -1587,6 +1592,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mParamNames = nsnull;
   mParamVals = nsnull;
   mPluginTimer = nsnull;
+  mPluginHost = nsnull;
 }
 
 nsPluginInstanceOwner::~nsPluginInstanceOwner()
@@ -1601,12 +1607,13 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   if (nsnull != mInstance)
   {
+    mPluginHost->StopPluginInstance(mInstance);
     mInstance->Stop();
     mInstance->SetWindow(nsnull);
-    //mInstance->Destroy();
     NS_RELEASE(mInstance);
   }
 
+  NS_RELEASE(mPluginHost);
   mOwner = nsnull;
 
   for (cnt = 0; cnt < mNumAttrs; cnt++)
@@ -2521,4 +2528,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   }
 
   return rv;
+}
+
+void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
+{
+  if(mPluginHost != nsnull)
+    NS_RELEASE(mPluginHost);
+ 
+  mPluginHost = aHost;
+  NS_ADDREF(mPluginHost);
 }
