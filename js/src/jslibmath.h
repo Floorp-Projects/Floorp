@@ -26,6 +26,9 @@
 
 #include <math.h>
 #include "jsconfig.h"
+#ifdef MOZILLA_CLIENT
+#include "platform.h"
+#endif
 
 /*
  * Define which platforms on which to use fdlibm.  Not used
