@@ -507,7 +507,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
                                     aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
 
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *mySpacing, 0);
+                                aDirtyRect, rect, *mySpacing, mStyleContext, 0);
 
     nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
@@ -561,7 +561,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
 
     aRenderingContext.DrawString(mTextStr, x, y, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, inside, *blkSpacing, 0);
+                                aDirtyRect, inside, *blkSpacing, blkStyle, 0);
 
     aRenderingContext.PopState(clipEmpty);
 
@@ -582,7 +582,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
       nsRect srect(0,0,0,0);//mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
       srect = mButtonRect;
       nsFormControlHelper::PaintArrow(nsFormControlHelper::eArrowDirection_Down, aRenderingContext,aPresContext, 
-                      aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
+                      aDirtyRect, srect, onePixel, mArrowStyle, *arrowSpacing, this, mRect);
     //}
 
 
