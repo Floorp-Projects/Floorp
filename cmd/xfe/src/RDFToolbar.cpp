@@ -411,32 +411,20 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
     Arg                     av[20];
     Cardinal                ac;
     ItemCallbackStruct *    data = NULL;
-    tbarTooltipCBStruct *   ttip = NULL;
+    /*     tbarTooltipCBStruct *   ttip = NULL; */
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
     XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     button = XfeCreateButton(parent,"bookmarkButton",av,ac);
-    /*
-    XtManageChild(button);
-    XtRealizeWidget(button);
-    	XfeTipStringSetEnabledState(button, True);
-    XfeTipStringGlobalSetEnabledState(True);
-    */
+
+    /* Add the tooltip Callback */
     XfeTipStringAdd(button);
-    ttip = XP_NEW_ZAP(tbarTooltipCBStruct);
-    ttip->obj = this;
-    ttip->entry = entry;
 
-    XfeTipStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) ttip);
 
-#ifdef NOTYET
-    XfeDocStringGlobalSetEnabledState(True);
-    XfeDocStringAdd(button);
-    XfeDocStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer)this, (XtPointer) entry);
-    XfeDocStringSetEnabledState(button, True);
-#endif  /* NOTYET  */
+
+
     // Set the item's label
     setItemLabelString(button,entry);
 
@@ -447,7 +435,7 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
 
     data->object    = this;
     data->entry        = entry;
-
+    XfeTipStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
     XtAddCallback(button,
                   XmNactivateCallback,
                   &XFE_RDFMenuToolbarBase::item_activated_cb,
@@ -493,27 +481,15 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     Arg                     av[5];
     Cardinal                ac;
     ItemCallbackStruct *    data = NULL;
-    tbarTooltipCBStruct *   ttip = NULL;
+    /*     tbarTooltipCBStruct *   ttip = NULL; */
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
     XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     cascade = XfeCreateCascade(parent,"bookmarkCascade",av,ac);
-    /*
-    XtManageChild(cascade);
-    XtRealizeWidget(cascade);
-   	XfeTipStringSetEnabledState(cascade, True);
-    */
-    XfeTipStringAdd(cascade);
-    
-    ttip = XP_NEW_ZAP(tbarTooltipCBStruct);
-    ttip->obj = this;
-    ttip->entry = entry;
-    
-    XfeTipStringSetObtainCallback(cascade, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) ttip);
 
-
+    
     // Set the item's label
     setItemLabelString(cascade,entry);
 
@@ -525,6 +501,9 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     data->object    = this;
     data->entry        = entry;
 
+    /* Set the tooltip callback */
+    XfeTipStringAdd(cascade);
+    XfeTipStringSetObtainCallback(cascade, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
     XtAddCallback(cascade,
                   XmNcascadingCallback,
                   &XFE_RDFMenuToolbarBase::item_cascading_cb,
@@ -577,8 +556,8 @@ void
 XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_return, Boolean * need_to_free_string )
 {
 
-    tbarTooltipCBStruct * ttip = (tbarTooltipCBStruct * )client_data;
-    XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->obj;
+    ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
+    XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->object;
     HT_Resource  entry = (HT_Resource) ttip->entry;
 
     void *        data=NULL;
@@ -603,6 +582,5 @@ XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_ret
       *string_return = obj->getStringFromResource(entry);
       *need_to_free_string = True;
     }
-    XP_FREE(ttip);
 
 }
