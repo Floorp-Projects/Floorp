@@ -46,5 +46,6 @@ sub decodeHTTPArguments {
     my $self = shift;
     local $/ = undef;
     my $input = <STDIN>;
+    $self->dump(9, 'HTTP POST. Input was: ' . $input);
     $self->splitURLEncodedForm($input, sub { $self->addArgument(@_); })
 }

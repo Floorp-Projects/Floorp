@@ -43,8 +43,9 @@ sub applies {
 sub decodeHTTPArguments {
     my $self = shift;
     if (defined($ENV{'QUERY_STRING'})) {
+        $self->dump(9, 'HTTP GET. Input was: ' . $ENV{'QUERY_STRING'});
         $self->splitURLEncodedForm($ENV{'QUERY_STRING'}, sub { $self->addArgument(@_); })
     } else {
-        # XXX no arguments
+        $self->dump(9, 'HTTP GET. No input.');
     }
 }

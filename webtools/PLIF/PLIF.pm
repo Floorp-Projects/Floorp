@@ -28,8 +28,9 @@
 
 package PLIF;
 use strict; # require strict adherence to perl standards
-use vars qw($AUTOLOAD);  # it's a package global
+use vars qw($AUTOLOAD); # it's a package global
 use Carp qw(cluck confess); # stack trace versions of warn and die
+use POSIX qw(strftime); # timestamps in debug output
 my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
 my $USER = 1; # level of errors to report to user (all go to STDERR)
 my @FATAL = (); # a list of pointers to functions that want to report errors to the user
@@ -187,8 +188,9 @@ sub dump {
     my $self = shift;
     my($level, @data) = @_;
     if ($self->isAtDebugLevel($level)) {
+        my $time = strftime('%Y-%m-%d %H:%M:%S UTC', gmtime());
         foreach (@data) {
-            print STDERR "$0: ($level) $_\n";
+            print STDERR "$0.$$ \@ $time: ($level) $_\n";
         }
     }
 }

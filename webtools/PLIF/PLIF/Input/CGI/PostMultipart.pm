@@ -64,6 +64,8 @@ sub decodeHTTPArguments {
     }
     # XXX END OF PLATFORM SPECIFIC CODE XXX
 
+    $self->dump(9, 'HTTP POST. Input was in multipart/form-data format.');
+
     # parse the MIME body
     local $/ = undef;
     my $entity = $parser->parse_data('Content-Type: '   . $self->CONTENT_TYPE   . "\n" .
