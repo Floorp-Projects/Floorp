@@ -64,6 +64,8 @@
 #include <JavaControl.h>
 #endif
 
+#include <string>
+
 extern MRJConsole* theConsole;
 extern short thePluginRefnum;
 
@@ -247,29 +249,34 @@ static void java_lowmem(JMSessionRef session)
 	// NPN_MemFlush(512 * 1024);
 }
 
-JavaVMOption theOptions[] = {
-	{ "-Djava.class.path=/Users/beard/Library/Classes/MRJPlugin.jar" }
-};
-
-JavaVMInitArgs theInitArgs = {
-	JNI_VERSION_1_2,
-	1,
-	theOptions,
-	JNI_TRUE
-};
-
 MRJSession::MRJSession()
-	:	mSession(NULL), mStatus(noErr), mMainEnv(NULL), mJavaVM(NULL),
+	:	mStatus(noErr), mMainEnv(NULL), mJavaVM(NULL),
 	    mFirst(NULL), mLast(NULL), mMessageMonitor(NULL), mLockCount(0)
+{
+}
+
+MRJSession::~MRJSession()
+{
+    close();
+}
+
+OSStatus MRJSession::open()
 {
 #if TARGET_CARBON
     // Use vanilla JNI invocation API to fire up a fresh JVM.
 
-    /* No Java VM supplied, so create our own */
-    JavaVMInitArgs initArgs;
-    memset(&initArgs, 0, sizeof(initArgs));
+    std::string classPath = getClassPath();
+    JavaVMOption theOptions[] = {
+    	{ (char*) classPath.c_str() }
+    };
 
-    /* Magic constant indicates JRE version 1.2 */
+    JavaVMInitArgs theInitArgs = {
+    	JNI_VERSION_1_2,
+    	sizeof(theOptions) / sizeof(JavaVMOption),
+    	theOptions,
+    	JNI_TRUE
+    };
+
     mStatus = ::JNI_CreateJavaVM(&mJavaVM, (void**) &mMainEnv, &theInitArgs);
     
     if (mStatus == noErr) {
@@ -312,43 +319,31 @@ MRJSession::MRJSession()
 		mStatus = kJMVersionError;
 	}
 #endif /* !TARGET_CARBON */
+
+    return mStatus;
 }
 
-MRJSession::~MRJSession()
+OSStatus MRJSession::close()
 {
-#ifdef MRJPLUGIN_4X
-    // is this perhaps too late?
-    ::CloseMRJNetworking(this);
-#endif
+    if (mJavaVM) {
+    	if (mMessageMonitor != NULL) {
+    		mMessageMonitor->notifyAll();
+    		delete mMessageMonitor;
+    		mMessageMonitor;
+    	}
 
-	if (mMessageMonitor != NULL) {
-		mMessageMonitor->notifyAll();
-		delete mMessageMonitor;
-	}
-
-#if !TARGET_CARBON
-	if (mSession != NULL) {
-		mStatus = ::JMCloseSession(mSession);
-		mSession = NULL;
-	}
-#endif
-}
-
-JMSessionRef MRJSession::getSessionRef()
-{
-	return mSession;
+        mJavaVM->DestroyJavaVM();
+        mJavaVM = NULL;
+    }
+    return noErr;
 }
 
 JNIEnv* MRJSession::getCurrentEnv()
 {
-#if !TARGET_CARBON
-	return ::JMGetCurrentEnv(mSession);
-#else
 	JNIEnv* env;
-	if (mJavaVM->GetEnv((void**)&env, JNI_VERSION_1_2) == 0)
+	if (mJavaVM->GetEnv((void**)&env, JNI_VERSION_1_2) == JNI_OK)
 		return env;
     return NULL;
-#endif
 }
 
 JNIEnv* MRJSession::getMainEnv()
@@ -358,14 +353,7 @@ JNIEnv* MRJSession::getMainEnv()
 
 JavaVM* MRJSession::getJavaVM()
 {
-#if TARGET_CARBON
     return mJavaVM;
-#else
-	JNIEnv* env = ::JMGetCurrentEnv(mSession);
-	JavaVM* vm = NULL;
-	env->GetJavaVM(&vm);
-	return vm;
-#endif
 }
 
 Boolean MRJSession::onMainThread()
@@ -382,11 +370,14 @@ inline StringPtr c2p(const char* cstr, StringPtr pstr)
 
 Boolean MRJSession::addToClassPath(const FSSpec& fileSpec)
 {
-#if TARGET_CARBON
-    return false;
-#else
-	return (::JMAddToClassPath(mSession, &fileSpec) == noErr);
-#endif
+    // if the Java VM has started already, it's too late to do this (for now).
+    if (mJavaVM)
+        return false;
+
+    // keep accumulating paths.
+    mClassPath.push_back(fileSpec);
+
+    return true;
 }
 
 Boolean MRJSession::addToClassPath(const char* dirPath)
@@ -402,24 +393,8 @@ Boolean MRJSession::addToClassPath(const char* dirPath)
 
 Boolean MRJSession::addURLToClassPath(const char* fileURL)
 {
-#if TARGET_CARBON
-    // Use CMURL, FSRef and FSSpec?
+    // Use CFURL, FSRef and FSSpec?
     return false;
-#else
-	OSStatus status = noErr;
-	// Need to convert the URL into an FSSpec, and add it MRJ's class path.
-	JMTextRef urlRef = NULL;
-	status = ::JMNewTextRef(mSession, &urlRef, kTextEncodingMacRoman, fileURL, strlen(fileURL));
-	if (status == noErr) {
-		FSSpec pathSpec;
-		status = ::JMURLToFSS(mSession, urlRef, &pathSpec);
-		if (status == noErr)
-			status = ::JMAddToClassPath(mSession, &pathSpec);
-		::JMDisposeTextRef(urlRef);
-	}
-	
-	return (status == noErr);
-#endif
 }
 
 char* MRJSession::getProperty(const char* propertyName)
@@ -522,4 +497,39 @@ void MRJSession::lock()
 void MRJSession::unlock()
 {
 	--mLockCount;
+}
+
+static OSStatus spec2path(const FSSpec& spec, char* path, UInt32 maxPathSize)
+{
+    OSStatus status;
+    FSRef ref;
+    
+    status = FSpMakeFSRef(&spec, &ref);
+    if (status == noErr)
+        status = FSRefMakePath(&ref, (UInt8*)path, maxPathSize);
+
+    return status;
+}
+
+std::string MRJSession::getClassPath()
+{
+    std::string classPath("-Djava.class.path=");
+    
+    // keep appending paths make from FSSpecs.
+    std::vector<FSSpec>::const_iterator i = mClassPath.begin();
+    if (i != mClassPath.end()) {
+        char path[1024];
+        if (spec2path(*i, path, sizeof(path)) == noErr)
+            classPath += path;
+        ++i;
+        while (i != mClassPath.end()) {
+            if (spec2path(*i, path, sizeof(path)) == noErr) {
+                classPath += ":";
+                classPath += path;
+            }    
+            ++i;
+        }
+    }
+    
+    return classPath;
 }
