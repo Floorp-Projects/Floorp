@@ -159,6 +159,14 @@ NS_NewTableCaptionPart(nsIHTMLContent** aInstancePtrResult,
                        nsIAtom* aTag);
 
 extern nsresult
+NS_NewHTMLApplet(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag);
+
+extern nsresult
+NS_NewHTMLObject(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag);
+
+extern nsresult
 NS_NewHTMLImage(nsIHTMLContent** aInstancePtrResult,
                 nsIAtom* aTag);
 
