@@ -3095,6 +3095,45 @@ NS_IMETHODIMP nsLocalFile::InitToAppWithCreatorCode(OSType aAppCreator)
     return InitWithFSSpec(&appSpec);
 }
 
+NS_IMETHODIMP nsLocalFile::GetCFURL(CFURLRef *_retval)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+#if TARGET_CARBON
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = nsnull;
+    
+    PRBool exists;
+    if (NS_SUCCEEDED(Exists(&exists)) && exists)
+    {
+        FSRef fsRef;
+        FSSpec fsSpec = mFollowLinks ? mTargetSpec : mSpec;
+        if (::FSpMakeFSRef(&fsSpec, &fsRef) == noErr)
+        {
+            *_retval = ::CFURLCreateFromFSRef(NULL, &fsRef);
+            if (*_retval)
+                return NS_OK;    
+        }
+    }
+    else
+    {
+        nsCAutoString tempPath;
+        if (NS_SUCCEEDED(GetNativePath(tempPath)))
+        {
+            CFStringRef pathStrRef = ::CFStringCreateWithCString(NULL, tempPath.get(), kCFStringEncodingMacRoman);
+            if (!pathStrRef)
+                return NS_ERROR_FAILURE;
+            *_retval = ::CFURLCreateWithFileSystemPath(NULL, pathStrRef, kCFURLHFSPathStyle, false);
+            ::CFRelease(pathStrRef);
+            if (*_retval)
+                return NS_OK;    
+        }
+    }
+#endif
+
+    return rv;
+}
+
 NS_IMETHODIMP nsLocalFile::GetFSRef(FSRef *_retval)
 {
     nsresult rv = NS_ERROR_FAILURE;
