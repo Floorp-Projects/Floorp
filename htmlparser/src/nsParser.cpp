@@ -777,7 +777,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
     theContext.Append(aStack.TagAt(theCount-theIndex));
     theContext.Append(">");
   }
-  theContext.Append("<endnote>");
+  theContext.Append("<endnote>");       //XXXHack! I'll make this better later.
   nsAutoString theBuffer(theContext);
   theBuffer.Append(aSourceBuffer);
   
