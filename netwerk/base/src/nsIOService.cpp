@@ -29,7 +29,6 @@
 #include "prprf.h"
 #include "prmem.h"      // for PR_Malloc
 #include "prsystem.h"   // for PR_GetSystemInfo
-#include <ctype.h>      // for isalpha
 #include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
 #include "nsLoadGroup.h"
 #include "nsIFileChannel.h"
@@ -124,7 +123,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     // and service manager stuff
 
     char buf[MAX_NET_PROGID_LENGTH];
-    nsAutoString2 progID(NS_NETWORK_PROTOCOL_PROGID_PREFIX);
+    nsCAutoString progID(NS_NETWORK_PROTOCOL_PROGID_PREFIX);
     progID += scheme;
     progID.ToCString(buf, MAX_NET_PROGID_LENGTH);
 
@@ -145,9 +144,9 @@ GetScheme(const char* inURI, char* *scheme)
     if (!inURI) return NS_ERROR_NULL_POINTER;
     char c;
     const char* URI = inURI;
-    PRUint32 length = 0;
+    PRUint8 length = 0;
     // skip leading white space
-    while (isspace(*URI))
+    while (nsString::IsSpace(*URI))
         URI++;
     while ((c = *URI++) != '\0') {
         if (c == ':') {
@@ -160,7 +159,7 @@ GetScheme(const char* inURI, char* *scheme)
             *scheme = newScheme;
             return NS_OK;
         }
-        else if (isalpha(c)) {
+        else if (nsString::IsAlpha(c)) {
             length++;
         }
         else 
