@@ -32,6 +32,7 @@ my $srcdir       = "";
 my $package_name = "";
 my $package_file = "";
 my $output_file  = "";
+my $exclude_file = "";
 my $shared_pass;
 my $retval;
 
@@ -41,6 +42,7 @@ $retval = GetOptions('source=s',       \$srcdir,
 		     'package=s',      \$package_name,
 		     'package-file=s', \$package_file,
 		     'output-file=s',  \$output_file,
+                     'exclude-file=s', \$exclude_file,
 		     'shared!',        \$shared_pass);
 
 # make sure that all of the values are specific on the command line
@@ -100,6 +102,22 @@ LINE: while (<PACKAGE_FILE>) {
 }
 
 close PACKAGE_FILE;
+
+# check if we have an exclude file
+
+if ($exclude_file) {
+    print "reading exclude file $exclude_file\n";
+
+    open (EXCLUDE_FILE, $exclude_file) || die("$0: Failed to open exclude file $exclude_file for reading.");
+
+    while (<EXCLUDE_FILE>) {
+	chomp;
+	print "Ignoring $_\n";
+	push (@exclude_list, $_);
+    }
+
+    close EXCLUDE_FILE;
+}
 
 # Expand our file list
 

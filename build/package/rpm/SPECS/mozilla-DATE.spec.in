@@ -17,6 +17,8 @@ Source12:    mozilla-mail.desktop
 Source13:    mozilla-mail-icon.gif
 Source14:    mozilla-compose.desktop
 Source15:    mozilla-compose-icon.gif
+Source16:    mozilla-exclude-list
+Source17:    mozilla-psm-exclude-list
 Patch0:      mozilla-navigator-overlay-menu.patch
 Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
@@ -184,10 +186,12 @@ BUILD_OFFICIAL=1 make -s
 
 %{SOURCE7} --package browser --output-file /tmp/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --source $RPM_BUILD_DIR/mozilla/dist
+    --source $RPM_BUILD_DIR/mozilla/dist \
+    --exclude-file=%{SOURCE16}
 %{SOURCE7} --package browser --output-file /tmp/mozilla.list.shared \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --source $RPM_BUILD_DIR/mozilla/dist --shared
+    --source $RPM_BUILD_DIR/mozilla/dist --shared \
+    --exclude-file=%{SOURCE16}
 
 /bin/rm -f /tmp/mozilla-mail.list
 /bin/rm -f /tmp/mozilla-mail.list.shared
@@ -204,7 +208,8 @@ BUILD_OFFICIAL=1 make -s
 /bin/rm -f /tmp/mozilla-psm.package
 %{SOURCE7} --package psm --output-file /tmp/mozilla-psm.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --source $RPM_BUILD_DIR/mozilla/dist
+    --source $RPM_BUILD_DIR/mozilla/dist \
+    --exclude-file=%{SOURCE17}
 
 # we don't actually build the shared list since the only one in the
 # package, libnssckbi.so, needs to be in /usr/lib/mozilla because it's
@@ -213,13 +218,15 @@ BUILD_OFFICIAL=1 make -s
 echo libnssckbi.so >> /tmp/mozilla-psm.list
 
 # manually add the nss libraries
-echo libnss3.so >> /tmp/mozilla-psm.list.shared
-echo libsmime3.so >> /tmp/mozilla-psm.list.shared
-echo libssl3.so >> /tmp/mozilla-psm.list.shared
+# I'll add these back in later when they are actual shared libraries
+#echo libnss3.so >> /tmp/mozilla-psm.list.shared
+#echo libsmime3.so >> /tmp/mozilla-psm.list.shared
+#echo libssl3.so >> /tmp/mozilla-psm.list.shared
 
-#%{SOURCE7} --package psm --output-file /tmp/mozilla-psm.list.shared \
-#    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-#    --source $RPM_BUILD_DIR/mozilla/dist --shared
+%{SOURCE7} --package psm --output-file /tmp/mozilla-psm.list.shared \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist --shared \
+    --exclude-file=%{SOURCE17}
 
 /bin/rm -f /tmp/mozilla-chat.list
 /bin/rm -f /tmp/mozilla-chat.list.shared
@@ -293,10 +300,9 @@ popd
     $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
     $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib/mozilla
-# note that this pulls from dist/lib, not dist/bin to get the psm libraries!
 %{SOURCE8} /tmp/mozilla-psm.list.shared /tmp/mozilla-psm.package \
     $RPM_BUILD_ROOT/%{prefix}/lib \
-    $RPM_BUILD_DIR/mozilla/dist/lib \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib
 
 %{SOURCE8} /tmp/mozilla-chat.list /tmp/mozilla-chat.package \
