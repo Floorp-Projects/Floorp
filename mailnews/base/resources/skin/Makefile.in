@@ -32,6 +32,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		messenger.css \
 		folderPane.css \
 		threadPane.css \
+		msgHdrViewOverlay.css \
 		mailfolder.gif \
 		open-mailfolder.gif \
 		mail-message.gif \
