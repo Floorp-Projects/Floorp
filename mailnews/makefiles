@@ -66,6 +66,8 @@ mailnews/ui/messenger/src/Makefile
 mailnews/ui/messenger/resources/Makefile
 mailnews/ui/compose/Makefile
 mailnews/ui/compose/resources/Makefile
+mailnews/ui/preference/Makefile
+mailnews/ui/preference/resources/Makefile
 mailnews/ui/ab/Makefile
 mailnews/public/Makefile
 mailnews/idl/Makefile
