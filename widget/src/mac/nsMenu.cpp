@@ -852,11 +852,11 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
       return nsEventStatus_eIgnore;
   }
   
-  nsIDocument * tmp = nsnull;
-  contentNode->GetDocument(tmp);
-  if(tmp) {
+  nsCOMPtr<nsIDocument> document;
+  contentNode->GetDocument(*getter_AddRefs(document));
+      
+  if(document) {
     domElement->RemoveAttribute("open");
-    NS_RELEASE(tmp);
   }
   
   return nsEventStatus_eIgnore;
@@ -1360,6 +1360,7 @@ nsMenu::AttributeChanged(
 		  
     if(aContent == contentNode){
       nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
+      nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
       if(aAttribute == disabledAtom) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
         nsString valueString;
@@ -1368,8 +1369,30 @@ nsMenu::AttributeChanged(
           SetEnabled(PR_FALSE);
         else
           SetEnabled(PR_TRUE);
+          
+        ::DrawMenuBar();
+      } else if(aAttribute == valueAtom) {
+        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
+        element->GetAttribute("value", mLabel);
+        ::DeleteMenu(mMacMenuID);
+        
+        mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
+
+        // Replace standard MDEF with our stub MDEF
+        if(mMacMenuHandle) {    
+          SInt8 state = ::HGetState((Handle)mMacMenuHandle);
+          ::HLock((Handle)mMacMenuHandle);
+          //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
+          (**mMacMenuHandle).menuProc = gMDEF;
+          ::HSetState((Handle)mMacMenuHandle, state);
+        }
+        ::InsertMenu(mMacMenuHandle, mMacMenuID+1);
+        if(mMenuBarParent) {
+          mMenuBarParent->SetNativeData(::GetMenuBar());
+          ::DrawMenuBar();
+        }
       }
-      ::DrawMenuBar();
+      
     }
   }
   return NS_OK;
