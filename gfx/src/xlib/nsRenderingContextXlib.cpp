@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -927,25 +928,21 @@ nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
   }
   PRInt32 i ;
   XPoint * xpoints;
-  XPoint * thispoint;
-  nscoord x,y;
    
   xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
   
-  for (i = 0; i < aNumPoints; i++){
-    thispoint = (xpoints+i);
-    x = aPoints[i].x;
-    y = aPoints[i].y;
-    mTranMatrix->TransformCoord(&x,&y);
-    thispoint->x = x;
-    thispoint->y = y;
+  for (i = 0; i < aNumPoints; ++i) {
+    nsPoint p = aPoints[i];
+    mTranMatrix->TransformCoord(&p.x, &p.y);
+    xpoints[i].x = p.x;
+    xpoints[i].y = p.y;
   } 
     
   UpdateGC();
   ::XFillPolygon(mDisplay,
                  mRenderingSurface->GetDrawable(),
                  *mGC,
-                 xpoints, aNumPoints, Convex, CoordModeOrigin);
+                 xpoints, aNumPoints, Complex, CoordModeOrigin);
                
   PR_Free((void *)xpoints);
 
