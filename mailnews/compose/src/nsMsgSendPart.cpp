@@ -686,8 +686,7 @@ nsMsgSendPart::Write()
       // We are attaching a message, so we should be careful to
       // strip out certain sensitive internal header fields.
       PRBool skipping = PR_FALSE;
-      NS_ASSERTION(MIME_BUFFER_SIZE > 1000, "buffer size out of range"); /* SMTP (RFC821) limit */
-      
+
       while (1) 
       {
         char *line;

@@ -164,7 +164,8 @@
 // Some necessary defines...
 //
 #define TEN_K                 10240
-#define MIME_BUFFER_SIZE		  4096
+#define MIME_BUFFER_SIZE      4096 // must be greater than 1000
+                                   // SMTP (RFC821) limit
 
 //
 // Utilities for string handling
