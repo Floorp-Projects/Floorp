@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=walletviewers
+MODULE=cookieviewer
 
 #MAKE_OBJ_TYPE=DLL
 #DLLNAME=$(MODULE)
@@ -28,7 +28,6 @@ XPIDLSRCS=      .\nsICookieViewer.idl                  \
                 $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsCookieViewerFactory.obj  \
         .\$(OBJDIR)\nsCookieViewer.obj         \
         $(NULL)
 

@@ -27,7 +27,7 @@ LINCS =                          \
 	$(NULL)
 
 CPP_OBJS =                             \
-        .\$(OBJDIR)\dlldeps.obj        \
+        .\$(OBJDIR)\nsWalletViewerFactory.obj        \
        $(NULL)
 
 OURLIBS =                               \
@@ -35,7 +35,8 @@ OURLIBS =                               \
         $(DIST)\lib\signonviewer_s.lib  \
         $(DIST)\lib\walletpreview_s.lib \
         $(DIST)\lib\walleteditor_s.lib  \
-	$(NULL)
+        $(DIST)\lib\xpcom.lib  \
+        $(NULL)
 
 LLIBS =                                \
         $(OURLIBS)                     \
@@ -45,4 +46,4 @@ LLIBS =                                \
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
-	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
+	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components

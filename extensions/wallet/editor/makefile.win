@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=walletviewers
+MODULE=walleteditor
 
 #MAKE_OBJ_TYPE=DLL
 #DLLNAME=$(MODULE)
@@ -28,7 +28,6 @@ XPIDLSRCS=      .\nsIWalletEditor.idl                  \
                 $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsWalletEditorFactory.obj  \
         .\$(OBJDIR)\nsWalletEditor.obj         \
         $(NULL)
 

@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=walletviewers
+MODULE=signonviewer
 
 #MAKE_OBJ_TYPE=DLL
 #DLLNAME=$(MODULE)
@@ -28,7 +28,6 @@ XPIDLSRCS=      .\nsISignonViewer.idl                  \
                 $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsSignonViewerFactory.obj  \
         .\$(OBJDIR)\nsSignonViewer.obj         \
         $(NULL)
 
