@@ -330,12 +330,57 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipVal
   return NS_OK;
 }
 
+#ifdef DEBUG
+#undef TRACE_SET_CLIP
+#endif
+
+#ifdef TRACE_SET_CLIP
+static char *
+nsClipCombine_to_string(nsClipCombine aCombine)
+{
+#ifdef TRACE_SET_CLIP
+  printf("nsRenderingContextGTK::SetClipRect(x=%d,y=%d,w=%d,h=%d,%s)\n",
+         trect.x,
+         trect.y,
+         trect.width,
+         trect.height,
+         nsClipCombine_to_string(aCombine));
+#endif // TRACE_SET_CLIP
+
+  switch(aCombine)
+    {
+      case nsClipCombine_kIntersect:
+        return "nsClipCombine_kIntersect";
+        break;
+
+      case nsClipCombine_kUnion:
+        return "nsClipCombine_kUnion";
+        break;
+
+      case nsClipCombine_kSubtract:
+        return "nsClipCombine_kSubtract";
+        break;
+
+      case nsClipCombine_kReplace:
+        return "nsClipCombine_kReplace";
+        break;
+    }
+
+  return "something got screwed";
+}
+#endif // TRACE_SET_CLIP
+
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
   nsRect trect = aRect;
   GdkRegion *rgn;
+
+#ifdef TRACE_SET_CLIP
+  printf("nsRenderingContextGTK::SetClipRect(%s)\n",
+         nsClipCombine_to_string(aCombine));
+#endif // TRACE_SET_CLIP
 
   mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
