@@ -35,7 +35,7 @@
         <![CDATA[
           if (!this.disabled) {
             this.checked = !this.checked;
-            this.command();
+            this.doCommand();
           }
         ]]>
       </handler>
