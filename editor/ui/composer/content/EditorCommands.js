@@ -394,7 +394,7 @@ function EditorSetTextProperty(property, attribute, value)
 
 function EditorSetParagraphFormat(paraFormat)
 {
-  editorShell.paragraphFormat = paraFormat;
+  editorShell.SetParagraphFormat(paraFormat);
   contentWindow.focus();
 }
 
