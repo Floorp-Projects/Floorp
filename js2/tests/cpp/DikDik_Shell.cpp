@@ -40,6 +40,7 @@
 
 #ifdef DEBUG
 #include "tracer.h"
+#include "collector.h"
 #endif
 
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
@@ -257,11 +258,15 @@ int main(int argc, char **argv)
 {
     using namespace JavaScript;
     using namespace Shell;
-
+    
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to DikDik.\n", argc, argv);
 #else
     stdOut << "Welcome to DikDik.\n";
+#endif
+
+#if DEBUG
+    testCollector();
 #endif
 
     try {
