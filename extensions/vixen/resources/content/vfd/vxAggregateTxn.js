@@ -45,7 +45,7 @@ vxAggregateTxn.prototype = {
   undoTransaction: function ()
   {
     _dd("vxAggregateTxn::undoTransaction");
-    for (var i = 0; i < this.mTransactionList.length; i++) 
+    for (var i = 0; i < this.mTransactionList.length; i++)
       this.mTransactionList[i].undoTransaction();
   },
   

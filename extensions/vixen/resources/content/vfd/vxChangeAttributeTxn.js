@@ -40,37 +40,46 @@
 function vxChangeAttributeTxn(aElement, aAttribute, aValue, aRemoveFlag)
 {
   this.mElement     = aElement;
-  this.mAttribute   = aAttribute;
-  this.mValue       = aValue;
-  this.mRemoveFlag  = aRemoveFlag;
+  this.mAttributes  = aAttribute.splice ? aAttribute : [aAttribute];
+  this.mValues      = aValue.splice ? aValue : [aValue];
+  this.mRemoveFlags = aRemoveFlag.splice ? aRemoveFlag : [aRemoveFlag];
+  this.mUndoValues  = [];
 } 
  
 vxChangeAttributeTxn.prototype = {
   doTransaction: function ()
   {
-    this.mUndoValue = this.mElement.getAttribute(this.mAttribute);
-    if (!this.mRemoveFlag)
-      this.mElement.setAttribute(this.mAttribute, this.mValue);
-    else
-      this.mElement.removeAttribute(this.mAttribute);
+    for (var i = 0; i < this.mAttributes.length; i++) {
+      _ddf("this attribute", this.mAttributes[i]);
+      this.mUndoValues[i] = this.mElement.getAttribute(this.mAttributes[i]);
+      if (!this.mRemoveFlags[i])
+        this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
+      else
+        this.mElement.removeAttribute(this.mAttributes[i]);
+    }
   },
 
   undoTransaction: function ()
   {
-    if (this.mUndoValue) 
-      this.mElement.setAttribute(this.mAttribute, this.mUndoValue);
-    else
-      this.mElement.removeAttribute(this.mAttribute);
+    for (var i = 0; i < this.mAttributes.length; i++) {
+      if (this.mUndoValues[i]) 
+        this.mElement.setAttribute(this.mAttributes[i], this.mUndoValues[i]);
+      else
+        this.mElement.removeAttribute(this.mAttributes[i]);
+    }
   },
   
   redoTransaction: function ()
   {
-    if (!this.mRemoveFlag)
-      this.mElement.setAttribute(this.mAttribute, this.mValue);
-    else
-      this.mElement.removeAttribute(this.mAttribute);
+    for (var i = 0; i < this.mAttributes.length; i++) {
+      if (!this.mRemoveFlags[i])
+        this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
+      else
+        this.mElement.removeAttribute(this.mAttributes[i]);
+    }
   },
   
+  // XXX TODO: update to support multiple attribute syntax
   get commandString()
   {
     var commandString = "change-attribute,";
