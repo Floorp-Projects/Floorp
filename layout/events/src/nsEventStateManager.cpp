@@ -1529,12 +1529,21 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
       mCurrentTabIndex = val;
     }
 
-    // Check to see if the mCurrentTarget has a view with a widget
+    nsIFrame * currentFocusFrame = nsnull;
+    nsCOMPtr<nsIPresShell> shell;
+    if (mPresContext) {
+      nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv) && shell){
+        shell->GetPrimaryFrameFor(aContent, &currentFocusFrame);
+      }
+    }
+
+    // Check to see if the newly focused content's frame has a view with a widget
     // i.e TextField or TextArea, if so, don't set the focus on their window
     PRBool shouldSetFocusOnWindow = PR_TRUE;
-    if (nsnull != mCurrentTarget) {
+    if (nsnull != currentFocusFrame) {
       nsIView * view = nsnull;
-      mCurrentTarget->GetView(&view);
+      currentFocusFrame->GetView(&view);
       if (view != nsnull) {
         nsIWidget *window = nsnull;
         view->GetWidget(window);
@@ -1552,9 +1561,9 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     // so some windows may get multiple focus events
     // For example, if you clicked in the window (generates focus event)
     // then click on a gfx control (generates another focus event)
-    if (shouldSetFocusOnWindow && nsnull != mCurrentTarget) {
+    if (shouldSetFocusOnWindow && nsnull != currentFocusFrame) {
       nsIFrame * parentFrame;
-      mCurrentTarget->GetParentWithView(&parentFrame);
+      currentFocusFrame->GetParentWithView(&parentFrame);
       if (nsnull != parentFrame) {
         nsIView * pView;
         parentFrame->GetView(&pView);
