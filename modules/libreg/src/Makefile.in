@@ -43,7 +43,7 @@ CC		= cc
 endif
 
 INCLUDES	+= -I$(topsrcdir)/include
-GARBAGE		+= $(PROGRAM)
+GARBAGE		+= $(PROGRAM) $(BIN_OBJS)
 
 PROGRAM		= $(OBJDIR)/vreg$(BIN_SUFFIX)
 
