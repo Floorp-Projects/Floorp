@@ -2125,6 +2125,47 @@ WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 
 //
+// Native method SetCursor
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowSetCursor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETCURSOR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->SetCursor(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Open
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2567,6 +2608,7 @@ static JSFunctionSpec WindowMethods[] =
   {"routeEvent",          WindowRouteEvent,     1},
   {"enableExternalCapture",          WindowEnableExternalCapture,     0},
   {"disableExternalCapture",          WindowDisableExternalCapture,     0},
+  {"setCursor",          WindowSetCursor,     1},
   {"open",          WindowOpen,     0},
   {"openDialog",          WindowOpenDialog,     0},
   {"close",          WindowClose,     0},

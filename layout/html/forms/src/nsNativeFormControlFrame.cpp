@@ -299,7 +299,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext* aPresContext,
 	PRInt32 type;
 	GetType(&type);
 	switch (aEvent->message) {
-	  case NS_MOUSE_ENTER:
+	  case NS_MOUSE_ENTER_SYNTH:
 	    mLastMouseState = eMouseEnter;
 	    break;
 
@@ -314,7 +314,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext* aPresContext,
 	    mLastMouseState = eMouseEnter;
 	    break;
 
-	  case NS_MOUSE_EXIT:
+	  case NS_MOUSE_EXIT_SYNTH:
 	    mLastMouseState = eMouseNone;
 	    break;
 

@@ -1,6 +1,7 @@
       interface Window {
 /* IID: { 0xa6cf906b, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+        
         readonly attribute  Window window;
         readonly attribute  Window self;
         readonly attribute  Document document;
@@ -68,7 +69,8 @@
         void routeEvent(in Event evt);
         void enableExternalCapture();
         void disableExternalCapture();
-        
+        void setCursor(in DOMString cursor);
+
         Window open(/* ... */);
         Window openDialog(/* ... */);
         noscript void  close();

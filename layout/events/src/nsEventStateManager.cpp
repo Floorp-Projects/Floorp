@@ -100,6 +100,7 @@ nsEventStateManager::nsEventStateManager()
   mLastRightMouseDownContent = nsnull;
 
   mConsumeFocusEvents = PR_FALSE;
+  mLockCursor = 0;
 
   // init d&d gesture state machine variables
   mIsTrackingDragGesture = PR_FALSE;
@@ -231,7 +232,7 @@ NS_IMPL_ISUPPORTS1(nsEventStateManager, nsIEventStateManager)
 
 NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext, 
-                                 nsGUIEvent *aEvent,
+                                 nsEvent *aEvent,
                                  nsIFrame* aTargetFrame,
                                  nsEventStatus* aStatus,
                                  nsIView* aView)
@@ -258,7 +259,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
-    BeginTrackingDragGesture ( aEvent, aTargetFrame );
+    BeginTrackingDragGesture ( (nsGUIEvent*)aEvent, aTargetFrame );
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
@@ -282,17 +283,17 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     // If this is the case, however, we know that ClearFrameRefs() has been called
     // and it cleared out |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
     // into UpdateCursor().
-    GenerateDragGesture(aPresContext, aEvent);
+    GenerateDragGesture(aPresContext, (nsGUIEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
-    GenerateMouseEnterExit(aPresContext, aEvent);
+    GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
     break;
   case NS_MOUSE_EXIT:
-    GenerateMouseEnterExit(aPresContext, aEvent);
+    GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
     //This is a window level mouseenter event and should stop here
     aEvent->message = 0;
     break;
   case NS_DRAGDROP_OVER:
-    GenerateDragDropEnterExit(aPresContext, aEvent);
+    GenerateDragDropEnterExit(aPresContext, (nsGUIEvent*)aEvent);
     break;
   case NS_GOTFOCUS:
     {
@@ -663,7 +664,7 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 
 NS_IMETHODIMP
 nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext, 
-                                     nsGUIEvent *aEvent,
+                                     nsEvent *aEvent,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus,
                                      nsIView* aView)
@@ -869,7 +870,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   case NS_DRAGDROP_EXIT:
     // clean up after ourselves. make sure we do this _after_ the event, else we'll
     // clean up too early!
-    GenerateDragDropEnterExit(aPresContext, aEvent);
+    GenerateDragDropEnterExit(aPresContext, (nsGUIEvent*)aEvent);
     break;
   case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
@@ -1055,24 +1056,57 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
                                   nsEventStatus* aStatus)
 {
   PRInt32 cursor;
-  nsCursor c;
-  nsCOMPtr<nsIContent> targetContent;
 
-  if (mCurrentTarget) {
-    mCurrentTarget->GetContent(getter_AddRefs(targetContent));
+  //If cursor is locked just use the locked one
+  if (mLockCursor) {
+    cursor = mLockCursor;
   }
-
-  //Check if the current target is disabled.  If so use the default pointer.
-  if (targetContent && CheckDisabled(targetContent)) {
-    cursor = NS_STYLE_CURSOR_DEFAULT;
-  }
-  //If not disabled, check for the right cursor.
+  //If not locked, look for correct cursor
   else {
-    if ( aTargetFrame )
-      aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor);
+    nsCOMPtr<nsIContent> targetContent;
+    if (mCurrentTarget) {
+      mCurrentTarget->GetContent(getter_AddRefs(targetContent));
+    }
+
+    //Check if the current target is disabled.  If so use the default pointer.
+    if (targetContent && CheckDisabled(targetContent)) {
+      cursor = NS_STYLE_CURSOR_DEFAULT;
+    }
+    //If not disabled, check for the right cursor.
+    else {
+      if (aTargetFrame) {
+        aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor);
+      }
+    }
   }
 
-  switch (cursor) {
+  if (aTargetFrame) {
+    nsCOMPtr<nsIWidget> window;
+    aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));
+    SetCursor(cursor, window, PR_FALSE);
+  }
+
+  if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
+    *aStatus = nsEventStatus_eConsumeDoDefault;
+  }
+}
+
+NS_IMETHODIMP
+nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor)
+{
+  nsCursor c;
+
+  NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
+  if (aLockCursor) {
+    if (NS_STYLE_CURSOR_AUTO != aCursor) {
+      mLockCursor = aCursor;
+    }
+    else {
+      //If cursor style is set to auto we unlock the cursor again.
+      mLockCursor = 0;
+    }
+  }
+  switch (aCursor) {
   default:
   case NS_STYLE_CURSOR_AUTO:
   case NS_STYLE_CURSOR_DEFAULT:
@@ -1104,7 +1138,7 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
   case NS_STYLE_CURSOR_E_RESIZE:
     c = eCursor_sizeWE;
     break;
-  //These aren't in the CSS2 spec. Don't know what to do with them.
+  //We don't have cursors defined for these in nsIWidget.  Need them to fix this.
   case NS_STYLE_CURSOR_NE_RESIZE:
   case NS_STYLE_CURSOR_NW_RESIZE:
   case NS_STYLE_CURSOR_SE_RESIZE:
@@ -1113,15 +1147,9 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
     break;
   }
 
-  if (NS_STYLE_CURSOR_AUTO != cursor) {
-    *aStatus = nsEventStatus_eConsumeDoDefault;
-  }
+  aWidget->SetCursor(c);
 
-  if ( aTargetFrame ) {
-    nsCOMPtr<nsIWidget> window;
-    aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));
-    window->SetCursor(c);
-  }
+  return NS_OK;
 }
 
 void
@@ -1152,7 +1180,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event;
             event.eventStructType = NS_MOUSE_EVENT;
-            event.message = NS_MOUSE_EXIT;
+            event.message = NS_MOUSE_EXIT_SYNTH;
             event.widget = aEvent->widget;
             event.clickCount = 0;
             event.point = aEvent->point;
@@ -1196,7 +1224,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_ENTER;
+          event.message = NS_MOUSE_ENTER_SYNTH;
           event.widget = aEvent->widget;
           event.clickCount = 0;
           event.point = aEvent->point;
@@ -1251,7 +1279,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_EXIT;
+          event.message = NS_MOUSE_EXIT_SYNTH;
           event.widget = aEvent->widget;
           event.clickCount = 0;
           event.point = aEvent->point;
@@ -1315,7 +1343,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_DRAGDROP_EVENT;
-          event.message = NS_DRAGDROP_EXIT;
+          event.message = NS_DRAGDROP_EXIT_SYNTH;
           event.widget = aEvent->widget;
           event.clickCount = 0;
           event.point = aEvent->point;
@@ -1406,7 +1434,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
         nsEventStatus status = nsEventStatus_eIgnore;
         nsMouseEvent event;
         event.eventStructType = NS_DRAGDROP_EVENT;
-        event.message = NS_DRAGDROP_EXIT;
+        event.message = NS_DRAGDROP_EXIT_SYNTH;
         event.widget = aEvent->widget;
         event.clickCount = 0;
         event.point = aEvent->point;
@@ -1550,14 +1578,10 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     event.isAlt = aEvent->isAlt;
     event.isMeta = aEvent->isMeta;
 
-    if (mouseContent) {
-      ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull,
-                                         NS_EVENT_FLAG_INIT, aStatus); 
-	  NS_ASSERTION(NS_SUCCEEDED(ret), "HandleDOMEvent failed");
-    }
-
-    if (nsnull != mCurrentTarget) {
-      ret = mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, aStatus);
     }
   }
   return ret;

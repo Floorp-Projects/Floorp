@@ -610,6 +610,8 @@ public:
   NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
                                          GeneratedContentType aType,
                                          nsIContentIterator** aIterator) const;
+ 
+  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, nsEventStatus* aStatus);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 
@@ -745,6 +747,8 @@ protected:
   nsIFrame* mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
+  nsVoidArray mCurrentEventContentStack;
+
 #ifdef NS_DEBUG
   nsRect mCurrentTargetRect;
   nsIView* mCurrentTargetView;
@@ -784,8 +788,10 @@ private:
 
   //helper funcs for event handling
   nsIFrame* GetCurrentEventFrame();
-  void PushCurrentEventFrame();
-  void PopCurrentEventFrame();  
+  void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
+  void PopCurrentEventInfo();
+  nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, nsEventStatus *aStatus);
+
 };
 
 #ifdef NS_DEBUG
@@ -983,7 +989,15 @@ PresShell::~PresShell()
     mSubShellMap = nsnull;
   }
 
+  // release current event content and any content on event stack
   NS_IF_RELEASE(mCurrentEventContent);
+
+  PRInt32 i, count = mCurrentEventContentStack.Count();
+  nsIContent* currentEventContent;
+  for (i = 0; i < count; i++) {
+    currentEventContent = (nsIContent*)mCurrentEventContentStack.ElementAt(i);
+    NS_IF_RELEASE(currentEventContent);
+  }
 
   if (mViewManager) {
     // Disable paints during tear down of the frame tree
@@ -2202,12 +2216,17 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   }
   
   if (aFrame == mCurrentEventFrame) {
-    mCurrentEventFrame->GetContent(&mCurrentEventContent);
+    aFrame->GetContent(&mCurrentEventContent);
     mCurrentEventFrame = nsnull;
   }
 
   for (int i=0; i<mCurrentEventFrameStack.Count(); i++) {
     if (aFrame == (nsIFrame*)mCurrentEventFrameStack.ElementAt(i)) {
+      //One of our stack frames was deleted.  Get its content so that when we
+      //pop it we can still get its new frame from its content
+      nsIContent *currentEventContent;
+      aFrame->GetContent(&currentEventContent);
+      mCurrentEventContentStack.ReplaceElementAt((void*)currentEventContent, i);
       mCurrentEventFrameStack.ReplaceElementAt(nsnull, i);
     }
   }
@@ -3172,21 +3191,28 @@ PresShell::GetCurrentEventFrame()
 }
 
 void
-PresShell::PushCurrentEventFrame()
+PresShell::PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent)
 {
-  if (mCurrentEventFrame) {
+  if (mCurrentEventFrame || mCurrentEventContent) {
     mCurrentEventFrameStack.InsertElementAt((void*)mCurrentEventFrame, 0);
+    mCurrentEventContentStack.InsertElementAt((void*)mCurrentEventContent, 0);
   }
+  mCurrentEventFrame = aFrame;
+  mCurrentEventContent = aContent;
+  NS_IF_ADDREF(aContent);
 }
 
 void
-PresShell::PopCurrentEventFrame()
+PresShell::PopCurrentEventInfo()
 {
   mCurrentEventFrame = nsnull;
+  NS_IF_RELEASE(mCurrentEventContent);
 
   if (0 != mCurrentEventFrameStack.Count()) {
     mCurrentEventFrame = (nsIFrame*)mCurrentEventFrameStack.ElementAt(0);
     mCurrentEventFrameStack.RemoveElementAt(0);
+    mCurrentEventContent = (nsIContent*)mCurrentEventContentStack.ElementAt(0);
+    mCurrentEventContentStack.RemoveElementAt(0);
   }
 }
 
@@ -3220,16 +3246,15 @@ PresShell::HandleEvent(nsIView         *aView,
   }
 */
   if (nsnull != frame) {
-    PushCurrentEventFrame();
+    PushCurrentEventInfo(nsnull, nsnull);
 
     nsIEventStateManager *manager;
-    nsIContent* focusContent = nsnull;
     if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
       if (NS_IS_KEY_EVENT(aEvent)) {
         //Key events go to the focused frame, not point based.
-        manager->GetFocusedContent(&focusContent);
-        if (focusContent)
-          GetPrimaryFrameFor(focusContent, &mCurrentEventFrame);
+        manager->GetFocusedContent(&mCurrentEventContent);
+        if (mCurrentEventContent)
+          GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
         else {
           // XXX This is the way key events seem to work?  Why?????
           // They spend time doing calls to GetFrameForPoint with the
@@ -3284,42 +3309,10 @@ PresShell::HandleEvent(nsIView         *aView,
           }
         }
       }
-      NS_IF_RELEASE(mCurrentEventContent);
-      if (GetCurrentEventFrame() || focusContent) {
-      //Once we have the targetFrame, handle the event in this order
-        //1. Give event to event manager for pre event state changes and generation of synthetic events.
-        rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
-
-        //2. Give event to the DOM for third party and JS use.
-        if ((GetCurrentEventFrame() || focusContent) && NS_OK == rv) {          
-          if (focusContent) {
-            rv = focusContent->HandleDOMEvent(mPresContext, (nsEvent*)aEvent, nsnull, 
-                                               NS_EVENT_FLAG_INIT, aEventStatus);
-          }
-          else {
-            nsIContent* targetContent;
-            if (NS_OK == mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent) && nsnull != targetContent) {
-              rv = targetContent->HandleDOMEvent(mPresContext, (nsEvent*)aEvent, nsnull, 
-                                                 NS_EVENT_FLAG_INIT, aEventStatus);
-              NS_RELEASE(targetContent);
-            }
-          }
-
-          //3. Give event to the Frames for browser default processing.
-          // XXX The event isn't translated into the local coordinate space
-          // of the frame...
-          if (GetCurrentEventFrame() && NS_OK == rv) {
-            rv = mCurrentEventFrame->HandleEvent(mPresContext, aEvent, aEventStatus);
-          }
-
-          //4. Give event to event manager for post event state changes and generation of synthetic events.
-          if ((GetCurrentEventFrame() || focusContent) && NS_OK == rv) {
-            rv = manager->PostHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
-          }
-        }
+      if (GetCurrentEventFrame()) {
+        rv = HandleEventInternal(aEvent, aView, aEventStatus);
       }
       NS_RELEASE(manager);
-      NS_IF_RELEASE(focusContent);
     }
 #ifdef NS_DEBUG
     if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (GetCurrentEventFrame())) {
@@ -3347,13 +3340,66 @@ PresShell::HandleEvent(nsIView         *aView,
       }
     }
 #endif
-    PopCurrentEventFrame();
+    PopCurrentEventInfo();
   }
   else {
     rv = NS_OK;
     aHandled = PR_FALSE;
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, nsEventStatus* aStatus)
+{
+  nsresult ret;
+
+  PushCurrentEventInfo(aFrame, aContent);
+  ret = HandleEventInternal(aEvent, nsnull, aStatus);
+  PopCurrentEventInfo();
+  return NS_OK;
+}
+
+nsresult
+PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, nsEventStatus* aStatus)
+{
+  nsresult rv;
+
+  nsIEventStateManager *manager;
+  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+    //1. Give event to event manager for pre event state changes and generation of synthetic events.
+    rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aStatus, aView);
+
+    //2. Give event to the DOM for third party and JS use.
+    if ((GetCurrentEventFrame()) && NS_OK == rv) {
+      if (mCurrentEventContent) {
+        rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
+                                           NS_EVENT_FLAG_INIT, aStatus);
+      }
+      else {
+        nsIContent* targetContent;
+        if (NS_OK == mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent) && nsnull != targetContent) {
+          rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
+                                             NS_EVENT_FLAG_INIT, aStatus);
+          NS_RELEASE(targetContent);
+        }
+      }
+
+      //3. Give event to the Frames for browser default processing.
+      // XXX The event isn't translated into the local coordinate space
+      // of the frame...
+      if (GetCurrentEventFrame() && NS_OK == rv && aEvent->eventStructType != NS_EVENT) {
+        rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent, aStatus);
+      }
+
+      //4. Give event to event manager for post event state changes and generation of synthetic events.
+      if ((GetCurrentEventFrame()) && NS_OK == rv) {
+        rv = manager->PostHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aStatus, aView);
+      }
+    }
+    NS_RELEASE(manager);
+  }
   return rv;
 }
 

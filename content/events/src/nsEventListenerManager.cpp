@@ -741,8 +741,8 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_LEFT_DOUBLECLICK:
     case NS_MOUSE_MIDDLE_DOUBLECLICK:
     case NS_MOUSE_RIGHT_DOUBLECLICK:
-    case NS_MOUSE_ENTER:
-    case NS_MOUSE_EXIT:
+    case NS_MOUSE_ENTER_SYNTH:
+    case NS_MOUSE_EXIT_SYNTH:
       if (nsnull != mMouseListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -777,10 +777,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_MOUSE_RIGHT_DOUBLECLICK:
                     ret = mMouseListener->MouseDblClick(*aDOMEvent);
                     break;
-                  case NS_MOUSE_ENTER:
+                  case NS_MOUSE_ENTER_SYNTH:
                     ret = mMouseListener->MouseOver(*aDOMEvent);
                     break;
-                  case NS_MOUSE_EXIT:
+                  case NS_MOUSE_EXIT_SYNTH:
                     ret = mMouseListener->MouseOut(*aDOMEvent);
                     break;
                   default:
@@ -824,13 +824,13 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                       correctSubType = PR_TRUE;
                     }
                     break;
-                  case NS_MOUSE_ENTER:
+                  case NS_MOUSE_ENTER_SYNTH:
                     subType = NS_EVENT_BITS_MOUSE_MOUSEOVER;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEOVER) {
                       correctSubType = PR_TRUE;
                     }
                     break;
-                  case NS_MOUSE_EXIT:
+                  case NS_MOUSE_EXIT_SYNTH:
                     subType = NS_EVENT_BITS_MOUSE_MOUSEOUT;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEOUT) {
                       correctSubType = PR_TRUE;
@@ -1207,6 +1207,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_PAGE_UNLOAD:
     case NS_IMAGE_LOAD:
     case NS_IMAGE_ERROR:
+    case NS_SCRIPT_ERROR:
 
       if (nsnull != mLoadListeners) {
         if (nsnull == *aDOMEvent) {
@@ -1230,6 +1231,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     ret = mLoadListener->Unload(*aDOMEvent);
                     break;
                   case NS_IMAGE_ERROR:
+                  case NS_SCRIPT_ERROR:
                     ret = mLoadListener->Error(*aDOMEvent);
                   default:
                     break;
@@ -1254,6 +1256,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     }
                     break;
                   case NS_IMAGE_ERROR:
+                  case NS_SCRIPT_ERROR:
                     subType = NS_EVENT_BITS_LOAD_ERROR;
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_ERROR) {
                       correctSubType = PR_TRUE;
@@ -1307,8 +1310,8 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       break;
 
     case NS_DRAGDROP_ENTER:
-    case NS_DRAGDROP_OVER:
-    case NS_DRAGDROP_EXIT:
+    case NS_DRAGDROP_OVER_SYNTH:
+    case NS_DRAGDROP_EXIT_SYNTH:
     case NS_DRAGDROP_DROP:
     case NS_DRAGDROP_GESTURE:
       if (nsnull != mDragListeners) {
@@ -1329,10 +1332,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_DRAGDROP_ENTER:
                     ret = dragListener->DragEnter(*aDOMEvent);
                     break;
-                  case NS_DRAGDROP_OVER:
+                  case NS_DRAGDROP_OVER_SYNTH:
                     ret = dragListener->DragOver(*aDOMEvent);
                     break;
-                  case NS_DRAGDROP_EXIT:
+                  case NS_DRAGDROP_EXIT_SYNTH:
                     ret = dragListener->DragExit(*aDOMEvent);
                     break;
                   case NS_DRAGDROP_DROP:
@@ -1352,12 +1355,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_ENTER)
                       correctSubType = PR_TRUE;
                     break;
-                  case NS_DRAGDROP_OVER:
+                  case NS_DRAGDROP_OVER_SYNTH:
                     subType = NS_EVENT_BITS_DRAG_OVER;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_OVER)
                       correctSubType = PR_TRUE;
                     break;
-                  case NS_DRAGDROP_EXIT:
+                  case NS_DRAGDROP_EXIT_SYNTH:
                     subType = NS_EVENT_BITS_DRAG_EXIT;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_EXIT)
                       correctSubType = PR_TRUE;

@@ -924,9 +924,9 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
       break;
 
     case NS_DRAGDROP_ENTER:
-    case NS_DRAGDROP_OVER:
+    case NS_DRAGDROP_OVER_SYNTH:
     case NS_DRAGDROP_DROP:
-    case NS_DRAGDROP_EXIT:
+    case NS_DRAGDROP_EXIT_SYNTH:
       // currently unused
       break;
       

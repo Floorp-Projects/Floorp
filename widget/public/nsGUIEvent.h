@@ -333,6 +333,8 @@ enum nsDragDropEventStatus {
 // Indicates the display has changed depth
 #define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
 
+// Indicates a script error has occurred
+#define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
@@ -351,6 +353,8 @@ enum nsDragDropEventStatus {
 #define NS_MOUSE_MIDDLE_CLICK           (NS_MOUSE_MESSAGE_START + 28)
 #define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 29)
 #define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
+#define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
+#define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
 
 #define NS_SCROLLBAR_MESSAGE_START      1000
 #define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
@@ -385,6 +389,8 @@ enum nsDragDropEventStatus {
 #define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
 #define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
 #define NS_DRAGDROP_GESTURE             (NS_DRAGDROP_EVENT_START + 4)
+#define NS_DRAGDROP_OVER_SYNTH          (NS_DRAGDROP_EVENT_START + 1)
+#define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
 
 // Events for popups
 #define NS_MENU_EVENT_START            1500
@@ -414,6 +420,10 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_RIGHT_DOUBLECLICK) || \
         ((evnt)->message == NS_MOUSE_ENTER) || \
         ((evnt)->message == NS_MOUSE_EXIT) || \
+        ((evnt)->message == NS_MOUSE_ENTER) || \
+        ((evnt)->message == NS_MOUSE_EXIT) || \
+        ((evnt)->message == NS_MOUSE_ENTER_SYNTH) || \
+        ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
         ((evnt)->message == NS_MOUSE_MOVE))
 
 #define NS_IS_KEY_EVENT(evnt) \

@@ -174,7 +174,7 @@ public:
    **/
   NS_IMETHOD CallEventHandler(void* aTarget, void* aHandler,
                               PRUint32 argc, void* argv,
-                              PRBool* aBoolResult) = 0;
+                              PRBool* aBoolResult, PRBool aReverseReturnResult) = 0;
 
   /**
    * Bind an already-compiled event handler function to a name in the given

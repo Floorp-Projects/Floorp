@@ -53,6 +53,14 @@ protected:
   nsIScriptContext* mContext;
   nsIScriptObjectOwner* mOwner;
   nsCOMPtr<nsIAtom> mEventName;
+  
+  enum nsReturnResult {
+     nsReturnResult_eNotSet,
+     nsReturnResult_eReverseReturnResult,
+     nsReturnResult_eDoNotReverseReturnResult
+  };
+
+  nsReturnResult mReturnResult;
 };
 
 

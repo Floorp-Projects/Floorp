@@ -66,6 +66,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMPaintListener.h"
 #include "nsIEventQueueService.h"
+#include "nsIEventStateManager.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIJSContextStack.h"
@@ -79,6 +80,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsISelectionController.h"
 #include "nsISidebar.h"                // XXX for sidebar HACK, see bug 20721
+#include "nsIStyleContext.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -1024,7 +1026,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
 
 NS_IMETHODIMP GlobalWindowImpl::GetPageXOffset(PRInt32* aPageXOffset)
 {
-   return NS_OK;
+   return GetScrollX(aPageXOffset);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::SetPageXOffset(PRInt32 aPageXOffset)
@@ -1034,7 +1036,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetPageXOffset(PRInt32 aPageXOffset)
 
 NS_IMETHODIMP GlobalWindowImpl::GetPageYOffset(PRInt32* aPageYOffset)
 {
-   return NS_OK;
+   return GetScrollY(aPageYOffset);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::SetPageYOffset(PRInt32 aPageYOffset)
@@ -1518,6 +1520,61 @@ NS_IMETHODIMP GlobalWindowImpl::EnableExternalCapture()
 NS_IMETHODIMP GlobalWindowImpl::DisableExternalCapture()
 {
    return NS_ERROR_FAILURE;
+}
+
+//Note: This call will lock the cursor, it will not change as it moves.
+//To unlock, the cursor must be set back to CURSOR_AUTO.
+NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsString& aCursor)
+{
+  nsresult ret = NS_OK;
+  PRInt32 cursor;
+
+  if (aCursor == "auto") cursor = NS_STYLE_CURSOR_AUTO;
+  else if (aCursor == "default") cursor = NS_STYLE_CURSOR_DEFAULT;
+  else if (aCursor == "pointer") cursor = NS_STYLE_CURSOR_POINTER;
+  else if (aCursor == "crosshair") cursor = NS_STYLE_CURSOR_CROSSHAIR;
+  else if (aCursor == "move") cursor = NS_STYLE_CURSOR_MOVE;
+  else if (aCursor == "text") cursor = NS_STYLE_CURSOR_TEXT;
+  else if (aCursor == "wait") cursor = NS_STYLE_CURSOR_WAIT;
+  else if (aCursor == "help") cursor = NS_STYLE_CURSOR_HELP;
+  else if (aCursor == "n-resize") cursor = NS_STYLE_CURSOR_N_RESIZE;
+  else if (aCursor == "s-resize") cursor = NS_STYLE_CURSOR_S_RESIZE;
+  else if (aCursor == "w-resize") cursor = NS_STYLE_CURSOR_W_RESIZE;
+  else if (aCursor == "e-resize") cursor = NS_STYLE_CURSOR_E_RESIZE;
+  else if (aCursor == "ne-resize") cursor = NS_STYLE_CURSOR_NE_RESIZE;
+  else if (aCursor == "nw-resize") cursor = NS_STYLE_CURSOR_NW_RESIZE;
+  else if (aCursor == "se-resize") cursor = NS_STYLE_CURSOR_SE_RESIZE;
+  else if (aCursor == "sw-resize") cursor = NS_STYLE_CURSOR_SW_RESIZE;
+  else return NS_OK;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  if(presContext) {
+    nsCOMPtr<nsIEventStateManager> esm;
+    if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
+      //Need root widget.
+      nsCOMPtr<nsIPresShell> presShell;
+      mDocShell->GetPresShell(getter_AddRefs(presShell));
+      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+ 
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+
+      nsIView* rootView;
+      vm->GetRootView(rootView);
+      NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+  
+      nsCOMPtr<nsIWidget> widget;
+      rootView->GetWidget(*getter_AddRefs(widget));
+      NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+      
+      //call esm and set cursor
+      ret = esm->SetCursor(cursor, widget, PR_TRUE);
+    }
+  }
+
+  return ret;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Open(JSContext* cx, jsval* argv, PRUint32 argc, 
@@ -3135,7 +3192,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         PRBool aBoolResult;
         rv = mContext->CallEventHandler(mScriptObject, timeout->funobj,
                                         timeout->argc + 1, timeout->argv,
-                                        &aBoolResult);
+                                        &aBoolResult, PR_FALSE);
       }
       
       --mTimeoutFiringDepth;

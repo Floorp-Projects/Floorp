@@ -951,6 +951,10 @@ nsImageMap::IsInside(nscoord aX, nscoord aY)
       if (href.Length() > 0) {
         return PR_TRUE;
       }
+      else {
+        //We need to return here so we don't hit an overlapping map area
+        return PR_FALSE;
+      }
     }
   }
   return PR_FALSE;
