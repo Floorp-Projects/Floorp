@@ -3458,13 +3458,28 @@ nsBookmarksService::GetLastModifiedFolders(nsISimpleEnumerator **aResult)
             folderArray.AppendObject(element);
     }
 
-    // sorting the array containing all the folders
+    // sort the array containing all the folders
     folderArray.Sort(CompareLastModifiedFolders, NS_STATIC_CAST(void*, mInner));
 
     // only keep the first elements
     PRInt32 index;
     for (index = folderArray.Count()-1; index >= MAX_LAST_MODIFIED_FOLDERS; index--)
         folderArray.RemoveObjectAt(index);
+
+    // always show the bookmarks root
+    if (folderArray.IndexOfObject(kNC_BookmarksRoot) < 0)
+        folderArray.ReplaceObjectAt(kNC_BookmarksRoot, MAX_LAST_MODIFIED_FOLDERS-1);
+
+    // always show the bookmarks toolbar folder
+    nsCOMPtr<nsIRDFResource> btfResource;
+    rv = GetBookmarksToolbarFolder(getter_AddRefs(btfResource));
+    if (NS_SUCCEEDED(rv) && folderArray.IndexOfObject(btfResource) < 0) {
+        if (folderArray.ObjectAt(MAX_LAST_MODIFIED_FOLDERS-1) == kNC_BookmarksRoot)
+            index = MAX_LAST_MODIFIED_FOLDERS - 2;
+        else
+            index = MAX_LAST_MODIFIED_FOLDERS - 1;
+        folderArray.ReplaceObjectAt(btfResource, index);
+    }
 
     return NS_NewArrayEnumerator(aResult, folderArray);
 }
