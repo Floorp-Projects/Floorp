@@ -590,8 +590,6 @@ BookmarksUIElement.prototype = {
       ksRDFC.Init(kBMDS, krParent);
       nextElement = this.getNextElement(aSelection[count]);
       ksRDFC.RemoveElement(krBookmark, true);
-      // Manipulate the selection array ourselves. 
-      aSelection.splice(count,1);
 
       try {
         // XXX - UGH. Template builder is NOT removing the element from the
@@ -602,8 +600,8 @@ BookmarksUIElement.prototype = {
       }
       catch (e) {
       }
-      
-      ++count;
+      // Manipulate the selection array ourselves. 
+      aSelection.splice(count,1);
     }
     this.selectElement(nextElement);
   },
@@ -840,7 +838,7 @@ var BookmarksUtils = {
       var fw = document.commandDispatcher.focusedWindow;
       aCharset = fw.document.characterSet;
     }
-  
+
     if (aShowDialog)
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
                  "centerscreen,chrome,dialog=yes,resizable,dependent", aTitle, aURL, null, aCharset);
