@@ -877,19 +877,23 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       nsresult rv;
       NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
       if (NS_FAILED(rv)) return PR_FALSE;
-
-      nsIURI *baseUri = nsnull;
-
-      if ((area->mBase).Length() > 0) {
-        // use the area->base as the base uri
-        char *uriStr = (area->mBase).ToNewCString();
-        if (!uriStr) {
-            return PR_FALSE;
+      // Set the image loader's source URL and base URL
+      nsIURI* baseUri = nsnull;
+      nsIHTMLContent* htmlContent;
+      if (mMap) {
+        rv = mMap->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+        if (NS_SUCCEEDED(rv)) {
+          htmlContent->GetBaseURL(baseUri);
+          NS_RELEASE(htmlContent);
         }
-        rv = service->NewURI(uriStr, nsnull, &baseUri);
-        delete [] uriStr;
-      } else {
-        rv = aDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+        else {
+          nsIDocument* doc;
+          rv = mMap->GetDocument(doc);
+          if (NS_SUCCEEDED(rv)) {
+            doc->GetBaseURL(baseUri); // Could just use mDocument here...
+            NS_RELEASE(doc);
+          }
+        }
       }
       if (NS_FAILED(rv)) return PR_FALSE;
 
