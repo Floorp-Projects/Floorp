@@ -47,6 +47,10 @@
 #include "nsISaveAsCharset.h"
 #include "nsIComponentManager.h"
 
+#include "nsMacUnicodeFontInfo.h"
+#include "nsICharRepresentable.h"
+
+
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
 #define STACK_TREASHOLD 1000
@@ -312,74 +316,81 @@ static PRUnichar gSymbolReplacement[]={0xf8ee,0xf8f9,0xf8f0,0xf8fb,0x3008,0x3009
 
 PRBool 
 nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
-	const PRUnichar *aCharPt, 
+  const PRUnichar *aCharPt, 
   nsTextDimensions& oDim, 
-	short origFontNum,
-	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
+  short origFontNum,
+  short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
-	if (nsATSUIUtils::IsAvailable()  
+  nsMacUnicodeFontInfo info;
+  if (nsATSUIUtils::IsAvailable()  
       && (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) 
-          || IN_SYMBOL_FONT(*aCharPt)
-          || SPECIAL_IN_SYMBOL_FONT(*aCharPt)))
-	{
-		mATSUIToolkit.PrepareToDraw(mPort, mContext );
-		nsresult res;
+         ||IN_SYMBOL_FONT(*aCharPt)
+         ||SPECIAL_IN_SYMBOL_FONT(*aCharPt)
+         ||info.HasGlyphFor(*aCharPt)))
+  {
+    mATSUIToolkit.PrepareToDraw(mPort, mContext );
+    nsresult res;
     if (SPECIAL_IN_SYMBOL_FONT(*aCharPt))
     {
-			 short rep = 0;
+       short rep = 0;
       if ((*aCharPt) > 0x230b)
-			 	rep = (*aCharPt) - 0x2325;
-			 else 
-			 	rep = (*aCharPt) - 0x2308;
+         rep = (*aCharPt) - 0x2325;
+       else 
+         rep = (*aCharPt) - 0x2308;
       res = mATSUIToolkit.GetTextDimensions(gSymbolReplacement+rep, oDim, aSize, 
-													origFontNum, 
-													aBold, aItalic, aColor);
+                                            origFontNum, 
+                                            aBold, aItalic, aColor);
     } 
     else 
     {
       res = mATSUIToolkit.GetTextDimensions(aCharPt, oDim, aSize, 
-													origFontNum, 
-													aBold, aItalic, aColor);
-		}
+                                            origFontNum, 
+                                            aBold, aItalic, aColor);
+    }
     if (NS_SUCCEEDED(res)) 
     {
-			return PR_TRUE;
-	}
+      return PR_TRUE;
+    }
   }
-	return PR_FALSE;
+  return PR_FALSE;
 }
 //------------------------------------------------------------------------
 
 PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
-	const PRUnichar *aCharPt, 
-	PRInt32 x, 	PRInt32 y, 
-	short& oWidth, 
-	short origFontNum,
-	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
+  const PRUnichar *aCharPt, 
+  PRInt32 x,   PRInt32 y, 
+  short& oWidth, 
+  short origFontNum,
+  short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
-	if (nsATSUIUtils::IsAvailable()
-	   &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)||SPECIAL_IN_SYMBOL_FONT(*aCharPt)))
-	{
-		mATSUIToolkit.PrepareToDraw(mPort, mContext );
-		nsresult res;
-		if(SPECIAL_IN_SYMBOL_FONT(*aCharPt)) {
-			 short rep = 0;
-			 if((*aCharPt) > 0x230b)
-			 	rep = (*aCharPt) - 0x2325;
-			 else 
-			 	rep = (*aCharPt) - 0x2308;
-			res = mATSUIToolkit.DrawString(gSymbolReplacement+rep, x, y, oWidth, aSize, 
-													origFontNum, 
-													aBold, aItalic, aColor);
-		} else {
-			res = mATSUIToolkit.DrawString(aCharPt, x, y, oWidth, aSize, 
-													origFontNum, 
-													aBold, aItalic, aColor);
-		}
-		if(NS_SUCCEEDED(res))
-			return PR_TRUE;
-	}
-	return PR_FALSE;
+  nsMacUnicodeFontInfo info;
+  if (nsATSUIUtils::IsAvailable()  
+      && (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) 
+         ||IN_SYMBOL_FONT(*aCharPt)
+         ||SPECIAL_IN_SYMBOL_FONT(*aCharPt)
+         ||info.HasGlyphFor(*aCharPt)))
+  {
+    mATSUIToolkit.PrepareToDraw(mPort, mContext );
+    nsresult res;
+    if(SPECIAL_IN_SYMBOL_FONT(*aCharPt)) 
+    {
+       short rep = 0;
+       if((*aCharPt) > 0x230b)
+         rep = (*aCharPt) - 0x2325;
+       else 
+         rep = (*aCharPt) - 0x2308;
+      res = mATSUIToolkit.DrawString(gSymbolReplacement+rep, x, y, oWidth, aSize, 
+                                     origFontNum, 
+                                     aBold, aItalic, aColor);
+    } else {
+      res = mATSUIToolkit.DrawString(aCharPt, x, y, oWidth, aSize, 
+                                     origFontNum, 
+                                     aBold, aItalic, aColor);
+    }
+    if(NS_SUCCEEDED(res))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 static char *question = "<?>";
 //------------------------------------------------------------------------
