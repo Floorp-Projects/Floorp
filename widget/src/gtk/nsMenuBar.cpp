@@ -68,6 +68,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
   GtkWidget *mainWindow = XtParent(parentWidget);
 #endif
   mMenu = gtk_menu_bar_new();
+  mParent->SetMenuBar(this);
   gtk_widget_show(mMenu);
 // does this need to be added?
 //  gtk_layout_put(GTK_LAYOUT(parentWidget), mMenu, 0, 0);

@@ -48,8 +48,6 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
   gtk_init (argc, &argv);
 
-  gdk_rgb_init ();
- 
   // Windows and Mac don't create anything here, so why should we?
 //  mTopLevel = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 /* we should probibly set even handlers here */
