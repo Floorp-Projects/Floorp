@@ -1,8 +1,5 @@
 
-This is a CVS pull from 2004.10.05 (has to be CVS since a few bug
-fixes we need went in past 3.0.7).  Note that THIS SUCKS: qe'll want
-to pick a release version, probably 3.0.8, and stick with that, as
-soon as it's out.
+This is sqlite 3.0.8.  (SQLITE_3_0_8 tag)
 
 See http://www.sqlite.org/ for more info.
 

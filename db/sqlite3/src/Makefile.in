@@ -46,7 +46,7 @@ LIBRARY_NAME     = sqlite3_s
 MODULE_NAME      = sqlite3
 FORCE_STATIC_LIB = 1
 
-VERSION          = 3.0.7+041005
+VERSION          = 3.0.8
 
 EXPORTS = sqlite3.h
 

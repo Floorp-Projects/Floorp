@@ -604,21 +604,22 @@ void sqlite3VdbeMakeReady(
     assert( nVar>=0 );
     n = isExplain ? 10 : p->nOp;
     p->aStack = sqliteMalloc(
-      n*(sizeof(p->aStack[0])+sizeof(Mem*))          /* aStack, apArg */
-      + nVar*sizeof(Mem)                             /* aVar */
-      + nVar*sizeof(char*)                           /* azVar */
-      + nMem*sizeof(Mem)                             /* aMem */
-      + nCursor*sizeof(Cursor*)                      /* apCsr */
+        n*sizeof(p->aStack[0])         /* aStack */
+      + n*sizeof(Mem*)                 /* apArg */
+      + nVar*sizeof(Mem)               /* aVar */
+      + nVar*sizeof(char*)             /* azVar */
+      + nMem*sizeof(Mem)               /* aMem */
+      + nCursor*sizeof(Cursor*)        /* apCsr */
     );
     if( !sqlite3_malloc_failed ){
-      p->apArg = (Mem **)&p->aStack[n];
-      p->aVar = (Mem *)&p->apArg[n];
-      p->azVar = (char**)&p->aVar[nVar];
-      p->okVar = 0;
-      p->nVar = nVar;
-      p->aMem = (Mem*)&p->azVar[nVar];
+      p->aMem = &p->aStack[n];
       p->nMem = nMem;
-      p->apCsr = (Cursor**)&p->aMem[nMem];
+      p->aVar = &p->aMem[nMem];
+      p->nVar = nVar;
+      p->okVar = 0;
+      p->apArg = (Mem**)&p->aVar[nVar];
+      p->azVar = (char**)&p->apArg[n];
+      p->apCsr = (Cursor**)&p->azVar[nVar];
       p->nCursor = nCursor;
       for(n=0; n<nVar; n++){
         p->aVar[n].flags = MEM_Null;
@@ -1516,7 +1517,7 @@ int sqlite3VdbeSerialTypeLen(u32 serial_type){
   if( serial_type>=12 ){
     return (serial_type-12)/2;
   }else{
-    static u8 aSize[] = { 0, 1, 2, 3, 4, 6, 8, 8, 0, 0, 0, 0 };
+    static const u8 aSize[] = { 0, 1, 2, 3, 4, 6, 8, 8, 0, 0, 0, 0 };
     return aSize[serial_type];
   }
 }
