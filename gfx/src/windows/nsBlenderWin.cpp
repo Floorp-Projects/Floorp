@@ -609,6 +609,8 @@ PRInt16     dspan,sspan,span,savesp;
 
       for(x=0;x<span;x++)
         {
+
+
         t1 = RED16(*d2);
         t2 = RED16(*s2);
         red = (t1*val1+t2*val2)>>8;
@@ -628,9 +630,7 @@ PRInt16     dspan,sspan,span,savesp;
         if(blue>255)
           blue = 255;
 
-
         *sv2 = *d2;
-        //red = 255;green = 0;blue=0;
         *d2 = ((red&0xF8)<<7) | ((green&0xF8)<<2) | (blue&0xF8)>>3;
         sv2++;
         d2++;
@@ -638,12 +638,10 @@ PRInt16     dspan,sspan,span,savesp;
         }
 
       s1 += sspan;
-      //s1+=458;
       d1 += dspan;
       saveptr += savesp;
       }
     }
-#ifdef NEVER
   else
     {
     for(y = 0; y < aNumlines; y++)
@@ -674,7 +672,6 @@ PRInt16     dspan,sspan,span,savesp;
       d1 += aDLSpan;
       }
     }
-#endif
 }
 
 //------------------------------------------------------------
