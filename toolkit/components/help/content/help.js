@@ -88,11 +88,17 @@ var helpFileDS;
 var helpBaseURI;
 
 const defaultHelpFile = "chrome://help/locale/help.rdf";
-# Set from nc:defaulttopic. It is used when the requested uri has no topic
-# specified.
-const defaultTopic = "use-help";
 var searchDatasources = "rdf:null";
 var searchDS = null;
+
+/* defaultTopic is either set
+   1. in the openHelp() call, passed as an argument to the Help window and
+      evaluated in init(), or
+   2. in nc:defaulttopic in the content pack (e.g. firebirdhelp.rdf),
+      evaluated in loadHelpRDF(), or
+   3. "welcome" as a fallback, specified in loadHelpRDF() as well;
+      displayTopic() then uses defaultTopic because topic is null. */
+var defaultTopic;
 
 const NSRESULT_RDF_SYNTAX_ERROR = 0x804e03f7;
 
@@ -186,6 +192,8 @@ function loadHelpRDF() {
         try {
             document.title = getAttribute(helpFileDS, RDF_ROOT, NC_TITLE, "");
             helpBaseURI = getAttribute(helpFileDS, RDF_ROOT, NC_BASE, helpBaseURI);
+            // if there's no nc:defaulttopic in the content pack, set "welcome"
+            // as the default topic
             defaultTopic = getAttribute(helpFileDS,
                 RDF_ROOT, NC_DEFAULTTOPIC, "welcome");
 
@@ -373,7 +381,7 @@ function goForward() {
 
 function goHome() {
     // Load "Welcome" page
-    loadURI("chrome://help/locale/firefox_welcome.xhtml");
+    displayTopic(defaultTopic);
 }
 
 function print() {
