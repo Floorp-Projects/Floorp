@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+#include "nsXPIDLString.h"
 #include "nsRDFCID.h"
 #include "rdfutil.h"
 #include "nsIRDFService.h"
@@ -40,6 +41,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prio.h"
+#include "rdf.h"
 
 #include "nsIURL.h"
 #include "nsIInputStream.h"
@@ -111,9 +113,9 @@ static PRBool
 isFTPURI(nsIRDFResource *r)
 {
 	PRBool		isFTPURI = PR_FALSE;
-	const char	*uri;
+        nsXPIDLCString uri;
 	
-	r->GetValue(&uri);
+	r->GetValue( getter_Copies(uri) );
 	if (!strncmp(uri, "ftp:", PL_strlen("ftp:")))
 	{
 		isFTPURI = PR_TRUE;
@@ -127,10 +129,10 @@ static PRBool
 isFTPDirectory(nsIRDFResource *r)
 {
 	PRBool		isFTPDirectoryFlag = PR_FALSE;
-	const char	*uri;
+        nsXPIDLCString uri;
 	int		len;
 	
-	r->GetValue(&uri);
+	r->GetValue( getter_Copies(uri) );
 	if (uri)
 	{
 		if ((len = PL_strlen(uri)) > 0)
@@ -216,7 +218,7 @@ FTPDataSource::Init(const char *uri)
 		return rv;
 
 	// register this as a named data source with the service manager
-	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this)))
+	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return rv;
 	return NS_OK;
 }
@@ -224,10 +226,12 @@ FTPDataSource::Init(const char *uri)
 
 
 NS_IMETHODIMP
-FTPDataSource::GetURI(const char **uri) const
+FTPDataSource::GetURI(char **uri)
 {
-	*uri = mURI;
-	return NS_OK;
+    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    else
+        return NS_OK;
 }
 
 
@@ -264,8 +268,8 @@ FTPDataSource::GetURL(nsIRDFResource *source, nsVoidArray **array)
 		return(NS_ERROR_OUT_OF_MEMORY);
 	}
 
-	const char	*uri;
-	source->GetValue(&uri);
+        nsXPIDLCString uri;
+	source->GetValue( getter_Copies(uri) );
 	nsAutoString	url(uri);
 
 	nsIRDFLiteral	*literal;
@@ -303,8 +307,8 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			const char	*uri;
-			kNC_FTPObject->GetValue(&uri);
+                    nsXPIDLCString uri;
+			kNC_FTPObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
 				nsAutoString	url(uri);
@@ -487,8 +491,8 @@ FTPDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, P
 				if (file.Equals("/") || file.Equals(".") || file.Equals(".."))
 					return(rv);
 
-				const char	*parentURL;
-				mParent->GetValue(&parentURL);
+                                nsXPIDLCString parentURL;
+				mParent->GetValue( getter_Copies(parentURL) );
 
 				nsAutoString	path(parentURL);
 				path += file;
@@ -557,11 +561,11 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsVoidArray **array)
 
 	if (isFTPDirectory(source))
 	{
-		const char	*ftpURL;
-		source->GetValue(&ftpURL);
+            nsXPIDLCString ftpURL;
+		source->GetValue( getter_Copies(ftpURL) );
 
 		nsIURL		*url;
-		if (NS_SUCCEEDED(rv = NS_NewURL(&url, ftpURL)))
+		if (NS_SUCCEEDED(rv = NS_NewURL(&url, (const char*) ftpURL)))
 		{
 			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
 			if (nsnull != callback)
@@ -598,8 +602,8 @@ FTPDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			const char	*uri;
-			kNC_FTPObject->GetValue(&uri);
+                    nsXPIDLCString uri;
+			kNC_FTPObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
 				nsAutoString	url(uri);
@@ -769,7 +773,8 @@ FTPDataSource::GetAllCommands(nsIRDFResource* source,nsIEnumerator/*<nsIRDFResou
 NS_IMETHODIMP
 FTPDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult)
 {
 	NS_NOTYETIMPLEMENTED("write me!");
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -881,7 +886,7 @@ FTPCursor::GetDataSource(nsIRDFDataSource **aDataSource)
 
 
 NS_IMETHODIMP
-FTPCursor::GetSubject(nsIRDFResource **aResource)
+FTPCursor::GetSource(nsIRDFResource **aResource)
 {
 	NS_ADDREF(mSource);
 	*aResource = mSource;
@@ -891,7 +896,7 @@ FTPCursor::GetSubject(nsIRDFResource **aResource)
 
 
 NS_IMETHODIMP
-FTPCursor::GetPredicate(nsIRDFResource **aPredicate)
+FTPCursor::GetLabel(nsIRDFResource **aPredicate)
 {
 	if (mArcsOut == PR_FALSE)
 	{
@@ -911,7 +916,7 @@ FTPCursor::GetPredicate(nsIRDFResource **aPredicate)
 
 
 NS_IMETHODIMP
-FTPCursor::GetObject(nsIRDFNode **aObject)
+FTPCursor::GetTarget(nsIRDFNode **aObject)
 {
 	if (nsnull != mTarget)
 		NS_ADDREF(mTarget);

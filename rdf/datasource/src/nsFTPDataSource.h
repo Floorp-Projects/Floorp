@@ -138,7 +138,7 @@ public:
 	// nsIRDFDataSource methods
 
 	NS_IMETHOD	Init(const char *uri);
-	NS_IMETHOD	GetURI(const char **uri) const;
+	NS_IMETHOD	GetURI(char **uri);
 	NS_IMETHOD	GetSource(nsIRDFResource *property,
 				nsIRDFNode *target,
 				PRBool tv,
@@ -179,7 +179,8 @@ public:
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
 	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                PRBool* aResult);
 	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
@@ -207,9 +208,9 @@ public:
 	NS_IMETHOD	Advance(void);
 	NS_IMETHOD	GetValue(nsIRDFNode **aValue);
 	NS_IMETHOD	GetDataSource(nsIRDFDataSource **aDataSource);
-	NS_IMETHOD	GetSubject(nsIRDFResource **aResource);
-	NS_IMETHOD	GetPredicate(nsIRDFResource **aPredicate);
-	NS_IMETHOD	GetObject(nsIRDFNode **aObject);
+	NS_IMETHOD	GetSource(nsIRDFResource **aResource);
+	NS_IMETHOD	GetLabel(nsIRDFResource **aPredicate);
+	NS_IMETHOD	GetTarget(nsIRDFNode **aObject);
 	NS_IMETHOD	GetTruthValue(PRBool *aTruthValue);
 };
 

@@ -26,6 +26,10 @@
 #ifndef nsIRDFCompositeDataSource_h__
 #define nsIRDFCompositeDataSource_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nsISupports.h"
 #include "nsIRDFDataSource.h"
 
@@ -53,6 +57,8 @@ public:
      */
     NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source) = 0;
 };
+
+#endif
 
 extern nsresult
 NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result);

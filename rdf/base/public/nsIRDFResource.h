@@ -20,6 +20,10 @@
 #ifndef nsIRDFResource_h__
 #define nsIRDFResource_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nsIRDFNode.h"
 #include "prtypes.h"
 
@@ -68,10 +72,7 @@ public:
     }
 };
 
-
-
-
-
+#endif
 
 #endif // nsIRDFResource_h__
 

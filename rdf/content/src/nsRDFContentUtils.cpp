@@ -31,6 +31,7 @@
 #include "nsLayoutCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "prlog.h"
 
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
@@ -53,15 +54,15 @@ nsRDFContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
     nsIRDFLiteral* literal   = nsnull;
     
     if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-        const char* p;
-        if (NS_FAILED(rv = resource->GetValue(&p)))
+        nsXPIDLCString p;
+        if (NS_FAILED(rv = resource->GetValue( getter_Copies(p) )))
             goto error;
 
         s = p;
     }
     else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-        const PRUnichar* p;
-        if (NS_FAILED(rv = literal->GetValue(&p)))
+        nsXPIDLString p;
+        if (NS_FAILED(rv = literal->GetValue( getter_Copies(p) )))
             goto error;
 
         s = p;

@@ -27,6 +27,10 @@
 #ifndef nsIRDFCursor_h__
 #define nsIRDFCursor_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nsISupports.h"
 #include "prtypes.h"
 #include "rdf.h" // for error codes
@@ -170,5 +174,6 @@ public:
     NS_IMETHOD GetResource(nsIRDFResource** aResource) = 0;
 };
 
+#endif
 
 #endif /* nsIRDFCursor_h__ */

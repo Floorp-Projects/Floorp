@@ -61,6 +61,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsIDOMXULElement.h"
@@ -560,7 +561,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 
     while (NS_SUCCEEDED(rv = children->Advance())) {
         nsCOMPtr<nsIRDFNode> child;
-        if (NS_FAILED(rv = children->GetObject(getter_AddRefs(child)))) {
+        if (NS_FAILED(rv = children->GetTarget(getter_AddRefs(child)))) {
             NS_ERROR("error reading cursor");
             return rv;
         }
@@ -1491,8 +1492,8 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
     // that our ID is relative if possible.
     //
     // XXX Why? Is this for supporting inline style or something?
-    const char* uri;
-    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+    nsXPIDLCString uri;
+    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
         return rv;
 
     // XXX Won't somebody just cram this back into a fully qualified
@@ -1540,7 +1541,7 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
     while (NS_SUCCEEDED(rv = properties->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
 
-        if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property)))) {
+        if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get property from cursor");
             return rv;
         }
@@ -1675,7 +1676,7 @@ RDFXULBuilderImpl::CreateHTMLContents(nsIContent* aElement,
 
     while (NS_SUCCEEDED(rv = children->Advance())) {
         nsCOMPtr<nsIRDFNode> child;
-        if (NS_FAILED(rv = children->GetObject(getter_AddRefs(child)))) {
+        if (NS_FAILED(rv = children->GetTarget(getter_AddRefs(child)))) {
             NS_ERROR("error reading cursor");
             return rv;
         }
@@ -1725,7 +1726,7 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
     while (NS_SUCCEEDED(rv = properties->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
 
-        if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property)))) {
+        if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get property from cursor");
             return rv;
         }
@@ -1852,15 +1853,15 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
     // whether we're aValue is a resource or a literal.
     if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFResourceIID,
                                                  (void**) getter_AddRefs(resource)))) {
-        const char* uri;
-        resource->GetValue(&uri);
-        rv = aElement->SetAttribute(nameSpaceID, tag, uri, PR_TRUE);
+        nsXPIDLCString uri;
+        resource->GetValue( getter_Copies(uri) );
+        rv = aElement->SetAttribute(nameSpaceID, tag, (const char*) uri, PR_TRUE);
     }
     else if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFLiteralIID,
                                                       (void**) getter_AddRefs(literal)))) {
-        const PRUnichar* s;
-        literal->GetValue(&s);
-        rv = aElement->SetAttribute(nameSpaceID, tag, s, PR_TRUE);
+        nsXPIDLString s;
+        literal->GetValue( getter_Copies(s) );
+        rv = aElement->SetAttribute(nameSpaceID, tag, (const PRUnichar*) s, PR_TRUE);
     }
     else {
         // This should _never_ happen.
@@ -2043,11 +2044,11 @@ RDFXULBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     // Set the element's ID. We do this _before_ we insert the element
     // into the document so that it gets properly hashed into the
     // document's resource-to-element map.
-    const char* uri;
-    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+    nsXPIDLCString uri;
+    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
         return rv;
 
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE)))
         return rv;
 
     // Set the document for this element.

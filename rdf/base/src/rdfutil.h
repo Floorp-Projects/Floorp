@@ -46,7 +46,7 @@ class nsString;
  * rdf:_2, etc.
  */
 PR_EXTERN(PRBool)
-rdf_IsOrdinalProperty(const nsIRDFResource* property);
+rdf_IsOrdinalProperty(nsIRDFResource* property);
 
 /**
  * Converts an ordinal property to an index

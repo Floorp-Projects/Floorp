@@ -38,6 +38,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFContentUtils.h"
+#include "nsXPIDLString.h"
+#include "rdf.h"
 #include "rdfutil.h"
 #include "prlog.h"
 
@@ -149,7 +151,7 @@ RDFHTMLBuilderImpl::AddTreeChild(nsIContent* parent,
     PRInt32 nameSpaceID;
     nsIAtom* tag = nsnull;
     nsIContent* child = nsnull;
-    const char* p;
+    nsXPIDLCString p;
 
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
@@ -157,10 +159,10 @@ RDFHTMLBuilderImpl::AddTreeChild(nsIContent* parent,
     if (NS_FAILED(rv = CreateResourceElement(nameSpaceID, tag, value, &child)))
         goto done;
 
-    if (NS_FAILED(rv = value->GetValue(&p)))
+    if (NS_FAILED(rv = value->GetValue( getter_Copies(p) )))
         goto done;
 
-    if (NS_FAILED(rv = child->SetAttribute(kNameSpaceID_HTML, kIdAtom, p, PR_FALSE)))
+    if (NS_FAILED(rv = child->SetAttribute(kNameSpaceID_HTML, kIdAtom, (const char*) p, PR_FALSE)))
         goto done;
 
     rv = parent->AppendChildTo(child, PR_TRUE);
@@ -383,8 +385,8 @@ RDFHTMLBuilderImpl::IsTreeProperty(nsIRDFResource* aProperty)
 
 #define TREE_PROPERTY_HACK
 #if defined(TREE_PROPERTY_HACK)
-    const char* p;
-    aProperty->GetValue(&p);
+    nsXPIDLCString p;
+    aProperty->GetValue( getter_Copies(p) );
     nsAutoString s(p);
     if (s.Equals(NC_NAMESPACE_URI "child") ||
         s.Equals(NC_NAMESPACE_URI "Folder") ||
@@ -413,11 +415,11 @@ RDFHTMLBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
         return rv;
 
-    const char* uri;
-    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+    nsXPIDLCString uri;
+    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
         return rv;
 
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE)))
         return rv;
 
     *aResult = result;

@@ -26,6 +26,10 @@
 #ifndef nsIRDFObserver_h__
 #define nsIRDFObserver_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nsISupports.h"
 
 class nsIRDFDataSource;
@@ -60,5 +64,6 @@ public:
                           nsIRDFNode* object) = 0;
 };
 
+#endif
 
 #endif /* nsIRDFObserver_h__ */

@@ -37,6 +37,7 @@
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsXPIDLString.h"
 #include "prio.h"
 #include "rdf.h"
 #include "rdfutil.h"
@@ -648,7 +649,7 @@ public:
     // nsIRDFDataSource
     NS_IMETHOD Init(const char* uri);
 
-    NS_IMETHOD GetURI(const char* *uri) const {
+    NS_IMETHOD GetURI(char* *uri)  {
         return mInner->GetURI(uri);
     }
 
@@ -724,7 +725,8 @@ public:
 
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult);
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
@@ -826,7 +828,7 @@ BookmarkDataSourceImpl::Init(const char* uri)
         return rv;
 
     // register this as a named data source with the RDF service
-    return gRDFService->RegisterDataSource(this);
+    return gRDFService->RegisterDataSource(this, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -844,8 +846,8 @@ BookmarkDataSourceImpl::GetTarget(nsIRDFResource* aSource,
         if (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion))
             && hasAssertion) {
 
-            const char *uri;
-            if (NS_FAILED(rv = aSource->GetValue(&uri))) {
+            nsXPIDLCString uri;
+            if (NS_FAILED(rv = aSource->GetValue( getter_Copies(uri) ))) {
                 NS_ERROR("unable to get source's URI");
                 return rv;
             }
@@ -907,7 +909,8 @@ BookmarkDataSourceImpl::GetAllCommands(nsIRDFResource* source,
 NS_IMETHODIMP
 BookmarkDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                          nsIRDFResource*   aCommand,
-                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                         PRBool* aResult)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

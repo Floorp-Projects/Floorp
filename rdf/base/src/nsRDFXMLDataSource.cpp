@@ -61,6 +61,7 @@
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsVoidArray.h"
+#include "nsXPIDLString.h"
 #include "plstr.h"
 #include "prio.h"
 #include "prthread.h"
@@ -187,7 +188,7 @@ public:
     // nsIRDFDataSource
     NS_IMETHOD Init(const char* uri);
 
-    NS_IMETHOD GetURI(const char* *uri) const {
+    NS_IMETHOD GetURI(char* *uri) {
         return mInner->GetURI(uri);
     }
 
@@ -267,8 +268,9 @@ public:
 
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments) {
-        return mInner->IsCommandEnabled(aSources, aCommand, aArguments);
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult) {
+        return mInner->IsCommandEnabled(aSources, aCommand, aArguments, aResult);
     }
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -540,7 +542,7 @@ static const char kResourceURIPrefix[] = "resource:";
                                                     (nsISupports**) &rdfService)))
         goto done;
 
-    if (NS_FAILED(rv = rdfService->RegisterDataSource(this)))
+    if (NS_FAILED(rv = rdfService->RegisterDataSource(this, PR_FALSE)))
         goto done;
 
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
@@ -658,9 +660,9 @@ RDFXMLDataSourceImpl::Flush(void)
 
     nsresult rv;
 
-    const char* uri;
-    if (NS_FAILED(rv = mInner->GetURI(&uri)))
-        return rv;
+    nsXPIDLCString uri;
+    rv = mInner->GetURI(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
 
     nsFileURL url(uri);
     nsFileSpec path(url);
@@ -937,9 +939,9 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
                                 nsString& nameSpacePrefix,
                                 nsString& nameSpaceURI)
 {
-    const char* s;
-    resource->GetValue(&s);
-    nsAutoString uri(s);
+    nsXPIDLCString s;
+    resource->GetValue(getter_Copies(s));
+    nsAutoString uri((const char*) s);
 
     for (NameSpaceMap* entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
         if (uri.Find(entry->URI) == 0) {
@@ -1047,14 +1049,14 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
     nsIRDFLiteral* literal;
 
     if (NS_SUCCEEDED(aValue->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-        const char* s;
-        resource->GetValue(&s);
+        nsXPIDLCString s;
+        resource->GetValue(getter_Copies(s));
 
-        const char* docURI;
-        mInner->GetURI(&docURI);
+        nsXPIDLCString docURI;
+        mInner->GetURI(getter_Copies(docURI));
 
         nsAutoString uri(s);
-        rdf_PossiblyMakeRelative(docURI, uri);
+        rdf_PossiblyMakeRelative((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
 
 static const char kRDFResource1[] = " RDF:resource=\"";
@@ -1066,9 +1068,9 @@ static const char kRDFResource2[] = "\"/>\n";
         NS_RELEASE(resource);
     }
     else if (NS_SUCCEEDED(aValue->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-        const PRUnichar* value;
-        literal->GetValue(&value);
-        nsAutoString s(value);
+        nsXPIDLString value;
+        literal->GetValue(getter_Copies(value));
+        nsAutoString s((const PRUnichar*) value);
 
         rdf_EscapeAmpersands(s); // do these first!
         rdf_EscapeAngleBrackets(s);
@@ -1135,15 +1137,16 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     // as a "typed node" instead of the more verbose "RDF:Description
     // RDF:type='...'".
 
-    const char* s;
-    if (NS_FAILED(rv = aResource->GetValue(&s)))
-        return rv;
+    nsXPIDLCString s;
+    rv = aResource->GetValue(getter_Copies(s));
+    if (NS_FAILED(rv)) return rv;
 
-    const char* docURI;
-    mInner->GetURI(&docURI);
+    nsXPIDLCString docURI;
+    rv = mInner->GetURI(getter_Copies(docURI));
+    if (NS_FAILED(rv)) return rv;
 
     nsAutoString uri(s);
-    rdf_PossiblyMakeRelative(docURI, uri);
+    rdf_PossiblyMakeRelative((const char*) docURI, uri);
     rdf_EscapeAmpersands(uri);
 
     rdf_BlockingWrite(aStream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
@@ -1156,7 +1159,7 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
 
     while (NS_SUCCEEDED(rv = arcs->Advance())) {
         nsIRDFResource* property;
-        if (NS_FAILED(rv = arcs->GetPredicate(&property)))
+        if (NS_FAILED(rv = arcs->GetLabel(&property)))
             break;
 
         rv = SerializeProperty(aStream, aResource, property);
@@ -1190,13 +1193,13 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
     if (NS_FAILED(rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, &cursor)))
         return rv;
 
-    const char* docURI;
-    mInner->GetURI(&docURI);
+    nsXPIDLCString docURI;
+    mInner->GetURI(getter_Copies(docURI));
 
     while (NS_SUCCEEDED(rv = cursor->Advance())) {
         nsIRDFNode* node;
 
-        if (NS_FAILED(rv = cursor->GetObject(&node)))
+        if (NS_FAILED(rv = cursor->GetTarget(&node)))
             break;
 
         // If it's a resource, then output a "<RDF:li resource=... />"
@@ -1208,13 +1211,13 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
         nsIRDFLiteral* literal = nsnull;
 
         if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-            const char* s;
-            if (NS_SUCCEEDED(rv = resource->GetValue(&s))) {
+            nsXPIDLCString s;
+            if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(s) ))) {
 static const char kRDFLIResource1[] = "    <RDF:li RDF:resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
                 nsAutoString uri(s);
-                rdf_PossiblyMakeRelative(docURI, uri);
+                rdf_PossiblyMakeRelative((const char*) docURI, uri);
                 rdf_EscapeAmpersands(uri);
 
                 rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
@@ -1224,12 +1227,12 @@ static const char kRDFLIResource2[] = "\"/>\n";
             NS_RELEASE(resource);
         }
         else if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-            const PRUnichar* value;
-            if (NS_SUCCEEDED(rv = literal->GetValue(&value))) {
+            nsXPIDLString value;
+            if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(value) ))) {
 static const char kRDFLILiteral1[] = "    <RDF:li>";
 static const char kRDFLILiteral2[] = "</RDF:li>\n";
                 rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
-                rdf_BlockingWrite(aStream, value);
+                rdf_BlockingWrite(aStream, (const PRUnichar*) value);
                 rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
             }
             NS_RELEASE(literal);
@@ -1288,13 +1291,13 @@ static const char kRDFAlt[] = "RDF:Alt";
     // this because we never really know who else might be referring
     // to it...
 
-    const char* docURI;
-    mInner->GetURI(&docURI);
+    nsXPIDLCString docURI;
+    mInner->GetURI( getter_Copies(docURI) );
 
-    const char* s;
-    if (NS_SUCCEEDED(aContainer->GetValue(&s))) {
+    nsXPIDLCString s;
+    if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
         nsAutoString uri(s);
-        rdf_PossiblyMakeRelative(docURI, uri);
+        rdf_PossiblyMakeRelative((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
         rdf_BlockingWrite(aStream, " RDF:ID=\"", 9);
         rdf_BlockingWrite(aStream, uri);
@@ -1314,7 +1317,7 @@ static const char kRDFAlt[] = "RDF:Alt";
     while (NS_SUCCEEDED(rv = arcs->Advance())) {
         nsIRDFResource* property;
 
-        if (NS_FAILED(rv = arcs->GetPredicate(&property)))
+        if (NS_FAILED(rv = arcs->GetLabel(&property)))
             break;
 
         // If it's a membership property, then output a "LI"

@@ -46,6 +46,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
 
@@ -610,8 +611,8 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 
 	nsIRDFResource	*res1;
 	nsIRDFResource	*res2;
-	const PRUnichar	*uniStr1 = nsnull;
-	const PRUnichar	*uniStr2 = nsnull;
+    nsXPIDLString uniStr1;
+    nsXPIDLString uniStr2;
 
 	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) &res1)))
 	{
@@ -621,7 +622,7 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 			nsIRDFLiteral *literal1;
 			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
 			{
-				literal1->GetValue(&uniStr1);
+				literal1->GetValue( getter_Copies(uniStr1) );
 				NS_RELEASE(literal1);
 			}
 		}
@@ -635,7 +636,7 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 			nsIRDFLiteral	*literal2;
 			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
 			{
-				literal2->GetValue(&uniStr2);
+				literal2->GetValue( getter_Copies(uniStr2) );
 				NS_RELEASE(literal2);
 			}
 		}
@@ -684,8 +685,8 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 				// value, we want the sorting value (so that, for example, a mail datasource could strip
 				// off a "Re:" on a mail message subject)
 
-				const char	*sortPropertyURI;
-				sortInfo->sortProperty->GetValue(&sortPropertyURI);
+				nsXPIDLCString	sortPropertyURI;
+				sortInfo->sortProperty->GetValue( getter_Copies(sortPropertyURI) );
 				if (sortPropertyURI)
 				{
 					nsAutoString	modSortProperty(sortPropertyURI);
@@ -703,8 +704,8 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 									nsIRDFLiteral *literal1;
 									if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
 									{
-										const PRUnichar	*uniStr1 = nsnull;
-										literal1->GetValue(&uniStr1);
+										nsXPIDLString uniStr1;
+										literal1->GetValue( getter_Copies(uniStr1) );
 										cellVal1 = uniStr1;
 										NS_RELEASE(literal1);
 									}
@@ -724,8 +725,8 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 						nsIRDFLiteral *literal1;
 						if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
 						{
-							const PRUnichar	*uniStr1 = nsnull;
-							literal1->GetValue(&uniStr1);
+							nsXPIDLString uniStr1;
+							literal1->GetValue( getter_Copies(uniStr1) );
 							cellVal1 = uniStr1;
 							NS_RELEASE(literal1);
 						}

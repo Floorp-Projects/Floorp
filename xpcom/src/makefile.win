@@ -66,6 +66,7 @@ CPPSRCS =                             \
         nsTraceRefcnt.cpp             \
         nsRegistry.cpp                \
         nsXPComFactory.cpp            \
+        nsXPIDLString.cpp             \
         nsEventQueueService.cpp       \
         nsAllocator.cpp               \
         xcDll.cpp                     \
@@ -88,6 +89,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsTraceRefcnt.obj             \
         .\$(OBJDIR)\nsRegistry.obj                \
         .\$(OBJDIR)\nsXPComFactory.obj            \
+        .\$(OBJDIR)\nsXPIDLString.obj             \
         .\$(OBJDIR)\nsEventQueueService.obj       \
         .\$(OBJDIR)\nsAllocator.obj               \
         .\$(OBJDIR)\xcDll.obj                     \

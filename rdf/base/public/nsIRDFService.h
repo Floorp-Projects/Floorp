@@ -35,6 +35,10 @@
 #ifndef nsIRDFService_h__
 #define nsIRDFService_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nscore.h"
 #include "nsISupports.h"
 #include "prtime.h"
@@ -187,6 +191,7 @@ public:
 
 };
 
+#endif
 
 extern nsresult
 NS_NewRDFService(nsIRDFService** result);

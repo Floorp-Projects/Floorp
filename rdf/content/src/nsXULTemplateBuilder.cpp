@@ -60,6 +60,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
 
@@ -459,7 +460,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     while (NS_SUCCEEDED(rv = properties->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
 
-        if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property))))
+        if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property))))
             break;
 
         // If it's not a widget item property, then it doesn't specify an
@@ -1314,8 +1315,8 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         return PR_TRUE;
 
     nsresult rv;
-    const char* propertyURI;
-    if (NS_FAILED(rv = aProperty->GetValue(&propertyURI))) {
+    nsXPIDLCString propertyURI;
+    if (NS_FAILED(rv = aProperty->GetValue( getter_Copies(propertyURI) ))) {
         NS_ERROR("unable to get property URI");
         return PR_FALSE;
     }
@@ -1383,7 +1384,7 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
 
     while (NS_SUCCEEDED(arcs->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(arcs->GetPredicate(getter_AddRefs(property)))) {
+        if (NS_FAILED(arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
             return result;
         }
@@ -1499,11 +1500,11 @@ RDFGenericBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
         return rv;
 
-    const char* uri;
-    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+    nsXPIDLCString uri;
+    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
         return rv;
 
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE)))
         return rv;
 
     *aResult = result;

@@ -21,6 +21,7 @@
 
 #include "nsIRDFNode.h"
 #include "nscore.h"
+#include "rdf.h"
 class nsIRDFService;
 
 /**
@@ -33,13 +34,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode methods:
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
 
     // nsIRDFResource methods:
     NS_IMETHOD Init(const char* uri);
-    NS_IMETHOD GetValue(const char* *uri) const;
-    NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const;
-    NS_IMETHOD EqualsString(const char* uri, PRBool* result) const;
+    NS_IMETHOD GetValue(char* *uri);
+    NS_IMETHOD EqualsResource(nsIRDFResource* resource, PRBool* result);
+    NS_IMETHOD EqualsString(const char* uri, PRBool* result);
 
     // nsRDFResource methods:
     nsRDFResource(void);

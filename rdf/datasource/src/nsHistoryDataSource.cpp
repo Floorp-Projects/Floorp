@@ -33,6 +33,7 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+#include "nsXPIDLString.h"
 #include "nsRDFCID.h"
 #include "rdfutil.h"
 #include "nsIHistoryDataSource.h"
@@ -45,6 +46,7 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prlong.h"
+#include "rdf.h"
 
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
@@ -164,7 +166,7 @@ public:
 
     NS_IMETHOD Init(const char* uri) ;
 
-    NS_IMETHOD GetURI(const char* *uri) {
+    NS_IMETHOD GetURI(char* *uri) {
         return mInner->GetURI(uri);
     }
 
@@ -186,9 +188,9 @@ public:
 	{
 		if (tv && property == mResourceURL)
 		{
-			const char	*uri;
-			nsresult	rv;
-			if (NS_FAILED(rv = source->GetValue(&uri)))
+            nsXPIDLCString uri;
+			nsresult rv;
+			if (NS_FAILED(rv = source->GetValue( getter_Copies(uri) )))
 			{
 				NS_ERROR("unable to get source's URI");
 				return(rv);
@@ -261,8 +263,9 @@ public:
 
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments) {
-        return mInner->IsCommandEnabled(aSources, aCommand, aArguments);
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult) {
+        return mInner->IsCommandEnabled(aSources, aCommand, aArguments, aResult);
     }
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -271,10 +274,6 @@ public:
         // XXX Uh oh, this could cause problems wrt. the "dirty" flag
         // if it changes the in-memory store's internal state.
         return mInner->DoCommand(aSources, aCommand, aArguments);
-    }
-
-    NS_IMETHOD GetURI(const char* *uri) const {
-        return mInner->GetURI(uri);
     }
 
     NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor) {
@@ -293,8 +292,9 @@ public:
         nsIRDFResource* res;
         PRBool found = 0;
         *aDate = 0;
-        gRDFService->FindResource(aURI, &res, &found);
-        if (found) *aDate = (uint32)PL_HashTableLookup(mLastVisitDateHash, res);    
+        gRDFService->GetResource(aURI, &res);
+        *aDate = (uint32)PL_HashTableLookup(mLastVisitDateHash, res);    
+        NS_RELEASE(res);
         return NS_OK;
     }
 
@@ -424,7 +424,7 @@ nsHistoryDataSource::Init(const char* uri)
 		return rv;
 
 	// register this as a named data source with the RDF service
-	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this)))
+	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return rv;
 
     mLastVisitDateHash = PL_NewHashTable(400, rdf_HashPointer,
@@ -653,7 +653,6 @@ nsHistoryDataSource::getSiteOfURL(const char* url, nsIRDFResource** resource)
 	char* str = strstr(url, "://");
 	char buff[256];
 	nsIRDFLiteral  *titleLiteral;
-	PRBool foundp;
 	if (!str) return NS_ERROR_FAILURE;
 	str = str + 3;
 	if (str[0] == '/') str++;
@@ -666,8 +665,10 @@ nsHistoryDataSource::getSiteOfURL(const char* url, nsIRDFResource** resource)
 	static const char kHistoryURLPrefix[] = "NC:hst:site?";
 	strcpy(buff, kHistoryURLPrefix);
 	strncat(buff, str, (estr-str));
-	if (NS_OK != gRDFService->FindResource(buff, resource, &foundp)) return NS_ERROR_FAILURE;
-	if (foundp) return NS_OK;
+
+    // XXXwaterson: fix this
+	//if (NS_OK != gRDFService->FindResource(buff, resource, &foundp)) return NS_ERROR_FAILURE;
+	//if (foundp) return NS_OK;
 	if (NS_OK != gRDFService->GetResource(buff, resource)) return NS_ERROR_FAILURE;
 	mInner->Assert(mResourceHistoryBySite,  mResourceChild, *resource, 1);
 	nsAutoString ptitle(buff + sizeof(kHistoryURLPrefix) - 1);	
@@ -767,9 +768,10 @@ nsHistoryDataSource::AddToDateHierarchy (PRTime date, const char *url)
 	if (NS_OK != gRDFService->GetResource(url, &resource))
 		return NS_ERROR_FAILURE;
 
-	PRBool			found;
-	if (NS_OK != gRDFService->FindResource(timeBuffer, &timeResource, &found))
-		return NS_ERROR_FAILURE;
+	PRBool			found = PR_FALSE;
+    //XXXwaterson: fix this
+	//if (NS_OK != gRDFService->FindResource(timeBuffer, &timeResource, &found))
+    //return NS_ERROR_FAILURE;
 	if (found == PR_FALSE)
 	{
 		if (NS_OK != gRDFService->GetResource(timeBuffer, &timeResource))
@@ -786,9 +788,10 @@ nsHistoryDataSource::AddToDateHierarchy (PRTime date, const char *url)
 
 	if (dayBuffer[0])
 	{
-		PRBool			found;
-		if (NS_OK != gRDFService->FindResource(dayBuffer, &dayResource, &found))
-			return NS_ERROR_FAILURE;
+		PRBool			found = PR_FALSE;
+        // XXXwaterson: fix this
+		//if (NS_OK != gRDFService->FindResource(dayBuffer, &dayResource, &found))
+        //return NS_ERROR_FAILURE;
 		if (found == PR_FALSE)
 		{
 			if (NS_OK != gRDFService->GetResource(dayBuffer, &dayResource))

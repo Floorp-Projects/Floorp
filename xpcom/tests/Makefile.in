@@ -23,7 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= dynamic
 
-CPPSRCS		= RegFactory.cpp TestFactory.cpp TestCOMPtr.cpp TestID.cpp
+CPPSRCS		= RegFactory.cpp TestFactory.cpp TestCOMPtr.cpp TestID.cpp TestXPIDLString.cpp
 
 include $(topsrcdir)/config/config.mk
 

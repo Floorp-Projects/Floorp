@@ -45,9 +45,11 @@
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "rdfutil.h"
 #include "plhash.h"
 #include "plstr.h"
+#include "rdf.h"
 
 
 #if 1 // defined(MOZ_THREADSAFE_RDF)
@@ -157,7 +159,7 @@ public:
     // nsIRDFDataSource methods
     NS_IMETHOD Init(const char* uri);
 
-    NS_IMETHOD GetURI(const char* *uri) const;
+    NS_IMETHOD GetURI(char* *uri);
 
     NS_IMETHOD GetSource(nsIRDFResource* property,
                          nsIRDFNode* target,
@@ -213,7 +215,8 @@ public:
 
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult);
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
@@ -273,9 +276,9 @@ public:
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 
     // nsIRDFAssertionCursor interface
-    NS_IMETHOD GetSubject(nsIRDFResource** aResource);
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
-    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetSource(nsIRDFResource** aResource);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject);
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
@@ -390,7 +393,7 @@ InMemoryAssertionCursor::GetDataSource(nsIRDFDataSource** aDataSource)
 
 
 NS_IMETHODIMP
-InMemoryAssertionCursor::GetSubject(nsIRDFResource** aSubject)
+InMemoryAssertionCursor::GetSource(nsIRDFResource** aSubject)
 {
     NS_PRECONDITION(aSubject != nsnull, "null ptr");
     if (! aSubject)
@@ -414,7 +417,7 @@ InMemoryAssertionCursor::GetSubject(nsIRDFResource** aSubject)
 
 
 NS_IMETHODIMP
-InMemoryAssertionCursor::GetPredicate(nsIRDFResource** aPredicate)
+InMemoryAssertionCursor::GetLabel(nsIRDFResource** aPredicate)
 {
     NS_PRECONDITION(aPredicate != nsnull, "null ptr");
     if (! aPredicate)
@@ -427,7 +430,7 @@ InMemoryAssertionCursor::GetPredicate(nsIRDFResource** aPredicate)
 
 
 NS_IMETHODIMP
-InMemoryAssertionCursor::GetObject(nsIRDFNode** aObject)
+InMemoryAssertionCursor::GetTarget(nsIRDFNode** aObject)
 {
     NS_PRECONDITION(aObject != nsnull, "null ptr");
     if (! aObject)
@@ -503,12 +506,12 @@ public:
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 
     // nsIRDFArcsOutCursor interface
-    NS_IMETHOD GetSubject(nsIRDFResource** aSubject);
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetSource(nsIRDFResource** aSubject);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate);
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 
     // nsIRDFArcsInCursor interface
-    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject);
 };
 
 InMemoryArcsCursor::InMemoryArcsCursor(InMemoryDataSource* ds,
@@ -645,7 +648,7 @@ InMemoryArcsCursor::GetDataSource(nsIRDFDataSource** aDataSource)
 }
 
 NS_IMETHODIMP
-InMemoryArcsCursor::GetSubject(nsIRDFResource** aSubject)
+InMemoryArcsCursor::GetSource(nsIRDFResource** aSubject)
 {
     NS_PRECONDITION(aSubject != nsnull, "null ptr");
     if (! aSubject)
@@ -657,7 +660,7 @@ InMemoryArcsCursor::GetSubject(nsIRDFResource** aSubject)
 }
 
 NS_IMETHODIMP
-InMemoryArcsCursor::GetObject(nsIRDFNode** aObject)
+InMemoryArcsCursor::GetTarget(nsIRDFNode** aObject)
 {
     NS_PRECONDITION(aObject != nsnull, "null ptr");
     if (! aObject)
@@ -669,7 +672,7 @@ InMemoryArcsCursor::GetObject(nsIRDFNode** aObject)
 }
 
 NS_IMETHODIMP
-InMemoryArcsCursor::GetPredicate(nsIRDFResource** aPredicate)
+InMemoryArcsCursor::GetLabel(nsIRDFResource** aPredicate)
 {
     NS_PRECONDITION(aPredicate != nsnull, "null ptr");
     if (! aPredicate)
@@ -888,6 +891,7 @@ InMemoryDataSource::~InMemoryDataSource(void)
         delete mObservers;
     }
 
+    if (mURL) PL_strfree(mURL);
     PR_DestroyLock(mLock);
 }
 
@@ -956,14 +960,16 @@ InMemoryDataSource::Init(const char* uri)
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::GetURI(const char* *uri) const
+InMemoryDataSource::GetURI(char* *uri)
 {
     NS_PRECONDITION(uri != nsnull, "null ptr");
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    *uri = mURL;
-    return NS_OK;
+    if ((*uri = nsXPIDLCString::Copy(mURL)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    else
+        return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1458,7 +1464,8 @@ InMemoryDataSource::GetAllCommands(nsIRDFResource* source,
 NS_IMETHODIMP
 InMemoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                      nsIRDFResource*   aCommand,
-                                     nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                                     nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                     PRBool* aResult)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

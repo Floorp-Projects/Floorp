@@ -39,10 +39,12 @@
 #include "nsIRDFXMLDataSource.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "rdf.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -80,18 +82,15 @@ public:
 
     // nsIRDFService
     NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
-    NS_IMETHOD FindResource(const char* uri, nsIRDFResource** resource, PRBool *found);
     NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
     NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
-    NS_IMETHOD GetDateLiteral(const PRTime value, nsIRDFDate** date) ;
-    NS_IMETHOD GetIntLiteral(const int32 value, nsIRDFInt** intLiteral);
+    NS_IMETHOD GetDateLiteral(PRTime value, nsIRDFDate** date) ;
+    NS_IMETHOD GetIntLiteral(PRInt32 value, nsIRDFInt** intLiteral);
     NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE);
     NS_IMETHOD UnregisterResource(nsIRDFResource* aResource);
     NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource, PRBool replace = PR_FALSE);
     NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource);
     NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource);
-    NS_IMETHOD CreateDatabase(const char** uris, nsIRDFDataBase** dataBase);
-    NS_IMETHOD CreateBrowserDatabase(nsIRDFDataBase** dataBase);
 
     // Implementation methods
     nsresult RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace = PR_FALSE);
@@ -117,11 +116,11 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
 
     // nsIRDFLiteral
-    NS_IMETHOD GetValue(const PRUnichar* *value) const;
-    NS_IMETHOD EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const;
+    NS_IMETHOD GetValue(PRUnichar* *value);
+    NS_IMETHOD EqualsLiteral(nsIRDFLiteral* literal, PRBool* result);
 
 private:
     nsAutoString mValue;
@@ -161,7 +160,7 @@ LiteralImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-LiteralImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+LiteralImpl::EqualsNode(nsIRDFNode* node, PRBool* result)
 {
     nsresult rv;
     nsIRDFLiteral* literal;
@@ -177,30 +176,30 @@ LiteralImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
 }
 
 NS_IMETHODIMP
-LiteralImpl::GetValue(const PRUnichar* *value) const
+LiteralImpl::GetValue(PRUnichar* *value)
 {
     NS_ASSERTION(value, "null ptr");
     if (! value)
         return NS_ERROR_NULL_POINTER;
 
-    *value = mValue.GetUnicode();
+    *value = nsXPIDLString::Copy(mValue.GetUnicode());
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-LiteralImpl::EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const
+LiteralImpl::EqualsLiteral(nsIRDFLiteral* literal, PRBool* result)
 {
     NS_ASSERTION(literal && result, "null ptr");
     if (!literal || !result)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    const PRUnichar* p;
-    if (NS_FAILED(rv = literal->GetValue(&p)))
+    nsXPIDLString p;
+    if (NS_FAILED(rv = literal->GetValue(getter_Copies(p))))
         return rv;
 
-    nsAutoString s(p);
+    nsAutoString s((const PRUnichar*) p);
 
     *result = s.Equals(mValue);
     return NS_OK;
@@ -220,11 +219,11 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
 
     // nsIRDFDate
-    NS_IMETHOD GetValue(PRTime *value) const;
-    NS_IMETHOD EqualsDate(const nsIRDFDate* date, PRBool* result) const;
+    NS_IMETHOD GetValue(PRTime *value);
+    NS_IMETHOD EqualsDate(nsIRDFDate* date, PRBool* result);
 
 private:
     PRTime mValue;
@@ -262,7 +261,7 @@ DateImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-DateImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+DateImpl::EqualsNode(nsIRDFNode* node, PRBool* result)
 {
     nsresult rv;
     nsIRDFDate* date;
@@ -278,7 +277,7 @@ DateImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
 }
 
 NS_IMETHODIMP
-DateImpl::GetValue(PRTime *value) const
+DateImpl::GetValue(PRTime *value)
 {
     NS_ASSERTION(value, "null ptr");
     if (! value)
@@ -290,7 +289,7 @@ DateImpl::GetValue(PRTime *value) const
 
 
 NS_IMETHODIMP
-DateImpl::EqualsDate(const nsIRDFDate* date, PRBool* result) const
+DateImpl::EqualsDate(nsIRDFDate* date, PRBool* result)
 {
     NS_ASSERTION(date && result, "null ptr");
     if (!date || !result)
@@ -311,25 +310,25 @@ DateImpl::EqualsDate(const nsIRDFDate* date, PRBool* result) const
 
 class IntImpl : public nsIRDFInt {
 public:
-    IntImpl(const int32 s);
+    IntImpl(PRInt32 s);
     virtual ~IntImpl(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
 
     // nsIRDFInt
-    NS_IMETHOD GetValue(int32 *value) const;
-    NS_IMETHOD EqualsInt(const nsIRDFInt* value, PRBool* result) const;
+    NS_IMETHOD GetValue(PRInt32 *value);
+    NS_IMETHOD EqualsInt(nsIRDFInt* value, PRBool* result);
 
 private:
-    int32 mValue;
+    PRInt32 mValue;
 };
 
 
-IntImpl::IntImpl(const int32 s)
+IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
 {
     NS_INIT_REFCNT();
@@ -360,7 +359,7 @@ IntImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-IntImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+IntImpl::EqualsNode(nsIRDFNode* node, PRBool* result)
 {
     nsresult rv;
     nsIRDFInt* intValue;
@@ -376,7 +375,7 @@ IntImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
 }
 
 NS_IMETHODIMP
-IntImpl::GetValue(int32 *value) const
+IntImpl::GetValue(PRInt32 *value)
 {
     NS_ASSERTION(value, "null ptr");
     if (! value)
@@ -388,14 +387,14 @@ IntImpl::GetValue(int32 *value) const
 
 
 NS_IMETHODIMP
-IntImpl::EqualsInt(const nsIRDFInt* intValue, PRBool* result) const
+IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
 {
     NS_ASSERTION(intValue && result, "null ptr");
     if (!intValue || !result)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    int32 p;
+    PRInt32 p;
     if (NS_FAILED(rv = intValue->GetValue(&p)))
         return rv;
 
@@ -583,21 +582,6 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 }
 
 NS_IMETHODIMP
-ServiceImpl::FindResource(const char* uri, nsIRDFResource** resource, PRBool *found)
-{
-    nsIRDFResource* result =
-        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
-
-    if (result) {
-        *resource = result;
-        *found = 1;
-    } else {
-        *found = 0;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResource)
 {
     nsAutoString uriStr(aURI);
@@ -650,7 +634,7 @@ ServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
 }
 
 NS_IMETHODIMP
-ServiceImpl::GetDateLiteral(const PRTime time, nsIRDFDate** literal)
+ServiceImpl::GetDateLiteral(PRTime time, nsIRDFDate** literal)
 {
     // XXX how do we cache these? should they live in their own hashtable?
     DateImpl* result = new DateImpl(time);
@@ -663,7 +647,7 @@ ServiceImpl::GetDateLiteral(const PRTime time, nsIRDFDate** literal)
 }
 
 NS_IMETHODIMP
-ServiceImpl::GetIntLiteral(const int32 value, nsIRDFInt** literal)
+ServiceImpl::GetIntLiteral(PRInt32 value, nsIRDFInt** literal)
 {
     // XXX how do we cache these? should they live in their own hashtable?
     IntImpl* result = new IntImpl(value);
@@ -684,8 +668,8 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
 
     nsresult rv;
 
-    const char* uri;
-    rv = aResource->GetValue(&uri);
+    nsXPIDLCString uri;
+    rv = aResource->GetValue(getter_Copies(uri));
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to get URI from resource");
         return rv;
@@ -703,10 +687,15 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
         return NS_ERROR_FAILURE;    // already registered
     }
 
-    // This is a little trick to make storage more efficient. For
-    // the "key" in the table, we'll use the string value that's
-    // stored as a member variable of the nsIRDFResource object.
-    PL_HashTableAdd(mResources, uri, aResource);
+    if (prevRes) {
+        // XXXwaterson: LEAK! Release the previous key.
+    }
+
+    const char* key = PL_strdup(uri);
+    if (! key)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_HashTableAdd(mResources, key, aResource);
 
     // *We* don't AddRef() the resource: that way, the resource
     // can be garbage collected when the last refcount goes
@@ -724,11 +713,13 @@ ServiceImpl::UnregisterResource(nsIRDFResource* resource)
 
     nsresult rv;
 
-    const char* uri;
-    if (NS_FAILED(rv = resource->GetValue(&uri)))
-        return rv;
+    nsXPIDLCString uri;
+    rv = resource->GetValue(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
 
     PL_HashTableRemove(mResources, uri);
+
+    // XXXwaterson: LEAK! Release the previous key.
 
     // N.B. that we _don't_ release the resource: we only held a weak
     // reference to it in the hashtable.
@@ -745,9 +736,9 @@ ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
 
     nsresult rv;
 
-    const char* uri;
-    if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
-        return rv;
+    nsXPIDLCString uri;
+    rv = aDataSource->GetURI(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
 
     nsIRDFDataSource* ds =
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
@@ -772,9 +763,9 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 
     nsresult rv;
 
-    const char* uri;
-    if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
-        return rv;
+    nsXPIDLCString uri;
+    rv = aDataSource->GetURI(getter_Copies(uri));
+    if (NS_FAILED(rv)) return rv;
 
     if (uri) {
         nsIRDFDataSource* ds =
@@ -868,21 +859,6 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-ServiceImpl::CreateDatabase(const char** uri, nsIRDFDataBase** dataBase)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-ServiceImpl::CreateBrowserDatabase(nsIRDFDataBase** dataBase)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
@@ -891,11 +867,10 @@ ServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
     NS_PRECONDITION(aLiteral != nsnull, "null ptr");
 
     nsresult rv;
-    const PRUnichar* value;
-    if (NS_FAILED(rv = aLiteral->GetValue(&value))) {
-        NS_ERROR("unable to get literal's value");
-        return rv;
-    }
+    nsXPIDLString value;
+    rv = aLiteral->GetValue(getter_Copies(value));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get literal's value");
+    if (NS_FAILED(rv)) return rv;
 
     nsIRDFLiteral* prevLiteral =
         NS_STATIC_CAST(nsIRDFLiteral*, PL_HashTableLookup(mLiterals, value));
@@ -903,6 +878,7 @@ ServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
     if (prevLiteral) {
         if (aReplace) {
             NS_RELEASE(prevLiteral);
+            // XXXwaterson LEAK! free the previous key
         }
         else {
             NS_WARNING("literal already registered and replace not specified");
@@ -910,7 +886,11 @@ ServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
         }
     }
 
-    PL_HashTableAdd(mLiterals, value, aLiteral);
+    const PRUnichar* key = nsXPIDLString::Copy(value);
+    if (! key)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_HashTableAdd(mLiterals, key, aLiteral);
     return NS_OK;
 }
 
@@ -922,13 +902,14 @@ ServiceImpl::UnregisterLiteral(nsIRDFLiteral* aLiteral)
 
     nsresult rv;
 
-    const PRUnichar* value;
-    if (NS_FAILED(rv = aLiteral->GetValue(&value))) {
-        NS_ERROR("unable to get literal's value");
-        return rv;
-    }
+    nsXPIDLString value;
+    rv = aLiteral->GetValue(getter_Copies(value));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get literal's value");
+    if (NS_FAILED(rv)) return rv;
 
     PL_HashTableRemove(mLiterals, value);
+
+    // XXXwaterson LEAK! free the key
     return NS_OK;
 }
 
