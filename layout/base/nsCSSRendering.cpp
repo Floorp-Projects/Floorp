@@ -2487,19 +2487,18 @@ const nsStyleBackground*
 nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
                                              PRBool aStartAtParent /*= PR_FALSE*/)
 {
+  NS_ASSERTION(aContext, "Cannot find NonTransparentBackground in a null context" );
+  
   const nsStyleBackground* result = nsnull;
-  nsStyleContext* context;
+  nsStyleContext* context = nsnull;
   if (aStartAtParent) {
     context = aContext->GetParent();
-  } else {
+  }
+  if (!context) {
     context = aContext;
   }
-  NS_ASSERTION(context, "Cannot find NonTransparentBackground in a null context" );
   
   while (context) {
-    // Have to .get() because some compilers won't match the template
-    // otherwise (they don't look for implicit type conversions while doing
-    // template matching?).
     result = context->GetStyleBackground();
     if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
       break;
