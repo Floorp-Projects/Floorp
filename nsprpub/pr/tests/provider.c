@@ -766,10 +766,8 @@ static PRStatus NewThread(
             rv = pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
             PR_ASSERT(0 == rv);
 
-#if !defined(LINUX)
             rv = pthread_attr_setstacksize(&tattr, 64 * 1024);
             PR_ASSERT(0 == rv);
-#endif
 
             rv = _PT_PTHREAD_CREATE(&id, tattr, pthread_start, start_object);
             (void)_PT_PTHREAD_ATTR_DESTROY(&tattr);
