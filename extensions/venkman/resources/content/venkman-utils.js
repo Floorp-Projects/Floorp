@@ -27,15 +27,23 @@ var dumpln;
 var dd;
 
 if (typeof document == "undefined") /* in xpcshell */
+{
     dumpln = print;
+}
 else
+{
     if (typeof dump == "function")
         dumpln = function (str) {dump (str + "\n");}
     else if (jsenv.HAS_RHINO)
-        dumpln = function (str) {var out = java.lang.System.out;
-                                 out.println(str); out.flush(); }
+    {
+        dumpln = function (str) {
+                     var out = java.lang.System.out;
+                     out.println(str); out.flush();
+                 }
+    }
     else
         dumpln = function () {} /* no suitable function */
+}
 
 if (DEBUG)
     dd = dumpln;
@@ -381,6 +389,16 @@ function zeroPad (num, decimals)
         rv = "0" + rv;
     
     return rv;
+}
+
+function leftPadString (str, num, ch)
+{
+    var rv = "";
+    var len = rv.length;
+    for (var i = len; i < num; ++i)
+        rv += ch;
+    
+    return rv + str;
 }
     
 function roundTo (num, prec)
