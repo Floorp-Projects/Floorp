@@ -646,7 +646,7 @@ class FindFunction extends JDialog implements ActionListener {
                 int lineNumber = FrameHelper.getFirstLine(script);
                 FileWindow w = db.getFileWindow(sourceName);
                 if (w == null) {
-                    (new CreateFileWindow(db, sourceName, sourceEntry.source.toString(), lineNumber)).run();
+                    (new CreateFileWindow(db, sourceName, sourceEntry.source, lineNumber)).run();
                     w = db.getFileWindow(sourceName);
                     w.setPosition(-1);
                 }
@@ -2124,12 +2124,10 @@ class ContextData {
 
 class FrameHelper implements DebugFrame {
 
-    FrameHelper(Context cx, Main master, Scriptable scope,
-                DebuggableScript fnOrScript)
+    FrameHelper(Context cx, Main master, DebuggableScript fnOrScript)
     {
         this.master = master;
         this.contextData = ContextData.get(cx);
-        this.scope = scope;
         this.fnOrScript = fnOrScript;
         this.lineNumber = getFirstLine(fnOrScript);
 
@@ -2149,8 +2147,13 @@ class FrameHelper implements DebugFrame {
         return lineNumber;
     }
 
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
+    public void onEnter(Context cx, Scriptable activation,
+                        Scriptable thisObj, Object[] args)
+    {
+        this.activation = activation;
+        if (master.breakOnEnter) {
+            master.handleBreakpointHit(cx);
+        }
     }
 
     public void onLineChange(Context cx, int lineNumber, boolean breakpoint) {
@@ -2172,7 +2175,7 @@ class FrameHelper implements DebugFrame {
     }
 
     Scriptable getVariableObject() {
-        return scope;
+        return activation;
     }
 
     String getSourceName() {
@@ -2189,7 +2192,7 @@ class FrameHelper implements DebugFrame {
 
     private Main master;
     private ContextData contextData;
-    private Scriptable scope;
+    private Scriptable activation;
     private DebuggableScript fnOrScript;
     private int lineNumber;
 }
@@ -2292,11 +2295,11 @@ public class Main extends JFrame implements Debugger, ContextListener {
     private Hashtable sourceNames = new Hashtable();
 
     class SourceEntry {
-        SourceEntry(StringBuffer source, DebuggableScript fnOrScript) {
+        SourceEntry(String source, DebuggableScript fnOrScript) {
             this.source = source;
             this.fnOrScript = fnOrScript;
         }
-        StringBuffer source;
+        String source;
         DebuggableScript fnOrScript;
     };
 
@@ -2320,7 +2323,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
     /* Debugger Interface */
 
     public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,
-                                      StringBuffer source) {
+                                      String source) {
         String sourceName = fnOrScript.getSourceName();
         if (sourceName == null) {
             sourceName = "<stdin>";
@@ -2351,7 +2354,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 functionMap.put(name, entry);
             }
         }
-        loadedFile(sourceName, source.toString());
+        loadedFile(sourceName, source);
     }
 
     void handleBreakpointHit(Context cx) {
@@ -2420,15 +2423,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
     }
 
-    public DebugFrame enterFrame(Context cx, Scriptable scope,
-                          Scriptable thisObj, Object[] args,
-                          DebuggableScript fnOrScript)
-    {
-        FrameHelper frame = new FrameHelper(cx, this, scope, fnOrScript);
-        if (breakOnEnter) {
-            handleBreakpointHit(cx);
-        }
-        return frame;
+    public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript) {
+        return new FrameHelper(cx, this, fnOrScript);
     }
 
     /* end Debugger interface */
@@ -2662,8 +2658,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 action.run();
             } else {
                 Vector v = (Vector)sourceNames.get(sourceName);
-                String source =
-                    ((SourceEntry)v.elementAt(0)).source.toString();
+                String source = ((SourceEntry)v.elementAt(0)).source;
                 CreateFileWindow action = new CreateFileWindow(this,
                                                                sourceName,
                                                                source,
@@ -2815,8 +2810,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     swingInvoke(action);
                 } else {
                     Vector v = (Vector)sourceNames.get(fileName);
-                    String source =
-                        ((SourceEntry)v.elementAt(0)).source.toString();
+                    String source = ((SourceEntry)v.elementAt(0)).source;
                     CreateFileWindow action = new CreateFileWindow(this,
                                                                    fileName,
                                                                    source,
