@@ -123,6 +123,10 @@ function processCreateProfileData( aProfName, aProfDir )
     //       dropout layery thing. yeah. something like that to tell them when 
     //       it happens, not when the whole wizard is complete. blah. 
     if( profile.profileExists( aProfName ) )	{
+      alert( bundle.GetStringFromName( "profileExists" ) );
+      // this is a bad but probably acceptable solution for now. 
+      // when we add more panels, we will want a better solution. 
+      window.frames["content"].document.getElementById("ProfileName").focus();
 			return false;
 		}
 		profile.createNewProfile( aProfName, aProfDir );
