@@ -39,8 +39,6 @@ class XFE_BuiltinTreeView : public XFE_RDFTreeView
     virtual void          notify      (HT_Resource n, HT_Event whatHappened);
 
  protected:
-    XFE_RDFTreeView *    _rdftree;
-	Widget               mainForm;
 	char                 *url;
 	char                 *target;
 	char                 *classId;
