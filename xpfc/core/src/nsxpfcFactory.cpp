@@ -115,7 +115,7 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
   } else if (mClassID.Equals(kCXPFCDTD)) {
     inst = (nsISupports *)new nsXPFCXMLDTD();
   } else if (mClassID.Equals(kCXPFCContentSink)) {
-    inst = (nsISupports *)new nsXPFCXMLContentSink();
+    inst = (nsISupports *)(nsIXPFCXMLContentSink*)new nsXPFCXMLContentSink();
   } else if (mClassID.Equals(kCVector)) {
     inst = (nsISupports *)new nsVector();
   } else if (mClassID.Equals(kCVectorIterator)) {

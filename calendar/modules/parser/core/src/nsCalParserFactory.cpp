@@ -119,7 +119,7 @@ nsresult nsCalParserFactory::CreateInstance(nsISupports *aOuter,
   if (mClassID.Equals(kCCalXMLDTD)) {
     inst = (nsISupports *)new nsCalXMLDTD();
   } else if (mClassID.Equals(kCCalXMLContentSink)) {
-    inst = (nsISupports *)new nsCalXMLContentSink();
+    inst = (nsISupports *)(nsIXPFCXMLContentSink *)new nsCalXMLContentSink();
   }
 
   if (inst == NULL) {  

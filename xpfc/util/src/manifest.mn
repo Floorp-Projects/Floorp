@@ -21,6 +21,7 @@ CPPSRCS = \
 	nsVectorIterator.cpp \
 	nsVector.cpp \
 	nsStack.cpp \
+    nsUrlParser.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor

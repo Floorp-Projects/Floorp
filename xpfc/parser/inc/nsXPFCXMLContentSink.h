@@ -31,8 +31,10 @@
 #include "nsHTMLTokens.h"
 #include "nsXPFCXMLDTD.h"
 #include "nsIXMLParserObject.h"
+#include "nsIXPFCXMLContentSink.h"
 
-class nsXPFCXMLContentSink : public nsIHTMLContentSink 
+class nsXPFCXMLContentSink : public nsIHTMLContentSink,
+                             public nsIXPFCXMLContentSink
 {
 
 public:
@@ -41,6 +43,9 @@ public:
 
   nsXPFCXMLContentSink();
   virtual ~nsXPFCXMLContentSink();
+
+  NS_IMETHOD Init();
+  NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
 
   // nsIContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
@@ -66,8 +71,6 @@ public:
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
-
-  NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
 
 private:
   NS_IMETHOD CIDFromTag(eXPFCXMLTags tag, nsCID &aClass);

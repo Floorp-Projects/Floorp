@@ -81,11 +81,7 @@ public:
 private:
   nsIWidget * mWindow;
   nsIXPFCCanvas * mRootCanvas ;
-  nsIURL * mUrl;
   nsIStreamListener * mStreamListener;
-  nsIDTD * mDTD;
-  nsIParser * mParser;
-  nsIContentSink * mSink;
 
 public:
   nsICalendarShell * mCalendarShell;

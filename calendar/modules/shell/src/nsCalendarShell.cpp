@@ -156,7 +156,7 @@ int RcvData(void * pData,
      * the parsing thread to take over. This will help keep the 
      * list of unparsed buffers to a minimum.
      */
-    PR_Sleep(PR_INTERVAL_NO_WAIT);
+    //PR_Sleep(PR_INTERVAL_NO_WAIT);
     return iSize > 0 ? 0 : -1;
 }
 
@@ -365,10 +365,10 @@ nsresult nsCalendarShell::InitialLoadData()
   parseThread = PR_CreateThread(PR_USER_THREAD,
                  main_CalStreamReader,
                  pCalStreamReader,
-                 PR_PRIORITY_HIGH,
+                 PR_PRIORITY_NORMAL,
                  PR_LOCAL_THREAD,
                  PR_UNJOINABLE_THREAD,
-                 4096);
+                 0);
 
   capiStatus = pCapi->CAPI_SetStreamCallbacks(
     mCAPISession, &RcvStream, 0,0,RcvData, pCalStreamReader,0);

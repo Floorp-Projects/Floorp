@@ -34,8 +34,10 @@
 #include "nsCalXMLDTD.h"
 #include "nsIXMLParserObject.h"
 #include "nsICalTimeContext.h"
+#include "nsIXPFCXMLContentSink.h"
 
-class nsCalXMLContentSink : public nsIHTMLContentSink 
+class nsCalXMLContentSink : public nsIHTMLContentSink,
+                            public nsIXPFCXMLContentSink
 {
 
 public:
@@ -44,6 +46,9 @@ public:
 
   nsCalXMLContentSink();
   virtual ~nsCalXMLContentSink();
+
+  NS_IMETHOD Init();
+  NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
 
   // nsIContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);

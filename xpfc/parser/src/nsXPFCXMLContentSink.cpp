@@ -53,6 +53,7 @@ static NS_DEFINE_IID(kCTabWidgetCID,        NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCButtonCID,       NS_XPFC_BUTTON_CID);
 static NS_DEFINE_IID(kCXPFCTabWidgetCID,    NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID,   NS_XPFC_TEXTWIDGET_CID);
+static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
 
 #define XPFC_PARSING_STATE_UNKNOWN 0
 #define XPFC_PARSING_STATE_TOOLBAR 1
@@ -158,12 +159,20 @@ nsresult nsXPFCXMLContentSink::QueryInterface(const nsIID& aIID, void** aInstanc
   else if(aIID.Equals(kClassIID)) {  //do this class...
     *aInstancePtr = (nsXPFCXMLContentSink*)(this);                                        
   }                 
+  else if(aIID.Equals(kIXPFCXMLContentSinkIID)) {  //do this class...
+    *aInstancePtr = (nsIXPFCXMLContentSink*)(this);                                        
+  }                 
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
   }
   ((nsISupports*) *aInstancePtr)->AddRef();
   return NS_OK;                                                        
+}
+
+NS_IMETHODIMP nsXPFCXMLContentSink::Init()
+{
+  return NS_OK;
 }
 
 

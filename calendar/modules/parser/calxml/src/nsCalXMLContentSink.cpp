@@ -32,7 +32,7 @@
 #include "nsICalendarShell.h"
 #include "nsCalParserCIID.h"
 #include "nsxpfcCIID.h"
-
+#include "nsCalendarContainer.h"
 
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID,          NS_ICONTENT_SINK_IID);
@@ -55,6 +55,7 @@ static NS_DEFINE_IID(kCalMultiDayViewCanvasCID,     NS_CAL_MULTIDAYVIEWCANVAS_CI
 static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
 static NS_DEFINE_IID(kCalContextcontrollerIID, NS_ICAL_CONTEXT_CONTROLLER_IID);
+static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
 
 
 
@@ -168,6 +169,9 @@ nsresult nsCalXMLContentSink::QueryInterface(const nsIID& aIID, void** aInstance
   else if(aIID.Equals(kClassIID)) {  //do this class...
     *aInstancePtr = (nsCalXMLContentSink*)(this);                                        
   }                 
+  else if(aIID.Equals(kIXPFCXMLContentSinkIID)) {  //do this class...
+    *aInstancePtr = (nsIXPFCXMLContentSink*)(this);                                        
+  }                 
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -176,6 +180,18 @@ nsresult nsCalXMLContentSink::QueryInterface(const nsIID& aIID, void** aInstance
   return NS_OK;                                                        
 }
 
+
+NS_IMETHODIMP nsCalXMLContentSink::Init()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCalXMLContentSink::SetViewerContainer(nsIWebViewerContainer * aViewerContainer)
+{
+  SetWidget(((nsCalendarWidget *)((nsCalendarContainer*)aViewerContainer)->GetDocumentWidget()));
+  return NS_OK;
+}
+  
 
 /*
  * this method gets invoked whenever a container type tag
