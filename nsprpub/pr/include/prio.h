@@ -1880,9 +1880,12 @@ struct PRPollDesc {
 ** DESCRIPTION:
 **
 ** The call returns as soon as I/O is ready on one or more of the underlying
-** file/socket objects. A count of the number of ready descriptors is
+** socket objects. A count of the number of ready descriptors is
 ** returned unless a timeout occurs in which case zero is returned.
 **
+** PRPollDesc.fd should be set to a pointer to a PRFileDesc object
+** representing a socket. This field can be set to NULL to indicate to
+** PR_Poll that this PRFileDesc object should be ignored.
 ** PRPollDesc.in_flags should be set to the desired request
 ** (read/write/except or some combination). Upon successful return from
 ** this call PRPollDesc.out_flags will be set to indicate what kind of
