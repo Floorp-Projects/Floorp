@@ -39,9 +39,13 @@
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsXIFConverter.h"
-#include "nsITextContent.h"
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
+
+#include "nsITextContent.h"
+#include "nsTextReflow.h"/* XXX rename to nsTextRun */
+#include "nsTextFragment.h"
+#include "nsTextTransformer.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
@@ -54,6 +58,9 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #undef NOISY_BLINK
 #undef DEBUG_WORD_WRAPPING
 #endif
+
+#define WORD_BUF_SIZE 100
+#define TEXT_BUF_SIZE 1000
 
 // XXX TODO:
 // 0. re-implement justified text
@@ -74,13 +81,6 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 // do this and then save them in the mWords; later on when we get reflowed
 // again we can destroy them
 // 3. when pulling up text get word width information from next-in-flow
-
-// XXX temporary
-#define XP_IS_SPACE(_ch) \
-  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
-
-// XXX need more of this in nsIRenderingContext.GetWidth
-#define CH_NBSP 160
 
 // XXX use a PreTextFrame for pre-formatted text?
 
@@ -135,7 +135,7 @@ public:
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
 
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
 
   NS_IMETHOD ListTag(FILE* out) const;
 
@@ -165,17 +165,19 @@ public:
                             PRInt32* aIndicies, PRInt32 aTextLength,
                             SelectionInfo& aResult);
 
-  PRUnichar* PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
-                                PRInt32* aIndicies,
-                                PRUnichar* aBuffer, PRInt32 aBufSize,
-                                PRInt32& aStrLen,
-                                nscoord& aNewWidth);
+  void PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
+                          nsTextTransformer& aTransformer,
+                          PRInt32* aIndicies,
+                          PRUnichar* aBuffer,
+                          PRInt32& aTextLen,
+                          nscoord& aNewWidth);
 
-  char* PrepareAsciiText(nsIRenderingContext& aRenderingContext,
-                         PRInt32* aIndexes,
-                         char* aBuffer, PRInt32 aBufSize,
-                         PRInt32& aStrLen,
-                         nscoord& aDeltaWidthResult);
+  void PrepareAsciiText(nsIRenderingContext& aRenderingContext,
+                        nsTextTransformer& aTransformer,
+                        PRInt32* aIndicies,
+                        char* aBuffer,
+                        PRInt32& aTextLen,
+                        nscoord& aNewWidth);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             PRUint8 aDecorations, 
@@ -221,28 +223,30 @@ public:
                                    nsITextContent* aText,
                                    PRBool& aStop);
 
+  void ToCString(nsString& aBuf, PRInt32& aContentLength) const;
+
 protected:
   virtual ~TextFrame();
 
+  // XXX pack this tighter?
   PRInt32 mContentOffset;
   PRInt32 mContentLength;
-
-  // XXX need a better packing
   PRUint32 mFlags;
-  PRUint32 mColumn;
+  PRInt32 mColumn;
 };
 
 // Flag information used by rendering code. This information is
 // computed by the ResizeReflow code. Remaining bits are used by the
 // tab count.
-#define TEXT_SKIP_LEADING_WS    0x01
-#define TEXT_HAS_MULTIBYTE      0x02
-#define TEXT_IS_PRE             0x04
-#define TEXT_BLINK_ON           0x08
-//#define TEXT_ENDS_IN_WHITESPACE 0x10
 
-#define TEXT_GET_TAB_COUNT(_mf) ((_mf) >> 5)
-#define TEXT_SET_TAB_COUNT(_mf,_tabs) (_mf) = (_mf) | ((_tabs)<< 5)
+// Flag indicating that whitespace was skipped
+#define TEXT_SKIP_LEADING_WS    0x01
+
+#define TEXT_HAS_MULTIBYTE      0x02
+
+#define TEXT_IS_PRE             0x04
+
+#define TEXT_BLINK_ON           0x08
 
 //----------------------------------------------------------------------
 
@@ -462,33 +466,18 @@ TextFrame::Paint(nsIPresContext& aPresContext,
         (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
       // Use PRUnichar rendering routine
       PaintUnicodeText(aPresContext, aRenderingContext,
-                       color->mColor, font->mFont.decorations, selfg, selbg, 0, 0);
+                       color->mColor, font->mFont.decorations,
+                       selfg, selbg, 0, 0);
     }
     else {
       // Use char rendering routine
       PaintAsciiText(aPresContext, aRenderingContext,
-                       color->mColor, font->mFont.decorations, selfg, selbg, 0, 0);
+                     color->mColor, font->mFont.decorations,
+                     selfg, selbg, 0, 0);
     }
   }
 
   return NS_OK;
-}
-
-/**
- * To keep things efficient we depend on text content implementing
- * our nsITextContent API
- */
-static const PRUnichar*
-GetText(nsIContent* aContent, PRInt32& aLengthResult)
-{
-  const PRUnichar* cp = nsnull;
-  nsITextContent* tc = nsnull;
-  nsresult rv = aContent->QueryInterface(kITextContentIID, (void**) &tc);
-  if ((NS_OK == rv) && (nsnull != tc)) {
-    tc->GetText(cp, aLengthResult);
-    NS_RELEASE(tc);
-  }
-  return cp;
 }
 
 /**
@@ -627,145 +616,143 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
  * then fill in aIndexes's with the mapping from the original input to
  * the prepared output.
  */
-PRUnichar*
+void
 TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
+                              nsTextTransformer& aTX,
                               PRInt32* aIndexes,
-                              PRUnichar* aBuffer, PRInt32 aBufSize,
-                              PRInt32& aStrLen,
+                              PRUnichar* aBuffer,
+                              PRInt32& aTextLen,
                               nscoord& aNewWidth)
 {
-  PRUnichar* s = aBuffer;
-  PRUnichar* s0 = s;
+  PRUnichar* dst = aBuffer;
 
-  // Get text content
-  PRInt32 textLength;
-  const PRUnichar* cp = GetText(mContent, textLength);
-  if (0 == textLength) {
-    aBuffer[0] = 0;
-    aStrLen = 0;
-    return aBuffer;
-  }
-  cp += mContentOffset;
-  const PRUnichar* end = cp + mContentLength;
+  // Setup transform to operate starting in the content at our content
+  // offset
+  aTX.Init(this, mContentOffset);
 
-  // Skip leading space if necessary
   PRInt32 mappingInx = 0;
   PRInt32 strInx = mContentOffset;
-  if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
-    while (cp < end) {
-      PRUnichar ch = *cp++;
-      if (!XP_IS_SPACE_W(ch)) {
-        cp--;
-        break;
-      } else {
+
+  // Skip over the leading whitespace
+  PRInt32 n = mContentLength;
+  if (0 == (mFlags & TEXT_IS_PRE)) {
+    if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
+      PRBool isWhitespace;
+      PRInt32 wordLen, contentLen;
+      aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      NS_ASSERTION(isWhitespace, "mFlags and content are out of sync");
+      if (isWhitespace) {
         if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
+          // Point mapping indicies at the same content index since
+          // all of the compressed whitespace maps down to the same
+          // renderable character.
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx;
+          }
+        }
+        n -= contentLen;
+        NS_ASSERTION(n >= 0, "whoops");
+      }
+    }
+  }
+
+  // Rescan the content and transform it. Stop when we have consumed
+  // mContentLength characters.
+  PRInt32 column = mColumn;
+  PRInt32 textLength = 0;
+  while (0 != n) {
+    PRUnichar* bp;
+    PRInt32 wordLen, contentLen;
+    if (0 != (TEXT_IS_PRE & mFlags)) {
+      // Get the next section. Check for a tab and if we find one,
+      // expand it.
+      bp = aTX.GetNextSection(wordLen, contentLen);
+      if (nsnull == bp) {
+        break;
+      }
+      if ('\t' == bp[0]) {
+        PRInt32 spaces = 8 - (7 & column);
+        PRUnichar* tp = bp;
+        wordLen = spaces;
+        while (--spaces >= 0) {
+          *tp++ = ' ';
+        }
+        // XXX This is a one to many mapping that I think isn't handled well
+        if (nsnull != aIndexes) {
+          *aIndexes++ = strInx;
+          strInx++;
+        }
+      }
+      else {
+        // Point mapping indicies at each content index in the section
+        if (nsnull != aIndexes) {
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx++;
+          }
+        }
+      }
+      column += wordLen;
+    }
+    else {
+      // Get the next word
+      PRBool isWhitespace;
+      bp = aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      if (nsnull == bp) {
+        break;
+      }
+      if (isWhitespace) {
+        if (nsnull != aIndexes) {
+          // Point mapping indicies at the same content index since
+          // all of the compressed whitespace maps down to the same
+          // renderable character.
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx;
+          }
+          strInx++;
+        }
+      }
+      else {
+        if (nsnull != aIndexes) {
+          // Point mapping indicies at each content index in the word
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx++;
+          }
         }
       }
     }
+    textLength += wordLen;
+    n -= contentLen;
+    nsCRT::memcpy(dst, bp, sizeof(PRUnichar) * wordLen);
+    dst += wordLen;
+    NS_ASSERTION(n >= 0, "whoops");
   }
 
-  PRInt32 length = 0;
-  if (0 != (TEXT_IS_PRE & mFlags)) {
-    PRIntn tabs = TEXT_GET_TAB_COUNT(mFlags);
-
-    // Make a copy of the text we are to render, translating tabs
-    // into whitespace.
-    PRInt32 maxLen = (end - cp) + 8*tabs;
-    if (maxLen > aBufSize) {
-      s0 = s = new PRUnichar[maxLen];
+  // Now remove trailing whitespace if appropriate. It's appropriate
+  // if this frame is continued. And it's also appropriate if this is
+  // not last (or only) frame in a text-run.
+  // XXX fix this to fully obey the comment!
+  if (nsnull != mNextInFlow) {
+    PRIntn zapped = 0;
+    while (dst > aBuffer) {
+      if (dst[-1] == ' ') {
+        dst--;
+        textLength--;
+        zapped++;
+      }
+      else
+        break;
     }
-
-    // Translate tabs into whitespace; translate other whitespace into
-    // spaces.
-    PRIntn col = (PRIntn) mColumn;
-    while (cp < end) {
-      PRUnichar ch = *cp++;
-      if (XP_IS_SPACE_W(ch)) {
-        if (ch == '\t') {
-          PRIntn spaces = 8 - (col & 7);
-          col += spaces;
-          while (--spaces >= 0) {
-            *s++ = ' ';
-            length++;
-          }
-          if (nsnull != aIndexes) {
-            aIndexes[mappingInx++] = strInx;
-            strInx++;/* XXX wrong? */
-          }
-          continue;
-        } else {
-          ch = ' ';
-        }
-      }
-      else if (ch == CH_NBSP) {
-        ch = ' ';
-      }
-      *s++ = ch;
-      length++;
-      if (nsnull != aIndexes) {
-        aIndexes[mappingInx++] = strInx;
-        strInx++;
-      }
-      col++;
-    }
-  } else {
-    // Make a copy of the text we are to render, compressing out
-    // whitespace; translating whitespace to literal spaces;
-    // eliminating trailing whitespace.
-    PRInt32 maxLen = end - cp;
-    if (maxLen > aBufSize) {
-      s0 = s = new PRUnichar[maxLen];
-    }
-
-    // Compress down the whitespace
-    while (cp < end) {
-      PRUnichar ch = *cp++;
-      if (XP_IS_SPACE_W(ch)) {
-        while (cp < end) {
-          ch = *cp++;
-          if (!XP_IS_SPACE_W(ch)) {
-            cp--;
-            break;
-          } else {
-            if (nsnull != aIndexes) {
-              aIndexes[mappingInx++] = strInx;
-            }
-          }
-        }
-        ch = ' ';
-      }
-      else if (ch == CH_NBSP) {
-        ch = ' ';
-      }
-      *s++ = ch;
-      length++;
-      if (nsnull != aIndexes) {
-        aIndexes[mappingInx++] = strInx;
-        strInx++;
-      }
+    if (0 != zapped) {
+      nscoord spaceWidth;
+      aRenderingContext.GetWidth(' ', spaceWidth);
+      aNewWidth = aNewWidth - spaceWidth*zapped;
     }
   }
-
-  // Now remove trailing whitespace
-  PRIntn zapped = 0;
-  while (s > s0) {
-    if (s[-1] == ' ') {
-      s--;
-      length--;
-      zapped++;
-    }
-    else
-      break;
-  }
-  if (0 != zapped) {
-    nscoord spaceWidth;
-    aRenderingContext.GetWidth(' ', spaceWidth);
-    aNewWidth = aNewWidth - spaceWidth*zapped;
-  }
-
-  aStrLen = length;
-  return s0;
+  aTextLen = textLength;
 }
 
 /**
@@ -773,145 +760,147 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
  * then fill in aIndexes's with the mapping from the original input to
  * the prepared output.
  */
-char*
+void
 TextFrame::PrepareAsciiText(nsIRenderingContext& aRenderingContext,
+                            nsTextTransformer& aTX,
                             PRInt32* aIndexes,
-                            char* aBuffer, PRInt32 aBufSize,
-                            PRInt32& aStrLen,
+                            char* aBuffer,
+                            PRInt32& aTextLen,
                             nscoord& aNewWidth)
 {
-  char* s = aBuffer;
-  char* s0 = s;
+  char* dst = aBuffer;
 
-  // Get text content
-  PRInt32 textLength;
-  const PRUnichar* cp = GetText(mContent, textLength);
-  if (0 == textLength) {
-    aBuffer[0] = 0;
-    aStrLen = 0;
-    return aBuffer;
-  }
-  cp += mContentOffset;
-  const PRUnichar* end = cp + mContentLength;
+  // Setup transform to operate starting in the content at our content
+  // offset
+  aTX.Init(this, mContentOffset);
 
-  // Skip leading space if necessary
   PRInt32 mappingInx = 0;
   PRInt32 strInx = mContentOffset;
-  if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
-    while (cp < end) {
-      char ch = char(*cp++);
-      if (!XP_IS_SPACE(ch)) {
-        cp--;
-        break;
-      } else {
+
+  // Skip over the leading whitespace
+  PRInt32 n = mContentLength;
+  if (0 == (mFlags & TEXT_IS_PRE)) {
+    if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
+      PRBool isWhitespace;
+      PRInt32 wordLen, contentLen;
+      aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      NS_ASSERTION(isWhitespace, "mFlags and content are out of sync");
+      if (isWhitespace) {
         if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
+          // Point mapping indicies at the same content index since
+          // all of the compressed whitespace maps down to the same
+          // renderable character.
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx;
+          }
+        }
+        n -= contentLen;
+        NS_ASSERTION(n >= 0, "whoops");
+      }
+    }
+  }
+
+  // Rescan the content and transform it. Stop when we have consumed
+  // mContentLength characters.
+  PRInt32 column = mColumn;
+  PRInt32 textLength = 0;
+  while (0 != n) {
+    PRInt32 wordLen, contentLen;
+    PRUnichar* bp;
+    if (0 != (TEXT_IS_PRE & mFlags)) {
+      // Get the next section. Check for a tab and if we find one,
+      // expand it.
+      bp = aTX.GetNextSection(wordLen, contentLen);
+      if (nsnull == bp) {
+        break;
+      }
+      if ('\t' == bp[0]) {
+        PRInt32 spaces = 8 - (7 & column);
+        PRUnichar* tp = bp;
+        wordLen = spaces;
+        while (--spaces >= 0) {
+          *tp++ = ' ';
+        }
+        // XXX This is a one to many mapping that I think isn't handled well
+        if (nsnull != aIndexes) {
+          *aIndexes++ = strInx;
+          strInx++;
+        }
+      }
+      else {
+        // Point mapping indicies at each content index in the section
+        if (nsnull != aIndexes) {
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx++;
+          }
+        }
+      }
+      column += wordLen;
+    }
+    else {
+      // Get the next word
+      PRBool isWhitespace;
+      bp = aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      if (nsnull == bp) {
+        break;
+      }
+      if (isWhitespace) {
+        if (nsnull != aIndexes) {
+          // Point mapping indicies at the same content index since
+          // all of the compressed whitespace maps down to the same
+          // renderable character.
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx;
+          }
+          strInx++;
+        }
+      }
+      else {
+        if (nsnull != aIndexes) {
+          // Point mapping indicies at each content index in the word
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *aIndexes++ = strInx++;
+          }
         }
       }
     }
+    textLength += wordLen;
+    n -= contentLen;
+
+    // Convert PRUnichar's to char's
+    PRInt32 i = wordLen;
+    while (--i >= 0) {
+      *dst++ = char((unsigned char) (*bp++));
+    }
+    NS_ASSERTION(n >= 0, "whoops");
   }
 
-  PRInt32 length = 0;
-  if (0 != (TEXT_IS_PRE & mFlags)) {
-    PRIntn tabs = TEXT_GET_TAB_COUNT(mFlags);
-
-    // Make a copy of the text we are to render, translating tabs
-    // into whitespace.
-    PRInt32 maxLen = (end - cp) + 8*tabs;
-    if (maxLen > aBufSize) {
-      s0 = s = new char[maxLen];
+  // Now remove trailing whitespace if appropriate. It's appropriate
+  // if this frame is continued. And it's also appropriate if this is
+  // not last (or only) frame in a text-run.
+  // XXX fix this to obey the comment!
+  if (nsnull != mNextInFlow) {
+    PRIntn zapped = 0;
+    while (dst > aBuffer) {
+      if (dst[-1] == ' ') {
+        dst--;
+        textLength--;
+        zapped++;
+      }
+      else
+        break;
     }
-
-    // Translate tabs into whitespace; translate other whitespace into
-    // spaces.
-    PRIntn col = (PRIntn) mColumn;
-    while (cp < end) {
-      char ch = char(*cp++);
-      if (XP_IS_SPACE(ch)) {
-        if (ch == '\t') {
-          PRIntn spaces = 8 - (col & 7);
-          col += spaces;
-          while (--spaces >= 0) {
-            *s++ = ' ';
-            length++;
-          }
-          if (nsnull != aIndexes) {
-            aIndexes[mappingInx++] = strInx;
-            strInx++;/* XXX wrong? */
-          }
-          continue;
-        } else {
-          ch = ' ';
-        }
-      }
-      else if (ch == CH_NBSP) {
-        ch = ' ';
-      }
-      *s++ = ch;
-      length++;
-      if (nsnull != aIndexes) {
-        aIndexes[mappingInx++] = strInx;
-        strInx++;
-      }
-      col++;
-    }
-  } else {
-    // Make a copy of the text we are to render, compressing out
-    // whitespace; translating whitespace to literal spaces;
-    // eliminating trailing whitespace.
-    PRInt32 maxLen = end - cp;
-    if (maxLen > aBufSize) {
-      s0 = s = new char[maxLen];
-    }
-
-    // Compress down the whitespace
-    while (cp < end) {
-      char ch = char(*cp++);
-      if (XP_IS_SPACE(ch)) {
-        while (cp < end) {
-          ch = char(*cp++);
-          if (!XP_IS_SPACE(ch)) {
-            cp--;
-            break;
-          } else {
-            if (nsnull != aIndexes) {
-              aIndexes[mappingInx++] = strInx;
-            }
-          }
-        }
-        ch = ' ';
-      }
-      else if (ch == CH_NBSP) {
-        ch = ' ';
-      }
-      *s++ = ch;
-      length++;
-      if (nsnull != aIndexes) {
-        aIndexes[mappingInx++] = strInx;
-        strInx++;
-      }
+    if (0 != zapped) {
+      nscoord spaceWidth;
+      aRenderingContext.GetWidth(' ', spaceWidth);
+      aNewWidth = aNewWidth - spaceWidth*zapped;
     }
   }
-
-  // Now remove trailing whitespace
-  PRIntn zapped = 0;
-  while (s > s0) {
-    if (s[-1] == ' ') {
-      s--;
-      length--;
-      zapped++;
-    }
-    else
-      break;
-  }
-  if (0 != zapped) {
-    nscoord spaceWidth;
-    aRenderingContext.GetWidth(' ', spaceWidth);
-    aNewWidth = aNewWidth - spaceWidth*zapped;
-  }
-
-  aStrLen = length;
-  return s0;
+  aTextLen = textLength;
 }
 
 // XXX This clearly needs to be done by the container, *somehow*
@@ -1022,17 +1011,26 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
-  PRInt32 textLength;
-  PRInt32 indicies[500];
+  // Make enough space to transform
+  PRUnichar wordBufMem[WORD_BUF_SIZE];
+  PRUnichar paintBufMem[TEXT_BUF_SIZE];
+  PRInt32 indicies[TEXT_BUF_SIZE];
   PRInt32* ip = indicies;
-  if (mContentLength > 500) {
+  PRUnichar* paintBuf = paintBufMem;
+  if (mContentLength > TEXT_BUF_SIZE) {
     ip = new PRInt32[mContentLength];
+    paintBuf = new PRUnichar[mContentLength];
   }
-  PRUnichar buf[500];
   nscoord width = mRect.width;
-  PRUnichar* text = PrepareUnicodeText(aRenderingContext,
-                                       displaySelection ? ip : nsnull,
-                                       buf, 500, textLength, width);
+  PRInt32 textLength;
+
+  // Transform text from content into renderable form
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
+  PrepareUnicodeText(aRenderingContext, tx,
+                     displaySelection ? ip : nsnull,
+                     paintBuf, textLength, width);
+
+  PRUnichar* text = paintBuf;
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and
@@ -1059,16 +1057,19 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 
         if (0 != si.mStartOffset) {
           // Render first (unselected) section
-          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset),
+                                     textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
+                               textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          aRenderingContext.GetWidth(text + si.mStartOffset, PRUint32(secondLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mStartOffset,
+                                     PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aSelectionBGColor);
@@ -1076,7 +1077,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
           aRenderingContext.SetColor(aSelectionTextColor);
           aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
+                               textWidth);
           aRenderingContext.SetColor(aTextColor);
           x += textWidth;
         }
@@ -1084,10 +1086,12 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
           PRInt32 thirdLen = textLength - si.mEndOffset;
 
           // Render third (unselected) section
-          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen),
+                                     textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
+                               textWidth);
         }
       }
       NS_RELEASE(fm);
@@ -1095,8 +1099,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   }
 
   // Cleanup
-  if (text != buf) {
-    delete [] text;
+  if (paintBuf != paintBufMem) {
+    delete [] paintBuf;
   }
   if (ip != indicies) {
     delete [] ip;
@@ -1119,17 +1123,26 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
-  PRInt32 textLength;
-  PRInt32 indicies[500];
+  // Make enough space to transform
+  PRUnichar wordBufMem[WORD_BUF_SIZE];
+  char paintBufMem[TEXT_BUF_SIZE];
+  PRInt32 indicies[TEXT_BUF_SIZE];
   PRInt32* ip = indicies;
-  if (mContentLength > 500) {
+  char* paintBuf = paintBufMem;
+  if (mContentLength > TEXT_BUF_SIZE) {
     ip = new PRInt32[mContentLength];
+    paintBuf = new char[mContentLength];
   }
-  char buf[500];
   nscoord width = mRect.width;
-  char* text = PrepareAsciiText(aRenderingContext,
-                                displaySelection ? ip : nsnull,
-                                buf, 500, textLength, width);
+  PRInt32 textLength;
+
+  // Transform text from content into renderable form
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
+  PrepareAsciiText(aRenderingContext, tx,
+                   displaySelection ? ip : nsnull,
+                   paintBuf, textLength, width);
+
+  char* text = paintBuf;
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and
@@ -1156,16 +1169,19 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 
         if (0 != si.mStartOffset) {
           // Render first (unselected) section
-          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset),
+                                     textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
+                               textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          aRenderingContext.GetWidth(text + si.mStartOffset, PRUint32(secondLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mStartOffset,
+                                     PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aSelectionBGColor);
@@ -1173,7 +1189,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
           aRenderingContext.SetColor(aSelectionTextColor);
           aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
+                               textWidth);
           aRenderingContext.SetColor(aTextColor);
           x += textWidth;
         }
@@ -1181,10 +1198,12 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
           PRInt32 thirdLen = textLength - si.mEndOffset;
 
           // Render third (unselected) section
-          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen),
+                                     textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
+                               textWidth);
         }
       }
       NS_RELEASE(fm);
@@ -1192,8 +1211,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   }
 
   // Cleanup
-  if (text != buf) {
-    delete [] text;
+  if (paintBuf != paintBufMem) {
+    delete [] paintBuf;
   }
   if (ip != indicies) {
     delete [] ip;
@@ -1276,38 +1295,41 @@ TextFrame::GetPosition(nsIPresContext& aCX,
                        PRUint32&       aAcutalContentOffset,
                        PRInt32&        aOffset)
 {
-  const PRInt16 kNumIndices = 512;
-
-  // Get the rendered form of the text
-  PRInt32 textLength;
-  PRInt32  indicies[kNumIndices];
+  PRUnichar wordBufMem[WORD_BUF_SIZE];
+  PRUnichar paintBufMem[TEXT_BUF_SIZE];
+  PRInt32 indicies[TEXT_BUF_SIZE];
   PRInt32* ip = indicies;
-  if (mContentLength > kNumIndices) {
+  PRUnichar* paintBuf = paintBufMem;
+  if (mContentLength >= TEXT_BUF_SIZE) {
     ip = new PRInt32[mContentLength+1];
+    paintBuf = new PRUnichar[mContentLength];
   }
-  PRUnichar buf[kNumIndices];
   nscoord width = 0;
-  PRUnichar* text = PrepareUnicodeText(*aRendContext,
-                                       ip, buf, kNumIndices, textLength,
-                                       width);
+  PRInt32 textLength;
+
+  // Get the renderable form of the text
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
+  PrepareUnicodeText(*aRendContext, tx,
+                     ip, paintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1]+1;
 
   // Find the font metrics for this text
   nsIStyleContext* styleContext;
   aNewFrame->GetStyleContext(&aCX, styleContext);
-  const nsStyleFont *font = (const nsStyleFont*) styleContext->GetStyleData(eStyleStruct_Font);
+  const nsStyleFont *font = (const nsStyleFont*)
+    styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
-
   nsIFontMetrics* fm = aCX.GetMetricsFor(font->mFont);
-
-  PRInt32 offset = mContentOffset + mContentLength;
-
-  PRInt32 index;
-  PRInt32 textWidth;
-
   aRendContext->SetFont(fm);
 
-  PRBool found = BinarySearchForPosition(aRendContext, text, 0, 0, 0, PRInt32(textLength), PRInt32(aEvent->point.x), index, textWidth);
+  PRInt32 offset = mContentOffset + mContentLength;
+  PRInt32 index;
+  PRInt32 textWidth;
+  PRUnichar* text = paintBuf;
+  PRBool found = BinarySearchForPosition(aRendContext, text, 0, 0, 0,
+                                         PRInt32(textLength),
+                                         PRInt32(aEvent->point.x),
+                                         index, textWidth);
   if (found) {
     PRInt32 charWidth;
     aRendContext->GetWidth(text[index], charWidth);
@@ -1319,7 +1341,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 
     offset = 0;
     PRInt32 j;
-    PRInt32* ptr = ip; // We will use pointer math to make it fast, instead of indexing into ip
+    PRInt32* ptr = ip;
     for (j=0;j<=PRInt32(mContentLength);j++) {
       if (*ptr == index+mContentOffset) {
         offset = j+mContentOffset;
@@ -1333,8 +1355,8 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   if (ip != indicies) {
     delete [] ip;
   }
-  if (text != buf) {
-    delete [] text;
+  if (paintBuf != paintBufMem) {
+    delete [] paintBuf;
   }
 
   aAcutalContentOffset = ((TextFrame *)aNewFrame)->mContentOffset;
@@ -1394,9 +1416,17 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-// Reflow normal text (stuff that doesn't have to deal with horizontal
-// tabs). Normal text reflow may or may not wrap depending on the
-// "whiteSpace" style property.
+static void
+MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+                     const nsStyleFont& aFont,
+                     PRUnichar* aWord,
+                     PRInt32 aWordLength,
+                     nscoord& aWidthResult)
+{
+  // XXX write me!
+  aReflowState.rendContext->GetWidth(aWord, aWordLength, aWidthResult);
+}
+
 nsReflowStatus
 TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
                         nsHTMLReflowMetrics& aMetrics,
@@ -1405,13 +1435,6 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
                         const nsStyleText& aTextStyle,
                         PRInt32 aStartingOffset)
 {
-  PRInt32 textLength;
-  const PRUnichar* cp = GetText(mContent, textLength);
-  cp += aStartingOffset;
-  const PRUnichar* end = cp + textLength - aStartingOffset;
-  const PRUnichar* cpStart = cp;
-  mContentOffset = aStartingOffset;
-
   nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(aFont.mFont);
   PRInt32 spaceWidth;
   aReflowState.rendContext->SetFont(fm);
@@ -1420,108 +1443,93 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
     wrapping = PR_FALSE;
   }
+  PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == aFont.mFont.variant;
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
   if (aLineLayout.GetSkipLeadingWhiteSpace()) {
     skipWhitespace = PR_TRUE;
-    mFlags |= TEXT_SKIP_LEADING_WS;
   }
 
-  // Try to fit as much of the text as possible. Note that if we are
-  // at the left margin then the first word always fits. In addition,
-  // we compute the size of the largest word that we contain. If we
-  // end up containing nothing (because there isn't enough space for
-  // the first word) then we still compute the size of that first
-  // non-fitting word.
-
-  // XXX XP_IS_SPACE must not return true for the unicode &nbsp character
-  // XXX what about &zwj and it's cousins?
   nscoord x = 0;
   nscoord maxWidth = aReflowState.maxSize.width;
   nscoord maxWordWidth = 0;
   nscoord prevMaxWordWidth = 0;
-  nscoord lastWordWidth;
-  const PRUnichar* lastWordEnd = cpStart;
-  const PRUnichar* lastWordStart = nsnull;
-  PRBool hasMultibyte = PR_FALSE;
   PRBool endsInWhitespace = PR_FALSE;
 
-  while (cp < end) {
-    PRUnichar ch = *cp++;
-    PRBool isWhitespace;
-    nscoord width;
-    if (XP_IS_SPACE(ch)) {
-      // Compress whitespace down to a single whitespace
-      while (cp < end) {
-        ch = *cp;
-        if (XP_IS_SPACE(ch)) {
-          cp++;
-          continue;
-        }
-        break;
-      }
-      if (skipWhitespace) {
-        skipWhitespace = PR_FALSE;
-        continue;
-      }
-      width = spaceWidth;
-      isWhitespace = PR_TRUE;
-      lastWordStart = cp;
-    } else {
-      // The character is not a space character. Find the end of the
-      // word and then measure it.
-      if (ch >= 128) {
-        hasMultibyte = PR_TRUE;
-      }
-      lastWordStart = cp - 1;
-      while (cp < end) {
-        ch = *cp;
-        if (ch >= 128) {
-          hasMultibyte = PR_TRUE;
-        }
-        if (!XP_IS_SPACE(ch)) {
-          cp++;
-          continue;
-        }
-        break;
-      }
-      aReflowState.rendContext->GetWidth(lastWordStart,
-                                         PRUint32(cp - lastWordStart),
-                                         width);
-      skipWhitespace = PR_FALSE;
-      isWhitespace = PR_FALSE;
-      lastWordWidth = width;
-    }
+  // Setup text transformer to transform this frames text content
+  nsTextRun* textRun = aLineLayout.FindTextRunFor(this);
+  PRUnichar wordBuf[WORD_BUF_SIZE];
+  nsTextTransformer tx(wordBuf, WORD_BUF_SIZE);
+  nsresult rv = tx.Init(/**textRun, XXX*/ this, aStartingOffset);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  PRInt32 contentLength = tx.GetContentLength();
 
-    // Now that we have the end of the word or whitespace, see if it
-    // will fit.
-    if ((0 != x) && wrapping && (x + width > maxWidth)) {
-      // The word/whitespace will not fit.
-      cp = lastWordEnd;
+  // Offset tracks how far along we are in the content
+  PRInt32 offset = aStartingOffset;
+  PRInt32 prevOffset = -1;
+  nscoord lastWordWidth = 0;
+
+  // Loop over words and whitespace in content and measure
+  for (;;) {
+    // Get next word/whitespace from the text
+    PRBool isWhitespace;
+    PRInt32 wordLen, contentLen;
+    PRUnichar* bp = tx.GetNextWord(wordLen, contentLen, isWhitespace);
+    if (nsnull == bp) {
       break;
     }
 
-    // The word/whitespace fits. Add it to the run of text.
+    // Measure the word/whitespace
+    nscoord width;
+    if (isWhitespace) {
+      if (skipWhitespace) {
+        offset += contentLen;
+        skipWhitespace = PR_FALSE;
+
+        // Only set flag when we actually do skip whitespace
+        mFlags |= TEXT_SKIP_LEADING_WS;
+        continue;
+      }
+      width = spaceWidth;
+    } else {
+      if (smallCaps) {
+        MeasureSmallCapsText(aReflowState, aFont, bp, wordLen, width);
+      }
+      else {
+        aReflowState.rendContext->GetWidth(bp, wordLen, width);
+      }
+      skipWhitespace = PR_FALSE;
+      lastWordWidth = width;
+    }
+
+    // See if there is room for the text
+    if ((0 != x) && wrapping && (x + width > maxWidth)) {
+      // The text will not fit.
+      break;
+    }
     x += width;
     prevMaxWordWidth = maxWordWidth;
     if (width > maxWordWidth) {
       maxWordWidth = width;
     }
-    lastWordEnd = cp;
     endsInWhitespace = isWhitespace;
+    prevOffset = offset;
+    offset += contentLen;
   }
-  if (hasMultibyte) {
+  if (tx.HasMultibyte()) {
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
 
-  // Post processing logic to deal with non-breakable-units (in
-  // english "words")
-  if (aLineLayout.InNonBreakingUnit()) {
-    // We are already in an nbu. This means a text frame prior to
-    // this one had a fragment of an nbu that is joined with this
+  // Post processing logic to deal with word-breaking that spans
+  // multiple frames.
+  if (aLineLayout.InWord()) {
+    // We are already in a word. This means a text frame prior to this
+    // one had a fragment of a nbword that is joined with this
     // frame. It also means that the prior frame already found this
-    // frame and recorded it as part of the nbu.
+    // frame and recorded it as part of the word.
 #ifdef DEBUG_WORD_WRAPPING
     ListTag(stdout);
     printf(": in nbu; skipping\n");
@@ -1529,52 +1537,53 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
     aLineLayout.ForgetWordFrame(this);
   }
   else {
-    // There is no currently active nbu. This frame may contain the
+    // There is no currently active word. This frame may contain the
     // start of one.
     if (endsInWhitespace) {
-      // Nope, this frame doesn't start an nbu.
+      // Nope, this frame doesn't start a word.
       aLineLayout.ForgetWordFrames();
     }
-    else if ((nsnull != lastWordStart) && wrapping && (cp == end)) {
-      // This frame does start an nbu. However, there is no point
+    else if (wrapping && (offset == contentLength) && (prevOffset >= 0)) {
+      // This frame does start a word. However, there is no point
       // messing around with it if we are already out of room.
       if ((0 == aLineLayout.GetPlacedFrames()) || (x <= maxWidth)) {
-        // There is room for this nbu fragment. It's possible that
-        // this nbu fragment is the end of the text-run. If it's not
+        // There is room for this word fragment. It's possible that
+        // this word fragment is the end of the text-run. If it's not
         // then we continue with the look-ahead processing.
         nsIFrame* next = aLineLayout.FindNextText(this);
         if (nsnull != next) {
 #ifdef DEBUG_WORD_WRAPPING
-          nsAutoString tmp(lastWordStart, cp - lastWordStart);
+          nsAutoString tmp(tx.GetTextAt(prevOffset), offset-prevOffset);
           ListTag(stdout);
           printf(": start='");
           fputs(tmp, stdout);
           printf("' baseWidth=%d\n", lastWordWidth);
 #endif
-          // Look ahead in the text-run and compute the final nbu
+          // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
-          nscoord nbuWidth = ComputeTotalWordWidth(aLineLayout, aReflowState,
-                                                   next, lastWordWidth);
+          nscoord wordWidth = ComputeTotalWordWidth(aLineLayout, aReflowState,
+                                                    next, lastWordWidth);
           if ((0 == aLineLayout.GetPlacedFrames()) ||
-              (x - lastWordWidth + nbuWidth <= maxWidth)) {
-            // The fully joined nbu has fit. Account for the joined
-            // nbu's affect on the max-element-size here (since the
-            // joined nbu is large than it's pieces, the right effect
-            // will occur)
-            if (nbuWidth > maxWordWidth) {
-              maxWordWidth = nbuWidth;
+              (x - lastWordWidth + wordWidth <= maxWidth)) {
+            // The fully joined word has fit. Account for the joined
+            // word's affect on the max-element-size here (since the
+            // joined word is large than it's pieces, the right effect
+            // will occur from the perspective of the container
+            // reflowing this frame)
+            if (wordWidth > maxWordWidth) {
+              maxWordWidth = wordWidth;
             }
           }
           else {
-            // The fully joined nbu won't fit. We need to reduce our
+            // The fully joined word won't fit. We need to reduce our
             // size by the lastWordWidth.
             x -= lastWordWidth;
             maxWordWidth = prevMaxWordWidth;
-            cp = lastWordEnd = lastWordStart;
+            offset = prevOffset;
 #ifdef DEBUG_WORD_WRAPPING
             printf("  x=%d maxWordWidth=%d len=%d\n", x, maxWordWidth,
-                   cp - cpStart);
+                   offset - aStartingOffset);
 #endif
             aLineLayout.ForgetWordFrames();
           }
@@ -1584,52 +1593,43 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   }
 
   if (0 == x) {
-    // Since we collapsed into nothingness (all our whitespace
-    // is ignored) leave the aState->mSkipLeadingWhiteSpace
-    // flag alone since it doesn't want leading whitespace
+    // Since we collapsed into nothingness (all our whitespace is
+    // ignored) leave the skip-leading-whitespace flag alone so that
+    // whitespace that immediately follows this frame can be properly
+    // skipped.
   }
   else {
     aLineLayout.SetSkipLeadingWhiteSpace(endsInWhitespace);
   }
 
-  // XXX too much code here: some of it isn't needed
-  // Now we know our content length
-  mContentLength = lastWordEnd - cpStart;
-  if (0 == mContentLength) {
-    if (cp == end) {
-      // The entire chunk of text was whitespace that we skipped over.
-      aMetrics.width = 0;
-      aMetrics.height = 0;
-      aMetrics.ascent = 0;
-      aMetrics.descent = 0;
-      mContentLength = end - cpStart;
-      if (nsnull != aMetrics.maxElementSize) {
-        aMetrics.maxElementSize->width = 0;
-        aMetrics.maxElementSize->height = 0;
-      }
-      NS_RELEASE(fm);
-      return NS_FRAME_COMPLETE;
-    }
-  }
-
-  // Set desired size to the computed size
+  // Setup metrics for caller; store final max-element-size information
   aMetrics.width = x;
-  fm->GetHeight(aMetrics.height);
-  fm->GetMaxAscent(aMetrics.ascent);
-  fm->GetMaxDescent(aMetrics.descent);
+  if (0 == x) {
+    aMetrics.height = 0;
+    aMetrics.ascent = 0;
+    aMetrics.descent = 0;
+  }
+  else {
+    fm->GetHeight(aMetrics.height);
+    fm->GetMaxAscent(aMetrics.ascent);
+    fm->GetMaxDescent(aMetrics.descent);
+  }
   if (!wrapping) {
     maxWordWidth = x;
   }
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = maxWordWidth;
-    fm->GetHeight(aMetrics.maxElementSize->height);
+    aMetrics.maxElementSize->height = aMetrics.height;
   }
   NS_RELEASE(fm);
 
-  if (cp == end) {
+  // Set content offset and length and return completion status
+  mContentOffset = aStartingOffset;
+  mContentLength = offset - aStartingOffset;
+  if (offset == contentLength) {
     return NS_FRAME_COMPLETE;
   }
-  else if (cp == cpStart) {
+  else if (offset == aStartingOffset) {
     return NS_INLINE_LINE_BREAK_BEFORE();
   }
   return NS_FRAME_NOT_COMPLETE;
@@ -1702,34 +1702,22 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
                                     nsITextContent* aText,
                                     PRBool& aStop)
 {
-  // Get a pointer and length count for the text
-  const PRUnichar* cp;
-  const PRUnichar* cp0;
-  const PRUnichar* end;
-  PRInt32 len;
-  if (NS_OK != aText->GetText(cp0, len)) {
+  nsTextRun* textRun = aLineLayout.FindTextRunFor(aTextFrame);
+  PRUnichar buf[TEXT_BUF_SIZE];
+  nsTextTransformer tx(buf, TEXT_BUF_SIZE);
+  // XXX we need the content-offset of the text frame!!! 0 won't
+  // always be right when continuations are in action
+  tx.Init(/**textRun, XXX*/ aTextFrame, 0);
+                       
+  PRBool isWhitespace;
+  PRInt32 wordLen, contentLen;
+  PRUnichar* bp = tx.GetNextWord(wordLen, contentLen, isWhitespace);
+  if ((nsnull == bp) || isWhitespace) {
+    // Don't bother measuring nothing
     aStop = PR_TRUE;
     return 0;
   }
-  cp = cp0;
-  end = cp0 + len;
-
-  // Count forward in the text until we hit a whitespace character or
-  // run out of text.
-  aStop = PR_FALSE;
-  while (cp < end) {
-    PRUnichar ch = *cp;
-    if (XP_IS_SPACE(ch)) {
-      aStop = PR_TRUE;
-      break;
-    }
-    cp++;
-  }
-  len = cp - cp0;
-  if (0 == len) {
-    // Don't bother measuring nothing
-    return 0;
-  }
+  aStop = contentLen < tx.GetContentLength();
 
   const nsStyleFont* font;
   aTextFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
@@ -1742,15 +1730,22 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
     nsIFontMetrics* oldfm = rc.GetFontMetrics();
     nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(font->mFont);
     rc.SetFont(fm);
-    rc.GetWidth(cp0, len, width);
+    if (NS_STYLE_FONT_VARIANT_SMALL_CAPS == font->mFont.variant) {
+      MeasureSmallCapsText(aReflowState, *font, buf, wordLen, width);
+    }
+    else {
+      rc.GetWidth(buf, wordLen, width);
+    }
     rc.SetFont(oldfm);
     NS_RELEASE(oldfm);
     NS_RELEASE(fm);
+
 #ifdef DEBUG_WORD_WRAPPING
-    nsAutoString tmp(cp0, len);
+    nsAutoString tmp(bp, wordLen);
     printf("  fragment='");
     fputs(tmp, stdout);
-    printf("' width=%d\n", width);
+    printf("' width=%d [wordLen=%d contentLen=%d ContentLength=%d]\n",
+           width, wordLen, contentLen, tx.GetContentLength());
 #endif
 
     // Remember the text frame for later so that we don't bother doing
@@ -1759,6 +1754,7 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
     return width;
   }
 
+  aStop = PR_TRUE;
   return 0;
 }
 
@@ -1771,60 +1767,54 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
 {
   nsReflowStatus rs = NS_FRAME_COMPLETE;
 
-  PRInt32 textLength;
-  const PRUnichar* cp = GetText(mContent, textLength);
-  cp += aStartingOffset;
-  const PRUnichar* cpStart = cp;
-  const PRUnichar* end = cp + textLength - aStartingOffset;
+  // Use text transformer to transform the next line of PRE content
+  // into its expanded form (it exands tabs, translates NBSP's, etc.).
+  PRInt32 column = aLineLayout.GetColumn();
+  mColumn = column;
+  PRInt32 lineLen, contentLen;
+  PRUnichar buf[TEXT_BUF_SIZE];
+  nsTextTransformer tx(buf, TEXT_BUF_SIZE);
+  tx.Init(this, aStartingOffset);
 
-  mFlags |= TEXT_IS_PRE;
+  // Setup font for measuring with
+  nscoord spaceWidth;
   nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(aFont.mFont);
-  PRInt32 width = 0;
-  PRBool hasMultibyte = PR_FALSE;
-  PRUint16 tabs = 0;
-  PRUint16 col = aLineLayout.GetColumn();
-  mColumn = col;
-  nscoord spaceWidth, charWidth;
   aReflowState.rendContext->SetFont(fm);
   aReflowState.rendContext->GetWidth(' ', spaceWidth);
+  nscoord width = 0;
 
-// XXX change this to measure a line at a time
-  while (cp < end) {
-    PRUnichar ch = *cp++;
-    if (ch == '\n') {
-      rs = (cp == end)
-        ? NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE)
-        : NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_NOT_COMPLETE);
+  // Transform each section of the content. The transformer stops on
+  // tabs and newlines.
+  nscoord totalLen = 0;
+  for (;;) {
+    PRUnichar* bp = tx.GetNextSection(lineLen, contentLen);
+    if (nsnull == bp) {
       break;
     }
-    if (ch == '\t') {
-      // Advance to next tab stop
-      PRIntn spaces = 8 - (col & 7);
-      width += spaces * spaceWidth;
-      col += spaces;
-      tabs++;
-      continue;
+    totalLen += contentLen;
+    if (0 == lineLen) {
+      break;
     }
-    if (ch == CH_NBSP) {
-      width += spaceWidth;
-      col++;
-      continue;
+    if ('\t' == bp[0]) {
+      PRInt32 spaces = 8 - (7 & column);
+      width += spaceWidth * spaces;
     }
-    aReflowState.rendContext->GetWidth(ch, charWidth);
-    width += charWidth;
-    if (ch > 128) {
-      hasMultibyte = PR_TRUE;
+    else {
+      nscoord sectionWidth;
+      aReflowState.rendContext->GetWidth(bp, lineLen, sectionWidth);
+      width += sectionWidth;
     }
-    col++;
   }
-  aLineLayout.SetColumn(col);
-  if (hasMultibyte) {
+  if (tx.HasMultibyte()) {
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
-  TEXT_SET_TAB_COUNT(mFlags, tabs);
+  aLineLayout.SetColumn(column);
 
+  // Record content offset information
   mContentOffset = aStartingOffset;
-  mContentLength = cp - cpStart;
+  mContentLength = totalLen;
+  mFlags |= TEXT_IS_PRE;
+
   aMetrics.width = width;
   fm->GetHeight(aMetrics.height);
   fm->GetMaxAscent(aMetrics.ascent);
@@ -1835,16 +1825,54 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
   }
   NS_RELEASE(fm);
 
+  if (aStartingOffset + totalLen < tx.GetContentLength()) {
+    rs = NS_FRAME_NOT_COMPLETE;
+  }
   return rs;
 }
 
-// XXX there is a copy of this in nsGenericDomDataNode.cpp
-static void
-ToCString(const PRUnichar* cp, PRInt32 aLen, nsString& aBuf)
+// Translate the mapped content into a string that's printable
+void
+TextFrame::ToCString(nsString& aBuf, PRInt32& aContentLength) const
 {
-  const PRUnichar* end = cp + aLen;
-  while (cp < end) {
-    PRUnichar ch = *cp++;
+  const nsTextFragment* frag;
+  PRInt32 numFrags;
+
+  // Get the frames text content
+  nsITextContent* tc;
+  if (NS_OK != mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
+    return;
+  }
+  tc->GetText(frag, numFrags);
+  NS_RELEASE(tc);
+
+  // Compute the total length of the text content.
+  PRInt32 sum = 0;
+  PRInt32 i, n = numFrags;
+  for (i = 0; i < n; i++) {
+    sum += frag[i].GetLength();
+  }
+  aContentLength = sum;
+
+  // Set current fragment and current fragment offset
+  PRInt32 fragOffset = 0, offset = 0;
+  n = numFrags;
+  while (--n >= 0) {
+    if (mContentOffset < offset + frag->GetLength()) {
+      fragOffset = mContentOffset - offset;
+      break;
+    }
+    offset += frag->GetLength();
+    frag++;
+  }
+
+  if (0 == mContentLength) {
+    return;
+  }
+
+  n = mContentLength;
+  for (;;) {
+    PRUnichar ch = frag->CharAt(fragOffset);
     if (ch == '\r') {
       aBuf.Append("\\r");
     } else if (ch == '\n') {
@@ -1857,6 +1885,13 @@ ToCString(const PRUnichar* cp, PRInt32 aLen, nsString& aBuf)
     } else {
       aBuf.Append(ch);
     }
+    if (--n == 0) {
+      break;
+    }
+    if (++fragOffset == frag->GetLength()) {
+      frag++;
+      fragOffset = 0;
+    }
   }
 }
 
@@ -1868,7 +1903,7 @@ TextFrame::ListTag(FILE* out) const
 }
 
 NS_IMETHODIMP
-TextFrame::List(FILE* out, PRInt32 aIndent) const
+TextFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -1881,12 +1916,12 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [view=%p]", view);
   }
 
-  // Output the first/last content offset and prev/next in flow info
-  // XXX inefficient (especially for really large strings)
-  PRInt32 textLength;
-  const PRUnichar* cp = GetText(mContent, textLength);
+  PRInt32 contentLength;
+  nsAutoString tmp;
+  ToCString(tmp, contentLength);
 
-  PRBool isComplete = (mContentOffset + mContentLength) == textLength;
+  // Output the first/last content offset and prev/next in flow info
+  PRBool isComplete = (mContentOffset + mContentLength) == contentLength;
   fprintf(out, "[%d,%d,%c] ", 
           mContentOffset, mContentOffset+mContentLength-1,
           isComplete ? 'T':'F');
@@ -1909,8 +1944,6 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs("\"", out);
-  nsAutoString tmp;
-  ToCString(cp, mContentLength, tmp);
   fputs(tmp, out);
   fputs("\"\n", out);
 
