@@ -437,7 +437,8 @@ print "
   <TR>
     <TD ALIGN=RIGHT><B>URL:</B>
     <TD COLSPAN=5>
-      <INPUT NAME=bug_file_loc SIZE=60 value=\"http://" .
+      <INPUT NAME=bug_file_loc SIZE=60 value=\"" .
+    ((formvalue('bug_file_loc') !~ /:/o) ? 'http://' : '') .
     value_quote(formvalue('bug_file_loc')) .
     "\"></TD>
   </TR>
