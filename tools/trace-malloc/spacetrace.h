@@ -486,13 +486,19 @@ typedef struct __struct_STContext
 **                      This should not be modified after initialization.
 **  mSortedRun          A pre sorted run taken from the global run, with our
 **                          options applied.
+**  mImageLock          An overly simplistic locking mechanism to protect the
+**                          shared image cache.
+**                      The proper implementation would have a reader/writer
+**                          lock per cached image data.
+**                      However, this will prove to be simpler for the time
+**                          being.
 **  mFootprintCached    Wether or not YData contains something useful.
-**  mFootprintYData     Precomputed cached graph data.
 **  mTimevalCached      Wether or not YData contains something useful.
-**  mTimevalYData       Precomputed cached graph data.
 **  mLifespanCached     Wether or not YData contains something useful.
-**  mLifespanYData      Precomputed cached graph data.
 **  mWeightCached       Wether or not YData contains something useful.
+**  mFootprintYData     Precomputed cached graph data.
+**  mTimevalYData       Precomputed cached graph data.
+**  mLifespanYData      Precomputed cached graph data.
 **  mWeightYData        Precomputed cached graph data.
 */
 {
@@ -500,13 +506,14 @@ typedef struct __struct_STContext
     PRUint32 mIndex;
     STRun* mSortedRun;
 #if ST_WANT_GRAPHS
+    PRLock* mImageLock;
     PRBool mFootprintCached;
-    PRUint32 mFootprintYData[STGD_SPACE_X];
     PRBool mTimevalCached;
-    PRUint32 mTimevalYData[STGD_SPACE_X];
     PRBool mLifespanCached;
-    PRUint32 mLifespanYData[STGD_SPACE_X];
     PRBool mWeightCached;
+    PRUint32 mFootprintYData[STGD_SPACE_X];
+    PRUint32 mTimevalYData[STGD_SPACE_X];
+    PRUint32 mLifespanYData[STGD_SPACE_X];
     PRUint64 mWeightYData64[STGD_SPACE_X];
 #endif
 }

@@ -3615,6 +3615,7 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
         PRUint32 traverse = 0;
         PRUint32 timeval = 0;
         PRUint32 loop = 0;
+        PRBool underLock = PR_FALSE;
 
         /*
         ** Decide if this is custom or we should use the cache.
@@ -3622,10 +3623,20 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
         if(aRun == inRequest->mContext->mSortedRun)
         {
             YData = inRequest->mContext->mFootprintYData;
+            underLock = PR_TRUE;
         }
         else
         {
             YData = YDataArray;
+        }
+
+        /*
+        **  Protect the shared data so that only one client has access to it
+        **      at any given time.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
@@ -3666,6 +3677,14 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
             {
                 inRequest->mContext->mFootprintCached = PR_TRUE;
             }
+        }
+
+        /*
+        **  Done with the lock.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Unlock(inRequest->mContext->mImageLock);
         }
 
         if(0 == retval)
@@ -3809,6 +3828,7 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
         PRUint32 traverse = 0;
         PRUint32 timeval = globals.mMinTimeval;
         PRUint32 loop = 0;
+        PRBool underLock = PR_FALSE;
 
         /*
         ** Decide if this is custom or we should use the global cache.
@@ -3816,10 +3836,20 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
         if(aRun == inRequest->mContext->mSortedRun)
         {
             YData = inRequest->mContext->mTimevalYData;
+            underLock = PR_TRUE;
         }
         else
         {
             YData = YDataArray;
+        }
+
+        /*
+        **  Protect the shared data so that only one client has access to it
+        **      at any given time.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
@@ -3864,6 +3894,14 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
             {
                 inRequest->mContext->mTimevalCached = PR_TRUE;
             }
+        }
+
+        /*
+        **  Done with the lock.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Unlock(inRequest->mContext->mImageLock);
         }
 
         if(0 == retval)
@@ -4007,6 +4045,7 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
         PRUint32 traverse = 0;
         PRUint32 timeval = 0;
         PRUint32 loop = 0;
+        PRBool underLock = PR_FALSE;
 
         /*
         ** Decide if this is custom or we should use the global cache.
@@ -4014,10 +4053,20 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
         if(aRun == inRequest->mContext->mSortedRun)
         {
             YData = inRequest->mContext->mLifespanYData;
+            underLock = PR_TRUE;
         }
         else
         {
             YData = YDataArray;
+        }
+
+        /*
+        **  Protect the shared data so that only one client has access to it
+        **      at any given time.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
@@ -4065,6 +4114,14 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
             {
                 inRequest->mContext->mLifespanCached = PR_TRUE;
             }
+        }
+
+        /*
+        **  Done with the lock.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Unlock(inRequest->mContext->mImageLock);
         }
 
         if(0 == retval)
@@ -4208,6 +4265,7 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
         PRUint32 traverse = 0;
         PRUint32 timeval = globals.mMinTimeval;
         PRUint32 loop = 0;
+        PRBool underLock = PR_FALSE;
 
         /*
         ** Decide if this is custom or we should use the global cache.
@@ -4215,10 +4273,20 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
         if(aRun == inRequest->mContext->mSortedRun)
         {
             YData64 = inRequest->mContext->mWeightYData64;
+            underLock = PR_TRUE;
         }
         else
         {
             YData64 = YDataArray64;
+        }
+
+        /*
+        **  Protect the shared data so that only one client has access to it
+        **      at any given time.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
@@ -4271,6 +4339,14 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
             {
                 inRequest->mContext->mWeightCached = PR_TRUE;
             }
+        }
+
+        /*
+        **  Done with the lock.
+        */
+        if(PR_FALSE != underLock)
+        {
+            PR_Unlock(inRequest->mContext->mImageLock);
         }
 
         if(0 == retval)
@@ -5505,7 +5581,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.36 2002/05/13 02:43:25 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.37 2002/05/13 03:02:52 blythe%netscape.com Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
@@ -5931,6 +6007,13 @@ int initCaches(void)
                         {
                             break;
                         }
+#if ST_WANT_GRAPHS
+                        inCache->mItems[loop].mContext.mImageLock = PR_NewLock();
+                        if(NULL == inCache->mItems[loop].mContext.mImageLock)
+                        {
+                            break;
+                        }
+#endif
                     }
 
                     if(loop != inCache->mItemCount)
@@ -5991,6 +6074,13 @@ int destroyCaches(void)
                 PR_DestroyRWLock(inCache->mItems[loop].mContext.mRWLock);
                 inCache->mItems[loop].mContext.mRWLock = NULL;
             }
+#if ST_WANT_GRAPHS
+            if(NULL != inCache->mItems[loop].mContext.mImageLock)
+            {
+                PR_DestroyLock(inCache->mItems[loop].mContext.mImageLock);
+                inCache->mItems[loop].mContext.mImageLock = NULL;
+            }
+#endif
         }
 
         inCache->mItemCount = 0;
