@@ -1597,11 +1597,12 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             mCurrentScriptURL = url;
 
             nsIUnicharStreamLoader* loader;
+            nsCOMPtr<nsILoadGroup> group;
+
+            mDocument->GetDocumentLoadGroup(getter_AddRefs(group));
             rv = NS_NewUnicharStreamLoader(&loader,
                                            url, 
-#ifdef NECKO
-                                           nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
-#endif
+                                           group,
                                            (nsStreamCompleteFunc)DoneLoadingScript, 
                                            (void *)this);
             NS_RELEASE(url);

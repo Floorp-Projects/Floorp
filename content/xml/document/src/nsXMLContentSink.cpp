@@ -1829,11 +1829,12 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       NS_ADDREF(this);
 
       nsIUnicharStreamLoader* loader;
+      nsCOMPtr<nsILoadGroup> loadGroup;
+
+      mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
       rv = NS_NewUnicharStreamLoader(&loader,
                                      url, 
-#ifdef NECKO
-                                     nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
-#endif
+                                     loadGroup,
                                      (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
       NS_RELEASE(url);

@@ -538,7 +538,7 @@ public:
 
     virtual nsIPrincipal* GetDocumentPrincipal() const;
 
-    virtual nsILoadGroup* GetDocumentLoadGroup() const;
+    NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
 
@@ -1525,13 +1525,12 @@ XULDocumentImpl::GetDocumentPrincipal() const
     return result;
 }
 
-
-nsILoadGroup* 
-XULDocumentImpl::GetDocumentLoadGroup() const
+NS_IMETHODIMP
+XULDocumentImpl::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 {
-    nsILoadGroup* result = mDocumentLoadGroup;
-    NS_IF_ADDREF(result);
-    return result;
+    *aGroup = mDocumentLoadGroup;
+    NS_IF_ADDREF(*aGroup);
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
