@@ -57,6 +57,7 @@ CPPSRCS =				\
 	nsSliderFrame.cpp \
 	nsColorPickerFrame.cpp \
 	nsFontPickerFrame.cpp \
+	nsToolbarItemFrame.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
