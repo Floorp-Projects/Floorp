@@ -471,7 +471,7 @@ NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBo
     showVert = NSToCoordRound(scrollWidth);
 
   // Compute the clip view rect
-  clipRect.SetRect(0, 0, width - showVert, height - showHorz);
+  clipRect.SetRect(0, 0, PR_MAX((width - showVert), 0), PR_MAX((height - showHorz), 0));
   clipRect.Deflate(mInsets);
 
   // Size and position the clip view
@@ -1088,11 +1088,15 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
     // Adjust the size of the clip view to account for scrollbars that are
     // showing
-    if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView))
+    if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView)) {
       controlRect.height -= hheight;
+      controlRect.height = PR_MAX(controlRect.height, 0);
+    }
 
-    if (mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView))
+    if (mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView)) {
       controlRect.width -= vwidth;
+      controlRect.width = PR_MAX(controlRect.width, 0);
+    }
 
     mClipView->SetDimensions(controlRect.width, controlRect.height, PR_FALSE);
 
