@@ -48,8 +48,6 @@ CPPSRCS		= \
 		nsBidiKeyboard.cpp \
 		nsCanvas.cpp \
 		nsClipboard.cpp \
-		nsDirPicker.cpp \
-		nsFSTree.cpp \
 		nsFilePicker.cpp \
 		nsFrameWindow.cpp \
 		nsLookAndFeel.cpp \

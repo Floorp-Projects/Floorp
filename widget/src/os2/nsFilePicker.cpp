@@ -33,7 +33,6 @@
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 #include "nsWidgetDefs.h"
-#include "nsDirPicker.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
@@ -43,6 +42,8 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
+
+MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
 
 //-------------------------------------------------------------------------
 //
@@ -98,16 +99,20 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   mFile.SetLength(0);
 
   if (mMode == modeGetFolder) {
-
-    DIRPICKER dp = { { 0 }, 0, TRUE, 0 }; // modal dialog
-
-    HWND ret = FS_PickDirectory(HWND_DESKTOP, mWnd,
-                                gWidgetModuleData->hModResources, &dp);
-
-    if (ret && dp.lReturn == DID_OK) {
+    FILEDLG filedlg;
+ 
+    memset(&filedlg, 0, sizeof(FILEDLG));
+    filedlg.cbSize = sizeof(FILEDLG);
+    filedlg.fl = FDS_OPEN_DIALOG | FDS_CENTER;
+    filedlg.pfnDlgProc = FileDialogProc;
+    strcpy(filedlg.szFullFile, "^");
+    WinFileDlg(HWND_DESKTOP, mWnd, &filedlg);
+    char* tempptr = strstr(filedlg.szFullFile, "^");
+    *tempptr = '\0';
+    if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
-      mDisplayDirectory->InitWithPath(dp.szFullFile);
-      mFile.Append(dp.szFullFile);
+      mDisplayDirectory->InitWithPath(filedlg.szFullFile);
+      mFile.Append(filedlg.szFullFile);
     }
   }
   else {
@@ -396,4 +401,105 @@ nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
   mFilterList.AppendWithConversion('\0');
 
   return NS_OK;
+}
+
+MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+   switch ( msg ) {
+      case WM_INITDLG:
+         {
+         SWP swpDlgOrig;
+         SWP swpDlgNew;
+         SWP swpFileST;
+         SWP swpDirST;
+         SWP swpDirLB;
+         SWP swpDriveST;
+         SWP swpDriveCB;
+         SWP swpDriveCBEF;
+         SWP swpOK;
+         SWP swpCancel;
+         HWND hwndFileST;
+         HWND hwndDirST;
+         HWND hwndDirLB;
+         HWND hwndDriveST;
+         HWND hwndDriveCB;
+         HWND hwndOK;
+         HWND hwndCancel;
+
+         hwndFileST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
+         hwndDirST = WinWindowFromID(hwndDlg, DID_DIRECTORY_TXT);
+         hwndDirLB = WinWindowFromID(hwndDlg, DID_DIRECTORY_LB);
+         hwndDriveST = WinWindowFromID(hwndDlg, DID_DRIVE_TXT);
+         hwndDriveCB = WinWindowFromID(hwndDlg, DID_DRIVE_CB);
+         hwndOK = WinWindowFromID(hwndDlg, DID_OK);
+         hwndCancel = WinWindowFromID(hwndDlg, DID_CANCEL);
+         
+         // Reposition drives combobox
+         WinQueryWindowPos(hwndOK, &swpOK);
+         WinQueryWindowPos(hwndCancel, &swpCancel);
+         WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
+         WinQueryWindowPos(WinWindowFromID(hwndDriveCB, CBID_EDIT), &swpDriveCBEF);
+         WinSetWindowPos(hwndDriveCB, 0, swpDriveCB.x,
+                                         swpOK.y+swpOK.cy+swpDriveCBEF.cy-swpDriveCB.cy+20,
+                                         swpCancel.x+swpCancel.cx-swpOK.x, swpDriveCB.cy, SWP_MOVE | SWP_SIZE);
+
+         // Reposition drives text
+         WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
+         WinQueryWindowPos(hwndDriveST, &swpDriveST);
+         WinSetWindowPos(hwndDriveST, 0, swpDriveST.x, swpDriveCB.y+swpDriveCB.cy+5,
+                                         swpDriveST.cx*2, swpDriveST.cy, SWP_MOVE | SWP_SIZE);
+
+         // Reposition directories listbox 
+         WinQueryWindowPos(hwndDriveST, &swpDriveST);
+         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinSetWindowPos(hwndDirLB, 0, swpDirLB.x, swpDriveST.y+swpDriveST.cy+10,
+                                       swpDirLB.cx*2, swpDirLB.cy, SWP_MOVE | SWP_SIZE);
+
+         // Reposition file text
+         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinQueryWindowPos(hwndFileST, &swpFileST);
+         WinSetWindowPos(hwndFileST, 0, swpFileST.x, swpDirLB.y+swpDirLB.cy+5,
+                                        swpFileST.cx*2, swpFileST.cy, SWP_MOVE | SWP_SIZE);
+
+         // Begin repositioning dialog
+         WinQueryWindowPos(hwndDlg, &swpDlgOrig);
+         swpDlgNew = swpDlgOrig;
+         swpDlgNew.cy -= swpFileST.y;
+
+         // Reposition directory text
+         WinQueryWindowPos(hwndFileST, &swpFileST);
+         WinQueryWindowPos(hwndDirST, &swpDirST);
+         WinSetWindowPos(hwndDirST, 0, swpDirST.x, swpFileST.y+swpFileST.cy+5,
+                                       swpDirST.cx*2, swpDirST.cy, SWP_MOVE | SWP_SIZE);
+
+         // Size main dialog
+         swpDlgNew.cy += (swpFileST.y+swpFileST.cy+5);
+         swpDlgNew.cx = (swpDirLB.x*2)+swpDirLB.cx;
+         swpDlgNew.x += (swpDlgOrig.cx-swpDlgNew.cx)/2;
+         swpDlgNew.y += (swpDlgOrig.cy-swpDlgNew.cy)/2;
+         WinSetWindowPos(hwndDlg, 0, swpDlgNew.x, swpDlgNew.y,
+                                     swpDlgNew.cx, swpDlgNew.cy,
+                                     SWP_SIZE | SWP_MOVE);
+
+         // Hide unused stuff
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_LB), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_TXT), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_CB), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_TXT), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg, DID_FILENAME_ED), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg, 0x503D), FALSE);
+         // Set Titlebar to nothing
+         WinSetWindowText(hwndDlg, "");
+         }
+         break;
+      case WM_CONTROL:
+         {
+         PFILEDLG pfiledlg;
+
+         pfiledlg = (PFILEDLG)WinQueryWindowPtr(hwndDlg, QWL_USER);
+         WinSetWindowText(WinWindowFromID(hwndDlg,DID_FILENAME_TXT), pfiledlg->szFullFile);
+         }
+         break;
+   }      
+   return WinDefFileDlgProc(hwndDlg, msg, mp1, mp2);
 }
