@@ -106,6 +106,36 @@ static nsresult RemoveDuplicateAddresses(const char * addresses, const char * an
 	return rv;
 }
 
+static void TranslateLineEnding(nsString& data)
+{
+  PRUnichar* rPtr;   //Read pointer
+  PRUnichar* wPtr;   //Write pointer
+  PRUnichar* sPtr;   //Start data pointer
+  PRUnichar* ePtr;   //End data pointer
+
+  rPtr = wPtr = sPtr = data.mUStr;
+  ePtr = rPtr + data.Length();
+
+  while (rPtr < ePtr)
+  {
+    if (*rPtr == 0x0D)
+      if (rPtr + 1 < ePtr && *(rPtr + 1) == 0x0A)
+      {
+        *wPtr = 0x0A;
+        rPtr ++;
+      }
+      else
+        *wPtr = 0x0A;
+    else
+      *wPtr = *rPtr;
+
+    rPtr ++;
+    wPtr ++;
+  }
+
+  data.SetLength(wPtr - sPtr);
+}
+
 nsMsgCompose::nsMsgCompose()
 {
 	NS_INIT_REFCNT();
@@ -218,6 +248,10 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   // First, get the nsIEditor interface for future use
   nsCOMPtr<nsIEditor> editor;
   nsCOMPtr<nsIDOMNode> nodeInserted;
+
+  TranslateLineEnding(aPrefix);
+  TranslateLineEnding(aBuf);
+  TranslateLineEnding(aSignature);
 
   aEditorShell->GetEditor(getter_AddRefs(editor));
 
@@ -3126,6 +3160,8 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
 
   if (!aSignature.IsEmpty())
   {
+    TranslateLineEnding(aSignature);
+
     editor->BeginTransaction();
     editor->EndOfDocument();
     if (m_composeHTML)
