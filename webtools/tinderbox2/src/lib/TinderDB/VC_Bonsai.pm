@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.51 $ 
-# $Date: 2002/05/06 23:52:57 $ 
+# $Revision: 1.52 $ 
+# $Date: 2002/05/07 00:23:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.51 $ )[1];
+$VERSION = ( qw $Revision: 1.52 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -351,6 +351,9 @@ sub status_table_start {
   # sort numerically descending
   @DB_TIMES = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
+  # NEXT_DB is my index into the list of all times.
+
+
   # adjust the $NEXT_DB to skip data which came after the first cell
   # at the top of the page.  We make the first cell bigger then the
   # rest to allow for some overlap between pages.
@@ -364,7 +367,14 @@ sub status_table_start {
     $NEXT_DB{$tree}++
   }
 
+  # we do not store a treestate with every database entry.
+  # remember the treestate as we travel through the database.
+
   $LAST_TREESTATE{$tree} = '';
+
+  # Sometimes our output will span several rows.  This will track the
+  # next row in which we create more HTML.
+
   $NEXT_ROW{$tree} = 0;
 
   return ;  
@@ -399,8 +409,9 @@ sub is_break_cell {
          1);
 
     my $is_state_different = $is_state1_different || $is_state2_different;    
-    my $is_author_data = defined($DATABASE{$tree}{$next_time}{'author'});
-    
+    my $is_author_data = ( defined($DATABASE{$tree}{$time}{'author'}) ||
+                           defined($DATABASE{$tree}{$next_time}{'author'}) );
+
     my $is_break_cell = ( ($is_state_different) || ($is_author_data) );
     
     return $is_break_cell;
@@ -416,7 +427,7 @@ sub status_table_row {
   # skip this column because it is part of a multi-row missing data
   # cell?
 
-  if ( $NEXT_ROW{$tree} !=  $row_index ) {
+  if ( $NEXT_ROW{$tree} != $row_index ) {
       
       push @outrow, ("\t<!-- VC_Bonsai: skipping. ".
                      "tree: $tree, ".
