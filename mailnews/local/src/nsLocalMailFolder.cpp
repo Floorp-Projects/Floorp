@@ -1175,7 +1175,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
               message = do_QueryInterface(msgSupports, &rv);
               if(message)
               {
-                  DeleteMessage(message, txnMgr, deleteStorage);
+                  DeleteMessage(message, txnMgr, PR_TRUE);
               }
           }
       }
@@ -1609,7 +1609,11 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 	if(!copyListener)
 		return NS_ERROR_NO_INTERFACE;
 
-	rv = copyStreamListener->Init(this, copyListener, nsnull);
+	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->srcSupport));
+	if(!srcFolder)
+		return NS_ERROR_NO_INTERFACE;
+
+	rv = copyStreamListener->Init(srcFolder, copyListener, nsnull);
 	if(NS_FAILED(rv))
 		return rv;
 
