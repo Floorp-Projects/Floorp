@@ -1907,9 +1907,12 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       // - it's inline (not a block)
       // - it's either the last line in the block -or- it ended with a
       //   break after
+      // - there are no floaters associated with the line (reflowing the
+      //   placeholder frame causes the floater to be reflowed)
       if (line->IsBlock() ||
-          (line->mNext && (line->mBreakType != NS_STYLE_CLEAR_NONE)) ||
-          (line->mCombinedArea.XMost() > newAvailWidth)) {
+          (line->mNext && (line->mBreakType == NS_STYLE_CLEAR_NONE)) ||
+          line->mFloaters.NotEmpty() ||
+          (line->mBounds.XMost() > newAvailWidth)) {
 
         // We have to mark the line dirty
         line->MarkDirty();
