@@ -33,5 +33,6 @@ interface nsIMsgStatusFeedback : nsISupports {
 	void StopMeteors();
 	void ShowProgress(in long percent);
 	void SetWebShell(in nsIWebShell shell, in nsIDOMWindow window);
+	void closeWindow();
 };
 
