@@ -260,21 +260,21 @@ CURLDragHelper :: ExtractURLAndTitle ( DragReference inDragRef, ItemReference in
 	else if ( theDataSize ) {
 		vector<char> urlAndTitle ( theDataSize + 1 );
 		ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, emBookmarkDrag,
-										urlAndTitle.begin(), &theDataSize, 0 ) );
+										&(*urlAndTitle.begin()), &theDataSize, 0 ) );
 		urlAndTitle[theDataSize] = NULL;
-		char* title = find(urlAndTitle.begin(), urlAndTitle.end(), '\r');
-		if ( title != urlAndTitle.end() ) {
+		char* title = &(*find(urlAndTitle.begin(), urlAndTitle.end(), '\r'));
+		if ( title != &(*urlAndTitle.end()) ) {
 			// hack up the data string into it's components
 			title[0] = NULL;
 			title++;
-			char* url = urlAndTitle.begin();
+			char* url = &(*urlAndTitle.begin());
 			
 			// assign those components to the output parameters
 			outURL = url;
 			outTitle = title;
 		}
 		else {
-			outURL = urlAndTitle.begin();
+			outURL = &(*urlAndTitle.begin());
 			outTitle = "";
 		}
 	}
@@ -419,8 +419,8 @@ CURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inD
 					vector<char> textData ( theDataSize + 1 );
 					try {
 						ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, 'TEXT',
-														textData.begin(), &theDataSize, 0 ) );
-						HandleDropOfText ( textData.begin() );
+														&(*textData.begin()), &theDataSize, 0 ) );
+						HandleDropOfText ( &(*textData.begin()) );
 					}
 					catch ( ... ) {
 						DebugStr("\pError getting flavor data for TEXT");
@@ -473,9 +473,9 @@ CURLDragMixin :: FindBestFlavor ( DragReference inDragRef, ItemReference inItemR
  		ItemReference mItemRef;
  	};
  	
-	FlavorType* result = find_if ( AcceptedFlavors().begin(), AcceptedFlavors().end(), 
-										FindBestFlavor_imp(inDragRef, inItemRef) );
-	if ( result != AcceptedFlavors().end() ) {
+	FlavorType* result = &(* find_if ( AcceptedFlavors().begin(), AcceptedFlavors().end(), 
+										FindBestFlavor_imp(inDragRef, inItemRef) ) );
+	if ( result != &(*AcceptedFlavors().end()) ) {
 		oFlavor = *result;
 		return true;
 	}

@@ -117,7 +117,7 @@ CHyperTreeHeader::SetUpColumns ( HT_View inView )
 	while (iter != dataVector.end())
 	{
 		Int32 byteCount = sizeof(LTableHeader::SColumnData);
-		dataStream.PutBytes(iter, byteCount);
+		dataStream.PutBytes(&(*iter), byteCount);
 		++iter;
 	}
 	if (mColumnData)
