@@ -184,7 +184,7 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
         // instance object.
         //
         if (msg->Target().Equals(IPCM_TARGET) &&
-            IPCM_GetMsgType(msg) == IPCM_MSG_TYPE_CLIENT_HELLO) {
+            IPCM_GetType(msg) == IPCM_MSG_REQ_CLIENT_HELLO) {
             RemoveClient(client);
             client = NULL;
         }
