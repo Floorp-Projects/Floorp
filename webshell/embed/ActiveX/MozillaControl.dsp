@@ -918,10 +918,6 @@ SOURCE=..\..\..\dist\include\nsCardDataSource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\dist\include\nsCaretProperties.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\dist\include\nsCCapsManager.h
 # End Source File
 # Begin Source File

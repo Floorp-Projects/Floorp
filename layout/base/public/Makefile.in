@@ -27,7 +27,6 @@ MODULE=layout
 EXPORTS =				\
 	nslayout.h			\
 	nsICaret.h			\
-	nsCaretProperties.h		\
 	nsIContent.h			\
 	nsIContentIterator.h		\
 	nsIDiskDocument.h	\

@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsHTMLParts.h"
 #include "nsINameSpaceManager.h"
-#include "nsCaretProperties.h"
 
 void XXXNeverCalled()
 {
@@ -53,5 +52,4 @@ void XXXNeverCalled()
   nsINameSpaceManager* nsm;
   NS_NewNameSpaceManager(&nsm);
   NS_CreateHTMLElement(nsnull, "");
-  NewCaretProperties();
 }
