@@ -366,4 +366,5 @@ nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx)
   cairo_matrix_t *matrix = cairo_matrix_create();
   cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
   cairo_concat_matrix(ctx, matrix);
+  cairo_matrix_destroy(matrix);
 }
