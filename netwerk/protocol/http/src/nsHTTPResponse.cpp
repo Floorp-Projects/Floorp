@@ -25,27 +25,16 @@
 #include "nsXPIDLString.h"
 #include "nsHTTPAtoms.h"
 
-nsHTTPResponse::nsHTTPResponse(nsIInputStream* i_InputStream):
-    mStatusString(nsnull)
+nsHTTPResponse::nsHTTPResponse()
 {
     NS_INIT_REFCNT();
 
     mStatus = 0;
     mServerVersion = HTTP_ONE_ZERO;
-
-    mInputStream = i_InputStream;
-    NS_IF_ADDREF(mInputStream);
 }
 
 nsHTTPResponse::~nsHTTPResponse()
 {
-    NS_IF_RELEASE(mInputStream);
-
-    if (mStatusString) {
-        nsCRT::free(mStatusString);
-        mStatusString = nsnull;
-    }
-
 }
 
 NS_IMPL_ISUPPORTS(nsHTTPResponse, NS_GET_IID(nsISupports))
@@ -53,6 +42,8 @@ NS_IMPL_ISUPPORTS(nsHTTPResponse, NS_GET_IID(nsISupports))
 
 nsresult nsHTTPResponse::GetContentLength(PRInt32* o_Value)
 {
+    nsresult rv = NS_OK;
+
     if (o_Value) {
         PRInt32 err;
         nsXPIDLCString value;
@@ -61,27 +52,35 @@ nsresult nsHTTPResponse::GetContentLength(PRInt32* o_Value)
         mHeaders.GetHeader(nsHTTPAtoms::Content_Length, getter_Copies(value));
         str = value;
         *o_Value = str.ToInteger(&err);
-        return NS_OK;
     }
-    else 
-        return NS_ERROR_NULL_POINTER;
-    return NS_OK;
+    else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
 
 nsresult nsHTTPResponse::GetStatus(PRUint32* o_Value)
 {
-    if (o_Value)
+    nsresult rv = NS_OK;
+
+    if (o_Value) {
         *o_Value = mStatus;
-    else 
-        return NS_ERROR_NULL_POINTER;
-    return NS_OK;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
 
 nsresult nsHTTPResponse::GetStatusString(char* *o_String)
 {
-    if (o_String)
-        *o_String = mStatusString;
-    return NS_OK;
+    nsresult rv = NS_OK;
+
+    if (o_String) {
+        *o_String = mStatusString.ToNewCString();
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
 
 nsresult nsHTTPResponse::GetServer(char* *o_String)
@@ -115,19 +114,10 @@ nsresult nsHTTPResponse::SetStatusString(const char* i_Status)
 {
     nsresult rv = NS_OK;
 
-    NS_ASSERTION(!mStatusString, "Overwriting status string!");
-    mStatusString = nsCRT::strdup(i_Status);
-    if (!mStatusString) {
-      rv = NS_ERROR_FAILURE;
-    }
+    NS_ASSERTION(mStatusString.Length() == 0, "Overwriting status string!");
+    mStatusString = i_Status;
 
     return rv;
-}
-
-nsresult nsHTTPResponse::GetInputStream(nsIInputStream* *o_Stream)
-{
-    *o_Stream = mInputStream;
-    return NS_OK;
 }
 
 nsresult nsHTTPResponse::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
