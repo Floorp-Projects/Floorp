@@ -55,7 +55,8 @@
 #include "nspr.h"
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(imgRequestProxy, imgIRequest, nsIRequest)
+NS_IMPL_THREADSAFE_ISUPPORTS3(imgRequestProxy, imgIRequest, nsIRequest,
+                              nsISupportsPriority)
 
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
@@ -350,6 +351,29 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
   // Send the notifications to the clone's observer
   mOwner->NotifyProxyListener(clone);
 
+  return NS_OK;
+}
+
+/** nsISupportsPriority methods **/
+
+NS_IMETHODIMP imgRequestProxy::GetPriority(PRInt32 *priority)
+{
+  NS_ENSURE_STATE(mOwner);
+  *priority = mOwner->Priority();
+  return NS_OK;
+}
+
+NS_IMETHODIMP imgRequestProxy::SetPriority(PRInt32 priority)
+{
+  NS_ENSURE_STATE(mOwner);
+  mOwner->BumpPriority(this, priority - mOwner->Priority());
+  return NS_OK;
+}
+
+NS_IMETHODIMP imgRequestProxy::BumpPriority(PRInt32 priority)
+{
+  NS_ENSURE_STATE(mOwner);
+  mOwner->BumpPriority(this, priority);
   return NS_OK;
 }
 

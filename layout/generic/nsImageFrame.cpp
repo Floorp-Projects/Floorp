@@ -57,6 +57,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
+#include "nsISupportsPriority.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsIView.h"
@@ -300,6 +301,11 @@ nsImageFrame::Init(nsPresContext*  aPresContext,
   PRUint32 currentLoadStatus = imgIRequest::STATUS_ERROR;
   if (currentRequest) {
     currentRequest->GetImageStatus(&currentLoadStatus);
+
+    // Give image loads associated with an image frame a small priority boost!
+    nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
+    if (p)
+      p->BumpPriority(-1);
   }
 
   if (currentLoadStatus & imgIRequest::STATUS_ERROR) {

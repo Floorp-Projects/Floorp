@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,8 +14,8 @@
  * The Original Code is Mozilla.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Darin Fisher <darin@meer.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,44 +36,42 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
-interface nsIProxyInfo;
-
-/** 
- * Dumping ground for http.  This interface will never be frozen.  If you are 
- * using any feature exposed by this interface, be aware that this interface 
- * will change and you will be broken.  You have been warned.
+/**
+ * This interface exposes the general notion of a scheduled object with a
+ * integral priority value.  Following UNIX conventions, smaller (and possibly
+ * negative) values have higher priority.
+ *
+ * This interface does not strictly define what happens when the priority of an
+ * object is changed.  An implementation of this interface is free to define
+ * the side-effects of changing the priority of an object.  In some cases,
+ * changing the priority of an object may be disallowed (resulting in an
+ * exception being thrown) or may simply be ignored.
  */
-[scriptable, uuid(f3764874-ed7e-4873-883c-11d67a4e3638)]
-interface nsIHttpChannelInternal : nsISupports
+[scriptable, uuid(aa578b44-abd5-4c19-8b14-36d4de6fdc36)]
+interface nsISupportsPriority : nsISupports
 {
-    /**
-     * An http channel can own a reference to the document URI
-     */
-    attribute nsIURI documentURI;
+  /**
+   * Typical priority values.
+   */
+  const long PRIORITY_HIGHEST = -20;
+  const long PRIORITY_HIGH    = -10;
+  const long PRIORITY_NORMAL  =   0;
+  const long PRIORITY_LOW     =  10;
+  const long PRIORITY_LOWEST  =  20;
+  
+  /**
+   * This attribute may be modified to change the priority of this object.  The
+   * implementation of this interface is free to truncate a given priority
+   * value to whatever limits are appropriate.  Typically, this attribute is
+   * initialized to PRIORITY_NORMAL, but implementations may choose to assign a
+   * different initial value.
+   */
+  attribute long priority;
 
-    /**
-     * Get the major/minor version numbers for the request
-     */
-    void getRequestVersion(out unsigned long major, out unsigned long minor);
-
-    /**
-     * Get the major/minor version numbers for the response
-     */
-    void getResponseVersion(out unsigned long major, out unsigned long minor);
-
-    /**
-     * Helper method to set a cookie with a consumer-provided
-     * cookie header, _but_ using the channel's other information
-     * (URI's, prompters, date headers etc).
-     *
-     * @param aCookieHeader
-     *        The cookie header to be parsed.
-     */
-    void setCookie(in string aCookieHeader);
-
-    /**
-     * Get the proxy info in use by the channel.
-     */
-    readonly attribute nsIProxyInfo proxyInfo;
+  /**
+   * This method adjusts the priority attribute by a given delta.  It helps
+   * reduce the amount of coding required to increment or decrement the value
+   * of the priority attribute.
+   */
+  void bumpPriority(in long delta);
 };

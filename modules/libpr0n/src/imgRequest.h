@@ -117,6 +117,14 @@ private:
   // aProxyToIgnore, has an observer.  aProxyToIgnore may be null.
   PRBool HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const;
 
+  // Return the priority of the underlying network request, or return
+  // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
+  PRInt32 Priority() const;
+
+  // Bump the priority of the underlying network request by the given delta
+  // on behalf of the given proxy.
+  void BumpPriority(imgRequestProxy *aProxy, PRInt32 aDelta);
+
 public:
   NS_DECL_IMGILOAD
   NS_DECL_IMGIDECODEROBSERVER

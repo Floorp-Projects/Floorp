@@ -232,6 +232,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoader)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
    if (aIID.Equals(kThisImplCID))
      foundInterface = NS_STATIC_CAST(nsIDocumentLoader *, this);
    else
@@ -1464,6 +1465,69 @@ NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports * aContext,
   if (mParent) {
     mParent->OnSecurityChange(aContext, aState);
   }
+  return NS_OK;
+}
+
+/*
+ * Implementation of nsISupportsPriority methods...
+ *
+ * The priority of the DocLoader _is_ the priority of its LoadGroup.
+ *
+ * XXX(darin): Once we start storing loadgroups in loadgroups, this code will
+ * go away. 
+ */
+
+NS_IMETHODIMP nsDocLoader::GetPriority(PRInt32 *aPriority)
+{
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mLoadGroup);
+  if (p)
+    return p->GetPriority(aPriority);
+
+  *aPriority = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoader::SetPriority(PRInt32 aPriority)
+{
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader:%p: SetPriority(%d) called\n", this, aPriority));
+
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mLoadGroup);
+  if (p)
+    p->SetPriority(aPriority);
+
+  PRInt32 count = mChildList.Count();
+
+  nsDocLoader *loader;
+  for (PRInt32 i=0; i < count; i++) {
+    loader = NS_STATIC_CAST(nsDocLoader*, ChildAt(i));
+    if (loader) {
+      loader->SetPriority(aPriority);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoader::BumpPriority(PRInt32 aDelta)
+{
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader:%p: BumpPriority(%d) called\n", this, aDelta));
+
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mLoadGroup);
+  if (p)
+    p->BumpPriority(aDelta);
+
+  PRInt32 count = mChildList.Count();
+
+  nsDocLoader *loader;
+  for (PRInt32 i=0; i < count; i++) {
+    loader = NS_STATIC_CAST(nsDocLoader*, ChildAt(i));
+    if (loader) {
+      loader->BumpPriority(aDelta);
+    }
+  }
+
   return NS_OK;
 }
 

@@ -47,11 +47,13 @@
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsISupportsPriority.h"
 #include "pldhash.h"
 
 class  nsISupportsArray;
 
 class nsLoadGroup : public nsILoadGroup,
+                    public nsISupportsPriority,
                     public nsSupportsWeakReference
 {
 public:
@@ -64,6 +66,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsILoadGroup methods:
     NS_DECL_NSILOADGROUP
+
+    ////////////////////////////////////////////////////////////////////////////
+    // nsISupportsPriority methods:
+    NS_DECL_NSISUPPORTSPRIORITY
 
     ////////////////////////////////////////////////////////////////////////////
     // nsLoadGroup methods:
@@ -92,6 +98,7 @@ protected:
     nsWeakPtr                       mObserver;
     
     nsresult                        mStatus;
+    PRInt32                         mPriority;
     PRBool                          mIsCanceling;
 };
 

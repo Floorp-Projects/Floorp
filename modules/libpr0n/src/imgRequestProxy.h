@@ -45,6 +45,7 @@
 #include "nsIRequestObserver.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
+#include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
 
 #include "imgRequest.h"
@@ -59,12 +60,13 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
-class imgRequestProxy : public imgIRequest
+class imgRequestProxy : public imgIRequest, public nsISupportsPriority
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
+  NS_DECL_NSISUPPORTSPRIORITY
 
   imgRequestProxy();
   virtual ~imgRequestProxy();

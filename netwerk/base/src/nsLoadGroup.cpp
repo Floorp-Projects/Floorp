@@ -123,6 +123,26 @@ RequestHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 }
 
 
+static void
+RescheduleRequest(nsIRequest *aRequest, PRInt32 delta)
+{
+    nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(aRequest);
+    if (p)
+        p->BumpPriority(delta);
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+RescheduleRequests(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                   PRUint32 number, void *arg)
+{
+    RequestMapEntry *e = NS_STATIC_CAST(RequestMapEntry *, hdr);
+    PRInt32 *delta = NS_STATIC_CAST(PRInt32 *, arg);
+
+    RescheduleRequest(e->mKey, *delta);
+    return PL_DHASH_NEXT;
+}
+
+
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mForegroundCount(0)
     , mLoadFlags(LOAD_NORMAL)
@@ -229,6 +249,9 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
     }
+    else if (aIID.Equals(NS_GET_IID(nsISupportsPriority))) {
+        *aInstancePtr = NS_STATIC_CAST(nsISupportsPriority*,this);
+    }
     else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
         *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*,this);
     }
@@ -300,7 +323,7 @@ AppendRequestsToVoidArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
 // nsVoidArray enumeration callback that releases all items in the
 // nsVoidArray
 PR_STATIC_CALLBACK(PRBool)
-ReleaseVoidArrayItems(void* aElement, void *aData)
+ReleaseVoidArrayItems(void *aElement, void *aData)
 {
     nsISupports *s = NS_STATIC_CAST(nsISupports *, aElement);
 
@@ -602,6 +625,9 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    if (mPriority != 0)
+        RescheduleRequest(request, mPriority);
+
     if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
         // Update the count of foreground URIs..
         mForegroundCount += 1;
@@ -683,6 +709,10 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     }
 
     PL_DHashTableRawRemove(&mRequests, entry);
+
+    // Undo any group priority delta...
+    if (mPriority != 0)
+        RescheduleRequest(request, -mPriority);
 
     nsLoadFlags flags;
     rv = request->GetLoadFlags(&flags);
@@ -791,6 +821,33 @@ NS_IMETHODIMP
 nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
     mCallbacks = aCallbacks;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsISupportsPriority methods:
+
+NS_IMETHODIMP
+nsLoadGroup::GetPriority(PRInt32 *aValue)
+{
+    *aValue = mPriority;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::SetPriority(PRInt32 aValue)
+{
+    return BumpPriority(aValue - mPriority);
+}
+
+NS_IMETHODIMP
+nsLoadGroup::BumpPriority(PRInt32 aDelta)
+{
+    // Update the priority for each request that supports nsISupportsPriority
+    if (aDelta != 0) {
+        mPriority += aDelta;
+        PL_DHashTableEnumerate(&mRequests, RescheduleRequests, &aDelta);
+    }
     return NS_OK;
 }
 
