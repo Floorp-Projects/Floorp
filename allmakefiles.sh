@@ -1043,16 +1043,6 @@ if [ "$MOZ_SVG" ]; then
 "
 fi
 
-if [ "$MOZ_ENABLE_XFT" ]; then
-    MAKEFILES_xft="other-licenses/Xft/Makefile
-	other-licenses/Xft/Xft/Makefile
-	other-licenses/Xft/Xrender/Makefile
-	other-licenses/Xft/fontconfig/Makefile
-	other-licenses/Xft/fontconfig/fontconfig/Makefile
-	other-licenses/Xft/fontconfig/src/Makefile
-"
-fi
-
 # directory/xpcom
 if [ "$MOZ_LDAP_XPCOM" ]; then
     MAKEFILES_ldap="

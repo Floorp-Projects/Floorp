@@ -44,10 +44,6 @@ default: $(SUBMAKEFILES)
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
-ifdef MOZ_ENABLE_XFT
-	$(MAKE) freetype
-	$(MAKE) expat
-endif
 	$(MAKE) tier_0
 	$(MAKE) tier_1
 	$(MAKE) tier_2
@@ -156,10 +152,6 @@ endif
 
 ifdef MOZ_JSDEBUGGER
 tier_9_dirs	+= js/jsd
-endif
-
-ifdef MOZ_ENABLE_XFT
-tier_9_dirs	+= other-licenses/Xft
 endif
 
 ifdef MOZ_ENABLE_XLIB
@@ -291,10 +283,6 @@ export::
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
-ifdef MOZ_ENABLE_XFT
-	$(MAKE) freetype
-	$(MAKE) expat
-endif
 
 install::
 ifndef MOZ_NATIVE_NSPR
@@ -347,20 +335,6 @@ endif
 ldap:
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk
-endif
-
-freetype:
-ifdef MOZ_ENABLE_XFT
-ifndef MOZ_XFT_SYSTEM_FREETYPE2
-	$(MAKE) -C other-licenses/freetype
-	$(MAKE) -C other-licenses/freetype install
-endif
-endif
-
-expat:
-ifdef MOZ_ENABLE_XFT
-	$(MAKE) -C other-licenses/expat
-	$(MAKE) -C other-licenses/expat install
 endif
 
 # For modules.mk standalone build

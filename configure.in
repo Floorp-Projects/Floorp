@@ -3123,10 +3123,8 @@ fi
 
 if test -z "$_NO_FREETYPE2"; then
     AC_CHECK_FT2(6.1.0, [MOZ_ENABLE_FREETYPE2=1], [MOZ_ENABLE_FREETYPE2=])
-    AC_CHECK_FT2(8.0.2, [MOZ_XFT_SYSTEM_FREETYPE2=1], [MOZ_XFT_SYSTEM_FREETYPE2=])
 fi
 
-AC_SUBST(MOZ_XFT_SYSTEM_FREETYPE2)
 AC_SUBST(MOZ_ENABLE_FREETYPE2)
 
 dnl ========================================================
@@ -3135,15 +3133,28 @@ dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(xft,
 [  --enable-xft            Enable Xft support ],
     MOZ_ENABLE_XFT=1
-    MOZ_XFT_CFLAGS="$X_CFLAGS -I${x_includes}/X11/extensions"
-dnl    MOZ_XFT_CFLAGS="$X_CFLAGS"
-    MOZ_XFT_LIBS="$X_LIBS"
     AC_DEFINE(MOZ_ENABLE_XFT)
 )
+
+if test "$MOZ_ENABLE_XFT"
+then
+    PKG_CHECK_MODULES(MOZ_XFT, xft)
+fi
 
 AC_SUBST(MOZ_ENABLE_XFT)
 AC_SUBST(MOZ_XFT_CFLAGS)
 AC_SUBST(MOZ_XFT_LIBS)
+
+dnl ========================================================
+dnl = disabling x11 core support, enabled by default
+dnl ========================================================
+MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS:-1}
+if test "$MOZ_ENABLE_COREXFONTS"
+then
+    AC_DEFINE(MOZ_ENABLE_COREXFONTS)
+fi
+
+AC_SUBST(MOZ_ENABLE_COREXFONTS)
 
 dnl ========================================================
 dnl = PostScript print module
@@ -4860,16 +4871,5 @@ if test "$MOZ_LDAP_XPCOM"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
     AC_OUTPUT_SUBDIRS(directory/c-sdk)
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
-fi
-
-# if we're building Xft, we need our private copy of freetype
-if test "$MOZ_ENABLE_XFT"; then
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
-    if test -z "$MOZ_XFT_SYSTEM_FREETYPE2"; then
-        AC_OUTPUT_SUBDIRS(other-licenses/freetype)
-    fi
-    ac_configure_args="$ac_configure_args --includedir=$MOZ_BUILD_ROOT/dist/include/expat-1.95"
-    AC_OUTPUT_SUBDIRS(other-licenses/expat)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
