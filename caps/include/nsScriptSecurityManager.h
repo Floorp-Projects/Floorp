@@ -98,6 +98,11 @@ public:
 private:
 
     NS_IMETHOD
+    CheckScriptAccessInternal(JSContext *cx, 
+                              void* obj, const char* aObjUrlStr, PRInt32 domPropInt, 
+                              PRBool isWrite);
+
+    NS_IMETHOD
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
 
     NS_IMETHOD
@@ -107,7 +112,7 @@ private:
     GetObjectPrincipal(JSContext *aCx, JSObject *aObj, nsIPrincipal **result);
 
     NS_IMETHOD
-    CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability);
+    CheckPermissions(JSContext *aCx, nsIPrincipal* aObjectPrincipal, const char *aCapability);
     
     PRInt32 
     GetSecurityLevel(nsIPrincipal *principal, nsDOMProp domProp, 

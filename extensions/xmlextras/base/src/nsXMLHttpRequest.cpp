@@ -46,6 +46,7 @@
 #include "nsICodebasePrincipal.h"
 #include "nsWeakPtr.h"
 #include "nsICharsetAlias.h"
+#include "nsDOMPropEnums.h"
 #ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -854,6 +855,8 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   if (NS_FAILED(rv)) return rv;
 
   // Only http URLs are allowed
+  // The following check takes the place of nsScriptSecurityManager::CheckLoadURI
+  // since loads of http URLs are always allowed.
   PRBool isHTTP = PR_FALSE;
   uri->SchemeIs(nsIURI::HTTP, &isHTTP);
   if (!isHTTP)
@@ -921,16 +924,18 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+     rv = secMan->CheckScriptAccessToURL(cx, url, NS_DOM_PROP_XMLHTTPREQUEST_OPEN, PR_FALSE);
+     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+ 
+     nsCOMPtr<nsIPrincipal> principal;
+     rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
-        if (codebase) {
-          codebase->GetURI(getter_AddRefs(mBaseURI));
+       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+       if (codebase) {
+         codebase->GetURI(getter_AddRefs(mBaseURI));
         }
       }
-    }
 
     if (argc > 2) {
       JSBool asyncBool;

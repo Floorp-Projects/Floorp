@@ -29,6 +29,7 @@ function myfunc()
 }
 
 p.onload = myfunc;
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 p.open("POST", "http://blueviper/cgi-bin/echo_xml.cgi");
 
 if (!sendPlainTextData) {

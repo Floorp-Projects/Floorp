@@ -1028,6 +1028,7 @@
     "windowinternal.unescape", \
     "windowinternal.updatecommands", \
     "windowinternal.window", \
+    "xmlhttprequest.open", \
     "xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \
     "xulcommanddispatcher.focusedelement", \

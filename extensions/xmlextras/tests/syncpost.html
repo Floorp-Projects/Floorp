@@ -9,6 +9,7 @@ x.documentElement.lastChild.appendChild(document.createTextNode("My Document Hea
 x.documentElement.lastChild.setAttributeNS("http://www.w3.org/1999/xhtml","id","id1")
 
 var p = new XMLHttpRequest();
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 p.open("POST", "http://blueviper/cgi-bin/echo_xml.cgi", false);
 p.send(x);
 var d = p.responseXML;
