@@ -149,46 +149,20 @@ nsComponentManager::FreeLibraries(void)
 
 nsresult
 nsComponentManager::AutoRegister(nsIComponentManager::RegistrationTime when,
-                                 const char* pathlist)
+                                 const char* directory)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->AutoRegister(when, pathlist);
+    return cm->AutoRegister(when, directory);
 }
 
 nsresult
-nsComponentManager::AddToDefaultPathList(const char *pathlist)
+nsComponentManager::AutoRegisterComponent(nsIComponentManager::RegistrationTime when,
+                                          const char *fullname)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->AddToDefaultPathList(pathlist);
-}
-
-nsresult
-nsComponentManager::SyncComponentsInPathList(const char *pathlist)
-{
-    nsIComponentManager* cm;
-    nsresult rv = NS_GetGlobalComponentManager(&cm);
-    if (NS_FAILED(rv)) return rv;
-    return cm->SyncComponentsInPathList(pathlist);
-}
-
-nsresult
-nsComponentManager::SyncComponentsInDir(const char *path)
-{
-    nsIComponentManager* cm;
-    nsresult rv = NS_GetGlobalComponentManager(&cm);
-    if (NS_FAILED(rv)) return rv;
-    return cm->SyncComponentsInDir(path);
-}
-
-nsresult
-nsComponentManager::SyncComponentsInFile(const char *fullname)
-{
-    nsIComponentManager* cm;
-    nsresult rv = NS_GetGlobalComponentManager(&cm);
-    if (NS_FAILED(rv)) return rv;
-    return cm->SyncComponentsInFile(fullname);
+    return cm->AutoRegisterComponent(when, fullname);
 }
