@@ -5,19 +5,19 @@
 <!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
 
 <window id="commonDialog"
-	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         orient="vertical"
-	      onload="commonDialogOnLoad()"
-	      style="width: 40em; min-height: 8em; -moz-user-focus: ignore;"
-	      class="dialog"> 
+        onload="commonDialogOnLoad();"
+        style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"
+        class="dialog"> 
     
-  <script language="JavaScript" src="chrome://global/content/commonDialog.js"></script>
+  <script language="JavaScript" src="chrome://global/content/commonDialog.js"/>
     
   <keyset id="keyset"/>
 
   <box flex="1">
     <box autostretch="never" valign="top">
-			<image id="info.icon" class="spaced" src="chrome://global/skin/message-icon.gif" />
+      <image id="info.icon" class="spaced" src="chrome://global/skin/message-icon.gif" />
     </box>
     <separator orient="vertical" class="thin"/>
     <box orient="vertical" flex="1">
@@ -28,22 +28,25 @@
       <!-- edit fields -->
       <box orient="vertical" id="loginEditField" collapsed="true">
         <text class="label" id="login.text" value="&editfield0.label;" for="dialog.loginname"/>
-        <textfield tabindex="0" type="text" id="dialog.loginname" flex="1"/>
+        <textfield tabindex="0" id="dialog.loginname" flex="1"/>
+        <separator class="thin"/>
       </box>
       <box orient="vertical" id ="password1EditField" collapsed="true">
         <text class="label" id="password1.text" value="&editfield1.label;" for="dialog.password1"/>
         <textfield tabindex="1" type="password" id="dialog.password1" flex="1"/>
+        <separator class="thin"/>
       </box>
       <box orient="vertical" id="password2EditField" collapsed="true">
         <text class="label" id="password2.text" value="&editfield2.label;" for="dialog.password2"/>
         <textfield tabindex="1" type="password" id="dialog.password2" flex="1"/>
+        <separator class="thin"/>
       </box>
   
       <spring flex="1"/>
       
       <!-- checkbox -->
       <box id="checkboxContainer" collapsed="true" autostretch="never">
-        <checkbox id="checkbox" oncommand="onCheckboxClick(this)" style="max-width: 40em;"/>
+        <checkbox id="checkbox" oncommand="onCheckboxClick(this);" style="max-width: 40em;"/>
       </box>
     </box>
   </box>
