@@ -252,13 +252,6 @@ nsImapIncomingServer::GetServerDirectory(char **serverDirectory)
 NS_IMETHODIMP
 nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
 {
-    nsCAutoString dirString(serverDirectory);
-
-    if (dirString.Length() > 0)
-    {
-        if (dirString.Last() != '/')
-            dirString += '/';
-    }
     nsXPIDLCString serverKey;
     nsresult rv = GetKey(getter_Copies(serverKey));
     if (NS_SUCCEEDED(rv))
@@ -266,9 +259,9 @@ nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
         nsCOMPtr<nsIImapHostSessionList> hostSession = 
                  do_GetService(kCImapHostSessionList, &rv);
         if (NS_SUCCEEDED(rv))
-            hostSession->SetOnlineDirForHost(serverKey, dirString.get());
+            hostSession->SetOnlineDirForHost(serverKey, serverDirectory);
     }
-    return SetCharValue("server_sub_directory", dirString.get());
+    return SetCharValue("server_sub_directory", serverDirectory);
 }
 
 

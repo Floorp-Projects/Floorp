@@ -748,13 +748,6 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 	// If this host has an online server directory configured
 	if (onlineMailboxName && onlineDir)
 	{
-#ifdef DEBUG
-		// This invariant should be maintained by libmsg when reading/writing the prefs.
-		// We are only supporting online directories whose online delimiter is /
-		// Therefore, the online directory must end in a slash.
-		NS_ASSERTION (onlineDir[strlen(onlineDir) - 1] == '/', 
-                      "online directory not ended with a slash\n");
-#endif
         nsIMAPNamespace *ns = nsnull;
 		rv = hostSessionList->GetNamespaceForMailboxForHost(serverKey,
                                                             onlineMailboxName,
@@ -764,19 +757,26 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 		if (ns && (PL_strlen(ns->GetPrefix()) == 0) &&
             PL_strcasecmp(onlineMailboxName, "INBOX"))
 		{
-			// Also make sure that the first character in the mailbox name is
-            // not '/'. 
-			NS_ASSERTION(*onlineMailboxName != '/', 
-                         "first char of onlinemailbox is //");
+                        // Make sure onlineDir have the namespace delimiter
+                        char delimiter = ns->GetDelimiter();
+                        nsCAutoString onlineDirWithDelimiter(onlineDir);
+                        if ( delimiter && delimiter != kOnlineHierarchySeparatorUnknown )
+                        {
+                            // try to change the canonical online dir name to real dir name first
+                            onlineDirWithDelimiter.ReplaceChar('/', delimiter);
+                            // make sure the last character is the delimiter
+                            if ( onlineDirWithDelimiter.Last() != delimiter )
+		  	        onlineDirWithDelimiter += delimiter;
+                        }
 
 			// The namespace for this mailbox is the root ("").
 			// Prepend the online server directory
-			int finalLen = strlen(onlineDir) +
+			int finalLen = onlineDirWithDelimiter.Length() +
 			               strlen(onlineMailboxName) + 1;
 			newOnlineName = (char *)PR_Malloc(finalLen);
 			if (newOnlineName)
 			{
-				PL_strcpy(newOnlineName, onlineDir);
+				PL_strcpy(newOnlineName, onlineDirWithDelimiter.get());
 				PL_strcat(newOnlineName, onlineMailboxName);
 			}
 		}
@@ -920,7 +920,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 	char *serverKey = nsnull;
   nsString aString;
 	char *currentPath = (char *) serverPath;
-  char *onlineDir = nsnull;
+  nsCAutoString onlineDir;
 	nsCOMPtr<nsIMsgIncomingServer> server;
 
     nsCOMPtr<nsIImapHostSessionList> hostSessionList = 
@@ -946,21 +946,21 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
   // First we have to check to see if we should strip off an online server
   // subdirectory 
 	// If this host has an online server directory configured
-	onlineDir = !aString.IsEmpty() ? ToNewCString(aString) : nsnull;
+	onlineDir = (char *)(!aString.IsEmpty() ? ToNewCString(aString) : nsnull);
 
-	if (currentPath && onlineDir)
+	if (currentPath && onlineDir.Length() > 0)
 	{
-#ifdef DEBUG
-		// This invariant should be maintained by libmsg when reading/writing the prefs.
-		// We are only supporting online directories whose online delimiter is /
-		// Therefore, the online directory must end in a slash.
-		NS_ASSERTION (onlineDir[PL_strlen(onlineDir) - 1] == '/', 
-                      "Oops... online dir not end in a slash");
-#endif
-
 		// By definition, the online dir must be at the root.
-		int len = PL_strlen(onlineDir);
-		if (!PL_strncmp(onlineDir, currentPath, len))
+		if (delimiterToUse && delimiterToUse != kOnlineHierarchySeparatorUnknown)
+		{
+			// try to change the canonical online dir name to real dir name first
+			onlineDir.ReplaceChar('/', delimiterToUse);
+			// Add the delimiter
+			if (onlineDir.Last() != delimiterToUse)
+				onlineDir += delimiterToUse;
+		}
+		int len = onlineDir.Length();
+		if (!PL_strncmp(onlineDir.get(), currentPath, len))
 		{
 			// This online path begins with the server sub directory
 			currentPath += len;
@@ -981,7 +981,6 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
   rv = ConvertToCanonicalFormat(currentPath, delimiterToUse, allocatedPath);
 
 done:
-  PR_FREEIF(onlineDir);
 	PR_FREEIF(serverKey);
   return rv;
 }
