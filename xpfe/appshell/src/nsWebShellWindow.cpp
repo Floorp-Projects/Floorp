@@ -1909,8 +1909,7 @@ nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                                    nsIChannel* channel, nsresult aStatus,
-                                    nsIDocumentLoaderObserver * aDocObserver)
+                                    nsIChannel* channel, nsresult aStatus)
 {
 #ifdef DEBUG_MENUSDEL
   printf("OnEndDocumentLoad\n");
@@ -1991,8 +1990,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP 
 nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIChannel* channel, 
-                                 nsIContentViewer* aViewer)
+                                 nsIChannel* channel)
 {
   return NS_OK;
 }

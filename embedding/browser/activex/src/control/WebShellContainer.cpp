@@ -517,7 +517,7 @@ CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, nsresult aStatus, nsIDocumentLoaderObserver * aObserver)
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, nsresult aStatus)
 {
 	NG_TRACE(_T("CWebShellContainer::OnEndDocumentLoad(...,  \"\")\n"));
 
@@ -556,7 +556,7 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCh
 } 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsIContentViewer* aViewer)
+CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel)
 { 
 	NG_TRACE(_T("CWebShellContainer::OnStartURLLoad(...,  \"\")\n"));
 

@@ -3977,8 +3977,7 @@ EnderTempObserver::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 EnderTempObserver::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                      nsIChannel* channel,
-                                     nsresult aStatus,
-                                     nsIDocumentLoaderObserver * aObserver)
+                                     nsresult aStatus)
 {
   if (PR_TRUE==mFirstCall)
   {
@@ -3992,8 +3991,7 @@ EnderTempObserver::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 EnderTempObserver::OnStartURLLoad(nsIDocumentLoader* loader,
-                                  nsIChannel* channel, 
-                                  nsIContentViewer* aViewer)
+                                  nsIChannel* channel)
 {
   return NS_OK;
 }

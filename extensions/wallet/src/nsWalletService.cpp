@@ -212,8 +212,7 @@ nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL
 #include "prmem.h"
 
 NS_IMETHODIMP
-nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
-									nsIDocumentLoaderObserver * aObserver)
+nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus)
 {
   nsresult rv = NS_OK;
 
@@ -329,7 +328,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
 
 NS_IMETHODIMP
 nsWalletlibService::OnStartURLLoad
-  (nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer)
+  (nsIDocumentLoader* loader, nsIChannel* channel)
 {
  return NS_OK;
 }

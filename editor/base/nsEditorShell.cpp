@@ -3601,8 +3601,7 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 }
 
 NS_IMETHODIMP
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
-                 nsIDocumentLoaderObserver * aObserver)
+nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
 {
   // for pages with charsets, this gets called the first time with a 
   // non-zero status value. Don't prepare the editor that time.
@@ -3620,8 +3619,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
 
 NS_IMETHODIMP
 nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
-                              nsIChannel* channel,
-                              nsIContentViewer* aViewer)
+                              nsIChannel* channel)
 {
 
    return NS_OK;

@@ -55,8 +55,7 @@ public:
   /**
    * Notify the observer that a document has been completely loaded.
    */
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
-								nsIDocumentLoaderObserver * aObserver) = 0;
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus) = 0;
 
   /**
    * Notify the observer that the specified nsIURI has just started to load.
@@ -64,8 +63,7 @@ public:
    * This notification occurs after DNS resolution, and a connection to the
    * server has been established.
    */
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, 
-                            nsIContentViewer* aViewer) = 0;
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel) = 0;
   
   /**
    * Notify the observer that progress has occurred in the loading of the 

@@ -1444,8 +1444,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
-									nsIDocumentLoaderObserver * aObserver)
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus)
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
   if (! aLoader)
@@ -1466,9 +1465,12 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   if (NS_FAILED(rv)) return rv;
 
   PRBool  isFrame=PR_FALSE;
+  nsCOMPtr<nsISupports> container;
   nsCOMPtr<nsIWebShell> webshell, parent;
+
+  aLoader->GetContainer(getter_AddRefs(container));
   // Is this a frame ?
-  webshell = do_QueryInterface(aObserver);
+  webshell = do_QueryInterface(container);
   if (webshell) {
     webshell->GetParent(*getter_AddRefs(parent));
   }
@@ -1609,8 +1611,7 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIChannel* channel,
-                                 nsIContentViewer* aViewer)
+                                 nsIChannel* channel)
 {
   return NS_OK;
 }

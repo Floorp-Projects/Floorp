@@ -215,8 +215,7 @@ nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 NS_IMETHODIMP
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsIChannel* channel,
-                                nsresult aStatus,
-                                nsIDocumentLoaderObserver* aObserver)
+                                nsresult aStatus)
 {
   nsresult rv;
   PRTime endLoadTime = PR_Now();
@@ -370,8 +369,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader,
-                             nsIChannel* channel,
-                             nsIContentViewer* aViewer)
+                             nsIChannel* channel)
 {
   return NS_OK;
 }

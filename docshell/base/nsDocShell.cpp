@@ -280,11 +280,7 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
    // (7) fire end document load notification
    nsresult rv = NS_OK;
-   nsCOMPtr<nsIDocumentLoaderObserver> dlObserver; 
-   // XXX: this was just "this", and webshell container relied on getting a webshell
-   // through this interface.  No one else uses it anywhere afaict  
-   //if (!dlObserver) { return NS_ERROR_NO_INTERFACE; }
-   NS_ENSURE_SUCCESS(FireEndDocumentLoad(mDocLoader, dummyChannel, rv, dlObserver), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(FireEndDocumentLoad(mDocLoader, dummyChannel, rv), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
 
    return NS_OK;
@@ -1812,12 +1808,10 @@ nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
 NS_IMETHODIMP
 nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsIChannel       * aChannel,
-                                    nsresult           aStatus,
-                                    nsIDocumentLoaderObserver * aDocLoadObserver)
+                                    nsresult           aStatus)
 {
   NS_ENSURE_ARG_POINTER(aLoader);
   NS_ENSURE_ARG_POINTER(aChannel);
-  // null aDocLoadObserver is legal
 
   nsCOMPtr<nsIURI> aURL;
   NS_ENSURE_SUCCESS(aChannel->GetURI(getter_AddRefs(aURL)), NS_ERROR_FAILURE);
@@ -1894,7 +1888,7 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
      * Fire the OnEndDocumentLoad of the DocLoaderobserver
      */
     if (dlObserver && aURL) {
-       NS_ENSURE_SUCCESS(dlObserver->OnEndDocumentLoad(mDocLoader, aChannel, aStatus, aDocLoadObserver), 
+       NS_ENSURE_SUCCESS(dlObserver->OnEndDocumentLoad(mDocLoader, aChannel, aStatus), 
                          NS_ERROR_FAILURE);
     }
 

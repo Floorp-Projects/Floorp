@@ -81,12 +81,10 @@ public:
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* /*loader*/, nsIURI* /*aURL*/, const char* /*aCommand*/)
   													{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
 
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, nsresult /*aStatus*/,
-														nsIDocumentLoaderObserver * /*aObserver*/)
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, nsresult /*aStatus*/)
 														{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
 
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, 
-                            nsIContentViewer* /*aViewer*/)
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/)
                             { return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
