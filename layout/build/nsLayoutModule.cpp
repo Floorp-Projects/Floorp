@@ -129,6 +129,7 @@
 #include "nsImageFrame.h"
 #include "nsILanguageAtomService.h"
 #include "nsTextControlFrame.h"
+#include "nsStyleSheetService.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -608,6 +609,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
 // views are not refcounted, so this is the same as
 // NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
@@ -1310,7 +1313,12 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Plugin Document",
     NS_PLUGINDOCUMENT_CID,
     nsnull,
-    CreatePluginDocument }
+    CreatePluginDocument },
+
+  { "Style sheet service",
+    NS_STYLESHEETSERVICE_CID,
+    NS_STYLESHEETSERVICE_CONTRACTID,
+    nsStyleSheetServiceConstructor }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)
