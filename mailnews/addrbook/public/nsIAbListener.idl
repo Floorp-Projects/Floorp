@@ -26,8 +26,8 @@
 [scriptable, uuid(1920E484-0709-11d3-A2EC-001083003D0C)]    
 interface nsIAbListener : nsISupports {
 
-	void OnItemAdded(in nsISupports parentDir, in nsISupports item);
-	void OnItemRemoved(in nsISupports parentDir, in nsISupports item);
-	void OnItemPropertyChanged(in nsISupports item, in string property, in wstring oldValue, in wstring newValue);
+	void onItemAdded(in nsISupports parentDir, in nsISupports item);
+	void onItemRemoved(in nsISupports parentDir, in nsISupports item);
+	void onItemPropertyChanged(in nsISupports item, in string property, in wstring oldValue, in wstring newValue);
 
 };

@@ -63,7 +63,7 @@ var ResultsPaneController =
 				if ( resultsTree )
 				{
 					var cardList = resultsTree.selectedItems;
-					top.addressbook.DeleteCards(resultsTree, resultsTree, cardList);
+					top.addressbook.deleteCards(resultsTree, resultsTree, cardList);
 				}
 				break;
 		}
@@ -136,7 +136,7 @@ var DirPaneController =
 			case "cmd_delete":
 			case "button_delete":
 				if ( dirTree )
-					top.addressbook.DeleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
+					top.addressbook.deleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
 				break;
 		}
 	},

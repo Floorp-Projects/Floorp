@@ -25,6 +25,6 @@
 
 [scriptable, uuid(CA2A6B08-3625-11d3-988E-001083010E9B)]
 interface nsIAutoCompleteListener : nsISupports {
-	void OnAutoCompleteResult(in nsISupports aParam, in wstring aOriginalString, in wstring aMatch);
+	void onAutoCompleteResult(in nsISupports aParam, in wstring aOriginalString, in wstring aMatch);
 };
 

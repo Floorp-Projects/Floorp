@@ -135,7 +135,7 @@ function EditCardOKButton()
 {
 	SetCardValues(editCard.card, document);
 	
-	editCard.card.EditCardToDatabase(editCard.abURI);
+	editCard.card.editCardToDatabase(editCard.abURI);
 	
 	// callback to allow caller to update
 	if ( editCard.okCallback )
@@ -150,45 +150,45 @@ function GetCardValues(cardproperty, doc)
 {
 	if ( cardproperty )
 	{
-		doc.getElementById('FirstName').value = cardproperty.FirstName;
-		doc.getElementById('LastName').value = cardproperty.LastName;
-		doc.getElementById('DisplayName').value = cardproperty.DisplayName;
-		doc.getElementById('NickName').value = cardproperty.NickName;
+		doc.getElementById('FirstName').value = cardproperty.firstName;
+		doc.getElementById('LastName').value = cardproperty.lastName;
+		doc.getElementById('DisplayName').value = cardproperty.displayName;
+		doc.getElementById('NickName').value = cardproperty.nickName;
 		
-		doc.getElementById('PrimaryEmail').value = cardproperty.PrimaryEmail;
-		doc.getElementById('SecondEmail').value = cardproperty.SecondEmail;
-		//doc.getElementById('SendPlainText').value = cardproperty.SendPlainText;
+		doc.getElementById('PrimaryEmail').value = cardproperty.primaryEmail;
+		doc.getElementById('SecondEmail').value = cardproperty.secondEmail;
+		//doc.getElementById('SendPlainText').value = cardproperty.sendPlainText;
 		
-		doc.getElementById('WorkPhone').value = cardproperty.WorkPhone;
-		doc.getElementById('HomePhone').value = cardproperty.HomePhone;
-		doc.getElementById('FaxNumber').value = cardproperty.FaxNumber;
-		doc.getElementById('PagerNumber').value = cardproperty.PagerNumber;
-		doc.getElementById('CellularNumber').value = cardproperty.CellularNumber;
+		doc.getElementById('WorkPhone').value = cardproperty.workPhone;
+		doc.getElementById('HomePhone').value = cardproperty.homePhone;
+		doc.getElementById('FaxNumber').value = cardproperty.faxNumber;
+		doc.getElementById('PagerNumber').value = cardproperty.pagerNumber;
+		doc.getElementById('CellularNumber').value = cardproperty.cellularNumber;
 
-		doc.getElementById('HomeAddress').value = cardproperty.HomeAddress;
-		doc.getElementById('HomeAddress2').value = cardproperty.HomeAddress2;
-		doc.getElementById('HomeCity').value = cardproperty.HomeCity;
-		doc.getElementById('HomeState').value = cardproperty.HomeState;
-		doc.getElementById('HomeZipCode').value = cardproperty.HomeZipCode;
-		doc.getElementById('HomeCountry').value = cardproperty.HomeCountry;
+		doc.getElementById('HomeAddress').value = cardproperty.homeAddress;
+		doc.getElementById('HomeAddress2').value = cardproperty.homeAddress2;
+		doc.getElementById('HomeCity').value = cardproperty.homeCity;
+		doc.getElementById('HomeState').value = cardproperty.homeState;
+		doc.getElementById('HomeZipCode').value = cardproperty.homeZipCode;
+		doc.getElementById('HomeCountry').value = cardproperty.homeCountry;
 
-		doc.getElementById('JobTitle').value = cardproperty.JobTitle;
-		doc.getElementById('Department').value = cardproperty.Department;
-		doc.getElementById('Company').value = cardproperty.Company;
-		doc.getElementById('WorkAddress').value = cardproperty.WorkAddress;
-		doc.getElementById('WorkAddress2').value = cardproperty.WorkAddress2;
-		doc.getElementById('WorkCity').value = cardproperty.WorkCity;
-		doc.getElementById('WorkState').value = cardproperty.WorkState;
-		doc.getElementById('WorkZipCode').value = cardproperty.WorkZipCode;
-		doc.getElementById('WorkCountry').value = cardproperty.WorkCountry;
+		doc.getElementById('JobTitle').value = cardproperty.jobTitle;
+		doc.getElementById('Department').value = cardproperty.department;
+		doc.getElementById('Company').value = cardproperty.company;
+		doc.getElementById('WorkAddress').value = cardproperty.workAddress;
+		doc.getElementById('WorkAddress2').value = cardproperty.workAddress2;
+		doc.getElementById('WorkCity').value = cardproperty.workCity;
+		doc.getElementById('WorkState').value = cardproperty.workState;
+		doc.getElementById('WorkZipCode').value = cardproperty.workZipCode;
+		doc.getElementById('WorkCountry').value = cardproperty.workCountry;
 
-		doc.getElementById('WebPage1').value = cardproperty.WebPage1;
+		doc.getElementById('WebPage1').value = cardproperty.webPage1;
 
-		doc.getElementById('Custom1').value = cardproperty.Custom1;
-		doc.getElementById('Custom2').value = cardproperty.Custom2;
-		doc.getElementById('Custom3').value = cardproperty.Custom3;
-		doc.getElementById('Custom4').value = cardproperty.Custom4;
-		doc.getElementById('Notes').value = cardproperty.Notes;
+		doc.getElementById('Custom1').value = cardproperty.custom1;
+		doc.getElementById('Custom2').value = cardproperty.custom2;
+		doc.getElementById('Custom3').value = cardproperty.custom3;
+		doc.getElementById('Custom4').value = cardproperty.custom4;
+		doc.getElementById('Notes').value = cardproperty.notes;
 	}
 }
 
@@ -198,45 +198,45 @@ function SetCardValues(cardproperty, doc)
 {
 	if (cardproperty)
 	{
-		cardproperty.FirstName = doc.getElementById('FirstName').value;
-		cardproperty.LastName = doc.getElementById('LastName').value;
-		cardproperty.DisplayName = doc.getElementById('DisplayName').value;
-		cardproperty.NickName = doc.getElementById('NickName').value;
+		cardproperty.firstName = doc.getElementById('FirstName').value;
+		cardproperty.lastName = doc.getElementById('LastName').value;
+		cardproperty.displayName = doc.getElementById('DisplayName').value;
+		cardproperty.nickName = doc.getElementById('NickName').value;
 		
-		cardproperty.PrimaryEmail = doc.getElementById('PrimaryEmail').value;
-		cardproperty.SecondEmail = doc.getElementById('SecondEmail').value;
+		cardproperty.primaryEmail = doc.getElementById('PrimaryEmail').value;
+		cardproperty.secondEmail = doc.getElementById('SecondEmail').value;
 		//cardproperty.SendPlainText = doc.getElementById('SendPlainText').value;
 		
-		cardproperty.WorkPhone = doc.getElementById('WorkPhone').value;
-		cardproperty.HomePhone = doc.getElementById('HomePhone').value;
-		cardproperty.FaxNumber = doc.getElementById('FaxNumber').value;
-		cardproperty.PagerNumber = doc.getElementById('PagerNumber').value;
-		cardproperty.CellularNumber = doc.getElementById('CellularNumber').value;
+		cardproperty.workPhone = doc.getElementById('WorkPhone').value;
+		cardproperty.homePhone = doc.getElementById('HomePhone').value;
+		cardproperty.faxNumber = doc.getElementById('FaxNumber').value;
+		cardproperty.pagerNumber = doc.getElementById('PagerNumber').value;
+		cardproperty.cellularNumber = doc.getElementById('CellularNumber').value;
 
-		cardproperty.HomeAddress = doc.getElementById('HomeAddress').value;
-		cardproperty.HomeAddress2 = doc.getElementById('HomeAddress2').value;
-		cardproperty.HomeCity = doc.getElementById('HomeCity').value;
-		cardproperty.HomeState = doc.getElementById('HomeState').value;
-		cardproperty.HomeZipCode = doc.getElementById('HomeZipCode').value;
-		cardproperty.HomeCountry = doc.getElementById('HomeCountry').value;
+		cardproperty.homeAddress = doc.getElementById('HomeAddress').value;
+		cardproperty.homeAddress2 = doc.getElementById('HomeAddress2').value;
+		cardproperty.homeCity = doc.getElementById('HomeCity').value;
+		cardproperty.homeState = doc.getElementById('HomeState').value;
+		cardproperty.homeZipCode = doc.getElementById('HomeZipCode').value;
+		cardproperty.homeCountry = doc.getElementById('HomeCountry').value;
 
-		cardproperty.JobTitle = doc.getElementById('JobTitle').value;
-		cardproperty.Department = doc.getElementById('Department').value;
-		cardproperty.Company = doc.getElementById('Company').value;
-		cardproperty.WorkAddress = doc.getElementById('WorkAddress').value;
-		cardproperty.WorkAddress2 = doc.getElementById('WorkAddress2').value;
-		cardproperty.WorkCity = doc.getElementById('WorkCity').value;
-		cardproperty.WorkState = doc.getElementById('WorkState').value;
-		cardproperty.WorkZipCode = doc.getElementById('WorkZipCode').value;
-		cardproperty.WorkCountry = doc.getElementById('WorkCountry').value;
+		cardproperty.jobTitle = doc.getElementById('JobTitle').value;
+		cardproperty.department = doc.getElementById('Department').value;
+		cardproperty.company = doc.getElementById('Company').value;
+		cardproperty.workAddress = doc.getElementById('WorkAddress').value;
+		cardproperty.workAddress2 = doc.getElementById('WorkAddress2').value;
+		cardproperty.workCity = doc.getElementById('WorkCity').value;
+		cardproperty.workState = doc.getElementById('WorkState').value;
+		cardproperty.workZipCode = doc.getElementById('WorkZipCode').value;
+		cardproperty.workCountry = doc.getElementById('WorkCountry').value;
 
-		cardproperty.WebPage1 = doc.getElementById('WebPage1').value;
+		cardproperty.webPage1 = doc.getElementById('WebPage1').value;
 
-		cardproperty.Custom1 = doc.getElementById('Custom1').value;
-		cardproperty.Custom2 = doc.getElementById('Custom2').value;
-		cardproperty.Custom3 = doc.getElementById('Custom3').value;
-		cardproperty.Custom4 = doc.getElementById('Custom4').value;
-		cardproperty.Notes = doc.getElementById('Notes').value;
+		cardproperty.custom1 = doc.getElementById('Custom1').value;
+		cardproperty.custom2 = doc.getElementById('Custom2').value;
+		cardproperty.custom3 = doc.getElementById('Custom3').value;
+		cardproperty.custom4 = doc.getElementById('Custom4').value;
+		cardproperty.notes = doc.getElementById('Notes').value;
 	}
 }
 

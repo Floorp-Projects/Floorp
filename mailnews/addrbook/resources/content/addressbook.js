@@ -3,6 +3,7 @@ var gUpdateCardView = 0;
 
 function OnLoadAddressBook()
 {
+
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 	top.gUpdateCardView = UpdateCardView;
@@ -80,7 +81,7 @@ function AbPrintCard()
 {
         dump("print card\n");
         try {
-                addressbook.PrintCard();
+                addressbook.printCard();
         }
         catch (ex) {
                 dump("failed to print card\n");
@@ -100,7 +101,7 @@ function AbPrintAddressBook()
 
 function AbImport()
 {
-	addressbook.ImportAddressBook();
+	addressbook.importAddressBook();
 }
 
 /*
@@ -115,7 +116,7 @@ function AbDelete()
 		//get the current folder
 		var srcDirectory = document.getElementById('resultsTree');
 		dump("srcDirectory = " + srcDirectory + "\n");
-		top.addressbook.DeleteCards(tree, srcDirectory, cardList);
+		top.addressbook.deleteCards(tree, srcDirectory, cardList);
 	}
 }
 */
@@ -128,7 +129,7 @@ function AbDeleteDirectory()
 	
 //	if ( tree && tree.selectedItems && tree.selectedItems.length )
 	if ( tree )
-		top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
+		top.addressbook.deleteAddressBooks(tree.database, tree, tree.selectedItems);
 }
 */
 

@@ -36,12 +36,12 @@ interface nsIDOMWindow;
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
 interface nsIAddressBook : nsISupports {
 
-    void DeleteCards(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
-	void NewAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in wstring name);
-    void DeleteAddressBooks(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
-    void PrintCard();
-    void PrintAddressbook();
-    void SetWebShellWindow(in nsIDOMWindow win);
-	void ImportAddressBook();
+    void deleteCards(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
+	void newAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in wstring name);
+    void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
+    void printCard();
+    void printAddressbook();
+    void setWebShellWindow(in nsIDOMWindow win);
+	void importAddressBook();
 };
 

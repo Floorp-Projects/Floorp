@@ -27,10 +27,11 @@ interface nsIAddrDBAnnouncer;
 [scriptable, uuid(A4186D89-1DD0-11d3-A303-001083003D0C)] 
 interface nsIAddrDBListener : nsISupports {
 
-	void OnCardAttribChange(in unsigned long abCode, 
+	void onCardAttribChange(in unsigned long abCode, 
 							in nsIAddrDBListener instigator);
-	void OnCardEntryChange (in unsigned long abCode, 
+	void onCardEntryChange (in unsigned long abCode, 
 							in nsIAbCard card, 
 							in nsIAddrDBListener instigator);
-    void OnAnnouncerGoingAway(in nsIAddrDBAnnouncer instigator);
+    void onAnnouncerGoingAway(in nsIAddrDBAnnouncer instigator);
+
 };

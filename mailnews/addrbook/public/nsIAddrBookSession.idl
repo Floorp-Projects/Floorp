@@ -39,15 +39,15 @@
 [scriptable, uuid(C5339441-303F-11d3-9E13-00A0C92B5F0D)]
 interface nsIAddrBookSession : nsISupports {
 
-  void AddAddressBookListener(in nsIAbListener listener);
-  void RemoveAddressBookListener(in nsIAbListener listener);
-  void NotifyItemPropertyChanged(in nsISupports item,
+  void addAddressBookListener(in nsIAbListener listener);
+  void removeAddressBookListener(in nsIAbListener listener);
+  void notifyItemPropertyChanged(in nsISupports item,
                                  in string property,
                                  in wstring oldValue,
                                  in wstring newValue);
-  void NotifyDirectoryItemAdded(in nsIAbDirectory directory, in nsISupports item);
-  void NotifyDirectoryItemDeleted(in nsIAbDirectory directory, in nsISupports item);
+  void notifyDirectoryItemAdded(in nsIAbDirectory directory, in nsISupports item);
+  void notifyDirectoryItemDeleted(in nsIAbDirectory directory, in nsISupports item);
 
-  [noscript] void GetUserProfileDirectory(out nsFileSpec userDir);
+  [noscript] readonly attribute nsFileSpec userProfileDirectory;
 };
 
