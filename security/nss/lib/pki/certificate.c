@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.6 $ $Date: 2001/10/11 18:40:33 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:41:50 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -65,6 +65,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.6 $ 
 #ifndef BASE_H
 #include "base.h"
 #endif /* BASE_H */
+
+extern const NSSError NSS_ERROR_NOT_FOUND;
 
 /* Hm, sadly, I'm using PK11_HashBuf...  Need to get crypto context going to
  * get rid of that
