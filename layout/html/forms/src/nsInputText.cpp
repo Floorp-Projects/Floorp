@@ -88,7 +88,12 @@ PRInt32 nsInputTextFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 PRInt32 nsInputTextFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                                      PRInt32 aInnerHeight) const
 {
+#ifdef XP_PC
   return (int)(5 * aPixToTwip + 0.5);
+#endif
+#ifdef XP_UNIX
+  return (int)(10 * aPixToTwip + 0.5);
+#endif
 }
 
 PRInt32 nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip, 

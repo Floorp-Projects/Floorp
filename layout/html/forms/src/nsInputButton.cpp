@@ -372,18 +372,31 @@ PRInt32 nsInputButtonFrame::GetVerticalInsidePadding(float aPixToTwip,
                                                      PRInt32 aInnerHeight) const
 {
   //return (int)(4 * aPixToTwip + 0.5);
+#ifdef XP_PC
   return (int)(aInnerHeight * .25 + 0.5);
+#endif
+#ifdef XP_UNIX
+  return (int)(aInnerHeight * .50 + 0.5);
+#endif
 }
 
 PRInt32 nsInputButtonFrame::GetHorizontalInsidePadding(float aPixToTwip, 
                                                        PRInt32 aInnerWidth) const
 {
+#ifdef XP_PC
   if (kBackwardMode == GetMode()) {
-    return (int)(aInnerWidth * .25 + 0.5);
+    return (int)(aInnerWidth * .25 + 0.5)+8;
+  } else {
+    return (int)(10 * aPixToTwip + 0.5)+8;
   }
-  else {
-    return (int)(10 * aPixToTwip + 0.5);
+#endif
+#ifdef XP_UNIX
+  if (kBackwardMode == GetMode()) {
+    return (int)(aInnerWidth * .5 + 0.5);
+  } else {
+    return (int)(20 * aPixToTwip + 0.5);
   }
+#endif
 }
 
 NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
@@ -531,11 +544,15 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
+printf("-------------nsInputButtonFrame::PostCreateWidget-----------\n");
   nsIButton* button;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&button)) {
+printf("Before setting font\n");
     button->SetFont(GetFont(aPresContext));
+printf("After setting font\n");
   } 
   else {
+printf("Button is NULL\n");
     NS_ASSERTION(0, "no widget in button control");
   }
 
@@ -544,7 +561,9 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
   nsString value;
   nsContentAttr status = content->GetAttribute(nsHTMLAtoms::value, value);
   if (eContentAttr_HasValue == status) {  
+printf("Before setting SetLabel [%s]\n", value.ToNewCString());
     button->SetLabel(value);
+printf("After setting SetLabel\n");
   } 
   else {
     nsAutoString label;
