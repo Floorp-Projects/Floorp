@@ -1184,8 +1184,10 @@ nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
   }
 
   // Adjust available width to account for the indent and the margins
-  aReflowState.availableWidth -= indent + pfd->mMargin.left +
-    pfd->mMargin.right;
+  if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
+    aReflowState.availableWidth -= indent + pfd->mMargin.left +
+      pfd->mMargin.right;
+  }
 
   // NOTE: While the x coordinate remains relative to the parent span,
   // the y coordinate is fixed at the top edge for the line. During
