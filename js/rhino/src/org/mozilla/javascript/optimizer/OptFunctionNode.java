@@ -48,7 +48,7 @@ final class OptFunctionNode
         int parameterCount = fnode.getParamCount();
         optVars = new OptLocalVariable[N];
         for (int i = 0; i != N; ++i) {
-            optVars[i] = new OptLocalVariable(i, i < parameterCount);
+            optVars[i] = new OptLocalVariable(i < parameterCount);
         }
         fnode.setCompilerData(this);
     }
@@ -106,6 +106,32 @@ final class OptFunctionNode
     {
         int index = fnode.getParamOrVarIndex(name);
         if (index < 0) { return null; }
+        return optVars[index];
+    }
+
+    int getVarIndex(Node n)
+    {
+        int index = n.getIntProp(Node.VARIABLE_PROP, -1);
+        if (index == -1) {
+            String name;
+            int type = n.getType();
+            if (type == Token.GETVAR) {
+                name = n.getString();
+            } else if (type == Token.SETVAR) {
+                name = n.getFirstChild().getString();
+            } else {
+                throw Kit.codeBug();
+            }
+            index = fnode.getParamOrVarIndex(name);
+            if (index < 0) throw Kit.codeBug();
+            n.putIntProp(Node.VARIABLE_PROP, index);
+        }
+        return index;
+    }
+
+    OptLocalVariable getVar(Node n)
+    {
+        int index = getVarIndex(n);
         return optVars[index];
     }
 

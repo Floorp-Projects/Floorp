@@ -1423,21 +1423,7 @@ class BodyCodegen
         switch (type) {
               case Token.LOOP:
               case Token.LABEL:
-                while (child != null) {
-                    generateStatement(child, node);
-                    child = child.getNext();
-                }
-                break;
-
               case Token.WITH:
-                ++withNesting;
-                while (child != null) {
-                    generateStatement(child, node);
-                    child = child.getNext();
-                }
-                --withNesting;
-                break;
-
               case Token.SCRIPT:
               case Token.BLOCK:
               case Token.EMPTY:
@@ -3085,7 +3071,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
           case Token.GETVAR:
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                 boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
-                OptLocalVariable lVar = OptLocalVariable.get(child);
+                OptLocalVariable lVar = fnCurrent.getVar(child);
                 short reg = lVar.getJRegister();
                 cfw.addDLoad(reg);
                 if (post) {
@@ -3104,9 +3090,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 break;
             } else if (hasVarsInRegs) {
                 boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
-                OptLocalVariable lVar = OptLocalVariable.get(child);
-                if (lVar == null)
-                    lVar = fnCurrent.getVar(child.getString());
+                OptLocalVariable lVar = fnCurrent.getVar(child);
                 short reg = lVar.getJRegister();
                 cfw.addALoad(reg);
                 if (post) {
@@ -3271,7 +3255,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         if (node.getType() == Token.GETVAR
             && inDirectCallFunction && !itsForcedObjectParameters)
         {
-            OptLocalVariable lVar = OptLocalVariable.get(node);
+            OptLocalVariable lVar = fnCurrent.getVar(node);
             if (lVar.isParameter()) {
                 return lVar.getJRegister();
             }
@@ -3543,10 +3527,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     private void visitGetVar(Node node)
     {
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = OptLocalVariable.get(node);
-            if (lVar == null) {
-                lVar = fnCurrent.getVar(node.getString());
-            }
+            OptLocalVariable lVar = fnCurrent.getVar(node);
             short reg = lVar.getJRegister();
             if (varIsDirectCallParameter(lVar)) {
                 // Remember that here the isNumber flag means that we
@@ -3579,10 +3560,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     private void visitSetVar(Node node, Node child, boolean needValue)
     {
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = OptLocalVariable.get(node);
-            if (lVar == null) {
-                lVar = fnCurrent.getVar(child.getString());
-            }
+            OptLocalVariable lVar = fnCurrent.getVar(node);
             generateExpression(child.getNext(), node);
             boolean isNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
             short reg = lVar.getJRegister();
@@ -4002,8 +3980,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     private boolean itsForcedObjectParameters;
     private int enterAreaStartLabel;
     private int epilogueLabel;
-
-    private int withNesting = 0;
 
     // special known locals. If you add a new local here, be sure
     // to initialize it to -1 in initBodyGeneration

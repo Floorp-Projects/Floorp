@@ -69,14 +69,12 @@ class Optimizer
         if (theFunction.fnode.requiresActivation()) return;
 
         inDirectCallFunction = theFunction.isTargetOfDirectCall();
+        this.theFunction = theFunction;
 
         ObjArray statementsArray = new ObjArray();
         buildStatementList_r(theFunction.fnode, statementsArray);
         Node[] theStatementNodes = new Node[statementsArray.size()];
         statementsArray.toArray(theStatementNodes);
-
-        for (int i = 0; i < theStatementNodes.length; i++)
-            replaceVariableAccess(theStatementNodes[i], theFunction);
 
         Block.runFlowAnalyzes(theFunction, theStatementNodes);
 
@@ -132,7 +130,7 @@ class Optimizer
     private void markDCPNumberContext(Node n)
     {
         if (inDirectCallFunction && n.getType() == Token.GETVAR) {
-            if (OptLocalVariable.get(n).isParameter()) {
+            if (theFunction.getVar(n).isParameter()) {
                 parameterUsedInNumberContext = true;
             }
         }
@@ -141,7 +139,7 @@ class Optimizer
     private boolean convertParameter(Node n)
     {
         if (inDirectCallFunction && n.getType() == Token.GETVAR) {
-            if (OptLocalVariable.get(n).isParameter()) {
+            if (theFunction.getVar(n).isParameter()) {
                 n.removeProp(Node.ISNUMBER_PROP);
                 return true;
             }
@@ -164,7 +162,7 @@ class Optimizer
                 return NumberType;
 
             case Token.GETVAR : {
-                    OptLocalVariable theVar = OptLocalVariable.get(n);
+                    OptLocalVariable theVar = theFunction.getVar(n);
                     if (inDirectCallFunction && theVar.isParameter()) {
                         n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                         return NumberType;
@@ -180,7 +178,7 @@ class Optimizer
             case Token.DEC : {
                     Node child = n.getFirstChild();     // will be a GETVAR or GETPROP
                     if (child.getType() == Token.GETVAR) {
-                        OptLocalVariable theVar = OptLocalVariable.get(child);
+                        OptLocalVariable theVar = theFunction.getVar(child);
                         if (theVar.isNumber()) {
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(child);
@@ -196,7 +194,7 @@ class Optimizer
                     Node lChild = n.getFirstChild();
                     Node rChild = lChild.getNext();
                     int rType = rewriteForNumberVariables(rChild);
-                    OptLocalVariable theVar = OptLocalVariable.get(n);
+                    OptLocalVariable theVar = theFunction.getVar(n);
                     if (inDirectCallFunction && theVar.isParameter()) {
                         if (rType == NumberType) {
                             if (!convertParameter(rChild)) {
@@ -494,24 +492,8 @@ class Optimizer
         }
     }
 
-    private static void replaceVariableAccess(Node n, OptFunctionNode fn)
-    {
-        Node child = n.getFirstChild();
-        while (child != null) {
-            replaceVariableAccess(child, fn);
-            child = child.getNext();
-        }
-        int type = n.getType();
-        if (type == Token.SETVAR) {
-            String name = n.getFirstChild().getString();
-            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
-        } else if (type == Token.GETVAR) {
-            String name = n.getString();
-            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
-        }
-    }
-
     private int itsOptLevel;
     private boolean inDirectCallFunction;
+    OptFunctionNode theFunction;
     private boolean parameterUsedInNumberContext;
 }

@@ -41,17 +41,9 @@ import org.mozilla.javascript.*;
 final class OptLocalVariable
 {
 
-    OptLocalVariable(int index, boolean isParameter)
+    OptLocalVariable(boolean isParameter)
     {
-        itsIndex = index;
         itsIsParameter = isParameter;
-    }
-
-    static OptLocalVariable get(Node n)
-    {
-        int type = n.getType();
-        if (type != Token.GETVAR && type != Token.SETVAR) Kit.codeBug();
-        return (OptLocalVariable)n.getProp(Node.VARIABLE_PROP);
     }
 
     short getJRegister() {
@@ -62,19 +54,14 @@ final class OptLocalVariable
         itsJRegister = aJReg;
     }
 
-    int getIndex() {
-        return itsIndex;
-    }
-
     void setIsNumber()      { itsIsNumber = true; }
     boolean isNumber()      { return itsIsNumber; }
 
     boolean isParameter()   { return itsIsParameter; }
 
     private boolean itsIsParameter;
-    private int itsIndex;
+    private boolean itsIsNumber;
 
     private short itsJRegister = -1;   // unassigned
 
-    private boolean itsIsNumber;
 }

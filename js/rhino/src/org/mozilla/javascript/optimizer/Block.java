@@ -331,7 +331,8 @@ class Block
             if (visit[vIndex] || !doneOnce[vIndex]) {
                 doneOnce[vIndex] = true;
                 visit[vIndex] = false;
-                if (theBlocks[vIndex].doTypeFlow(statementNodes, varTypes)) {
+                if (theBlocks[vIndex].doTypeFlow(fn, statementNodes, varTypes))
+                {
                     Block succ[] = theBlocks[vIndex].itsSuccessors;
                     if (succ != null) {
                         for (int i = 0; i < succ.length; i++) {
@@ -353,11 +354,6 @@ class Block
             else
                 vIndex++;
         }
-    }
-
-    private static int getVarIndex(Node n)
-    {
-        return OptLocalVariable.get(n).getIndex();
     }
 
     private static boolean assignType(int[] varTypes, int index, int type)
@@ -383,7 +379,7 @@ class Block
         The itsNotDefSet is built reversed then flipped later.
 
     */
-    private void lookForVariableAccess(Node n)
+    private void lookForVariableAccess(OptFunctionNode fn, Node n)
     {
         switch (n.getType()) {
             case Token.DEC :
@@ -391,7 +387,7 @@ class Block
                 {
                     Node child = n.getFirstChild();
                     if (child.getType() == Token.GETVAR) {
-                        int varIndex = getVarIndex(child);
+                        int varIndex = fn.getVarIndex(child);
                         if (!itsNotDefSet.test(varIndex))
                             itsUseBeforeDefSet.set(varIndex);
                         itsNotDefSet.set(varIndex);
@@ -402,13 +398,13 @@ class Block
                 {
                     Node lhs = n.getFirstChild();
                     Node rhs = lhs.getNext();
-                    lookForVariableAccess(rhs);
-                    itsNotDefSet.set(getVarIndex(n));
+                    lookForVariableAccess(fn, rhs);
+                    itsNotDefSet.set(fn.getVarIndex(n));
                 }
                 break;
             case Token.GETVAR :
                 {
-                    int varIndex = getVarIndex(n);
+                    int varIndex = fn.getVarIndex(n);
                     if (!itsNotDefSet.test(varIndex))
                         itsUseBeforeDefSet.set(varIndex);
                 }
@@ -416,7 +412,7 @@ class Block
             default :
                 Node child = n.getFirstChild();
                 while (child != null) {
-                    lookForVariableAccess(child);
+                    lookForVariableAccess(fn, child);
                     child = child.getNext();
                 }
                 break;
@@ -437,7 +433,7 @@ class Block
         itsLiveOnExitSet = new DataFlowBitSet(listLength);
         for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
             Node n = statementNodes[i];
-            lookForVariableAccess(n);
+            lookForVariableAccess(fn, n);
         }
         itsNotDefSet.not();         // truth in advertising
     }
@@ -464,7 +460,8 @@ class Block
             Literals,
             Arithmetic operations - always return a Number
     */
-    private static int findExpressionType(Node n, int[] varTypes)
+    private static int findExpressionType(OptFunctionNode fn, Node n,
+                                          int[] varTypes)
     {
         switch (n.getType()) {
           case Token.NUMBER :
@@ -479,7 +476,7 @@ class Block
              return Optimizer.AnyType;
 
           case Token.GETVAR :
-              return varTypes[getVarIndex(n)];
+              return varTypes[fn.getVarIndex(n)];
 
           case Token.INC :
           case Token.DEC :
@@ -498,8 +495,8 @@ class Block
               // if the lhs & rhs are known to be numbers, we can be sure that's
               // the result, otherwise it could be a string.
               Node child = n.getFirstChild();
-              int lType = findExpressionType(child, varTypes);
-              int rType = findExpressionType(child.getNext(), varTypes);
+              int lType = findExpressionType(fn, child, varTypes);
+              int rType = findExpressionType(fn, child.getNext(), varTypes);
               return lType | rType;    // we're not distinguishng strings yet
           }
         }
@@ -510,21 +507,22 @@ class Block
         } else {
             int result = Optimizer.NoType;
             while (child != null) {
-                result |= findExpressionType(child, varTypes);
+                result |= findExpressionType(fn, child, varTypes);
                 child = child.getNext();
             }
             return result;
         }
     }
 
-    private static boolean findDefPoints(Node n, int[] varTypes)
+    private static boolean findDefPoints(OptFunctionNode fn, Node n,
+                                         int[] varTypes)
     {
         boolean result = false;
         Node child = n.getFirstChild();
         switch (n.getType()) {
           default :
             while (child != null) {
-                result |= findDefPoints(child, varTypes);
+                result |= findDefPoints(fn, child, varTypes);
                 child = child.getNext();
             }
             break;
@@ -532,25 +530,25 @@ class Block
           case Token.INC :
             if (child.getType() == Token.GETVAR) {
                 // theVar is a Number now
-                int i = getVarIndex(child);
+                int i = fn.getVarIndex(child);
                 result |= assignType(varTypes, i, Optimizer.NumberType);
             }
             break;
           case Token.SETPROP :
           case Token.SETPROP_OP :
             if (child.getType() == Token.GETVAR) {
-                int i = getVarIndex(child);
+                int i = fn.getVarIndex(child);
                 assignType(varTypes, i, Optimizer.AnyType);
             }
             while (child != null) {
-                result |= findDefPoints(child, varTypes);
+                result |= findDefPoints(fn, child, varTypes);
                 child = child.getNext();
             }
             break;
           case Token.SETVAR : {
             Node rValue = child.getNext();
-            int theType = findExpressionType(rValue, varTypes);
-            int i = getVarIndex(n);
+            int theType = findExpressionType(fn, rValue, varTypes);
+            int i = fn.getVarIndex(n);
             result |= assignType(varTypes, i, theType);
             break;
           }
@@ -558,14 +556,15 @@ class Block
         return result;
     }
 
-    private boolean doTypeFlow(Node[] statementNodes, int[] varTypes)
+    private boolean doTypeFlow(OptFunctionNode fn, Node[] statementNodes,
+                               int[] varTypes)
     {
         boolean changed = false;
 
         for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
             Node n = statementNodes[i];
             if (n != null)
-                changed |= findDefPoints(n, varTypes);
+                changed |= findDefPoints(fn, n, varTypes);
         }
 
         return changed;
