@@ -40,10 +40,6 @@ public:
   NS_IMETHOD_(PRUint32) GetNumberViewableDays();
   NS_IMETHOD SetNumberViewableDays(PRUint32 aNumberViewableDays);
 
-  NS_IMETHOD SetShowHeaders(PRBool aShowHeaders);
-  NS_IMETHOD SetShowStatus(PRBool aShowHeaders);
-  NS_IMETHOD_(PRBool) GetShowHeaders();
-  NS_IMETHOD_(PRBool) GetShowStatus();
   NS_IMETHOD SetTimeContext(nsICalTimeContext * aContext);
 
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
@@ -67,8 +63,6 @@ protected:
 
 private:
   PRUint32 mNumberViewableDays;
-  PRBool mShowHeaders;
-  PRBool mShowStatus;
   PRUint32 mMaxRepeat;
   PRUint32 mMinRepeat;
 

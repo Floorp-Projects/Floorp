@@ -36,6 +36,8 @@ static NS_DEFINE_IID(kCalTimebarCanvasCID,    NS_CAL_TIMEBARCANVAS_CID);
 nsCalMultiViewCanvas :: nsCalMultiViewCanvas(nsISupports* outer) : nsCalTimebarComponentCanvas(outer)
 {
   NS_INIT_REFCNT();
+  mShowHeaders = PR_TRUE;
+  mShowStatus = PR_FALSE;
 }
 
 nsCalMultiViewCanvas :: ~nsCalMultiViewCanvas()
@@ -79,3 +81,43 @@ nsresult nsCalMultiViewCanvas :: Init()
   return (nsCalTimebarComponentCanvas::Init());
 }
 
+nsEventStatus nsCalMultiViewCanvas :: PaintBackground(nsIRenderingContext& aRenderingContext,
+                                                         const nsRect& aDirtyRect)
+{
+  return (nsCalCanvas :: PaintBackground(aRenderingContext,aDirtyRect));  
+}
+
+
+PRBool nsCalMultiViewCanvas :: GetShowHeaders()
+{
+  return (mShowHeaders);
+}
+
+PRBool nsCalMultiViewCanvas :: GetShowStatus()
+{
+  return (mShowStatus);
+}
+
+nsresult nsCalMultiViewCanvas :: SetShowHeaders(PRBool aShowHeaders)
+{
+  mShowHeaders = aShowHeaders;
+  return (NS_OK);
+}
+
+nsresult nsCalMultiViewCanvas :: SetShowStatus(PRBool aShowStatus)
+{
+  mShowStatus = aShowStatus;
+  return (NS_OK);
+}
+
+
+
+nsresult nsCalMultiViewCanvas::Action(nsIXPFCCommand * aCommand)
+{
+  return (nsCalTimebarComponentCanvas::Action(aCommand));
+}
+
+nsresult nsCalMultiViewCanvas :: SetParameter(nsString& aKey, nsString& aValue)
+{
+  return (nsCalTimebarComponentCanvas::SetParameter(aKey, aValue));
+}

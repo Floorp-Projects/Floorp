@@ -43,11 +43,8 @@ nsCalMultiDayViewCanvas :: nsCalMultiDayViewCanvas(nsISupports* outer) : nsCalMu
 {
   NS_INIT_REFCNT();
   mNumberViewableDays = 0; 
-  mShowHeaders = PR_TRUE;
-  mShowStatus = PR_FALSE;
   mMinRepeat = 1;
   mMaxRepeat = 1000;
-
 }
 
 nsCalMultiDayViewCanvas :: ~nsCalMultiDayViewCanvas()
@@ -145,28 +142,6 @@ nsresult nsCalMultiDayViewCanvas :: SetNumberViewableDays(PRUint32 aNumberViewab
   return NS_OK;  
 }
 
-PRBool nsCalMultiDayViewCanvas :: GetShowHeaders()
-{
-  return (mShowHeaders);
-}
-
-PRBool nsCalMultiDayViewCanvas :: GetShowStatus()
-{
-  return (mShowStatus);
-}
-
-nsresult nsCalMultiDayViewCanvas :: SetShowHeaders(PRBool aShowHeaders)
-{
-  mShowHeaders = aShowHeaders;
-  return (NS_OK);
-}
-
-nsresult nsCalMultiDayViewCanvas :: SetShowStatus(PRBool aShowStatus)
-{
-  mShowStatus = aShowStatus;
-  return (NS_OK);
-}
-
 
 PRUint32 nsCalMultiDayViewCanvas :: GetNumberViewableDays()
 {
@@ -210,7 +185,7 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
    * Add the Header Time Canvas
    */
 
-  if (mShowHeaders) {
+  if (GetShowHeaders()) {
 
     static NS_DEFINE_IID(kCalTimebarTimeHeadingCID,     NS_CAL_TIMEBARTIMEHEADING_CID);
 
@@ -257,7 +232,7 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
    * Add the status View Canvas
    */
 
-  if (mShowStatus) {
+  if (GetShowStatus()) {
 
     res = nsRepository::CreateInstance(kCXPFCCanvasCID, 
                                        nsnull, 

@@ -33,8 +33,22 @@ public:
 
   NS_IMETHOD Init();
 
+  NS_IMETHOD SetShowHeaders(PRBool aShowHeaders);
+  NS_IMETHOD SetShowStatus(PRBool aShowHeaders);
+  NS_IMETHOD_(PRBool) GetShowHeaders();
+  NS_IMETHOD_(PRBool) GetShowStatus();
+  NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
+  NS_IMETHOD Action(nsIXPFCCommand * aCommand);
+
+  NS_IMETHOD_(nsEventStatus) PaintBackground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
+
 protected:
   ~nsCalMultiViewCanvas();
+
+private:
+  PRBool mShowHeaders;
+  PRBool mShowStatus;
 
 };
 
