@@ -2210,7 +2210,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       //
       //  IF we get here and the URL is NULL, just dec the pending count and move on!!!
       //
-      if (!m_attachments[i].mURL)
+      if ( (!m_attachments[i].mURL) && (!m_attachments[i].m_uri) )
       {
         m_attachments[i].m_bogus_attachment = PR_TRUE;
         m_attachments[i].m_done = PR_TRUE;
