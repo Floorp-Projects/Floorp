@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/04/26 22:42:44 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/04/27 01:24:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -54,6 +54,12 @@ use HTMLPopUp;
 use Utils;
 
 
+sub timestring2time {
+    my $string = @_;
+
+    return time();
+}
+
 
 sub get_params {
 
@@ -70,6 +76,13 @@ sub get_params {
 
   $MAILADDR = ( param("mailaddr") ||
                 cookie(-name=>"tinderbox_mailaddr"));
+
+  $EFFECTIVE_TIME = param("effectivetime");
+  if ( $EFFECTIVE_TIME ) {
+      $EFFECTIVE_TIME = timestring2time($EFFECTIVE_TIME);
+  } else {
+      $EFFECTIVE_TIME = time();
+  }
 
   $MAILADDR = main::extract_user($MAILADDR);
 
@@ -131,6 +144,14 @@ sub format_input_page {
 	     );
   
   push @out, (
+	      "Effective Time: \n",p(),
+	      textarea(-name=>'effectivetime', 
+                       -default=>$LOCALTIME,
+		       -rows=>1, -cols=>30, -wrap=>'physical',),
+	      p(),
+	     );
+  
+  push @out, (
 	      submit(-name=>'Submit'),
 	      p(),
 	     );
@@ -159,8 +180,7 @@ sub save_note {
 
   my (@out);
 
-  my ($time) = time();
-  my ($localtime) = localtime($time);
+  my ($localtime) = localtime($EFFECTIVE_TIME);
   
   my ($pretty_time) = HTMLPopUp::timeHTML($time);
 
@@ -173,7 +193,7 @@ sub save_note {
                   'tree' => $TREE,
                   'mailaddr' => $MAILADDR,
                   'note' => $NOTE,
-                  'time' => $time,
+                  'time' => $EFFECTIVE_TIME,
                   'localtime' => $localtime,
                   'remote_host' => $REMOTE_HOST,
                  };
