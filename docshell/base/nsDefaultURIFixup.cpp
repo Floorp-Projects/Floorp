@@ -281,17 +281,13 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
     //   ://totallybroken.url.com
     //   //shorthand.url.com
     //
-    if (uriString.EqualsIgnoreCase("://", 3))
+    if (StringBeginsWith(uriString, NS_LITERAL_CSTRING("://")))
     {
-        nsCAutoString newUriString;
-        uriString.Mid(newUriString, 3, uriString.Length() - 3);
-        uriString = newUriString;
+        uriString = StringTail(uriString, uriString.Length() - 3);
     }
-    else if (uriString.EqualsIgnoreCase("//", 2))
+    else if (StringBeginsWith(uriString, NS_LITERAL_CSTRING("//")))
     {
-        nsCAutoString newUriString;
-        uriString.Mid(newUriString, 2, uriString.Length() - 2);
-        uriString = newUriString;
+        uriString = StringTail(uriString, uriString.Length() - 2);
     }
 
     // Add ftp:// or http:// to front of url if it has no spec
