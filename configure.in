@@ -1840,12 +1840,24 @@ fi
 fi
 
 dnl Does this platform require array notation to assign to a va_list?
+dnl If cross-compiling, we assume va_list is "normal".  If this breaks
+dnl you, set ac_cv_valistisarray=true and maybe define HAVE_VA_LIST_AS_ARRAY
+dnl also just to be sure.
 AC_MSG_CHECKING(whether va_list assignments need array notation)
 AC_CACHE_VAL(ac_cv_valistisarray,
-	[AC_TRY_COMPILE([#include <varargs.h>],
-			[va_list ap, foo;foo = "abcdef";ap = foo;],
-			[ac_cv_valistisarray=false],
-			[ac_cv_valistisarray=true])])
+	[AC_TRY_RUN([#include <stdlib.h>
+		     #include <stdarg.h>
+		     void foo(int i, ...) {
+			va_list ap1, ap2;
+			va_start(ap1, i);
+			ap2 = ap1;
+			if (va_arg(ap2, int) != 123 || va_arg(ap1, int) != 123) { exit(1); }
+			va_end(ap1); va_end(ap2);
+		     }
+		     int main() { foo(0, 123); return(0); }],
+		    [ac_cv_valistisarray=false],
+		    [ac_cv_valistisarray=true],
+		    [ac_cv_valistisarray=false])])
 
 if test "$ac_cv_valistisarray" = true ; then
 	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)
