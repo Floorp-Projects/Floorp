@@ -1,0 +1,177 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.1 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+<?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize.dtd" >
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="Init();" 
+  id="main-box"
+  class="dialog"
+  windowtype="sidebar:customize"
+  align="vertical">
+
+  <!-- Dialog title -->
+  <html:script src="chrome://sidebar/content/customize.js" />
+  <html:div class="title">
+    &sidebar.customize.title.label;
+  </html:div>
+
+  <html:div>
+    <html:hr />
+  </html:div>
+
+  <!-- The two-pane -->
+  <box align="horizontal">
+
+    <!-- All of the panels that are available -->
+    <box align="vertical" flex="1*">
+
+      <html:div class="subtitle">
+      &sidebar.customize.additional.label;
+      </html:div>
+
+      <html:div style="width:15em;height:15em" flex="1*">
+        <tree id="other-panels" size="10"
+          datasources="chrome://sidebar/content/local-panels.rdf
+                       chrome://sidebar/content/remote-panels.rdf"
+          ref="urn:sidebar:master-panel-list"
+          indent="true"
+          style="width:100%;height:100%">
+    
+          <template>
+            <treechildren onclick="otherPanelSelected(event, event.target.parentNode.parentNode)">
+              <treeitem uri="rdf:*"
+                title="rdf:http://home.netscape.com/NC-rdf#title"
+                content="rdf:http://home.netscape.com/NC-rdf#content"
+                open="rdf:http://home.netscape.com/NC-rdf#open">
+                <treerow>
+                  <treecell indent="true" 
+                    value="rdf:http://home.netscape.com/NC-rdf#title"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </template>
+
+          <treecol />
+        </tree>
+      </html:div>
+
+      <!-- xxxslamm Need to add descriptive panel text here -->
+      <box align="horizontal" class="button-group">
+        <titledbutton id="add_button" onclick="AddPanel()"
+          class="dialog push"
+          value="&sidebar.customize.add.label;"
+          disabled="true"/>
+
+        <titledbutton id="preview_button" onclick="PreviewPanel()"
+          class="dialog push"
+          value="&sidebar.customize.preview.label;"
+          disabled="true"/>
+      </box>
+    </box> 
+    
+    <!-- Spacing between the left and right halves of the dialog -->
+    <spring style="width:2em"/>
+
+    <!-- The panels that the user currently has chosen -->
+    <box align="vertical" flex="1*">
+      <html:div class="subtitle">
+      &sidebar.customize.current.label;
+      </html:div>
+
+      <box align="horizontal" class="box-group" flex="1*">
+        <html:div style="width:15em;height:15em" flex="1*">
+          <tree id="selected-panels" onclick="selectChange();"
+            datasources="chrome://sidebar/content/local-panels.rdf
+                         chrome://sidebar/content/remote-panels.rdf"
+            style="width:100%;height:100%">
+
+            <template>
+              <treechildren>
+                <treeitem uri="rdf:*"
+                  title="rdf:http://home.netscape.com/NC-rdf#title"
+                  customize="rdf:http://home.netscape.com/NC-rdf#customize"
+                  content="rdf:http://home.netscape.com/NC-rdf#content"
+                  persist="open">
+                  <treerow>
+                    <treecell
+                      value="rdf:http://home.netscape.com/NC-rdf#title" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </template>
+
+            <treecol />
+
+            <!-- We explicitly create a 'treechildren' so we can refer
+                 to it from the script -->
+            <treechildren id="selected-panels-root"/> 
+          </tree>
+        </html:div>
+
+       <!-- Spacing between the right selector and "Reorder" -->
+       <spring style="width:5px"/>
+
+        <!-- The 'reorder' buttons -->
+        <box align="vertical">
+          <spring flex="50%"/>
+          <titledbutton onclick="moveUp();" id="up" class="borderless up" />
+          <html:div>
+          &sidebar.customize.reorder.label;
+          </html:div>
+          <titledbutton onclick="moveDown();" id="down"
+            class="borderless down" />
+          <spring flex="50%"/>
+        </box>
+      </box>
+
+      <box align="horizontal" class="button-group" flex="100%">
+        <titledbutton id="customize-button" onclick="CustomizePanel();" 
+          class="dialog push"
+          value="&sidebar.customize.customize.label;" />
+        <titledbutton id="remove-button" onclick="RemovePanel()"
+          class="dialog push"
+          value="&sidebar.customize.remove.label;" />
+      </box>
+    </box> 
+  </box>
+
+  <html:div>
+    <html:hr />
+  </html:div>
+
+  <!-- The 'Save' and 'Cancel' buttons -->
+  <box align="horizontal">
+    <spring flex="48%"/>
+    <titledbutton onclick="window.close()"
+       class="dialog push"
+       value="&sidebar.customize.cancel.label;" />
+    <spring flex="4%"/>
+    <titledbutton id="save_button" onclick="Save();"
+       class="dialog push"
+       value="&sidebar.customize.save.label;"
+       disabled="true"/>
+    <spring flex="48%"/>
+  </box>
+</window>
+
