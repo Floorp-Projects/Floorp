@@ -120,7 +120,7 @@ function onRebuild() {
     var dl = window.arguments[1];
     selectDownload(dl.QueryInterface(Components.interfaces.nsIDownload));
   }
-  else if (gDownloadView.view.rowCount) {
+  else if (gDownloadView.view && gDownloadView.view.rowCount > 0) {
     // Select the first item in the view, if any.
     gDownloadView.treeBoxObject.selection.select(0);
   }
@@ -157,6 +157,7 @@ var downloadViewController = {
   
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
   {
+    if (!gDownloadView.treeBoxObject.selection) return false;
     var selectionCount = gDownloadView.treeBoxObject.selection.count;
     if (!selectionCount) return false;
 
@@ -237,6 +238,9 @@ var downloadViewController = {
       break;
     case "cmd_remove":
       selectedItems = getSelectedItems();
+      // Figure out where to place the selection after deletion
+      var newSelectionPos = gDownloadView.contentView.getIndexOfItem(selectedItems[0]);
+      
       gDownloadManager.startBatchUpdate();
       
       // Notify the datasource that we're about to begin a batch operation
@@ -253,9 +257,18 @@ var downloadViewController = {
       var remote = window.arguments[0].QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
       remote.Flush();
       gDownloadView.builder.rebuild();
-      if (minValue >= gDownloadView.treeBoxObject.view.rowCount)
-        --minValue;
-      gDownloadView.treeBoxObject.selection.select(minValue);
+      // If there's nothing on the panel now, skip setting the selection
+      if (gDownloadView.treeBoxObject.view && gDownloadView.treeBoxObject.view.rowCount > 0) {
+        // Select the item that replaced the first deleted one
+        if (newSelectionPos >= gDownloadView.treeBoxObject.view.rowCount)
+          newSelectionPos = gDownloadView.treeBoxObject.view.rowCount - 1;
+        gDownloadView.treeBoxObject.selection.select(newSelectionPos);
+        gDownloadView.treeBoxObject.ensureRowIsVisible(newSelectionPos);
+      }
+      else {
+        // Nothing on the panel, so clear the Status Bar
+        gStatusBar.label = "";
+      }
       break;
     case "cmd_selectAll":
       gDownloadView.treeBoxObject.selection.selectAll();
