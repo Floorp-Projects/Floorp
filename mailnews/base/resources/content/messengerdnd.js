@@ -332,7 +332,7 @@ function BeginDragFolderOutliner(event)
     debugDump("BeginDragFolderOutliner\n");
 
     if (event.originalTarget.localName != "outlinerchildren")
-      return;
+      return false;
 
     var folderOutliner = GetFolderOutliner();
     var row = {};
@@ -340,7 +340,7 @@ function BeginDragFolderOutliner(event)
     var elt = {};
     folderOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
     if (row.value == -1)
-      return;
+      return false;
 
     var folderResource = GetFolderResource(folderOutliner, row.value);
 
