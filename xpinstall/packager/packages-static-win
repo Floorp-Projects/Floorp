@@ -278,9 +278,6 @@ bin\res\entityTables\*
 bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
-bin\res\throbber\*
-;debug menus reference samples dir - remove for actual releases:
-bin\res\samples\*
 bin\res\builtin\platformHTMLBindings.xml
 
 [mail]

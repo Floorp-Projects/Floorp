@@ -259,9 +259,6 @@ bin\defaults\wallet\StateSchema.tbl
 bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
-bin\res\throbber\*
-;debug menus reference samples dir - remove for actual releases:
-bin\res\samples\*
 
 ; download progress
 bin\components\nsProgressDialog.js
