@@ -535,6 +535,7 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:db:mork:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
@@ -1216,6 +1217,8 @@ sub BuildMailNewsProjects()
 	BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",				"MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",							"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:db:mork:macbuild:mork.mcp",						"Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",					"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
