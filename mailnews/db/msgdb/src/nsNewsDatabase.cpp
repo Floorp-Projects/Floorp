@@ -144,7 +144,7 @@ nsNewsDatabase	*nsNewsDatabase::GetNewsDB()
 	return this;
 }
 
-PRBool	nsNewsDatabase::PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
+PRBool	nsNewsDatabase::PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo) { return PR_FALSE; };
 PRBool	nsNewsDatabase::IsCategory();
 nsresult nsNewsDatabase::SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *);
 nsresult nsNewsDatabase::SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
