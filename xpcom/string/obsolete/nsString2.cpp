@@ -1389,8 +1389,10 @@ class CalculateUTF8Length
                 p += 2;
             else if ( UTF8traits::is3byte(*p) )
                 p += 3;
-            else if ( UTF8traits::is4byte(*p) )
+            else if ( UTF8traits::is4byte(*p) ) {
                 p += 4;
+                ++mLength;
+            }
             else if ( UTF8traits::is5byte(*p) )
                 p += 5;
             else if ( UTF8traits::is6byte(*p) )
