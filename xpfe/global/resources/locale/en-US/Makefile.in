@@ -35,6 +35,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/commonDialog.dtd \
 		$(srcdir)/charsetOverlay.dtd \
 		$(srcdir)/charsetDetectorsOverlay.dtd \
+		$(srcdir)/brand.properties \
     $(srcdir)/wizardManager.properties \
     $(srcdir)/wizardOverlay.dtd \
     $(srcdir)/about.dtd \
