@@ -50,8 +50,9 @@ NS_IMPL_ISUPPORTS3(nsLDAPAutoCompleteSession, nsIAutoCompleteSession,
 
 nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
     mState(UNBOUND), 
-    mFilterTemplate(NS_LITERAL_STRING("(|(cn=%v*)(mail=%v*)(sn=%v*))")),
-    mMaxHits(100), mMinStringLength(0), mSearchAttrs(0), mSearchAttrsSize(0)
+    mFilterTemplate(NS_LITERAL_STRING(
+                      "(|(cn=%v1*%v2-*)(mail=%v1*%v2-*)(sn=%v1*%v2-*))")),
+    mMaxHits(100), mMinStringLength(2), mSearchAttrs(0), mSearchAttrsSize(0)
 {
     NS_INIT_ISUPPORTS();
 }

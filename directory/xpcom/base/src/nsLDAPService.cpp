@@ -974,7 +974,17 @@ nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
                 ++aIter;    // move past the space
                 break;
             }
-            ++aIter; // move to next char and continue with this token
+
+            ++aIter; // move to next char
+
+            // if we've hit the end of this token and the end of this 
+            // iterator simultaneous, be sure to bump the count, since we're
+            // never gonna hit the IsAsciiSpace where it's normally done.
+            //
+            if (aIter == aIterEnd) {
+                ++count;
+            }
+
         }
     }
 
