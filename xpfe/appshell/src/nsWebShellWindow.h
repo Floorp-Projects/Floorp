@@ -98,23 +98,19 @@ public:
   NS_IMETHOD OnConnectionsComplete();
 
 protected:
-  PRInt32 GetDocHeight(nsIDocument * aDoc);
-  void SetCommandEnabled(const nsString & aCmdName, PRBool aState);
-  void ConnectCommandToOneGUINode(nsIDOMNode* aGUINode);
+  void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript);
 
+  PRInt32 GetDocHeight(nsIDocument * aDoc);
+ 
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
-  nsCOMPtr<nsIXULCommand>  FindCommandByName(const nsString & aCmdName);
   nsCOMPtr<nsIDOMNode>     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
   nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
   nsCOMPtr<nsIDOMNode>     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
-  void                     LoadCommandsInWebShell(nsIWebShell *aShell);
-  void                     MakeOneCommand(nsIWebShell *aShell, nsCOMPtr<nsIDOMNode> aCommand);
-  void                     ConnectCommandsToWidgetsByType(nsIWebShell *aShell, nsString &aType);
-  void                     ConnectWidgetCommands(nsIDOMNodeList *aNodes);
-
+  void                     ExecuteStartupCode();
+  
 
   virtual ~nsWebShellWindow();
 
@@ -126,8 +122,6 @@ protected:
   nsIDOMCharacterData*    mStatusText;
   nsIDOMHTMLInputElement* mURLBarText;
   nsIDOMHTMLImageElement* mThrobber;
-
-  nsVoidArray mCommands;
 };
 
 
