@@ -155,6 +155,7 @@ public:
 
   /** return the column layout data for this inner table frame.
     * if this is a continuing frame, return the first-in-flow's column layout data.
+    * @return the column layout data array, or null if there is no info yet.
     */
   virtual nsVoidArray *GetColumnLayoutData();
 
