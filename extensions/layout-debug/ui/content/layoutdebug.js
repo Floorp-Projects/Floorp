@@ -325,6 +325,7 @@ RTestIndexList.prototype = {
 
 const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
 const nsILineInputStream = Components.interfaces.nsILineInputStream;
+const nsIFile = Components.interfaces.nsIFile;
 const nsILocalFile = Components.interfaces.nsILocalFile;
 const nsIFileURL = Components.interfaces.nsIFileURL;
 const nsIIOService = Components.interfaces.nsIIOService;
@@ -406,6 +407,8 @@ RTestURLList.prototype = {
 
     var data = this.mCurrentURL.dir.clone();
     data.append( this.mIsBaseline ? "baseline" : "verify");
+    if (!data.exists())
+      data.create(nsIFile.DIRECTORY_TYPE, 0777)
     data.append(basename);
 
     dump("Writing regression data to " +
