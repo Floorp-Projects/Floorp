@@ -1135,6 +1135,33 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
 
 }
 
+PRBool
+cookie_IsInDomain(char* domain, char* host, int hostLength) {
+  int domainLength = PL_strlen(domain);
+
+  /*
+   * special case for domainName = .hostName
+   *    e.g., hostName = netscape.com
+   *          domainName = .netscape.com
+   */
+  if ((domainLength == hostLength+1) && (domain[0] == '.') && 
+      !PL_strncasecmp(&domain[1], host, hostLength)) {
+    return PR_TRUE;
+  }
+
+  /*
+   * normal case for hostName = x<domainName>
+   *    e.g., hostName = home.netscape.com
+   *          domainName = .netscape.com
+   */
+  if(domainLength <= hostLength &&
+      !PL_strncasecmp(domain, &host[hostLength-domainLength], domainLength)) {
+    return PR_TRUE;
+  }
+
+  /* tests failed, not in domain */
+  return PR_FALSE;
+}
 
 /* returns PR_TRUE if authorization is required
 ** 
@@ -1151,7 +1178,6 @@ COOKIE_GetCookie(char * address) {
   time_t cur_time = get_current_time();
 
   int host_length;
-  int domain_length;
 
   /* return string to build */
   char * rv=0;
@@ -1185,7 +1211,6 @@ COOKIE_GetCookie(char * address) {
     /* check the host or domain first */
     if(cookie_s->isDomain) {
       char *cp;
-      domain_length = PL_strlen(cookie_s->host);
 
       /* calculate the host length by looking at all characters up to a
        * colon or '\0'.  That way we won't include port numbers in domains
@@ -1194,10 +1219,7 @@ COOKIE_GetCookie(char * address) {
         ; /* null body */ 
       }
       host_length = cp - host;
-      if(domain_length > host_length ||
-          PL_strncasecmp(cookie_s->host, &host[host_length - domain_length], domain_length)) {
-//      HG20476 -- @@??
-        /* no match. FAIL */
+      if(!cookie_IsInDomain(cookie_s->host, host, host_length)) {
         continue;
       }
     } else if(PL_strcasecmp(host, cookie_s->host)) {
@@ -1447,8 +1469,7 @@ cookie_IsFromHost(cookie_CookieStruct *cookie_s, char *host) {
   }
   if (cookie_s->isDomain) {
     char *cp;
-    int domain_length, host_length;
-    domain_length = PL_strlen(cookie_s->host);
+    int host_length;
 
     /* calculate the host length by looking at all characters up to
      * a colon or '\0'.  That way we won't include port numbers
@@ -1460,10 +1481,7 @@ cookie_IsFromHost(cookie_CookieStruct *cookie_s, char *host) {
     host_length = cp - host;
 
     /* compare the tail end of host to cook_s->host */
-    return 
-      (domain_length <= host_length && 
-        PL_strncasecmp
-          (cookie_s->host, &host[host_length - domain_length], domain_length) == 0);
+    return cookie_IsInDomain(cookie_s->host, host, host_length);
   } else {
     return PL_strcasecmp(host, cookie_s->host) == 0;
   }
@@ -1684,8 +1702,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       cur_host_length = PL_strlen(cur_host);
 
       /* check to see if the host is in the domain */
-      if(domain_length > cur_host_length ||
-          PL_strcasecmp(domain_from_header, &cur_host[cur_host_length-domain_length])) {
+      if (!cookie_IsInDomain(domain_from_header, cur_host, cur_host_length)) {
           // TRACEMSG(("DOMAIN failed host within domain test."
 //        " Domain: %s, Host: %s", domain_from_header, cur_host));
         PR_FREEIF(path_from_header);
