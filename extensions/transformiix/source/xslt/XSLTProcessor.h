@@ -204,8 +204,8 @@ public:
      * will not close the ostream argument
      * @param documentBase the document base for resolving relative URIs.
     **/
-    void process(Document& xmlDocument, Document& xslDocument,
-                 ostream& out);
+    void process(Document& aXMLDocument, Node& aStylesheet,
+                 ostream& aOut);
 
     /**
      * Reads an XML Document from the given XML input stream, and

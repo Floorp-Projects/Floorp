@@ -859,7 +859,7 @@ Document* XSLTProcessor::process(Document& xmlDocument,
  * and prints the results to the given ostream argument
  */
 void XSLTProcessor::process(Document& aXMLDocument,
-                            Document& aXSLTDocument,
+                            Node& aStylesheet,
                             ostream& aOut)
 {
     // Need a result document for creating result tree fragments.
@@ -869,7 +869,16 @@ void XSLTProcessor::process(Document& aXMLDocument,
     // before the destruction of the result document.
     {
         // Create a new ProcessorState
-        ProcessorState ps(&aXMLDocument, &aXSLTDocument, &result);
+        Document* stylesheetDoc = 0;
+        Element* stylesheetElem = 0;
+        if (aStylesheet.getNodeType() == Node::DOCUMENT_NODE) {
+            stylesheetDoc = (Document*)&aStylesheet;
+        }
+        else {
+            stylesheetElem = (Element*)&aStylesheet;
+            stylesheetDoc = aStylesheet.getOwnerDocument();
+        }
+        ProcessorState ps(&aXMLDocument, stylesheetDoc, &result);
 
         // Add error observers
         txListIterator iter(&errorObservers);
@@ -886,7 +895,11 @@ void XSLTProcessor::process(Document& aXMLDocument,
         if (!importFrame.next())
             // XXX ErrorReport: out of memory
             return;
-        processStylesheet(&aXMLDocument, &aXSLTDocument, &importFrame, &ps);
+        
+        if (stylesheetElem)
+            processTopLevel(&aXMLDocument, stylesheetElem, &importFrame, &ps);
+        else
+            processStylesheet(&aXMLDocument, stylesheetDoc, &importFrame, &ps);
 
         initializeHandlers(&ps);
         if (mOutputHandler)
@@ -936,7 +949,25 @@ void XSLTProcessor::process
         delete xmlDoc;
         return;
     }
-    process(*xmlDoc, *xslDoc, out);
+
+    Node* stylesheet;
+    String frag;
+    URIUtils::getFragmentIdentifier(href, frag);
+    if (!frag.isEmpty()) {
+        stylesheet = xslDoc->getElementById(frag);
+        if (!stylesheet) {
+            String err("unable to get fragment");
+            notifyError(err, ErrorObserver::FATAL);
+            delete xmlDoc;
+            delete xslDoc;
+            return;
+        }
+    }
+    else {
+        stylesheet = xslDoc;
+    }
+
+    process(*xmlDoc, *stylesheet, out);
     delete xmlDoc;
     delete xslDoc;
 } //-- process
@@ -2365,7 +2396,18 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
         importFrame.addAfter(new ProcessorState::ImportFrame(0));
         if (!importFrame.next())
             return NS_ERROR_OUT_OF_MEMORY;
-        processStylesheet(&sourceDocument, &xslDocument, &importFrame, &ps);
+        nsCOMPtr<nsIDOMDocument> styleDoc = do_QueryInterface(aStyleDOM);
+        if (styleDoc) {
+            processStylesheet(&sourceDocument, &xslDocument, &importFrame,
+                              &ps);
+        }
+        else {
+            nsCOMPtr<nsIDOMElement> styleElem = do_QueryInterface(aStyleDOM);
+            NS_ENSURE_TRUE(styleElem, NS_ERROR_FAILURE);
+            Element* element = xslDocument.createElement(styleElem);
+            NS_ENSURE_TRUE(element, NS_ERROR_OUT_OF_MEMORY);
+            processTopLevel(&sourceDocument, element, &importFrame, &ps);
+        }
 
         initializeHandlers(&ps);
 

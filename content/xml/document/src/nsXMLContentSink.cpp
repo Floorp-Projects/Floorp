@@ -695,7 +695,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
                                    const nsString& aHref,
                                    PRBool aAlternate,

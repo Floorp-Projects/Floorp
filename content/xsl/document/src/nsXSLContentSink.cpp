@@ -38,9 +38,12 @@
 
 #include "nsXSLContentSink.h"
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
 #include "nsITransformMediator.h"
 #include "nsIParser.h"
+#include "nsIURL.h"
+#include "nsString2.h"
 
 nsresult
 NS_NewXSLContentSink(nsIXMLContentSink** aResult,
@@ -100,15 +103,33 @@ nsXSLContentSink::WillBuildModel(void)
 NS_IMETHODIMP 
 nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {  
-  nsCOMPtr<nsIDOMNode> styleDoc;
-  nsresult rv;
-
   mDocument->SetRootContent(mDocElement);
   mDocument->EndLoad();
-  styleDoc = do_QueryInterface(mDocument, &rv);
-  if (NS_SUCCEEDED(rv) && mXSLTransformMediator) {
+
+  nsCOMPtr<nsIDOMNode> styleNode;
+  nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
+  if (url) {
+      nsXPIDLCString ref;
+      url->GetRef(getter_Copies(ref));
+      if (!ref.IsEmpty()) {
+          nsCOMPtr<nsIDOMDocument> styleDoc = do_QueryInterface(mDocument);
+          NS_ENSURE_TRUE(styleDoc, NS_ERROR_NO_INTERFACE);
+          nsCOMPtr<nsIDOMElement> elem;
+          styleDoc->GetElementById(NS_ConvertASCIItoUCS2(ref),
+                                   getter_AddRefs(elem));
+          styleNode = elem;
+      }
+      else {
+          styleNode = do_QueryInterface(mDocument);
+      }
+  }
+  else {
+      styleNode = do_QueryInterface(mDocument);
+  }
+
+  if (mXSLTransformMediator) {
     // Pass the style content model to the tranform mediator.
-    mXSLTransformMediator->SetStyleSheetContentModel(styleDoc);
+    mXSLTransformMediator->SetStyleSheetContentModel(styleNode);
   }
   
   // Drop our reference to the parser to get rid of a circular
@@ -116,4 +137,16 @@ nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   NS_IF_RELEASE(mParser);
 
   return NS_OK;
+}
+
+// To stop infinite recursive processing of <?xml-stylesheet?>
+NS_IMETHODIMP
+nsXSLContentSink::ProcessStyleLink(nsIContent* aElement,
+                                   const nsString& aHref,
+                                   PRBool aAlternate,
+                                   const nsString& aTitle,
+                                   const nsString& aType,
+                                   const nsString& aMedia)
+{
+    return NS_OK;
 }

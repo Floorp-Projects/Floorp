@@ -80,7 +80,12 @@ public:
   //NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
 protected:
-
+  NS_IMETHOD ProcessStyleLink(nsIContent* aElement,
+                              const nsString& aHref,
+                              PRBool aAlternate,
+                              const nsString& aTitle,
+                              const nsString& aType,
+                              const nsString& aMedia);
 };
 
 
