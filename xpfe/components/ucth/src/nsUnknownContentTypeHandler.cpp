@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIUnkContentTypeHandler.h"
 
@@ -100,7 +101,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                     "chrome://global/content/unknownContent.xul",
                                                     "_blank",
                                                     "chrome",
-                                                    (const nsIID*)(&nsIChannel::GetIID()),
+                                                    (const nsIID*)(&NS_GET_IID(nsIChannel)),
                                                     (nsISupports*)channel.get(),
                                                     aContentType );
                     if ( argv ) {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -212,7 +213,7 @@ stEventQueueStack::stEventQueueStack() {
   // ick! this makes bad assumptions about the structure of the service, but
   // the service manager seems to need to work this way...
   mGotService = nsServiceManager::GetService(kEventQueueServiceCID,
-                                  nsIEventQueueService::GetIID(),
+                                  NS_GET_IID(nsIEventQueueService),
                                   (nsISupports **) &mService);
   mPushedStack = mGotService;
   if (NS_SUCCEEDED(mGotService))
@@ -367,7 +368,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   nsIPref *prefs;
 
   rv = nsServiceManager::GetService(kPrefCID, 
-                                    nsIPref::GetIID(), 
+                                    NS_GET_IID(nsIPref), 
                                     (nsISupports **)&prefs);
   if (NS_SUCCEEDED(rv)) {
     // Set the prefs in the outermost webshell.
@@ -1532,7 +1533,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   rv = service->NewURI(urlStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
   NS_RELEASE(uri);
 
   if (NS_SUCCEEDED(rv)) {
@@ -2639,7 +2640,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    rv = service->NewURI(urlStr, nsnull, &uri);
    if (NS_FAILED(rv)) return rv;
 
-   rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
+   rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
    NS_RELEASE(uri);
    if (NS_FAILED(rv))
      return rv;
@@ -2806,7 +2807,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
     // Get observer service.
     nsIObserverService *svc = 0;
     rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
-                                       nsIObserverService::GetIID(),
+                                       NS_GET_IID(nsIObserverService),
                                        (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Notify observers as instructed; the subject is "this" web shell window.

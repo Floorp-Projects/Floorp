@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsRDFResource.h"
@@ -75,8 +76,8 @@ nsRDFResource::QueryInterface(REFNSIID aIID, void** aResult)
         return NS_ERROR_NULL_POINTER;
 
     *aResult = nsnull;
-    if (aIID.Equals(nsIRDFResource::GetIID()) ||
-        aIID.Equals(nsIRDFNode::GetIID()) ||
+    if (aIID.Equals(NS_GET_IID(nsIRDFResource)) ||
+        aIID.Equals(NS_GET_IID(nsIRDFNode)) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFResource*, this);
         NS_ADDREF_THIS();
@@ -98,7 +99,7 @@ nsRDFResource::EqualsNode(nsIRDFNode* aNode, PRBool* aResult)
 
     nsresult rv;
     nsIRDFResource* resource;
-    rv = aNode->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource);
+    rv = aNode->QueryInterface(NS_GET_IID(nsIRDFResource), (void**)&resource);
     if (NS_SUCCEEDED(rv)) {
         *aResult = (NS_STATIC_CAST(nsIRDFResource*, this) == resource);
         NS_RELEASE(resource);
@@ -131,7 +132,7 @@ nsRDFResource::Init(const char* aURI)
     nsresult rv = NS_OK;
     if (gRDFServiceRefCnt++ == 0) {
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**)&gRDFService);
         if (NS_FAILED(rv)) return rv;
     }

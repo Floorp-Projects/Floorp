@@ -16,6 +16,7 @@
  * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
  * 
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // mozXMLTerminal.cpp: implementation of mozIXMLTerminal interface
@@ -264,30 +265,30 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
   if (mDOMDocument) {
     // Release any event listeners for the document
     nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-    nsresult result = mDOMDocument->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(eventReceiver));
+    nsresult result = mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
 
     if (NS_SUCCEEDED(result) && eventReceiver) {
       if (mKeyListener) {
         eventReceiver->RemoveEventListenerByIID(mKeyListener,
-                                                nsIDOMKeyListener::GetIID());
+                                                NS_GET_IID(nsIDOMKeyListener));
         mKeyListener = nsnull;
       }
 
       if (mTextListener) {
         eventReceiver->RemoveEventListenerByIID(mTextListener,
-                                                nsIDOMTextListener::GetIID());
+                                                NS_GET_IID(nsIDOMTextListener));
         mTextListener = nsnull;
       }
 
       if (mMouseListener) {
         eventReceiver->RemoveEventListenerByIID(mMouseListener,
-                                                nsIDOMMouseListener::GetIID());
+                                                NS_GET_IID(nsIDOMMouseListener));
         mMouseListener = nsnull;
       }
 
       if (mDragListener) {
         eventReceiver->RemoveEventListenerByIID(mDragListener,
-                                                nsIDOMDragListener::GetIID());
+                                                NS_GET_IID(nsIDOMDragListener));
         mDragListener = nsnull;
       }
     }
@@ -458,7 +459,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Get the DOM event receiver for document
   nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-  result = mDOMDocument->QueryInterface(nsIDOMEventReceiver::GetIID(),
+  result = mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver),
                                         getter_AddRefs(eventReceiver));
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to get DOM receiver\n");
@@ -474,7 +475,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Register the key listener with the DOM event receiver
   result = eventReceiver->AddEventListenerByIID(mKeyListener,
-                                                nsIDOMKeyListener::GetIID());
+                                                NS_GET_IID(nsIDOMKeyListener));
 
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to register key listener\n");
@@ -490,7 +491,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Register the text listener with the DOM event receiver
   result = eventReceiver->AddEventListenerByIID(mTextListener,
-                                                nsIDOMTextListener::GetIID());
+                                                NS_GET_IID(nsIDOMTextListener));
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to register text listener\n");
     return result;
@@ -505,7 +506,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Register the mouse listener with the DOM event receiver
   result = eventReceiver->AddEventListenerByIID(mMouseListener,
-                                                nsIDOMMouseListener::GetIID());
+                                                NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to register mouse listener\n");
     return result;
@@ -520,7 +521,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Register the drag listener with the DOM event receiver
   result = eventReceiver->AddEventListenerByIID(mDragListener,
-                                                nsIDOMDragListener::GetIID());
+                                                NS_GET_IID(nsIDOMDragListener));
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to register drag listener\n");
     return result;
@@ -593,7 +594,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   // Generic transferable for getting clipboard data
   nsCOMPtr<nsITransferable> trans;
   result = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), 
+                                              NS_GET_IID(nsITransferable), 
                                               (void**) getter_AddRefs(trans));
 
   if (NS_FAILED(result) || !trans)
@@ -705,7 +706,7 @@ NS_IMETHODIMP mozXMLTerminal::GetDocument(nsIDOMDocument** aDoc)
   NS_PRECONDITION(mDOMDocument, "bad state, null mDOMDocument");
   if (!mDOMDocument)
     return NS_ERROR_NOT_INITIALIZED;
-  return mDOMDocument->QueryInterface(nsIDOMDocument::GetIID(),
+  return mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
                                       (void **)aDoc);
 }
 
@@ -735,7 +736,7 @@ NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
   NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
-  return mPresShell->QueryInterface(nsIPresShell::GetIID(),
+  return mPresShell->QueryInterface(NS_GET_IID(nsIPresShell),
                                     (void **)aPresShell);
 }
 

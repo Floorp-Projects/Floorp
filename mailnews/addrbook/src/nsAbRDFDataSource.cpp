@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAbRDFDataSource.h"
@@ -156,7 +157,7 @@ nsresult nsAbRDFDataSource::Init()
 {
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-											 nsCOMTypeInfo<nsIRDFService>::GetIID(),
+											 NS_GET_IID(nsIRDFService),
 											 (nsISupports**) &mRDFService); 
 	if (NS_FAILED(rv)) return rv;
 
@@ -165,7 +166,7 @@ nsresult nsAbRDFDataSource::Init()
 	return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsAbRDFDataSource, nsCOMTypeInfo<nsIRDFDataSource>::GetIID());
+NS_IMPL_ISUPPORTS(nsAbRDFDataSource, NS_GET_IID(nsIRDFDataSource));
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsAbRDFDataSource::GetURI(char* *uri)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /**
@@ -197,7 +198,7 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
   rv = nsComponentManager::CreateInstance(nsIHTMLContentSinkStream::GetCID(),
                                           nsnull,
-                                          nsIHTMLContentSinkStream::GetIID(),
+                                          NS_GET_IID(nsIHTMLContentSinkStream),
                                           getter_AddRefs(it));
   if (NS_SUCCEEDED(rv)) {
     rv = it->Initialize(aOutStream,
@@ -206,7 +207,7 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
                         aFlags);
 
     if (NS_SUCCEEDED(rv)) {
-      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+      rv = it->QueryInterface(NS_GET_IID(nsIHTMLContentSink),
                               (void**)aInstancePtrResult);
     }
   }
@@ -223,7 +224,7 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
   rv = nsComponentManager::CreateInstance(nsIHTMLContentSinkStream::GetCID(),
                                           nsnull,
-                                          nsIHTMLContentSinkStream::GetIID(),
+                                          NS_GET_IID(nsIHTMLContentSinkStream),
                                           getter_AddRefs(it));
   if (NS_SUCCEEDED(rv)) {
     rv = it->Initialize(nsnull,
@@ -232,7 +233,7 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
                         aFlags);
 
     if (NS_SUCCEEDED(rv)) {
-      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+      rv = it->QueryInterface(NS_GET_IID(nsIHTMLContentSink),
                               (void**)aInstancePtrResult);
     }
   }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -184,7 +185,7 @@ InternetSearchContext::Truncate()
 
 
 
-NS_IMPL_ISUPPORTS(InternetSearchContext, nsIInternetSearchContext::GetIID());
+NS_IMPL_ISUPPORTS(InternetSearchContext, NS_GET_IID(nsIInternetSearchContext));
 
 
 
@@ -339,7 +340,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-			nsIRDFService::GetIID(), (nsISupports**) &gRDFService);
+			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService);
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
@@ -520,7 +521,7 @@ InternetSearchDataSource::Init()
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, nsIRDFDataSource::GetIID(), (void **)&mInner)))
+		nsnull, NS_GET_IID(nsIRDFDataSource), (void **)&mInner)))
 		return(rv);
 
 	// register this as a named data source with the service manager

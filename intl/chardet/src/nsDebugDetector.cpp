@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsDebugDetector.h"
@@ -128,7 +129,7 @@ void nsDebugDetector::Report()
 }
 
 
-NS_IMPL_ISUPPORTS(nsDebugDetector, nsICharsetDetector::GetIID());
+NS_IMPL_ISUPPORTS(nsDebugDetector, NS_GET_IID(nsICharsetDetector));
 
 //--------------------------------------------------------------
 class nsDebugDetectorFactory : public nsIFactory {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -55,10 +56,10 @@ nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsIDOMXULTreeElement>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIDOMXULTreeElement))) {
         *aResult = NS_STATIC_CAST(nsIDOMXULTreeElement*, this);
     }
-    else if (aIID.Equals(nsCOMTypeInfo<nsIXULTreeContent>::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIXULTreeContent))) {
         *aResult = NS_STATIC_CAST(nsIXULTreeContent*, this);
     }
     else {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsDragService.h"
@@ -74,7 +75,7 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsIDragService::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDragService))) {
     *aInstancePtr = (void*) ((nsIDragService*)this);
     NS_ADDREF_THIS();
     return NS_OK;

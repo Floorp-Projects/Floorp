@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "xp_core.h"
@@ -2460,7 +2461,7 @@ nsFontEnumeratorGTK::nsFontEnumeratorGTK()
 }
 
 NS_IMPL_ISUPPORTS(nsFontEnumeratorGTK,
-                  nsCOMTypeInfo<nsIFontEnumerator>::GetIID());
+                  NS_GET_IID(nsIFontEnumerator));
 
 static int gInitializedFontEnumerator = 0;
 

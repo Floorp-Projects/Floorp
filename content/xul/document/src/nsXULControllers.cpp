@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -128,7 +129,7 @@ nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
     if(mControllers) {
         nsCOMPtr<nsISupports> supports;
         mControllers->GetElementAt(index, getter_AddRefs(supports));
-        supports->QueryInterface(nsIController::GetIID(), (void**)_retval);
+        supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
         mControllers->RemoveElementAt(index);  
     } else
         *_retval = nsnull;
@@ -143,7 +144,7 @@ nsXULControllers::GetControllerAt(PRUint32 index, nsIController **_retval)
     if(mControllers) {
         nsCOMPtr<nsISupports> supports;
         mControllers->GetElementAt(index, getter_AddRefs(supports));
-        supports->QueryInterface(nsIController::GetIID(), (void**)_retval);
+        supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
     } else 
         *_retval = nsnull;
     

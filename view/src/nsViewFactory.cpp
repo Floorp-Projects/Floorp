@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -216,7 +217,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     viewModule = new nsViewModule;
     if (viewModule == NULL) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = viewModule->QueryInterface(nsIModule::GetIID(), (void **)return_cobj);
+    rv = viewModule->QueryInterface(NS_GET_IID(nsIModule), (void **)return_cobj);
 
     if (NS_FAILED(rv))
     {
@@ -233,7 +234,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 //////////////////////////////////////////////////////////////////////
 // VIEW Decoder Module Implementation
 
-NS_IMPL_ISUPPORTS(nsViewModule, nsIModule::GetIID())
+NS_IMPL_ISUPPORTS(nsViewModule, NS_GET_IID(nsIModule))
 
 nsViewModule::nsViewModule(void)
   : mObjCount(-1)

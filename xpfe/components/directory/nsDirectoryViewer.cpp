@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -216,7 +217,7 @@ nsHTTPIndexParser::Init()
 
   if (gRefCnt++ == 0) {
     rv = nsServiceManager::GetService("component://netscape/rdf/rdf-service",
-                                      nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                      NS_GET_IID(nsIRDFService),
                                       NS_REINTERPRET_CAST(nsISupports**, &gRDF));
     if (NS_FAILED(rv)) return rv;
 
@@ -301,9 +302,9 @@ nsHTTPIndexParser::QueryInterface(REFNSIID aIID, void** aResult)
   if (! aResult)
     return NS_OK;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
+      aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
     *aResult = NS_STATIC_CAST(nsIStreamListener*, this);
     NS_ADDREF(this);
     return NS_OK;
@@ -352,7 +353,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
     rv = xpc->WrapNative(jscontext,                       
                          global,
                          httpindex,
-                         nsCOMTypeInfo<nsIHTTPIndex>::GetIID(),
+                         NS_GET_IID(nsIHTTPIndex),
                          getter_AddRefs(wrapper));
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap http-index");
@@ -746,7 +747,7 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNod
   rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
-  return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
+  return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
 }
 
 
@@ -764,7 +765,7 @@ nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode**
   rv = gRDF->GetDateLiteral(tm, getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
-  return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
+  return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
 }
 
 
@@ -789,7 +790,7 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
   rv = gRDF->GetIntLiteral(i, getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
-  return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
+  return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
 }
 
 
@@ -822,7 +823,7 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 
   static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
   rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull,
-                                          nsCOMTypeInfo<nsIRDFDataSource>::GetIID(),
+                                          NS_GET_IID(nsIRDFDataSource),
                                           getter_AddRefs(mDataSource));
   if (NS_FAILED(rv)) return rv;
 
@@ -869,8 +870,8 @@ nsHTTPIndex::QueryInterface(REFNSIID aIID, void** aResult)
   if (! aResult)
     return NS_OK;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIHTTPIndex>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIHTTPIndex)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
     *aResult = NS_STATIC_CAST(nsIHTTPIndex*, this);
     NS_ADDREF(this);
     return NS_OK;
@@ -1002,8 +1003,8 @@ nsDirectoryViewerFactory::QueryInterface(REFNSIID aIID, void** aResult)
   if (! aResult)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIDocumentLoaderFactory>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderFactory)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
     *aResult = NS_STATIC_CAST(nsIDocumentLoaderFactory*, this);
   }
   else {
@@ -1033,7 +1034,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsIDocumentLoaderFactory> factory;
   rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/text/xul",
                                           nsnull,
-                                          nsCOMTypeInfo<nsIDocumentLoaderFactory>::GetIID(),
+                                          NS_GET_IID(nsIDocumentLoaderFactory),
                                           getter_AddRefs(factory));
   if (NS_FAILED(rv)) return rv;
 
@@ -1366,7 +1367,7 @@ NSGetFactory(nsISupports* aServiceMgr,
   nsCOMPtr<nsIGenericFactory> factory;
   rv = compMgr->CreateInstance(kGenericFactoryCID,
                                nsnull,
-                               nsIGenericFactory::GetIID(),
+                               NS_GET_IID(nsIGenericFactory),
                                getter_AddRefs(factory));
 
   if (NS_FAILED(rv)) return rv;

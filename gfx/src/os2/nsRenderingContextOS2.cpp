@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 //#define PROFILE_GSTATE // be noisy about graphicsstate-usage
@@ -180,7 +180,7 @@ nsRenderingContextOS2::QueryInterface( REFNSIID aIID, void **aInstancePtr)
    if( !aInstancePtr)
       return NS_ERROR_NULL_POINTER;
 
-   if( aIID.Equals( nsIRenderingContext::GetIID()))
+   if( aIID.Equals( NS_GET_IID(nsIRenderingContext)))
       *aInstancePtr = (void *) (nsIRenderingContext*) this;
    else if( aIID.Equals( ((nsISupports*)(nsIRenderingContext*)this)->GetIID()))
       *aInstancePtr = (void *) (nsISupports*)(nsIRenderingContext*)this;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
  
 
@@ -868,7 +869,7 @@ void CObserverService::UnregisterObservers() {
 void CObserverService::RegisterObservers(nsString& aTopic) {
   nsresult result = NS_OK;
   nsIObserverService* theObserverService = nsnull;
-  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
+  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, NS_GET_IID(nsIObserverService),
                                       (nsISupports**) &theObserverService, nsnull);
   if(result == NS_OK){
     nsIEnumerator* theEnum = nsnull;
@@ -881,7 +882,7 @@ void CObserverService::RegisterObservers(nsString& aTopic) {
       for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
         result = theEnum->CurrentItem(&inst);
         if (NS_SUCCEEDED(result)) {
-          result = inst->QueryInterface(nsIElementObserver::GetIID(), (void**)&theElementObserver);
+          result = inst->QueryInterface(NS_GET_IID(nsIElementObserver), (void**)&theElementObserver);
           NS_RELEASE(inst);
         }
         if (result == NS_OK) {

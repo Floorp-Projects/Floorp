@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -186,7 +187,7 @@ void nsWalletlibService::Init()
   nsIDocumentLoader *docLoaderService;
 
   nsresult rv = nsServiceManager::GetService
-    (NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(), (nsISupports**)&svc );
+    (NS_OBSERVERSERVICE_PROGID, NS_GET_IID(nsIObserverService), (nsISupports**)&svc );
   if ( NS_SUCCEEDED( rv ) && svc ) {
     nsString  topic(NS_FORMSUBMIT_SUBJECT);
     rv = svc->AddObserver( this, topic.GetUnicode());

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -81,7 +82,7 @@
 *
 * xpconnect allows implementors of nsIXPCScriptable to bend the rules a bit...
 * implementations of nsIXPCScriptable are not required to follow QueryInterface
-* identity rules; i.e. doing a QI(nsISupports::GetIID()) on this interface is
+* identity rules; i.e. doing a QI(NS_GET_IID(nsISupports)) on this interface is
 * not required to return the same pointer as doing so on the object that
 * presented this interface. Thus, it is allowable to implement only one
 * nsIXPCScriptable instance per class if desired.

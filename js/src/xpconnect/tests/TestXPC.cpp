@@ -369,7 +369,7 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  build wrapper with veto: ");
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, nsITestXPCFoo2::GetIID(), &wrapper)))
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, NS_GET_IID(nsITestXPCFoo2), &wrapper)))
     {
         success = JS_FALSE;
         printf("failed\n");
@@ -382,7 +382,7 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 */
     sm->SetMode(MySecMan::OK_ALL);
     printf("  build wrapper no veto: ");
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, nsITestXPCFoo2::GetIID(), &wrapper)))
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, NS_GET_IID(nsITestXPCFoo2), &wrapper)))
     {
         printf("passed\n");
         JSObject* obj;
@@ -480,7 +480,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     printf("ArgumentFormatter test: ");
 
     argv = JS_PushArguments(jscontext, &mark, "s %ip s",
-                            a_in, &nsITestXPCFoo2::GetIID(), foo, b_in);
+                            a_in, &NS_GET_IID(nsITestXPCFoo2), foo, b_in);
 
     if(argv)
     {
@@ -491,7 +491,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
         {
             if(fooc)
             {
-                if(NS_SUCCEEDED(fooc->QueryInterface(nsTestXPCFoo::GetIID(),
+                if(NS_SUCCEEDED(fooc->QueryInterface(NS_GET_IID(nsTestXPCFoo),
                                 (void**)&foog)))
                 {
                     if(foog == foo)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -97,7 +98,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsCOMTypeInfo<nsIOutputStream>::GetIID());
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, NS_GET_IID(nsIOutputStream));
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -129,7 +130,7 @@ main(int argc, char** argv)
     nsCOMPtr<nsIRDFDataSource> ds;
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            nsIRDFDataSource::GetIID(),
+                                            NS_GET_IID(nsIRDFDataSource),
                                             getter_AddRefs(ds));
 
     if (NS_FAILED(rv)) {

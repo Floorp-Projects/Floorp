@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "jsapi.h"
@@ -278,7 +279,7 @@ nsJSProtocolHandler::NewChannel(const char* verb,
         return NS_ERROR_OUT_OF_MEMORY;
 
     rv = proxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
-                                            nsCOMTypeInfo<nsIEvaluateStringProxy>::GetIID(),
+                                            NS_GET_IID(nsIEvaluateStringProxy),
                                             NS_STATIC_CAST(nsISupports*, eval),
                                             PROXY_SYNC | PROXY_ALWAYS,
                                             (void**) &evalProxy);

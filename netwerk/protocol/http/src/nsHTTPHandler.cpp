@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nspr.h"
@@ -321,7 +322,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
         if (NS_FAILED(rv)) return rv;
 
         nsIInputStream* rawStream;
-        rv = in->QueryInterface(nsIInputStream::GetIID(), (void**)&rawStream);
+        rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&rawStream);
         NS_RELEASE(in);
         if (NS_FAILED(rv)) return rv;
 
@@ -336,7 +337,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
         rv = NS_NewStringInputStream(&in, data);
         if (NS_FAILED(rv)) return rv;
 
-        rv = in->QueryInterface(nsIInputStream::GetIID(), (void**)result);
+        rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)result);
         NS_RELEASE(in);
         return rv;
     }

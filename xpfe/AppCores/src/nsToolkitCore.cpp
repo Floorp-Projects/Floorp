@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -219,7 +220,7 @@ private:
 }; // nsArgCallbacks
 
 // Implement ISupports stuff.
-NS_IMPL_ISUPPORTS( nsArgCallbacks, nsIXULWindowCallbacks::GetIID() );
+NS_IMPL_ISUPPORTS( nsArgCallbacks, NS_GET_IID(nsIXULWindowCallbacks) );
 
 static const int APP_DEBUG = 0;
 static nsresult setAttribute( nsIWebShell *shell,

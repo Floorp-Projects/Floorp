@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsString.h"
@@ -69,7 +70,7 @@ nsresult NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
     nsresult rv;
   
     rv = nsComponentManager::CreateInstance( 
-                                        kRDFContainerCID, NULL, nsIRDFContainer::GetIID(),  (void**)aResult );
+                                        kRDFContainerCID, NULL, NS_GET_IID(nsIRDFContainer),  (void**)aResult );
     if (NS_FAILED(rv))
     	return rv;
 
@@ -189,7 +190,7 @@ public:
 	NS_IMETHOD ConvertISupportsToDOMWindow( nsISupports* inInterface, nsIDOMWindow** outWindow )
 	{
 		
-		return inInterface->QueryInterface(nsIDOMWindow::GetIID()  , (void**) outWindow );
+		return inInterface->QueryInterface(NS_GET_IID(nsIDOMWindow)  , (void**) outWindow );
 	}
 	// COM and RDF 
 	NS_DECL_ISUPPORTS	

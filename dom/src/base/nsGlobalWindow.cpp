@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -260,7 +261,7 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(nsPIDOMWindow::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsPIDOMWindow))) {
     *aInstancePtrResult = (void*)(nsISupports*)(nsPIDOMWindow*)this;
     AddRef();
     return NS_OK;
@@ -2227,7 +2228,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
         }
     
         nsIURI *baseUri = nsnull;
-        rv = mDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+        rv = mDocURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
         if (NS_FAILED(rv)) return rv;
     
         rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "EditTxn.h"
@@ -132,7 +133,7 @@ EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsITransactionDescription::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsITransactionDescription))) {
     *aInstancePtr = (void*)(nsITransactionDescription*)this;
     NS_ADDREF_THIS();
     return NS_OK;

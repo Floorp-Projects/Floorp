@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define alphabetize 1
@@ -643,7 +644,7 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
   char * colon = nsnull;
   if (URLName) {
     nsCOMPtr<nsIURL> uri;
-    nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
+    nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
     uri->SetSpec((char *)URLName);
 
     /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
@@ -2244,7 +2245,7 @@ SINGSIGN_PromptUsernameAndPassword
 
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
+  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
   uri->SetSpec((char *)urlname);
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
@@ -2300,7 +2301,7 @@ SINGSIGN_PromptPassword
 
   /* convert to a uri so we can parse out the username and hostname */
   nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
+  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
   uri->SetSpec((char *)urlname);
 
   /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */

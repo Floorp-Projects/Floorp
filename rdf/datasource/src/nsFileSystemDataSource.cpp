@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -251,7 +252,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-					   nsIRDFService::GetIID(),
+					   NS_GET_IID(nsIRDFService),
 					   (nsISupports**) &gRDFService);
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
@@ -338,7 +339,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
 
 
 
-NS_IMPL_ISUPPORTS(FileSystemDataSource, nsIRDFDataSource::GetIID());
+NS_IMPL_ISUPPORTS(FileSystemDataSource, NS_GET_IID(nsIRDFDataSource));
 
 
 
@@ -437,7 +438,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			if (NS_FAILED(rv)) return(rv);
 			if (!name)	rv = NS_RDF_NO_VALUE;
 			if (rv == NS_RDF_NO_VALUE)	return(rv);
-			return name->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+			return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 		}
 		else if (property == kNC_URL)
 		{
@@ -447,7 +448,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			if (!url)	rv = NS_RDF_NO_VALUE;
 			if (rv == NS_RDF_NO_VALUE)	return(rv);
 
-			return url->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+			return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 		}
 		else if (property == kRDF_type)
 		{
@@ -475,7 +476,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			nsAutoString	url(type);
 			nsIRDFLiteral	*literal;
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
-			rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+			rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			NS_RELEASE(literal);
 			return rv;
 		}
@@ -484,7 +485,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
 			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
-			rv = pulseLiteral->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+			rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			NS_RELEASE(pulseLiteral);
 			return rv;
 		}
@@ -504,7 +505,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 				rv = children->GetNext(getter_AddRefs(isupports));
 				if (NS_FAILED(rv)) return rv;
 
-				return isupports->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
+				return isupports->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			}
 		}
 	}

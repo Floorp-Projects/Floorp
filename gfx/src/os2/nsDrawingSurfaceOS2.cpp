@@ -16,6 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  */
 
@@ -28,7 +29,7 @@
 
 // Base class -- fonts, palette and xpcom -----------------------------------
 
-NS_IMPL_ISUPPORTS(nsDrawingSurfaceOS2,nsIDrawingSurface::GetIID())
+NS_IMPL_ISUPPORTS(nsDrawingSurfaceOS2, NS_GET_IID(nsIDrawingSurface))
 
 // We start allocated lCIDs at 2.  This leaves #1 for nsFontMetricsOS2 to
 // do testing with, and 0 is, of course, LCID_DEFAULT.

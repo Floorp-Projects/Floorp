@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsNetSupportDialog.h"
 #include "nsIWebShell.h"
@@ -340,7 +341,7 @@ NS_IMETHODIMP nsNetSupportDialog::Alert(const PRUnichar *text)
 	 	nsCOMPtr< nsIDOMWindow> window;
 	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
 	 	nsCOMPtr<nsICommonDialogs> dialogService;
-	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, NS_GET_IID(nsICommonDialogs),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
         	rv = dialogService->Alert( window, NULL, text );
@@ -367,7 +368,7 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm(const PRUnichar *text, PRBool *returnV
 	 	nsCOMPtr< nsIDOMWindow> window;
 	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
 	 	nsCOMPtr<nsICommonDialogs> dialogService;
-	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, NS_GET_IID(nsICommonDialogs),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
         	rv = dialogService->Confirm( window, NULL, text, returnValue );
@@ -397,7 +398,7 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck(const PRUnichar *text,
 	 	nsCOMPtr< nsIDOMWindow> window;
 	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
 	 	nsCOMPtr<nsICommonDialogs> dialogService;
-	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, NS_GET_IID(nsICommonDialogs),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
         	rv = dialogService->ConfirmCheck( window,NULL, text, checkMsg, checkValue, returnValue );
@@ -475,7 +476,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *text,
 	 	nsCOMPtr< nsIDOMWindow> window;
 	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
 	 	nsCOMPtr<nsICommonDialogs> dialogService;
-	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, NS_GET_IID(nsICommonDialogs),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
         	rv = dialogService->Prompt( window, NULL, text, defaultText, resultText, returnValue );
@@ -510,7 +511,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUsernameAndPassword(const PRUnichar *tex
 	 	nsCOMPtr< nsIDOMWindow> window;
 	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
 	 	nsCOMPtr<nsICommonDialogs> dialogService;
-	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, NS_GET_IID(nsICommonDialogs),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
         	rv = dialogService->PromptUsernameAndPassword( window, NULL,text, user, pwd, returnValue );
@@ -546,7 +547,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text,
 	 	nsCOMPtr< nsIDOMWindow> window;
 	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
 	 	nsCOMPtr<nsICommonDialogs> dialogService;
-	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, NS_GET_IID(nsICommonDialogs),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
         	rv = dialogService->PromptPassword( window, windowTitle,text, pwd, returnValue );
@@ -738,7 +739,7 @@ NS_IMETHODIMP nsNetSupportDialog::QueryInterface(REFNSIID aIID,void** aInstanceP
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if ( aIID.Equals( nsIPrompt::GetIID() ) )
+  if ( aIID.Equals( NS_GET_IID(nsIPrompt) ) )
   {
     *aInstancePtr = (void*) ((nsIPrompt*)this);
     NS_ADDREF_THIS();

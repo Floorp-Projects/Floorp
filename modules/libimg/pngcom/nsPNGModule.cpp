@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsPNGModule.h"
@@ -67,7 +68,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     module = new nsPNGModule;
     if (module == NULL) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = module->QueryInterface(nsIModule::GetIID(), (void **)return_cobj);
+    rv = module->QueryInterface(NS_GET_IID(nsIModule), (void **)return_cobj);
 
     if (NS_FAILED(rv))
     {
@@ -119,7 +120,7 @@ nsPNGDecoderCreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 //////////////////////////////////////////////////////////////////////
 // PNG Decoder Module Implementation
 
-NS_IMPL_ISUPPORTS(nsPNGModule, nsIModule::GetIID())
+NS_IMPL_ISUPPORTS(nsPNGModule, NS_GET_IID(nsIModule))
 
 nsPNGModule::nsPNGModule(void)
   : mObjCount(-1), mClassObject(NULL)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsEditProperty.h"
@@ -297,12 +298,12 @@ nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEditProperty::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEditProperty))) {
     *aInstancePtr = (void*)(nsIEditProperty*)this;
     NS_ADDREF_THIS();
     return NS_OK;

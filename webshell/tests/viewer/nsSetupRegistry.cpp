@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #define NS_IMPL_IDS
 #include "nsCOMPtr.h"
@@ -252,7 +253,7 @@ NS_SetupRegistry()
     
   rv = nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
                                           nsnull,
-                                          nsIUnixToolkitService::GetIID(),
+                                          NS_GET_IID(nsIUnixToolkitService),
                                           (void **) &unixToolkitService);
   
   NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");

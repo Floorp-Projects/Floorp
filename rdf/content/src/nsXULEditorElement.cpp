@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -47,7 +48,7 @@ nsXULEditorElement::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsIDOMXULEditorElement>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIDOMXULEditorElement))) {
         *aResult = NS_STATIC_CAST(nsIDOMXULEditorElement*, this);
     }
     else {

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // ToDo: nowt (except get rid of unicode hack)
@@ -79,7 +79,7 @@ nsGfxFactoryOS2::~nsGfxFactoryOS2()
 {   
 }   
 
-NS_IMPL_ISUPPORTS(nsGfxFactoryOS2,nsIFactory::GetIID())
+NS_IMPL_ISUPPORTS(nsGfxFactoryOS2,NS_GET_IID(nsIFactory))
 
 nsresult nsGfxFactoryOS2::CreateInstance( nsISupports *aOuter,
                                           const nsIID &aIID,
@@ -144,7 +144,7 @@ extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
    if( !*aFactory)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return (*aFactory)->QueryInterface( nsIFactory::GetIID(), (void**) aFactory);
+  return (*aFactory)->QueryInterface( NS_GET_IID(nsIFactory), (void**) aFactory);
 }
 
 // Module-level data ---------------------------------------------------------

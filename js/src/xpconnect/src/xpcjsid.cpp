@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -1057,9 +1058,9 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
         nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx, obj);
     if(wrapper)
     {
-        if(wrapper->GetIID().Equals(nsIJSID::GetIID())  ||
-           wrapper->GetIID().Equals(nsIJSIID::GetIID()) ||
-           wrapper->GetIID().Equals(nsIJSCID::GetIID()))
+        if(wrapper->GetIID().Equals(NS_GET_IID(nsIJSID))  ||
+           wrapper->GetIID().Equals(NS_GET_IID(nsIJSIID)) ||
+           wrapper->GetIID().Equals(NS_GET_IID(nsIJSCID)))
         {
             ((nsIJSID*)wrapper->GetNative())->GetId(&id);
         }

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsGfxDefs.h"
@@ -26,7 +26,7 @@
 #include "nsIDeviceContext.h"
 #include "nsRenderingContextOS2.h"
 
-NS_IMPL_ISUPPORTS(nsImageOS2,nsIImage::GetIID());
+NS_IMPL_ISUPPORTS(nsImageOS2, NS_GET_IID(nsIImage));
 
 //------------------------------------------------------------
 nsImageOS2::nsImageOS2()

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsClipboard.h"
@@ -100,7 +101,7 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsIClipboard::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIClipboard))) {
     *aInstancePtr = (void*) ((nsIClipboard*)this);
     NS_ADDREF_THIS();
     return NS_OK;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIPref.h"
@@ -1580,7 +1581,7 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
 {
   if (!gPref) {
     nsServiceManager::GetService(kPrefCID,
-      nsCOMTypeInfo<nsIPref>::GetIID(), (nsISupports**) &gPref);
+      NS_GET_IID(nsIPref), (nsISupports**) &gPref);
     if (!gPref) {
       return nsnull;
     }
@@ -3178,7 +3179,7 @@ nsFontEnumeratorWin::nsFontEnumeratorWin()
 }
 
 NS_IMPL_ISUPPORTS(nsFontEnumeratorWin,
-                  nsCOMTypeInfo<nsIFontEnumerator>::GetIID());
+                  NS_GET_IID(nsIFontEnumerator));
 
 static int gInitializedFontEnumerator = 0;
 

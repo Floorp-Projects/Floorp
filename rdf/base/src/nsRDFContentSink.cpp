@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -324,7 +325,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          nsIRDFContainerUtils::GetIID(),
+                                          NS_GET_IID(nsIRDFContainerUtils),
                                           (nsISupports**) &gRDFContainerUtils);
 
         kAboutAtom       = NS_NewAtom("about");

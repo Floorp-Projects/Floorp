@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsHTMLEditRules.h"
@@ -97,7 +98,7 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   bodyNode = do_QueryInterface(bodyElem);
   if (bodyNode)
   {
-    res = nsComponentManager::CreateInstance(kRangeCID, nsnull, nsIDOMRange::GetIID(),
+    res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(mDocChangeRange));
     if (NS_FAILED(res)) return res;
     if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
@@ -1968,7 +1969,7 @@ nsHTMLEditRules::IsEmptyNode( nsIDOMNode *aNode,
   if (!nodeAsContent) return NS_ERROR_FAILURE;
   nsresult res = nsComponentManager::CreateInstance(kContentIteratorCID,
                                         nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter));
   if (NS_FAILED(res)) return res;
   res = iter->Init(nodeAsContent);
@@ -2505,7 +2506,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     opRange = do_QueryInterface(isupports);
     res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
                                         nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter));
     if (NS_FAILED(res)) return res;
     res = iter->Init(opRange);
@@ -3503,7 +3504,7 @@ nsHTMLEditRules::AdjustSpecialBreaks()
   // need an iterator
   res = nsComponentManager::CreateInstance(kContentIteratorCID,
                                         nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter));
   if (NS_FAILED(res)) return res;
   
@@ -3591,7 +3592,7 @@ nsHTMLEditRules::AdjustWhitespace(nsIDOMSelection *aSelection)
   // need an iterator
   res = nsComponentManager::CreateInstance(kContentIteratorCID,
                                         nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter));
   if (NS_FAILED(res)) return res;
   
@@ -3826,7 +3827,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
   // need an iterator
   res = nsComponentManager::CreateInstance(kContentIteratorCID,
                                         nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter));
   if (NS_FAILED(res)) return res;
   
@@ -4424,7 +4425,7 @@ nsHTMLEditListener::WillDeleteSelection(nsIDOMSelection *aSelection)
   // construct a range to represent start and end of inNode
   nsresult res = nsComponentManager::CreateInstance(kRangeCID,
                                                     nsnull,
-                                                    nsIDOMRange::GetIID(),
+                                                    NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(range));
   if (NS_FAILED(res)) return res;
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
@@ -4460,7 +4461,7 @@ nsHTMLEditListener::MakeRangeFromNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMRange> 
   // construct a range to represent start and end of inNode
   nsresult res = nsComponentManager::CreateInstance(kRangeCID,
                                                     nsnull,
-                                                    nsIDOMRange::GetIID(),
+                                                    NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(*outRange));
   if (NS_FAILED(res)) return res;
   res = (*outRange)->SelectNode(inNode);
@@ -4484,7 +4485,7 @@ nsHTMLEditListener::MakeRangeFromTextOffsets(nsIDOMCharacterData *inNode,
   // construct a range to represent start and end of text run
   nsresult res = nsComponentManager::CreateInstance(kRangeCID,
                                                     nsnull,
-                                                    nsIDOMRange::GetIID(),
+                                                    NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(*outRange));
   if (NS_FAILED(res)) return res;
   res = (*outRange)->SetStart(theNode, inStart);

@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsDocShell.h"
@@ -192,7 +193,7 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
    nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
    static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
    NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
-                                                       nsIDocumentLoaderFactory::GetIID(),
+                                                       NS_GET_IID(nsIDocumentLoaderFactory),
                                                        (void**)getter_AddRefs(docFactory)),
                     NS_ERROR_FAILURE);
 

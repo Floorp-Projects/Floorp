@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // ToDo: Unicode, encoding.
@@ -58,7 +58,7 @@ nsFontMetricsOS2::~nsFontMetricsOS2()
    delete mFontHandle;
 }
 
-NS_IMPL_ISUPPORTS( nsFontMetricsOS2, nsIFontMetrics::GetIID())
+NS_IMPL_ISUPPORTS( nsFontMetricsOS2, NS_GET_IID(nsIFontMetrics))
 
 nsresult nsFontMetricsOS2::Init( const nsFont &aFont, nsIDeviceContext *aContext)
 {

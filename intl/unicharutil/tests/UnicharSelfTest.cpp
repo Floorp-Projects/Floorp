@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <iostream.h>
 #include "nsISupports.h"
@@ -377,7 +378,7 @@ static void TestEntityConversion(PRUint32 version)
   inString.Append(&uChar, 1);
 
   nsCOMPtr <nsIEntityConverter> entityConv;
-  res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, nsIEntityConverter::GetIID(), getter_AddRefs(entityConv));
+  res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n"; return;}
 
 
@@ -426,7 +427,7 @@ static void TestSaveAsCharset()
   cout << "\n";
 
   nsCOMPtr <nsISaveAsCharset> saveAsCharset;
-  res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, nsISaveAsCharset::GetIID(), getter_AddRefs(saveAsCharset));
+  res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, NS_GET_IID(nsISaveAsCharset), getter_AddRefs(saveAsCharset));
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   
   cout << "ISO-8859-1 " << "attr_plainTextDefault " << "entityNone " << "\n";

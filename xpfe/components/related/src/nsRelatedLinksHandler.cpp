@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -191,7 +192,7 @@ RelatedLinksStreamListener::Init()
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-				    nsIRDFService::GetIID(),
+				    NS_GET_IID(nsIRDFService),
 				    (nsISupports**) &gRDFService);
 
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -201,7 +202,7 @@ RelatedLinksStreamListener::Init()
 		nsICharsetConverterManager	*charsetConv = nsnull;
 
 		rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-				nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
+				NS_GET_IID(nsICharsetConverterManager), 
 				(nsISupports**)&charsetConv);
 		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
@@ -228,7 +229,7 @@ RelatedLinksStreamListener::Init()
 
 
 // nsISupports interface
-NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, nsIStreamListener::GetIID());
+NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, NS_GET_IID(nsIStreamListener));
 
 
 
@@ -673,7 +674,7 @@ RelatedLinksHandlerImpl::Init()
 	if (gRefCnt++ == 0)
 	{
 		rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                  nsIRDFService::GetIID(),
+                                                  NS_GET_IID(nsIRDFService),
                                                   (nsISupports**) &gRDFService);
 		if (NS_FAILED(rv)) return rv;
 
@@ -702,7 +703,7 @@ RelatedLinksHandlerImpl::Init()
 	}
 
 	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, nsIRDFDataSource::GetIID(), getter_AddRefs(mInner));
+		nsnull, NS_GET_IID(nsIRDFDataSource), getter_AddRefs(mInner));
 	return(rv);
 }
 
@@ -756,12 +757,12 @@ RelatedLinksHandlerImpl::QueryInterface(REFNSIID aIID, void** aResult)
 
 	static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-	if (aIID.Equals(nsIRelatedLinksHandler::GetIID()) ||
+	if (aIID.Equals(NS_GET_IID(nsIRelatedLinksHandler)) ||
 	    aIID.Equals(kISupportsIID))
 	{
 		*aResult = NS_STATIC_CAST(nsIRelatedLinksHandler*, this);
 	}
-	else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
+	else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
 		*aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
 	}
 	else
@@ -1344,7 +1345,7 @@ NSGetFactory(nsISupports* aServiceMgr,
 	nsCOMPtr<nsIGenericFactory> factory;
 	rv = compMgr->CreateInstance(kGenericFactoryCID,
 				     nsnull,
-				     nsIGenericFactory::GetIID(),
+				     NS_GET_IID(nsIGenericFactory),
 				     getter_AddRefs(factory));
 
 	if (NS_FAILED(rv)) return rv;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAbDirectory.h"	 
@@ -284,7 +285,7 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 	nsCOMPtr<nsIAbCard> personCard(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 	{
-		rv = nsComponentManager::CreateInstance(kAbCardCID, nsnull, nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(personCard));
+		rv = nsComponentManager::CreateInstance(kAbCardCID, nsnull, NS_GET_IID(nsIAbCard), getter_AddRefs(personCard));
 		if (NS_FAILED(rv) || !personCard)
 		{
 			delete[] uriStr;

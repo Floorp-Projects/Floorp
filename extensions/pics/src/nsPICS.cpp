@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -424,7 +425,7 @@ nsPICS::Init()
     static PRBool first_time=PR_TRUE;
 
     res = nsServiceManager::GetService(kPrefCID, 
-                                    nsIPref::GetIID(), 
+                                    NS_GET_IID(nsIPref), 
                                     (nsISupports **)&aPrefs);
 
     if (NS_OK != res) {
@@ -466,7 +467,7 @@ nsPICS::Init()
           return rv;
   
         rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
-                                nsIObserverService::GetIID(), 
+                                NS_GET_IID(nsIObserverService), 
                                 (nsISupports **)&anObserverService);
 
         if(rv == NS_OK) {

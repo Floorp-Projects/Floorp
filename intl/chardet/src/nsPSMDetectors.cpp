@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -60,7 +61,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {               \
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {                            \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
@@ -350,7 +351,7 @@ nsXPCOMDetector::~nsXPCOMDetector()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
-MY_NS_IMPL_ISUPPORTS(nsXPCOMDetector,nsICharsetDetector::GetIID(), nsICharsetDetector)
+MY_NS_IMPL_ISUPPORTS(nsXPCOMDetector,NS_GET_IID(nsICharsetDetector), nsICharsetDetector)
 //----------------------------------------------------------
 NS_IMETHODIMP nsXPCOMDetector::Init(
   nsICharsetDetectionObserver* aObserver)
@@ -417,7 +418,7 @@ nsXPCOMStringDetector::~nsXPCOMStringDetector()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
-MY_NS_IMPL_ISUPPORTS(nsXPCOMStringDetector,nsIStringCharsetDetector::GetIID(), nsIStringCharsetDetector)
+MY_NS_IMPL_ISUPPORTS(nsXPCOMStringDetector,NS_GET_IID(nsIStringCharsetDetector), nsIStringCharsetDetector)
 //----------------------------------------------------------
 void nsXPCOMStringDetector::Report(const char* charset)
 {

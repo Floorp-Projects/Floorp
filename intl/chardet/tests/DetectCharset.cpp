@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <iostream.h>
 #include "nsISupports.h"
@@ -264,7 +265,7 @@ class nsReporter : public nsICharsetDetectionObserver
 };
 
 
-NS_IMPL_ISUPPORTS(nsReporter, nsICharsetDetectionObserver::GetIID())
+NS_IMPL_ISUPPORTS(nsReporter, NS_GET_IID(nsICharsetDetectionObserver))
 
 nsresult GetDetector(const char* key, nsICharsetDetector** det)
 {
@@ -274,7 +275,7 @@ nsresult GetDetector(const char* key, nsICharsetDetector** det)
   return nsComponentManager::CreateInstance(
             buf,
             nsnull,
-            nsICharsetDetector::GetIID(),
+            NS_GET_IID(nsICharsetDetector),
             (void**)det);
 }
 
@@ -284,7 +285,7 @@ nsresult GetObserver(nsICharsetDetectionObserver** aRes)
   *aRes = nsnull;
   nsReporter* rep = new nsReporter();
   if(rep) {
-     return rep->QueryInterface(nsICharsetDetectionObserver::GetIID() ,
+     return rep->QueryInterface(NS_GET_IID(nsICharsetDetectionObserver) ,
                                 (void**)aRes);
   }
   return NS_ERROR_OUT_OF_MEMORY;

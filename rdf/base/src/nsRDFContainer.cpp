@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -105,7 +106,7 @@ nsIRDFResource*       RDFContainerImpl::kRDF_nextVal;
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS(RDFContainerImpl, nsIRDFContainer::GetIID());
+NS_IMPL_ISUPPORTS(RDFContainerImpl, NS_GET_IID(nsIRDFContainer));
 
 
 
@@ -188,7 +189,7 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
         return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIRDFLiteral> nextValLiteral;
-    rv = nextValNode->QueryInterface(nsIRDFLiteral::GetIID(), getter_AddRefs(nextValLiteral));
+    rv = nextValNode->QueryInterface(NS_GET_IID(nsIRDFLiteral), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLString s;
@@ -438,7 +439,7 @@ RDFContainerImpl::Init()
         nsresult rv;
 
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -448,7 +449,7 @@ RDFContainerImpl::Init()
         if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          nsIRDFContainerUtils::GetIID(),
+                                          NS_GET_IID(nsIRDFContainerUtils),
                                           (nsISupports**) &gRDFContainerUtils);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils service");
@@ -667,7 +668,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
         return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIRDFLiteral> nextValLiteral;
-    rv = nextValNode->QueryInterface(nsIRDFLiteral::GetIID(), getter_AddRefs(nextValLiteral));
+    rv = nextValNode->QueryInterface(NS_GET_IID(nsIRDFLiteral), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
     const PRUnichar* s;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -86,7 +87,7 @@ nsSaveAsCharset::Init(const char *charset, PRUint32 attr, PRUint32 entityVersion
   if (attr_EntityNone != MASK_ENTITY(mAttribute)) {
     rv = nsComponentManager::CreateInstance(kEntityConverterCID, 
                                             NULL,
-                                            nsCOMTypeInfo<nsIEntityConverter>::GetIID(), 
+                                            NS_GET_IID(nsIEntityConverter), 
                                             (void**)&mEntityConverter);
     if (NULL == mEntityConverter) return NS_ERROR_FAILURE;
   }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -115,13 +116,13 @@ nsDlgDefaultKeysImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIDlgDefaultKeys::GetIID()) ||
+    if (iid.Equals(NS_GET_IID(nsIDlgDefaultKeys)) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIDlgDefaultKeys*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMKeyListener::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
         *result = NS_STATIC_CAST(nsIDOMKeyListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;

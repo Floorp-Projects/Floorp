@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // this file implements the nsAddrDatabase interface using the MDB Interface.
@@ -231,9 +232,9 @@ NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
     if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-    if (aIID.Equals(nsCOMTypeInfo<nsIAddrDatabase>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIAddrDBAnnouncer>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIAddrDatabase)) ||
+        aIID.Equals(NS_GET_IID(nsIAddrDBAnnouncer)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsIAddrDatabase*, this);   
         NS_ADDREF_THIS();
         return NS_OK;
@@ -2571,7 +2572,7 @@ nsAddrDBEnumerator::~nsAddrDBEnumerator()
 		mRowCursor->CutStrongRef(mDB->GetEnv());
 }
 
-NS_IMPL_ISUPPORTS(nsAddrDBEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
+NS_IMPL_ISUPPORTS(nsAddrDBEnumerator, NS_GET_IID(nsIEnumerator))
 
 NS_IMETHODIMP nsAddrDBEnumerator::First(void)
 {

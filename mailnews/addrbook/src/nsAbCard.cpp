@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAbCard.h"	 
@@ -101,7 +102,7 @@ NS_IMETHODIMP nsAbCard::OnCardEntryChange
 nsresult nsAbCard::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
-	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
 	{
 		//Notify listeners who listen to every folder
 		nsresult rv;

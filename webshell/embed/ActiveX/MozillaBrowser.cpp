@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "stdafx.h"
@@ -647,7 +648,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	// Load preferences service
 	rv = nsServiceManager::GetService(kPrefCID, 
-									nsIPref::GetIID(), 
+									NS_GET_IID(nsIPref), 
 									(nsISupports **)&m_pIPref);
 	if (NS_FAILED(rv))
 	{
@@ -731,7 +732,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 
 		nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID,
 										nsnull,
-										nsIEditor::GetIID(),
+										NS_GET_IID(nsIEditor),
 										(void **) &m_pEditor);
 		if (NS_FAILED(result))
 		{

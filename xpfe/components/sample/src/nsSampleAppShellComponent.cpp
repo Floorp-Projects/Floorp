@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsISampleAppShellComponent.h"
 
@@ -121,7 +122,7 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
                         rv = xpc->WrapNative( jsContext,
                                               JS_GetGlobalObject(jsContext),
                                               observer,
-                                              nsIObserver::GetIID(),
+                                              NS_GET_IID(nsIObserver),
                                               getter_AddRefs( wrapper ) );
                         if ( NS_SUCCEEDED( rv ) ) {
                           JSObject* obj;

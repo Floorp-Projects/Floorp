@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Douglas Turner <dougt@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -72,12 +73,12 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsIXPINotifier::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIXPINotifier))) {
     *aInstancePtr = (void*) ((nsIXPINotifier*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIXPIProgressDlg::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIXPIProgressDlg))) {
     *aInstancePtr = (void*) ((nsIXPIProgressDlg*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -165,9 +166,9 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
                                             "chrome://xpinstall/content/xpistatus.xul",
                                             "_blank",
                                             "chrome",
-                                            (const nsIID*)&nsIDialogParamBlock::GetIID(),
+                                            (const nsIID*)&NS_GET_IID(nsIDialogParamBlock),
                                             (nsISupports*)ioParamBlock,
-                                            (const nsIID*)&nsPIXPIManagerCallbacks::GetIID(),
+                                            (const nsIID*)&NS_GET_IID(nsPIXPIManagerCallbacks),
                                             (nsISupports*)mgr
                                             );
             if (argv)

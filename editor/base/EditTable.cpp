@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -611,7 +612,7 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aRowIndex, PRInt32 &
   { // get the table cell interface from the frame
     nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
   
-    res = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
+    res = layoutObject->QueryInterface(NS_GET_IID(nsITableCellLayout), (void**)(&cellLayoutObject));
     if ((NS_SUCCEEDED(res)) && (nsnull!=cellLayoutObject))
     {
       res = cellLayoutObject->GetCellIndexes(aRowIndex, aColIndex);
@@ -633,7 +634,7 @@ nsHTMLEditor::GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **table
   if ((NS_SUCCEEDED(res)) && (nsnull!=layoutObject)) 
   { // get the table interface from the frame 
     
-    res = layoutObject->QueryInterface(nsITableLayout::GetIID(), 
+    res = layoutObject->QueryInterface(NS_GET_IID(nsITableLayout), 
                             (void**)(tableLayoutObject)); 
   }
   return res;
@@ -809,7 +810,7 @@ nsHTMLEditor::GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell)
       nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
       nsCOMPtr<nsIContentIterator> iter;
       res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                  nsIContentIterator::GetIID(), 
+                                                  NS_GET_IID(nsIContentIterator), 
                                                   getter_AddRefs(iter));
       if ((NS_SUCCEEDED(res)) && iter)
       {

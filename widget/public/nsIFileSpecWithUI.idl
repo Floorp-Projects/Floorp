@@ -86,7 +86,7 @@ inline nsIFileSpecWithUI* NS_CreateFileSpecWithUI()
      nsresult rv = nsComponentManager::CreateInstance(
      	(const char*)NS_FILESPECWITHUI_PROGID,
      	(nsISupports*)nsnull,
-     	(const nsID&)nsIFileSpecWithUI::GetIID(),
+     	(const nsID&)NS_GET_IID(nsIFileSpecWithUI),
      	(void**)&spec);
      NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
      return spec;

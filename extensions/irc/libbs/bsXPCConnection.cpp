@@ -17,11 +17,9 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
- *  Robert Ginda, rginda@ndcico.com, original author
+ *  Robert Ginda <rginda@ndcico.com> (original author)
+ *  Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "prerror.h"
@@ -111,7 +109,7 @@ bsConnection::~bsConnection()
     
 }
 
-NS_IMPL_ISUPPORTS(bsConnection, bsIConnection::GetIID());
+NS_IMPL_ISUPPORTS(bsConnection, NS_GET_IID(bsIConnection));
 
 NS_IMETHODIMP
 bsConnection::Init(const char *hostname)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIPref.h" 
@@ -701,7 +702,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     res = service->NewURI(WALLET_EDITOR_URL, nsnull, &uri);
     if (NS_FAILED(res)) return nsEventStatus_eIgnore;
 
-    res = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+    res = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
     if (!NS_FAILED(res)) {
 //      res = walletservice->WALLET_PreEdit(url);
@@ -1065,7 +1066,7 @@ GetTitleSuffix(void)
     ret = service->NewURI(VIEWER_BUNDLE_URL, nsnull, &uri);
     if (NS_FAILED(ret)) return ret;
 
-    ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+    ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
   if (NS_FAILED(ret)) {
     NS_RELEASE(service);
@@ -1145,7 +1146,7 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIProgressEventSink::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
     *aInstancePtrResult = (void*) ((nsIProgressEventSink*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2777,7 +2778,7 @@ DumpFramesRecurse(nsIDocShell* aDocShell, FILE* out, nsString *aFilterName)
         shell->GetPresContext(&presContext);
 
         nsIFrameDebug* fdbg;
-        if (NS_SUCCEEDED(root->QueryInterface(nsIFrameDebug::GetIID(), (void**)&fdbg))) {
+        if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&fdbg))) {
           fdbg->List(presContext, out, 0);
         }
         NS_IF_RELEASE(presContext);
@@ -2932,7 +2933,7 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
     aFrame->GetFrameType(getter_AddRefs(frameType));
     PRUint32 frameDataSize;
     nsIFrameDebug* fdbg;
-    if (NS_SUCCEEDED(aFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**) &fdbg))) {
+    if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
       fdbg->SizeOf(aHandler, &frameDataSize);
       aHandler->AddSize(frameType, frameDataSize);
     }

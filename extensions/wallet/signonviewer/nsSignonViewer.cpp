@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -46,7 +47,7 @@ SignonViewerImpl::~SignonViewerImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(SignonViewerImpl, nsISignonViewer::GetIID());
+NS_IMPL_ISUPPORTS(SignonViewerImpl, NS_GET_IID(nsISignonViewer));
 
 NS_IMETHODIMP
 SignonViewerImpl::GetSignonValue(char** aValue)

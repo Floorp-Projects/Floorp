@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -78,7 +79,7 @@ nsresult nsPluginInstancePeerImpl::QueryInterface(const nsIID& iid, void** insta
     if (instance == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsIPluginInstancePeer::GetIID()) || iid.Equals(nsIPluginInstancePeer2::GetIID()))
+    if (iid.Equals(NS_GET_IID(nsIPluginInstancePeer)) || iid.Equals(NS_GET_IID(nsIPluginInstancePeer2)))
     {
         *instance = (void *)(nsIPluginInstancePeer2*)this;
         AddRef();

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -354,7 +355,7 @@ nsXULElement::Init()
         }
 
         rv = nsServiceManager::GetService(kXULContentUtilsCID,
-                                          nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+                                          NS_GET_IID(nsIXULContentUtils),
                                           (nsISupports**) &gXULUtils);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
         if (NS_FAILED(rv)) return rv;
@@ -536,18 +537,18 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 
     nsresult rv;
 
-    if (iid.Equals(nsIStyledContent::GetIID()) ||
+    if (iid.Equals(NS_GET_IID(nsIStyledContent)) ||
         iid.Equals(kIContentIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIStyledContent*, this);
     }
-    else if (iid.Equals(nsIXMLContent::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIXMLContent))) {
         *result = NS_STATIC_CAST(nsIXMLContent*, this);
     }
-    else if (iid.Equals(nsCOMTypeInfo<nsIXULContent>::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIXULContent))) {
         *result = NS_STATIC_CAST(nsIXULContent*, this);
     }
-    else if (iid.Equals(nsIDOMXULElement::GetIID()) ||
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULElement)) ||
              iid.Equals(kIDOMElementIID) ||
              iid.Equals(kIDOMNodeIID)) {
         *result = NS_STATIC_CAST(nsIDOMElement*, this);
@@ -567,19 +568,19 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
     }
-    else if (iid.Equals(nsIFocusableContent::GetIID()) &&
+    else if (iid.Equals(NS_GET_IID(nsIFocusableContent)) &&
              (NameSpaceID() == kNameSpaceID_XUL) &&
              IsFocusableContent()) {
         *result = NS_STATIC_CAST(nsIFocusableContent*, this);
     }
-    else if (iid.Equals(nsIStyleRule::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIStyleRule))) {
         *result = NS_STATIC_CAST(nsIStyleRule*, this);
     }
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
-              iid.Equals(nsIXULTreeContent::GetIID())) &&
+              iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
              (NameSpaceID() == kNameSpaceID_XUL) &&
              (Tag() == kTreeAtom)) {
         // We delegate XULTreeElement APIs to an aggregate object
@@ -833,7 +834,7 @@ NS_IMETHODIMP
 nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
     if (mDocument) {
-        return mDocument->QueryInterface(nsIDOMDocument::GetIID(), (void**) aOwnerDocument);
+        return mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) aOwnerDocument);
     }
     else {
         *aOwnerDocument = nsnull;
@@ -1173,7 +1174,7 @@ nsXULElement::GetElementsByAttribute(const nsString& aAttribute,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDOMNode> domElement;
-    rv = QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(domElement));
+    rv = QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(domElement));
     if (NS_SUCCEEDED(rv)) {
         GetElementsByAttribute(domElement, aAttribute, aValue, elements);
     }

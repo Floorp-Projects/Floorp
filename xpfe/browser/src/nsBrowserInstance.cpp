@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsBrowserInstance.h"
@@ -129,8 +130,6 @@ static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
-static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
@@ -223,7 +222,7 @@ nsBrowserAppCore::Init()
   
   rv = nsComponentManager::CreateInstance(kCSessionHistoryCID,
                                           nsnull,
-                                          nsISessionHistory::GetIID(),
+                                          NS_GET_IID(nsISessionHistory),
                                           (void **)&mSHistory );
 
   if ( NS_SUCCEEDED( rv ) ) {
@@ -839,7 +838,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     rv = service->NewURI(urlstr, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
     NS_RELEASE(uri);
     if (NS_FAILED(rv))
         return rv;
@@ -1040,7 +1039,7 @@ public:
       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, nsIProxyObjectManager::GetCID(), &rv);
       if(NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIAppShellService> appShellProxy;
-      rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, nsIAppShellService::GetIID(), 
+      rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIAppShellService), 
                                                 appShellServ, PROXY_ASYNC | PROXY_ALWAYS,
                                                 getter_AddRefs(appShellProxy));
 
@@ -1662,7 +1661,7 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
     // Get "unknown content type handler" and have it handle this.
     nsIUnknownContentTypeHandler *handler;
     rv = nsServiceManager::GetService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID,
-                                       nsIUnknownContentTypeHandler::GetIID(),
+                                       NS_GET_IID(nsIUnknownContentTypeHandler),
                                        (nsISupports**)&handler );
 
     if ( NS_SUCCEEDED( rv ) ) {
@@ -2052,7 +2051,7 @@ nsBrowserAppCore::Find()
     // Get find component.
     nsIFindComponent *finder;
     rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
-                                       nsIFindComponent::GetIID(),
+                                       NS_GET_IID(nsIFindComponent),
                                        (nsISupports**)&finder );
     if ( NS_SUCCEEDED( rv ) ) {
         // Make sure we've initialized searching for this document.
@@ -2084,7 +2083,7 @@ nsBrowserAppCore::FindNext()
     // Get find component.
     nsIFindComponent *finder;
     rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
-                                       nsIFindComponent::GetIID(),
+                                       NS_GET_IID(nsIFindComponent),
                                        (nsISupports**)&finder );
     if ( NS_SUCCEEDED( rv ) ) {
         // Make sure we've initialized searching for this document.
@@ -2183,7 +2182,7 @@ nsBrowserAppCore::BeginObserving() {
     // Get observer service.
     nsIObserverService *svc = 0;
     nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
-                                                nsIObserverService::GetIID(),
+                                                NS_GET_IID(nsIObserverService),
                                                 (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Add/Remove object as observer of web shell window topics.
@@ -2205,7 +2204,7 @@ nsBrowserAppCore::EndObserving() {
     // Get observer service.
     nsIObserverService *svc = 0;
     nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
-                                                nsIObserverService::GetIID(),
+                                                NS_GET_IID(nsIObserverService),
                                                 (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Add/Remove object as observer of web shell window topics.
@@ -2231,7 +2230,7 @@ nsBrowserAppCore::Observe( nsISupports *aSubject,
     // We only are interested if aSubject is our web shell window.
     if ( aSubject && mWebShellWin ) {
         nsIWebShellWindow *window = 0;
-        rv = aSubject->QueryInterface( nsIWebShellWindow::GetIID(), (void**)&window );
+        rv = aSubject->QueryInterface( NS_GET_IID(nsIWebShellWindow), (void**)&window );
         if ( NS_SUCCEEDED( rv ) && window ) {
             nsString topic1 = prefix;
             topic1 += ";status";

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -211,7 +212,7 @@ nsRegistryDataSource::Init()
     if (gRefCnt++ == 0) {
         nsresult rv;
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &gRDF);
         if (NS_FAILED(rv)) return rv;
 
@@ -271,7 +272,7 @@ nsRegistryDataSource::Open(const char* aPlatformFileName)
     nsresult rv;
     rv = nsComponentManager::CreateInstance(kRegistryCID,
                                             nsnull,
-                                            nsCOMTypeInfo<nsIRegistry>::GetIID(),
+                                            NS_GET_IID(nsIRegistry),
                                             getter_AddRefs(mRegistry));
     if (NS_FAILED(rv)) return rv;
 
@@ -288,7 +289,7 @@ nsRegistryDataSource::OpenWellKnownRegistry(PRInt32 aID)
     nsresult rv;
     rv = nsComponentManager::CreateInstance(kRegistryCID,
                                             nsnull,
-                                            nsCOMTypeInfo<nsIRegistry>::GetIID(),
+                                            NS_GET_IID(nsIRegistry),
                                             getter_AddRefs(mRegistry));
     if (NS_FAILED(rv)) return rv;
 
@@ -358,7 +359,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
                 rv = results->GetNext(getter_AddRefs(isupports));
                 if (NS_FAILED(rv)) return rv;
 
-                return isupports->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) _retval);
+                return isupports->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) _retval);
             }
         }
         else {
@@ -383,7 +384,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
                     rv = gRDF->GetLiteral(nsAutoString(value).GetUnicode(), getter_AddRefs(literal));
                     if (NS_FAILED(rv)) return rv;
 
-                    return literal->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) _retval);
+                    return literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) _retval);
                 }
 
                 case nsIRegistry::Int32: {
@@ -395,7 +396,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
                     rv = gRDF->GetIntLiteral(value, getter_AddRefs(literal));
                     if (NS_FAILED(rv)) return rv;
 
-                    return literal->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) _retval);
+                    return literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) _retval);
                 }
 
                 case nsIRegistry::Bytes:
@@ -773,7 +774,7 @@ nsRegistryDataSource::SubkeyEnumerator::ConvertRegistryNodeToResource(nsISupport
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsRegistryDataSource::SubkeyEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID());
+NS_IMPL_ISUPPORTS(nsRegistryDataSource::SubkeyEnumerator, NS_GET_IID(nsISimpleEnumerator));
 
 NS_IMETHODIMP
 nsRegistryDataSource::SubkeyEnumerator::HasMoreElements(PRBool* _retval)

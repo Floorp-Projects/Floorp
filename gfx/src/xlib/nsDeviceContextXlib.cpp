@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsRenderingContextXlib.h"
@@ -392,7 +393,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   
   rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
                                           nsnull,
-                                          nsIDeviceContextPS::GetIID(),
+                                          NS_GET_IID(nsIDeviceContextPS),
                                           (void **)&dcps);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
@@ -401,7 +402,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
                             (nsIDeviceContext*)this);
 
-  rv = dcps->QueryInterface(nsIDeviceContext::GetIID(),
+  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
                             (void **)&aContext);
 
   NS_RELEASE(dcps);

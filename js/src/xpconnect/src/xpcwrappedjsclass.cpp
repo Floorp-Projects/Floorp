@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -225,7 +226,7 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
     void* result;
     NS_PRECONDITION(aPtr, "null pointer");
     return aPtr &&
-           NS_OK == aPtr->QueryInterface(WrappedJSIdentity::GetIID(), &result) &&
+           NS_OK == aPtr->QueryInterface(NS_GET_IID(WrappedJSIdentity), &result) &&
            result == WrappedJSIdentity::GetSingleton();
 }
 
@@ -246,7 +247,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
-    if(aIID.Equals(WrappedJSIdentity::GetIID()))
+    if(aIID.Equals(NS_GET_IID(WrappedJSIdentity)))
     {
         // asking to find out if this is a wrapper object
         *aInstancePtr = WrappedJSIdentity::GetSingleton();

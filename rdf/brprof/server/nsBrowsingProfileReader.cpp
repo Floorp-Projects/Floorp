@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define FORCE_PR_LOG
@@ -172,7 +173,7 @@ nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
             nsIBrowsingProfile* profile;
             rv = nsComponentManager::CreateInstance(kBrowsingProfileCID,
                                                     nsnull,
-                                                    nsIBrowsingProfile::GetIID(),
+                                                    NS_GET_IID(nsIBrowsingProfile),
                                                     (void**) &profile);
 
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create profile");
@@ -235,7 +236,7 @@ nsBrowsingProfileReader::Init()
     nsresult rv;
 
     rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsIRDFService::GetIID(),
+                                      NS_GET_IID(nsIRDFService),
                                       (nsISupports**) &mRDFService);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -477,7 +478,7 @@ int main(int argc, char **argv)
     // Get netlib off the floor...
     nsIEventQueueService* theEventQueueService = nsnull;
     rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      nsIEventQueueService::GetIID(),
+                                      NS_GET_IID(nsIEventQueueService),
                                       (nsISupports**) &theEventQueueService);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get event queue service");

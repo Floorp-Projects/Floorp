@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -110,11 +111,11 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsIDOMNodeList>::GetIID()) ||
+    if (aIID.Equals(NS_GET_IID(nsIDOMNodeList)) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIDOMNodeList*, this);
     }
-    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFNodeList>::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFNodeList))) {
         *aResult = NS_STATIC_CAST(nsIRDFNodeList*, this);
     }
     else if (aIID.Equals(kIScriptObjectOwnerIID)) {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIStreamTransfer.h"
 
@@ -170,7 +171,7 @@ nsStreamTransfer::SelectFile( nsIFileSpec **aResult, const nsCString &suggested 
 
             if ( NS_SUCCEEDED( rv ) ) {
                 // Give result to caller.
-                rv = result->QueryInterface( nsIFileSpec::GetIID(), (void**)aResult );
+                rv = result->QueryInterface( NS_GET_IID(nsIFileSpec), (void**)aResult );
 
                 if ( NS_SUCCEEDED( rv ) && prefs ) {
                     // Save selected directory for next time.

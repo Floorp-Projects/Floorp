@@ -16,6 +16,7 @@
  * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
  * 
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // mozLineTerm.cpp: class implementing mozILineTerm/mozILineTermAux interfaces,
@@ -133,11 +134,11 @@ mozLineTerm::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(mozILineTermAux*,this));
 
-  } else if ( aIID.Equals(mozILineTerm::GetIID()) ) {
+  } else if ( aIID.Equals(NS_GET_IID(mozILineTerm)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozILineTerm*,
                                    NS_STATIC_CAST(mozILineTermAux*,this));
 
-  } else if ( aIID.Equals(mozILineTermAux::GetIID()) ) {
+  } else if ( aIID.Equals(NS_GET_IID(mozILineTermAux)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozILineTermAux*,this);
 
   } else {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -258,7 +259,7 @@ nsBrowsingProfile::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIBrowsingProfile::GetIID()) ||
+    if (aIID.Equals(NS_GET_IID(nsIBrowsingProfile)) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIBrowsingProfile*, this);
         NS_ADDREF(this);

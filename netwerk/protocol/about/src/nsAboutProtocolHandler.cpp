@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAboutProtocolHandler.h"
@@ -49,7 +50,7 @@ nsAboutProtocolHandler::~nsAboutProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, nsIProtocolHandler::GetIID());
+NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, NS_GET_IID(nsIProtocolHandler));
 
 NS_METHOD
 nsAboutProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -104,7 +105,7 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else {
         rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                                nsIURI::GetIID(),
+                                                NS_GET_IID(nsIURI),
                                                 (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);

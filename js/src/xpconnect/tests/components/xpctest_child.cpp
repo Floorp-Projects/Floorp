@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -154,9 +155,9 @@ xpctestChild::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsIXPCTestChild::GetIID()) ||
-        iid.Equals(nsIXPCTestParent::GetIID()) ||
-        iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (iid.Equals(NS_GET_IID(nsIXPCTestChild)) ||
+        iid.Equals(NS_GET_IID(nsIXPCTestParent)) ||
+        iid.Equals(NS_GET_IID(nsISupports))) {
         *result = NS_STATIC_CAST(nsIXPCTestChild*, this);
         NS_ADDREF(this);
         return NS_OK;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "DeleteRangeTxn.h"
@@ -319,7 +320,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
   
   result = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
                                         nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter));
   if (NS_FAILED(result)) return result;
   if (!iter) return NS_ERROR_NULL_POINTER;

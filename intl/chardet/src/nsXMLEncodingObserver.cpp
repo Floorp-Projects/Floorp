@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsICharsetAlias.h"
 #include "nsXMLEncodingObserver.h"
@@ -205,7 +206,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                nsICharsetAlias* calias = nsnull;
                res = nsServiceManager::GetService(
                               kCharsetAliasCID,
-                              nsICharsetAlias::GetIID(),
+                              NS_GET_IID(nsICharsetAlias),
                               (nsISupports**) &calias);
                if(NS_SUCCEEDED(res) && (nsnull != calias) ) 
                {
@@ -247,7 +248,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
     nsIObserverService* anObserverService = nsnull;
 
     res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
-                                       nsIObserverService::GetIID(),
+                                       NS_GET_IID(nsIObserverService),
                                        (nsISupports**) &anObserverService);
     if(NS_FAILED(res)) 
         goto done;
@@ -267,7 +268,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
     nsIObserverService* anObserverService = nsnull;
 
     res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
-                                       nsIObserverService::GetIID(),
+                                       NS_GET_IID(nsIObserverService),
                                        (nsISupports**) &anObserverService);
     if(NS_FAILED(res)) 
         goto done;

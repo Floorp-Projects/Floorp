@@ -53,8 +53,6 @@ static const char *kNPLStr =  \
 " * Communications Corporation.  Portions created by Netscape are\n"
 " * Copyright (C) 1998 Netscape Communications Corporation. All\n"
 " * Rights Reserved.\n"
-" *\n"
-" * Contributor(s): \n"
 " */\n";
 static const char *kDisclaimerStr = "/* AUTO-GENERATED. DO NOT EDIT!!! */\n";
 static const char *kObjTypeStr = "nsIDOM%s*";

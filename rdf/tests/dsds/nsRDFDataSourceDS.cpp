@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -136,7 +137,7 @@ nsRDFDataSourceDataSource::~nsRDFDataSourceDataSource()
 }
 
 
-NS_IMPL_ISUPPORTS(nsRDFDataSourceDataSource, nsIRDFDataSource::GetIID());
+NS_IMPL_ISUPPORTS(nsRDFDataSourceDataSource, NS_GET_IID(nsIRDFDataSource));
 
 /* void Init (in string uri); */
 NS_IMETHODIMP

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -262,13 +263,13 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
         return NS_ERROR_NULL_POINTER;
 
     if (aIID.Equals(kISupportsIID) ||
-        aIID.Equals(nsILocalStore::GetIID())) {
+        aIID.Equals(NS_GET_IID(nsILocalStore))) {
         *aResult = NS_STATIC_CAST(nsILocalStore*, this);
     }
-    else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource *, this);
     }
-    else if (aIID.Equals(nsIRDFRemoteDataSource::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource *, this);
     }
     else {
@@ -358,7 +359,7 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
 
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            nsIRDFDataSource::GetIID(),
+                                            NS_GET_IID(nsIRDFDataSource),
                                             (void**) &mInner);
     if (NS_FAILED(rv)) return rv;
 

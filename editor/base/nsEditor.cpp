@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "pratom.h"
@@ -205,19 +206,19 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   
   *aInstancePtr = nsnull;
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIEditor *tmp = this;
     nsISupports *tmp2 = tmp;
     *aInstancePtr = (void*)tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEditor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEditor))) {
     *aInstancePtr = (void*)(nsIEditor*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEditorIMESupport::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEditorIMESupport))) {
     *aInstancePtr = (void*)(nsIEditorIMESupport*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -318,7 +319,7 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  return doc->QueryInterface(nsIDOMDocument::GetIID(), (void **)aDoc);
+  return doc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void **)aDoc);
 }
 
 
@@ -332,7 +333,7 @@ nsEditor::GetPresShell(nsIPresShell **aPS)
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  return ps->QueryInterface(nsIPresShell::GetIID(), (void **)aPS);
+  return ps->QueryInterface(NS_GET_IID(nsIPresShell), (void **)aPS);
 }
 
 
@@ -369,7 +370,7 @@ nsEditor::Do(nsITransaction *aTxn)
 
     // Then we QI to an nsIAbsorbingTransaction to get at placeholder functionality
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
-    editTxn->QueryInterface(nsIAbsorbingTransaction::GetIID(), getter_AddRefs(plcTxn));
+    editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
     // have to use line above instead of "plcTxn = do_QueryInterface(editTxn);"
     // due to our broken interface model for transactions.
 
@@ -425,7 +426,7 @@ nsEditor::EnableUndo(PRBool aEnable)
     {
       result = nsComponentManager::CreateInstance(kCTransactionManagerCID,
                                         nsnull,
-                                        nsITransactionManager::GetIID(), getter_AddRefs(mTxnMgr));
+                                        NS_GET_IID(nsITransactionManager), getter_AddRefs(mTxnMgr));
       if (NS_FAILED(result) || !mTxnMgr) {
         printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
@@ -1600,7 +1601,7 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
   result = nodeList->Item(0, getter_AddRefs(node)); 
   if (NS_SUCCEEDED(result) && node)
   {
-    //return node->QueryInterface(nsIDOMElement::GetIID(), (void **)aBodyElement);
+    //return node->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)aBodyElement);
     // Is above equivalent to this:
     nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
     if (bodyElement)
@@ -2652,7 +2653,7 @@ nsEditor::GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent)
     result = IsNodeInline(parent, isInline);
     if (PR_FALSE==isInline)
     {
-      parent->QueryInterface(nsIDOMElement::GetIID(), (void**)aBlockParent);
+      parent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aBlockParent);
       break;
     }
     result = parent->GetParentNode(getter_AddRefs(temp));
@@ -2723,7 +2724,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
   nsresult result;
   nsCOMPtr<nsIContentIterator>iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), getter_AddRefs(iter));
+                                              NS_GET_IID(nsIContentIterator), getter_AddRefs(iter));
   if ((NS_SUCCEEDED(result)) && iter)
   {
     nsCOMPtr<nsIDOMRange> lastRange;
@@ -2791,7 +2792,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
                 if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", leftNode.get());}
                 nsCOMPtr<nsIDOMRange> range;
                 result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
-                                                            nsIDOMRange::GetIID(), getter_AddRefs(range));
+                                                            NS_GET_IID(nsIDOMRange), getter_AddRefs(range));
                 if ((NS_SUCCEEDED(result)) && range)
                 { // initialize the range
                   range->SetStart(leftNode, 0);
@@ -2828,7 +2829,7 @@ nsEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
   nsCOMPtr<nsIContentIterator>iter;
   nsresult result;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), getter_AddRefs(iter));
+                                              NS_GET_IID(nsIContentIterator), getter_AddRefs(iter));
   //XXX: maybe CreateInstance is expensive, and I should keep around a static iter?  
   //     as long as this method can't be called recursively or re-entrantly!
 
@@ -3381,14 +3382,14 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode     *aStartNode,
   result = aStartNode->GetFirstChild(getter_AddRefs(childNode));
   while (childNode)
   {
-    result = childNode->QueryInterface(nsIDOMNode::GetIID(),getter_AddRefs(element));
+    result = childNode->QueryInterface(NS_GET_IID(nsIDOMNode),getter_AddRefs(element));
     nsAutoString tag;
     if (NS_SUCCEEDED(result) && (element))
     {    
       element->GetTagName(tag);
       if (PR_TRUE==aTag.EqualsIgnoreCase(tag))
       {
-        return (childNode->QueryInterface(nsIDOMNode::GetIID(),(void **) aResult)); // does the addref
+        return (childNode->QueryInterface(NS_GET_IID(nsIDOMNode),(void **) aResult)); // does the addref
       }
       else
       {
@@ -3700,7 +3701,7 @@ nsEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
 
   nsCOMPtr<nsIContentIterator> iter;
   if (NS_FAILED(nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         getter_AddRefs(iter))))
     return nullNode;
 

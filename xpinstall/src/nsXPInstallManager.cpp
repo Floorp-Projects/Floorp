@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -73,7 +74,7 @@ nsXPInstallManager::nsXPInstallManager()
     mStringBundle = nsnull;
     nsIStringBundleService *service;
     nsresult rv = nsServiceManager::GetService( kStringBundleServiceCID, 
-                                       nsIStringBundleService::GetIID(),
+                                       NS_GET_IID(nsIStringBundleService),
                                        (nsISupports**) &service );
     if (NS_SUCCEEDED(rv) && service)
     {
@@ -102,17 +103,17 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   if (!aInstancePtr)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(nsIXPINotifier::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIXPINotifier)))
     *aInstancePtr = NS_STATIC_CAST(nsIXPINotifier*,this);
-  else if (aIID.Equals(nsIStreamListener::GetIID()))
+  else if (aIID.Equals(NS_GET_IID(nsIStreamListener)))
     *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*,this);
-  else if (aIID.Equals(nsPIXPIManagerCallbacks::GetIID()))
+  else if (aIID.Equals(NS_GET_IID(nsPIXPIManagerCallbacks)))
     *aInstancePtr = NS_STATIC_CAST(nsPIXPIManagerCallbacks*,this);
-  else if (aIID.Equals(nsIProgressEventSink::GetIID()))
+  else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)))
     *aInstancePtr = NS_STATIC_CAST(nsIProgressEventSink*,this);
-  else if (aIID.Equals(nsIInterfaceRequestor::GetIID()))
+  else if (aIID.Equals(NS_GET_IID(nsIInterfaceRequestor)))
     *aInstancePtr = NS_STATIC_CAST(nsIInterfaceRequestor*,this);
-  else if (aIID.Equals(kISupportsIID))
+  else if (aIID.Equals(NS_GET_IID(nsISupports)))
     *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
   else
     *aInstancePtr = 0;
@@ -153,7 +154,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     //-----------------------------------------------------
     rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
                                             nsnull,
-                                            nsIDialogParamBlock::GetIID(),
+                                            NS_GET_IID(nsIDialogParamBlock),
                                             getter_AddRefs(ioParamBlock));
 
     
@@ -178,7 +179,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
                                           "chrome://xpinstall/content/institems.xul",
                                           "_blank",
                                           "chrome,modal",
-                                          (const nsIID*)(&nsIDialogParamBlock::GetIID()),
+                                          (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                           (nsISupports*)ioParamBlock);
 
           if (argv)
@@ -216,14 +217,14 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
 
         if ( dlg )
         {
-            rv = dlg->QueryInterface( nsIXPIProgressDlg::GetIID(), 
+            rv = dlg->QueryInterface( NS_GET_IID(nsIXPIProgressDlg), 
                                       getter_AddRefs(mDlg) );
             if (NS_SUCCEEDED(rv))
             {
                 NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
-                    rv = pmgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIXPIProgressDlg::GetIID(),
+                    rv = pmgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIXPIProgressDlg),
                             mDlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mProxy) );
 
                 }

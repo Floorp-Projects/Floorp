@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
  
 #include "nsCOMPtr.h"
@@ -307,7 +308,7 @@ nsChromeProtocolHandler::~nsChromeProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsChromeProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetIID());
+NS_IMPL_ISUPPORTS(nsChromeProtocolHandler, NS_GET_IID(nsIProtocolHandler));
 
 NS_METHOD
 nsChromeProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -363,7 +364,7 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else {
         rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                nsCOMTypeInfo<nsIURI>::GetIID(),
+                                                NS_GET_IID(nsIURI),
                                                 (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIAddressBook.h"
@@ -87,7 +88,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 		if(NS_FAILED(nodeList->Item(i, &node)))
 			return rv;
 
-		if(NS_SUCCEEDED(rv = node->QueryInterface(nsCOMTypeInfo<nsIDOMXULElement>::GetIID(), (void**)&xulElement)))
+		if(NS_SUCCEEDED(rv = node->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)&xulElement)))
 		{
 			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)))
 			{
@@ -115,7 +116,7 @@ nsAddressBook::~nsAddressBook()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsAddressBook, nsIAddressBook::GetIID());
+NS_IMPL_ISUPPORTS(nsAddressBook, NS_GET_IID(nsIAddressBook));
 
 //
 // nsIAddressBook

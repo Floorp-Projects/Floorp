@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsPrefWindow.h"
@@ -64,9 +65,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // Globals - how many K are we wasting by putting these in every file?
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kIDOMDocumentIID,          nsIDOMDocument::GetIID());
-static NS_DEFINE_IID(kIDocumentIID,             nsIDocument::GetIID());
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -123,7 +121,7 @@ nsPrefWindow::~nsPrefWindow()
     sPrefWindow = 0;
 }
 
-NS_IMPL_ISUPPORTS( nsPrefWindow, nsIPrefWindow::GetIID())
+NS_IMPL_ISUPPORTS( nsPrefWindow, NS_GET_IID(nsIPrefWindow))
 
 //----------------------------------------------------------------------------------------
 /* static */ nsPrefWindow* nsPrefWindow::Get()
@@ -184,7 +182,7 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
 #endif
 	    nsIPref* prefs = nsnull;
 	    nsresult rv = nsServiceManager::GetService(
-	    	kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
+	    	kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&prefs);
 	    if (NS_FAILED(rv))
 	        return rv;
 	    mPrefs = prefs;
@@ -203,7 +201,7 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     rv = service->NewURI(urlStr, nsnull, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
@@ -691,7 +689,7 @@ nsresult nsPrefWindow::InitializePrefWidgets()
     if (!mPrefs) {
                 nsIPref* prefs = nsnull;
             nsresult rv = nsServiceManager::GetService(
-                kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
+                kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&prefs);
             if (NS_FAILED(rv))
                 return rv;
             mPrefs = prefs;

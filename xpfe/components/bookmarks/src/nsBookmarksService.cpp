@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -189,14 +190,14 @@ bm_AddRefGlobals()
 	if (gRefCnt++ == 0) {
 		nsresult rv;
 		rv = nsServiceManager::GetService(kRDFServiceCID,
-						  nsIRDFService::GetIID(),
+						  NS_GET_IID(nsIRDFService),
 						  (nsISupports**) &gRDF);
 
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 		if (NS_FAILED(rv)) return rv;
 
 		rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-						  nsIRDFContainerUtils::GetIID(),
+						  NS_GET_IID(nsIRDFContainerUtils),
 						  (nsISupports**) &gRDFC);
 
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
@@ -682,7 +683,7 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 	nsCOMPtr<nsIRDFContainer> container;
 	rv = nsComponentManager::CreateInstance(kRDFContainerCID,
 						nsnull,
-						nsIRDFContainer::GetIID(),
+						NS_GET_IID(nsIRDFContainer),
 						getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
@@ -859,7 +860,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 	// found a charset, now try and get a decoder from it to Unicode
 	nsICharsetConverterManager	*charsetConv = nsnull;
 	rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-			nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
+			NS_GET_IID(nsICharsetConverterManager), 
 			(nsISupports**)&charsetConv);
 	if (NS_SUCCEEDED(rv) && (charsetConv))
 	{
@@ -2405,7 +2406,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 /*
 				nsCOMPtr<nsISound>	soundInterface;
 				rv = nsComponentManager::CreateInstance(kSoundCID,
-						nsnull, nsISound::GetIID(),
+						nsnull, NS_GET_IID(nsISound),
 						getter_AddRefs(soundInterface));
 				if (NS_SUCCEEDED(rv))
 				{
@@ -2620,15 +2621,15 @@ nsBookmarksService::QueryInterface(REFNSIID aIID, void **aResult)
 	if (! aResult)
 		return NS_ERROR_NULL_POINTER;
 
-	if (aIID.Equals(nsIBookmarksService::GetIID()) ||
+	if (aIID.Equals(NS_GET_IID(nsIBookmarksService)) ||
 	    aIID.Equals(kISupportsIID))
 	{
 		*aResult = NS_STATIC_CAST(nsIBookmarksService*, this);
 	}
-	else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
+	else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
 		*aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
 	}
-	else if (aIID.Equals(nsIRDFRemoteDataSource::GetIID())) {
+	else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
 		*aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource*, this);
 	}
 	else {
@@ -2662,7 +2663,7 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	nsCOMPtr<nsIRDFContainer> container;
 	rv = nsComponentManager::CreateInstance(kRDFContainerCID,
 						nsnull,
-						nsIRDFContainer::GetIID(),
+						NS_GET_IID(nsIRDFContainer),
 						getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
@@ -3339,7 +3340,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 
 	nsCOMPtr<nsIRDFContainer>	container;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
-			nsIRDFContainer::GetIID(), getter_AddRefs(container))))
+			NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
 		return(rv);
 	if (NS_FAILED(rv = container->Init(mInner, argParent)))
 		return(rv);
@@ -3409,7 +3410,7 @@ nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 
 	nsCOMPtr<nsIRDFContainer>	container;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
-			nsIRDFContainer::GetIID(), getter_AddRefs(container))))
+			NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
 		return(rv);
 	if (NS_FAILED(rv = container->Init(mInner, argParent)))
 		return(rv);
@@ -3624,7 +3625,7 @@ nsBookmarksService::ReadBookmarks()
 	// so we need to forget about any previous bookmarks
 	mInner = nsnull;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-				nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner)))
+				nsnull, NS_GET_IID(nsIRDFDataSource), (void**) &mInner)))
 		return(rv);
 
 	rv = mInner->AddObserver(this);
@@ -3720,7 +3721,7 @@ nsBookmarksService::ReadBookmarks()
 		nsCOMPtr<nsIRDFContainer> bookmarksRoot;
 		rv = nsComponentManager::CreateInstance(kRDFContainerCID,
 							nsnull,
-							nsIRDFContainer::GetIID(),
+							NS_GET_IID(nsIRDFContainer),
 							getter_AddRefs(bookmarksRoot));
 		if (NS_FAILED(rv)) return rv;
 
@@ -3749,7 +3750,7 @@ nsBookmarksService::ReadBookmarks()
 			nsCOMPtr<nsIRDFContainer> container;
 			rv = nsComponentManager::CreateInstance(kRDFContainerCID,
 								nsnull,
-								nsIRDFContainer::GetIID(),
+								NS_GET_IID(nsIRDFContainer),
 								getter_AddRefs(container));
 			if (NS_FAILED(rv)) return rv;
 
@@ -3784,7 +3785,7 @@ nsBookmarksService::ReadBookmarks()
 			nsCOMPtr<nsIRDFContainer> container;
 			rv = nsComponentManager::CreateInstance(kRDFContainerCID,
 								nsnull,
-								nsIRDFContainer::GetIID(),
+								NS_GET_IID(nsIRDFContainer),
 								getter_AddRefs(container));
 			if (NS_FAILED(rv)) return rv;
 
@@ -3869,7 +3870,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 	nsCOMPtr<nsIRDFContainer> container;
 	rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
-		nsIRDFContainer::GetIID(), getter_AddRefs(container));
+		NS_GET_IID(nsIRDFContainer), getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
 	rv = container->Init(ds, parent);
@@ -4570,7 +4571,7 @@ NSGetFactory(nsISupports* aServiceMgr,
 	nsCOMPtr<nsIGenericFactory> factory;
 	rv = compMgr->CreateInstance(kGenericFactoryCID,
 				     nsnull,
-				     nsIGenericFactory::GetIID(),
+				     NS_GET_IID(nsIGenericFactory),
 				     getter_AddRefs(factory));
 
 	if (NS_FAILED(rv)) return rv;

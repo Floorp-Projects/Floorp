@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -857,7 +858,7 @@ nsSilentDownloadTask::DownloadSelf(PRInt32 range)
     nsCRT::free(uriStr);
     if (NS_FAILED(result)) return result;
 
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&pURL);
+    result = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&pURL);
     NS_RELEASE(uri);
 
     if (result != NS_OK) 
@@ -1259,7 +1260,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
 
     nsIComponentManager* compMgr;
     rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
+                             NS_GET_IID(nsIComponentManager), 
                              (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
@@ -1286,7 +1287,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 
     nsIComponentManager* compMgr;
     rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
+                             NS_GET_IID(nsIComponentManager), 
                              (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 

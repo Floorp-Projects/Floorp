@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIServiceManager.h"
@@ -63,7 +64,7 @@ NSGetFactory(nsISupports* aServMgr,
     if (NS_FAILED(rv)) return rv;
 
     nsIGenericFactory* factory;
-    rv = compMgr->CreateInstance(kGenericFactoryCID, nsnull, nsIGenericFactory::GetIID(), 
+    rv = compMgr->CreateInstance(kGenericFactoryCID, nsnull, NS_GET_IID(nsIGenericFactory), 
                                  (void**)&factory);
     if (NS_FAILED(rv)) return rv;
 
