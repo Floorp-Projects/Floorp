@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.32 $ 
-# $Date: 2002/05/03 21:44:25 $ 
+# $Revision: 1.33 $ 
+# $Date: 2002/05/03 22:01:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.32 $ )[1];
+$VERSION = ( qw $Revision: 1.33 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -382,12 +382,20 @@ sub status_table_row {
 
   # create a multi-row dummy cell for missing data?
 
-  if  ( $DB_TIMES[$NEXT_DB] < $row_times->[$row_index] ) {
+  my $next_time;
+  my $next_index = $NEXT_DB;
+  $next_time = $DB_TIMES[$next_index];
+
+  while (!defined($DATABASE{$tree}{$next_time}{'author'})) {
+      $next_time = $DB_TIMES[$next_index];
+      $next_index++;
+  }
+  if  ( $next_time < $row_times->[$row_index] ) {
       
       my ($rowspan) = 1;
       while ( 
               ( ($row_index + $rowspan) <= $#{$row_times}) &&
-              ( $DB_TIMES[$NEXT_DB]  <  
+              ( $next_time <  
                 $row_times->[$row_index + $rowspan] ) 
               ) {
           $rowspan++ ;
@@ -395,7 +403,7 @@ sub status_table_row {
       
       my ($cell_options) = ("rowspan=$rowspan ".
                             "bgcolor=$cell_color ");
-      my ($lc_time) = localtime($DB_TIMES[$NEXT_DB]);
+      my ($lc_time) = localtime($next_time);
 
       push @outrow, ("\t<!-- empty data: VC_Bonsai ".
                      "tree: $tree, ".
