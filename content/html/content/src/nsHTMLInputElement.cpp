@@ -1610,9 +1610,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               nsCOMPtr<nsISupports> currentControlSupports;
               nsCOMPtr<nsIFormControl> currentControl;
               PRBool hasMoreElements;
-              rv = formControls->HasMoreElements(&hasMoreElements);
-              NS_ENSURE_SUCCESS(rv, rv);
-              while (hasMoreElements) {
+              while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
+                     hasMoreElements) {
                 rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
                 NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1634,10 +1633,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                     numTextControlsFound++;
                   }
                 }
-
-                rv = formControls->HasMoreElements(&hasMoreElements);
-                NS_ENSURE_SUCCESS(rv, rv);
               }
+	      NS_ENSURE_SUCCESS(rv, rv);
             
               nsCOMPtr<nsIPresShell> shell;
               aPresContext->GetShell(getter_AddRefs(shell));
