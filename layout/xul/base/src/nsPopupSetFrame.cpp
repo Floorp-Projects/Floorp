@@ -99,7 +99,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
 mPresContext(nsnull), 
-mElementFrame(nsnull), 
+mElementContent(nsnull), 
 mCreateHandlerSucceeded(PR_FALSE),
 mLastPref(-1,-1)
 {
@@ -329,7 +329,7 @@ nsPopupSetFrame::RePositionPopup(nsBoxLayoutState& aState)
 {
   // Sync up the view.
   nsIFrame* activeChild = GetActiveChild();
-  if (activeChild && mElementFrame) {
+  if (activeChild && mElementContent) {
 
     nsCOMPtr<nsIContent> menuPopupContent;
     activeChild->GetContent(getter_AddRefs(menuPopupContent));
@@ -343,8 +343,12 @@ nsPopupSetFrame::RePositionPopup(nsBoxLayoutState& aState)
     if (popupAlign.IsEmpty())
       popupAlign.AssignWithConversion("topleft");
    
+    nsIFrame* frameToSyncTo = nsnull;
+    nsCOMPtr<nsIPresShell> presShell;
     nsIPresContext* presContext = aState.GetPresContext();
-    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(presContext, popupAnchor, popupAlign, mElementFrame, mXPos, mYPos);
+    presContext->GetShell(getter_AddRefs(presShell));
+    presShell->GetPrimaryFrameFor ( mElementContent, &frameToSyncTo );
+    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(presContext, popupAnchor, popupAlign, frameToSyncTo, mXPos, mYPos);
   }
 }
 
@@ -422,14 +426,14 @@ nsPopupSetFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent, 
+nsPopupSetFrame::CreatePopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
                              PRInt32 aXPos, PRInt32 aYPos, 
                              const nsString& aPopupType, const nsString& anAnchorAlignment,
                              const nsString& aPopupAlignment)
 {
-  // Cache the element frame.
-  mElementFrame = aElementFrame;
+  // Cache the element content we're supposed to sync to
   mPopupType = aPopupType;
+  mElementContent = aElementContent;
   
   // Show the popup at the specified position.
   mXPos = aXPos;
@@ -479,7 +483,7 @@ nsPopupSetFrame::DestroyPopup()
 
   // clear things out for next time
   mCreateHandlerSucceeded = PR_FALSE;
-  mElementFrame = nsnull;
+  mElementContent = nsnull;
   mXPos = mYPos = 0;
   mLastPref.width = -1;
   mLastPref.height = -1;
