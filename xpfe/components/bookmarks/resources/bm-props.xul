@@ -236,4 +236,8 @@
       </vbox>
     </tabpanels>
   </tabbox> 
+  <!-- By calling this inline, we guarantee the description text node 
+       will have its bindings before Init() is called, and the
+       dialog will be intrinsically sized correctly. -->
+  <script type="application/x-javascript">showDescription();</script>
 </dialog>
