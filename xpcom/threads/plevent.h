@@ -198,6 +198,7 @@ and to ensure that no more events will be delivered for that owner.
 #define INCL_DOSMISC
 #define INCL_DOSPROCESS
 #define INCL_DOSERRORS
+#define INCL_WINSHELLDATA
 #include <os2.h>
 #endif
 
