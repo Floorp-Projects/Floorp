@@ -686,43 +686,6 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 }
 
 
-static void InitCachePrefs()
-{
-  const char * const CACHE_DIR_PREF = "browser.cache.directory";
-  nsresult rv;
-  PRBool isDir = PR_FALSE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return;
-		
-  // If the pref is already set don't do anything
-  nsCOMPtr<nsILocalFile> cacheDir;
-  rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDir));
-  if (NS_SUCCEEDED(rv) && cacheDir.get()) {
-    rv = cacheDir->IsDirectory(&isDir);
-    if (NS_SUCCEEDED(rv) && isDir)
-      return;
-  }
-  // Set up the new pref
-
-  nsCOMPtr<nsIFile> profileDir;   
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-  NS_ASSERTION(profileDir, "NS_APP_USER_PROFILE_50_DIR is not defined");
-  if (NS_FAILED(rv)) return;
-
-  cacheDir = do_QueryInterface(profileDir);
-  NS_ASSERTION(cacheDir, "Cannot get nsILocalFile from cache dir");
-    
-  PRBool exists;
-  cacheDir->Append("Cache");
-  rv = cacheDir->Exists(&exists);
-  if (NS_SUCCEEDED(rv) && !exists)
-    rv = cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-  if (NS_FAILED(rv)) return;
-
-  prefs->SetFileXPref(CACHE_DIR_PREF, cacheDir);
-}
-
-
 static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
   nsresult rv;
@@ -1204,8 +1167,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Startup wallet service so it registers for notifications
   nsCOMPtr<nsIWalletService> walletService(do_GetService(NS_WALLETSERVICE_CONTRACTID, &rv));
-                  
-  InitCachePrefs();
 
   // From this point on, should be true
   appShell->SetQuitOnLastWindowClosing(PR_TRUE);	

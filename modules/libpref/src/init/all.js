@@ -47,10 +47,11 @@ pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.pro
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
 
-pref("browser.cache.disk_cache_size",       50000);
 pref("browser.cache.enable",                true);
 pref("browser.cache.disk.enable",           true);
-pref("browser.cache.memory_cache_size",     4096);
+pref("browser.cache.disk.capacity",         50000);
+pref("browser.cache.memory.enable",         true);
+pref("browser.cache.memory.capacity",       4096);
 pref("browser.cache.disk_cache_ssl",        false);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);

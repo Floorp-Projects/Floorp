@@ -37,13 +37,11 @@
 static NS_DEFINE_CID(kStorageTransportCID, NS_STORAGETRANSPORT_CID);
 
 const char *gMemoryDeviceID      = "memory";
-const char *gMemoryCacheSizePref = "browser.cache.memory_cache_size";
 
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
     : mEvictionThreshold(40 * 1024),
-      mHardLimit(0),
-      mSoftLimit(0),
+      mHardLimit(4 * 1024 * 1024),  // set default memory limit, in case prefs aren't available
       mTotalSize(0),
       mInactiveSize(0),
       mEntryCount(0),
@@ -55,38 +53,8 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
 
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
-{
-#if DEBUG
-    printf("### starting ~nsMemoryCacheDevice()\n");
-#endif    
-    nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        prefs->UnregisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
-    }
-    
+{    
     Shutdown();
-}
-
-
-int PR_CALLBACK
-nsMemoryCacheDevice::MemoryCacheSizeChanged(const char * pref, void * closure)
-{
-    nsresult  rv;
-    PRUint32   softLimit = 0;
-    nsMemoryCacheDevice * device = (nsMemoryCacheDevice *)closure;
-
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-    if (NS_FAILED(rv))  return rv;
-
-    rv = prefs->GetIntPref(gMemoryCacheSizePref, (PRInt32 *)&softLimit);
-    if (NS_FAILED(rv)) return rv;
-    
-    softLimit *= 1024;  // convert k into bytes
-    PRUint32 hardLimit = softLimit + 1024*1024*2;  // XXX find better limit than +2Meg
-    device->AdjustMemoryLimits(softLimit, hardLimit);
-
-    return 0; // XXX what are we supposed to return?
 }
 
 
@@ -98,28 +66,9 @@ nsMemoryCacheDevice::Init()
     rv = mMemCacheEntries.Init();
     
     // set some default memory limits, in case prefs aren't available
-    mSoftLimit = 1024 * 1024 * 3;
-    mHardLimit = mSoftLimit + 1024 *1024 * 2;
+    mSoftLimit = mHardLimit * 0.9;
 
-    // read user prefs for memory cache limits
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-
-        rv = prefs->RegisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
-        if (NS_FAILED(rv))  return rv;
-
-        // Initialize the pref
-        MemoryCacheSizeChanged(gMemoryCacheSizePref, this);
-    }
-
-    // Register as a memory pressure observer
-    NS_WITH_SERVICE(nsIObserverService,
-                    observerService,
-                    NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        // XXX rv = observerServcie->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
-    }
-    // Ignore failure of memory pressure registration
+    // XXX Register as a memory pressure observer
 
     return rv;
 }
@@ -437,6 +386,15 @@ nsMemoryCacheDevice::EvictEntries(const char * clientID)
         }
     }
     return NS_OK;
+}
+
+
+void
+nsMemoryCacheDevice::SetCapacity(PRUint32  capacity)
+{
+    PRUint32 hardLimit = capacity * 1024;  // convert k into bytes
+    PRUint32 softLimit = hardLimit * 0.9;
+    AdjustMemoryLimits(softLimit, hardLimit);
 }
 
 

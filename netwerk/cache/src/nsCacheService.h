@@ -39,18 +39,20 @@
 #include "nsProxiedService.h"
 
 class nsCacheRequest;
+class nsCacheProfilePrefObserver;
+class nsDiskCacheDevice;
+class nsMemoryCacheDevice;
 
 
 /******************************************************************************
  *  nsCacheService
  ******************************************************************************/
 
-class nsCacheService : public nsICacheService, public nsIObserver
+class nsCacheService : public nsICacheService
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESERVICE
-    NS_DECL_NSIOBSERVER
     
     nsCacheService();
     virtual ~nsCacheService();
@@ -108,9 +110,15 @@ public:
     void             ProxyObjectRelease(nsISupports * object, PRThread * thread);
 
     /**
-     * Methods called by nsCachePrefObserver
+     * Methods called by nsCacheProfilePrefObserver
      */
-    void             SetCacheDevicesEnabled(PRBool  disk, PRBool  memory);
+    static void      ProfileChanged();
+
+    static void      SetDiskCacheEnabled(PRBool  enabled);
+    static void      SetDiskCacheCapacity(PRInt32  capacity);
+
+    static void      SetMemoryCacheEnabled(PRBool  enabled);
+    static void      SetMemoryCacheCapacity(PRInt32  capacity);
 
 private:
 
@@ -164,33 +172,35 @@ private:
      *  Data Members
      */
 
-    static nsCacheService *             gService;  // there can be only one...
-    nsCOMPtr<nsIEventQueueService>      mEventQService;
-    nsCOMPtr<nsIProxyObjectManager>     mProxyObjectManager;
+    static nsCacheService *         gService;  // there can be only one...
+    nsCOMPtr<nsIEventQueueService>  mEventQService;
+    nsCOMPtr<nsIProxyObjectManager> mProxyObjectManager;
     
-    PRLock*                 mCacheServiceLock;
+    nsCacheProfilePrefObserver *    mObserver;
     
-    PRBool                  mEnableMemoryDevice;
-    PRBool                  mEnableDiskDevice;
+    PRLock *                        mCacheServiceLock;
+    
+    PRBool                          mEnableMemoryDevice;
+    PRBool                          mEnableDiskDevice;
 
-    nsCacheDevice *         mMemoryDevice;
-    nsCacheDevice *         mDiskDevice;
+    nsMemoryCacheDevice *           mMemoryDevice;
+    nsDiskCacheDevice *             mDiskDevice;
 
-    nsCacheEntryHashTable   mActiveEntries;
-    PRCList                 mDoomedEntries;
+    nsCacheEntryHashTable           mActiveEntries;
+    PRCList                         mDoomedEntries;
 
     // stats
     
-    PRUint32                mTotalEntries;
-    PRUint32                mCacheHits;
-    PRUint32                mCacheMisses;
-    PRUint32                mMaxKeyLength;
-    PRUint32                mMaxDataSize;
-    PRUint32                mMaxMetaSize;
+    PRUint32                        mTotalEntries;
+    PRUint32                        mCacheHits;
+    PRUint32                        mCacheMisses;
+    PRUint32                        mMaxKeyLength;
+    PRUint32                        mMaxDataSize;
+    PRUint32                        mMaxMetaSize;
 
     // Unexpected error totals
-    PRUint32                mDeactivateFailures;
-    PRUint32                mDeactivatedUnboundEntries;
+    PRUint32                        mDeactivateFailures;
+    PRUint32                        mDeactivatedUnboundEntries;
 };
 
 

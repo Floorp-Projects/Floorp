@@ -556,7 +556,7 @@ nsDiskCacheMap::CloseBlockFiles()
 nsresult
 nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry ** result)
 {
-    nsresult            rv;
+    nsresult            rv         = NS_ERROR_UNEXPECTED;
     nsDiskCacheEntry *  diskEntry  = nsnull;
     PRUint32            metaFile   = record->MetaFile();
     PRFileDesc *        fd         = nsnull;
@@ -630,7 +630,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
     
     PRUint32    size = diskEntry->Size();
     PRUint32    fileIndex;
-    PRUint32    blocks;
+    PRUint32    blocks = 0;
     
     if (size < 1024) {             // block size 256
         fileIndex = 1;
@@ -691,7 +691,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         PRInt32 bytesWritten = PR_Write(fd, diskEntry, size);
         
         PRStatus err = PR_Close(mMapFD);
-        if ((bytesWritten != size) || (err != PR_SUCCESS)) {
+        if ((bytesWritten != (PRInt32)size) || (err != PR_SUCCESS)) {
             rv = NS_ERROR_UNEXPECTED;
             goto exit;
         }
@@ -748,7 +748,7 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record)
 nsresult
 nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
 {
-    nsresult    rv;
+    nsresult    rv = NS_ERROR_UNEXPECTED;
     PRUint32    fileIndex = metaData ? record->MetaFile() : record->DataFile();
     nsCOMPtr<nsIFile> file;
     
