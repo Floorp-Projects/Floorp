@@ -4306,6 +4306,22 @@ NS_IMETHODIMP nsWebShell::SetParent(nsIDocShell* aParent)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
+{
+   NS_ENSURE_ARG_POINTER(aTreeOwner);
+
+   //XXXIMPL
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented!");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
+{
+   //XXXIMPL
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented!");
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener**
    aParent)
 {
