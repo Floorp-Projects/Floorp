@@ -28,6 +28,11 @@
   A simple fixed-size allocator that allocates its memory from an
   arena.
 
+  Although the allocator can handle blocks of any size, its
+  preformance will degrade rapidly if used to allocate blocks of
+  arbitrary size. Ideally, it should be used to allocate and recycle a
+  large number of fixed-size blocks.
+
 */
 
 #ifndef nsFixedSizeAllocator_h__
@@ -58,14 +63,16 @@ protected:
     struct Bucket {
         size_t     mSize;
         FreeEntry* mFirst;
+        Bucket*    mNext;
     };
 
     Bucket* mBuckets;
-    PRInt32 mNumBuckets;
+
+    nsresult
+    AddBucket(size_t aSize);
 
 public:
-    nsFixedSizeAllocator()
-        : mBuckets(nsnull), mNumBuckets(0) {}
+    nsFixedSizeAllocator() : mBuckets(nsnull) {}
 
     ~nsFixedSizeAllocator() {
         if (mBuckets)
@@ -80,15 +87,13 @@ public:
      */
     nsresult
     Init(const char* aName,
-         size_t* aBucketSizes,
+         const size_t* aBucketSizes,
          PRInt32 aNumBuckets,
          PRInt32 aInitialSize,
          PRInt32 aAlign = 0);
 
     /**
-     * Allocate a block of memory 'aSize' bytes big. 'aSize' must
-     * be one of the block sizes passed to 'Init()', or else this
-     * will fail and return a null pointer.
+     * Allocate a block of memory 'aSize' bytes big.
      */
     void* Alloc(size_t aSize);
 
