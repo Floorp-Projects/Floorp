@@ -410,6 +410,9 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:profile:public:MANIFEST",							"$distdirectory:profile:");
     _InstallFromManifest(":mozilla:profile:idlservices:MANIFEST",								"$distdirectory:idl:");
 
+	#PREF_MIGRATOR
+    _InstallFromManifest(":mozilla:profile:pref-migrator:public:MANIFEST",				"$distdirectory:profile:");
+
 	#LIBIMAGE
     _InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
     _InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
@@ -776,6 +779,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
 	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp",				"profileservices");
+	BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",	"prefm");
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
 	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
@@ -959,6 +963,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:profile:macbuild:profileservices.mcp",					"profileservices$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
+	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp",			"prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+
 	BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",     "Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1102,6 +1108,9 @@ sub MakeResourceAliases()
 	my($profile_dir) = "$resource_dir" . "profile:";
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
 	BuildFolderResourceAliases(":mozilla:profile:defaults:",							"$defaults_dir");
+
+	my($prefmigrator_dir) = "$resource_dir" . "pref-migrator:";
+	BuildFolderResourceAliases(":mozilla:profile:pref-migrator:resources:",				"$resource_dir");
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
