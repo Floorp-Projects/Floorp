@@ -82,6 +82,13 @@ NS_IMETHODIMP nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
     return NS_OK;
 }
 
+#ifndef HTMLDialogs
+NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(){
+    ::SINGSIGN_SignonViewerReturn();
+    return NS_OK;
+}
+#endif
+
 NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
     ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);

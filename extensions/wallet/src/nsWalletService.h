@@ -35,6 +35,10 @@ public:
     NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName);
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML();
+#ifndef HTMLDialogs
+    NS_IMETHOD SI_SignonViewerReturn();
+#endif
+
     NS_IMETHOD SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
     NS_IMETHOD SI_RestoreSignonData

@@ -33,6 +33,11 @@ XP_BEGIN_PROTOS
 extern void
 SINGSIGN_DisplaySignonInfoAsHTML();
 
+#ifndef HTMLDialogs
+extern void
+SINGSIGN_SignonViewerReturn();
+#endif
+
 extern void
 SINGSIGN_RememberSignonData(char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
 

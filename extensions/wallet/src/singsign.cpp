@@ -2849,6 +2849,10 @@ struct _SignonViewerDialog {
 };
 
 PUBLIC void
+SINGSIGN_SignonViewerReturn () {
+}
+
+PUBLIC void
 SINGSIGN_DisplaySignonInfoAsHTML()
 {
     char *buffer = (char*)XP_ALLOC(BUFLEN);
@@ -3171,7 +3175,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "    function loadButtons(){\n"
 "      top.frames[button_frame].document.open();\n"
 "      top.frames[button_frame].document.write(\n"
-"        \"<FORM name=buttons action=internal-dialog-handler method=post>\" +\n"
+"        \"<FORM name=buttons action=internal-signonViewer-handler method=post>\" +\n"
 "          \"<BR>\" +\n"
 "          \"&nbsp;\" +\n"
 "          \"<INPUT type=BUTTON \" +\n"
