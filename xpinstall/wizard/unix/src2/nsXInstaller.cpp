@@ -105,6 +105,7 @@ int
 nsXInstaller::RunWizard(int argc, char **argv)
 {
     int err = OK;
+    GtkWidget *logovbox;
 
     XI_VERIFY(gCtx);
 
@@ -114,16 +115,18 @@ nsXInstaller::RunWizard(int argc, char **argv)
 
     gCtx->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     XI_VERIFY(gCtx->window);
-    gtk_signal_connect (GTK_OBJECT(gCtx->window), "delete_event",
-                              GTK_SIGNAL_FUNC(Kill), NULL);
+    gtk_signal_connect(GTK_OBJECT(gCtx->window), "delete_event",
+                       GTK_SIGNAL_FUNC(Kill), NULL);
 
     gtk_widget_set_usize(gCtx->window, XI_WIN_WIDTH, XI_WIN_HEIGHT);
     gtk_container_set_border_width(GTK_CONTAINER(gCtx->window), 5);
     gtk_window_set_title(GTK_WINDOW(gCtx->window), "Mozilla Installer"); // XXX
     gtk_widget_show(gCtx->window);
 
-    // create and display the logo
-    DrawLogo();
+    // create and display the logo and cancel button
+    logovbox = DrawLogo();
+    if (logovbox)
+        DrawCancelButton(logovbox);
 
     // create and display the nav buttons
     XI_ERR_BAIL(DrawNavButtons());
@@ -158,11 +161,9 @@ nsXInstaller::Kill(GtkWidget *widget, GtkWidget *event, gpointer data)
     return FALSE;
 }
 
-int
+GtkWidget *
 nsXInstaller::DrawLogo()
 {
-    int err = OK;
-
     GtkWidget *logo = NULL;
     GdkPixmap *pixmap = NULL;
     GdkBitmap *mask = NULL;
@@ -194,6 +195,26 @@ nsXInstaller::DrawLogo()
     gtk_container_add(GTK_CONTAINER(gCtx->window), mainhbox);
 
     gCtx->mainbox = canvasvbox; /* canvasvbox = canvas + nav btns' box */
+
+    return logovbox;
+}
+
+int
+nsXInstaller::DrawCancelButton(GtkWidget *aLogoVBox)
+{
+    int err = OK;
+    GtkWidget *cancelButton;
+    GtkWidget *hbox;
+
+    cancelButton = gtk_button_new_with_label(CANCEL);
+    hbox = gtk_hbox_new(FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbox), cancelButton, TRUE, TRUE, 15);
+    gtk_box_pack_end(GTK_BOX(aLogoVBox), hbox, FALSE, TRUE, 10);
+    gtk_signal_connect(GTK_OBJECT(cancelButton), "clicked",
+                       GTK_SIGNAL_FUNC(Kill), NULL);
+    gtk_widget_show(hbox);
+    gtk_widget_show(cancelButton);
+
     return err;
 }
 

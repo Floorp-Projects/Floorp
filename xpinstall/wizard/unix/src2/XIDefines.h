@@ -33,6 +33,7 @@
  *--------------------------------------------------------------------*/
 #define NEXT "Next >"
 #define BACK "< Back"
+#define CANCEL "Cancel"
 #define ACCEPT "Accept"
 #define DECLINE "Decline"
 #define INSTALL "Install"
