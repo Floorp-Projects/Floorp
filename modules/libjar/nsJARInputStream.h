@@ -30,8 +30,9 @@
      {0x90, 0xd8, 0x9c, 0x98, 0xfc, 0x2b, 0x7a, 0xc0}}
 
 #include "nsIInputStream.h"
-#include "prio.h" // XXX: Needed by nsZipArchive.h, but I'm not sure if I can put it there.
-#include "nsZipArchive.h"
+#include "prio.h" // XXX: Needed by nsZipArchive.h
+#include "nsJAR.h"
+//#include "nsZipArchive.h"
 
 /*-------------------------------------------------------------------------
  * Class nsJARInputStream declaration. This class defines objects returned
@@ -57,12 +58,15 @@ class nsJARInputStream : public nsIInputStream
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
     nsresult 
-    Init(nsZipArchive* aZip, const char* aFilename);
+    Init(nsJAR* aParser, nsZipArchive* aZip, const char* aFilename);
   
   private:
 
+    nsJAR*        mJAR;
+    PRUint32      digestContexts[JAR_DIGEST_COUNT];
+    char*         mEntryName;
     nsZipArchive* mZip;
-    nsZipRead* mReadInfo;
+    nsZipRead*    mReadInfo;
 };
 
 #endif /* nsJAR_h__ */
