@@ -517,12 +517,16 @@ nsUnknownContentTypeDialog.prototype = {
     
     _blurred: false,
     _delayExpired: false, 
-    onBlur: function() {
+    onBlur: function(aEvent) {
+      if (aEvent.target != this.mDialog.document)
+        return;
       this._blurred = true;
       this.mDialog.document.documentElement.getButton("accept").disabled = true;
     },
     
-    onFocus: function() {
+    onFocus: function(aEvent) {
+      if (aEvent.target != this.mDialog.document)
+        return;
       this._blurred = false;
       if (this._delayExpired) {
         var script = "document.documentElement.getButton('accept').disabled = false";
