@@ -16,10 +16,9 @@
       <xul:image class="menu-dropmarker"/>
     </content>
     <handlers>
-      <handler event="command" phase="capturing" action="dump('menulist command\n'); if (event.target.localName == 'menuitem') this.selectedItem = event.target;"/>
+      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') this.selectedItem = event.target;"/>
       <handler event="create">
         <![CDATA[
-          dump('menulist create\n');
           if (event.target.parentNode == this && this.selectedItem) {
             // Not ready for auto-setting the active child in hierarchies yet.
             // For now, only do this when the outermost menupopup opens.
@@ -52,7 +51,6 @@
       <property name="data" onget="return this.getAttribute('data');">
         <setter>
           <![CDATA[
-            dump('setting data.\n');
             var arr;
 
             if (this.childNodes.length)
@@ -116,21 +114,17 @@
       <property name="selectedItem">
         <getter>
           <![CDATA[
-            dump('getting selected item.\n');
             return this.selectedInternal;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            dump('setting selected item.\n');
             if (this.selectedInternal == val)
               return val;
             
             if (this.selectedInternal)
               this.selectedInternal.removeAttribute('selected');
 
-            dump('updating selected item.\n');
-            
             this.selectedInternal = val;
             if (!this.selectedInternal) {
               this.removeAttribute('data');
@@ -138,9 +132,7 @@
               this.removeAttribute('value');
               return val;
             }
-
-            dump('got here with selected item.\n');
-                        
+             
             val.setAttribute('selected', 'true');
 
             this.setAttribute('data', val.getAttribute('data'));
