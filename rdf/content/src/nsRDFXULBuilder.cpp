@@ -121,7 +121,7 @@ private:
     static PRInt32  kNameSpaceID_XUL;
 
     static nsIAtom* kContainerAtom;
-    static nsIAtom* kContentsGeneratedAtom;
+    static nsIAtom* kXULContentsGeneratedAtom;
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kTreeAtom;
@@ -219,7 +219,7 @@ PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
 nsIAtom*        RDFXULBuilderImpl::kContainerAtom;
-nsIAtom*        RDFXULBuilderImpl::kContentsGeneratedAtom;
+nsIAtom*        RDFXULBuilderImpl::kXULContentsGeneratedAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
@@ -273,11 +273,11 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
             NS_ERROR("couldn't create namepsace manager");
         }
 
-        kContainerAtom         = NS_NewAtom("container");
-        kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
-        kIdAtom                = NS_NewAtom("id");
-        kDataSourcesAtom       = NS_NewAtom("datasources");
-        kTreeAtom              = NS_NewAtom("tree");
+        kContainerAtom            = NS_NewAtom("container");
+        kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
+        kIdAtom                   = NS_NewAtom("id");
+        kDataSourcesAtom          = NS_NewAtom("datasources");
+        kTreeAtom                 = NS_NewAtom("tree");
 
 
         if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -327,7 +327,7 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kXUL_element);
 
         NS_IF_RELEASE(kContainerAtom);
-        NS_IF_RELEASE(kContentsGeneratedAtom);
+        NS_IF_RELEASE(kXULContentsGeneratedAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kTreeAtom);
@@ -467,15 +467,19 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 {
     nsresult rv;
 
-    // First, mark the elements contents as being generated so that
-    // any re-entrant calls don't trigger an infinite recursion.
-    if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_XUL,
-                                              kContentsGeneratedAtom,
-                                              "true",
-                                              PR_FALSE))) {
-        NS_ERROR("unable to set contents-generated attribute");
+    // See if someone has marked the element's contents as being
+    // generated: this prevents a re-entrant call from triggering
+    // another generation.
+    nsAutoString attrValue;
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
+                                              kXULContentsGeneratedAtom,
+                                              attrValue))) {
+        NS_ERROR("unable to test contents-generated attribute");
         return rv;
     }
+
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
+        return NS_OK;
 
     // Get the treeitem's resource so that we can generate cell
     // values. We could QI for the nsIRDFResource here, but doing this
@@ -515,6 +519,16 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     NS_ASSERTION(rdf_IsContainer(mDB, resource), "element is a XUL:element, but not an RDF:Seq");
     if (! rdf_IsContainer(mDB, resource))
         return NS_ERROR_UNEXPECTED;
+
+    // Now mark the element's contents as being generated so that
+    // any re-entrant calls don't trigger an infinite recursion.
+    if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_None,
+                                              kXULContentsGeneratedAtom,
+                                              "true",
+                                              PR_FALSE))) {
+        NS_ERROR("unable to set contents-generated attribute");
+        return rv;
+    }
 
     // Iterate through all of the element's children, and construct
     // appropriate children for each arc.
@@ -589,7 +603,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             // them later.
             nsAutoString contentsGenerated;
             if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kContentsGeneratedAtom,
+                                                     kXULContentsGeneratedAtom,
                                                      contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
                 return rv;
@@ -671,7 +685,7 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
             // them later.
             nsAutoString contentsGenerated;
             if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kContentsGeneratedAtom,
+                                                     kXULContentsGeneratedAtom,
                                                      contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
                 return rv;
@@ -1001,54 +1015,64 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         return NS_OK;
     }
 
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
+    // Make sure it's a XUL element; otherwise, we really don't have
+    // any business with the attribute.
+    PRBool isXULElement;
+    if (NS_SUCCEEDED(rv = mDB->HasAssertion(resource,
+                                            kRDF_instanceOf,
+                                            kXUL_element,
+                                            PR_TRUE,
+                                            &isXULElement))
+        && isXULElement) {
 
-    // Split the property name into its namespace and tag components
-    PRInt32  nameSpaceID;
-    nsCOMPtr<nsIAtom> nameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
-        NS_ERROR("unable to parse attribute string");
-        return rv;
-    }
+        // Get the nsIContent interface, it's a bit more utilitarian
+        nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
+        if (! element) {
+            NS_ERROR("element doesn't support nsIContent");
+            return NS_ERROR_UNEXPECTED;
+        }
 
-    nsCOMPtr<nsIRDFResource> property;
-    if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
-        NS_ERROR("unable to construct resource");
-        return rv;
-    }
-
-    // Unassert the old value, if there was one.
-    nsAutoString oldValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
+        // Split the property name into its namespace and tag components
+        PRInt32  nameSpaceID;
+        nsCOMPtr<nsIAtom> nameAtom;
+        if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
+            NS_ERROR("unable to parse attribute string");
             return rv;
         }
 
-        rv = mDB->Unassert(resource, property, value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-    }
-
-    // Assert the new value
-    {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
+        nsCOMPtr<nsIRDFResource> property;
+        if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
+            NS_ERROR("unable to construct resource");
             return rv;
         }
 
-        if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
-            NS_ERROR("unable to assert new property value");
-            return rv;
+        // Unassert the old value, if there was one.
+        nsAutoString oldValue;
+        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
+            nsCOMPtr<nsIRDFLiteral> value;
+            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+                NS_ERROR("unable to construct literal");
+                return rv;
+            }
+
+            rv = mDB->Unassert(resource, property, value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
         }
-    }
-    
+
+        // Assert the new value
+        {
+            nsCOMPtr<nsIRDFLiteral> value;
+            if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+                NS_ERROR("unable to construct literal");
+                return rv;
+            }
+
+            if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
+                NS_ERROR("unable to assert new property value");
+                return rv;
+            }
+        }
+    }    
 
     return NS_OK;
 }
@@ -1066,40 +1090,49 @@ RDFXULBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aN
         return NS_OK;
     }
 
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
+    // Make sure it's a XUL element; otherwise, we really don't have
+    // any business with the attribute.
+    PRBool isXULElement;
+    if (NS_SUCCEEDED(rv = mDB->HasAssertion(resource,
+                                            kRDF_instanceOf,
+                                            kXUL_element,
+                                            PR_TRUE,
+                                            &isXULElement))
+        && isXULElement) {
+        // Get the nsIContent interface, it's a bit more utilitarian
+        nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
+        if (! element) {
+            NS_ERROR("element doesn't support nsIContent");
+            return NS_ERROR_UNEXPECTED;
+        }
 
-    // Split the property name into its namespace and tag components
-    PRInt32  nameSpaceID;
-    nsCOMPtr<nsIAtom> nameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
-        NS_ERROR("unable to parse attribute string");
-        return rv;
-    }
-
-    nsCOMPtr<nsIRDFResource> property;
-    if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
-        NS_ERROR("unable to construct resource");
-        return rv;
-    }
-
-    // Unassert the old value, if there was one.
-    nsAutoString oldValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
+        // Split the property name into its namespace and tag components
+        PRInt32  nameSpaceID;
+        nsCOMPtr<nsIAtom> nameAtom;
+        if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
+            NS_ERROR("unable to parse attribute string");
             return rv;
         }
 
-        rv = mDB->Unassert(resource, property, value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-    }
+        nsCOMPtr<nsIRDFResource> property;
+        if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
+            NS_ERROR("unable to construct resource");
+            return rv;
+        }
 
+        // Unassert the old value, if there was one.
+        nsAutoString oldValue;
+        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
+            nsCOMPtr<nsIRDFLiteral> value;
+            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+                NS_ERROR("unable to construct literal");
+                return rv;
+            }
+
+            rv = mDB->Unassert(resource, property, value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+        }
+    }
     return NS_OK;
 }
 
