@@ -95,6 +95,7 @@ nsView :: nsView()
   mOpacity = 1.0f;
   mViewManager = nsnull;
   mCompositorFlags = 0;
+  mChildRemoved = PR_FALSE;
 }
 
 nsView :: ~nsView()
@@ -320,20 +321,19 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
   //see if any of this view's children can process the event
   if ( !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN) ) {
-    PRInt32 numkids = GetChildCount();
     nsRect  trect;
     nscoord x, y;
 
     x = event->point.x;
     y = event->point.y;
 
-    for (PRInt32 cnt = 0; cnt < numkids && !aHandled; cnt++) 
+    nsView* pKid = GetFirstChild();
+    PRInt32 cnt = 0; 
+    while (pKid != nsnull && (!aHandled)) 
     {
-      nsView *pKid = GetChild(cnt);
-      if (!pKid) break;
- 
       pKid->GetBounds(trect);
 
+      mChildRemoved = PR_FALSE;
       if (PointIsInside(*pKid, x, y))
       {
         //the x, y position of the event in question
@@ -348,6 +348,20 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
         event->point.x += trect.x;
         event->point.y += trect.y;
       }
+ 
+      if (mChildRemoved) {
+        // a child has been removed as the result of the HandleEvent
+        // so pick up at the same relative position in the child list.
+        // We may end up skipping over a child depending on which child
+        // or the number of children removed from the list, but this should
+        // not be an issue since it is unusual to have the views destroyed
+        // while traversing this list and the only negative effect will be
+        // that the event is dispatched to a view underneath the intended view.
+        pKid = GetChild(cnt);
+      } else {
+        pKid = pKid->GetNextSibling();
+      } 
+      cnt++;
     }
   }
 
@@ -819,6 +833,7 @@ void nsView :: RemoveChild(nsView *child)
         break;
       }
       prevKid = kid;
+      mChildRemoved = PR_TRUE;
 	    kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
