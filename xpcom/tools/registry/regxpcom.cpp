@@ -393,6 +393,7 @@ int main(int argc, char *argv[])
     }
     rv = registrar->AutoRegister(nsnull);
     ret = (NS_FAILED(rv)) ? -1 : 0;
+    registrar = 0;
     shutdown_xpcom();
     return ret;
   }
