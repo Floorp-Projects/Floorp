@@ -1321,7 +1321,7 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
       fputs("<\n", out);
       while (nsnull != kid) {
         // Verify the child frame's parent frame pointer is correct
-        NS_ASSERTION(kid->GetParent() == this, "bad parent frame pointer");
+        NS_ASSERTION(kid->GetParent() == (nsIFrame*)this, "bad parent frame pointer");
 
         // Have the child frame list
         nsIFrameDebug*  frameDebug;
