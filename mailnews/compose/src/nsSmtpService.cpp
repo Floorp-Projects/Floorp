@@ -461,7 +461,7 @@ nsSmtpService::loadSmtpServers()
     
     nsXPIDLCString serverList;
     rv = prefs->CopyCharPref("mail.smtpservers", getter_Copies(serverList));
-    if (NS_FAILED(rv)) {
+    if (NS_SUCCEEDED(rv)) {
 
         char *newStr;
         char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList),
