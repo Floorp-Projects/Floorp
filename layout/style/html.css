@@ -1225,8 +1225,8 @@ select[size]:focus {
   padding-bottom: 1px;
 }
 
-select, select[size="1"]:focus {
-  border: 2px dotted black;
+select:focus, select[size="1"]:focus {
+  border: 2px dotted rgb(128,128,128);
   padding-left:   0px;
   padding-top:    0px;
   padding-right:  0px;
@@ -1234,7 +1234,7 @@ select, select[size="1"]:focus {
 }
 
 select[multiple]:focus {
-  border: 2px dotted black;
+  border: 2px dotted rgb(128,128,128);
   padding-left:   0px;
   padding-top:    0px;
   padding-right:  3px;
