@@ -20,6 +20,7 @@
  *
  * Contributors:
  *     John R. McMullen <mcmullen@netscape.com>
+ *     Seth Spitzer <sspitzer@netscape.com>
  */
 
 #include "nsFileLocations.h"
@@ -488,6 +489,32 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this += "panacea.dat";
                 break;
             }
+            break;
+	case App_UsersPanels50:
+	    {
+		*this = nsSpecialFileSpec(App_UserProfileDirectory50);
+		*this += "panels.rdf";
+
+		if (!(this->Exists())) {
+			// find the default panels.rdf file
+			// something like bin/defaults/profile/panels.rdf
+			nsFileSpec defaultPanelsFile;
+			GetProfileDefaultsFolder(defaultPanelsFile);
+			defaultPanelsFile += "panels.rdf";
+
+			// get the users profile directory
+			*this = nsSpecialFileSpec(App_UserProfileDirectory50);
+			
+			// copy the default panels.rdf to <profile>/panels.rdf
+			nsresult rv = defaultPanelsFile.CopyToDir(*this);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy panels.rdf");
+			if (NS_SUCCEEDED(rv)) {
+				// set this to <profile>/panels.rdf
+				*this += "panels.rdf";
+			}
+		}
+		break;
+	    }
             break;
         case App_DirectoryBase:
         case App_FileBase:
