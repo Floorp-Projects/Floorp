@@ -38,7 +38,6 @@
 #ifndef nsIPrivateDOMEvent_h__
 #define nsIPrivateDOMEvent_h__
 
-#include "nsEvent.h"
 #include "nsISupports.h"
 
 class nsPresContext;
@@ -53,6 +52,7 @@ class nsPresContext;
 
 class nsIDOMEventTarget;
 class nsIDOMEvent;
+struct nsEvent;
 
 class nsIPrivateDOMEvent : public nsISupports {
 
@@ -71,11 +71,18 @@ public:
 };
 
 nsresult
-NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
-                 nsPresContext* aPresContext, const nsAString& aEventType,
-                 nsEvent *aEvent);
+NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsEvent *aEvent);
 nsresult
-NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, 
-                       nsEvent* aEvent);
+NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsGUIEvent *aEvent);
+nsresult
+NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsInputEvent *aEvent);
+nsresult
+NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsKeyEvent *aEvent);
+nsresult
+NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsMutationEvent* aEvent);
+nsresult
+NS_NewDOMPopupBlockedEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsPopupBlockedEvent* aEvent);
+nsresult
+NS_NewDOMTextEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsTextEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

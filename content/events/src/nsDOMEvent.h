@@ -38,34 +38,29 @@
 #ifndef nsDOMEvent_h__
 #define nsDOMEvent_h__
 
-#include "nsIDOMKeyEvent.h"
-#include "nsIDOMMouseEvent.h"
-#include "nsIDOMPopupBlockedEvent.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsISupports.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIPrivateCompositionEvent.h"
-#include "nsIPrivateTextEvent.h"
-#include "nsIPrivateTextRange.h"
-#include "nsIDOMEvent.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
+#include "nsRecycled.h"
 
 class nsIContent;
 class nsIScrollableView;
 
-class nsDOMEvent : public nsIDOMKeyEvent,
+/* Currently we use a single-object recycler (nsRecycledSingle).
+ * With our current usage pattern, we almost never have more than
+ * a single nsDOMEvent active in memory at a time under normal circumstances.
+ */
+ 
+class nsDOMEvent : public nsIDOMEvent,
                    public nsIDOMNSEvent,
-                   public nsIDOMMouseEvent,
-                   public nsIDOMPopupBlockedEvent,
-                   public nsIDOMNSUIEvent,
                    public nsIPrivateDOMEvent,
-                   public nsIPrivateTextEvent,
-                   public nsIPrivateCompositionEvent
+                   public nsRecycledSingle<nsDOMEvent>
 {
 public:
 
@@ -127,8 +122,7 @@ public:
     eDOMEvents_DOMFocusOut
   };
 
-  nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
-             const nsAString& aEventType);
+  nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);
   virtual ~nsDOMEvent();
 
   NS_DECL_ISUPPORTS
@@ -138,32 +132,6 @@ public:
 
   // nsIDOMNSEvent Interface
   NS_DECL_NSIDOMNSEVENT
-
-  // nsIDOMUIEvent Interface
-  NS_DECL_NSIDOMUIEVENT
-
-  // nsIDOMPopupBlockedEvent interface
-  NS_DECL_NSIDOMPOPUPBLOCKEDEVENT
-
-  // nsIDOMMouseEvent interface
-  NS_DECL_NSIDOMMOUSEEVENT
-
-  // nsIDOMKeyEvent interface
-  NS_IMETHOD GetCharCode(PRUint32 *aCharCode);
-  NS_IMETHOD GetKeyCode(PRUint32 *aKeyCode);
-  // defined in nsIDOMMouseEvent
-  // NS_IMETHOD GetAltKey(PRBool *aAltKey);
-  // NS_IMETHOD GetCtrlKey(PRBool *aCtrlKey);
-  // NS_IMETHOD GetShiftKey(PRBool *aShiftKey);
-  // NS_IMETHOD GetMetaKey(PRBool *aMetaKey);
-  NS_IMETHOD InitKeyEvent(const nsAString &aTypeTag, PRBool aCanBubbleArg,
-                          PRBool aCancelableArg, nsIDOMAbstractView *aViewArg,
-                          PRBool aCtrlKeyArg, PRBool aAltKeyArg,
-                          PRBool aShiftKeyArg, PRBool aMetaKeyArg,
-                          PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg);
-
-  // nsIDOMNSUIEvent interface
-  NS_DECL_NSIDOMNSUIEVENT
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
@@ -179,47 +147,12 @@ public:
   NS_IMETHOD    IsHandled(PRBool* aHandled);
   NS_IMETHOD    SetHandled(PRBool aHandled);
 
-  // nsIPrivateTextEvent interface
-	NS_IMETHOD GetText(nsString& aText);
-	NS_IMETHOD GetInputRange(nsIPrivateTextRangeList** aInputRange);
-	NS_IMETHOD GetEventReply(nsTextEventReply** aReply);
-
-  // nsIPrivateCompositionEvent interface
-  NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
-  NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
-
-  /** Overloaded new operator. Initializes the memory to 0. 
-   *  Relies on a recycler to perform the allocation, 
-   *  optionally from a pool.
-   */
-  void* operator new(size_t sz) CPP_THROW_NEW;
-
-  /** Overloaded delete operator. Relies on a recycler to either
-    * recycle the object or call the global delete operator, as needed.
-    */
-  void operator delete(void* aPtr);
-
 protected:
 
-  nsDOMEvent() {}; // private constructor for pool, not for general use
-
-  /** bit to say whether the event pool is in use or not.
-    * note that it would be trivial to make this a bitmap if we ever
-    * wanted to increase the size of the pool from one.  But with our
-    * current usage pattern, we almost never have more than a single
-    * nsDOMEvent active in memory at a time under normal circumstances.
-    */
-  static PRBool gEventPoolInUse;
-
-  //Internal helper funcs
-  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
-                         float* aT2P);
+  // Internal helper functions
   nsresult SetEventType(const nsAString& aEventTypeArg);
-  const char* GetEventName(PRUint32 aEventType);
+  static const char* GetEventName(PRUint32 aEventType);
   already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
-  void AllocateEvent(const nsAString& aEventType);
-  nsPoint GetClientPoint();
-  nsPoint GetScreenPoint();
 
   nsEvent* mEvent;
   nsCOMPtr<nsPresContext> mPresContext;
@@ -228,17 +161,13 @@ protected:
   nsCOMPtr<nsIDOMEventTarget> mOriginalTarget;
   nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
   nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
-  nsString*	mText;
-  nsCOMPtr<nsIPrivateTextRangeList> mTextRange;
   PRPackedBool mEventIsInternal;
   PRPackedBool mEventIsTrusted;
 
-  //These are use for internal data for user created events
-  PRInt16 mButton;
-  nsPoint mScreenPoint;               
-  nsPoint mClientPoint;               
-
   void* mScriptObject;
 };
+
+#define NS_FORWARD_TO_NSDOMEVENT \
+  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
 
 #endif // nsDOMEvent_h__

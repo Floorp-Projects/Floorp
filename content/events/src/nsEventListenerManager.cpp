@@ -301,12 +301,12 @@ static const EventDispatchData sMutationEvents[] = {
 };
 
 static const EventDispatchData sUIEvents[] = {
-  { NS_DOMUI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate),
-    NS_EVENT_BITS_DOMUI_ACTIVATE },
-  { NS_DOMUI_FOCUSIN, HANDLER(&nsIDOMUIListener::FocusIn),
-    NS_EVENT_BITS_DOMUI_FOCUSIN },
-  { NS_DOMUI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut),
-    NS_EVENT_BITS_DOMUI_FOCUSOUT }
+  { NS_UI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate),
+    NS_EVENT_BITS_UI_ACTIVATE },
+  { NS_UI_FOCUSIN, HANDLER(&nsIDOMUIListener::FocusIn),
+    NS_EVENT_BITS_UI_FOCUSIN },
+  { NS_UI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut),
+    NS_EVENT_BITS_UI_FOCUSOUT }
 };
 
 #define IMPL_EVENTTYPEDATA(type) \
@@ -979,15 +979,15 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
   }
   else if (aType == nsLayoutAtoms::onDOMActivate) {
     *aArrayType = eEventArrayType_DOMUI;
-    *aFlags = NS_EVENT_BITS_DOMUI_ACTIVATE;
+    *aFlags = NS_EVENT_BITS_UI_ACTIVATE;
   }
   else if (aType == nsLayoutAtoms::onDOMFocusIn) {
     *aArrayType = eEventArrayType_DOMUI;
-    *aFlags = NS_EVENT_BITS_DOMUI_FOCUSIN;
+    *aFlags = NS_EVENT_BITS_UI_FOCUSIN;
   }
   else if (aType == nsLayoutAtoms::onDOMFocusOut) {
     *aArrayType = eEventArrayType_DOMUI;
-    *aFlags = NS_EVENT_BITS_DOMUI_FOCUSOUT;
+    *aFlags = NS_EVENT_BITS_UI_FOCUSOUT;
   }
   else {
     return NS_ERROR_FAILURE;
@@ -1580,10 +1580,7 @@ nsresult nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
  found:
   if (listeners) {
     if (!*aDOMEvent) {
-      if (aEvent->eventStructType == NS_MUTATION_EVENT)
-        ret = NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
-      else
-        ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, EmptyString(), aEvent);
+      ret = CreateEvent(aPresContext, aEvent, EmptyString(), aDOMEvent);
     }
 
     if (NS_SUCCEEDED(ret)) {
@@ -1627,22 +1624,55 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
 {
   *aDOMEvent = nsnull;
 
-  nsAutoString str(aEventType);
-  if (!aEvent && !str.LowerCaseEqualsLiteral("mouseevents") &&
-                 !str.LowerCaseEqualsLiteral("keyevents") &&
-                 !str.LowerCaseEqualsLiteral("htmlevents") &&
-                 !str.LowerCaseEqualsLiteral("mutationevents") &&
-                 !str.LowerCaseEqualsLiteral("mousescrollevents") &&
-                 !str.LowerCaseEqualsLiteral("popupblockedevents") &&
-                 !str.LowerCaseEqualsLiteral("uievents") &&
-                 !str.LowerCaseEqualsLiteral("events")) {
+  if (aEvent)
+  {
+    switch(aEvent->eventStructType)
+    {
+      case NS_MUTATION_EVENT:
+        return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMutationEvent*,aEvent));
+      case NS_GUI_EVENT:
+        return NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
+      case NS_KEY_EVENT:
+        return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));
+      case NS_MOUSE_EVENT:
+      case NS_MOUSE_SCROLL_EVENT:
+        return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*,aEvent));
+      case NS_POPUP_EVENT:
+        return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsPopupBlockedEvent*,aEvent));
+      case NS_TEXT_EVENT:
+        return NS_NewDOMTextEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsTextEvent*,aEvent));
+      default:
+        return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+    }
+  }
+  else
+  {
+    nsAutoString str(aEventType);
+    if (str.EqualsIgnoreCase("MouseEvent") ||
+        str.EqualsIgnoreCase("MouseEvents") ||
+        str.EqualsIgnoreCase("MouseScrollEvents"))
+       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMouseEvent*,aEvent));
+    if (str.EqualsIgnoreCase("KeyboardEvent") ||
+        str.EqualsIgnoreCase("KeyEvents"))
+       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));
+    if (str.EqualsIgnoreCase("MutationEvent") ||
+        str.EqualsIgnoreCase("MutationEvents"))
+       return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMutationEvent*,aEvent));
+    if (str.EqualsIgnoreCase("TextEvent") ||
+        str.EqualsIgnoreCase("TextEvents"))
+       return NS_NewDOMTextEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsTextEvent*,aEvent));
+    if (str.EqualsIgnoreCase("PopupBlockedEvents"))
+       return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsPopupBlockedEvent*,aEvent));
+    if (str.EqualsIgnoreCase("UIEvent") ||
+        str.EqualsIgnoreCase("UIEvents"))
+       return NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
+    if (str.EqualsIgnoreCase("Event") ||
+        str.EqualsIgnoreCase("Events") ||
+        str.EqualsIgnoreCase("HTMLEvents"))
+       return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+    
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
-
-  if ((aEvent && aEvent->eventStructType == NS_MUTATION_EVENT) ||
-      (!aEvent && str.LowerCaseEqualsLiteral("mutationevents")))
-    return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
-  return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEventType, aEvent);
 }
 
 /**
@@ -2000,7 +2030,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
     // the client X/Y will be 0,0. We can make use of that if the widget is null.
     if (aEvent->message == NS_CONTEXTMENU_KEY)
       NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget
-    ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, EmptyString(), aEvent);
+    ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
   }
 
   if (NS_SUCCEEDED(ret)) {

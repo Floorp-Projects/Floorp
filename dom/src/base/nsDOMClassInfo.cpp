@@ -197,6 +197,8 @@
 #include "nsIDOMEntity.h"
 #include "nsIDOMEntityReference.h"
 #include "nsIDOMNotation.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMMutationEvent.h"
@@ -515,6 +517,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Event, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MutationEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(UIEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MouseEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(KeyboardEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(PopupBlockedEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Misc HTML classes
@@ -1345,6 +1355,15 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
 
+#define DOM_CLASSINFO_EVENT_MAP_ENTRIES                                       \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)                                      \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEvent)                                    \
+
+#define DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES                                    \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMUIEvent)                                    \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSUIEvent)                                  \
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+
 #define DOM_CLASSINFO_MAP_END_WITH_XPATH                                      \
     xpathEvaluatorIID,                                                        \
   DOM_CLASSINFO_MAP_END
@@ -1547,17 +1566,33 @@ nsDOMClassInfo::Init()
                                       nsIDOMStyleSheetList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
   DOM_CLASSINFO_MAP_END
-
+  
   DOM_CLASSINFO_MAP_BEGIN(Event, nsIDOMEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(PopupBlockedEvent, nsIDOMPopupBlockedEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopupBlockedEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSUIEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MutationEvent, nsIDOMMutationEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMutationEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(UIEvent, nsIDOMUIEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+  
+  DOM_CLASSINFO_MAP_BEGIN(KeyboardEvent, nsIDOMKeyEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MouseEvent, nsIDOMMouseEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
