@@ -1,39 +1,94 @@
-/** this should only contain XUL widget defaults. Defaults for widgets of
+ /** this should only contain XUL dialog widget defaults. Defaults for widgets of
     a particular application should be in that application's style sheet.
 	For example style definitions for navigator can be found in navigator.css
+	REVISION 2
 **/
 
+window { 
+  background-color:#CCCCDD;
+  //background-image: url(bg.jpg);
+  display: block; 
+  overflow: hidden;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+  padding: 0px;
+}
+
+window.dialog { 
+  background-color:#CCCCDD;
+  display: block; 
+  overflow: hidden;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+  padding-left: 11px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 11px;
+}
+
+/* generic elements*/
+
+
 box {
-  display: block;
+  	display: block;
+  	font: inherit;
 }
 
-box[debug] box {
-  border: 5px solid blue;
-  margin: 1px;
-  padding: 1px;
+popup {
+	display: none;
 }
 
-box[debug] box[align="vertical"] {
-   border: 5px solid red;
+div {
+	background-color:inherit;
+	background-image:inherit;
 }
+
+div.textline {
+	background-color:inherit;
+	background-image:inherit;
+}
+
 
 spring {
    display: block;
 }
 
-box[debug] spring {
-   background-color: green;
+
+/* toolbar stuff*/
+
+
+toolbox { 
+      background-color:inherit;
+		display: block;
+}
+
+:toolbox-normal {
+	background-color: inherit;
+	background-image: url("resource:/res/toolbar/TB_Tab.gif");
+	background-repeat: no-repeat;
+	color: lightgray;
+	border-top: 1px solid #ccccff;
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
+}
+
+:toolbox-rollover {
+	background-color: #ccccff;
+	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
+	background-repeat: no-repeat;
+	border-top: 1px solid white;
+	border-bottom: 1px solid #9999CC;
+	border-left: 1px solid white;
+	border-right: 1px solid #9999CC;
 }
 
 toolbar {
     display:block;
-    background-color: #CCCCCC;
-    border-bottom: solid darkGray 1px;
-    border-top: solid white 1px;
-    border-left: solid white 1px;
-    border-right: solid darkGray 1px;
-    font: 10pt sans-serif;
-    min-height: 20px;
+    background-color: inherit;
+    background-image: none;
+    border-top: 1px solid #9999cc;
+    font: inherit;
+    min-height: 2em;
+    width: 100%;
 }
 
 toolbar[collapsed="true"] {
@@ -43,36 +98,143 @@ toolbar[hidden="true"] {
 	display:none;
 }
 
-toolbox { 
-        background-color:darkgray;
-		display: block;
+
+
+/* misc input elements */
+
+fieldset {
+	margin-bottom: 6px;
+	margin-top: 5px;
+	margin-left: 6px;
+	margin-right: 5px;
+	padding: 5px; 
+	border: 2px groove white;
 }
 
-:toolbox-normal {
-	background-color: #666699;
-	background-image: url("resource:/res/toolbar/TB_Tab.gif");
-	background-repeat: no-repeat;
-	color: lightgray;
-	border-bottom: solid darkGray 1px;
-	border-top: solid white 0px;
-	border-left: solid white 0px;
-	border-right: solid darkGray 1px;
-}
-:toolbox-rollover {
-	background-color: #ccccff;
-	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
-	background-repeat: no-repeat;
-	color: green;
-	border-bottom: solid darkGray 1px;
-	border-top: solid white 0px;
-	border-left: solid white 0px;
-	border-right: solid darkGray 1px;
+
+legend {
+	border: none;
+	margin-bottom: 5px;
+	margin-top: 0px;
+	margin-left: 4px;
+	margin-right: 3px;
 }
 
-window { 
-  background-color:#CCCCCC;
-  display: block; 
-  overflow: hidden;
+label {
+  display: inline;
+	padding-bottom: 4px;
+	//background-color: inherit;
+	background-color:#CCCCDD;
+	background-image: inherit;
+}
+
+textarea {
+  border: 1px inset #DDDDDD;
+  padding-top: 1px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 3px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 3px;
+  background-color: white;
+  color: black;
+}
+
+input[type=text] {
+  border: 1px inset yellow;
+  padding-top: 3px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 3px;
+  margin-top: 0px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 3px;
+  background-color: white;
+  color: black;
+  min-height: 1.75em;
+}
+
+input[type=password] {
+  border: 1px inset rgb(192, 192, 192);
+  padding-top: 3px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 3px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 3px;
+  background-color: white;
+  color: black;
+  min-height: 1.75em;
+}
+
+input {
+  vertical-align: bottom;
+  border: 2px inset rgb(192, 192, 192);
+  background-color: transparent;
+  color: black;
+}
+
+input[type=radio] {
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 3px; 
+  //border: 2px inset rgb(192, 192, 192);
+  background-color: inherit;
+  background-image: inherit;
+  color:black;
+  width:12px;
+  height:12px;
+}
+
+input[type=checkbox] {
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 4px;
+  border: 1px inset rgb(192, 192, 192);
+  color:black;
+}
+
+checkbox {
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 4px;
+  border: 1px inset white;
+  background-color: white;
+  color:black;
+  min-width: .7em;
+  min-height: .7em;
+}
+
+checkbox[depress] {
+   background-color: gray;
+   border: 1px inset white;
+}
+
+progressmeter {
+        display:inline;
+        border: 1px grey;
+        color : #9999CC; 
+        height: 0.7em;        
+}
+
+div.pmBackground {
+	border: 1px inset white; 
+	padding: 1px;
+	margin: 1em;
+	margin-bottom: 3px;
+	background-color: #CCCCCC;
+}
+
+:progressmeter-stripe {
+	color: #BBBBCC;
 }
 
 broadcaster {
@@ -95,10 +257,6 @@ menuitem {
 	display: none;
 }
 
-popup {
-	display: none;
-}
-
 progressmeter {
         display:inline;
         border: 1px #666699;
@@ -109,29 +267,198 @@ progressmeter {
 	color: #BBBBCC;
 }
 
+
+/* titledbuttons are the preferred means of generating UI buttons in XUL (see below) */
+
+button {
+  display: inline;
+  color:black; 
+   // -moz-border-radius: 2px;
+  border: 1px outset white;
+  padding: 2px;
+  margin: 2px;
+	text-align: center;
+  font: inherit;
+	background-color: inherit;
+	background-image: inherit;
+	min-height: 1.25em;
+	max-height: 1.25em;
+	min-width: 7em;
+}
+
+button[default] {
+  font-weight: bold;
+}
+
+button:hover {
+  border: 1px outset white;
+	color:#333366;
+	text-decoration:underline;
+  padding: 2px;
+}
+ 
+button:hover:-moz-outline {
+   border : 1px solid black;
+   color:#666699;
+   padding: 2px;
+}
+ 
+button:active {
+
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+button:active:-moz-outline {
+   border : 1px solid black;
+
+}
+ 
+button[disabled] {
+	background-color: inherit;
+	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+/* titledbuttons recommended for use with most XUL UI */
+
 titledbutton {
   display: inline;
+  color:black; 
+   // -moz-border-radius: 2px;
+  border: 1px outset white;
+  padding: 2px;
+  margin: 2px;
+  text-align: center;
+  font: inherit;
+  background-color:inherit;
+  background-image: inherit;
+  min-width: 5em;
+  min-height: 1.25em;
 }
 
 titledbutton[class~=popup] {
 	list-style-image:url(resource:/res/toolbar/TB_popup.gif);
 }
 
-toolbar titledbutton {
-  display: inline;
-  color:black; 
-  border: 1px solid transparent;
-  padding: 1px;
-  margin: 2px;
+titledbutton:hover {
+  border: 1px outset white;
+	color:#333366;
+	text-decoration:underline;
+  padding: 2px;
+}
+ 
+titledbutton:hover:-moz-outline {
+   border : 1px solid black;
+   color:#666699;
+   padding: 2px;
+}
+ 
+titledbutton:active {
 
-  font: 2.5mm sans-serif;
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+titledbutton[default] {
+	//border-color: black;
+	font-weight: bold;
+	list-style-image: url("return.gif");
+}
+
+titledbutton:active:-moz-outline {
+   border : 1px solid black;
+
+}
+ 
+titledbutton[disabled] {
+	background-color:inherit;
+  	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+titledbutton[disabled]:hover {
+  	background-color:inherit;
+  	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+titledbutton[disabled]:active {
+  	background-color:inherit;
+  	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+/* special class for borderless buttons */
+/* titled button on toolbars are automatically set to be borderless (see below) */
+
+titledbutton.borderless {
+  border: 1px solid transparent;
+  min-width: 3.5em;
+}
+
+titledbutton.borderless:hover {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: underline;
+}
+ 
+titledbutton.borderless:hover:-moz-outline {
+   border : 1px solid black;
+}
+ 
+titledbutton.borderless:active {
+  text-decoration:none;
+  border: 1px inset;
+}
+
+titledbutton.borderless:active:-moz-outline {
+   border : 1px solid black;
+}
+ 
+titledbutton.borderless[disabled] {
+	border: 1px solid transparent;
+}
+
+titledbutton.borderless[disabled]:hover {
+	border: 1px solid transparent;
+}
+
+titledbutton.borderless[disabled]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+
+/* as a convenience predefined for toolbar as being same as class borderless */
+
+toolbar titledbutton {
+  border: 1px solid transparent;
+  min-width: 3.5em;
 }
 
 toolbar titledbutton:hover {
   border: 1px outset white;
-	color:blue;
-	//text-decoration:underline;
-  padding: 1px;
+  color:#333366;
+  text-decoration: underline;
 }
  
 toolbar titledbutton:hover:-moz-outline {
@@ -139,14 +466,8 @@ toolbar titledbutton:hover:-moz-outline {
 }
  
 toolbar titledbutton:active {
-
   text-decoration:none;
   border: 1px inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
 }
 
 toolbar titledbutton:active:-moz-outline {
@@ -154,154 +475,301 @@ toolbar titledbutton:active:-moz-outline {
 }
  
 toolbar titledbutton[disabled] {
-	opacity: 0.5;
+	border: 1px solid transparent;
+}
+
+toolbar titledbutton[disabled]:hover {
+	border: 1px solid transparent;
+}
+
+toolbar titledbutton[disabled]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+/* tree related stuff */
+
+tree {
+ display: table;
+ background-color: white;
+ border: none;
+ border-spacing: 0px;
+ width: 100%;
+ table-layout: fixed;
+ font: inherit;
+}
+
+treeitem { 
+ display: table-row; 
+ color: black;
+ font: inherit;
+} 
+
+treehead { 
+ display: table-header-group; 
+ font: inherit;
+} 
+
+treebody { 
+ display: table-row-group;
+ font: inherit; 
+} 
+
+treeitem[selected="true"] { 
+ color: white;
+ background-color: #666699;
+ font: inherit; 
+}
+
+treecell { 
+ display: table-cell; 
+ white-space: nowrap;
+ font: inherit;
+} 
+
+treehead treeitem treecell { 
+ font-size: 10pt;
+ background-color: #a0a0a0; 
+ border: 1px white transparent;
+ color: black;
+} 
+
+
+treecol {
+ display: table-column;
 }
 
 
-titledbutton.push { 
-  display: inline;
-  vertical-align: bottom;
-  cursor: default;
 
-  border: 2px outset rgb(156, 154, 156);
-  background-color: rgb(206, 207, 206);
-  color:black; 
 
-  padding: 1px;
-}
 
-titledbutton.push:active {
-  border-style: inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-titledbutton.push:hover {
-}
-
-titledbutton.push:active:-moz-outline {
-   border : 1px solid black;
-}
-
-titledbutton.push:hover:-moz-outline {
-   border : 1px solid black;
-}
-
-titledbutton.push[disabled] {
-   border-style: solid;
-}
-
-titledbutton.push[disabled]:active {
-  padding: 1px;
-}
-
-titledbutton.push:-moz-focus-inner {
-   padding-left  : 2px;
-   padding-right : 2px;
-   padding-top   : 1px;
-   padding-bottom: 1px;
-   margin: 0px;
-}
-
-titledbutton.push:focus:-moz-focus-inner {
-   padding-left  : 1px;
-   padding-right : 1px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
- 
-   margin: 0px;
-   border : 1px dotted black;
-}
-
-checkbox {
-   display:inline;
-   border: 1px solid black;
-}
-
-checkbox[depress] {
-   background: darkGray;
-   border: 1px inset black;
-}
+/* tabs related stuff */
 
 tab { 
   display: inline;
   cursor: default;
 
-  border: 2px outset gray;
+  border: 1px outset white;
   //-moz-border-radius: 90;
 
   color:black; 
 }
 
+tab:active { 
+  display: inline;
+  cursor: default;
+
+  border: 1px outset white;
+  //-moz-border-radius: 90;
+
+  color:red; 
+}
+
+tabbox { 
+  
+
+  //border-bottom: 1px outset white;
+}
+
 tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"]  tab { 
-
-  border-left: 2px outset gray;
-  border-right: 2px outset gray;
+	//bottom tabs
+  border-left: 1px outset white;
+  border-right: 1px outset white;
   border-top: none;
-  border-bottom: 2px outset gray;
+  border-bottom: 1px outset white;
+  
+  padding-right: 3px;
+  padding-left: 3px;
+  padding-top: 1px;
+  padding-bottom: 3px;
 
-  margin-right: 1px;
-  margin-left: 1px;
-  margin-top: none;
-  margin-bottom: none;
+  margin-right: 2px;
+  margin-left: 2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  
 }
 
 tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
-  border-left: 2px outset gray;
-  border-right: 2px outset gray;
-  border-top: 2px outset gray;
+  //top tabs
+  border-left: 1px outset white;
+  border-right: 1px outset white;
+  border-top: 1px outset white;
   border-bottom: none;
 
-  margin-right: 1px;
-  margin-left: 1px;
-  margin-top: none;
-  margin-bottom: none;
+  padding-right: 3px;
+  padding-left: 3px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+
+  margin-right: 2px;
+  margin-left: 2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
 
 }
 
 tabcontrol[align="horizontal"] tabbox[align="vertical"] tab { 
-  border-left: 2px outset gray;
+	//left tabs
+  border-left: 1px outset white;
   border-right: none;
-  border-top: 2px outset gray;
-  border-bottom: 2px outset gray;
+  border-top: 1px outset white;
+  border-bottom: 1px outset white;
+  
+  padding-right: 1px;
+  padding-left: 3px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 
-  margin-right: none;
-  margin-left: none;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-right: 1px;
+  margin-left: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  
 }
 
 tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab { 
+	//right tabs
   border-left: none;
-  border-right: 2px outset gray;
-  border-top: 2px outset gray;
-  border-bottom: 2px outset gray;
+  border-right: 1px outset white;
+  border-top: 1px outset white;
+  border-bottom: 1px outset white;
+  
+  padding-right: 3px;
+  padding-left: 1px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 
-  margin-right: none;
-  margin-left: none;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-right: 1px;
+  margin-left: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  
 }
 
 
 tab:hover { 
- background-color: rgb(230, 207, 206);
+ color: #000033;
+ text-decoration:underline;
 }
 
 tabcontrol { 
   display: block;
   cursor: default;
 
-  border: 2px outset gray;
-  padding: 10px;
-
-  background-color: rgb(206, 207, 206);
-  color:black; 
+  border: none; 
 }
 
 :-moz-deck-hidden {
    visibility: hidden;
+}
+
+/* all the debug stuff
+is here */
+
+box[debug] box {
+  border: 1px solid blue;
+}
+
+box[debug][align="vertical"] {
+   border: 1px solid red;
+}
+
+box[debug][align="horizontal"] {
+   border: 1px solid blue;
+}
+
+box[debug] box[align="vertical"] {
+   border: 1px solid red;
+}
+
+box[debug] spring {
+   background-color: green;
+}
+
+box[debug] div{
+	background-color:inherit;
+	background-image:inherit;
+	border: 1px dashed yellow;
+}
+
+box[debug] div.textline {
+	background-color:inherit;
+	background-image:none;
+	border: 1px solid yellow;
+}
+
+box[debug] span{
+	background-color:inherit;
+	background-image:inherit;
+	border: 1px dotted yellow;
+}
+
+box[debug] button{
+	border: 1px outset yellow;
+}
+
+box[debug] button:active{
+	border: 1px inset yellow;
+}
+
+box[debug] titledbutton{
+	border: 1px outset yellow;
+}
+
+box[debug] titledbutton:active{
+	border: 1px inset yellow;
+}
+
+box[debug] legend {
+	border: 1px solid white;
+}
+
+box[debug] label {
+	border: 1px solid yellow;
+}
+
+box[debug] textarea {
+	border: 1px inset yellow;
+}
+
+box[debug] input[type=text]{
+	border: 2px inset yellow;
+}
+
+box[debug] input[type=password]{
+	border: 2px inset yellow;
+}
+
+box[debug] input{
+	border: 2px inset yellow;
+}
+
+box[debug] input[type=radio]{
+	border: 2px inset yellow;
+}
+
+box[debug] input[type=checkbox]{
+	border: 1px inset yellow;
+}
+
+box[debug] checkbox{
+	background-color: white;
+	border: 1px inset yellow;
+}
+
+box[debug] checkbox[depress]{
+	border: 1px inset yellow;
+}
+
+box[debug] div.pmBackground {
+	border: 1px inset yellow; 
+	padding: 1px;
+	background-color: #CCCCCC;
+}
+
+box[debug] progressmeter {
+        display:inline;
+        border: 1px yellow;
+        color : #9999CC;         
 }
