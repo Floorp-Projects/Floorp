@@ -43,13 +43,74 @@
    
 #include "pk11pars.h" 
 
+/* create a new module */
+static  SECMODModule *
+secmod_NewModule(void)
+{
+    SECMODModule *newMod;
+    PRArenaPool *arena;
+
+
+    /* create an arena in which dllName and commonName can be
+     * allocated.
+     */
+    arena = PORT_NewArena(512);
+    if (arena == NULL) {
+	return NULL;
+    }
+
+    newMod = (SECMODModule *)PORT_ArenaAlloc(arena,sizeof (SECMODModule));
+    if (newMod == NULL) {
+	PORT_FreeArena(arena,PR_FALSE);
+	return NULL;
+    }
+
+    /*
+     * initialize of the fields of the module
+     */
+    newMod->arena = arena;
+    newMod->internal = PR_FALSE;
+    newMod->loaded = PR_FALSE;
+    newMod->isFIPS = PR_FALSE;
+    newMod->dllName = NULL;
+    newMod->commonName = NULL;
+    newMod->library = NULL;
+    newMod->functionList = NULL;
+    newMod->slotCount = 0;
+    newMod->slots = NULL;
+    newMod->slotInfo = NULL;
+    newMod->slotInfoCount = 0;
+    newMod->refCount = 1;
+    newMod->ssl[0] = 0;
+    newMod->ssl[1] = 0;
+    newMod->libraryParams = NULL;
+    newMod->moduleDBFunc = NULL;
+    newMod->parent = NULL;
+    newMod->isCritical = PR_FALSE;
+    newMod->isModuleDB = PR_FALSE;
+    newMod->moduleDBOnly = PR_FALSE;
+    newMod->trustOrder = 0;
+    newMod->cipherOrder = 0;
+#ifdef PKCS11_USE_THREADS
+    newMod->refLock = (void *)PZ_NewLock(nssILockRefLock);
+    if (newMod->refLock == NULL) {
+	PORT_FreeArena(arena,PR_FALSE);
+	return NULL;
+    }
+#else
+    newMod->refLock = NULL;
+#endif
+    return newMod;
+    
+}
+
 /*
  * for 3.4 we continue to use the old SECMODModule structure
  */
-static SECMODModule *
-pk11_CreateModule(char *library, char *moduleName, char *parameters, char *nss)
+SECMODModule *
+SECMOD_CreateModule(char *library, char *moduleName, char *parameters, char *nss)
 {
-    SECMODModule *mod = SECMOD_NewModule();
+    SECMODModule *mod = secmod_NewModule();
     char *slotParams,*ciphers;
     if (mod == NULL) return NULL;
 
@@ -147,7 +208,7 @@ loser:
     
 
 char **
-pk11_getModuleSpecList(SECMODModule *module)
+SECMOD_GetModuleSpecList(SECMODModule *module)
 {
     SECMODModuleDBFunc func = (SECMODModuleDBFunc) module->moduleDBFunc;
     if (func) {
@@ -158,7 +219,7 @@ pk11_getModuleSpecList(SECMODModule *module)
 }
 
 SECStatus
-pk11_AddPermDB(SECMODModule *module)
+SECMOD_AddPermDB(SECMODModule *module)
 {
     SECMODModuleDBFunc func;
     char *moduleSpec;
@@ -178,7 +239,7 @@ pk11_AddPermDB(SECMODModule *module)
 }
 
 SECStatus
-pk11_DeletePermDB(SECMODModule *module)
+SECMOD_DeletePermDB(SECMODModule *module)
 {
     SECMODModuleDBFunc func;
     char *moduleSpec;
@@ -197,7 +258,8 @@ pk11_DeletePermDB(SECMODModule *module)
     return SECFailure;
 }
 
-pk11_freeModuleSpecList(char **moduleSpecList)
+SECStatus
+SECMOD_FreeModuleSpecList(SECMODModule *parent, char **moduleSpecList)
 {
     char ** index;
 
@@ -205,10 +267,11 @@ pk11_freeModuleSpecList(char **moduleSpecList)
 	PORT_Free(*index);
     }
     PORT_Free(moduleSpecList);
+    return SECSuccess;
 }
 
-SECStatus
-PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent, PRBool recurse)
+SECMODModule *
+SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 {
     char *library = NULL, *moduleName = NULL, *parameters = NULL, *nss= NULL;
     SECStatus status;
@@ -224,14 +287,14 @@ PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent, PRBool recurse)
 	goto loser;
     }
 
-    module = pk11_CreateModule(library, moduleName, parameters, nss);
+    module = SECMOD_CreateModule(library, moduleName, parameters, nss);
     if (library) PORT_Free(library);
     if (moduleName) PORT_Free(moduleName);
     if (parameters) PORT_Free(parameters);
     if (nss) PORT_Free(nss);
 
     /* load it */
-    rv = SECMOD_LoadModule(module);
+    rv = SECMOD_LoadPKCS11Module(module);
     if (rv != SECSuccess) {
 	goto loser;
     }
@@ -240,14 +303,20 @@ PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent, PRBool recurse)
 	char ** moduleSpecList;
 	char **index;
 
-	moduleSpecList = pk11_getModuleSpecList(module);
+	moduleSpecList = SECMOD_GetModuleSpecList(module);
 
 	for (index = moduleSpecList; index && *index; index++) {
-	    rv = PK11_LoadPKCS11Module(*index,module,PR_TRUE);
-	    if (rv != SECSuccess) break;
+	    SECMODModule *child;
+	    child = SECMOD_LoadModule(*index,module,PR_TRUE);
+	    if (!child) break;
+	    if (child->isCritical && !child->loaded) {
+		SECMOD_DestroyModule(child);
+		break;
+	    }
+	    SECMOD_DestroyModule(child);
 	}
 
-	pk11_freeModuleSpecList(moduleSpecList);
+	SECMOD_FreeModuleSpecList(module,moduleSpecList);
     }
 
     if (rv != SECSuccess) {
@@ -257,43 +326,20 @@ PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent, PRBool recurse)
     if (parent) {
     	module->parent = SECMOD_ReferenceModule(parent);
     }
+
+    /* inherit the reference */
     if (!module->moduleDBOnly) {
 	SECMOD_AddModuleToList(module);
     } else {
 	SECMOD_AddModuleToDBOnlyList(module);
     }
    
-#ifdef notdef
-    printf("-------------------------------------------------\n");
-    printf("Module Name: %s\n",module->commonName);
-    printf("Library Name: %s\n", module->dllName);
-    printf("Module Parameters: %s\n", module->moduleParams);
-    printf("Module type: %s\n",module->internal?"internal":"external");
-    printf("FIPS module: %s\n", module->isFIPS ?"on": "off");
-    printf("Trust Order: %d\n", module->trustOrder);
-    printf("Cipher Order: %d\n", module->cipherOrder);
-    printf("New Ciphers: 0x%08x,0x%08x\n",module->ssl[0], module->ssl[1]);
-    printf("Can Load PKCS #11 module: %s\n", module->isModuleDB ? "True" : "False");
-    if (module->slotInfoCount) {
-	int i;
-	printf("Slot Infos: %d\n", module->slotInfoCount);
-	for (i=0; i < module->slotInfoCount; i++) {
-	    printf("	++++++++++++++++++++++++++++++++++++++++++++\n");
-	    printf("	Slot ID=0x%08x\n",module->slotInfo[i].slotID);
-	    printf("	Slot Flags = 0x%08x\n",module->slotInfo[i].defaultFlags);
-	    printf("	Slot PWarg = %d\n",module->slotInfo[i].askpw);
-	    printf("	Slot timeout = %d\n",module->slotInfo[i].timeout);
-	}
-    }
-#endif
     /* handle any additional work here */
-    return SECSuccess;
+    return module;
 
 loser:
     if (module) {
-	PRBool critical = module->isCritical || (parent == NULL);
-	SECMOD_DestroyModule(module);
-	return critical ? SECFailure: SECSuccess;
+	SECMOD_AddModuleToUnloadList(module);
     }
-    return SECFailure;
+    return module;
 }

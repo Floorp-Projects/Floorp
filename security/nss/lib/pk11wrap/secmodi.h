@@ -42,6 +42,7 @@
 #include "secoidt.h"
 #include "secdert.h"
 #include "certt.h"
+#include "secmodt.h"
 #include "secmodti.h"
 
 #ifdef PKCS11_USE_THREADS
@@ -53,13 +54,36 @@
 SEC_BEGIN_PROTOS
 
 /* proto-types */
-SECMODModule * SECMOD_NewModule(void); /* create a new module */
-SECMODModule * SECMOD_NewInternal(void); /* create an internal module */
+SECMODModule * SECMOD_CreateModule(char *lib, char *name, char *param, 
+								char *nss);
+extern SECStatus SECMOD_DeletePermDB(SECMODModule *module);
+extern SECStatus SECMOD_AddPermDB(SECMODModule *module);
 
-/*void SECMOD_ReferenceModule(SECMODModule *); */
+extern void SECMOD_Init(void);
+extern void SECMOD_Shutdown(void);
+
+/* list managment */
+extern SECStatus SECMOD_AddModuleToList(SECMODModule *newModule);
+extern SECStatus SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule);
+extern SECStatus SECMOD_AddModuleToUnloadList(SECMODModule *newModule);
+extern void SECMOD_RemoveList(SECMODModuleList **,SECMODModuleList *);
+extern void SECMOD_AddList(SECMODModuleList *,SECMODModuleList *,SECMODListLock *);
+
+/* Operate on modules by name */
+extern SECMODModule *SECMOD_FindModuleByID(SECMODModuleID);
+
+/* database/memory management */
+extern SECMODModuleList *SECMOD_NewModuleListElement(void);
+extern SECMODModuleList *SECMOD_DestroyModuleListElement(SECMODModuleList *);
+extern void SECMOD_DestroyModuleList(SECMODModuleList *);
+extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
+extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name);
+
+extern unsigned long SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags);
+extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);
 
 /* Library functions */
-SECStatus SECMOD_LoadModule(SECMODModule *);
+SECStatus SECMOD_LoadPKCS11Module(SECMODModule *);
 SECStatus SECMOD_UnloadModule(SECMODModule *);
 void SECMOD_SetInternalModule(SECMODModule *);
 
@@ -69,10 +93,16 @@ CK_RV pk11_notify(CK_SESSION_HANDLE session, CK_NOTIFICATION event,
 void pk11_SignedToUnsigned(CK_ATTRIBUTE *attrib);
 CK_OBJECT_HANDLE pk11_FindObjectByTemplate(PK11SlotInfo *slot,
 					CK_ATTRIBUTE *inTemplate,int tsize);
+SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *slot,
+				 PK11DefaultArrayEntry *entry, PRBool add);
 SEC_END_PROTOS
 
 #define PK11_GETTAB(x) ((CK_FUNCTION_LIST_PTR)((x)->functionList))
 #define PK11_SETATTRS(x,id,v,l) (x)->type = (id); \
 		(x)->pValue=(v); (x)->ulValueLen = (l);
+SECStatus PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+                               CK_ATTRIBUTE *theTemplate, int count,
+                                PRBool token, CK_OBJECT_HANDLE *objectID);
+
 #endif
 

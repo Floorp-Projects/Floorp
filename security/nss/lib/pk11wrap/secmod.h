@@ -75,11 +75,24 @@
 
 SEC_BEGIN_PROTOS
 
+/*
+ * the following functions are going to be depricated in NSS 4.0 in
+ * favor of the new stan functions.
+ */
+
+/* Initialization */
+extern SECMODModule *SECMOD_LoadModule(char *moduleSpec,SECMODModule *parent,
+							PRBool recurse);
+
+/* Module Management */
+char **SECMOD_GetModuleSpecList(SECMODModule *module);
+SECStatus SECMOD_FreeModuleSpecList(SECMODModule *module,char **moduleSpecList);
+ 
 /* protoypes */
-extern void SECMOD_init(char *dbname);
-extern void SECMOD_Shutdown(void);
 extern SECMODModuleList *SECMOD_GetDefaultModuleList(void);
 extern SECMODListLock *SECMOD_GetDefaultModuleListLock(void);
+
+extern SECStatus SECMOD_UpdateModule(SECMODModule *module);
 
 /* lock management */
 extern SECMODListLock *SECMOD_NewListLock(void);
@@ -89,30 +102,17 @@ extern void SECMOD_ReleaseReadLock(SECMODListLock *);
 extern void SECMOD_GetWriteLock(SECMODListLock *);
 extern void SECMOD_ReleaseWriteLock(SECMODListLock *);
 
-/* list managment */
-extern void SECMOD_RemoveList(SECMODModuleList **,SECMODModuleList *);
-extern void SECMOD_AddList(SECMODModuleList *,SECMODModuleList *,SECMODListLock *);
-
 /* Operate on modules by name */
 extern SECMODModule *SECMOD_FindModule(char *name);
-extern SECMODModule *SECMOD_FindModuleByID(SECMODModuleID);
 extern SECStatus SECMOD_DeleteModule(char *name, int *type);
 extern SECStatus SECMOD_DeleteInternalModule(char *name);
 extern SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags);
 /* database/memory management */
-extern SECMODModule *SECMOD_NewModule(void);
-extern SECMODModuleList *SECMOD_NewModuleListElement(void);
 extern SECMODModule *SECMOD_GetInternalModule(void);
-extern SECMODModule *SECMOD_GetFIPSInternal(void);
 extern SECMODModule *SECMOD_ReferenceModule(SECMODModule *module);
 extern void SECMOD_DestroyModule(SECMODModule *module);
-extern SECMODModuleList *SECMOD_DestroyModuleListElement(SECMODModuleList *);
-extern void SECMOD_DestroyModuleList(SECMODModuleList *);
-extern SECMODModule *SECMOD_DupModule(SECMODModule *old);
-extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
-extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name);
 extern PK11SlotInfo *SECMOD_LookupSlot(SECMODModuleID module,
 							unsigned long slotID);
 
