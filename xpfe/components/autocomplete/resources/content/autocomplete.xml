@@ -74,7 +74,7 @@
                 if (status == Components.interfaces.nsIAutoCompleteStatus.failed)
                     return;
                 
-                if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+                if (me.disableAutocomplete == "true")
                     return;
 
                 me.lastResults = result;
@@ -101,9 +101,9 @@
 					item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
 					var match = item.value.toLowerCase();
 					var entry = inputElement.value.toLowerCase();
-                
 					if (entry != match)
 					{
+            me.ignoreInputEvent = true;
 						if (match.substring(0, entry.length) == entry)
 						{
 							inputElement.value = inputElement.value + item.value.substring(entry.length, match.length);
@@ -116,6 +116,7 @@
 							inputElement.setSelectionRange(entry.length, inputElement.value.length);
 							me.noDirectMatch = true;
 						}
+            me.ignoreInputEvent = false;
 					}
 				}
                 
@@ -162,17 +163,6 @@
         <property name="privatefunc">
         <![CDATA[
         ({
-			imeInProgress: function(me) {
-				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
-				//I hope ime will set an attribute on the input field when it's currently building a sequence
-				//like that we can now when we can or not autocomplete.
-				//Q: How can I know when ime is done? I need to kick the autocomplete timer?
-
-				//if (inputElement.getAttribute('<TBD>') == "true")
-				//	return true;
-
-				return false;
-			},
 
             onMenuCommand: function(me, popupSetElem) {
 				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
@@ -182,11 +172,13 @@
 					var menuitem = popupElem.childNodes[i];
 					if (menuitem.getAttribute("menuactive") == "true")
 					{
+            me.ignoreInputEvent = true;
 						inputElement.value = menuitem.getAttribute("value");
 						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
 						needToAutocomplete = false;
 						me.privatefunc.selectedItemIndex = i;
+            me.ignoreInputEvent = false;
 						return;
 					}
 				}
@@ -195,7 +187,7 @@
 			callListener: function(me, action) {
                 switch (action) {
                     case 'startLookup':
-                        if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+                        if (me.disableAutocomplete == "true")
                             return;
 						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         if (!me.lastResults || inputElement.value != me.lastResults.searchString)
@@ -212,7 +204,7 @@
                             me.autoCompleteTimer = 0;
                         }
                         me.needToAutocomplete = false;
-                        if (this.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+                        if (this.disableAutocomplete == "true")
                             return;
 						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
@@ -222,7 +214,7 @@
 
 			finishAutoComplete: function(me, event) {
  			   me.privatefunc.closePopupMenu(me);
-               if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+               if (me.disableAutocomplete == "true")
                     return;
 
                 var inputElement = document.getAnonymousNodes(me)[0].firstChild;
@@ -233,11 +225,13 @@
                 {
                     if (me.lastResults.searchString == entry)
                     {
+                        me.ignoreInputEvent = true;
                         try {
                             inputElement.value = me.lastResults.items.QueryElementAt(me.lastResults.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
                         } catch(e) {};
                         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
-						return;
+                        me.ignoreInputEvent = false;
+                        return;
                     }
                 }
                 
@@ -258,8 +252,10 @@
 					var index = value.indexOf(">> ");
 					if (index >= 0)
 					{
+            me.ignoreInputEvent = true;
 						inputElement.value = value.substr(index + 3);
 						inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
+            me.ignoreInputEvent = false;
 					}
 				}
 			},
@@ -282,6 +278,7 @@
 							me.privatefunc.selectedItemIndex = -1
 					}
 
+          me.ignoreInputEvent = true;
 					if (me.privatefunc.selectedItemIndex == -1)
 						inputElement.value = me.lastResults.searchString;
 					else
@@ -289,6 +286,7 @@
 					inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
 					noDirectMatch = false;
 					needToAutocomplete = false;
+          me.ignoreInputEvent = false;
 
 					//TODO: Need to change the menu selection
 					if (popup)
@@ -298,15 +296,32 @@
 				}
 			},
 
-			processKeyPress: function(me, event) {
+   		processInput: function(me) {
+        if (me.ignoreInputEvent)
+          return;
+
 				//Stop current lookup in case it's async.
-				me.privatefunc.callListener(me, 'stopLookup'); 
+				me.privatefunc.callListener(me, 'stopLookup');
 				if (me.autoCompleteTimer) {
 					clearTimeout(me.autoCompleteTimer);
 					me.autoCompleteTimer = 0;
 				}
+        me.privatefunc.closePopupMenu(me);
 
-				if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+				if (me.disableAutocomplete == "true")
+					return;
+
+				/*We want to autocomplete only if the user is editing at the end of the text */
+				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+				if (inputElement.selectionEnd >= inputElement.value.length)
+				{
+					me.needToAutocomplete = true;
+					me.autoCompleteTimer = setTimeout(me.privatefunc.callListener, me.timeout, me, 'startLookup');
+				}
+			},
+
+			processKeyPress: function(me, event) {
+				if (me.disableAutocomplete == "true")
 				{
           me.privatefunc.closePopupMenu(me);
 					return;
@@ -320,16 +335,28 @@
 				{
 					case 8: /*vk_back*/
 					case 46: /*vk_delete*/
+				    if (me.autoCompleteTimer) {
+					    clearTimeout(me.autoCompleteTimer);
+					    me.autoCompleteTimer = 0;
+				    }
 						me.privatefunc.closePopupMenu(me);
 						me.lastResults.searchString='';
 						return;
 
 					case 13 /*vk_return*/:
+				    if (me.autoCompleteTimer) {
+					    clearTimeout(me.autoCompleteTimer);
+					    me.autoCompleteTimer = 0;
+				    }
 						me.privatefunc.closePopupMenu(me);
 						me.privatefunc.finishAutoComplete(me, event);
 						return;
 
 					case 27 /*vk_escape*/:
+				    if (me.autoCompleteTimer) {
+					    clearTimeout(me.autoCompleteTimer);
+					    me.autoCompleteTimer = 0;
+				    }
 						if (popup) {
 							me.privatefunc.closePopupMenu(me);
 							event.preventDefault();
@@ -340,6 +367,10 @@
 
 					case 37 /*vk_left*/:
 					case 39 /*vk_right*/:
+				    if (me.autoCompleteTimer) {
+					    clearTimeout(me.autoCompleteTimer);
+					    me.autoCompleteTimer = 0;
+				    }
 						if (popup)
 						{
 							me.privatefunc.closePopupMenu(me);
@@ -351,21 +382,15 @@
 
 					case 38 /*vk_up*/:
 					case 40 /*vk_down*/:
+				    if (me.autoCompleteTimer) {
+					    clearTimeout(me.autoCompleteTimer);
+					    me.autoCompleteTimer = 0;
+				    }
 						me.privatefunc.keyNavigation(me, event, popup);
 						event.preventDefault();
 						event.preventBubble();
 						me.privatefunc.cleanupInputField(me);
 						break;
-
-					default:
-						me.privatefunc.closePopupMenu(me);
-						/*We want to autocomplete only if the user is editing at the end of the text*/
-						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
-						if (inputElement.selectionEnd >= inputElement.value.length)
-						{
-						  me.needToAutocomplete = true;
-						  me.autoCompleteTimer = setTimeout(me.privatefunc.callListener, me.timeout, me, 'startLookup');
-						}
 				}
 			},
 
@@ -380,6 +405,7 @@
 	<handlers>
 		<handler type="click" value="this.privatefunc.cleanupInputField(this);"/>
 		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
+        <handler type="input" value="this.privatefunc.processInput(this);"/>
         <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
         <handler type="focus" value="this.needToAutocomplete = false; this.lastResults.searchString=''"/>
         <handler type="blur" value="
