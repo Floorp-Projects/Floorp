@@ -2810,177 +2810,178 @@ void CommitInstall(void)
   char    szInstallLogFile[MAX_BUF];
   long    RetrieveResults;
 
-        LogISShared();
-        LogISDestinationPath();
-        LogISSetupType();
-        LogISComponentsSelected();
-        LogISComponentsToDownload();
-        LogISDiskSpace(gdsnComponentDSRequirement);
+  LogISShared();
+  LogISDestinationPath();
+  LogISSetupType();
+  LogISComponentsSelected();
+  LogISComponentsToDownload();
+  LogISDiskSpace(gdsnComponentDSRequirement);
 
-        lstrcpy(szDestPath, sgProduct.szPath);
-        if(*sgProduct.szSubPath != '\0')
-        {
-          AppendBackSlash(szDestPath, sizeof(szDestPath));
-          lstrcat(szDestPath, sgProduct.szSubPath);
-        }
-        AppendBackSlash(szDestPath, sizeof(szDestPath));
+  lstrcpy(szDestPath, sgProduct.szPath);
+  if(*sgProduct.szSubPath != '\0')
+  {
+    AppendBackSlash(szDestPath, sizeof(szDestPath));
+    lstrcat(szDestPath, sgProduct.szSubPath);
+  }
+  AppendBackSlash(szDestPath, sizeof(szDestPath));
 
-        /* Create the destination path here in case it had not been created,
-         * as in the case of silent or auto mode installs */
-        CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
+  /* Create the destination path here in case it had not been created,
+   * as in the case of silent or auto mode installs */
+  CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
 
-        /* Set global var, that determines where the log file is to update, to
-         * not use the TEMP dir *before* the FileCopy() calls because we want
-         * to log the FileCopy() calls to where the log files were copied to.
-         * This is possible because the logging, that is done within the
-         * FileCopy() function, is done after the actual copy
-         */
-        gbILUseTemp = FALSE;
+  /* Set global var, that determines where the log file is to update, to
+   * not use the TEMP dir *before* the FileCopy() calls because we want
+   * to log the FileCopy() calls to where the log files were copied to.
+   * This is possible because the logging, that is done within the
+   * FileCopy() function, is done after the actual copy
+   */
+  gbILUseTemp = FALSE;
 
-        /* copy the install_wizard.log file from the temp\ns_temp dir to
-         * the destination dir and use the new destination file to continue
-         * logging.
-         */
-        lstrcpy(szInstallLogFile, szTempDir);
-        AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-        lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
-        FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
-        DeleteFile(szInstallLogFile);
+  /* copy the install_wizard.log file from the temp\ns_temp dir to
+   * the destination dir and use the new destination file to continue
+   * logging.
+   */
+  lstrcpy(szInstallLogFile, szTempDir);
+  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+  lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+  FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
+  DeleteFile(szInstallLogFile);
 
-        /* copy the install_status.log file from the temp\ns_temp dir to
-         * the destination dir and use the new destination file to continue
-         * logging.
-         */
-        lstrcpy(szInstallLogFile, szTempDir);
-        AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-        lstrcat(szInstallLogFile, FILE_INSTALL_STATUS_LOG);
-        FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
-        DeleteFile(szInstallLogFile);
+  /* copy the install_status.log file from the temp\ns_temp dir to
+   * the destination dir and use the new destination file to continue
+   * logging.
+   */
+  lstrcpy(szInstallLogFile, szTempDir);
+  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+  lstrcat(szInstallLogFile, FILE_INSTALL_STATUS_LOG);
+  FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
+  DeleteFile(szInstallLogFile);
 
-        /* PRE_DOWNLOAD process file manipulation functions */
-        RetrieveResults = WIZ_OK;
-        if(sgProduct.bInstallFiles)
-        {
-          ProcessFileOpsForAll(T_PRE_DOWNLOAD);
-          RetrieveResults = RetrieveArchives();
-        }
+  /* PRE_DOWNLOAD process file manipulation functions */
+  RetrieveResults = WIZ_OK;
+  if(sgProduct.bInstallFiles)
+  {
+    ProcessFileOpsForAll(T_PRE_DOWNLOAD);
+    RetrieveResults = RetrieveArchives();
+  }
 
-        if(RetrieveResults == WIZ_OK)
-        {
-          if(sgProduct.bInstallFiles)
-          {
-            /* Check to see if Turbo is required.  If so, set the
-             * appropriate Windows registry keys */
-            SetTurboArgs();
+  if(RetrieveResults == WIZ_OK)
+  {
+    if(sgProduct.bInstallFiles)
+    {
+      /* Check to see if Turbo is required.  If so, set the
+       * appropriate Windows registry keys */
+      SetTurboArgs();
 
-            if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-              SetSetupState(SETUP_STATE_UNPACK_XPCOM);
+      if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+        SetSetupState(SETUP_STATE_UNPACK_XPCOM);
 
-            /* POST_DOWNLOAD process file manipulation functions */
-            ProcessFileOpsForAll(T_POST_DOWNLOAD);
-            /* PRE_XPCOM process file manipulation functions */
-            ProcessFileOpsForAll(T_PRE_XPCOM);
+      /* POST_DOWNLOAD process file manipulation functions */
+      ProcessFileOpsForAll(T_POST_DOWNLOAD);
+      /* PRE_XPCOM process file manipulation functions */
+      ProcessFileOpsForAll(T_PRE_XPCOM);
 
-            if(ProcessXpinstallEngine() != WIZ_OK)
-            {
-              bSDUserCanceled = TRUE;
-              CleanupXpcomFile();
-              PostQuitMessage(0);
+      if(ProcessXpinstallEngine() != WIZ_OK)
+      {
+        bSDUserCanceled = TRUE;
+        CleanupXpcomFile();
+        PostQuitMessage(0);
 
-              return;
-            }
+        return;
+      }
 
-            if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-              SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
+      if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+        SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
 
-            /* POST_XPCOM process file manipulation functions */
-            ProcessFileOpsForAll(T_POST_XPCOM);
-            /* PRE_SMARTUPDATE process file manipulation functions */
-            ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
+      /* POST_XPCOM process file manipulation functions */
+      ProcessFileOpsForAll(T_POST_XPCOM);
+      /* PRE_SMARTUPDATE process file manipulation functions */
+      ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
 
-            /* save the installer files in the local machine */
-            if(diAdditionalOptions.bSaveInstaller)
-              SaveInstallerFiles();
+      /* save the installer files in the local machine */
+      if(diAdditionalOptions.bSaveInstaller)
+        SaveInstallerFiles();
 
-            if(CheckInstances())
-            {
-              bSDUserCanceled = TRUE;
-              CleanupXpcomFile();
-              PostQuitMessage(0);
+      if(CheckInstances())
+      {
+        bSDUserCanceled = TRUE;
+        CleanupXpcomFile();
+        PostQuitMessage(0);
 
-              return;
-            }
+        return;
+      }
 
-            lstrcat(szDestPath, "uninstall\\");
-            CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
-            hrErr = SmartUpdateJars();
-          }
-          else
-            hrErr = WIZ_OK;
+      lstrcat(szDestPath, "uninstall\\");
+      CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
+      hrErr = SmartUpdateJars();
+    }
+    else
+      hrErr = WIZ_OK;
 
-          if((hrErr == WIZ_OK) || (hrErr == 999))
-          {
-            if(sgProduct.bInstallFiles)
-              UpdateJSProxyInfo();
+    if((hrErr == WIZ_OK) || (hrErr == 999))
+    {
+      if(sgProduct.bInstallFiles)
+        UpdateJSProxyInfo();
 
-            /* POST_SMARTUPDATE process file manipulation functions */
-            ProcessFileOpsForAll(T_POST_SMARTUPDATE);
-  
-            if(sgProduct.bInstallFiles)
-            {
-              /* PRE_LAUNCHAPP process file manipulation functions */
-              ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
+      /* POST_SMARTUPDATE process file manipulation functions */
+      ProcessFileOpsForAll(T_POST_SMARTUPDATE);
 
-              LaunchApps();
+      if(sgProduct.bInstallFiles)
+      {
+        /* PRE_LAUNCHAPP process file manipulation functions */
+        ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
 
-              // XXX ignore.  Part of testings.
-              /* Prepend GRE's path to the application's App Paths key
-               * in the windows registry.  If this install instance happens
-               * to be installing GRE, the function will not prepend the
-               * GRE path. */
-              //AddGrePathToApplicationAppPathsKey();
+        LaunchApps();
 
-              /* POST_LAUNCHAPP process file manipulation functions */
-              ProcessFileOpsForAll(T_POST_LAUNCHAPP);
-              /* DEPEND_REBOOT process file manipulation functions */
-              ProcessFileOpsForAll(T_DEPEND_REBOOT);
+        // XXX ignore.  Part of testings.
+        /* Prepend GRE's path to the application's App Paths key
+         * in the windows registry.  If this install instance happens
+         * to be installing GRE, the function will not prepend the
+         * GRE path. */
+        //AddGrePathToApplicationAppPathsKey();
 
-              // Refresh system icons if necessary
-              if(gSystemInfo.bRefreshIcons)
-                RefreshIcons();
+        /* POST_LAUNCHAPP process file manipulation functions */
+        ProcessFileOpsForAll(T_POST_LAUNCHAPP);
+        /* DEPEND_REBOOT process file manipulation functions */
+        ProcessFileOpsForAll(T_DEPEND_REBOOT);
 
-              UnsetSetupState(); // clear setup state
-              ClearWinRegUninstallFileDeletion();
-              if(!gbIgnoreProgramFolderX)
-                ProcessProgramFolderShowCmd();
+        // Refresh system icons if necessary
+        if(gSystemInfo.bRefreshIcons)
+          RefreshIcons();
 
-              CleanupArgsRegistry();
-              CleanupPreviousVersionRegKeys();
-            }
+        UnsetSetupState(); // clear setup state
+        ClearWinRegUninstallFileDeletion();
+        if(!gbIgnoreProgramFolderX)
+          ProcessProgramFolderShowCmd();
 
-            if(NeedReboot())
-            {
-              CleanupXpcomFile();
-              hDlgCurrent = InstantiateDialog(hWndMain, DLG_RESTART, diReboot.szTitle, DlgProcReboot);
-            }
-            else
-            {
-              CleanupXpcomFile();
-              PostQuitMessage(0);
-            }
-          }
-          else
-          {
-            CleanupXpcomFile();
-            PostQuitMessage(0);
-          }
-        }
+        CleanupArgsRegistry();
+        CleanupPreviousVersionRegKeys();
+      }
+
+      CleanupXpcomFile();
+      if(NeedReboot())
+      {
+        LogExitStatus("Reboot");
+        if(sgProduct.mode == NORMAL)
+          hDlgCurrent = InstantiateDialog(hWndMain, DLG_RESTART, diReboot.szTitle, DlgProcReboot);
         else
-        {
-          bSDUserCanceled = TRUE;
-          CleanupXpcomFile();
-          CleanupArgsRegistry();
           PostQuitMessage(0);
-        }
-        gbProcessingXpnstallFiles = FALSE;
+      }
+      else
+        PostQuitMessage(0);
+    }
+    else
+    {
+      CleanupXpcomFile();
+      PostQuitMessage(0);
+    }
+  }
+  else
+  {
+    bSDUserCanceled = TRUE;
+    CleanupXpcomFile();
+    CleanupArgsRegistry();
+    PostQuitMessage(0);
+  }
+  gbProcessingXpnstallFiles = FALSE;
 }

@@ -205,11 +205,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
-  /* garbage collection */
-  DeInitSetupGeneral();
   if(iRv != WIZ_SETUP_ALREADY_RUNNING)
     /* Do clean up before exiting from the application */
     DeInitialize();
+
+  /* garbage collection */
+  DeInitSetupGeneral();
 
   return(msg.wParam);
 } /*  End of WinMain */

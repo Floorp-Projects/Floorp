@@ -97,6 +97,7 @@ LPSTR szProxyDLLPath;
 LPFNDLLFUNC lpfnProgressUpd;
 HINSTANCE hGREAppInstallerProxyDLL;
 
+BOOL gGreInstallerHasRun = FALSE;
 BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize);
 DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name);
 PPERF_OBJECT FindObject (PPERF_DATA pData, DWORD TitleIndex);
@@ -590,8 +591,8 @@ HRESULT Initialize(HINSTANCE hInstance)
   char szBuf[MAX_BUF];
   char szCurrentProcessDir[MAX_BUF];
 
-  bSDUserCanceled     = FALSE;
-  hDlgMessage         = NULL;
+  bSDUserCanceled        = FALSE;
+  hDlgMessage            = NULL;
 
   /* load strings from setup.exe */
   if(NS_LoadStringAlloc(hInstance, IDS_ERROR_GLOBALALLOC, &szEGlobalAlloc, MAX_BUF))
@@ -627,14 +628,14 @@ HRESULT Initialize(HINSTANCE hInstance)
     }
   }
 
-  dwWizardState         = DLG_NONE;
-  dwTempSetupType       = dwWizardState;
-  siComponents          = NULL;
-  bCreateDestinationDir = FALSE;
-  bReboot               = FALSE;
-  gdwUpgradeValue       = UG_NONE;
-  gdwSiteSelectorStatus = SS_SHOW;
-  gbILUseTemp           = TRUE;
+  dwWizardState          = DLG_NONE;
+  dwTempSetupType        = dwWizardState;
+  siComponents           = NULL;
+  bCreateDestinationDir  = FALSE;
+  bReboot                = FALSE;
+  gdwUpgradeValue        = UG_NONE;
+  gdwSiteSelectorStatus  = SS_SHOW;
+  gbILUseTemp            = TRUE;
   gbIgnoreRunAppX        = FALSE;
   gbIgnoreProgramFolderX = FALSE;
 
@@ -781,7 +782,12 @@ void RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize)
  */
 int MozCopyStr(LPSTR szSrc, LPSTR szDest, DWORD dwDestBufSize)
 {
-  DWORD length = lstrlen(szSrc) + 1;
+  DWORD length;
+
+  assert(szSrc);
+  assert(szDest);
+
+  length = lstrlen(szSrc) + 1;
   strncpy(szDest, szSrc, dwDestBufSize);
   if(length > dwDestBufSize)
   {
@@ -2331,6 +2337,7 @@ HRESULT ProcessGre(greInfo *aGre)
    * in the config.ini file.
    */
   /* Unset "Component GRE"'s SELECTED attribute so it doesn't get spawned again later from LaunchApps() */
+  gGreInstallerHasRun = TRUE;
   if(aGre->siCGreComponent)
     aGre->siCGreComponent->dwAttributes &= ~SIC_SELECTED;
 
@@ -2973,7 +2980,6 @@ HRESULT InitSetupGeneral()
     return(1);
 
   *sgProduct.grePrivateKey = '\0';
-
   return(0);
 }
 
@@ -6570,7 +6576,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diWindowsIntegration.bShowDialog          = FALSE;
       diProgramFolder.bShowDialog               = FALSE;
       diQuickLaunch.bShowDialog                 = FALSE;
-      diAdditionalOptions.bShowDialog             = FALSE;
+      diAdditionalOptions.bShowDialog           = FALSE;
       diAdvancedSettings.bShowDialog            = FALSE;
       diStartInstall.bShowDialog                = FALSE;
       diDownload.bShowDialog                    = FALSE;
@@ -6720,6 +6726,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
         break;
     }
   }
+
+  /* clean up previous exit status log file */
+  DeleteExitStatusFile();
 
   iRv = StartupCheckArchives();
   return(iRv);
@@ -7653,10 +7662,38 @@ HRESULT FileExists(LPSTR szFile)
 
 BOOL NeedReboot()
 {
-   if(diReboot.dwShowDialog == AUTO)
-     return(bReboot);
-   else
-     return(diReboot.dwShowDialog);
+  if(GreInstallerNeedsReboot())
+    return(TRUE);
+  if(diReboot.dwShowDialog == AUTO)
+    return(bReboot);
+  else
+    return(diReboot.dwShowDialog);
+}
+
+/* Function: GreInstallerNeedsReboot()
+ *       in: none.
+ *      out: Boolean value on whether or not GRE installer needed a
+ *           when it ran last.
+ *  purpose: To check if this is not the GRE installer and that the GRE installer
+ *           has been run needed a reboot.
+ */
+BOOL GreInstallerNeedsReboot()
+{
+  BOOL greReboot = FALSE;
+
+  /* if this setup is not installing GRE *and* the GRE Setup has been run, then
+   * check for GRE setup's exit value, if one exists */
+  if((lstrcmpi(sgProduct.szProductNameInternal, "GRE") != 0) && gGreInstallerHasRun)
+  {
+    char status[MAX_BUF];
+
+    GetGreSetupExitStatus(status, sizeof(status));
+    /* if a reboot is detected from the GRE setup run, then
+     * simply return TRUE for reboot is needed. */
+    if(lstrcmpi(status, "Reboot") == 0)
+      greReboot = TRUE;
+  }
+  return(greReboot);
 }
 
 BOOL DeleteWGetLog(void)

@@ -222,6 +222,7 @@ void              LaunchOneComponent(siC *siCObject, greInfo *aGre);
 HRESULT           ProcessXpinstallEngine(void);
 void              GetXpinstallPath(char *aPath, int aPathBufSize);
 int               AddGrePathToApplicationAppPathsKey(void);
+BOOL              GreInstallerNeedsReboot(void);
 
 #endif /* _EXTRA_H_ */
 

@@ -55,9 +55,9 @@ ParseArgv(@ARGV);
 
 $DEPTH            = "$topsrcdir" if !defined($DEPTH);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
-$verPartial       = "5.0.0.";
+$verPartial       = "1.3.0.";
 $ver              = $verPartial . GetVersion($DEPTH);
-$verGre           = "1.3b.0.0";
+$verGre           = $verPartial . "0";
 $gDistInstallPath = "$inDistPath/install";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 
