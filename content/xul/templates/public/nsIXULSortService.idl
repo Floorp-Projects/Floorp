@@ -35,9 +35,8 @@ interface nsIDOMNode;
 interface nsIXULSortService : nsISupports
 {
 		void	Sort(in nsIDOMNode node, in string sortResource, in string sortDirection);
-[noscript]	void	OpenContainer(in nsIRDFCompositeDataSource db, in nsIContent container,
-				in nsIRDFResourceArray flatArray, in long numElements, in long elementSize);
-[noscript]	void	InsertContainerNode(in nsIContent container, in nsIContent node, in boolean aNotify);
+[noscript]	void	InsertContainerNode(in nsIRDFCompositeDataSource db, in nsIContent root,
+				in nsIContent container, in nsIContent node, in boolean aNotify);
 };
 
 %{C++
