@@ -322,7 +322,7 @@ void nsImageGTK::UpdateCachedImage()
   nsRegionRectIterator ri(mUpdateRegion);
   const nsRect *rect;
 
-  while (rect = ri.Next()) {
+  while ((rect = ri.Next()) != nsnull) {
 
 //  fprintf(stderr, "ImageUpdated %p x,y=(%d %d) width,height=(%d %d)\n",
 //          this, rect->x, rect->y, rect->width, rect->height);
@@ -1867,27 +1867,70 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
   // now composite the two images together
   switch (mAlphaDepth) {
   case 1:
-    for (y=0; y<aDHeight; y++) {
-      PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
-      PRUint8 *dstAlpha = dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes;
-      PRUint8 *src = rgbPtr + y*rgbStride; 
-      PRUint8 *alpha = alphaPtr + y*alphaStride;
-      for (int x=0; x<aDWidth; x++, dst+=3, src+=3) {
-        // if this pixel is opaque then copy into the destination image
-        if (NS_GET_BIT(alpha, x)) {
-          dst[0] = src[0];
-          dst[1] = src[1];
-          dst[2] = src[2];
-          NS_SET_BIT(dstAlpha, aDX+x);
+    {
+      PRUint8 *dst = dest->mImageBits + aDY*dest->mRowBytes + 3*aDX;
+      PRUint8 *dstAlpha = dest->mAlphaBits + aDY*dest->mAlphaRowBytes;
+      PRUint8 *src = rgbPtr;
+      PRUint8 *alpha = alphaPtr;
+      PRUint8 offset = aDX & 0x7; // x starts at 0
+      int iterations = (aDWidth+7)/8; // round up
+      for (y=0; y<aDHeight; y++) {
+        for (int x=0; x<aDWidth; x += 8, dst += 3*8, src += 3*8) {
+          PRUint8 alphaPixels = *alpha++;
+          if (alphaPixels == 0) {
+            // all 8 transparent; jump forward
+            continue;
+          }
+
+          // 1 or more bits are set, handle dstAlpha now - may not be aligned.
+          // Are all 8 of these alpha pixels used?
+          if (x+7 >= aDWidth) {
+            alphaPixels &= 0xff << (8 - (aDWidth-x)); // no, mask off unused
+            if (alphaPixels == 0)
+              continue;  // no 1 alpha pixels left
+          }
+          if (offset == 0) {
+            dstAlpha[(aDX+x)>>3] |= alphaPixels; // the cheap aligned case
+          }
+          else {
+            dstAlpha[(aDX+x)>>3]       |= alphaPixels >> offset;
+            // avoid write if no 1's to write - also avoids going past end of array
+            // compiler should merge the common sub-expressions
+            if (alphaPixels << (8U - offset))
+              dstAlpha[((aDX+x)>>3) + 1] |= alphaPixels << (8U - offset);
+          }
+          
+          if (alphaPixels == 0xff) {
+            // fix - could speed up by gathering a run of 0xff's and doing 1 memcpy
+            // all 8 pixels set; copy and jump forward
+            memcpy(dst,src,8*3);
+            continue;
+          }
+          else {
+            // else mix of 1's and 0's in alphaPixels, do 1 bit at a time
+            // Don't go past end of line!
+            PRUint8 *d = dst, *s = src;
+            for (PRUint8 aMask = 1<<7, j = 0; aMask && j < aDWidth-x; aMask >>= 1, j++) {
+              // if this pixel is opaque then copy into the destination image
+              if (alphaPixels & aMask) {
+                // might be faster with *d++ = *s++ 3 times?
+                d[0] = s[0];
+                d[1] = s[1];
+                d[2] = s[2];
+                // dstAlpha bit already set
+              }
+              d += 3;
+              s += 3;
+            }
+          }
         }
+        // at end of each line, bump pointers
+        dst += dest->mRowBytes - 3*8*iterations;
+        src += rgbStride - 3*8*iterations;
+        alpha += alphaStride - iterations;
+        dstAlpha += dest->mAlphaRowBytes;
       }
     }
-    break;
-  case 8:
-    // Ripped out 8 bit alpha blending code but leaving an assert in here
-    // to catch an errant use of this function
-    NS_ASSERTION(0, "nsImageGTK::DrawToImage(): Unexpected 8 bit alpha image");
-
     break;
   case 0:
   default:
