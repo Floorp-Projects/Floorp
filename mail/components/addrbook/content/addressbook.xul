@@ -409,7 +409,7 @@
         <label id="abDirTreeHeader-title" value="&dirTreeHeader.label;"/>
       </sidebarheader>
       <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
-      <tree id="dirTree" class="abDirectory plain" seltype="single" style="min-width:150px" flex="1" persist="width"
+      <tree id="dirTree" class="abDirectory plain" seltype="single" minwidth="150" flex="1" persist="width"
             datasources="rdf:addressdirectory" ref="moz-abdirectory://"
             flags="dont-build-content"
             hidecolumnpicker="true"
@@ -462,11 +462,9 @@
       </tree>
     </vbox>
 
-    <splitter id="dirTree-splitter" collapse="before" persist="state">
-      <grippy/>
-    </splitter>
+    <splitter id="dirTree-splitter" collapse="before" persist="state"/> 
     
-    <vbox flex="1" style="min-width:100px">
+    <vbox flex="1" minwidth="100">
 
       <hbox id="searchBox" persist="collapsed" align="center">
         <label id="searchCriteria" value="&SearchNameOrEmail.label;"
@@ -491,6 +489,7 @@
             onclick="AbResultsPaneOnClick(event);"
             onselect="this.view.selectionChanged();"
             sortCol="GeneratedName"
+            minheight="100" height="100"
             persist="height sortCol">
 
         <treecols id="abResultsTreeCols">
@@ -559,16 +558,14 @@
         <treechildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>
       </tree>
       
-      <splitter id="results-splitter" collapse="after" persist="state">
-        <grippy/>
-      </splitter>
+      <splitter id="results-splitter" collapse="after" persist="state"/>
       
       <!-- card view -->
-      <hbox id="CardViewOuterBox" flex="1">
-        <vbox id="CardViewBox" flex="1" style="height:170px; min-height:1px; min-width:1px">
+      <hbox id="CardViewOuterBox" flex="1" minheight="100" height="200" persist="height"> 
+        <vbox id="CardViewBox" flex="1">
           <vbox id="CardViewInnerBox" collapsed="true" flex="1">
             <description id="CardTitle"/>
-            <hbox style="width:100%" flex="1">
+            <hbox flex="1">
               <vbox flex="1">
                 <vbox id="cvbContact" class="cardViewGroup">
                   <description class="CardViewHeading" id="cvhContact">&contact.heading;</description>          
@@ -625,7 +622,7 @@
                 </vbox>
               </vbox>
       
-              <spacer style="width:20px"/>
+              <spacer width="20"/>
 
               <vbox flex="1">
                 <vbox id="cvbPhone" class="cardViewGroup">
