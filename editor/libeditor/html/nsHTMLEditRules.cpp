@@ -367,6 +367,13 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
         res = GetPriorNode(node, getter_AddRefs(priorNode));
         if (NS_FAILED(res)) return res;
         
+        // if there is no prior node then cancel the deletion
+        if (!priorNode)
+        {
+          *aCancel = PR_TRUE;
+          return res;
+        }
+        
         // XXX hackery - using this to skip empty text nodes,
         // since these are almost always non displayed preservation
         // of returns in the original html.  but they could
@@ -423,9 +430,14 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
         nsCOMPtr<nsIDOMNode> nextNode;
         res = GetNextNode(node, getter_AddRefs(nextNode));
         if (NS_FAILED(res)) return res;
-        if (HasSameBlockNodeParent(node, nextNode)) return NS_OK;
-		
-		// deleting across blocks
+         
+        // if there is no next node then cancel the deletion
+        if (!nextNode)
+        {
+          *aCancel = PR_TRUE;
+          return res;
+        }
+       
         // XXX hackery - using this to skip empty text nodes,
         // since these are almost always non displayed preservation
         // of returns in the original html.  but they could
