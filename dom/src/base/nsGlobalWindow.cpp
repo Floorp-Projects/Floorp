@@ -2878,19 +2878,10 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
 NS_IMETHODIMP
 GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 {
+  *_retval = nsnull;
+
   NS_ENSURE_STATE(sXPConnect);
   nsresult rv = NS_OK;
-
-  /* If we're in a commonly abused state (top level script, running a timeout,
-   * or onload/onunload), and the preference is enabled, block the window.open().
-   */
-  if (CheckForAbusePoint()) {
-#ifdef DEBUG
-    printf ("*** Blocking window.open.\n");
-#endif
-    *_retval = nsnull;
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
@@ -2922,6 +2913,29 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
       if (argc > 2) {
         nsJSUtils::ConvertJSValToString(options, cx, argv[2]);
       }
+    }
+  }
+
+  /*
+   * If we're in a commonly abused state (top level script, running a timeout,
+   * or onload/onunload), and the preference is enabled, prevent window.open().
+   */
+  if (CheckForAbusePoint()) {
+    if (name.IsEmpty()) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID, &rv));
+    // If getting a window watcher fails, we'd fail downstream anyway when trying to
+    // open a new window so just bail here.
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMWindow> namedWindow;
+    wwatch->GetWindowByName(name.get(), this,
+                            getter_AddRefs(namedWindow));
+
+    if (!namedWindow) {
+      return NS_OK;
     }
   }
 
