@@ -34,6 +34,7 @@
 #endif 
 
 
+static const char* kPossibleNull = "Error: possible unintended null in string";
 static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
 
@@ -1095,7 +1096,9 @@ nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
 
 #ifdef NS_DEBUG
       PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
-      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in append(char*)");
+      if(kNotFound<len) {
+        NS_WARNING(kPossibleNull);
+      }
 #endif
 
     }
@@ -1129,7 +1132,9 @@ nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
       PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
-      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in append(PRUnichar*)");
+      if(kNotFound<len) {
+        NS_WARNING(kPossibleNull);
+      }
 #endif
 
     }
@@ -1321,7 +1326,9 @@ nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
       PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
-      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in Insert(char*)");
+      if(kNotFound<len) {
+        NS_WARNING(kPossibleNull);
+      }
 #endif
 
     }
@@ -1359,7 +1366,9 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
       PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
-      NS_WARN_IF_FALSE(kNotFound==len,"possible embedded null in Insert(PRUnichar*)");
+      if(kNotFound<len) {
+        NS_WARNING(kPossibleNull);
+      }
 #endif
 
     }
