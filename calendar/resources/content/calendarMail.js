@@ -35,7 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gMailAccounts = false;
-var gMAILDEBUG = 2;  // 0 - no output, 1 dump to terminal, > 1 use alerts
+var gMAILDEBUG = 1;  // 0 - no output, 1 dump to terminal, > 1 use alerts
+var gMailIdentity;
 
 /**** checkMail
  *
@@ -69,6 +70,7 @@ function checkMail()
 	{
 		AccountManager = AccountManagerService.QueryInterface(Components.interfaces.nsIMsgAccountManager);
 		DefaultAccount = AccountManager.defaultAccount;
+		gMailIdentity = DefaultAccount.defaultIdentity; // we'll store the user's account info globally for now
 	}
 	catch(ex)
 	{
@@ -142,6 +144,61 @@ function noSmtp()
 	 * from bug 122651
 	 */
 	 mdebug("You don't have an smtp account");
+}
+
+function sendEvent()
+{
+	var Event;
+	var nsIMsgCompFieldsComponent;
+	var nsIMsgCompFields;
+	var nsIMsgComposeParamsComponent;
+	var nsIMsgComposeParams;
+	var nsIMsgComposeServiceComponent;
+	var nsIMsgComposeService;
+	var nsIMsgCompFormat;
+	var nsIMsgCompType;
+
+	Event = gCalendarWindow.EventSelection.selectedEvents[0];
+	/* Want output like
+	 * When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time
+     * (US & Canada); Tijuana.
+     * Where: San Francisco
+	 * see bug 59630
+	 */
+	if (Event)
+	{
+		// lets open a composer with fields and body prefilled
+		try
+		{
+			// lets setup the fields for the message
+			nsIMsgCompFieldsComponent = Components.classes["@mozilla.org/messengercompose/composefields;1"];
+			nsIMsgCompFields = nsIMsgCompFieldsComponent.createInstance(Components.interfaces.nsIMsgCompFields);
+			nsIMsgCompFields.from = gMailIdentity.email;
+			nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
+			nsIMsgCompFields.subject = gMailIdentity.fullName + " would like to schedule a meeting with you";
+			nsIMsgCompFields.organization = gMailIdentity.organization;
+			nsIMsgCompFields.body = "When: " + Event.start + "-" + Event.end + "\nWhere: " + Event.location;
+			/* later on we may be able to add:
+			 * returnReceipt, attachVCard
+			 */
+			// time to handle the message paramaters
+			nsIMsgComposeParamsComponent = Components.classes["@mozilla.org/messengercompose/composeparams;1"];
+			nsIMsgComposeParams = nsIMsgComposeParamsComponent.createInstance(Components.interfaces.nsIMsgComposeParams);
+			nsIMsgComposeParams.composeFields = nsIMsgCompFields;
+			nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
+			nsIMsgCompType = Components.interfaces.nsIMsgCompType;
+			nsIMsgComposeParams.format = nsIMsgCompFormat.PlainText; // this could be a pref for the user
+			nsIMsgComposeParams.type = nsIMsgCompType.New;
+			// finally lets pop open a composer window after all this work :)
+			nsIMsgComposeServiceComponent = Components.classes["@mozilla.org/messengercompose;1"];
+			nsIMsgComposeService = nsIMsgComposeServiceComponent.getService().QueryInterface(Components.interfaces.nsIMsgComposeService);
+			nsIMsgComposeService.OpenComposeWindowWithParams(null, nsIMsgComposeParams);
+		}
+		catch(ex)
+		{
+			mdebug("failed to get composer window\nex: " + ex);
+		}
+	}
 }
 
 /**** mdebug

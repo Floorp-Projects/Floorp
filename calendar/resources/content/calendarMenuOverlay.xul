@@ -101,7 +101,7 @@
          <menuitem id="unifinder-modify-menu" observes="modify_command" label="&file.edit.event;" oncommand="unifinderModifyCommand()" />                    
          <menuitem id="unifinder-remove-menu" observes="delete_command" label="&file.delete.event;" oncommand="unifinderRemoveCommand()" key="delete_key" /> 
          <menuseparator/>                                                                                                                                        
-         <menuitem id="calendar-mail-event" observes="send_event_command" label="&file.mail.event;" oncommand="javascript:void(0);"/>                            
+         <menuitem id="calendar-mail-event" observes="send_event_command" label="&file.mail.event;" oncommand="sendEvent();"/>
          <menuseparator/>
          <menuitem id="calendar-about-menu-item" label="About Calendar" oncommand="alertCalendarVersion()"/>
       </menupopup>                                                                                                                                                 
