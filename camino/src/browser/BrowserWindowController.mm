@@ -128,6 +128,12 @@ static NSArray* sToolbarDefaults = nil;
 
 #define kMaxBrowserWindowTabs 16
 
+enum BWCOpenDest {
+  kDestinationNewWindow = 0,
+  kDestinationNewTab,
+  kDestinationCurrentView
+};
+
 //////////////////////////////////////
 @interface AutoCompleteTextFieldEditor : NSTextView
 {
@@ -349,6 +355,8 @@ static NSArray* sToolbarDefaults = nil;
 -(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 -(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 - (BOOL)isPageTextFieldFocused;
+-(void)performSearch:(SearchTextField *)inSearchField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
+-(void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
@@ -1440,23 +1448,36 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
 {
+  if ([sender isKindOfClass:[AutoCompleteTextField class]])
+    [self goToLocationFromToolbarURLField:(AutoCompleteTextField *)sender
+                                    inView:kDestinationCurrentView inBackground:NO];
+}
+
+- (void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField 
+                                 inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG
+{
   // trim off any whitespace around url
-  NSString *theURL = [[sender stringValue] stringByTrimmingWhitespace];
+  NSString *theURL = [[inURLField stringValue] stringByTrimmingWhitespace];
   
   // look for bookmarks keywords match
   NSArray *resolvedURLs = [[BookmarkManager sharedBookmarkManager] resolveBookmarksKeyword:theURL];
-
+  
   NSString* resolvedURL = nil;
-  if ([resolvedURLs count] == 1)
-  {
+  if ([resolvedURLs count] == 1) {
     resolvedURL = [resolvedURLs lastObject];
-    [self loadURL:resolvedURL referrer:nil activate:YES];
+    if (inDest == kDestinationNewTab)
+      [self openNewTabWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG];
+    else if (inDest == kDestinationNewWindow)
+      [self openNewWindowWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG];
+    else // if it's not a new window or a new tab, load into the current view
+      [self loadURL:resolvedURL referrer:nil activate:YES];
+  } else {
+    if (inDest == kDestinationNewTab || inDest == kDestinationNewWindow)
+      [self openURLArray:resolvedURLs replaceExistingTabs:NO];
+    else
+      [self openURLArray:resolvedURLs replaceExistingTabs:YES];
   }
-  else
-  {
-  	[self openURLArray:resolvedURLs replaceExistingTabs:YES];
-  }
-    
+  
   // global history needs to know the user typed this url so it can present it
   // in autocomplete. We use the URI fixup service to strip whitespace and remove
   // invalid protocols, etc. Don't save keyword-expanded urls.
@@ -1465,14 +1486,13 @@ static NSArray* sToolbarDefaults = nil;
     nsAutoString url;
     [theURL assignTo_nsAString:url];
     NS_ConvertUCS2toUTF8 utf8URL(url);
-
+    
     nsCOMPtr<nsIURI> fixedURI;
     mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));
     if (fixedURI)
       mGlobalHistory->MarkPageAsTyped(fixedURI);
   }
 }
-
 - (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView
 {
   [[mBrowserView getBrowserView] saveDocument:focusedFrame filterView:aFilterView];
@@ -1543,69 +1563,90 @@ static NSArray* sToolbarDefaults = nil;
 - (IBAction)performSearch:(id)aSender
 {
   // If we have a valid SearchTextField, perform a search using its contents
-  if ([aSender isKindOfClass:[SearchTextField class]]) {
-    // Get the search URL from our dictionary of sites and search urls
-    NSMutableString *searchURL = [NSMutableString stringWithString:
-      [[BrowserWindowController searchURLDictionary] objectForKey:
-        [aSender titleOfSelectedPopUpItem]]];
-    NSString *currentURL = [[self getBrowserWrapper] getCurrentURLSpec];
-    NSString *searchString = [aSender stringValue];
+  if ([aSender isKindOfClass:[SearchTextField class]]) 
+    [self performSearch:(SearchTextField *)aSender inView:kDestinationCurrentView inBackground:NO];
+}
+
+//
+// - performSearch:inView:inBackground
+//
+// performs a search using searchField and opens either in the current view, a new tab, or a new
+// window. If it's a new tab or window, loadInBG determines whether the window/tab is opened in the background
+//
+-(void)performSearch:(SearchTextField *)inSearchField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG
+{
+  // Get the search URL from our dictionary of sites and search urls
+  NSMutableString *searchURL = [NSMutableString stringWithString:
+    [[BrowserWindowController searchURLDictionary] objectForKey:
+      [inSearchField titleOfSelectedPopUpItem]]];
+  NSString *currentURL = [[self getBrowserWrapper] getCurrentURLSpec];
+  NSString *searchString = [inSearchField stringValue];
+  
+  const char *aURLSpec = [currentURL lossyCString];
+  NSString *aDomain = @"";
+  nsIURI *aURI = nil;
+  
+  // If we have an about: type URL, remove " site:%d" from the search string
+  // This is a fix to deal with Google's Search this Site feature
+  // If other sites use %d to search the site, we'll have to have specific rules
+  // for those sites.
+  
+  if ([currentURL hasPrefix:@"about:"]) {
+    NSRange domainStringRange = [searchURL rangeOfString:@" site:%d"
+                                                 options:NSBackwardsSearch];
     
-    const char *aURLSpec = [currentURL lossyCString];
-    NSString *aDomain = @"";
-    nsIURI *aURI = nil;
-
-    // If we have an about: type URL, remove " site:%d" from the search string
-    // This is a fix to deal with Google's Search this Site feature
-    // If other sites use %d to search the site, we'll have to have specific rules
-    // for those sites.
-
-    if ([currentURL hasPrefix:@"about:"]) {
-      NSRange domainStringRange = [searchURL rangeOfString:@" site:%d"
-                                                   options:NSBackwardsSearch];
-
-      NSRange notFoundRange = NSMakeRange(NSNotFound, 0);
-      if (NSEqualRanges(domainStringRange, notFoundRange) == NO)
-        [searchURL deleteCharactersInRange:domainStringRange];
-    }
-
-    // If they didn't type anything in the search field, visit the domain of
-    // the search site, i.e. www.google.com for the Google site
-    if ([[aSender stringValue] isEqualToString:@""]) {
-      aURLSpec = [searchURL lossyCString];
-
-      if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
-        nsCAutoString spec;
-        aURI->GetHost(spec);
-
-        aDomain = [NSString stringWithUTF8String:spec.get()];
-
+    NSRange notFoundRange = NSMakeRange(NSNotFound, 0);
+    if (NSEqualRanges(domainStringRange, notFoundRange) == NO)
+      [searchURL deleteCharactersInRange:domainStringRange];
+  }
+  
+  // If they didn't type anything in the search field, visit the domain of
+  // the search site, i.e. www.google.com for the Google site
+  if ([[inSearchField stringValue] isEqualToString:@""]) {
+    aURLSpec = [searchURL lossyCString];
+    
+    if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
+      nsCAutoString spec;
+      aURI->GetHost(spec);
+      
+      aDomain = [NSString stringWithUTF8String:spec.get()];
+      
+      if (inDest == kDestinationNewTab)
+        [self openNewTabWithURL:aDomain referrer:nil loadInBackground:inLoadInBG];
+      else if (inDest == kDestinationNewWindow)
+        [self openNewWindowWithURL:aDomain referrer:nil loadInBackground:inLoadInBG];
+      else // if it's not a new window or a new tab, load into the current view
         [self loadURL:aDomain referrer:nil activate:NO];
-      }
+
+    } 
+  } else {
+    aURLSpec = [[[self getBrowserWrapper] getCurrentURLSpec] lossyCString];
+    
+    // Get the domain so that we can replace %d in our searchURL
+    if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
+      nsCAutoString spec;
+      aURI->GetHost(spec);
+      
+      aDomain = [NSString stringWithUTF8String:spec.get()];
     }
-    else {
-      aURLSpec = [[[self getBrowserWrapper] getCurrentURLSpec] lossyCString];
-
-      // Get the domain so that we can replace %d in our searchURL
-      if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
-        nsCAutoString spec;
-        aURI->GetHost(spec);
-
-        aDomain = [NSString stringWithUTF8String:spec.get()];
-      }
-
-      // Escape the search string so the user can search for strings with
-      // special characters ("&", "+", etc.) List from RFC2396.
-      NSString *escapedSearchString = (NSString *) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)searchString, NULL, CFSTR(";/?:@&=+$,"), kCFStringEncodingUTF8);
-      
-      // replace the conversion specifiers (%d, %s) in the search string
-      [self transformFormatString:searchURL domain:aDomain search:escapedSearchString];
-      [escapedSearchString release];
-      
+    
+    // Escape the search string so the user can search for strings with
+    // special characters ("&", "+", etc.) List from RFC2396.
+    NSString *escapedSearchString = (NSString *) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)searchString, NULL, CFSTR(";/?:@&=+$,"), kCFStringEncodingUTF8);
+    
+    // replace the conversion specifiers (%d, %s) in the search string
+    [self transformFormatString:searchURL domain:aDomain search:escapedSearchString];
+    [escapedSearchString release];
+    
+    if (inDest == kDestinationNewTab)
+      [self openNewTabWithURL:searchURL referrer:nil loadInBackground:inLoadInBG];
+    else if (inDest == kDestinationNewWindow)
+      [self openNewWindowWithURL:searchURL referrer:nil loadInBackground:inLoadInBG];
+    else // if it's not a new window or a new tab, load into the current view
       [self loadURL:searchURL referrer:nil activate:NO];
-    }
   }
 }
+
 
 //
 // - transformFormatString:domain:search
@@ -3169,6 +3210,44 @@ static NSArray* sToolbarDefaults = nil;
   if ( [mContentView isBookmarkManagerVisible] )
     [self toggleBookmarkManager:self];
 }
+
+//
+// - handleCommandReturn:
+//
+// handle command-return in location or search field, opening a new tab or window as appropriate
+//
+- (BOOL) handleCommandReturn
+{
+  BOOL handled = NO;
+  
+  // determine whether to load in background
+  PRBool loadInBG;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBG);
+    
+  // determine whether to load in tab or window
+  PRBool loadInTab;
+  pref->GetBoolPref("browser.tabs.opentabfor.middleclick",&loadInTab);
+  
+  BWCOpenDest destination = loadInTab ? kDestinationNewTab : kDestinationNewWindow;
+  
+  // see if command-return came in the url bar
+  if ([mURLBar fieldEditor] && [[self window] firstResponder] == [mURLBar fieldEditor]) {
+    handled = YES;
+    [self goToLocationFromToolbarURLField:mURLBar inView:destination inBackground:loadInBG];
+    // kill any autocomplete that was in progress
+    [mURLBar revertText];
+    // set the text in the URL bar back to the current URL
+    [self updateLocationFields:[mBrowserView getCurrentURLSpec]];
+    
+  // see if command-return came in the search field
+  } else if ([mSearchBar isFirstResponder]) {
+    handled = YES;
+    [self performSearch:mSearchBar inView:destination inBackground:loadInBG]; 
+  }
+  return handled;
+}
+
 
 @end
 

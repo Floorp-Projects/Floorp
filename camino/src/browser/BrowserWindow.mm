@@ -81,6 +81,19 @@ static const int kEscapeKeyCode = 53;
 	mSuppressMakeKeyFront = inSuppress;
 }
 
+// pass command-return off to the controller so that locations/searches may be opened in a new tab
+- (BOOL)performKeyEquivalent:(NSEvent *)theEvent
+{
+  BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
+  NSString* keyString = [theEvent charactersIgnoringModifiers];
+  unichar keyChar = [keyString characterAtIndex:0];
+  BOOL handled = NO;
+  if (keyChar == NSCarriageReturnCharacter) {
+    handled = [windowController handleCommandReturn];
+  }
+  return handled ? handled : [super performKeyEquivalent:theEvent];
+}
+
 // accessor for the 'URL' Apple Event attribute
 - (NSString*)getURL
 {

@@ -363,4 +363,7 @@ typedef enum
 // not hold onto this for longer than the current call unless they addref it.
 - (nsIWebNavigation*) currentWebNavigation;
 
+// handle command-return in location or search field
+- (BOOL) handleCommandReturn;
+
 @end
