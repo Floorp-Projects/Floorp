@@ -574,8 +574,10 @@ nsLog::Vprintf(const char* format, va_list args)
 {
     nsAutoMonitor monitor(gLogMonitor);
     
-    const char* msg = PR_vsmprintf(format, args);
-    return mSink->Print(this, msg);
+    char* msg = PR_vsmprintf(format, args);
+    nsresult rv = mSink->Print(this, msg);
+    PR_smprintf_free(msg);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
