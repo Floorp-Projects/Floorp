@@ -5463,16 +5463,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
         rv = NS_NewPopupSetFrame(aPresShell, &newFrame);
         ((nsPopupSetFrame*) newFrame)->SetFrameConstructor(this);
-
-        // Locate the root frame and tell it about the popupgroup.
-        nsIFrame* rootFrame;
-        aState.mFrameManager->GetRootFrame(&rootFrame);
-        if (rootFrame)
-          rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
-        nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
-        if (rootBox)
-          rootBox->SetPopupSetFrame(newFrame);
-
       }
       else if (aTag == nsXULAtoms::scrollbox) {
             rv = NS_NewScrollBoxFrame(aPresShell, &newFrame);
