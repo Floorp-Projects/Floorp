@@ -62,20 +62,7 @@ function OnLoadMessenger()
 	AddDataSources();
 	InitPanes();
 
-	//Load StartFolder
-    var pref = Components.classes['component://netscape/preferences'].getService(Components.interfaces.nsIPref);
-	if(pref)
-	{
-		try
-		{
-			var startFolder = pref.CopyCharPref("mailnews.start_folder");
-			ChangeFolderByURI(startFolder);
-		//	var folder = OpenFolderTreeToFolder(startFolder);
-		}
-		catch(ex)
-		{
-		}
-	}
+    loadStartFolder();
 
 	var mailSession = Components.classes['component://netscape/messenger/services/session'].getService();
 	if(mailSession)
@@ -149,6 +136,22 @@ function loadStartPage() {
         dump("Error loading start page.\n");
         return;
     }
+}
+
+function loadStartFolder()
+{
+	//Load StartFolder
+    try {
+        var pref = Components.classes['component://netscape/preferences'].getService(Components.interfaces.nsIPref);
+        
+        var startFolder = pref.CopyCharPref("mailnews.start_folder");
+        ChangeFolderByURI(startFolder);
+		//	var folder = OpenFolderTreeToFolder(startFolder);
+    }
+    catch(ex) {
+
+    }
+
 }
 
 function AddDataSources()
