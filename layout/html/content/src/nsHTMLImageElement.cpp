@@ -27,6 +27,8 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
+// XXX nav attrs: suppress
+
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
@@ -170,6 +172,18 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+  else if (aAttribute == nsHTMLAtoms::ismap) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if ((aAttribute == nsHTMLAtoms::usemap) ||
+      (aAttribute == nsHTMLAtoms::src) ||
+      (aAttribute == nsHTMLAtoms::lowsrc)) {
+    nsAutoString tmp(aValue);
+    tmp.StripWhitespace();
+    aResult.SetStringValue(tmp);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   else if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
                                                      aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
@@ -199,7 +213,36 @@ NS_IMETHODIMP
 nsHTMLImageElement::MapAttributesInto(nsIStyleContext* aContext,
                                       nsIPresContext* aPresContext)
 {
-  mInner.MapImageAlignAttributeInto(aContext, aPresContext);
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRUint8 align = value.GetIntValue();
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        aContext->GetMutableStyleData(eStyleStruct_Display);
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsStyleSpacing* spacing = (nsStyleSpacing*)
+        aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      float p2t = aPresContext->GetPixelsToTwips();
+      nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
+      switch (align) {
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        display->mFloats = NS_STYLE_FLOAT_LEFT;
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
+        break;
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        display->mFloats = NS_STYLE_FLOAT_RIGHT;
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
+        break;
+      default:
+        text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
+        break;
+      }
+    }
+  }
   mInner.MapImageAttributesInto(aContext, aPresContext);
   mInner.MapImageBorderAttributesInto(aContext, aPresContext, nsnull);
   return mInner.MapAttributesInto(aContext, aPresContext);
