@@ -227,9 +227,7 @@ CanvasFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsHTMLContainerFrame::Init(aPresContext,aContent,aParent,aContext,aPrevInFlow);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  presShell->GetViewManager(getter_AddRefs(mViewManager));
+  mViewManager = aPresContext->GetViewManager();
 
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);
@@ -359,9 +357,7 @@ CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
   } else if (aOldFrame == mFrames.FirstChild()) {
     // It's our one and only child frame
     // Damage the area occupied by the deleted frame
-    nsRect  damageRect;
-    aOldFrame->GetRect(damageRect);
-    Invalidate(aPresContext, damageRect, PR_FALSE);
+    Invalidate(aPresContext, aOldFrame->GetRect(), PR_FALSE);
 
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -430,8 +426,7 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
     if (mDoPaintFocus) {
-      nsRect focusRect;
-      GetRect(focusRect);
+      nsRect focusRect = GetRect();
       /////////////////////
       // draw focus
       // XXX This is only temporary
@@ -441,14 +436,13 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
         nsCOMPtr<nsIEventStateManager> stateManager;
         nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
         if (NS_SUCCEEDED(rv)) {
-          nsIFrame * parentFrame;
-          GetParent(&parentFrame);
+          nsIFrame * parentFrame = GetParent();
           nsIScrollableFrame* scrollableFrame;
           if (NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
             nscoord width, height;
             scrollableFrame->GetClipSize(aPresContext, &width, &height);
           }
-          nsIView* parentView = parentFrame->GetView(aPresContext);
+          nsIView* parentView = parentFrame->GetView();
 
           nsIScrollableView* scrollableView;
           if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollableView))) {
@@ -456,8 +450,7 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
             scrollableView->GetContainerSize(&width, &height);
             const nsIView* clippedView;
             scrollableView->GetClipView(&clippedView);
-            nsRect vcr;
-            clippedView->GetBounds(vcr);
+            nsRect vcr = clippedView->GetBounds();
             focusRect.width = vcr.width;
             focusRect.height = vcr.height;
             nscoord x,y;
@@ -573,11 +566,7 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     if (eReflowReason_Incremental == aReflowState.reason) {
       // Restore original kid desired dimensions in case it decides to
       // reuse them during incremental reflow.
-      nsRect r;
-      kidFrame->GetRect(r);
-      r.width = mSavedChildWidth;
-      r.height = mSavedChildHeight;
-      kidFrame->SetRect(aPresContext, r);
+      kidFrame->SetSize(nsSize(mSavedChildWidth, mSavedChildHeight));
     }
 
     // Reflow the frame
@@ -592,15 +581,13 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     // take into account the combined area and any space taken up by
     // absolutely positioned elements
     nsMargin      border;
-    nsFrameState  kidState;
 
     if (!kidReflowState.mStyleBorder->GetBorder(border)) {
       NS_NOTYETIMPLEMENTED("percentage border");
     }
-    kidFrame->GetFrameState(&kidState);
 
     // First check the combined area
-    if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+    if (NS_FRAME_OUTSIDE_CHILDREN & kidFrame->GetStateBits()) {
       // The background covers the content area and padding area, so check
       // for children sticking outside the child frame's padding edge
       nscoord paddingEdgeX = kidDesiredSize.width - border.right;

@@ -678,8 +678,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
           mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
         }
       } else {
-        nsSize s;
-        GetSize(s);
+        nsSize s = GetSize();
         nsRect r(0, 0, s.width, s.height);
         if (!r.IsEmpty()) {
           Invalidate(mPresContext, r, PR_FALSE);
@@ -864,8 +863,7 @@ nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
 
   if (mPrevInFlow) {
     for (nsIFrame* prevInFlow = mPrevInFlow ; prevInFlow; prevInFlow->GetPrevInFlow(&prevInFlow)) {
-      nsRect rect;
-      prevInFlow->GetRect(rect);
+      nsRect rect = prevInFlow->GetRect();
       if (aWidth) {
         *aWidth = rect.width;
       }
@@ -1211,14 +1209,12 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
 
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
-    nsCOMPtr<nsIContent> content;
-    nsCOMPtr<nsIAtom>    tag;
-    nsAutoString         altText;
-
-    GetContent(getter_AddRefs(content));
+    nsIContent* content = GetContent();
     if (content) {
+      nsCOMPtr<nsIAtom> tag;
       content->GetTag(getter_AddRefs(tag));
       if (tag) {
+        nsAutoString altText;
         nsCSSFrameConstructor::GetAlternateTextFor(content, tag, altText);
         DisplayAltText(aPresContext, aRenderingContext, altText, inner);
       }
@@ -1659,7 +1655,9 @@ nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
     }
   }
 
-  return GetContent(aContent);
+  *aContent = GetContent();
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;
 }
 
 // XXX what should clicks on transparent pixels do?
@@ -1819,7 +1817,7 @@ nsImageFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   fprintf(out, " [parent=%p]", mParent);
 #endif
   if (HasView()) {
-    fprintf(out, " [view=%p]", GetView(aPresContext));
+    fprintf(out, " [view=%p]", GetView());
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, 
 mRect.height);

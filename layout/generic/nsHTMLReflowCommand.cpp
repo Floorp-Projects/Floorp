@@ -233,7 +233,7 @@ nsHTMLReflowCommand::List(FILE* out) const
   // state at this point.
   if (mTargetFrame) {
     PRBool didOne = PR_FALSE;
-    for (nsIFrame* f = mTargetFrame; nsnull != f; f->GetParent(&f)) {
+    for (nsIFrame* f = mTargetFrame; f; f = f->GetParent()) {
       if (f != mTargetFrame) {
         fprintf(out, " ");
         nsFrame::ListTag(out, f);

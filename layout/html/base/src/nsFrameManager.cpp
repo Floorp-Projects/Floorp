@@ -163,9 +163,7 @@ PR_STATIC_CALLBACK(const void *)
 PrimaryFrameMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*, hdr);
-  nsCOMPtr<nsIContent> content;
-  entry->frame->GetContent(getter_AddRefs(content));
-  return content;
+  return entry->frame->GetContent();
   // and then release it, but we know the frame still owns it :-)
 }
 
@@ -175,9 +173,7 @@ PrimaryFrameMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
 {
   const PrimaryFrameMapEntry *entry =
     NS_STATIC_CAST(const PrimaryFrameMapEntry*, hdr);
-  nsCOMPtr<nsIContent> content;
-  entry->frame->GetContent(getter_AddRefs(content));
-  return content == key;
+  return entry->frame->GetContent() == key;
 }
 
 static PLDHashTableOps PrimaryFrameMapOps = {
@@ -559,7 +555,7 @@ FrameManager::GetCanvasFrame(nsIFrame** aCanvasFrame) const
           *aCanvasFrame = siblingFrame;
           break;
         } else {
-          siblingFrame->GetNextSibling(&siblingFrame);
+          siblingFrame = siblingFrame->GetNextSibling();
         }
       }
       // move on to the child's child
@@ -675,10 +671,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
   // This code should be used if/when we switch back to a 2-word entry
   // in the primary frame map.
 #if 0
-//#ifdef DEBUG
-    nsCOMPtr<nsIContent> content;
-    aPrimaryFrame->GetContent(getter_AddRefs(content));
-    NS_PRECONDITION(content == aContent, "wrong content");
+    NS_PRECONDITION(aPrimaryFrame->GetContent() == aContent, "wrong content");
 #endif
 
     // Create a new hashtable if necessary
@@ -1031,10 +1024,8 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
 
 #ifdef DEBUG
   if (mPrimaryFrameMap.ops) {
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
     PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-        PL_DHashTableOperate(&mPrimaryFrameMap, content, PL_DHASH_LOOKUP));
+        PL_DHashTableOperate(&mPrimaryFrameMap, aFrame->GetContent(), PL_DHASH_LOOKUP));
     NS_ASSERTION(!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->frame != aFrame,
                  "frame was not removed from primary frame map before "
                  "destruction or was readded to map after being removed");
@@ -1429,9 +1420,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
     child = nsnull;
     nsresult result = aFrame->FirstChild(aPresContext, childList, &child);
     while ((NS_SUCCEEDED(result)) && child) {
-      nsFrameState  state;
-      child->GetFrameState(&state);
-      if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
+      if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         child->GetFrameType(&frameType);
         if (nsLayoutAtoms::placeholderFrame == frameType) { 
@@ -1452,7 +1441,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
         }
         NS_IF_RELEASE(frameType);
       }
-      child->GetNextSibling(&child);
+      child = child->GetNextSibling();
     }
 
     NS_IF_RELEASE(childList);
@@ -1515,9 +1504,7 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
             child = nsnull;
             result = aFrame->FirstChild(presContext, childList, &child);
             while ((NS_SUCCEEDED(result)) && child) {
-              nsFrameState  state;
-              child->GetFrameState(&state);
-              if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
+              if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
                 // only do frames that are in flow
                 child->GetFrameType(&frameType);
                 if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
@@ -1537,7 +1524,7 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
                 NS_IF_RELEASE(frameType);
               }
 
-              child->GetNextSibling(&child);
+              child = child->GetNextSibling();
             }
 
             NS_IF_RELEASE(childList);
@@ -1653,19 +1640,11 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
   if (oldContext) {
     oldContext->AddRef();
     nsCOMPtr<nsIAtom> pseudoTag = oldContext->GetPseudoType();
-    nsIContent* localContent = nsnull;
-    nsIContent* content = nsnull;
-    result = aFrame->GetContent(&localContent);
-    if (NS_SUCCEEDED(result) && localContent) {
-      content = localContent;
-    }
-    else {
-      content = aParentContent;
-    }
+    nsIContent* localContent = aFrame->GetContent();
+    nsIContent* content = localContent ? localContent : aParentContent;
+
     if (aParentContent && aAttribute) { // attribute came from parent, we don't care about it here when recursing
-      nsFrameState  frameState;
-      aFrame->GetFrameState(&frameState);
-      if (0 == (frameState & NS_FRAME_GENERATED_CONTENT)) { // keep it for generated content
+      if (!(aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) { // keep it for generated content
         aAttribute = nsnull;
       }
     }
@@ -1934,9 +1913,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         nsIFrame* child = nsnull;
         result = aFrame->FirstChild(aPresContext, childList, &child);
         while (NS_SUCCEEDED(result) && child) {
-          nsFrameState  state;
-          child->GetFrameState(&state);
-          if (!(state & NS_FRAME_OUT_OF_FLOW)) {
+          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
             // only do frames that are in flow
             nsCOMPtr<nsIAtom> frameType;
             child->GetFrameType(getter_AddRefs(frameType));
@@ -1970,7 +1947,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
               }
             }
           }
-          child->GetNextSibling(&child);
+          child = child->GetNextSibling();
         }
 
         NS_IF_RELEASE(childList);
@@ -1980,7 +1957,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
 
     newContext->Release();
-    NS_IF_RELEASE(localContent);
   }
 }
 
@@ -2035,9 +2011,7 @@ FrameManager::ComputeStyleChangeFor(nsIFrame* aFrame,
     } while (frame);
 
     // Might we have special siblings?
-    nsFrameState frame2state;
-    frame2->GetFrameState(&frame2state);
-    if (! (frame2state & NS_FRAME_IS_SPECIAL)) {
+    if (!(frame2->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
       // nothing more to do here
       return NS_OK;
     }
@@ -2096,11 +2070,8 @@ FrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
 
   // Generate the hash key to store the state under
   // Exit early if we get empty key
-  nsCOMPtr<nsIContent> content;
-  rv = aFrame->GetContent(getter_AddRefs(content));
-
   nsCAutoString stateKey;
-  rv = nsContentUtils::GenerateStateKey(content, aID, stateKey);
+  rv = nsContentUtils::GenerateStateKey(aFrame->GetContent(), aID, stateKey);
   if(NS_FAILED(rv) || stateKey.IsEmpty()) {
     return rv;
   }
@@ -2128,7 +2099,7 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame,
     while (childFrame) {             
       rv = CaptureFrameState(childFrame, aState);
       // Get the next sibling child frame
-      childFrame->GetNextSibling(&childFrame);
+      childFrame = childFrame->GetNextSibling();
     }
     NS_IF_RELEASE(childListName);
     aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
@@ -2155,17 +2126,15 @@ FrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
 
   // Generate the hash key the state was stored under
   // Exit early if we get empty key
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIContent> content;
-  rv = aFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aFrame->GetContent();
   // If we don't have content, we can't generate a hash
   // key and there's probably no state information for us.
   if (!content) {
-    return rv;
+    return NS_OK;
   }
 
   nsCAutoString stateKey;
-  rv = nsContentUtils::GenerateStateKey(content, aID, stateKey);
+  nsresult rv = nsContentUtils::GenerateStateKey(content, aID, stateKey);
   if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return rv;
   }
@@ -2203,7 +2172,7 @@ FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
     while (childFrame) {
       rv = RestoreFrameState(childFrame, aState);
       // Get the next sibling child frame
-      childFrame->GetNextSibling(&childFrame);
+      childFrame = childFrame->GetNextSibling();
     }
     NS_IF_RELEASE(childListName);
     aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
