@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.3 2000/10/06 23:26:10 nelsonb%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.4 2001/06/21 20:50:06 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -59,7 +59,7 @@ NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert)
     NSSCMSRecipientInfo *ri;
     void *mark;
     SECOidTag certalgtag;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     NSSCMSRecipientEncryptedKey *rek;
     NSSCMSOriginatorIdentifierOrKey *oiok;
     unsigned long version;
@@ -274,7 +274,7 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, S
 {
     CERTCertificate *cert;
     SECOidTag certalgtag;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     SECItem *params = NULL;
     NSSCMSRecipientEncryptedKey *rek;
     NSSCMSOriginatorIdentifierOrKey *oiok;
