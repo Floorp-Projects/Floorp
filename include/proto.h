@@ -279,6 +279,8 @@ extern char *SI_PromptPassword
     (MWContext *context, char *prompt, char *URLName, Bool pickFirstUser);
 extern char * SI_Prompt
     (MWContext *context, char *prompt, char* defaultUsername, char *URLName);
+extern void SI_AnonymizeSignons();
+extern void SI_UnanonymizeSignons();
 extern void SI_StartOfForm();
 #endif
 
