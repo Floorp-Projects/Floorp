@@ -46,7 +46,7 @@
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
-#ifdef XP_WIN
+#if defined (XP_WIN) && ! defined (WINCE)
 #undef GetClassName
 #undef GetObject
 #endif
