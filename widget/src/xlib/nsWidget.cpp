@@ -228,11 +228,13 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
+  printf("nsWidget::Invalidate(sync)\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
+  printf("nsWidget::Invalidate(rect, sync)\n");
   return NS_OK;
 }
 
@@ -344,6 +346,7 @@ NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 
 NS_IMETHODIMP nsWidget::Update()
 {
+  printf("nsWidget::Update()\n");
   return NS_OK;
 }
 
@@ -399,7 +402,7 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+  attr.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
   attr.border_pixel = border_pixel;
