@@ -4,3 +4,4 @@
 
 nsISelectElement.idl
 nsITextAreaElement.idl
+nsIPhonetic.idl
