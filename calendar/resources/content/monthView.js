@@ -289,7 +289,7 @@ MonthView.prototype.createEventBox = function(itemOccurrence)
 
     if (calEvent.isAllDay) {
         eventBox.setAttribute("allday", "true");
-        eventBoxText.setAttribute("value", itemOccurrence.title );
+        eventBoxText.setAttribute("value", calEvent.title );
         // Create an image
         var newImage = document.createElement("image");
         newImage.setAttribute("class", "all-day-event-class");

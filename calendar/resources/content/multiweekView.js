@@ -222,182 +222,97 @@ function MultiweekView( calendarWindow )
 */
 MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 {
-  // Set the numberOfEventsToShow
-  if( this.numberOfEventsToShow == false )
-      this.setNumberOfEventsToShow();
+    var startDate = new Date( this.firstDateOfView );
+    var endDate = new Date( this.lastDateOfView );
+    //First just make it work with events
 
-   // get this view's events and display them
-   var viewEventList = gEventSource.getEventsDisplayForRange( this.firstDateOfView,this.lastDateOfView );
+    //Clear out all current events
+    this.removeElementsByAttribute("eventbox", "multiweekview");
+    
+    //Save this so we can use it again in onGetResult below in getListener
+    var savedThis = this;
 
-   // remove old event boxes
-  this.removeElementsByAttribute("eventbox", "multiweekview");
-   
-   //getAllToDo's
-   var viewToDoList = gEventSource.getToDosForRange( this.firstDateOfView,this.lastDateOfView );   
+    //Start of our getListener callback
+    var getListener =
+    {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
+        {
+            dump("OnOperationComplete in multiweekview\n");
+        },
 
-   // remove old todo boxes
-  this.removeElementsByAttribute("todobox","multiweekview");
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
+        {
+            dump("OnGetResult in multiweekview\n");
 
-   // clear calendarEvent counts. This controls how many events are shown full, and then the rest are shown as dots.
-   // count them by adding a property numEvents to the dayItem, which is zeroed here
-   for( var dayItemIndex = 0; dayItemIndex < this.dayBoxItemArray.length; ++dayItemIndex )
-   {
-      var dayItem = this.dayBoxItemArray[ dayItemIndex ];
-      dayItem.numEvents = 0;
-   }  
-   
-   //instead of making a bunch of new date objects, make one here and modify in the for loop
-   var DisplayDate = new Date( );
-   var eventDayInView;
-   var dayBoxItem;
-   var calendarToDo;
-   //
-   // add The ToDo to the view (only due date)
-  if(gDisplayToDoInViewChecked === "true" ) {
-     for( var todoIndex = 0; todoIndex < viewToDoList.length; ++todoIndex )
-       {
-	 calendarToDo = viewToDoList[ todoIndex ];
-	 DisplayDate.setTime( calendarToDo.due.getTime() );
-	 eventDayInView = this.indexOfDate(DisplayDate);
-	 
-	 dayBoxItem = this.dayBoxItemArray[ eventDayInView ];
-	 if( !dayBoxItem )  break;
+            for(var i = 0; i < aCount; ++i )
+            {
+                var itemOccurrence = aItems[i];
+                var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+                dump("calEvent.title:" + calEvent.title + "\n");
 
-	 dayBoxItem.numEvents +=  1;
-	 // Only displayed if there is enough room
-	 if( dayBoxItem.numEvents <= this.numberOfEventsToShow)
-	   {
-	     var todoBox = this.getToDoBox( calendarToDo,"due" );
-	     dayBoxItem.appendChild( todoBox );
-	   }
-       }
-   }
-   // add each calendarEvent
-   for( var eventIndex = 0; eventIndex < viewEventList.length; ++eventIndex )
-   {
-      var calendarEventDisplay = viewEventList[ eventIndex ];
-      
-      // get the day box for the calendarEvent's day
-      DisplayDate.setTime( calendarEventDisplay.displayDate );
-      eventDayInView = this.indexOfDate(DisplayDate);
-      dayBoxItem = this.dayBoxItemArray[ eventDayInView ];
+                var DisplayDate = new Date(calEvent.startDate.jsDate);
+                dayBoxItem = savedThis.dayBoxItemArray[savedThis.indexOfDate(DisplayDate)];
 
-      if( !dayBoxItem )
-         break;
+                var eventbox = savedThis.createEventBox(itemOccurrence);
+                dayBoxItem.appendChild(eventbox);
+            }
+        }
+    };
 
-      // Display no more than three, show dots for the events > this.numberOfEventsToShow
-      
-      dayBoxItem.numEvents +=  1;
-      
-      var eventBox;
-      if( dayBoxItem.numEvents <= this.numberOfEventsToShow )
-      {
-         // Make a box item to hold the event
-         eventBox = document.createElement( "box" );
-         eventBox.setAttribute( "id", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
-         eventBox.setAttribute( "name", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
-         //eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
-          
-         this.setEventboxClass( eventBox, calendarEventDisplay.event, "multiweek-view");
-                    
-         eventBox.setAttribute( "eventbox", "multiweekview" );
-         eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
-         eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-         eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-         eventBox.setAttribute( "tooltip", "eventTooltip" );
-         eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
-         // add a property to the event box that holds the calendarEvent that the
-         // box represents
+    var ccalendar = createCalendar();
 
-         eventBox.calendarEventDisplay = calendarEventDisplay;
-         
-         this.kungFooDeathGripOnEventBoxes.push( eventBox );
-         
-         // Make a text item to show the event title
-         
-         var eventBoxText = document.createElement( "label" );
-         eventBoxText.setAttribute( "crop", "end" );
-         eventBoxText.setAttribute( "class", "multiweek-day-event-text-class" );
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,0,jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
 
-         if ( calendarEventDisplay.event.allDay == true )
-         {
-            eventBox.setAttribute( "allday", "true" );
-            eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
-            // Create an image
-            var newImage = document.createElement("image");
-            newImage.setAttribute( "class", "all-day-event-class" );
-            eventBox.appendChild( newImage );
-         }
-         else
-         {
-            // To format the starting time of the event
-            var eventStartTime = new Date( calendarEventDisplay.event.start.getTime() ) ;
-            var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime( eventStartTime );
-            // display as "12:15 titleevent"
-            eventBoxText.setAttribute( "value",  StartFormattedTime+' '+calendarEventDisplay.event.title);
-         }
+}      
+// JT: Liberal code reuse (ie. Cut and Paste)
+// Create an eventbox and return it. Expects an ItemOccurence
+MultiweekView.prototype.createEventBox = function multiweekView_createEventBox(itemOccurrence)
+{
+    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+    // Make a box item to hold the event
+    eventBox = document.createElement( "box" );
+    eventBox.setAttribute( "id", "multiweek-view-event-box-" + itemOccurrence.id );
+    eventBox.setAttribute( "name", "multiweek-view-event-box-"+ itemOccurrence.id );
+    eventBox.setAttribute("class", "multiweek-view-event-class");
+    
+    eventBox.setAttribute( "eventbox", "multiweekview" );
 
-         //you need this flex in order for text to crop
-         eventBoxText.setAttribute( "flex", "1" );
+    eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
+    eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
+    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
+    eventBox.setAttribute( "tooltip", "eventTooltip" );
+    eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
-         // add the text to the event box and the event box to the day box
-         
-         eventBox.appendChild( eventBoxText );        
-         dayBoxItem.appendChild( eventBox );
-      }
-      else
-      {
-         //if there is not a box to hold the little dots for this day...
-	     var dotBoxHolder;
-         if ( !document.getElementById( "multiweekdotbox"+eventDayInView ) )
-         {
-            //make one
-            dotBoxHolder = document.createElement( "hbox" );
-            dotBoxHolder.setAttribute( "id", "multiweekdotbox"+eventDayInView );
-            dotBoxHolder.setAttribute( "eventbox", "multiweekview" );
-                        
-            //add the box to the day.
-            dayBoxItem.appendChild( dotBoxHolder );
-         }
-         else
-         {
-            //otherwise, get the box
-            dotBoxHolder = document.getElementById( "multiweekdotbox"+eventDayInView );
-         }
-         
-         if( dotBoxHolder.childNodes.length < kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
-         {
-            var eventDotBox = document.createElement( "box" );
-            eventDotBox.setAttribute( "eventbox", "multiweekview" );
-            
-            //show a dot representing an event.
-            
-            //NOTE: This variable is named eventBox because it needs the same name as 
-            // the regular boxes, for the next part of the function!
-            eventBox = document.createElement( "image" );
-            eventBox.setAttribute( "class", "multiweek-view-event-dot-class" );
-            eventBox.setAttribute( "id", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
-            eventBox.setAttribute( "name", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
-            eventBox.calendarEventDisplay = calendarEventDisplay;
-            eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-            eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
-            eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-            eventBox.setAttribute( "tooltip", "eventTooltip" );
-   
-            this.kungFooDeathGripOnEventBoxes.push( eventBox );
-            
-            //add the dot to the extra box.
-            eventDotBox.appendChild( eventBox );
-            dotBoxHolder.appendChild( eventDotBox );
-         }
-      }
+    eventBox.event = calEvent;
 
-      // mark the box as selected, if the event is
-      if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) )
-      {
-         this.selectBoxForEvent( calendarEventDisplay.event ); 
-      } 
-   }
+    var eventBoxText = document.createElement( "label" );
+    eventBoxText.setAttribute( "crop", "end" );
+    eventBoxText.setAttribute( "class", "multiweek-day-event-text-class" );
+
+    if(calEvent.isAllDay)
+    {
+        eventBox.setAttribute("allday", "true");
+        eventBoxText.setAttribute("value", calEvent.title );
+        // Create an image
+        var newImage = document.createElement("image");
+        newImage.setAttribute("class", "all-day-event-class");
+        eventBox.appendChild(newImage);
+    }
+    else
+    {
+        var eventStartTime = new Date(calEvent.startDate.jsDate.getTime());
+        var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime(eventStartTime);
+        // display as "12:15 titleevent"
+        eventBoxText.setAttribute("value", StartFormattedTime+' '+ calEvent.title);
+    }
+
+    eventBoxText.setAttribute( "flex", "1" );
+
+    // add the text to the event box
+    eventBox.appendChild( eventBoxText );
+
+    return eventBox;
+
 }
 
 
