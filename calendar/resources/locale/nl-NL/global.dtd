@@ -106,6 +106,6 @@
 <!ENTITY more.label "MEER" >
 <!ENTITY less.label "MINDER" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
+<!ENTITY add.label     "Toevoegen">
+<!ENTITY edit.label    "Bewerken">
+<!ENTITY remove.label  "Verwijderen">
