@@ -340,7 +340,7 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
         rv = GetHTMLAttribute(nsHTMLAtoms::style, val);
         if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
             val.GetUnit() == eHTMLUnit_ISupports) {
-          nsCOMPtr<nsISupports> supports(dont_AddRef(val.GetISupportsValue()));
+          nsCOMPtr<nsISupports> supports(val.GetISupportsValue());
           nsCOMPtr<nsICSSStyleRule> rule(do_QueryInterface(supports));
 
           if (rule) {
@@ -2308,7 +2308,7 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::style, value)) {
       if (eHTMLUnit_ISupports == value.GetUnit()) {
-        nsCOMPtr<nsISupports> supports = getter_AddRefs(value.GetISupportsValue());
+        nsCOMPtr<nsISupports> supports = value.GetISupportsValue();
         if (supports)
           CallQueryInterface(supports, aStyleRule);
       }
@@ -2687,9 +2687,9 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
   if (docShell) {
     rv = docShell->GetLayoutHistoryState(aHistory);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!*aHistory) {
-      return NS_OK;
-    }
+  }
+  if (!*aHistory) {
+    return NS_OK;
   }
 
   //
