@@ -80,18 +80,13 @@ nsresult nsCookieService::Init()
   COOKIE_RegisterPrefCallbacks();
   nsresult rv;
 
-  // cache mDir
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mDir));
-  if (NS_SUCCEEDED(rv)) {
-    COOKIE_Read();
-  }
+  COOKIE_Read();
 
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);
-    observerService->AddObserver(this, "xpcom-shutdown", PR_TRUE);
     observerService->AddObserver(this, "cookieIcon", PR_FALSE);
   }
 
@@ -214,9 +209,9 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
-    
-    COOKIE_Write(mDir);
+    COOKIE_Write();
     COOKIE_RemoveAll();
+
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
       COOKIE_DeletePersistentUserData();
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
