@@ -54,7 +54,14 @@ PRInt32 i, n;
     NS_RELEASE(fm);
   }
   mFontMetrics.Clear();
+  NS_IF_RELEASE(mSpec);
 
+}
+
+void nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
+{
+  mSpec = aSpec;
+  NS_ADDREF(aSpec);
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextPS, kDeviceContextIID)

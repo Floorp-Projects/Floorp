@@ -19,7 +19,12 @@
 #ifndef nsDeviceContextPS_h___
 #define nsDeviceContextPS_h___
 
+#define WINTEST
+
+#ifdef WINTEST
 #include <windows.h>
+#endif
+
 #include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
 #include "nsIWidget.h"
@@ -42,7 +47,11 @@ public:
    * with a NativeWidget.
    * @update 12/21/98 dwc
    */
-  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext, HDC aTheDC);  
+#ifdef WINTEST
+  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext, HDC aTheDC); 
+#else
+  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext);  
+#endif
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -54,7 +63,6 @@ public:
 
 
   NS_IMETHOD 	  CheckFontExistence(const nsString& aFontName);
-  //NS_IMETHOD 	  CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHOD 	  GetDepth(PRUint32& aDepth);
   NS_IMETHOD 	  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
@@ -72,6 +80,8 @@ public:
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);
 
+  virtual void  SetSpec(nsIDeviceContextSpec *aSpec);
+
 protected:
   virtual 	~nsDeviceContextPS();
   
@@ -86,10 +96,13 @@ public:
   //static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
   nsPostScriptObj*    GetPrintContext() { return mPSObj; }
 
+#ifdef WINTEST
 public:
   HDC           mDC;               // this is temporary!!!
+#endif
 
-friend nsDeviceContextWin;         // need to be a friend of the class using us.
+
+//friend nsDeviceContextWin;         // need to be a friend of the class using us.
 };
 
 #endif /* nsDeviceContextPS_h___ */

@@ -69,7 +69,7 @@ PS_State :: PS_State()
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mFontMetrics = nsnull;
   mCurrentColor = NS_RGB(0, 0, 0);
-  mTextColor = RGB(0, 0, 0);
+  mTextColor = NS_RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
 }
 
@@ -347,7 +347,9 @@ NS_IMETHODIMP nsRenderingContextPS :: IsVisibleRect(const nsRect& aRect, PRBool 
 NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
 nsRect  trect = aRect;
+#ifdef XP_PC
 int     cliptype;
+#endif
 
   mStates->mLocalClip = aRect;
 
@@ -384,10 +386,12 @@ int     cliptype;
     NS_ASSERTION(FALSE, "illegal clip combination");
   }
 
+#ifdef XP_PC
   if (cliptype == NULLREGION)
     aClipEmpty = PR_TRUE;
   else
     aClipEmpty = PR_FALSE;
+#endif
 
   return NS_OK;
 }
@@ -600,14 +604,14 @@ nsRenderingContextPS :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
 {
 
 const nsPoint*  np;
-POINT           pp;
+nsPoint         pp;
 
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
   np = &aPoints[0];
 
-	pp.x = np->x;
-	pp.y = np->y;
+  pp.x = np->x;
+  pp.y = np->y;
   mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
   mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
@@ -709,7 +713,7 @@ NS_IMETHODIMP
 nsRenderingContextPS :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
 const nsPoint*  np;
-POINT           pp;
+nsPoint         pp;
 
   mPSObj->newpath();
 
@@ -745,7 +749,7 @@ NS_IMETHODIMP
 nsRenderingContextPS :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
 const nsPoint*  np;
-POINT           pp;
+nsPoint         pp;
 
 
   mPSObj->newpath();
@@ -942,6 +946,7 @@ nsRenderingContextPS :: GetWidth(const char* aString, nscoord& aWidth)
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& aWidth)
 {
+#if XP_PC
   if (nsnull != mFontMetrics){
     SIZE  size;
 
@@ -956,6 +961,9 @@ nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& a
   }
   else
     return NS_ERROR_FAILURE;
+#else
+    return NS_OK;
+#endif
 }
 
 /** ---------------------------------------------------
@@ -975,6 +983,7 @@ nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoord &aWidth, PRInt32 *aFontID)
 {
+#ifdef XP_PC
   if (nsnull != mFontMetrics){
     SIZE  size;
 
@@ -992,6 +1001,9 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
   }
   else
     return NS_ERROR_FAILURE;
+#else
+    return NS_OK;
+#endif
 }
 
 /** ---------------------------------------------------
@@ -1007,13 +1019,12 @@ PRInt32	      x = aX;
 PRInt32       y = aY;
 
   SetupFontAndColor();
-
-  INT dxMem[500];
-  INT* dx0;
+  PRInt32 dxMem[500];
+  PRInt32* dx0 = 0;
   if (nsnull != aSpacing) {
     dx0 = dxMem;
     if (aLength > 500) {
-      dx0 = new INT[aLength];
+      dx0 = new PRInt32[aLength];
     }
     mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
@@ -1204,10 +1215,10 @@ NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 void 
 nsRenderingContextPS :: SetupFontAndColor(void)
 {
+#ifdef XP_PC
 nscoord         fontHeight = 0;
 nsFont          *font;
 nsFontHandle    fontHandle;       // WINDOWS ONLY
-
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
@@ -1222,6 +1233,7 @@ nsFontHandle    fontHandle;       // WINDOWS ONLY
   mStates->mFontMetrics = mFontMetrics;
 
   mPSObj->setscriptfont(fontHeight,font->style,font->variant,font->weight,font->decorations);
+#endif
 }
 
 

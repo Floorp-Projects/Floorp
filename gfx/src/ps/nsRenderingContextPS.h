@@ -42,7 +42,7 @@ class nsRenderingContextPS : public nsIRenderingContext
 {
 public:
   nsRenderingContextPS();
-  ~nsRenderingContextPS();
+  virtual ~nsRenderingContextPS();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];

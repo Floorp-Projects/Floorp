@@ -25,8 +25,8 @@
 #include "xp_file.h"
 #include "ntypes.h"
 #include "net.h"
-#include "nscolor.h"
-#include "nscoord.h"
+#include "nsColor.h"
+#include "nsCoord.h"
 
 
 class nsIImage;
