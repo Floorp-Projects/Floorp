@@ -224,7 +224,7 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
 		{
 		  data = cliphdr->data;
 		  dataLen = cliphdr->length;
-          char *dataStr = cliphdr->data;
+          char *dataStr = (char *)cliphdr->data;
 		  
 		  /* If this is a TEXT, and is NULL teminated then strip it off */
           if ( (strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_TEXT) == 0)
