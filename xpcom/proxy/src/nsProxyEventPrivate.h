@@ -22,7 +22,6 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsHashtable.h"
 
 #include "plevent.h"
 #include "xptcall.h"    // defines nsXPTCVariant
@@ -45,44 +44,28 @@ class nsProxyEventClass;
 { 0xeea90d45, 0xb059, 0x11d2,                       \
   { 0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33 } }
 
-
-#define NS_PROXYEVENT_OBJECT_IID \
-{ 0xec373590, 0x9164, 0x11d3,    \
-{0x8c, 0x73, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
-
-static NS_DEFINE_IID(kProxyEventClassIID, NS_PROXYEVENT_CLASS_IID);
-static NS_DEFINE_IID(kProxyEventObjectIID, NS_PROXYEVENT_OBJECT_IID);
-
-
 class nsProxyEventClass : public nsISupports
 {
 public:
+    // all the interface method declarations...
     NS_DECL_ISUPPORTS
-    
-    
-    static const nsIID& GetIID() {static nsIID iid = kProxyEventClassIID; return iid;}
+    NS_IMETHOD DelegatedQueryInterface(nsProxyEventObject* self, REFNSIID aIID, void** aInstancePtr);
+
     static nsProxyEventClass* GetNewOrUsedClass(REFNSIID aIID);
-    
-    NS_IMETHOD DelegatedQueryInterface( nsProxyEventObject* self, 
-                                        REFNSIID aIID, 
-                                        void** aInstancePtr);
 
-
+    REFNSIID                 GetIID() const {return mIID;}
     nsIInterfaceInfo*        GetInterfaceInfo() const {return mInfo;}
-    const nsIID&             GetProxiedIID()    const {return mIID; }
+	nsresult				 CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID, nsProxyEventObject** aInstancePtr);
+
 protected:
-    nsProxyEventClass();
+
     nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo);
     virtual ~nsProxyEventClass();
     
 private:
-    nsIID                      mIID;
-    nsCOMPtr<nsIInterfaceInfo> mInfo;
-    uint32*                    mDescriptors;
-
-	nsresult	      CallQueryInterfaceOnProxy(nsProxyEventObject* self, 
-                                                REFNSIID aIID, 
-                                                nsProxyEventObject** aInstancePtr);
+    nsIInterfaceInfo* mInfo;
+    nsIID             mIID;
+    uint32*           mDescriptors;
 };
 
 
@@ -92,53 +75,42 @@ class nsProxyEventObject : public nsXPTCStubBase
 public:
 
     NS_DECL_ISUPPORTS
-    static const nsIID& GetIID() {static nsIID iid = kProxyEventObjectIID; return iid;}
-    
-    static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
-                                                 PRInt32 proxyType,
-                                                 nsISupports *aObj,
-                                                 REFNSIID aIID);
-    
-    static PRUint32 GetProxyHashKey(    nsISupports *rootProxy, 
-                                        nsIEventQueue *destQueue, 
-                                        PRInt32 proxyType);
 
-
-    
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
     // call this method and return result
     NS_IMETHOD CallMethod(PRUint16 methodIndex, const nsXPTMethodInfo* info, nsXPTCMiniVariant* params);
 
+    
+    static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
+                                                 PRInt32 proxyType,
+                                                 nsISupports *aObj,
+                                                 REFNSIID aIID);
 
+
+    REFNSIID              GetIID()             const { return GetClass()->GetIID();}
     nsProxyEventClass*    GetClass()           const { return mClass; }
-    nsIEventQueue*        GetQueue()           const { return (mProxyObject ? mProxyObject->GetQueue()     : nsnull);}
-    nsISupports*          GetRealObject()      const { return (mProxyObject ? mProxyObject->GetRealObject(): nsnull);}
-    PRInt32               GetProxyType()       const { return (mProxyObject ? mProxyObject->GetProxyType() : nsnull);} 
+    nsIEventQueue*        GetQueue()           const { return mProxyObject->GetQueue(); }
+    nsISupports*          GetRealObject()      const { return mProxyObject->GetRealObject(); }
+    
 
-    nsProxyEventObject();
+protected:
+    virtual ~nsProxyEventObject();
+    
     nsProxyEventObject(nsIEventQueue *destQueue,
                        PRInt32 proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
-                       nsProxyEventObject* root,
-                       PRUint32 hashValue);
-    
-    virtual ~nsProxyEventObject();
+                       nsProxyEventObject* root);
     
     nsProxyEventObject*   Find(REFNSIID aIID);
 
-#ifdef DEBUG_dougt
-    void DebugDump(const char * message, PRUint32 hashKey);
-#endif
+private:
+    nsresult            RootRemoval();
 
-protected:
-    nsVoidKey           mHashKey;
-
-    nsCOMPtr<nsProxyObject>      mProxyObject;
-    nsCOMPtr<nsProxyEventClass>  mClass;
-    nsCOMPtr<nsProxyEventObject> mRoot;
-    
+    nsProxyObject*      mProxyObject;
+    nsProxyEventClass*  mClass;
+    nsProxyEventObject* mRoot;
     nsProxyEventObject* mNext;
 };
 
