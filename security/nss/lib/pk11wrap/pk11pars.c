@@ -130,9 +130,11 @@ SECMOD_CreateModule(char *library, char *moduleName, char *parameters, char *nss
 							&mod->slotInfoCount);
     if (slotParams) PORT_Free(slotParams);
     /* new field */
-    mod->trustOrder = pk11_argReadLong("trustOrder",nss);
+    mod->trustOrder = pk11_argReadLong("trustOrder",nss,
+						PK11_DEFAULT_TRUST_ORDER,NULL);
     /* new field */
-    mod->cipherOrder = pk11_argReadLong("cipherOrder",nss);
+    mod->cipherOrder = pk11_argReadLong("cipherOrder",nss,
+						PK11_DEFAULT_CIPHER_ORDER,NULL);
     /* new field */
     mod->isModuleDB = pk11_argHasFlag("flags","moduleDB",nss);
     mod->moduleDBOnly = pk11_argHasFlag("flags","moduleDBOnly",nss);
