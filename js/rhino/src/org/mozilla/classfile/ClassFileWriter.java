@@ -118,7 +118,7 @@ public class ClassFileWriter extends LabelTable {
     }
 
     public static String fullyQualifiedForm(String name) {
-    	return name.replace('.', '/');
+        return name.replace('.', '/');
     }
 
     /**
@@ -972,7 +972,7 @@ public class ClassFileWriter extends LabelTable {
     public void write(OutputStream oStream)
         throws IOException
     {
-    	DataOutputStream out = new DataOutputStream(oStream);
+        DataOutputStream out = new DataOutputStream(oStream);
 
         short sourceFileAttributeNameIndex = 0;
         if (itsSourceFileNameIndex != 0)
@@ -1004,6 +1004,65 @@ public class ClassFileWriter extends LabelTable {
         }
         else
             out.writeShort(0);      // no attributes
+    }
+
+    private int getWriteSize()
+    {
+        int size = 0;
+
+        if (itsSourceFileNameIndex != 0) {
+            itsConstantPool.addUtf8("SourceFile");
+        }
+
+        size += 8; //writeLong(FileHeaderConstant);
+        size += itsConstantPool.getWriteSize();
+        size += 2; //writeShort(itsFlags);
+        size += 2; //writeShort(itsThisClassIndex);
+        size += 2; //writeShort(itsSuperClassIndex);
+        size += 2; //writeShort(itsInterfaces.size());
+        size += 2 * itsInterfaces.size();
+
+        size += 2; //writeShort(itsFields.size());
+        for (int i = 0; i < itsFields.size(); i++) {
+            size += ((ClassFileField)(itsFields.elementAt(i))).getWriteSize();
+        }
+
+        size += 2; //writeShort(itsMethods.size());
+        for (int i = 0; i < itsMethods.size(); i++) {
+            size += ((ClassFileMethod)(itsMethods.elementAt(i))).getWriteSize();
+        }
+
+        if (itsSourceFileNameIndex != 0) {
+            size += 2; //writeShort(1);  attributes count
+            size += 2; //writeShort(sourceFileAttributeNameIndex);
+            size += 4; //writeInt(2);
+            size += 2; //writeShort(itsSourceFileNameIndex);
+        }else {
+            size += 2; //out.writeShort(0);  no attributes
+        }
+
+        return size;
+    }
+
+    /**
+     * Get the class file as array of bytesto the OutputStream.
+     */
+    public byte[] toByteArray()
+    {
+        int size = (DEBUG) ? getWriteSize() : 0;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(size);
+        try {
+            write(bos);
+        }
+        catch (IOException ioe) {
+            throw new RuntimeException(); // Unexpected
+        }
+        byte[] classBytes = bos.toByteArray();
+        if (DEBUG && classBytes.length != size) {
+            // Check getWriteSize is consistent with write!
+            throw new RuntimeException();
+        }
+        return classBytes;
     }
 
     /*
@@ -1062,7 +1121,7 @@ public class ClassFileWriter extends LabelTable {
 
     private final static long FileHeaderConstant = 0xCAFEBABE0003002DL;
     // Set DEBUG flags to true to get better checking and progress info.
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private static final boolean DEBUGSTACK = false;
     private static final boolean DEBUGLABELS = false;
     private static final boolean DEBUGCODE = false;
@@ -1177,6 +1236,17 @@ class ClassFileField {
         }
     }
 
+    int getWriteSize()
+    {
+        int size = 2 * 3;
+        if (itsAttr == null) {
+            size += 2;
+        }else {
+            size += 2 + 2 * 4;
+        }
+        return size;
+    }
+
     private short itsNameIndex;
     private short itsTypeIndex;
     private short itsFlags;
@@ -1204,6 +1274,11 @@ class ClassFileMethod {
         out.writeShort(itsTypeIndex);
         out.writeShort(1);              // Code attribute only
         out.write(itsCodeAttribute, 0, itsCodeAttribute.length);
+    }
+
+    int getWriteSize()
+    {
+        return 2 * 4 + itsCodeAttribute.length;
     }
 
     private short itsNameIndex;
@@ -1240,6 +1315,11 @@ class ConstantPool {
     {
         out.writeShort((short)(itsTopIndex));
         out.write(itsPool, 0, itsTop);
+    }
+
+    int getWriteSize()
+    {
+        return 2 + itsTop;
     }
 
     short addConstant(int k)
