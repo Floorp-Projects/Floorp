@@ -30,4 +30,4 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(REGCHROME) content help help.jar
-	$(REGCHROME) locale en-US/help help.jar
+	$(REGCHROME) locale en-US/help en-US.jar
