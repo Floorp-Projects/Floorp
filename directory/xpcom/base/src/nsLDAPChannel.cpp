@@ -754,7 +754,9 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     //
     rv = aMessage->GetErrorCode(&errorCode);
     if ( NS_FAILED(rv) ) {
+#ifdef DEBUG
 	PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(errorCode));
+#endif
 	return NS_ERROR_FAILURE;
     }
 
@@ -823,7 +825,9 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 	//
 	rv = aMessage->GetValues(attr, &attrCount, &vals);
 	if (NS_FAILED(rv)) {
+#ifdef DEBUG
 	    PR_fprintf(PR_STDERR, "aMessage->GetValues\n");
+#endif
 	    return rv;;
 	}
 
