@@ -72,6 +72,7 @@ XPIDLSRCS	= \
 		nsIMIMEInputStream.idl \
 		nsIPasswordManager.idl \
 		nsIPasswordManagerInternal.idl \
+		nsIPermissionManager.idl \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
 		nsIProtocolProxyService.idl \
