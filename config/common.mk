@@ -81,7 +81,7 @@ JAVAC_FLAGS		= -classpath $(JAVAC_CLASSPATH) $(JAVAC_OPTIMIZER) -d $(JAVA_DESTPA
 # 
 # appropriately delimited, in that order
 #
-JAVAC_CLASSPATH		= $(JAVA_DESTPATH)$(PATH_SEPARATOR)$(JAVA_SOURCEPATH)
+JAVAC_CLASSPATH		= $(JAVAC_ZIP)$(PATH_SEPARATOR)$(JAVA_DESTPATH)$(PATH_SEPARATOR)$(JAVA_SOURCEPATH)
 
 ######################################################################
 # javadoc
@@ -95,7 +95,7 @@ JAVADOC			= $(JAVADOC_PROG) $(JAVADOC_FLAGS)
 ######################################################################
 # javah
 
-JAVAH_FLAGS		= -classpath $(JAVA_DESTPATH)
+JAVAH_FLAGS		= -classpath $(JAVAC_ZIP)$(PATH_SEPARATOR)$(JAVA_DESTPATH)
 JAVAH			= $(JAVAH_PROG) $(JAVAH_FLAGS)
 
 ######################################################################
