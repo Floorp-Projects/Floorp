@@ -54,21 +54,7 @@ nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 
 NS_IMPL_ADDREF(nsMsgFilterList)
 NS_IMPL_RELEASE(nsMsgFilterList)
-
-NS_IMETHODIMP nsMsgFilterList::QueryInterface(REFNSIID aIID, void** aResult)
-{   
-    if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
-    if (aIID.Equals(NS_GET_IID(nsIMsgFilterList)) ||
-        aIID.Equals(NS_GET_IID(nsISupports)))
-	{
-        *aResult = NS_STATIC_CAST(nsMsgFilterList*, this);   
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}   
+NS_IMPL_QUERY_INTERFACE1(nsMsgFilterList, nsIMsgFilterList)
 
 NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFilter **aFilter)
 {
