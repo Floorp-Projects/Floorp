@@ -792,7 +792,7 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
     }
   }
   else {  // load failed or document now gone, cleanup    
-    if (mDocument) {  // still have doc, must have failed
+    if (mDocument && NS_FAILED(aStatus)) {  // still have doc, must have failed
       // Dump error message to console.
 #ifdef NECKO
       char *url;
