@@ -28,6 +28,7 @@
 #include "prtime.h"
 #include "prmon.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 class nsFactoryEntry;
 class nsDll;
@@ -44,7 +45,7 @@ extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsComponentManagerImpl : public nsIComponentManager {
+class nsComponentManagerImpl : public nsIComponentManager, public nsSupportsWeakReference {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMPONENTMANAGER

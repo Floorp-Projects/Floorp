@@ -206,7 +206,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
         nsComponentManagerImpl::gComponentManager = compMgr;
     }
     
-    rv = servMgr->RegisterService(kComponentManagerCID, compMgr);
+    rv = servMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
 
     // 3. Register the global services with the component manager so that
