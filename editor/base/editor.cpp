@@ -723,9 +723,9 @@ getDOMSelection(nsIPresShell* presShell)
   nsCOMPtr<nsIDOMSelection> selection;  // will be the return value
 
   nsresult result;
-  nsISelection* frameSelection;
-  result = presShell->GetSelection(&frameSelection);
-  if ((!NS_SUCCEEDED(result)) || (nsnull == frameSelection))
+  nsCOMPtr<nsISelection> frameSelection;
+  result = presShell->GetSelection(getter_AddRefs(frameSelection));
+  if ((!NS_SUCCEEDED(result)) || !frameSelection)
     return selection;
 
   frameSelection->QueryInterface(kIDOMSelectionIID,
@@ -759,9 +759,9 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
                                           InsertTextTxn ** aTxn)
 {
   nsresult result;
-  nsISelection* selection;
-  result = mPresShell->GetSelection(&selection);
-  if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
+  nsCOMPtr<nsISelection> selection;
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = selection;
@@ -857,9 +857,9 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
   {
     return result;
   }
-  nsISelection* selection;
-  result = mPresShell->GetSelection(&selection);
-  if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
+  nsCOMPtr<nsISelection> selection;
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = selection;
@@ -947,9 +947,9 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
   {
     return result;
   }
-  nsISelection* selection;
-  result = mPresShell->GetSelection(&selection);
-  if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
+  nsCOMPtr<nsISelection> selection;
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = selection;
