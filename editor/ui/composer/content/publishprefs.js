@@ -54,12 +54,6 @@ function GetPublishSiteData()
   // Array of all site data
   var siteArray = [];
 
-  var siteCount = siteNameList.length;
-
-  // Build array for sites in alphabetical order (XXX Ascii sort, not locale-aware)
-  if (siteCount > 1)
-    siteNameList.sort();
-
   // We  rewrite siteName prefs to eliminate names if data is bad
   //  and to be sure order is the same as sorted name list
   try {
@@ -68,7 +62,7 @@ function GetPublishSiteData()
 
   // Get publish data using siteName as the key
   var index = 0;
-  for (var i = 0; i < siteCount; i++)
+  for (var i = 0; i < siteNameList.length; i++)
   {
     // Associated data uses site name as key
     var publishData = GetPublishData_internal(publishBranch, siteNameList[i]);
@@ -147,8 +141,11 @@ function CreatePublishDataFromUrl(docUrl)
   //XXX Look for "?", "=", and "&" ?
   pubUrl = pubUrl.slice(0, lastSlash+1);
 
+  var siteName = CreateSiteNameFromUrl(pubUrl, pubSiteData);
+
   publishData = { 
-    siteName : pubUrl,
+    siteName : siteName,
+    previousSiteName : siteName,
     filename : GetFilename(docUrl),
     username : userObj.value,
     password : passObj.value,
@@ -164,6 +161,28 @@ function CreatePublishDataFromUrl(docUrl)
   }
 
   return publishData;
+}
+
+function CreateSiteNameFromUrl(url, publishSiteData)
+{
+  var host = GetHost(url);
+  var schemePostfix = " (" + GetScheme(url) + ")";
+  var siteName = host + schemePostfix;
+
+  if (publishSiteData)
+  {
+    // Look for duplicates. Append "-1"  etc until unique name found
+    var i = 1;
+    var exists = false;
+    do {
+      exists = PublishSiteNameExists(siteName, publishSiteData, -1)  
+      if (exists)
+        siteName = host + "-" + i + schemePostfix;
+      i++;
+    }
+    while (exists);
+  }
+  return siteName;
 }
 
 // Similar to above, but in param is a site profile name
@@ -232,6 +251,7 @@ function GetPublishData_internal(publishBranch, siteName)
 
   var publishData = { 
     siteName : siteName,
+    previousSiteName : siteName,
     filename : "",
     username : GetPublishStringPref(publishBranch, prefPrefix+"username"),
     savePassword : savePassword,
@@ -337,9 +357,9 @@ function SavePublishDataToPrefs(publishData)
   if (!publishBranch)
     return false;
 
-  // Use the site URL if no site name is provided
+  // Create name from URL if no site name is provided
   if (!publishData.siteName)
-    publishData.siteName = publishData.publishUrl;
+    publishData.siteName = CreateSiteNameFromUrl(publishData.publishUrl, publishData);
 
   var siteCount = {value:0};
   var siteNamePrefs;
@@ -354,13 +374,17 @@ function SavePublishDataToPrefs(publishData)
     return SavePublishSiteDataToPrefs(siteData, publishData.siteName);
   }
 
+  // Use "previous" name if available in case it was changed
+  var previousSiteName =  ("previousSiteName" in publishData && publishData.previousSiteName) ? 
+                            publishData.previousSiteName : publishData.siteName;
+
   // Find site number of existing site or fall through at next available one
   // (Number is arbitrary; needed to construct unique "site_name.x" pref string)
-  var i;
-  for (i = 0; i < siteCount.value; i++)
+  for (var i = 0; i < siteCount.value; i++)
   {
     var siteName = GetPublishStringPref(publishBranch, "site_name."+i);
-    if (siteName == publishData.siteName)
+
+    if (siteName == previousSiteName)
     {
       // Delete prefs for an existing site
       try {
@@ -370,11 +394,20 @@ function SavePublishDataToPrefs(publishData)
     }
   }
 
+  // We've taken care of finding old duplicate, so be sure 'previous name' is current
+  publishData.previousSiteName = publishData.siteName;
 
   var ret = SavePublishData_Internal(publishBranch, publishData, i);
   if (ret)
   {
+    // Check if siteName was the default and we need to update that
+    var defaultSiteName = GetPublishStringPref(publishBranch, "default_site");
+    if (previousSiteName == defaultSiteName 
+        && publishData.siteName != defaultSiteName)
+      SetPublishStringPref(publishBranch, "default_site", publishData.siteName);
+
     SavePrefFile();
+
     // Clear signal to save these data
     if ("notInSiteData" in publishData && publishData.notInSiteData)
       publishData.notInSiteData = false;
@@ -658,10 +691,11 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
     //  So we must examine all records to find the site URL that best
     //    matches the document URL: the longest-matching substring (XXX is this right?)
     var lenObj = {value:0};
-    var tempData = publishSiteData[i];
-    
+    var tempData = Clone(publishSiteData[i]);
+
     // Check if this site matches docUrl (returns length of match if found)
     var len = FillInMatchingPublishData(tempData, docUrl);
+
     if (len > siteUrlLen)
     {
       siteIndex = i;
@@ -700,8 +734,10 @@ function FillInMatchingPublishData(publishData, docUrl)
   username = username.value;
 
   var matchedLength = 0;
-  var pubUrlFound = baseUrl.indexOf(publishData.publishUrl) == 0;
-  var browseUrlFound = baseUrl.indexOf(publishData.browseUrl) == 0;
+  var pubUrlFound = publishData.publishUrl ?
+                      baseUrl.indexOf(publishData.publishUrl) == 0 : false;
+  var browseUrlFound = publishData.browseUrl ?
+                          baseUrl.indexOf(publishData.browseUrl) == 0 : false;
 
   if ((pubUrlFound || browseUrlFound) 
       && (!username || !publishData.username || username == publishData.username))
@@ -710,10 +746,13 @@ function FillInMatchingPublishData(publishData, docUrl)
     matchedLength = pubUrlFound ? publishData.publishUrl.length 
                             : publishData.browseUrl.length;
 
-    publishData.filename = filename;
+    if (matchedLength > 0)
+    {
+      publishData.filename = filename;
 
-    // Subdirectory within the site is whats left in baseUrl after the matched portion
-    publishData.docDir = FormatDirForPublishing(baseUrl.slice(matchedLength));
+      // Subdirectory within the site is what's left in baseUrl after the matched portion
+      publishData.docDir = FormatDirForPublishing(baseUrl.slice(matchedLength));
+    }
   }
   return matchedLength;
 }
