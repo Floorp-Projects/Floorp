@@ -51,6 +51,7 @@ public:
 class nsBoxSizeList
 {
 public:
+    virtual ~nsBoxSizeList() {}
     virtual nsBoxSize GetBoxSize(nsBoxLayoutState& aState, PRBool aIsHorizontal)=0;
     virtual nsBoxSizeList* GetFirst()=0;
     virtual nsBoxSizeList* GetLast()=0;
