@@ -3,8 +3,8 @@
 # General purpose utility functions.  Every project needs a kludge
 # bucket for common access.
 
-# $Revision: 1.4 $ 
-# $Date: 2000/09/18 19:23:17 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/09/22 15:01:32 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -66,8 +66,13 @@ sub set_static_vars {
   
   # localtime(2000 * 1000 * 400) = 'Tue May  9 02:13:20 1995'
   $SMALLEST_VALID_TIME = (2000 * 1000 * 400);
-  
 
+  # It is easier to understand algorithms if you use named constants,
+  # rather then some mysterious constants hard coded into the code.
+
+  $SECONDS_PER_MINUTE = (60);
+  $SECONDS_PER_HOUR = (60*60);
+  $SECONDS_PER_DAY = (60*60*24);
 
   # where errors are loged
   
