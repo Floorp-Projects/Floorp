@@ -144,14 +144,6 @@ function editPage(url, launchWindow, delay)
   } catch(e) {}
 }
 
-// This used to be BrowserNewEditorWindow in navigator.js
-function NewEditorWindow()
-{
-  // Open editor window with blank page
-  // Kludge to leverage openDialog non-modal!
-  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
-}
-
 function NewEditorFromTemplate()
 {
   // XXX not implemented

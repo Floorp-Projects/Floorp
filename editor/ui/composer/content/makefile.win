@@ -52,6 +52,7 @@ CHROME_CONTENT = \
 	.\sb-FileWidgetFileHandler.js \
 	.\editorOverlay.xul \
 	.\editorOverlay.js \
+	.\editorTasksOverlay.xul \
 	.\composerOverlay.xul \
 	.\pref-editing.xul \
 	.\pref-publish.xul \
