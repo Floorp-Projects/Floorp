@@ -28,6 +28,7 @@ include <$(DEPTH)\config\rules.mak>
 DISTBROWSER=$(DIST)\bin\chrome\global\content\default
 
 install::
+	$(MAKE_INSTALL) inputBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) hiddenWindow.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) globalOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) globalOverlay.js $(DISTBROWSER)
