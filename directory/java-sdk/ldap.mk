@@ -86,10 +86,10 @@ all: classes
 basics: $(DISTDIR) $(CLASSDIR)
 	cp -p manifest.mf $(CLASS_DEST)
 
-classes: LDAPCLASSES BEANS
+classes: LDAPCLASSES BEANS TOOLS
 
 basepackage: $(CLASSPACKAGEDIR)
-	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvfm ../packages/$(BASEPACKAGENAME) manifest.mf netscape/ldap/*.class netscape/ldap/client/*.class netscape/ldap/client/opers/*.class netscape/ldap/ber/stream/*.class netscape/ldap/controls/*.class netscape/ldap/util/*.class netscape/ldap/errors/*.props com/netscape/sasl/*.class
+	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvfm ../packages/$(BASEPACKAGENAME) manifest.mf netscape/ldap/*.class netscape/ldap/client/*.class netscape/ldap/client/opers/*.class netscape/ldap/ber/stream/*.class netscape/ldap/controls/*.class netscape/ldap/util/*.class netscape/ldap/errors/*.props com/netscape/sasl/*.class tools/*.class
 
 MAIN: basics
 	cd ldapjdk/$(SRCDIR); $(JAVAC) -d "$(CLASS_DEST)" *.java
@@ -121,6 +121,9 @@ BEANS: OTHERBEANS
 
 OTHERBEANS: basics
 	cd ldapbeans/$(SRCDIR)/beans; $(JAVAC) -d "$(CLASS_DEST)" *.java
+
+TOOLS: basics
+	cd tools; $(JAVAC) -d "$(CLASS_DEST)" *.java
 
 clean:
 	rm -rf $(DISTDIR)

@@ -270,3 +270,11 @@ Name: netscape/ldap/util/MimeEncoder.class
 
 Name: netscape/ldap/util/RDN.class
 
+Name: LDAPTool.class
+
+Name: LDAPDelete.class
+
+Name: LDAPSearch.class
+
+Name: LDAPModify.class
+

@@ -35,16 +35,18 @@ import netscape.ldap.client.*;
  */
 class LDAPSearchListener extends LDAPResponseListener {
     private Vector searchResults;
-    private int lastRetrieved = -1;
 
     // this instance variable is only for cache purpose
     private Long m_key = null;
+    private LDAPSearchConstraints m_constraints;
 
     /**
      * Constructs a LDAP search listener.
      */
-    LDAPSearchListener ( LDAPConnection conn ) {
+    LDAPSearchListener ( LDAPConnection conn,
+                         LDAPSearchConstraints cons ) {
         super ( conn );
+        m_constraints = cons;
         searchResults = new Vector ();
     }
 
@@ -78,7 +80,6 @@ class LDAPSearchListener extends LDAPResponseListener {
      */
     void reset () {
         super.reset();
-        lastRetrieved = -1;
         if ( searchResults != null )
             searchResults.removeAllElements();
     }
@@ -91,24 +92,34 @@ class LDAPSearchListener extends LDAPResponseListener {
      * method returns null.
      * @return jdap message
      */
-    synchronized JDAPMessage nextResult () {
-        while (lastRetrieved >= (searchResults.size()-1)) {
-            if (isResponseReceived()) {
-                searchResults.removeAllElements();
-                return null;
+    JDAPMessage nextResult () {
+        JDAPMessage result;
+        synchronized( this ) {
+            while (searchResults.size() < 1) {
+                if (isResponseReceived()) {
+                    searchResults.removeAllElements();
+                    return null;
+                }
+                try {
+                    wait();
+                } catch (InterruptedException e ) {
+                }
             }
 
-            try {
-                wait();
-            } catch (InterruptedException e ) {
-            }
+            result = (JDAPMessage)searchResults.elementAt (0);
+            /* Allow garbage collection to free this result */
+            searchResults.removeElementAt (0);
         }
-
-        lastRetrieved++;
-        JDAPMessage result = (JDAPMessage)searchResults.elementAt (lastRetrieved);
-        /* Allow garbage collection to free this result */
-        searchResults.setElementAt (null, lastRetrieved);
+        getConnection().resultRetrieved();
         return result;
+    }
+
+    /**
+     * Return the search constraints used to create this object
+     * @return the search constraints used to create this object
+     */
+    LDAPSearchConstraints getConstraints() {
+        return m_constraints;
     }
 
     /**

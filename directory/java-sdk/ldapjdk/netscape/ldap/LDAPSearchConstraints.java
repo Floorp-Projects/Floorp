@@ -38,6 +38,7 @@ public class LDAPSearchConstraints implements Cloneable {
     private int m_hop_limit;
     private LDAPControl[] m_clientControls;
     private LDAPControl[] m_serverControls;
+    transient private int m_maxBacklog = 100;
 
     /**
      * Constructs an <CODE>LDAPSearchConstraints</CODE> object that specifies
@@ -326,6 +327,18 @@ public class LDAPSearchConstraints implements Cloneable {
      */
     public void setServerControls( LDAPControl[] controls ) {
         m_serverControls = controls;
+    }
+
+    /**
+     * Set and get the maximum number of unread entries any search listener can
+     * have before we stop reading from the server.
+     */
+    void setMaxBacklog( int backlog ) {
+        m_maxBacklog = backlog;
+    }
+
+    int getMaxBacklog() {
+        return m_maxBacklog;
     }
 
     /**

@@ -39,14 +39,12 @@ import java.io.*;
  */
 public class LDAPSearchResults implements Enumeration {
 
-    private int current = 0;
     private Vector entries = null;
     private LDAPSearchListener resultSource;
     private boolean searchComplete = false;
     private LDAPConnection connectionToClose;
     private LDAPConnection currConn;
     private boolean persistentSearch = false;
-    private Vector cacheEntries = null;
     private LDAPSearchConstraints currCons;
     private String currBase;
     private int currScope;
@@ -54,7 +52,6 @@ public class LDAPSearchResults implements Enumeration {
     private String[] currAttrs;
     private boolean currAttrsOnly;
     private Vector referralResults = new Vector();
-    private int totalReferralEntries = 0;
 
     // only used for the persistent search
     private boolean firstResult = false;
@@ -68,10 +65,8 @@ public class LDAPSearchResults implements Enumeration {
      */
     public LDAPSearchResults() {
         entries = new Vector();
-        current = 0;
         connectionToClose = null;
         searchComplete = true;
-        cacheEntries = null;
     }
 
     LDAPSearchResults(LDAPConnection conn, LDAPSearchConstraints cons,
@@ -94,7 +89,14 @@ public class LDAPSearchResults implements Enumeration {
      */
     LDAPSearchResults(Vector v) {
         this();
-        cacheEntries = (Vector)v.clone();
+        entries = (Vector)v.clone();
+
+        if ((entries != null) && (entries.size() >= 1)) {
+            // Each cache value is represented by a vector. The first element
+            // represents the size of all the LDAPEntries. This needs to be
+            // removed before we iterate through each LDAPEntry.
+            entries.removeElementAt(0);
+        }
     }
 
     LDAPSearchResults(Vector v, LDAPConnection conn, LDAPSearchConstraints cons,
@@ -137,11 +139,10 @@ public class LDAPSearchResults implements Enumeration {
      * Adds search reference to this object.
      */
     void add( JDAPSearchResultReference sr ) {
-        /* build LDAPReferenceException out of this references */
+        /* convert to LDAPReferralException */
         String urls[] = sr.getUrls();
-        if (urls == null)
-            return;
-        entries.addElement(new LDAPReferralException(null, 0, urls));
+        if (urls != null)
+            entries.addElement(new LDAPReferralException(null, 0, urls));
     }
 
     void add(LDAPException e) {
@@ -263,10 +264,6 @@ public class LDAPSearchResults implements Enumeration {
                     entries.addElement(obj);
         }
 
-        // reset it to 0 since all the referral entries are now in the entries
-        // vector
-        totalReferralEntries = 0;
-
         int numEntries = entries.size();
         if (numEntries <= 0)
             return;
@@ -280,13 +277,12 @@ public class LDAPSearchResults implements Enumeration {
         entries.removeAllElements();
         for (int i = 0; i < numEntries; i++)
             entries.addElement (toSort[i]);
-
-        current = 0;
     }
 
     /**
      * Returns the next LDAP entry from the search results
-     * and throws an exception if the next result is a referral.
+     * and throws an exception if the next result is a referral, or 
+     * if a sizelimit or timelimit error occurred.
      * <P>
      *
      * You can use this method in conjunction with the
@@ -305,13 +301,18 @@ public class LDAPSearchResults implements Enumeration {
      *     // Your code for handling referrals
      *     }
      *     continue;
-     *   }
+     *   } catch ( LDAPException e ) {
+     *     // Your code for handling errors on limits exceeded 
+     *     continue; 
+     *   } 
      *   ...
      * }
      * </PRE>
      * @return The next LDAP entry in the search results.
      * @exception LDAPReferralException A referral (thrown
-     * if the next result is a referral).
+     * if the next result is a referral), or LDAPException 
+     * if a limit on the number of entries or the time was 
+     * exceeded.
      * @see netscape.ldap.LDAPSearchResults#hasMoreElements()
      */
     public LDAPEntry next() throws LDAPException {
@@ -337,24 +338,28 @@ public class LDAPSearchResults implements Enumeration {
      *                         LDAPConnection.SCOPE_BASE, MY_FILTER,
      *                         null, false );
      * while ( res.hasMoreElements() ) {
-     *   LDAPEntry findEntry = (LDAPEntry)res.nextElement();
-     *   ...
-     * }
-     * </PRE>
+     *   Object o = res.nextElement(); 
+     *   if ( o instanceof LDAPEntry ) { 
+     *     LDAPEntry findEntry = (LDAPEntry)o; 
+     *     ... 
+     *   } else if ( o instanceof LDAPReferralException ) { 
+     *     LDAPReferralException e = (LDAPReferralException)o; 
+     *     LDAPUrl refUrls[] = e.getURLs(); 
+     *     ... 
+     *   } else if ( o instanceof LDAPException ) { 
+     *     LDAPException e = (LDAPException)o; 
+     *     ... 
+     *   } 
+     * } 
+     * </PRE> 
      * @return The next element in the search results.
      * @see netscape.ldap.LDAPSearchResults#hasMoreElements()
      */
     public Object nextElement() {
-        if ((cacheEntries == null) && (!persistentSearch) && (current >= entries.size()-1))
-            fetchResult();
-
-        if ( current < entries.size() ) {
-            current++;
-            /* Invalidate our reference to the entry, so it can be
-               garbage collected */
-            Object next = entries.elementAt( current-1 );
-            entries.setElementAt( null, current-1 );
-            return next;
+        if ( entries.size() > 0 ) {
+            Object obj = entries.elementAt(0);
+            entries.removeElementAt(0);
+            return obj;
         }
 
         if (referralResults.size() > 0) {
@@ -367,10 +372,10 @@ public class LDAPSearchResults implements Enumeration {
     Object nextReferralElement() {
         LDAPSearchResults res =
           (LDAPSearchResults)referralResults.elementAt(0);
-        if ((!res.persistentSearch && res.hasMoreElements()) || (res.persistentSearch)) {
+        if ((!res.persistentSearch && res.hasMoreElements()) || 
+          (res.persistentSearch)) {
             Object obj = res.nextElement();
             if (obj != null) {
-                totalReferralEntries++;
                 return obj;
             }
 
@@ -402,20 +407,20 @@ public class LDAPSearchResults implements Enumeration {
      * @see netscape.ldap.LDAPSearchResults#next()
      */
     public boolean hasMoreElements() {
-        if (current >= entries.size()-1)
+
+        while ((entries.size() == 0) && (!searchComplete))
             fetchResult();
 
         while (referralResults.size() > 0) {
             LDAPSearchResults res =
               (LDAPSearchResults)referralResults.elementAt(0);
-            if (res.hasMoreElements()) {
-
+            if (res.hasMoreElements())
                 return true;
-            } else
+            else
                 referralResults.removeElementAt(0);
         }
 
-        return ( current < entries.size() );
+        return (entries.size() > 0);
     }
 
     /**
@@ -423,7 +428,13 @@ public class LDAPSearchResults implements Enumeration {
      * @return Count of entries found by the search.
      */
     public int getCount() {
-        return (current + totalReferralEntries);
+        int totalReferralEntries = 0;
+        for (int i=0; i<referralResults.size(); i++) {
+            LDAPSearchResults res =
+              (LDAPSearchResults)referralResults.elementAt(i);
+            totalReferralEntries = totalReferralEntries+res.getCount();
+        }
+        return (entries.size() + totalReferralEntries);
     }
 
     /**
@@ -449,17 +460,6 @@ public class LDAPSearchResults implements Enumeration {
      * Fetchs the next result, for asynchronous searches.
      */
     private synchronized void fetchResult() {
-        // if using the results from cache
-        if ((cacheEntries != null) && (current < cacheEntries.size()-1))
-        {
-            // always retrieves the one at current+1 because the first element
-            // in the cacheEntries always contains the size of all elements in the
-            // cacheEntries vector.
-            LDAPEntry entry = (LDAPEntry)cacheEntries.elementAt(current+1);
-            LDAPEntry e = new LDAPEntry(entry.getDN(), entry.getAttributeSet());
-            entries.addElement(e);
-            return;
-        }
 
         /* Asynchronous case */
         if ( resultSource != null ) {
