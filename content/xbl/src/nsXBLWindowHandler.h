@@ -45,7 +45,7 @@
 #include "nsError.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 
 
 class nsIDOMEventReceiver;
@@ -71,31 +71,35 @@ public:
 
 protected:
 
-    // are we working with editor or browser?
+  // are we working with editor or browser?
   PRBool IsEditor() ;
 
-    // lazily load the handlers
+  // lazily load the handlers
   virtual nsresult EnsureHandlers();
   
-    // walk the handlers, looking for one to handle the event
-  virtual nsresult WalkHandlersInternal(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType, 
-                                          nsIXBLPrototypeHandler* aHandler);
+  // walk the handlers, looking for one to handle the event
+  virtual nsresult WalkHandlersInternal(nsIDOMEvent* aKeyEvent,
+                                        nsIAtom* aEventType, 
+                                        nsXBLPrototypeHandler* aHandler);
 
-    // create the event handler list from the given document/URI
+  // create the event handler list from the given document/URI
   void GetHandlers(nsIXBLDocumentInfo* aInfo,
                    const nsACString& aRef,
-                   nsIXBLPrototypeHandler** aResult) ;
+                   nsXBLPrototypeHandler** aResult);
 
     // does the handler care about the particular event?
-  virtual PRBool EventMatched ( nsIXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
-                                 nsIDOMEvent* inEvent ) = 0;                                 
+  virtual PRBool EventMatched(nsXBLPrototypeHandler* inHandler,
+                              nsIAtom* inEventType,
+                              nsIDOMEvent* inEvent) = 0;
                     
   nsIDOMElement* mElement;            // weak ref
   nsIDOMEventReceiver* mReceiver;     // weak ref
 
-  nsCOMPtr<nsIXBLPrototypeHandler> mHandler;            // XP bindings
-  nsCOMPtr<nsIXBLPrototypeHandler> mPlatformHandler;    // platform-specific bindings
-  nsCOMPtr<nsIXBLPrototypeHandler> mUserHandler;        // user-specific bindings
+  // these are not owning references; the prototype handlers are owned
+  // by the prototype bindings which are owned by the docinfo.
+  nsXBLPrototypeHandler* mHandler;            // XP bindings
+  nsXBLPrototypeHandler* mPlatformHandler;    // platform-specific bindings
+  nsXBLPrototypeHandler* mUserHandler;        // user-specific bindings
 
   static nsXBLSpecialDocInfo* sXBLSpecialDocInfo;       // holds document info about bindings
     

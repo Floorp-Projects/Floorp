@@ -53,7 +53,6 @@
 class nsIContent;
 class nsIDocument;
 class nsIScriptContext;
-class nsIXBLPrototypeHandler;
 class nsIXBLPrototypeBinding;
 
 // {5C4D9674-A2CF-4ddf-9F65-E1806C34D28D}

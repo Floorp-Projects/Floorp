@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLFormHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -61,8 +61,9 @@ nsIAtom* nsXBLFormHandler::kInputAtom = nsnull;
 nsIAtom* nsXBLFormHandler::kSelectAtom = nsnull;
 nsIAtom* nsXBLFormHandler::kChangeAtom = nsnull;
 
-nsXBLFormHandler::nsXBLFormHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLFormHandler::nsXBLFormHandler(nsIDOMEventReceiver* aReceiver,
+                                   nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -116,7 +117,8 @@ nsresult nsXBLFormHandler::Input(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLFormHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLFormHandler(nsIDOMEventReceiver* aRec,
+                     nsXBLPrototypeHandler* aHandler,
                      nsXBLFormHandler** aResult)
 {
   *aResult = new nsXBLFormHandler(aRec, aHandler);

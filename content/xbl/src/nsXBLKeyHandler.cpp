@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLKeyHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -66,8 +66,9 @@ nsIAtom* nsXBLKeyHandler::kKeyDownAtom = nsnull;
 nsIAtom* nsXBLKeyHandler::kKeyUpAtom = nsnull;
 nsIAtom* nsXBLKeyHandler::kKeyPressAtom = nsnull;
 
-nsXBLKeyHandler::nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLKeyHandler::nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver,
+                                 nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -107,7 +108,8 @@ nsresult nsXBLKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLKeyHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLKeyHandler(nsIDOMEventReceiver* aRec,
+                    nsXBLPrototypeHandler* aHandler,
                     nsXBLKeyHandler** aResult)
 {
   *aResult = new nsXBLKeyHandler(aRec, aHandler);

@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsXBLService.h"
-#include "nsIXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "nsXBLWindowDragHandler.h"
 #include "nsIInputStream.h"
@@ -79,8 +78,6 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsISyncLoadDOMService.h"
-
-#include "nsIXBLPrototypeHandler.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -1213,24 +1210,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(domDoc, aResult);
-}
-
-static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** aResult) 
-{
-  *aResult = nsnull;
-  PRInt32 childCount;
-  aParent->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aParent->ChildAt(i, *getter_AddRefs(child));
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
-    if (aTag == tag.get()) {
-      *aResult = child;
-      NS_ADDREF(*aResult);
-      return;
-    }
-  }
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

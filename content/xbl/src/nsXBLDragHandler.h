@@ -49,13 +49,14 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLDragHandler : public nsIDOMDragListener, 
                          public nsXBLEventHandler
 {
 public:
-  nsXBLDragHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLDragHandler(nsIDOMEventReceiver* aReceiver,
+                   nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLDragHandler();
   
   // nsIDOMetc.
@@ -82,7 +83,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLDragHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLDragHandler(nsIDOMEventReceiver* aEventReceiver,
+                     nsXBLPrototypeHandler* aHandlerElement, 
                      nsXBLDragHandler** aResult);
 
 

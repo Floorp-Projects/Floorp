@@ -50,7 +50,6 @@
 
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
-class nsIXBLPrototypeHandler;
 class nsIXBLPrototypeBinding;
 class nsIContent;
 class nsIDocument;

@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIXBLPrototypeBinding.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLPrototypeResources.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
@@ -79,13 +79,13 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
 
   NS_IMETHOD InheritsStyle(PRBool* aResult);
 
-  NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler);
-  NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler);
+  NS_IMETHOD GetPrototypeHandlers(nsXBLPrototypeHandler** aHandler);
+  NS_IMETHOD SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler);
 
-  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult);
-  NS_IMETHOD SetConstructor(nsIXBLPrototypeHandler* aConstructor);
-  NS_IMETHOD GetDestructor(nsIXBLPrototypeHandler** aResult);
-  NS_IMETHOD SetDestructor(nsIXBLPrototypeHandler* aDestructor);
+  NS_IMETHOD GetConstructor(nsXBLPrototypeHandler** aResult);
+  NS_IMETHOD SetConstructor(nsXBLPrototypeHandler* aConstructor);
+  NS_IMETHOD GetDestructor(nsXBLPrototypeHandler** aResult);
+  NS_IMETHOD SetDestructor(nsXBLPrototypeHandler* aDestructor);
 
   NS_IMETHOD InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject);
   
@@ -190,7 +190,7 @@ protected:
   char* mID;
 
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
-  nsCOMPtr<nsIXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
+  nsXBLPrototypeHandler* mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
   
   nsXBLProtoImpl* mImplementation; // Our prototype implementation (includes methods, properties, fields,
                                    // the constructor, and the destructor).

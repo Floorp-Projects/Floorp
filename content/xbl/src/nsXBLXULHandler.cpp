@@ -72,8 +72,9 @@ nsIAtom* nsXBLXULHandler::kCloseAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kCommandUpdateAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kBroadcastAtom = nsnull;
 
-nsXBLXULHandler::nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLXULHandler::nsXBLXULHandler(nsIDOMEventReceiver* aReceiver,
+                                 nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -147,7 +148,7 @@ nsresult nsXBLXULHandler::CommandUpdate(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLXULHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLXULHandler(nsIDOMEventReceiver* aRec, nsXBLPrototypeHandler* aHandler,
                     nsXBLXULHandler** aResult)
 {
   *aResult = new nsXBLXULHandler(aRec, aHandler);

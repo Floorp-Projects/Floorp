@@ -257,7 +257,8 @@ NS_IMPL_ISUPPORTS2(nsXBLPrototypeBinding, nsIXBLPrototypeBinding, nsISupportsWea
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID, nsIXBLDocumentInfo* aInfo,
                                              nsIContent* aElement)
-: mImplementation(nsnull),
+: mPrototypeHandler(nsnull),
+  mImplementation(nsnull),
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
   mResources(nsnull),
@@ -304,6 +305,7 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
   delete mInsertionPointTable;
   delete mInterfaceTable;
   delete mImplementation;
+  delete mPrototypeHandler;
   gRefCnt--;
   if (gRefCnt == 0) {
     delete kAttrPool;
@@ -483,46 +485,41 @@ nsXBLPrototypeBinding::SetHasBasePrototype(PRBool aHasBase)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::GetPrototypeHandlers(nsIXBLPrototypeHandler** aResult)
+nsXBLPrototypeBinding::GetPrototypeHandlers(nsXBLPrototypeHandler** aResult)
 {
   *aResult = mPrototypeHandler;
-  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)
+nsXBLPrototypeBinding::SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler)
 {
   mPrototypeHandler = aHandler;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::GetConstructor(nsIXBLPrototypeHandler** aResult)
+nsXBLPrototypeBinding::GetConstructor(nsXBLPrototypeHandler** aResult)
 {
-  if (mImplementation && mImplementation->mConstructor) {
+  if (mImplementation && mImplementation->mConstructor)
     *aResult = mImplementation->mConstructor; 
-    NS_ADDREF(*aResult);
-  }
   else
     *aResult = nsnull;
   return NS_OK; 
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::GetDestructor(nsIXBLPrototypeHandler** aResult)
+nsXBLPrototypeBinding::GetDestructor(nsXBLPrototypeHandler** aResult)
 {
-  if (mImplementation && mImplementation->mDestructor) {
+  if (mImplementation && mImplementation->mDestructor)
     *aResult = mImplementation->mDestructor; 
-    NS_ADDREF(*aResult);
-  }
   else
     *aResult = nsnull;
   return NS_OK; 
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::SetConstructor(nsIXBLPrototypeHandler* aHandler)
+nsXBLPrototypeBinding::SetConstructor(nsXBLPrototypeHandler* aHandler)
 {
   if (!mImplementation)
     return NS_ERROR_FAILURE;
@@ -531,7 +528,7 @@ nsXBLPrototypeBinding::SetConstructor(nsIXBLPrototypeHandler* aHandler)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::SetDestructor(nsIXBLPrototypeHandler* aHandler)
+nsXBLPrototypeBinding::SetDestructor(nsXBLPrototypeHandler* aHandler)
 {
   if (!mImplementation)
     return NS_ERROR_FAILURE;

@@ -61,7 +61,8 @@ class nsIController;
 class nsXBLEventHandler : public nsISupports
 {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver,
+                    nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLEventHandler();
   
   NS_DECL_ISUPPORTS
@@ -81,7 +82,7 @@ public:
 
 protected:
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
+  nsXBLPrototypeHandler* mProtoHandler;
 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 
@@ -90,8 +91,7 @@ protected:
     if (!mProtoHandler)
       return NS_ERROR_FAILURE;
 
-    PRUint8 phase;
-    mProtoHandler->GetPhase(&phase);
+    PRUint8 phase = mProtoHandler->GetPhase();
     if (phase == NS_PHASE_TARGET) {
       PRUint16 eventPhase;
       aEvent->GetEventPhase(&eventPhase);
@@ -100,10 +100,8 @@ protected:
     }
 
     if (aEventType) {
-      nsCOMPtr<nsIAtom> eventName;
-      mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-      if (eventName.get() != aEventType)
+      nsCOMPtr<nsIAtom> eventName = mProtoHandler->GetEventName();
+      if (eventName != aEventType)
         return NS_OK;
     }
 
@@ -116,8 +114,7 @@ protected:
     if (!mProtoHandler)
       return NS_ERROR_FAILURE;
 
-    PRUint8 phase;
-    mProtoHandler->GetPhase(&phase);
+    PRUint8 phase = mProtoHandler->GetPhase();
     if (phase == NS_PHASE_TARGET) {
       PRUint16 eventPhase;
       aKeyEvent->GetEventPhase(&eventPhase);
@@ -125,11 +122,8 @@ protected:
         return NS_OK;
     }
 
-    PRBool matched = PR_FALSE;
     nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(aEventType, key, &matched);
-
-    if (matched)
+    if (mProtoHandler->KeyEventMatched(aEventType, key))
       mProtoHandler->ExecuteHandler(mEventReceiver, aKeyEvent);
 
     return NS_OK;
@@ -140,8 +134,7 @@ protected:
     if (!mProtoHandler)
       return NS_ERROR_FAILURE;
 
-    PRUint8 phase;
-    mProtoHandler->GetPhase(&phase);
+    PRUint8 phase = mProtoHandler->GetPhase();
     if (phase == NS_PHASE_TARGET) {
       PRUint16 eventPhase;
       aMouseEvent->GetEventPhase(&eventPhase);
@@ -149,11 +142,8 @@ protected:
         return NS_OK;
     }
 
-    PRBool matched = PR_FALSE;
     nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(aEventType, mouse, &matched);
-
-    if (matched)
+    if (mProtoHandler->MouseEventMatched(aEventType, mouse))
       mProtoHandler->ExecuteHandler(mEventReceiver, aMouseEvent);
 
     return NS_OK;
@@ -161,6 +151,7 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver,
+                      nsXBLPrototypeHandler* aHandlerElement, 
                       nsXBLEventHandler** aResult);
 #endif

@@ -66,17 +66,18 @@ protected:
 
   NS_IMETHOD WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType);
 
-    // lazily load the handlers. Overridden to handle being attached
-    // to a particular element rather than the document
+  // lazily load the handlers. Overridden to handle being attached
+  // to a particular element rather than the document
   virtual nsresult EnsureHandlers();
   
-    // check if the given handler cares about the given key event
-  PRBool EventMatched ( nsIXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
-                          nsIDOMEvent* inEvent ) ;
+  // check if the given handler cares about the given key event
+  PRBool EventMatched(nsXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
+                      nsIDOMEvent* inEvent);
 
-    // We need our own refcount (even though our base class has one) because
-    // we have our own statics that need to be initialized and the creation of
-    // other subclasses would cause us to miss things if we shared the counter.  
+  // We need our own refcount (even though our base class has one) because
+  // we have our own statics that need to be initialized and the creation of
+  // other subclasses would cause us to miss things if we shared the counter.
+
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyUpAtom;
   static nsIAtom* kKeyDownAtom;

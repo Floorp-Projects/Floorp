@@ -40,16 +40,17 @@
 #ifndef nsXBLPrototypeHandler_h__
 #define nsXBLPrototypeHandler_h__
 
-#include "nsIXBLPrototypeHandler.h"
 #include "nsIAtom.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
+#include "nsIController.h"
 
-class nsIXBLBinding;
 class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
+class nsIDOMEventReceiver;
 
 #define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
 #define NS_HANDLER_TYPE_XBL_COMMAND     (1 << 1)
@@ -60,7 +61,7 @@ class nsIDOMMouseEvent;
 #define NS_PHASE_TARGET             1
 #define NS_PHASE_CAPTURING          2
 
-class nsXBLPrototypeHandler : public nsIXBLPrototypeHandler
+class nsXBLPrototypeHandler
 {
 public:
   // This constructor is used by XBL handlers (both the JS and command shorthand variety)
@@ -73,29 +74,27 @@ public:
   // This constructor is used only by XUL key handlers (e.g., <key>)
   nsXBLPrototypeHandler(nsIContent* aKeyElement);
 
-  virtual ~nsXBLPrototypeHandler();
+  ~nsXBLPrototypeHandler();
   
-  NS_DECL_ISUPPORTS
+  PRBool MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* aEvent);
+  PRBool KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent);
 
-  NS_IMETHOD MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* aEvent, PRBool* aResult);
-  NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult);
+  already_AddRefed<nsIContent> GetHandlerElement();
 
-  NS_IMETHOD GetHandlerElement(nsIContent** aResult);
+  void AppendHandlerText(const nsAString& aText);
 
-  NS_IMETHOD AppendHandlerText(const nsAString& aText);
+  PRUint8 GetPhase() { return mPhase; }
 
-  NS_IMETHOD GetPhase(PRUint8* aResult) { *aResult = mPhase; return NS_OK; };
+  nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
+  void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
 
-  NS_IMETHOD GetNextHandler(nsIXBLPrototypeHandler** aResult);
-  NS_IMETHOD SetNextHandler(nsIXBLPrototypeHandler* aHandler);
+  nsresult ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent);
 
-  NS_IMETHOD ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent);
+  already_AddRefed<nsIAtom> GetEventName();
+  void SetEventName(nsIAtom* aName) { mEventName = aName; }
 
-  NS_IMETHOD GetEventName(nsIAtom** aResult);
-  NS_IMETHOD SetEventName(nsIAtom* aName) { mEventName = aName; return NS_OK; };
-
-  NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aReceiver);
-  NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver);
+  nsresult BindingAttached(nsIDOMEventReceiver* aReceiver);
+  nsresult BindingDetached(nsIDOMEventReceiver* aReceiver);
   
 public:
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
@@ -103,7 +102,7 @@ public:
   static PRUint32 gRefCnt;
   
 protected:
-  NS_IMETHOD GetController(nsIDOMEventReceiver* aReceiver, nsIController** aResult);
+  already_AddRefed<nsIController> GetController(nsIDOMEventReceiver* aReceiver);
   
   inline PRInt32 GetMatchingKeyCode(const nsAString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement, 
@@ -157,19 +156,9 @@ protected:
   
   
 
-  nsCOMPtr<nsIXBLPrototypeHandler> mNextHandler; // Prototype handlers are chained. We own the next handler in the chain.
+  // Prototype handlers are chained. We own the next handler in the chain.
+  nsXBLPrototypeHandler* mNextHandler;
   nsCOMPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
 };
-
-extern nsresult
-NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
-                          const PRUnichar* aAction, const PRUnichar* aCommand,
-                          const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
-                          const PRUnichar* aModifiers, const PRUnichar* aButton,
-                          const PRUnichar* aClickCount, const PRUnichar* aPreventDefault,
-                          nsIXBLPrototypeHandler** aResult);
-
-extern nsresult
-NS_NewXULKeyHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);
 
 #endif

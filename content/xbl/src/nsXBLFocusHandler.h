@@ -49,13 +49,14 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLFocusHandler : public nsIDOMFocusListener, 
                           public nsXBLEventHandler
 {
 public:
-  nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver,
+                    nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLFocusHandler();
   
   // nsIDOMetc.
@@ -76,7 +77,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLFocusHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLFocusHandler(nsIDOMEventReceiver* aEventReceiver,
+                      nsXBLPrototypeHandler* aHandlerElement, 
                       nsXBLFocusHandler** aResult);
 
 

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLWindowDragHandler.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -164,15 +164,15 @@ nsXBLWindowDragHandler::DragDrop(nsIDOMEvent* aDragEvent)
 // See if the given handler cares about this particular key event
 //
 PRBool
-nsXBLWindowDragHandler :: EventMatched ( nsIXBLPrototypeHandler* inHandler, nsIAtom* inEventType, nsIDOMEvent* inEvent )
+nsXBLWindowDragHandler::EventMatched (nsXBLPrototypeHandler* inHandler,
+                                      nsIAtom* inEventType,
+                                      nsIDOMEvent* inEvent)
 {
-  PRBool matched = PR_FALSE;
-  
   nsCOMPtr<nsIDOMMouseEvent> dragEvent ( do_QueryInterface(inEvent) );
   if ( dragEvent )
-    inHandler->MouseEventMatched(inEventType, dragEvent, &matched);
+    return inHandler->MouseEventMatched(inEventType, dragEvent);
   
-  return matched;
+  return PR_FALSE;
 }
 
  
