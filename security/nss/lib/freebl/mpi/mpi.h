@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.13 2000/09/29 19:51:32 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.14 2000/09/30 01:46:30 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -101,13 +101,14 @@ typedef unsigned int      mp_digit;
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
 #elif defined(ULLONG_MAX)			/* Solaris */
 #define MP_ULONG_LONG_MAX ULLONG_MAX
+/* MP_ULONG_LONG_MAX was defined to be ULLONG_MAX */
 #elif defined(ULONGLONG_MAX)			/* IRIX, AIX */
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
 
 #if defined(MP_ULONG_LONG_MAX)
-#if MP_ULONG_LONG_MAX > UINT_MAX
-#if MP_ULONG_LONG_MAX == ULONG_MAX
+#if (MP_ULONG_LONG_MAX > UINT_MAX) || defined(SOLARIS)
+#if MP_ULONG_LONG_MAX == ULONG_MAX || (defined(SOLARIS) && defined(NSS_USE_64))
 typedef unsigned long     mp_word;
 typedef          long     mp_sword;
 #define MP_WORD_MAX       ULONG_MAX
@@ -116,10 +117,12 @@ typedef unsigned long long mp_word;
 typedef          long long mp_sword;
 #define MP_WORD_MAX       MP_ULONG_LONG_MAX
 #endif
-#else /* MP_ULONG_LONG_MAX <= UINT_MAX */
+#else 
+/* MP_ULONG_LONG_MAX <= UINT_MAX */
 #define MP_NO_MP_WORD 1
 #endif
-#else /* MP_ULONG_LONG_MAX not defined */
+#else 
+/* MP_ULONG_LONG_MAX not defined */
 #define MP_NO_MP_WORD 1
 #endif
 

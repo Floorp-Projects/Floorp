@@ -119,8 +119,15 @@ ifeq ($(OS_RELEASE),5.8)
 endif
 ifeq ($(SYSV_SPARC),1)
 ifdef USE_64
+    DEFINES += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD -DMP_ASSEMBLY_MULTIPLY
+    MPI_SRCS += mpi_sparc.c mpv_sparc.c
+    SOLARIS_FLAGS = -fast -xO5 -xrestrict=%all -xdepend -xchip=ultra -xarch=v9a -KPIC -mt
 else
-    DEFINES += -DMP_NO_MP_WORD
+    DEFINES += -DMP_NO_MP_WORD -DMP_ASSEMBLY_MULTIPLY
+    ASFILES  = mpv_sparc32.S
+    ASM_SUFFIX = .S
+    MPI_SRCS += mpi_sparc.c
+    SOLARIS_FLAGS = -xchip=ultra -xarch=v8plusa -KPIC -mt 
 endif
 endif
 endif
@@ -151,14 +158,16 @@ private_export::
 ifeq ($(OS_ARCH), WINNT)
 	rm -f $(DIST)/lib/bsafe$(BSAFEVER).lib
 endif
-	$(NSINSTALL) -R $(BSAFEPATH) $(DIST)/lib;
-
+	$(NSINSTALL) -R $(BSAFEPATH) $(DIST)/lib
 endif
 
 mp%.h : mpi/mp%.h
 	cd mpi; cp $@ ..
 
 mp%.c : mpi/mp%.c
+	cd mpi; cp $@ ..
+
+mp%.S : mpi/mp%.S
 	cd mpi; cp $@ ..
 
 mp%.s : mpi/mp%.s
@@ -173,15 +182,39 @@ logtab.h : mpi/logtab.h
 primes.c : mpi/primes.c
 	cd mpi; cp $@ ..
 
+vis%.il : mpi/vis%.il
+	cd mpi; cp $@ ..
+
+vis%.h : mpi/vis%.h
+	cd mpi; cp $@ ..
+
 .PRECIOUS : $(MPI_SRCS) $(MPI_HDRS) $(ASFILES)
 
 ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS) $(ASFILES) primes.c
 
 DEFINES += -DMP_API_COMPATIBLE
 
+MPI_USERS = dh.c pqg.c dsa.c rsa.c 
+
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
-#MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(DH_SRCS:.c=$(OBJ_SUFFIX)))
+MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_USERS:.c=$(OBJ_SUFFIX)))
 
 $(MPI_OBJS): $(MPI_HDRS) primes.c
 
+ifeq ($(SYSV_SPARC),1)
+SPARCFIX = $(OBJDIR)/sparcfix
 
+$(SPARCFIX): sparcfix.c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -O sparcfix.c -l elf
+
+$(OBJDIR)/mpv_sparc32.o: $(SPARCFIX) mpv_sparc32.S
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(SOLARIS_FLAGS) -c mpv_sparc32.S
+	$(SPARCFIX) $@
+
+$(OBJDIR)/mpv_sparc.o: vis_64.il vis_proto.h mpv_sparc.c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(SOLARIS_FLAGS) -c vis_64.il mpv_sparc.c
+#       $(SPARCFIX) $@
+endif
