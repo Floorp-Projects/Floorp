@@ -617,7 +617,6 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
     HWND    hwnd = (HWND)mWidget;
     HDC     hdc = ::GetDC(hwnd);
     mPaletteInfo.palette = ::CreateHalftonePalette(hdc);  
-    ::SetStretchBltMode(hdc, HALFTONE);
     ::ReleaseDC(hwnd, hdc);                                                     
   }
 

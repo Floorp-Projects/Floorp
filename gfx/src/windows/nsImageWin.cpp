@@ -379,6 +379,12 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
 
   if (TheHDC != NULL){
+    // Temporary fix for bug 135226 until we do better decode-time
+    // dithering and paletized storage of images. Bail on the 
+    // optimization to DDB if we're on a paletted device.
+    int rasterCaps = ::GetDeviceCaps(TheHDC, RASTERCAPS);
+    if (RC_PALETTE == (rasterCaps & RC_PALETTE)) return;
+    
     if (mSizeImage > 0){
        if (mAlphaDepth == 8) {
          CreateImageWithAlphaBits(TheHDC);
@@ -522,12 +528,9 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                 }
               }
             } else {
-              int saveMode = ::GetStretchBltMode(TheHDC);                         
-              ::SetStretchBltMode(TheHDC, HALFTONE);                              
               ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mAlphaBits,
                              (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
               rop = SRCPAINT;
-              ::SetStretchBltMode(TheHDC, saveMode);
             }
           }
         }
@@ -546,11 +549,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                 blendFunction.SourceConstantAlpha = 255;
                 blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
                 gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY, aSWidth, aSHeight, blendFunction);
-              } else {
-                int saveMode = ::GetStretchBltMode(TheHDC);                         
-                ::SetStretchBltMode(TheHDC, HALFTONE);  
+              } else { 
                 ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,aSWidth, aSHeight, rop);
-                ::SetStretchBltMode(TheHDC, saveMode); 
               }
             }else{
               if (! didComposite) 
@@ -567,11 +567,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
             blendFunction.SourceConstantAlpha = 255;
             blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
             gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY, aSWidth, aSHeight, blendFunction);
-          } else {
-            int saveMode = ::GetStretchBltMode(TheHDC);                         
-            ::SetStretchBltMode(TheHDC, HALFTONE);  
+          } else { 
             ::StretchBlt(TheHDC,aDX,aDY,aDWidth,aDHeight,srcDC,aSX,aSY,aSWidth,aSHeight,rop);
-            ::SetStretchBltMode(TheHDC, saveMode); 
           }
         }
 
@@ -630,11 +627,8 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
   DrawComposited24(screenBits, aSX, aSY, aSWidth, aSHeight);
 
   /* Copy back to the HDC */
-  int saveMode = ::GetStretchBltMode(TheHDC);                         
-  ::SetStretchBltMode(TheHDC, HALFTONE);  
   ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
                memDC, 0, 0, aSWidth, aSHeight, SRCCOPY);
-  ::SetStretchBltMode(TheHDC, saveMode); 
 
   ::SelectObject(memDC, oldBitmap);
   ::DeleteObject(tmpBitmap);
