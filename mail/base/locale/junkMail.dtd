@@ -20,6 +20,8 @@
 <!ENTITY manualMarkModeMove.label "Move them to the &quot;Junk&quot; folder">
 <!ENTITY manualMarkModeDelete.label "Delete them">
 <!ENTITY renderWithSafeHtml.label "When displaying HTML messages marked as junk, sanitize the HTML">
+<!ENTITY log.label "Logging">
+<!ENTITY handling.label "Handling">
 
 <!ENTITY account.label "Account:">
 <!ENTITY account.accesskey "A">

@@ -136,7 +136,7 @@
       </groupbox>           
                     
         <groupbox flex="1">
-          <caption class="tab-caption" label="Action"/>            
+          <caption class="tab-caption" label="&handling.label;"/>            
             <vbox align="start">
                 <checkbox id="moveOnSpam" oncommand="conditionallyEnableUI('moveOnSpam')" label="&move.label;"/>
                 <radiogroup id="moveTargetMode">
@@ -185,7 +185,7 @@
         </groupbox>
 
         <groupbox>
-          <caption class="tab-caption" label="Logging"/>
+          <caption class="tab-caption" label="&log.label;"/>
           <hbox>
             <description>&loggingDescription.label;</description>      
             <spacer flex="1"/>
