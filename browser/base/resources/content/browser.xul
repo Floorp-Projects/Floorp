@@ -76,7 +76,6 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
 
-<<<<<<< browser.xul
   <script type="application/x-javascript" src="chrome://browser/content/policy/policy.js"/>
 
   <!-- hook for stringbundle overlays -->
@@ -87,13 +86,6 @@ Contributor(s): ______________________________________. -->
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
-=======
-  <stringbundle id="bundle_navigator" src="chrome://browser/locale/navigator.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
-  <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
-  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
->>>>>>> 1.11
 
   <commandset id="commands">    
     <commandset id="globalEditMenuItems"/>
@@ -398,8 +390,8 @@ Contributor(s): ______________________________________. -->
     <statusbarpanel>
       <button id="policy-menu" type="menu" label="Policy"
               oncommand="policyMenuAction(event);">
-        <menupopup context="" onpopupshowing="policyMenuShowing(event);"
-                    popupanchor="bottomleft" popupalign="topleft">
+        <menupopup onpopupshowing="policyMenuShowing(event);"
+                   popupanchor="topright" popupalign="topleft">
           <menuitem id="policyMenu-noregions" label="Add to New Region..."/>
           <menuseparator id="customPolicySeparator"/>
           <menuitem id="policyMenu-cookies" label="Can set cookies"/>
