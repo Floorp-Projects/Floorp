@@ -2652,7 +2652,6 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GotFocusCallback pWidget=<%p>\n", pWidget));
-printf("GOTFOCUS %X\n ", widget);
   pWidget->DispatchStandardEvent(NS_GOTFOCUS);
 
   return Pt_CONTINUE;
@@ -2665,7 +2664,6 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
   if ((widget->parent) && (PtIsFocused(widget) != 2))
   {
      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget) ));
-     printf("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
      return Pt_CONTINUE;
   }
   
