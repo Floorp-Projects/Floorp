@@ -295,9 +295,7 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
     nsBoxLayoutState state(mPresContext);
     MarkDirtyChildren(state); 
     mTreeLayoutState = eTreeLayoutAbort;
-    if (mCurrentIndex > 0)
-      VerticalScroll(mCurrentIndex * mRowHeight);
-
+    
     PostReflowCallback();
   } 
 }
@@ -1040,6 +1038,7 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
+  // Now dirty the world.s
   nsCOMPtr<nsIContent> tree;
   mContent->GetParent(*getter_AddRefs(tree));
   
