@@ -622,20 +622,25 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIForm> form = do_QueryInterface(formNode);
     SignonDataEntry* firstMatch = nsnull;
     nsCOMPtr<nsIDOMHTMLInputElement> userField, passField;
+    nsCOMPtr<nsIDOMHTMLInputElement> temp;
 
     for (SignonDataEntry* e = hashEnt->head; e; e = e->next) {
       
       nsCOMPtr<nsISupports> foundNode;
       form->ResolveName(e->userField, getter_AddRefs(foundNode));
-      userField = do_QueryInterface(foundNode);
+      temp = do_QueryInterface(foundNode);
 
-      if (!userField)
+      if (temp)
+        userField = temp;
+      else
         continue;
 
       form->ResolveName(e->passField, getter_AddRefs(foundNode));
-      passField = do_QueryInterface(foundNode);
+      temp = do_QueryInterface(foundNode);
 
-      if (!passField)
+      if (temp)
+        passField = temp;
+      else
         continue;
 
       if (firstMatch) {
