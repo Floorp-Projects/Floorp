@@ -670,7 +670,7 @@ function GetSelectTrashUri(folder)
         var numFolder;
         var out = new Object();
         var trashFolder = rootFolder.getFoldersWithFlag(0x0100, 1, out); 
-        numFolder = out1.value;
+        numFolder = out.value;
         dump (numFolder + "\n");
         if (trashFolder)
         {
