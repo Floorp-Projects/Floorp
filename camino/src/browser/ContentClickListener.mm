@@ -221,7 +221,16 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
     PRInt32 xDelta = clientX - left;
     PRInt32 yDelta = top + height - clientY;
 
-    nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([[[mBrowserController getBrowserWrapper] getBrowserView] getContentWindow]);
+    nsCOMPtr<nsIContent> selContent = do_QueryInterface(sel);
+    nsCOMPtr<nsIDocument> doc;
+    selContent->GetDocument(*getter_AddRefs(doc));
+
+    // I'm going to assume that if we got a mousedown for a content node,
+    // it's actually in a document.
+
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
     PRInt32 scrollX, scrollY;
     window->GetScrollX(&scrollX);
     window->GetScrollY(&scrollY);
