@@ -7,6 +7,15 @@ implementation
 
 housecleaning
 ------------- 
+* currently nsILDAPOperation::SimpleBind is called as though it were
+  asynchronous (ie from the UI thread), which it mostly is -- the call
+  to connect() can stall.  We could use the ASYNC_CONNECT flag,
+  but it seems to do weird stuff on Linux, and mcs says it isn't well
+  tested anyway.  At the moment, my feeling is that fixing
+  ASYNC_CONNECT is probably the right thing to do, but the bind could
+  actually be pushed from nsILDAPOperation into nsILDAPConnection and
+  then called after the thread for the connection is spun up.
+  
 * remove nsILDAPService from (at least) the build and
   nsLDAPProtocolModule.cpp (if not CVS), since it's not currently in use.
 
@@ -62,12 +71,8 @@ housecleaning
   want the reference to "xp_sort.h"?
 
 * error handling: sort out what should be NS_ASSERTIONs vs. normal
-  error conditions (eg network & data errors).  also: does NS_ENSURE_*
-  provide adequate error-checking at interface boundaries for JS in
-  non-debug builds?  should we move away from NS_ENSURE_* as per scc's
-  suggestion of just using NS_PRECONDITION, NS_POSTCONDITION,
-  NS_ASSERTION?  whatever the answers to these questions, should audit 
-  interface boundaries to make sure they do appropriate checking.
+  error conditions (eg network & data errors).  should audit interface
+  boundaries to make sure they do appropriate checking.
 
 * migrate from "#ifdef DEBUG_dmose PR_fprintf(PR_STDERR)" to a more
   general logging mechanism (NSPR logging facilities? nsIConsoleService?)
@@ -98,7 +103,7 @@ misc
 * HTMLize nsLDAPChannel output for linkification
 
 
-rdf datasource
+rdf datasource (in progress: dmose)
 --------------
   * non-anonymous binding
 
