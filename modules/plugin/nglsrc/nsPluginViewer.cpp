@@ -413,6 +413,7 @@ PluginViewerImpl::CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const 
     channel->GetContentType(&ct);
     if (NS_FAILED(rv)) return rv;
     rv = aHost->InstantiateFullPagePlugin(ct, str, aResult, mOwner);
+   
     delete[] ct;
   }
 
@@ -517,6 +518,7 @@ PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
  
   mWindow->Create(aParent, aBounds,HandlePluginEvent, aDeviceContext);
   mWindow->SetClientData(this);
+  Show();
   return rv;
 }
 
@@ -536,13 +538,14 @@ PluginViewerImpl::GetBounds(nsRect& aResult)
 NS_IMETHODIMP
 PluginViewerImpl::GetPreviousViewer(nsIContentViewer** aViewer)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aViewer = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PluginViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
