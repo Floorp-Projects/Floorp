@@ -138,7 +138,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
   PR_Abort();
 #endif
 #elif defined(XP_MAC)
-  DebugStr(buffer);
+  DebugStr(buf);
   ExitToShell();
 #elif defined(XP_UNIX)
   PR_Abort();
