@@ -141,6 +141,9 @@ td textarea {
   margin-bottom: 2px;
 }
 
+td div p {
+  margin:0px;
+}
 
 /* Quirk: HRs avoid floats (b=18754) */
 
