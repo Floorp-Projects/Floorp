@@ -71,6 +71,7 @@ public:
 
   virtual void SetParent(nsIContent* aParent);
   virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom *GetClassAttributeName() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
