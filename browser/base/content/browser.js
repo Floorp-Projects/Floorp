@@ -4545,7 +4545,7 @@ function BrowserOpenExtensions(aOpenMode)
   if (needToOpen) {
     const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
     const EMFEATURES = "chrome,dialog=no,resizable";
-    window.openDialog(EMURL, "", EMFEATURES, aOpenMode);
+    window.openDialog(EMURL, "", EMFEATURES);
   }
 }
 
