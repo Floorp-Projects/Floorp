@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2002/04/27 01:37:05 $ 
+# $Revision: 1.14 $ 
+# $Date: 2002/04/27 01:48:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -55,9 +55,9 @@ use Utils;
 
 
 sub timestring2time {
-    my $string = @_;
+    my ($string) = @_;
 
-    $string = ~m/\s*(\d+)/s+(\d+):(\d+)\s*/;
+    $string =~ m!\s*(\d+)/(\d+)s+(\d+):(\d+)\s*!;
 
     my ($mon, $mday, $hours, $min,) = ($1, $2, $3, $4);
 
@@ -93,7 +93,7 @@ sub timestring2time {
 
 
 sub time2timestring {
-    my $time = @_;
+    my ($time) = @_;
     
     my ($sec,$min,$hour,$mday,$mon,
         $year,$wday,$yday,$isdst) =
@@ -192,17 +192,17 @@ sub format_input_page {
 	     );
   
   push @out, (
-	      "Enter Notice: \n",p(),
-	      textarea(-name=>'note', 
-		       -rows=>10, -cols=>30, -wrap=>'physical',),
+	      "Effective Time: \n",p(),
+	      textarea(-name=>'effectivetime', 
+                       -default=>$display_effective_time,
+		       -rows=>1, -cols=>20, -wrap=>'physical',),
 	      p(),
 	     );
   
   push @out, (
-	      "Effective Time: \n",p(),
-	      textarea(-name=>'effectivetime', 
-                       -default=>$display_effective_time,
-		       -rows=>1, -cols=>30, -wrap=>'physical',),
+	      "Enter Notice: \n",p(),
+	      textarea(-name=>'note', 
+		       -rows=>10, -cols=>30, -wrap=>'physical',),
 	      p(),
 	     );
   
