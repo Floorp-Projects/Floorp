@@ -1,5 +1,5 @@
 /* deflate.h -- internal compression state
- * Copyright (C) 1995-2002 Jean-loup Gailly
+ * Copyright (C) 1995-1996 Jean-loup Gailly
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: deflate.h,v 1.2 2003/02/08 08:50:38 wtc%netscape.com Exp $ */
+/* $Id: deflate.h,v 1.3 2003/02/08 15:00:10 wtc%netscape.com Exp $ */
 
 #ifndef _DEFLATE_H
 #define _DEFLATE_H
@@ -83,7 +83,6 @@ typedef struct internal_state {
     z_streamp strm;      /* pointer back to this zlib stream */
     int   status;        /* as the name implies */
     Bytef *pending_buf;  /* output still pending */
-    ulg   pending_buf_size; /* size of pending_buf */
     Bytef *pending_out;  /* next pending byte to output to the stream */
     int   pending;       /* nb of bytes in the pending buffer */
     int   noheader;      /* suppress zlib header and adler32 */
@@ -230,12 +229,12 @@ typedef struct internal_state {
 
     ulg opt_len;        /* bit length of current block with optimal trees */
     ulg static_len;     /* bit length of current block with static trees */
+    ulg compressed_len; /* total bit length of compressed file */
     uInt matches;       /* number of string matches in current block */
     int last_eob_len;   /* bit length of EOB code for last block */
 
 #ifdef DEBUG
-    ulg compressed_len; /* total bit length of compressed file mod 2^32 */
-    ulg bits_sent;      /* bit length of compressed data sent mod 2^32 */
+    ulg bits_sent;      /* bit length of the compressed data */
 #endif
 
     ush bi_buf;
@@ -268,51 +267,9 @@ typedef struct internal_state {
         /* in trees.c */
 void _tr_init         OF((deflate_state *s));
 int  _tr_tally        OF((deflate_state *s, unsigned dist, unsigned lc));
-void _tr_flush_block  OF((deflate_state *s, charf *buf, ulg stored_len,
+ulg  _tr_flush_block  OF((deflate_state *s, charf *buf, ulg stored_len,
 			  int eof));
 void _tr_align        OF((deflate_state *s));
 void _tr_stored_block OF((deflate_state *s, charf *buf, ulg stored_len,
                           int eof));
-
-#define d_code(dist) \
-   ((dist) < 256 ? _dist_code[dist] : _dist_code[256+((dist)>>7)])
-/* Mapping from a distance to a distance code. dist is the distance - 1 and
- * must not have side effects. _dist_code[256] and _dist_code[257] are never
- * used.
- */
-
-#ifndef DEBUG
-/* Inline versions of _tr_tally for speed: */
-
-#if defined(GEN_TREES_H) || !defined(STDC)
-  extern uch _length_code[];
-  extern uch _dist_code[];
-#else
-  extern const uch _length_code[];
-  extern const uch _dist_code[];
-#endif
-
-# define _tr_tally_lit(s, c, flush) \
-  { uch cc = (c); \
-    s->d_buf[s->last_lit] = 0; \
-    s->l_buf[s->last_lit++] = cc; \
-    s->dyn_ltree[cc].Freq++; \
-    flush = (s->last_lit == s->lit_bufsize-1); \
-   }
-# define _tr_tally_dist(s, distance, length, flush) \
-  { uch len = (length); \
-    ush dist = (distance); \
-    s->d_buf[s->last_lit] = dist; \
-    s->l_buf[s->last_lit++] = len; \
-    dist--; \
-    s->dyn_ltree[_length_code[len]+LITERALS+1].Freq++; \
-    s->dyn_dtree[d_code(dist)].Freq++; \
-    flush = (s->last_lit == s->lit_bufsize-1); \
-  }
-#else
-# define _tr_tally_lit(s, c, flush) flush = _tr_tally(s, 0, c)
-# define _tr_tally_dist(s, distance, length, flush) \
-              flush = _tr_tally(s, distance, length) 
-#endif
-
 #endif

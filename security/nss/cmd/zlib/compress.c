@@ -1,29 +1,29 @@
 /* compress.c -- compress a memory buffer
- * Copyright (C) 1995-2002 Jean-loup Gailly.
+ * Copyright (C) 1995-1996 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
-
-/* @(#) $Id: compress.c,v 1.2 2003/02/08 08:50:37 wtc%netscape.com Exp $ */
+/* This file was modified since it was taken from the zlib distribution */
+/* $Id: compress.c,v 1.3 2003/02/08 15:00:09 wtc%netscape.com Exp $ */
 
 #include "zlib.h"
 
 /* ===========================================================================
-     Compresses the source buffer into the destination buffer. The level
-   parameter has the same meaning as in deflateInit.  sourceLen is the byte
-   length of the source buffer. Upon entry, destLen is the total size of the
-   destination buffer, which must be at least 0.1% larger than sourceLen plus
-   12 bytes. Upon exit, destLen is the actual size of the compressed buffer.
-
-     compress2 returns Z_OK if success, Z_MEM_ERROR if there was not enough
-   memory, Z_BUF_ERROR if there was not enough room in the output buffer,
-   Z_STREAM_ERROR if the level parameter is invalid.
+     Compresses the source buffer into the destination buffer.  sourceLen is
+   the byte length of the source buffer. Upon entry, destLen is the total
+   size of the destination buffer, which must be at least 0.1% larger than
+   sourceLen plus 8 bytes. Upon exit, destLen is the actual size of the
+   compressed buffer.
+     This function can be used to compress a whole file at once if the
+   input file is mmap'ed.
+     compress returns Z_OK if success, Z_MEM_ERROR if there was not
+   enough memory, Z_BUF_ERROR if there was not enough room in the output
+   buffer.
 */
-int ZEXPORT compress2 (dest, destLen, source, sourceLen, level)
+PR_PUBLIC_API(int) compress (dest, destLen, source, sourceLen)
     Bytef *dest;
     uLongf *destLen;
     const Bytef *source;
     uLong sourceLen;
-    int level;
 {
     z_stream stream;
     int err;
@@ -42,7 +42,7 @@ int ZEXPORT compress2 (dest, destLen, source, sourceLen, level)
     stream.zfree = (free_func)0;
     stream.opaque = (voidpf)0;
 
-    err = deflateInit(&stream, level);
+    err = deflateInit(&stream, Z_DEFAULT_COMPRESSION);
     if (err != Z_OK) return err;
 
     err = deflate(&stream, Z_FINISH);
@@ -54,15 +54,4 @@ int ZEXPORT compress2 (dest, destLen, source, sourceLen, level)
 
     err = deflateEnd(&stream);
     return err;
-}
-
-/* ===========================================================================
- */
-int ZEXPORT compress (dest, destLen, source, sourceLen)
-    Bytef *dest;
-    uLongf *destLen;
-    const Bytef *source;
-    uLong sourceLen;
-{
-    return compress2(dest, destLen, source, sourceLen, Z_DEFAULT_COMPRESSION);
 }
