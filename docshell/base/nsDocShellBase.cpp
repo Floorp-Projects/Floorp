@@ -78,10 +78,8 @@ NS_IMETHODIMP nsDocShellBase::LoadURIVia(nsIURI* aUri,
 {
    NS_ENSURE_ARG(aUri);
 
-   nsCOMPtr<nsIURILoader> uriLoader;
-   NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(NS_URI_LOADER_PROGID,
-         nsnull, NS_GET_IID(nsIURILoader), getter_AddRefs(uriLoader)), 
-         NS_ERROR_FAILURE);
+   nsCOMPtr<nsIURILoader> uriLoader = do_CreateInstance(NS_URI_LOADER_PROGID);
+   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
    mContentListener->SetPresContext(aPresContext);
