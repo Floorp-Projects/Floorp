@@ -666,7 +666,11 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetProgress(PRInt32 *_retval)
 		*_retval = ((m_pThreadData->currentTotal + sz) * 100) / m_totalSize;
 	else
 		*_retval = 0;
-		
+	
+	// never return less than 5 so it looks like we are doing something!
+	if (*_retval < 5)
+		*_retval = 5;
+
 	return( NS_OK);
 }
 
