@@ -251,7 +251,11 @@ function setLabelAttributes(labelID, menuItemID)
 
     try
     {
-        color = gPrefBranch.getCharPref("mailnews.labels.color." + labelID);
+        if (labelID)
+          color = gPrefBranch.getCharPref("mailnews.labels.color." + labelID);
+        else
+          color = "none";
+
         prefString = gPrefBranch.getComplexValue("mailnews.labels.description." + labelID,
                                            Components.interfaces.nsIPrefLocalizedString);
     }
@@ -366,9 +370,7 @@ function InitMessageLabel()
 {
     /* this code gets the label strings and changes the menu labels */
     var lastLabel = 5;
-    // start with 1 because there is no None label (id 0) as an filtering
-    // option to filter to.
-    for (var i = 1; i <= lastLabel; i++)
+    for (var i = 0; i <= lastLabel; i++)
     {
         setLabelAttributes(i, "labelMenuItem" + i);
     }

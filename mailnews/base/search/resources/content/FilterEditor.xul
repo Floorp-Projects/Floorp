@@ -120,6 +120,7 @@
               <menulist id="actionValueLabel" flex="1">
                 <menupopup>
                   <!-- see MailNewsTypes2.idl -->
+                  <menuitem id="labelMenuItem0" value="0"/>
                   <menuitem id="labelMenuItem1" value="1"/>
                   <menuitem id="labelMenuItem2" value="2"/>
                   <menuitem id="labelMenuItem3" value="3"/>
@@ -150,10 +151,10 @@
 
           <listitem allowevents="true">
             <listcell>
-              <checkbox id="setJunkScore" label="&setJunkScore.label;"/>
+              <checkbox id="setJunkScore" enablefornews="false" label="&setJunkScore.label;"/>
             </listcell>
             <listcell> 
-              <menulist id="actionValueJunkScore" flex="1">
+              <menulist enablefornews="false" id="actionValueJunkScore" flex="1">
                 <menupopup>
                   <!-- see MailNewsTypes2.idl -->
                   <menuitem value="100" label="&junk.label;"/>
