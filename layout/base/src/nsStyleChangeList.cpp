@@ -17,6 +17,9 @@
  */
 
 #include "nsStyleChangeList.h"
+#include "nsStyleConsts.h"
+#include "nsIFrame.h"
+#include "nsIContent.h"
 #include "nsCRT.h"
 
 static const PRUint32 kGrowArrayBy = 10;
@@ -48,6 +51,29 @@ nsresult
 nsStyleChangeList::AppendChange(nsIFrame* aFrame, PRInt32 aHint)
 {
   NS_ASSERTION(aFrame, "must have frame");
+
+  if ((0 < mCount) && (NS_STYLE_HINT_FRAMECHANGE == aHint)) { // filter out all other changes for same content
+    nsIContent* changeContent;
+    aFrame->GetContent(&changeContent);
+    if (changeContent) {
+      PRInt32 index = mCount;
+      while (0 < index--) {
+        nsIContent* content;
+        mArray[index].mFrame->GetContent(&content);
+        if (content == changeContent) { // remove this change
+          mCount--;
+          if (index < mCount) { // move later changes down
+            nsCRT::memcpy(&(mArray[index]), &(mArray[index + 1]), 
+                          (mCount - index) * sizeof(nsStyleChangeData));
+          }
+        }
+        NS_IF_RELEASE(content);
+      }
+
+      NS_RELEASE(changeContent);
+    }
+  }
+
   PRInt32 last = mCount - 1;
   if ((0 < mCount) && (aFrame == mArray[last].mFrame)) { // same as last frame
     if (mArray[last].mHint < aHint) {
