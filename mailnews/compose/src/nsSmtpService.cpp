@@ -302,7 +302,7 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
     if (NS_SUCCEEDED(rv)) {
         nsXPIDLCString serverList;
         prefs->CopyCharPref("mail.smtpservers",getter_Copies(serverList));
-        if (serverList && *serverList) {
+        if (serverList && *((const char*)serverList)) {
             nsCAutoString newServerList(serverList);
             newServerList += ',';
             newServerList += key;
