@@ -62,8 +62,9 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 BOOL nsWindow::sIsRegistered = FALSE;
 
 ////////////////////////////////////////////////////
-static nsIRollupListener * gRollupListener = nsnull;
-static nsIWidget         * gRollupWidget   = nsnull;
+static nsIRollupListener * gRollupListener           = nsnull;
+static nsIWidget         * gRollupWidget             = nsnull;
+static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
 
@@ -379,9 +380,12 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                            PRBool aDoCapture, 
+                                            PRBool aConsumeRollupEvent)
 {
   if (aDoCapture) {
+    gRollupConsumeRollupEvent = aConsumeRollupEvent;
     NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
     gRollupListener = aListener;
@@ -420,7 +424,16 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
       if (mp.x < r.left || mp.x > r.right ||
           mp.y < r.top || mp.y > r.bottom) {
         gRollupListener->Rollup();
-        return TRUE;
+        // return TRUE tells Windows that the event is consumed, 
+        // false allows the event to be dispacthed
+        //
+        // So if we are NOT suppose to be consuming events and it is a 
+        // non-client Mouse Button down, let it go through
+        if (!gRollupConsumeRollupEvent && msg == WM_NCLBUTTONDOWN) {
+          return FALSE;
+        } else {
+          return TRUE;
+        }
       }
     }
   }

@@ -105,7 +105,7 @@ public:
     NS_IMETHOD            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     virtual nsIToolkit*     GetToolkit();  
     NS_IMETHOD            SetBorderStyle(nsBorderStyle aBorderStyle); 
-    NS_IMETHOD            CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture);
+    NS_IMETHOD            CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD            SetTitle(const nsString& aTitle); 
     NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
     NS_IMETHOD            RemoveTooltips();

@@ -648,10 +648,12 @@ interface nsIWidget : nsISupports
 
 	/**
 	 * Enables/Disables system capture of any and all events that would cause a
-	 * dropdown to be rolled up
+	 * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
+   * parameter when aDoCapture is FALSE
 	 * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
+	 * @param aConsumeRollupEvent PR_TRUE consumes the rollup event, PR_FALSE dispatches rollup event
 	 *
 	 */
-  void CaptureRollupEvents(in nsIRollupListener aListener, in PRBool aDoCapture);
+  void CaptureRollupEvents(in nsIRollupListener aListener, in PRBool aDoCapture, in PRBool aConsumeRollupEvent);
 
 };

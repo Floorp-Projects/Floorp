@@ -366,7 +366,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
     NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
     view->GetWidget(widget);
     if (nsnull != widget) {
-      widget->CaptureRollupEvents((nsIRollupListener *)this, !mDroppedDown);
+      widget->CaptureRollupEvents((nsIRollupListener *)this, !mDroppedDown, PR_TRUE);
       NS_RELEASE(widget);
     }
   }

@@ -127,7 +127,7 @@ public:
     virtual void            SetUpForPaint(HDC aHDC);
    	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
-    NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture);
+    NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);

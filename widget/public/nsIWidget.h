@@ -682,13 +682,15 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD CaptureMouse(PRBool aCapture) = 0;
 
-    /**
-     * Enables/Disables system capture of any and all events that would cause a
-     * dropdown to be rolled up
-     * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
-     *
-     */
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture) = 0;
+	/**
+	 * Enables/Disables system capture of any and all events that would cause a
+	 * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
+   * parameter when aDoCapture is FALSE
+	 * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
+	 * @param aConsumeRollupEvent PR_TRUE consumes the rollup event, PR_FALSE dispatches rollup event
+	 *
+	 */
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) = 0;
 };
 
 #endif // nsIWidget_h__
