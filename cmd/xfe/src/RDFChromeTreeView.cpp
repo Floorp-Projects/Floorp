@@ -68,13 +68,13 @@ XFE_RDFChromeTreeView::XFE_RDFChromeTreeView(XFE_Component *	toplevel,
 	_htmlPaneHeightFixed(0),
 	_htmlPaneSizing(XFE_HTML_PANE_PERCENT)
 {
+	createViewLabel();
+
 	createDivisionForm();
 
 	createTree();
 
     createControlToolbar();
-
-    createViewLabel();
 
     doAttachments();
 }
