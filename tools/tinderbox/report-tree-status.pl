@@ -172,8 +172,8 @@ sub is_tree_open {
 
       # Clamp time to 8 hours so we don't get huge spikes for
       # extended open times (weekends)
-      if($time_since_open > 28800) {
-        $time_since_open = 28800;
+      if($time_since_open > 8.0) {
+        $time_since_open = 8.0;
       }
       
     }
