@@ -146,12 +146,16 @@ CImageCache :: ~CImageCache ( )
 //
 // Make a request for an icon. Will start loading if not present, and the return result 
 // will be |kPutOnWaitingList|. If the data is already there in the cache, |kDataPresent|
-// is returned.
+// is returned. If the url being asked for is the empty string (""), return |kEmptyURL|.
 //
 CImageCache::ELoadResult
 CImageCache :: RequestIcon ( const string & inURL, const LListener* inClient )
 {
 	ELoadResult result;
+	
+	// first check to make sure URL is not ""
+	if ( ! inURL.length() )
+		return kEmptyURL;
 	
 	ImageCacheData* data = mCache[inURL];
 	if ( data ) {

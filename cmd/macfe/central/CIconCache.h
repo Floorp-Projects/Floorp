@@ -87,12 +87,14 @@ private:
 class CImageCache : public LListener
 {
 public:
-	enum ELoadResult { kDataPresent, kPutOnWaitingList } ;
+	enum ELoadResult { kDataPresent, kPutOnWaitingList, kEmptyURL } ;
 	
 	CImageCache ( ) ;
 	virtual ~CImageCache ( ) ;
 	
-		// Make a request for an icon. Will start loading if not present.
+		// Make a request for an icon. Will start loading if not present. If an
+		// empty string is passed in, this will return |kEmptyURL| and nothing
+		// will be loaded.
 	ELoadResult RequestIcon ( const string & inURL, const LListener* inClient ) ;
 	
 		// For images that are already loaded (RequestIcon() returned |kDataPresent|,
