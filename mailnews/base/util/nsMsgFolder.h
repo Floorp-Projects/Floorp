@@ -266,12 +266,13 @@ public:
   NS_IMETHOD CopyMessages(nsIMsgFolder* srcFolder,
                           nsISupportsArray *messages,
                           PRBool isMove,
-                          nsITransactionManager* txnMgr);
+                          nsITransactionManager* txnMgr,
+                          nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
                              nsIMessage* messageToReplace,
-                             PRBool isDraft,
-                             nsISupports* aSupport,
-                             nsITransactionManager* txnMgr);
+                             PRBool isDraftOrTemplate,
+                             nsITransactionManager* txnMgr,
+                             nsIMsgCopyServiceListener* listener);
 
 	NS_IMETHOD GetNewMessages();
 

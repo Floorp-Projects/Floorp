@@ -1376,7 +1376,8 @@ NS_IMETHODIMP
 nsMsgFolder::CopyMessages(nsIMsgFolder* srcFolder,
                           nsISupportsArray *messages,
                           PRBool isMove,
-                          nsITransactionManager* txnMgr)
+                          nsITransactionManager* txnMgr,
+                          nsIMsgCopyServiceListener* listener)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1384,9 +1385,9 @@ nsMsgFolder::CopyMessages(nsIMsgFolder* srcFolder,
 NS_IMETHODIMP
 nsMsgFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                              nsIMessage* messageToReplace,
-                             PRBool isDraft,
-                             nsISupports* aSupport,
-                             nsITransactionManager* txnMgr)
+                             PRBool isDraftOrTemplate,
+                             nsITransactionManager* txnMgr,
+                             nsIMsgCopyServiceListener* listener)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
