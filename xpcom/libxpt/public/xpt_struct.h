@@ -224,8 +224,6 @@ struct XPTTypeDescriptorPrefix {
 #define XPT_TDP_IS_UNIQUE_POINTER(flags) (flags & XPT_TDP_UNIQUE_POINTER)
 #define XPT_TDP_IS_REFERENCE(flags)      (flags & XPT_TDP_REFERENCE)
 
-/* XXX TD #defines should include required flag bits! */
-
 /* 
  * The following enum maps mnemonic names to the different numeric values 
  * of XPTTypeDescriptor->tag.

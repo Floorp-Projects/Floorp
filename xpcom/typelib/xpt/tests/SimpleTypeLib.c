@@ -45,7 +45,7 @@ struct nsID iid = {
     {0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
 };
 
-XPTTypeDescriptor td_void = { TD_VOID };
+XPTTypeDescriptor td_void = {};
 
 int
 main(int argc, char **argv)
@@ -62,6 +62,8 @@ main(int argc, char **argv)
     uint32 len, header_sz;
 
     PRBool ok;
+
+    td_void.prefix.flags = TD_VOID;
     
     if (argc != 2) {
 	fprintf(stderr, "Usage: %s <filename.xpt>\n"
@@ -140,9 +142,14 @@ main(int argc, char **argv)
 
     XPT_GetXDRData(state, XPT_DATA, &data, &len);
     fwrite(data, len, 1, out);
-    fclose(out);
-    XPT_DestroyXDRState(state);
 
+    if (ferror(out) != 0 || fclose(out) != 0) {
+        fprintf(stderr, "\nError writing file: %s\n\n", argv[1]);
+    } else {
+        fprintf(stderr, "\nFile written: %s\n\n", argv[1]);
+    }
+    XPT_DestroyXDRState(state);
+    
     /* XXX DestroyHeader */
     return 0;
 }

@@ -139,6 +139,9 @@ main(int argc, char **argv)
 
     if (flen > 0) {
         fread(whole, flen, 1, in);
+        if (ferror(in) != 0 || fclose(in) != 0)
+            perror("FAILED: Unable to read typelib file.\n");
+        
         state = XPT_NewXDRState(XPT_DECODE, whole, flen);
         if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
             fprintf(stdout, "MakeCursor failed\n");
@@ -157,8 +160,6 @@ main(int argc, char **argv)
         XPT_DestroyXDRState(state);
         free(whole);
     }
-
-    fclose(in);
 
     return 0;
 }
