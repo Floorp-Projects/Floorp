@@ -191,7 +191,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow the child
   nsHTMLReflowState rs(aPresContext, aReflowState, kid, availSize);
   htmlReflow->WillReflow(aPresContext);
-  if (!rs.lineLayout) {
+  if (!rs.mLineLayout) {
     // When there is no lineLayout provided, we provide our own. The
     // only time that the first-letter-frame is not reflowing in a
     // line context is when its floating.
@@ -199,7 +199,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
                     nsnull != aMetrics.maxElementSize);
     ll.BeginLineReflow(0, 0, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE,
                        PR_FALSE, PR_TRUE);
-    rs.lineLayout = &ll;
+    rs.mLineLayout = &ll;
     ll.SetFirstLetterStyleOK(PR_TRUE);
     htmlReflow->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
     ll.EndLineReflow();

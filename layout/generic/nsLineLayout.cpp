@@ -771,7 +771,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mPresContext, *psd->mReflowState, aFrame,
                                 availSize, reason);
-  reflowState.lineLayout = this;
+  reflowState.mLineLayout = this;
   reflowState.isTopOfPage = mIsTopOfPage;
   mUnderstandsWhiteSpace = PR_FALSE;
 
@@ -784,7 +784,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   pfd->mRelativePos =
     reflowState.mStylePosition->mPosition == NS_STYLE_POSITION_RELATIVE;
   if (pfd->mRelativePos) {
-    pfd->mOffsets = reflowState.computedOffsets;
+    pfd->mOffsets = reflowState.mComputedOffsets;
   }
 
   // We want to guarantee that we always make progress when

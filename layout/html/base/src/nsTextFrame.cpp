@@ -2286,7 +2286,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
   // but not inside a cell. For now, just don't reflow.
-  if (nsnull == aReflowState.lineLayout) {
+  if (nsnull == aReflowState.mLineLayout) {
     // XXX Add a method to aMetrics that does this; we do it several places
     aMetrics.width = 0;
     aMetrics.height = 0;
@@ -2306,7 +2306,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     startingOffset = prev->mContentOffset + prev->mContentLength;
   }
 
-  nsLineLayout& lineLayout = *aReflowState.lineLayout;
+  nsLineLayout& lineLayout = *aReflowState.mLineLayout;
   TextStyle ts(&aPresContext, *aReflowState.rendContext, mStyleContext);
 
   // Initialize mFlags (without destroying the TEXT_BLINK_ON bit) bits

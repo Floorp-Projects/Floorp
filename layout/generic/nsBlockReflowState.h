@@ -5694,7 +5694,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   availSize.height = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState reflowState(*aState.mPresContext, aState.mReflowState,
                                 mBullet, availSize);
-  reflowState.lineLayout = aState.mLineLayout;
+  reflowState.mLineLayout = aState.mLineLayout;
   nsIHTMLReflow* htmlReflow;
   nsresult rv = mBullet->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
   if (NS_SUCCEEDED(rv)) {

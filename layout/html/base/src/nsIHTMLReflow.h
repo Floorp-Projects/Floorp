@@ -134,7 +134,7 @@ struct nsHTMLReflowState : nsReflowState {
   nsISpaceManager* mSpaceManager;
 
   // LineLayout object (only for inline reflow; set to NULL otherwise)
-  nsLineLayout*    lineLayout;
+  nsLineLayout*    mLineLayout;
 
   // The computed width specifies the frame's content width, and it does not
   // apply to inline non-replaced elements
@@ -173,7 +173,7 @@ struct nsHTMLReflowState : nsReflowState {
 
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements
-  nsMargin         computedOffsets;
+  nsMargin         mComputedOffsets;
 
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
   nscoord          mComputedMinWidth, mComputedMaxWidth;
