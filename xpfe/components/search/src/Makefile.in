@@ -39,6 +39,10 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
+ifdef MOZ_PHOENIX
+REQUIRES	+= bookmarks
+endif
+
 CPPSRCS		= \
 		nsInternetSearchService.cpp \
 		nsLocalSearchService.cpp \

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= appcomps
+MODULE		= bookmarks
 LIBRARY_NAME	= bookmarks_s
 
 REQUIRES	= xpcom \
