@@ -26,9 +26,11 @@
 #include "nsIAllocator.h"
 #include "prmem.h"
 #include "nsAgg.h"
+#include "nsIFactory.h"
 
 class nsAllocator : public nsIAllocator {
 public:
+    static const nsCID& CID() { static nsCID cid = NS_ALLOCATOR_CID; return cid; }
 
     /**
      * Allocates a block of memory of a particular size. 
@@ -71,8 +73,6 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#include "nsIFactory.h"
 
 class nsAllocatorFactory : public nsIFactory {
 public:
