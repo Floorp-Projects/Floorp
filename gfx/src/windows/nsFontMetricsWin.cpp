@@ -1144,6 +1144,115 @@ static PRUint8 gCharsetToBit[eCharset_COUNT] =
 	21   // JOHAB_CHARSET,
 };
 
+// the mapping from bitfield in fsUsb (of FONTSIGNATURE) to UnicodeRange
+// defined in nsUnicodeRange.h. Only the first 96 bits are mapped here
+// because at the moment only the first 84 bits are assigned according to 
+// the MSDN. See 
+// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
+static PRUint8 gBitToUnicodeRange[] = 
+{
+ /*  0 */ kRangeSetLatin,   // 0020 - 007e     Basic Latin
+ /*  1 */ kRangeSetLatin,   // 00a0 - 00ff     Latin-1 Supplement
+ /*  2 */ kRangeSetLatin,   // 0100 - 017f     Latin Extended-A
+ /*  3 */ kRangeSetLatin,   // 0180 - 024f     Latin Extended-B
+ /*  4 */ kRangeSetLatin,   // 0250 - 02af     IPA Extensions
+ /*  5 */ kRangeSetLatin,   // 02b0 - 02ff     Spacing Modifier Letters
+ /*  6 */ kRangeGreek,      // 0300 - 036f     Combining Diacritical Marks
+ /*  7 */ kRangeGreek,      // 0370 - 03ff     Basic Greek
+ /*  8 */ kRangeUnassigned, // Reserved
+ /*  9 */ kRangeCyrillic,   // 0400 - 04ff     Cyrillic
+ /* 10 */ kRangeArmenian,   // 0530 - 058f     Armenian
+ /* 11 */ kRangeHebrew,     // 0590 - 05ff     Basic Hebrew
+ /* 12 */ kRangeUnassigned, // Reserved
+ /* 13 */ kRangeArabic,     // 0600 - 06ff     Basic Arabic
+ /* 14 */ kRangeUnassigned, // Reserved
+ /* 15 */ kRangeDevanagari, // 0900 - 097f     Devanagari
+ /* 16 */ kRangeBengali,    // 0980 - 09ff     Bengali
+ /* 17 */ kRangeGurmukhi,   // 0a00 - 0a7f     Gurmukhi
+ /* 18 */ kRangeGujarati,   // 0a80 - 0aff     Gujarati
+ /* 19 */ kRangeOriya,      // 0b00 - 0b7f     Oriya
+ /* 20 */ kRangeTamil,      // 0b80 - 0bff     Tamil
+ /* 21 */ kRangeTelugu,     // 0c00 - 0c7f     Telugu
+ /* 22 */ kRangeKannada,    // 0c80 - 0cff     Kannada
+ /* 23 */ kRangeMalayalam,  // 0d00 - 0d7f     Malayalam
+ /* 24 */ kRangeThai,       // 0e00 - 0e7f     Thai
+ /* 25 */ kRangeLao,        // 0e80 - 0eff     Lao
+ /* 26 */ kRangeGeorgian,   // 10a0 - 10ff     Basic Georgian
+ /* 27 */ kRangeUnassigned, // Reserved
+ /* 28 */ kRangeKorean,     // 1100 - 11ff     Hangul Jamo
+ /* 29 */ kRangeSetLatin,   // 1e00 - 1eff     Latin Extended Additional
+ /* 30 */ kRangeGreek,      // 1f00 - 1fff     Greek Extended
+ /* 31 */ kRangeSetLatin,   // 2000 - 206f     General Punctuation
+ /* 32 */ kRangeSetLatin,   // 2070 - 209f     Subscripts and Superscripts
+ /* 33 */ kRangeSetLatin,   // 20a0 - 20cf     Currency Symbols
+ /* 34 */ kRangeSetLatin,   // 20d0 - 20ff     Comb. Diacrit. Marks for Symbols
+ /* 35 */ kRangeSetLatin,   // 2100 - 214f     Letter-like Symbols
+ /* 36 */ kRangeSetLatin,   // 2150 - 218f     Number Forms
+ /* 37 */ kRangeSetLatin,   // 2190 - 21ff     Arrows
+ /* 38 */ kRangeMathOperators,          // 2200 - 22ff     
+ /* 39 */ kRangeMiscTechnical,          // 2300 - 23ff    
+ /* 40 */ kRangeControlOpticalEnclose,  // 2400 - 243f     Control Pictures
+ /* 41 */ kRangeControlOpticalEnclose,  // 2440 - 245f     OCR
+ /* 42 */ kRangeControlOpticalEnclose,  // 2460 - 24ff     Enc. Alphanumerics
+ /* 43 */ kRangeBoxBlockGeometrics,     // 2500 - 257f     Box Drawing
+ /* 44 */ kRangeBoxBlockGeometrics,     // 2580 - 259f     Block Elements
+ /* 45 */ kRangeBoxBlockGeometrics,     // 25a0 - 25ff     Geometric Shapes
+ /* 46 */ kRangeMiscSymbols,            // 2600 - 26ff     
+ /* 47 */ kRangeDingbats,               // 2700 - 27bf   
+ /* 48 */ kRangeSetCJK,                 // 3000 - 303f     CJK Symb & Punct.
+ /* 49 */ kRangeSetCJK,                 // 3040 - 309f     Hiragana
+ /* 50 */ kRangeSetCJK,                 // 30a0 - 30ff     Katakana
+ /* 51 */ kRangeSetCJK,                 // 3100 - 312f 31a0, - 31bf  Bopomofo
+ /* 52 */ kRangeSetCJK,                 // 3130 - 318f     Hangul Comp. Jamo
+ /* 53 */ kRangeSetCJK,                 // 3190 - 319f     CJK Miscellaneous
+ /* 54 */ kRangeSetCJK,                 // 3200 - 32ff     Enc. CJK Letters
+ /* 55 */ kRangeSetCJK,                 // 3300 - 33ff     CJK Compatibility
+ /* 56 */ kRangeKorean,                 // ac00 - d7a3     Hangul
+ /* 57 */ kRangeSurrogate,              // d800 - dfff     Surrogates. 
+ /* 58 */ kRangeUnassigned,             // Reserved
+ /* 59 */ kRangeSetCJK,                 // 4e00 - 9fff     CJK Ideographs
+                                        // 2e80 - 2eff  2f00 - 2fdf Radicals
+                                        // 2ff0 - 2fff     IDS
+                                        // 3400 - 4dbf     CJK Ext. A
+ /* 60 */ kRangePrivate,                // e000 - f8ff     PUA
+ /* 61 */ kRangeSetCJK,                 // f900 - faff     CJK Compat. 
+ /* 62 */ kRangeArabic,                 // fb00 - fb4f     Alpha. Presen. Forms
+ /* 63 */ kRangeArabic,                 // fb50 - fdff     Arabic Presen. FormsA
+ /* 64 */ kRangeArabic,                 // fe20 - fe2f     Combining Half Marks
+ /* 65 */ kRangeArabic,                 // fe30 - fe4f     CJK Compat. Forms
+ /* 66 */ kRangeArabic,                 // fe50 - fe6f     Small Form Variants
+ /* 67 */ kRangeArabic,                 // fe70 - fefe     Arabic Presen. FormsB
+ /* 68 */ kRangeSetCJK,                 // ff00 - ffef     Half/Fullwidth Forms
+ /* 69 */ kRangeSetCJK,                 // fff0 - fffd     Specials
+ /* 70 */ kRangeTibetan,                // 0f00 - 0fcf     Tibetan
+ /* 71 */ kRangeSyriac,                 // 0700 - 074f     Syriac
+ /* 72 */ kRangeThaana,                 // 0780 - 07bf     Thaana
+ /* 73 */ kRangeSinhala,                // 0d80 - 0dff     Sinhala
+ /* 74 */ kRangeMyanmar,                // 1000 - 109f     Myanmar
+ /* 75 */ kRangeEthiopic,               // 1200 - 12bf     Ethiopic
+ /* 76 */ kRangeCherokee,               // 13a0 - 13ff     Cherokee
+ /* 77 */ kRangeAboriginal,             // 1400 - 14df     Can. Aboriginal Syl.
+ /* 78 */ kRangeOghamRunic,             // 1680 - 169f     Ogham
+ /* 79 */ kRangeOghamRunic,             // 16a0 - 16ff     Runic
+ /* 80 */ kRangeKhmer,                  // 1780 - 17ff     Khmer
+ /* 81 */ kRangeMongolian,              // 1800 - 18af     Mongolian
+ /* 82 */ kRangeBraillePattern,         // 2800 - 28ff     Braille
+ /* 83 */ kRangeYi,                     // a000 - a48c     Yi Yi Radicals
+ /* 84 */ kRangeUnassigned,             // Reserved
+ /* 85 */ kRangeUnassigned,
+ /* 86 */ kRangeUnassigned,
+ /* 87 */ kRangeUnassigned,
+ /* 88 */ kRangeUnassigned,
+ /* 89 */ kRangeUnassigned,
+ /* 90 */ kRangeUnassigned,
+ /* 91 */ kRangeUnassigned,
+ /* 92 */ kRangeUnassigned,
+ /* 93 */ kRangeUnassigned,
+ /* 94 */ kRangeUnassigned,
+ /* 95 */ kRangeUnassigned
+};
+
+
 // Helper to determine if a font has a private encoding that we know something about
 static nsresult
 GetEncoding(const char* aFontName, nsString& aValue)
@@ -2321,9 +2430,11 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
 }
 
 static int CALLBACK 
-enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
+enumProc(const ENUMLOGFONTEX* logFontEx, const NEWTEXTMETRICEX* metrics,
          DWORD fontType, LPARAM closure)
 {
+  const LOGFONT* logFont = &(logFontEx->elfLogFont);
+
   // XXX ignore vertical fonts
   if (logFont->lfFaceName[0] == '@') {
     return 1;
@@ -2337,6 +2448,11 @@ enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
       if (charsetSigBit >= 0) {
         DWORD charsetSigAdd = 1 << charsetSigBit;
         font->signature.fsCsb[0] |= charsetSigAdd;
+      }
+
+      // copy Unicode subrange bitfield (128bit) if it's a truetype font. 
+      if (fontType & TRUETYPE_FONTTYPE) {
+        memcpy(font->signature.fsUsb, metrics->ntmFontSig.fsUsb, 16);
       }
       return 1;
     }
@@ -2364,6 +2480,8 @@ enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
 
   if (fontType & TRUETYPE_FONTTYPE) {
     font->flags |= NS_GLOBALFONT_TRUETYPE;
+    // copy Unicode subrange bitfield (128 bits = 16 bytes)
+    memcpy(font->signature.fsUsb, metrics->ntmFontSig.fsUsb, 16);
   }
   if (logFont->lfCharSet == SYMBOL_CHARSET) {
     font->flags |= NS_GLOBALFONT_SYMBOL;
@@ -2421,7 +2539,7 @@ nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
      * msdn.microsoft.com/library states that
      * EnumFontFamiliesExW is only on NT/2000
      */
-    EnumFontFamiliesEx(aDC, &logFont, enumProc, nsnull, 0);
+    EnumFontFamiliesEx(aDC, &logFont, (FONTENUMPROC) enumProc, nsnull, 0);
 
     // Sort the global list of fonts to put the 'preferred' fonts first
     gGlobalFonts->Sort(CompareGlobalFonts, nsnull);
@@ -3213,6 +3331,18 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
   if (mLangGroup) {
     const char* langGroup;
     mLangGroup->GetUTF8String(&langGroup);
+  
+    // x-unicode pseudo-langGroup should be the last resort to turn to.
+    // That is, it should be refered to only when we don't  recognize 
+    // |langGroup| specified by the authors of documents and  the 
+    // determination of |langGroup| based  on Unicode range also fails 
+    // in |FindPrefFont|. 
+
+    if (!strcmp(langGroup, "x-unicode")) {
+      mTriedAllGenerics = 1;
+      return nsnull;
+    }
+
     AppendGenericFontFromPref(font.name, langGroup, 
                               NS_ConvertUCS2toUTF8(mGeneric).get());
   }
@@ -5142,6 +5272,9 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
   const char* aLangGroup)
 {
   int dword;
+
+  // For scripts that have been supported by 'ANSI' codepage in Win9x/ME,
+  // we can rely on fsCsb. 
   DWORD* array = aSignature->fsCsb;
   int i = 0;
   for (dword = 0; dword < 2; ++dword) {
@@ -5156,6 +5289,36 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
     }
   }
 
+  // For aLangGroup corresponding to one of 'ANSI' codepages, the negative
+  // result from fsCsb should be considered final. Otherwise, we risk getting
+  // a false positive from fsUsb, which could lead unncessarily to 
+  // a mix of glyphs from different fonts.
+
+  // x-western .. zh-TW. (exclude JOHAB)
+  for (i = eCharset_ANSI; i <= eCharset_CHINESEBIG5; ++i) 
+  {
+    if (!strcmp(gCharsetInfo[i].mLangGroup, aLangGroup))
+      return 0;
+  }
+
+  // For other scripts, we need fsUsb (Unicode coverage bitfield : 128bit).
+  // Here we're just examining the first 3 dwords because at the moment
+  // only the first 84 bits are assigned according to the MSDN.
+
+  array = aSignature->fsUsb;
+  for (i = 0, dword = 0; dword < 3; ++dword) {
+    for (int bit = 0; bit < sizeof(DWORD) * 8; ++bit) {
+      if ((array[dword] >> bit) & 1) {
+        PRUint8 range = gBitToUnicodeRange[i];
+        if (kRangeSpecificItemNum > range &&
+            !strcmp(gUnicodeRangeToLangGroupTable[range], aLangGroup)) {
+          return 1;
+        }
+      }
+      ++i;
+    }
+  }
+
   return 0;
 }
 
@@ -5163,7 +5326,7 @@ static int
 FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric)
 {
   switch (aFont->logFont.lfPitchAndFamily & 0xF0) {
-    case FF_DONTCARE:   return 0;
+    case FF_DONTCARE:   return 1;
     case FF_ROMAN:      return !strcmp(aGeneric, "serif");
     case FF_SWISS:      return !strcmp(aGeneric, "sans-serif");
     case FF_MODERN:     return !strcmp(aGeneric, "monospace");

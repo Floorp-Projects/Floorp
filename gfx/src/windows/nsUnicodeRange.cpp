@@ -51,6 +51,8 @@ const char *gUnicodeRangeToLangGroupTable[] =
   "ja",
   "zh-CN",
   "zh-TW",
+  "x-devanagari",
+  "x-tamil"
 };
 
 /**********************************************************************
@@ -224,24 +226,24 @@ static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeCyrillic,          //u04xx
     kRangeHebrew,            //u05xx     XXX 0530-058f is in fact kRangeArmenian
     kRangeArabic,            //u06xx
-    kRangeSriacThaana,       //u07xx
+    kRangeTertiaryTable,     //u07xx
     kRangeUnassigned,        //u08xx
-    kRangeDevanagariBengali, //u09xx
-    kRangeGurmukhiGujarati,  //u0axx
-    kRangeOriyaTamil,        //u0bxx
-    kRangeTeluguKannada,     //u0cxx
-    kRangeMalayalamSinhala,  //u0dxx
-    kRangeThaiLao,           //u0exx
-    kRangeTibetan,           //u0fxx
+    kRangeTertiaryTable,     //u09xx
+    kRangeTertiaryTable,     //u0axx
+    kRangeTertiaryTable,     //u0bxx
+    kRangeTertiaryTable,     //u0cxx
+    kRangeTertiaryTable,     //u0dxx
+    kRangeTertiaryTable,     //u0exx
+    kRangeTertiaryTable,     //u0fxx
   },
   { //table for 1x--
-    kRangeMyanmarGeorgian,   //u10xx
+    kRangeTertiaryTable,     //u10xx
     kRangeKorean,            //u11xx
     kRangeEthiopic,          //u12xx
-    kRangeEthiopicCherokee,  //u13xx
+    kRangeTertiaryTable,     //u13xx
     kRangeAboriginal,        //u14xx
     kRangeAboriginal,        //u15xx
-    kRangeAboriginalOghamRunic, //u16xx
+    kRangeTertiaryTable,     //u16xx
     kRangeKhmer,             //u17xx
     kRangeMongolian,         //u18xx
     kRangeUnassigned,        //u19xx
@@ -256,7 +258,7 @@ static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeSetLatin,          //u20xx
     kRangeSetLatin,          //u21xx
     kRangeMathOperators,     //u22xx
-    kRangeMiscTechical,      //u23xx
+    kRangeMiscTechnical,     //u23xx
     kRangeControlOpticalEnclose, //u24xx
     kRangeBoxBlockGeometrics, //u25xx
     kRangeMiscSymbols,       //u26xx
@@ -322,12 +324,55 @@ static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeArabic,            //ufcxx
     kRangeArabic,            //ufdxx
     kRangeArabic,            //ufexx, includes Combining half marks, 
-                            //               CJK compatibility forms, 
-                            //               CJK compatibility forms, 
-                            //               small form variants
+                             //                CJK compatibility forms, 
+                             //                CJK compatibility forms, 
+                             //                small form variants
     
     kRangeSetCJK,            //uffxx, halfwidth and fullwidth forms, includes Special
   }
+};
+
+// Most scripts between U+0700 and U+16FF are assigned a chunk of 128 (0x80) 
+// code points  so that the number of entries in the tertiary range
+// table for that range is obtained by dividing (0x1700 - 0x0700) by 128.
+// Exceptions: Ethiopic, Tibetan, Hangul Jamo and Canadian aboriginal 
+// syllabaries take multiple chunks and Ogham and Runic share  a single chunk.
+#define TERTIARY_TABLE_SIZE ((0x1700 - 0x0700) / 0x80)
+
+static PRUint8 gUnicodeTertiaryRangeTable[TERTIARY_TABLE_SIZE] =
+{ //table for 0x0700 - 0x1600 
+    kRangeSyriac,            //u070x
+    kRangeThaana,            //u078x
+    kRangeUnassigned,        //u080x  place holder(resolved in the 2ndary tab.)
+    kRangeUnassigned,        //u088x  place holder(resolved in the 2ndary tab.)
+    kRangeDevanagari,        //u090x
+    kRangeBengali,           //u098x
+    kRangeGurmukhi,          //u0a0x
+    kRangeGujarati,          //u0a8x
+    kRangeOriya,             //u0b0x
+    kRangeTamil,             //u0b8x
+    kRangeTelugu,            //u0c0x
+    kRangeKannada,           //u0c8x
+    kRangeMalayalam,         //u0d0x
+    kRangeSinhala,           //u0d8x
+    kRangeThai,              //u0e0x  
+    kRangeLao,               //u0e8x
+    kRangeTibetan,           //u0f0x  place holder(resolved in the 2ndary tab.)
+    kRangeTibetan,           //u0f8x  place holder(resolved in the 2ndary tab.)
+    kRangeMyanmar,           //u100x
+    kRangeGeorgian,          //u108x
+    kRangeKorean,            //u110x  place holder(resolved in the 2ndary tab.)
+    kRangeKorean,            //u118x  place holder(resolved in the 2ndary tab.)
+    kRangeEthiopic,          //u120x  place holder(resolved in the 2ndary tab.)
+    kRangeEthiopic,          //u128x  place holder(resolved in the 2ndary tab.)
+    kRangeEthiopic,          //u130x  
+    kRangeCherokee,          //u138x
+    kRangeAboriginal,        //u140x  place holder(resolved in the 2ndary tab.)
+    kRangeAboriginal,        //u148x  place holder(resolved in the 2ndary tab.)
+    kRangeAboriginal,        //u150x  place holder(resolved in the 2ndary tab.)
+    kRangeAboriginal,        //u158x  place holder(resolved in the 2ndary tab.)
+    kRangeAboriginal,        //u160x  
+    kRangeOghamRunic,        //u168x  this contains two scripts, Ogham & Runic
 };
 
 // A two level index is almost enough for locating a range, with the 
@@ -336,6 +381,8 @@ static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
 // not discriminated further. But future adoption of this module for other use 
 // should be aware of this limitation. The implementation can be extended if 
 // there is such a need.
+// For Indic, Southeast Asian scripts and some other scripts between
+// U+0700 and U+16FF, it's extended to the third level.
 PRUint32 FindCharUnicodeRange(PRUnichar ch)
 {
   PRUint32 range;
@@ -349,6 +396,9 @@ PRUint32 FindCharUnicodeRange(PRUnichar ch)
 
   // otherwise, we have one more table to look at
   range = gUnicodeSubrangeTable[range - kRangeTableBase][(ch & 0x0f00) >> 8];
+  if (range < kRangeTertiaryTable)
+    return range;     
 
-  return range;
+  // Yet another table to look at : U+0700 - U+16FF : 128 code point blocks
+  return  gUnicodeTertiaryRangeTable[(ch - 0x0700) >> 7];
 }

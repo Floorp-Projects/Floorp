@@ -118,6 +118,18 @@ pref("font.name-list.serif.zh-TW", "MingLiU");
 pref("font.name-list.sans-serif.zh-TW", "MingLiU"); 
 pref("font.name-list.monospace.zh-TW", "MingLiU"); 
 
+pref("font.name.serif.x-devanagari", "Mangal");
+pref("font.name.sans-serif.x-devanagari", "Raghindi");
+pref("font.name.monospace.x-devanagari", "Mangal");
+pref("font.name-list.serif.x-devanagari", "Mangal, Raghindi");
+pref("font.name-list.monospace.x-devanagari", "Mangal, Raghindi");
+
+pref("font.name.serif.x-tamil", "Latha");
+pref("font.name.sans-serif.x-tamil", "Code2000");
+pref("font.name.monospace.x-tamil", "Latha");
+pref("font.name-list.serif.x-tamil", "Latha, Code2000");
+pref("font.name-list.monospace.x-tamil", "Latha, Code2000");
+
 pref("font.default", "serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -148,6 +160,12 @@ pref("font.size.fixed.x-central-euro", 13);
 
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
+
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
 
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
