@@ -123,6 +123,46 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
   }
 }
 
+void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose) 
+{
+  // We need to destroy frames until our row count has been properly
+  // reduced.  A reflow will then pick up and create the new frames.
+  nsIFrame* childFrame = GetLastFrame();
+  while (childFrame && rowsToLose > 0) {
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
+    {
+      PRInt32 rowGroupCount;
+      ((nsTreeRowGroupFrame*)childFrame)->GetRowCount(rowGroupCount);
+      if ((rowGroupCount - rowsToLose) > 0) {
+        // The row group will destroy as many rows as it can, and it will
+        // modify rowsToLose.
+        ((nsTreeRowGroupFrame*)childFrame)->ReverseDestroyRows(aPresContext, rowsToLose);
+        return;
+      }
+      else rowsToLose = 0;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    {
+      // Lost a row.
+      rowsToLose--;
+    }
+    
+    nsIFrame* prevFrame;
+    prevFrame = mFrames.GetPrevSiblingFor(childFrame);
+    mFrames.DeleteFrame(aPresContext, childFrame);
+    mBottomFrame = childFrame = prevFrame;
+  }
+}
+
+void 
+nsTreeRowGroupFrame::ConstructContentChain(PRInt32 aOldIndex, PRInt32 aNewIndex, nsIContent* aContent)
+{
+  
+
+}
+
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
@@ -139,27 +179,37 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
+  // Get the content node that corresponds to the topmost row.
+  nsTableCellFrame* tableCellFrame = tableFrame->GetCellFrameAt(0, 0);
+  nsCOMPtr<nsIContent> cellContent;
+  tableCellFrame->GetContent(getter_AddRefs(cellContent));
+  nsCOMPtr<nsIContent> rowContent;
+  cellContent->GetParent(*getter_AddRefs(rowContent));
+
+  // Figure out how many rows we need to lose (if we moved down) or gain (if we moved up).
+  PRInt32 delta = aNewIndex > aOldIndex ? aNewIndex - aOldIndex : aOldIndex - aNewIndex;
+  
   // Get our presentation context.
-  if (aNewIndex > aOldIndex) {
-    // Figure out how many rows we have to lose off the top.
-    PRInt32 rowsToLose = aNewIndex - aOldIndex;
-    if (rowsToLose > rowCount) {
-
-      // Get the content node that corresponds to the row.
-      nsTableCellFrame* tableCellFrame = tableFrame->GetCellFrameAt(0, 0);
-      nsCOMPtr<nsIContent> cellContent;
-      tableCellFrame->GetContent(getter_AddRefs(cellContent));
-      nsCOMPtr<nsIContent> rowContent;
-      cellContent->GetParent(*getter_AddRefs(rowContent));
-
-      // Just destroy everything and build a content chain
-      mFrames.DeleteFrames(aPresContext); // Destroys everything.
-      //ConstructContentChain(aOldIndex, aNewIndex, rowContent);
+  if (delta <= rowCount) {
+    PRInt32 loseRows = delta;
+    if (aNewIndex > aOldIndex) {
+      // Figure out how many rows we have to lose off the top.
+      DestroyRows(aPresContext, loseRows);
     }
-    else DestroyRows(aPresContext, rowsToLose);
+    else {
+      // Figure out how many rows we have to lose off the bottom.
+      ReverseDestroyRows(aPresContext, loseRows);
+    
+      // Now that we've lost some rows, we need to create a
+      // content chain that provides a hint for moving forward.
+      ConstructContentChain(aOldIndex, aNewIndex, rowContent);
+    }
   }
   else {
-    // Figure out how many rows we have to lose off the bottom.
+    // Just blow away all our frames, but keep a content chain
+    // as a hint to figure out how to build the frames.
+    mFrames.DeleteFrames(aPresContext); // Destroys everything.
+    ConstructContentChain(aOldIndex, aNewIndex, rowContent);
   }
 
   // Invalidate the cell map and column cache.
