@@ -180,7 +180,7 @@ NS_ScriptErrorReporter(JSContext *cx,
   error.AppendWithConversion(": ");
   error.Append(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage));
   error.AppendWithConversion("\n");
-  if (status != nsEventStatus_eIgnore)
+  if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
     error.AppendWithConversion("Error was suppressed by event handler\n");
   
   char *errorStr = error.ToNewCString();
