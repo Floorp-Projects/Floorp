@@ -38,7 +38,6 @@
 #include "nsStyleUtil.h"
 
 #include "nsIDOMText.h"
-#include "nsITextContent.h"
 
 #include "nsMathMLmiFrame.h"
 
