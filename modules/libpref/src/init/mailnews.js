@@ -169,8 +169,7 @@ localDefPref("news.window_rect",                    "-1,-1,-1,-1");
 pref("news.fcc_folder",                     "");
 pref("news.notify.on",                      true);
 pref("news.notify.size",                    1000);
-// was 500.  this is only until we fix performance in 5.0
-pref("news.max_articles",                   50);
+pref("news.max_articles",                   500);
 pref("news.abbreviate_pretty_names",        0);
 pref("news.mark_old_read",                  false);
 pref("news.server_is_secure",               false);
