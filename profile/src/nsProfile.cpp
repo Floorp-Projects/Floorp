@@ -613,16 +613,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         }
     }
 
-/* hack so we don't do this for tinderbox.  otherwise the tree goes orange */
-#if !defined(DEBUG_cltbld) && !defined(MOZ_BYPASS_PROFILE_AT_STARTUP) && !defined(DEBUG_pavlov)
-#ifdef DEBUG
-    if (profileURLStr.Length() == 0) {
-        printf("DEBUG BUILDS ONLY:  we are forcing you to use the profile manager to help smoke test it.\n");
-        profileURLStr = PROFILE_MANAGER_URL;
-    }
-#endif /* DEBUG */
-#endif /* !DEBUG_cltbld && !MOZ_BYPASS_PROFILE_AT_STARTUP */
-
 #ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : End\n");
 #endif
