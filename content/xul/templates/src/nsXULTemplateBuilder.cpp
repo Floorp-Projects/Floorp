@@ -87,7 +87,6 @@
 #include "nsIRDFService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsArray.h"
 #include "nsITimer.h"
@@ -203,9 +202,8 @@ nsXULTemplateBuilder::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS3(nsXULTemplateBuilder,
+NS_IMPL_ISUPPORTS2(nsXULTemplateBuilder,
                    nsIXULTemplateBuilder,
-                   nsISecurityCheckedComponent,
                    nsIRDFObserver)
 
 //----------------------------------------------------------------------
@@ -2263,38 +2261,6 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 
 //----------------------------------------------------------------------
 
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsXULTemplateBuilder::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  *_retval = PL_strdup("AllAccess");
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsXULTemplateBuilder::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  *_retval = PL_strdup("AllAccess");
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXULTemplateBuilder::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  *_retval = PL_strdup("AllAccess");
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXULTemplateBuilder::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  *_retval = PL_strdup("AllAccess");
-  return NS_OK;
-}
 
 nsresult 
 nsXULTemplateBuilder::IsSystemPrincipal(nsIPrincipal *principal, PRBool *result)

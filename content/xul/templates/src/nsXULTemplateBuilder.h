@@ -44,7 +44,6 @@
 
 #include "nsStubDocumentObserver.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
@@ -76,7 +75,6 @@ class nsIRDFCompositeDataSource;
  * set of rules.
  */
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
-                             public nsISecurityCheckedComponent,
                              public nsStubDocumentObserver,
                              public nsIRDFObserver
 {
@@ -92,9 +90,6 @@ public:
     // nsIXULTemplateBuilder interface
     NS_DECL_NSIXULTEMPLATEBUILDER
    
-    // nsISecurityCheckedComponent
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
     // nsIDocumentObserver
     virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
