@@ -35,6 +35,9 @@
 #include "NewConfigDialog.h"
 #include "ProgDlgThread.h"
 
+// for CopyDir
+#include "winbase.h"  
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -763,6 +766,43 @@ void CWizardMachineApp::ExecuteAction(char action)
 	}
 }
 
+void CWizardMachineApp::CopyDir(CString from, CString to)
+{
+	WIN32_FIND_DATA data;
+	HANDLE d;
+	CString dot = ".";
+	CString dotdot = "..";
+	CString fchild, tchild;
+	CString pattern = from + "\\*.*";
+	int		found;
+	DWORD	tmp;
+
+	d = FindFirstFile((const char *) to, &data);
+	if (d == INVALID_HANDLE_VALUE)
+		mkdir(to);
+
+	d = FindFirstFile((const char *) pattern, &data);
+	found = (d != INVALID_HANDLE_VALUE);
+
+	while (found)
+	{
+		if (data.cFileName != dot && data.cFileName != dotdot)
+		{
+			fchild = from + "\\" + data.cFileName;
+			tchild = to + "\\" + data.cFileName;
+			tmp = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+			if (tmp == FILE_ATTRIBUTE_DIRECTORY)
+				CopyDir(fchild, tchild);
+			else
+				CopyFile((const char *) fchild, (const char *) tchild, FALSE);
+		}
+
+		found = FindNextFile(d, &data);
+	}
+
+	FindClose(d);
+}
+
 void CWizardMachineApp::ExecuteCommand(char *command, int showflag)
 {
 	STARTUPINFO	startupInfo; 
@@ -788,6 +828,7 @@ CString CWizardMachineApp::replaceVars(char *str, char *listval)
 	char buf[MIN_SIZE];
 	char *b = buf;
 	char *v;
+	CString v1;
 
 	while (*str)
 	{
@@ -806,7 +847,15 @@ CString CWizardMachineApp::replaceVars(char *str, char *listval)
 				{
 					WIDGET *w = findWidget(n);
 					if (w)
-						v = (char *) (LPCSTR) w->value;
+					{
+						if (w->control && w->control->m_hWnd)
+						{
+							v1 = CWizardUI::GetScreenValue(w);
+							v = (char *) (LPCSTR) v1;
+						}
+						else
+							v = (char *) (LPCSTR) w->value;
+					}
 					else
 						v = "";
 				}
@@ -841,7 +890,7 @@ BOOL CWizardMachineApp::IterateListBox(char *parms)
 	if (!w || w->type != "ListBox")
 		return FALSE;
 
-	if (w->control)
+	if (w->control && w->control->m_hWnd)
 	{
 		// Widget is still visible on screen, get temporary copy of current value
 		// (from here, we depend on UpdataData() having been called somewhere upstream)
@@ -1023,6 +1072,18 @@ BOOL CWizardMachineApp::interpret(CString cmds, WIDGET *curWidget)
 				{
 					if (curWidget)
 						CWizardUI::NewConfig(curWidget);
+				}
+
+				else if (strcmp(pcmd, "CopyDir") == 0)
+				{
+					char *p2 = strchr(parms, ',');
+					if (p2)
+					{
+						*p2++ = '\0';
+						CString from = replaceVars(parms, NULL);
+						CString to = replaceVars(p2, NULL);
+						CopyDir(from, to);
+					}
 				}
 			}
 			// This is an extra free...

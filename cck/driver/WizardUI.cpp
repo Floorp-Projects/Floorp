@@ -685,6 +685,35 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			if (curWidget->action.function == "command")
 				theApp.interpret(curWidget->action.parameters, curWidget);
+			else if (curWidget->action.function == "NewConfig") {
+				CNewConfigDialog newDlg;
+				newDlg.DoModal();
+				CString configField = newDlg.GetConfigName();
+				CString newDir = CString(customizationPath); 
+				newDir += configField;
+				_mkdir(newDir);
+					
+				/**
+				char srcCache[250];
+				char destCache[250];
+				strcpy(srcCache, Path);
+				strcat(srcCache, "cck.che");
+				strcpy(destCache, newDir);
+				strcat(destCache, "\\cck.che");
+				CopyFile(srcCache, destCache, FALSE);
+				**/
+
+				WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+				CString tmpFunction = tmpWidget->action.function;
+				CString params = CString(tmpWidget->action.parameters);
+				theApp.GenerateList(tmpFunction, tmpWidget, params);	
+					
+				((CComboBox*)tmpWidget->control)->SelectString(0, configField);
+
+
+				// remembering the widget name for subsequent .che file operations
+				//customizationWidgetName = tmpWidget->name;
+			}
 		}
 		else 
 			Progress();

@@ -53,6 +53,7 @@ public:
 	char* GetSectionBuffer(CString iniFile, CString section);
 	void ExecuteAction(char action);
 	CString replaceVars(char *str, char *listval);
+	void CopyDir(CString from, CString to);
 	void ExecuteCommand(char *command, int showflag);
 	BOOL IterateListBox(char *parms);
 	BOOL interpret(CString cmd, WIDGET *curWidget);
