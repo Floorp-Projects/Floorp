@@ -190,6 +190,9 @@ nsIAtom* nsXULDocument::kRefAtom;
 nsIAtom* nsXULDocument::kRuleAtom;
 nsIAtom* nsXULDocument::kTemplateAtom;
 
+nsIAtom* nsXULDocument::kCoalesceAtom;
+nsIAtom* nsXULDocument::kAllowNegativesAtom;
+
 nsIRDFService* nsXULDocument::gRDFService;
 nsIRDFResource* nsXULDocument::kNC_persist;
 nsIRDFResource* nsXULDocument::kNC_attribute;
@@ -466,6 +469,9 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
         NS_IF_RELEASE(kTemplateAtom);
+
+	NS_IF_RELEASE(kCoalesceAtom);
+	NS_IF_RELEASE(kAllowNegativesAtom);
 
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -3313,6 +3319,9 @@ nsXULDocument::Init()
         kRuleAtom           = NS_NewAtom("rule");
         kTemplateAtom       = NS_NewAtom("template");
 
+        kCoalesceAtom       = NS_NewAtom("coalesceduplicatearcs");
+        kAllowNegativesAtom = NS_NewAtom("allownegativeassertions");
+
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
         rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -5146,6 +5155,19 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct new composite data source");
     if (NS_FAILED(rv)) return rv;
+
+	// check for magical attributes
+	nsAutoString		attrib;
+	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kCoalesceAtom, attrib))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.Equals("false")))
+	{
+		db->SetCoalesceDuplicateArcs(PR_FALSE);
+	}
+	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kAllowNegativesAtom, attrib))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.Equals("false")))
+	{
+		db->SetAllowNegativeAssertions(PR_FALSE);
+	}
 
     // Add the local store as the first data source in the db. Note
     // that we _might_ not be able to get a local store if we haven't
