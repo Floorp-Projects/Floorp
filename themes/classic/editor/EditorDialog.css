@@ -90,7 +90,7 @@ titledbox {
   width: 20px;
   height: 12px; 
   border: 1px inset #CCCCCC;
-  margin: 4px; 10px 4px 10px;
+  margin: 2px;
 }
 
 .color-well[default="true"] {
@@ -100,9 +100,10 @@ titledbox {
 
 button.color-button {
   /* need to override large default min-width */
-  min-width : 32px;
-  width : 32px;
-  margin: 4px;
+  min-width : 30px;
+  width : 30px;
+  height: 16px;
+  margin: 2px;
 }
 
 .menu-list[focused="true"] {
