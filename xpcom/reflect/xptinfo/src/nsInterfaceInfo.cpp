@@ -63,20 +63,18 @@ nsInterfaceInfo::GetName(char** name)
 {
     NS_PRECONDITION(name, "bad param");
 
-//      nsIAllocator* allocator;
-//      if(NULL != (allocator = nsInterfaceInfoManager::GetAllocator())) {
+    nsIAllocator* allocator;
+    if(NULL != (allocator = nsInterfaceInfoManager::GetAllocator())) {
         int len = strlen(mEntry->name)+1;
-//          char* p = (char*)allocator->Alloc(len);
-        // XXX malloc for now.
-    char *p = (char *)malloc(len);
-//          NS_RELEASE(allocator);
+        char* p = (char*)allocator->Alloc(len);
+        NS_RELEASE(allocator);
         if(p) {
             memcpy(p, mEntry->name, len);
             *name = p;
             return NS_OK;
         }
-//      }
-
+    }
+    
     *name = NULL;
     return NS_ERROR_FAILURE;
 }
@@ -86,18 +84,16 @@ nsInterfaceInfo::GetIID(nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
 
-//      nsIAllocator* allocator;
-//      if(NULL != (allocator = nsInterfaceInfoManager::GetAllocator())) {
-//          nsIID* p = (nsIID*)allocator->Alloc(sizeof(nsIID));
-//          NS_RELEASE(allocator);
-    // XXX malloc for now.
-    nsIID* p = (nsIID*)malloc(sizeof(nsIID));
+    nsIAllocator* allocator;
+    if(NULL != (allocator = nsInterfaceInfoManager::GetAllocator())) {
+        nsIID* p = (nsIID*)allocator->Alloc(sizeof(nsIID));
+        NS_RELEASE(allocator);
         if(p) {
             memcpy(p, &mEntry->iid, sizeof(nsIID));
             *iid = p;
             return NS_OK;
         }
-//      }
+    }
 
     *iid = NULL;
     return NS_ERROR_FAILURE;

@@ -24,12 +24,38 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 
-
-//  XTC_PUBLIC_API(nsIInterfaceInfoManager*)
-//  XPT_GetInterfaceInfoManager();
+static void RegAllocator();
 
 int main (int argc, char **argv) {
+    RegAllocator();
+
     nsIInterfaceInfoManager *iim = XPT_GetInterfaceInfoManager();
     nsIID *iid;
     iim->GetIIDForName("Interface", &iid);
 }    
+
+
+// XXX remove following code when allocator autoregisters.
+#include "nsRepository.h"
+#include "nsIAllocator.h"
+
+static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+
+#ifdef XP_PC
+#define XPCOM_DLL  "xpcom32.dll"
+#else
+#ifdef XP_MAC
+#define XPCOM_DLL  "XPCOM_DLL"
+#else
+#define XPCOM_DLL  "libxpcom.so"
+#endif
+#endif
+
+static void RegAllocator()
+{
+    nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, 
+                                    PR_FALSE, PR_FALSE);
+}
+
+

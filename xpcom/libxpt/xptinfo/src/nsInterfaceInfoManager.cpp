@@ -147,9 +147,7 @@ nsInterfaceInfoManager::nsInterfaceInfoManager()
                                  kIAllocatorIID,
                                  (nsISupports **)&mAllocator);
 
-    // just added this baby.
-    // allocator isn't currently registered, so just use malloc instead.
-//      PR_ASSERT((mAllocator != NULL));
+    PR_ASSERT((mAllocator != NULL));
 }
 
 nsInterfaceInfo *
@@ -232,10 +230,8 @@ nsInterfaceInfoManager::GetIIDForName(const char* name, nsIID** iid)
         if (!strcmp(name, entry->name)) {
             nsIID* p;
 
-            // Allocator isn't registered, so just use malloc for now...
-//              if(!(p = (nsIID*)mAllocator->Alloc(sizeof(nsIID))))
-//                  break;
-            if (!(p = (nsIID*)malloc(sizeof(nsIID))))
+
+            if(!(p = (nsIID*)mAllocator->Alloc(sizeof(nsIID))))
                 break;
 
             // XXX I'm confused here about the lifetime of IID pointers.
