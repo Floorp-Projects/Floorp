@@ -106,8 +106,8 @@ enum eHTMLAttributes {
   eHTMLAttr_title,      eHTMLAttr_wordbreak,  eHTMLAttr_width,    eHTMLAttr_xmp
 };
 
-PRInt32         ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner* aScanner);
-PRInt32         ConsumeAttributeText(PRUnichar aChar,nsString& aString,CScanner* aScanner);
+PRInt32         ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner);
+PRInt32         ConsumeAttributeText(PRUnichar aChar,nsString& aString,CScanner& aScanner);
 PRInt32         FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
 eHTMLTags       DetermineHTMLTagType(const nsString& aString);
 eHTMLTokenTypes DetermineTokenType(const nsString& aString);
@@ -139,7 +139,7 @@ protected:
 class CStartToken: public CHTMLToken {
 	public:
                         CStartToken(const nsString& aString);
-    virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+    virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual eHTMLTags   GetHTMLTag();
     virtual const char*	GetClassName(void);
 		virtual PRInt32     GetTokenType(void);
@@ -163,7 +163,7 @@ class CStartToken: public CHTMLToken {
 class CEndToken: public CHTMLToken {
 	public:
                         CEndToken(const nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual eHTMLTags   GetHTMLTag();
     virtual const char*	GetClassName(void);
 		virtual PRInt32	    GetTokenType(void);
@@ -182,7 +182,7 @@ class CEndToken: public CHTMLToken {
 class CCommentToken: public CHTMLToken {
 	public:
                         CCommentToken(const nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*	GetClassName(void);
 		virtual PRInt32	    GetTokenType(void);
             char        mLeadingChar;
@@ -202,8 +202,8 @@ class CEntityToken : public CHTMLToken {
     virtual const char*	GetClassName(void);
 		virtual PRInt32	    GetTokenType(void);
             PRInt32     TranslateToUnicodeStr(nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
+    static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
     static  PRInt32     FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
     static  PRBool      VerifyEntityTable(void);
@@ -226,7 +226,7 @@ class CEntityToken : public CHTMLToken {
 class CWhitespaceToken: public CHTMLToken {
 	public:
                         CWhitespaceToken(const nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*	GetClassName(void);
 		virtual PRInt32			GetTokenType(void);
 };
@@ -242,7 +242,7 @@ class CWhitespaceToken: public CHTMLToken {
 class CTextToken: public CHTMLToken {
 	public:
                         CTextToken(const nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*	GetClassName(void);
 		virtual PRInt32			GetTokenType(void);
 };
@@ -259,7 +259,7 @@ class CTextToken: public CHTMLToken {
 class CAttributeToken: public CHTMLToken {
 	public:
                           CAttributeToken(const nsString& aString);
-   	virtual PRInt32       Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32       Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*	  GetClassName(void);
 		virtual PRInt32			  GetTokenType(void);
     virtual nsString&     GetKey(void) {return mTextKey;}
@@ -282,7 +282,7 @@ class CAttributeToken: public CHTMLToken {
 class CNewlineToken: public CHTMLToken { 
 	public:
                         CNewlineToken(const nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*	GetClassName(void);
 		virtual PRInt32			GetTokenType(void);
 };
@@ -334,7 +334,7 @@ class CStyleToken: public CHTMLToken {
 class CSkippedContentToken: public CAttributeToken {
 	public:
                         CSkippedContentToken(const nsString& aString);
-   	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
+   	virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*	GetClassName(void);
 	  virtual PRInt32			GetTokenType(void);
   protected:

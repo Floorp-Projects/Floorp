@@ -59,7 +59,8 @@
 #include "nsDeque.h"
 #include "nsHTMLTokens.h"
 #include "nsParserNode.h"
-#include "nsDefaultTokenHandler.h"
+#include "nsTokenHandler.h"
+#include "nsParserTypes.h"
 
 
 #define NS_IHTML_PARSER_IID      \
@@ -77,13 +78,14 @@ class nsHTMLDTD;
 class nsHTMLParser : public nsIParser {
             
 	public:
-friend class CDefaultTokenHandler;
+friend class CTokenHandler;
 
     NS_DECL_ISUPPORTS
 						                    nsHTMLParser();
                                 ~nsHTMLParser();
-    virtual void                SetContentSink(nsIContentSink* aSink);
+    virtual nsIContentSink*     SetContentSink(nsIContentSink* aSink);
     virtual PRBool              Parse(nsIURL* aURL);
+    virtual PRBool              Parse(nsIURL* aURL,eParseMode aMode);
     virtual PRBool              ResumeParse();
 
 
@@ -102,6 +104,7 @@ friend class CDefaultTokenHandler;
             PRBool              IsWithinBody(void) const;
 
   protected:
+            PRBool              IterateTokens();
             eHTMLTags           NodeAt(PRInt32 aPos) const;
             eHTMLTags           GetTopNode() const;
             PRInt32             GetStackPos() const;
@@ -109,9 +112,10 @@ friend class CDefaultTokenHandler;
             PRInt32             CollectAttributes(nsCParserNode& aNode);
             PRInt32             CollectSkippedContent(nsCParserNode& aNode);
             void                InitializeDefaultTokenHandlers();
-          CDefaultTokenHandler* GetTokenHandler(const nsString& aString) const;
-          CDefaultTokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
-          CDefaultTokenHandler* AddTokenHandler(CDefaultTokenHandler* aHandler);
+            CTokenHandler*      GetTokenHandler(const nsString& aString) const;
+            CTokenHandler*      GetTokenHandler(eHTMLTokenTypes aType) const;
+            CTokenHandler*      AddTokenHandler(CTokenHandler* aHandler);
+            nsHTMLParser&       DeleteTokenHandlers(void);
 
   protected:
 
@@ -142,14 +146,15 @@ friend class CDefaultTokenHandler;
             nsIHTMLContentSink* mSink;
             CTokenizer*         mTokenizer;
 
-            eHTMLTags           mTagStack[50];
-            PRInt32             mTagStackPos;
+            eHTMLTags           mContextStack[50];
+            PRInt32             mContextStackPos;
 
-          CDefaultTokenHandler* mTokenHandlers[100];
-          PRInt32               mTokenHandlerCount;
-          CDequeIterator*       mCurrentPos;
+            CTokenHandler*      mTokenHandlers[100];
+            PRInt32             mTokenHandlerCount;
+            nsDequeIterator*    mCurrentPos;
 
             nsHTMLDTD*          mDTD;
+            eParseMode          mParseMode;
 };
 
 

@@ -33,7 +33,12 @@
 
 #include "prtypes.h"
 
-#define PRChar  char
+enum  eParseMode {
+  
+  eParseMode_unknown=0,
+  eParseMode_navigator,
+  eParseMode_other
+};
 
 const	PRInt32   kNotFound     = -1;
 const	PRInt32   kNoError      = 0;

@@ -51,7 +51,7 @@ class nsIParser : public nsISupports {
             
 	public:
 
-    virtual void            SetContentSink(nsIContentSink* aContentSink)=0;
+    virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
     virtual PRBool          Parse(nsIURL* aURL)=0;
     virtual PRBool          ResumeParse()=0;
 };

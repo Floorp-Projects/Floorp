@@ -23,19 +23,23 @@ DEFINES=-D_IMPL_NS_HTMLPARS
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
-CPPSRCS=nsDeque.cpp nsHTMLContentSink.cpp nsHTMLDelegate.cpp nsHTMLDTD.cpp \
+CPPSRCS=nsHTMLContentSink.cpp nsHTMLDelegate.cpp nsHTMLDTD.cpp \
     nsHTMLParser.cpp nsHTMLTokens.cpp nsParserNode.cpp nsScanner.cpp \
-    nsToken.cpp nsTokenizer.cpp nsDefaultTokenHandler.cpp 
+    nsToken.cpp nsTokenizer.cpp nsTokenHandler.cpp  \
+    CNavDTD.cpp CNavDelegate.cpp \
+    COtherDTD.cpp COtherDelegate.cpp
 
 EXPORTS=nshtmlpars.h nsIContentSink.h nsIHTMLContentSink.h \
     nsHTMLTokens.h nsIParserNode.h nsIParser.h nsToken.h 
 
-CPP_OBJS=.\$(OBJDIR)\nsDeque.obj .\$(OBJDIR)\nsHTMLContentSink.obj \
-    .\$(OBJDIR)\nsHTMLDelegate.obj .\$(OBJDIR)\nsHTMLParser.obj \
+CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
+    .\$(OBJDIR)\nsHTMLDelegate.obj        .\$(OBJDIR)\nsHTMLParser.obj \
     .\$(OBJDIR)\nsHTMLDTD.obj \
-    .\$(OBJDIR)\nsHTMLTokens.obj .\$(OBJDIR)\nsParserNode.obj \
-    .\$(OBJDIR)\nsScanner.obj .\$(OBJDIR)\nsToken.obj \
-    .\$(OBJDIR)\nsTokenizer.obj .\$(OBJDIR)\nsDefaultTokenHandler.obj 
+    .\$(OBJDIR)\CNavDelegate.obj          .\$(OBJDIR)\CNavDTD.obj \
+    .\$(OBJDIR)\COtherDelegate.obj        .\$(OBJDIR)\COtherDTD.obj \
+    .\$(OBJDIR)\nsHTMLTokens.obj          .\$(OBJDIR)\nsParserNode.obj \
+    .\$(OBJDIR)\nsScanner.obj             .\$(OBJDIR)\nsToken.obj \
+    .\$(OBJDIR)\nsTokenizer.obj           .\$(OBJDIR)\nsTokenHandler.obj 
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
 

@@ -60,7 +60,7 @@ class CToken {
 		virtual	void			    SetStringValue(const char* name);
     virtual	void			    SetOrdinal(PRInt32 value);
   	virtual	PRInt32			  GetOrdinal(void);
-  	virtual	PRInt32       Consume(PRUnichar aChar,CScanner* aScanner);
+  	virtual	PRInt32       Consume(PRUnichar aChar,CScanner& aScanner);
   	virtual	void			    DebugDumpToken(ostream& out);
   	virtual	void			    DebugDumpSource(ostream& out);
 		virtual	PRInt32			  GetTokenType(void);

@@ -44,6 +44,28 @@ CHTMLTokenizerDelegate::CHTMLTokenizerDelegate() :
 }
 
 /**-------------------------------------------------------
+ *  Default constructor
+ *  
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ *-----------------------------------------------------*/
+CHTMLTokenizerDelegate::CHTMLTokenizerDelegate(CHTMLTokenizerDelegate& aDelegate) : 
+  ITokenizerDelegate(), mTokenDeque() {
+}
+
+
+/*-------------------------------------------------------
+ * 
+ * @update	gess4/11/98
+ * @param 
+ * @return
+ *------------------------------------------------------*/
+eParseMode CHTMLTokenizerDelegate::GetParseMode() const {
+  return eParseMode_unknown;
+}
+
+/**-------------------------------------------------------
  *  This method is called just after a "<" has been consumed 
  *  and we know we're at the start of some kind of tagged 
  *  element. We don't know yet if it's a tag or a comment.
@@ -75,10 +97,10 @@ CToken* CHTMLTokenizerDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PR
         nsAutoString temp("<");
         return ConsumeText(temp,aScanner,anErrorCode);
       }
-  }
+  } //switch
 
   if(result!=0) {
-    anErrorCode= result->Consume(aChar,&aScanner);  //tell new token to finish consuming text...    
+    anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(anErrorCode) {
       result=0;
       delete result;
@@ -103,7 +125,7 @@ void CHTMLTokenizerDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanne
   while((!done) && (anErrorCode==kNoError)) {
    	CToken* result = new CAttributeToken(as);
       if(result){
-        anErrorCode= result->Consume(aChar,&aScanner);  //tell new token to finish consuming text...    
+        anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
          mTokenDeque.Push(result);
       }
 		aScanner.Peek(aChar);
@@ -133,7 +155,7 @@ CToken* CHTMLTokenizerDelegate::ConsumeContentToEndTag(const nsString& aString,P
   endTag.Append(aString);
   endTag.Append(">");
   CSkippedContentToken* sc=new CSkippedContentToken(endTag);
-  anErrorCode= sc->Consume(aChar,&aScanner);  //tell new token to finish consuming text...    
+  anErrorCode= sc->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
   return sc;
 }
 
@@ -150,10 +172,10 @@ CToken* CHTMLTokenizerDelegate::ConsumeContentToEndTag(const nsString& aString,P
 CToken* CHTMLTokenizerDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
 	CStartToken* result=new CStartToken(nsAutoString(""));
   if(result) {
-    anErrorCode= result->Consume(aChar,&aScanner);  //tell new token to finish consuming text...    
-    if(result->IsAttributed()) 
+    anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+    if(result->IsAttributed()) {
       ConsumeAttributes(aChar,aScanner,anErrorCode);
-
+    }
     //now that that's over with, we have one more problem to solve.
     //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
     //consume all the content itself.
@@ -176,8 +198,8 @@ CToken* CHTMLTokenizerDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScann
 
         CEndToken* endtoken=new CEndToken(str);
         mTokenDeque.Push(endtoken);
-      }
-    } 
+      } //if
+    } //if
   }
   return result;
 }
@@ -198,14 +220,13 @@ CToken* CHTMLTokenizerDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner
    anErrorCode=aScanner.GetChar(ch);
    if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
      result = new CEntityToken(nsAutoString(""));
-     anErrorCode= result->Consume(ch,&aScanner);  //tell new token to finish consuming text...    
+     anErrorCode= result->Consume(ch,aScanner);  //tell new token to finish consuming text...    
    }
    else if(kHashsign==ch) {
      result = new CEntityToken(nsAutoString(""));
-     anErrorCode=result->Consume(ch,&aScanner);
+     anErrorCode=result->Consume(ch,aScanner);
    }
-   else
-   {
+   else {
      //oops, we're actually looking at plain text...
      nsAutoString temp("&");
      return ConsumeText(temp,aScanner,anErrorCode);
@@ -226,7 +247,7 @@ CToken* CHTMLTokenizerDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner
  *------------------------------------------------------*/
 CToken* CHTMLTokenizerDelegate::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
   CToken* result = new CWhitespaceToken(nsAutoString(""));
-  anErrorCode=result->Consume(aChar,&aScanner);
+  anErrorCode=result->Consume(aChar,aScanner);
   return result;
 }
 #endif
@@ -243,7 +264,7 @@ CToken* CHTMLTokenizerDelegate::ConsumeWhitespace(PRUnichar aChar,CScanner& aSca
  *------------------------------------------------------*/
 CToken* CHTMLTokenizerDelegate::ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
   CToken* result= new CCommentToken(nsAutoString(""));
-  anErrorCode=result->Consume(aChar,&aScanner);
+  anErrorCode=result->Consume(aChar,aScanner);
   return result;
 }
 
@@ -259,9 +280,10 @@ CToken* CHTMLTokenizerDelegate::ConsumeComment(PRUnichar aChar,CScanner& aScanne
  *------------------------------------------------------*/
 CToken* CHTMLTokenizerDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode){
   CToken* result=new CTextToken(aString);
-  PRUnichar ch;
-	if(result)
-   	anErrorCode=result->Consume(ch,&aScanner);
+  if(result) {
+    PRUnichar ch;
+   	anErrorCode=result->Consume(ch,aScanner);
+  }
   return result;
 }
 
@@ -277,8 +299,9 @@ CToken* CHTMLTokenizerDelegate::ConsumeText(const nsString& aString,CScanner& aS
  *------------------------------------------------------*/
 CToken* CHTMLTokenizerDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
 	CToken* result=new CNewlineToken(nsAutoString(""));
-	if(result)
-   	anErrorCode=result->Consume(aChar,&aScanner);
+  if(result) {
+   	anErrorCode=result->Consume(aChar,aScanner);
+  }
   return result;
 }
 #endif
@@ -295,42 +318,52 @@ CToken* CHTMLTokenizerDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanne
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  *------------------------------------------------------*/
-CToken* CHTMLTokenizerDelegate::GetToken(CScanner* aScanner,PRInt32& anErrorCode){
+CToken* CHTMLTokenizerDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode){
 	CToken* 	result=0;
   PRUnichar aChar;
 
-  if(mTokenDeque.GetSize()>0) 
-    return mTokenDeque.Pop();
+  if(mTokenDeque.GetSize()>0) {
+    return (CToken*)mTokenDeque.Pop();
+  }
 
- 	while(!aScanner->Eof())
- 	{
-   	anErrorCode=aScanner->GetChar(aChar);
+ 	while(!aScanner.Eof()) {
+   	anErrorCode=aScanner.GetChar(aChar);
     switch(aChar) {
       case kAmpersand:
-        return ConsumeEntity(aChar,*aScanner,anErrorCode);
+        return ConsumeEntity(aChar,aScanner,anErrorCode);
       case kLessThan:
-        return ConsumeTag(aChar,*aScanner,anErrorCode);
+        return ConsumeTag(aChar,aScanner,anErrorCode);
 #ifdef TOKENIZE_CRLF
       case kCR: case kLF:
-        return ConsumeNewline(aChar,*aScanner,anErrorCode);
+        return ConsumeNewline(aChar,aScanner,anErrorCode);
       case kNotFound:
         break;
 #endif
       default:
 #ifdef TOKENIZE_WHITESPACE
         if(nsString::IsSpace(aChar))
-            return ConsumeWhitespace(aChar,*aScanner,anErrorCode);
+            return ConsumeWhitespace(aChar,aScanner,anErrorCode);
         else
 #endif
         {
           nsAutoString temp(aChar);
-          return ConsumeText(temp,*aScanner,anErrorCode);
+          return ConsumeText(temp,aScanner,anErrorCode);
         }
-    }
+    } //switch
     if(anErrorCode==kEOF)
       anErrorCode=0;
- 	}
+ 	} //while
 	return result;
+}
+
+/*-------------------------------------------------------
+ * 
+ * @update	gess4/11/98
+ * @param 
+ * @return
+ *------------------------------------------------------*/
+CToken* CHTMLTokenizerDelegate::CreateTokenOfType(eHTMLTokenTypes aType) {
+  return 0;
 }
 
 /**-------------------------------------------------------

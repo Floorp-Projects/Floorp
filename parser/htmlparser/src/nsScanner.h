@@ -43,7 +43,7 @@ class ifstream;
 
 class CScanner {
   public:
-   					      CScanner(nsIURL* aURL);
+   					      CScanner(nsIURL* aURL,eParseMode aMode=eParseMode_navigator);
             		  ~CScanner();
 
       PRInt32     GetChar(PRUnichar& ch);
@@ -69,6 +69,7 @@ class CScanner {
       nsString        mBuffer;
       PRInt32         mOffset;
       PRInt32         mTotalRead;
+      eParseMode      mParseMode;
 };
 
 #endif

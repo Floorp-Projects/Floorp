@@ -17,21 +17,26 @@
  */
   
 #include "nsHTMLParser.h"
-#include "nsHTMLDelegate.h"
-#include "nsHTMLContentSink.h"
+#include "nsHTMLContentSink.h" 
 #include "nsTokenizer.h"
 #include "nsHTMLTokens.h"
 #include "nsString.h"
 #include "nsIURL.h"
-#include "nsDefaultTokenHandler.h"
 #include "nsCRT.h"
-#include "nsHTMLDTD.h"
+#include "COtherDelegate.h"
+#include "COtherDTD.h"
+#include "CNavDelegate.h"
+#include "CNavDTD.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTMLCONTENTSINK_IID);
+
+static const char* kNullURL = "Error: Null URL given";
+static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
+static const char* kNullToken = "Error: Null token given";
+static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 
 
 /**-------------------------------------------------------
@@ -84,12 +89,13 @@ void nsHTMLParser::InitializeDefaultTokenHandlers() {
 nsHTMLParser::nsHTMLParser() {
   NS_INIT_REFCNT();
   mSink=0;
-  mTokenHandlerCount=0;
-  mTagStackPos=0;
+  mContextStackPos=0;
   mCurrentPos=0;
-  nsCRT::zero(mTagStack,sizeof(mTagStack));
+  mParseMode=eParseMode_unknown;
+  nsCRT::zero(mContextStack,sizeof(mContextStack));
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
-  mDTD=new nsHTMLDTD();
+  mDTD=0;
+  mTokenHandlerCount=0;
   InitializeDefaultTokenHandlers();
 }
 
@@ -102,13 +108,16 @@ nsHTMLParser::nsHTMLParser() {
  *  @return  
  *------------------------------------------------------*/
 nsHTMLParser::~nsHTMLParser() {
+  DeleteTokenHandlers();
   if(mCurrentPos)
     delete mCurrentPos;
   mCurrentPos=0;
+  if(mTokenizer)
+    delete mTokenizer;
   if(mDTD)
     delete mDTD;
+  mTokenizer=0;
   mDTD=0;
-  NS_IF_RELEASE(mSink);
 }
 
 
@@ -160,8 +169,8 @@ nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *------------------------------------------------------*/
 eHTMLTags nsHTMLParser::NodeAt(PRInt32 aPos) const {
   NS_PRECONDITION(0 <= aPos, "bad nodeAt");
-  if((aPos>-1) && (aPos<mTagStackPos))
-    return mTagStack[aPos];
+  if((aPos>-1) && (aPos<mContextStackPos))
+    return mContextStack[aPos];
   return (eHTMLTags)kNotFound;
 }
 
@@ -174,8 +183,8 @@ eHTMLTags nsHTMLParser::NodeAt(PRInt32 aPos) const {
  *  @return  
  *------------------------------------------------------*/
 eHTMLTags nsHTMLParser::GetTopNode() const {
-  if(mTagStackPos) 
-    return mTagStack[mTagStackPos-1];
+  if(mContextStackPos) 
+    return mContextStack[mContextStackPos-1];
   return (eHTMLTags)kNotFound;
 }
 
@@ -188,8 +197,8 @@ eHTMLTags nsHTMLParser::GetTopNode() const {
  *  @return  topmost index of tag on stack
  *------------------------------------------------------*/
 PRInt32 nsHTMLParser::GetTopmostIndex(eHTMLTags aTag) const {
-  for(int i=mTagStackPos-1;i>=0;i--){
-    if(mTagStack[i]==aTag)
+  for(int i=mContextStackPos-1;i>=0;i--){
+    if(mContextStack[i]==aTag)
       return i;
   }
   return kNotFound;
@@ -216,9 +225,8 @@ PRBool nsHTMLParser::IsOpen(eHTMLTags aTag) const {
  *  @return  
  *------------------------------------------------------*/
 PRInt32 nsHTMLParser::GetStackPos() const {
-  return mTagStackPos;
+  return mContextStackPos;
 }
-
 
 /**-------------------------------------------------------
  *  Finds a tag handler for the given tag type, given in string.
@@ -227,7 +235,22 @@ PRInt32 nsHTMLParser::GetStackPos() const {
  *  @param   aString contains name of tag to be handled
  *  @return  valid tag handler (if found) or null
  *------------------------------------------------------*/
-CDefaultTokenHandler* nsHTMLParser::GetTokenHandler(const nsString& aString) const{
+nsHTMLParser& nsHTMLParser::DeleteTokenHandlers(void) {
+  for(int i=0;i<mTokenHandlerCount;i++){
+    delete mTokenHandlers[i];
+  }
+  mTokenHandlerCount=0;
+  return *this;
+}
+
+/**-------------------------------------------------------
+ *  Finds a tag handler for the given tag type, given in string.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   aString contains name of tag to be handled
+ *  @return  valid tag handler (if found) or null
+ *------------------------------------------------------*/
+CTokenHandler* nsHTMLParser::GetTokenHandler(const nsString& aString) const{
   eHTMLTokenTypes theType=DetermineTokenType(aString);
   return GetTokenHandler(theType);
 }
@@ -240,7 +263,7 @@ CDefaultTokenHandler* nsHTMLParser::GetTokenHandler(const nsString& aString) con
  *  @param   aTagType type of tag to be handled
  *  @return  valid tag handler (if found) or null
  *------------------------------------------------------*/
-CDefaultTokenHandler* nsHTMLParser::GetTokenHandler(eHTMLTokenTypes aType) const {
+CTokenHandler* nsHTMLParser::GetTokenHandler(eHTMLTokenTypes aType) const {
   for(int i=0;i<mTokenHandlerCount;i++) {
     if(mTokenHandlers[i]->CanHandle(aType)) {
       return mTokenHandlers[i];
@@ -257,9 +280,14 @@ CDefaultTokenHandler* nsHTMLParser::GetTokenHandler(eHTMLTokenTypes aType) const
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-CDefaultTokenHandler* nsHTMLParser::AddTokenHandler(CDefaultTokenHandler* aHandler) {
+CTokenHandler* nsHTMLParser::AddTokenHandler(CTokenHandler* aHandler) {
   NS_ASSERTION(0!=aHandler,"Error: Null handler argument");
+  
   if(aHandler) {
+    int max=sizeof(mTokenHandlers)/sizeof(mTokenHandlers[0]);
+    if(mTokenHandlerCount<max) {
+      mTokenHandlers[mTokenHandlerCount++]=aHandler;
+    } 
   }
   return 0;
 }
@@ -272,20 +300,79 @@ CDefaultTokenHandler* nsHTMLParser::AddTokenHandler(CDefaultTokenHandler* aHandl
  *  @param   nsIContentSink interface for node receiver
  *  @return  
  *------------------------------------------------------*/
-void nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
+nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
   NS_PRECONDITION(0!=aSink,"sink cannot be null!");
+  nsIContentSink* old=mSink;
   if(aSink) {
-    nsIHTMLContentSink* htmlSink;
-    if (NS_OK == aSink->QueryInterface(kIHTMLContentSinkIID, (void**)&htmlSink)) {
-      if ((nsHTMLContentSink*)(htmlSink) != mSink) {
-        NS_IF_RELEASE(mSink);
-        mSink = (nsHTMLContentSink*)(htmlSink);
-      }
-      else {
-        NS_RELEASE(htmlSink);
-      }
-    }
+    mSink=(nsHTMLContentSink*)(aSink);
   }
+  return old;
+}
+
+/**-------------------------------------------------------
+ *  This is where we loop over the tokens created in the 
+ *  tokenization phase, and try to make sense out of them. 
+ *
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ *------------------------------------------------------*/
+PRBool nsHTMLParser::IterateTokens() {
+  nsDeque& deque=mTokenizer->GetDeque();
+  nsDequeIterator e=deque.End();
+
+  if(mCurrentPos)
+    delete mCurrentPos; //don't leak, now!
+  mCurrentPos=new nsDequeIterator(deque.Begin());
+
+  CToken* theToken;
+  PRBool  done=PR_FALSE;
+  PRBool  result=PR_TRUE;
+  PRInt32 iteration=0;
+
+  while((!done) && (result)) {
+    theToken=(CToken*)mCurrentPos->GetCurrent();
+    eHTMLTokenTypes type=eHTMLTokenTypes(theToken->GetTokenType());
+    iteration++; //debug purposes...
+    switch(eHTMLTokenTypes(type)){
+      case eToken_start: 
+        result=HandleStartToken(theToken); break;
+      case eToken_end:
+        result=HandleEndToken(theToken); break;
+      case eToken_entity:
+        result=HandleEntityToken(theToken); break;
+      case eToken_text:
+        result=HandleTextToken(theToken); break;
+      case eToken_newline:
+        result=HandleNewlineToken(theToken); break;
+      case eToken_skippedcontent:  
+        //used in cases like <SCRIPT> where we skip over script content.
+        result=HandleSkippedContentToken(theToken); break;
+      case eToken_attribute:
+        result=HandleAttributeToken(theToken); break;
+      case eToken_script:
+        result=HandleScriptToken(theToken); break;
+      case eToken_style:
+        result=HandleStyleToken(theToken); break;
+      case eToken_comment:
+        result=HandleCommentToken(theToken); break;
+      case eToken_whitespace:
+        result=HandleWhitespaceToken(theToken); break;
+      default:
+        //for all these non-interesting types, just skip them for now.
+        //later you have to Handle them, because they're relevent to certain containers (eg PRE).
+        break;
+    }
+    mDTD->VerifyContextStack(mContextStack,mContextStackPos);
+    ++(*mCurrentPos);
+    done=PRBool(e==*mCurrentPos);
+  }
+
+  //One last thing...close any open containers.
+  if((PR_TRUE==result) && (mContextStackPos>0)) {
+    result=CloseContainersTo(0);
+  }
+  return result;
 }
 
 /**-------------------------------------------------------
@@ -300,73 +387,53 @@ void nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  *------------------------------------------------------*/
 PRBool nsHTMLParser::Parse(nsIURL* aURL){
-  NS_PRECONDITION(0!=aURL,"Error: URL cannot be null!");
+  return Parse(aURL,eParseMode_navigator);
+}
+
+/**-------------------------------------------------------
+ *  This is the main controlling routine in the parsing process. 
+ *  Note that it may get called multiple times for the same scanner, 
+ *  since this is a pushed based system, and all the tokens may 
+ *  not have been consumed by the scanner during a given invocation 
+ *  of this method. 
+ *
+ *  @update  gess 3/25/98
+ *  @param   aFilename -- const char* containing file to be parsed.
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ *------------------------------------------------------*/
+PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
+  NS_PRECONDITION(0!=aURL,kNullURL);
   
   PRBool result=PR_FALSE;
   if(aURL) {
 
     result=PR_TRUE;
-    CHTMLTokenizerDelegate delegate;
-    mTokenizer=new CTokenizer(aURL, delegate);
+    mParseMode=aMode;
+    ITokenizerDelegate* theDelegate=0;
+
+    switch(mParseMode) {
+      case eParseMode_navigator:
+        theDelegate=new CNavDelegate();
+        mDTD= new CNavDTD();
+        break;
+      case eParseMode_other:
+        theDelegate=new COtherDelegate();
+        mDTD= new COtherDTD();
+        break;
+      default:
+        break;
+    }
+    if(!theDelegate) {
+      NS_ERROR(kNullTokenizer);
+      return PR_FALSE;
+    }
+    if(!mDTD) {
+      mDTD= new nsHTMLDTD();
+    }
+
+    mTokenizer=new CTokenizer(aURL, theDelegate, mParseMode);
     mTokenizer->Tokenize();
-
-//#define VERBOSE_DEBUG
-#ifdef VERBOSE_DEBUG
-    mTokenizer->DebugDumpTokens(cout);
-#endif
-
-    CDeque& deque=mTokenizer->GetDeque();
-    CDequeIterator e=deque.End();
-
-    if(mCurrentPos)
-      delete mCurrentPos; //don't leak, now!
-    mCurrentPos=new CDequeIterator(deque.Begin());
-
-    CToken* theToken;
-    PRBool  done=PR_FALSE;
-    PRInt32 iteration=0;
-
-    while((!done) && (result)) {
-      theToken=*mCurrentPos;
-      eHTMLTokenTypes type=eHTMLTokenTypes(theToken->GetTokenType());
-      iteration++; //debug purposes...
-      switch(eHTMLTokenTypes(type)){
-        case eToken_start: 
-          result=HandleStartToken(theToken); break;
-        case eToken_end:
-          result=HandleEndToken(theToken); break;
-        case eToken_entity:
-          result=HandleEntityToken(theToken); break;
-        case eToken_text:
-          result=HandleTextToken(theToken); break;
-        case eToken_newline:
-          result=HandleNewlineToken(theToken); break;
-        case eToken_skippedcontent:  
-          //used in cases like <SCRIPT> where we skip over script content.
-          result=HandleSkippedContentToken(theToken); break;
-        case eToken_attribute:
-          result=HandleAttributeToken(theToken); break;
-        case eToken_script:
-          result=HandleScriptToken(theToken); break;
-        case eToken_style:
-          result=HandleStyleToken(theToken); break;
-        case eToken_comment:
-          result=HandleCommentToken(theToken); break;
-        case eToken_whitespace:
-          result=HandleWhitespaceToken(theToken); break;
-        default:
-          //for all these non-interesting types, just skip them for now.
-          //later you have to Handle them, because they're relevent to certain containers (eg PRE).
-          break;
-      }
-      mDTD->VerifyContextStack(mTagStack,mTagStackPos);
-      done=PRBool(++(*mCurrentPos)==e);
-    }
-
-    //One last thing...close any open containers.
-    if((PR_TRUE==result) && (mTagStackPos>0)) {
-      result=CloseContainersTo(0);
-    }
+    result=IterateTokens();
   }
   return result;
 }
@@ -383,7 +450,7 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL){
  *  @return  PR_TRUE if parsing concluded successfully.
  *------------------------------------------------------*/
 PRBool nsHTMLParser::ResumeParse() {
-  PRBool result=PR_TRUE;
+  PRBool result=IterateTokens();
   return result;
 }
 
@@ -396,8 +463,8 @@ PRBool nsHTMLParser::ResumeParse() {
  *------------------------------------------------------*/
 PRInt32 nsHTMLParser::CollectAttributes(nsCParserNode& aNode){
   eHTMLTokenTypes subtype=eToken_attribute;
-  CDeque&         deque=mTokenizer->GetDeque();
-  CDequeIterator  end=deque.End();
+  nsDeque&         deque=mTokenizer->GetDeque();
+  nsDequeIterator  end=deque.End();
   
   while((*mCurrentPos!=end) && (eToken_attribute==subtype)) {
     CHTMLToken* tkn=(CHTMLToken*)(++(*mCurrentPos));
@@ -418,8 +485,8 @@ PRInt32 nsHTMLParser::CollectAttributes(nsCParserNode& aNode){
  *------------------------------------------------------*/
 PRInt32 nsHTMLParser::CollectSkippedContent(nsCParserNode& aNode){
   eHTMLTokenTypes subtype=eToken_attribute;
-  CDeque&         deque=mTokenizer->GetDeque();
-  CDequeIterator  end=deque.End();
+  nsDeque&         deque=mTokenizer->GetDeque();
+  nsDequeIterator  end=deque.End();
   PRInt32         count=0;
 
   while((*mCurrentPos!=end) && (eToken_attribute==subtype)) {
@@ -450,7 +517,7 @@ PRInt32 nsHTMLParser::CollectSkippedContent(nsCParserNode& aNode){
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
 
   PRBool        result=PR_FALSE;
   CStartToken*  st= (CStartToken*)(aToken);
@@ -551,7 +618,7 @@ PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
 
   PRBool      result=PR_FALSE;
   CEndToken*  st = (CEndToken*)(aToken);
@@ -605,7 +672,7 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleEntityToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
   CEntityToken*  et = (CEntityToken*)(aToken);
   PRBool result=PR_TRUE;
   nsCParserNode aNode((CHTMLToken*)aToken);
@@ -624,6 +691,7 @@ PRBool nsHTMLParser::HandleEntityToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleCommentToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
   return PR_TRUE;
 }
 
@@ -638,11 +706,13 @@ PRBool nsHTMLParser::HandleCommentToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleWhitespaceToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
   PRBool result=PR_TRUE;
   if(PR_TRUE==IsWithinBody()) {
     //now we know we're in the body <i>somewhere</i>. 
     //let's see if the current tag can contain a ws.
-    result=mDTD->CanDisregard(mTagStack[mTagStackPos-1],eHTMLTag_whitespace);
+    result=mDTD->CanOmit(mContextStack[mContextStackPos-1],eHTMLTag_whitespace);
     if(PR_FALSE==result)
       result=HandleTextToken(aToken);
   }
@@ -660,11 +730,13 @@ PRBool nsHTMLParser::HandleWhitespaceToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleNewlineToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
   PRBool result=PR_TRUE;
   if(PR_TRUE==IsWithinBody()) {
     //now we know we're in the body <i>somewhere</i>. 
     //let's see if the current tag can contain a ws.
-    result=mDTD->CanDisregard(mTagStack[mTagStackPos-1],eHTMLTag_newline);
+    result=mDTD->CanOmit(mContextStack[mContextStackPos-1],eHTMLTag_newline);
     if(PR_FALSE==result)
       result=HandleTextToken(aToken);
   }
@@ -682,7 +754,8 @@ PRBool nsHTMLParser::HandleNewlineToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleTextToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
   PRBool result=PR_TRUE;
   nsCParserNode aNode((CHTMLToken*)aToken);
   result=AddLeaf(aNode);
@@ -700,7 +773,8 @@ PRBool nsHTMLParser::HandleTextToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleSkippedContentToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
   PRBool result=PR_TRUE;
 
   if(IsWithinBody()) {
@@ -721,7 +795,7 @@ PRBool nsHTMLParser::HandleSkippedContentToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleAttributeToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
   NS_ERROR("attribute encountered -- this shouldn't happen!");
 
   CAttributeToken*  at = (CAttributeToken*)(aToken);
@@ -738,7 +812,7 @@ PRBool nsHTMLParser::HandleAttributeToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleScriptToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
 
   CScriptToken*  st = (CScriptToken*)(aToken);
   PRBool result=PR_TRUE;
@@ -754,7 +828,7 @@ PRBool nsHTMLParser::HandleScriptToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  *------------------------------------------------------*/
 PRBool nsHTMLParser::HandleStyleToken(CToken* aToken){
-  NS_PRECONDITION(0!=aToken,"token cannot be null!");
+  NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStyleToken*  st = (CStyleToken*)(aToken);
   PRBool result=PR_TRUE;
@@ -770,8 +844,8 @@ PRBool nsHTMLParser::HandleStyleToken(CToken* aToken){
  *  @return  PR_TRUE if given tag can contain other tags
  *------------------------------------------------------*/
 PRBool nsHTMLParser::IsWithinBody(void) const {
-  for(int i=0;i<mTagStackPos;i++) {
-    if(eHTMLTag_body==mTagStack[i])
+  for(int i=0;i<mContextStackPos;i++) {
+    if(eHTMLTag_body==mContextStack[i])
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -787,9 +861,10 @@ PRBool nsHTMLParser::IsWithinBody(void) const {
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::OpenHTML(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+
   PRBool result=mSink->OpenHTML(aNode); 
-  mTagStack[mTagStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
   return result;
 }
 
@@ -803,9 +878,9 @@ PRBool nsHTMLParser::OpenHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseHTML(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRBool result=mSink->CloseHTML(aNode); 
-  mTagStack[--mTagStackPos]=eHTMLTag_unknown;
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
   return result;
 }
 
@@ -819,9 +894,7 @@ PRBool nsHTMLParser::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::OpenHead(const nsIParserNode& aNode){
-//  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
   PRBool result=mSink->OpenHead(aNode); 
-//  mTagStack[mTagStackPos++]=(eHTMLTags)aNode.GetNodeType();
   return result;
 }
 
@@ -834,9 +907,7 @@ PRBool nsHTMLParser::OpenHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseHead(const nsIParserNode& aNode){
-//  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
   PRBool result=mSink->CloseHead(aNode); 
-//  mTagStack[--mTagStackPos]=eHTMLTag_unknown;
   return result;
 }
 
@@ -849,7 +920,7 @@ PRBool nsHTMLParser::CloseHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::OpenBody(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
 
   PRBool    result=PR_TRUE;
   eHTMLTags topTag=(eHTMLTags)nsHTMLParser::GetTopNode();
@@ -882,7 +953,7 @@ PRBool nsHTMLParser::OpenBody(const nsIParserNode& aNode){
 
   if(PR_TRUE==result) {
     result=mSink->OpenBody(aNode); 
-    mTagStack[mTagStackPos++]=(eHTMLTags)aNode.GetNodeType();
+    mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
   }
   return result;
 }
@@ -896,9 +967,9 @@ PRBool nsHTMLParser::OpenBody(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseBody(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRBool result=mSink->CloseBody(aNode); 
-  mTagStack[--mTagStackPos]=eHTMLTag_unknown;
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
   return result;
 }
 
@@ -911,9 +982,9 @@ PRBool nsHTMLParser::CloseBody(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::OpenForm(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRBool result=mSink->OpenForm(aNode); 
-  mTagStack[mTagStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
   return result;
 }
 
@@ -926,9 +997,9 @@ PRBool nsHTMLParser::OpenForm(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseForm(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRBool result=mSink->CloseContainer(aNode); 
-  mTagStack[--mTagStackPos]=eHTMLTag_unknown;
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
   return result;
 }
 
@@ -941,9 +1012,9 @@ PRBool nsHTMLParser::CloseForm(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::OpenFrameset(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRBool result=mSink->OpenFrameset(aNode); 
-  mTagStack[mTagStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
   return result;
 }
 
@@ -956,9 +1027,9 @@ PRBool nsHTMLParser::OpenFrameset(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseFrameset(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRBool result=mSink->CloseFrameset(aNode); 
-  mTagStack[--mTagStackPos]=eHTMLTag_unknown;
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
   return result;
 }
 
@@ -971,9 +1042,9 @@ PRBool nsHTMLParser::CloseFrameset(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::OpenContainer(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRBool result=mSink->OpenContainer(aNode); 
-  mTagStack[mTagStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
   return result;
 }
 
@@ -986,7 +1057,7 @@ PRBool nsHTMLParser::OpenContainer(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseContainer(const nsIParserNode& aNode){
-  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRBool result=PR_FALSE;
   
   //XXX Hack! We know this is wrong, but it works
@@ -1010,7 +1081,7 @@ PRBool nsHTMLParser::CloseContainer(const nsIParserNode& aNode){
     case eHTMLTag_title:
     default:
       result=mSink->CloseContainer(aNode); 
-      mTagStack[--mTagStackPos]=eHTMLTag_unknown;
+      mContextStack[--mContextStackPos]=eHTMLTag_unknown;
       break;
   }
   return result;
@@ -1025,16 +1096,16 @@ PRBool nsHTMLParser::CloseContainer(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseContainersTo(PRInt32 anIndex){
-  NS_PRECONDITION(mTagStackPos >= 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRBool result=PR_TRUE;
 
   nsAutoString empty;
   CHTMLToken aToken(empty);
   nsCParserNode theNode(&aToken);
 
-  if((anIndex<mTagStackPos) && (anIndex>=0)) {
-    while(mTagStackPos>anIndex) {
-      aToken.SetHTMLTag(mTagStack[mTagStackPos-1]);
+  if((anIndex<mContextStackPos) && (anIndex>=0)) {
+    while(mContextStackPos>anIndex) {
+      aToken.SetHTMLTag(mContextStack[mContextStackPos-1]);
       result=CloseContainer(theNode);
     }
   }
@@ -1050,7 +1121,7 @@ PRBool nsHTMLParser::CloseContainersTo(PRInt32 anIndex){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseContainersTo(eHTMLTags aTag){
-  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
 
   PRInt32 pos=GetTopmostIndex(aTag);
   PRBool result=PR_FALSE;
@@ -1082,11 +1153,11 @@ PRBool nsHTMLParser::CloseContainersTo(eHTMLTags aTag){
  * @return  TRUE if ok, FALSE if error
  *------------------------------------------------------*/
 PRBool nsHTMLParser::CloseTopmostContainer(){
-  NS_PRECONDITION(mTagStackPos > 0, "invalid tag stack pos");
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
 
   nsAutoString empty;
   CEndToken aToken(empty);
-  aToken.SetHTMLTag(mTagStack[mTagStackPos-1]);
+  aToken.SetHTMLTag(mContextStack[mContextStackPos-1]);
   nsCParserNode theNode(&aToken);
 
   return CloseContainer(theNode);
@@ -1132,8 +1203,8 @@ PRBool nsHTMLParser::CreateContextStackFor(PRInt32 aChildTag){
 
     //now, compare requested stack against existing stack...
   PRInt32 pos=0;
-  while(pos<mTagStackPos) {
-    if(mTagStack[pos]==tags[tagCount-1-pos]) {
+  while(pos<mContextStackPos) {
+    if(mContextStack[pos]==tags[tagCount-1-pos]) {
       pos++;
     }
     else {
