@@ -45,6 +45,8 @@
 #include "nsISecurityPref.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIRelativeFilePref.h"
+#include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
@@ -103,3 +105,18 @@ private:
   nsCOMPtr<nsISupportsWString> mUnicodeString;
 };
 
+
+class nsRelativeFilePref : public nsIRelativeFilePref
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRELATIVEFILEPREF
+  
+                nsRelativeFilePref();
+  virtual       ~nsRelativeFilePref();
+  
+private:
+  nsCOMPtr<nsILocalFile> mFile;
+  nsCAutoString mRelativeToKey; // An nsCAutoString because length is always very short.
+                                // While this makes the object larger, avoids allocation.
+};
