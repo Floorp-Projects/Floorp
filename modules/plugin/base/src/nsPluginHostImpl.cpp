@@ -3749,9 +3749,14 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
     return rv;
 
   nsCOMPtr<imgILoader> loader;
-  if (!mOverrideInternalTypes)
+  if (!mOverrideInternalTypes) {
     loader = do_GetService("@mozilla.org/image/loader;1");
-    
+    if (!loader) {
+      NS_WARNING("get loader failed, falling back to mOverrideInternalTypes")
+      mOverrideInternalTypes=PR_TRUE;
+    }
+  }
+
   for(int i = 0; i < pluginTag->mVariants; i++) {
 
     // Do not register any doc loader factory content viewers for mime types we do internally
