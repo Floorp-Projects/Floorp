@@ -331,8 +331,10 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
     if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) {
       fits = PR_TRUE;
 
-      // Update the in-flow bounding box's bounds
-      aInFlowBounds.SetRect(x, y, mMetrics.width, mMetrics.height);
+      // Update the in-flow bounding box's bounds. Include the margins.
+      aInFlowBounds.SetRect(x, y,
+                            mMetrics.width + mMargin.right,
+                            mMetrics.height);
 
       // Apply CSS relative positioning to update x,y coordinates
       const nsStylePosition* stylePos;
@@ -370,6 +372,15 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
                                          mOuterReflowState.spaceManager,
                                          dx, dy);
         }
+      }
+
+      // Adjust the max-element-size in the metrics to take into
+      // account the margins around the block element. Note that we
+      // use the collapsed top and bottom margin values.
+      if (mOuterReflowState.mComputeMaxElementSize) {
+        nsSize* m = mMetrics.maxElementSize;
+        m->width += mMargin.left + mMargin.right;
+        m->height += mTopMargin + mBottomMargin;
       }
     }
     else {
