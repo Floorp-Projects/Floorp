@@ -131,13 +131,6 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
       nsStyleText* text =
         (nsStyleText*) mStyleContext->GetData(eStyleStruct_Text);
       switch (text->mTextAlign) {
-      default:
-        if (NS_STYLE_DIRECTION_LTR == disp->mDirection) {
-          // left align when direction is left-to-right
-          break;
-        }
-        // right align when direction is right-to-left
-
       case NS_STYLE_TEXT_ALIGN_RIGHT:
         x0 += width - size.width;
         break;
@@ -145,6 +138,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
       case NS_STYLE_TEXT_ALIGN_LEFT:
         break;
 
+      default:
       case NS_STYLE_TEXT_ALIGN_CENTER:
         x0 += (width - size.width) / 2;
         break;
