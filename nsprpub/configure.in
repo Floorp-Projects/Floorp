@@ -250,6 +250,7 @@ dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PATH_PROGS(PERL, perl5 perl, :)
+AC_PATH_PROGS(STRIP, strip, :)
 
 dnl ========================================================
 dnl Default platform specific options
@@ -1046,6 +1047,8 @@ AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(GNU_CC)
+
+AC_SUBST(MOZ_OPTIMIZE)
 
 AC_SUBST(USE_CPLUS)
 AC_SUBST(USE_IPV6)
