@@ -181,7 +181,6 @@ Contributor(s):
          modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
-    <key id="key_editPage"       key="&editPageCmd.commandkey;" command="Browser:EditPage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
     <key id="key_close"/>
     <key id="key_closeWindow"/>
@@ -278,12 +277,12 @@ Contributor(s):
                 oncommand="gContextMenu.setWallpaper();"/>
       <menuseparator id="context-sep-image"/>
       <menuitem id="context-back"
-                label="&goBackCmd.label;"
-                accesskey="&goBackCmd.accesskey;"
+                label="&backCmd.label;"
+                accesskey="&backCmd.accesskey;"
                 oncommand="BrowserBack()"/>
       <menuitem id="context-forward"
-                label="&goForwardCmd.label;"
-                accesskey="&goForwardCmd.accesskey;"
+                label="&forwardCmd.label;"
+                accesskey="&forwardCmd.accesskey;"
                 oncommand="BrowserForward()"/>
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
@@ -658,14 +657,11 @@ Contributor(s):
               </menupopup>
             </rule>
           </template>
-          <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
+          <menupopup>
             <menuitem key="addBookmarkAsKb"
                       label="&addCurPageAsCmd.label;"
                       accesskey="&addCurPageAsCmd.accesskey;"
                       command="Browser:AddBookmarkAs"/>
-            <menuitem id="bookmarks_groupmark" label="&addCurTabsAsCmd.label;"
-                      accesskey="&addCurTabsAsCmd.accesskey;"
-                      oncommand="addGroupmarkAs(); event.preventBubble();"/>
             <menuitem key="manBookmarkKb" 
                       label="&manBookmarksCmd.label;"
                       accesskey="&manBookmarksCmd.accesskey;"    
@@ -709,7 +705,7 @@ Contributor(s):
              fullscreentoolbar="true">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
-                       label="&backButton.label;"
+                       label="&backCmd.label;"
                        oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
                        observes="canGoBack" context="backMenu"
                        tooltiptext="&backButton.tooltip;">
@@ -717,7 +713,7 @@ Contributor(s):
         </toolbarbutton>
         
         <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
-                       label="&forwardButton.label;"
+                       label="&forwardCmd.label;"
                        oncommand="if (event.target==this) BrowserForward(); else gotoHistoryIndex(event);"
                        observes="canGoForward" context="forwardMenu"
                        tooltiptext="&forwardButton.tooltip;">
@@ -725,7 +721,7 @@ Contributor(s):
         </toolbarbutton>
         
         <toolbarbutton id="reload-button" class="toolbarbutton-1"
-                       label="&reloadButton.label;"
+                       label="&reloadCmd.label;"
                        oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
                        tooltiptext="&reloadButton.tooltip;"/>
                        

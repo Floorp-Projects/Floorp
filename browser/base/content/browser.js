@@ -766,12 +766,6 @@ function addBookmarkAs(aBrowser)
     BookmarksUtils.addBookmarkForBrowser(aBrowser.webNavigation, true);
 }
 
-function updateGroupmarkMenuitem(id)
-{
-  const disabled = gBrowser.browsers.length == 1;
-  document.getElementById(id).setAttribute("disabled", disabled);
-}
-
 function readRDFString(aDS,aRes,aProp)
 {
   var n = aDS.GetTarget(aRes, aProp, true);
