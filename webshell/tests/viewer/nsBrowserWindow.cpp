@@ -395,8 +395,8 @@ static void BuildFileURL(const char * aFileName, nsString & aFileURL)
 
   // create string
   aFileURL = lpszFileURL;
-  delete [] lpszFileURL;
-
+  delete[] lpszFileURL;
+  delete[] str;
 }
 
 //----------------------------------------------------------
@@ -1842,7 +1842,7 @@ nsBrowserWindow::Alert(const nsString &aText)
   msg = aText.ToNewCString();
   if (nsnull != msg) {
     printf("%cBrowser Window Alert: %s\n", '\007', msg);
-    PR_Free(msg);
+    delete[] msg;
   }
 }
 
@@ -1854,7 +1854,7 @@ nsBrowserWindow::Confirm(const nsString &aText)
   msg = aText.ToNewCString();
   if (nsnull != msg) {
     printf("Browser Window Confirm: %s (y/n)? ", msg);
-    PR_Free(msg);
+    delete[] msg;
     char c;
     for (;;) {
       c = getchar();
@@ -1880,7 +1880,7 @@ nsBrowserWindow::Prompt(const nsString &aText,
   msg = aText.ToNewCString();
   if (nsnull != msg) {
     printf("Browser Window: %s\n", msg);
-    PR_Free(msg);
+    delete[] msg;
 
     printf("%cPrompt: ", '\007');
     scanf("%s", buf);
@@ -1901,7 +1901,7 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
   msg = aText.ToNewCString();
   if (nsnull != msg) {
     printf("Browser Window: %s\n", msg);
-    PR_Free(msg);
+    delete[] msg;
 
     printf("%cUser: ", '\007');
     scanf("%s", buf);
@@ -1927,6 +1927,7 @@ nsBrowserWindow::PromptPassword(const nsString &aText,
     printf("%cPassword: ", '\007');
     scanf("%s", buf);
     aPassword = buf;
+    delete[] msg;
   }
  
   return PR_TRUE;
