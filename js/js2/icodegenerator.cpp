@@ -608,6 +608,9 @@ namespace JavaScript {
                     }
                     break;
                 case ADD :
+                case SUBTRACT :
+                case MULTIPLY :
+                case DIVIDE :
                 case COMPARE :
                     {
                          Arithmetic *t = static_cast<Arithmetic * >(instr);
