@@ -445,7 +445,7 @@ class NS_COM nsFastLoadFileWriter
 
     nsresult   Init();
     nsresult   Open();
-    NS_IMETHOD Close(void);
+    NS_IMETHOD Close();
 
     nsresult WriteObjectCommon(nsISupports* aObject,
                                PRBool aIsStrongRef,
@@ -521,7 +521,8 @@ class NS_COM nsFastLoadFileUpdater
     // nsIFastLoadFileIO methods
     NS_DECL_NSIFASTLOADFILEIO
 
-    nsresult Open(nsFastLoadFileReader* aReader);
+    nsresult   Open(nsFastLoadFileReader* aReader);
+    NS_IMETHOD Close();
 
     static PLDHashOperator PR_CALLBACK
     CopyReadDocumentMapEntryToUpdater(PLDHashTable *aTable,
