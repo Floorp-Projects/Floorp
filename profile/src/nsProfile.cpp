@@ -183,6 +183,7 @@ public:
 	NS_IMETHOD GetCookie(nsString& aCookie);
 	NS_IMETHOD ProcessPRegCookie();
 	NS_IMETHOD IsPregCookieSet(char **pregSet);
+	NS_IMETHOD ProcessPREGInfo(char* data);
 };
 
 nsProfile* nsProfile::mInstance = nsnull;
@@ -2055,6 +2056,18 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
 
 	nsString aCookie;
 	GetCookie(aCookie);
+
+	rv = ProcessPREGInfo(aCookie.ToNewCString());
+
+	return rv;
+}
+
+NS_IMETHODIMP nsProfile::ProcessPREGInfo(char* data)
+{
+	nsresult rv = NS_OK;
+
+	nsString aCookie(data);
+
 	char *pregCookie = nsnull;
 	char *profileName = nsnull;
 	char *service_denial = nsnull;
@@ -2213,7 +2226,6 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
 			}
 		}
 	}
-
 	return rv;
 }
 
@@ -2392,6 +2404,11 @@ NSGetFactory(nsISupports* serviceMgr,
   }
   if (aClass.Equals(kProfileCID)) {
     nsProfileFactory *factory = new nsProfileFactory();
+
+	if (factory == nsnull) {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
 	nsresult res = factory->QueryInterface(nsIFactory::GetIID(), (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = nsnull;
