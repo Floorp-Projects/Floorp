@@ -141,7 +141,10 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
   // behave like a BR.
   nsLineLayout* ll = aReflowState.mLineLayout;
   if (ll) {
-    if ( ll->CanPlaceFloaterNow() || ll->InStrictMode() ) {
+    // Note that the compatibility mode check excludes AlmostStandards
+    // mode, since this is the inline box model.  See bug 161691.
+    if ( ll->CanPlaceFloaterNow() ||
+         ll->GetCompatMode() == eCompatibility_FullStandards ) {
       // If we can place a floater on the line now it means that the
       // line is effectively empty (there may be zero sized compressed
       // white-space frames on the line, but they are to be ignored).
