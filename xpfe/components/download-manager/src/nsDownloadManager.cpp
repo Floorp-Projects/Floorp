@@ -584,7 +584,7 @@ nsDownloadManager::RemoveDownload(const char* aPersistentDescriptor)
   nsCOMPtr<nsIRDFNode> node;
   rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
   if (NS_FAILED(rv)) return rv;
-
+  
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mDataSource);
   return remote->Flush();
 }  
@@ -764,7 +764,7 @@ nsDownload::nsDownload():mStartTime(0),
 }
 
 nsDownload::~nsDownload()
-{
+{  
   char* persistentDescriptor;
   mTarget->GetPersistentDescriptor(&persistentDescriptor);
   mDownloadManager->AssertProgressInfoFor(persistentDescriptor);
