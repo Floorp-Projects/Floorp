@@ -1200,13 +1200,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   if (mListener)
     mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
-  if (mDownloadManager->MustUpdateUI()) {
-    nsCOMPtr<nsIDownloadProgressListener> internalListener;
-    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
-    if (internalListener)
-      internalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
-  }
-
   // We need to update mDownloadState before updating the dialog, because
   // that will close and call CancelDownload if it was the last open window.
   nsresult rv = NS_OK;
@@ -1230,6 +1223,13 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     // break the cycle we created in AddDownload
     if (mPersist)
       mPersist->SetProgressListener(nsnull);
+  }
+
+  if (mDownloadManager->MustUpdateUI()) {
+    nsCOMPtr<nsIDownloadProgressListener> internalListener;
+    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
+    if (internalListener)
+      internalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
   }
 
   if (mDialogListener)
