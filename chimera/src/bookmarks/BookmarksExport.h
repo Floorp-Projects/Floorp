@@ -41,6 +41,7 @@
 #define BookmarksExport_h__
 
 #include "nsString.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIOutputStream.h"
 #include "nsCOMPtr.h"

@@ -195,6 +195,7 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
    
   nsLoadFlags loadFlags = (allowNetworking) ? nsIRequest::LOAD_NORMAL : nsIRequest::LOAD_FROM_CACHE;
   loadFlags |= nsIRequest::LOAD_BACKGROUND;		// don't show progress or cookie dialogs
+
   if (!allowNetworking)
     loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
 
@@ -204,7 +205,7 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
   rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, mLoadGroup,
                      nsnull, loadFlags);
   if (NS_FAILED(rv)) return rv;
-  
+
   nsCOMPtr<nsIStreamLoader> streamLoader;
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), channel, this, loaderContext) ; // , mLoadGroup, nsnull, loadFlags);
   if (NS_FAILED(rv))

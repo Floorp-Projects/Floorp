@@ -263,9 +263,11 @@ static BOOL gMadePrefManager;
       }
       return NO;
     }
+#ifdef BRANCH_CHANGES_NEED_MERGED
     else if (rv == NS_ERROR_PROFILE_SETLOCK_FAILED) {
       NSLog(@"SetCurrentProfile returned NS_ERROR_PROFILE_SETLOCK_FAILED");
     }
+#endif
 
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
     mPrefs = prefs;

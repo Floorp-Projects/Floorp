@@ -41,6 +41,7 @@
 
 #include "nsIStringBundle.h"
 #include "nsIPromptService.h"
+#include "nsCOMPtr.h"
 #import <Cocoa/Cocoa.h>
 
 class CocoaPromptService : public nsIPromptService

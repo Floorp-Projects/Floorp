@@ -346,7 +346,8 @@ static id gSharedProgressController = nil;
 {
   ProgressViewController *newController = [[ProgressViewController alloc] init];
   [newController setProgressWindowController:self];
-  [mProgressViewControllers addObject:newController];
+  //[mProgressViewControllers addObject:newController];
+  [mProgressViewControllers insertObject:newController atIndex:0];		// new downoads at the top
   
   return newController;
 }

@@ -256,13 +256,9 @@ static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
   if (mDownloader)    // we should always have one
     mDownloader->CancelDownload();
 
-  // clean up downloaded file. - do it here or in CancelDownload?
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  if ([fileManager isDeletableFileAtPath:mDestPath])
-  {
-    // if we delete it, fantastic. if not, oh well.  better to move to trash instead?
-    [fileManager removeFileAtPath:mDestPath handler:nil];
-  }
+  // note that we never want to delete downloaded files here,
+  // because the file does not have its final path yet.
+  // Necko will delete the evil temp file.
 }
 
 - (IBAction)close:(id)sender

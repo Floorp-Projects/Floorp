@@ -130,6 +130,12 @@
 
 - (void)removeTabViewItem:(NSTabViewItem *)tabViewItem
 {
+  // the normal behavior of the tab widget is to select the tab to the left
+  // of the tab being removed. Users, however, want the tab to the right to
+  // be selected. This also matches how mozilla works. Select the right tab
+  // first so we don't take the hit of displaying the left tab before we switch.
+  if ( [self selectedTabViewItem] == tabViewItem )
+    [self selectNextTabViewItem:self];
   [super removeTabViewItem:tabViewItem];
   [self showOrHideTabsAsAppropriate];
 }

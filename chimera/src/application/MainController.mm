@@ -150,6 +150,8 @@ const int kReuseWindowOnAE = 2;
 
 -(void)dealloc
 {
+  [mCharsets release];
+  
   // Terminate shared menus
   [mSharedMenusObj release];
 
@@ -256,6 +258,10 @@ const int kReuseWindowOnAE = 2;
     while ((itemIndex = [mGoMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
       [mGoMenu removeItemAtIndex:itemIndex];
   }
+  
+  // load up the charset dictionary with keys and menu titles.
+  NSString* charsetPath = [NSBundle pathForResource:@"Charset" ofType:@"dict" inDirectory:[[NSBundle mainBundle] bundlePath]];
+  mCharsets = [[NSDictionary dictionaryWithContentsOfFile:charsetPath] retain];
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
@@ -305,6 +311,9 @@ const int kReuseWindowOnAE = 2;
 
 - (void)setupStartpage
 {
+  // only do this if no url was specified in the command-line
+  if (mStartURL) return;
+  
   // for non-nightly builds, show a special start page
   PreferenceManager* prefManager = [PreferenceManager sharedInstance];
 
@@ -533,6 +542,18 @@ const int kReuseWindowOnAE = 2;
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
     [browserController reload: aSender]; 
+}
+
+-(IBAction) reloadWithCharset:(id)aSender
+{
+  // Figure out which charset to tell gecko to load based on the sender's tag. There
+  // is guaranteed to only be 1 key that matches this tag, so we just take the first one.
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController) {
+    NSArray* charsetList = [mCharsets allKeysForObject:[NSNumber numberWithInt:[aSender tag]]];
+    NS_ASSERTION([charsetList count] == 1, "OOPS, multiply defined charsets in plist");
+    [browserController reloadWithNewCharset:[charsetList objectAtIndex:0]];
+  }
 }
 
 -(IBAction) doStop:(id)aSender
@@ -918,11 +939,34 @@ const int kReuseWindowOnAE = 2;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
 
+  // Handle the encoding menu first, since there are many of those items. They're
+  // identifyable because they have a specific tag. 
+  const int kEncodingMenuTag = 10;
+  if ( [aMenuItem tag] >= kEncodingMenuTag ) {
+    if ( browserController ) {
+      NSString* charset = [browserController currentCharset];
+#if DEBUG_CHARSET
+      NSLog(@"charset is %@", charset);
+#endif
+      // given the document's charset, check if it maps to the same int as the
+      // current item's key. If yes, we select this item because it's our charset.
+      // Note that this relies on the key in the nib mapping to the right integer
+      // in the plist.
+      NSNumber* tag = [mCharsets objectForKey:[charset lowercaseString]];
+      if ( tag && [[NSNumber numberWithInt:[aMenuItem tag]] isEqualToNumber:tag] )
+        [aMenuItem setState:NSOnState];
+      else
+        [aMenuItem setState:NSOffState];
+      return YES;
+    }
+    return NO;
+  }
+
   // disable items that aren't relevant if there's no main browser window open
   SEL action = [aMenuItem action];
 
   //NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
-
+  
   if (action == @selector(printPage:) ||
         /* ... many more items go here ... */
         /* action == @selector(goHome:) || */			// always enabled
@@ -1103,17 +1147,16 @@ const int kReuseWindowOnAE = 2;
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApp hasVisibleWindows:(BOOL)flag
 {
-  // If AppKit knows what to do, let it.
-  if (flag)
-    return YES;
-    
-  // If window available, wake it up. |mainWindow| should always be null.
-  NSWindow* mainWindow = [mApplication mainWindow];
-  if (!mainWindow)
+  // ignore |hasVisibleWindows| because we always want to show a browser window when
+  // the user clicks on the app icon, even if, say, prefs or the d/l window are open.
+  // If there is no browser, create one. If there is one, bring it to the front and
+  // unminimize it if it's down in the dock.
+  NSWindow* frontBrowser = [self getFrontmostBrowserWindow];
+  if ( !frontBrowser )
     [self newWindow:self];
-  else {												// Don't think this will ever happen, but just in case
-    if ([[mainWindow windowController]respondsToSelector:@selector(showWindow:)])
-      [[mainWindow windowController] showWindow:self];
+  else {
+    if ([[frontBrowser windowController] respondsToSelector:@selector(showWindow:)])
+      [[frontBrowser windowController] showWindow:self];
     else
       [self newWindow:self];
   }

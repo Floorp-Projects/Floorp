@@ -71,7 +71,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsDownloadListener, CHDownloader, nsIDownload, nsIW
 /* void init (in nsIURI aSource, in nsILocalFile aTarget, in wstring aDisplayName, in wstring openingWith, in long long startTime, in nsIWebBrowserPersist aPersist); */
 NS_IMETHODIMP
 nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar *aDisplayName,
-        nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsIWebBrowserPersist *aPersist)
+        nsIMIMEInfo* aMIMEInfo, PRInt64 startTime, nsIWebBrowserPersist *aPersist)
 { 
   CreateDownloadDisplay(); // call the base class to make the download UI
   
@@ -269,7 +269,12 @@ NS_IMETHODIMP nsDownloadListener::Notify(nsITimer *timer)
   // changed it
   nsAutoString pathStr;
   mDestination->GetPath(pathStr);
-  [mDownloadDisplay setDestinationPath: [NSString stringWith_nsAString:pathStr]];
+  NSString* destPath = [NSString stringWith_nsAString:pathStr];
+  [mDownloadDisplay setDestinationPath:destPath];
+
+  // update the Finder immediately.
+  if ( NS_SUCCEEDED(mDownloadStatus) )
+    [[NSWorkspace sharedWorkspace] noteFileSystemChanged:destPath];
 
   // cancelling should give us a failure status
   [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(mDownloadStatus) && !mUserCanceled)];
@@ -364,7 +369,7 @@ nsDownloadListener::DownloadDone(nsresult aStatus)
   mEndRefreshTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mEndRefreshTimer)
   {
-    nsresult rv = mEndRefreshTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);  // defaults to 1-shot, normal priority
+    nsresult rv = mEndRefreshTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);
     if (NS_FAILED(rv))
       mEndRefreshTimer = NULL;
   }

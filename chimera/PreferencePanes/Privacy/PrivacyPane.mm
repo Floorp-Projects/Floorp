@@ -9,7 +9,7 @@
 #include "nsIPermission.h"
 #include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
-#include "nsString.h"
+
 
 // prefs for keychain password autofill
 static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
@@ -199,7 +199,7 @@ const int kDisableAllCookies = 2;
     if ( perm ) {
       nsXPIDLCString host;
       perm->GetHost(getter_Copies(host));
-      mManager->Remove(nsDependentCString(host), 0);           // could this api _be_ any worse? Come on!
+      mManager->Remove(host, 0);           // could this api _be_ any worse? Come on!
       
       mCachedPermissions->RemoveElementAt(row);
     }

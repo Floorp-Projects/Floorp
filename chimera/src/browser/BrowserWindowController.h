@@ -93,6 +93,7 @@ typedef enum
 @class PageProxyIcon;
 @class BrowserContentView;
 @class BrowserTabViewItem;
+@class AutoCompleteTextField;
 
 @interface BrowserWindowController : NSWindowController<Find>
 {
@@ -101,7 +102,7 @@ typedef enum
   IBOutlet NSTabView*         mSidebarTabView;
   IBOutlet NSTabView*         mSidebarSourceTabView;
   IBOutlet NSView*            mLocationToolbarView;
-  IBOutlet NSTextField*       mURLBar;
+  IBOutlet AutoCompleteTextField* mURLBar;
   IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;              // STRONG reference
   IBOutlet NSImageView*       mLock;
@@ -257,6 +258,9 @@ typedef enum
 - (IBAction)reload:(id)aSender;
 - (IBAction)stop:(id)aSender;
 - (IBAction)home:(id)aSender;
+
+- (IBAction)reloadWithNewCharset:(NSString*)charset;
+- (NSString*)currentCharset;
 
 - (IBAction)frameToNewWindow:(id)sender;
 - (IBAction)frameToNewTab:(id)sender;

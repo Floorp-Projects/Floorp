@@ -52,12 +52,12 @@ public:
   virtual ~SecurityDialogs();
 
   NS_DECL_ISUPPORTS;
-  NS_DECL_NSIBADCERTLISTENER
-  NS_DECL_NSISECURITYWARNINGDIALOGS
+  NS_DECL_NSIBADCERTLISTENER;
+  NS_DECL_NSISECURITYWARNINGDIALOGS;
 
 private:
   nsresult EnsureSecurityStringBundle();
- 
+
   nsresult AlertDialog(nsIInterfaceRequestor* ctx, const char* prefName,
                        const PRUnichar* messageName,
                        const PRUnichar* showAgainName);

@@ -41,6 +41,7 @@
                 pageSetup = id; 
                 previousTab = id; 
                 printPage = id; 
+                reloadWithCharset = id; 
                 savePage = id; 
                 sendURL = id; 
                 showAboutBox = id; 

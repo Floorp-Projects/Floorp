@@ -658,11 +658,10 @@ BookmarksService::SaveBookmarksToFile(const nsAString& inFileName)
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), bookmarksTempFile);
   if (NS_FAILED(rv)) return rv;
 
-  PRUint32 bytesWritten = 0;
-
   if (writeDocType)
   {
     const char* const kDocTypeString = "<!DOCTYPE bookmarks SYSTEM \"http://www.mozilla.org/DTDs/ChimeraBookmarks.dtd\">\n";
+    PRUint32 bytesWritten = 0;
     rv = outputStream->Write(kDocTypeString, strlen(kDocTypeString), &bytesWritten);
     if (NS_FAILED(rv)) return rv;
   }

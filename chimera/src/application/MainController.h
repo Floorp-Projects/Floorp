@@ -89,6 +89,8 @@
     
     SharedMenusObj*         mSharedMenusObj;
     NetworkServices*        mNetworkServices;
+    
+    NSMutableDictionary*    mCharsets;
 }
 
 // File menu actions.
@@ -127,6 +129,7 @@
 -(IBAction) smallerTextSize:(id)aSender;
 -(IBAction) viewSource:(id)aSender;
 -(IBAction) manageSidebar: (id)aSender;
+-(IBAction) reloadWithCharset:(id)aSender;
 
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender;
