@@ -214,7 +214,7 @@ nsEventStatus nsContextMenu::MenuConstruct(const nsMenuEvent &aMenuEvent,
       if (menuitemNodeType.Equals("menuitem")) {
         // LoadMenuItem
         LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-      } else if (menuitemNodeType.Equals("separator")) {
+      } else if (menuitemNodeType.Equals("menuseparator")) {
         //        AddSeparator();
       } else if (menuitemNodeType.Equals("menu")) {
         // Load a submenu
@@ -260,7 +260,7 @@ void nsContextMenu::LoadMenuItem(nsIMenu        *pParentMenu,
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -282,7 +282,7 @@ void nsContextMenu::LoadMenuItem(nsIMenu        *pParentMenu,
       return;
     }
     
-    nsAutoString cmdAtom("onclick");
+    nsAutoString cmdAtom("onaction");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -307,7 +307,7 @@ void nsContextMenu::LoadSubMenu(nsIMenu         *pParentMenu,
                                 nsIDOMNode      *menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("name"), menuName);
+  menuElement->GetAttribute(nsAutoString("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -351,7 +351,7 @@ void nsContextMenu::LoadMenuItem(nsIContextMenu *pParentMenu,
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -373,7 +373,7 @@ void nsContextMenu::LoadMenuItem(nsIContextMenu *pParentMenu,
       return;
     }
 
-    nsAutoString cmdAtom("onclick");
+    nsAutoString cmdAtom("onaction");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -398,7 +398,7 @@ void nsContextMenu::LoadSubMenu(nsIContextMenu  *pParentMenu,
                                 nsIDOMNode      *menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("name"), menuName);
+  menuElement->GetAttribute(nsAutoString("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
