@@ -581,7 +581,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   aPresContext.GetScaledPixelsToTwips(p2t);
   nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
-                              inner, recessedBorder, 0);
+                              inner, recessedBorder, mStyleContext, 0);
 
   // Adjust the inner rect to account for the one pixel recessed border,
   // and a six pixel padding on each edge
