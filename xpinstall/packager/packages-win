@@ -83,6 +83,7 @@ bin\components\embedcomponents.dll
 bin\components\commandhandler.xpt
 bin\components\history.xpt
 bin\components\winhooks.xpt
+bin\components\alerts.xpt
 bin\components\related.xpt
 bin\components\search.xpt
 bin\components\timebomb.xpt
