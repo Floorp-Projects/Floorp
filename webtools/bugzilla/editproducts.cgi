@@ -306,12 +306,26 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    if (TestProduct($product)) {
+
+    my $existing_product = TestProduct($product);
+
+    # Check for exact case sensitive match:
+    if ($existing_product eq $product) {
         print "The product '$product' already exists. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
         exit;
     }
+
+    # Next check for a case-insensitive match:
+    if (lc($existing_product) eq lc($product)) {
+        print "The new product '$product' differs from existing product ";
+        print "'$existing_product' only in case. Please press\n";
+        print "<b>Back</b> and try again.\n";
+        PutTrailer($localtrailer);
+        exit;
+    }
+
 
     my $version = trim($::FORM{version} || '');
 
@@ -1190,7 +1204,9 @@ if ($action eq 'update') {
             PutTrailer($localtrailer);
             exit;
         }
-        if (TestProduct($product)) {
+
+        if (lc($product) ne lc($productold) &&
+            TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
             SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
