@@ -53,6 +53,7 @@ class nsIProperties;
 
 #include "nsIChromeRegistry.h"
 #include "nsIXULOverlayProvider.h"
+#include "nsIProtocolHandler.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -68,6 +69,7 @@ class nsIProperties;
 
 class nsChromeRegistry : public nsIXULChromeRegistry,
                          public nsIXULOverlayProvider,
+                         public nsIProtocolHandler,
                          public nsIObserver,
                          public nsSupportsWeakReference
 {
@@ -78,6 +80,9 @@ public:
   NS_DECL_NSICHROMEREGISTRY
   NS_DECL_NSIXULCHROMEREGISTRY
   NS_DECL_NSIXULOVERLAYPROVIDER
+
+  // nsIProtocolHandler
+  NS_DECL_NSIPROTOCOLHANDLER
 
   NS_DECL_NSIOBSERVER
 
@@ -167,6 +172,7 @@ private:
   nsresult UninstallFromDynamicDataSource(const nsACString& aPackageName,
                                           PRBool aIsOverlay, PRBool aUseProfile);
 
+  NS_HIDDEN_(nsresult) RealCheckForNewChrome();
   NS_HIDDEN_(nsresult) ProcessNewChromeFile(nsILocalFile *aListFile);
   NS_HIDDEN_(nsresult) ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
