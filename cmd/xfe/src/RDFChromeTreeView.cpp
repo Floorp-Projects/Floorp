@@ -67,8 +67,6 @@ XFE_RDFChromeTreeView::XFE_RDFChromeTreeView(XFE_Component *	toplevel,
 
     doAttachments();
 
-    XtManageChild(_tree);
-
 	show();
 }
 //////////////////////////////////////////////////////////////////////////
