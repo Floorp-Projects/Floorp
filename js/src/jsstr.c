@@ -1506,6 +1506,8 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!JS_ConvertValue(cx, argv[1], JSTYPE_STRING, &argv[1]))
             return JS_FALSE;
         repstr = JSVAL_TO_STRING(argv[1]);
+        if (!js_UndependString(cx, repstr))     /* XXX flatten for js_strchr */
+            return JS_FALSE;
         lambda = NULL;
     }
 
