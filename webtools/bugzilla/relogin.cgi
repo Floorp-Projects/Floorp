@@ -40,7 +40,7 @@ do an action that requires a login, you will be prompted for it.
 <p>
 ";
 
-navigation_header();
+PutFooter();
 
 exit;
 

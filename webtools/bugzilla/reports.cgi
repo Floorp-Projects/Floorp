@@ -96,6 +96,7 @@ else
 			print "<font color=blue>$_</font> : " . 
 				($::FORM{$_} ? $::FORM{$_} : "undef") . "<br>\n";
 			}
+                PutFooter();
 		exit;
 		}
 
@@ -104,9 +105,9 @@ else
 
 print <<FIN;
 <p>
-</body>
-</html>
 FIN
+
+PutFooter();
 
 ##################################
 # user came in with no form data #
@@ -308,6 +309,7 @@ FIN
 	if ($bugs_count == 0)
 		{
 		print "No bugs found!\n";
+                PutFooter();
 		exit;
 		}
 	
@@ -524,6 +526,7 @@ $msg
 <p>
 FIN
 	
+	PutFooter();
 	exit;
 	}
 

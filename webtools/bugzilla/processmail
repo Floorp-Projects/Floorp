@@ -212,8 +212,36 @@ sub GetBugText {
     $::bug{'cclist'} = join(',', @cclist);
     $::bug{'voterlist'} = join(',', @voterlist);
 
+    if (Param("prettyasciimail")) {
+        my $temp = formline <<'END',$::bug{'short_desc'},$id,$::bug{'product'},$::bug{'bug_status'},$::bug{'version'},$::bug{'resolution'},$::bug{'rep_platform'},$::bug{'bug_severity'},$::bug{'op_sys'},$::bug{'priority'},$::bug{'component'},$::bug{'assigned_to'},$::bug{'reporter'},$qa_contact,DescCC(\@cclist),$target_milestone,${status_whiteboard},$::bug{'bug_file_loc'},DescDependencies($id);
++============================================================================+
+| @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
++----------------------------------------------------------------------------+
+|        Bug #: @<<<<<<<<<<<                Product: @<<<<<<<<<<<<<<<<<<<<<< |
+|       Status: @<<<<<<<<<<<<<<<<<<         Version: @<<<<<<<<<<<<<<<<<<<<<< |
+|   Resolution: @<<<<<<<<<<<<<<<<<<        Platform: @<<<<<<<<<<<<<<<<<<<<<< |
+|     Severity: @<<<<<<<<<<<<<<<<<<      OS/Version: @<<<<<<<<<<<<<<<<<<<<<< |
+|     Priority: @<<<<<<<<<<<<<<<<<<       Component: @<<<<<<<<<<<<<<<<<<<<<< |
++----------------------------------------------------------------------------+
+|  Assigned To: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
+|  Reported By: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
+|  ~QA Contact: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
+|  ~   CC list: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
++----------------------------------------------------------------------------+
+| ~  Milestone: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
+|~  Whiteboard: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
+|          URL: @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
+|~Dependencies: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
++============================================================================+
+|                              DESCRIPTION                                   |
+END
 
-    return "Bug\#: $id
+    my $prettymail = $^A . $::bug{'long_desc'};
+        return $prettymail;
+
+
+    } else {
+        return "Bug\#: $id
 Product: $::bug{'product'}
 Version: $::bug{'version'}
 Platform: $::bug{'rep_platform'}
@@ -230,6 +258,7 @@ $qa_contact$target_milestone${status_whiteboard}URL: $::bug{'bug_file_loc'}
 " . DescDependencies($id) . "
 $::bug{'long_desc'}
 ";
+}
 
 }
 
@@ -313,6 +342,7 @@ sub ProcessOneBug {
         if ($tolist ne "" || $cclist ne "") {
             my %substs;
 
+            $substs{"fullbugreport"} = $text; # added ability to include the full bug report
             $substs{"to"} = $tolist;
             $substs{"cc"} = $cclist;
             $substs{"bugid"} = $i;
@@ -331,6 +361,7 @@ sub ProcessOneBug {
                 # harmless.
                 open(SENDMAIL, "|/usr/lib/sendmail -t") ||
                     die "Can't open sendmail";
+
                 print SENDMAIL $msg;
                 close SENDMAIL;
                 $logstr = "$logstr; mail sent to $tolist, $cclist";

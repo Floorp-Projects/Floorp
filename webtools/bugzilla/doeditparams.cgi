@@ -39,6 +39,7 @@ print "Content-type: text/html\n\n";
 if (!UserInGroup("tweakparams")) {
     print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";
     print "And so, you aren't allowed to edit the parameters.\n";
+    PutFooter();
     exit;
 }
 
@@ -58,6 +59,7 @@ foreach my $i (@::param_list) {
             if ($ok ne "") {
                 print "New value for $i is invalid: $ok<p>\n";
                 print "Please hit <b>Back</b> and try again.\n";
+                PutFooter();
                 exit;
             }
         }
@@ -75,3 +77,4 @@ print "OK, done.<p>\n";
 print "<a href=editparams.cgi>Edit the params some more.</a><p>\n";
 print "<a href=query.cgi>Go back to the query page.</a>\n";
     
+PutFooter();

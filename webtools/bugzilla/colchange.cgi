@@ -116,3 +116,4 @@ print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
 print "<INPUT TYPE=HIDDEN NAME=resetit VALUE=1>\n";
 print "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">\n";
 print "</FORM>\n";
+PutFooter();

@@ -41,6 +41,7 @@ if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
     print "<INPUT NAME=id>\n";
     print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">\n";
     print "</FORM>\n";
+    PutFooter();
     exit;
 }
 
@@ -53,6 +54,4 @@ print "<HR>\n";
 
 $! = 0;
 do "bug_form.pl" || die "Error doing bug_form.pl: $!";
-print "</BODY>";
-print "</HTML>\n";
 

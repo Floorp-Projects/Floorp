@@ -129,7 +129,7 @@ sub PutTrailer (@)
 	}
 	$num++;
     }
-    print "</BODY></HTML>\n";
+    PutFooter();
 }
 
 

@@ -39,7 +39,7 @@ if ($who ne $::FORM{'who'}) {
     print "The login info got confused.  If you want to adjust the votes\n";
     print "for <tt>$::COOKIE{'Bugzilla_login'}</tt>, then please\n";
     print "<a href=showvotes.cgi?user=$who>click here</a>.<hr>\n";
-    navigation_header();
+    PutFooter();
     exit();
 }
 
@@ -48,7 +48,7 @@ my @buglist = grep {/^\d+$/} keys(%::FORM);
 if (0 == @buglist) {
     PutHeader("Oops?");
     print "Something got confused.  Please click <b>Back</b> and try again.";
-    navigation_header();
+    PutFooter();
     exit();
 }
 
@@ -58,7 +58,7 @@ foreach my $id (@buglist) {
         PutHeader("Numbers only, please");
         print "Only use numeric values for your bug votes.\n";
         print "Please click <b>Back</b> and try again.<hr>\n";
-        navigation_header();
+        PutFooter();
         exit();
     }
 }
@@ -82,7 +82,7 @@ foreach my $prod (keys(%prodcount)) {
         print "You may only use $::prodmaxvotes{$prod} votes for bugs in the\n";
         print "<tt>$prod</tt> product, but you are using $prodcount{$prod}.\n";
         print "Please click <b>Back</b> and try again.<hr>\n";
-        navigation_header();
+        PutFooter();
         exit();
     }
 }
@@ -114,7 +114,7 @@ SendSQL("unlock tables");
 PutHeader("Voting tabulated", "Voting tabulated", $::COOKIE{'Bugzilla_login'});
 print "Your votes have been recorded.\n";
 print qq{<p><a href="showvotes.cgi?user=$who">Review your votes</a><hr>\n};
-navigation_header();
+PutFooter();
 exit();
     
 

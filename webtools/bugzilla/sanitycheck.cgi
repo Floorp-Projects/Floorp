@@ -241,3 +241,4 @@ while (@row = FetchSQLData()) {
 
 
 Status("Sanity check completed.");
+PutFooter();

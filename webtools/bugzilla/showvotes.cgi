@@ -120,5 +120,5 @@ if (defined $::FORM{'bug_id'}) {
     
 print qq{<a href="votehelp.html">Help!  I don't understand this voting stuff</a>};
 
-navigation_header();
+PutFooter();
     

@@ -12,13 +12,23 @@
 # rights and limitations under the License.
 #
 # The Original Code is the Bugzilla Bug Tracking System.
-#
+# 
 # The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+# 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+
+
+########################################################################
+#
+# enter_bug.cgi
+# -------------
+# Displays bug entry form. Bug fields are specified through popup menus, 
+# drop-down lists, or text fields. Default for these values can be passed
+# in as parameters to the cgi.
+#
+########################################################################
 
 use diagnostics;
 use strict;
@@ -56,6 +66,7 @@ if (!defined $::FORM{'product'}) {
             print "</tr>";
         }
         print "</table>\n";
+        PutFooter();
         exit;
     }
     $::FORM{'product'} = $prodlist[0];
@@ -184,7 +195,7 @@ my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
 my $component_popup = make_popup('component', $::components{$product},
                                  formvalue('component'), 1);
 
-PutHeader ("Enter Bug");
+PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugzilla.");
 
 print "
 <FORM METHOD=POST ACTION=\"post_bug.cgi\">
@@ -231,7 +242,7 @@ print "
   <TR>";
 if (Param('letsubmitterchoosepriority')) {
     print "
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority</A>:</B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Resolution<br>Priority</A>:</B></TD>
     <TD>$priority_popup</TD>";
 } else {
     print '<INPUT TYPE=HIDDEN NAME=priority VALUE="' .
@@ -277,7 +288,7 @@ print "
   <tr>
     <td></td>
     <td colspan=5>
-       <INPUT TYPE=\"submit\" VALUE=\"    Commit    \">
+       <INPUT TYPE=\"submit\" VALUE=\"    Commit    \" ONCLICK=\"if (this.form.short_desc.value =='') { alert('Please enter a summary sentence for this bug.'); return false; }\">
        &nbsp;&nbsp;&nbsp;&nbsp;
        <INPUT TYPE=\"reset\" VALUE=\"Reset\">
        &nbsp;&nbsp;&nbsp;&nbsp;
@@ -301,6 +312,8 @@ print "
   </TABLE>
   <INPUT TYPE=hidden name=form_name VALUE=enter_bug>
 </FORM>\n";
+
+PutFooter();
 
 print "</BODY></HTML>\n";
 

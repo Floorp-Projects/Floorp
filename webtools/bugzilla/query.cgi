@@ -360,7 +360,7 @@ function selectProduct(f) {
 #    set legal_product [concat $default{"product"} [lreplace $legal_product $w $w]]
 # }
 
-PutHeader("Bugzilla Query Page", "Query Page", "",
+PutHeader("Bugzilla Query Page", "Query", "This page lets you search the database for recorded bugs.",
           q{onLoad="selectProduct(document.forms[0]);"});
 
 push @::legal_resolution, "---"; # Oy, what a hack.
@@ -387,34 +387,29 @@ print "
 </tr>
 <tr>
 <td align=left valign=top>
-<SELECT NAME=\"bug_status\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_bug_status, $default{'bug_status'}, $type{'bug_status'})]}
-</SELECT>
+
+@{[make_selection_widget(\"bug_status\",\@::legal_bug_status,$default{'bug_status'}, $type{'bug_status'}, 1)]}
+
 </td>
 <td align=left valign=top>
-<SELECT NAME=\"resolution\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_resolution, $default{'resolution'}, $type{'resolution'})]}
-</SELECT>
+@{[make_selection_widget(\"resolution\",\@::legal_resolution,$default{'resolution'}, $type{'resolution'}, 1)]}
+
 </td>
 <td align=left valign=top>
-<SELECT NAME=\"rep_platform\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_platform, $default{'rep_platform'}, $type{'rep_platform'})]}
-</SELECT>
+@{[make_selection_widget(\"platform\",\@::legal_platform,$default{'platform'}, $type{'platform'}, 1)]}
+
 </td>
 <td align=left valign=top>
-<SELECT NAME=\"op_sys\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_opsys, $default{'op_sys'}, $type{'op_sys'})]}
-</SELECT>
+@{[make_selection_widget(\"op_sys\",\@::legal_platform,$default{'op_sys'}, $type{'op_sys'}, 1)]}
+
 </td>
 <td align=left valign=top>
-<SELECT NAME=\"priority\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_priority, $default{'priority'}, $type{'priority'})]}
-</SELECT>
+@{[make_selection_widget(\"priority\",\@::legal_priority,$default{'priority'}, $type{'priority'}, 1)]}
+
 </td>
 <td align=left valign=top>
-<SELECT NAME=\"bug_severity\" MULTIPLE SIZE=7>
-@{[make_options(\@::legal_severity, $default{'bug_severity'}, $type{'bug_severity'})]}
-</SELECT>
+@{[make_selection_widget(\"bug_severity\",\@::legal_severity,$default{'bug_severity'}, $type{'bug_severity'}, 1)]}
+
 </tr>
 </table>
 
@@ -626,3 +621,5 @@ print "<a href=changepassword.cgi>Change your password or preferences.</a><br>\n
 print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
 print "<a href=\"createaccount.cgi\">Open a new Bugzilla account</a><br>\n";
 print "<a href=\"reports.cgi\">Bug reports</a><br>\n";
+
+PutFooter();

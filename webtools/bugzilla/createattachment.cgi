@@ -31,6 +31,7 @@ use vars %::COOKIE, %::FILENAME;
 sub Punt {
     my ($str) = (@_);
     print "$str<P>Please hit <b>Back</b> and try again.\n";
+    PutFooter();
     exit;
 }
 
@@ -108,5 +109,5 @@ What kind of file is this?
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go Back to BUG# $id</A></TABLE>\n";
 }
 
-navigation_header();
+PutFooter();
 

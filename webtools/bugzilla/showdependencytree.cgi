@@ -100,4 +100,4 @@ print "<h1>Bugs that depend on bug $linkedid</h1>";
 undef %seen;
 DumpKids($id, "dependson", "blocked");
 
-navigation_header();
+PutFooter();

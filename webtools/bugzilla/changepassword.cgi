@@ -87,13 +87,14 @@ On which of these bugs would you like email notification of changes?</td>
 <a href=\"showvotes.cgi\">Review your votes</a>
 <hr>
 ";
-    navigation_header();
+    PutFooter();
     exit;
 }
 
 if ($::FORM{'pwd1'} ne $::FORM{'pwd2'}) {
     print "<H1>Try again.</H1>
 The two passwords you entered did not match.  Please click <b>Back</b> and try again.\n";
+    PutFooter();
     exit;
 }
 
@@ -113,6 +114,7 @@ Please choose a password that is between 3 and 15 characters long, and that
 contains only numbers, letters, hyphens, or underlines.
 <p>
 Please click <b>Back</b> and try again.\n";
+        PutFooter();
         exit;
     }
     
@@ -145,5 +147,5 @@ PutHeader("Preferences updated.");
 print "
 Your preferences have been updated.
 <p>";
-navigation_header();
+PutFooter();
 

@@ -97,6 +97,7 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "</form>\n";
         print "</hr>\n";
         print "<a href=query.cgi>Cancel all this and go to the query page.</a>\n";
+        PutFooter();
         exit;
     }
 }
@@ -196,6 +197,7 @@ sub CheckonComment( $ ) {
                        "<p>" .
                        "Please press <b>Back</b> and give some words " .
                        "on the reason of the your change.\n" );
+            PutFooter();
             exit( 0 );
         } else {
             $ret = 0;
@@ -294,6 +296,7 @@ SWITCH: for ($::FORM{'knob'}) {
                trim($::FORM{'assigned_to'}) eq "") {
             print "You cannot reassign to a bug to noone.  Unless you intentionally cleared out the \"Reassign bug to\" field, ";
             print Param("browserbugmessage");
+            PutFooter();
             exit 0;
           }
         }
@@ -305,11 +308,13 @@ SWITCH: for ($::FORM{'knob'}) {
         if ($::FORM{'product'} eq $::dontchange) {
             print "You must specify a product to help determine the new\n";
             print "owner of these bugs.\n";
+            PutFooter();
             exit 0
         }
         if ($::FORM{'component'} eq $::dontchange) {
             print "You must specify a component whose owner should get\n";
             print "assigned these bugs.\n";
+            PutFooter();
             exit 0
         }
         ChangeStatus('NEW');
@@ -344,11 +349,13 @@ SWITCH: for ($::FORM{'knob'}) {
         if ($num !~ /^[0-9]*$/) {
             print "You must specify a bug number of which this bug is a\n";
             print "duplicate.  The bug has not been changed.\n";
+            PutFooter();
             exit;
         }
         if (defined($::FORM{'id'}) && $::FORM{'dup_id'} == $::FORM{'id'}) {
             print "Nice try, $::FORM{'who'}.  But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
+            PutFooter();
             exit;
         }
         AppendComment($::FORM{'dup_id'}, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
@@ -365,6 +372,7 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     # default
     print "Unknown action $::FORM{'knob'}!\n";
+    PutFooter();
     exit;
 }
 
@@ -372,6 +380,7 @@ SWITCH: for ($::FORM{'knob'}) {
 if ($#idlist < 0) {
     print "You apparently didn't choose any bugs to modify.\n";
     print "<p>Click <b>Back</b> and try again.\n";
+    PutFooter();
     exit;
 }
 
@@ -388,6 +397,7 @@ if ($::FORM{'keywords'}) {
             print "<P>The legal keyword names are <A HREF=describekeywords.cgi>";
             print "listed here</A>.\n";
             print "<P>Please click the <B>Back</B> button and try again.\n";
+            PutFooter();
             exit;
         }
         if (!$keywordseen{$i}) {
@@ -403,7 +413,8 @@ if ($::comma eq "" && 0 == @keywordlist && $keywordaction ne "makeexact") {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
         print "Um, you apparently did not change anything on the selected\n";
         print "bugs. <p>Click <b>Back</b> and try again.\n";
-        exit
+        PutFooter();
+        exit;
     }
 }
 
@@ -501,7 +512,7 @@ The changes made were:
             print ", except for the changes to the description";
         }
         print qq{.</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
-        navigation_header();
+        PutFooter();
         exit;
     }
         
@@ -523,6 +534,7 @@ The changes made were:
                 if ($comp ne $i) {
                     print "<H1>$i is not a legal bug number</H1>\n";
                     print "<p>Click <b>Back</b> and try again.\n";
+                    PutFooter();
                     exit;
                 }
                 if (!exists $seen{$i}) {
@@ -541,6 +553,7 @@ The changes made were:
                         print "The change you are making to dependencies\n";
                         print "has caused a circular dependency chain.\n";
                         print "<p>Click <b>Back</b> and try again.\n";
+                        PutFooter();
                         exit;
                     }
                     if (!exists $seen{$t}) {
@@ -717,4 +730,5 @@ if (defined $::next_bug) {
     do "bug_form.pl";
 } else {
     navigation_header();
+    PutFooter();
 }

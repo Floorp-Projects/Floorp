@@ -521,4 +521,6 @@ print "
 
 navigation_header();
 
+PutFooter();
+
 1;

@@ -129,7 +129,7 @@ sub PutTrailer (@)
         }
         $num++;
     }
-    print "</BODY>\n</HTML>\n";
+    PutFooter();
 }
 
 
@@ -637,8 +637,8 @@ if ($action eq 'update') {
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
-            PutTrailer($localtrailer);
             SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
             exit;
         }
         SendSQL("UPDATE products
@@ -665,14 +665,14 @@ if ($action eq 'update') {
     if ($product ne $productold) {
         unless ($product) {
             print "Sorry, I can't delete the product name.";
-            PutTrailer($localtrailer);
             SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
             exit;
         }
         if (TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
-            PutTrailer($localtrailer);
             SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
             exit;
         }
 

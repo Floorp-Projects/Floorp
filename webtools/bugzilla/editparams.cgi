@@ -38,6 +38,7 @@ print "Content-type: text/html\n\n";
 if (!UserInGroup("tweakparams")) {
     print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";
     print "And so, you aren't allowed to edit the parameters.\n";
+    PutFooter();
     exit;
 }
 
@@ -105,3 +106,4 @@ print "<input type=submit value=\"Submit changes\">\n";
 print "</form>\n";
 
 print "<p><a href=query.cgi>Skip all this, and go back to the query page</a>\n";
+PutFooter();

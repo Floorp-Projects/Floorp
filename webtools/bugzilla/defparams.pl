@@ -121,6 +121,22 @@ sub check_urlbase {
     return "";
 }
 
+DefParam("preferlists",
+	"If this is on, Bugzilla will display most selection options as selection lists. If this is off, Bugzilla will use radio buttons and checkboxes instead.",
+	"b",
+	1);
+
+DefParam("prettyasciimail",
+	"If this is on, Bugzilla will send email reports formatted (assuming 76 character monospace font display). If this is off, email reports are sent using the old 'one-item-per-line' format.",
+	"b",
+	0);
+
+DefParam("capitalizelists",
+	"If this is on, Bugzilla will capitalize list entries, checkboxes, and radio buttons. If this is off, Bugzilla will leave these items untouched.",
+	"b",
+	0);
+
+
 DefParam("usequip",
 	"If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
 	"b",
@@ -152,6 +168,18 @@ DefParam("headerhtml",
          "l",
          '');
 
+DefParam("footerhtml",
+         "HTML to add to the bottom of every page. By default it displays the blurbhtml, and %commandmenu%, a menu of useful commands.  You probably really want either headerhtml or footerhtml to include %commandmenu%.",
+         "l",
+         '<TABLE BORDER="0"><TR><TD BGCOLOR="#000000" VALIGN="TOP">
+<TABLE BORDER="0" CELLPADDING="10" CELLSPACING="0" WIDTH="100%" BGCOLOR="lightyellow">
+<TR><TD>
+%blurbhtml%
+<BR>
+%commandmenu%
+</TD></TR></TABLE></TD></TR></TABLE>');
+
+
 
 DefParam("bannerhtml",
          "The html that gets emitted at the head of every Bugzilla page. 
@@ -174,7 +202,10 @@ information about what Bugzilla is and what it can do, see
 <A HREF=\"http://www.mozilla.org/bugs/\"><B>bug pages</B></A>.");
 
 
-
+DefParam("mybugstemplate",
+         "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",
+         "t",
+         "buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&assigned_to=%userid%");
     
 DefParam("shutdownhtml",
          "If this field is non-empty, then Bugzilla will be completely disabled and this text will be displayed instead of all the Bugzilla pages.",
@@ -386,10 +417,12 @@ DefParam("allowbugdeletion",
          "b",
          0);
 
+
 DefParam("strictvaluechecks",
          "Do stricter integrity checking on both form submission values and values read in from the database.",
          "b",
          0);
+
 
 DefParam("browserbugmessage",
          "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",

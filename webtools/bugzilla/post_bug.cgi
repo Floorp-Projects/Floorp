@@ -49,6 +49,7 @@ if (defined $::FORM{'maketemplate'}) {
     print "If you put a bookmark <a href=\"$url\">to this link</a>, it will\n";
     print "bring up the submit-a-new-bug page with the fields initialized\n";
     print "as you've requested.\n";
+    PutFooter();
     exit;
 }
 
@@ -61,12 +62,14 @@ if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
     print "You must choose a component that corresponds to this bug.  If\n";
     print "necessary, just guess.  But please hit the <B>Back</B> button\n";
     print "and choose a component.\n";
+    PutFooter();
     exit 0
 }
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
     print "You must enter a summary for this bug.  Please hit the\n";
     print "<B>Back</B> button and try again.\n";
+    PutFooter();
     exit;
 }
 
@@ -173,4 +176,5 @@ print "<BR><A HREF=\"createattachment.cgi?id=$id\">Attach a file to this bug</a>
 
 navigation_header();
 
+PutFooter();
 exit;

@@ -53,6 +53,7 @@ if (defined $login) {
 	print "exists.  If you have forgotten the password for it, then\n";
 	print "<a href=query.cgi?GoAheadAndLogIn>click here</a> and use\n";
 	print "the <b>E-mail me a password</b> button.\n";
+        PutFooter();
 	exit;
     }
     PutHeader("Account created");
@@ -63,6 +64,7 @@ if (defined $login) {
     print "received, you may <a href=query.cgi?GoAheadAndLogIn>click\n";
     print "here</a> and log in.  Or, you can just <a href=\"\">go back to\n";
     print "the top</a>.";
+    PutFooter();
     exit;
 }
 
@@ -87,3 +89,4 @@ as well.
 <input type=submit>
 };
 
+PutFooter();

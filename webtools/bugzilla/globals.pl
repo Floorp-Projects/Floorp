@@ -33,8 +33,10 @@ sub globals_pl_sillyness {
     $zz = @main::db_errstr;
     $zz = @main::default_column_list;
     $zz = @main::dontchange;
+    $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
     $zz = @main::legal_components;
+    $zz = @main::legal_keywords;
     $zz = @main::legal_opsys;
     $zz = @main::legal_platform;
     $zz = @main::legal_priority;
@@ -576,11 +578,18 @@ sub RemoveVotes {
 }
 
 
-
 sub Param {
     my ($value) = (@_);
     if (defined $::param{$value}) {
         return $::param{$value};
+    }
+
+    # See if it is a dynamically-determined param (can't be changed by user).
+    if ($value eq "commandmenu") {
+        return GetCommandMenu();
+    }
+    if ($value eq "settingsmenu") {
+        return GetSettingsMenu();
     }
     # Um, maybe we haven't sourced in the params at all yet.
     if (stat("data/params")) {
@@ -607,7 +616,6 @@ sub Param {
     die "Can't find param named $value";
 }
 
-    
 sub PerformSubsts {
     my ($str, $substs) = (@_);
     $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;

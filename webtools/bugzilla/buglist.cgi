@@ -77,6 +77,7 @@ OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
 <P>
 <A HREF=query.cgi>Go back to the query page.</A>
 ";
+        PutFooter();
         exit;
     };
     /^asnamed$/ && do {
@@ -103,6 +104,7 @@ Query names can only have letters, digits, spaces, or underbars.  You entered
 Click the <B>Back</B> button and type in a valid name for this query.
 ";
         }
+        PutFooter();
         exit;
     };
     /^asdefault$/ && do {
@@ -116,6 +118,7 @@ individual query.
 
 <P><A HREF=query.cgi>Go back to the query page, using the new default.</A>
 ";
+        PutFooter();
         exit;
     };
 }
@@ -195,6 +198,7 @@ if (defined $::FORM{'votes'}) {
             print "\n\n<P>The 'At least ___ votes' field must be a simple ";
             print "number. You entered \"$c\", which doesn't cut it.";
             print "<P>Please click the <B>Back</B> button and try again.\n";
+            PutFooter();
             exit;
         }
         $minvotes = $c;
@@ -305,6 +309,7 @@ if ($::FORM{'keywords'}) {
             print "<P>The legal keyword names are <A HREF=describekeywords.cgi>";
             print "listed here</A>.\n";
             print "<P>Please click the <B>Back</B> button and try again.\n";
+            PutFooter();
             exit;
         }
     }
@@ -367,6 +372,7 @@ foreach my $id ("1", "2") {
     if (!$foundone) {
         print "\n\n<P>You must specify one or more fields in which to search for <tt>$email</tt>.\n";
         print "<P>Please click the <B>Back</B> button and try again.\n";
+        PutFooter();
         exit;
     }
     if ($lead eq " or ") {
@@ -385,6 +391,7 @@ if (defined $::FORM{'changedin'}) {
             print "\n\n<P>The 'changed in last ___ days' field must be a simple ";
             print "number. You entered \"$c\", which doesn't cut it.";
             print "<P>Please click the <B>Back</B> button and try again.\n";
+            PutFooter();
             exit;
         }
         $query .= "and to_days(now()) - to_days(bugs.delta_ts) <= $c ";
@@ -408,6 +415,7 @@ sub SqlifyDate {
     if (!defined $date) {
         print "\n\n<P>The string '<tt>$str</tt>' is not a legal date.\n";
         print "<P>Please click the <B>Back</B> button and try again.\n";
+        PutFooter();
         exit;
     }
     return time2str("'%Y/%m/%d %H:%M:%S'", $date);
@@ -545,7 +553,7 @@ if ($dotweak) {
     pnl "<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">";
 }
 
-my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=2>
+my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=4 WIDTH=100%>
 <TR ALIGN=LEFT><TH>
 <A HREF=\"buglist.cgi?$fields&order=bugs.bug_id\">ID</A>";
 
@@ -577,6 +585,18 @@ my %prodhash;
 my %statushash;
 my $buggroupset = "";
 
+my $pricol = -1;
+my $sevcol = -1;
+for (my $colcount = 0 ; $colcount < @collist ; $colcount++) {
+    my $colname = $collist[$colcount];
+    if ($colname eq "priority") {
+        $pricol = $colcount;
+    }
+    if ($colname eq "severity") {
+        $sevcol = $colcount;
+    }
+}
+
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
     my $g = shift @row;         # Bug's group set.
@@ -596,7 +616,30 @@ while (@row = FetchSQLData()) {
             pnl "</TABLE>$tablestart";
         }
         push @bugarray, $bug_id;
-        pnl "<TR VALIGN=TOP ALIGN=LEFT><TD>";
+        
+        # retrieve this bug's priority and severity, if available,
+        # by looping through all column names -- gross but functional
+        my $priority = "unknown";
+        my $severity;
+        if ($pricol >= 0) {
+            $priority = $row[$pricol];
+        }
+        if ($sevcol >= 0) {
+            $severity = $row[$sevcol];
+        }
+        my $customstyle = "";
+        if ($severity) {
+            if ($severity eq "enhan") {
+                $customstyle = "style='font-style:italic ! important'";
+            }
+            if ($severity eq "block") {
+                $customstyle = "style='color:red ! important; font-weight:bold ! important'";
+            }
+            if ($severity eq "criti") {
+                $customstyle = "style='color:red; ! important'";
+            }
+        }
+        pnl "<TR VALIGN=TOP ALIGN=LEFT CLASS=$priority $customstyle><TD>";
         if ($dotweak) {
             pnl "<input type=checkbox name=id_$bug_id>";
         }
@@ -613,7 +656,7 @@ while (@row = FetchSQLData()) {
                 } else {
                     $value = "<nobr>$value</nobr>";
                 }
-                pnl "<td>$value";
+                pnl "<td class=$c>$value";
             } elsif ($c eq "keywords") {
                 my $query =
                     $::db->query("SELECT keyworddefs.name
@@ -917,6 +960,8 @@ if ($count > 0) {
     }
     print "</FORM>\n";
 }
+PutFooter();
+
 if ($serverpush) {
     print "\n--thisrandomstring--\n";
 }

@@ -190,6 +190,7 @@ sub CheckFormField (\%$;\@) {
 
         print "A legal $fieldname was not set; ";
         print Param("browserbugmessage");
+        PutFooter();
         exit 0;
       }
 }
@@ -204,6 +205,7 @@ sub CheckFormFieldDefined (\%$) {
     if ( !defined $formRef->{$fieldname} ) {
         print "$fieldname was not defined; ";
         print Param("browserbugmessage");
+        PutFooter();
         exit 0;
       }
 }
@@ -217,6 +219,7 @@ sub CheckPosInt($) {
     if ( $number !~ /^[1-9][0-9]*$/ ) {
         print "Received string \"$number\" when postive integer expected; ";
         print Param("browserbugmessage");
+        PutFooter();
         exit 0;
       }
 }
@@ -269,6 +272,142 @@ sub navigation_header {
     print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=enter_bug.cgi>Enter new bug</A>\n"
 }
 
+sub make_checkboxes {
+    my ($src,$default,$isregexp,$name) = (@_);
+    my $last = "";
+    my $capitalized = "";
+    my $popup = "";
+    my $found = 0;
+    $default = "" if !defined $default;
+
+    if ($src) {
+        foreach my $item (@$src) {
+            if ($item eq "-blank-" || $item ne $last) {
+                if ($item eq "-blank-") {
+                    $item = "";
+                }
+                $last = $item;
+                $capitalized = $item;
+                $capitalized =~ tr/A-Z/a-z/;
+                $capitalized =~ s/^(.?)(.*)/\u$1$2/;
+                if ($isregexp ? $item =~ $default : $default eq $item) {
+                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\" SELECTED>$capitalized<br>";
+                    $found = 1;
+                } else {
+                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\">$capitalized<br>";
+                }
+            }
+        }
+    }
+    if (!$found && $default ne "") {
+	$popup .= "<INPUT NAME=$name TYPE=CHECKBOX SELECTED>$default";
+    }
+    return $popup;
+}
+
+#
+# make_selection_widget: creates an HTML selection widget from a list of text strings.
+# $groupname is the name of the setting (form value) that this widget will control
+# $src is the list of options
+# you can specify a $default value which is either a string or a regex pattern to match to
+#    identify the default value
+# $capitalize lets you optionally capitalize the option strings; the default is the value
+#    of Param("capitalizelists")
+# $multiple is 1 if several options are selectable (default), 0 otherwise.
+# $size is used for lists to control how many items are shown. The default is 7. A list of
+#    size 1 becomes a popup menu.
+# $preferLists is 1 if selection lists should be used in favor of radio buttons and
+#    checkboxes, and 0 otherwise. The default is the value of Param("preferlists").
+#
+# The actual widget generated depends on the parameter settings:
+# 
+#        MULTIPLE     PREFERLISTS    SIZE     RESULT
+#       0 (single)        0           =1      Popup Menu (normal for list of size 1)
+#       0 (single)        0           >1      Radio buttons
+#       0 (single)        1           =1      Popup Menu (normal for list of size 1)
+#       0 (single)        1           n>1     List of size n, single selection
+#       1 (multi)         0           n/a     Check boxes; size ignored
+#       1 (multi)         1           n/a     List of size n, multiple selection, of size n
+#
+sub make_selection_widget {
+    my ($groupname,$src,$default,$isregexp,$multiple, $size, $capitalize, $preferLists) = (@_);
+    my $last = "";
+    my $popup = "";
+    my $found = 0;
+    my $displaytext = "";
+    $groupname = "" if !defined $groupname;
+    $default = "" if !defined $default;
+    $capitalize = Param("capitalizelists") if !defined $capitalize;
+    $multiple = 1 if !defined $multiple;
+    $preferLists = Param("preferlists") if !defined $preferLists;
+    $size = 7 if !defined $size;
+    my $type = "LIST";
+    if (!$preferLists) {
+        if ($multiple) {
+            $type = "CHECKBOX";
+        } else {
+            if ($size > 1) {
+                $type = "RADIO";
+            }
+        }
+    }
+
+    if ($type eq "LIST") {
+        $popup .= "<SELECT NAME=\"$groupname\"";
+        if ($multiple) {
+            $popup .= " MULTIPLE";
+        }
+        $popup .= " SIZE=$size>\n";
+    }
+    if ($src) {
+        foreach my $item (@$src) {
+            if ($item eq "-blank-" || $item ne $last) {
+                if ($item eq "-blank-") {
+                    $item = "";
+                }
+                $last = $item;
+                $displaytext = $item;
+                if ($capitalize) {
+                    $displaytext =~ tr/A-Z/a-z/;
+                    $displaytext =~ s/^(.?)(.*)/\u$1$2/;
+                }   
+
+                if ($isregexp ? $item =~ $default : $default eq $item) {
+                    if ($type eq "CHECKBOX") {
+                        $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\" CHECKED>$displaytext<br>";
+                    } elsif ($type eq "RADIO") {
+                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\" check>$displaytext<br>";
+                    } else {
+                        $popup .= "<OPTION SELECTED VALUE=\"$item\">$displaytext";
+                    }
+                    $found = 1;
+                } else {
+                    if ($type eq "CHECKBOX") {
+                        $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\">$displaytext<br>";
+                    } elsif ($type eq "RADIO") {
+                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\">$displaytext<br>";
+                    } else {
+                        $popup .= "<OPTION VALUE=\"$item\">$displaytext";
+                    }
+                }
+            }
+        }
+    }
+    if (!$found && $default ne "") {
+        if ($type eq "CHECKBOX") {
+            $popup .= "<INPUT NAME=$groupname type=checkbox CHECKED>$default";
+        } elsif ($type eq "RADIO") {
+            $popup .= "<INPUT NAME=$groupname type=radio checked>$default";
+        } else {
+            $popup .= "<OPTION SELECTED>$default";
+        }
+    }
+    if ($type eq "LIST") {
+        $popup .= "</SELECT>";
+    }
+    return $popup;
+}
+
 
 $::CheckOptionValues = 1;
 
@@ -303,6 +442,7 @@ sub make_options {
               "Please send mail to " . Param("maintainer") . " with " .
               "details of what you were doing when this message " . 
               "appeared.  Thank you.\n";
+        PutFooter();
         exit 0;
               
       } else {
@@ -393,6 +533,7 @@ sub CheckEmailSyntax {
         print "syntax checking for a legal email address.\n";
         print Param('emailregexpdesc');
         print "<p>Please click <b>back</b> and try again.\n";
+        PutFooter();
         exit;
     }
 }
@@ -459,6 +600,7 @@ sub confirm_login {
 	    print "Content-type: text/html\n\n";
 	    PutHeader("Password has been emailed");
             MailPassword($enteredlogin, $realpwd);
+            PutFooter();
             exit;
         }
 
@@ -468,6 +610,7 @@ sub confirm_login {
 	    PutHeader("Login failed");
             print "The username or password you entered is not valid.\n";
             print "Please click <b>Back</b> and try again.\n";
+            PutFooter();
             exit;
         }
         $::COOKIE{"Bugzilla_login"} = $enteredlogin;
@@ -539,6 +682,7 @@ name=PleaseMailAPassword>
         SendSQL("delete from logincookies where to_days(now()) - to_days(lastused) > 30");
 
         
+        PutFooter();
         exit;
     }
 
@@ -567,29 +711,35 @@ sub PutHeader {
 
     print PerformSubsts(Param("bannerhtml"), undef);
 
-    print "<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">\n";
+    print "<TABLE BORDER=0 CELLSPACING=0 WIDTH=\"100%\">\n";
     print " <TR>\n";
-    print "  <TD>\n";
+    print "  <TD WIDTH=10% VALIGN=TOP ALIGN=LEFT>\n";
     print "   <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2>\n";
-    print "    <TR><TD VALIGN=TOP ALIGN=CENTER NOWRAP>\n";
-    print "     <FONT SIZE=\"+3\"><B><NOBR>$h1</NOBR></B></FONT>\n";
-    print "    </TD></TR><TR><TD VALIGN=TOP ALIGN=CENTER>\n";
-    print "     <B>$h2</B>\n";
+    print "    <TR><TD VALIGN=TOP ALIGN=LEFT NOWRAP>\n";
+    print "     <FONT SIZE=+1><B>$h1</B></FONT>";
     print "    </TD></TR>\n";
     print "   </TABLE>\n";
     print "  </TD>\n";
-    print "  <TD>\n";
+    print "  <TD VALIGN=CENTER>&nbsp;</TD>\n";
+    print "  <TD VALIGN=CENTER ALIGN=LEFT>\n";
 
-    print Param("blurbhtml");
+    print "$h2\n";
+    print "</TD></TR></TABLE>\n";
 
     print "</TD></TR></TABLE>\n";
 
     if (Param("shutdownhtml")) {
         if (!$ignoreshutdown) {
             print Param("shutdownhtml");
+            PutFooter();
             exit;
         }
     }
+}
+
+
+sub PutFooter {
+    print PerformSubsts(Param("footerhtml")); 
 }
 
 
@@ -649,6 +799,54 @@ sub warnBanner( $ )
   print Param("warnfooterhtml");
 }
 
+
+sub GetCommandMenu {
+    my $loggedin = quietly_check_login();
+    my $html = qq{<FORM METHOD=GET ACTION="show_bug.cgi">};
+    $html .= "<a href='enter_bug.cgi'>New</a> | <a href='query.cgi'>Query</a>";
+    if (-e "query2.cgi") {
+        $html .= "[<a href='query2.cgi'>beta</a>]";
+    }
+    
+    $html .= qq{| <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
+
+    $html .= " | <a href='reports.cgi'>Reports</a>";
+    if ($loggedin) {
+        my $mybugstemplate = Param("mybugstemplate");
+        my %substs;
+        $substs{'userid'} = $::COOKIE{"Bugzilla_login"};
+        my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
+        $html = $html . " | <a href='$mybugsurl'>My Bugs</a>";
+    }
+                
+    $html = $html . " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
+
+    my $onLogPage = 0;
+    if (defined $ENV{"HTTP_REFERER"}) {
+        #my $referrer = $ENV{"HTTP_REFERER"};
+        #my @parts = split("/",$referrer);
+        #my $called_from = $parts[@parts-1];
+        #confirm_login($called_from);
+    }
+
+    if ($loggedin) {
+        $html .= "| <NOBR>Edit <a href='changepassword.cgi'>prefs</a></NOBR>";
+        if (UserInGroup("tweakparams")) {
+            $html .= ", <a href=editparams.cgi>parameters</a>";
+        }
+        if (UserInGroup("editcomponents")) {
+            $html .= ", <a href=editproducts.cgi>components</a>\n";
+        }
+        if (UserInGroup("editkeywords")) {
+            $html .= ", <a href=editkeywords.cgi>keywords</a>\n";
+        }
+        $html = $html . " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
+    } else {
+        $html = $html . " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
+    }
+    $html .= "</FORM>";                
+    return $html;
+}
 
 ############# Live code below here (that is, not subroutine defs) #############
 

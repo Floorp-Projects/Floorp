@@ -35,3 +35,5 @@ ConnectToDatabase();
 DumpBugActivity($::FORM{'id'});
 
 print "<hr><a href=show_bug.cgi?id=$::FORM{'id'}>Back to bug $::FORM{'id'}</a>\n";
+
+PutFooter();

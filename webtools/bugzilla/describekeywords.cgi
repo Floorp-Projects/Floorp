@@ -76,4 +76,4 @@ if (UserInGroup("editkeywords")) {
     print "<p><a href=editkeywords.cgi>Edit keywords</a><p>\n";
 }
 
-navigation_header();
+PutFooter();

@@ -49,6 +49,7 @@ Product: <SELECT NAME=product>
 <INPUT TYPE=\"submit\" VALUE=\"Submit\">
 </FORM>
 ";
+    PutFooter();
     exit;
 }
 
@@ -95,3 +96,5 @@ while (MoreSQLData()) {
 }
 
 print "<tr><td colspan=$cols><hr></td></tr></table>\n";
+
+PutFooter();
