@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.13 2001/11/08 00:15:27 relyea%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.14 2002/01/25 19:08:19 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -105,6 +105,8 @@ NSS_CMSSignedData_Destroy(NSSCMSSignedData *sigd)
     }
 
     /* everything's in a pool, so don't worry about the storage */
+   NSS_CMSContentInfo_Destroy(&(sigd->contentInfo));
+
 }
 
 /*

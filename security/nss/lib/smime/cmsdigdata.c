@@ -34,7 +34,7 @@
 /*
  * CMS digestedData methods.
  *
- * $Id: cmsdigdata.c,v 1.2 2000/06/13 21:56:28 chrisk%netscape.com Exp $
+ * $Id: cmsdigdata.c,v 1.3 2002/01/25 19:08:17 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -87,6 +87,7 @@ void
 NSS_CMSDigestedData_Destroy(NSSCMSDigestedData *digd)
 {
     /* everything's in a pool, so don't worry about the storage */
+    NSS_CMSContentInfo_Destroy(&(digd->contentInfo));
     return;
 }
 
