@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.36 2002/06/19 15:21:37 ian.mcgreer%sun.com Exp $
+ * $Id: ssl3con.c,v 1.37 2002/06/22 01:40:32 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1615,8 +1615,9 @@ ssl3_HandleNoCertificate(sslSocket *ss)
      * first handshake because if we're redoing the handshake we 
      * know the server is paying attention to the certificate.
      */
-    if ((ss->requireCertificate == 1) ||
-	(!ss->firstHsDone && (ss->requireCertificate > 1))) {
+    if ((ss->requireCertificate == SSL_REQUIRE_ALWAYS) ||
+	(!ss->firstHsDone && 
+	 (ss->requireCertificate == SSL_REQUIRE_FIRST_HANDSHAKE))) {
 	PRFileDesc * lower;
 
 	ss->sec.uncache(ss->sec.ci.sid);
@@ -5009,8 +5010,10 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	 * then drop this old cache entry and start a new session.
 	 */
 	if ((sid->peerCert == NULL) && ss->requestCertificate &&
-	    ((ss->requireCertificate == 1) ||
-	     ((ss->requireCertificate == 2) && !ss->firstHsDone))) {
+	    ((ss->requireCertificate == SSL_REQUIRE_ALWAYS) ||
+	     (ss->requireCertificate == SSL_REQUIRE_NO_ERROR) ||
+	     ((ss->requireCertificate == SSL_REQUIRE_FIRST_HANDSHAKE) 
+	      && !ss->firstHsDone))) {
 
 	    ++ssl3stats.hch_sid_cache_not_ok;
 	    ss->sec.uncache(sid);
