@@ -52,8 +52,10 @@ EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
 	-ljs		\
 	-lraptorbase	\
-	-lxpcom	\
-	-lxp			\
+	-ljsdom		\
+	-lxpcom		\
+	-lxp		\
+	-lsecfree	\
 	$(NSPR_LIBS)	\
 	$(NULL)
 
