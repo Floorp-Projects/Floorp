@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.17 2001/11/22 00:46:48 jpierre%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.18 2002/01/09 23:22:19 javi%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -159,7 +159,6 @@ struct sidCacheEntryStr {
     } u;
 };
 typedef struct sidCacheEntryStr sidCacheEntry;
-
 
 /* The length of this struct is supposed to be a power of 2, e.g. 4KB */
 struct certCacheEntryStr {
@@ -1605,6 +1604,20 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
     PRBool        rv = PR_FALSE;
     PR_ASSERT(!"SSL servers are not supported on this platform. (ssl_SetWrappingKey)");
     return rv;
+}
+
+PRUint32  
+SSL_GetMaxServerCacheLocks(void)
+{
+    PR_ASSERT(!"SSL servers are not supported on this platform. (SSL_GetMaxServerCacheLocks)");
+    return -1;
+}
+
+SECStatus 
+SSL_SetMaxServerCacheLocks(PRUint32 maxLocks)
+{
+    PR_ASSERT(!"SSL servers are not supported on this platform. (SSL_SetMaxServerCacheLocks)");
+    return SECFailure;
 }
 
 #endif /* XP_UNIX || XP_WIN32 */
