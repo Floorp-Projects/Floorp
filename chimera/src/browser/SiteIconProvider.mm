@@ -288,6 +288,7 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   if (!gotImageData)
     [self addToMissedIconsCache:uriString withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
 
+  [faviconImage setDataRetained:YES];
   [faviconImage setScalesWhenResized:YES];
   [faviconImage setSize:NSMakeSize(16, 16)];
   
