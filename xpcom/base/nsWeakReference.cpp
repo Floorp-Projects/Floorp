@@ -25,6 +25,20 @@
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
+nsresult
+nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
+	{
+		nsresult status;
+		if ( mWeakPtr )
+			status = mWeakPtr->QueryReferent(aIID, answer);
+		else
+			status = NS_ERROR_NULL_POINTER;
+
+		if ( mErrorPtr )
+			*mErrorPtr = status;
+		return status;
+	}
+
 NS_COM nsIWeakReference *
 NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
   {

@@ -32,10 +32,10 @@
   // for |nsresult|, |NS_ADDREF|, et al
 #endif
 
-#ifndef __gen_nsIWeakReference_h__
-#include "nsIWeakReference.h"
-  // for |nsIWeakReference|
-#endif
+// #ifndef __gen_nsIWeakReference_h__
+// #include "nsIWeakReference.h"
+//   // for |nsIWeakReference|
+// #endif
 
 /*
   Public things defined in this file:
@@ -51,9 +51,6 @@
     getter_AddRefs( nsCOMPtr<T>& )											rv = SomeGetter( getter_AddRefs(smartTptr) );
     getter_AddRefs( T* )                                smartTptr = getter_AddRefs( SomeGetter() );
     dont_AddRef( T* )                                   smartTptr = dont_AddRef(rawTptr);
-
-		do_QueryReferent( nsIWeakReference* )
-		do_QueryReferent( nsIWeakReference*, nsresult* )
 
 		SameCOMIdentity( nsISupports*, nsISupports* )       if ( SameCOMIdentity(rawTptr, rawUptr) )
 		                                                      ...
@@ -299,25 +296,44 @@ dont_QueryInterface( T* aRawPtr )
   }
 
 
-template <class T>
-struct
-nsCOMPtrQueryRequest
-  {
-    T*         mRawPtr;
-    nsresult*  mErrorPtr;
 
-    explicit
-    nsCOMPtrQueryRequest( T* aRawPtr, nsresult* error = 0 )
-        : mRawPtr(aRawPtr),
-          mErrorPtr(error)
-      {
-        // nothing else to do here
-      }
-  };
+class nsCOMPtr_helper
+		/*
+			An |nsCOMPtr_helper| transforms commonly called getters into typesafe forms
+			that are more convenient to call, and more efficient to use with |nsCOMPtr|s.
+			Good candidates for helpers are |QueryInterface()|, |CreateInstance()|, etc.
 
-typedef nsCOMPtrQueryRequest<nsISupports>       nsQueryInterface;
-typedef nsCOMPtrQueryRequest<nsIWeakReference>  nsQueryReferent;
+			Here are the rules for a helper:
+			  - it implements operator() to produce an interface pointer
+				- (except for its name) operator() is a valid [XP]COM `getter'
+				- that interface pointer it returns is already |AddRef()|ed (as from any good getter)
+				- it matches the type requested with the supplied |nsIID| argument
+				- it's constructor provides an optional |nsresult*| that |operator()| can fill
+					in with an error when it is executed
+					
+			See |class nsQueryInterface| for an example.
+		*/
+	{
+		public:
+			virtual nsresult operator()( const nsIID&, void** ) const = 0;
+	};
 
+class NS_EXPORT nsQueryInterface : public nsCOMPtr_helper
+	{
+		public:
+			nsQueryInterface( nsISupports* aRawPtr, nsresult* error )
+					: mRawPtr(aRawPtr),
+						mErrorPtr(error)
+				{
+					// nothing else to do here
+				}
+
+			virtual nsresult operator()( const nsIID& aIID, void** ) const;
+
+		private:
+			nsISupports*	mRawPtr;
+			nsresult*			mErrorPtr;
+	};
 
 inline
 const nsQueryInterface
@@ -326,12 +342,6 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
     return nsQueryInterface(aRawPtr, error);
   }
 
-inline
-const nsQueryReferent
-do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
-  {
-    return nsQueryReferent(aRawPtr, error);
-  }
 
 
   /**
@@ -416,8 +426,7 @@ class nsCOMPtr_base
 #endif
 
       NS_EXPORT void    assign_with_AddRef( nsISupports* );
-      NS_EXPORT void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
-      NS_EXPORT void    assign_with_QueryReferent( nsIWeakReference*, const nsIID&, nsresult* );
+			NS_EXPORT void		assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
       NS_EXPORT void**  begin_assignment();
 
     protected:
@@ -435,8 +444,9 @@ class nsCOMPtr
 #ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
     private:
       void    assign_with_AddRef( nsISupports* );
-      void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
-      void    assign_with_QueryReferent( nsIWeakReference*, const nsIID&, nsresult* );
+      void		assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
+//    void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
+//    void    assign_with_QueryReferent( nsIWeakReference*, const nsIID&, nsresult* );
       void**  begin_assignment();
 
     private:
@@ -464,17 +474,11 @@ class nsCOMPtr
           // nothing else to do here
         }
 
-      nsCOMPtr( const nsQueryInterface& aSmartPtr )
-          : NSCAP_CTOR_BASE(0)
-        {
-          assign_with_QueryInterface(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
-        }
-
-      nsCOMPtr( const nsQueryReferent& aSmartPtr )
-          : NSCAP_CTOR_BASE(0)
-        {
-          assign_with_QueryReferent(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
-        }
+			nsCOMPtr( const nsCOMPtr_helper& helper )
+					: NSCAP_CTOR_BASE(0)
+				{
+					assign_from_helper(helper, NS_GET_IID(T));
+				}
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
       void
@@ -534,19 +538,12 @@ class nsCOMPtr
           return *this;
         }
 
-      nsCOMPtr<T>&
-      operator=( const nsQueryInterface& rhs )
-        {
-          assign_with_QueryInterface(rhs.mRawPtr, nsCOMTypeInfo<T>::GetIID(), rhs.mErrorPtr);
-          return *this;
-        }
-
-      nsCOMPtr<T>&
-      operator=( const nsQueryReferent& rhs )
-        {
-          assign_with_QueryReferent(rhs.mRawPtr, nsCOMTypeInfo<T>::GetIID(), rhs.mErrorPtr);
-          return *this;
-        }
+			nsCOMPtr<T>&
+			operator=( const nsCOMPtr_helper& rhs )
+				{
+					assign_from_helper(rhs, NS_GET_IID(T));
+					return *this;
+				}
 
       nsCOMPtr<T>&
       operator=( const nsDontAddRef<T>& rhs )
@@ -635,39 +632,15 @@ nsCOMPtr<T>::assign_with_AddRef( nsISupports* rawPtr )
 
 template <class T>
 void
-nsCOMPtr<T>::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
-  {
-    nsresult status = NS_ERROR_NULL_POINTER;
-    T* newPtr;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &newPtr)) ) )
-      newPtr = 0;
-
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-
-    mRawPtr = newPtr;
-
-    if ( result )
-      *result = status;
-  }
-
-template <class T>
-void
-nsCOMPtr<T>::assign_with_QueryReferent( nsIWeakReference* rawPtr, const nsIID& iid, nsresult* result )
-  {
-    nsresult status = NS_ERROR_NULL_POINTER;
-    T* newPtr;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryReferent(iid, NSCAP_REINTERPRET_CAST(void**, &newPtr)) ) )
-      newPtr = 0;
-
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-
-    mRawPtr = newPtr;
-
-    if ( result )
-      *result = status;
-  }
+nsCOMPtr<T>::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& aIID )
+	{
+		T* newRawPtr;
+		if ( !NS_SUCCEEDED( helper(aIID, NSCAP_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+			newRawPtr = 0;
+		if ( mRawPtr )
+			NSCAP_RELEASE(mRawPtr);
+		mRawPtr = newRawPtr;
+	}
 
 template <class T>
 void**
@@ -711,6 +684,13 @@ class nsGetterAddRefs
         {
           // nothing else to do
         }
+
+#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
+		 ~nsGetterAddRefs()
+		 		{
+		 			// mTargetSmartPtr.Assert_NoQueryNeeded();
+		 		}
+#endif
 
       operator void**()
         {
@@ -837,19 +817,5 @@ SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
   {
     return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
   }
-
-
-#if 0
-    // We don't really need this routine, and it confuses Solaris ... so out it goes
-  template <class DestinationType>
-  inline
-  nsresult
-  CallQueryInterface( nsISupports* aSource, nsCOMPtr<DestinationType>* aDestination )
-      // a type-safe shortcut for calling the |QueryInterface()| member function
-    {
-      return CallQueryInterface(aSource, getter_AddRefs(*aDestination));
-        // this calls the _other_ |CallQueryInterface|
-    }
-#endif
 
 #endif // !defined(nsCOMPtr_h___)

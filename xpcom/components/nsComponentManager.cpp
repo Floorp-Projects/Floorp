@@ -90,6 +90,21 @@ static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 #define USE_REGISTRY
 #endif /* USE_NSREG */
 
+
+nsresult
+nsCreateInstance::operator()( const nsIID& aIID, void** answer ) const
+	{
+		nsresult status;
+		if ( mFactory )
+			status = mFactory->CreateInstance(mOuter, aIID, answer);
+		else
+			status = NS_ERROR_NULL_POINTER;
+
+		if ( mErrorPtr )
+			*mErrorPtr = status;
+		return status;
+	}
+
 /* prototypes for the Mac */
 PRBool
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);

@@ -26,6 +26,6 @@
 #include "nsIWeakReference.h"
 #include "nsCOMPtr.h"
 
-typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
+// typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
 
 #endif

@@ -17,7 +17,21 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIWeakReference.h"
+// #include "nsIWeakReference.h"
+
+nsresult
+nsQueryInterface::operator()( const nsIID& aIID, void** answer ) const
+	{
+		nsresult status;
+		if ( mRawPtr )
+			status = mRawPtr->QueryInterface(aIID, answer);
+		else
+			status = NS_ERROR_NULL_POINTER;
+		
+		if ( mErrorPtr )
+			*mErrorPtr = status;
+		return status;
+	}
 
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
 nsCOMPtr_base::~nsCOMPtr_base()
@@ -37,6 +51,19 @@ nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
     mRawPtr = rawPtr;
 	}
 
+void
+nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& iid )
+	{
+		nsISupports* newRawPtr;
+		if ( !NS_SUCCEEDED( helper(iid, NSCAP_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+			newRawPtr = 0;
+		if ( mRawPtr )
+			NSCAP_RELEASE(mRawPtr);
+		mRawPtr = newRawPtr;
+	}
+
+
+#if 0
 void
 nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
   {
@@ -70,6 +97,7 @@ nsCOMPtr_base::assign_with_QueryReferent( nsIWeakReference* weakPtr, const nsIID
     if ( result )
       *result = status;
   }
+#endif
 
 void**
 nsCOMPtr_base::begin_assignment()
