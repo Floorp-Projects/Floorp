@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -46,6 +46,9 @@ class nsMIMEService : public nsIMIMEService {
     NS_IMETHOD RemoveMIMEInfo(nsIMIMEInfo *aMIMEInfo);
 
 private:
+    nsresult AddMapping(const char* mimeType, 
+                        const char* extension,
+                        const char* description);
     nsresult InitFromURI(nsIURI *aUri);
     nsresult InitFromFile(const char *aFileName);
     nsresult InitFromHack();
