@@ -348,11 +348,6 @@ public:
                          const nsRect& aDamageRect,
                          PRBool aImmediate = PR_FALSE) const;
 
-  // Helper function to compute the overflow area for a frame,
-  // taking into account overflow:hidden and any outline present.
-  // This sets the frame state bit FRAME_OUTSIDE_CHILDREN if necessary.
-  void ComputeOverflowArea(nsRect& aOverflowArea, const nsRect& aCombinedChildren);
-
   // Helper function to return the index in parent of the frame's content
   // object. Returns -1 on error or if the frame doesn't have a content object
   static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);

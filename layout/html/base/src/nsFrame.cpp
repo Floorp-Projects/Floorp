@@ -755,41 +755,6 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 }
 
 void
-nsFrame::ComputeOverflowArea(nsRect& aOverflowArea, const nsRect& aCombinedChildren)
-{
-  // WARNING: aCombinedChildren might be the same rect as aOverflowArea
-  const nsStyleDisplay* display;
-  ::GetStyleData(mStyleContext, &display);
-  
-  nsRect r(0, 0, mRect.width, mRect.height);
-  // Add in the outline width, which overflows our border area
-  const nsStyleOutline* outline;
-  ::GetStyleData(mStyleContext, &outline);
-
-  nscoord width;
-  outline->GetOutlineWidth(width);
-  r.Inflate(width, width);
-
-  // overflow:hidden doesn't need to take account of the child area
-  if (NS_STYLE_OVERFLOW_HIDDEN == display->mOverflow
-      && (display->IsBlockLevel() || display->IsFloating())) {
-    aOverflowArea = r;
-  } else {
-    aOverflowArea.UnionRect(aCombinedChildren, r);
-  }
-
-  // Set state bit to indicate whether there is any overflow
-  if (aOverflowArea.x < 0
-      || aOverflowArea.y < 0
-      || aOverflowArea.XMost() > mRect.width
-      || aOverflowArea.YMost() > mRect.height) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  } else {
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  }
-}
-
-void
 nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
 {
   // 'overflow-clip' only applies to block-level elements and replaced

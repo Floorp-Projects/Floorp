@@ -1280,8 +1280,16 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
       mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
       aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
 
+      // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+      if ((aDesiredSize.mOverflowArea.x < 0) ||
+          (aDesiredSize.mOverflowArea.y < 0) ||
+          (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) ||
+          (aDesiredSize.mOverflowArea.YMost() > aDesiredSize.height)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      } else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
 #endif
-      // Don't update the overflow area state here. It's done by line layout.
       return rv;
     }
   }
@@ -1317,8 +1325,16 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
     // Factor the absolutely positioned child bounds into the overflow area
     aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
 
+    // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+    if ((aDesiredSize.mOverflowArea.x < 0) ||
+        (aDesiredSize.mOverflowArea.y < 0) ||
+        (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) ||
+        (aDesiredSize.mOverflowArea.YMost() > aDesiredSize.height)) {
+      mState |= NS_FRAME_OUTSIDE_CHILDREN;
+    } else {
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    }
 #endif
-    // Don't update the overflow area state here. It's done by line layout.
   }
 
   return rv;
