@@ -1539,9 +1539,8 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
               globalObject->GetContext(getter_AddRefs(context));
               if (!context) {
                 NS_CreateScriptContext(globalObject, getter_AddRefs(context));
+                globalObject->SetNewDocument(aDocument);
               }
-
-              globalObject->SetNewDocument(aDocument);
 
               nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(keyElement);
               void* scriptObject;
