@@ -54,6 +54,8 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -63,6 +65,8 @@
 
 // Common helper routines (also used by the context menu code)
 #include "CHGeckoUtils.h"
+
+#import "CHBrowserView.h"
 
 static void FindOptionWithContentID(nsIDOMHTMLSelectElement* aSel, PRUint32 aID, nsIDOMHTMLOptionElement** aResult)
 {
@@ -211,6 +215,13 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
 
     PRInt32 xDelta = clientX - left;
     PRInt32 yDelta = top + height - clientY;
+
+    nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([[[mBrowserController getBrowserWrapper] getBrowserView] getContentWindow]);
+    PRInt32 scrollX, scrollY;
+    window->GetScrollX(&scrollX);
+    window->GetScrollY(&scrollY);
+    xDelta += scrollX; // Normal direction.
+    yDelta -= scrollY; // Remember, y is flipped.
     
 #define XMENUOFFSET 20
 #define MENUHEIGHT 20
