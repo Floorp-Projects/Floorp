@@ -405,7 +405,6 @@ int processEventLoop(WebShellInitContext * initContext)
     
     if (::PeekMessage(&msg, nsnull, 0, 0, PM_NOREMOVE)) {
         if (::GetMessage(&msg, nsnull, 0, 0)) {
-            printMsg(&msg, msgFile);
             wasHandled = PR_FALSE;
             ::NS_HandleEmbeddingEvent(msg, wasHandled);
             if (!wasHandled) {
