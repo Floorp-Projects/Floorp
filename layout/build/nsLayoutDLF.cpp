@@ -16,19 +16,17 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
+#include "nsLayoutModule.h"
 #include "nsIComponentManager.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsString.h"
 #include "nsLayoutCID.h"
-#include "nsCOMPtr.h"
 #include "prprf.h"
-#include "plstr.h"
 
 #include "nsRDFCID.h"
 #include "nsIXULParentDocument.h"
@@ -42,9 +40,6 @@
 // Factory code for creating variations on html documents
 
 #undef NOISY_REGISTRY
-
-// URL for the "user agent" style sheet
-#define UA_CSS_URL "resource:/res/ua.css"
 
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_IID(kIDocStreamLoaderFactoryIID, NS_IDOCSTREAMLOADERFACTORY_IID);
@@ -171,8 +166,6 @@ public:
   nsresult CreateRDFDocument(nsISupports*,
                              nsCOMPtr<nsIDocument>*,
                              nsCOMPtr<nsIDocumentViewer>*);
-
-  static nsICSSStyleSheet* gUAStyleSheet;
 };
 
 nsresult
@@ -188,8 +181,6 @@ NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
   }
   return it->QueryInterface(kIDocumentLoaderFactoryIID, (void**)aResult);
 }
-
-nsICSSStyleSheet* nsLayoutDLF::gUAStyleSheet;
 
 nsLayoutDLF::nsLayoutDLF()
 {
@@ -314,18 +305,13 @@ nsLayoutDLF::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
 {
   nsresult rv = NS_ERROR_FAILURE;  
 
-  // Load the UA style sheet if we haven't already done that
-  if (nsnull == gUAStyleSheet) {
-    InitUAStyleSheet();
-  }
-
   do {
     nsCOMPtr<nsIDocumentViewer> docv;
     // Create the document viewer
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(gUAStyleSheet);
+    docv->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
 
     // Bind the document to the Content Viewer
     rv = docv->BindToDocument(aDocument, aCommand);
@@ -360,11 +346,6 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
   }
 #endif
 
-  // Load the UA style sheet if we haven't already done that
-  if (nsnull == gUAStyleSheet) {
-    InitUAStyleSheet();
-  }
-
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIDocumentViewer> docv;
   do {
@@ -379,7 +360,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(gUAStyleSheet);
+    docv->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
 
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
@@ -434,10 +415,6 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
   xulDocumentInfo = do_QueryInterface(aExtraInfo);
     
   // Load the UA style sheet if we haven't already done that
-  if (nsnull == gUAStyleSheet) {
-    InitUAStyleSheet();
-  }
-
   do {
     // Create the XUL document
     rv = nsComponentManager::CreateInstance(kXULDocumentCID, nsnull,
@@ -452,7 +429,7 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
     rv = NS_NewDocumentViewer(getter_AddRefs(*docv));
     if (NS_FAILED(rv))
       break;
-    (*docv)->SetUAStyleSheet(gUAStyleSheet);
+    (*docv)->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
 
     // We are capable of being a XUL overlay. If we have extra
     // info that supports the XUL document info interface, then we'll
@@ -561,38 +538,13 @@ nsLayoutDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
   return status;
 }
 
-// XXX move this into nsDocumentViewer.cpp
-nsresult
-nsLayoutDLF::InitUAStyleSheet()
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull == gUAStyleSheet) {  // snarf one
-    nsIURI* uaURL;
-    rv = NS_NewURI(&uaURL, UA_CSS_URL); // XXX this bites, fix it
-    if (NS_SUCCEEDED(rv)) {
-      nsICSSLoader* cssLoader;
-      rv = NS_NewCSSLoader(&cssLoader);
-      if (NS_SUCCEEDED(rv) && cssLoader) {
-        PRBool complete;
-        rv = cssLoader->LoadAgentSheet(uaURL, gUAStyleSheet, complete, nsnull, nsnull);
-        NS_RELEASE(cssLoader);
-        if (NS_FAILED(rv)) {
-          printf("open of %s failed: error=%x\n", UA_CSS_URL, rv);
-          rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
-        }
-      }
-      NS_RELEASE(uaURL);
-    }
-  }
-  return rv;
-}
-
 static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 static nsresult
-RegisterTypes(nsIComponentManager* cm, const char* aCommand,
-              const char* aPath, char** aTypes)
+RegisterTypes(nsIComponentManager* aCompMgr,
+              const char* aCommand,
+              nsIFileSpec* aPath,
+              char** aTypes)
 {
   nsresult rv = NS_OK;
   while (*aTypes) {
@@ -604,8 +556,8 @@ RegisterTypes(nsIComponentManager* cm, const char* aCommand,
 #ifdef NOISY_REGISTRY
     printf("Register %s => %s\n", progid, aPath);
 #endif
-    rv = cm->RegisterComponent(kDocumentFactoryImplCID,
-                               "Layout", progid, aPath, PR_TRUE, PR_TRUE);
+    rv = aCompMgr->RegisterComponentSpec(kDocumentFactoryImplCID, "Layout",
+                                         progid, aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
       break;
     }
@@ -614,43 +566,43 @@ RegisterTypes(nsIComponentManager* cm, const char* aCommand,
 }
 
 nsresult
-NS_RegisterDocumentFactories(nsIComponentManager* cm, const char* aPath)
+nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
+                                          nsIFileSpec* aPath)
 {
   nsresult rv;
 
   do {
-    rv = RegisterTypes(cm, "view", aPath, gHTMLTypes);
+    rv = RegisterTypes(aCompMgr, "view", aPath, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view-source", aPath, gHTMLTypes);
+    rv = RegisterTypes(aCompMgr, "view-source", aPath, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view", aPath, gXMLTypes);
+    rv = RegisterTypes(aCompMgr, "view", aPath, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view-source", aPath, gXMLTypes);
+    rv = RegisterTypes(aCompMgr, "view-source", aPath, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view", aPath, gImageTypes);
+    rv = RegisterTypes(aCompMgr, "view", aPath, gImageTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view", aPath, gPluginTypes);
+    rv = RegisterTypes(aCompMgr, "view", aPath, gPluginTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view", aPath, gRDFTypes);
+    rv = RegisterTypes(aCompMgr, "view", aPath, gRDFTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, "view-source", aPath, gRDFTypes);
+    rv = RegisterTypes(aCompMgr, "view-source", aPath, gRDFTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);
   return rv;
 }
 
-nsresult
-NS_UnregisterDocumentFactories(nsIComponentManager* cm, const char* aPath)
+void
+nsLayoutModule::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
+                                            nsIFileSpec* aPath)
 {
-  nsresult rv;
-  rv = cm->UnregisterComponent(kDocumentFactoryImplCID, aPath);
-  return rv;
+  aCompMgr->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
 }

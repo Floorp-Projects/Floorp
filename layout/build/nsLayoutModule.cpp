@@ -23,7 +23,6 @@
 #include "nsNeckoUtil.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
-
 #include "nsHTMLAtoms.h"
 #include "nsCSSKeywords.h"  // to addref/release table
 #include "nsCSSProps.h"     // to addref/release table
@@ -33,7 +32,6 @@
 #include "nsXULAtoms.h"
 #endif
 #include "nsLayoutAtoms.h"
-
 #include "nsDOMCID.h"
 #include "nsIScriptContext.h"
 #include "nsINameSpaceManager.h"
@@ -185,6 +183,7 @@ nsLayoutModule::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsHTMLAtoms::AddRefAtoms();
+  nsLayoutAtoms::AddRefAtoms();
 #ifdef INCLUDE_XUL
   nsXULAtoms::AddRefAtoms();
 #endif
@@ -232,6 +231,7 @@ nsLayoutModule::Shutdown()
   nsCSSKeywords::ReleaseTable();
   nsCSSAtoms::ReleaseAtoms();
   nsHTMLAtoms::ReleaseAtoms();
+  nsLayoutAtoms::ReleaseAtoms();
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
 #endif

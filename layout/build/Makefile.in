@@ -31,6 +31,7 @@ REQUIRES	= xpcom raptor dom js
 CPPSRCS		= \
 		nsLayoutDLF.cpp \
 		nsLayoutFactory.cpp \
+		nsLayoutModule.cpp \
 		$(NULL)
 
 ifndef MKSHLIB_FORCE_ALL
@@ -73,7 +74,8 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-INCLUDES	+= -I$(srcdir)/../html/base/src -I$(srcdir)/../xul/content/src
+INCLUDES	+= -I$(srcdir)/../html/base/src \
+		   -I$(srcdir)/../xul/content/src
 
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
