@@ -84,6 +84,7 @@ var browserRemoteControl = {
                                                 null,
                                                 Components.interfaces.nsIMsgCompType.New,
                                                 Components.interfaces.nsIMsgCompFormat.Default,
+                                                null,
                                                 null);
         }
         return(true);
