@@ -25,6 +25,11 @@ LIBRARY_NAME = converters
 
 IS_COMPONENT = 1
 
+
+EXPORTS = \
+	nsMultiMixedConv.h  \
+	$(NULL)
+
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =                              \
