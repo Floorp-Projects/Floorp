@@ -21,7 +21,7 @@
 #include <StringCompare.h>
 #include <Resources.h>
 #include <Folders.h>
-#include <LowMem.h>
+#include <Appearance.h>
 #if TARGET_CARBON
 #include <ControlDefinitions.h>
 #endif
@@ -79,10 +79,9 @@ nsListBox::~nsListBox()
 void nsListBox::GetRectForMacControl(nsRect &outRect)
 {
 	outRect = mBounds;
-	outRect.x = 2;
-	outRect.y = 5;
-	outRect.width -= 4;
-	outRect.height -= 6;
+	outRect.x = outRect.y = 0;
+	// inset to make space for border
+	outRect.Deflate(2, 2);
 }
 
 //-------------------------------------------------------------------------
@@ -115,11 +114,11 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
 		{
 			SetMultipleSelection(mMultiSelect);
 			StartDraw();
-			::LSetDrawingMode(mVisible, mListHandle);
-			::SetControlMinimum(mControl, 1);
-			::SetControlMaximum(mControl, 0);
-			::SetControlValue(mControl, 0);
-  		EndDraw();
+				::LSetDrawingMode(mVisible, mListHandle);
+				::SetControlMinimum(mControl, 0);
+				::SetControlMaximum(mControl, 0);
+				::SetControlValue(mControl, 0);
+  			EndDraw();
 		}
 		else
 			res = NS_ERROR_FAILURE;
@@ -518,20 +517,17 @@ PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 		case NS_MOUSE_LEFT_DOUBLECLICK:
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			eventHandled = Inherited::DispatchMouseEvent(aEvent);
-			if (!eventHandled) {
+			if (!eventHandled && mListHandle != NULL) {
+				EventRecord* macEvent = (EventRecord*)aEvent.nativeMsg;
+	
 				StartDraw();
-				Point thePoint;
-				thePoint.h = aEvent.point.x;
-				thePoint.v = aEvent.point.y;
-//			::TrackControl(mControl, thePoint, nil);
-				if (mListHandle)
-				{
-					EventRecord* osEvent = (EventRecord*)aEvent.nativeMsg;
-					EventModifiers modifiers = (osEvent ? osEvent->modifiers : 0);
-					::LClick(thePoint, modifiers, mListHandle);
-					ControlChanged(GetSelectedIndex());
-				}
+					Point where = macEvent->where;
+					::GlobalToLocal(&where);
+					::HandleControlClick(mControl, where, macEvent->modifiers, NULL);
+					// ::LClick(where, macEvent->modifiers, mListHandle);
 				EndDraw();
+
+				ControlChanged(GetSelectedIndex());
 				
 				// since the mouseUp event will be consumed by TrackControl,
 				// simulate the mouse up event immediately.
@@ -542,4 +538,31 @@ PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 			break;
 	}
 	return (Inherited::DispatchMouseEvent(aEvent));
+}
+
+PRBool nsListBox::DispatchWindowEvent(nsGUIEvent& aEvent)
+{
+	PRBool eventHandled = Inherited::DispatchWindowEvent(aEvent);
+	if (!eventHandled && mListHandle != NULL) {
+		if (aEvent.message == NS_KEY_DOWN) {
+	  		EventRecord* macEvent = (EventRecord*)aEvent.nativeMsg;
+			SInt16 keyCode = (macEvent->message & keyCodeMask) >> 8;
+			SInt16 charCode = (macEvent->message & charCodeMask);
+			StartDraw();
+			::HandleControlKey(mControl, keyCode, charCode, macEvent->modifiers);
+			EndDraw();
+			eventHandled = PR_TRUE;
+		} else {
+			switch (aEvent.message) {
+			case NS_GOTFOCUS:
+			case NS_LOSTFOCUS:
+				StartDraw();
+				::SetKeyboardFocus(mWindowPtr, mControl, (aEvent.message == NS_GOTFOCUS ? kControlFocusNextPart : kControlFocusNoPart));
+				EndDraw();
+				eventHandled = PR_TRUE;
+				break;
+			}
+		}
+	}
+	return eventHandled;
 }

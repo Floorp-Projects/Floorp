@@ -69,6 +69,7 @@ public:
 
 	// nsWindow
 	virtual PRBool			DispatchMouseEvent(nsMouseEvent &aEvent);
+	virtual PRBool			DispatchWindowEvent(nsGUIEvent& aEvent);
 
 protected:
 	// nsMacControl
