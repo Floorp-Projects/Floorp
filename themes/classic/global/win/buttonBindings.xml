@@ -6,7 +6,7 @@
 
   <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-      <xul:box class="button-box-1" autostretch="never" flex="1">
+      <xul:box class="button-box-1" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1">
           <xul:image class="button-icon" inherits="src"/>
           <xul:box class="button-box-text" flex="1" autostretch="never">
@@ -19,7 +19,7 @@
 
   <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-      <xul:box class="button-box-1" autostretch="never" flex="1">
+      <xul:box class="button-box-1" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1">
           <xul:box class="button-box-text" flex="1" autostretch="never">
             <xul:text class="button-text" inherits="disabled,value,accesskey,crop"/>
@@ -32,7 +32,7 @@
   
   <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-      <xul:box class="button-box-1" autostretch="never" flex="1">
+      <xul:box class="button-box-1" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
           <xul:image class="button-icon" inherits="src"/>
           <xul:box class="button-box-text" flex="1" autostretch="never">
@@ -45,7 +45,7 @@
 
   <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-      <xul:box class="button-box-1" autostretch="never" flex="1">
+      <xul:box class="button-box-1" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
           <xul:box class="button-box-text" flex="1" autostretch="never">
             <xul:text class="button-text" inherits="disabled,value,accesskey,crop"/>
