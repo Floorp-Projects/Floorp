@@ -347,7 +347,7 @@ NS_IMETHODIMP nsViewManager :: GetFrameRate(PRUint32 &aRate)
 
 NS_IMETHODIMP nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
 {
-  nsresult  rv;
+  nsresult  rv = NS_OK;
 
   if (aFrameRate != mFrameRate)
   {
@@ -372,11 +372,7 @@ NS_IMETHODIMP nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
         mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
 #endif
     }
-    else
-      rv = NS_OK;
   }
-  else
-    rv = NS_OK;
 
   return rv;
 }

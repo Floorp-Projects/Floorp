@@ -347,35 +347,33 @@ NS_IMETHODIMP nsViewManager2::GetFrameRate(PRUint32 &aRate)
 
 NS_IMETHODIMP nsViewManager2::SetFrameRate(PRUint32 aFrameRate)
 {
-	nsresult  rv;
+	nsresult  rv = NS_OK;
 
 	if (aFrameRate != mFrameRate)
-		{
+	{
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
 			if (nsnull != mTimer)
-				{
+			{
 					mTimer->Cancel();     //XXX this should not be necessary. MMP
 					NS_RELEASE(mTimer);
-				}
+			}
 #endif
 
 			mFrameRate = aFrameRate;
 			mTrueFrameRate = aFrameRate;
 
 			if (mFrameRate != 0)
-				{
+			{
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
 					rv = NS_NewTimer(&mTimer);
 
 					if (NS_OK == rv)
 						mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
 #endif
-				}
-			else
-				rv = NS_OK;
-		}
-	else
-		rv = NS_OK;
+			}
+			
+	}
+
 
 	return rv;
 }
