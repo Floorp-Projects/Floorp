@@ -34,6 +34,8 @@ CPP_OBJS=\
 	.\$(OBJDIR)\nsXULCommandDispatcher.obj    \
 	.\$(OBJDIR)\nsXULControllers.obj    \
 	.\$(OBJDIR)\nsXULPopupListener.obj        \
+        .\$(OBJDIR)\nsXULPrototypeDocument.obj    \
+        .\$(OBJDIR)\nsXULPrototypeCache.obj       \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \
@@ -43,11 +45,10 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULContentUtils.obj         \
         .\$(OBJDIR)\nsXULContentSink.obj          \
         .\$(OBJDIR)\nsXULDocument.obj             \
-        .\$(OBJDIR)\nsXULDocumentInfo.obj	  \
         .\$(OBJDIR)\nsXULKeyListener.obj          \
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
-        .\$(OBJDIR)\nsXULEditorElement.obj          \
+        .\$(OBJDIR)\nsXULEditorElement.obj        \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements

@@ -17,35 +17,35 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
 
-#ifndef nsIXULContentSink_h__
-#define nsIXULContentSink_h__
 
-#include "nsIXMLContentSink.h"
 
-class nsIDocument;
+ */
+
+#ifndef nsIXULPrototypeCache_h__
+#define nsIXULPrototypeCache_h__
+
+#include "nsISupports.h"
+class nsIURI;
 class nsIXULPrototypeDocument;
 
-// {E49AA620-C16C-11d2-A6AA-00104BDE6048}
-#define NS_IXULCONTENTSINK_IID \
-{ 0xe49aa620, 0xc16c, 0x11d2, { 0xa6, 0xaa, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
+// {3A0A0FC0-8349-11d3-BE47-00104BDE6048}
+#define NS_IXULPROTOTYPECACHE_IID \
+{ 0x3a0a0fc0, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
 
-class nsIXULContentSink : public nsIXMLContentSink
+class nsIXULPrototypeCache : public nsISupports
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPECACHE_IID);
 
-    /**
-     * Initialize the content sink, giving it an nsIDocument object
-     * with which to communicate with the outside world, and an
-     * nsIXULPrototypeDocument to build.
-     */
-    NS_IMETHOD Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aPrototype) = 0;
+    NS_IMETHOD Get(nsIURI* aURI, nsIXULPrototypeDocument** _result) = 0;
+    NS_IMETHOD Put(nsIURI* aURI, nsIXULPrototypeDocument* aDocument) = 0;
 };
 
 
-nsresult
-NS_NewXULContentSink(nsIXULContentSink** aResult);
+extern NS_IMETHODIMP
+NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-#endif // nsIXULContentSink_h__
+#endif // nsIXULPrototypeCache_h__

@@ -36,14 +36,14 @@ class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class.
 
 class nsForwardReference;
 class nsIAtom;
-class nsIRDFCompositeDataSource;
-class nsIRDFContent;
-class nsIRDFContentModelBuilder;
-class nsISupportsArray;
-class nsIRDFResource;
+class nsIContentViewerContainer;
 class nsIDOMElement;
 class nsIDOMHTMLFormElement;
-class nsIChannel;
+class nsIPrincipal;
+class nsIRDFContentModelBuilder;
+class nsIRDFResource;
+class nsISupportsArray;
+class nsIXULPrototypeDocument;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -101,7 +101,13 @@ public:
 
   NS_IMETHOD ResolveForwardReferences() = 0;
 
-  NS_IMETHOD GetChannel(nsIChannel **aResult) = 0;
+  /**
+   * Create a XUL document from a prototype
+   */
+  NS_IMETHOD CreateFromPrototype(const char* aCommand,
+                                 nsIXULPrototypeDocument* aPrototype,
+                                 nsIPrincipal* aPrincipal,
+                                 nsIContentViewerContainer* aContainer) = 0;
 };
 
 // factory functions

@@ -1658,17 +1658,19 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         nsXPIDLCString resourceCStr;
         rv = aChild->GetValue(getter_Copies(resourceCStr));
         if (NS_FAILED(rv)) return rv;
-        
-        const PRUnichar *unicodeString;
-        tag->GetUnicode(&unicodeString);
-        nsAutoString tagStr(unicodeString);
-        char* tagCStr = tagStr.ToNewCString();
+
+        nsAutoString tagstr;
+        tag->ToString(tagstr);
+
+        nsAutoString templatestr;
+        aTemplateNode->GetAttribute(kNameSpaceID_None, kIdAtom, templatestr);
 
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfgeneric[%p] build-content-from-template %s [%s]",
-                this, tagCStr, (const char*) resourceCStr));
-
-        nsCRT::free(tagCStr);
+               ("rdfgeneric[%p] build-content-from-template %s (template='%s') [%s]",
+                this,
+                (const char*) nsCAutoString(tagstr),
+                (const char*) nsCAutoString(templatestr),
+                (const char*) resourceCStr));
     }
 #endif
 

@@ -31,6 +31,15 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMPaintListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMFormListener.h"
+#include "nsIDOMMenuListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIRDFNode.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -96,6 +105,14 @@ protected:
     static nsIAtom* kEventsAtom;
     static nsIAtom* kTargetsAtom;
 
+    struct EventHandlerMapEntry {
+        const char*  mAttributeName;
+        nsIAtom*     mAttributeAtom;
+        const nsIID* mHandlerIID;
+    };
+
+    static EventHandlerMapEntry kEventHandlerMap[];
+
 public:
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -150,6 +167,9 @@ public:
 
     NS_IMETHOD
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
+
+    NS_IMETHOD
+    GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
 };
 
 nsrefcnt nsXULContentUtils::gRefCnt;
@@ -159,6 +179,53 @@ nsIDateTimeFormat* nsXULContentUtils::gFormat;
 
 nsIAtom* nsXULContentUtils::kEventsAtom;
 nsIAtom* nsXULContentUtils::kTargetsAtom;
+
+nsXULContentUtils::EventHandlerMapEntry
+nsXULContentUtils::kEventHandlerMap[] = {
+    { "onclick",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "ondblclick",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmousedown",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmouseup",       nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmouseover",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmouseout",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+
+    { "onmousemove",     nsnull, &NS_GET_IID(nsIDOMMouseMotionListener) },
+
+    { "onkeydown",       nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "onkeyup",         nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "onkeypress",      nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+
+    { "onload",          nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onunload",        nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onabort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onerror",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+
+    { "oncreate",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "ondestroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "oncommandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+
+    { "onfocus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+    { "onblur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+
+    { "onsubmit",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onreset",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onchange",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onselect",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "oninput",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+
+    { "onpaint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
+    
+    { "ondragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondraggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+
+    { nsnull,            nsnull, nsnull                                 }
+};
+
 
 //------------------------------------------------------------------------
 // Constructors n' stuff
@@ -194,6 +261,12 @@ nsXULContentUtils::Init()
 
         kEventsAtom  = NS_NewAtom("events");
         kTargetsAtom = NS_NewAtom("targets");
+
+        EventHandlerMapEntry* entry = kEventHandlerMap;
+        while (entry->mAttributeName) {
+            entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
+            ++entry;
+        }
     }
     return NS_OK;
 }
@@ -216,6 +289,12 @@ nsXULContentUtils::~nsXULContentUtils()
 
         NS_IF_RELEASE(kEventsAtom);
         NS_IF_RELEASE(kTargetsAtom);
+
+        EventHandlerMapEntry* entry = kEventHandlerMap;
+        while (entry->mAttributeName) {
+            NS_IF_RELEASE(entry->mAttributeAtom);
+            ++entry;
+        }
     }
 }
 
@@ -852,3 +931,20 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULContentUtils::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
+{
+    *aFound = PR_FALSE;
+
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeAtom) {
+        if (entry->mAttributeAtom == aName) {
+            *aIID = *entry->mHandlerIID;
+            *aFound = PR_TRUE;
+            break;
+        }
+        ++entry;
+    }
+
+    return NS_OK;
+}

@@ -27,6 +27,8 @@
 #define nsIXULContent_h__
 
 #include "nsISupports.h"
+class nsIAtom;
+class nsString;
 
 // {39C5ECC0-5C47-11d3-BE36-00104BDE6048}
 #define NS_IXULCONTENT_IID \
@@ -84,6 +86,11 @@ public:
      * @aResult the result
      */
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aResult) = 0;
+
+    /**
+     * Add a script event listener to the element.
+     */
+    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID) = 0;
 
     /**
      * Evil rotten hack to make mailnews work. They assume that we

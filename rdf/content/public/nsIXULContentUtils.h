@@ -95,6 +95,9 @@ public:
 
     NS_IMETHOD
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement) = 0;
+
+    NS_IMETHOD
+    GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound) = 0;
 };
 
 
