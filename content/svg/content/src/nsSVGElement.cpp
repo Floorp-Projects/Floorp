@@ -107,10 +107,6 @@ nsSVGElement::Init()
   rv = nsSVGAttributes::Create(this,&mAttributes);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;  
-  rv = mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
   nsCOMPtr<nsINodeInfo> ni;
 
   // Create mapped properties:
@@ -168,13 +164,9 @@ nsSVGElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                       const nsAString& aValue,
                       PRBool aNotify)
 {
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-
-    mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsINodeInfo> ni;
-    nimgr->GetNodeInfo(aName, nsnull, aNameSpaceID, getter_AddRefs(ni));
+    mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, nsnull, aNameSpaceID,
+                                              getter_AddRefs(ni));
 
     return SetAttr(ni, aValue, aNotify);
 }
