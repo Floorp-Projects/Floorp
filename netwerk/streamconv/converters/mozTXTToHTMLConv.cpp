@@ -928,32 +928,36 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     }
   }
 
-  if    // x^2 -> sup
+  // x^2  =>  x<sup>2</sup>,   also handle powers x^-2,  x^0.5
+  // implement regular expression /[\dA-Za-z\)\]}]\^-?\d+(\.\d+)*[^\dA-Za-z]/
+  if    
     (
-      text1 == '^' // Performance increase
-        &&
-        (
-          ItMatchesDelimited(aInString, aInLength,
-                             NS_LITERAL_STRING("^").get(), 1,
-                             LT_DIGIT, LT_DIGIT) ||
-          ItMatchesDelimited(aInString, aInLength,
-                             NS_LITERAL_STRING("^").get(), 1,
-                             LT_ALPHA, LT_DIGIT) ||
-          ItMatchesDelimited(&aInString[1], aInLength - 1,
-                             NS_LITERAL_STRING("^").get(), 1,
-                             LT_IGNORE, LT_DIGIT)
-            && text0 == ')'
-        )
+      text1 == '^'
+      && 
+      (
+        nsCRT::IsAsciiDigit(text0) || nsCRT::IsAsciiAlpha(text0) || 
+        text0 == ')' || text0 == ']' || text0 == '}'
+      )
+      &&
+      (
+        2 < aInLength && nsCRT::IsAsciiDigit(aInString[2]) ||
+        3 < aInLength && aInString[2] == '-' && nsCRT::IsAsciiDigit(aInString[3])
+      )
     )
   {
     // Find first non-digit
-    PRInt32 delimPos = 3;  // 3 = Position after first digit after "^"
-    for (; delimPos < aInLength &&
-         nsCRT::IsAsciiDigit(aInString[PRUint32(delimPos)]); delimPos++)
+    PRInt32 delimPos = 3;  // skip "^" and first digit (or '-')
+    for (; delimPos < aInLength
+           &&
+           (
+             nsCRT::IsAsciiDigit(aInString[delimPos]) || 
+             aInString[delimPos] == '.' && delimPos + 1 < aInLength &&
+               nsCRT::IsAsciiDigit(aInString[delimPos + 1])
+           );
+         delimPos++)
       ;
-    // Note: (delimPos == text.Length()) could be true
 
-    if (nsCRT::IsAsciiAlpha(aInString[PRUint32(delimPos)]))
+    if (delimPos < aInLength && nsCRT::IsAsciiAlpha(aInString[delimPos]))
     {
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_FALSE;
