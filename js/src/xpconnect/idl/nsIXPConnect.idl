@@ -345,5 +345,10 @@ interface nsIXPConnect : nsISupports
                           in PRBool showThisProps);
     void debugDumpEvalInJSStackFrame(in PRUint32 aFrameNumber,
                                      in string aSourceText);
+    /**
+    * Set fallback JSContext to use when xpconnect can't find an appropriate
+    * context to use to execute JavaScript.
+    */
+    void setSafeJSContextForCurrentThread(in JSContextPtr cx);
 };
 

@@ -325,6 +325,14 @@ xpcPerThreadData::GetSafeJSContext()
     return mSafeJSContext;
 }        
 
+nsresult
+xpcPerThreadData::SetSafeJSContext(JSContext *cx)
+{
+    NS_ASSERTION(!mSafeJSContext, "SetSafeJSContext called too late!");
+    mSafeJSContext = cx;
+    return NS_OK;
+}
+
 JS_STATIC_DLL_CALLBACK(void)
 xpc_ThreadDataDtorCB(void* ptr)
 {

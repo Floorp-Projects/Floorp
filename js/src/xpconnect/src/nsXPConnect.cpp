@@ -799,7 +799,15 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
 #endif
     return NS_OK;
 }        
-        
+
+NS_IMETHODIMP
+nsXPConnect::SetSafeJSContextForCurrentThread(JSContext *cx)
+{
+    xpcPerThreadData* data = xpcPerThreadData::GetData();
+    if(!data)
+        return NS_ERROR_FAILURE;
+    return data->SetSafeJSContext(cx);
+}
 
 #ifdef DEBUG
 /* These are here to be callable from a debugger */

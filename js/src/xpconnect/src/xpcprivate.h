@@ -1356,6 +1356,7 @@ public:
     void             SetException(nsIXPCException* aException);
 
     JSContext*       GetSafeJSContext();
+    nsresult         SetSafeJSContext(JSContext *cx);
     nsDeque*         GetJSContextStack();
 
     PRBool IsValid() const;
