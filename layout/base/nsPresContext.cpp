@@ -219,14 +219,14 @@ nsPresContext::GetBaseURL(nsIURL*& aURL)
 
 nsIStyleContext*
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
-                                      nsIFrame* aParentFrame,
+                                      nsIStyleContext* aParentContext,
                                       PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
 
   nsIStyleSet* set = mShell->GetStyleSet();
   if (nsnull != set) {
-    result = set->ResolveStyleFor(this, aContent, aParentFrame, aForceUnique);
+    result = set->ResolveStyleFor(this, aContent, aParentContext, aForceUnique);
     NS_RELEASE(set);
   }
 
@@ -234,15 +234,16 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
 }
 
 nsIStyleContext*
-nsPresContext::ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                            nsIFrame* aParentFrame,
+nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                                            nsIAtom* aPseudoTag,
+                                            nsIStyleContext* aParentContext,
                                             PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
 
   nsIStyleSet* set = mShell->GetStyleSet();
   if (nsnull != set) {
-    result = set->ResolvePseudoStyleFor(this, aPseudoTag, aParentFrame, aForceUnique);
+    result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag, aParentContext, aForceUnique);
     NS_RELEASE(set);
   }
 
@@ -250,15 +251,16 @@ nsPresContext::ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
 }
 
 nsIStyleContext*
-nsPresContext::ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                          nsIFrame* aParentFrame,
+nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
+                                          nsIAtom* aPseudoTag,
+                                          nsIStyleContext* aParentContext,
                                           PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
 
   nsIStyleSet* set = mShell->GetStyleSet();
   if (nsnull != set) {
-    result = set->ProbePseudoStyleFor(this, aPseudoTag, aParentFrame, aForceUnique);
+    result = set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag, aParentContext, aForceUnique);
     NS_RELEASE(set);
   }
 
