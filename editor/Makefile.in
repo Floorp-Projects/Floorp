@@ -22,10 +22,13 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public core
+DIRS = public
 
+ifdef MOZ_EDITOR
+DIRS += core
 ifdef ENABLE_TESTS
 DIRS += tests
+endif
 endif
 
 include $(topsrcdir)/config/config.mk
