@@ -5,7 +5,7 @@ INSTALL: Installation instructions for XMLterm source code
 
 *NOTE* Check the XMLterm web site <http://xmlterm.org> for updates.
 
-7 Mar 2000
+15 Mar 2000
 
 QUICK BUILD INSTRUCTIONS (Linux/Solaris)
 ----------------------------------------
@@ -153,29 +153,7 @@ your shell initialization file (.profile/.cshrc). This will enable you to use
 commands such as "xmlterm", "xls", and "xcat" easily.
 
 
-6. Using the lightweight "geckoterm" stand-alone program
---------------------------------------------------------
-
-Step 3 also creates an executable called "geckoterm" in the "mozilla/dist/bin"
-directory. This is a lightweight program implementing XMLterm using the Gecko
-layout engine only, without the added baggage of the full browser. To use it,
-type the following command in the "mozilla/dist/bin" directory:
-
-./run-mozilla.sh geckoterm
-
-This will create an XMLterm window. Click on this window to give it focus
-before typing Unix commands.
-
-Notes:
-     a) The Mozilla component registry may need to be updated by running
-        xmlterm using mozilla at least once (as in step 4) before trying to
-        run "geckoterm".
-
-     b) At present, the "geckoterm" executable works only with the GTK front
-        end.
-
-
-7. Stand-alone mode (optional)
+6. Stand-alone mode (optional)
 ------------------------------
 
 Although XMLterm resides in the Mozilla source tree, portions of it are

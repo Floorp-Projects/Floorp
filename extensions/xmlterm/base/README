@@ -1,7 +1,7 @@
  base --- core source code for XMLterm and LineTerm
 
 XMLterm may be invoked in one of two ways:
- 1. By loading the URL "chrome://xmlterm/content/xmlterm.html" in mozilla, or
+ 1. By loading "-chrome chrome://xmlterm/content/xmlterm.xul" in mozilla, or
  2. By running the stand-alone executable "../geckoterm/xmlterm".
 The diagram below shows the control-flow/layering hierarchy for both ways
 of invoking XMLterm.
@@ -30,8 +30,8 @@ of invoking XMLterm.
                        (pseudo-TTY/shell)
 
 
-1 Mar 2000
-===========================================================================
+15 Mar 2000
+============================================================================
 FILES:
 
 The core source code for XMLterm in this directory consists of two distinct
