@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.15 2004/07/13 05:44:47 nelsonb%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.16 2004/07/13 05:49:48 nelsonb%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -901,174 +901,180 @@ sec_asn1e_write_header (sec_asn1e_state *state)
 
 
 static void
-sec_asn1e_write_contents (sec_asn1e_state *state,
+sec_asn1e_write_contents_from_buf (sec_asn1e_state *state,
 			  const char *buf, unsigned long len)
 {
     PORT_Assert (state->place == duringContents);
+    PORT_Assert (state->top->from_buf);
+    PORT_Assert (state->may_stream && !state->disallowStreaming);
 
-    if (state->top->from_buf) {
-	/*
-	 * Probably they just turned on "take from buf", but have not
-	 * yet given us any bytes.  If there is nothing in the buffer
-	 * then we have nothing to do but return and wait.
-	 */
-	if (buf == NULL || len == 0) {
-	    state->top->status = needBytes;
-	    return;
-	}
-	/*
-	 * We are streaming, reading from a passed-in buffer.
-	 * This means we are encoding a simple string or an ANY.
-	 * For the former, we need to put out a substring, with its
-	 * own identifier and length.  For an ANY, we just write it
-	 * out as is (our caller is required to ensure that it
-	 * is a properly encoded entity).
-	 */
-	PORT_Assert (state->is_string);		/* includes ANY */
-	if (state->underlying_kind != SEC_ASN1_ANY) {
-	    unsigned char identifier;
-
-	    /*
-	     * Create the identifier based on underlying_kind.  We cannot
-	     * use tag_number and tag_modifiers because this can be an
-	     * implicitly encoded field.  In that case, the underlying
-	     * substrings *are* encoded with their real tag.
-	     */
-	    identifier = (unsigned char)state->underlying_kind & SEC_ASN1_TAG_MASK;
-	    /*
-	     * The underlying kind should just be a simple string; there
-	     * should be no bits like CONTEXT_SPECIFIC or CONSTRUCTED set.
-	     */
-	    PORT_Assert ((identifier & SEC_ASN1_TAGNUM_MASK) == identifier);
-	    /*
-	     * Write out the tag and length for the substring.
-	     */
-	    sec_asn1e_write_identifier_bytes (state, identifier);
-	    if (state->underlying_kind == SEC_ASN1_BIT_STRING) {
-		char byte;
-		/*
-		 * Assume we have a length in bytes but we need to output
-		 * a proper bit string.  This interface only works for bit
-		 * strings that are full multiples of 8.  If support for
-		 * real, variable length bit strings is needed then the
-		 * caller will have to know to pass in a bit length instead
-		 * of a byte length and then this code will have to
-		 * perform the encoding necessary (length written is length
-		 * in bytes plus 1, and the first octet of string is the
-		 * number of bits remaining between the end of the bit
-		 * string and the next byte boundary).
-		 */
-		sec_asn1e_write_length_bytes (state, len + 1, PR_FALSE);
-		byte = 0;
-		sec_asn1e_write_contents_bytes (state, &byte, 1);
-	    } else {
-		sec_asn1e_write_length_bytes (state, len, PR_FALSE);
-	    }
-	}
-	sec_asn1e_write_contents_bytes (state, buf, len);
+    /*
+     * Probably they just turned on "take from buf", but have not
+     * yet given us any bytes.  If there is nothing in the buffer
+     * then we have nothing to do but return and wait.
+     */
+    if (buf == NULL || len == 0) {
 	state->top->status = needBytes;
-    } else {
-	switch (state->underlying_kind) {
-	  case SEC_ASN1_SET:
-	  case SEC_ASN1_SEQUENCE:
-	    PORT_Assert (0);
-	    break;
-
-	  case SEC_ASN1_BIT_STRING:
-	    {
-		SECItem *item;
-		char rem;
-
-		item = (SECItem *)state->src;
-		len = (item->len + 7) >> 3;
-		rem = (unsigned char)((len << 3) - item->len);	/* remaining bits */
-		sec_asn1e_write_contents_bytes (state, &rem, 1);
-		sec_asn1e_write_contents_bytes (state, (char *) item->data,
-						len);
-	    }
-	    break;
-
-	  case SEC_ASN1_BMP_STRING:
-	    /* The number of bytes must be divisable by 2 */
-	    if ((((SECItem *)state->src)->len) % 2) {
-		SEC_ASN1EncoderContext *cx;
-
-		cx = state->top;
-		cx->status = encodeError;
-		break;
-	    }
-	    /* otherwise, fall through to write the content */
-	    goto process_string;
-
-	  case SEC_ASN1_UNIVERSAL_STRING:
-	    /* The number of bytes must be divisable by 4 */
-	    if ((((SECItem *)state->src)->len) % 4) {
-		SEC_ASN1EncoderContext *cx;
-
-		cx = state->top;
-		cx->status = encodeError;
-		break;
-	    }
-	    /* otherwise, fall through to write the content */
-	    goto process_string;
-
-	  case SEC_ASN1_INTEGER:
-	   /* ASN.1 INTEGERs are signed.  If the source is an unsigned
-	    * integer, the encoder will need to handle the conversion here.
-	    */
-	    {
-		unsigned int blen;
-		unsigned char *buf;
-		SECItemType integerType;
-		blen = ((SECItem *)state->src)->len;
-		buf = ((SECItem *)state->src)->data;
-		integerType = ((SECItem *)state->src)->type;
-		while (blen > 0) {
-		    if (*buf & 0x80 && integerType == siUnsignedInteger) {
-			char zero = 0; /* write a leading 0 */
-			sec_asn1e_write_contents_bytes(state, &zero, 1);
-			/* and then the remaining buffer */
-			sec_asn1e_write_contents_bytes(state, 
-			                               (char *)buf, blen); 
-			break;
-		    } 
-		    /* Check three possibilities:
-		     * 1.  No leading zeros, msb of MSB is not 1;
-		     * 2.  The number is zero itself;
-		     * 3.  Encoding a signed integer with a leading zero,
-		     *     keep the zero so that the number is positive.
-		     */
-		    if (*buf != 0 || 
-		         blen == 1 || 
-		         (buf[1] & 0x80 && integerType != siUnsignedInteger) ) 
-		    {
-			sec_asn1e_write_contents_bytes(state, 
-			                               (char *)buf, blen); 
-			break;
-		    }
-		    /* byte is 0, continue */
-		    buf++;
-		    blen--;
-		}
-	    }
-	    /* done with this content */
-	    break;
-			
-process_string:			
-	  default:
-	    {
-		SECItem *item;
-
-		item = (SECItem *)state->src;
-		sec_asn1e_write_contents_bytes (state, (char *) item->data,
-						item->len);
-	    }
-	    break;
-	}
-	state->place = afterContents;
+	return;
     }
+    /*
+     * We are streaming, reading from a passed-in buffer.
+     * This means we are encoding a simple string or an ANY.
+     * For the former, we need to put out a substring, with its
+     * own identifier and length.  For an ANY, we just write it
+     * out as is (our caller is required to ensure that it
+     * is a properly encoded entity).
+     */
+    PORT_Assert (state->is_string);		/* includes ANY */
+    if (state->underlying_kind != SEC_ASN1_ANY) {
+	unsigned char identifier;
+
+	/*
+	 * Create the identifier based on underlying_kind.  We cannot
+	 * use tag_number and tag_modifiers because this can be an
+	 * implicitly encoded field.  In that case, the underlying
+	 * substrings *are* encoded with their real tag.
+	 */
+	identifier = (unsigned char)state->underlying_kind & SEC_ASN1_TAG_MASK;
+	/*
+	 * The underlying kind should just be a simple string; there
+	 * should be no bits like CONTEXT_SPECIFIC or CONSTRUCTED set.
+	 */
+	PORT_Assert ((identifier & SEC_ASN1_TAGNUM_MASK) == identifier);
+	/*
+	 * Write out the tag and length for the substring.
+	 */
+	sec_asn1e_write_identifier_bytes (state, identifier);
+	if (state->underlying_kind == SEC_ASN1_BIT_STRING) {
+	    char byte;
+	    /*
+	     * Assume we have a length in bytes but we need to output
+	     * a proper bit string.  This interface only works for bit
+	     * strings that are full multiples of 8.  If support for
+	     * real, variable length bit strings is needed then the
+	     * caller will have to know to pass in a bit length instead
+	     * of a byte length and then this code will have to
+	     * perform the encoding necessary (length written is length
+	     * in bytes plus 1, and the first octet of string is the
+	     * number of bits remaining between the end of the bit
+	     * string and the next byte boundary).
+	     */
+	    sec_asn1e_write_length_bytes (state, len + 1, PR_FALSE);
+	    byte = 0;
+	    sec_asn1e_write_contents_bytes (state, &byte, 1);
+	} else {
+	    sec_asn1e_write_length_bytes (state, len, PR_FALSE);
+	}
+    }
+    sec_asn1e_write_contents_bytes (state, buf, len);
+    state->top->status = needBytes;
 }
 
+static void
+sec_asn1e_write_contents (sec_asn1e_state *state)
+{
+    unsigned long len = 0;
+
+    PORT_Assert (state->place == duringContents);
+
+    switch (state->underlying_kind) {
+      case SEC_ASN1_SET:
+      case SEC_ASN1_SEQUENCE:
+	PORT_Assert (0);
+	break;
+
+      case SEC_ASN1_BIT_STRING:
+	{
+	    SECItem *item;
+	    char rem;
+
+	    item = (SECItem *)state->src;
+	    len = (item->len + 7) >> 3;
+	    rem = (unsigned char)((len << 3) - item->len); /* remaining bits */
+	    sec_asn1e_write_contents_bytes (state, &rem, 1);
+	    sec_asn1e_write_contents_bytes (state, (char *) item->data, len);
+	}
+	break;
+
+      case SEC_ASN1_BMP_STRING:
+	/* The number of bytes must be divisable by 2 */
+	if ((((SECItem *)state->src)->len) % 2) {
+	    SEC_ASN1EncoderContext *cx;
+
+	    cx = state->top;
+	    cx->status = encodeError;
+	    break;
+	}
+	/* otherwise, fall through to write the content */
+	goto process_string;
+
+      case SEC_ASN1_UNIVERSAL_STRING:
+	/* The number of bytes must be divisable by 4 */
+	if ((((SECItem *)state->src)->len) % 4) {
+	    SEC_ASN1EncoderContext *cx;
+
+	    cx = state->top;
+	    cx->status = encodeError;
+	    break;
+	}
+	/* otherwise, fall through to write the content */
+	goto process_string;
+
+      case SEC_ASN1_INTEGER:
+       /* ASN.1 INTEGERs are signed.  If the source is an unsigned
+	* integer, the encoder will need to handle the conversion here.
+	*/
+	{
+	    unsigned int blen;
+	    unsigned char *buf;
+	    SECItemType integerType;
+	    blen = ((SECItem *)state->src)->len;
+	    buf = ((SECItem *)state->src)->data;
+	    integerType = ((SECItem *)state->src)->type;
+	    while (blen > 0) {
+		if (*buf & 0x80 && integerType == siUnsignedInteger) {
+		    char zero = 0; /* write a leading 0 */
+		    sec_asn1e_write_contents_bytes(state, &zero, 1);
+		    /* and then the remaining buffer */
+		    sec_asn1e_write_contents_bytes(state, 
+						   (char *)buf, blen); 
+		    break;
+		} 
+		/* Check three possibilities:
+		 * 1.  No leading zeros, msb of MSB is not 1;
+		 * 2.  The number is zero itself;
+		 * 3.  Encoding a signed integer with a leading zero,
+		 *     keep the zero so that the number is positive.
+		 */
+		if (*buf != 0 || 
+		     blen == 1 || 
+		     (buf[1] & 0x80 && integerType != siUnsignedInteger) ) 
+		{
+		    sec_asn1e_write_contents_bytes(state, 
+						   (char *)buf, blen); 
+		    break;
+		}
+		/* byte is 0, continue */
+		buf++;
+		blen--;
+	    }
+	}
+	/* done with this content */
+	break;
+			
+process_string:			
+      default:
+	{
+	    SECItem *item;
+
+	    item = (SECItem *)state->src;
+	    sec_asn1e_write_contents_bytes (state, (char *) item->data,
+					    item->len);
+	}
+	break;
+    }
+    state->place = afterContents;
+}
 
 /*
  * We are doing a SET OF or SEQUENCE OF, and have just finished an item.
@@ -1209,7 +1215,10 @@ SEC_ASN1EncoderUpdate (SEC_ASN1EncoderContext *cx,
 	    sec_asn1e_write_header (state);
 	    break;
 	  case duringContents:
-	    sec_asn1e_write_contents (state, buf, len);
+	    if (cx->from_buf)
+		sec_asn1e_write_contents_from_buf (state, buf, len);
+	    else
+		sec_asn1e_write_contents (state);
 	    break;
 	  case duringGroup:
 	    sec_asn1e_next_in_group (state);
