@@ -86,7 +86,7 @@ interface nsIFileSpec : nsISupports
 	boolean isHidden();
 
 	readonly attribute unsigned long fileSize;
-	readonly attribute unsigned long diskSpaceAvailable;
+	readonly attribute unsigned long long diskSpaceAvailable;
 
 	void appendRelativeUnixPath(in string relativePath);
 
