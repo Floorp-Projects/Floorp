@@ -79,12 +79,16 @@ typedef struct JSInlineFrame {
 } JSInlineFrame;
 
 /* JS stack frame flags. */
-#define JSFRAME_CONSTRUCTING   0x1  /* frame is for a constructor invocation */
-#define JSFRAME_ASSIGNING      0x2  /* a complex (not simplex JOF_ASSIGNING) op
+#define JSFRAME_CONSTRUCTING  0x01  /* frame is for a constructor invocation */
+#define JSFRAME_INTERNAL      0x02  /* internal call, not invoked by a script */
+#define JSFRAME_SKIP_CALLER   0x04  /* skip one link when evaluating f.caller
+                                       for this invocation of f */
+#define JSFRAME_ASSIGNING     0x08  /* a complex (not simplex JOF_ASSIGNING) op
                                        is currently assigning to a property */
-#define JSFRAME_DEBUGGER       0x4  /* frame for JS_EvaluateInStackFrame */
-#define JSFRAME_EVAL           0x8  /* frame for obj_eval */
-#define JSFRAME_SPECIAL        0xc  /* special evaluation frame flags */
+#define JSFRAME_DEBUGGER      0x10  /* frame for JS_EvaluateInStackFrame */
+#define JSFRAME_EVAL          0x20  /* frame for obj_eval */
+#define JSFRAME_SPECIAL       0x30  /* special evaluation frame flags */
+
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
 
@@ -243,12 +247,11 @@ extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, uintN flags);
 
 /*
- * Consolidated js_Invoke flags.  NB: JSINVOKE_CONSTRUCT must be the same bit
- * as JSFRAME_CONSTRUCTING (see js_Invoke's initialization of frame.flags --
- * there's a #error check to ensure this identity in jsinterp.c).
+ * Consolidated js_Invoke flags simply rename the low JSFRAME_* flags.
  */
-#define JSINVOKE_CONSTRUCT      0x1     /* construct object rather than call */
-#define JSINVOKE_INTERNAL       0x2     /* internal call, not from a script */
+#define JSINVOKE_CONSTRUCT      JSFRAME_CONSTRUCTING
+#define JSINVOKE_INTERNAL       JSFRAME_INTERNAL
+#define JSINVOKE_SKIP_CALLER    JSFRAME_SKIP_CALLER
 
 /*
  * "Internal" calls may come from C or C++ code using a JSContext on which no

@@ -661,10 +661,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
     vp = sp - (2 + argc);
     v = *vp;
     frame.rval = JSVAL_VOID;
-#if JSINVOKE_CONSTRUCT != JSFRAME_CONSTRUCTING
-# error "constructor invoke/frame flag mismatch!"
-#endif
-    frame.flags = (flags & JSINVOKE_CONSTRUCT);
+    frame.flags = flags;
 
     /* A callee must be an object reference. */
     if (JSVAL_IS_PRIMITIVE(v))
@@ -958,7 +955,7 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
      * other native code has the chance to check.
      *
      * Contrast this non-native (scripted) case with native getter and setter
-     * accesses, where the native itself must do an acess check, if security
+     * accesses, where the native itself must do an access check, if security
      * policies requires it.  We make a checkAccess or checkObjectAccess call
      * back to the embedding program only in those cases where we're not going
      * to call an embedding-defined native function, getter, setter, or class

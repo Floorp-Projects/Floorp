@@ -930,6 +930,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       case FUN_CALLER:
+        while (fp && (fp->flags & JSFRAME_SKIP_CALLER) && fp->down)
+            fp = fp->down;
         if (fp && fp->down && fp->down->fun && fp->down->argv)
             *vp = fp->down->argv[-2];
         else
@@ -1477,7 +1479,7 @@ fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fp = cx->fp;
     oldsp = fp->sp;
     fp->sp = sp;
-    ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL | JSINVOKE_SKIP_CALLER);
 
     /* Store rval and pop stack back to our frame's sp. */
     *rval = fp->sp[-1];
@@ -1545,7 +1547,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     /* Allocate stack space for fval, obj, and the args. */
-    argc = (uintN)length;
+    argc = (uintN)JS_MIN(length, ARGC_LIMIT - 1);
     sp = js_AllocStack(cx, 2 + argc, &mark);
     if (!sp)
         return JS_FALSE;
@@ -1564,7 +1566,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fp = cx->fp;
     oldsp = fp->sp;
     fp->sp = sp;
-    ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL | JSINVOKE_SKIP_CALLER);
 
     /* Store rval and pop stack back to our frame's sp. */
     *rval = fp->sp[-1];
@@ -1596,14 +1598,11 @@ js_IsIdentifier(JSString *str)
     jschar *s, c;
 
     n = JSSTRING_LENGTH(str);
+    if (n == 0)
+        return JS_FALSE;
     s = JSSTRING_CHARS(str);
     c = *s;
-    /*
-     * We don't handle unicode escape sequences here
-     * because they won't be in the input string.
-     * (Right?)
-     */
-    if (n == 0 || !JS_ISIDENT_START(c))
+    if (!JS_ISIDENT_START(c))
         return JS_FALSE;
     for (n--; n != 0; n--) {
         c = *++s;
