@@ -187,8 +187,13 @@ public:
     //
     nsresult GetName(PRUnichar **);
     nsresult Dispatch(nsSocketRequest *);
-    nsresult OnProgress(nsSocketRequest *, nsISupports *ctxt, PRUint32 offset);
-    nsresult OnStatus(nsSocketRequest *, nsISupports *ctxt, nsresult message);
+
+    // 
+    // status/progress helpers
+    //
+    void OnStatusWithProgress(nsSocketRequest *, nsISupports *ctxt, nsresult message, PRUint32 offset);
+    void OnStatus_Locked(nsSocketRequest *, nsISupports *ctxt, nsresult message);
+    void OnStatus_Locked(nsresult message); // with either request
 
     //
     // blocking stream helpers
@@ -202,8 +207,6 @@ protected:
     nsresult doBlockingConnection();
     nsresult doReadWrite(PRInt16 aSelectFlags);
     nsresult doResolveHost();
-
-    nsresult OnStatus(nsresult message); // with either request
 
     void CompleteAsyncRead();
     void CompleteAsyncWrite();

@@ -442,11 +442,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             PR_AtomicIncrement(&mService->mConnectedTransports);
             mWasConnected = PR_TRUE;
 
-            // Send status message
-            OnStatus(NS_NET_STATUS_CONNECTED_TO);
-
             // Initialize select flags
             mSelectFlags = PR_POLL_EXCEPT;
+
+            // Send status message
+            OnStatus_Locked(NS_NET_STATUS_CONNECTED_TO);
             break;
             
         case eSocketState_Error:
@@ -498,7 +498,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             // only send a status if doResolveHost is going to do some
             // resolution
             if (mStatus != NS_OK)
-                OnStatus(NS_NET_STATUS_RESOLVING_HOST);
+                OnStatus_Locked(NS_NET_STATUS_RESOLVING_HOST);
             break;
 
         case eSocketState_WaitConnect:
@@ -507,7 +507,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             mStatus = doConnection(aSelectFlags);
 
             // Send status message
-            OnStatus(NS_NET_STATUS_CONNECTING_TO);
+            OnStatus_Locked(NS_NET_STATUS_CONNECTING_TO);
             break;
 
         case eSocketState_WaitReadWrite:
@@ -1307,6 +1307,9 @@ NS_IMETHODIMP
 nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
                                             PRUint32               aFlags)
 {
+    // Enter the socket transport lock...
+    nsAutoMonitor mon(mMonitor);
+
     mNotificationCallbacks = aCallbacks;
     mProgressSink = 0;
 
@@ -1378,14 +1381,68 @@ nsSocketTransport::Dispatch(nsSocketRequest *req)
     return rv;
 }
 
-nsresult
-nsSocketTransport::OnProgress(nsSocketRequest *req, nsISupports *ctx, PRUint32 offset)
+
+//
+// --------------------------------------------------------------------------
+// status/progress helpers...
+// --------------------------------------------------------------------------
+//
+
+void
+nsSocketTransport::OnStatusWithProgress(nsSocketRequest *req,
+                                        nsISupports *ctxt,
+                                        nsresult message,
+                                        PRUint32 offset)
 {
-    if (mProgressSink)
-        // we don't have content length info at the socket level
-        // just pass 0 through.
-        mProgressSink->OnProgress(req, ctx, offset, 0);
-    return NS_OK;
+    nsCOMPtr<nsIProgressEventSink> progressSink;
+    // must only access mProgressSink from within the transport's monitor,
+    // and we must not hold the monitor while calling out to our listener or
+    // else we'd risk dead-locking.
+    {
+        nsAutoMonitor mon(mMonitor);
+        progressSink = mProgressSink;
+    }
+    if (!progressSink)
+        return;
+
+    progressSink->OnStatus(req, ctxt, message, NS_ConvertASCIItoUCS2(mHostName).get());
+    progressSink->OnProgress(req, ctxt, offset, 0);
+}
+
+void
+nsSocketTransport::OnStatus_Locked(nsSocketRequest *req,
+                                   nsISupports *ctxt,
+                                   nsresult message)
+{
+    if (!mProgressSink)
+        return;
+
+    // no reason to report this status message again.
+    if (message == mLastOnStatusMsg)
+        return;
+    mLastOnStatusMsg = message;
+
+    nsCOMPtr<nsIProgressEventSink> progressSink = mProgressSink;
+    // must only access mProgressSink from within the transport's monitor,
+    // and we must not hold the monitor while calling out to our listener or
+    // else we risk dead-locking.
+    PR_ExitMonitor(mMonitor);
+    progressSink->OnStatus(req, ctxt, message, NS_ConvertASCIItoUCS2(mHostName).get());
+    PR_EnterMonitor(mMonitor);
+}
+
+void
+nsSocketTransport::OnStatus_Locked(nsresult message)
+{
+    nsSocketRequest *req;
+
+    if (mReadRequest)
+        req = mReadRequest;
+    else
+        req = mWriteRequest;
+
+    if (req)
+        OnStatus_Locked(req, req->Context(), message);
 }
 
 //
@@ -1835,38 +1892,6 @@ nsSocketTransport::SetSocketConnectTimeout (PRUint32   a_Seconds)
     return NS_OK;
 }
 
-nsresult
-nsSocketTransport::OnStatus(nsSocketRequest *req, nsISupports *ctxt, nsresult message)
-{
-    if (!mProgressSink)
-        return NS_ERROR_FAILURE;
-
-    // no reason to report this status message again.
-    if (message == mLastOnStatusMsg)
-        return NS_OK;
-
-    mLastOnStatusMsg = message;
-
-    nsAutoString host; host.AssignWithConversion(mHostName);
-    return mProgressSink->OnStatus(req, ctxt, message, host.get());
-}
-
-nsresult
-nsSocketTransport::OnStatus(nsresult message)
-{
-    nsSocketRequest *req;
-
-    if (mReadRequest)
-        req = mReadRequest;
-    else
-        req = mWriteRequest;
-
-    if (req)
-        return OnStatus(req, req->Context(), message);
-
-    return NS_OK;
-}
-
 PRFileDesc *
 nsSocketTransport::GetConnectedSocket()
 {
@@ -2117,12 +2142,6 @@ tryRead:
         LOG(("nsSocketBIS::Read [this=%x] PR_Read failed  [error=%x]\n", this, PR_GetError()));
         goto end;
     }
-    /*
-    if (mTransport && total) {
-        mTransport->OnStatus(this, mContext, NS_NET_STATUS_RECEIVING_FROM);
-        mTransport->OnProgress(this, mContext, mOffset);
-    }
-    */
     *aBytesRead = (PRUint32) total;
 end:
     ReleaseSocket(sock);
@@ -2227,12 +2246,6 @@ tryWrite:
     if ((PRUint32)total != aCount)
         goto tryWrite;
 
-    /*
-    if (mTransport && total) {
-        mTransport->OnStatus(this, mContext, NS_NET_STATUS_SENDING_TO);
-        mTransport->OnProgress(this, mContext, mOffset);
-    }
-    */
     *aBytesWritten = (PRUint32) total;
 end:
     ReleaseSocket(sock);
@@ -2800,10 +2813,10 @@ nsSocketReadRequest::OnRead()
             rv = NS_BASE_STREAM_WOULD_BLOCK;
         }
 
-        if (mTransport && total) {
-            mTransport->OnStatus(this, mContext, NS_NET_STATUS_RECEIVING_FROM);
-            mTransport->OnProgress(this, mContext, offset);
-        }
+        if (mTransport && total)
+            mTransport->OnStatusWithProgress(this, mContext,
+                                             NS_NET_STATUS_RECEIVING_FROM,
+                                             offset);
     }
     return rv;
 }
@@ -2898,10 +2911,10 @@ nsSocketWriteRequest::OnWrite()
             rv = NS_BASE_STREAM_WOULD_BLOCK;
         }
 
-        if (mTransport && total) {
-            mTransport->OnStatus(this, mContext, NS_NET_STATUS_SENDING_TO);
-            mTransport->OnProgress(this, mContext, offset);
-        }
+        if (mTransport && total)
+            mTransport->OnStatusWithProgress(this, mContext,
+                                             NS_NET_STATUS_SENDING_TO,
+                                             offset);
     }
     return rv;
 }
