@@ -60,8 +60,9 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
+#else
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsIViewManager.h"
 #include "nsIXULContentSink.h"
 #include "nsLayoutCID.h"
