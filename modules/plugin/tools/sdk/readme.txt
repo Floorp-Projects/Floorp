@@ -46,6 +46,6 @@ native methods callable from the JavaScript and uses native window drawings.
 
 Scriptable samples require generation of .xpt files which should reside
 in the Mozilla Components directory. To make sure Mozilla is aware of 
-the presence of the new .xpt file one may look at xpi.dat. To force
-Mozilla to re-scan the Components directory xpi.dat should be removed
+the presence of the new .xpt file one may look at xpti.dat. To force
+Mozilla to re-scan the Components directory xpti.dat should be removed
 before Mozilla is started.
