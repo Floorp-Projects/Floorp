@@ -413,7 +413,7 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent)
 	map = obj->map;
 	if (map->ops == &js_ObjectOps) {
 	    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
-		obj = fp->fun->object;
+                obj = fp->fun ? fp->fun->object : NULL;
 		if (obj)
 		    map = obj->map;
 	    }
