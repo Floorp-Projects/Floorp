@@ -1,13 +1,21 @@
 
 (defun js-state-transition (action-results)
   (assert-type action-results (tuple t bool))
-  (values action-results (if (second action-results) '($re) '($non-re))))
+  (values action-results (if (second action-results) '($re) '($div))))
 
 (defun js-metaparse (string &key trace)
   (lexer-metaparse *ll* string :initial-state '($re) :state-transition #'js-state-transition :trace trace))
 
 (defun js-pmetaparse (string &key (stream t) trace)
   (lexer-pmetaparse *ll* string :initial-state '($re) :state-transition #'js-state-transition :stream stream :trace trace))
+
+
+(defun translate-number (data)
+  (cond
+   ((or (float64? data) (float32? data)) data)
+   ((eq (first data) 'l:long) (list 'j:long (second data)))
+   ((eq (first data) 'l:u-long) (list 'j:u-long (second data)))
+   (t (error "Bad number token: ~S" data))))
 
 
 ; Convert the results of the lexer's actions into a token suitable for the parser.
@@ -17,13 +25,17 @@
     (values *end-marker* nil))
    ((stringp token-value)
     (values (if line-break (terminal-lf-terminal '$string) '$string) token-value))
+   ((or (float64? token-value) (float32? token-value))
+    (values (if line-break (terminal-lf-terminal '$number) '$number) token-value))
+   ((eq token-value :negated-min-long)
+    (values (if line-break (terminal-lf-terminal '$negated-min-long) '$negated-min-long) nil))
    (t
     (let ((data (second token-value)))
       (multiple-value-bind (token token-arg)
                            (ecase (first token-value)
                              (l:identifier (values '$identifier data))
                              ((l:keyword l:punctuator) (values (intern (string-upcase data)) nil))
-                             (l:number (values '$number data))
+                             ((l:long l:u-long) (values '$number (translate-number token-value)))
                              (l:regular-expression (values '$regular-expression data)))
         (when line-break
           (setq token (terminal-lf-terminal token)))
@@ -74,17 +86,20 @@
                       token2 nil
                       token2-arg nil)
                 (let* ((lexer-state (cond
-                                     (prev-number-token '$unit)
-                                     ((or (state-transition state '/) (state-transition state '/=)) '$non-re)
+                                     (prev-number-token '$num)
+                                     ((or (state-transition state '/) (state-transition state '/=)) '$div)
                                      (t '$re)))
                        (token-value (get-next-token-value lexer-state))
                        (line-break nil))
                   (when (eq token-value :line-break)
-                    (when (eq lexer-state '$unit)
-                      (setq lexer-state '$non-re))
+                    (when (eq lexer-state '$num)
+                      (setq lexer-state '$div))
                     (setq token-value (get-next-token-value lexer-state))
                     (setq line-break t))
-                  (setq prev-number-token (and (consp token-value) (eq (car token-value) 'l:number)))
+                  (setq prev-number-token (or (float64? token-value)
+                                              (float32? token-value)
+                                              (eq token-value :negated-min-long)
+                                              (and (consp token-value) (member (car token-value) '(l:long l:u-long)))))
                   (multiple-value-setq (token token-arg) (js-lexer-results-to-token token-value line-break)))))
             (setq transition (state-transition state token))
             (unless transition
