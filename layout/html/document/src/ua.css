@@ -1052,8 +1052,8 @@ select[size="1"] option[-moz-option-selected] {
 }
 
 select[size="1"][disabled] option[-moz-option-selected] {
-  color:yellow;
-  background-color:green;
+  color:rgb(153,153,153); 
+  background-color:rgb(204,204,204); 
 }
 
 select[multiple] option[-moz-option-selected] {
