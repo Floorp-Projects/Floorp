@@ -2495,7 +2495,7 @@ function toDownloadManager()
     dlmgrWindow.focus();
   }
   else {
-    dlmgr.open(window, null);
+    window.openDialog("chrome://browser/content/downloadmanager/downloadmanager.xul", "Downloads", "chrome");
   }
 }
   
@@ -3197,3 +3197,43 @@ nsBrowserContentListener.prototype =
     parentContentListener: null
 }
 
+function openSidebar(aElt) {
+  var sidebar = document.getElementById("sidebar");
+  var sidebarSplitter = document.getElementById("sidebar-splitter");
+
+  if (aElt.checked) {
+    aElt.checked = false;
+    sidebar.hidden = true;
+    sidebarSplitter.hidden = true;
+    return;
+  }
+  
+  aElt.checked = true;
+
+  if (sidebar.hidden) {
+    // Can't use .hidden = false here, since that will remove the attr.
+    // and we need it to exist so we can persist its value.
+    sidebar.setAttribute("hidden", "false");
+    sidebarSplitter.setAttribute("hidden", "false");
+  }
+  var url = aElt.getAttribute("sidebarurl");
+  sidebar.setAttribute("src", url);
+}
+
+function goPreferences(containerID, paneURL, itemID)
+{
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+  //check for an existing pref window and focus it; it's not application modal
+  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+  var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
+  if (lastPrefWindow)
+    lastPrefWindow.focus();
+  else {
+    var features = "chrome,titlebar,resizable";
+    openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
+               features, paneURL, containerID, itemID);
+  }
+}

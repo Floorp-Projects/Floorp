@@ -76,36 +76,6 @@ function goPageSetup(domwin, printSettings)
   return true;
 }
 
-function goPreferences(containerID, paneURL, itemID)
-{
-  var resizable;
-  var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                       .getService(Components.interfaces.nsIPrefBranch);
-  try {
-    // We are resizable ONLY if in box debugging mode, because in
-    // this special debug mode it is often impossible to see the 
-    // content of the debug panel in order to disable debug mode.
-    resizable = pref.getBoolPref("xul.debug.box");
-  }
-  catch (e) {
-    resizable = false;
-  }
-
-  //check for an existing pref window and focus it; it's not application modal
-  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
-  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
-  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
-  var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
-  if (lastPrefWindow)
-    lastPrefWindow.focus();
-  else {
-    var resizability = resizable ? "yes" : "no";
-    var features = "chrome,titlebar,resizable=" + resizability;
-    openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
-               features, paneURL, containerID, itemID);
-  }
-}
-
 function goToggleToolbar( id, elementID )
 {
   var toolbar = document.getElementById( id );
