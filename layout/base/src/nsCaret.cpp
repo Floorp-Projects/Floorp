@@ -205,6 +205,17 @@ NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
 }
 
 //-----------------------------------------------------------------------------
+NS_IMETHODIMP nsCaret::GetCaretDOMSelection(nsISelection **aDOMSel)
+{
+  nsCOMPtr<nsISelection> sel(do_QueryReferent(mDomSelectionWeak));
+  
+  NS_IF_ADDREF(*aDOMSel = sel);
+
+  return NS_OK;
+}
+
+
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
 {
   NS_ENSURE_ARG_POINTER(aDOMSel);

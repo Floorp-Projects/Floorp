@@ -57,6 +57,7 @@ class nsCaret : public nsICaret,
     // nsICaret interface
     NS_IMETHOD    Init(nsIPresShell *inPresShell);
 
+    NS_IMETHOD    GetCaretDOMSelection(nsISelection **outDOMSel);
     NS_IMETHOD    SetCaretDOMSelection(nsISelection *inDOMSel);
     NS_IMETHOD    GetCaretVisible(PRBool *outMakeVisible);
  		NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
