@@ -38,6 +38,8 @@ public:
   virtual PRInt32     GetHeight()         { return mWidth; }
   virtual PRInt32     GetWidth()          { return mDepth; }
   virtual PRUint8*    GetBits()           { return nsnull; }
+  virtual void*       GetBitInfo()        { return nsnull; }
+
   virtual PRInt32     GetLineStride()     {return 0; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
