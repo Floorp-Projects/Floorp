@@ -129,7 +129,6 @@ PATH=$(DIST)\bin;$(PATH)
 
 libs:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
-    $(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
 
 clobber::
     -del $(DEFFILE)
