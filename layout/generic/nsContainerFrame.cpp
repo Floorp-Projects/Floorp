@@ -501,12 +501,14 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       PositionFrameView(aPresContext, aFrame);
     }
 
+    nsRect newSize(0, 0, frameSize.width, frameSize.height);
     if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
       // If the frame has child frames that stick outside the content
       // area, then size the view large enough to include those child
       // frames
       if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
         vm->ResizeView(aView, *aCombinedArea);
+        newSize = *aCombinedArea;
       } else {
         nsRect bounds;
         aView->GetBounds(bounds);
@@ -518,10 +520,15 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         // This is because some frames do not invalidate themselves properly. see bug 73825.
         // Once bug 73825 is fixed, we should always pass PR_TRUE instead of 
         // frameSize.width == width && frameSize.height >= height.
-        nsRect newSize(0, 0, frameSize.width, frameSize.height);
         vm->ResizeView(aView, newSize, 
                        (frameSize.width == bounds.width && frameSize.height >= bounds.height));
       }
+    } else {
+      aView->GetBounds(newSize);
+      nscoord x, y;
+      aView->GetPosition(&x, &y);
+      newSize.x -= x;
+      newSize.y -= y;
     }
   
     const nsStyleBackground* bg;
@@ -639,25 +646,25 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
           if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
             clipRect.y = display->mClip.y;
-            if (clipRect.y > 0) {
+            if (clipRect.y > newSize.y) {
               viewHasTransparentContent = PR_TRUE;
             }
           }
           if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
             clipRect.x = display->mClip.x;
-            if (clipRect.x > 0) {
+            if (clipRect.x > newSize.x) {
               viewHasTransparentContent = PR_TRUE;
             }
           }
           if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
             clipRect.width = display->mClip.width;
-            if (clipRect.width < frameSize.width) {
+            if (clipRect.width < newSize.width) {
               viewHasTransparentContent = PR_TRUE;
             }
           }
           if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
             clipRect.height = display->mClip.height;
-            if (clipRect.height < frameSize.height) {
+            if (clipRect.height < newSize.height) {
               viewHasTransparentContent = PR_TRUE;
             }
           }
