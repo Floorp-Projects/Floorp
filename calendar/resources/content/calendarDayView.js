@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com> 
+ *                 Karl Guertin <grayrest@grayrest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -315,7 +316,8 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    topHeight = Math.round( topHeight ) - 1;
    eventBox.setAttribute( "top", topHeight );
    eventBox.setAttribute( "height", Math.round( ( hourDuration*kDayViewHourHeight ) + 1 ) );
-   var width = Math.round( 500 / calendarEventDisplay.NumberOfSameTimeEvents );
+   var daywidth = parseInt(document.defaultView.getComputedStyle(document.getElementById("day-tree-item-0"), "").getPropertyValue("width"));
+   var width = Math.round( ( daywidth-kDayViewHourLeftStart ) / calendarEventDisplay.NumberOfSameTimeEvents );
    eventBox.setAttribute( "width", width );
    eventBox.setAttribute( "style", "max-width: "+width+"px;" );
    var left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * width )  + kDayViewHourLeftStart );

@@ -674,9 +674,6 @@ button.calendar-management-button:hover:active
    border             : 1px solid #2085c4;
 }
 
-#day-view-content-board
-{
-}
 
 /*--------------------------------------------------------------------
  * Box around the tree content
@@ -706,13 +703,13 @@ button.calendar-management-button:hover:active
 
 .day-view-hour-box-class
 {
-   width                : 609px;
    border-top           : 1px solid #2085c4;
    background-color     : white;
    -moz-box-pack        : start;
    -moz-box-align       : center;
    height               : 50px;
    padding-top          : 2px;
+   margin-right 	: 5px;
 }
 
 
