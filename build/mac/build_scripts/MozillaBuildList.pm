@@ -678,7 +678,20 @@ sub BuildResources()
     #just  copy this plugin to this directory.. temporary solution until the plug in is part of the build
     my($dist_dir) = GetBinDirectory();
     my($essentials_dir) = "$dist_dir" . "Essential Files:";
-    FSpDirectoryCopy(":mozilla:gfx:src:mac:printerplugin:PrintDialogPDE.plugin:","$essentials_dir",0);  
+    my($existing_plugin) = $essentials_dir."PrintDialogPDE.plugin";
+    
+    if (-e $existing_plugin)
+    {
+        my $deadPlugin = full_path_to($existing_plugin);
+        my $ascript = <<EOS;
+        tell application "Finder"
+            delete alias "$deadPlugin"
+        end tell
+EOS
+        MacPerl::DoAppleScript($ascript) or die($^E);
+    }
+
+    FSpDirectoryCopy(":mozilla:gfx:src:mac:printerplugin:PrintDialogPDE.plugin:","$essentials_dir", 0);  
 
     ActivateApplication('McPL');
     
