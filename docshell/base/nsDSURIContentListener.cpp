@@ -23,6 +23,7 @@
 #include "nsDocShell.h"
 #include "nsDSURIContentListener.h"
 #include "nsIChannel.h"
+#include "nsXPIDLString.h"
 
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management
@@ -37,6 +38,15 @@ nsDSURIContentListener::nsDSURIContentListener() : mDocShell(nsnull),
 nsDSURIContentListener::~nsDSURIContentListener()
 {
 }
+
+nsresult
+nsDSURIContentListener::Init() 
+{
+    nsresult rv = NS_OK;
+    mCatMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    return rv;
+}
+
 
 //*****************************************************************************
 // nsDSURIContentListener::nsISupports
@@ -146,48 +156,21 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
     NS_ENSURE_ARG_POINTER(aCanHandleContent);
     NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
-    // this implementation should be the same for all webshell's so no need to pass it up the chain...
-    // although I suspect if aWindowTarget has a value, we will need to pass it up the chain in order to find
-    // the desired window target.
-
-    // a webshell can handle the following types. Eventually I think we want to get this information
-    // from the registry and in addition, we want to
-    //    incoming Type                     Preferred type
-    //      text/html
-    //      application/vnd.mozilla.xul+xml
-    //      text/rdf
-    //      text/xml
-    //      text/css
-    //      image/gif
-    //      image/jpeg
-    //      image/png
-    //      image/tiff
-    //      application/http-index-format
-    //      message/rfc822                    application/vnd.mozilla.xul+xml 
-
     if (aContentType)
     {
-        // (1) list all content types we want to  be the primary handler for....
-        // and suggest a desired content type if appropriate...
-        if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
-            || nsCRT::strcasecmp(aContentType, "application/vnd.mozilla.xul+xml") == 0
-            || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
-            || nsCRT::strcasecmp(aContentType, "text/xml") == 0
-            || nsCRT::strcasecmp(aContentType, "text/css") == 0
-            || nsCRT::strcasecmp(aContentType, "image/gif") == 0
-            || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
-            || nsCRT::strcasecmp(aContentType, "image/png") == 0
-            || nsCRT::strcasecmp(aContentType, "text/plain") == 0
-            || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
-            || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
-        *aCanHandleContent = PR_TRUE;
-        else if (PL_strcasestr(aContentType, "; x-view-type=view-source") != nsnull)
+        nsXPIDLCString value;
+        nsresult rv = mCatMgr->GetCategoryEntry("Gecko-Content-Viewers", aContentType, 
+                                       getter_Copies(value));
+        if (NS_FAILED(rv)) return rv;
+
+        if (value && *value)
             *aCanHandleContent = PR_TRUE;
+        else
+            *aCanHandleContent = PR_FALSE;
     }
     else
         *aCanHandleContent = PR_FALSE;
 
-    // we may need to ask the plugin manager for this webshell if it can handle the content type too...
     return NS_OK;
 }
 
