@@ -24,8 +24,7 @@
         onload="return StartUp('Applications');"  title="&window.title;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
-
+<html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&appsHeader;</html:SPAN>
 </html:DIV>
@@ -57,5 +56,5 @@
 			<html:tr><html:td>&handle;</html:td></html:tr>
 </html:table>
 </html:form>
-
+</html:div>
 </xul:window>

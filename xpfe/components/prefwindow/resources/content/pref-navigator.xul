@@ -34,7 +34,7 @@
         onload="return StartUp('Navigator');"  title="&title.label;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:DIV ID="top">
 <html:SPAN ID="lefttext">Navigator</html:SPAN>
 </html:DIV>
@@ -77,5 +77,5 @@
 			<html:input name="starts" type="button" value="&clearLoc;" />
 		</html:td></html:tr>
 </html:table>
-
+</html:div>
 </window>

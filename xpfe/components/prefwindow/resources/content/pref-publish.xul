@@ -25,7 +25,7 @@
         onload="return StartUp('Publish');"  title="&window.title;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&composerHeader.label;</html:SPAN>
 </html:DIV>
@@ -61,5 +61,5 @@
 			
 			
 </html:table>
-
+</html:div>
 </window>

@@ -22,7 +22,7 @@
         onload="return StartUp('smart_browsing');"  title="&title.label;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&smartHeader.label;</html:SPAN>
 </html:DIV>
@@ -61,4 +61,5 @@
 			&enableKeyCheck.label;</html:td></html:tr>
 	
 </html:table>
+</html:div>
 </window>

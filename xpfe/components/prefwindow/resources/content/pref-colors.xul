@@ -24,7 +24,7 @@
         onload="StartUp('Colors')"  title="&window.title;">
 
 <html:script language="JavaScript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 	<html:div ID="top">
 		<html:span ID="lefttext">
 			&colorsHeader;
@@ -51,5 +51,5 @@
    <html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:browser.use_document_" />&alwaysOverCheck.label;</html:label></html:td></html:tr>
 </html:table>
 
-
+</html:div>
 </xul:window>
