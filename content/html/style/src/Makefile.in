@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconhtmlstyle_s
-REQUIRES	= xpcom string dom widget caps locale js necko webshell xul htmlparser docshell uconv xuldoc xpconnect
+REQUIRES	= xpcom string dom widget caps locale js necko webshell xul htmlparser docshell uconv xuldoc xpconnect gfx2
 
 CPPSRCS		= \
 		nsCSSDeclaration.cpp \

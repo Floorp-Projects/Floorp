@@ -31,7 +31,7 @@ LIBRARY_NAME	= gklayout
 SHORT_LIBNAME	= gkhtml
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= jsdom gkgfx
-REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale timer xuldoc
+REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale timer xuldoc gfx2
 
 CPPSRCS		= \
 		nsLayoutDLF.cpp \

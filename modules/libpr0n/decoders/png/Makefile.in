@@ -30,6 +30,8 @@ MODULE		= imgpng
 LIBRARY_NAME	= imgpng
 IS_COMPONENT	= 1
 
+REQUIRES	= xpcom necko layout png gfx2 imglib2
+
 CPPSRCS		= nsPNGDecoder.cpp nsPNGFactory.cpp
 
 EXTRA_DSO_LDOPTS = $(PNG_LIBS) $(ZLIB_LIBS) \

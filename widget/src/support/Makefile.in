@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= widget
 LIBRARY_NAME	= widgetsupport_s
-REQUIRES	= xpcom string widget layout dom
+REQUIRES	= xpcom string widget layout dom gfx2
 
 CPPSRCS		= nsWidgetSupport.cpp
 

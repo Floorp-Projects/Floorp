@@ -30,6 +30,8 @@ MODULE		= imgppm
 LIBRARY_NAME	= imgppm
 IS_COMPONENT	= 1
 
+REQUIRES	= xpcom layout necko gfx2 imglib2
+
 CPPSRCS		= nsPPMDecoder.cpp nsPPMFactory.cpp
 
 EXTRA_DSO_LDOPTS = \

@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= docshell
 EXTRA_DSO_LIBS	= jsdom
-REQUIRES	= xpcom string dom shistory necko layout uriloader timer webshell widget pref locale view intl htmlparser chardet appcomps
+REQUIRES	= xpcom string dom shistory necko layout uriloader timer webshell widget pref locale view intl htmlparser chardet appcomps gfx2
 
 CPPSRCS		= \
 		nsDocShellModule.cpp		\

@@ -29,7 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gfx2
 LIBRARY_NAME	= gfx2
-IS_COMPONENT = 1
+IS_COMPONENT	= 1
+
+REQUIRES	= xpcom layout
 
 CPPSRCS		= \
 		gfxImageFrame.cpp \

@@ -93,7 +93,7 @@ CPPSRCS = \
 
 MODULE = xmlterm
 IS_COMPONENT = 1
-REQUIRES	= xpcom string pref js dom docshell view locale caps layout uriloader necko widget webshell appshell
+REQUIRES	= xpcom string pref js dom docshell view locale caps layout uriloader necko widget webshell appshell gfx2
 
 EXTRA_DSO_LDOPTS = $(TK_LIBS) \
                    $(MOZ_COMPONENT_LIBS) \

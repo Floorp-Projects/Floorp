@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconbase_s
-REQUIRES	= xpcom string dom widget view locale timer htmlparser js webshell necko caps lwbrk uconv chrome docshell pref uriloader xpconnect util unicharutil
+REQUIRES	= xpcom string dom widget view locale timer htmlparser js webshell necko caps lwbrk uconv chrome docshell pref uriloader xpconnect util unicharutil gfx2
 
 CPPSRCS		= \
 		nsCommentNode.cpp \

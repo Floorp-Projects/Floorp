@@ -30,6 +30,8 @@ MODULE		= imggif
 LIBRARY_NAME	= imggif
 IS_COMPONENT	= 1
 
+REQUIRES	= xpcom necko layout gfx2 imglib2
+
 CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp nsGIFModule.cpp
 
 EXTRA_DSO_LDOPTS = $(GIF_LIBS) $(ZLIB_LIBS) \
