@@ -68,7 +68,7 @@ ipcTransport::InitUnix()
     nsresult rv = GetSocketPath(mSocketPath);
     if (NS_FAILED(rv)) return rv;
 
-    ipcSocketProviderUnix::SetSocketPath(socketPath);
+    ipcSocketProviderUnix::SetSocketPath(mSocketPath);
     return NS_OK;
 }
 
