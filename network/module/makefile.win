@@ -91,7 +91,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME)
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LCFLAGS=-DNETSCAPE -D_IMPL_NS_NET -DNETLIB_THREAD
+LCFLAGS=-DNETSCAPE -D_IMPL_NS_NET 
 
 NETLIBS=\
 		$(DIST)\lib\abouturl.lib    \
