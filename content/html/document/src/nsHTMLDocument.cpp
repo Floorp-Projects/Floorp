@@ -4172,6 +4172,7 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "inserthorizontalrule", "cmd_insertHR", "", PR_TRUE,  PR_FALSE },
   { "createlink",    "cmd_insertLinkNoUI",  "", PR_FALSE, PR_FALSE },
   { "insertimage",   "cmd_insertImageNoUI", "", PR_FALSE, PR_FALSE },
+  { "inserthtml",    "cmd_insertHTML",      "", PR_FALSE, PR_FALSE },
   { "justifyleft",   "cmd_align",       "left", PR_TRUE,  PR_FALSE },
   { "justifyright",  "cmd_align",      "right", PR_TRUE,  PR_FALSE },
   { "justifycenter", "cmd_align",     "center", PR_TRUE,  PR_FALSE },
@@ -4401,6 +4402,10 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
 
     if (isBool)
       rv = cmdParams->SetBooleanValue("state_attribute", boolVal);
+    else if (cmdToDispatch.Equals("cmd_fontFace"))
+      rv = cmdParams->SetStringValue("state_attribute", value);
+    else if (cmdToDispatch.Equals("cmd_insertHTML"))
+      rv = cmdParams->SetStringValue("state_data", value);
     else
       rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
     if (NS_FAILED(rv))
