@@ -276,7 +276,7 @@ nsXMLContentSink::ScrollToRef()
       mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
         // Scroll to the anchor
-        shell->FlushPendingNotifications();
+        shell->FlushPendingNotifications(PR_FALSE);
 
         // Check an empty string which might be caused by the UTF-8 conversion
         if (!ref.IsEmpty())

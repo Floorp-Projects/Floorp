@@ -668,7 +668,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-  presShell->FlushPendingNotifications();
+  presShell->FlushPendingNotifications(PR_FALSE);
 
   if (widget)
     widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, PR_TRUE);
@@ -2064,7 +2064,7 @@ nsComboboxControlFrame::SelectionChanged()
 
       nsCOMPtr<nsIPresShell> presShell;
       mPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->FlushPendingNotifications();
+      presShell->FlushPendingNotifications(PR_FALSE);
     }
   }
   return rv;
