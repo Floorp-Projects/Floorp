@@ -283,6 +283,10 @@
         null
       </field>
 
+      <field name="userTypedValue">
+        null
+      </field>
+
       <constructor>
         <![CDATA[
           try {
