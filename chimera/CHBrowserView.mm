@@ -1330,15 +1330,17 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
+//  NSLog(@"draggingEntered");  
   nsCOMPtr<nsIDragHelperService> helper(do_GetService("@mozilla.org/widget/draghelperservice;1"));
   mDragHelper = helper.get();
   NS_IF_ADDREF(mDragHelper);
   NS_ASSERTION ( mDragHelper, "Couldn't get a drag service, we're in biiig trouble" );
   
   if ( mDragHelper ) {
+    mLastTrackedLocation = [sender draggingLocation];
+    mLastTrackedWindow   = [sender draggingDestinationWindow];
     nsCOMPtr<nsIEventSink> sink;
-    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
-            inWindow:[sender draggingDestinationWindow]];
+    [self findEventSink:getter_AddRefs(sink) forPoint:mLastTrackedLocation inWindow:mLastTrackedWindow];
     if (sink)
       mDragHelper->Enter ( [sender draggingSequenceNumber], sink );
   }
@@ -1348,10 +1350,14 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
+//  NSLog(@"draggingExited");
   if ( mDragHelper ) {
     nsCOMPtr<nsIEventSink> sink;
-    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
-            inWindow:[sender draggingDestinationWindow]];
+    
+    [self findEventSink:getter_AddRefs(sink)
+            forPoint:mLastTrackedLocation /* [sender draggingLocation] */
+            inWindow:mLastTrackedWindow   /* [sender draggingDestinationWindow] */
+            ];
     if (sink)
       mDragHelper->Leave( [sender draggingSequenceNumber], sink );
     NS_RELEASE(mDragHelper);     
@@ -1360,11 +1366,13 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
 {
+//  NSLog(@"draggingUpdated");
   PRBool dropAllowed = PR_FALSE;
   if ( mDragHelper ) {
+    mLastTrackedLocation = [sender draggingLocation];
+    mLastTrackedWindow   = [sender draggingDestinationWindow];
     nsCOMPtr<nsIEventSink> sink;
-    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
-            inWindow:[sender draggingDestinationWindow]];
+    [self findEventSink:getter_AddRefs(sink) forPoint:mLastTrackedLocation inWindow:mLastTrackedWindow];
     if (sink)
       mDragHelper->Tracking([sender draggingSequenceNumber], sink, &dropAllowed);
   }
