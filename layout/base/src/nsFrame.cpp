@@ -31,19 +31,34 @@
 
 #define DO_SELECTION 0
 
-#if DO_SELECTION
 #include "nsIDOMText.h"
+#include "nsSelectionRange.h"
+#include "nsDocument.h"
+#include "nsIDeviceContext.h"
+#include "nsIPresShell.h"
+
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
-///////////////////////////////////
-// Important Selection Variables
-///////////////////////////////////
-nsIFrame * mCurrentFrame   = nsnull;
-PRBool     mDoingSelection = PR_FALSE;
-PRBool     mDidDrag        = PR_FALSE;
+// Kludged Content stuff
+nsIFrame   * fFrameArray[1024];
+nsIContent * fContentArray[1024];
+PRInt32      fMax = -1;
 
+// Tracker Data
+#define kInsertInRemoveList 0
+#define kInsertInAddList    1
+
+nsIContent * fTrackerContentArrayRemoveList[1024];
+PRInt32      fTrackerRemoveListMax = 0;
+nsIContent * fTrackerContentArrayAddList[1024];
+PRInt32      fTrackerAddListMax = 0;
+
+// Some Misc #defines
 #define gSelectionDebug 0
+#define FORCE_SELECTION_UPDATE 1
+PRBool  gTrackerDebug   = PR_FALSE;
+PRBool  gCalcDebug      = PR_FALSE;
 
 // [HACK] Foward Declarations
 void BuildContentList(nsIContent*aContent);
@@ -51,10 +66,31 @@ PRBool IsInRange(nsIContent * aStartContent, nsIContent * aEndContent, nsIConten
 PRBool IsBefore(nsIContent * aNewContent, nsIContent * aCurrentContent);
 nsIContent * GetPrevContent(nsIContent * aContent);
 nsIContent * GetNextContent(nsIContent * aContent);
-#endif
+void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
+void ForceDrawFrame(nsFrame * aFrame);
+void resetContentTrackers();
+void RefreshFromContentTrackers(nsIPresContext& aPresContext);
+void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndContent, PRUint32 aType);
+void PrintIndex(char * aStr, nsIContent * aContent);
+
 
 
 static PRBool gShowFrameBorders = PR_FALSE;
+
+
+// Initialize Global Selection Data
+nsIFrame *  nsFrame::mCurrentFrame   = nsnull;
+PRBool      nsFrame::mDoingSelection = PR_FALSE;
+PRBool      nsFrame::mDidDrag        = PR_FALSE;
+PRInt32     nsFrame::mStartPos       = 0;
+
+// Selection data is valid only from the Mouse Press to the Mouse Release
+nsSelectionRange * nsFrame::mSelectionRange      = nsnull;
+nsISelection     * nsFrame::mSelection           = nsnull;
+
+nsSelectionPoint * nsFrame::mStartSelectionPoint = nsnull;
+nsSelectionPoint * nsFrame::mEndSelectionPoint   = nsnull;
+
 
 NS_LAYOUT void nsIFrame::ShowFrameBorders(PRBool aEnable)
 {
@@ -96,6 +132,7 @@ void* nsFrame::operator new(size_t size)
 nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
   : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
 {
+
   NS_ADDREF(mContent);
 }
 
@@ -375,6 +412,46 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect)
 {
+#if DO_SELECTION
+
+  PRBool clearAfterPaint = PR_FALSE;
+
+  // Get Content
+  nsIContent * content;
+  GetContent(content);
+  if (content->ChildCount() > 0) {
+    return NS_OK;
+  }
+
+  if (mSelectionRange == nsnull) { // Get Selection Object
+    nsIPresShell     * shell     = aPresContext.GetShell();
+    nsIDocument      * doc       = shell->GetDocument();
+    nsISelection     * selection = doc->GetSelection();
+
+    mSelectionRange = selection->GetRange(); 
+
+    clearAfterPaint = PR_TRUE;
+    NS_RELEASE(shell);
+    NS_RELEASE(selection);
+  }
+
+  if (IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), content)) {
+    nsRect rect;
+    GetRect(rect);
+    rect.width--;
+    rect.height--;
+    aRenderingContext.SetColor(NS_RGB(0,0,255));
+    aRenderingContext.DrawRect(rect);
+    aRenderingContext.DrawLine(rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
+    aRenderingContext.DrawLine(rect.x, rect.y+rect.height, rect.x+rect.width, rect.y);
+  }
+
+  if (clearAfterPaint) {
+    mSelectionRange = nsnull;
+  }
+  NS_RELEASE(content);
+
+#endif
   return NS_OK;
 }
 
@@ -385,7 +462,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus)
 {
-#if DO_SELECTION
+#if DO_SELECTION 
 
   if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
       aEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
@@ -394,24 +471,27 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
     aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
+  if (gSelectionDebug) printf("Message: %d-------------------------------------------------------------\n",aEvent->message);
 
-  //printf("-------------------------------------------------------------\n");
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-    if (!mDidDrag && mDoingSelection) {
+    if (mDoingSelection) {
       //mEndSelect = 0;
       HandleRelease(aPresContext, aEvent, aEventStatus, this);
     }
   } else if (aEvent->message == NS_MOUSE_MOVE) {
     mDidDrag = PR_TRUE;
 
+    //if (gSelectionDebug) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
     HandleDrag(aPresContext, aEvent, aEventStatus, this);
-    //if (gSelectionDebug) printf("HandleEvent(Drag)::fTextRange %s\n", fTextRange->ToString());
+    if (gSelectionDebug) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
 
   } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     nsIContent * content;
     GetContent(content);
     BuildContentList(content);
+
+    NS_RELEASE(content);
 
     HandlePress(aPresContext, aEvent, aEventStatus, this);
   }
@@ -421,14 +501,27 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-
+/**
+  * Handles the Mouse Press Event for the frame
+ */
 NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext, 
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus,
                                nsFrame *       aFrame)
 {
-#if DO_SELECTION
-  nsFrame * currentFrame = aFrame;
+#if DO_SELECTION 
+  nsFrame          * currentFrame   = aFrame;
+  nsIPresShell     * shell          = aPresContext.GetShell();
+  nsIDocument      * doc            = shell->GetDocument();
+  nsISelection     * selection      = doc->GetSelection();
+  nsMouseEvent     * mouseEvent     = (nsMouseEvent *)aEvent;
+
+  mSelectionRange = selection->GetRange();
+  
+  NS_RELEASE(shell);
+  NS_RELEASE(doc);
+  NS_RELEASE(selection);
+
 
   PRInt32 offset = 0;
   PRInt32 width  = 0;
@@ -437,90 +530,154 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
   mDidDrag        = PR_FALSE;
   mCurrentFrame   = currentFrame;
 
-  /*fStartPos = GetPosition(aPresContext, aEvent, currentFrame);
-
- // CalcCursorPosition(aPresContext, aEvent, currentFrame, fStartPos, width);
+  mStartPos = GetPosition(aPresContext, aEvent, currentFrame);
 
   // Click count is 1
-  nsIContent * newContent = currentFrame->GetContent();
+  nsIContent * newContent;
+  currentFrame->GetContent(newContent);
 
-  // Fix this next section
-  if (fTextRange == nsnull) {
-    fTextRange = new nsTextRange(newContent, fStartPos, PR_TRUE,
-                                 newContent, fStartPos, PR_TRUE);
-  } else {
-    //selection.resetContentTrackers();
+  mCurrentFrame = currentFrame;
 
-    if (IsInRange(newContent, fTextRange)) {
-      //??selection.resetContentTrackers();
-      if (gTrackerDebug) printf("Adding split range to removed selection.\n");
+  if (mStartSelectionPoint == nsnull) {
+    mStartSelectionPoint = new nsSelectionPoint(nsnull, -1, PR_TRUE);
+  }
+  if (mEndSelectionPoint == nsnull) {
+    mEndSelectionPoint = new nsSelectionPoint(nsnull, -1, PR_TRUE);
+  }
 
+  mSelectionRange->GetStartPoint(mStartSelectionPoint);
+  mSelectionRange->GetEndPoint(mEndSelectionPoint);
+
+  resetContentTrackers();
+
+  // keep old start and end
+  nsIContent * startContent = mSelectionRange->GetStartContent();
+  nsIContent * endContent   = mSelectionRange->GetEndContent();
+
+  if (gSelectionDebug) printf("****** Shift[%s]\n", (mouseEvent->isShift?"Down":"Up"));
+
+  if (IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), newContent)) {
+    //resetContentTrackers();
+    if (gTrackerDebug) printf("Adding split range to removed selection. Shift[%s]\n", (mouseEvent->isShift?"Down":"Up"));
+
+    if (mouseEvent->isShift) {
       nsIContent * prevContent = GetPrevContent(newContent);
       nsIContent * nextContent = GetNextContent(newContent);
 
+      addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), prevContent, kInsertInRemoveList);
+      addRangeToSelectionTrackers(nextContent, mSelectionRange->GetEndContent(), kInsertInRemoveList);
 
-      //??addRangeToSelectionTrackers(selection, fTextRange.getStartContent(),
-      //??                            prevContent, kInsertInRemoveList);
-      //??addRangeToSelectionTrackers(selection, nextContent,
-      //??                            fTextRange.getEndContent(), kInsertInRemoveList);
-      
+      mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
     } else {
-      if (gTrackerDebug) printf("Adding full range to removed selection.\n");
-      //addRangeToSelectionTrackers(selection, fTextRange.getStartContent(),
-      //                            fTextRange.getEndContent(), kInsertInRemoveList); // removed from selection
+      addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
+
+      mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+      mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+
+      addRangeToSelectionTrackers(newContent, newContent, kInsertInAddList); // add to selection
     }
-    fTextRange->SetRange(newContent, fStartPos, PR_TRUE,
-                         newContent, fStartPos, PR_TRUE);
+    
+  } else if (IsBefore(newContent, startContent)) {
+    if (mouseEvent->isShift) {
+      if (mStartSelectionPoint->IsAnchor()) {
+        if (gSelectionDebug) printf("New Content is before,  Start will now be end\n");
+
+        addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
+
+        nsIContent * prevContent = GetPrevContent(newContent);
+        nsIContent * nextContent = GetNextContent(newContent);
+
+        mEndSelectionPoint->SetPoint(mStartSelectionPoint->GetContent(), mStartSelectionPoint->GetOffset(), PR_TRUE);
+        mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
+
+        addRangeToSelectionTrackers(newContent, mEndSelectionPoint->GetContent(), kInsertInAddList); // add to selection
+      } else {
+        if (gSelectionDebug) printf("New Content is before,  Appending to Beginning\n");
+        addRangeToSelectionTrackers(newContent, mEndSelectionPoint->GetContent(), kInsertInAddList); // add to selection
+        mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
+      }
+    } else {
+      if (gSelectionDebug) printf("Adding full range to removed selection. (insert selection)\n");
+      addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
+
+      mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+      mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+
+      addRangeToSelectionTrackers(newContent, newContent, kInsertInAddList); // add to selection
+    }
+  } else { // Content is After End
+
+    if (mouseEvent->isShift) {
+      if (mStartSelectionPoint->IsAnchor()) {
+        if (gSelectionDebug) printf("New Content is after,  Append new content\n");
+        addRangeToSelectionTrackers(mEndSelectionPoint->GetContent(), newContent,  kInsertInAddList); // add to selection
+        mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
+      } else {
+        if (gSelectionDebug) printf("New Content is after,  End will now be Start\n");
+        
+        addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
+
+        nsIContent * prevContent = GetPrevContent(newContent);
+        nsIContent * nextContent = GetNextContent(newContent);
+
+        mStartSelectionPoint->SetPoint(mEndSelectionPoint->GetContent(), mEndSelectionPoint->GetOffset(), PR_TRUE);
+        mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
+
+        addRangeToSelectionTrackers(mEndSelectionPoint->GetContent(), newContent,  kInsertInAddList); // add to selection
+      }
+
+    } else { 
+      if (gTrackerDebug) printf("Adding full range to removed selection.\n");
+      addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
+
+      mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+      mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+
+      addRangeToSelectionTrackers(newContent, newContent, kInsertInAddList); // add to selection
+    }
   }
-  if (fStartTextPoint == nsnull) {
-    fStartTextPoint = new nsTextPoint(nsnull, 0, PR_FALSE);
+
+  /*if (mStartSelectionPoint == nsnull) {
+    mStartSelectionPoint = new nsSelectionPoint(newContent, mStartPos, PR_TRUE);
+  } else {
+    mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
   }
-  if (fEndTextPoint == nsnull) {
-    fEndTextPoint = new nsTextPoint(nsnull, 0, PR_FALSE);
-  }
-  fTextRange->GetStartTextPoint(fStartTextPoint);
-  fTextRange->GetEndTextPoint(fEndTextPoint);
+  if (mEndSelectionPoint == nsnull) {
+    mEndSelectionPoint = new nsSelectionPoint(newContent, mStartPos, PR_TRUE);
+  } else {
+    mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_TRUE);
+  }*/
+
+  mSelectionRange->SetStartPoint(mStartSelectionPoint);
+  mSelectionRange->SetEndPoint(mEndSelectionPoint);
+
 
   // [TODO] Recycle sub-selections here?
-  ////fSubSelection = new SubSelection(fTextRange);
+  ////fSubSelection = new SubSelection(mSelectionRange);
   ////selection.setSelection(fSubSelection);
-  //aPart.setSelection(fTextRange);
+  //aPart.setSelection(mSelectionRange);
   //updateSelection();
-  ////selection.resetContentTrackers();
+  //resetContentTrackers();
 
-  //addRangeToSelectionTrackers(selection, newContent, nsnull, kInsertInAddList);
+  //addRangeToSelectionTrackers(newContent, newContent, kInsertInAddList);
+
+  //RefreshContentFrames(aPresContext, startContent, endContent);
+  RefreshFromContentTrackers(aPresContext);
 
   //// [TODO] Set position of caret at start point,
   //// [TODO] Turn on caret and have it rendered
   ////printf("Selection Start Point set.");
 
-  fDoingSelection = PR_TRUE;
-  mCurrentFrame   = currentFrame;
 
   //buildContentTree(currentFrame);
 
   //fCurrentParentContentList = eventStrategy.getParentList();
-  printf("HandleEvent::fTextRange %s\n", fTextRange->ToString());
+  if (gSelectionDebug) printf("HandleEvent::mSelectionRange %s\n", mSelectionRange->ToString());
 
   // Force Update
-  if (FORCE_SELECTION_UPDATE) {
-    nsRect rect;
-    GetRect(rect);
-    nsIView * view = GetView();
-    if (view == nsnull) {
-      nsIFrame * frame = GetParentWithView();
-      view = GetViewWithWindow(frame->GetView());
-    }
-    rect.height *= 2;
-    nsIViewManager      * viewMgr       = view->GetViewManager();
-    nsIDeviceContext    * devContext    = aPresContext.GetDeviceContext();
-    nsIRenderingContext * renderContext = devContext->CreateRenderingContext(view);
-    viewMgr->Refresh(view, renderContext, &rect, NS_VMREFRESH_IMMEDIATE|NS_VMREFRESH_DOUBLE_BUFFER);
-    printf("***** %d\n", rect.height);
-    NS_RELEASE(renderContext);
-    NS_RELEASE(devContext);
-    NS_RELEASE(view);
-  }*/
+  ForceDrawFrame(this);
+
+  NS_RELEASE(newContent);
 
 #endif
   aEventStatus = nsEventStatus_eIgnore;
@@ -533,12 +690,17 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsEventStatus&  aEventStatus,
                               nsFrame *       aFrame)
 {
-#if DO_SELECTION
+#if DO_SELECTION 
+  // keep old start and end
+  nsIContent * startContent = mSelectionRange->GetStartContent();
+  nsIContent * endContent   = mSelectionRange->GetEndContent();
+
   PRBool isNewFrame = PR_FALSE; // for testing (rcs)
 
   mDidDrag = PR_TRUE;
 
   if (aFrame != nsnull) {
+    //printf("nsFrame::HandleDrag\n");
 
     // Check to see if we have changed frame
     if (aFrame != mCurrentFrame) {
@@ -558,64 +720,73 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       if (currentContent == newContent) {
         if (gSelectionDebug) printf("HandleDrag::New Frame, same content.\n");
 
-        // AdjustTextPointsInNewContent(aPresContext, aEvent, newFrame);
+        AdjustPointsInNewContent(aPresContext, aEvent, aFrame);
 
       } else if (IsBefore(newContent, currentContent)) {
         if (gSelectionDebug) printf("HandleDrag::New Frame, is Before.\n");
 
-        //??selection.resetContentTrackers();
+        resetContentTrackers();
         NewContentIsBefore(aPresContext, aEvent, newContent, currentContent, aFrame);
 
       } else { // Content is AFTER
         if (gSelectionDebug) printf("HandleDrag::New Frame, is After.\n");
 
-        //??selection.resetContentTrackers();
+        resetContentTrackers();
         NewContentIsAfter(aPresContext, aEvent, newContent, currentContent, aFrame);
       }
       mCurrentFrame = aFrame;
+
+      NS_RELEASE(currentContent);
+      NS_RELEASE(newContent);
     } else {
-      if (gSelectionDebug) printf("HandleDrag::Same Frame.\n");
+      //if (gSelectionDebug) printf("HandleDrag::Same Frame.\n");
 
       // Same Frame as before
-      //if (gSelectionDebug) printf("\nSame Start: %s\n", fStartTextPoint->ToString());
-      //if (gSelectionDebug) printf("Same End:   %s\n",   fEndTextPoint->ToString());
+      //if (gSelectionDebug) printf("\nSame Start: %s\n", mStartSelectionPoint->ToString());
+      //if (gSelectionDebug) printf("Same End:   %s\n",   mEndSelectionPoint->ToString());
         // [TODO] Uncomment these soon
-/*
-      if (fStartTextPoint->GetContent() == fEndTextPoint->GetContent()) {
-        if (gSelectionDebug) printf("Start & End Frame are the same: \n");
-        //AdjustTextPointsInSameContent(aPresContext, aEvent);
+
+      if (mStartSelectionPoint->GetContent() == mEndSelectionPoint->GetContent()) {
+        //if (gSelectionDebug) printf("Start & End Frame are the same: \n");
+        if (gSelectionDebug) printf("******** Code is need here!\n********\n");
+        //AdjustPointsInSameContent(aPresContext, aEvent);
       } else {
-        if (gSelectionDebug) printf("Start & End Frame are different: \n");
+        //if (gSelectionDebug) printf("Start & End Frame are different: \n");
 
         // Get Content for New Frame
         nsIContent * newContent;
-        newFrame->GetContent(newContent);
+        aFrame->GetContent(newContent);
         PRInt32 newPos = -1;
 
-        newPos = GetPosition(aPresContext, aEvent, newFrame);
+        newPos = GetPosition(aPresContext, aEvent, aFrame);
 
-        if (newContent == fStartTextPoint->GetContent()) {
-          if (gSelectionDebug) printf("New Content equals Start Content\n");
-          fStartTextPoint->SetOffset(newPos);
-          fTextRange->SetStartPoint(fStartTextPoint);
-        } else if (newContent == fEndTextPoint->GetContent()) {
-          if (gSelectionDebug) printf("New Content equals End Content\n");
-          fEndTextPoint->SetOffset(newPos);
-          fTextRange->SetEndPoint(fEndTextPoint);
+        if (newContent == mStartSelectionPoint->GetContent()) {
+          //if (gSelectionDebug) printf("New Content equals Start Content\n");
+          mStartSelectionPoint->SetOffset(newPos);
+          mSelectionRange->SetStartPoint(mStartSelectionPoint);
+        } else if (newContent == mEndSelectionPoint->GetContent()) {
+          //if (gSelectionDebug) printf("New Content equals End Content\n");
+          mEndSelectionPoint->SetOffset(newPos);
+          mSelectionRange->SetEndPoint(mEndSelectionPoint);
         } else {
           if (gSelectionDebug) printf("=====\n=====\n=====\n=====\n=====\n=====\n Should NOT be here.\n");
         }
 
-        //if (gSelectionDebug) printf("*Same Start: "+fStartTextPoint->GetOffset()+
-        //                               " "+fStartTextPoint->IsAnchor()+
-        //                               "  End: "+fEndTextPoint->GetOffset()  +
-        //                               " "+fEndTextPoint->IsAnchor());
-      }*/
+        //if (gSelectionDebug) printf("*Same Start: "+mStartSelectionPoint->GetOffset()+
+        //                               " "+mStartSelectionPoint->IsAnchor()+
+         //                               "  End: "+mEndSelectionPoint->GetOffset()  +
+        //                               " "+mEndSelectionPoint->IsAnchor());
+        NS_RELEASE(newContent);
+      }
       //??doDragRepaint(mCurrentFrame);
     }
   }
-#endif
+  // Force Update
+  ForceDrawFrame(this);
+  //RefreshContentFrames(aPresContext, startContent, endContent);
+  RefreshFromContentTrackers(aPresContext);
 
+#endif
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
@@ -625,13 +796,126 @@ NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext,
                                  nsEventStatus&  aEventStatus,
                                  nsFrame *       aFrame)
 {
-#if DO_SELECTION
+#if DO_SELECTION 
   mDoingSelection = PR_FALSE;
 #endif
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
 
+//--------------------------------------------------------------------------
+//-- GetPosition
+//--------------------------------------------------------------------------
+PRInt32 nsFrame::GetPosition(nsIPresContext& aPresContext,
+                             nsGUIEvent * aEvent,
+                             nsIFrame * aNewFrame) {
+
+  //PRInt32 offset; 
+  //PRInt32 width;
+  //CalcCursorPosition(aPresContext, aEvent, aNewFrame, offset, width);
+  //offset += aNewFrame->GetContentOffset();
+
+  //return offset;
+  return -1;
+}
+
+/********************************************************
+* Adjusts the Starting and Ending TextPoint for a Range
+*********************************************************/
+void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
+                                       nsGUIEvent * aEvent,
+                                       nsIFrame  * aNewFrame) {
+  // Get new Cursor Poition in the new content
+  PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame);//, fText);
+
+  if (mStartSelectionPoint->IsAnchor()) {
+    if (newPos == mStartSelectionPoint->GetOffset()) {
+      mEndSelectionPoint->SetOffset(newPos);
+      mEndSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetEndPoint(mEndSelectionPoint);
+    } else if (newPos < mStartSelectionPoint->GetOffset()) {
+      mEndSelectionPoint->SetOffset(mStartSelectionPoint->GetOffset());
+      mEndSelectionPoint->SetAnchor(PR_TRUE);
+      mStartSelectionPoint->SetOffset(newPos);
+      mStartSelectionPoint->SetAnchor(PR_FALSE);
+      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
+    } else {
+      mEndSelectionPoint->SetOffset(newPos);
+      mSelectionRange->SetEndPoint(mEndSelectionPoint);
+    }
+  } else if (mEndSelectionPoint->IsAnchor()) {
+    int endPos = mEndSelectionPoint->GetOffset();
+    if (newPos == mEndSelectionPoint->GetOffset()) {
+      mStartSelectionPoint->SetOffset(newPos);
+      mStartSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetStartPoint(mStartSelectionPoint);
+    } else if (newPos > mEndSelectionPoint->GetOffset()) {
+      mEndSelectionPoint->SetOffset(newPos);
+      mEndSelectionPoint->SetAnchor(PR_FALSE);
+      mStartSelectionPoint->SetOffset(endPos);
+      mStartSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
+    } else {
+      mStartSelectionPoint->SetOffset(newPos);
+      mSelectionRange->SetStartPoint(mStartSelectionPoint);
+    }
+  } else {
+    // [TODO] Should get here
+    // throw exception
+    if (gSelectionDebug) printf("--\n--\n--\n--\n--\n--\n--\n Should be here. #102\n");
+    //return;
+  }
+}
+
+/********************************************************
+* Adjusts the Starting and Ending TextPoint for a Range
+*********************************************************/
+void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
+                                        nsGUIEvent    * aEvent) {
+  // Get new Cursor Poition in the same content
+  PRInt32 newPos = GetPosition(aPresContext, aEvent, mCurrentFrame);
+  if (gSelectionDebug) printf("AdjustTextPointsInSameContent newPos: %d\n", newPos);
+
+  if (mStartSelectionPoint->IsAnchor()) {
+    if (newPos == mStartSelectionPoint->GetOffset()) {
+      mEndSelectionPoint->SetOffset(newPos);
+      mEndSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetEndPoint(mEndSelectionPoint);
+    } else if (newPos < mStartSelectionPoint->GetOffset()) {
+      mStartSelectionPoint->SetOffset(newPos);
+      mStartSelectionPoint->SetAnchor(PR_FALSE);
+      mEndSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
+    } else {
+      mEndSelectionPoint->SetAnchor(PR_FALSE);
+      mEndSelectionPoint->SetOffset(newPos);
+      mSelectionRange->SetEndPoint(mEndSelectionPoint);
+    }
+  } else if (mEndSelectionPoint->IsAnchor()) {
+    if (newPos == mEndSelectionPoint->GetOffset()) {
+      mStartSelectionPoint->SetOffset(newPos);
+      mStartSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetStartPoint(mStartSelectionPoint);
+    } else if (newPos > mEndSelectionPoint->GetOffset()) {
+      mEndSelectionPoint->SetOffset(newPos);
+      mEndSelectionPoint->SetAnchor(PR_FALSE);
+      mStartSelectionPoint->SetAnchor(PR_TRUE);
+      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
+    } else {
+      mStartSelectionPoint->SetAnchor(PR_FALSE);
+      mStartSelectionPoint->SetOffset(newPos);
+      mSelectionRange->SetStartPoint(mStartSelectionPoint);
+    }
+  } else {
+    // [TODO] Should get here
+    // throw exception
+    if (gSelectionDebug) printf("--\n--\n--\n--\n--\n--\n--\n Should be here. #101\n");
+    //return;
+  }
+
+    if (gSelectionDebug) printf("Start %s  End %s\n", mStartSelectionPoint->ToString(), mEndSelectionPoint->ToString());
+  //}
+}
 
 NS_METHOD nsFrame::GetCursorAt(nsIPresContext& aPresContext,
                                const nsPoint&  aPoint,
@@ -946,15 +1230,32 @@ NS_METHOD nsFrame::VerifyTree() const
 }
 
 //-----------------------------------------------------------------------------------
-#if DO_SELECTION
-//-----------------------------------------------------------------------------------
 
-nsIContent * fContentArray[1024];
-PRInt32      fMax = -1;
 
 //------------------------------
 void WalkTree(nsIContent * aParent) {
+
+  /*if (aParent->ChildCount() == 0) {
+    nsIDOMText * textContent;
+    nsresult status = aParent->QueryInterface(kIDOMTextIID, (void**) &textContent);
+    if (NS_OK == status) {
+      nsString text;
+      textContent->GetData(text);
+      if (text.Length() == 1) {
+        char * str = text.ToNewCString();
+        if (str[0] >= 32 && str[0] != '\n') {
+          fContentArray[fMax++] = aParent;
+        }
+        delete str;
+      } else {
+        fContentArray[fMax++] = aParent;
+      }
+
+    }
+    return;
+  }*/
   fContentArray[fMax++] = aParent;
+
   for (PRInt32 i=0;i<aParent->ChildCount();i++) {
     nsIContent * node = aParent->ChildAt(i);
     WalkTree(node);
@@ -975,10 +1276,15 @@ void PrintContent() {
       //textContent->GetText(text, 0, textContent->GetLength());
       textContent->GetData(text);
       char * str = text.ToNewCString();
-      printf("%i [%s]\n", i, str);
+      if (text.Length() > 1) {
+        printf("%i [%s]\n", i, str);
+      } else {
+        printf("%i [%s] %d\n", i, str, str[0]);
+      }
       delete str;
     }
   }
+  printf("Total pieces of Content: %d\n", fMax);
 }
 
 
@@ -1001,7 +1307,7 @@ void BuildContentList(nsIContent * Start) {
   } // while
   //fContentArray = new nsIContent[1024];
   WalkTree(node);
-  PrintContent();
+  if (gSelectionDebug) PrintContent();
 }
 
 
@@ -1010,8 +1316,8 @@ void BuildContentList(nsIContent * Start) {
 // piece of content
 //--------------------------------------------------------------------------
 PRBool IsInRange(nsIContent * aStartContent,
-                            nsIContent * aEndContent,
-                            nsIContent * aContent) {
+                 nsIContent * aEndContent,
+                 nsIContent * aContent) {
   // Start and End Content is the same, so check against the start
   if (aStartContent == aEndContent) {
     return PRBool(aContent == aStartContent);
@@ -1022,11 +1328,11 @@ PRBool IsInRange(nsIContent * aStartContent,
     return PR_TRUE;
   }
 
-  PRBool foundStart = PR_FALSE;
   if (fMax == -1) {
     BuildContentList(aContent);
   }
 
+  PRBool foundStart = PR_FALSE;
   for (PRInt32 i=0;i<fMax;i++) {
     nsIContent * node = (nsIContent *)fContentArray[i];
     if (node == aStartContent) {
@@ -1039,6 +1345,7 @@ PRBool IsInRange(nsIContent * aStartContent,
   }
   return PR_FALSE;
 }
+
 //--------------------------------------------------------------------------
 // Determines whether a piece of content in question is inbetween the two 
 // piece of content
@@ -1114,7 +1421,6 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
                                  nsIFrame   * aNewFrame)
 {
   if (gSelectionDebug) printf("New Frame, New content is before.\n");
-#if 0
   // Dragging mouse to the left or backward in content
   //
   // 1) The cursor is being dragged backward in the content
@@ -1128,27 +1434,28 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
 
 
   // Check to see if the new content is in the selection
-  if (IsInRange(fStartTextPoint->GetContent(), fEndTextPoint->GetContent(), aNewContent)) {
+  if (IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent)) {
 
     // Case #1 - Remove Current Content from Selection (at End)
     if (gSelectionDebug) printf("Case #1 - (Before) New Content is in selected Range.\n");
 
-    if (aNewContent == fStartTextPoint->GetContent()) {
+
+    if (aNewContent == mStartSelectionPoint->GetContent()) {
       // [TODO] This is where we might have to delete from end to new content
 
       // Returns the new End Point, if Start and End are on the
       // same content then End Point's Cursor is set to Start's
-      fEndTextPoint->SetContent(fStartTextPoint->GetContent());
-      AdjustTextPointsInNewContent(aPresContext, aEvent, aNewFrame);
+      mEndSelectionPoint->SetContent(mStartSelectionPoint->GetContent());
+      AdjustPointsInNewContent(aPresContext, aEvent, aNewFrame);
 
     } else {
       PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame);
-      fEndTextPoint->SetPoint(aNewContent, newPos, PR_FALSE);
-      fTextRange->SetEndPoint(fEndTextPoint);
+      mEndSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE);
+      mSelectionRange->SetEndPoint(mEndSelectionPoint);
     }
 
     // The current content is being removed from Selection
-    //??addRangeToSelectionTrackers(aSelection, null, aCurrentContent, kInsertInRemoveList);
+    addRangeToSelectionTrackers(aNewContent, aCurrentContent, kInsertInRemoveList);
   } else {
     // Case #2 - Add new content to selection (At Start)
     if (gSelectionDebug) printf("Case #2 - (Before) New Content is NOT in selected Range. Moving Start Backward.\n");
@@ -1156,15 +1463,45 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
     PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame);
 
     // Create new TextPoint and move Start Point backward
-    fStartTextPoint->SetPoint(aNewContent, newPos, PR_FALSE); // position is set correctly in adjustTextPoints
+    mStartSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE); // position is set correctly in adjustTextPoints
+    mSelectionRange->SetStartPoint(mStartSelectionPoint);
 
     // The New Content is added to Tracker
-    //??addRangeToSelectionTrackers(aSelection, aNewContent, null, kInsertInAddList);
+    addRangeToSelectionTrackers(aNewContent, aCurrentContent, kInsertInAddList);
   }
   //??doDragRepaint(fCurrentFrame);
   //??doDragRepaint(aNewFrame);
-  //??if (gSelectionDebug) fTextRange.printContent();
-#endif
+  //??if (gSelectionDebug) mSelectionRange.printContent();
+}
+
+/********************************************************
+* Refreshes each content's frame
+*********************************************************/
+void RefreshContentFrames(nsIPresContext& aPresContext,
+                          nsIContent * aStartContent,
+                          nsIContent * aEndContent)
+{
+  //-------------------------------------
+  // Undraw all the current selected frames
+  // XXX Kludge for now
+  nsIPresShell * shell = aPresContext.GetShell();
+  PRBool foundStart = PR_FALSE;
+  for (PRInt32 i=0;i<fMax;i++) {
+    nsIContent * node = (nsIContent *)fContentArray[i];
+    if (node == aStartContent) {
+      foundStart = PR_TRUE;
+      ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(node));
+      if (aStartContent == aEndContent) {
+        break;
+      }
+    } else if (foundStart) {
+      ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(node));
+    } else if (aEndContent == node) {
+      ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(node));
+      break;
+    }
+  }
+  //-------------------------------------
 }
 
 /********************************************************
@@ -1178,7 +1515,7 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
                                 nsIFrame   * aNewFrame)
 {
   if (gSelectionDebug) printf("New Frame, New content is after.\n");
-#if 0
+
 
   // Dragging Mouse to the Right
   //
@@ -1193,29 +1530,32 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
   //
 
   // Check to see if the new content is in the selection
-  if (IsInRange(fStartTextPoint->GetContent(), fEndTextPoint->GetContent(), aNewContent)) {
+  if (IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent)) {
 
     // Case #3 - Remove Content (from Start)
     if (gSelectionDebug) printf("Case #3 - (After) New Content is in selected Range.\n");
+
+    PrintIndex("Start:   ", mStartSelectionPoint->GetContent());
+    PrintIndex("Current: ", aNewContent);
+    // Remove Current Content in Tracker, but leave New Content in Selection
+    addRangeToSelectionTrackers(mStartSelectionPoint->GetContent(), aNewContent, kInsertInRemoveList);
 
     // [TODO] Always get nearest Text content
     PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame);
 
     // Check to see if the new Content is the same as the End Point's
-    if (aNewContent == fEndTextPoint->GetContent()) {
+    if (aNewContent == mEndSelectionPoint->GetContent()) {
       if (gSelectionDebug) printf("New Content matches End Point\n");
 
-      fStartTextPoint->SetContent(aNewContent);
-      AdjustTextPointsInNewContent(aPresContext, aEvent, aNewFrame);
+      mStartSelectionPoint->SetContent(aNewContent);
+      AdjustPointsInNewContent(aPresContext, aEvent, aNewFrame);
 
     } else {
       if (gSelectionDebug) printf("New Content does NOT matches End Point\n");
-      fStartTextPoint->SetPoint(aNewContent, newPos, PR_FALSE);
-      fTextRange->SetStartPoint(fStartTextPoint);
+      mStartSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE);
+      mSelectionRange->SetStartPoint(mStartSelectionPoint);
     }
 
-    // Remove Current Content in Tracker, but leave New Content in Selection
-    //??addRangeToSelectionTrackers(aSelection, aCurrentContent, null, kInsertInRemoveList);
   } else {
     if (gSelectionDebug)
       printf("Case #4 - (After) Adding New Content\n");
@@ -1224,56 +1564,198 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
     // The new content is not in the selection
     PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame);
 
-    // Check to see if we need to create a new TextPoint and add it
+    // Check to see if we need to create a new SelectionPoint and add it
     // or do we simply move the existing start or end point
-    if (fStartTextPoint->GetContent() == fEndTextPoint->GetContent()) {
+    if (mStartSelectionPoint->GetContent() == mEndSelectionPoint->GetContent()) {
       if (gSelectionDebug) printf("Case #4 - Start & End Content the Same\n");
       // Move start or end point
       // Get new Cursor Poition in the new content
 
-      if (fStartTextPoint->IsAnchor()) {
+      if (mStartSelectionPoint->IsAnchor()) {
         if (gSelectionDebug) printf("Case #4 - Start is Anchor\n");
         // Since the Start is the Anchor just adjust the end
         // What is up Here????????
-        if (gSelectionDebug) printf("Start: %s\n", fStartTextPoint->ToString());
-        if (gSelectionDebug) printf("End:   %s\n", fEndTextPoint->ToString());
-        if (gSelectionDebug) printf("---->");
+        //if (gSelectionDebug) printf("Start: %s\n", mStartSelectionPoint->ToString());
+        //if (gSelectionDebug) printf("End:   %s\n", mEndSelectionPoint->ToString());
+        //if (gSelectionDebug) printf("---->");
 
-        fEndTextPoint->SetPoint(aNewContent, newPos, PR_FALSE);
-        fTextRange->SetEndPoint(fEndTextPoint);
+        // XXX Note this includes the current End point (it should be end->nextContent)
+        addRangeToSelectionTrackers(mEndSelectionPoint->GetContent(), aNewContent, kInsertInAddList);
 
-        if (gSelectionDebug) printf("Start: %s\n", fStartTextPoint->ToString());
-        if (gSelectionDebug) printf("End:   %s\n", fEndTextPoint->ToString());
+        mEndSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE);
+        mSelectionRange->SetEndPoint(mEndSelectionPoint);
+
+
+        //if (gSelectionDebug) printf("Start: %s\n", mStartSelectionPoint->ToString());
+        //if (gSelectionDebug) printf("End:   %s\n", mEndSelectionPoint->ToString());
 
       } else {
         if (gSelectionDebug) printf("Case #4 - Start is NOT Anchor\n");
         // Because End was the anchor, we need to set the Start Point to
         // the End's Offset and set it to be the new anchor
+        addRangeToSelectionTrackers(mStartSelectionPoint->GetContent(), 
+                                    mEndSelectionPoint->GetContent(), kInsertInRemoveList);
 
-        int endPos = fEndTextPoint->GetOffset();
-        fStartTextPoint->SetOffset(endPos);
-        fStartTextPoint->SetAnchor(PR_TRUE);
+        int endPos = mEndSelectionPoint->GetOffset();
+        mStartSelectionPoint->SetOffset(endPos);
+        mStartSelectionPoint->SetAnchor(PR_TRUE);
 
         // The Start point was being moved so when it jumped to the new frame
         // we needed to make it the new End Point
-        fEndTextPoint->SetPoint(aNewContent, newPos, PR_FALSE);
-        fTextRange->SetRange(fStartTextPoint, fEndTextPoint);
+        mEndSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE);
+        mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
+
+        addRangeToSelectionTrackers(mStartSelectionPoint->GetContent(), 
+                                    mEndSelectionPoint->GetContent(), kInsertInRemoveList);
       }
-      // Same Content so don't do anything with Selection Tracker
-      // Add New Content to Selection Tracker
-      //??addRangeToSelectionTrackers(aSelection, aNewContent, null, kInsertInAddList);
     } else {
       if (gSelectionDebug) printf("Case #4 - Start & End Content NOT the Same\n");
+      nsIContent * oldEnd = mEndSelectionPoint->GetContent();
       // Adjust the end point
-      fEndTextPoint->SetPoint(aNewContent, newPos, PR_FALSE);
-      fTextRange->SetRange(fStartTextPoint, fEndTextPoint);
+      mEndSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE);
+      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
 
       // Add New Content to Selection Tracker
-     //?? addRangeToSelectionTrackers(aSelection, aNewContent, null, kInsertInAddList);
+      addRangeToSelectionTrackers(oldEnd, mEndSelectionPoint->GetContent(), kInsertInAddList);
     }
   }
-  //??if (gSelectionDebug) fTextRange.printContent();
-#endif
+  //??if (gSelectionDebug) mSelectionRange.printContent();
+
 }
 
-#endif
+/**
+  *
+ */
+void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
+{
+  if (aFrame == nsnull) {
+    return;
+  }
+  nsRect    rect;
+  nsIView * view;
+  nsPoint   pnt;
+  aFrame->GetOffsetFromView(pnt, view);
+  aFrame->GetRect(rect);
+  rect.x = pnt.x;
+  rect.y = pnt.y;
+  if (view != nsnull) {
+    nsIViewManager * viewMgr = view->GetViewManager();
+    if (viewMgr != nsnull) {
+      viewMgr->UpdateView(view, rect, 0);
+    }
+  }
+  //viewMgr->UpdateView(view, rect, NS_VMREFRESH_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
+
+  //NS_RELEASE(view);
+}
+
+
+/////////////////////////////////////////////////
+// Selection Tracker Methods
+/////////////////////////////////////////////////
+
+//----------------------------
+//
+//----------------------------
+void resetContentTrackers() {
+  //nsIContent * fTrackerContentArrayRemoveList[1024];
+  //nsIContent * fTrackerContentArrayAddList[1024];
+  fTrackerRemoveListMax = 0;
+  fTrackerAddListMax = 0;
+}
+
+//----------------------------
+//
+//----------------------------
+void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
+  /*FILE * fd = fopen("data.txt", "w");
+  PRBool foundStart = PR_FALSE;
+  for (PRInt32 j=0;j<fMax;j++) {
+    nsIContent * node = (nsIContent *)fContentArray[j];
+    if (node == mSelectionRange->GetStartContent()) {
+      foundStart = PR_TRUE;
+      printf("%d -> 0x%X\n", j, node);
+    } else if (mSelectionRange->GetEndContent() == node) {
+      printf("%d -> 0x%X\n", j, node);
+      break;
+    } else if (foundStart) {
+      printf("%d -> 0x%X\n", j, node);
+    }
+  }
+  fflush(fd);
+  fclose(fd);*/
+
+
+  nsIPresShell * shell = aPresContext.GetShell();
+  for (PRInt32 i=0;i<fTrackerRemoveListMax;i++) {
+    ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(fTrackerContentArrayRemoveList[i]));
+    if (gSelectionDebug) printf("ForceDrawFrame (remove) content 0x%X\n", fTrackerContentArrayRemoveList[i]);
+  }
+  for (i=0;i<fTrackerAddListMax;i++) {
+    ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(fTrackerContentArrayAddList[i]));
+    if (gSelectionDebug) printf("ForceDrawFrame (add) content 0x%X\n", fTrackerContentArrayAddList[i]);
+  }
+  resetContentTrackers();
+}
+
+//----------------------------
+//
+//----------------------------
+void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndContent, PRUint32 aType) 
+{
+  if (aStartContent == nsnull || aEndContent == nsnull) {
+    return;
+  }
+  nsIContent ** content = (aType == kInsertInRemoveList?fTrackerContentArrayRemoveList:fTrackerContentArrayAddList);
+  int           inx     = (aType == kInsertInRemoveList?fTrackerRemoveListMax:fTrackerAddListMax);
+
+  //FILE * fd  = fopen("data.txt", "w");
+  //fprintf(fd, "Inx before %d\n", inx);
+
+  PRBool foundStart = PR_FALSE;
+  for (PRInt32 i=0;i<fMax;i++) {
+    nsIContent * node = (nsIContent *)fContentArray[i];
+    //fprintf(fd, "Checking 0x%X 0x%X 0x%X\n",  node, aStartContent, aEndContent);
+    if (node == aStartContent) {
+      //fprintf(fd, "Found start %d\n", i);
+      content[inx++] = node;
+      foundStart = PR_TRUE;
+      if (aStartContent == aEndContent) {
+        break;
+      }
+    } else if (aEndContent == node) {
+      //fprintf(fd, "Found end %d\n", i);
+      content[inx++] = node;
+      break;
+    } else if (foundStart) {
+      //fprintf(fd, "adding %d\n", i);
+      content[inx++] = node;
+    }
+    if (inx > 10) {
+      int x = 0;
+    }
+  }
+  //fprintf(fd, "Inx after  %d\n", inx);
+  //printf("Inx after  %d\n", inx);
+  //fflush(fd);
+  //fclose(fd);
+  if (inx > 100) {
+    int x = 0;
+  }
+  if (gSelectionDebug) printf("Adding to %s  %d\n", (aType == kInsertInRemoveList?"Remove Array":"Add Array"), inx);
+  if (aType == kInsertInRemoveList) {
+    fTrackerRemoveListMax = inx;
+  } else { // kInsertInAddList
+    fTrackerAddListMax = inx;
+  }
+}
+
+void PrintIndex(char * aStr, nsIContent * aContent) {
+  for (PRInt32 j=0;j<fMax;j++) {
+    nsIContent * node = (nsIContent *)fContentArray[j];
+    if (node == aContent) {
+      printf("%s %d\n", aStr, j);
+      return;
+    }
+  }
+}

@@ -39,6 +39,15 @@
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 
+// Selection includes
+#include "nsISelection.h"
+#include "nsSelectionRange.h"
+
+#define gCalcDebug 0
+
+PRBool IsInRange(nsIContent * aStart, nsIContent * aEnd, nsIContent * aContent);
+
+
 #ifdef NS_DEBUG
 #undef NOISY
 #undef NOISY_BLINK
@@ -134,10 +143,31 @@ public:
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
+  PRInt32 GetPosition(nsIPresContext& aCX,
+                      nsGUIEvent*     aEvent,
+                      nsIFrame *      aNewFrame);
+
+  void    CalcCursorPosition(nsIPresContext& aPresContext,
+                             nsGUIEvent*     aEvent,
+                             TextFrame *     aNewFrame,
+                             PRInt32 &       aOffset, 
+                             PRInt32 &       aWidth);
+
+  void    CalcActualPosition(PRUint32         &aMsgType,
+                             const PRUnichar* aCPStart, 
+                             const PRUnichar* aCP, 
+                             PRInt32 &        aOffset, 
+                             PRInt32 &        aWidth,
+                             nsIFontMetrics * aFM);
+
+  PRInt32 GetContentOffset() { return mContentOffset;}
+  PRInt32 GetContentLength() { return mContentLength;}
+
 protected:
   virtual ~TextFrame();
 
-  void PaintRegularText(nsIRenderingContext& aRenderingContext,
+  void PaintRegularText(nsIPresContext& aPresContext,
+                        nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect,
                         nscoord dx, nscoord dy);
 
@@ -421,17 +451,19 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
     }
     return NS_OK;
   }
-  PaintRegularText(aRenderingContext, aDirtyRect, 0, 0);
+  PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, 0, 0);
+  //nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
   if (font->mThreeD) {
     nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
     aRenderingContext.SetColor(color->mBackgroundColor);
-    PaintRegularText(aRenderingContext, aDirtyRect, onePixel, onePixel);
+    PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, onePixel, onePixel);
   }
 
   return NS_OK;
 }
 
-void TextFrame::PaintRegularText(nsIRenderingContext& aRenderingContext,
+void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect,
                                  nscoord dx, nscoord dy)
 {
@@ -496,8 +528,40 @@ void TextFrame::PaintRegularText(nsIRenderingContext& aRenderingContext,
         }
       }
 
-      // Render the text
-      aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+      // Get Selection Object
+      nsIPresShell     * shell     = aPresContext.GetShell();
+      nsIDocument      * doc       = shell->GetDocument();
+      nsISelection     * selection = doc->GetSelection();
+      nsSelectionRange * range     = selection->GetRange();
+
+      NS_RELEASE(shell);
+      NS_RELEASE(doc);
+      NS_RELEASE(selection);
+
+
+      if (IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
+        nsRect rect;
+        GetRect(rect);
+        rect.width--;
+        rect.height--;
+
+        nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
+
+        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        aRenderingContext.FillRect(rect);
+
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+
+        // Render the text
+        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        aRenderingContext.SetColor(color->mColor);
+      } else {
+        // Render the text
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+      }
 
       if (s0 != buf) {
         delete[] s0;
@@ -542,8 +606,39 @@ void TextFrame::PaintRegularText(nsIRenderingContext& aRenderingContext,
         }
       }
 
-      // Render the text
-      aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+      // Get Selection Object
+      nsIPresShell     * shell     = aPresContext.GetShell();
+      nsIDocument      * doc       = shell->GetDocument();
+      nsISelection     * selection = doc->GetSelection();
+      nsSelectionRange * range     = selection->GetRange();
+
+      NS_RELEASE(shell);
+      NS_RELEASE(doc);
+      NS_RELEASE(selection);
+
+      if (IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
+        nsRect rect;
+        GetRect(rect);
+        rect.width--;
+        rect.height--;
+
+        nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
+
+        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        aRenderingContext.FillRect(rect);
+
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+
+        // Render the text
+        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        aRenderingContext.SetColor(color->mColor);
+      } else {
+        // Render the text
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+      }
 
       if (s0 != buf) {
         delete[] s0;
@@ -1141,6 +1236,295 @@ bail:
   return NS_OK;
 }
 #undef NUM_WORDS
+
+//--------------------------------------------------------------------------
+// CalcActualPosition
+// This finds the actual interger offset into the text and the width of the
+// offset in Twips 
+//--------------------------------------------------------------------------
+void TextFrame::CalcActualPosition(PRUint32         &aMsgType,
+                                   const PRUnichar* aCPStart, 
+                                   const PRUnichar* aCP, 
+                                   PRInt32 &        aOffset, 
+                                   PRInt32 &        aWidth,
+                                   nsIFontMetrics * aFM) {
+
+  //printf("**STOPPED! Offset is [%d][%d]\n", width, PRUint32(cp - cpStart));
+
+  if (aMsgType == NS_MOUSE_LEFT_BUTTON_UP || aMsgType == NS_MOUSE_MOVE) {
+    aOffset = PRUint32(aCP - aCPStart);
+    aWidth  = aFM->GetWidth(aCPStart, aOffset-1);
+  } else if (aMsgType == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    aOffset = PRUint32(aCP - aCPStart)-1;
+    if (aOffset == 0) {
+      aWidth = 0;
+    } else {
+      aWidth = aFM->GetWidth(aCPStart, aOffset);
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
+//-- GetPosition
+//--------------------------------------------------------------------------
+PRInt32 TextFrame::GetPosition(nsIPresContext& aCX,
+                               nsGUIEvent * aEvent,
+                               nsIFrame * aNewFrame) {
+
+  PRInt32 offset; 
+  PRInt32 width;
+  CalcCursorPosition(aCX, aEvent, (TextFrame *)aNewFrame, offset, width);
+  offset += ((TextFrame *)aNewFrame)->GetContentOffset();
+
+  return offset;
+}
+
+
+//--------------------------------------------------------------------------
+//-- CalcCursorPosition
+//--------------------------------------------------------------------------
+void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
+                                   nsGUIEvent*     aEvent,
+                                   TextFrame *     aNewFrame,
+                                   PRInt32 &       aOffset, 
+                                   PRInt32 &       aWidth) {
+
+ 
+  if (gCalcDebug) printf("Cursor Point [%d,%d]\n", aEvent->point.x, aEvent->point.y);
+
+  // Get starting offset into the content
+  PRInt32 startingOffset = 0;
+  if (nsnull != aNewFrame->GetPrevInFlow()) {
+    TextFrame* prev = (TextFrame*) aNewFrame->GetPrevInFlow();
+    startingOffset = prev->GetContentOffset() + prev->GetContentLength();
+  }
+
+  // Get cached state for containing block frame
+  nsLineLayout* lineLayoutState = nsnull;
+  nsBlockReflowState* state = nsBlockFrame::FindBlockReflowState(&aCX, this);
+  if (nsnull != state) {
+    lineLayoutState = state->mCurrentLine;
+    if (nsnull != lineLayoutState) {
+      lineLayoutState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
+    }
+  }
+
+
+  nsIContent * content;
+  GetContent(content);
+
+  Text* txt = (Text*) content;
+
+  const PRUnichar* cp = txt->mText + startingOffset;
+  const PRUnichar* end = cp + txt->mLength - startingOffset;
+  const PRUnichar* cpStart = cp;
+  //mContentOffset = startingOffset;
+
+  nsIStyleContext * styleContext;
+
+  aNewFrame->GetStyleContext(&aCX, styleContext);
+  nsStyleFont *font      = (nsStyleFont*)styleContext->GetData(kStyleFontSID);
+  nsStyleText *styleText = (nsStyleText*)styleContext->GetData(kStyleTextSID);
+  NS_RELEASE(styleContext);
+
+  nsIFontMetrics* fm   = aCX.GetMetricsFor(font->mFont);
+  PRInt32 spaceWidth   = fm->GetWidth(' ');
+  PRBool  atLeftMargin = PR_TRUE;
+  PRBool  wrapping     = PR_TRUE;
+  if (NS_STYLE_WHITESPACE_NORMAL != styleText->mWhiteSpace) {
+    wrapping = PR_FALSE;
+  }
+
+  // Set whitespace skip flag
+  PRBool skipWhitespace = PR_FALSE;
+  if (nsnull != lineLayoutState) {
+    if (lineLayoutState->mSkipLeadingWhiteSpace) {
+      skipWhitespace = PR_TRUE;
+      mFlags |= TEXT_SKIP_LEADING_WS;
+    }
+  }
+
+  // Try to fit as much of the text as possible. Note that if we are
+  // at the left margin then the first word always fits. In addition,
+  // we compute the size of the largest word that we contain. If we
+  // end up containing nothing (because there isn't enough space for
+  // the first word) then we still compute the size of that first
+  // non-fitting word.
+
+  // XXX XP_IS_SPACE must not return PR_TRUE for the unicode &nbsp character
+  // XXX what about &zwj and it's cousins?
+  nscoord x            = 0;
+  nscoord maxWidth     = 100000;//aMaxSize.width;
+  nscoord width        = 0;
+  nscoord maxWordWidth = 0;
+
+  const PRUnichar* lastWordEnd = cpStart;
+
+  PRBool hasMultibyte     = PR_FALSE;
+  PRBool endsInWhitespace = PR_FALSE;
+
+  int w = 0;
+  while (cp < end) {
+    width = fm->GetWidth(cpStart, PRUint32(cp - cpStart));
+
+    if (gCalcDebug) printf("Cursor %d ******>> Width %d Pos: %d   end: %d \n", aEvent->point.x, 
+                                                               width, 
+                                                               PRUint32(cp - cpStart), 
+                                                               end-cpStart);
+    if (width >= aEvent->point.x) {
+      if (gCalcDebug) printf("*********************************\n*STOPPED**! Offset is [%d][%d]\n", width, PRUint32(cp - cpStart));
+      if (gCalcDebug) printf("**********************************\n");
+      CalcActualPosition(aEvent->message, cpStart, cp, aOffset, aWidth, fm);
+
+      //--------- Major Debugging ----
+     /*if (aEvent->message == NS_MOUSE_MOVE ||
+          aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+          int len = txt->mLength - startingOffset;
+
+          //printf("Len %d\n", len);
+          PRUnichar buf0[256];
+          PRUnichar buf1[256];
+          PRUnichar buf2[256];
+          const PRUnichar* start = txt->mText + startingOffset;
+
+          printf("mStart %d  mEnd %d  len %d\n", mStartSelect, mEndSelect, len);
+
+          for (PRUint32 i=0;i<mStartSelect;i++) {
+            printf("%c/", *start);
+            buf0[i] = *start;
+            start++;
+          }
+          if (mEndSelect-mStartSelect > 4) {
+            int x = 0;
+            x++;
+          }
+          printf("\n%d>", mEndSelect-mStartSelect);
+          buf0[i] = 0;
+          for (i=0;i<mEndSelect-mStartSelect;i++) {
+            printf("%c/", *start);
+            buf1[i] = *start;
+            start++;
+          }
+          printf("\n%d>", len-mEndSelect);
+          buf1[i] = 0;
+          for (i=0;i<len-mEndSelect;i++) {
+            printf("%c/", *start);
+            buf2[i] = *start;
+            start++;
+          }
+          printf("\n");
+          buf2[i] = 0;
+          //printf("[%s][%s][%s]\n", buf0, buf1, buf2);
+
+          int l0 = fm->GetWidth(cpStart,              PRUint32(mStartSelect));
+          int l1 = fm->GetWidth(cpStart+mStartSelect, PRUint32(mEndSelect-mStartSelect));
+          int l2 = fm->GetWidth(cpStart+mEndSelect,   PRUint32(len-mEndSelect));
+          int l3 = fm->GetWidth(cpStart,              PRUint32(mEndSelect));
+          printf("%d  %d  %d/\n", mStartSelect, mEndSelect-mStartSelect, len-mEndSelect);
+          printf("%d  %d  %d  %d  %d\n", l0, l1, l2, l3, (l0+l1+l2));
+
+          printf("mStart %d,%d  mEnd %d,%d  whole width %d  len %d\n", mStartSelect, mStartWidth, mEndSelect, mEndWidth, fm->GetWidth(cpStart, PRUint32(txt->mLength-startingOffset)), PRUint32(txt->mLength-startingOffset));
+          if (mEndSelect-mStartSelect > 0) {
+            mSelectWidth = fm->GetWidth(cpStart+mStartSelect, PRUint32(mEndSelect-mStartSelect));
+          } else {
+            mSelectWidth = 0;
+          }
+      }*/
+      //------
+
+      //----
+      NS_RELEASE(content);
+      return; 
+        }
+
+    PRUnichar ch = *cp++;
+
+    PRBool isWhitespace;
+    if (XP_IS_SPACE(ch)) {
+      if (gCalcDebug) printf("Before 11111111111111111111111111111111\n");
+      // Compress whitespace down to a single whitespace
+      while (cp < end) {
+        ch = *cp;
+        if (XP_IS_SPACE(ch)) {
+          cp++;
+          continue;
+        }
+        break;
+      }
+      if (skipWhitespace) {
+        skipWhitespace = PR_FALSE;
+        continue;
+      }
+      width = spaceWidth;
+      isWhitespace = PR_TRUE;
+      if (gCalcDebug) printf("After 11111111111111111111111111111111\n");
+    } else {
+      if (gCalcDebug) printf("Before 2222222222222222222222222222222222222\n");
+      // The character is not a space character. Find the end of the
+      // word and then measure it.
+      if (ch >= 256) {
+        hasMultibyte = PR_TRUE;
+      }
+      const PRUnichar* wordStart = cp - 1; 
+      while (cp < end) {
+        width = fm->GetWidth(cpStart, PRUint32(cp - cpStart));
+
+        if (gCalcDebug) printf("-Cursor %d ******>> Width %d Pos: %d   end: %d \n", aEvent->point.x, 
+                                                                   width, 
+                                                                   PRUint32(cp - cpStart), 
+                                                                   end-cpStart);
+        if (width >= aEvent->point.x) {
+          if (gCalcDebug) printf("**********************************\nSTOPPED! Offset is [%d][%d]\n", width, PRUint32(cp - cpStart));
+          if (gCalcDebug) printf("**********************************\n");
+          CalcActualPosition(aEvent->message, cpStart, cp, aOffset, aWidth, fm);
+          NS_RELEASE(content);
+          return; 
+        }
+
+        ch = *cp;
+        if (ch >= 256) {
+          hasMultibyte = PR_TRUE;
+        }
+        if (!XP_IS_SPACE(ch)) {
+          cp++;
+          continue;
+        }
+        if (gCalcDebug) printf("At bottom...breaking..........................\n");
+        break;
+      }
+      if (gCalcDebug) printf("After 2222222222222222222222222222222222222\n");
+    }
+
+    // Now that we have the end of the word or whitespace, see if it
+    // will fit.
+    if (!atLeftMargin && wrapping && (x + width > maxWidth)) {
+      // The word/whitespace will not fit.
+      cp = lastWordEnd;
+      if (x == 0) {
+        // Nothing fit at all. In this case, we still may want to know
+        // the maxWordWidth so compute it right now.
+        maxWordWidth = width;
+      }
+      if (gCalcDebug) printf(">>>>> Breaking\n");
+      break;
+    } // if
+
+    // The word fits. Add it to the run of text.
+    x += width;
+    if (width > maxWordWidth) {
+      maxWordWidth = width;
+    }
+    atLeftMargin = PR_FALSE;
+    lastWordEnd  = cp;
+    width        = 0;
+    endsInWhitespace = isWhitespace;
+    if (gCalcDebug) printf("Bottom--------------------------------\n");
+  } // while
+
+  NS_RELEASE(content);
+
+}
+
 
 NS_METHOD TextFrame::List(FILE* out, PRInt32 aIndent) const
 {

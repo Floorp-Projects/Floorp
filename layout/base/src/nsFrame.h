@@ -20,6 +20,9 @@
 
 #include "nsIFrame.h"
 #include "nsRect.h"
+#include "nsISelection.h"
+#include "nsSelectionRange.h"
+#include "nsSelectionPoint.h"
 
 
 // Implementation of a simple frame with no children and that isn't splittable
@@ -173,10 +176,7 @@ public:
   NS_IMETHOD  VerifyTree() const;
 
 protected:
-  // Style post processing hook
-  virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
-
-  // Selection Methods
+    // Selection Methods
   NS_METHOD HandlePress(nsIPresContext& aPresContext,
                    nsGUIEvent *    aEvent,
                    nsEventStatus&  aEventStatus,
@@ -192,17 +192,33 @@ protected:
                    nsEventStatus&  aEventStatus,
                    nsFrame  *      aFrame);
 
-  void NewContentIsBefore(nsIPresContext& aPresContext,
+  virtual void NewContentIsBefore(nsIPresContext& aPresContext,
                           nsGUIEvent * aEvent,
                           nsIContent * aNewContent,
                           nsIContent * aCurrentContent,
                           nsIFrame   * aNewFrame);
 
-  void NewContentIsAfter(nsIPresContext& aPresContext,
+  virtual void NewContentIsAfter(nsIPresContext& aPresContext,
                          nsGUIEvent * aEvent,
                          nsIContent * aNewContent,
                          nsIContent * aCurrentContent,
                          nsIFrame   * aNewFrame);
+
+  virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
+                              nsGUIEvent*     aEvent,
+                              nsIFrame *      aNewFrame);
+
+  virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
+                                nsGUIEvent    * aEvent,
+                                nsIFrame       * aNewFrame);
+
+  virtual void AdjustPointsInSameContent(nsIPresContext& aPresContext,
+                                 nsGUIEvent    * aEvent);
+
+
+  // Style post processing hook
+  virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
 
 
   // Constructor. Takes as arguments the content object, the index in parent,
@@ -217,6 +233,23 @@ protected:
   nsIFrame*        mContentParent;
   nsIFrame*        mGeometricParent;
   nsIFrame*        mNextSibling;  // singly linked list of frames
+
+  ///////////////////////////////////
+  // Important Selection Variables
+  ///////////////////////////////////
+  static nsIFrame * mCurrentFrame;
+  static PRBool     mDoingSelection;
+  static PRBool     mDidDrag;
+  static PRInt32    mStartPos;
+
+  // Selection data is valid only from the Mouse Press to the Mouse Release
+  static nsSelectionRange * mSelectionRange;
+  static nsISelection     * mSelection;
+
+  static nsSelectionPoint * mStartSelectionPoint;
+  static nsSelectionPoint * mEndSelectionPoint;
+  ///////////////////////////////////
+
 
 private:
   nsIView*         mView;  // must use accessor member functions
