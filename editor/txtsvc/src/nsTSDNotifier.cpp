@@ -163,4 +163,3 @@ nsTSDNotifier::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
   return mDoc->JoinNodes(aLeftNode, aRightNode, aParent);
 }
-

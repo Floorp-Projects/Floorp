@@ -50,6 +50,8 @@ public:
   NS_IMETHOD Init(nsIEditor *aEditor);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
+  NS_IMETHOD GetFlags(PRUint32 *aFlags);
+  NS_IMETHOD SetFlags(PRUint32 aFlags);
 
   // nsTextEditRules action id's
   enum 
@@ -57,7 +59,8 @@ public:
     kUndo            = 1000,
     kRedo            = 1001,
     kInsertText      = 2000,
-    kDeleteSelection = 2001
+    kDeleteSelection = 2001,
+    kInsertBreak     = 2002
   };
   
 protected:
@@ -71,6 +74,9 @@ protected:
                             TypeInState    typeInState);
   nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
   nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
+
+  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
 
   nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
@@ -112,10 +118,14 @@ protected:
   nsresult InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
                                        nsIAtom    *aTag, 
                                        nsIDOMSelection *aSelection);
+
+  /** creates a bogus text node if the document has no editable content */
+  nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
   
   // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
+  PRUint32 mFlags;
 };
 
 

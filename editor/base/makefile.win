@@ -108,6 +108,7 @@ LINCS=-I$(PUBLIC)\editor \
     -I$(PUBLIC)\xpcom \
     -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\js \
+    -I$(PUBLIC)\pref \
     -I$(PUBLIC)\txmgr \
     -I$(PUBLIC)\netlib \
     -I$(PUBLIC)\pref \

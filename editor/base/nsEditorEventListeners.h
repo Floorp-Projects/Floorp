@@ -25,6 +25,7 @@
 #include "nsIDOMTextListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMCompositionListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsITextEditor.h"
 #include "nsCOMPtr.h"
 
@@ -195,9 +196,41 @@ public:
 /*END implementations of dragevent handler interface*/
 
 protected:
-  nsITextEditor*  mEditor;		// weak reference
-  
+  nsITextEditor* mEditor;
+
 };
+
+/** editor Implementation of the FocusListener interface
+ */
+class nsTextEditorFocusListener : public nsIDOMFocusListener 
+{
+public:
+  /** default constructor
+   */
+  nsTextEditorFocusListener();
+  /** default destructor
+   */
+  virtual ~nsTextEditorFocusListener();
+
+  /** SetEditor gives an address to the editor that will be accessed
+   *  @param aEditor the editor this listener calls for editing operations
+   */
+  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+
+/*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+/*BEGIN implementations of focus event handler interface*/
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+public:
+  virtual nsresult Focus(nsIDOMEvent* aEvent);
+  virtual nsresult Blur(nsIDOMEvent* aEvent);
+/*END implementations of focus event handler interface*/
+
+protected:
+  nsITextEditor*  mEditor;		// weak reference
+};
+
 
 
 /** factory for the editor key listener
@@ -219,5 +252,10 @@ extern nsresult NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResu
 /** factory for the editor composition listener 
  */
 extern nsresult NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor *aEditor);
+
+/** factory for the editor composition listener 
+ */
+extern nsresult NS_NewEditorFocusListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor *aEditor);
+
 #endif //editorInterfaces_h__
 

@@ -36,6 +36,7 @@
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMDragListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNodeList.h"
@@ -97,9 +98,6 @@ static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,    NS_RANGE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-//static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-//static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
-
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -155,6 +153,7 @@ nsTextEditor::nsTextEditor()
 //  NS_INIT_REFCNT();
   mRules = nsnull;
   nsEditProperty::InstanceInit();
+  mMaxTextLength = -1;
 }
 
 nsTextEditor::~nsTextEditor()
@@ -175,19 +174,18 @@ nsTextEditor::~nsTextEditor()
       if (mMouseListenerP) {
         erP->RemoveEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
       }
-
-	  if (mTextListenerP) {
-		  erP->RemoveEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
-	  }
-
- 	  if (mCompositionListenerP) {
-		  erP->RemoveEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
-	  }
-
-	  if (mDragListenerP) {
-        erP->RemoveEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
+	    if (mTextListenerP) {
+        erP->RemoveEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
+	    }
+ 	    if (mCompositionListenerP) {
+		    erP->RemoveEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
+	    }
+      if (mFocusListenerP) {
+        erP->RemoveEventListenerByIID(mFocusListenerP, nsIDOMFocusListener::GetIID());
       }
-
+	    if (mDragListenerP) {
+          erP->RemoveEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
+      }
     }
     else
       NS_NOTREACHED("~nsTextEditor");
@@ -228,7 +226,8 @@ NS_IMETHODIMP nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsEditor::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
+NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, 
+                                 nsIPresShell   *aPresShell)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   nsresult result=NS_ERROR_NULL_POINTER;
@@ -258,94 +257,121 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     // Init the rules system
     InitRules();
 
+    // get a key listener
     result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
     if (NS_OK != result) {
+      HandleEventListenerError();
       return result;
     }
+    
+    // get a mouse listener
     result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
     if (NS_OK != result) {
 #ifdef DEBUG_akkana
       printf("Couldn't get mouse listener\n");
 #endif
-      // drop the key listener if we couldn't get a mouse listener.
-      mKeyListenerP = do_QueryInterface(0); 
+      HandleEventListenerError();
       return result;
     }
 
-	result = NS_NewEditorTextListener(getter_AddRefs(mTextListenerP),this);
-	if (NS_OK !=result) {
-		// drop the key and mouse listeners
+    // get a text listener
+	  result = NS_NewEditorTextListener(getter_AddRefs(mTextListenerP),this);
+	  if (NS_OK !=result) 
+    {
 #ifdef DEBUG_TAGUE
 	printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 #endif
-		mMouseListenerP = do_QueryInterface(0);
-		mKeyListenerP = do_QueryInterface(0);
-		return result;
-	}
+		  HandleEventListenerError();
+		  return result;
+	  }
 
-	result = NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),this);
-	if (NS_OK!=result) {
-		// drop the key and mouse listeners
+    // get a composition listener
+	  result = NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),this);
+	  if (NS_OK!=result) 
+    {
 #ifdef DEBUG_TAGUE
 	printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 #endif
-		mMouseListenerP = do_QueryInterface(0);
-		mKeyListenerP = do_QueryInterface(0);
-		mTextListenerP = do_QueryInterface(0);
-		return result;
-	}
+		  HandleEventListenerError();
+		  return result;
+	  }
 
+    // get a drag listener
     result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), this);
-    if (NS_OK != result) {
-      //return result;
-		mMouseListenerP = do_QueryInterface(0);
-		mKeyListenerP = do_QueryInterface(0);
-		mTextListenerP = do_QueryInterface(0);
-		mCompositionListenerP = do_QueryInterface(0);
-    }
-
-    nsCOMPtr<nsIDOMEventReceiver> erP;
-    result = aDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
     if (NS_OK != result) 
     {
-      mKeyListenerP = do_QueryInterface(0);
-      mMouseListenerP = do_QueryInterface(0); //dont need these if we cant register them
-	  mTextListenerP = do_QueryInterface(0);
-      mDragListenerP = do_QueryInterface(0); //dont need these if we cant register them
-	  mCompositionListenerP = do_QueryInterface(0);
+      HandleEventListenerError();
+      //return result;    // XXX: why is this return commented out?
+    }
+
+    // get a focus listener
+    result = NS_NewEditorFocusListener(getter_AddRefs(mFocusListenerP), this);
+    if (NS_OK != result) 
+    {
+      HandleEventListenerError();
       return result;
     }
-    //cmanske: Shouldn't we check result from this?
-    result = erP->AddEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
+
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    result = aDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
     if (!NS_SUCCEEDED(result))
     {
-      printf("nsTextEditor::Init -- faile to add mKeyListenerP\n");
+      HandleEventListenerError();
       return result;
     }
 
+    // register the event listeners with the DOM event reveiver
+    result = erP->AddEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener");
+    result = erP->AddEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse listener");
+    result = erP->AddEventListenerByIID(mFocusListenerP, nsIDOMFocusListener::GetIID());
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register focus listener");
+    result = erP->AddEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register text listener");
+    result = erP->AddEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register composition listener");
 #ifdef NEW_DRAG_AND_DROP
-    erP->AddEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
-#endif
-    erP->AddEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
-	
-    erP->AddEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
-    erP->AddEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
-
-    result = NS_OK;
-
+    result = erP->AddEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register drag listener");
+#endif    result = NS_OK;
 		EnableUndo(PR_TRUE);
   }
   return result;
 }
 
-void  nsTextEditor::InitRules()
+void nsTextEditor::HandleEventListenerError()
+{
+  printf("failed to add event listener\n");
+  mKeyListenerP = do_QueryInterface(0);
+  mMouseListenerP = do_QueryInterface(0);
+  mTextListenerP = do_QueryInterface(0);
+  mDragListenerP = do_QueryInterface(0); 
+  mCompositionListenerP = do_QueryInterface(0);
+  mFocusListenerP = do_QueryInterface(0);
+}
+
+void nsTextEditor::InitRules()
 {
 // instantiate the rules for this text editor
-// XXX: we should be told which set of rules to instantiate
   mRules =  new nsTextEditRules();
   mRules->Init(this);
 }
 
+NS_IMETHODIMP
+nsTextEditor::GetFlags(PRUint32 *aFlags)
+{
+  if (!mRules || !aFlags) { return NS_ERROR_NULL_POINTER; }
+  return mRules->GetFlags(aFlags);
+}
+
+NS_IMETHODIMP
+nsTextEditor::SetFlags(PRUint32 aFlags)
+{
+  if (!mRules) { return NS_ERROR_NULL_POINTER; }
+  return mRules->SetFlags(aFlags);
+}
 
 NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty, 
                                             const nsString *aAttribute, 
@@ -803,17 +829,10 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
   NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
 
-
-// XXXX: Horrible hack! We are doing this because
-// of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/13/99
-  // BEGIN HACK!!!
-  // HACKForceRedraw();
-  // END HACK
-
   return result;
 }
 
+/* XXX InsertText must respect mMaxTextLength */
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -841,18 +860,34 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   if (placeholderTxn)
     placeholderTxn->SetAbsorb(PR_FALSE);  // this ends the merging of txns into placeholderTxn
 
-  // BEGIN HACK!!!
-  // HACKForceRedraw();
-  // END HACK
   return result;
+}
+
+NS_IMETHODIMP nsTextEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
+{
+  mMaxTextLength = aMaxTextLength;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsTextEditor::InsertBreak()
 {
-  // For plainttext just pass newlines through
-  nsAutoString  key;
-  key += '\n';
-  return InsertText(key);
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertBreak);
+  nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    // For plainttext just pass newlines through
+    nsAutoString  key;
+    key += '\n';
+    result = InsertText(key);
+    nsEditor::GetSelection(getter_AddRefs(selection));
+    result = mRules->DidDoAction(selection, &ruleInfo, result);
+  }
+  return result;
 }
 
 

@@ -17,10 +17,9 @@
  */
 #include "nsEditorEventListeners.h"
 #include "nsEditor.h"
-
-#include "CreateElementTxn.h"
-
 #include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMCharacterData.h"
@@ -1241,10 +1240,133 @@ NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsITex
 	if (nsnull==it) {
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
-
 	it->SetEditor(aEditor);
+  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
+}
 
+nsresult 
+NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult, 
+                          nsITextEditor *aEditor)
+{
+  nsTextEditorFocusListener* it = new nsTextEditorFocusListener();
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  it->SetEditor(aEditor);
+  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 	return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
+
+
+/*
+ * nsTextEditorFocusListener implementation
+ */
+
+NS_IMPL_ADDREF(nsTextEditorFocusListener)
+
+NS_IMPL_RELEASE(nsTextEditorFocusListener)
+
+
+nsTextEditorFocusListener::nsTextEditorFocusListener() 
+{
+  NS_INIT_REFCNT();
+}
+
+nsTextEditorFocusListener::~nsTextEditorFocusListener() 
+{
+}
+
+nsresult
+nsTextEditorFocusListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
+  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMFocusListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMFocusListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsresult
+nsTextEditorFocusListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTextEditorFocusListener::Focus(nsIDOMEvent* aDragEvent)
+{
+  // turn on selection and caret
+  if (mEditor)
+  {
+    nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
+    if (editor)
+    {
+      nsCOMPtr<nsIPresShell>ps;
+      editor->GetPresShell(getter_AddRefs(ps));
+      if (ps)
+      {
+        ps->SetCaretEnabled(PR_TRUE);
+      }
+      nsCOMPtr<nsIDOMDocument>domDoc;
+      editor->GetDocument(getter_AddRefs(domDoc));
+      if (domDoc)
+      {
+        nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+        if (doc)
+        {
+          doc->SetDisplaySelection(PR_TRUE);
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsTextEditorFocusListener::Blur(nsIDOMEvent* aDragEvent)
+{
+  // turn off selection and caret
+  if (mEditor)
+  {
+    nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
+    if (editor)
+    {
+      nsCOMPtr<nsIPresShell>ps;
+      editor->GetPresShell(getter_AddRefs(ps));
+      if (ps)
+      {
+        ps->SetCaretEnabled(PR_FALSE);
+      }
+      nsCOMPtr<nsIDOMDocument>domDoc;
+      editor->GetDocument(getter_AddRefs(domDoc));
+      if (domDoc)
+      {
+        nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+        if (doc)
+        {
+          doc->SetDisplaySelection(PR_FALSE);
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
 

@@ -47,10 +47,11 @@ public:
 
 	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
 
-  /** Initialize the text editor 
+  /** Initialize the HTML editor 
     *
     */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell )=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, 
+                  nsIPresShell   *aPresShell)=0;
 
 // Methods shared with nsITextEditor (see nsITextEditor.h for details)
   NS_IMETHOD SetTextProperty(nsIAtom *aProperty, 

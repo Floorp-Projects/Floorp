@@ -37,6 +37,10 @@ Editor Action Listener interface to outside world
  * <P>
  * nsIEditActionListener is the interface used by applications wishing to be notified
  * when the editor modifies the DOM tree.
+ *
+ * Note:  this is the wrong class to implement if you are interested in generic
+ * change notifications.  For generic notifications, you should implement
+ * nsIDocumentObserver.
  */
 class nsIEditActionListener : public nsISupports{
 public:
@@ -126,7 +130,6 @@ public:
                           nsIDOMNode  *aRightNode,
                           nsIDOMNode  *aParent,
                           nsresult    aResult)=0;
-  
 };
 
 #endif //nsIEditActionListener_h__

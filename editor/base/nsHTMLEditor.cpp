@@ -100,7 +100,8 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
+NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, 
+                                 nsIPresShell   *aPresShell)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   nsresult result=NS_ERROR_NULL_POINTER;
