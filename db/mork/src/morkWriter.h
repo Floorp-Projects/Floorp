@@ -58,7 +58,7 @@
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 
-#define morkWriter_kStreamBufSize /*i*/ (16) /* buffer size for stream */ 
+#define morkWriter_kStreamBufSize /*i*/ (16 * 1024) /* buffer size for stream */ 
 
 #define morkDerived_kWriter  /*i*/ 0x5772 /* ascii 'Wr' */
 
@@ -85,7 +85,10 @@
 
 #define morkWriter_kMaxColumnNameSize        128 /* longest writable col name */
 
-#define morkWriter_kMaxIndent 48 /* default value for mWriter_MaxIndent */
+#define morkWriter_kMaxIndent 56 /* default value for mWriter_MaxIndent */
+#define morkWriter_kMaxLine   78 /* default value for mWriter_MaxLine */
+
+#define morkWriter_kYarnEscapeSlop  4 /* guess average yarn escape overhead */
 
 #define morkWriter_kTableMetaCellDepth 4 /* */
 #define morkWriter_kTableMetaCellValueDepth 6 /* */
@@ -126,6 +129,7 @@ public: // state is public because the entire Mork system is private
   
   mork_size    mWriter_LineSize;  // length of current line being written
   mork_size    mWriter_MaxIndent; // line size forcing a line break
+  mork_size    mWriter_MaxLine;   // line size forcing a value continuation
   
   mork_cscode  mWriter_TableCharset;     // current charset metainfo
   mork_scope   mWriter_TableAtomScope;   // current atom scope
@@ -195,6 +199,7 @@ public: // typing & errors
   static void UnsupportedPhaseError(morkEnv* ev);
 
 public: // inlines
+  void ChangeDictCharset(morkEnv* ev, mork_cscode inNewForm);
   mork_bool DidStartDict() const { return mWriter_DidStartDict; }
   mork_bool DidEndDict() const { return mWriter_DidEndDict; }
   
@@ -204,6 +209,13 @@ public: // inlines
   void IndentAsNeeded(morkEnv* ev, mork_size inDepth)
   { 
     if ( mWriter_LineSize > mWriter_MaxIndent )
+      mWriter_LineSize = mWriter_Stream->PutIndent(ev, inDepth);
+  }
+  
+  void IndentOverMaxLine(morkEnv* ev,
+    mork_size inPendingSize, mork_size inDepth)
+  { 
+    if ( mWriter_LineSize + inPendingSize > mWriter_MaxLine )
       mWriter_LineSize = mWriter_Stream->PutIndent(ev, inDepth);
   }
 

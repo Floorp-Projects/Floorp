@@ -64,6 +64,8 @@ typedef unsigned long  mork_u4;  // make sure this is four bytes
 typedef long           mork_i4;  // make sure this is four bytes
 typedef long           mork_ip;  // make sure sizeof(mork_ip) == sizeof(void*)
 
+typedef mork_u1 mork_ch;  // small byte-sized character (never wide)
+
 typedef mork_u2 mork_base;    // 2-byte magic class signature slot in object
 typedef mork_u2 mork_derived; // 2-byte magic class signature slot in object
 typedef mork_u2 mork_uses;    // 2-byte strong uses count
@@ -109,6 +111,9 @@ typedef mork_u1 mork_load; // dirty or clean (clone IronDoc's fe_load)
 #define morkChange_kPut 'p' /* put member */
 #define morkChange_kSet 's' /* set all members */
 #define morkChange_kNil 0   /* no change in this member */
+#define morkChange_kDup 'd' /* duplicate changes have no effect */
+// kDup is intended to replace another change constant in an object as a
+// conclusion about change feasibility while staging intended alterations.
 
 #define morkLoad_kDirty ((mork_load) 0xDD) /* same as IronDoc constant */
 #define morkLoad_kClean ((mork_load) 0x22) /* same as IronDoc constant */
@@ -147,6 +152,7 @@ typedef mdb_order mork_order; // neg:lessthan, zero:equalto, pos:greaterthan
 
 // { %%%%% begin class forward defines %%%%%
 // try to put these in alphabetical order for easier examination:
+class morkMid;
 class morkAtom;
 class morkAtomSpace;
 class morkBookAtom;
@@ -168,6 +174,7 @@ class morkObject;
 class morkOidAtom;
 class morkParser;
 class morkPool;
+class morkPlace;
 class morkPort;
 class morkPortTableCursor;
 class morkRow;
@@ -175,6 +182,7 @@ class morkRowCellCursor;
 class morkRowObject;
 class morkRowSpace;
 class morkSpace;
+class morkSpan;
 class morkStore;
 class morkStream;
 class morkTable;

@@ -52,6 +52,18 @@
 #include "morkWriter.h"
 #endif
 
+#ifndef _MORKPARSER_
+#include "morkParser.h"
+#endif
+
+#ifndef _MORKBUILDER_
+#include "morkBuilder.h"
+#endif
+
+#ifndef _MORKFILE_
+#include "morkFile.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 
@@ -92,6 +104,7 @@ morkThumb::morkThumb(morkEnv* ev,
 , mThumb_Store( 0 )
 , mThumb_File( 0 )
 , mThumb_Writer( 0 )
+, mThumb_Builder( 0 )
 , mThumb_SourcePort( 0 )
 
 , mThumb_DoCollect( morkBool_kFalse )
@@ -111,9 +124,13 @@ morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
     if ( this->IsNode() )
     {
       mThumb_Magic = 0;
+      if ( mThumb_Builder && mThumb_Store )
+        mThumb_Store->ForgetBuilder(ev);
+      morkBuilder::SlotStrongBuilder((morkBuilder*) 0, ev, &mThumb_Builder);
+      
       morkWriter::SlotStrongWriter((morkWriter*) 0, ev, &mThumb_Writer);
       morkFile::SlotStrongFile((morkFile*) 0, ev, &mThumb_File);
-      morkStore::SlotWeakStore((morkStore*) 0, ev, &mThumb_Store);
+      morkStore::SlotStrongStore((morkStore*) 0, ev, &mThumb_Store);
       morkPort::SlotStrongPort((morkPort*) 0, ev, &mThumb_SourcePort);
       this->MarkShut();
     }
@@ -152,6 +169,11 @@ morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
   ev->NewError("nil mThumb_Writer");
 }
 
+/*static*/ void morkThumb::NilThumbBuilderError(morkEnv* ev)
+{
+  ev->NewError("nil mThumb_Builder");
+}
+
 /*static*/ void morkThumb::NilThumbSourcePortError(morkEnv* ev)
 {
   ev->NewError("nil mThumb_SourcePort");
@@ -181,14 +203,31 @@ morkThumb::Make_OpenFileStore(morkEnv* ev, nsIMdbHeap* ioHeap,
   morkThumb* outThumb = 0;
   if ( ioHeap && ioStore )
   {
-    outThumb = new(*ioHeap, ev)
-      morkThumb(ev, morkUsage::kHeap, ioHeap, ioHeap,
-        morkThumb_kMagic_OpenFileStore);
-        
-    if ( outThumb )
+    morkFile* file = ioStore->mStore_File;
+    if ( file )
     {
-      morkStore::SlotWeakStore(ioStore, ev, &outThumb->mThumb_Store);
+      mork_pos fileEof = file->Length(ev);
+      if ( ev->Good() )
+      {
+        outThumb = new(*ioHeap, ev)
+          morkThumb(ev, morkUsage::kHeap, ioHeap, ioHeap,
+            morkThumb_kMagic_OpenFileStore);
+            
+        if ( outThumb )
+        {
+          morkBuilder* builder = ioStore->LazyGetBuilder(ev);
+          if ( builder )
+          {
+            outThumb->mThumb_Total = fileEof;
+            morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
+            morkBuilder::SlotStrongBuilder(builder, ev,
+              &outThumb->mThumb_Builder);
+          }
+        }
+      }
     }
+    else
+      ioStore->NilStoreFileError(ev);
   }
   else
     ev->NilPointerError();
@@ -219,7 +258,7 @@ morkThumb::Make_CompressCommit(morkEnv* ev,
         {
           writer->mWriter_NeedDirtyAll = morkBool_kTrue;
           outThumb->mThumb_DoCollect = inDoCollect;
-          morkStore::SlotWeakStore(ioStore, ev, &outThumb->mThumb_Store);
+          morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
           morkFile::SlotStrongFile(file, ev, &outThumb->mThumb_File);
           morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
         }
@@ -330,7 +369,21 @@ void morkThumb::DoMore_OpenFilePort(morkEnv* ev)
 
 void morkThumb::DoMore_OpenFileStore(morkEnv* ev)
 {
-  this->UnsupportedThumbMagicError(ev);
+  morkBuilder* builder = mThumb_Builder;
+  if ( builder )
+  {
+    mork_pos pos = 0;
+    builder->ParseMore(ev, &pos, &mThumb_Done, &mThumb_Broken);
+    // mThumb_Total = builder->mBuilder_TotalCount;
+    // mThumb_Current = builder->mBuilder_DoneCount;
+    mThumb_Current = pos;
+  }
+  else
+  {
+    this->NilThumbBuilderError(ev);
+    mThumb_Broken = morkBool_kTrue;
+    mThumb_Done = morkBool_kTrue;
+  }
 }
 
 void morkThumb::DoMore_ExportToFormat(morkEnv* ev)

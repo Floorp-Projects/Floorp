@@ -221,7 +221,7 @@ morkFile::NewFileErrnoError(morkEnv* ev) const
 
 // ````` ````` ````` ````` newlines ````` ````` ````` `````  
 
-#ifdef MORK_MAC
+#if defined(MORK_MAC) || defined(MORK_OBSOLETE)
        static const char* morkFile_kNewlines = 
        "\015\015\015\015\015\015\015\015\015\015\015\015\015\015\015\015";
 #      define morkFile_kNewlinesCount 16
@@ -314,7 +314,7 @@ morkStdioFile::OpenOldStdioFile(morkEnv* ev, nsIMdbHeap* ioHeap,
   morkStdioFile* outFile = 0;
   if ( ioHeap && inFilePath )
   {
-    const char* mode = (inFrozen)? "rb" : "wb";
+    const char* mode = (inFrozen)? "rb" : "rb+";
     outFile = new(*ioHeap, ev)
       morkStdioFile(ev, morkUsage::kHeap, ioHeap, ioHeap, inFilePath, mode); 
       

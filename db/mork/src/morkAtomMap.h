@@ -138,11 +138,11 @@ public: // dynamic type identification
 // { ===== begin morkMap poly interface =====
   virtual mork_bool // note: equal(a,b) implies hash(a) == hash(b)
   Equal(morkEnv* ev, const void* inKeyA, const void* inKeyB) const;
-  // implemented using morkBookAtom::HashFormAndBody()
+  // implemented using morkBookAtom::EqualFormAndBody()
 
   virtual mork_u4 // note: equal(a,b) implies hash(a) == hash(b)
   Hash(morkEnv* ev, const void* inKey) const;
-  // implemented using morkBookAtom::EqualFormAndBody()
+  // implemented using morkBookAtom::HashFormAndBody()
 // } ===== end morkMap poly interface =====
 
 public: // other map methods

@@ -212,6 +212,7 @@ public: // public non-poly morkStream methods
   void    Ungetc(int c) /*i*/
   { if ( mStream_At > mStream_Buf && c > 0 ) *--mStream_At = c; }
   
+  // Note Getc() returns EOF consistently after any fill_getc() error occurs.
   int     Getc(morkEnv* ev) /*i*/
   { return ( mStream_At < mStream_ReadEnd )? *mStream_At++ : fill_getc(ev); }
   

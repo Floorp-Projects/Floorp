@@ -84,6 +84,7 @@ public: // state is public because the entire Mork system is private
   morkStore*   mThumb_Store; // weak ref to created store
   morkFile*    mThumb_File;  // strong ref to file (store, import, export)
   morkWriter*  mThumb_Writer;  // strong ref to writer (for commit)
+  morkBuilder* mThumb_Builder;  // strong ref to builder (for store open)
   morkPort*    mThumb_SourcePort;  // strong ref to port for import
   
   mork_bool    mThumb_DoCollect; // influence whether a collect happens
@@ -115,6 +116,7 @@ public: // typing
   static void NilThumbStoreError(morkEnv* ev);
   static void NilThumbFileError(morkEnv* ev);
   static void NilThumbWriterError(morkEnv* ev);
+  static void NilThumbBuilderError(morkEnv* ev);
   static void NilThumbSourcePortError(morkEnv* ev);
 
 public: // 'do more' methods

@@ -75,7 +75,7 @@ morkStream::morkStream(morkEnv* ev, const morkUsage& inUsage,
 , mStream_ContentFile( 0 )
 
 , mStream_Buf( 0 )
-, mStream_BufSize( 0 )
+, mStream_BufSize( inBufSize )
 , mStream_BufPos( 0 )
 , mStream_Dirty( morkBool_kFalse )
 , mStream_HitEof( morkBool_kFalse )
@@ -329,7 +329,7 @@ morkStream::PutByteThenNewlineThenSpace(morkEnv* ev, int inByte)
 mork_size
 morkStream::PutLineBreak(morkEnv* ev)
 {
-#ifdef MORK_MAC
+#if defined(MORK_MAC) || defined(MORK_OBSOLETE)
 
   this->Putc(ev, mork_kCR);
   return 1;

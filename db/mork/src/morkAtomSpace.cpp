@@ -154,6 +154,32 @@ morkAtomSpace::CutAllAtoms(morkEnv* ev, morkPool* ioPool)
 
 
 morkBookAtom*
+morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
+   const morkBigBookAtom& inAtom,  mork_aid inAid)
+// Make copy of inAtom and put it in both maps, using specified ID.
+{
+  morkBookAtom* outAtom = 0;
+  if ( ev->Good() )
+  {
+    morkPool* pool = this->GetSpaceStorePool();
+    outAtom = pool->NewBookAtomCopy(ev, inAtom);
+    if ( outAtom )
+    {
+      outAtom->mBookAtom_Id = inAid;
+      outAtom->mBookAtom_Space = this;
+      mAtomSpace_AtomAids.AddAtom(ev, outAtom);
+      mAtomSpace_AtomBodies.AddAtom(ev, outAtom);
+      if ( mSpace_Scope == morkAtomSpace_kColumnScope )
+        outAtom->MakeCellUseForever(ev);
+
+      if ( mAtomSpace_HighUnderId <= inAid )
+        mAtomSpace_HighUnderId = inAid + 1;
+    }
+  }
+  return outAtom;
+}
+
+morkBookAtom*
 morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
 // make copy of inAtom and put it in both maps, using a new ID as needed.
 {
@@ -167,9 +193,12 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
       mork_aid id = this->MakeNewAtomId(ev, atom);
       if ( id )
       {
-        outAtom = atom;
+        outAtom = atom; 
+        atom->mBookAtom_Space = this;
         mAtomSpace_AtomAids.AddAtom(ev, atom);
         mAtomSpace_AtomBodies.AddAtom(ev, atom);
+        if ( mSpace_Scope == morkAtomSpace_kColumnScope )
+          outAtom->MakeCellUseForever(ev);
       }
     }
   }

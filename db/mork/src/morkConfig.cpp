@@ -30,8 +30,8 @@
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
-/* ----- ----- ----- ----- MORK_MAC ----- ----- ----- ----- */
-#ifdef MORK_MAC
+/* ----- ----- ----- ----- MORK_OBSOLETE ----- ----- ----- ----- */
+#ifdef MORK_OBSOLETE
 
 #include <Types.h>
   
@@ -58,14 +58,14 @@
     
     DebugStr(pascalStr); /* call Mac debugger entry point */
   }
-#endif /*MORK_MAC*/
-/* ----- ----- ----- ----- MORK_MAC ----- ----- ----- ----- */
+#endif /*MORK_OBSOLETE*/
+/* ----- ----- ----- ----- MORK_OBSOLETE ----- ----- ----- ----- */
 
 void mork_assertion_signal(const char* inMessage)
 {
-#ifdef XP_MAC
+#ifdef MORK_OBSOLETE
   mork_mac_break_string(inMessage);
-#endif /*XP_MAC*/
+#endif /*MORK_OBSOLETE*/
 
 #ifdef MORK_WIN
   // asm { int 3 }

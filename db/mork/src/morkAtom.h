@@ -305,7 +305,7 @@ class morkMaxBookAtom : public morkBigBookAtom { //
   // mork_u1       mBigBookAtom_Body[ 1 ]; // 1st byte of immed content vector
   
 public:
-  mork_u1 mBigBookAtom_Body[ morkBookAtom_kMaxBodySize + 3 ]; // max bytes
+  mork_u1 mMaxBookAtom_Body[ morkBookAtom_kMaxBodySize + 3 ]; // max bytes
 
 public: // empty construction does nothing
   morkMaxBookAtom() { }

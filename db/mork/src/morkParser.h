@@ -23,10 +23,6 @@
 #include "mork.h"
 #endif
 
-#ifndef _MORKPARSER_
-#include "morkParser.h"
-#endif
-
 #ifndef _MORKBLOB_
 #include "morkBlob.h"
 #endif
@@ -68,6 +64,9 @@ public:
   
   morkPlace(mork_pos inPos, mork_line inLine)
   { mPlace_Pos = inPos; mPlace_Line = inLine; }
+  
+  morkPlace(const morkPlace& inPlace)
+  : mPlace_Pos(inPlace.mPlace_Pos), mPlace_Line(inPlace.mPlace_Line) { }
 };
 
 /*=============================================================================
@@ -80,48 +79,68 @@ public:
   const char*  mGlitch_Comment; // null-terminated ASCII C string
 
   morkGlitch() { mGlitch_Comment = 0; }
+  
+  morkGlitch(const morkPlace& inPlace, const char* inComment)
+  : mGlitch_Place(inPlace), mGlitch_Comment(inComment) { }
 };
 
 /*=============================================================================
- * morkAlias: all possible ways needed to express an alias ID in Mork syntax
+ * morkMid: all possible ways needed to express an alias ID in Mork syntax
  */
 
-/*| morkAlias: an abstraction of all the variations we might need to support
+/*| morkMid: an abstraction of all the variations we might need to support
 **| in order to present an ID through the parser interface most cheaply and
 **| with minimum transformation away from the original text format.
 **|
 **|| An ID can have one of four forms:
-**| 1) idHex            (mAlias_Oid.mOid_Id <- idHex)
-**| 2) idHex:^scopeHex  (mAlias_Oid.mOid_Id <- idHex, mOid_Scope <- scopeHex)
-**| 3) idHex:scopeName  (mAlias_Oid.mOid_Id <- idHex, mAlias_Buf <- scopeName)
-**| 4) columnName       (mAlias_Buf <- columnName, for columns in cells only)
+**| 1) idHex            (mMid_Oid.mOid_Id <- idHex)
+**| 2) idHex:^scopeHex  (mMid_Oid.mOid_Id <- idHex, mOid_Scope <- scopeHex)
+**| 3) idHex:scopeName  (mMid_Oid.mOid_Id <- idHex, mMid_Buf <- scopeName)
+**| 4) columnName       (mMid_Buf <- columnName, for columns in cells only)
 **|
-**|| Typically, mAlias_Oid.mOid_Id will hold a nonzero integer value for
+**|| Typically, mMid_Oid.mOid_Id will hold a nonzero integer value for
 **| an ID, but we might have an optional scope specified by either an integer
 **| in hex format, or a string name.  (Note that while the first ID can be
 **| scoped variably, any integer ID for a scope is assumed always located in
 **| the same scope, so the second ID need not be disambiguated.)
 **|
-**|| The only time mAlias_Oid.mOid_Id is ever zero is when mAlias_Buf alone
+**|| The only time mMid_Oid.mOid_Id is ever zero is when mMid_Buf alone
 **| is nonzero, to indicate an explicit string instead of an alias appeared.
 **| This case happens to make the representation of columns in cells somewhat
 **| easier to represent, since columns can just appear as a string name; and
 **| this unifies those interfaces with row and table APIs expecting IDs.
 **|
-**|| So when the parser passes an instance of morkAlias to a subclass, the 
-**| mAlias_Oid.mOid_Id slot should usually be nonzero.  And the other two
-**| slots, mAlias_Oid.mOid_Scope and mAlias_Buf, might both be zero, or at
+**|| So when the parser passes an instance of morkMid to a subclass, the 
+**| mMid_Oid.mOid_Id slot should usually be nonzero.  And the other two
+**| slots, mMid_Oid.mOid_Scope and mMid_Buf, might both be zero, or at
 **| most one of them will be nonzero to indicate an explicit scope; the
 **| parser is responsible for ensuring at most one of these is nonzero.
 |*/
-class morkAlias {
+class morkMid {
 public:
-  mdbOid          mAlias_Oid;  // mOid_Scope is zero when not specified
-  const morkBuf*  mAlias_Buf;  // points to some specific buf subclass
+  mdbOid          mMid_Oid;  // mOid_Scope is zero when not specified
+  const morkBuf*  mMid_Buf;  // points to some specific buf subclass
   
-  morkAlias()
-  { mAlias_Oid.mOid_Scope = 0; mAlias_Oid.mOid_Id = morkId_kMinusOne;
-   mAlias_Buf = 0; }
+  morkMid()
+  { mMid_Oid.mOid_Scope = 0; mMid_Oid.mOid_Id = morkId_kMinusOne;
+   mMid_Buf = 0; }
+  
+  void InitMidWithCoil(morkCoil* ioCoil)
+  { mMid_Oid.mOid_Scope = 0; mMid_Oid.mOid_Id = morkId_kMinusOne;
+   mMid_Buf = ioCoil; }
+    
+  void ClearMid()
+  { mMid_Oid.mOid_Scope = 0; mMid_Oid.mOid_Id = morkId_kMinusOne;
+   mMid_Buf = 0; }
+
+  morkMid(const morkMid& other)
+  : mMid_Oid(other.mMid_Oid), mMid_Buf(other.mMid_Buf) { }
+  
+  mork_bool HasNoId() const // ID is unspecified?
+  { return ( mMid_Oid.mOid_Id == morkId_kMinusOne ); }
+  
+  mork_bool HasSomeId() const // ID is specified?
+  { return ( mMid_Oid.mOid_Id != morkId_kMinusOne ); }
 };
 
 /*=============================================================================
@@ -137,6 +156,9 @@ public: // methods
   
 public: // inlines
   morkSpan() { } // use inline empty constructor for each place
+  
+  morkPlace* AsPlace() { return &mSpan_Start; }
+  const morkPlace* AsConstPlace() const { return &mSpan_Start; }
   
   void SetSpan(mork_pos inFromPos, mork_line inFromLine,
     mork_pos inToPos, mork_line inToLine)
@@ -208,7 +230,7 @@ class morkParser /*d*/ : public morkNode {
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected morkParser members
   
-  nsIMdbHeap*      mParser_Heap;   // refcounted heap used for allocation
+  nsIMdbHeap*   mParser_Heap;   // refcounted heap used for allocation
   morkStream*   mParser_Stream; // refcounted input stream
 
   mork_u4       mParser_Tag; // must equal morkParser_kTag
@@ -219,9 +241,10 @@ protected: // protected morkParser members
   // after finding ends of group transactions, we can re-seek the start:
   mork_pos      mParser_GroupContentStartPos; // start of this group
 
-  mork_gid      mParser_GroupId; // group ID if inside a group
-  mork_tid      mParser_TableId; // table ID if inside a table
-  mork_rid      mParser_RowId;   // row ID if inside a row
+  morkMid       mParser_TableMid; // table mid if inside a table
+  morkMid       mParser_RowMid;   // row mid if inside a row
+  morkMid       mParser_CellMid;  // cell mid if inside a row
+  mork_gid      mParser_GroupId;  // group ID if inside a group
 
   mork_bool     mParser_InPort;  // called OnNewPort but not OnPortEnd?
   mork_bool     mParser_InDict;  // called OnNewDict but not OnDictEnd?
@@ -229,28 +252,36 @@ protected: // protected morkParser members
   mork_bool     mParser_InMeta;  // called OnNewMeta but not OnMetaEnd?
 
   mork_bool     mParser_InPortRow;  // called OnNewPortRow but not OnPortRowEnd?
+  mork_bool     mParser_InRow;    // called OnNewRow but not OnNewRowEnd?
+  mork_bool     mParser_InTable;  // called OnNewMeta but not OnMetaEnd?
+  mork_bool     mParser_InGroup;  // called OnNewGroup but not OnGroupEnd?
+
+  mork_change   mParser_AtomChange;  // driven by mParser_Change 
+  mork_change   mParser_CellChange;  // driven by mParser_Change 
+  mork_change   mParser_RowChange;   // driven by mParser_Change 
+  mork_change   mParser_TableChange; // driven by mParser_Change 
+
+  mork_change   mParser_Change;     // driven by modifier in text 
   mork_bool     mParser_IsBroken;   // has the parse become broken?
   mork_bool     mParser_IsDone;     // has the parse finished?
   mork_bool     mParser_DoMore;     // mParser_MoreGranularity not exhausted? 
 
-  mork_change   mParser_Change;  // driven by modifier in text 
+  morkMid       mParser_Mid;   // current alias being parsed
+  // note that mParser_Mid.mMid_Buf points at mParser_ScopeCoil below:
 
-  morkAlias     mParser_Alias;   // current alias being parsed
-  // note that mParser_Alias.mAlias_Buf points at mParser_ScopeSpool below:
+  // blob coils allocated in mParser_Heap
+  morkCoil     mParser_ScopeCoil;   // place to accumulate ID scope blobs
+  morkCoil     mParser_ValueCoil;   // place to accumulate value blobs
+  morkCoil     mParser_ColumnCoil;  // place to accumulate column blobs
+  morkCoil     mParser_StringCoil;  // place to accumulate string blobs
 
-  // blob spools allocated in mParser_Heap
-  morkSpool     mParser_ScopeSpool;   // place to accumulate ID scope blobs
-  morkSpool     mParser_ValueSpool;   // place to accumulate value blobs
-  morkSpool     mParser_ColumnSpool;  // place to accumulate column blobs
-  morkSpool     mParser_StringSpool;  // place to accumulate string blobs
-
-  morkSpoolSink mParser_ScopeSink;  // writes to mParser_ScopeSpool
-  morkSpoolSink mParser_ValueSink;  // writes to mParser_ValueSpool
-  morkSpoolSink mParser_ColumnSink; // writes to mParser_ColumnSpool
-  morkSpoolSink mParser_StringSink; // writes to mParser_StringSpool
+  morkSpool    mParser_ScopeSpool;  // writes to mParser_ScopeCoil
+  morkSpool    mParser_ValueSpool;  // writes to mParser_ValueCoil
+  morkSpool    mParser_ColumnSpool; // writes to mParser_ColumnCoil
+  morkSpool    mParser_StringSpool; // writes to mParser_StringCoil
 
   // yarns allocated in mParser_Heap
-  morkYarn      mParser_AliasYarn;   // place to receive from AliasToYarn()
+  morkYarn      mParser_MidYarn;   // place to receive from MidToYarn()
 
   // span showing current ongoing file position status:
   morkSpan      mParser_PortSpan; // span of current db port file
@@ -274,8 +305,8 @@ private: // convenience inlines
   void SetHerePos(mork_pos inPos)
   { mParser_PortSpan.mSpan_End.mPlace_Pos = inPos; }
 
-  void AddLine()
-  { ++ mParser_PortSpan.mSpan_End.mPlace_Line; }
+  void CountLineBreak()
+  { ++mParser_PortSpan.mSpan_End.mPlace_Line; }
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -300,8 +331,13 @@ public: // dynamic type identification
   
 // } ===== end morkNode methods =====
 
-public: // typing
-  void NonParserTypeError(morkEnv* ev);
+public: // errors and warnings
+  static void UnexpectedEofError(morkEnv* ev);
+  static void EofInsteadOfHexError(morkEnv* ev);
+  static void ExpectedEqualError(morkEnv* ev);
+  static void ExpectedHexDigitError(morkEnv* ev, int c);
+  static void NonParserTypeError(morkEnv* ev);
+  static void UnexpectedByteInMetaWarning(morkEnv* ev);
 
 public: // other type methods
   mork_bool GoodParserTag() const { return mParser_Tag == morkParser_kTag; }
@@ -312,8 +348,8 @@ public: // other type methods
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // in virtual morkParser methods, data flow subclass to parser
 
-    virtual void AliasToYarn(morkEnv* ev,
-      const morkAlias& inAlias,  // typically an alias to concat with strings
+    virtual void MidToYarn(morkEnv* ev,
+      const morkMid& inMid,  // typically an alias to concat with strings
       mdbYarn* outYarn) = 0;
     // The parser might ask that some aliases be turned into yarns, so they
     // can be concatenated into longer blobs under some circumstances.  This
@@ -350,7 +386,7 @@ public: // out virtual morkParser methods, data flow parser to subclass
 // mp:RowItem   ::= mp:Cell | mp:Meta | OnRowGlitch
 // mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
 // mp:CellItem  ::= mp:Slot | OnCellForm | OnCellGlitch
-// mp:Slot      ::= OnValue | OnValueAlias | OnRowAlias | OnTableAlias
+// mp:Slot      ::= OnValue | OnValueMid | OnRowMid | OnTableMid
 
 
   // Note that in interfaces below, mork_change parameters kAdd and kNil
@@ -367,12 +403,12 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnGroupAbortEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
   virtual void OnNewPortRow(morkEnv* ev, const morkPlace& inPlace, 
-    const morkAlias& inAlias, mork_change inChange) = 0;
+    const morkMid& inMid, mork_change inChange) = 0;
   virtual void OnPortRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
   virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
   virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
-    const morkAlias& inAlias, mork_change inChange) = 0;
+    const morkMid& inMid, mork_change inChange) = 0;
   virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
   virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
     
@@ -381,7 +417,7 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
 
   virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
-    const morkAlias& inAlias, mork_change inChange) = 0;
+    const morkMid& inMid, mork_change inChange) = 0;
   virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
   virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
@@ -390,12 +426,16 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnDictEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
   virtual void OnAlias(morkEnv* ev, const morkSpan& inSpan,
-    const morkAlias& inAlias) = 0;
+    const morkMid& inMid) = 0;
 
   virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
 
   virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
-    const morkAlias& inAlias, mork_change inChange) = 0;
+    const morkMid* inMid, const morkBuf* inBuf, mork_change inChange) = 0;
+  // Exactly one of inMid and inBuf is nil, and the other is non-nil.
+  // When hex ID syntax is used for a column, then inMid is not nil, and
+  // when a naked string names a column, then inBuf is not nil.
+    
   virtual void OnCellGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
   virtual void OnCellForm(morkEnv* ev, mork_cscode inCharsetFormat) = 0;
   virtual void OnCellEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
@@ -403,29 +443,54 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnValue(morkEnv* ev, const morkSpan& inSpan,
     const morkBuf& inBuf) = 0;
 
-  virtual void OnValueAlias(morkEnv* ev, const morkSpan& inSpan,
-    const morkAlias& inAlias) = 0;
+  virtual void OnValueMid(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid) = 0;
 
-  virtual void OnRowAlias(morkEnv* ev, const morkSpan& inSpan,
-    const morkAlias& inAlias) = 0;
+  virtual void OnRowMid(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid) = 0;
 
-  virtual void OnTableAlias(morkEnv* ev, const morkSpan& inSpan,
-    const morkAlias& inAlias) = 0;
+  virtual void OnTableMid(morkEnv* ev, const morkSpan& inSpan,
+    const morkMid& inMid) = 0;
   
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected parser helper methods
 
-   void ParseLoop(morkEnv* ev); // find parse continuation and resume
-   
-   void StartParse(morkEnv* ev); // prepare for parsing
-   void StopParse(morkEnv* ev); // terminate parsing & call needed methods
+  void ParseLoop(morkEnv* ev); // find parse continuation and resume
+
+  void StartParse(morkEnv* ev); // prepare for parsing
+  void StopParse(morkEnv* ev); // terminate parsing & call needed methods
+
+  int NextChar(morkEnv* ev); // next non-white content
+
+  void OnCellState(morkEnv* ev);
+  void OnMetaState(morkEnv* ev);
+  void OnRowState(morkEnv* ev);
+  void OnTableState(morkEnv* ev);
+  void OnDictState(morkEnv* ev);
+  void OnPortState(morkEnv* ev);
+  void OnStartState(morkEnv* ev);
   
-   int NextChar(morkEnv* ev); // next non-white content
+  void ReadCell(morkEnv* ev);
+  void ReadRow(morkEnv* ev, int c);
+  void ReadTable(morkEnv* ev);
+  void ReadTableMeta(morkEnv* ev);
+  void ReadDict(morkEnv* ev);
+  void ReadMeta(morkEnv* ev, int inEndMeta);
+  void ReadAlias(morkEnv* ev);
+  mork_id ReadHex(morkEnv* ev, int* outNextChar);
+  morkBuf* ReadValue(morkEnv* ev);
+  morkBuf* ReadName(morkEnv* ev, int c);
+  mork_bool ReadMid(morkEnv* ev, morkMid* outMid);
+  
+  void EndSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan);
+  void StartSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan);
+  
+  int eat_line_break(morkEnv* ev, int inLast);
+  int eat_line_continue(morkEnv* ev); // last char was '\\'
+  int eat_comment(morkEnv* ev); // last char was '/'
   
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // public non-poly morkParser methods
-
-  void SetParserStream(morkEnv* ev, morkStream* ioStream);
     
   mdb_count ParseMore( // return count of bytes consumed now
     morkEnv* ev,          // context

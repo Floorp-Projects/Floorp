@@ -64,6 +64,8 @@
 
 #define morkDerived_kAtomSpace  /*i*/ 0x6153 /* ascii 'aS' */
 
+#define morkAtomSpace_kColumnScope ((mork_scope) 'c') /* column scope is forever */
+
 /*| morkAtomSpace:
 |*/
 class morkAtomSpace : public morkSpace { // 
@@ -131,6 +133,10 @@ public: // other space methods
 
   mork_num CutAllAtoms(morkEnv* ev, morkPool* ioPool);
   // CutAllAtoms() puts all the atoms back in the pool.
+  
+  morkBookAtom* MakeBookAtomCopyWithAid(morkEnv* ev,
+     const morkBigBookAtom& inAtom,  mork_aid inAid);
+  // Make copy of inAtom and put it in both maps, using specified ID.
   
   morkBookAtom* MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom);
   // Make copy of inAtom and put it in both maps, using a new ID as needed.

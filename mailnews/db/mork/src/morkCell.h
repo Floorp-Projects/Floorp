@@ -40,6 +40,9 @@ public:
   
 public:
   morkCell() : mCell_Atom( 0 ), mCell_Delta( 0 ) { }
+
+  morkCell(const morkCell& c)
+  : mCell_Atom( c.mCell_Atom ), mCell_Delta( c.mCell_Delta ) { }
   
   // note if ioAtom is non-nil, caller needs to call ioAtom->AddCellUse():
   morkCell(mork_column inCol, mork_change inChange, morkAtom* ioAtom)

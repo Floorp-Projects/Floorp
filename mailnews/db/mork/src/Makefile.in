@@ -48,6 +48,7 @@ CPPSRCS = \
 	morkBuilder.cpp\
 	morkCell.cpp\
 	morkCellObject.cpp\
+	morkCh.cpp\
 	morkConfig.cpp\
 	morkCursor.cpp \
 	morkDeque.cpp\

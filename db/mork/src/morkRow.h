@@ -74,6 +74,27 @@ public: // other row methods
 
 public: // internal row methods
 
+  mork_count CountOverlap(morkEnv* ev, morkCell* ioVector, mork_fill inFill);
+  // Count cells in ioVector that change existing cells in this row when
+  // ioVector is added to the row (as in TakeCells()).   This is the set
+  // of cells with the same columns in ioVector and mRow_Cells, which do
+  // not have exactly the same value in mCell_Atom, and which do not both
+  // have change status equal to morkChange_kCut (because cutting a cut
+  // cell still yields a cell that has been cut).  CountOverlap() also
+  // modifies the change attribute of any cell in ioVector to kDup when
+  // the change was previously kCut and the same column cell was found
+  // in this row with change also equal to kCut; this tells callers later
+  // they need not look for that cell in the row again on a second pass.
+
+  void MergeCells(morkEnv* ev, morkCell* ioVector,
+    mork_fill inVecLength, mork_fill inOldRowFill, mork_fill inOverlap);
+  // MergeCells() is the part of TakeCells() that does the insertion.
+  // inOldRowFill is the old value of mRow_Length, and inOverlap is the
+  // number of cells in the intersection that must be updated.
+
+  void TakeCells(morkEnv* ev, morkCell* ioVector, mork_fill inVecLength,
+    morkStore* ioStore);
+
   morkCell* NewCell(morkEnv* ev, mdb_column inColumn, mork_pos* outPos,
     morkStore* ioStore);
   morkCell* GetCell(morkEnv* ev, mdb_column inColumn, mork_pos* outPos) const;

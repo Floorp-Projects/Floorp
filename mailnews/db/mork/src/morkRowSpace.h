@@ -115,6 +115,9 @@ public: // other space methods
   morkTable* NewTable(morkEnv* ev, mork_kind inTableKind,
     mdb_bool inMustBeUnique);
   
+  morkTable* NewTableWithTid(morkEnv* ev, mork_tid inTid,
+    mork_kind inTableKind);
+  
   morkTable* FindTableByKind(morkEnv* ev, mork_kind inTableKind);
   morkTable* FindTableByTid(morkEnv* ev, mork_tid inTid)
   { return mRowSpace_Tables.GetTable(ev, inTid); }

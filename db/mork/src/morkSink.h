@@ -114,47 +114,52 @@ public: // public non-poly morkSink methods
   }
 };
 
-/*| morkSpoolSink: an output sink that efficiently writes individual bytes
-**| or entire byte sequences to a spool instance, which grows as needed by
-**| using the heap instance in the spool to grow the internal buffer.
+/*| morkSpool: an output sink that efficiently writes individual bytes
+**| or entire byte sequences to a coil instance, which grows as needed by
+**| using the heap instance in the coil to grow the internal buffer.
 **|
-**|| Note we do not "own" the spool referenced by mSpoolSink_Spool, and
-**| the lifetime of the spool is expected to equal or exceed that of this
+**|| Note we do not "own" the coil referenced by mSpool_Coil, and
+**| the lifetime of the coil is expected to equal or exceed that of this
 **| sink by some external means.  Typical usage might involve keeping an
-**| instance of morkSpool and an instance of morkSpoolSink in the same
-**| owning parent object, which uses the sink with the associated spool.
+**| instance of morkCoil and an instance of morkSpool in the same
+**| owning parent object, which uses the spool with the associated coil.
 |*/
-class morkSpoolSink : public morkSink { // for buffered i/o to a morkSpool
+class morkSpool : public morkSink { // for buffered i/o to a morkCoil
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // public sink virtual methods
 
-  virtual void FlushSink(morkEnv* ev); // probably does nothing
-  virtual void SpillPutc(morkEnv* ev, int c); // grow spool and write byte
+  // when morkSink::Putc() moves mSink_At, mSpool_Coil->mBuf_Fill is wrong:
+
+  virtual void FlushSink(morkEnv* ev); // sync mSpool_Coil->mBuf_Fill
+  virtual void SpillPutc(morkEnv* ev, int c); // grow coil and write byte
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // member variables
-  morkSpool*   mSpoolSink_Spool; // destination medium for written bytes
+  morkCoil*   mSpool_Coil; // destination medium for written bytes
     
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // public non-poly morkSink methods
 
-  virtual ~morkSpoolSink();
+  static void BadSpoolCursorOrderError(morkEnv* ev);
+  static void NilSpoolCoilError(morkEnv* ev);
+
+  virtual ~morkSpool();
   // Zero all slots to show this sink is disabled, but destroy no memory.
-  // Note it is typically unnecessary to flush this spool sink, since all
-  // content is written directly to the spool without any buffering.
+  // Note it is typically unnecessary to flush this coil sink, since all
+  // content is written directly to the coil without any buffering.
   
-  morkSpoolSink(morkEnv* ev, morkSpool* ioSpool);
-  // After installing the spool, calls Seek(ev, 0) to prepare for writing.
+  morkSpool(morkEnv* ev, morkCoil* ioCoil);
+  // After installing the coil, calls Seek(ev, 0) to prepare for writing.
   
   // ----- All boolean return values below are equal to ev->Good(): -----
 
   mork_bool Seek(morkEnv* ev, mork_pos inPos);
-  // Changed the current write position in spool's buffer to inPos.
-  // For example, to start writing the spool from scratch, use inPos==0.
+  // Changed the current write position in coil's buffer to inPos.
+  // For example, to start writing the coil from scratch, use inPos==0.
 
   mork_bool Write(morkEnv* ev, const void* inBuf, mork_size inSize);
-  // write inSize bytes of inBuf to current position inside spool's buffer
+  // write inSize bytes of inBuf to current position inside coil's buffer
 
   mork_bool PutBuf(morkEnv* ev, const morkBuf& inBuffer)
   { return this->Write(ev, inBuffer.mBuf_Body, inBuffer.mBuf_Fill); }

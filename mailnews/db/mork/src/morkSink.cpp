@@ -32,6 +32,10 @@
 #include "morkEnv.h"
 #endif
 
+#ifndef _MORKBLOB_
+#include "morkBlob.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 /*virtual*/ morkSink::~morkSink()
@@ -41,41 +45,134 @@
 }
 
 /*virtual*/ void
-morkSpoolSink::FlushSink(morkEnv* ev) // probably does nothing
+morkSpool::FlushSink(morkEnv* ev) // sync mSpool_Coil->mBuf_Fill
 {
-  ev->StubMethodOnlyError();
+  morkCoil* coil = mSpool_Coil;
+  if ( coil )
+  {
+    mork_u1* body = (mork_u1*) coil->mBuf_Body;
+    if ( body )
+    {
+      mork_u1* at = mSink_At;
+      mork_u1* end = mSink_End;
+      if ( at >= body && at <= end ) // expected cursor order?
+      {
+        mork_fill fill = at - body; // current content size
+        if ( fill <= coil->mBlob_Size )
+          coil->mBuf_Fill = fill;
+        else
+        {
+          coil->BlobFillOverSizeError(ev);
+          coil->mBuf_Fill = coil->mBlob_Size; // make it safe
+        }
+      }
+      else
+        this->BadSpoolCursorOrderError(ev);
+    }
+    else
+      coil->NilBufBodyError(ev);
+  }
+  else
+    this->NilSpoolCoilError(ev);
 }
 
 /*virtual*/ void
-morkSpoolSink::SpillPutc(morkEnv* ev, int c) // grow spool and write byte
+morkSpool::SpillPutc(morkEnv* ev, int c) // grow coil and write byte
 {
-  ev->StubMethodOnlyError();
+  morkCoil* coil = mSpool_Coil;
+  if ( coil )
+  {
+    mork_u1* body = (mork_u1*) coil->mBuf_Body;
+    if ( body )
+    {
+      mork_u1* at = mSink_At;
+      mork_u1* end = mSink_End;
+      if ( at >= body && at <= end ) // expected cursor order?
+      {
+        mork_size size = coil->mBlob_Size;
+        mork_fill fill = at - body; // current content size
+        if ( fill <= size ) // less content than medium size?
+        {
+          coil->mBuf_Fill = fill;
+          if ( at >= end ) // need to grow the coil?
+          {
+            if ( size > 2048 ) // grow slower over 2K?
+              size += 512;
+            else
+            {
+              mork_size growth = ( size * 4 ) / 3; // grow by 33%
+              if ( growth < 64 ) // grow faster under (64 * 3)?
+                growth = 64;
+              size += growth;
+            }
+            if ( coil->GrowCoil(ev, size) ) // made coil bigger?
+            {
+              body = (mork_u1*) coil->mBuf_Body;
+              if ( body ) // have a coil body?
+              {
+                mSink_At = at = body + fill;
+                mSink_End = end = body + coil->mBlob_Size;
+              }
+              else
+                coil->NilBufBodyError(ev);
+            }
+          }
+          if ( ev->Good() ) // seem ready to write byte c?
+          {
+            if ( at < end ) // morkSink::Putc() would succeed?
+            {
+              *at++ = c;
+              mSink_At = at;
+              coil->mBuf_Fill = fill + 1;
+            }
+            else
+              this->BadSpoolCursorOrderError(ev);
+          }
+        }
+        else // fill exceeds size
+        {
+          coil->BlobFillOverSizeError(ev);
+          coil->mBuf_Fill = coil->mBlob_Size; // make it safe
+        }
+      }
+      else
+        this->BadSpoolCursorOrderError(ev);
+    }
+    else
+      coil->NilBufBodyError(ev);
+  }
+  else
+    this->NilSpoolCoilError(ev);
 }
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
 // public: // public non-poly morkSink methods
 
 /*virtual*/
-morkSpoolSink::~morkSpoolSink()
+morkSpool::~morkSpool()
 // Zero all slots to show this sink is disabled, but destroy no memory.
-// Note it is typically unnecessary to flush this spool sink, since all
-// content is written directly to the spool without any buffering.
+// Note it is typically unnecessary to flush this coil sink, since all
+// content is written directly to the coil without any buffering.
 {
+  mSink_At = 0;
+  mSink_End = 0;
+  mSpool_Coil = 0;
 }
 
-morkSpoolSink::morkSpoolSink(morkEnv* ev, morkSpool* ioSpool)
-// After installing the spool, calls Seek(ev, 0) to prepare for writing.
+morkSpool::morkSpool(morkEnv* ev, morkCoil* ioCoil)
+// After installing the coil, calls Seek(ev, 0) to prepare for writing.
 : morkSink()
-, mSpoolSink_Spool( 0 )
+, mSpool_Coil( 0 )
 {
+  mSink_At = 0; // set correctly later in Seek()
+  mSink_End = 0; // set correctly later in Seek()
+  
   if ( ev->Good() )
   {
-    if ( ioSpool )
+    if ( ioCoil )
     {
-      // ev->StubMethodOnlyError();
-      mSink_At = 0;
-      mSink_End = 0;
-      mSpoolSink_Spool = ioSpool;
+      mSpool_Coil = ioCoil;
+      this->Seek(ev, /*pos*/ 0);
     }
     else
       ev->NilPointerError();
@@ -84,29 +181,124 @@ morkSpoolSink::morkSpoolSink(morkEnv* ev, morkSpool* ioSpool)
 
 // ----- All boolean return values below are equal to ev->Good(): -----
 
-mork_bool
-morkSpoolSink::Seek(morkEnv* ev, mork_pos inPos)
-// Changed the current write position in spool's buffer to inPos.
-// For example, to start writing the spool from scratch, use inPos==0.
+/*static*/ void
+morkSpool::BadSpoolCursorOrderError(morkEnv* ev)
 {
-  ev->StubMethodOnlyError();
+  ev->NewError("bad morkSpool cursor order");
+}
+
+/*static*/ void
+morkSpool::NilSpoolCoilError(morkEnv* ev)
+{
+  ev->NewError("nil mSpool_Coil");
+}
+
+mork_bool
+morkSpool::Seek(morkEnv* ev, mork_pos inPos)
+// Changed the current write position in coil's buffer to inPos.
+// For example, to start writing the coil from scratch, use inPos==0.
+{
+  morkCoil* coil = mSpool_Coil;
+  if ( coil )
+  {
+    mork_size minSize = inPos + 64;
+    
+    if ( coil->mBlob_Size < minSize )
+      coil->GrowCoil(ev, minSize);
+      
+    if ( ev->Good() )
+    {
+      coil->mBuf_Fill = inPos;
+      mork_u1* body = (mork_u1*) coil->mBuf_Body;
+      if ( body )
+      {
+        mSink_At = body + inPos;
+        mSink_End = body + coil->mBlob_Size;
+      }
+      else
+        coil->NilBufBodyError(ev);
+    }
+  }
+  else
+    this->NilSpoolCoilError(ev);
+    
   return ev->Good();
 }
 
 mork_bool
-morkSpoolSink::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
-// write inSize bytes of inBuf to current position inside spool's buffer
+morkSpool::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
+// write inSize bytes of inBuf to current position inside coil's buffer
 {
-  ev->StubMethodOnlyError();
+  // This method is conceptually very similar to morkStream::Write(),
+  // and this code was written while looking at that method for clues.
+ 
+  morkCoil* coil = mSpool_Coil;
+  if ( coil )
+  {
+    mork_u1* body = (mork_u1*) coil->mBuf_Body;
+    if ( body )
+    {
+      if ( inBuf && inSize ) // anything to write?
+      {
+        mork_u1* at = mSink_At;
+        mork_u1* end = mSink_End;
+        if ( at >= body && at <= end ) // expected cursor order?
+        {
+          // note coil->mBuf_Fill can be stale after morkSink::Putc():
+          mork_pos fill = at - body; // current content size
+          mork_num space = end - at; // space left in body
+          if ( space < inSize ) // not enough to hold write?
+          {
+            mork_size minGrowth = space + 16;
+            mork_size minSize = coil->mBlob_Size + minGrowth;
+            if ( coil->GrowCoil(ev, minSize) )
+            {
+              body = (mork_u1*) coil->mBuf_Body;
+              if ( body )
+              {
+                mSink_At = at = body + fill;
+                mSink_End = end = body + coil->mBlob_Size;
+                space = end - at; // space left in body
+              }
+              else
+                coil->NilBufBodyError(ev);
+            }
+          }
+          if ( ev->Good() )
+          {
+            if ( space >= inSize ) // enough room to hold write?
+            {
+              MORK_MEMCPY(at, inBuf, inSize); // into body
+              mSink_At = at + inSize; // advance past written bytes
+              coil->mBuf_Fill = fill + inSize; // "flush" to fix fill
+            }
+            else
+              ev->NewError("insufficient morkSpool space");
+          }
+        }
+        else
+          this->BadSpoolCursorOrderError(ev);
+      }
+    }
+    else
+      coil->NilBufBodyError(ev);
+  }
+  else
+    this->NilSpoolCoilError(ev);
+  
   return ev->Good();
 }
 
 mork_bool
-morkSpoolSink::PutString(morkEnv* ev, const char* inString)
+morkSpool::PutString(morkEnv* ev, const char* inString)
 // call Write() with inBuf=inString and inSize=strlen(inString),
 // unless inString is null, in which case we then do nothing at all.
 {
-  ev->StubMethodOnlyError();
+  if ( inString )
+  {
+    mork_size size = MORK_STRLEN(inString);
+    this->Write(ev, inString, size);
+  }
   return ev->Good();
 }
 
