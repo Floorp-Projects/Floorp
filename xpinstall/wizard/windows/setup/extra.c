@@ -6217,16 +6217,19 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   char szKey[MAX_BUF];
   char szName[MAX_BUF];
   char szValue[MAX_BUF];
+  char szLookupSection[MAX_BUF];
   char szWRMSCurrentVersion[] = "Software\\Microsoft\\Windows\\CurrentVersion";
   char szWRMSShellFolders[]   = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
   char szWRMSMapGroup[]       = "Software\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroup";
-
+  HKEY hkeyRoot;
 
   /* zero out the memory allocations */
-  ZeroMemory(szBuf,       sizeof(szBuf));
-  ZeroMemory(szKey,       sizeof(szKey));
-  ZeroMemory(szName,      sizeof(szName));
-  ZeroMemory(szValue,     sizeof(szValue));
+  ZeroMemory(szBuf,           sizeof(szBuf));
+  ZeroMemory(szKey,           sizeof(szKey));
+  ZeroMemory(szName,          sizeof(szName));
+  ZeroMemory(szValue,         sizeof(szValue));
+  ZeroMemory(szBuf2,          sizeof(szBuf2));
+  ZeroMemory(szLookupSection, sizeof(szLookupSection));
 
   if(lstrcmpi(szVariable, "PROGRAMFILESDIR") == 0)
   {
@@ -6593,6 +6596,35 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
       return(FALSE);
 
     wsprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious, szBuf);
+  }
+  else if(szVariable[0] == '$')
+  {
+    // the $ indicates that there's another section that defines a lookup for this string.
+    // find that section to get the registry information, lookup the proper value and 
+    // stick it into szVariable
+    wsprintf(szLookupSection,"Path Lookup %s",szVariable);
+
+    GetPrivateProfileString(szLookupSection, "Path Reg Key Root", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    if(*szBuf == '\0')
+      return(FALSE); 
+    hkeyRoot = ParseRootKey(szBuf);
+
+    GetPrivateProfileString(szLookupSection, "Path Reg Key", "", szKey, sizeof(szKey), szFileIniConfig);
+
+    GetPrivateProfileString(szLookupSection, "Path Reg Name", "", szName, sizeof(szName), szFileIniConfig);
+
+    GetWinReg(hkeyRoot, szKey, szName, szBuf, sizeof(szBuf));
+
+    GetPrivateProfileString(szLookupSection, "Strip Filename", "", szBuf2, sizeof(szBuf2), szFileIniConfig);
+    if(lstrcmpi(szBuf2, "TRUE") == 0)
+    {
+      ParsePath(szBuf, szVariable, dwVariableSize, FALSE, PP_PATH_ONLY);
+      RemoveBackSlash(szVariable);
+    }
+    else
+    {
+      lstrcpy(szVariable,szBuf);
+    }
   }
   else
     return(FALSE);
