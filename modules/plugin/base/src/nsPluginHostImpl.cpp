@@ -3283,7 +3283,12 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
       dirService->UnregisterProvider(mPrivateDirServiceProvider);
     mPrivateDirServiceProvider = nsnull;
   }
+  
+  return NS_OK;
+}
 
+void nsPluginHostImpl::UnloadUnusedLibraries()
+{
   // unload any remaining plugin libraries from memory
   for (PRInt32 i = 0; i < mUnusedLibraries.Count(); i++) {
     PRLibrary * library = (PRLibrary *)mUnusedLibraries[i];
@@ -3291,8 +3296,6 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
       PostPluginUnloadEvent(library);
   }
   mUnusedLibraries.Clear();
-
-  return NS_OK;
 }
 
 
@@ -6026,10 +6029,12 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 #ifdef NS_DEBUG
   printf("nsPluginHostImpl::Observe \"%s\"\n", aTopic ? aTopic : "");
 #endif
-  if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) ||
-      !nsCRT::strcmp("quit-application", aTopic))
+  if (!nsCRT::strcmp("quit-application", aTopic))
   {
     Destroy();
+  } else if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic))
+  {
+    UnloadUnusedLibraries();
   }
   return NS_OK;
 }

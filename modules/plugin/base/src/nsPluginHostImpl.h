@@ -474,6 +474,9 @@ private:
   // one-off hack to include nppl3260.dll from the components folder
   nsresult ScanForRealInComponentsFolder(nsIComponentManager * aCompManager);
 
+  // calls PostPluginUnloadEvent for each library in mUnusedLibraries
+  void UnloadUnusedLibraries();
+
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   nsPluginTag *mCachedPlugins;
