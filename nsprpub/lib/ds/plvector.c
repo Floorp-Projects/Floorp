@@ -238,7 +238,7 @@ PL_VectorSet(PLVector* v, PRUint32 index, void* newElement)
 }
 
 /* Adds at the end */
-PR_IMPLEMENT(PRInt32)
+PR_IMPLEMENT(PRUint32)
 PL_VectorAdd(PLVector* v, void* newElement)
 {
     PRUint32 index = v->size;
@@ -248,7 +248,7 @@ PL_VectorAdd(PLVector* v, void* newElement)
     }
 #endif			
     PL_VectorSet(v, index, newElement);
-    return (PRInt32)index;
+    return index;
 }
 
 /* Inserts new element count times at index */

@@ -77,7 +77,7 @@ PR_EXTERN(void)
 PL_VectorSet(PLVector* v, PRUint32 index, void* newElement);
 
 /* Adds at the end */
-PR_EXTERN(PRInt32)
+PR_EXTERN(PRUint32)
 PL_VectorAdd(PLVector* v, void* newElement);
 
 /* Inserts new element count times at index */
