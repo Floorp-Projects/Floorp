@@ -207,7 +207,11 @@ NS_IMETHODIMP nsGenericInterfaceInfoSet::GetIIDForName(const char *name, nsIID *
     if(NS_FAILED(rv))
         return rv;
     
-    return InfoAtNoAddRef(index)->GetIID(_retval);
+    nsIInterfaceInfo* info = InfoAtNoAddRef(index);
+    if(!info)
+        return NS_ERROR_FAILURE;
+
+    return info->GetIID(_retval);
 }
 
 /* string getNameForIID (in nsIIDPtr iid); */
@@ -218,7 +222,11 @@ NS_IMETHODIMP nsGenericInterfaceInfoSet::GetNameForIID(const nsIID * iid, char *
     if(NS_FAILED(rv))
         return rv;
     
-    return InfoAtNoAddRef(index)->GetName(_retval);
+    nsIInterfaceInfo* info = InfoAtNoAddRef(index);
+    if(!info)
+        return NS_ERROR_FAILURE;
+
+    return info->GetName(_retval);
 }
 
 /* nsIEnumerator enumerateInterfaces (); */
@@ -249,6 +257,8 @@ NS_IMETHODIMP nsGenericInterfaceInfoSet::EnumerateInterfacesWhoseNamesStartWith(
     for(PRInt32 i = 0; i < count; i++)
     {
         nsIInterfaceInfo* info = InfoAtNoAddRef(i);
+        if(!info)
+            continue;
         if(!prefix || 
            (NS_SUCCEEDED(info->GetNameShared(&name)) &&
             name == PL_strnstr(name, prefix, len)))
@@ -478,7 +488,11 @@ NS_IMETHODIMP nsGenericInterfaceInfo::GetIIDForParam(PRUint16 methodIndex, const
     const XPTTypeDescriptor* td = GetPossiblyNestedType(param);
     NS_ASSERTION(XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE, "not an interface");
     
-    return mSet->InfoAtNoAddRef(td->type.iface)->GetIID(_retval);
+    nsIInterfaceInfo* info = mSet->InfoAtNoAddRef(td->type.iface);
+    if(!info)
+        return NS_ERROR_FAILURE;
+
+    return info->GetIID(_retval);
 }
 
 /* nsXPTType getTypeForParam (in PRUint16 methodIndex, [const] in nsXPTParamInfoPtr param, in PRUint16 dimension); */
@@ -589,9 +603,16 @@ NS_IMETHODIMP_(nsresult) nsGenericInterfaceInfo::GetIIDForParamNoAlloc(PRUint16 
 
     const XPTTypeDescriptor* td = GetPossiblyNestedType(param);
     NS_ASSERTION(XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE, "not an interface");
-    
+
+    nsIInterfaceInfo* info = mSet->InfoAtNoAddRef(td->type.iface);
+    if(!info)
+        return NS_ERROR_FAILURE;
+
     const nsIID* iidp;
-    return mSet->InfoAtNoAddRef(td->type.iface)->GetIIDShared(&iidp);
+    nsresult rv = info->GetIIDShared(&iidp);
+    if(NS_FAILED(rv))
+        return rv;
+
     *iid = *iidp;
     return NS_OK;
 }

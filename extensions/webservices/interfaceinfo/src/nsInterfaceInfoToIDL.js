@@ -49,6 +49,7 @@ const nsIDataType = Components.interfaces.nsIDataType;
 const nsISupports = Components.interfaces.nsISupports;
 
 const PARAM_NAME_PREFIX = "arg";
+const MISSING_INTERFACE = "@";  // flag to indicate missing interfaceinfo
 
 // helpers...
 
@@ -103,7 +104,7 @@ function formatConstType(type)
 
 function formatTypeName(info, methodIndex, param, dimension) 
 {
-    var type = param.type;
+    var type = info.getTypeForParam(methodIndex, param, dimension);
      
     switch(type.dataType)
     {
@@ -151,7 +152,11 @@ function formatTypeName(info, methodIndex, param, dimension)
         case nsIDataType.VTYPE_WCHAR_STR:
             return "wstring";
         case nsIDataType.VTYPE_INTERFACE:
-            return info.getInfoForParam(methodIndex, param).name;
+            try  {
+                return info.getInfoForParam(methodIndex, param).name;
+            } catch(e) {
+                return "/*!!! missing interface info, guessing!!!*/ nsISupports";    
+            }
         case nsIDataType.VTYPE_INTERFACE_IS:
             return "nsQIResult";
         case nsIDataType.VTYPE_ARRAY:
@@ -376,7 +381,13 @@ function appendForwardDeclarations(list, info)
             
             if(p.type.dataType == nsIDataType.VTYPE_INTERFACE)
             {
-                list.push(info.getInfoForParam(i, p).name);
+                var name;
+                try {
+                    name = info.getInfoForParam(i, p).name;
+                } catch(e)  {
+                    name = MISSING_INTERFACE;                  
+                }
+                list.push(name);
             }
         }
     }
@@ -396,7 +407,11 @@ function doForwardDeclarations(out, iid)
         cur = list[i];
         if(cur != prev && cur != "nsISupports") 
         {
-            out.writeln("interface " + cur +";");
+            if(cur == MISSING_INTERFACE)                 
+                out.writeln("/*\n * !!! Unable to find details for a declared "+
+                            "interface (name unknown)!!!\n */");
+            else
+                out.writeln("interface " + cur +";");
             prev = cur;    
         }    
     }
