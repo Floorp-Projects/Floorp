@@ -25,11 +25,12 @@
 #include "nsGUIEvent.h"
 
 class nsWindow;
+class nsMacWindow;
 
 class nsMacEventHandler : public nsDeleteObserver
 {
 public:
-		nsMacEventHandler(nsWindow* aTopLevelWidget);
+		nsMacEventHandler(nsMacWindow* aTopLevelWidget);
 		virtual ~nsMacEventHandler();
 
 		virtual PRBool	HandleOSEvent(EventRecord& aOSEvent);
@@ -46,7 +47,6 @@ protected:
 		virtual PRBool	HandleMouseDownEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);
-		virtual PRBool	HandleDiskEvent(const EventRecord& anEvent);
 
 		virtual void	ConvertOSEventToMouseEvent(
 									EventRecord&	aOSEvent,
@@ -57,7 +57,7 @@ public:
 	virtual void	NotifyDelete(void* aDeletedObject);
 
 protected:
-	nsWindow*			mTopLevelWidget;
+	nsMacWindow*	mTopLevelWidget;
 	nsWindow*			mLastWidgetHit;
 	PRBool				mMouseInWidgetHit;
 	nsWindow*			mLastWidgetPointed;

@@ -19,6 +19,7 @@
 #include "nsMacEventHandler.h"
 
 #include "nsWindow.h"
+#include "nsMacWindow.h"
 #include "nsToolkit.h"
 #include "prinrval.h"
 
@@ -41,7 +42,7 @@ PRBool	nsMacEventHandler::mInBackground = PR_FALSE;
 // nsMacEventHandler constructor/destructor
 //
 //-------------------------------------------------------------------------
-nsMacEventHandler::nsMacEventHandler(nsWindow* aTopLevelWidget)
+nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 {
 	mTopLevelWidget			= aTopLevelWidget;
 	mLastWidgetHit			= nsnull;
@@ -101,10 +102,6 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 
 		case mouseUp:
 			retVal = HandleMouseUpEvent(aOSEvent);
-			break;
-
-		case diskEvt:
-			retVal = HandleDiskEvent(aOSEvent);
 			break;
 
 		case osEvt:
@@ -191,8 +188,12 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 }
 
 
+//-------------------------------------------------------------------------
 //
 // DropOccurred
+//
+//-------------------------------------------------------------------------
+
 //
 // Someone on the outside told us that a drop from the DragManager has occurred in
 // this window. We need to send this event into Gecko for processing. Create a Gecko
@@ -264,7 +265,7 @@ printf("dispatching drop into Gecko\n");
 
 //-------------------------------------------------------------------------
 //
-// HandleKeyEvent
+// ConvertMacToRaptorKeyCode
 //
 //-------------------------------------------------------------------------
 
@@ -742,21 +743,6 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 	}
 
 	return retVal;
-}
-
-//-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleDiskEvent(const EventRecord& anEvent)
-//-------------------------------------------------------------------------
-{
-	if (HiWord(anEvent.message) != noErr)
-	{
-		// Error mounting disk. Ask if user wishes to format it.	
-		Point pt = {120, 120};	// System 7 will auto-center dialog
-		::DILoad();
-		::DIBadMount(pt, (SInt32) anEvent.message);
-		::DIUnload();
-	}
-	return PR_TRUE;
 }
 
 
