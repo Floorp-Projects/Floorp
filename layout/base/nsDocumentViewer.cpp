@@ -873,9 +873,19 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     PRInt32 index = aDocument->GetNumberOfStyleSheets();
 
     while (0 < index--) {
-      nsIStyleSheet* sheet = aDocument->GetStyleSheetAt(index);
-      (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
-      NS_RELEASE(sheet);
+      nsCOMPtr<nsIStyleSheet> sheet(getter_AddRefs(aDocument->GetStyleSheetAt(index)));
+
+      /*
+       * GetStyleSheetAt will return all style sheets in the document but
+       * we're only interested in the ones that are enabled.
+       */
+
+      PRBool styleEnabled;
+      sheet->GetEnabled(styleEnabled);
+
+      if (styleEnabled) {
+        (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
+      }
     }
     if (mUAStyleSheet) {
       (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
