@@ -2077,7 +2077,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 
   InitEvent(event, aEventType, &point); // this add ref's event.widget
 
-  event.charCode = aCharCode;
+  event.charCode = !mIMEIsComposing?MapFromNativeToDOM(aCharCode):aCharCode;
   event.keyCode  = !mIMEIsComposing?MapFromNativeToDOM(aVirtualCharCode):aVirtualCharCode;
 
 #ifdef KE_DEBUG
