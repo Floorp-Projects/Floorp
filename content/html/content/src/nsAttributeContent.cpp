@@ -573,7 +573,7 @@ nsAttributeContent::AppendTextTo(nsAString& aResult)
     aResult.Append(mText.Get2b(), mText.GetLength());
   }
   else {
-    AppendUTF8toUTF16(mText.Get1b(), aResult);
+    AppendASCIItoUTF16(mText.Get1b(), aResult);
   }
 
   return NS_OK;
