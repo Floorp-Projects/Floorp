@@ -984,6 +984,21 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
   static nsAutoString terminals("\b\t\n\r >");
   nsresult result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
+  
+  //Let's force quotes if either the first or last char is quoted.
+  PRUnichar theLast=aString.Last();
+  PRUnichar theFirst=aString.First();
+  if(kQuote==theLast) {
+    if(kQuote!=theFirst) {
+      aString.Insert(kQuote,0);;
+    }
+  }
+  else if(kQuote==theFirst) {
+    if(kQuote!=theLast) {
+      aString+=kQuote;
+    }
+  }
+
   return result;
 }
 
