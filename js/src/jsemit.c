@@ -503,16 +503,19 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
                     JSFunction *fun)
 {
     JSStackFrame *fp, frame;
+    JSObject *funobj;
     JSBool ok;
 
     if (!js_AllocTryNotes(cx, cg))
         return JS_FALSE;
 
     fp = cx->fp;
-    if (!fp || fp->scopeChain != fun->object) {
+    funobj = fun->object;
+    if (!fp || fp->fun != fun || fp->varobj != funobj ||
+        fp->scopeChain != funobj) {
         memset(&frame, 0, sizeof frame);
-        frame.varobj = frame.scopeChain = fun->object;
         frame.fun = fun;
+        frame.varobj = frame.scopeChain = funobj;
         frame.down = fp;
         cx->fp = &frame;
     }
