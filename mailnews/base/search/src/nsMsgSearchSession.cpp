@@ -473,7 +473,7 @@ nsresult nsMsgSearchSession::Initialize()
 
 nsresult nsMsgSearchSession::BeginSearching()
 {
-	nsresult err = NS_OK;;
+	nsresult err = NS_OK;
 
 	// Here's a sloppy way to start the URL, but I don't really have time to
 	// unify the scheduling mechanisms. If the first scope is a newsgroup, and

@@ -859,7 +859,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 		}
 		break;
 	case nsMsgSearchOp::IsEmpty:
-		if (PL_strlen(stringToMatch))
+		if (!PL_strlen(stringToMatch))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::BeginsWith:
@@ -868,7 +868,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 			result = PR_TRUE;
 #else
 		// ### DMB - not the  most efficient way to do this.
-		if (PL_strncmp(stringToMatch, n_str, PL_strlen(stringToMatch)) == 0)
+		if (PL_strncmp(stringToMatch, n_str, PL_strlen(n_str)) == 0)
 			result = PR_TRUE;
 #endif
 		break;
