@@ -293,26 +293,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
-#ifdef USE_OBUFFER
-  /* There is the issue of guessing how much space we will need for emoticons.
-     So what we will do is count the total number of "special" chars and
-     multiply by 82 (max len for a smiley line) and add one for good measure.*/
-  // Do we need obj->obuffer at all here? Bug 39226
-  PRInt32 buffersizeneeded = (length * 2);
-  PRInt32   specialCharCount = 0;
-  for (PRInt32 z=0; z<length; z++)
-  {
-    if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':')
-         || (line[z] == ';') || (line[z] == '>') )
-      ++specialCharCount;
-  }
-  buffersizeneeded += 82 * (specialCharCount + 1); 
-
-  status = MimeObject_grow_obuffer (obj, buffersizeneeded);
-  if (status < 0) return status;
-  *obj->obuffer = 0;
-#endif
-
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
   MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
 
@@ -481,12 +461,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
     if (!(text->mIsSig && quoting))
     {
-#ifdef USE_OBUFFER
-      /* Do we need obj->obuffer at all here? Bug 39226 */
-      prefaceResultStr.ToCString(obj->obuffer, obj->obuffer_size - 10);
-      lineResultStr.ToCString(obj->obuffer + prefaceResultStr.Length(),
-                          obj->obuffer_size - 10 - prefaceResultStr.Length());
-#else
       char* tmp = prefaceResultStr.ToNewCString();
       status = MimeObject_write(obj, tmp, prefaceResultStr.Length(), PR_TRUE);
       if (status < 0) return status;
@@ -495,7 +469,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
       status = MimeObject_write(obj, tmp, lineResultStr.Length(), PR_TRUE);
       if (status < 0) return status;
       Recycle(tmp);
-#endif
     }
     else
     {
@@ -504,21 +477,10 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   }
   else
   {
-#ifdef USE_OBUFFER
-    nsCRT::memcpy(obj->obuffer, line, length);
-    obj->obuffer[length] = '\0';
-    status = NS_OK;
-#else
     status = MimeObject_write(obj, line, length, PR_TRUE);
     if (status < 0) return status;
-#endif
   }
 
-#ifdef USE_OBUFFER
-  NS_ASSERTION(*line == 0 || *obj->obuffer, "have line or buffer");
-  status = MimeObject_write(obj, obj->obuffer, nsCRT::strlen(obj->obuffer),
-                            PR_TRUE);
-#endif
   return status;
 }
 
