@@ -57,7 +57,7 @@ PRBool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
         NS_RELEASE(vertex);
         edges->RemoveElementAt(0);
     }
-    delete entry->data;
+    delete (nsVoidArray *)entry->data;
     delete entry;
     return PR_TRUE;   
 };
