@@ -42,8 +42,8 @@
       <rows>
         <row>
           <text class="header" value="&certmgr.subjectinfo.label;"/>
-          <spring/>
-          <spring/>
+          <spacer/>
+          <spacer/>
         </row>
         <row>
           <text class="label" value="&certmgr.certdetail.cn;"/> 
@@ -63,11 +63,11 @@
         </row>
         <row>
           <separator class="thin"/>
-          <spring/>
+          <spacer/>
         </row>
         <row>
           <text class="header" value="&certmgr.issuerinfo.label;"/>
-          <spring/>
+          <spacer/>
         </row>
         <row>
           <text class="label" value="&certmgr.certdetail.cn;"/> 
@@ -83,11 +83,11 @@
         </row>
         <row>
           <separator class="thin"/>
-          <spring/>
+          <spacer/>
         </row>
         <row>
           <text class ="header" value="&certmgr.validity.label;"/>
-          <spring/>
+          <spacer/>
         </row>
         <row>
           <text class="label" value="&certmgr.issued;"/>
@@ -99,11 +99,11 @@
         </row>
         <row>
           <separator class="thin"/>
-          <spring/>
+          <spacer/>
         </row>
         <row>
           <text class="header" value="&certmgr.fingerprints.label;"/>
-          <spring/>
+          <spacer/>
         </row>
         <row>
           <text class="label" value="&certmgr.certdetail.sha1fingerprint;"/> 
