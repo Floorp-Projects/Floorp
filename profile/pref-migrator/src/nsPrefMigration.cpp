@@ -554,7 +554,7 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
   char *mailPath = nsnull;
 
   PREF_GetIntPref("mail.server_type", &serverType);
-  if(serverType == POP_4X_MAIL_TYPE) /* User had POP */
+  if(serverType == POP_4X_MAIL_TYPE)
   {
     PREF_GetCharPref("network.hosts.pop_server", popServerName, &nameLength);
     PREF_GetCharPref("mail.directory", mailPath, &nameLength);
