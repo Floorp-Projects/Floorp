@@ -5712,3 +5712,91 @@ nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIChannel* aChannel,
     NS_NOTREACHED("CachedChromeStream doesn't receive data");
     return NS_ERROR_UNEXPECTED;
 }
+
+// The XUL element factory
+
+class XULElementFactoryImpl : public nsIElementFactory
+{
+protected:
+  XULElementFactoryImpl();
+  virtual ~XULElementFactoryImpl();
+
+public:
+  friend
+  nsresult
+  NS_NewXULElementFactory(nsIElementFactory** aResult);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  // nsIElementFactory interface
+  NS_IMETHOD CreateInstanceByTag(const nsString& aTag, nsIContent** aResult);
+
+  static PRUint32 gRefCnt;
+  static PRInt32 kNameSpaceID_XUL;
+  static nsINameSpaceManager* gNameSpaceManager;
+};
+
+PRUint32 XULElementFactoryImpl::gRefCnt = 0;
+PRInt32 XULElementFactoryImpl::kNameSpaceID_XUL;
+nsINameSpaceManager* XULElementFactoryImpl::gNameSpaceManager = nsnull;
+
+XULElementFactoryImpl::XULElementFactoryImpl()
+{
+  NS_INIT_REFCNT();
+  gRefCnt++;
+  if (gRefCnt == 1) {
+     nsresult rv = nsServiceManager::GetService(kNameSpaceManagerCID,
+                                          NS_GET_IID(nsINameSpaceManager),
+                                          (nsISupports**) &gNameSpaceManager);
+     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace manager");
+     if (NS_FAILED(rv)) return;
+
+#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
+        gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+  }
+}
+
+XULElementFactoryImpl::~XULElementFactoryImpl()
+{
+  gRefCnt--;
+  if (gRefCnt == 0) {
+    NS_IF_RELEASE(gNameSpaceManager);
+  }
+}
+
+
+NS_IMPL_ISUPPORTS(XULElementFactoryImpl, NS_GET_IID(nsIElementFactory));
+
+
+nsresult
+NS_NewXULElementFactory(nsIElementFactory** aResult)
+{
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  XULElementFactoryImpl* result = new XULElementFactoryImpl();
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(result);
+  *aResult = result;
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+XULElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIContent** aResult)
+{
+  nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aTag));
+  if (! tag)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return nsXULElement::Create(kNameSpaceID_XUL, tag, aResult); 
+}
+
+
+
