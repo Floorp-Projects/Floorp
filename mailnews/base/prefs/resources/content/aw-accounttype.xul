@@ -27,7 +27,7 @@ Rights Reserved.
 <window id="accounttype" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:nc="http://home.netscape.com/NC-rdf#"
-    class="dialog"
+    class="color-dialog"
     onload="dump('** acctype onload\n'); parent.wizardManager.onPageLoad('accounttype');"
     orient="vertical"
     onunload="onUnload();">
@@ -40,35 +40,26 @@ Rights Reserved.
   <spring class="spacer"/>
   <html class="desc">&accountTypeDirections.label;</html>
 
-  <radiogroup align="vertical" name="acctyperadio" id="acctyperadio">
-    <radio id="mailaccount" group="acctyperadio" 
-           wsm_persist="true"
-           oncommand="onTypeChanged()"
+  <radiogroup orient="vertical" 
+              name="acctyperadio" id="acctyperadio" >
+    <radio id="mailaccount" group="acctyperadio" data="mailaccount"
+           checked="true"
            value="&accountTypeMail.label;"/>
-    <radiogroup orient="vertical" style="margin-left: 10px"
-                id="ispchoice" >
-      <box orient="vertical"
-                  datasources="rdf:ispdefaults" 
-                  containment="http://home.netscape.com/NC-rdf#providers"
-                  id="ispBox"
-                  ref="NC:ispinfo">
-        <template>
-          <rule nc:wizardShow="true">
-          <radio group="ispchoice" uri="..."
-                 wsm_persist="true"
-                 fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
-                 value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
-          </rule>
-        </template>
-      </box>
-      <radio group="ispchoice" value="&accountTypeISP.label;"
-             wsm_persist="true" hidden="true"
-             id="otherIspRadio"/>
-    </radiogroup>
 
-    <radio group="acctyperadio" id="newsaccount"
-           wsm_persist="true"
-           oncommand="onTypeChanged()"
+    <box orient="vertical"
+         datasources="rdf:ispdefaults" 
+         containment="http://home.netscape.com/NC-rdf#providers"
+         id="ispBox"
+         ref="NC:ispinfo">
+      <template>
+        <rule nc:wizardShow="true">
+          <radio group="acctyperadio" uri="..." 
+                    data="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
+                    value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+        </rule>
+     </template>
+    </box>
+    <radio group="acctyperadio" id="newsaccount" data="newsaccount"
            value="&accountTypeNews.label;"/>
   </radiogroup>
 </window>
