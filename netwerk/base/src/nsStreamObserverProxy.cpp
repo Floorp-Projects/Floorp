@@ -122,7 +122,12 @@ nsOnStartRequestEvent::HandleEvent()
         return NS_ERROR_FAILURE;
     }
 
-    return observer->OnStartRequest(mRequest, mContext);
+    nsresult rv = observer->OnStartRequest(mRequest, mContext);
+    if (NS_FAILED(rv)) {
+        LOG(("OnStartRequest failed [rv=%x] canceling request!\n", rv));
+        mRequest->Cancel(rv);
+    }
+    return rv;
 }
 
 //
