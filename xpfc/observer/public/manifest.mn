@@ -12,6 +12,7 @@ DEPTH = ../../..
 
 EXPORTS = \
 	nsIXPFCObserver.h \
+	nsIXPFCCommandStateObserver.h \
 	nsIXPFCSubject.h \
 	nsIXPFCObserverManager.h \
 	$(NULL)

@@ -20,6 +20,7 @@
 #define nsIXPFCObserverManager_h___
 
 #include "nsISupports.h"
+#include "nsIXPFCCommandStateObserver.h"
 
 class nsIXPFCSubject;
 class nsIXPFCObserver;
@@ -41,6 +42,8 @@ public:
   NS_IMETHOD Unregister(nsISupports * aSubjectObserver) = 0;
   NS_IMETHOD Unregister(nsIXPFCSubject * aSubject, nsIXPFCObserver * aObserver) = 0;
   NS_IMETHOD Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand) = 0;
+
+  NS_IMETHOD RegisterForCommandState(nsIXPFCCommandStateObserver * aCommandStateObserver, nsCommandState aCommandState) = 0;
 
 };
 
