@@ -166,7 +166,8 @@ function initHost(obj)
     obj.eventPump = new CEventPump (200);
     
     obj.networks["efnet"] =
-	new CIRCNetwork ("efnet", [{name: "irc.magic.ca", port: 6667},
+	new CIRCNetwork ("efnet", [{name: "irc.mcs.net", port: 6667},
+                               {name: "irc.magic.ca", port: 6667},
                                {name: "irc.freei.net", port: 6667},
                                {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
