@@ -44,8 +44,8 @@ interface nsIDOMWindow;
 interface nsIWebProgressListener;
 
 /**
- * The nsIWebProgress interface is used to look at the progress of document
- * loading in a particular DOM window.
+ * The nsIWebProgress interface is used to look at the progress of documents
+ * loading in a particular DOM window and any descendent DOM windows.
  *
  * @status UNDER_REVIEW
  */
@@ -59,8 +59,8 @@ interface nsIWebProgress : nsISupports
    */ 
 
   /**
-   * These flags indicate the state transistions to observe, corresponding
-   * to nsIWebProgressListener::onStateChange.
+   * These flags indicate the state transistions to observe, corresponding to
+   * nsIWebProgressListener::onStateChange.
    *
    * NOTIFY_STATE_REQUEST
    *   Only receive the onStateChange event if the aStateFlags parameter
