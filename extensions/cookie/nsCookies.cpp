@@ -186,26 +186,29 @@ nsCookiePrefObserver::Observe(nsISupports *aSubject,
   PRBool computePermissions = PR_FALSE;
 
   if (pref.Equals(kCookiesEnabled)) {
-    rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &mCookiesEnabled_temp);
+    rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &tempPrefValue);
     if (NS_FAILED(rv)) {
-      mCookiesEnabled_temp = PR_FALSE;
+      tempPrefValue = PR_FALSE;
     }
+    mCookiesEnabled_temp = tempPrefValue;
     // set flag so we know to update the enumerated permissions
     computePermissions = PR_TRUE;
 
   } else if (pref.Equals(kCookiesForDomainOnly)) {
-    rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &mCookiesForDomainOnly_temp);
+    rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &tempPrefValue);
     if (NS_FAILED(rv)) {
-      mCookiesForDomainOnly_temp = PR_FALSE;
+      tempPrefValue = PR_FALSE;
     }
+    mCookiesForDomainOnly_temp = tempPrefValue;
     // set flag so we know to update the enumerated permissions
     computePermissions = PR_TRUE;
 
   } else if (pref.Equals(kCookiesLifetimeCurrentSession)) {
-    rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &mCookiesLifetimeCurrentSession);
+    rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
     if (NS_FAILED(rv)) {
-      mCookiesLifetimeCurrentSession = PR_FALSE;
+      tempPrefValue = PR_FALSE;
     }
+    mCookiesLifetimeCurrentSession = tempPrefValue;
     // Phoenix hack to reduce ifdefs in code
     mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
 
@@ -304,17 +307,19 @@ nsCookiePrefObserver::ReadPrefs()
 
   PRInt32 tempPrefValue;
 #ifdef MOZ_PHOENIX
-  rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &mCookiesEnabled_temp);
+  rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &tempPrefValue);
   if (NS_FAILED(rv)) {
-    mCookiesEnabled_temp = PR_FALSE;
+    tempPrefValue = PR_FALSE;
     rv2 = rv;
   }
+  mCookiesEnabled_temp = tempPrefValue;
 
-  rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &mCookiesForDomainOnly_temp);
+  rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &tempPrefValue);
   if (NS_FAILED(rv)) {
-    mCookiesForDomainOnly_temp = PR_FALSE;
+    tempPrefValue = PR_FALSE;
     rv2 = rv;
   }
+  mCookiesForDomainOnly_temp = tempPrefValue;
 
   // collapse two boolean prefs into enumerated permissions
   // note: PERMISSION_P3P is not used in Phoenix
@@ -329,14 +334,16 @@ nsCookiePrefObserver::ReadPrefs()
     mCookiesPermissions = PERMISSION_DontUse;
   }
 
-  rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &mCookiesLifetimeCurrentSession);
+  rv = mPrefBranch->GetBoolPref(kCookiesLifetimeCurrentSession, &tempPrefValue);
   if (NS_FAILED(rv)) {
-    mCookiesLifetimeCurrentSession = PR_FALSE;
+    tempPrefValue = PR_FALSE;
     rv2 = rv;
   }
+  mCookiesLifetimeCurrentSession = tempPrefValue;
   // Phoenix hacks to reduce ifdefs in code
   mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
   mCookiesDisabledForMailNews = PR_FALSE;
+  mCookiesLifetimeSec = 0;
 
 #else
   rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
