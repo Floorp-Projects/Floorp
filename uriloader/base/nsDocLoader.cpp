@@ -59,9 +59,7 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 
 
 /* Define IIDs... */
-static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
 
 
@@ -169,7 +167,32 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)   
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
+
+
+/*
+ * Implementation of nsIInterfaceRequestor methods...
+ */
+NS_IMETHODIMP nsDocLoaderImpl::GetInterface(const nsIID& aIID, void** aSink)
+{
+  nsresult rv = NS_ERROR_NO_INTERFACE;
+
+  NS_ENSURE_ARG_POINTER(aSink);
+
+  if(aIID.Equals(NS_GET_IID(nsILoadGroup))) {
+    *aSink = mLoadGroup;
+    NS_IF_ADDREF((nsISupports*)*aSink);
+    rv = NS_OK;
+  } else {
+    rv = QueryInterface(aIID, aSink);
+  }
+
+  return rv;
+}
+
+
+
 
 NS_IMETHODIMP
 nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
