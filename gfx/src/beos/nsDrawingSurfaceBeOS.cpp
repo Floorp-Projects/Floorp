@@ -247,19 +247,34 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
 {
 	NS_ASSERTION(!(aView == nsnull), "null BView");
 
+       //remember dimensions
+       mWidth=aWidth;
+       mHeight=aHeight;
+
 	BRect r = aView->Bounds();
 	mView = new BView(r, "", 0, 0);
+       if (mView==NULL)
+               return NS_ERROR_OUT_OF_MEMORY;
 
 //	if((aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS) &&
 //		(aWidth > 0) && (aHeight > 0))
 	if(aWidth > 0 && aHeight > 0)
 	{
 		mBitmap = new BBitmap(r, B_RGBA32, true);
-		mBitmap->AddChild(mView);
+               if (mBitmap==NULL)
+                       return NS_ERROR_OUT_OF_MEMORY;
+
+               if (mBitmap->InitCheck()!=B_OK) {
+                       //for some reason, the bitmap isn't valid - delete the
+                       //bitmap object, then indicate failure
+                       delete mBitmap;
+                       mBitmap=NULL;
+                       
+                       return NS_ERROR_FAILURE;
 	}
 
-	mWidth = aWidth;
-	mHeight = aHeight;
+               mBitmap->AddChild(mView);
+       }
 
 	return NS_OK;
 }

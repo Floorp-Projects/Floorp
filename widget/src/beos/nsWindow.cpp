@@ -40,6 +40,7 @@
 #include <Debug.h>
 #include <MenuBar.h>
 #include <app/Message.h>
+#include <app/MessageRunner.h>
 
 #ifdef DRAG_DROP
 //#include "nsDropTarget.h"
@@ -477,14 +478,14 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     mView = CreateBeOSView();
 	if(parent)
 	{
-		bool mustunlock;
+               bool mustunlock=false;
 
 		if(parent->LockLooper())
 			mustunlock = true;
 
 		parent->AddChild(mView);
 		mView->MoveTo(aRect.x, aRect.y);
-		mView->ResizeTo(aRect.width, GetHeight(aRect.height));
+               mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
 
 		if(mustunlock)
 			parent->UnlockLooper();
@@ -584,7 +585,7 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 
 BView *nsWindow::CreateBeOSView()
 {
-	return new nsViewBeOS(this, BRect(0, 0, 0, 0), "", 0, B_WILL_DRAW | B_FRAME_EVENTS);
+       return new nsViewBeOS(this, BRect(0, 0, 0, 0), "", 0, B_WILL_DRAW);
 }
 
 //-------------------------------------------------------------------------
@@ -793,12 +794,18 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 			printf("nsWindow::Resize FIXME: no repaint not implemented\n");
 
 		if(mView->Parent() || ! havewindow)
-			mView->ResizeTo(aWidth, GetHeight(aHeight));
+                       mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
 		else
-			mView->Window()->ResizeTo(aWidth, GetHeight(aHeight));
+                       ((nsWindowBeOS *)mView->Window())->ResizeToWithoutEvent(aWidth-1, GetHeight(aHeight)-1);
 
 		if(mustunlock)
 			mView->UnlockLooper();
+
+               //inform the xp layer of the change in size
+               OnResize(mBounds);
+
+       } else {
+               OnResize(mBounds);
 	}
 
 	return NS_OK;
@@ -841,16 +848,22 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 		if(mView->Parent() || ! havewindow)
 		{
 			mView->MoveTo(aX, aY);
-			mView->ResizeTo(aWidth, GetHeight(aHeight));
+                       mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
 		}
 		else
 		{
 			mView->Window()->MoveTo(aX, aY);
-			mView->Window()->ResizeTo(aWidth, GetHeight(aHeight));
+                       ((nsWindowBeOS *)mView->Window())->ResizeToWithoutEvent(aWidth-1, GetHeight(aHeight)-1);
 		}
 
 		if(mustunlock)
 			mView->UnlockLooper();
+
+               //inform the xp layer of the change in size
+               OnResize(mBounds);
+
+       } else {
+               OnResize(mBounds);
 	}
 
 	return NS_OK;
@@ -909,8 +922,8 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 		BRect r = mView->Frame();
 		aRect.x = nscoord(r.left);
 		aRect.y = nscoord(r.top);
-		aRect.width  = r.IntegerWidth();
-		aRect.height = r.IntegerHeight();
+               aRect.width  = r.IntegerWidth()+1;
+               aRect.height = r.IntegerHeight()+1;
 		mView->UnlockLooper();
 	} else {
 		aRect = mBounds;
@@ -931,8 +944,8 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
 		BRect r = mView->Bounds();
 		aRect.x = nscoord(r.left);
 		aRect.y = nscoord(r.top);
-		aRect.width  = r.IntegerWidth();
-		aRect.height = r.IntegerHeight();
+               aRect.width  = r.IntegerWidth()+1;
+               aRect.height = r.IntegerHeight()+1;
 		mView->UnlockLooper();
 	} else {
 		aRect.SetRect(0,0,0,0);
@@ -1331,21 +1344,16 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			break;
 
 		case nsWindow::ONRESIZE :
-			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			if(mView && mView->LockLooper())
 			{
+                               NS_ASSERTION(info->nArgs == 2,
+                                                       "Wrong number of arguments to CallMethod");
+
 				nsRect r;
-				nsViewBeOS	*bv = dynamic_cast<nsViewBeOS *>(mView);
-				if(bv && bv->GetSizeRect(r))
-				{
-					// have to disable frame events otherwise we'll be notified
-					// of the mozilla internals forced resize
-					mView->SetFlags(mView->Flags() & ~B_FRAME_EVENTS);
+                               r.width=(nscoord)info->args[0];
+                               r.height=(nscoord)info->args[1];
+
 					OnResize(r);
-					mView->SetFlags(mView->Flags() | B_FRAME_EVENTS);
 				}
-				mView->UnlockLooper();
-			}
 			break;
 
 		case nsWindow::ONSCROLL:
@@ -2253,8 +2261,8 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 		if(mView && mView->LockLooper())
 		{
 			BRect r = mView->Bounds();
-			event.mWinWidth  = PRInt32(r.right - r.left);
-			event.mWinHeight = PRInt32(r.bottom - r.top);
+                       event.mWinWidth  = r.IntegerWidth()+1;
+                       event.mWinHeight = r.IntegerHeight()+1;
 			mView->UnlockLooper();
 		} else {
 			event.mWinWidth  = 0;
@@ -2472,8 +2480,19 @@ nsIWidget *nsIWidgetStore::GetMozillaWidget(void)
 nsWindowBeOS::nsWindowBeOS( nsIWidget *aWidgetWindow, BRect aFrame, const char *aName, window_look aLook,
     window_feel aFeel, int32 aFlags, int32 aWorkspace )
   : BWindow( aFrame, aName, aLook, aFeel, aFlags, aWorkspace ),
-    nsIWidgetStore( aWidgetWindow )
+    nsIWidgetStore( aWidgetWindow ),
+    resizeRunner(NULL)
 {
+       //note that the window will be resized (and FrameResized()
+       //will be called) if aFrame isn't a valid window size
+    lastWidth=aFrame.Width();
+    lastHeight=aFrame.Height();
+}
+
+nsWindowBeOS::~nsWindowBeOS()
+{
+       //clean up
+       delete resizeRunner;
 }
 
 bool nsWindowBeOS::QuitRequested( void )
@@ -2495,10 +2514,98 @@ void nsWindowBeOS::MessageReceived(BMessage *msg)
 {
 	switch(msg->what)
 	{
+               case 'RESZ':
+			{
+				//this is the message generated by the resizeRunner - it
+				//has now served its purpose
+				delete resizeRunner;
+				resizeRunner=NULL;
+
+				//kick off the xp resizing stuff
+				DoFrameResized();
+			}
+			break;
+
 		default :
 			BWindow::MessageReceived(msg);
 			break;
 	}
+}
+
+void nsWindowBeOS::FrameResized(float width, float height)
+{
+       //determine if the window size actually changed
+       if (width==lastWidth && height==lastHeight) {
+               //it didn't - don't bother
+               return;
+       }
+
+       //remember new size
+       lastWidth=width;
+       lastHeight=height;
+
+       //while the user resizes the window, a large number of
+       //B_WINDOW_RESIZED events are generated.  because
+       //the layout/drawing code invoked during a resize isn't
+       //terribly fast, these events can "back up" (new ones are
+       //delivered before old ones are processed), causing mozilla
+       //to act sluggish (even on a fast machine, the re-layouts
+       //and redraws performed in response to the B_WINDOW_RESIZED
+       //events usually don't finish until long after the user is
+       //done resizing the window), and possibly even overflow the
+       //window's event queue.  to stop this from happening, we will
+       //consolidate all B_WINDOW_RESIZED messages generated within
+       //1/10 seconds of each other into a single resize event (i.e.,
+       //the views won't be resized/redrawn until the user finishes
+       //resizing the window)
+       const bigtime_t timerLen=100000LL;
+       if (resizeRunner==NULL) {
+               //this is the first B_WINDOW_RESIZE event in this interval -
+               //start the timer
+               BMessage msg('RESZ');
+               resizeRunner=new BMessageRunner(BMessenger(this), &msg, timerLen, 1);
+               
+       } else {
+               //this is not the first B_WINDOW_RESIZE event in the
+               //current interval - reset the timer
+               resizeRunner->SetInterval(timerLen);
+       }
+}
+
+void nsWindowBeOS::ResizeToWithoutEvent(float width, float height)
+{
+       //this method is just a wrapper for BWindow::ResizeTo(), except
+       //it will attempt to keep the B_FRAME_RESIZED event resulting
+       //from the ResizeTo() call from being passed to the xp layout
+       //engine (OnResize() will already have been called for this
+       //resize by nsWindow::Resize() above)
+       lastWidth=width;
+       lastHeight=height;
+       ResizeTo(width, height);
+}
+
+void nsWindowBeOS::DoFrameResized()
+{
+       //let the layout engine know the window has changed size,
+       //so it can resize the window's views
+       nsWindow        *w = (nsWindow *)GetMozillaWidget();
+       nsToolkit       *t;
+       if(w && (t = w->GetToolkit()) != 0)
+       {
+               //the window's new size needs to be passed to OnResize() -
+               //note that the values passed to FrameResized() are the
+               //dimensions as reported by Bounds().Width() and
+               //Bounds().Height(), which are one pixel smaller than the
+               //window's true size
+               uint32 args[2];
+               args[0]=(uint32)lastWidth+1;
+               args[1]=(uint32)lastHeight+1;
+
+               MethodInfo *info =
+                       new MethodInfo(w, w, nsWindow::ONRESIZE, 2, args);
+               t->CallMethodAsync(info);
+               NS_RELEASE(t);
+       }
 }
 
 //----------------------------------------------------
@@ -2506,7 +2613,7 @@ void nsWindowBeOS::MessageReceived(BMessage *msg)
 //----------------------------------------------------
 
 nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName, uint32 aResizingMode, uint32 aFlags)
- : BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow), buttons(0), currsizechanged(false)
+ : BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow), buttons(0)
 {
 }
 
@@ -2546,33 +2653,6 @@ bool nsViewBeOS::GetPaintRect(nsRect &r)
 	return true;
 }
 
-void nsViewBeOS::FrameResized(float width, float height)
-{
-	currsizerect.x = (nscoord)Bounds().left;
-	currsizerect.y = (nscoord)Bounds().top;
-	currsizerect.width = (nscoord)width;
-	currsizerect.height = (nscoord)height;
-	currsizechanged = true;
-
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
-	nsToolkit	*t;
-	if(w && (t = w->GetToolkit()) != 0)
-	{
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONRESIZE);
-		t->CallMethodAsync(info);
-		NS_RELEASE(t);
-	}
-}
-
-bool nsViewBeOS::GetSizeRect(nsRect &r)
-{
-	if(! currsizechanged)
-		return false;
-	r = currsizerect;
-	currsizechanged = false;
-	return true;
-}
-
 void nsViewBeOS::MouseDown(BPoint point)
 {
 	SetMouseEventMask(B_POINTER_EVENTS | B_KEYBOARD_EVENTS);
@@ -2603,7 +2683,7 @@ void nsViewBeOS::MouseDown(BPoint point)
 	}
 }
 
-void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *message)
+void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 {
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
@@ -2618,19 +2698,22 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *messag
 		if(transit == B_ENTERED_VIEW)
 		{
 			args[0] = NS_MOUSE_ENTER;
-			MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
-			t->CallMethodAsync(info);
+                       MethodInfo *enterInfo =
+                                               new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+                       t->CallMethodAsync(enterInfo);
 		}
 	
 		args[0] = NS_MOUSE_MOVE;
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
-		t->CallMethodAsync(info);
+               MethodInfo *moveInfo =
+                                               new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+               t->CallMethodAsync(moveInfo);
 	
 		if(transit == B_EXITED_VIEW)
 		{
 			args[0] = NS_MOUSE_EXIT;
-			MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
-			t->CallMethodAsync(info);
+                       MethodInfo *exitInfo =
+                                               new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args);
+                       t->CallMethodAsync(exitInfo);
 		}
 		NS_RELEASE(t);
 	}

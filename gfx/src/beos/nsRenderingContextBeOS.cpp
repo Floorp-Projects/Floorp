@@ -256,7 +256,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::UnlockDrawingSurface(void)
 
 NS_IMETHODIMP nsRenderingContextBeOS::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-	nsresult  rv;
+       nsresult  rv=NS_OK;
 
 	//XXX this should reset the data in the state stack.
 
@@ -294,8 +294,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::SelectOffScreenDrawingSurface(nsDrawingSur
 		NS_ADDREF(mSurface);
 		mSurface->GetView(&mView);
 	}
-	else
-		rv = NS_OK;
 	
 	return rv;
 }
@@ -677,21 +675,35 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(nsRect *aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
-	nsDrawingSurfaceBeOS *surf = new nsDrawingSurfaceBeOS();
+       aSurface=nsnull;
 
-	if(nsnull != surf)
-	{
+       //allocate a new surface
+	nsDrawingSurfaceBeOS *surf = new nsDrawingSurfaceBeOS();
+       if (surf==NULL) {
+               //there wasn't enough memory
+               return NS_ERROR_OUT_OF_MEMORY;
+       }
+
+       //we own this surface
 		NS_ADDREF(surf);
 
-		if (nsnull != aBounds)
-			surf->Init(mMainView, aBounds->width, aBounds->height, aSurfFlags);
-		else
-			surf->Init(mMainView, 0, 0, aSurfFlags);
+       int w=0, h=0;
+       if (aBounds!=NULL) {
+               w=aBounds->width;
+               h=aBounds->height;
+       }
+
+       nsresult rv=surf->Init(mMainView, w, h, aSurfFlags);
+       if (NS_FAILED(rv)) {
+               //the surface is invalid - get rid of it
+               NS_RELEASE(surf);
+               surf=nsnull;
 	}
 
+       //return the new surface
 	aSurface = (nsDrawingSurface)surf;
 
-	return NS_OK;
+       return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::DestroyDrawingSurface(nsDrawingSurface aDS)
