@@ -1083,7 +1083,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
     /* news:GROUP
        news:/GROUP
        news://HOST/GROUP
-       news://host/*
      */
     if (PL_strchr(group.get(),'*')) {
       // getting all the newsgroups on the server, for subscribe dialog
@@ -4873,38 +4872,39 @@ PRInt32 nsNNTPProtocol::SendListGroup()
 
 PRInt32 nsNNTPProtocol::SendListGroupResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
-	PRUint32 status = 0;
-
-	NS_ASSERTION(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED, "code != GROUP_SELECTED");
-	if (m_responseCode != MK_NNTP_RESPONSE_GROUP_SELECTED)
-	{
-		m_nextState = NEWS_DONE; 
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		return MK_DATA_LOADED;
-	}
-
-	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-
-	if(pauseForMoreData)
-	{
-		SetFlag(NNTP_PAUSE_FOR_READ);
-		return 0;
-	}
-
-	if (line)
-	{
-		if (line[0] != '.')
-		{
+  char *line;
+  PRUint32 status = 0;
+  
+  NS_ASSERTION(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED, "code != GROUP_SELECTED");
+  if (m_responseCode != MK_NNTP_RESPONSE_GROUP_SELECTED)
+  {
+    m_nextState = NEWS_DONE; 
+    ClearFlag(NNTP_PAUSE_FOR_READ);
+    return MK_DATA_LOADED;
+  }
+  
+  PRBool pauseForMoreData = PR_FALSE;
+  line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  
+  if(pauseForMoreData)
+  {
+    SetFlag(NNTP_PAUSE_FOR_READ);
+    return 0;
+  }
+  
+  if (line)
+  {
+    nsresult rv;
+    if (line[0] != '.')
+    {
       nsMsgKey found_id = nsMsgKey_None;
       PR_sscanf(line, "%ld", &found_id);
-      nsresult rv = m_articleList->AddArticleKey(found_id);
+      rv = m_articleList->AddArticleKey(found_id);
       NS_ASSERTION(NS_SUCCEEDED(rv), "add article key failed");
-		}
-		else
-		{
-      nsresult rv = m_articleList->FinishAddingArticleKeys();
+    }
+    else
+    {
+      rv = m_articleList->FinishAddingArticleKeys();
       NS_ASSERTION(NS_SUCCEEDED(rv), "finish adding article key failed");
       m_articleList = nsnull;
       m_nextState = NEWS_DONE;	 /* ### dmb - don't really know */
@@ -4912,9 +4912,9 @@ PRInt32 nsNNTPProtocol::SendListGroupResponse(nsIInputStream * inputStream, PRUi
       PR_FREEIF(line);
       return 0;
     }
-	}
-	PR_FREEIF(line);
-	return 0;
+  }
+  PR_FREEIF(line);
+  return 0;
 }
 
 
