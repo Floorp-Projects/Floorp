@@ -36,6 +36,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
