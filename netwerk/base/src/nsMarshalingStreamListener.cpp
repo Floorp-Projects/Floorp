@@ -17,8 +17,9 @@
  */
 
 #include "nsIStreamListener.h"
-#include "nsIUrl.h"
+#include "nsIProtocolConnection.h"
 #include "nsIInputStream.h"
+#include "nsIString.h"
 #include "nsCRT.h"
 
 class nsMarshalingStreamListener : public nsIStreamListener
@@ -27,11 +28,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnStartBinding(nsIUrl* aUrl, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIUrl* aUrl, nsIInputStream *aIStream, 
+    NS_IMETHOD OnStartBinding(nsIProtocolConnection* connection);
+    NS_IMETHOD OnDataAvailable(nsIProtocolConnection* connection,
+                               nsIInputStream *aIStream, 
                                PRUint32 aLength);
-    NS_IMETHOD OnStopBinding(nsIUrl* aUrl, nsresult aStatus, const PRUnichar* aMsg);
-    NS_IMETHOD GetBindInfo(nsIUrl* aUrl, nsStreamBindingInfo* aInfo);
+    NS_IMETHOD OnStopBinding(nsIProtocolConnection* connection,
+                             nsresult aStatus,
+                             nsIString* aMsg);
 
     // nsMarshalingStreamListener methods:
     nsMarshalingStreamListener(PLEventQueue* eventQueue,
@@ -56,7 +59,8 @@ protected:
 class nsStreamListenerEvent : public PLEvent 
 {
 public:
-    nsStreamListenerEvent(nsMarshalingStreamListener* listener, nsIUrl* url);
+    nsStreamListenerEvent(nsMarshalingStreamListener* listener,
+                          nsIProtocolConnection* connection);
     virtual ~nsStreamListenerEvent();
 
     nsresult Fire(PLEventQueue* aEventQ);
@@ -68,22 +72,23 @@ protected:
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
     nsMarshalingStreamListener* mListener;
-    nsIUrl*                     mURL;
+    nsIProtocolConnection*      mConnection;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsStreamListenerEvent::nsStreamListenerEvent(nsMarshalingStreamListener* listener, nsIUrl* url)
-    : mListener(listener), mURL(url)
+nsStreamListenerEvent::nsStreamListenerEvent(nsMarshalingStreamListener* listener,
+                                             nsIProtocolConnection* connection)
+    : mListener(listener), mConnection(connection)
 {
     NS_ADDREF(mListener);
-    NS_ADDREF(mURL);
+    NS_ADDREF(mConnection);
 }
 
 nsStreamListenerEvent::~nsStreamListenerEvent()
 {
     NS_RELEASE(mListener);
-    NS_RELEASE(mURL);
+    NS_RELEASE(mConnection);
 }
 
 void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
@@ -131,11 +136,11 @@ NS_IMPL_ISUPPORTS(nsMarshalingStreamListener, nsIStreamListener::GetIID());
 class nsOnStartBindingEvent : public nsStreamListenerEvent
 {
 public:
-    nsOnStartBindingEvent(nsMarshalingStreamListener* listener, nsIUrl* url)
-        : nsStreamListenerEvent(listener, url), mContentType(nsnull) {}
+    nsOnStartBindingEvent(nsMarshalingStreamListener* listener, 
+                          nsIProtocolConnection* connection)
+        : nsStreamListenerEvent(listener, connection), mContentType(nsnull) {}
     virtual ~nsOnStartBindingEvent();
 
-    nsresult Init(const char* aContentType);
     NS_IMETHOD HandleEvent();
 
 protected:
@@ -148,34 +153,23 @@ nsOnStartBindingEvent::~nsOnStartBindingEvent()
         delete[] mContentType;
 }
 
-nsresult
-nsOnStartBindingEvent::Init(const char* aContentType)
-{
-    mContentType = nsCRT::strdup(aContentType);
-    if (mContentType == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsOnStartBindingEvent::HandleEvent()
 {
-    return mListener->GetReceiver()->OnStartBinding(mURL, mContentType);
+    return mListener->GetReceiver()->OnStartBinding(mConnection);
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnStartBinding(nsIUrl* aUrl, const char *aContentType)
+nsMarshalingStreamListener::OnStartBinding(nsIProtocolConnection* connection)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
     nsOnStartBindingEvent* event = 
-        new nsOnStartBindingEvent(this, aUrl);
+        new nsOnStartBindingEvent(this, connection);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = event->Init(aContentType);
-    if (NS_FAILED(rv)) goto failed;
     rv = event->Fire(mEventQueue);
     if (NS_FAILED(rv)) goto failed;
     return rv;
@@ -190,8 +184,10 @@ nsMarshalingStreamListener::OnStartBinding(nsIUrl* aUrl, const char *aContentTyp
 class nsOnDataAvailableEvent : public nsStreamListenerEvent
 {
 public:
-    nsOnDataAvailableEvent(nsMarshalingStreamListener* listener, nsIUrl* url)
-        : nsStreamListenerEvent(listener, url), mIStream(nsnull), mLength(0) {}
+    nsOnDataAvailableEvent(nsMarshalingStreamListener* listener, 
+                           nsIProtocolConnection* connection)
+        : nsStreamListenerEvent(listener, connection),
+          mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
     nsresult Init(nsIInputStream* aIStream, PRUint32 aLength);
@@ -219,18 +215,19 @@ nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aLength)
 NS_IMETHODIMP
 nsOnDataAvailableEvent::HandleEvent()
 {
-    return mListener->GetReceiver()->OnDataAvailable(mURL, mIStream, mLength);
+    return mListener->GetReceiver()->OnDataAvailable(mConnection, mIStream, mLength);
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnDataAvailable(nsIUrl* aUrl, nsIInputStream *aIStream, 
+nsMarshalingStreamListener::OnDataAvailable(nsIProtocolConnection* connection,
+                                            nsIInputStream *aIStream, 
                                             PRUint32 aLength)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
     nsOnDataAvailableEvent* event = 
-        new nsOnDataAvailableEvent(this, aUrl);
+        new nsOnDataAvailableEvent(this, connection);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -250,49 +247,49 @@ nsMarshalingStreamListener::OnDataAvailable(nsIUrl* aUrl, nsIInputStream *aIStre
 class nsOnStopBindingEvent : public nsStreamListenerEvent
 {
 public:
-    nsOnStopBindingEvent(nsMarshalingStreamListener* listener, nsIUrl* url)
-        : nsStreamListenerEvent(listener, url), mStatus(NS_OK), mMessage(nsnull) {}
+    nsOnStopBindingEvent(nsMarshalingStreamListener* listener, 
+                         nsIProtocolConnection* connection)
+        : nsStreamListenerEvent(listener, connection),
+          mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopBindingEvent();
 
-    nsresult Init(nsresult status, const PRUnichar* aMsg);
+    nsresult Init(nsresult status, nsIString* aMsg);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsresult    mStatus;
-    PRUnichar*  mMessage;
+    nsIString*  mMessage;
 };
 
 nsOnStopBindingEvent::~nsOnStopBindingEvent()
 {
-    if (mMessage)
-        delete[] mMessage;
+    NS_RELEASE(mMessage);
 }
 
 nsresult
-nsOnStopBindingEvent::Init(nsresult status, const PRUnichar* aMsg)
+nsOnStopBindingEvent::Init(nsresult status, nsIString* aMsg)
 {
-    mStatus = status;
-    mMessage = nsCRT::strdup(aMsg);
-    if (mMessage == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mMessage = aMsg;
+    NS_ADDREF(mMessage);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsOnStopBindingEvent::HandleEvent()
 {
-    return mListener->GetReceiver()->OnStopBinding(mURL, mStatus, mMessage);
+    return mListener->GetReceiver()->OnStopBinding(mConnection, mStatus, mMessage);
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnStopBinding(nsIUrl* aUrl, nsresult aStatus,
-                                          const PRUnichar* aMsg)
+nsMarshalingStreamListener::OnStopBinding(nsIProtocolConnection* connection,
+                                          nsresult aStatus,
+                                          nsIString* aMsg)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
     nsOnStopBindingEvent* event = 
-        new nsOnStopBindingEvent(this, aUrl);
+        new nsOnStopBindingEvent(this, connection);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -305,71 +302,6 @@ nsMarshalingStreamListener::OnStopBinding(nsIUrl* aUrl, nsresult aStatus,
   failed:
     delete event;
     return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-class nsGetBindInfoEvent : public nsStreamListenerEvent
-{
-public:
-    nsGetBindInfoEvent(nsMarshalingStreamListener* listener, nsIUrl* url)
-        : nsStreamListenerEvent(listener, url), mContentType(nsnull) {}
-    virtual ~nsGetBindInfoEvent();
-
-    nsresult Init(const char* aContentType);
-    NS_IMETHOD HandleEvent();
-
-protected:
-    char*       mContentType;
-};
-
-nsGetBindInfoEvent::~nsGetBindInfoEvent()
-{
-    if (mContentType)
-        delete[] mContentType;
-}
-
-nsresult
-nsGetBindInfoEvent::Init(const char* aContentType)
-{
-    mContentType = nsCRT::strdup(aContentType);
-    if (mContentType == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGetBindInfoEvent::HandleEvent()
-{
-    return mListener->GetReceiver()->GetBindInfo(mURL, mContentType);
-}
-#endif
-
-NS_IMETHODIMP 
-nsMarshalingStreamListener::GetBindInfo(nsIUrl* aUrl, nsStreamBindingInfo* aInfo)
-{
-#if 0
-    nsresult rv = GetStatus();
-    if (NS_FAILED(rv)) return rv;
-
-    nsGetBindInfoEvent* event = 
-        new nsGetBindInfoEvent(this, aUrl);
-    if (event == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = event->Init(aContentType);
-    if (NS_FAILED(rv)) goto failed;
-    rv = event->Fire(mEventQueue);
-    if (NS_FAILED(rv)) goto failed;
-    return rv;
-
-  failed:
-    delete event;
-    return rv;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

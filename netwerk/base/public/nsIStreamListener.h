@@ -25,6 +25,8 @@
 
 class nsIUrl;
 class nsIInputStream;
+class nsIProtocolConnection;
+class nsIString;
 
 // XXX regenerate:
 #define NS_ISTREAMLISTENER_IID                       \
@@ -34,11 +36,6 @@ class nsIInputStream;
     0x11d2,                                          \
     {0x81, 0x6a, 0x00, 0x60, 0x09, 0x11, 0x9d, 0x7a} \
 }
-
-struct nsStreamBindingInfo {
-    PRBool      seekable;
-    /* ...more... */
-};
 
 class nsIStreamListener : public nsISupports
 {
@@ -52,7 +49,7 @@ public:
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    NS_IMETHOD OnStartBinding(nsIUrl* aUrl, const char *aContentType) = 0;
+    NS_IMETHOD OnStartBinding(nsIProtocolConnection* connection) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -64,7 +61,8 @@ public:
      * @param length    The amount of data that was just pushed into the stream.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnDataAvailable(nsIUrl* aUrl, nsIInputStream *aIStream, 
+    NS_IMETHOD OnDataAvailable(nsIProtocolConnection* connection,
+                               nsIInputStream *aIStream, 
                                PRUint32 aLength) = 0;
 
     /**
@@ -78,16 +76,9 @@ public:
      * @param msg   A text string describing the error.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnStopBinding(nsIUrl* aUrl, nsresult aStatus, const PRUnichar* aMsg) = 0;
-
-    /**
-     * Return information regarding the current URL load.<BR>
-     * The info structure that is passed in is filled out and returned
-     * to the caller. 
-     * 
-     * This method is currently not called.  
-     */
-    NS_IMETHOD GetBindInfo(nsIUrl* aUrl, nsStreamBindingInfo* aInfo) = 0;
+    NS_IMETHOD OnStopBinding(nsIProtocolConnection* connection,
+                             nsresult aStatus,
+                             nsIString* aMsg) = 0;
 
 };
 
