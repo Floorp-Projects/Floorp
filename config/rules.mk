@@ -536,10 +536,6 @@ else
 endif
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
 	$(ELF_DYNSTR_GC) $(DIST)/bin/components/$(SHARED_LIBRARY)
-ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib/components
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
-endif
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
@@ -550,10 +546,6 @@ else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
-ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin
-endif
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(DIST)/bin && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
@@ -774,7 +766,6 @@ ifndef IS_COMPONENT
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
 endif
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) VMSuni.opt;
-	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=.vms)
 endif
 else # OS2
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
