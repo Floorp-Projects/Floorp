@@ -444,13 +444,13 @@ int interpret(char *cmd)
 			return TRUE;//***Changed FALSE to TRUE
 		if (!CopyFile(iniSrcPath, iniDstPath, TRUE))
 			DWORD e = GetLastError();
-/*		if (strcmp(key, "Program Folder Name") == 0)
+		if (strcmp(key, "Program Folder Name") == 0)
 		{
 			strcpy(temp, "Netscape 6 by ");
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
-*/		WritePrivateProfileString(section, key, newvalue, iniDstPath);
+		WritePrivateProfileString(section, key, newvalue, iniDstPath);
 	}
 	else if (strcmp(cmdname, "replaceXPI") == 0)
 	{
