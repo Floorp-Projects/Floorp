@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
+ */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "nscore.h"
+#include "nsCom.h"
+%}
+
+interface nsIWebShellWindow;
+interface nsIURI;
+interface nsIStreamObserver;
+interface nsIXULWindowCallbacks;
+interface nsICmdLineService;
+
+%{C++
+/* Forward declarations... */
+struct PRThread;
+class nsIFactory;
+
+// e5e5af70-8a38-11d2-9938-0080c7cb1080
+#define NS_IAPPSHELL_SERVICE_IID \
+{ 0xe5e5af70, 0x8a38, 0x11d2, \
+	{0x99, 0x38, 0x00, 0x80, 0xc7, 0xcb, 0x10, 0x80} }
+%}
+
+[scriptable, uuid(E5E5AF70-8A38-11D2-9938-0080C7CB1080)]
+interface nsIAppShellService : nsISupports
+{
+
+  void Initialize(in nsICmdLineService aCmdLineService);
+  void Run();
+  void Shutdown();
+
+  void CreateTopLevelWindow(in nsIWebShellWindow aParent,
+                            in nsIURI aUrl, 
+								            in boolean showWindow, 
+                            out nsIWebShellWindow aResult, 
+                            in nsIStreamObserver anObserver,
+                            in nsIXULWindowCallbacks aCallbacks,
+                            in long aInitialWidth, in long aInitialHeight);
+  void CreateDialogWindow(  in nsIWebShellWindow aParent,
+                            in nsIURI aUrl, 
+													  in boolean showWindow,
+                            out nsIWebShellWindow aResult, 
+                            in nsIStreamObserver anObserver,
+                            in nsIXULWindowCallbacks aCallbacks,
+                            in long aInitialWidth, in long aInitialHeight);
+  void RunModalDialog(      out nsIWebShellWindow aWindow,
+                            in nsIURI aUrl, 
+                            in nsIWebShellWindow aParent, 
+                            in nsIStreamObserver anObserver,
+                            in nsIXULWindowCallbacks aCallbacks,
+                            in long aInitialWidth, in long aInitialHeight);
+  void CloseTopLevelWindow(in nsIWebShellWindow aWindow);
+  void RegisterTopLevelWindow(in nsIWebShellWindow aWindow);
+  void UnregisterTopLevelWindow(in nsIWebShellWindow aWindow);
+};
