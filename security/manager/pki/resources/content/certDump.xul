@@ -40,7 +40,7 @@
   </tree>
   <outliner class="inset" id="prettyDumpOutliner" style="height:150px">
     <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;"
-                 ignoreincolumnpicker="true" class="header outlinercol-header" primary="true"/>
+                 ignoreincolumnpicker="true" class="header" primary="true"/>
     <splitter/>
     <outlinerbody flex="1" onselect="displaySelected();"/>
   </outliner>
