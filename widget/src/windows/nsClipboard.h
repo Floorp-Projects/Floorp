@@ -23,7 +23,6 @@
 #include <windows.h>
 
 class nsITransferable;
-//class nsDataObj;
 class nsIClipboardOwner;
 class nsIWidget;
 struct IDataObject;
@@ -60,6 +59,7 @@ public:
 
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
 
+  static UINT     GetFormat(const nsString & aMimeStr);
 
 
 protected:

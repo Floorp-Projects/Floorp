@@ -101,7 +101,7 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 //-------------------------------------------------------------------------
-static UINT GetFormat(const nsString & aMimeStr)
+UINT nsClipboard::GetFormat(const nsString & aMimeStr)
 {
   UINT format = 0;
 
