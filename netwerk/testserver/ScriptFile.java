@@ -105,7 +105,9 @@ class ScriptFile {
                 if (s.startsWith("START")) {
                     // Check to see if this was in the requested URL
                     String filename = new String ("GET " + s.substring(6));
-                    if (request.startsWith(filename))
+                    String otherfilename = new String("POST " + s.substring(6));
+                    if (request.startsWith(filename) || 
+                            request.startsWith(otherfilename))
                     {
                         continue;
                     }
