@@ -415,7 +415,6 @@ protected:
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
   nsIUrlDispatcher *  mUrlDispatcher;
-  nsIPrompt* mPrompter;
 
   nsIWebShell* mParent;
   nsVoidArray mChildren;
@@ -624,7 +623,6 @@ nsWebShell::nsWebShell()
   mViewSource=PR_FALSE;
   mForceCharacterSet = "";
   mHistoryService = nsnull;
-  mPrompter = nsnull;
   mHistoryState = nsnull;
 }
 
@@ -655,7 +653,6 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
-  NS_IF_RELEASE(mPrompter);
 
   if (nsnull != mScriptGlobal) {
     mScriptGlobal->SetWebShell(nsnull);
@@ -1422,11 +1419,9 @@ NS_IMETHODIMP
 nsWebShell::SetObserver(nsIStreamObserver* anObserver)
 {
   NS_IF_RELEASE(mObserver);
-  NS_IF_RELEASE(mPrompter);
 
   mObserver = anObserver;
   if (nsnull != mObserver) {
-    mObserver->QueryInterface(nsIPrompt::GetIID(), (void**)&mPrompter);
     NS_ADDREF(mObserver);
   }
   return NS_OK;
@@ -1911,7 +1906,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   const char *cmd = mViewSource ? "view-source" : "view" ;
   mViewSource = PR_FALSE; // reset it
-  return LoadURL(aURLSpec, "view", aPostDataStream,
+  return LoadURL(aURLSpec, cmd, aPostDataStream,
                  aModifyHistory,aType, aLocalIP, aHistoryState,
                  aReferrer);
 }
@@ -3238,9 +3233,8 @@ nsWebShell::ReportScriptError(const char* aErrorString,
     Recycle(errorStr);
   }
   
-  if (mPrompter) {
-    mPrompter->Alert(error.GetUnicode());
-  }
+  // XXX Turn it off for now...there should be an Error method too
+  //Alert(error.GetUnicode());
 
   return NS_OK;
 }
@@ -3799,27 +3793,51 @@ nsWebShell::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 NS_IMETHODIMP
 nsWebShell::Alert(const PRUnichar *text)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->Alert(text);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->Alert(text);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
 nsWebShell::Confirm(const PRUnichar *text,
                     PRBool *result)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->Confirm(text, result);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->Confirm(text, result);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
 nsWebShell::ConfirmYN(const PRUnichar *text,
                     PRBool *result)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->ConfirmYN(text, result);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->ConfirmYN(text, result);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3828,9 +3846,17 @@ nsWebShell::ConfirmCheck(const PRUnichar *text,
                          PRBool *checkValue,
                          PRBool *result)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->ConfirmCheck(text, checkMsg, checkValue, result);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->ConfirmCheck(text, checkMsg, checkValue, result);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3839,9 +3865,17 @@ nsWebShell::ConfirmCheckYN(const PRUnichar *text,
                          PRBool *checkValue,
                          PRBool *result)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->ConfirmCheckYN(text, checkMsg, checkValue, result);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->ConfirmCheckYN(text, checkMsg, checkValue, result);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3850,9 +3884,17 @@ nsWebShell::Prompt(const PRUnichar *text,
                    PRUnichar **result,
                    PRBool *_retval)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->Prompt(text, defaultText, result, _retval);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->Prompt(text, defaultText, result, _retval);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3861,9 +3903,17 @@ nsWebShell::PromptUsernameAndPassword(const PRUnichar *text,
                                       PRUnichar **pwd,
                                       PRBool *_retval)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->PromptUsernameAndPassword(text, user, pwd, _retval);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->PromptUsernameAndPassword(text, user, pwd, _retval);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3871,9 +3921,17 @@ nsWebShell::PromptPassword(const PRUnichar *text,
                            PRUnichar **pwd,
                            PRBool *_retval)
 {
-  if (mPrompter == nsnull)
-    return NS_OK;
-  return mPrompter->PromptPassword(text, pwd, _retval);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrompt> prompter;
+
+  if (mContainer) {
+    prompter = do_QueryInterface(mContainer);
+    if (prompter) {
+      rv = prompter->PromptPassword(text, pwd, _retval);
+    }
+  }
+  
+  return rv;
 }
 
 //----------------------------------------------------

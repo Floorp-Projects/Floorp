@@ -172,10 +172,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-#ifdef NECKO
-#else
-static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
-#endif
+static NS_DEFINE_IID(kIPromptIID,         NS_IPROMPT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_CID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -1088,20 +1085,16 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#ifdef NECKO
   if (aIID.Equals(nsIProgressEventSink::GetIID())) {
     *aInstancePtrResult = (void*) ((nsIProgressEventSink*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#else
-  // XXX I don't think so...
-  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
+  if (aIID.Equals(kIPromptIID)) {
+    *aInstancePtrResult = (void*) ((nsIPrompt*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#endif
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
     NS_ADDREF_THIS();
@@ -2069,104 +2062,141 @@ nsBrowserWindow::OnStopRequest(nsIURI* aURL,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
-nsBrowserWindow::Alert(const nsString &aText)
+NS_IMETHODIMP
+nsBrowserWindow::Alert(const PRUnichar *text)
 {
-  char* msg = nsnull;
+  nsCAutoString str(text);
+  printf("%cBrowser Window Alert: %s\n", '\007', str.GetBuffer());
 
-  msg = aText.ToNewCString();
-  if (nsnull != msg) {
-    printf("%cBrowser Window Alert: %s\n", '\007', msg);
-    delete[] msg;
-  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsBrowserWindow::Confirm(const nsString &aText)
+NS_IMETHODIMP
+nsBrowserWindow::Confirm(const PRUnichar *text,
+                         PRBool *result)
 {
-  char* msg= nsnull;
+  nsCAutoString str(text);
+  const char* msg= nsnull;
 
-  msg = aText.ToNewCString();
+  msg = str.GetBuffer();
   if (nsnull != msg) {
     printf("Browser Window Confirm: %s (y/n)? ", msg);
-    delete[] msg;
     char c;
     for (;;) {
       c = getchar();
       if (tolower(c) == 'y') {
-        return PR_TRUE;
+        *result = PR_TRUE;
       }
       if (tolower(c) == 'n') {
-        return PR_FALSE;
+        *result = PR_FALSE;
       }
     }
   }
-  return PR_FALSE;
+  *result = PR_FALSE;
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsBrowserWindow::Prompt(const nsString &aText,
-			const nsString &aDefault,
-			nsString &aResult)
+NS_IMETHODIMP
+nsBrowserWindow::ConfirmYN(const PRUnichar *text,
+                           PRBool *result)
 {
-  char* msg = nsnull;
+  return Confirm(text, result);
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::ConfirmCheck(const PRUnichar *text,
+                              const PRUnichar *checkMsg,
+                              PRBool *checkValue,
+                              PRBool *result)
+{
+  return Confirm(text, result);
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::ConfirmCheckYN(const PRUnichar *text,
+                         const PRUnichar *checkMsg,
+                         PRBool *checkValue,
+                         PRBool *result)
+{
+  return Confirm(text, result);
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::Prompt(const PRUnichar *text,
+                        const PRUnichar *defaultText,
+                        PRUnichar **result,
+                        PRBool *_retval)
+{
+  nsCAutoString str(text);
+  const char* msg= nsnull;
   char buf[256];
 
-  msg = aText.ToNewCString();
+  msg = str.GetBuffer();
   if (nsnull != msg) {
     printf("Browser Window: %s\n", msg);
-    delete[] msg;
 
     printf("%cPrompt: ", '\007');
     scanf("%s", buf);
-    aResult = buf;
+    nsAutoString response(buf);
+    *result = response.ToNewUnicode();
   }
   
-  return (aResult.Length() > 0);
+  *_retval = (nsCRT::strlen(buf) > 0);
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool) 
-nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
-				       nsString &aUser,
-				       nsString &aPassword)
+NS_IMETHODIMP
+nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
+                                           PRUnichar **user,
+                                           PRUnichar **pwd,
+                                           PRBool *_retval)
 {
-  char* msg = nsnull;
+  nsCAutoString str(text);
+  const char* msg = nsnull;
   char buf[256];
 
-  msg = aText.ToNewCString();
+  msg = str.GetBuffer();
   if (nsnull != msg) {
+    nsAutoString response;
     printf("Browser Window: %s\n", msg);
-    delete[] msg;
 
     printf("%cUser: ", '\007');
     scanf("%s", buf);
-    aUser = buf;
+    response.SetString(buf);
+    *user = response.ToNewUnicode();
 
     printf("%cPassword: ", '\007');
     scanf("%s", buf);
-    aPassword = buf;
+    response.SetString(buf);
+    *pwd = response.ToNewUnicode();
   }
-  return (aUser.Length() > 0);
+
+  *_retval = (nsCRT::strlen(*user) > 0);
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool) 
-nsBrowserWindow::PromptPassword(const nsString &aText,
-				nsString &aPassword)
+NS_IMETHODIMP
+nsBrowserWindow::PromptPassword(const PRUnichar *text,
+                                PRUnichar **pwd,
+                                PRBool *_retval)
 {
-  char* msg = nsnull;
+  nsCAutoString str(text);
+  const char* msg = nsnull;
   char buf[256];
 
-  msg = aText.ToNewCString();
+  msg = str.GetBuffer();
   if (nsnull != msg) {
     printf("Browser Window: %s\n", msg);
     printf("%cPassword: ", '\007');
     scanf("%s", buf);
-    aPassword = buf;
-    delete[] msg;
+    nsAutoString response(buf);
+    *pwd = response.ToNewUnicode();
   }
  
-  return PR_TRUE;
+  *_retval = (nsCRT::strlen(*pwd) > 0);
+  return NS_OK;
 }
+
 
 //----------------------------------------
 
