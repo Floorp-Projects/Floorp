@@ -32,6 +32,8 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgSend.h"
+#include "nsIMimeConverter.h"
+#include "nsEscape.h"
 
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
@@ -41,6 +43,7 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 #if 0 //JFD
 #include "msg.h"
@@ -88,9 +91,6 @@ extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, 
 extern PRBool INTL_stateful_charset(const char *charset);
 extern PRBool INTL_7bit_data_part(const char *charset, const char *string, const PRUint32 size);
 
-extern MimeEncoderData * MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
-extern MimeEncoderData * MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
-extern MimeEncoderData * MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 
 
@@ -100,6 +100,58 @@ extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 
 #define TEN_K 10240
 #define MK_ATTACHMENT_LOAD_FAILED -666
+
+MimeEncoderData *	MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->B64EncoderInit(output_fn, closure, &returnEncoderData);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? returnEncoderData : nsnull;
+}
+
+MimeEncoderData *	MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->QPEncoderInit(output_fn, closure, &returnEncoderData);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? returnEncoderData : nsnull;
+}
+
+MimeEncoderData *	MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->UUEncoderInit(filename, output_fn, closure, &returnEncoderData);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? returnEncoderData : nsnull;
+}
+
+int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->EncoderDestroy(data, abort_p);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
 
 /* Asynchronous mailing of messages with attached URLs.
 
@@ -253,7 +305,7 @@ static char* NET_GetURLFromLocalFile(char *filename)
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-char * WH_TempName(XP_FileType /*type*/, const char * prefix)
+char * WH_TempName(const char * prefix)
 {
 	nsresult res;
 	nsString tempPath = "c:\\temp\\";
@@ -382,7 +434,29 @@ nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields, const
 			nBodyLength = 0;
 
 		StartMessageDelivery(NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE, PR_FALSE,
-			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);				
+			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);
+
+/**********
+void nsMsgSendMimeDeliveryState::StartMessageDelivery(
+						  MSG_Pane   *pane,
+						  void       *fe_data,
+						  nsMsgCompFields *fields,
+						  PRBool digest_p,
+						  PRBool dont_deliver_p,
+						  MSG_Deliver_Mode mode,
+						  const char *attachment1_type,
+						  const char *attachment1_body,
+						  PRUint32 attachment1_body_length,
+						  const struct MSG_AttachmentData *attachments,
+						  const struct MSG_AttachedFile *preloaded_attachments,
+						  nsMsgSendPart *relatedPart,
+						  void (*message_delivery_done_callback)
+						       (MWContext *context,
+								void *fe_data,
+								int status,
+								const char *error_message))
+**********/
+
 	}
 	return NS_OK;
 }
@@ -474,15 +548,29 @@ MSG_DeliverMimeAttachment::~MSG_DeliverMimeAttachment()
 {
 }
 
+void
+GenerateGlobalRandomBytes(unsigned char *buf, PRInt32 len)
+{
+  PRBool    firstTime = PR_TRUE;
+
+  if (firstTime)
+  {
+   /* Seed the random-number generator with current time so that
+    * the numbers will be different every time we run.    */
+   srand( (unsigned)time( NULL ) );
+   firstTime = PR_FALSE;
+  }
+
+  for( PRInt32 i = 0; i < len; i++ )
+    buf[i] = rand() % 10;
+}
    
 extern "C" char * mime_make_separator(const char *prefix)
 {
 	unsigned char rand_buf[13]; 
-#ifdef UNREADY_CODE  // mscott: I don't think we can do this in the mozilla world...
-	RNG_GenerateGlobalRandomBytes((void *) rand_buf, 12);
-#endif
+	GenerateGlobalRandomBytes(rand_buf, 12);
 
-	return PR_smprintf("------------%s"
+  return PR_smprintf("------------%s"
 					 "%02X%02X%02X%02X"
 					 "%02X%02X%02X%02X"
 					 "%02X%02X%02X%02X",
@@ -508,7 +596,7 @@ static void msg_escape_file_name (URL_Struct *m_url)
 	if (!m_url->address || PL_strncasecmp(m_url->address, "file:", 5))
 		return;
 
-	char * new_address = NET_Escape(PL_strchr(m_url->address, ':') + 1, URL_PATH);
+	char * new_address = nsEscape(PL_strchr(m_url->address, ':') + 1, url_Path);
 	NS_ASSERTION(new_address, "null ptr");
 	if (!new_address)
 		return;
@@ -582,7 +670,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 		needEscape = PR_TRUE;
 
 	if (needEscape)
-		dupParm = NET_Escape(parmValue, URL_PATH);
+		dupParm = nsEscape(parmValue, url_Path);
 	else 
 		dupParm = PL_strdup(parmValue);
 
@@ -722,11 +810,11 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
   PRInt32 status = 0;
   NS_ASSERTION (! m_done, "Already done");
 
-  m_file_name = WH_TempName (xpFileToPost, "nsmail");
+  m_file_name = WH_TempName ("nsmail");
   if (! m_file_name)
 	return (MK_OUT_OF_MEMORY);
 
-  m_file = XP_FileOpen (m_file_name, xpFileToPost, XP_FILE_WRITE_BIN);
+  m_file = PR_Open (m_file_name, PR_CREATE_FILE | PR_RDWR, 493);
   if (! m_file)
 	return MK_UNABLE_TO_OPEN_TMP_FILE; /* #### how do we pass file name? */
 
@@ -757,7 +845,7 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 		  if (!separator)
 			return MK_OUT_OF_MEMORY;
 						
-		  m_ap_filename  = WH_TempName (xpFileToPost, "nsmail");
+		  m_ap_filename  = WH_TempName ("nsmail");
 
 		  ad_encode_stream = (NET_StreamClass *)		/* need a prototype */
 NULL; /* JFD			fe_MakeAppleDoubleEncodeStream (FO_CACHE_AND_MAIL_TO,
@@ -1026,7 +1114,7 @@ void MSG_DeliverMimeAttachment::UrlExit(URL_Struct *url, int status,
 	NET_InterruptWindow (context);
 
   /* Close the file, but don't delete it (or the file name.) */
-  XP_FileClose (m_file);
+  PR_Close (m_file);
   m_file = 0;
   NET_FreeURLStruct (m_url);
   /* I'm pretty sure m_url == url */
@@ -1038,7 +1126,7 @@ void MSG_DeliverMimeAttachment::UrlExit(URL_Struct *url, int status,
   if (status < 0) {
 	  if (m_mime_delivery_state->m_status >= 0)
 		m_mime_delivery_state->m_status = status;
-	  XP_FileRemove(m_file_name, xpFileToPost);
+	  PR_Delete(m_file_name);
 	  PR_FREEIF(m_file_name);
   }
 
@@ -1146,22 +1234,22 @@ void
 MSG_DeliverMimeAttachment::AnalyzeSnarfedFile(void)
 {
 	char chunk[256];
-	XP_File fileHdl = NULL;
+	PRFileDesc  *fileHdl = NULL;
 	PRInt32 numRead = 0;
 	
 	if (m_file_name && *m_file_name)
 	{
-		fileHdl = XP_FileOpen(m_file_name, xpFileToPost, XP_FILE_READ_BIN);
+		fileHdl = PR_Open(m_file_name, PR_RDONLY, 0);
 		if (fileHdl)
 		{
 			do
 			{
-				numRead = XP_FileRead(chunk, 256, fileHdl);
+				numRead = PR_Read(fileHdl, chunk, 256);
 				if (numRead > 0)
 					AnalyzeDataChunk(chunk, numRead);
 			}
 			while (numRead > 0);
-			XP_FileClose(fileHdl);
+			PR_Close(fileHdl);
 		}
 	}
 }
@@ -1338,7 +1426,7 @@ mime_attachment_stream_write (void *stream, const char *block, PRInt32 length)
   while (length > 0)
 	{
 	  PRInt32 l;
-	  l = XP_FileWrite (block, length, ma->m_file);
+	  l = PR_Write (ma->m_file, block, length);
 	  if (l < length)
 		{
 		  ma->m_mime_delivery_state->m_status = MK_MIME_ERROR_WRITING_FILE;
@@ -2162,7 +2250,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	PRInt32 status, i;
 	char *headers = 0;
 	char *separator = 0;
-	XP_File in_file = 0;
+	PRFileDesc  *in_file = 0;
 	PRBool multipart_p = PR_FALSE;
 	PRBool plaintext_is_mainbody_p = PR_FALSE; // only using text converted from HTML?
 	char *buffer = 0;
@@ -2290,7 +2378,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			m_fields->GetUseMultipartAlternative()) &&
 			m_attachment1_body && PL_strcmp(m_attachment1_type, TEXT_HTML) == 0)
 	{
-		m_html_filename = WH_TempName (xpFileToPost, "nsmail");
+		m_html_filename = WH_TempName ("nsmail");
 		if (!m_html_filename)
 			goto FAILMEM;
 
@@ -2353,7 +2441,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 
 	/* First, open the message file.
 	*/
-	m_msg_file_name = WH_TempName (xpFileToPost, "nsmail");
+	m_msg_file_name = WH_TempName ("nsmail");
 	if (! m_msg_file_name)
 		goto FAILMEM;
 
@@ -2811,7 +2899,7 @@ FAIL:
 	PR_FREEIF(headers);
 	PR_FREEIF(separator);
 	if (in_file) {
-		XP_FileClose (in_file);
+		PR_Close (in_file);
 		in_file = NULL;
 	}
 
@@ -3393,18 +3481,18 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	}
 	
 	if (pPriority && *pPriority)
-		if (!strcasestr(pPriority, "normal")) {
+		if (!PL_strcasestr(pPriority, "normal")) {
 			PUSH_STRING ("X-Priority: ");
 			/* Important: do not change the order of the 
 			* following if statements
 			*/
-			if (strcasestr (pPriority, "highest"))
+			if (PL_strcasestr (pPriority, "highest"))
 				PUSH_STRING("1 (");
-			else if (strcasestr(pPriority, "high"))
+			else if (PL_strcasestr(pPriority, "high"))
 				PUSH_STRING("2 (");
-			else if (strcasestr(pPriority, "lowest"))
+			else if (PL_strcasestr(pPriority, "lowest"))
 				PUSH_STRING("5 (");
-			else if (strcasestr(pPriority, "low"))
+			else if (PL_strcasestr(pPriority, "low"))
 				PUSH_STRING("4 (");
 
 			PUSH_STRING (pPriority);
@@ -4091,7 +4179,7 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, const char *charset)
   if (s3) *s3 = 0;
 
   /* Now lose the %XX crap. */
-  NET_UnEscape (attachment->m_real_name);
+  nsUnescape (attachment->m_real_name);
 
   PRInt32 parmFolding = 0;
   PREF_GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
@@ -4588,7 +4676,7 @@ nsMsgSendMimeDeliveryState::Init(
 	m_digest_p = digest_p;
 	m_dont_deliver_p = dont_deliver_p;
 	m_deliver_mode = mode;
-	// m_msg_file_name = WH_TempName (xpFileToPost, "nsmail");
+	// m_msg_file_name = WH_TempName ("nsmail");
 
 	failure = HackAttachments(attachments, preloaded_attachments);
 	return failure;
@@ -4788,15 +4876,15 @@ void nsMsgSendMimeDeliveryState::Clear()
 
 	if (m_plaintext) {
 		if (m_plaintext->m_file)
-			XP_FileClose(m_plaintext->m_file);
-		XP_FileRemove(m_plaintext->m_file_name, xpFileToPost);
+			PR_Close(m_plaintext->m_file);
+		PR_Delete(m_plaintext->m_file_name);
 		PR_FREEIF(m_plaintext->m_file_name);
 		delete m_plaintext;
 		m_plaintext = NULL;
 	}
 
 	if (m_html_filename) {
-		XP_FileRemove(m_html_filename, xpFileToPost);
+		PR_Delete(m_html_filename);
 		PR_FREEIF(m_html_filename);
 	}
 
@@ -4815,11 +4903,11 @@ void nsMsgSendMimeDeliveryState::Clear()
 	if (m_imapLocalMailDB) {
 		m_imapLocalMailDB->Close();
 		m_imapLocalMailDB = NULL;
-		XP_FileRemove (m_msg_file_name, xpMailFolderSummary);
+		PR_Delete(m_msg_file_name);
 	}
 
 	if (m_msg_file_name) {
-		XP_FileRemove (m_msg_file_name, xpFileToPost);
+		PR_Delete(m_msg_file_name);
 		PR_FREEIF (m_msg_file_name);
 	}
 
@@ -4847,17 +4935,17 @@ void nsMsgSendMimeDeliveryState::Clear()
 			PR_FREEIF (m_attachments [i].m_real_name);
 			PR_FREEIF (m_attachments [i].m_encoding);
 			if (m_attachments [i].m_file)
-				XP_FileClose (m_attachments [i].m_file);
+				PR_Close (m_attachments [i].m_file);
 			if (m_attachments [i].m_file_name) {
 				if (!m_pre_snarfed_attachments_p)
-					XP_FileRemove (m_attachments [i].m_file_name, xpFileToPost);
+					PR_Delete(m_attachments [i].m_file_name);
 				PR_FREEIF (m_attachments [i].m_file_name);
 			}
 #ifdef XP_MAC
 		  /* remove the appledoubled intermediate file after we done all.
 		   */
 			if (m_attachments [i].m_ap_filename) {
-				XP_FileRemove (m_attachments [i].m_ap_filename, xpFileToPost);
+				PR_Delete(m_attachments [i].m_ap_filename);
 				PR_FREEIF (m_attachments [i].m_ap_filename);
 			}
 #endif /* XP_MAC */
@@ -5163,10 +5251,10 @@ nsMsgSendMimeDeliveryState::DeliverAsNewsExit(URL_Struct *url, int status)
 
 #ifdef XP_OS2
 XP_BEGIN_PROTOS
-extern PRInt32 msg_do_fcc_handle_line(char* line, PRUint32 length, void* closure);
+extern PRInt32 msg_do_fcc_handle_line(char* line, PRInt32 length, void* closure);
 XP_END_PROTOS
 #else
-static PRInt32 msg_do_fcc_handle_line(char* line, PRUint32 length, void* closure);
+static PRInt32 msg_do_fcc_handle_line(char* line, PRInt32 length, void* closure);
 #endif
 
 static int
@@ -5179,8 +5267,8 @@ mime_do_fcc_1 (MSG_Pane *pane,
 			   const char *news_url)
 {
   int status = 0;
-  XP_File in = 0;
-  XP_File out = 0;
+  PRFileDesc  *in = 0;
+  PRFileDesc  *out = 0;
   PRBool file_existed_p;
   XP_StatStruct st;
   char *ibuffer = 0;
@@ -5258,7 +5346,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	}
 
 
-  out = XP_FileOpen (output_file_name, output_file_type, XP_FILE_APPEND_BIN);
+  out = PR_Open (output_file_name, PR_APPEND, 493);
   if (!out)
 	{
 	  /* #### include file name in error message! */
@@ -5280,7 +5368,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  goto FAIL;
 	}
 
-  in = XP_FileOpen (input_file_name, input_file_type, XP_FILE_READ_BIN);
+  in = PR_Open (input_file_name, PR_RDONLY, 0);
   if (!in)
 	{
 	  status = MK_UNABLE_TO_OPEN_FILE; /* rb -1; */ /* How did this happen? */
@@ -5311,18 +5399,18 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	 that the previous message in the file was properly closed, that is, that
 	 the last line in the file ended with a linebreak.
    */
-  XP_FileSeek(out, 0, SEEK_END);
+  PR_Seek(out, 0, PR_SEEK_END);
 
   if (file_existed_p && st.st_size > 0)
 	{
-	  if (XP_FileWrite (MSG_LINEBREAK, MSG_LINEBREAK_LEN, out) < MSG_LINEBREAK_LEN)
+	  if (PR_Write (out, MSG_LINEBREAK, MSG_LINEBREAK_LEN) < MSG_LINEBREAK_LEN)
 		{
 		  status = MK_MIME_ERROR_WRITING_FILE;
 		  goto FAIL;
 		}
 	}
 
-  outgoingParser->Init(XP_FileTell(out));
+  outgoingParser->Init(PR_Seek(out, 0, PR_SEEK_CUR));
   envelope = msg_GetDummyEnvelope();
 
   if (msg_do_fcc_handle_line (envelope, PL_strlen (envelope), outgoingParser)
@@ -5505,7 +5593,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 
   while (1)
 	{
-	  n = XP_FileRead (ibuffer, ibuffer_size, in);
+	  n = PR_Read (in, ibuffer, ibuffer_size);
 	  if (n == 0)
 		break;
 	  if (n < 0) /* read failed (not eof) */
@@ -5532,7 +5620,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	msg_do_fcc_handle_line (obuffer, obuffer_fp, outgoingParser);
 
   /* Terminate with a final newline. */
-  if (XP_FileWrite (MSG_LINEBREAK, MSG_LINEBREAK_LEN, out) < MSG_LINEBREAK_LEN)
+  if (PR_Write (out, MSG_LINEBREAK, MSG_LINEBREAK_LEN) < MSG_LINEBREAK_LEN)
   {
 	  status = MK_MIME_ERROR_WRITING_FILE;
   }
@@ -5557,25 +5645,25 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	PR_Free (obuffer);
 
   if (in)
-	XP_FileClose (in);
+	PR_Close (in);
 
   if (out)
 	{
 	  if (status >= 0)
 		{
-		  XP_FileClose (out);
+		  PR_Close (out);
 		  if (summaryIsValid) {
 			msg_SetSummaryValid(output_file_name, 0, 0);
                   }
 		}
 	  else if (! file_existed_p)
 		{
-		  XP_FileClose (out);
-		  XP_FileRemove (output_file_name, output_file_type);
+		  PR_Close (out);
+		  PR_Delete(output_file_name);
 		}
 	  else
 		{
-		  XP_FileClose (out);
+		  PR_Close (out);
 		  XP_FileTruncate (output_file_name, output_file_type, st.st_size);	/* restore original size */
 		}
 	}
@@ -5632,12 +5720,12 @@ extern PRInt32
 #else
 static PRInt32
 #endif
-msg_do_fcc_handle_line(char* line, PRUint32 length, void* closure)
+msg_do_fcc_handle_line(char* line, PRInt32 length, void* closure)
 {
   ParseOutgoingMessage *outgoingParser = (ParseOutgoingMessage *) closure;
   PRInt32 err = 0;
 
-  XP_File out = outgoingParser->GetOutFile();
+  PRFileDesc *out = outgoingParser->GetOutFile();
 
   // if we have a DB, feed the line to the parser
   if (outgoingParser->GetMailDB() != NULL)
@@ -5659,15 +5747,15 @@ msg_do_fcc_handle_line(char* line, PRUint32 length, void* closure)
   if (outgoingParser->m_bytes_written > 0 && length >= 5 &&
 	  line[0] == 'F' && !PL_strncmp(line, "From ", 5))
 	{
-	  if (XP_FileWrite (">", 1, out) < 1)
+	  if (PR_Write (out, ">", 1) < 1)
 		  return MK_MIME_ERROR_WRITING_FILE;
 	  outgoingParser->AdvanceOutPosition(1);
 	}
 #endif /* MANGLE_INTERNAL_ENVELOPE_LINES */
 
-  /* #### if XP_FileWrite is a performance problem, we can put in a
+  /* #### if PR_Write is a performance problem, we can put in a
 	 call to msg_ReBuffer() here... */
-  if (XP_FileWrite (line, length, out) < length)
+  if (PR_Write (out, line, length) < length)
 	  return MK_MIME_ERROR_WRITING_FILE;
   outgoingParser->m_bytes_written += length;
   return 0;
@@ -5848,8 +5936,7 @@ JFD */
 		{
 			if (newMailMsgHdr)
 			{
-				XP_File fileId = XP_FileOpen (m_msg_file_name, xpFileToPost,
-											  XP_FILE_READ_BIN);
+				PRFileDesc  *fileId = PR_Open (m_msg_file_name, PR_RDONLY, 0);
 				int iSize = 10240;
 				char *ibuffer = NULL;
 				
@@ -5871,12 +5958,12 @@ JFD */
 					err = mailDB->AddHdrToDB(newMailMsgHdr, NULL, PR_TRUE);
 
 					// now write the offline message
-					numRead = XP_FileRead(ibuffer, iSize, fileId);
+					numRead = PR_Read(fileId, ibuffer, iSize);
 					while(numRead > 0)
 					{
 						newMailMsgHdr->AddToOfflineMessage(ibuffer, numRead,
 														   mailDB->GetDB());
-						numRead = XP_FileRead(ibuffer, iSize, fileId);
+						numRead = PR_Read(fileId, ibuffer, iSize);
 					}
 					// now add the offline op to the database
 					if (mailDB->GetMaster() == NULL)
@@ -5917,7 +6004,7 @@ JFD */
 					ret_code = FCC_FAILURE;
 				}
 				if (fileId)
-					XP_FileClose(fileId);
+					PR_Close(fileId);
 				PR_FREEIF(ibuffer);
 			}
 			else
@@ -5952,14 +6039,13 @@ nsMsgSendMimeDeliveryState::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 	char *post_data = NULL;
 	if (bcc_headers && *bcc_headers)
 	{
-		post_data = WH_TempName(xpFileToPost, "nsmail");
+		post_data = WH_TempName("nsmail");
 		if (post_data)
 		{
-			XP_File dstFile = XP_FileOpen(post_data, xpFileToPost, XP_FILE_WRITE_BIN);
+			PRFileDesc *dstFile = PR_Open(post_data, PR_WRONLY | PR_CREATE_FILE, 0);
 			if (dstFile)
 			{
-				XP_File srcFile = XP_FileOpen(m_msg_file_name, xpFileToPost,
-											  XP_FILE_READ_BIN);
+				PRFileDesc *srcFile = PR_Open(m_msg_file_name, PR_RDONLY, 0);
 				if (srcFile)
 				{
 					char *tmpBuffer = NULL;
@@ -5974,22 +6060,20 @@ nsMsgSendMimeDeliveryState::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 					int bytesRead = 0;
 					if (tmpBuffer)
 					{
-						XP_FileWrite("Bcc: ", 5, dstFile);
-						XP_FileWrite(bcc_headers, PL_strlen(bcc_headers),
-									 dstFile);
-						XP_FileWrite(CRLF, PL_strlen(CRLF), dstFile);
-						bytesRead = XP_FileRead(tmpBuffer, bSize, srcFile);
+						PR_Write(dstFile, "Bcc: ", 5);
+						PR_Write(dstFile, bcc_headers, PL_strlen(bcc_headers));
+						PR_Write(dstFile, CRLF, PL_strlen(CRLF));
+						bytesRead = PR_Read(srcFile, tmpBuffer, bSize);
 						while (bytesRead > 0)
 						{
-							XP_FileWrite(tmpBuffer, bytesRead, dstFile);
-							bytesRead = XP_FileRead(tmpBuffer, bSize,
-													srcFile);
+							PR_Write(dstFile, tmpBuffer, bytesRead);
+							bytesRead = PR_Read(srcFile, tmpBuffer, bSize);
 						}
 						PR_Free(tmpBuffer);
 					}
-					XP_FileClose(srcFile);
+					PR_Close(srcFile);
 				}
-				XP_FileClose(dstFile);
+				PR_Close(dstFile);
 			}
 		}
 	}
@@ -6053,7 +6137,7 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 			name = NET_ParseURL(onlineFolderName, GET_PATH_PART);
 			owner = NET_ParseURL(onlineFolderName, GET_USERNAME_PART);
 			if (owner)
-				NET_UnEscape(owner);
+				nsUnEscape(owner);
 			if (!name || !*name)
 			{
 				PR_FREEIF (name);	// in case of allocated empty string
@@ -6587,7 +6671,7 @@ nsMsgSendMimeDeliveryState::PostSendToImapMagicFolder (	URL_Struct *url,
 	char *onlineFolderName = NULL;
 
 	if (PL_strcmp(url->post_data, state->m_msg_file_name))
-		XP_FileRemove(url->post_data, xpFileToPost);
+		PR_Delete(url->post_data);
 
 	if (status < 0)
 	{ 

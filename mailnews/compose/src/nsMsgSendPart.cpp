@@ -21,6 +21,7 @@
 #include "nsMsgCompose.h"
 #include "nsMsgSend.h"
 #include "nsMsgSendPart.h"
+#include "nsIMimeConverter.h"
 
 #include "MsgCompGlue.h"
 
@@ -38,11 +39,25 @@
 
 // defined in msgCompGlue.cpp
 extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
-extern int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size);
 static char *mime_mailto_stream_read_buffer = 0;
 
 PRInt32 nsMsgSendPart::M_counter = 0;
 
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+
+int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  PRInt32 written = 0;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->EncoderWrite(data, buffer, size, &written);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
 
 nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, const char *part_charset)
 {
@@ -498,7 +513,7 @@ int nsMsgSendPart::Write()
 {
 	int status = 0;
 	char *separator = 0;
-	XP_File file = NULL;
+	PRFileDesc *file = NULL;
 
 #define PUSHLEN(str, length)									\
 	do {														\
@@ -519,10 +534,10 @@ int nsMsgSendPart::Write()
 			PRInt32 length = st.st_size;
 			m_buffer = new char[length + 1];
 			if (m_buffer) {
-				file = XP_FileOpen(m_filename, m_filetype, XP_FILE_READ_BIN);
+				file = PR_Open(m_filename, PR_RDONLY, 0);
 				if (file) {
-					XP_FileRead(m_buffer, length, file);
-					XP_FileClose(file);
+					PR_Read(file, m_buffer, length);
+					PR_Close(file);
 					m_buffer[length] = '\0';
 					file = NULL;
 					if (m_filename)
@@ -671,7 +686,7 @@ int nsMsgSendPart::Write()
 			goto FAIL;
 	}
 	else if (m_filename) {
-		file = XP_FileOpen(m_filename, m_filetype, XP_FILE_READ_BIN);
+		file = PR_Open(m_filename, PR_RDONLY, 0);
 		if (!file) {
 			status = -1;		// ### Better error code for a temp file
 								// mysteriously disappearing?
@@ -744,7 +759,7 @@ int nsMsgSendPart::Write()
 
 
 		while (PR_TRUE) {
-			status = XP_FileRead(buffer, MIME_BUFFER_SIZE, file);
+			status = PR_Read(file, buffer, MIME_BUFFER_SIZE);
 			if (status < 0)
 				goto FAIL;
 			else if (status == 0)
@@ -786,7 +801,7 @@ int nsMsgSendPart::Write()
 FAIL:
 	PR_FREEIF(separator);
     if (file)
-		XP_FileClose(file);
+		PR_Close(file);
 	if (m_intlDocToMailConverter) {
 		INTL_DestroyCharCodeConverter(m_intlDocToMailConverter);
 		m_intlDocToMailConverter = NULL;

@@ -21,6 +21,10 @@
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompPrefs.h"
 #include "nsMsgCompose.h"
+#include "nsEscape.h"
+#include "nsIMsgHeaderParser.h" 
+
+static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 /*JFD
 #include "msg.h"
@@ -335,7 +339,7 @@ msg_delete_attached_files(struct MSG_AttachedFile *attachments)
 		PR_FREEIF(tmp->x_mac_type);
 		PR_FREEIF(tmp->x_mac_creator);
 		if (tmp->file_name) {
-			XP_FileRemove(tmp->file_name, xpFileToPost);
+			PR_Delete(tmp->file_name);
 			PR_Free(tmp->file_name);
 		}
 	}
@@ -1344,7 +1348,7 @@ nsMsgCompose::GetUrlDone_S(PrintSetup* pptr)
 void
 nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 {
-	XP_File file=(XP_File)nsnull;
+	PRFileDesc  *file=(PRFileDesc *)nsnull;
 	PR_FREEIF(m_quoteUrl);
 	m_textContext = NULL;  /* since this is called as a result of
 							  TXFE_AllConnectionsComplete, we know this context
@@ -1352,7 +1356,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 	int bufSize = QUOTE_BUFFER_SIZE;
 
 /*JFD
-	XP_FileClose(m_print->out);
+	PR_Close(m_print->out);
 */
 	XP_StatStruct stat;
 	char* curquote = NULL;
@@ -1386,7 +1390,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 
 	/* Open hateful temporary file as input  */
 /*JFD
-	file = XP_FileOpen (m_print->filename, xpTemporary, XP_FILE_READ);
+	file = PR_Open (m_print->filename, PR_RDONLY, 493);
 */
 	if (file) {
 		char* buf = NULL;
@@ -1417,7 +1421,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 				doConv = 0;
 			}
 
-			while (0 < (bufferLen = XP_FileRead(buf, bufSize, file))) {
+			while (0 < (bufferLen = PR_Read(file, buf, bufSize))) {
 				char *newBuf;
 				buf[bufferLen] = '\0';
 				if (doConv) {
@@ -1462,12 +1466,12 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 				INTL_DestroyCharCodeConverter(conv);
 			}
 		}
-		XP_FileClose(file);
+		PR_Close(file);
 	}
 	if (curquote) *curquote = '\0';
 	m_cited = PR_TRUE;
 /*JFD
-	XP_FileRemove(m_print->filename, xpTemporary);
+	PR_Delete(m_print->filename);
 	PR_FREEIF(m_print->filename);
 */
 	if (m_exitQuoting) {
@@ -1807,12 +1811,12 @@ nsresult nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 	}
 	m_print->url->position_tag = 0;
 	m_print->completion = nsMsgCompose::GetUrlDone_S;
-	m_print->filename = WH_TempName(xpTemporary, "ns");
+	m_print->filename = WH_TempName("ns");
 	if (!m_print->filename) {
 		status = eOUT_OF_MEMORY;
 		goto FAIL;
 	}
-	m_print->out = XP_FileOpen(m_print->filename, xpTemporary, XP_FILE_WRITE);
+	m_print->out = PR_Open(m_print->filename, PR_CREATE_FILE | PR_RDWR, 493);
 	if (!m_print->out) {
 		status = 9999;				// ###tw   Need the right error code! 
 		goto FAIL;
@@ -1845,7 +1849,7 @@ FAIL:
 	PR_FREEIF(m_quoteUrl);
 /*JFD
 	if (m_print->out) {
-		XP_FileClose(m_print->out);
+		PR_Close(m_print->out);
 		m_print->out = NULL;
 	}
 	if (m_print->url) {
@@ -2057,7 +2061,7 @@ nsMsgCompose::DownloadAttachments()
 			int i = 0;
 
 			if (tmp2->file_name) {
-				XP_FileRemove(tmp2->file_name, xpFileToPost);
+				PR_Delete(tmp2->file_name);
 				PR_Free(tmp2->file_name);
 			}
 			PR_FREEIF(tmp2->orig_url);
@@ -2335,7 +2339,7 @@ nsMsgCompose::GetAttachmentString()
 					id += 4;
 					s2 = PL_strchr(id, '&');
 					if (s2) *s2 = 0;
-					NET_UnEscape (id);
+					nsUnEscape (id);
 				} else {
 					char *s2 = PL_strrchr(id, '/');
 					if (s2) id = s2+1;
@@ -2422,7 +2426,7 @@ nsMsgCompose::GetAttachmentString()
 				/* The file name is ok; use it. */
 				result = PL_strdup (s);
 			}
-			NET_UnEscape (result);
+			nsUnescape (result);
 			PR_Free(ptr2);
 			goto DONE;
 		}
@@ -3250,7 +3254,7 @@ nsMsgCompose::SaveMessageAsTemplate()
 static int
 StuffParams(char** params, const char* name, PRInt32 value)
 {
-	char* escaped = NET_EscapeHTML(name);
+	char* escaped = nsEscapeHTML(name);
 	if (!escaped) return MK_OUT_OF_MEMORY;
 	char* tmp = PR_smprintf("<OPTION value=%ld>%s\n", (long) value, escaped);
 	PR_Free(escaped);
@@ -3434,10 +3438,16 @@ nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 	char *ptr, *oldptr, *list, *newlist;
 	PRBool changed = PR_FALSE;
 	int status = 0;
+  nsresult   rv;
 
 	const char* line = m_fields->GetHeader(header);
 	if (!line || !*line) return 0;
-//JFD	list = MSG_ExtractRFC822AddressMailboxes(line);
+
+  NS_WITH_SERVICE(nsIMsgHeaderParser, headerParser, kCMsgHeaderParserCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  headerParser->ExtractHeaderAddressMailboxes (NULL, line, &list);
 	if (list && *list) {
 		newlist = (char *)PR_Malloc(PL_strlen(list) + 1);
 		if (!newlist) {

@@ -317,7 +317,7 @@ public:
 									   encoded, we just pass it through. */
 
   char *m_file_name;					/* The temp file to which we save it */
-  XP_File m_file;
+  PRFileDesc *m_file;
 
 #ifdef XP_MAC
   char *m_ap_filename;				/* The temp file holds the appledouble
