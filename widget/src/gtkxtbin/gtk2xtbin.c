@@ -785,7 +785,8 @@ xt_client_focus_listener( Widget w, XtPointer user_data, XEvent *event)
     case CreateNotify:
       if(event->xcreatewindow.parent == win) {
         Widget child=XtWindowToWidget( dpy, event->xcreatewindow.window);
-        xt_add_focus_listener_tree(child, user_data);
+        if (child)
+          xt_add_focus_listener_tree(child, user_data);
       }
       break;
     case DestroyNotify:
