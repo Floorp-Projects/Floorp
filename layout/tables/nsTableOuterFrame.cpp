@@ -111,7 +111,6 @@ nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFram
   mBottomCaptions(nsnull),
   mMinCaptionWidth(0),
   mMaxCaptionWidth(0),
-  mFirstPassValid(PR_FALSE),
   mDesiredSize(nsnull)
 {
 }
@@ -144,16 +143,6 @@ PRBool nsTableOuterFrame::NeedsReflow(const nsSize& aMaxSize)
   if (nsnull!=mInnerTableFrame)
     result = mInnerTableFrame->NeedsReflow(aMaxSize);
   return result;
-}
-
-PRBool nsTableOuterFrame::IsFirstPassValid()
-{
-  return mFirstPassValid;
-}
-
-void nsTableOuterFrame::SetFirstPassValid(PRBool aValidState)
-{
-  mFirstPassValid = aValidState;
 }
 
 // Recover the reflow state to what it should be if aKidFrame is about
@@ -349,11 +338,12 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   // PreReflowCheck();
 #endif
 
-  // Initialize out parameter
+  // Initialize out parameters
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = 0;
     aDesiredSize.maxElementSize->height = 0;
   }
+  aStatus = NS_FRAME_COMPLETE;
 
   // Initialize our local reflow state
   OuterTableReflowState state(aPresContext, aReflowState);
@@ -362,22 +352,25 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     IncrementalReflow(aPresContext, state, aDesiredSize, aReflowState, aStatus);
 
   } else {
-    PRBool  reflowMappedOK = PR_TRUE;
-    PRBool  isInitialReflow = PR_FALSE;
-  
-    aStatus = NS_FRAME_COMPLETE;
-  
-    // Set up our kids.  They're already present, on an overflow list, 
-    // or there are none so we'll create them now
-    MoveOverflowToChildList();
-    if (nsnull==mFirstChild) {
-      CreateChildFrames(aPresContext);
-      isInitialReflow = PR_TRUE;
+    if (eReflowReason_Initial == aReflowState.reason) {
+      // Set up our kids.  They're already present, on an overflow list, 
+      // or there are none so we'll create them now
+      MoveOverflowToChildList();
+      if (nsnull==mFirstChild) {
+        CreateChildFrames(aPresContext);
+      }
+      // XXX Add a comment on why mInnerTableFrame would be nsnull at this point?
+      // You would think that the call to CreateChildFrames() would have created
+      // the inner table frame...
+      if (nsnull!=mPrevInFlow && nsnull==mInnerTableFrame)
+      { // if I am a continuing frame, my inner table is my prev-in-flow's mInnerTableFrame's next-in-flow
+        CreateInnerTableFrame(aPresContext);
+      }
+
+      // lay out captions pass 1
+      aStatus = ResizeReflowCaptionsPass1(aPresContext, state, PR_TRUE);
     }
-    if (nsnull!=mPrevInFlow && nsnull==mInnerTableFrame)
-    { // if I am a continuing frame, my inner table is my prev-in-flow's mInnerTableFrame's next-in-flow
-      CreateInnerTableFrame(aPresContext);
-    }
+
     // at this point, we must have at least one child frame, and we must have an inner table frame
     NS_ASSERTION(nsnull!=mFirstChild, "no children");
     NS_ASSERTION(nsnull!=mInnerTableFrame, "no mInnerTableFrame");
@@ -387,14 +380,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
       return NS_OK;
     }
     
-    // lay out captions pass 1, if necessary
-    if (PR_FALSE==IsFirstPassValid())
-    {
-      mFirstPassValid = PR_TRUE;
-      aStatus = ResizeReflowCaptionsPass1(aPresContext, state, isInitialReflow);
-  
-    }
-  
     // lay out inner table, if required
     if (PR_FALSE==mInnerTableFrame->IsFirstPassValid())
     { 
@@ -427,6 +412,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     state.innerTableMaxSize.height = aReflowState.maxSize.height; 
   
     // Reflow the child frames
+    PRBool  reflowMappedOK = PR_TRUE;
     if (nsnull != mFirstChild) {
       reflowMappedOK = ReflowMappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
       if (PR_FALSE == reflowMappedOK) {
@@ -1404,7 +1390,6 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
-  cf->SetFirstPassValid(PR_TRUE);
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
