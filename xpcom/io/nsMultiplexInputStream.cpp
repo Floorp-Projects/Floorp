@@ -240,8 +240,13 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     while (mCurrentStream < len) {
         nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams,
                                                           mCurrentStream));
-        PRUint32 read;
-        rv = stream->ReadSegments(ReadSegCb, &state, aCount, &read);
+        PRUint32 avail, read, count;
+        rv = stream->Available(&avail);
+        if (NS_FAILED(rv)) return rv;
+
+        count = PR_MIN(avail, aCount);
+
+        rv = stream->ReadSegments(ReadSegCb, &state, count, &read);
         // If we got an NS_BASE_STREAM_WOULD_BLOCK error since the reader
         // didn't want any more data. This might not be an error for us if
         // data was read from a previous stream in this run
@@ -250,11 +255,17 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
             break;
 
         NS_ENSURE_SUCCESS(rv, rv);
-        NS_ASSERTION(aCount >= read, "Read more then requested");
+        if (read > count) {
+            NS_ERROR("Read more than requested");
+            read = count; // truncate and hope for the best...
+        }
         mStartedReadingCurrent = PR_TRUE;
         state.mOffset += read;
+        count -= read;
         aCount -= read;
-        if (state.mDone || !aCount)
+        if (state.mDone || // writer doesn't want anymore data
+            aCount == 0 || // already read total amount requested
+            count > 0)     // the current stream still has data
             break;
         
         ++mCurrentStream;
