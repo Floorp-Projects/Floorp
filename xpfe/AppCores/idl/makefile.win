@@ -37,6 +37,7 @@ IDLSRCS= \
 	PrefsCore.idl       \
 	RDFCore.idl         \
 	Toolbar.idl         \
+	ProfileCore.idl     \
 	ToolkitCore.idl
 !endif
 
