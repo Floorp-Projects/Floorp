@@ -17,6 +17,7 @@
             ACTIONS = {
                 addWhitelistSite = id; 
                 clickEnableAnnoyanceBlocker = id; 
+                clickEnableImageResizing = id; 
                 clickEnableJS = id; 
                 clickEnableJava = id; 
                 clickEnablePlugins = id; 
@@ -35,9 +36,9 @@
                 mEnableJava = NSButton; 
                 mEnablePlugins = NSButton; 
                 mEnablePopupBlocking = NSButton; 
-                mProtocol = NSPopUpButton; 
+                mImageResize = NSButton; 
                 mWhitelistPanel = id; 
-                mWhitelistTable = NSTableView; 
+                mWhitelistTable = ExtendedTableView; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 

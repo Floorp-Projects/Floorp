@@ -14,6 +14,7 @@ class nsISupportsArray;
   IBOutlet NSButton* mEnablePlugins;
 
   IBOutlet NSButton *mEnablePopupBlocking;
+  IBOutlet NSButton *mImageResize;
   IBOutlet NSButton *mEditWhitelist;
   
   IBOutlet id mWhitelistPanel;
@@ -30,6 +31,7 @@ class nsISupportsArray;
 -(IBAction) clickEnablePlugins:(id)sender;
 
 -(IBAction) clickEnablePopupBlocking:(id)sender;
+-(IBAction) clickEnableImageResizing:(id)sender;
 -(IBAction) editWhitelist:(id)sender;
 
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender;

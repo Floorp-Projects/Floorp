@@ -46,6 +46,10 @@
   BOOL enableAnnoyanceBlocker = [self getBooleanPref:"dom.disable_window_status_change" withSuccess:&gotPref];
   [mEnableAnnoyanceBlocker setState:enableAnnoyanceBlocker];
   
+  // set initial value on image-resizing
+  BOOL enableImageResize = [self getBooleanPref:"browser.enable_automatic_image_resizing" withSuccess:&gotPref];
+  [mImageResize setState:enableImageResize];
+  
   // store permission manager service and cache the enumerator.
   nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
   mManager = pm.get();
@@ -96,6 +100,16 @@
   else
     [self setPref:"dom.disable_open_during_load" toBoolean: NO];
   [mEditWhitelist setEnabled:[sender state]];
+}
+
+//
+// clickEnableImageResizing:
+//
+// Enable and disable mozilla's auto image resizing feature.
+//
+-(IBAction) clickEnableImageResizing:(id)sender
+{
+  [self setPref:"browser.enable_automatic_image_resizing" toBoolean:[sender state] ? YES : NO];
 }
 
 //
