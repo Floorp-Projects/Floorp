@@ -1661,7 +1661,10 @@ mips-sony-newsos*)
     RESOLVE_LINK_SYMBOLS=1
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
-        DSO_LDOPTS='-B/usr/ccs/bin/ -shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs' 
+        if `$CC -print-prog-name=ld` -v 2>&1 | grep -c GNU >/dev/null; then
+            GCC_USE_GNU_LD=1
+        fi
+        DSO_LDOPTS='-shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs' 
     else
         DSO_CFLAGS=-KPIC
         DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
@@ -2362,6 +2365,7 @@ AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(GNU_CC)
+AC_SUBST(GCC_USE_GNU_LD)
 AC_SUBST(CROSS_COMPILE)
 
 AC_SUBST(MOZ_OPTIMIZE)
