@@ -335,15 +335,15 @@ PL_GetEvent(PLEventQueue* self)
       PR_EnterMonitor(mon);
     }
 
-    if ( self->type == EventQueueIsNative )
+    if (!PR_CLIST_IS_EMPTY(&self->queue)) {
+      if ( self->type == EventQueueIsNative )
         err = _pl_AcknowledgeNativeNotify(self);
 
-    if (err) goto done;
+      if (err) goto done;
 
-    if (!PR_CLIST_IS_EMPTY(&self->queue)) {
-    /* then grab the event and return it: */
-    event = PR_EVENT_PTR(self->queue.next);
-    PR_REMOVE_AND_INIT_LINK(&event->link);
+      /* then grab the event and return it: */
+      event = PR_EVENT_PTR(self->queue.next);
+      PR_REMOVE_AND_INIT_LINK(&event->link);
     }
 
   done:
@@ -459,7 +459,7 @@ PL_ProcessPendingEvents(PLEventQueue* self)
   if (PR_FALSE != self->processingEvents) return;
 
     self->processingEvents = PR_TRUE;
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(XP_UNIX)
     while (PR_TRUE) {
     PLEvent* event = PL_GetEvent(self);
         if (event == NULL) break;
@@ -482,16 +482,30 @@ PL_ProcessPendingEvents(PLEventQueue* self)
       memcpy(&tmpQueue, self, sizeof(tmpQueue));
       tmpQueue.queue.next->prev = &tmpQueue.queue;
       tmpQueue.queue.prev->next = &tmpQueue.queue;
-      tmpQueue.monitor = 0; /* don't waste time locking this queue when getting events */
+#if defined(WIN32) || defined(XP_UNIX)
+      /* don't waste time locking this queue when getting events */
+      tmpQueue.monitor = 0;
+#else
+      /* CONSERVATIVE: go ahead and lock in case the underlying native
+         notification mechanism needs it */
+      tmpQueue.monitor = self->monitor;
+#endif
+
+      /* Make sure we reset the notification count */
+#if defined(XP_UNIX) || defined (VMS_EVENTS_USE_EF)
+      self->notifyCount = 0;
+#endif
+
       PR_INIT_CLIST(&self->queue);
       PR_ExitMonitor(self->monitor);
+
       /* Now process the existing events */
       while (PR_TRUE) {
-      PLEvent* event = PL_GetEvent(&tmpQueue);
-          if (event == NULL) break;
-      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
-      PL_HandleEvent(event);
-      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+        PLEvent* event = PL_GetEvent(&tmpQueue);
+        if (event == NULL) break;
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ tmpQ: processing event"));
+        PL_HandleEvent(event);
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ tmpQ: done processing event"));
       }
     }
 #endif
@@ -786,6 +800,9 @@ _pl_NativeNotify(PLEventQueue* self)
     PRInt32 count;
     unsigned char buf[] = { NOTIFY_TOKEN };
 
+    PR_LOG(event_lm, PR_LOG_DEBUG,
+           ("_pl_NativeNotify: self=%p notifyCount=%d",
+            self, self->notifyCount));
     count = write(self->eventPipe[1], buf, 1);
 	if (count == 1) {
 		self->notifyCount++;
@@ -846,6 +863,9 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
     PRInt32 count;
     unsigned char c;
 
+    PR_LOG(event_lm, PR_LOG_DEBUG,
+            ("_pl_AcknowledgeNativeNotify: self=%p notifyCount=%d",
+             self, self->notifyCount));
 	if (self->notifyCount <= 0) return PR_SUCCESS;
     /* consume the byte NativeNotify put in our pipe: */
     count = read(self->eventPipe[0], &c, 1);
