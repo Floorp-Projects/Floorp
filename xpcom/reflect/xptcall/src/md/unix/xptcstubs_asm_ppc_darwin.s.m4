@@ -38,14 +38,28 @@
         .text
         .globl _SharedStub
 
-define(STUB_NAME, `_Stub'$1`__14nsXPTCStubBase')
-
-define(STUB_ENTRY,
-`       .globl		'STUB_NAME($1)`
+define(STUB_MANGLED_ENTRY,
+`        .globl		'$2`
         .align		2
-'STUB_NAME($1)`:
+'$2`:
         addi    r12, 0, '$1`
         b       _SharedStub
+')
+
+define(STUB_ENTRY,
+`#ifdef HAVE_GCC3_ABI
+        .if '$1` < 10
+STUB_MANGLED_ENTRY('$1`, `__ZN14nsXPTCStubBase5Stub'$1`Ev')
+        .elseif '$1` < 100
+STUB_MANGLED_ENTRY('$1`, `__ZN14nsXPTCStubBase6Stub'$1`Ev')
+        .elseif '$1` < 1000
+STUB_MANGLED_ENTRY('$1`, `__ZN14nsXPTCStubBase7Stub'$1`Ev')
+        .else
+        .err "Stub'$1` >= 1000 not yet supported."
+        .endif
+#else /* !defined(HAVE_GCC3_ABI) */
+STUB_MANGLED_ENTRY('$1`, `_Stub'$1`__14nsXPTCStubBase')
+#endif /* !defined(HAVE_GCC3_ABI) */
 ')
 
 define(SENTINEL_ENTRY, `')
