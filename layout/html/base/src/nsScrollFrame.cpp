@@ -34,9 +34,9 @@
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+
+static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
@@ -168,6 +168,11 @@ nsScrollFrame::CreateScrollingView()
     // Because we only paintg the border and we don't paint a background,
     // inform the view manager that we have transparent content
     viewManager->SetViewContentTransparency(view, PR_TRUE);
+
+    // XXX If it's fixed positioned, then create a widget too
+    if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+      view->CreateWidget(kWidgetCID);
+    }
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
