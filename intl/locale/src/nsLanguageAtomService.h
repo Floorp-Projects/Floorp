@@ -22,7 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsILanguageAtomService.h"
 #include "nsIPersistentProperties.h"
 #include "nsISupportsArray.h"
@@ -42,7 +42,7 @@ public:
   NS_IMETHOD InitLangGroupTable();
 
 protected:
-  nsCOMPtr<nsICharsetConverterManager> mCharSets;
+  nsCOMPtr<nsICharsetConverterManager2> mCharSets;
   nsCOMPtr<nsISupportsArray> mLangs;
   nsCOMPtr<nsIPersistentProperties> mLangGroups;
 };

@@ -25,6 +25,7 @@
 #include "nsLanguageAtomService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsICharsetConverterManager.h"
 
 class nsLanguageAtom : public nsILanguageAtom
 {
@@ -207,10 +208,10 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
     mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
     NS_ENSURE_TRUE(mCharSets, NS_ERROR_FAILURE);
   }
-  nsAutoString charset(aCharSet);
-  charset.ToLowerCase();
+  nsCOMPtr<nsIAtom> charset;
+  mCharSets->GetCharsetAtom(aCharSet, getter_AddRefs(charset));
   nsCOMPtr<nsIAtom> langGroup;
-  mCharSets->GetCharsetLangGroup(&charset, getter_AddRefs(langGroup));
+  mCharSets->GetCharsetLangGroup(charset, getter_AddRefs(langGroup));
   nsCOMPtr<nsILanguageAtom> lang;
   PRUint32 n;
   NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);
