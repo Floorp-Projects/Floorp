@@ -290,10 +290,12 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   }
 
   if (nsnull != prevKidFrame) {
+#ifdef NS_DEBUG
     if (!IsLastChild(prevKidFrame))
     {
       mGeometricParent->List();
     }
+#endif
     NS_ASSERTION(IsLastChild(prevKidFrame), "unexpected last child");
     SetLastContentOffset(prevKidFrame);
   }
