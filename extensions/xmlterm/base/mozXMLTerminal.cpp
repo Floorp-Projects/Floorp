@@ -59,6 +59,8 @@
 #include "mozXMLTerminal.h"
 #include "mozIXMLTermSuspend.h"
 
+#include "nsIWebNavigation.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
