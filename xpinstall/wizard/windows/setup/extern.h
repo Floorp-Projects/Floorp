@@ -66,6 +66,7 @@ extern DWORD            dwTempSetupType;
 extern BOOL             bSDUserCanceled;
 extern BOOL             bIdiArchivesExists;
 extern BOOL             bCreateDestinationDir;
+extern BOOL             bReboot;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;

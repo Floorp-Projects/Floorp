@@ -66,6 +66,7 @@ DWORD           dwTempSetupType;
 BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;
 BOOL            bCreateDestinationDir;
+BOOL            bReboot;
 
 setupGen        sgProduct;
 diS             diSetup;

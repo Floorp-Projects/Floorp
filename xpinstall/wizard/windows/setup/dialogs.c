@@ -1394,6 +1394,7 @@ void CheckWizardStateCustom(DWORD dwDefault)
 void DlgSequenceNext()
 {
   HRESULT hrValue;
+  HRESULT hrErr;
 
   switch(dwWizardState)
   {
@@ -1481,7 +1482,7 @@ void DlgSequenceNext()
       /* PRE_DOWNLOAD process file manipulation functions */
       ProcessFileOps(T_PRE_DOWNLOAD);
 
-      if(RetrieveArchives() == 0)
+      if(RetrieveArchives() == WIZ_OK)
       {
         /* POST_DOWNLOAD process file manipulation functions */
         ProcessFileOps(T_POST_DOWNLOAD);
@@ -1495,7 +1496,8 @@ void DlgSequenceNext()
         /* PRE_SMARTUPDATE process file manipulation functions */
         ProcessFileOps(T_PRE_SMARTUPDATE);
 
-        if(SmartUpdateJars() == 0)
+        hrErr = SmartUpdateJars();
+        if((hrErr == WIZ_OK) || (hrErr == 999))
         {
           /* POST_SMARTUPDATE process file manipulation functions */
           ProcessFileOps(T_POST_SMARTUPDATE);
@@ -1506,20 +1508,34 @@ void DlgSequenceNext()
 
           /* POST_LAUNCHAPP process file manipulation functions */
           ProcessFileOps(T_POST_LAUNCHAPP);
+          /* DEPEND_REBOOT process file manipulation functions */
+          ProcessFileOps(T_DEPEND_REBOOT);
           ProcessProgramFolderShowCmd();
 
-          if(diReboot.dwShowDialog)
+          if(NeedReboot())
           {
             CleanupCoreFile();
             InstantiateDialog(DLG_RESTART, diReboot.szTitle, DlgProcReboot);
           }
+          else
+          {
+            CleanupCoreFile();
+            PostQuitMessage(0);
+          }
+        }
+        else
+        {
+          CleanupCoreFile();
+          PostQuitMessage(0);
         }
       }
       else
+      {
         bSDUserCanceled = TRUE;
+        CleanupCoreFile();
+        PostQuitMessage(0);
+      }
 
-      CleanupCoreFile();
-      PostQuitMessage(0);
       break;
   }
 }

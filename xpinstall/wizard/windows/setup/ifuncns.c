@@ -76,6 +76,11 @@ HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
         if(lstrcmpi(szBuf, "post launchapp") == 0)
           return(TRUE);
         break;
+
+      case T_DEPEND_REBOOT:
+        if(lstrcmpi(szBuf, "depend reboot") == 0)
+          return(TRUE);
+        break;
     }
   }
   return(FALSE);
@@ -615,16 +620,20 @@ HRESULT ProcessRunApp(DWORD dwTiming)
       GetPrivateProfileString(szSection, "WorkingDir", "", szBuf, MAX_BUF, szFileIniConfig);
       DecriptString(szWorkingDir, szBuf);
       GetPrivateProfileString(szSection, "Wait", "", szBuf, MAX_BUF, szFileIniConfig);
+
       if(lstrcmpi(szBuf, "FALSE") == 0)
-      {
         bWait = FALSE;
+      else
+        bWait = TRUE;
+
+      if((dwTiming == T_DEPEND_REBOOT) && (NeedReboot() == TRUE))
+      {
+        lstrcat(szTarget, " ");
+        lstrcat(szTarget, szParameters);
+        SetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", "Netscape", REG_SZ, szTarget, lstrlen(szTarget));
       }
       else
-      {
-        bWait = TRUE;
-      }
-
-      WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
+        WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
     }
 
     ++dwIndex;
