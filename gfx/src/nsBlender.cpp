@@ -27,9 +27,6 @@ static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 nsBlender :: nsBlender()
 {
   NS_INIT_REFCNT();
-
-  mSaveBytes = nsnull;
-  mSaveLS = 0;
 }
 
 nsBlender::~nsBlender() 
@@ -81,17 +78,14 @@ nsBlender :: CalcBytesSpan(PRUint32 aWidth, PRUint32 aBitsPixel)
  * @param aDLSpan number of bytes per line for the destination bytes
  * @param aMLSpan number of bytes per line for the Mask bytes
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
 PRUint8   *d1,*d2,*s1,*s2;
 PRUint32  val1,val2;
 PRInt32   x,y,temp1,numlines,xinc,yinc;
-PRUint8   *saveptr,*sv2;
 
-  saveptr = mSaveBytes;
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
   val1 = 255-val2;
@@ -104,52 +98,25 @@ PRUint8   *saveptr,*sv2;
   xinc = 1;
   yinc = 1;
 
-  if (aSaveBlendArea){
-    for (y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      sv2 = saveptr;
+  for (y = 0; y < aNumlines; y++){
+    s2 = s1;
+    d2 = d1;
 
-      for (x = 0; x < aNumbytes; x++){
-        *sv2 = *d2;
+    for (x = 0; x < aNumbytes; x++) {
+      temp1 = (((*d2) * val1) + ((*s2) * val2)) >> 8;
 
-        temp1 = (((*d2) * val1) + ((*s2) * val2)) >> 8;
+      if (temp1 > 255)
+        temp1 = 255;
 
-        if (temp1 > 255)
-          temp1 = 255;
+      *d2 = (PRUint8)temp1;
 
-        *d2 = (PRUint8)temp1; 
-
-        sv2++;
-        d2++;
-        s2++;
-      }
-
-      s1 += aSLSpan;
-      d1 += aDLSpan;
-      saveptr+= mSaveLS;
+      d2++;
+      s2++;
     }
-  } else {
-      for (y = 0; y < aNumlines; y++){
-        s2 = s1;
-        d2 = d1;
 
-        for (x = 0; x < aNumbytes; x++) {
-          temp1 = (((*d2) * val1) + ((*s2) * val2)) >> 8;
-
-          if (temp1 > 255)
-            temp1 = 255;
-
-          *d2 = (PRUint8)temp1;
-
-          d2++;
-          s2++;
-        }
-
-      s1 += aSLSpan;
-      d1 += aDLSpan;
-      }
-    }
+    s1 += aSLSpan;
+    d1 += aDLSpan;
+  }
 }
 
 /** --------------------------------------------------------------------------
@@ -164,10 +131,9 @@ PRUint8   *saveptr,*sv2;
  * @param aDLSpan number of bytes per line for the destination bytes
  * @param aMLSpan number of bytes per line for the Mask bytes
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
 {
 PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
 PRInt32   x,y;
@@ -237,17 +203,14 @@ PRInt32   sspan,dspan,mspan;
  * @param aDLSpan number of bytes per line for the destination bytes
  * @param aMLSpan number of bytes per line for the Mask bytes
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
 PRUint8   *d1,*d2,*s1,*s2;
 PRUint32  val1,val2;
 PRInt32   x,y,temp1,numlines,xinc,yinc;
-PRUint8   *saveptr,*sv2;
 
-  saveptr = mSaveBytes;
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
   val1 = 255-val2;
@@ -260,46 +223,22 @@ PRUint8   *saveptr,*sv2;
   xinc = 1;
   yinc = 1;
 
-  if(aSaveBlendArea){
-    for(y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      sv2 = saveptr;
+  for(y = 0; y < aNumlines; y++){
+    s2 = s1;
+    d2 = d1;
 
-      for(x = 0; x < aNumbytes; x++){
-        temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-        if(temp1>255)
-          temp1 = 255;
-        *sv2 = *d2;
-        *d2 = (PRUint8)temp1; 
+    for(x = 0; x < aNumbytes; x++){
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (PRUint8)temp1; 
 
-        sv2++;
-        d2++;
-        s2++;
-       }
-
-      s1 += aSLSpan;
-      d1 += aDLSpan;
-      saveptr+= mSaveLS;
+      d2++;
+      s2++;
     }
-  }else{
-    for(y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
 
-      for(x = 0; x < aNumbytes; x++){
-        temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-        if(temp1>255)
-          temp1 = 255;
-        *d2 = (PRUint8)temp1; 
-
-        d2++;
-        s2++;
-      }
-
-      s1 += aSLSpan;
-      d1 += aDLSpan;
-    }
+    s1 += aSLSpan;
+    d1 += aDLSpan;
   }
 }
 
@@ -321,19 +260,17 @@ PRUint8   *saveptr,*sv2;
  * @param aDLSpan number of bytes per line for the destination bytes
  * @param aMLSpan number of bytes per line for the Mask bytes
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-PRUint16    *d1,*d2,*s1,*s2;
-PRUint32    val1,val2,red,green,blue,stemp,dtemp;
+PRUint16    *d1,*d2,*s1,*s2,*ss1,*ss2;
+PRUint32    val1,val2,red,green,blue,stemp,dtemp,sstemp;
 PRInt32     x,y,numlines,xinc,yinc;
-PRUint16    *saveptr,*sv2;
-PRInt16     dspan,sspan,span,savesp;
+PRUint16    srccolor,secsrccolor;
+PRInt16     dspan,sspan,span;
 
   // since we are using 16 bit pointers, the num bytes need to be cut by 2
-  saveptr = (PRUint16*)mSaveBytes;
   aBlendVal = (aBlendVal * 255) / 100;
   val2 = aBlendVal;
   val1 = 255-val2;
@@ -344,49 +281,67 @@ PRInt16     dspan,sspan,span,savesp;
   dspan = aDLSpan >> 1;
   sspan = aSLSpan >> 1;
   span = aNumbytes >> 1;
-  savesp = mSaveLS >> 1;
   numlines = aNumlines;
   xinc = 1;
   yinc = 1;
 
-  if (aSaveBlendArea){
+  if (nsnull != aSecondSImage)
+  {
+    ss1 = (PRUint16*)aSecondSImage;
+    srccolor = ((NS_GET_R(aSrcBackColor) & 0xf8) << 8) |
+               ((NS_GET_G(aSrcBackColor) & 0xfc) << 3) |
+               ((NS_GET_B(aSrcBackColor) & 0xf8) >> 3);
+    secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & 0xf8) << 8) |
+                  ((NS_GET_G(aSecondSrcBackColor) & 0xfc) << 3) |
+                  ((NS_GET_B(aSecondSrcBackColor) & 0xf8) >> 3);
+  }
+  else
+    ss1 = nsnull;
+
+  if (nsnull != ss1){
     for (y = 0; y < aNumlines; y++){
       s2 = s1;
       d2 = d1;
-      sv2 = saveptr;
+      ss2 = ss1;
 
       for (x = 0; x < span; x++){
         stemp = *s2;
-        dtemp = *d2;
+        sstemp = *ss2;
 
-        red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
+        if ((stemp != srccolor) || (sstemp != secsrccolor))
+        {
+          dtemp = *d2;
 
-        if (red > 255)
-          red = 255;
+          red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
 
-        green = (GREEN16(dtemp) * val1 + GREEN16(stemp) * val2) >> 8;
+          if (red > 255)
+            red = 255;
 
-        if (green > 255)
-          green = 255;
+          green = (GREEN16(dtemp) * val1 + GREEN16(stemp) * val2) >> 8;
 
-        blue = (BLUE16(dtemp) * val1 + BLUE16(stemp) * val2) >> 8;
+          if (green > 255)
+            green = 255;
 
-        if (blue > 255)
-          blue = 255;
+          blue = (BLUE16(dtemp) * val1 + BLUE16(stemp) * val2) >> 8;
 
-        *sv2 = *d2;
-        *d2 = (PRUint16)((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
+          if (blue > 255)
+            blue = 255;
 
-        sv2++;
+          *d2 = (PRUint16)((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
+        }
+
         d2++;
         s2++;
+        ss2++;
       }
 
       s1 += sspan;
       d1 += dspan;
-      saveptr += savesp;
+      ss1 += sspan;
     }
-  } else {
+  }
+  else
+  {
     for (y = 0; y < aNumlines; y++){
       s2 = s1;
       d2 = d1;
@@ -434,10 +389,9 @@ PRInt16     dspan,sspan,span,savesp;
  * @param aDLSpan number of bytes per line for the destination bytes
  * @param aMLSpan number of bytes per line for the Mask bytes
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
 {
 PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
 PRInt32   x,y;
@@ -496,10 +450,9 @@ extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *di
  * @param aDLSpan number of bytes per line for the destination bytes
  * @param aMLSpan number of bytes per line for the Mask bytes
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- * @param aSaveBlendArea informs routine if the area affected area will be save first
  */
 void
-nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
 PRUint32   r,g,b,r1,g1,b1,i;
 PRUint8   *d1,*d2,*s1,*s2;

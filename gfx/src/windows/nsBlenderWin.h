@@ -50,9 +50,9 @@ public:
 
   NS_IMETHOD Init(nsIDeviceContext *aDeviceCon);
   NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
-                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea);
-
-  NS_IMETHOD RestoreImage(nsDrawingSurface aDst);
+                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsDrawingSurface aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
+                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
 
  private:
 
@@ -76,12 +76,14 @@ public:
    * @param aMLSpan -- number of bytes per span for the mask
    * @result PR_TRUE if calculation was succesful
    */
-  PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
-                              BITMAP  *aMapInfo,nsPoint *aMaskUL,
-                              PRInt32 aWidth,PRInt32 aHeight,
-                              PRInt32 *aNumlines,
-                              PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
-                              PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
+  PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,
+                          BITMAP *aSecondSrcInfo, nsPoint *ASrcUL,
+                          BITMAP  *aMapInfo,nsPoint *aMaskUL,
+                          PRInt32 aWidth,PRInt32 aHeight,
+                          PRInt32 *aNumlines,
+                          PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
+                          PRUint8 **aSecondSImage,
+                          PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
 
 
   /**
@@ -117,21 +119,18 @@ public:
 #endif
 
   private:
-  BITMAPINFOHEADER    *mDstbinfo, *mSrcbinfo;
+  BITMAPINFOHEADER    *mDstbinfo, *mSrcbinfo, *mSecondSrcbinfo;
   PRUint8             *mSrcBytes;
+  PRUint8             *mSecondSrcBytes;
   PRUint8             *mDstBytes;
-  BITMAP              mSrcInfo, mDstInfo;
+  BITMAP              mSrcInfo, mDstInfo, mSecondSrcInfo;
 
   PRInt32             mSRowBytes;
   PRInt32             mDRowBytes;
 
-  PRInt32             mSaveNumLines;
-  PRInt32             mSaveNumBytes;
-  PRUint8             *mRestorePtr;   // starting area of save dst
-  PRUint32            mResLS;         // line span for restore area
-
 #ifdef NGLAYOUT_DDRAW
   DDSURFACEDESC       mSrcSurf;
+  DDSURFACEDESC       mSecondSrcSurf;
   DDSURFACEDESC       mDstSurf;
 #endif
 };

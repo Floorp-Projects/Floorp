@@ -57,14 +57,18 @@ public:
    * @param aDY y offset into destination drawing surface of blend area
    * @param aSrcOpacity 0.0f -> 1.0f opacity value of source area. 1.0f indicates
    *        complete opacity.
+   * @param aSecondSrc an optional second source drawing surface which is used in
+   *        conjunction with the background color parameters to determine
+   *        which pixels to blend
+   * @param aSrcBackColor color of pixels in aSrc that should be
+   *        considered "background" color
+   * @param aSecondSrcBackColor color of pixels in aSrc that should be
+   *        considered "background" color
    */
   NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
-                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
-
-  /**
-   * Restore the the blended area of the image if one was save on a previous blend.
-   */
-  NS_IMETHOD RestoreImage(nsDrawingSurface aDst) = 0;
+                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsDrawingSurface aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
+                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0)) = 0;
 };
 
 #endif
