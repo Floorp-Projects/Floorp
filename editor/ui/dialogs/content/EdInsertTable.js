@@ -112,50 +112,23 @@ function ChangeRowOrColumn(id)
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  rows = ValidateNumberString(dialog.rowsInput.value, 1, maxRows);
-  if (rows == "")
-  {
-    // Set focus to the offending control
-    dialog.rowsInput.focus();
+  rows = ValidateNumber(dialog.rowsInput, null, 1, maxRows, null, null, true)
+  if (gValidationError)
     return false;
-  }
 
-  columns = ValidateNumberString(dialog.columnsInput.value, 1, maxColumns);
-  if (columns == "")
-  {
-    // Set focus to the offending control
-    SetTextboxFocus(dialog.columnsInput);
+  columns = ValidateNumber(dialog.columnsInput, null, 1, maxColumns, null, null, true)
+  if (gValidationError)
     return false;
-  }
 
-  // Set attributes: NOTE: These may be empty strings
-  var borderText = TrimString(dialog.borderInput.value);
-  if (borderText) 
-  {
-    // Set the other attributes on the table
-    if (ValidateNumberString(borderText, 0, maxPixels))
-      globalElement.setAttribute("border", borderText);
-  }
+  // Set attributes: NOTE: These may be empty strings (last param = false)
+  ValidateNumber(dialog.borderInput, null, 0, maxPixels, globalElement, "border", false);
+  // TODO: Deal with "BORDER" without value issue
+  if (gValidationError) return false;
 
-  var maxLimit;
-  var isPercent = (dialog.widthPixelOrPercentMenulist.selectedIndex == 1);
-  var widthText = TrimString(dialog.widthInput.value);
-  if (widthText.length > 0)
-  {
-    if (isPercent)
-      maxLimit = 100;
-    else
-      // Upper limit when using pixels
-      maxLimit = maxPixels;
-
-    widthText = ValidateNumberString(widthText, 1, maxLimit);
-    if (widthText.length == 0)
-      return false;
-
-    if (isPercent)
-      widthText += "%";
-    globalElement.setAttribute("width", widthText);
-  }
+  ValidateNumber(dialog.widthInput, dialog.widthPixelOrPercentMenulist,
+                 1, maxPixels, globalElement, "width", false);
+  if (gValidationError)
+    return false;
 
   return true;
 }
