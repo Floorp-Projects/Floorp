@@ -79,14 +79,15 @@ nsWindow::GetEventMask()
 	long event_mask;
 
 	event_mask = 
-    StructureNotifyMask | 
-    ExposureMask | 
+    ButtonMotionMask |
     ButtonPressMask | 
     ButtonReleaseMask | 
-    PointerMotionMask |
+    ExposureMask | 
+    FocusChangeMask |
     KeyPressMask | 
     KeyReleaseMask | 
-    FocusChangeMask |
+    PointerMotionMask |
+    StructureNotifyMask | 
     VisibilityChangeMask;
   return event_mask;
 }
