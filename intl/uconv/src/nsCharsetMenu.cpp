@@ -70,6 +70,23 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, CharsetDetector);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, NC, type);
 
+// Note here that browser and mailview have the same static area and cache 
+// size but the cache itself is separate.
+
+#define kBrowserStaticPrefKey       "intl.charsetmenu.browser.static"
+#define kBrowserCachePrefKey        "intl.charsetmenu.browser.cache"
+#define kBrowserCacheSizePrefKey    "intl.charsetmenu.browser.cache.size"
+
+#define kMailviewStaticPrefKey      "intl.charsetmenu.browser.static"
+#define kMailviewCachePrefKey       "intl.charsetmenu.mailview.cache"
+#define kMailviewCacheSizePrefKey   "intl.charsetmenu.browser.cache.size"
+
+#define kComposerStaticPrefKey      "intl.charsetmenu.browser.static"
+#define kComposerCachePrefKey       "intl.charsetmenu.composer.cache"
+#define kComposerCacheSizePrefKey   "intl.charsetmenu.browser.cache.size"
+
+#define kMaileditPrefKey            "intl.charsetmenu.mailedit"
+
 //----------------------------------------------------------------------------
 // Class nsMenuEntry [declaration]
 
@@ -128,17 +145,6 @@ private:
 
   static nsIRDFDataSource * mInner;
 
-  static const char *   kBrowserStaticPrefKey;
-  static const char *   kBrowserCachePrefKey;
-  static const char *   kBrowserCacheSizePrefKey;
-  static const char *   kMailviewStaticPrefKey;
-  static const char *   kMailviewCachePrefKey;
-  static const char *   kMailviewCacheSizePrefKey;
-  static const char *   kComposerStaticPrefKey;
-  static const char *   kComposerCachePrefKey;
-  static const char *   kComposerCacheSizePrefKey;
-  static const char *   kMaileditPrefKey;
-
   nsVoidArray   mBrowserMenu;
   PRInt32       mBrowserCacheStart;
   PRInt32       mBrowserCacheSize;
@@ -157,6 +163,7 @@ private:
   nsCOMPtr<nsIRDFService>               mRDFService;
   nsCOMPtr<nsICharsetConverterManager2> mCCManager;
   nsCOMPtr<nsIPref>                     mPrefService;
+  nsCOMPtr<nsIObserver>                 mCharsetMenuObserver;
 
   nsresult Init();
   nsresult Done();
@@ -229,6 +236,7 @@ public:
 
   nsresult RefreshBroserMenu();
   nsresult RefreshMailviewMenu();
+  nsresult RefreshMaileditMenu();
   nsresult RefreshComposerMenu();
 
   //--------------------------------------------------------------------------
@@ -289,34 +297,51 @@ static int PR_CALLBACK CompareMenuItems(const void* aArg1, const void* aArg2, vo
   return res;
 }
 
-static int PR_CALLBACK BrowserStaticChanged(const char * aPrefName, 
-                                            void * aInstanceData)
+//----------------------------------------------------------------------------
+// Class nsCharsetMenuObserver
+
+class nsCharsetMenuObserver : public nsIObserver {
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  nsCharsetMenuObserver(nsCharsetMenu * menu)
+    : mCharsetMenu(menu)
+  {
+    NS_INIT_ISUPPORTS();
+  }
+
+  virtual ~nsCharsetMenuObserver() {}
+
+private:
+  nsCharsetMenu* mCharsetMenu;
+};
+
+NS_IMPL_ISUPPORTS1(nsCharsetMenuObserver, nsIObserver);
+
+NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-  nsresult res;
-  res = ((nsCharsetMenu *) aInstanceData)->RefreshBroserMenu();
-  NS_ASSERTION(NS_SUCCEEDED(res), "error refreshing the browser menu");
+  nsresult rv;
 
-  return 0;
-}
+  nsLiteralString aTopicString(aTopic);
+  if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed"))) {
+    nsLiteralString prefName(someData);
 
-static int PR_CALLBACK MailviewStaticChanged(const char * aPrefName, 
-                                             void * aInstanceData)
-{
-  nsresult res;
-  res = ((nsCharsetMenu *) aInstanceData)->RefreshMailviewMenu();
-  NS_ASSERTION(NS_SUCCEEDED(res), "error refreshing the mailview menu");
+    if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {
+      // refresh menus which share this pref
+      rv = mCharsetMenu->RefreshBroserMenu();
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mCharsetMenu->RefreshMailviewMenu();
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mCharsetMenu->RefreshComposerMenu();
+    }
+    else if (prefName.Equals(NS_LITERAL_STRING(kMaileditPrefKey))) {
+      rv = mCharsetMenu->RefreshMaileditMenu();
+    }
+  }
 
-  return 0;
-}
-
-static int PR_CALLBACK ComposerStaticChanged(const char * aPrefName, 
-                                             void * aInstanceData)
-{
-  nsresult res;
-  res = ((nsCharsetMenu *) aInstanceData)->RefreshComposerMenu();
-  NS_ASSERTION(NS_SUCCEEDED(res), "error refreshing the composer menu");
-
-  return 0;
+  return rv;
 }
 
 //----------------------------------------------------------------------------
@@ -342,23 +367,6 @@ nsIRDFResource * nsCharsetMenu::kNC_Checked = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_CharsetDetector = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BookmarkSeparator = NULL;
 nsIRDFResource * nsCharsetMenu::kRDF_type = NULL;
-
-// Note here that browser and mailview have the same static area and cache 
-// size but the cache itself is separate.
-
-const char * nsCharsetMenu::kBrowserStaticPrefKey		= "intl.charsetmenu.browser.static";
-const char * nsCharsetMenu::kBrowserCachePrefKey		= "intl.charsetmenu.browser.cache";
-const char * nsCharsetMenu::kBrowserCacheSizePrefKey	= "intl.charsetmenu.browser.cache.size";
-
-const char * nsCharsetMenu::kMailviewStaticPrefKey		= "intl.charsetmenu.browser.static";
-const char * nsCharsetMenu::kMailviewCachePrefKey		= "intl.charsetmenu.mailview.cache";
-const char * nsCharsetMenu::kMailviewCacheSizePrefKey	= "intl.charsetmenu.browser.cache.size";
-
-const char * nsCharsetMenu::kComposerStaticPrefKey		= "intl.charsetmenu.browser.static";
-const char * nsCharsetMenu::kComposerCachePrefKey		= "intl.charsetmenu.composer.cache";
-const char * nsCharsetMenu::kComposerCacheSizePrefKey	= "intl.charsetmenu.browser.cache.size";
-
-const char * nsCharsetMenu::kMaileditPrefKey			= "intl.charsetmenu.mailedit";
 
 nsCharsetMenu::nsCharsetMenu() 
 {
@@ -451,6 +459,41 @@ nsresult nsCharsetMenu::RefreshMailviewMenu()
   res = InitCacheMenu(decs, kNC_MailviewCharsetMenuRoot, 
     kMailviewCachePrefKey, &mMailviewMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailview cache charset menu");
+
+  return res;
+}
+
+nsresult nsCharsetMenu::RefreshMaileditMenu()
+{
+  nsresult res;
+
+  nsCOMPtr<nsIRDFContainer> container;
+  res = NewRDFContainer(mInner, kNC_MaileditCharsetMenuRoot, getter_AddRefs(container));
+  NS_ENSURE_SUCCESS(res, res);
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  res = container->GetElements(getter_AddRefs(enumerator));
+  NS_ENSURE_SUCCESS(res, res);
+
+  // clear the menu
+  nsCOMPtr<nsIRDFNode> node;
+  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(node)))) {
+
+    res = mInner->Unassert(kNC_MaileditCharsetMenuRoot, kNC_Name, node);
+    NS_ENSURE_SUCCESS(res, res);
+
+    res = container->RemoveElement(node, PR_FALSE);
+    NS_ENSURE_SUCCESS(res, res);
+  }
+
+  // get a list of available encoders
+  nsCOMPtr<nsISupportsArray> encs;
+  res = mCCManager->GetEncoderList(getter_AddRefs(encs));
+  NS_ENSURE_SUCCESS(res, res);
+
+  // add menu items from pref
+  res = AddFromPrefsToMenu(NULL, container, kMaileditPrefKey, encs, NULL);
+  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailedit charset menu from prefs");
 
   return res;
 }
@@ -620,6 +663,9 @@ nsresult nsCharsetMenu::InitResources()
   mPrefService = do_GetService(NS_PREF_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
 
+  mCharsetMenuObserver = new nsCharsetMenuObserver(this);
+  NS_ENSURE_TRUE(mCharsetMenuObserver, NS_ERROR_OUT_OF_MEMORY);
+
   return res;
 }
 
@@ -629,6 +675,11 @@ nsresult nsCharsetMenu::InitResources()
 nsresult nsCharsetMenu::FreeResources()
 {
   nsresult res = NS_OK;
+
+  if (mCharsetMenuObserver) {
+    mPrefService->RemoveObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
+    mPrefService->RemoveObserver(kMaileditPrefKey, mCharsetMenuObserver);
+  }
 
   mRDFService   = NULL;
   mCCManager    = NULL;
@@ -672,8 +723,7 @@ nsresult nsCharsetMenu::InitBrowserMenu()
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
 
   // register prefs callback
-  mPrefService->RegisterCallback(kBrowserStaticPrefKey, BrowserStaticChanged, 
-    this);
+  res = mPrefService->AddObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
 
   return res;
 }
@@ -693,6 +743,9 @@ nsresult nsCharsetMenu::InitMaileditMenu()
 
   res = AddFromPrefsToMenu(NULL, container, kMaileditPrefKey, encs, NULL);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailedit charset menu from prefs");
+
+  // register prefs callback
+  res = mPrefService->AddObserver(kMaileditPrefKey, mCharsetMenuObserver);
 
   return res;
 }
@@ -729,10 +782,6 @@ nsresult nsCharsetMenu::InitMailviewMenu()
     kMailviewCachePrefKey, &mMailviewMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailview cache charset menu");
 
-  // register prefs callback
-  mPrefService->RegisterCallback(kMailviewStaticPrefKey, MailviewStaticChanged,
-    this);
-
   return res;
 }
 
@@ -767,10 +816,6 @@ nsresult nsCharsetMenu::InitComposerMenu()
   res = InitCacheMenu(decs, kNC_ComposerCharsetMenuRoot, 
     kComposerCachePrefKey, &mComposerMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing composer cache charset menu");
-
-  // register prefs callback
-  mPrefService->RegisterCallback(kComposerStaticPrefKey, ComposerStaticChanged,
-    this);
 
   return res;
 }
