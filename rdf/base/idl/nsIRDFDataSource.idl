@@ -39,7 +39,7 @@
 #include "nsISupportsArray.idl"
 #include "nsIRDFResource.idl"
 #include "nsIRDFNode.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "nsIRDFObserver.idl"
 
 %{C++

@@ -24,7 +24,7 @@
 
 #include "nsISupports.idl"
 #include "nsIURL.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "nsISupportsArray.idl"
 interface nsIDocShell;
 

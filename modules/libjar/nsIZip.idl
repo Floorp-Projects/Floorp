@@ -26,7 +26,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 #include "nsIInputStream.idl"
 
 %{C++

@@ -43,7 +43,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 
 [scriptable, uuid(AAAB6710-0F2C-11d5-A53B-0010A401EB10)]
 interface nsICookieManager : nsISupports
