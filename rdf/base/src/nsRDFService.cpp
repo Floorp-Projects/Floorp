@@ -63,6 +63,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "prmem.h"
 #include "rdf.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -125,6 +126,58 @@ public:
 };
 
 static RDFServiceImpl* gRDFService; // The one-and-only RDF service
+
+
+// These functions are copied from nsprpub/lib/ds/plhash.c, with one
+// change to free the key in DataSourceFreeEntry.
+
+static void * PR_CALLBACK
+DataSourceAllocTable(void *pool, PRSize size)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    return PR_MALLOC(size);
+}
+
+static void PR_CALLBACK
+DataSourceFreeTable(void *pool, void *item)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    PR_Free(item);
+}
+
+static PLHashEntry * PR_CALLBACK
+DataSourceAllocEntry(void *pool, const void *key)
+{
+#if defined(XP_MAC)
+#pragma unused (pool,key)
+#endif
+
+    return PR_NEW(PLHashEntry);
+}
+
+static void PR_CALLBACK
+DataSourceFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    if (flag == HT_FREE_ENTRY) {
+        PL_strfree((char*) he->key);
+        PR_Free(he);
+    }
+}
+
+static PLHashAllocOps dataSourceHashAllocOps = {
+    DataSourceAllocTable, DataSourceFreeTable,
+    DataSourceAllocEntry, DataSourceFreeEntry
+};
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -492,7 +545,7 @@ RDFServiceImpl::Init()
                                         PL_HashString,
                                         PL_CompareStrings,
                                         PL_CompareValues,
-                                        nsnull, nsnull);
+                                        &dataSourceHashAllocOps, nsnull);
 
     if (! mNamedDataSources) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1032,8 +1085,6 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     // so, don't unregister it.
     if (! *hep || ((*hep)->value != aDataSource))
         return NS_OK;
-
-    PL_strfree((char*) (*hep)->key);
 
     // N.B., we only held a weak reference to the datasource, so we
     // don't release here.
