@@ -108,7 +108,7 @@ interface nsIXULTemplateBuilder : nsISupports
  *  specific handling of specific nsITreeView methods that 
  *  XULTreeBuilder does not implement.
  */
-[scriptable, uuid(f6ed69be-1dd1-11b2-adfc-9db02ac57d88)]
+[scriptable, uuid(a5480e0d-ac7c-42e5-aca5-d7f0bbffa207)]
 interface nsIXULTreeBuilderObserver : nsISupports
 {
     const long DROP_BEFORE = -1;

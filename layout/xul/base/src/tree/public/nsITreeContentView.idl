@@ -37,7 +37,7 @@
 #include "nsISupports.idl"
 #include "nsIDOMElement.idl"
 
-[scriptable, uuid(972AE9FF-C7B3-4b60-A51E-A20A9DE36947)]
+[scriptable, uuid(5ef62896-0c0a-41f1-bb3c-44a60f5dfdab)]
 interface nsITreeContentView : nsISupports
 {
   /**
