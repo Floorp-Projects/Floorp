@@ -44,7 +44,9 @@
 
 NS_IMPL_ISUPPORTS2(nsPermission, nsIPermission, nsISupportsWeakReference);
 
-nsPermission::nsPermission() {
+nsPermission::nsPermission()
+  : permissionHost(0)
+{
 }
 
 nsPermission::nsPermission
@@ -57,7 +59,8 @@ nsPermission::nsPermission
 }
 
 nsPermission::~nsPermission(void) {
-  nsCRT::free(permissionHost);
+  if (permissionHost)
+    PL_strfree(permissionHost);
 }
 
 NS_IMETHODIMP nsPermission::GetHost(char * *aHost) {
