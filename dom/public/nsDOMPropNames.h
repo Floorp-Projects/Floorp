@@ -894,6 +894,7 @@
     "xulcheckboxelement.imgalign", \
     "xulcheckboxelement.src", \
     "xulcheckboxelement.value", \
+	"xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \
     "xulcommanddispatcher.focusedelement", \
     "xulcommanddispatcher.focusedwindow", \
