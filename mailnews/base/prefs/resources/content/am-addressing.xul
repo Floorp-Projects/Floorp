@@ -53,7 +53,7 @@ Contributors:
       <radio id="useGlobalPref" value="0" label="&useGlobal.label;"/>
       <hbox align="center">
         <radio id="directories" value="1" label="&directories.label;"/>
-        <menulist id="directoriesList" wsm_persist="true" flex="1">
+        <menulist id="directoriesList" wsm_persist="true" flex="1" width="&directoriesList.width;">
           <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
         </menulist>
         <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>

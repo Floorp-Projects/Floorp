@@ -7,3 +7,8 @@
 <!ENTITY editDirectories.label     "Edit Directories...">
 <!-- LOCALIZATION NOTE (directories.label) : do not translate "LDAP" in below line -->
 <!ENTITY directories.label         "Use a different LDAP server:">
+
+<!-- am-addressing.xul -->
+<!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the directoriesList 
+     drop down List box, which specifies the width of the dropdown listbox. -->
+<!ENTITY directoriesList.width "512">
