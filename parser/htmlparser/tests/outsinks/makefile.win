@@ -24,7 +24,7 @@ DEPTH=..\..\..
 
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\TestOutput.exe
-BATCHSCRIPT = TestOutSinks.bat
+BATCHSCRIPT = TestOutSinks.pl
 
 OBJS =					\
 	.\$(OBJDIR)\Convert.obj	        \
