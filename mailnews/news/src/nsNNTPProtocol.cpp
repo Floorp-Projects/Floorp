@@ -2614,13 +2614,12 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 
 PRInt32 nsNNTPProtocol::PasswordResponse()
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 
     if (MK_NNTP_RESPONSE_AUTHINFO_OK == m_responseCode ||
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
 	  {
         /* successful login */
-        nsresult rv = NS_OK;
         PRBool pushAuth;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
