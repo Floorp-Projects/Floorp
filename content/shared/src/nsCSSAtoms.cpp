@@ -25,6 +25,8 @@ nsIAtom* nsCSSAtoms::afterPseudo;
 nsIAtom* nsCSSAtoms::beforePseudo;
 
 nsIAtom* nsCSSAtoms::disabledPseudo;
+nsIAtom* nsCSSAtoms::dragOverPseudo;
+nsIAtom* nsCSSAtoms::dragPseudo;
 
 nsIAtom* nsCSSAtoms::enabledPseudo;
 
@@ -57,6 +59,8 @@ void nsCSSAtoms::AddrefAtoms()
     beforePseudo = NS_NewAtom(":before");
 
     disabledPseudo = NS_NewAtom(":disabled");
+    dragOverPseudo = NS_NewAtom(":drag-over");
+    dragPseudo = NS_NewAtom(":drag");
 
     enabledPseudo = NS_NewAtom(":enabled");
 
@@ -90,6 +94,8 @@ void nsCSSAtoms::ReleaseAtoms()
     NS_RELEASE(beforePseudo);
     
     NS_RELEASE(disabledPseudo);
+    NS_RELEASE(dragOverPseudo);
+    NS_RELEASE(dragPseudo);
 
     NS_RELEASE(enabledPseudo);
 
