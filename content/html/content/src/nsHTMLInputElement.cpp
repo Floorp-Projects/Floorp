@@ -192,6 +192,7 @@ public:
                             
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
+  NS_IMETHOD SetParent(nsIContent* aParent);
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue, PRBool aNotify) {
@@ -432,7 +433,8 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       mType == NS_FORM_INPUT_RADIO &&
       (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
     WillRemoveFromRadioGroup();
-  } else if (aName == nsHTMLAtoms::src && aNameSpaceID == kNameSpaceID_None &&
+  } else if (aNotify && aName == nsHTMLAtoms::src &&
+             aNameSpaceID == kNameSpaceID_None &&
              aValue && mType == NS_FORM_INPUT_IMAGE) {
     // Null value means the attr got unset; don't trigger on that
     ImageURIChanged(*aValue);
@@ -504,12 +506,14 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
     }
 
-    if (mType == NS_FORM_INPUT_IMAGE && !mCurrentRequest) {
+    if (aNotify && mType == NS_FORM_INPUT_IMAGE && !mCurrentRequest) {
       // We just got switched to be an image input; we should see
       // whether we have an image to load;
       nsAutoString src;
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
-      ImageURIChanged(src);
+      nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        ImageURIChanged(src);
+      }
     }
 
     // If the type of the input has changed we might need to change the type
@@ -1773,10 +1777,12 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
+  PRBool documentChanging = (aDocument != mDocument);
+
   // SetDocument() sets the form and that takes care of form's WillRemove
   // so we just have to take care of the case where we're removing from the
   // document and we don't have a form
-  if (!aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
+  if (documentChanging && !mForm && mType == NS_FORM_INPUT_RADIO) {
     WillRemoveFromRadioGroup();
   }
 
@@ -1784,6 +1790,17 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                                           aCompileEventHandlers);
 
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mType == NS_FORM_INPUT_IMAGE &&
+      documentChanging && aDocument && mParent) {
+    // Our base URI may have changed; claim that our URI changed, and the
+    // nsImageLoadingContent will decide whether a new image load is warranted.
+    nsAutoString uri;
+    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
+    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
+      ImageURIChanged(uri);
+    }
+  }
   
   // If this is radio button which is in a form,
   // and the parser is still creating the element.
@@ -1800,6 +1817,23 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetParent(nsIContent* aParent)
+{
+  nsresult rv = nsGenericHTMLLeafFormElement::SetParent(aParent);
+  if (mType == NS_FORM_INPUT_IMAGE && aParent && mDocument) {
+    // Our base URI may have changed; claim that our URI changed, and the
+    // nsImageLoadingContent will decide whether a new image load is warranted.
+    nsAutoString uri;
+    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
+    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
+      ImageURIChanged(uri);
+    }
+  }
+  return rv;
+}
+
 
 // nsIHTMLContent
 
