@@ -379,8 +379,9 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
 }
 
 nsresult
-NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
-                  nsIFrame* aParentFrame)
+NS_NewObjectFrame(nsIContent* aContent,
+                  nsIFrame* aParentFrame,
+                  nsIFrame*& aFrameResult)
 {
   aFrameResult = new nsObjectFrame(aContent, aParentFrame);
   if (nsnull == aFrameResult) {
