@@ -3047,7 +3047,7 @@ var nsSetSmiley =
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
   doCommandParams: function(aCommand, aParams, aRefCon)
   {
-    var smileyCode = aParams.getCStringValue("state_attribute");
+    var smileyCode = aParams.getStringValue("state_attribute");
 
     var strSml;
     switch(smileyCode)
