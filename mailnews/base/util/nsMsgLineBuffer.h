@@ -81,13 +81,20 @@ class nsIInputStream;
 class nsMsgLineStreamBuffer
 {
 public:
-	nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
+	// aBufferSize -- size of the buffer you want us to use for buffering stream data
+	// aAllocateNewLines -- PR_TRUE if you want calls to ReadNextLine to allocate new memory for the line. 
+	//						if false, the char * returned is just a ptr into the buffer. Subsequent calls to
+	//						ReadNextLine will alter the data so your ptr only has a life time of a per call.
+	// aEatCRLFs  -- PR_TRUE if you don't want to see the CRLFs on the lines returned by ReadNextLine. 
+	//				 PR_FALSE if you do want to see them.
+	nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
 	virtual ~nsMsgLineStreamBuffer();
 
 	// Caller must free the line returned using PR_Free
 	char * ReadNextLine(nsIInputStream * aInputStream, PRBool &aPauseForMoreData);
 protected:
 	PRBool m_eatCRLFs;
+	PRBool m_allocateNewLines;
 	char * m_dataBuffer;
 	char * m_startPos;
 	PRUint32 m_dataBufferSize;

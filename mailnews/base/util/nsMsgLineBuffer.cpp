@@ -245,7 +245,8 @@ PRInt32 nsMsgLineBuffer::FlushLastLine()
 // read but unprocessed stream data in a buffer. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aEatCRLFs) : m_eatCRLFs(aEatCRLFs)
+nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs) 
+											: m_eatCRLFs(aEatCRLFs), m_allocateNewLines(aAllocateNewLines)
 {
 	NS_PRECONDITION(aBufferSize > 0, "invalid buffer size!!!");
 	m_dataBuffer = nsnull;
@@ -310,7 +311,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool
 			numFreeBytesInBuffer = m_dataBufferSize - numBytesInBuffer;
 		}
 
-		PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer, numBytesInStream);
+		PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer - 1 /* leave one for a null terminator */, numBytesInStream);
 		// read the data into the end of our data buffer
 		if (numBytesToCopy > 0)
 		{
