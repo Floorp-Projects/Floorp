@@ -32,19 +32,16 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:xbl="http://www.mozilla.org/xbl"
     onload="Init();"
-    class="dialog" style=" width: 25em; "
-    title="&startup-newURL.window.title;">
+    style="width: 25em;"
+    title="&startup-newURL.window.title;"
+    ondialogaccept="return onOK();">
 
   <script src="chrome://chatzilla/content/prefpanel/startup-newURL.js"/>
-  
-  <keyset id="dialogKeys"/>
   
   <radiogroup id="czURLType" onselect="updateType();">
     <radio value="normal" label="&normal.label;"/>
@@ -77,9 +74,5 @@
       <label>&client.desc;</label>
     </vbox>
   </radiogroup>
-  
-  <separator/>
-  
-  <hbox id="okCancelButtonsRight"/>
-  
-</window>
+
+</dialog>

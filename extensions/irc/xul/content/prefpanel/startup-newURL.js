@@ -48,8 +48,6 @@ var gChannelNeedKey;
 
 function Init()
 {
-    doSetOKCancel(onOK);
-    
     gType = document.getElementById("czURLType");
     gServer = document.getElementById("czServer");
     gServerNeedPass = document.getElementById("czServerNeedPass");
@@ -68,12 +66,12 @@ function Init()
     
     if (gData.url == "irc:" || gData.url == "irc:/" || gData.url == "irc://")
     {
-        gType.selectedItem = gType.mRadioChildren[1];
+        gType.selectedIndex = 1;
     }
     else
     {
-        gType.selectedItem = gType.mRadioChildren[0];
-        gChannelIsNick.selectedItem = gChannelIsNick.mRadioChildren[0];
+        gType.selectedIndex = 0;
+        gChannelIsNick.selectedIndex = 0;
         
         // Split it up into server/channel parts...
         var params = gData.url.match(/^irc:\/\/(.*)\/([^,]*)(.*)?$/);
@@ -91,7 +89,7 @@ function Init()
                     gServerNeedPass.checked = true;
                 
                 if (modifiers[m] == 'isnick')
-                    gChannelIsNick.selectedItem = gChannelIsNick.mRadioChildren[1];
+                    gChannelIsNick.selectedIndex = 1;
                 
                 if (modifiers[m] == 'needkey')
                     gChannelNeedKey.checked = true;
