@@ -275,6 +275,18 @@ DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsIContentViewerFile::GetIID())) {
+    nsIContentViewerFile* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIContentViewerEdit::GetIID())) {
+    nsIContentViewerEdit* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     nsIContentViewer* tmp1 = this;
     nsISupports* tmp2 = tmp1;
