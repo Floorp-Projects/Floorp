@@ -111,8 +111,21 @@ static PRLock *_pr_logLock;
 
 /* Macros used to reduce #ifdef pollution */
 
-#if defined(_PR_USE_STDIO_FOR_LOGGING)
-#define _PUT_LOG(fd, buf, nb) {fputs(buf, fd); fflush(fd);}
+#if defined(_PR_USE_STDIO_FOR_LOGGING) && defined(XP_PC)
+#define _PUT_LOG(fd, buf, nb) \
+    PR_BEGIN_MACRO \
+    if (logFile == WIN32_DEBUG_FILE) { \
+        char savebyte = buf[nb]; \
+        buf[nb] = '\0'; \
+        OutputDebugString(buf); \
+        buf[nb] = savebyte; \
+    } else { \
+        fwrite(buf, 1, nb, fd); \
+        fflush(fd); \
+    } \
+    PR_END_MACRO
+#elif defined(_PR_USE_STDIO_FOR_LOGGING)
+#define _PUT_LOG(fd, buf, nb) {fwrite(buf, 1, nb, fd); fflush(fd);}
 #elif defined(_PR_PTHREADS)
 #define _PUT_LOG(fd, buf, nb) PR_Write(fd, buf, nb)
 #elif defined(XP_MAC)
@@ -348,8 +361,8 @@ PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
         lm->level = PR_LOG_NONE;
         lm->next = logModules;
         logModules = lm;
+        _PR_SetLogModuleLevel(lm);
     }
-    _PR_SetLogModuleLevel(lm);
     return lm;
 }
 
@@ -407,7 +420,6 @@ PR_IMPLEMENT(void) PR_SetLogBuffering(PRIntn buffer_size)
 
     if (logBuf)
         PR_DELETE(logBuf);
-    logBuf = 0;
 
     if (buffer_size >= LINE_BUF_SIZE) {
         logp = logBuf = (char*) PR_MALLOC(buffer_size);
@@ -459,14 +471,7 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
 
     _PR_LOCK_LOG();
     if (logBuf == 0) {
-#ifdef XP_PC
-        if ( logFile == WIN32_DEBUG_FILE)
-            OutputDebugString( line );
-        else
-            _PUT_LOG(logFile, line, nb);
-#else
         _PUT_LOG(logFile, line, nb);
-#endif
     } else {
         if (logp + nb > logEndp) {
             _PUT_LOG(logFile, logBuf, logp - logBuf);
