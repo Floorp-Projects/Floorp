@@ -1,11 +1,29 @@
-#include "nsNetSupportDialog.h"
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+
 #include "nsIWebShell.h"
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
-#include "nsComPtr.h"
+#include "nsCOMPtr.h"
 #include "nsIPresContext.h"
 #include "nsIDOMElement.h"
 #include "nsIAppShellService.h"
@@ -13,6 +31,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIURL.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsNetSupportDialog.h"
 
 /* Define Class IDs */
 
@@ -248,7 +267,7 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL, PRBool &wasOKed )
  		return result;
  	}
  	
- 	nsIWidget* dialogWindow = NULL;
+ 	nsIWebShellWindow* dialogWindow = NULL;
  	nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
  	result = appShellService->CreateDialogWindow( nsnull, dialogURL, controllerCID, dialogWindow, nsnull, this, 300,  150);
 
