@@ -76,6 +76,16 @@ function Startup()
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPref);
     try {
+      if (pref.GetBoolPref("imageblocker.enabled")) {
+        var element;
+        element = document.getElementById("imagesTab");
+        element.setAttribute("style","display: inline;" );
+        element = document.getElementById("images");
+        element.setAttribute("style","display: inline;" );
+      }
+    } catch(e) {
+    }
+    try {
       var tab = window.arguments[0];
       if (tab == "0") {
         element = document.getElementById("cookiesTab");
@@ -89,16 +99,6 @@ function Startup()
         element.setAttribute("selected","true" );
         element = document.getElementById("panel");
         element.setAttribute("index","2" );
-      }
-    } catch(e) {
-    }
-    try {
-      if (pref.GetBoolPref("imageblocker.enabled")) {
-        var element;
-        element = document.getElementById("imagesTab");
-        element.setAttribute("style","display: inline;" );
-        element = document.getElementById("images");
-        element.setAttribute("style","display: inline;" );
       }
     } catch(e) {
     }
