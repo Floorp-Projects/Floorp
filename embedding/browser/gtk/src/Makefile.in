@@ -46,6 +46,10 @@ REQUIRES	= xpcom \
 		  profdirserviceprovider \
 		  $(NULL)
 
+ifdef ACCESSIBILITY
+REQUIRES        += accessibility
+endif
+
 CPPSRCS		= \
 		gtkmozembed2.cpp \
 		EmbedPrivate.cpp \

@@ -194,6 +194,10 @@ gtk_moz_embed_map(GtkWidget *widget);
 static void
 gtk_moz_embed_unmap(GtkWidget *widget);
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+static AtkObject* gtk_moz_embed_get_accessible (GtkWidget *widget);
+#endif
+
 static gint
 handle_child_focus_in(GtkWidget     *aWidget,
 		      GdkEventFocus *aGdkFocusEvent,
@@ -281,6 +285,10 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
   widget_class->size_allocate = gtk_moz_embed_size_allocate;
   widget_class->map = gtk_moz_embed_map;
   widget_class->unmap = gtk_moz_embed_unmap;
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  widget_class->get_accessible = gtk_moz_embed_get_accessible;
+#endif
 
   object_class->destroy = gtk_moz_embed_destroy;
   
@@ -696,6 +704,20 @@ gtk_moz_embed_unmap(GtkWidget *widget)
 
   embedPrivate->Hide();
 }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+static AtkObject*
+gtk_moz_embed_get_accessible (GtkWidget *widget)
+{
+  g_return_val_if_fail(widget != NULL, NULL);
+  g_return_val_if_fail(GTK_IS_MOZ_EMBED(widget), NULL);
+
+  GtkMozEmbed  *embed = GTK_MOZ_EMBED(widget);;
+  EmbedPrivate *embedPrivate = (EmbedPrivate *)embed->data;
+  return NS_STATIC_CAST(AtkObject *,
+                        embedPrivate->GetAtkObjectForCurrentDocument());
+}
+#endif /* MOZ_ACCESSIBILITY_ATK */
 
 static gint
 handle_child_focus_in(GtkWidget     *aWidget,
