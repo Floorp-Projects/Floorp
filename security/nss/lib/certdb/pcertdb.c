@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.9 2001/01/30 21:01:55 wtc%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.10 2001/02/10 01:44:34 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -649,6 +649,10 @@ DecodeV4DBCertEntry(unsigned char *buf, int len)
 
     PORT_Memcpy(entry->derCert.data, &buf[DBCERT_V4_HEADER_LEN], certlen);
     PORT_Memcpy(entry->nickname, &buf[DBCERT_V4_HEADER_LEN + certlen], nnlen);
+
+    if (PORT_Strcmp(entry->nickname,"Server-Cert") == 0) {
+	entry->trust.sslFlags |= CERTDB_USER;
+    }
 
     return(entry);
     
@@ -3954,6 +3958,10 @@ updateV5Callback(CERTCertificate *cert, SECItem *k, void *pdata)
 	( trust->emailFlags == 0 ) ) {
 	trust->emailFlags = CERTDB_USER;
     }
+    /* servers didn't set the user flags on the server cert.. */
+    if (PORT_Strcmp(cert->dbEntry->nickname,"Server-Cert") == 0) {
+	trust->sslFlags |= CERTDB_USER;
+    }
     
     entry = AddCertToPermDB(handle, cert, cert->dbEntry->nickname,
 			    &cert->dbEntry->trust);
@@ -3979,6 +3987,26 @@ UpdateV5DB(CERTCertDBHandle *handle, DB *updatedb)
     PZ_DestroyMonitor(updatehandle.dbMon);
     
     return(rv);
+}
+
+static PRBool
+isV4DB(DB *db) {
+    DBT key,data;
+    int ret;
+
+    key.data = "Version";
+    key.size = 7;
+
+    ret = (*db->get)(db, &key, &data, 0);
+    if (ret) {
+	return PR_FALSE;
+    }
+
+    if ((data.size == 1) && (*(unsigned char *)data.data <= 4))  {
+	return PR_TRUE;
+    }
+
+    return PR_FALSE;
 }
 
 static SECStatus
@@ -4299,7 +4327,12 @@ SEC_OpenPermCertDB(CERTCertDBHandle *handle, PRBool readOnly,
 					      DB_HASH, 0 );
 			    PORT_Free(tmpname);
 			    if ( updatedb ) {
-				rv = UpdateV4DB(handle, updatedb);
+				/* NES has v5 db's with v4 db names! */
+				if (isV4DB(updatedb)) {
+				    rv = UpdateV4DB(handle, updatedb);
+				} else {
+				    rv = UpdateV5DB(handle, updatedb);
+				}
 				if ( rv != SECSuccess ) {
 				    goto loser;
 				}
