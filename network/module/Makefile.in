@@ -38,11 +38,12 @@ CPPSRCS			= \
 			  nsLoadAttribs.cpp   \
 			  nsNetFactory.cpp    \
 			  nsHttpURLFactory.cpp    \
+			  nsSocketTransport.cpp   \
 			  $(NULL)
 
 REQUIRES		= raptor js dbm nspr security pref xpcom util img \
 			  layer network netcache fileurl ftpurl abouturl \
-			  httpurl gophurl remoturl netcnvts netlib
+			  httpurl gophurl remoturl netcnvts netlib sockstuburl
 
 EXPORTS = nsINetService.h       \
           nsINetSupport.h		\
@@ -54,6 +55,7 @@ EXPORTS = nsINetService.h       \
           nsIProtocol.h         \
           nsIProtocolURLFactory.h   \
           nsIUnicharStreamLoader.h	\
+          nsSocketTransport.h	\
           $(NULL)
 
 ifdef ENABLE_TESTS
