@@ -463,8 +463,11 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 
   // handle sorting of servers
   else if ((property == kNC_NameSort) ||
-           (property == kNC_FolderTreeNameSort)) {    
-    // order is:
+           (property == kNC_FolderTreeNameSort)) {
+
+    // order for the folder pane
+    // and for the account manager tree is:
+    //
     // - default mail account
     // - <other mail accounts>
     // - "Local Folders" account
@@ -472,19 +475,11 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     // - smtp settings (note, this is only in account manager tree)
     // - fake account
 
-    if (source == kNC_PageTitleSMTP)
-      str = NS_LITERAL_STRING("4000");
-    else if (source == kNC_PageTitleFakeAccount)
-      str = NS_LITERAL_STRING("5000");
-    else {
-      // make sure we're handling a root folder that is a server
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      rv = getServerForFolderNode(source, getter_AddRefs(server));
-      
-      // only answer for servers!
-      if (NS_FAILED(rv) || !server)
-        return NS_RDF_NO_VALUE;
-      
+    // make sure we're handling a root folder that is a server
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = getServerForFolderNode(source, getter_AddRefs(server));
+
+    if (NS_SUCCEEDED(rv) && server) {     
       PRInt32 accountNum;
       nsCOMPtr<nsIMsgAccountManager> am =
         do_QueryReferent(mAccountManager);
@@ -492,7 +487,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       if (isDefaultServer(server))
         str = NS_LITERAL_STRING("0000");
       else {
-        
         rv = am->FindServerIndex(server, &accountNum);
         if (NS_FAILED(rv)) return rv;
         
@@ -508,6 +502,38 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
           accountNum += 1000;     // default is to appear at the top
         
         str.AppendInt(accountNum);
+      }
+    }
+    else {
+      const char *sourceValue;
+      rv = source->GetValueConst(&sourceValue);
+      NS_ENSURE_SUCCESS(rv, NS_RDF_NO_VALUE);
+      
+      // make sure the pointer math we're about to do is safe.
+      if (sourceValue && (strlen(sourceValue) > strlen(NC_RDF_PAGETITLE_PREFIX))) {
+        if (source == kNC_PageTitleSMTP)
+          str = NS_LITERAL_STRING("4000");
+        else if (source == kNC_PageTitleFakeAccount)
+          str = NS_LITERAL_STRING("5000");
+        else if (source == kNC_PageTitleServer)
+          str = NS_LITERAL_STRING("1");
+        else if (source == kNC_PageTitleCopies)
+          str = NS_LITERAL_STRING("2");
+        else if (source == kNC_PageTitleAddressing)
+          str = NS_LITERAL_STRING("3");
+        else if (source == kNC_PageTitleOfflineAndDiskSpace)
+          str = NS_LITERAL_STRING("4");
+        else if (source == kNC_PageTitleDiskSpace)
+          str = NS_LITERAL_STRING("4");
+        else {
+          // allow for the accountmanager to be dynamically extended
+          // all the other pages come after the standard ones
+          // server, copies, addressing, disk space (or offline & disk space)
+          str.AssignWithConversion(sourceValue);
+        }
+      }
+      else {
+        return NS_RDF_NO_VALUE;
       }
     }
   }
