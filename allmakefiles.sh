@@ -363,9 +363,11 @@ xpfe/browser/public/Makefile
 xpfe/browser/src/Makefile
 xpfe/browser/samples/Makefile
 xpfe/browser/samples/sampleimages/Makefile
-# xpfe/xpviewer/Makefile
-# xpfe/xpviewer/src/Makefile
-# xpfe/xpviewer/public/Makefile
+xpfe/components/Makefile
+xpfe/components/public/Makefile
+xpfe/components/find/public/Makefile
+xpfe/components/find/src/Makefile
+xpfe/components/resources/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
