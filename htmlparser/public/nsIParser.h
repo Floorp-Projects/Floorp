@@ -147,7 +147,7 @@ class nsIParser : public nsISupports {
      *  @update  gess 3/25/98
      *  @param   aDTD -- ptr DTD that you're publishing the services of
      */
-    virtual void RegisterDTD(nsIDTD* aDTD)=0;
+    NS_IMETHOD RegisterDTD(nsIDTD* aDTD)=0;
 
 
     /**
