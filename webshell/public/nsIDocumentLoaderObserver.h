@@ -21,6 +21,11 @@
 
 #include "nsISupports.h"
 
+// Forward declarations... 
+class nsIURL;
+class nsIContentViewer;
+
+
 /* f6b4f550-317c-11d2-bd8c-00805f8ae3f4 */
 #define NS_IDOCUMENT_LOADER_OBSERVER_IID   \
 { 0xf6b4f550, 0x317c, 0x11d2, \
@@ -33,6 +38,8 @@
 class nsIDocumentLoaderObserver : public nsISupports 
 {
 public:
+  NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                            nsIContentViewer* aViewer) = 0;
   /**
    * Notify the observer that all connections are complete
    */
