@@ -134,22 +134,6 @@ nsSVGLineElement::nsSVGLineElement()
 
 nsSVGLineElement::~nsSVGLineElement()
 {
-  if (mX1) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX1);
-    value->RemoveObserver(this);
-  }
-  if (mY1) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY1);
-    value->RemoveObserver(this);
-  }
-  if (mX2) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX2);
-    value->RemoveObserver(this);
-  }
-  if (mY2) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY2);
-    value->RemoveObserver(this);
-  }
 }
 
 
@@ -170,7 +154,7 @@ nsSVGLineElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX1), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x1, mX1);
+    rv = AddMappedSVGValue(nsSVGAtoms::x1, mX1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -182,7 +166,7 @@ nsSVGLineElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY1), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y1, mY1);
+    rv = AddMappedSVGValue(nsSVGAtoms::y1, mY1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -194,7 +178,7 @@ nsSVGLineElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX2), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x2, mX2);
+    rv = AddMappedSVGValue(nsSVGAtoms::x2, mX2);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -206,7 +190,7 @@ nsSVGLineElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY2), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y2, mY2);
+    rv = AddMappedSVGValue(nsSVGAtoms::y2, mY2);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

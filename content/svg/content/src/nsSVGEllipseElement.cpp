@@ -134,22 +134,6 @@ nsSVGEllipseElement::nsSVGEllipseElement()
 
 nsSVGEllipseElement::~nsSVGEllipseElement()
 {
-  if (mCx) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCx);
-    value->RemoveObserver(this);
-  }
-  if (mCy) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCy);
-    value->RemoveObserver(this);
-  }
-  if (mRx) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRx);
-    value->RemoveObserver(this);
-  }
-  if (mRy) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRy);
-    value->RemoveObserver(this);
-  }
 }
 
 
@@ -170,7 +154,7 @@ nsSVGEllipseElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCx), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::cx, mCx);
+    rv = AddMappedSVGValue(nsSVGAtoms::cx, mCx);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -182,7 +166,7 @@ nsSVGEllipseElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCy), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::cy, mCy);
+    rv = AddMappedSVGValue(nsSVGAtoms::cy, mCy);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -195,7 +179,7 @@ nsSVGEllipseElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mRx), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::rx, mRx);
+    rv = AddMappedSVGValue(nsSVGAtoms::rx, mRx);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -208,7 +192,7 @@ nsSVGEllipseElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mRy), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::ry, mRy);
+    rv = AddMappedSVGValue(nsSVGAtoms::ry, mRy);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

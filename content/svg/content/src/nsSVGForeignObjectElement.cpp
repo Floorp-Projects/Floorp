@@ -132,22 +132,6 @@ nsSVGForeignObjectElement::nsSVGForeignObjectElement()
 
 nsSVGForeignObjectElement::~nsSVGForeignObjectElement()
 {
-  if (mX) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
-    value->RemoveObserver(this);
-  }
-  if (mY) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
-    value->RemoveObserver(this);
-  }
-  if (mWidth) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
-    value->RemoveObserver(this);
-  }
-  if (mHeight) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
-    value->RemoveObserver(this);
-  }
 }
 
   
@@ -169,7 +153,7 @@ nsSVGForeignObjectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x, mX);
+    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -181,7 +165,7 @@ nsSVGForeignObjectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y, mY);
+    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -194,7 +178,7 @@ nsSVGForeignObjectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::width, mWidth);
+    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -207,7 +191,7 @@ nsSVGForeignObjectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::height, mHeight);
+    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   

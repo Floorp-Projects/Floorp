@@ -142,22 +142,6 @@ nsSVGImageElement::nsSVGImageElement()
 
 nsSVGImageElement::~nsSVGImageElement()
 {
-  if (mX) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
-    value->RemoveObserver(this);
-  }
-  if (mY) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
-    value->RemoveObserver(this);
-  }
-  if (mWidth) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
-    value->RemoveObserver(this);
-  }
-  if (mHeight) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
-    value->RemoveObserver(this);
-  }
 }
 
   
@@ -181,7 +165,7 @@ nsSVGImageElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x, mX);
+    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -193,7 +177,7 @@ nsSVGImageElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y, mY);
+    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -206,7 +190,7 @@ nsSVGImageElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::width, mWidth);
+    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -219,7 +203,7 @@ nsSVGImageElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::height, mHeight);
+    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -230,7 +214,7 @@ nsSVGImageElement::Init()
   {
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
+    rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   

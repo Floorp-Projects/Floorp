@@ -223,7 +223,7 @@ nsSVGSVGElement::Init()
     
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::width, mWidth);
+    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   // DOM property: height , #IMPLIED attrib: height
@@ -239,7 +239,7 @@ nsSVGSVGElement::Init()
 
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::height, mHeight);
+    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   // readonly DOM property: viewport
@@ -276,7 +276,7 @@ nsSVGSVGElement::Init()
 
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x, mX);
+    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -294,7 +294,7 @@ nsSVGSVGElement::Init()
 
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y, mY);
+    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
@@ -322,7 +322,7 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), wrapperRect);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
+    rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

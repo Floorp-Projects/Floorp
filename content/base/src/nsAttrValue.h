@@ -49,6 +49,7 @@ typedef unsigned long PtrBits;
 class nsAString;
 class nsIAtom;
 class nsICSSStyleRule;
+class nsISVGValue;
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 
@@ -67,6 +68,9 @@ public:
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
   explicit nsAttrValue(nsICSSStyleRule* aValue);
+#ifdef MOZ_SVG
+  explicit nsAttrValue(nsISVGValue* aValue);
+#endif
   ~nsAttrValue();
 
   // This has to be the same as in ValueBaseType
@@ -83,6 +87,9 @@ public:
     // anyway
     eCSSStyleRule = 0x14,
     eAtomArray =    0x15 
+#ifdef MOZ_SVG
+    ,eSVGValue =    0x16
+#endif
   };
 
   ValueType Type() const;
@@ -93,6 +100,9 @@ public:
   void SetTo(const nsAString& aValue);
   void SetTo(PRInt16 aInt, ValueType aType);
   void SetTo(nsICSSStyleRule* aValue);
+#ifdef MOZ_SVG
+  void SetTo(nsISVGValue* aValue);
+#endif
 
   void SwapValueWith(nsAttrValue& aOther);
 
@@ -110,6 +120,9 @@ public:
   inline float GetPercentValue() const;
   inline nsCOMArray<nsIAtom>* GetAtomArrayValue() const;
   inline nsICSSStyleRule* GetCSSStyleRuleValue() const;
+#ifdef MOZ_SVG
+  inline nsISVGValue* GetSVGValue() const;
+#endif
 
   PRUint32 HashValue() const;
   PRBool Equals(const nsAttrValue& aOther) const;
@@ -192,6 +205,9 @@ private:
       nscolor mColor;
       nsICSSStyleRule* mCSSStyleRule;
       nsCOMArray<nsIAtom>* mAtomArray;
+#ifdef MOZ_SVG
+      nsISVGValue* mSVGValue;
+#endif
     };
   };
 
@@ -264,6 +280,15 @@ nsAttrValue::GetCSSStyleRuleValue() const
   NS_PRECONDITION(Type() == eCSSStyleRule, "wrong type");
   return GetMiscContainer()->mCSSStyleRule;
 }
+
+#ifdef MOZ_SVG
+inline nsISVGValue*
+nsAttrValue::GetSVGValue() const
+{
+  NS_PRECONDITION(Type() == eSVGValue, "wrong type");
+  return GetMiscContainer()->mSVGValue;
+}
+#endif
 
 inline nsAttrValue::ValueBaseType
 nsAttrValue::BaseType() const

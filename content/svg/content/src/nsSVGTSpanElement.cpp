@@ -163,7 +163,7 @@ nsSVGTSpanElement::Init()
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x, mX);
+    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
@@ -175,7 +175,7 @@ nsSVGTSpanElement::Init()
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y, mY);
+    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   return NS_OK;

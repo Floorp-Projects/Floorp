@@ -47,7 +47,6 @@ CPPSRCS		= \
 		nsSVGAnimatedRect.cpp \
 		nsSVGAnimatedString.cpp \
 		nsSVGAnimatedTransformList.cpp \
-		nsSVGAttributes.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \

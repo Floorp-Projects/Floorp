@@ -45,6 +45,10 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDocument.h"
 
+#ifdef MOZ_SVG
+#include "nsISVGValue.h"
+#endif
+
 nsAttrValue::nsAttrValue()
     : mBits(0)
 {
@@ -67,6 +71,14 @@ nsAttrValue::nsAttrValue(nsICSSStyleRule* aValue)
 {
   SetTo(aValue);
 }
+
+#ifdef MOZ_SVG
+nsAttrValue::nsAttrValue(nsISVGValue* aValue)
+    : mBits(0)
+{
+  SetTo(aValue);
+}
+#endif
 
 nsAttrValue::~nsAttrValue()
 {
@@ -181,6 +193,12 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       }
       break;
     }
+#ifdef MOZ_SVG
+    case eSVGValue:
+    {
+      SetTo(otherCont->mSVGValue);
+    }
+#endif
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -229,6 +247,18 @@ nsAttrValue::SetTo(nsICSSStyleRule* aValue)
     cont->mType = eCSSStyleRule;
   }
 }
+
+#ifdef MOZ_SVG
+void
+nsAttrValue::SetTo(nsISVGValue* aValue)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    NS_ADDREF(cont->mSVGValue = aValue);
+    cont->mType = eSVGValue;
+  }
+}
+#endif
 
 void
 nsAttrValue::SwapValueWith(nsAttrValue& aOther)
@@ -326,6 +356,12 @@ nsAttrValue::ToString(nsAString& aResult) const
       }
       break;
     }
+#ifdef MOZ_SVG
+    case eSVGValue:
+    {
+      GetMiscContainer()->mSVGValue->GetValueString(aResult);
+    }
+#endif
   }
 }
 
@@ -383,6 +419,14 @@ nsAttrValue::ToHTMLValue(nsHTMLValue& aResult) const
       aResult.SetAtomArrayValue(array);
       break;
     }
+#ifdef MOZ_SVG
+    case eSVGValue:
+    {
+      nsAutoString tmp;
+      GetSVGValue()->GetValueString(tmp);
+      aResult.SetStringValue(tmp);
+    }
+#endif
   }
 }
 
@@ -472,6 +516,12 @@ nsAttrValue::HashValue() const
       }
       return retval;
     }
+#ifdef MOZ_SVG
+    case eSVGValue:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGValue);
+    }
+#endif
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -537,6 +587,12 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       }
       return PR_TRUE;
     }
+#ifdef MOZ_SVG
+    case eSVGValue:
+    {
+      return thisCont->mSVGValue == otherCont->mSVGValue;
+    }
+#endif
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
