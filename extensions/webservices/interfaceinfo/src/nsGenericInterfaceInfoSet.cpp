@@ -229,7 +229,7 @@ NS_IMETHODIMP nsGenericInterfaceInfoSet::GetIIDForName(const char *name, nsIID *
     if(!info)
         return NS_ERROR_FAILURE;
 
-    return info->GetIID(_retval);
+    return info->GetInterfaceIID(_retval);
 }
 
 /* string getNameForIID (in nsIIDPtr iid); */
@@ -499,7 +499,7 @@ NS_IMETHODIMP nsGenericInterfaceInfo::GetIIDForParam(PRUint16 methodIndex, const
     if(!info)
         return NS_ERROR_FAILURE;
 
-    return info->GetIID(_retval);
+    return info->GetInterfaceIID(_retval);
 }
 
 /* nsXPTType getTypeForParam (in PRUint16 methodIndex, [const] in nsXPTParamInfoPtr param, in PRUint16 dimension); */

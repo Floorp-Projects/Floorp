@@ -204,7 +204,7 @@ nsWSDLInterfaceSet::GetInfoForIID(const nsIID * iid,
     }
 
     nsIID* interfaceIID;
-    info->GetIID(&interfaceIID);
+    info->GetInterfaceIID(&interfaceIID);
     if (interfaceIID->Equals(*iid)) {
       *_retval = info.get();
       NS_ADDREF(*_retval);
@@ -263,7 +263,7 @@ nsWSDLInterfaceSet::GetIIDForName(const char *name,
     return rv;
   }
 
-  return info->GetIID(_retval);
+  return info->GetInterfaceIID(_retval);
 }
 
 /* string getNameForIID (in nsIIDPtr iid); */
@@ -591,7 +591,7 @@ nsWSDLInterfaceInfo::GetIIDForParam(PRUint16 methodIndex,
   if(NS_FAILED(rv)) {
     return rv;
   }
-  return info->GetIID(_retval);
+  return info->GetInterfaceIID(_retval);
 }
 
 // this is a private helper

@@ -600,7 +600,7 @@ nsScriptableInterfaceInfo::GetInterfaceID(nsIID * *aInterfaceID)
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
 
-    return mInfo->GetIID(aInterfaceID);
+    return mInfo->GetInterfaceIID(aInterfaceID);
 }
 
 /* readonly attribute PRBool isValid; */

@@ -1083,7 +1083,7 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
   while (if_info) {
     nsIID *iid = nsnull;
 
-    if_info->GetIID(&iid);
+    if_info->GetInterfaceIID(&iid);
     NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
 
     if (iid->Equals(NS_GET_IID(nsISupports))) {
@@ -3235,12 +3235,12 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       nsIID *iid = nsnull;
 
       if (ci_data && !ci_data->mHasClassInterface) {
-        if_info->GetIID(&iid);
+        if_info->GetInterfaceIID(&iid);
       } else {
         if_info->GetParent(getter_AddRefs(parent));
         NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
-        parent->GetIID(&iid);
+        parent->GetInterfaceIID(&iid);
       }
 
       if (iid) {

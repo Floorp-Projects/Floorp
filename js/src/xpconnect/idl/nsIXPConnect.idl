@@ -170,7 +170,7 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
     readonly attribute nsIInterfaceInfo InterfaceInfo;
-    readonly attribute nsIIDPtr         IID;
+    readonly attribute nsIIDPtr         InterfaceIID;
 
     void debugDump(in short depth);
 
