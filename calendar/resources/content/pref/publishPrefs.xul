@@ -21,6 +21,7 @@
    - Contributor(s):
    -  Mike Potter <mikep@oeone.com>
    -  ArentJan Banck <ajbanck@planet.nl>
+   -  Jano John Akim Franke <mozilla-mod@jjaf.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,7 +66,7 @@
          <textbox flex="1" id="publishPath" prefstring="calendar.publish.path"/>
       </hbox>
       <hbox>
-         <description>&pref.publish.path.label;</description>
+         <description>&pref.publish.filename.label;</description>
          <textbox flex="1" id="publishFileName" prefstring="calendar.publish.filename"/>
       </hbox>
       <hbox>
