@@ -253,37 +253,6 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
 //----------------------------------------------------------------------
 
-void
-nsBlockFrame::CombineRects(const nsRect& r1, nsRect& r2)
-{
-  nscoord xa = r2.x;
-  nscoord ya = r2.y;
-  nscoord xb = xa + r2.width;
-  nscoord yb = ya + r2.height;
-  nscoord x = r1.x;
-  nscoord y = r1.y;
-  nscoord xmost = x + r1.width;
-  nscoord ymost = y + r1.height;
-  if (x < xa) {
-    xa = x;
-  }
-  if (xmost > xb) {
-    xb = xmost;
-  }
-  if (y < ya) {
-    ya = y;
-  }
-  if (ymost > yb) {
-    yb = ymost;
-  }
-  r2.x = xa;
-  r2.y = ya;
-  r2.width = xb - xa;
-  r2.height = yb - ya;
-}
-
-//----------------------------------------------------------------------
-
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 nsresult
@@ -4261,7 +4230,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
            aState.mFloaterCombinedArea.width,
            aState.mFloaterCombinedArea.height);
 #endif
-    CombineRects(aState.mFloaterCombinedArea, lineCombinedArea);
+    lineCombinedArea.UnionRect(aState.mFloaterCombinedArea, lineCombinedArea);
 
     aLine->SetCombinedArea(lineCombinedArea);
 #ifdef NOISY_COMBINED_AREA
