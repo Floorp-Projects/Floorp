@@ -2139,7 +2139,8 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP    
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  return QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
+  *aOwnerDocument = nsnull;
+  return NS_OK;
 }
 
 nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
