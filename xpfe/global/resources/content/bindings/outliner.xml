@@ -99,8 +99,8 @@
             }
 
             aColMove.ordinal = aColBefore.ordinal;
-
-            for (var i = 0; i < cols.length; ++i)
+            var i;
+            for (i = 0; i < cols.length; ++i)
               cols[i].ordinal += 2;
           } else {
             var col = aColMove.boxObject.nextSibling;
@@ -114,7 +114,7 @@
 
             aColMove.ordinal = aBefore ? aColBefore.ordinal-2 : aColBefore.ordinal;
 
-            for (var i = 0; i < cols.length; ++i)
+            for (i = 0; i < cols.length; ++i)
               cols[i].ordinal -= 2;
           }
         ]]></body>
