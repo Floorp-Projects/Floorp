@@ -1,0 +1,265 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; I; Linux 2.2.5-22 i686) [Netscape]">
+</head>
+<body>
+
+<center>
+<h1>
+How to debug memory leaks/refcnt leaks</h1></center>
+
+<center>Last update:&nbsp;October 8th, 1999</center>
+
+<h2>
+How to build xpcom with refcnt/memory logging</h2>
+Built into xpcom is the ability to support the debugging of memory leaks.
+By default, an optimized build of xpcom has this disabled. Also by default,
+the debug builds have the logging facilities enabled. You can control either
+of these options by changing environment variables before you build mozilla:
+<p>FORCE_BUILD_REFCNT_LOGGING
+<blockquote>If this is defined then regardless of the type of build, refcnt
+logging (and related memory debugging) will be enabled in the build.</blockquote>
+NO_BUILD_REFCNT_LOGGING
+<blockquote>If this is defined then regardless of the type of build or
+of the setting of the FORCE_BUILD_REFCNT_LOGGING, no refcnt logging will
+be enabled and no memory debugging will be enabled. This variable overrides
+FORCE_BUILD_REFCNT_LOGGING.</blockquote>
+The remaining discussion assumes that one way or another that xpcom has
+been built with refcnt/memory logging enabled.
+<h2>
+How to instrument your objects for refcnt/memory logging</h2>
+First, if your object is an xpcom object and you use the NS_IMPL_ADDREF
+and NS_IMPL_RELEASE (or a variation thereof) macro to implement your AddRef
+and Release methods, then there is nothing you need do. By default, those
+macros support refcnt logging directly.
+<p>If your object is not an xpcom object then some manual editing is in
+order. The following sample code shows what must be done:
+<blockquote><b><tt>MOZ_DECL_CTOR_COUNTER(MyType);</tt></b><b><tt></tt></b>
+<p><b><tt>MyType::MyType()</tt></b>
+<br><b><tt>{</tt></b>
+<br><b><tt>&nbsp; MOZ_COUNT_CTOR(MyType);</tt></b>
+<br><b><tt>}</tt></b><b><tt></tt></b>
+<p><b><tt>MyType::~MyType()</tt></b>
+<br><b><tt>{</tt></b>
+<br><b><tt>&nbsp; MOZ_COUNT_DTOR(MyType);</tt></b>
+<br><b><tt>}</tt></b></blockquote>
+Now currently the MOZ_DECL_CTOR_COUNTER expands to nothing so your code
+will compile if you forget to add it; however, we reserve the right to
+change that so please put it in.
+<h2>
+What are those macros doing for me anyway?</h2>
+
+<p><br><b><tt>NS_IMPL_ADDREF</tt></b> has this additional line in it:
+<blockquote><b><tt>NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));</tt></b></blockquote>
+What this is doing is logging the addref call using xpcom's nsTraceRefcnt
+class. The implementation of that macro is:
+<br>&nbsp;
+<blockquote><b><tt>#define NS_LOG_ADDREF(_p, _rc, _type, _size) \</tt></b>
+<br><b><tt>&nbsp; nsTraceRefcnt::LogAddRef((_p), (_rc), (_type), (PRUint32)
+(_size))</tt></b></blockquote>
+Which as you can see just passes the buck to nsTraceRefcnt. nsTraceRefcnt
+implements the logging support and will track addref/release/ctor/dtor
+calls in a database that it builds up as the program is executing. In a
+similar manner, NS_IMPL_RELEASE&nbsp;uses NS_LOG_RELEASE&nbsp;which uses
+nsTraceRefcnt::LogRelease.
+<p>For the MOZ_DECL_CTOR_COUNTER, MOZ_COUNT_CTOR and MOZ_COUNT_DTOR&nbsp;macros
+the expansion boils down to calls to nsTraceRefcnt::LogCtor and nsTraceRefcnt::LogDtor
+calls. Again, the type of the object is passed in as well as the sizeof
+of all the data type.
+<blockquote><b><tt>#define MOZ_COUNT_CTOR(_type)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\</tt></b>
+<br><b><tt>PR_BEGIN_MACRO&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\</tt></b>
+<br><b><tt>&nbsp; nsTraceRefcnt::LogCtor((void*)this, #_type, sizeof(*this));
+\</tt></b>
+<br><b><tt>PR_END_MACRO</tt></b><b><tt></tt></b>
+<p><b><tt>#define MOZ_COUNT_DTOR(_type)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\</tt></b>
+<br><b><tt>PR_BEGIN_MACRO&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\</tt></b>
+<br><b><tt>&nbsp; nsTraceRefcnt::LogDtor((void*)this, #_type, sizeof(*this));
+\</tt></b>
+<br><b><tt>PR_END_MACRO</tt></b></blockquote>
+
+<h2>
+What's it good for?</h2>
+Once you have an instrumented build, you have a fair amount of control
+over what xpcom will do with the logging calls. Here are the options that
+you can set using NSPR_LOG_MODULES. The log variable we use is "xpcomrefcnt"&nbsp;and
+unlike other nspr log variables, it's setting value is a bitfield that
+controls a set of independent options:
+<blockquote>XPCOM_REFCNT_TRACK_BLOAT (0x1)
+<blockquote>If this bit is set then xpcom will use the "bloat" trackers.
+The bloat trackers gather data for the mega turbo bloat vision output that
+occurs when the program exits or a call to nsTraceRefcnt::DumpStatistics
+is done.
+<p>When an addref/release/ctor/dtor call is made, the data is logged and
+attributed to the particular data type.
+<p>By default enabling this bit will cause the mega turbo bloat vision
+software to dump out the entire database of collected data. If all you
+want to see is that data for objects that leaked, set the environment variable
+MOZ_DUMP_LEAKS.</blockquote>
+XPCOM_REFCNT_LOG_ALL&nbsp;(0x2)
+<blockquote>Only enable this for severe pain (unless you are using leaky,
+see below). What this does is to enable logging (to stdout) of each and
+every call to addref/release without discrimination to the types involved.
+The output includes mapping the call-stacks at the time of the call to
+symbolic forms (on platforms that support this) and thus will be *very*&nbsp;*VERY*&nbsp;*VERY*
+slow. Did I&nbsp;say slow?
+<br>&nbsp;</blockquote>
+XPCOM_REFCNT_LOG_SOME (0x4)
+<blockquote>Instead of slowing to a useless, instead you can slow to a
+meer crawl by using this option. When enabled, the xpcom logging software
+will look for the MOZ_TRACE_REFCNT_TYPES environment variable (for platforms
+that support getenv). The variable contains a comma seperated list of names
+which will be used to compare against the type's of the objects being logged.
+For example:
+<p>env MOZ_TRACE_REFCNT_TYPES="nsWebShell" NSPR_LOG_MODULES="xpcomrefcnt:4"
+./apprunner
+<p>will show you just the addref/release calls to instances of nsWebShell
+while running apprunner.</blockquote>
+XPCOM_REFCNT_LOG_TO_LEAKY (0x8)
+<blockquote>For platforms that support leaky, xpcom will endeavor to find
+at run time the symbols "__log_addref" and "__log_release" and if found,
+instead of doing the slow painful stack crawls at program execution time
+instead it will pass the buck to the leaky software. This will allow your
+program to actually run in user friendly real time, but does require that
+your platform support leaky. Currently only linux supports leaky.</blockquote>
+XPCOM_REFCNT_LOG_CALLS (0x10)
+<br>XPCOM_REFCNT_LOG_NEW&nbsp;(0x20)
+<blockquote>For losing architectures (those that don't have stack-crawl
+software written for them), xpcom supports logging at the *call site*&nbsp;to
+AddRef/Release using the usual cpp __FILE__&nbsp;and __LINE__&nbsp;number
+macro expansion hackery. This results in slower code, but at least you
+get *some*&nbsp;data about where the leaks might be occurring from.</blockquote>
+</blockquote>
+
+<h2>
+Using this stuff with leaky</h2>
+First, setup these environment variables:
+<blockquote>setenv LD_PRELOAD ../lib/libleaky.so (assumes you execute apprunner/viewer
+in the dist/bin directory)
+<br>setenv LIBMALLOC_LOG 8 (tells leaky to log addref/release calls)
+<br>setenv NSPR_LOG_MODULES&nbsp;"xpcomrefcnt:12" (some logging, use leaky)
+<br>setenv&nbsp;MOZ_TRACE_REFCNT_TYPES "a,b,c" (the list of types you care
+about)</blockquote>
+Then run the viewer or the apprunner and run your test. Then exit it. The
+result will be some large file in your current directory called "malloc-log"
+and a small file called "malloc-map". If these aren't there then somethings
+wrong.
+<p>If it works properly, then you now have the tracing data for the problem
+you are chasing in malloc-log. Use leaky to convert it to human readable
+form and debug away:
+<blockquote>leaky -dRq &lt;viewer|apprunner> malloc-log >&nbsp;/tmp/log</blockquote>
+Leaky used to require c++filt, but now it does it itself. With the -R&nbsp;option,
+leaky will only log the refcnts that actually leaked (those that didn't
+go to zero).
+<h2>
+List of environment variables</h2>
+
+<blockquote>NSPR_LOG_MODULES
+<blockquote>Set this to include "xpcomrefcnt:&lt;value>"</blockquote>
+MOZ_TRACE_REFCNT_TYPES
+<blockquote>Set this to the list of types that you want traced. Only used
+when bit 4 is set in xpcomrefcnt</blockquote>
+<br>
+LD_PRELOAD
+<blockquote>Set this to the pathname to libleaky.so if you are using leaky
+to track memory operations.</blockquote>
+LIBMALLOC_LOG
+<blockquote>Set this to "8"&nbsp;to enable leaky to track addref/release
+calls that are logged by xpcom. Note that you must set bit 8 in xpcomrefcnt
+to connect xpcom's tracing to leakys tracing.</blockquote>
+MOZ_DUMP_LEAKS
+<blockquote>Set this to anything to change the output from turbo mega bloat
+vision from dumping everything to just dumping the objects that actually
+leaked.</blockquote>
+</blockquote>
+
+<h2>
+Sample output</h2>
+Here is what you get out of turbo mega bloat vision:
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bloaty: Refcounting and Memory Bloat Statistics
+&nbsp;&nbsp;&nbsp;&nbsp; |&lt;-------Name------>|&lt;--------------References-------------->|&lt;----------------Objects---------------->|&lt;------Size----->|
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rem&nbsp;&nbsp;&nbsp; Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdDev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rem&nbsp;&nbsp;&nbsp; Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdDev Per-Class&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rem
+&nbsp;&nbsp; 1 nsAttributeContent&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25 (&nbsp;&nbsp;&nbsp; 5.70 +/-&nbsp;&nbsp;&nbsp;&nbsp; 5.14)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 (&nbsp;&nbsp;&nbsp; 2.00 +/-&nbsp;&nbsp;&nbsp;&nbsp; 1.29)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 44&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 132
+&nbsp;&nbsp; 4 NameSpaceURIKey&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 (&nbsp;&nbsp;&nbsp;&nbsp; nan +/-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nan)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 153 (&nbsp;&nbsp;&nbsp; 0.00 +/-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nan)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 64
+&nbsp;&nbsp; 5 nsSupportsArray&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25&nbsp;&nbsp;&nbsp; 11690 (&nbsp; 674.48 +/-&nbsp;&nbsp; 673.88)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25&nbsp;&nbsp;&nbsp;&nbsp; 2572 (&nbsp; 492.72 +/-&nbsp;&nbsp; 492.07)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 900
+&nbsp;&nbsp; 9 nsXPCWrappedJS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 (&nbsp;&nbsp;&nbsp; 1.71 +/-&nbsp;&nbsp;&nbsp;&nbsp; 0.97)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 (&nbsp;&nbsp;&nbsp; 1.00 +/-&nbsp;&nbsp;&nbsp;&nbsp; 0.00)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 28&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 28</pre>
+
+<p><br>Here is what you see when you enable some logging with MOZ_TRACE_REFCNT_TYPES&nbsp;set
+to something:
+<p>nsWebShell&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x81189f8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Release 5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nsWebShell::Release(void)+0x59&nbsp;
+nsCOMPtr&lt;nsIContentViewerContainer>::~nsCOMPtr(void)+0x34&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nsChannelListener::OnStartRequest(nsIChannel *, nsISupports *)+0x550&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nsFileChannel::OnStartRequest(nsIChannel *, nsISupports *)+0x7b nsOnStartRequestEvent::HandleEvent(void)+0x46&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nsStreamListenerEvent::HandlePLEvent(PLEvent *)+0x62&nbsp;&nbsp;&nbsp;
+PL_HandleEvent+0x57&nbsp;&nbsp;&nbsp;&nbsp; PL_ProcessPendingEvents+0x90&nbsp;&nbsp;&nbsp;
+nsEventQueueImpl::ProcessPendingEvents(void)+0x1d&nbsp;&nbsp; nsAppShell::SetDispatchListener(nsDispatchListener
+*)+0x3e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gdk_get_show_events+0xbb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+g_io_add_watch+0xaa&nbsp;&nbsp;&nbsp;&nbsp; g_get_current_time+0x136&nbsp;&nbsp;&nbsp;
+g_get_current_time+0x6f1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_main_run+0x81
+gtk_main+0xb9&nbsp;&nbsp; nsAppShell::Run(void)+0x245&nbsp;&nbsp;&nbsp;&nbsp;
+nsAppShell::Run(void)+0xc7a92ede&nbsp;&nbsp; nsAppShell::Run(void)+0xc7a9317c
+__libc_start_main+0xeb
+<p>Here is what you see when you use the leaky tool to dump out addref/release
+leaks:
+<p>addref&nbsp;&nbsp;&nbsp;&nbsp; 082cccc8&nbsp;&nbsp;&nbsp;&nbsp; 0 00000001
+--> CViewSourceHTML::AddRef(void) CViewSourceHTML::QueryInterface(nsID
+&amp;, void **) NS_NewViewSourceHTML(nsIDTD **) .LM708
+<br>&nbsp;GetSharedObjects(void) nsParser::RegisterDTD(nsIDTD *) RDFXMLDataSourceImpl::Refresh(int)
+nsChromeRegistry::InitRegistry(void) nsChromeProtocolHandler::New
+<br>Channel(char *, nsIURI *, nsILoadGroup *, nsIEventSinkGetter *, nsIChannel
+**) nsIOService::NewChannelFromURI(char *, nsIURI *, nsILoadGroup *, nsIEventSink
+<br>Getter *, nsIChannel **) NS_OpenURI(nsIChannel **, nsIURI *, nsILoadGroup
+*, nsIEventSinkGetter *) NS_OpenURI(nsIInputStream **, nsIURI *) CSSLoaderImpl::Lo
+<br>adSheet(URLKey &amp;, SheetLoadData *) CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet
+*, nsIURI *, nsString &amp;, int, int) CSSParserImpl::ProcessImport(int
+&amp;, nsS
+<br>tring &amp;, nsString &amp;) CSSParserImpl::ParseImportRule(int &amp;)
+CSSParserImpl::ParseAtRule(int &amp;) CSSParserImpl::Parse(nsIUnicharInputStream
+*, nsIURI *, nsICSSS
+<br>tyleSheet *&amp;) CSSLoaderImpl::ParseSheet(nsIUnicharInputStream *,
+SheetLoadData *, int &amp;, nsICSSStyleSheet *&amp;) CSSLoaderImpl::LoadAgentSheet(nsIURI
+*, nsICSS
+<br>StyleSheet *&amp;, int &amp;, void (*)(nsICSSStyleSheet *, void *),
+void *) nsLayoutModule::Initialize(void) nsLayoutModule::GetClassObject(nsIComponentManager
+*, n
+<br>sID &amp;, nsID &amp;, void **) nsNativeComponentLoader::GetFactoryFromModule(nsDll
+*, nsID &amp;, nsIFactory **) nsNativeComponentLoader::GetFactory(nsID
+&amp;, char *, ch
+<br>ar *, nsIFactory **) .LM1381 nsComponentManagerImpl::FindFactory(nsID
+&amp;, nsIFactory **) nsComponentManagerImpl::CreateInstance(nsID &amp;,
+nsISupports *, nsID &amp;
+<br>, void **) nsComponentManager::CreateInstance(nsID &amp;, nsISupports
+*, nsID &amp;, void **) RDFXMLDataSourceImpl::Refresh(int) nsChromeRegistry::InitRegistry(void
+<br>) nsChromeProtocolHandler::NewChannel(char *, nsIURI *, nsILoadGroup
+*, nsIEventSinkGetter *, nsIChannel **) nsIOService::NewChannelFromURI(char
+*, nsIURI *
+<br>, nsILoadGroup *, nsIEventSinkGetter *, nsIChannel **) NS_OpenURI(nsIChannel
+**, nsIURI *, nsILoadGroup *, nsIEventSinkGetter *) nsDocumentBindInfo::Bind(ns
+<br>IURI *, nsILoadGroup *, nsIInputStream *, unsigned short *) nsDocLoaderImpl::LoadDocument(nsIURI
+*, char *, nsIContentViewerContainer *, nsIInputStream *, n
+<br>sISupports *, unsigned int, unsigned int, unsigned short *) nsWebShell::DoLoadURL(nsIURI
+*, char *, nsIInputStream *, unsigned int, unsigned int, unsigned s
+<br>hort *) nsWebShell::LoadURI(nsIURI *, char *, nsIInputStream *, int,
+unsigned int, unsigned int, nsISupports *, unsigned short *) nsWebShell::LoadURL(unsign
+<br>ed short *, char *, nsIInputStream *, int, unsigned int, unsigned int,
+nsISupports *, unsigned short *) nsWebShell::LoadURL(unsigned short *,
+nsIInputStream
+<br>&nbsp;*, int, unsigned int, unsigned int, nsISupports *, unsigned short
+*) nsWebShellWindow::Initialize(nsIWebShellWindow *, nsIAppShell *, nsIURI
+*, int, int, n
+<br>sIXULWindowCallbacks *, int, int, nsWidgetInitData &amp;) nsAppShellService::JustCreateTopWindow(nsIWebShellWindow
+*, nsIURI *, int, int, unsigned int, nsIXULWi
+<br>ndowCallbacks *, int, int, nsIWebShellWindow **) nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow
+*, nsIURI *, int, int, unsigned int, nsIXULWindow
+<br>Callbacks *, int, int, nsIWebShellWindow **) OpenChromURL(char *, int,
+int) HandleBrowserStartup(nsICmdLineService *, nsIPref *, int) DoCommandLines(nsICmdL
+<br>ineService *, int) main1(int, char **) main __libc_start_main
+<br>&nbsp;
+</body>
+</html>
