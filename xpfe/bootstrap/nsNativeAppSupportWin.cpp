@@ -49,7 +49,7 @@ public:
     HWND mDlg;
 }; // class nsSplashScreenWin
 
-NS_IMPL_ISUPPORTS1(nsSplashScreenWin, nsISplashScreen)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSplashScreenWin, nsISplashScreen)
 
 nsSplashScreenWin::nsSplashScreenWin()
     : mRefCnt( 0 ), mDlg( 0 ) {

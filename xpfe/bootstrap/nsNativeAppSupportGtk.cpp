@@ -39,7 +39,7 @@ public:
   GdkWindow *mDialog;
 }; // class nsSplashScreenGtk
 
-NS_IMPL_ISUPPORTS0(nsSplashScreenGtk)
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsSplashScreenGtk)
 
 nsSplashScreenGtk::nsSplashScreenGtk()
 {
