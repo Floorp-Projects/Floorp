@@ -368,6 +368,8 @@ NS_IMETHODIMP
 nsDownloadManager::AddDownload(nsIURI* aSource,
                                nsILocalFile* aTarget,
                                const PRUnichar* aDisplayName,
+                               const PRUnichar* aOpeningWith,
+                               PRInt64 aStartTime,
                                nsIWebBrowserPersist* aPersist,
                                nsIDownload** aDownload)
 {
@@ -441,6 +443,9 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
     return rv;
   }
+  
+  internalDownload->SetOpeningWith(aOpeningWith);
+  internalDownload->SetStartTime(aStartTime);
 
   // Assert file information
   nsCOMPtr<nsIRDFResource> fileResource;
@@ -670,8 +675,6 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
   // start time...
   PRInt64 startTime = 0;
   download->GetStartTime(&startTime);
-  if (startTime) // possible not to have a start time yet if the dialog was requested immediately
-    dl->SetStartTime(startTime);
   
   // source...
   nsCOMPtr<nsIURI> source;
@@ -684,10 +687,8 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
   // helper app...
   nsXPIDLString openingWith;
   download->GetOpeningWith(getter_Copies(openingWith));
-  if (openingWith)
-    dl->SetOpeningWith(openingWith);
 
-  dl->Init(source, target, nsnull, nsnull); 
+  dl->Init(source, target, nsnull, openingWith, startTime, nsnull); 
   dl->SetObserver(this);
 
   // now set the listener so we forward notifications to the dialog
@@ -856,6 +857,20 @@ nsDownload::GetTransferInformation(PRInt32* aCurr, PRInt32* aMax)
 {
   *aCurr = mCurrBytes;
   *aMax = mMaxBytes;
+  return NS_OK;
+}
+
+nsresult
+nsDownload::SetStartTime(PRInt64 aStartTime)
+{
+  mStartTime = aStartTime;
+  return NS_OK;
+}
+
+nsresult
+nsDownload::SetOpeningWith(const PRUnichar* aOpeningWith)
+{
+  mOpeningWith = aOpeningWith;
   return NS_OK;
 }
 
@@ -1032,6 +1047,8 @@ NS_IMETHODIMP
 nsDownload::Init(nsIURI* aSource,
                  nsILocalFile* aTarget,
                  const PRUnichar* aDisplayName,
+                 const PRUnichar* aOpeningWith,
+                 PRInt64 aStartTime,
                  nsIWebBrowserPersist* aPersist)
 {
   NS_WARNING("Huh...how did we get here?!");
@@ -1090,13 +1107,6 @@ nsDownload::GetPersist(nsIWebBrowserPersist** aPersist)
 }
 
 NS_IMETHODIMP
-nsDownload::SetStartTime(PRInt64 aStartTime)
-{
-  mStartTime = aStartTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDownload::GetStartTime(PRInt64* aStartTime)
 {
   *aStartTime = mStartTime;
@@ -1137,13 +1147,6 @@ nsDownload::GetObserver(nsIObserver** aObserver)
 {
   *aObserver = mObserver;
   NS_IF_ADDREF(*aObserver);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::SetOpeningWith(const PRUnichar* aOpeningWith)
-{
-  mOpeningWith = aOpeningWith;
   return NS_OK;
 }
 
