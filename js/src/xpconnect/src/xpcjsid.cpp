@@ -55,7 +55,7 @@ static void ThrowBadResultException(uintN errNum, JSContext* cx, nsresult rv)
 /***************************************************************************/
 // nsJSID
 
-NS_IMPL_ISUPPORTS1(nsJSID, nsIJSID)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSID, nsIJSID)
 
 char nsJSID::gNoString[] = "";
 
@@ -254,7 +254,7 @@ nsJSID::NewID(const char* str)
 /***************************************************************************/
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS3(nsJSIID, nsIJSID, nsIJSIID, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsJSIID, nsIJSID, nsIJSIID, nsIXPCScriptable)
 
 XPC_IMPLEMENT_FORWARD_CREATE(nsJSIID)
 // XPC_IMPLEMENT_IGNORE_GETFLAGS(nsJSIID)
@@ -572,7 +572,7 @@ private:
 
 /*********************************************/
 
-NS_IMPL_ISUPPORTS2(CIDCreateInstance, CIDCreateInstance, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(CIDCreateInstance, CIDCreateInstance, nsIXPCScriptable)
 
 CIDCreateInstance::CIDCreateInstance(nsJSCID *aCID)
     : mCID(aCID)
@@ -734,7 +734,7 @@ private:
 
 /*********************************************/
 
-NS_IMPL_ISUPPORTS2(CIDGetService, CIDGetService, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(CIDGetService, CIDGetService, nsIXPCScriptable)
 
 CIDGetService::CIDGetService(nsJSCID *aCID)
     : mCID(aCID)
@@ -869,7 +869,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 /***************************************************************************/
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS3(nsJSCID, nsIJSID, nsIJSCID, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsJSCID, nsIJSID, nsIJSCID, nsIXPCScriptable)
 
 XPC_IMPLEMENT_FORWARD_CREATE(nsJSCID)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsJSCID)

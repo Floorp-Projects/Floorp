@@ -39,7 +39,7 @@
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-NS_IMPL_ISUPPORTS1(nsXPCArbitraryScriptable, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCArbitraryScriptable, nsIXPCScriptable)
 
 #define REAL_WRAPPER(w) ((nsXPCWrappedNative*)(w))
 

@@ -38,9 +38,7 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCWrappedJSClass)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCWrappedJSClass)
-NS_IMPL_QUERY_INTERFACE1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;

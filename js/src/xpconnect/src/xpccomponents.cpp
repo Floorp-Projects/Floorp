@@ -109,7 +109,7 @@ nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_Interfaces, nsIXPCComponents_Interfaces, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Interfaces, nsIXPCComponents_Interfaces, nsIXPCScriptable)
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCComponents_Interfaces)
 // XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_Interfaces)
@@ -356,7 +356,7 @@ nsXPCComponents_Classes::~nsXPCComponents_Classes()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_Classes, nsIXPCComponents_Classes, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Classes, nsIXPCComponents_Classes, nsIXPCScriptable)
 
 XPC_IMPLEMENT_FORWARD_CREATE(nsXPCComponents_Classes)
 // XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_Classes)
@@ -593,7 +593,7 @@ nsXPCComponents_ClassesByID::~nsXPCComponents_ClassesByID()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_ClassesByID, nsIXPCComponents_ClassesByID, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_ClassesByID, nsIXPCComponents_ClassesByID, nsIXPCScriptable)
 
 XPC_IMPLEMENT_FORWARD_CREATE(nsXPCComponents_ClassesByID)
 // XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_ClassesByID)
@@ -892,7 +892,7 @@ nsXPCComponents_Results::FillCache(JSContext *cx, JSObject *obj,
     return;
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_Results, nsIXPCComponents_Results, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Results, nsIXPCComponents_Results, nsIXPCScriptable)
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCComponents_Results)
 // XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_Results)
@@ -999,7 +999,7 @@ nsXPCComponents_ID::~nsXPCComponents_ID()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_ID, nsIXPCComponents_ID, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_ID, nsIXPCComponents_ID, nsIXPCScriptable)
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCComponents_ID)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_ID)
@@ -1144,7 +1144,7 @@ nsXPCComponents_Exception::~nsXPCComponents_Exception()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_Exception, nsIXPCComponents_Exception, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Exception, nsIXPCComponents_Exception, nsIXPCScriptable)
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCComponents_Exception)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_Exception)
@@ -1391,7 +1391,7 @@ nsXPCConstructor::GetInitializer(char * *aInitializer)
     XPC_STRING_GETTER_BODY(aInitializer, mInitializer);
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCConstructor, nsIXPCConstructor, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCConstructor, nsIXPCConstructor, nsIXPCScriptable)
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCConstructor)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCConstructor)
@@ -1541,7 +1541,7 @@ nsXPCComponents_Constructor::~nsXPCComponents_Constructor()
     // empty
 }
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents_Constructor, nsIXPCComponents_Constructor, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Constructor, nsIXPCComponents_Constructor, nsIXPCScriptable)
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCComponents_Constructor)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_Constructor)
@@ -1775,7 +1775,7 @@ nsXPCComponents_Constructor::HasInstance(JSContext *cx, JSObject *obj,
 // XXXjband We ought to cache the wrapper in the object's slots rather than
 // re-wrapping on demand
 
-NS_IMPL_ISUPPORTS2(nsXPCComponents, nsIXPCComponents, nsIXPCScriptable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents, nsIXPCComponents, nsIXPCScriptable)
 
 nsXPCComponents::nsXPCComponents()
     :   mInterfaces(nsnull),
