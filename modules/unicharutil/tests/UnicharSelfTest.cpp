@@ -236,24 +236,25 @@ void TestCaseConversion()
    cout << "Start nsICaseConversion Test \n";
    cout << "==============================\n";
    nsICaseConversion *t = NULL;
-   nsRepository::CreateInstance(kUnicharUtilCID,
+   nsresult res;
+   res = nsRepository::CreateInstance(kUnicharUtilCID,
                                 NULL,
                                 kCaseConversionIID,
                                 (void**) &t);
            
    cout << "Test 1 - CreateInstance():\n";
-   if( t == NULL ) {
+   if(( NS_OK != res) || ( t == NULL ) ) {
      cout << "\t1st CreateInstance failed\n";
    } else {
      t->Release();
    }
 
-   nsRepository::CreateInstance(kUnicharUtilCID,
+   res = nsRepository::CreateInstance(kUnicharUtilCID,
                                 NULL,
                                 kCaseConversionIID,
                                 (void**) &t);
            
-   if( t == NULL ) {
+   if(( NS_OK != res) || ( t == NULL ) ) {
      cout << "\t2nd CreateInstance failed\n";
    } else {
      int i;
@@ -343,10 +344,13 @@ void TestCaseConversion()
 
 void RegisterFactories()
 {
-   nsRepository::RegisterFactory(kUnicharUtilCID,
+   nsresult res;
+   res = nsRepository::RegisterFactory(kUnicharUtilCID,
                                  UNICHARUTIL_DLL_NAME,
                                  PR_FALSE,
                                  PR_TRUE);
+   if(NS_OK != res)
+     cout << "RegisterFactory failed\n";
 }
  
 int main(int argc, char** argv) {
@@ -361,8 +365,12 @@ int main(int argc, char** argv) {
 
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
-   nsRepository::FreeLibraries();
+   nsresult res;
+   res = nsRepository::FreeLibraries();
 
-   cout << "nsRepository FreeLibraries Done\n";
+   if(NS_OK != res)
+      cout << "nsRepository failed\n";
+   else
+      cout << "nsRepository FreeLibraries Done\n";
    return 0;
 }
