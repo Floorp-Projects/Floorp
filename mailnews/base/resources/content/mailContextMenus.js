@@ -157,14 +157,10 @@ function SetupForwardAsAttachmentMenuItem(menuID, numSelected, forceHide)
 function SetupMoveMenuItem(menuID, numSelected, isNewsgroup, forceHide)
 {
   ShowMenuItem(menuID, !isNewsgroup && !forceHide);
-  var folderResource = GetSelectedFolderResource();
-  var enableMenuItem = numSelected > 0;
+
+  var msgFolder = GetLoadedMsgFolder();
   // disable move if we can't delete message(s) from this folder
-  if (folderResource)
-  {
-    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    enableMenuItem = enableMenuItem && msgFolder && msgFolder.canDeleteMessages;
-    }
+  var enableMenuItem = (numSelected > 0) && msgFolder && msgFolder.canDeleteMessages;
   EnableMenuItem(menuID, enableMenuItem);
 }
 
