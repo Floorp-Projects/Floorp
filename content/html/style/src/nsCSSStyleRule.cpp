@@ -3463,109 +3463,16 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
   }
 }
 
-
-static void ListNameSpace(FILE* out, nsINameSpaceManager*& aManager, PRInt32 aNameSpaceID)
-{
-  if (kNameSpaceID_Unknown == aNameSpaceID) {
-    fputs("*|", out);
-  }
-  else if (kNameSpaceID_None == aNameSpaceID) {
-    fputs("|", out);
-  }
-  else if (kNameSpaceID_None < aNameSpaceID) {
-    nsAutoString  buffer;
-    if (! aManager) {
-      NS_NewNameSpaceManager(&aManager);
-    }
-    if (aManager) {
-      aManager->GetNameSpaceURI(aNameSpaceID, buffer);
-    }
-    else {
-      buffer.AssignWithConversion("{namespace ID: ");
-      buffer.AppendInt(aNameSpaceID, 10);
-      buffer.AppendWithConversion("}");
-    }
-    fputs(buffer, out);
-    fputs("|", out);
-  }
-}
-
-static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
-{
-  nsAutoString buffer;
-  nsINameSpaceManager*  nameSpaceMgr = nsnull;
-
-  if (0 != aSelector->mOperator) {
-    buffer.Truncate();
-    buffer.Append(aSelector->mOperator);
-    buffer.AppendWithConversion(" ");
-    fputs(buffer, out);
-  }
-  ListNameSpace(out, nameSpaceMgr, aSelector->mNameSpace);
-  if (nsnull != aSelector->mTag) {
-    aSelector->mTag->ToString(buffer);
-    fputs(buffer, out);
-  }
-  else {
-    fputs("*", out);
-  }
-  nsAtomList* list = aSelector->mIDList;
-  while (nsnull != list) {
-    list->mAtom->ToString(buffer);
-    fputs("#", out);
-    fputs(buffer, out);
-    list = list->mNext;
-  }
-  list = aSelector->mClassList;
-  while (nsnull != list) {
-    list->mAtom->ToString(buffer);
-    fputs(".", out);
-    fputs(buffer, out);
-    list = list->mNext;
-  }
-  list = aSelector->mPseudoClassList;
-  while (nsnull != list) {
-    list->mAtom->ToString(buffer);
-    fputs(buffer, out);
-    list = list->mNext;
-  }
-  nsAttrSelector* attr = aSelector->mAttrList;
-  while (nsnull != attr) {
-    fputs("[", out);
-    ListNameSpace(out, nameSpaceMgr, attr->mNameSpace);
-    attr->mAttr->ToString(buffer);
-    fputs(buffer, out);
-    if (NS_ATTR_FUNC_SET != attr->mFunction) {
-      switch (attr->mFunction) {
-        case NS_ATTR_FUNC_EQUALS:    fputs("=", out);  break;
-        case NS_ATTR_FUNC_INCLUDES:  fputs("~=", out);  break;
-        case NS_ATTR_FUNC_DASHMATCH: fputs("|=", out);  break;
-      }
-      fputs(attr->mValue, out);
-    }
-    fputs("]", out);
-    attr = attr->mNext;
-  }
-  NS_IF_RELEASE(nameSpaceMgr);
-}
-
 NS_IMETHODIMP
 CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  const nsCSSSelector*  selector = &mSelector;
-
-  while (nsnull != selector) {
-    ListSelector(out, selector);
-    fputs(" ", out);
-    selector = selector->mNext;
-  }
-
   nsAutoString buffer;
+  mSelector.ToString(buffer, mSheet, PR_FALSE, 0);
 
-  buffer.AppendWithConversion("weight: ");
+  buffer.AppendWithConversion(" weight: ");
   buffer.AppendInt(mWeight, 10);
   buffer.AppendWithConversion(" ");
   fputs(buffer, out);
