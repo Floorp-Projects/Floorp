@@ -43,7 +43,9 @@ LINCS=                                  \
 	-I$(PUBLIC)\raptor              \
 	-I$(PUBLIC)\xpcom               \
 	-I..\xpwidgets               \
-	-I..\windows               \
+        -I..\windows               \
+        -I$(PUBLIC)\netlib \
+        -I$(PUBLIC)\dom \
 	$(NULL)
 
 LCFLAGS =                               \
