@@ -20,6 +20,7 @@
    - 
    - Contributor(s):
    -   Ben Goodger <ben@netscape.com> (ass'td polish fixes)
+   -   Håkan Waara <hwaara@chello.se> (ass'td polish fix)
   -->
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
@@ -456,14 +457,15 @@
           </box> 
           <tree id="addressingWidgetTree" flex="1"/>
           <box autostretch="never">
-            <text class="label" value="&subject.label;"/>
+            <text class="label" value="&subject.label;" accesskey="&subject.accesskey;"/>
             <textfield id="msgSubject" type="text" flex="1" onkeyup="SetComposeWindowTitle(event.which);"
                        onkeypress="subjectKeyPress(event);" onchange="contentChanged=true;"/>
           </box>
         </box>
         <splitter id="attachmentbucket-sizer" collapse="after"/>
         <box orient="vertical" flex="25">
-          <text class="label" id="attachmentBucketText" value="&attachments.label;" crop="right"/>
+          <text class="label" id="attachmentBucketText" value="&attachments.label;" crop="right"
+                accesskey="&attachments.accesskey;"/>
           <tree id="attachmentBucket" class="inset toolbar-focustarget" flex="1" style="height: 0px; width: 0px;"
                 dragdroptree="true"
                 onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"

@@ -3,7 +3,9 @@
 
 <!ENTITY fromAddr.label "From:">
 <!ENTITY subject.label  "Subject:">
+<!ENTITY subject.accesskey "s">
 <!ENTITY attachments.label "Attachments:">
+<!ENTITY attachments.accesskey "a">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
