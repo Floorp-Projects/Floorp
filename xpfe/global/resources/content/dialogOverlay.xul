@@ -17,6 +17,10 @@
 		<spring style="width:10px"/>
 		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
 		<spring style="width:10px"/>
+		<titledbutton id="Button2" value="&cancelButton.label;" style = "display:none;" onclick="doButton2()"/>	
+		<spring style="width:10px"/>
+		<titledbutton id="Button3" value="&cancelButton.label;" style = "display:none;" onclick="doButton3()"/>	
+		<spring style="width:10px"/>
 	</box>
 	
 </overlay>		

@@ -21,7 +21,7 @@
 					&header.label;
 				</html:div>
 				<html:div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;" flex="100%">
-					&message.label;
+					
 				</html:div>
 		</box>
 	</box>

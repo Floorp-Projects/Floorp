@@ -87,7 +87,7 @@ nsCommonDialogs::~nsCommonDialogs()
 {
 }
 
-NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent, const PRUnichar *inMsg)
+NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle, const PRUnichar *inMsg)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -101,6 +101,8 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent, const PRUnichar *in
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons, 1 );
 	block->SetString( eMsg, inMsg );
+
+	block->SetString( eDialogTitle,inWindowTitle );
 	nsString url( kAlertIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
@@ -111,7 +113,7 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent, const PRUnichar *in
 
 }
 
-NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *inMsg, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -125,6 +127,7 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
+	block->SetString( eDialogTitle, inWindowTitle );
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
@@ -137,7 +140,7 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent, const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle,const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -151,6 +154,7 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent, const PRUnic
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
+	block->SetString( eDialogTitle, inWindowTitle );
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetString( eCheckboxMsg, inCheckMsg );
@@ -168,7 +172,7 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent, const PRUnic
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *inMsg, const PRUnichar *inDefaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, const PRUnichar *inDefaultText, PRUnichar **result, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -182,6 +186,7 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
+	block->SetString( eDialogTitle, inWindowTitle );
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
@@ -199,7 +204,7 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent, const PRUnichar *inMsg, PRUnichar **outUser, PRUnichar **outPassword, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRUnichar **outUser, PRUnichar **outPassword, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -213,6 +218,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
+	block->SetString( eDialogTitle, inWindowTitle );
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 2 );
@@ -229,7 +235,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent, const PRUnichar *inMsg, PRUnichar **outPassword, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRUnichar **outPassword, PRBool *_retval)
 {	
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -243,6 +249,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent, const PRUn
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
+	block->SetString( eDialogTitle, inWindowTitle );
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
