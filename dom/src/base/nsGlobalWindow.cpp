@@ -366,9 +366,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
       doc = nsnull;             // Forces release now
     }
 
-    PRBool is_about = PR_FALSE;
-    if (docURL && NS_SUCCEEDED(docURL->SchemeIs("about", &is_about)) &&
-        is_about) {
+    if (docURL) {
       docURL->GetSpec(getter_Copies(url));
 
       //about:blank URL's do not have ClearScope called on page change.
