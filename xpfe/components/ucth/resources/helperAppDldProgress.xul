@@ -99,12 +99,19 @@ Contributor(s):
           <text class="label" id="dialog.timeElapsed" value="&#160;"/>
         </row>
         <separator class="thin"/>
-        <row>   
-          <spring/> 
+        <row>             
+          <box autostretch="never" halign="right">
+            <text class="label" value="&progress;"/>
+          </box>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
           <box autostretch="never" halign="right">
             <text class="label" id="dialog.progressText" value="&#160;"/>
           </box>
+        </row>
+        <row>
+           <hbox flex="1">
+            <checkbox id="keepProgressDialogUp" value="&keepProgressDialogUpMsg.label;"/>
+           </hbox>
         </row>
       </rows>
     </grid>
@@ -113,6 +120,8 @@ Contributor(s):
     
     <box id="CancelButton">
       <spring flex="1"/>
+      <button class="dialog" id="open" value="&open.label;" disabled="true" onclick="doOpen()"/>
+      <button class="dialog" id="openFolder" value="&openFolder.label;" disabled="true" onclick="doOpenFolder()"/>
       <button class="dialog" id="cancel" value="&dialogCancel.label;" onclick="doCancelButton()"/>
       <spring flex="1"/>
     </box>
