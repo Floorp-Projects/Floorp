@@ -182,7 +182,7 @@ public class BaseFunction extends IdScriptable implements Function {
                 int indent = ScriptRuntime.toInt32(args, 0);
                 Object x = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
                 if (x instanceof BaseFunction) {
-                    return ((BaseFunction)x).decompile(cx, indent, false);
+                    return ((BaseFunction)x).decompile(cx, indent, 0);
                 }
                 throw ScriptRuntime.typeError1("msg.incompat.call", "toString");
               }
@@ -279,16 +279,16 @@ public class BaseFunction extends IdScriptable implements Function {
      * Decompile the source information associated with this js
      * function/script back into a string.
      *
-     * @param cx Current context
+     * @param cx Current context.
      *
-     * @param indent How much to indent the decompiled result
+     * @param indent How much to indent the decompiled result.
      *
-     * @param justbody Whether the decompilation should omit the
-     * function header and trailing brace.
+     * @param flags Flags specifying format of decompilation output.
      */
-
-    public String decompile(Context cx, int indent, boolean justbody) {
+    public String decompile(Context cx, int indent, int flags)
+    {
         StringBuffer sb = new StringBuffer();
+        boolean justbody = (0 != (flags & Decompiler.ONLY_BODY_FLAG));
         if (!justbody) {
             sb.append("function ");
             sb.append(getFunctionName());

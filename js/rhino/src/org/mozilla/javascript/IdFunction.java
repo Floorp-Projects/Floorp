@@ -105,9 +105,10 @@ public class IdFunction extends BaseFunction
         throw ScriptRuntime.typeError1("msg.not.ctor", functionName);
     }
 
-    public String decompile(Context cx, int indent, boolean justbody)
+    public String decompile(Context cx, int indent, int flags)
     {
         StringBuffer sb = new StringBuffer();
+        boolean justbody = (0 != (flags & Decompiler.ONLY_BODY_FLAG));
         if (!justbody) {
             sb.append("function ");
             sb.append(getFunctionName());

@@ -360,7 +360,17 @@ public class Kit
     public static RuntimeException codeBug()
         throws RuntimeException
     {
-        throw new RuntimeException("FAILED ASSERTION");
+        throw new IllegalStateException("FAILED ASSERTION");
+    }
+
+    /**
+     * Convinient way to throw IllegalArgumentException to indicate bad
+     * argument.
+     */
+    public static void badArg()
+        throws IllegalArgumentException
+    {
+        throw new IllegalArgumentException();
     }
 
 }

@@ -1115,7 +1115,7 @@ public class Context
                                    int indent)
     {
         NativeFunction scriptImpl = (NativeFunction) script;
-        return scriptImpl.decompile(this, indent, false);
+        return scriptImpl.decompile(this, indent, 0);
     }
 
     /**
@@ -1133,7 +1133,7 @@ public class Context
      */
     public String decompileFunction(Function fun, int indent) {
         if (fun instanceof BaseFunction)
-            return ((BaseFunction)fun).decompile(this, indent, false);
+            return ((BaseFunction)fun).decompile(this, indent, 0);
         else
             return "function " + fun.getClassName() +
                    "() {\n\t[native code]\n}\n";
@@ -1153,12 +1153,12 @@ public class Context
      * @return a string representing the function body source.
      */
     public String decompileFunctionBody(Function fun, int indent) {
-        if (fun instanceof BaseFunction)
-            return ((BaseFunction)fun).decompile(this, indent, true);
-        else
-            // not sure what the right response here is.  JSRef currently
-            // dumps core.
-            return "[native code]\n";
+        if (fun instanceof BaseFunction) {
+            BaseFunction bf = (BaseFunction)fun;
+            return bf.decompile(this, indent, Decompiler.ONLY_BODY_FLAG);
+        }
+        // ALERT: not sure what the right response here is.
+        return "[native code]\n";
     }
 
     /**

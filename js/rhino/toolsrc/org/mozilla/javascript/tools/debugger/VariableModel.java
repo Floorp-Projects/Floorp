@@ -141,8 +141,7 @@ public class VariableModel extends AbstractTreeTableModel
                 String result;
                 try {
                     if (value instanceof BaseFunction) {
-                        result = ((BaseFunction)value).decompile(cx, 0,
-                                                                 false);
+                        result = ((BaseFunction)value).decompile(cx, 0, 0);
                     } else {
                         result = Context.toString(value);
                     }

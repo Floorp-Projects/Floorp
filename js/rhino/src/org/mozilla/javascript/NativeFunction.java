@@ -71,19 +71,17 @@ public class NativeFunction extends BaseFunction
      *
      * @param indent How much to indent the decompiled result
      *
-     * @param justbody Whether the decompilation should omit the
-     * function header and trailing brace.
+     * @param flags Flags specifying format of decompilation output
      */
-    public final String decompile(Context cx, int indent, boolean justbody)
+    public final String decompile(Context cx, int indent, int flags)
     {
         String encodedSource = getEncodedSource();
         if (encodedSource == null) {
-            return super.decompile(cx, indent, justbody);
+            return super.decompile(cx, indent, flags);
         } else {
-            final int INDENT_GAP = 4;
-            final int CASE_GAP = 2; // less how much for case labels
-            return Decompiler.decompile(encodedSource, justbody,
-                                        indent, INDENT_GAP, CASE_GAP);
+            UintMap properties = new UintMap(1);
+            properties.put(Decompiler.INITIAL_INDENT_PROP, indent);
+            return Decompiler.decompile(encodedSource, flags, properties);
         }
     }
 

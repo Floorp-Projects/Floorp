@@ -72,13 +72,30 @@ package org.mozilla.javascript;
  */
 public class Decompiler
 {
+    /**
+     * Flag to indicate that the decompilation should omit the
+     * function header and trailing brace.
+     */
+    public static final int ONLY_BODY_FLAG = 1 << 0;
+
+    /**
+     * Decompilation property to specify initial ident value.
+     */
+    public static final int INITIAL_INDENT_PROP = 1;
+
+    /**
+     * Decompilation property to specify default identation offset.
+     */
+    public static final int INDENT_GAP_PROP = 2;
+
+    /**
+     * Decompilation property to specify identation offset for case labels.
+     */
+    public static final int CASE_GAP_PROP = 3;
+
     // Marker to denote the last RC of function so it can be distinguished from
     // the last RC of object literals in case of function expressions
     private static final int FUNCTION_END = Token.LAST_TOKEN + 1;
-
-    public Decompiler()
-    {
-    }
 
     String getEncodedSource()
     {
@@ -259,34 +276,28 @@ public class Decompiler
      * mapping the original source to the prettyprinted decompiled
      * version is done by the parser.
      *
-     * Note that support for Context.decompileFunctionBody is hacked
-     * on through special cases; I suspect that js makes a distinction
-     * between function header and function body that rhino
-     * decompilation does not.
+     * @param source encoded source tree presentation
      *
-     * @param encodedSourcesTree See {@link NativeFunction#getSourcesTree()}
-     *        for definition
+     * @param flags flags to select output format
      *
-     * @param justbody Whether the decompilation should omit the
-     * function header and trailing brace.
-     *
-     * @param indent How much to indent the decompiled result
-     *
-     * @param indentGap the default identation offset
-     *
-     * @param indentGap the identation offset for case labels
+     * @param properties indentation properties
      *
      */
-    public static String decompile(Object sourceObj,
-                                   boolean justFunctionBody,
-                                   int indent, int indentGap, int caseGap)
+    public static String decompile(String source, int flags,
+                                   UintMap properties)
     {
-        String source = (String)sourceObj;
-
         int length = source.length();
         if (length == 0) { return ""; }
 
+        int indent = properties.getInt(INITIAL_INDENT_PROP, 0);
+        if (indent < 0) Kit.badArg();
+        int indentGap = properties.getInt(INDENT_GAP_PROP, 4);
+        if (indentGap < 0) Kit.badArg();
+        int caseGap = properties.getInt(CASE_GAP_PROP, 2);
+        if (caseGap < 0) Kit.badArg();
+
         StringBuffer result = new StringBuffer();
+        boolean justFunctionBody = (0 != (flags & Decompiler.ONLY_BODY_FLAG));
 
         // Spew tokens in source, for debugging.
         // as TYPE number char
