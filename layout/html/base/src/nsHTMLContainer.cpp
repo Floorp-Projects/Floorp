@@ -257,11 +257,11 @@ nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
-    rv = NS_NewBlockFrame(&frame, this, aParentFrame);
+    rv = NS_NewBlockFrame(this, aParentFrame, frame);
     break;
 
   case NS_STYLE_DISPLAY_INLINE:
-    rv = NS_NewInlineFrame(&frame, this, aParentFrame);
+    rv = NS_NewInlineFrame(this, aParentFrame, frame);
     break;
 
   default:

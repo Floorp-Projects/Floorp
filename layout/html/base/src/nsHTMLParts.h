@@ -247,9 +247,8 @@ NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                 nsIFrame*& aNewFrame);
 
 extern nsresult
-NS_NewBlockFrame(nsIFrame**  aInstancePtrResult,
-                 nsIContent* aContent,
-                 nsIFrame*   aParent);
+NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                 nsIFrame*& aNewFrame);
 
 extern nsresult
 NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,
@@ -277,9 +276,8 @@ NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                  nsIFrame*& aFrameResult);
 
 extern nsresult
-NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
-                  nsIContent* aContent,
-                  nsIFrame*   aParent);
+NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aNewFrame);
 
 extern nsresult
 NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,

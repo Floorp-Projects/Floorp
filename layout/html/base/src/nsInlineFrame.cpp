@@ -91,19 +91,13 @@ nsInlineReflowState::~nsInlineReflowState()
 
 //----------------------------------------------------------------------
 
-nsresult NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent)
+nsresult NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                           nsIFrame*& aNewFrame)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsInlineFrame(aContent, aParent);
-  if (nsnull == it) {
+  aNewFrame = new nsInlineFrame(aContent, aParentFrame);
+  if (nsnull == aNewFrame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
   return NS_OK;
 }
 
