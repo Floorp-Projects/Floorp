@@ -58,3 +58,4 @@ locales/en-US.jar:
     global/locale/languageNames.properties    (resources/locale/en-US/languageNames.properties) 
     global/locale/regionNames.properties      (resources/locale/en-US/regionNames.properties) 
     global/locale/about.html                  (resources/locale/en-US/about.html) 
+    global/locale/commonDialogs.properties    (resources/locale/en-US/commonDialogs.properties) 
