@@ -22,11 +22,17 @@ function Startup()
     dump("toolkitCore not found!!! And we can't close the dialog!\n");
   }
 
+  // temporary while this window is opend with ShowWindowWithArgs
+  dump("Getting parent appcore\n");
+  var editorName = document.getElementById("args").getAttribute("value");
+  dump("Got editorAppCore called " + editorName + "\n");
+  
   // NEVER create an appcore here - we must find parent editor's
-  appCore = XPAppCoresManager.Find("EditorAppCoreHTML");  
+  appCore = XPAppCoresManager.Find(editorName);  
   if(!appCore || !toolkitCore) {
     dump("EditorAppCore not found!!!\n");
     toolkitCore.CloseWindow(window);
+    return;
   }
   dump("EditorAppCore found for Image Properties dialog\n");
 

@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
 
 <!DOCTYPE window
@@ -19,17 +20,18 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onload="Startup()" onunload="Shutdown()" title="Editor">
+			  onload="EditorStartup()" onunload="EditorShutdown()" title="Editor">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
 
+  <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <broadcaster id="canPrint"/>
   
   <menubar>
     <menu name="File">
-      <menuitem name=".New" onclick=""/>
-      <menuitem name=".Open..." onclick=""/>
+      <menuitem name="New" onclick="EditorNew()"/>
+      <menuitem name="Open..." onclick="EditorOpen()"/>
       <menuitem name=".Close" onclick="EditorClose()"/>
       <separator />
       <menuitem name="Save" onclick="EditorSave()"/>
@@ -37,7 +39,7 @@
       <separator />
       <menuitem name=".Print Setup..." onclick=""/>
       <menuitem name="Print Preview" onclick="EditorPrintPreview()"/>
-      <menuitem name=".Print..." onclick=""/>
+      <menuitem name=".Print..." onclick="EditorPrint()"/>
       <separator />
       <menuitem name="Quit" onclick="EditorExit()"/>
     </menu>
@@ -178,9 +180,24 @@
     </toolbar>
   </toolbox>
 
-  <html:iframe type="content" id="content-frame" html:src="chrome://editor/content/EditorInitPage.html" flex="100%" />
-  </box>
+  <html:iframe type="content" id="content-frame" src="about:blank" flex="100%"/>
 
+    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
+    <box align="horizontal" id="status-bar">
+ 
+    <titledbutton value="[Notification Component]" onclick="doTests()"/>
+	<box align="vertical" style="width:100px">
+		<spring flex="100%"/>
+		<progressmeter mode="normal" value="0">
+		</progressmeter>
+		<spring flex="100%"/>
+	</box>
+
+	<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+	</titledbutton>
+    </box>
+
+</box>
 </window>
 
 
