@@ -295,7 +295,8 @@ sub make_options {
     }
     if (!$found && $default ne "") {
       if ( Param("strictvaluechecks") && 
-           ($default ne $::dontchange) && ($default ne "-All-") ) {
+           ($default ne $::dontchange) && ($default ne "-All-") &&
+           ($default ne "DUPLICATE") ) {
         print "Possible bug database corruption has been detected.  " .
               "Please send mail to " . Param("maintainer") . " with " .
               "details of what you were doing when this message " . 
