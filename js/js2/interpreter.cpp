@@ -61,9 +61,12 @@ private:
 class JSArray : public JSObject {
 public:
     void* operator new(size_t) { return alloc.allocate(1, 0); }
+    JSArray() : elements(1) {}
     uint32 length() { return elements.size(); }
-    JSValue& operator[](uint32 n)
+    JSValue& operator[](const JSValue& index)
     {
+        // for now, we can only handle f64 index values.
+        uint32 n = (uint32)index.f64;
         // obviously, a sparse representation might be better.
         uint32 size = elements.size();
         if (n >= size) resize(n, size);
@@ -164,14 +167,14 @@ JSValue interpret(ICodeModule *iCode, const JSValues& args)
             {
                 GetElement* ge = static_cast<GetElement*>(instruction);
                 JSArray* array = registers[src1(ge)].array;
-                registers[dst(ge)] = (*array)[src2(ge)];
+                registers[dst(ge)] = (*array)[registers[src2(ge)]];
             }
             break;
         case SET_ELEMENT:
             {
                 SetElement* se = static_cast<SetElement*>(instruction);
                 JSArray* array = registers[dst(se)].array;
-                (*array)[src1(se)] = registers[src2(se)];
+                (*array)[registers[src1(se)]] = registers[src2(se)];
             }
             break;
         case LOAD_IMMEDIATE:
