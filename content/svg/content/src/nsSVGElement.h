@@ -114,8 +114,10 @@ public:
                            nsIAtom*& aName,
                            nsIAtom*& aPrefix) const;
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+#endif // DEBUG
   
   // NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
 //   NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
