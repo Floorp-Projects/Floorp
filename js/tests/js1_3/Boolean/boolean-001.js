@@ -29,7 +29,7 @@
  *  Date:               11 August 1998
  */
     var SECTION = "boolean-001.js";
-    var VERSION = "JS1_3";
+    var VERSION = "JS_1.3";
     var TITLE   = "new Boolean(false) should evaluate to false";
 
     startTest();
