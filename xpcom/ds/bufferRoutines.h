@@ -64,19 +64,10 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  * @param   aCount is the number of chars to be "cut"
  */
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  //PRUint32 theMax=aLength-anOffset;
-  //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  char* dst = aDest+anOffset;
+  char* src = aDest+anOffset+aCount;
 
-  char* first= aDest+anOffset+aCount;
-  char* last = aDest+aLength;
-  char* to   = aDest+anOffset;
-
-  //now loop over characters, shifting them left...
-  while(first<=last) {
-    *to=*first;  
-    to++;
-    first++;
-  }
+  memmove(dst,src,aLength-anOffset);
 }
 
 /**
@@ -88,16 +79,10 @@ void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCou
  * @param   aCount is the number of chars to be "inserted"
  */
 void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  char* last = aDest+aLength;
-  char* first= aDest+anOffset-1;
-  char* to = aDest+aLength+aCount;
+  char* src = aDest+anOffset;
+  char* dst = aDest+anOffset+aCount;
 
-  //Copy rightmost chars, up to offset+theDelta...
-  while(first<last) {
-    *to=*last;  
-    to--;
-    last--;
-  }
+  memmove(dst,src,aLength-anOffset);
 }
 
 /**
@@ -109,20 +94,11 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  * @param   aCount is the number of chars to be "cut"
  */
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  //PRUint32 theMax=aLength-anOffset;
-  //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  PRUnichar* root=(PRUnichar*)aDest;
+  PRUnichar* dst = root+anOffset;
+  PRUnichar* src = root+anOffset+aCount;
 
-  PRUnichar* theBuf=(PRUnichar*)aDest;
-  PRUnichar* first= theBuf+anOffset+aCount;
-  PRUnichar* last = theBuf+aLength;
-  PRUnichar* to   = theBuf+anOffset;
-
-  //now loop over characters, shifting them left...
-  while(first<=last) {
-    *to=*first;  
-    to++;
-    first++;
-  }
+  memmove(dst,src,sizeof(PRUnichar)*(aLength-anOffset));
 }
 
 
@@ -135,17 +111,12 @@ void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint3
  * @param   aCount is the number of chars to be "inserted"
  */
 void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  PRUnichar* theBuf=(PRUnichar*)aDest;
-  PRUnichar* last = theBuf+aLength;
-  PRUnichar* first= theBuf+anOffset-1;
-  PRUnichar* to = theBuf+aLength+aCount;
+  PRUnichar* root=(PRUnichar*)aDest;
+  PRUnichar* src = root+anOffset;
+  PRUnichar* dst = root+anOffset+aCount;
 
-  //Copy rightmost chars, up to offset+theDelta...
-  while(first<last) {
-    *to=*last;  
-    to--;
-    last--;
-  }
+  memmove(dst,src,sizeof(PRUnichar)*(aLength-anOffset));
+
 }
 
 
@@ -176,16 +147,10 @@ ShiftChars gShiftChars[2][2]= {
  */
 void CopyChars1To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount) { 
 
-  char*       to   = aDest+anDestOffset;
-  const char* first= aSource+anOffset;
-  const char* last = first+aCount;
+  char* dst = aDest+anDestOffset;
+  char* src = (char*)aSource+anOffset;
 
-  //now loop over characters, shifting them left...
-  while(first<last) {
-    *to=*first;  
-    to++;
-    first++;
-  }
+  memcpy(dst,src,aCount);
 } 
 
 /**
@@ -252,7 +217,7 @@ void CopyChars2To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   PRUnichar* theSource=(PRUnichar*)aSource;
   PRUnichar* from= theSource+anOffset;
 
-  memcpy((void*)to,(void*)from,aCount*2);
+  memcpy((void*)to,(void*)from,aCount*sizeof(PRUnichar));
 }
 
 

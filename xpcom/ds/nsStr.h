@@ -173,7 +173,7 @@ enum  eCharSize {eOneByte=0,eTwoByte=1};
 #define kRadix16        (16)
 #define kAutoDetect     (100)
 #define kRadixUnknown   (kAutoDetect+1)
-const   PRInt32 kDefaultStringSize = 32;
+const   PRInt32 kDefaultStringSize = 64;
 const   PRInt32 kNotFound = -1;
 
 
