@@ -29,20 +29,9 @@ class Editor : public nsIEditor
 {
 private:
   COM_auto_ptr<nsIDOMDocument> mDomInterfaceP;
+  COM_auto_ptr<nsEditorKeyListener> mKeyListenerP;
+  COM_auto_ptr<nsEditorMouseListener> mMouseListenerP;
 public:
-/*BEGIN nsIEditor interfaces*/
-  /*see the nsIEditor for more details*/
-  virtual nsresult Init();
-
-  virtual nsresult SetDomInterface(nsIDOMDocument *aDomInterface){mDomInterfaceP = aDomInterface}
-  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP;}
-
-  virtual nsresult SetProperties(PROPERTIES aProperty){}
-  virtual nsresult GetProperties(PROPERTIES &){}
-/*END nsIEditor interfaces*/
-
-/*BEGIN Editor interfaces*/
-
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
    */
@@ -52,8 +41,21 @@ public:
    */
   ~Editor();
 
+/*BEGIN nsIEditor interfaces*/
+  /*see the nsIEditor for more details*/
+  virtual nsresult Init(nsIDOMDocument *aDomInterface);
+
+  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP;}
+
+  virtual nsresult SetProperties(PROPERTIES aProperty){}
+  virtual nsresult GetProperties(PROPERTIES &){}
+/*END nsIEditor interfaces*/
+
+/*BEGIN Editor interfaces*/
+
+
 /*KeyListener Methods*/
-  /** KeyDown 
+  /** KeyDown is called from the key event lister "probably"
    *  @param int aKeycode the keycode or ascii
    *  value of the key that was hit for now
    *  @return False if ignored
@@ -65,7 +67,7 @@ public:
    *  @param int x the xposition of the click
    *  @param int y the yposition of the click
    */
-  PR_Bool MouseClick(int x,int y); //it should also tell us the dom element that was selected.
+  PR_Bool MouseClick(int aX,int aY); //it should also tell us the dom element that was selected.
 };
 
 

@@ -30,10 +30,11 @@ CPP_OBJS =					\
 
 MODULE=raptor 
 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor dom
 
 LINCS=-I$(PUBLIC)\xpcom \
-    -I$(PUBLIC)\raptor 
+    -I$(PUBLIC)\raptor \
+    -I$(PUBLIC)\dom 
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = ender

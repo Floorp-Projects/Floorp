@@ -18,7 +18,8 @@
 
 #ifndef nsIEditor_h__
 #define nsIEditor_h__
-
+#include "nsISupports.h"
+#include "nsIDOMDocument.h"
 /*
 Editor interface to outside world
 */
@@ -28,7 +29,7 @@ Editor interface to outside world
 0xa3c5ee71, 0x742e, 0x11d2, \
 {0x8f, 0x2c, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94} }
 
-enum PROPERTIES{NONE = 0;BOLD = 1;NUMPROPERTIES};
+enum PROPERTIES{NONE = 0,BOLD = 1,NUMPROPERTIES};
 
 /**
  * An editor specific interface. 
@@ -40,19 +41,12 @@ enum PROPERTIES{NONE = 0;BOLD = 1;NUMPROPERTIES};
  */
 class nsIEditor  : public nsISupports{
 public:
-  NS_DECL_ISUPPORTS
 
   /**
-   * Init() tells is to tell the implementation of nsIEditor to begin its services
-   */
-  virtual nsresult Init() = 0;
-
-  /**
-   * SetDomInterface() WILL BE ADDREFFED
-   *
+   * Init tells is to tell the implementation of nsIEditor to begin its services
    * @param aDomInterface The dom interface being observed
    */
-  virtual nsresult SetDomInterface(nsIDOMDocument *aDomInterface)=0;
+  virtual nsresult Init(nsIDOMDocument *aDomInterface) = 0;
 
   /**
    * GetDomInterface() WILL NOT RETURN AN ADDREFFED POINTER
