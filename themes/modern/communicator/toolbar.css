@@ -16,6 +16,11 @@ toolbargrippy
     height                : 10px;
   } 
 
+toolbar[collapsed="true"]
+  {
+    min-height            : 0px;
+  }
+
 toolbar[collapsed="true"] > toolbargrippy 
   {
     width                 : 30px;
@@ -46,12 +51,12 @@ toolbargrippy:hover
   
 .toolbar-standard 
   {
-	  color                 : white;
-	  background-color      : #003366;
-	  padding               : 0px;
-	  margin                : 0px;
-	  border                : none;
-	  min-height            : 46px;
+    color                 : white;
+    background-color      : #003366;
+    padding               : 0px;
+    margin                : 0px;
+    border                : none;
+    min-height            : 46px;
   }
 
 
