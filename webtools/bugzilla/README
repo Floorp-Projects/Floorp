@@ -13,3 +13,10 @@ docs/txt/Bugzilla-Guide.txt, or with a web browser at docs/html/index.html.
 * Release Notes for Bugzilla 2.12 are available at docs/rel_notes.txt.
 
 * If you wish to contribute to the documentation, please read docs/README.docs.
+
+* The Bugzilla web site is at "http://www.mozilla.org/projects/bugzilla/".
+This site will contain the latest Bugzilla information.
+
+* Bugs in the latest version of Bugzilla can be reported at
+bugzilla.mozilla.org, in Product "Webtools" and Component "Bugzilla".
+Please be detailed.
