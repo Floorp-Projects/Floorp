@@ -366,8 +366,6 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 #endif
                                   startline);
         if (script) {
-            JSErrorReporter older;
-
             ok = JS_ExecuteScript(cx, obj, script, &result);
             if (ok && result != JSVAL_VOID) {
                 str = JS_ValueToString(cx, result);
