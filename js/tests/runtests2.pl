@@ -38,8 +38,6 @@
 
 use Getopt::Mixed "nextOption";
 
-$SIG{INT} = 'int_handler';
-
 # command line option defaults
 local $opt_classpath = "";
 local $opt_engine_type = "";
@@ -54,9 +52,9 @@ local $opt_console_failures = 0;
 local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 
 # command line option definition
-local $options = "b=s bugurl>b c=s classpath>c d smdebug>d f=s file>f " .
-  "h help>h j=s javapath>j k confail>k l=s list>l o smopt>o p=s testpath>p " .
-  "r rhino>r s=s shellpath>s t trace>t u=s lxrurl>u x xpcshell>x";
+local $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
+  "h help>h i j=s javapath>j k confail>k l=s list>l p=s testpath>p " .
+  "s=s shellpath>s t trace>t u=s lxrurl>u";
 
 &parse_args;
 
@@ -71,6 +69,10 @@ local @test_list = &get_test_list;
 local $exec_time_string;
 local $start_time = time;
 
+if ($os_type ne "WIN") {
+    $SIG{INT} = 'int_handler';
+}
+
 &execute_tests (@test_list);
 
 local $exec_time = (time - $start_time);
@@ -84,6 +86,8 @@ if ($exec_mins > 0) {
 }
 
 &write_results;
+
+#End.
 
 sub execute_tests {
     local (@test_list) = @_;
@@ -153,7 +157,8 @@ sub execute_tests {
 
             if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
                 $1 =~ /(\n+)/;
-                $bug_line = "<a href='$opt_bug_url$1'>Bug Number $1</a>";
+                $bug_line = "<a href='$opt_bug_url$1' target='other_window'>" .
+                  "Bug Number $1</a>";
             }
 
         }
@@ -263,9 +268,9 @@ sub parse_args {
             &dd ("opt: setting classpath to '$value'.");
             $opt_classpath = $value;
             
-        } elsif ($option eq "d") {
-            &dd ("opt: using smdebug engine");
-            $opt_engine_type = "smdebug";
+        } elsif ($option eq "e") {            
+            &dd ("opt: setting engine to $value.");
+            $opt_engine_type = $value;
             
         } elsif ($option eq "f") {
             if (!$value) {
@@ -276,7 +281,7 @@ sub parse_args {
             
         } elsif ($option eq "h") {
             &usage;
-            
+
         } elsif ($option eq "j") {
             if (!($value =~ /[\/\\]$/)) {
                 $value .= "/";
@@ -292,20 +297,12 @@ sub parse_args {
             &dd ("opt: setting test list to '$value'.");
             $opt_test_list_file = $value;
             
-        } elsif ($option eq "o") {
-            &dd ("opt: using smopt engine.");
-            $opt_engine_type = "smopt";
-            
         } elsif ($option eq "p") {
             $opt_suite_path = $value;
             if (!($opt_suite_path =~ /[\/\\]$/)) {
                 $opt_suite_path .= "/";
             }
             &dd ("opt: setting suite path to '$opt_suite_path'.");
-            
-        } elsif ($option eq "r") {
-            &dd ("opt: using rhino engine.");
-            $opt_engine_type = "rhino";
             
         } elsif ($option eq "s") {
             $opt_shell_path = $value;
@@ -322,10 +319,6 @@ sub parse_args {
         } elsif ($option eq "u") {
             &dd ("opt: setting lxr url to '$value'.");
             $opt_lxr_url = $value;
-
-        } elsif ($option eq "x") {
-            &dd ("opt: using xpcshell.");
-            $opt_engine_type = "xpcshell";
             
         } else {
             &usage;
@@ -335,7 +328,7 @@ sub parse_args {
     Getopt::Mixed::cleanup();
     
     if (!$opt_engine_type) {
-        die "You must select a type of engine to test.\n";
+        die "You must select a shell to test in.\n";
     }
 
     if (!$opt_output_file) {
@@ -356,7 +349,9 @@ sub usage {
        "(-b|--bugurl)           Bugzilla URL.\n" .
        "                        (default is $opt_bug_url)\n" .
        "(-c|--classpath)        Classpath (Rhino only.)\n" .
-       "(-d|--smdebug)          Test SpiderMonkey Debug engine.\n" .
+       "(-e|--engine) <type>    Specify the type of engine to test.\n" .
+       "                        <type> is one of (smopt|smdebug|lcopt|lcdebug|" .
+       "xpcshell|rhino).\n" .
        "(-f|--file) <file>      Redirect output to file named <file>.\n" .
        "                        (default is " .
        "results-<engine-type>-<date-stamp>.html)\n" .
@@ -364,15 +359,11 @@ sub usage {
        "(-j|--javapath)         Location of java executable.\n" .
        "(-k|--confail)          Log failures to console (also.)\n" . 
        "(-l|--list) <file>      List of tests to execute.\n" . 
-       "(-o|--smopt)            Test SpiderMonkey Optimized engine.\n" .
        "(-p|--testpath) <path>  Root of the test suite. (default is ./)\n" .
-       "(-r|--rhino)            Test Rhino engine.\n" .
        "(-s|--shellpath) <path> Location of JavaScript shell.\n" .
        "(-t|--trace)            Trace script execution.\n" .
        "(-u|--lxrurl) <url>     Complete URL to tests subdirectory on lxr.\n" .
-       "                        (default is $opt_lxr_url)\n\n");
-       "(-x|--xpcshell)         Test xpcshell.\n" .
-    
+       "                        (default is $opt_lxr_url)\n\n");    
     exit (1);
     
 }
@@ -390,9 +381,14 @@ sub get_engine_command {
     } elsif ($opt_engine_type eq "xpcshell") {
         &dd ("getting xpcshell engine command.");
         $retval = &get_xpc_engine_command;	
-    } else {
+    } elsif ($opt_engine_type =~ /^lc(opt|debug)$/) {
+        &dd ("getting liveconnect engine command.");
+        $retval = &get_lc_engine_command;	
+    } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;	
+    } else {
+        die ("Unknown engine type selected, '$opt_engine_type'.\n");
     }
     
     &dd ("got '$retval'");
@@ -507,6 +503,57 @@ sub get_sm_engine_command {
         
     } 
     
+    if (!(-x $retval)) {
+        die ("$retval is not a valid executable on this system.\n");
+    }
+    
+    return $retval;
+    
+}
+
+#
+# get the shell command used to run the liveconnect shell
+#
+sub get_lc_engine_command {
+    local $retval;    
+        
+    if ($opt_shell_path) {
+        $retval = $opt_shell_path;
+        if (!($retval =~ /[\/\\]$/)) {
+            $retval .= "/";
+        }
+    } else {
+        $retval = $opt_suite_path . "../src/liveconnect/";
+        opendir (SRC_DIR_FILES, $retval);
+        local @src_dir_files = readdir(SRC_DIR_FILES);
+        closedir (SRC_DIR_FILES);
+        
+        local $dir, $object_dir;
+        local $pattern = ($opt_engine_type eq "lcdebug") ?
+          'DBG.OBJ' : 'OPT.OBJ';
+        
+        foreach $dir (@src_dir_files) {
+            if ($dir =~ $pattern) {
+                $object_dir = $dir;
+                break;
+            }
+        }
+        
+        if (!$object_dir) {
+            die ("Could not locate an object directory in $retval " .
+                 "matching the pattern *$pattern.  Have you built the " .
+                 "engine?\n");
+            }
+        
+        $retval .= $object_dir . "/";
+    }
+    
+    if ($os_type eq "WIN") {
+        $retval .= "lcshell.exe";
+    } else {
+        $retval .= "lcshell";
+    }
+
     if (!(-x $retval)) {
         die ("$retval is not a valid executable on this system.\n");
     }

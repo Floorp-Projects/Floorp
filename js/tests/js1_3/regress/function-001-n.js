@@ -43,7 +43,7 @@
     var SECTION = "function-001.js";
     var VERSION = "JS1_1";
     var TITLE   = "functions not separated by semicolons are errors in version 120 and higher";
-    var BUGNUMBER="99232";
+    var BUGNUMBER="10278";
 
     startTest();
     writeHeaderToLog( SECTION + " "+ TITLE);
