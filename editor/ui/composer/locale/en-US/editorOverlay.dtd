@@ -70,21 +70,7 @@
 <!-- Edit menu items -->
 <!ENTITY editMenu.label "Edit">
 <!ENTITY editmenu.accesskey "e">
-<!ENTITY undoCmd.label "Undo">
-<!ENTITY editundo.accesskey "u">
-<!ENTITY editundo.keybinding "z">
-<!ENTITY redoCmd.label "Redo">
-<!ENTITY editredo.accesskey "r">
-<!ENTITY editredo.keybinding "y">
-<!ENTITY cutCmd.label "Cut">
-<!ENTITY editcut.accesskey "t">
-<!ENTITY editcut.keybinding "x">
-<!ENTITY copyCmd.label "Copy">
-<!ENTITY editcopy.accesskey "c">
-<!ENTITY editcopy.keybinding "c">
-<!ENTITY pasteCmd.label "Paste">
-<!ENTITY editpaste.accesskey "p">
-<!ENTITY editpaste.keybinding "v">
+
 <!-- For a "Paste" submenu when more than 1 
      clipboard formats are available -->
 <!ENTITY pasteTextCmd.label "Text">
@@ -97,13 +83,9 @@
 <!ENTITY editpastehtml.accesskey "h">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
+<!ENTITY editpastequotation.keybinding "v">
 <!ENTITY editStripQuotesCmd.label "Strip Quotes">
 <!ENTITY editRewrapCmd.label "Rewrap">
-<!ENTITY clearCmd.label "Clear">
-<!ENTITY editclear.accesskey "l">
-<!ENTITY selectAllCmd.label "Select All">
-<!ENTITY editselectall.accesskey "a">
-<!ENTITY editselectall.keybinding "a">
 <!ENTITY findCmd.label "Find...">
 <!ENTITY editfind.accesskey "f">
 <!ENTITY editfind.keybinding "f">
@@ -248,9 +230,7 @@
 <!ENTITY insertMenu.label "Insert">
 <!ENTITY insertmenu.accesskey "i">
 <!ENTITY insertLinkCmd.label "Link...">
-<!ENTITY createLinkCmd.label "Create Link...">
 <!ENTITY insertlink.accesskey "l">
-<!ENTITY link.keybinding "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
 <!ENTITY insertanchor.accesskey "a">
 <!ENTITY insertCharsCmd.label "Characters and Symbols...">
@@ -264,6 +244,26 @@
 <!ENTITY inserttable.accesskey "t">
 <!ENTITY insertHTMLCmd.label "HTML...">
 <!ENTITY insertHTMLCmd.accesskey "h">
+
+<!-- Used just in context popup. -->
+<!ENTITY createLinkCmd.label "Create Link...">
+<!ENTITY createlink.accesskey "k">
+<!-- (Toplevel Edit menu uses utilityOverlay) -->
+<!ENTITY undoCmd.label "Undo">
+<!ENTITY undo.accesskey "u">
+<!ENTITY redoCmd.label "Redo">
+<!ENTITY redo.accesskey "r">
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY cut.accesskey "t">
+<!ENTITY copyCmd.label "Copy">
+<!ENTITY copy.accesskey "c">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY paste.accesskey "p">
+<!ENTITY clearCmd.label "Clear">
+<!ENTITY clear.accesskey "l">
+<!ENTITY selectAllCmd.label "Select All">
+<!ENTITY selectall.accesskey "a">
+
 
 <!-- Format Menu -->
 <!ENTITY formatMenu.label "Format">

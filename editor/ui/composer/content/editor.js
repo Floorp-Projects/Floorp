@@ -1124,18 +1124,11 @@ function EditorToggleParagraphMarks()
 
 function EditorInitEditMenu()
 {
-  var DelStr = GetString(gIsMac ? "Clear" : "Delete");
-
-  // Yuck. We should be doing this at build time, using
-  // platform-specific overlays or dtd files.
-  
-  // Change menu text to "Clear" for Mac 
-  // TODO: Should this be in globalOverlay.j?
-  document.getElementById("menu_delete").setAttribute("value",DelStr);
-  // TODO: WHAT IS THE Mac STRING?
+  // Fake the keybinding hint for the "Clear" item
+  // (Don't bother for Mac?)
   if (!gIsMac)
-    document.getElementById("menu_delete").setAttribute("acceltext", GetString("Del"));
-    
+    document.getElementById("menu_clear").setAttribute("acceltext", GetString("Del"));
+
   //TODO: We should modify the Paste menuitem to build a submenu 
   //      with multiple paste format types
 }

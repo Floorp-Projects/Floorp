@@ -41,10 +41,10 @@
 
   <!--keyset id="platformOverlayKeyset" /--> <!-- Don't do that, only one keyset per window! Anyway, this keyset is not defined! -->
 
-  <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
-  <key id="findkb"          xulkey="true" key="&editfind.keybinding;"          shift="false" observes="cmd_find" />
-  <key id="findnextkb"      xulkey="true" key="&editfindnext.keybinding;"      shift="false" observes="cmd_findNext" />
-  <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" shift="false" observes="cmd_spelling" />
+  <key id="pastequotationkb" xulkey="true" key="&editpastequotation.keybinding;" shift="true"  observes="cmd_pasteQuote" />
+  <key id="findkb"           xulkey="true" key="&editfind.keybinding;"           shift="false" observes="cmd_find" />
+  <key id="findnextkb"       xulkey="true" key="&editfindnext.keybinding;"       shift="false" observes="cmd_findNext" />
+  <key id="checkspellingkb"  xulkey="true" key="&editcheckspelling.keybinding;"  shift="false" observes="cmd_spelling" />
 
   <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      shift="false" observes="cmd_bold"/>
   <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
@@ -161,13 +161,13 @@
 					events="create"
 					oncommandupdate="goUpdateComposerMenuItems(this)"
 	>
-    <command id="cmd_undo" value="&undoCmd.label;"/>
-    <command id="cmd_redo" value="&redoCmd.label;"/>
-    <command id="cmd_cut" value="&cutCmd.label;"/>
-    <command id="cmd_copy" value="&copyCmd.label;"/>
-    <command id="cmd_paste" value="&pasteCmd.label;"/>  
-    <command id="cmd_delete" value="&clearCmd.label;"/>
-    <command id="cmd_selectAll" value="&selectAllCmd.label;"/>
+    <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_paste"/>  
+    <command id="cmd_delete"/>
+    <command id="cmd_selectAll"/>
 
     <command id="cmd_preferences"   oncommand="goDoCommand('cmd_preferences')"/>
 
@@ -325,13 +325,16 @@
 
   <menu id="editMenu" value="&editMenu.label;" accesskey="&editmenu.accesskey;">
     <menupopup id="edEditMenuPopup" oncreate="EditorInitEditMenu()">
-      <!-- from globalOverlay.xul -->
+      <!-- from utilityOverlay.xul -->
       <menuitem id="menu_undo"/>
       <menuitem id="menu_redo"/>
       <menuseparator id="edEditMenuSep1" />
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
+<!-- use this after using "clear" for Windows is approved
+      <menuitem id="menu_clear"/>
+-->
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
