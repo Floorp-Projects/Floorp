@@ -30,14 +30,17 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="mailnews:filterlist"
+  buttons="accept,cancel,help"
   onload="onLoad();"
   ondialogaccept="return onOk();"
+  ondialoghelp="return doHelpButton();"
   width="440"
   height="320"
   persist="width height screenX screenY"
   title="&window.title;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/FilterListDialog.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
 
   <keyset id="dialogKeys"/>

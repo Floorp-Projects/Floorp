@@ -505,3 +505,8 @@ function onAccept()
   window.opener.gRefresh = true;
   return true;
 }
+
+function doHelpButton()
+{
+  openHelp("mail-ldap-properties");
+}

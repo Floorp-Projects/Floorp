@@ -525,3 +525,8 @@ function SetBusyCursor(window, enable)
             window.setCursor("auto");
     }
 }
+
+function doHelpButton()
+{
+  openHelp("send-filter");
+}

@@ -26,10 +26,13 @@ Rights Reserved.
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         title="&window.title;"
+        buttons="accept,cancel,help"
         onload="onInitEditDirectories();"
-        ondialogaccept="return onAccept();">
+        ondialogaccept="return onAccept();"
+        ondialoghelp="return doHelpButton();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
     <description>&directoriesText.label;</description>
     <hbox flex="1">

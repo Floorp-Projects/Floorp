@@ -445,5 +445,5 @@ function ViewPageSource(messages)
 
 function doHelpButton() 
 {
-    openHelp("offline_sync");
+    openHelp("mail-offline-items");
 }
