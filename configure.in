@@ -3413,10 +3413,7 @@ MOZ_PSM=
 
 MOZ_ARG_ENABLE_BOOL(crypto,
 [  --enable-crypto         Enable crypto (Personal Security Manager)],
-  [if test -z "$MOZ_NSS_AUTOCONF"; then
-    AC_MSG_ERROR(["To use NSS autoconf you must set MOZ_NSS_AUTOCONF=1 in your environment."])
-   fi
-  MOZ_PSM=1] )
+  MOZ_PSM=1 )
 
 dnl ========================================================
 dnl =
@@ -4587,7 +4584,7 @@ if test "$MOZ_LDAP_XPCOM"; then
   AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
 fi
 
-if test "$MOZ_PSM"; then
+if test "$MOZ_PSM" && test -n "$MOZ_NSS_AUTOCONF"; then
     if test ! -d security; then
         rm -rf security; mkdir security
     fi
