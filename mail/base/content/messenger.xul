@@ -30,7 +30,6 @@ Rights Reserved.
 <!-- <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?> -->
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -57,14 +56,12 @@ Rights Reserved.
         persist="width height screenX screenY sizemode"
         windowtype="mail:3pane">
 
-<stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
-  <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
-  <stringbundle id="bundle_viewZoom"/>
-  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-</stringbundleset>
+<stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+<stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+<stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
+<stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
+<stringbundle id="bundle_viewZoom"/>
+<stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
@@ -90,6 +87,16 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
+<script type="application/x-javascript">
+  // Global variable that holds the nsContextMenu instance.
+  var gContextMenu = null;
+  
+  // Global variable that caches the default search engine info
+  var gDefaultEngine = null;
+</script>
+<script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
 <!-- Performance optimization...we include utilityOverlay.xul which defines some command sets
      which are updated based on events like focus and select. We have our own custom events
@@ -98,7 +105,7 @@ Rights Reserved.
      are updated on with events of our own controlling. 
  -->
 
-<commandset id="mailCommands">
+<commandset>
   <commandset id="mailFileMenuItems"
               commandupdater="true"
               events="create-menu-file"
