@@ -13,9 +13,15 @@ Release: 1
 Copyright: MPL
 Group: Development/Tools
 Source: cvs://:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot:mozilla/webtools/tinderbox2/tinderbox2.tar.gz
-Prereq: apache
 Prefix: %{_prefix}
 Buildroot: /var/tmp/%{name}-root
+Requires: perl, apache, tinderbox2-local-conf
+
+%package buildclient
+Summary: tinderbox build client software
+Group: Development/Tools
+Requires: perl, tinderbox2-local-conf
+
 
 %description
 
@@ -30,6 +36,10 @@ closed and when the state of the tree last changed, what trouble
 tickets have been closed, notices and messages posted by the
 developers or project manager.
 
+%description buildclient
+
+This package contains the executables needed on the buildmachine and
+no exectuables which are intended for the web machine.
 
 %prep
 %setup -q -n tinderbox2
@@ -66,11 +76,19 @@ rm -rf $RPM_BUILD_ROOT/%{_prefix}/local_conf
 mkdir -p $RPM_BUILD_ROOT/%{_prefix}/local_conf
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+#rm -rf $RPM_BUILD_ROOT
+
+
+%files buildclient
+%defattr(-,build,build)
+%{_prefix}/clientbin
 
 
 %files
 %defattr(-,apache,apache)
-%{_prefix}
+%{_prefix}/bin
+%{_prefix}/lib
+%{_prefix}/default_conf
+%{_prefix}/local_conf
 %{_cgi_prefix}/%{name}
 
