@@ -277,8 +277,8 @@ extern void vr_findGlobalRegName()
             if (err == noErr && thePath)
             {
                 // we have no idea if this moves memory, so better lock the handle
-                HLock(thePath);
             #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
+                HLock(thePath);
                 globalRegName = XP_ALLOC(pathLen + 1);
                 XP_STRNCPY(globalRegName, *thePath, pathLen);
                 globalRegName[pathLen] = '\0';
@@ -286,6 +286,7 @@ extern void vr_findGlobalRegName()
                 /* Since we're now using NSPR, this HAS to be a unix path! */
                 const char* src;
                 char* dst;
+                HLock(thePath);
                 globalRegName = (char*)XP_ALLOC(pathLen + 2);
                 src = *(char**)thePath;
                 dst = globalRegName;
@@ -335,8 +336,8 @@ extern char* vr_findVerRegName()
             if (err == noErr && thePath)
             {
                // we have no idea if this moves memory, so better lock the handle
-                HLock(thePath);
              #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
+                HLock(thePath);
                 verRegName = XP_ALLOC(pathLen + 1);
                 XP_STRNCPY(verRegName, *thePath, pathLen);
                 verRegName[pathLen] = '\0';
@@ -344,6 +345,7 @@ extern char* vr_findVerRegName()
                 /* Since we're now using NSPR, this HAS to be a unix path! */
                 const char* src;
                 char* dst;
+                HLock(thePath);
                 verRegName = (char*)XP_ALLOC(pathLen + 2);
                 src = *(char**)thePath;
                 dst = verRegName;
