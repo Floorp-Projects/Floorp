@@ -216,7 +216,7 @@ MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
             if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
-               return FALSE;
+//               return FALSE;
             }
          } 
       }

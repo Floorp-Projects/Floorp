@@ -35,6 +35,7 @@
  * 06/14/2000       IBM Corp.      Removed dead menu code to fix build break.
  * 06/15/2000       IBM Corp.      Created NS2PM for rectangles.
  * 06/21/2000       IBM Corp.      Corrected menu parentage; added CaptureMouse.
+ * 06/22/2000       IBM Corp.      Corrected menu ownership
  *
  */
 
@@ -200,13 +201,6 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
 {
    mWindowState = nsWindowState_eInCreate;
 
-   if( hwndP != HWND_DESKTOP && aInitData &&
-       ( aInitData->mWindowType == eWindowType_dialog ||
-         aInitData->mWindowType == eWindowType_popup  ||
-         aInitData->mWindowType == eWindowType_toplevel) ) {
-      hwndP = HWND_DESKTOP;
-   }
-
    // Must ensure toolkit before attempting to thread-switch!
    if( !mToolkit)
    {
@@ -287,6 +281,17 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          style |= WS_CLIPSIBLINGS;
       else
          style &= ~WS_CLIPSIBLINGS;
+   }
+
+   // For pop-up menus, the parent is the desktop, but use the "parent" as owner
+   if( hwndP != HWND_DESKTOP && aInitData &&
+       aInitData->mWindowType == eWindowType_popup)
+   {
+      if( !hwndOwner)
+      {
+         hwndOwner = hwndP;
+      }
+      hwndP = HWND_DESKTOP;
    }
 
    // Create a window: create hidden & then size to avoid swp_noadjust problems
@@ -507,7 +512,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
             if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
-               return FALSE;
+//               return FALSE;
             }
          } 
       }
