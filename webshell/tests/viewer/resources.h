@@ -56,6 +56,7 @@
 #define VIEWER_THREE_COLUMN     40035
 
 #define JS_CONSOLE              40100
+#define EDITOR_MODE             40120
 
 #define VIEWER_EDIT_CUT         40201
 #define VIEWER_EDIT_COPY        40202

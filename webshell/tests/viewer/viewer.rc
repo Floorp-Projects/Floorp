@@ -80,6 +80,7 @@ VIEWER MENU DISCARDABLE
   POPUP "&Tools"
   {
     MENUITEM "&JavaScript Console", JS_CONSOLE
+    MENUITEM "&Editor Mode", EDITOR_MODE
   }
 }
 
