@@ -14,7 +14,7 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -39,9 +39,11 @@
 #include "nsUCSupport.h"
 #include "nsUTF8ToUnicode.h"
 
-NS_IMETHODIMP NS_NewUTF8ToUnicode(nsISupports* aOuter, 
-                                            const nsIID& aIID,
-                                            void** aResult)
+#define UNICODE_BYTE_ORDER_MARK    0xFEFF
+
+NS_IMETHODIMP NS_NewUTF8ToUnicode(nsISupports* aOuter,
+                                  const nsIID& aIID,
+                                  void** aResult)
 {
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
@@ -66,18 +68,17 @@ NS_IMETHODIMP NS_NewUTF8ToUnicode(nsISupports* aOuter,
 //----------------------------------------------------------------------
 // Class nsUTF8ToUnicode [implementation]
 
-nsUTF8ToUnicode::nsUTF8ToUnicode() 
+nsUTF8ToUnicode::nsUTF8ToUnicode()
 : nsBasicDecoderSupport()
-
 {
-	Reset();
+  Reset();
 }
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 
-NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc, 
-                                            PRInt32 aSrcLength, 
+NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
+                                            PRInt32 aSrcLength,
                                             PRInt32 * aDestLength)
 {
   *aDestLength = aSrcLength;
@@ -88,139 +89,158 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
 //----------------------------------------------------------------------
 // Subclassing of nsBasicDecoderSupport class [implementation]
 
- NS_IMETHODIMP nsUTF8ToUnicode::Reset()
+NS_IMETHODIMP nsUTF8ToUnicode::Reset()
 {
 
-	mState = 0;			// cached expected number of bytes per UTF8 character sequence
-	mUcs4  = 0;			// cached Unicode character
-  mBytes = 1;
-	return NS_OK;
+  mState = 0;     // cached expected number of octets after the current octet
+                  // until the beginning of the next UTF8 character sequence
+  mUcs4  = 0;     // cached Unicode character
+  mBytes = 1;     // cached expected number of octets in the current sequence
+  return NS_OK;
 
 }
 
 //----------------------------------------------------------------------
 // Subclassing of nsBasicDecoderSupport class [implementation]
 
- 
- NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc, 
-                                                    PRInt32 * aSrcLength, 
-                                                    PRUnichar * aDest, 
-                                                    PRInt32 * aDestLength)
- {
-   
-   PRUint32 aSrcLen   = (PRUint32) (*aSrcLength);
-   PRUint32 aDestLen = (PRUint32) (*aDestLength);
-   
-   const char *in, *inend;
-   inend = aSrc + aSrcLen;
-   
-   PRUnichar *out, *outend;
-   outend = aDest + aDestLen;
 
-   nsresult res;	// conversion result
+NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
+                                       PRInt32 * aSrcLength,
+                                       PRUnichar * aDest,
+                                       PRInt32 * aDestLength)
+{
+  PRUint32 aSrcLen   = (PRUint32) (*aSrcLength);
+  PRUint32 aDestLen = (PRUint32) (*aDestLength);
 
-   for(in=aSrc,out=aDest,res=NS_OK;((in < inend) && (out < outend)); in++)
-   {
-      if(0 == mState) {
-         if( 0 == (0x80 & (*in))) {
-             // ASCII
-             *out++ = (PRUnichar)*in;
-        mBytes =1;
-         } else if( 0xC0 == (0xE0 & (*in))) {
-             // 2 bytes UTF8
-             mUcs4 = (PRUint32)(*in);
-             mUcs4 = (mUcs4 << 6) & 0x000007C0L;
-             mState=1;
-        mBytes =2;
-         } else if( 0xE0 == (0xF0 & (*in))) {
-			 // 3 bytes UTF8
-             mUcs4 = (PRUint32)(*in);
-             mUcs4 = (mUcs4 << 12) & 0x0000F000L;
-             mState=2;
-        mBytes =3;
-         } else if( 0xF0 == (0xF8 & (*in))) {
-			 // 4 bytes UTF8
-             mUcs4 = (PRUint32)(*in);
-             mUcs4 = (mUcs4 << 18) & 0x001F0000L;
-             mState=3;
-        mBytes =4;
-         } else if( 0xF8 == (0xFC & (*in))) {
-			 // 5 bytes UTF8
-             mUcs4 = (PRUint32)(*in);
-             mUcs4 = (mUcs4 << 24) & 0x03000000L;
-             mState=4;
-        mBytes =5;
-         } else if( 0xFC == (0xFE & (*in))) {
-			 // 6 bytes UTF8
-             mUcs4 = (PRUint32)(*in);
-             mUcs4 = (mUcs4 << 30) & 0x40000000L;
-             mState=5;
-        mBytes =6;
-         } else {
-			 //NS_ASSERTION(0, "The input string is not in utf8");
-	  		 //unexpected octet, put in a replacement char, 
-			 //flush and refill the buffer, reset state
-			 res = NS_ERROR_UNEXPECTED;
-			 break;
-         }
-	 } else {
-      if(0x80 == (0xC0 & (*in))) {
-             PRUint32 tmp = (*in);
-        PRUint32 shift = (mState-1) * 6;
-             tmp = (tmp << shift ) & ( 0x0000003FL << shift);
-             mUcs4 |= tmp;
-        if(0 == --mState) {
-                 if(mUcs4 >= 0x00010000) {
-                    if(mUcs4 >= 0x00110000) {
-                      *out++ = 0xFFFD;
-                    } else {
-                      mUcs4 -= 0x00010000;
-                      *out++ = 0xD800 | (0x000003FF & (mUcs4 >> 10));
-                      *out++ = 0xDC00 | (0x000003FF & mUcs4);
-                    }
-                 } else {
-            // from Unicode 3.1, non-shortest form is illegal 
-            if(((2==mBytes) && (mUcs4 < 0x0080)) ||
-               ((3==mBytes) && (mUcs4 < 0x0800)) ||
-               ((4==mBytes) && (mUcs4 < 0x1000)) ||
-                (5==mBytes) ||
-                (6==mBytes)) 
-            {
-              res = NS_ERROR_UNEXPECTED;
-              break;
-            } 
+  const char *in, *inend;
+  inend = aSrc + aSrcLen;
 
-                    if( 0xfeff != mUcs4 ) // ignore BOM
-            {  
-                      *out++ = mUcs4;
-                 }
+  PRUnichar *out, *outend;
+  outend = aDest + aDestLen;
+
+  nsresult res = NS_OK; // conversion result
+
+  for (in = aSrc, out = aDest; ((in < inend) && (out < outend)); ++in) {
+    if (0 == mState) {
+      // When mState is zero we expect either a US-ASCII character or a
+      // multi-octet sequence.
+      if (0 == (0x80 & (*in))) {
+        // US-ASCII, pass straight through.
+        *out++ = (PRUnichar)*in;
+        mBytes = 1;
+      } else if (0xC0 == (0xE0 & (*in))) {
+        // First octet of 2 octet sequence
+        mUcs4 = (PRUint32)(*in);
+        mUcs4 = (mUcs4 & 0x1F) << 6;
+        mState = 1;
+        mBytes = 2;
+      } else if (0xE0 == (0xF0 & (*in))) {
+        // First octet of 3 octet sequence
+        mUcs4 = (PRUint32)(*in);
+        mUcs4 = (mUcs4 & 0x0F) << 12;
+        mState = 2;
+        mBytes = 3;
+      } else if (0xF0 == (0xF8 & (*in))) {
+        // First octet of 4 octet sequence
+        mUcs4 = (PRUint32)(*in);
+        mUcs4 = (mUcs4 & 0x07) << 18;
+        mState = 3;
+        mBytes = 4;
+      } else if (0xF8 == (0xFC & (*in))) {
+        /* First octet of 5 octet sequence.
+         *
+         * This is illegal because the encoded codepoint must be either
+         * (a) not the shortest form or
+         * (b) outside the Unicode range of 0-0x10FFFF.
+         * Rather than trying to resynchronize, we will carry on until the end
+         * of the sequence and let the later error handling code catch it.
+         */
+        mUcs4 = (PRUint32)(*in);
+        mUcs4 = (mUcs4 & 0x03) << 24;
+        mState = 4;
+        mBytes = 5;
+      } else if (0xFC == (0xFE & (*in))) {
+        // First octet of 6 octet sequence, see comments for 5 octet sequence.
+        mUcs4 = (PRUint32)(*in);
+        mUcs4 = (mUcs4 & 1) << 30;
+        mState = 5;
+        mBytes = 6;
+      } else {
+        /* Current octet is neither in the US-ASCII range nor a legal first
+         * octet of a multi-octet sequence.
+         *
+         * Return an error condition. Caller is responsible for flushing and
+         * refilling the buffer and resetting state.
+         */
+        res = NS_ERROR_UNEXPECTED;
+        break;
+      }
+    } else {
+      // When mState is non-zero, we expect a continuation of the multi-octet
+      // sequence
+      if (0x80 == (0xC0 & (*in))) {
+        // Legal continuation.
+        PRUint32 shift = (mState - 1) * 6;
+        PRUint32 tmp = *in;
+        tmp = (tmp & 0x0000003FL) << shift;
+        mUcs4 |= tmp;
+
+        if (0 == --mState) {
+          /* End of the multi-octet sequence. mUcs4 now contains the final
+           * Unicode codepoint to be output
+           *
+           * Check for illegal sequences and codepoints.
+           */
+
+          // From Unicode 3.1, non-shortest form is illegal
+          if (((2 == mBytes) && (mUcs4 < 0x0080)) ||
+              ((3 == mBytes) && (mUcs4 < 0x0800)) ||
+              ((4 == mBytes) && (mUcs4 < 0x10000)) ||
+              (4 < mBytes) ||
+              // From Unicode 3.2, surrogate characters are illegal
+              ((mUcs4 & 0xFFFFF800) == 0xD800) ||
+              // Codepoints outside the Unicode range are illegal
+              (mUcs4 > 0x10FFFF)) {
+            res = NS_ERROR_UNEXPECTED;
+            break;
           }
-				 //initialize UTF8 cache
-				 Reset();
-             }
-         } else {
-			 //NS_ASSERTION(0, "The input string is not in utf8");
-	  		 //unexpected octet, put in a replacement char, 
-			 //flush and refill the buffer, reset state
-                         in--;
-			 res = NS_ERROR_UNEXPECTED;
-			 break;
-         }
-     }
-   }
+          if (mUcs4 > 0xFFFF) {
+            // mUcs4 is in the range 0x10000 - 0x10FFFF. Output a UTF-16 pair
+            mUcs4 -= 0x00010000;
+            *out++ = 0xD800 | (0x000003FF & (mUcs4 >> 10));
+            *out++ = 0xDC00 | (0x000003FF & mUcs4);
+          } else if (UNICODE_BYTE_ORDER_MARK != mUcs4) {
+            // BOM is legal but we don't want to output it
+            *out++ = mUcs4;
+          }
+          //initialize UTF8 cache
+          Reset();
+        }
+      } else {
+        /* ((0xC0 & (*in) != 0x80) && (mState != 0))
+         * 
+         * Incomplete multi-octet sequence. Unconsume this
+         * octet and return an error condition. Caller is responsible
+         * for flushing and refilling the buffer and resetting state.
+         */
+        in--;
+        res = NS_ERROR_UNEXPECTED;
+        break;
+      }
+    }
+  }
 
-   //output not finished, output buffer too short
-   if((NS_OK == res) && (in < inend) && (out >= outend)) 
-       res = NS_OK_UDEC_MOREOUTPUT;
+  // output not finished, output buffer too short
+  if ((NS_OK == res) && (in < inend) && (out >= outend))
+    res = NS_OK_UDEC_MOREOUTPUT;
 
-   //last USC4 is incomplete, make sure the caller 
-   //returns with properly aligned continuation of the buffer
-   if ((NS_OK == res) && (mState != 0))
-       res = NS_OK_UDEC_MOREINPUT;
+  // last UCS4 is incomplete, make sure the caller
+  // returns with properly aligned continuation of the buffer
+  if ((NS_OK == res) && (mState != 0))
+    res = NS_OK_UDEC_MOREINPUT;
 
-   *aSrcLength = in - aSrc;
-   *aDestLength  = out - aDest;
-   
-   return(res);
+  *aSrcLength = in - aSrc;
+  *aDestLength = out - aDest;
 
- }
+  return(res);
+}
