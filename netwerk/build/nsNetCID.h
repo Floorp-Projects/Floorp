@@ -185,6 +185,18 @@
     {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
 }
 
+#define NS_DOWNLOADER_CLASSNAME \
+    "File Downloader"
+#define NS_DOWNLOADER_CONTRACTID \
+    "@mozilla.org/network/downloader;1"
+#define NS_DOWNLOADER_CID \
+{ /* 510a86bb-6019-4ed1-bb4f-965cffd23ece */         \
+    0x510a86bb,                                      \
+    0x6019,                                          \
+    0x4ed1,                                          \
+    {0xbb, 0x4f, 0x96, 0x5c, 0xff, 0xd2, 0x3e, 0xce} \
+}
+
 
 /******************************************************************************
  * netwerk/cache/ classes

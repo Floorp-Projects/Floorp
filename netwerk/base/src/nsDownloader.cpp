@@ -26,16 +26,12 @@
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsIFileChannel.h"
+#include "nsICachingChannel.h"
 #include "nsProxiedService.h"
 #include "nsIFile.h"
 #include "nsXPIDLString.h"
 
-#include "nsCacheManager.h"
-#include "nsICachedNetData.h"
-#include "nsIStreamAsFile.h"
-
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_CID(kNetworkCacheManagerCID, NS_CACHE_MANAGER_CID);
 
 NS_IMETHODIMP
 nsDownloader::Init(nsIURI* aURL,
@@ -52,7 +48,6 @@ nsDownloader::Init(nsIURI* aURL,
   nsCOMPtr<nsIFile> localFile;
   nsCOMPtr<nsIChannel> channel;
 
-  aLoadAttributes |= nsIChannel::CACHE_AS_FILE;
   rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, aGroup, aNotificationCallbacks,
                   aLoadAttributes);
   if (NS_SUCCEEDED(rv) && channel)
@@ -106,7 +101,12 @@ NS_IMPL_ISUPPORTS3(nsDownloader, nsIDownloader,
 NS_IMETHODIMP 
 nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsICachingChannel> caching = do_QueryInterface(request, &rv);
+  if (caching)
+    rv = caching->SetCacheAsFile(PR_TRUE);
+  // Returning failure from here will cancel the load
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -116,34 +116,9 @@ nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   nsCOMPtr<nsIFile> file;
   if (NS_SUCCEEDED(aStatus))
   {
-    nsresult rv;
-    nsCOMPtr<nsIURI> uri;
-    
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = channel->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString spec;
-    rv = uri->GetSpec(getter_Copies(spec));
-    if (NS_FAILED(rv)) return rv;
-  
-    NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, kNetworkCacheManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsICachedNetData> cachedData;
-    rv = cacheMgr->GetCachedNetData(spec, nsnull, 0, nsINetDataCacheManager::CACHE_AS_FILE,
-                                      getter_AddRefs(cachedData));
-    
-
-    if (NS_SUCCEEDED(rv))
-    {
-      nsCOMPtr<nsIStreamAsFile> streamAsFile;
-      streamAsFile = do_QueryInterface(cachedData, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      rv = streamAsFile->GetFile(getter_AddRefs(file));
-      if (NS_FAILED(rv)) return rv;
-    }
+    nsCOMPtr<nsICachingChannel> caching = do_QueryInterface(request, &aStatus);
+    if (caching)
+      aStatus = caching->GetCacheFile(getter_AddRefs(file));
   }
 
   return mObserver->OnDownloadComplete(this, mContext, aStatus, file);

@@ -56,6 +56,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#if defined(OLD_CACHE)
 #include "nsINetDataCache.h"
 #include "nsINetDataCacheManager.h"
 #include "nsMemCacheCID.h"
@@ -69,6 +70,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMemCache, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetDiskCache, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCacheManager, Init)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -569,9 +571,9 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_STREAMLOADER_CID,
       "@mozilla.org/network/stream-loader;1",
       nsStreamLoader::Create },
-    { "Stream-As-File Downloader", 
+    { NS_DOWNLOADER_CLASSNAME,
       NS_DOWNLOADER_CID,
-      "@mozilla.org/network/downloader;1",
+      NS_DOWNLOADER_CONTRACTID,
       nsDownloader::Create },
     { NS_REQUESTOBSERVERPROXY_CLASSNAME,
       NS_REQUESTOBSERVERPROXY_CID,
@@ -750,12 +752,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
 	  NS_ISTREAMCONVERTER_KEY, 
 	  CreateNewTXTToHTMLConvFactory
     },
-
+#if defined(OLD_CACHE)
     // from netwerk/cache:
     { "Memory Cache", NS_MEM_CACHE_FACTORY_CID, NS_NETWORK_MEMORY_CACHE_CONTRACTID, nsMemCacheConstructor },
     { "File Cache",   NS_NETDISKCACHE_CID,      NS_NETWORK_FILE_CACHE_CONTRACTID,   nsNetDiskCacheConstructor },
     { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_CONTRACTID,nsCacheManagerConstructor },
-
+#endif
     // from netwerk/mime:
     { "The MIME mapping service", 
       NS_MIMESERVICE_CID,

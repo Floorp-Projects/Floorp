@@ -27,11 +27,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
-        public \
-        memcache \
-        filecache \
-        mgr \
+	public \
 	$(NULL)
+
+ifdef OLD_CACHE
+DIRS	+= \
+	memcache \
+	filecache \
+	mgr \
+	$(NULL)
+endif
 
 ifdef MOZ_NEW_CACHE
 DIRS    += src

@@ -47,7 +47,6 @@ public:
 protected:
   nsCOMPtr<nsIDownloadObserver>     mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
-///  nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
 #endif // nsDownloader_h__

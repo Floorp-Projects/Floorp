@@ -40,9 +40,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libneckosocket_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkconv_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkcnvts_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkcachemgr_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkfilecache_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkmemcache_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkmime_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkhttp_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkfile_s.$(LIB_SUFFIX) \
@@ -52,6 +49,14 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkabout_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkkwd_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifdef OLD_CACHE
+SHARED_LIBRARY_LIBS += \
+		$(DIST)/lib/libnkcachemgr_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkfilecache_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkmemcache_s.$(LIB_SUFFIX) \
+		$(NULL)
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
@@ -67,9 +72,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../socket/base \
 		-I$(srcdir)/../streamconv/src \
 		-I$(srcdir)/../streamconv/converters \
-		-I$(srcdir)/../cache/memcache \
-		-I$(srcdir)/../cache/filecache \
-		-I$(srcdir)/../cache/mgr \
 		-I$(srcdir)/../mime/src \
 		-I$(srcdir)/../protocol/http/src \
 		-I$(srcdir)/../protocol/file/src \
@@ -79,6 +81,15 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../protocol/about/src \
 		-I$(srcdir)/../protocol/keyword/src \
 		$(NULL)
+
+ifdef OLD_CACHE
+LOCAL_INCLUDES	+= \
+		-I$(srcdir)/../cache/memcache \
+		-I$(srcdir)/../cache/filecache \
+		-I$(srcdir)/../cache/mgr \
+		$(NULL)
+endif
+
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \

@@ -47,16 +47,13 @@
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
-#include "nsIStreamAsFile.h"
 #include "nsIFileStream.h" // for nsIRandomAccessStore
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
 #include "nsIScriptablePlugin.h"
-
-#if MOZ_NEW_CACHE
 #include "nsICachingChannel.h"
-#endif
+
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
 #undef None
@@ -1329,7 +1326,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   if (!channel)
       return NS_ERROR_FAILURE;
 
-#if MOZ_NEW_CACHE
     nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel);
     if (cacheChannel) {
         rv = cacheChannel->SetCacheAsFile(PR_TRUE);
@@ -1339,7 +1335,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
            NS_ASSERTION(PR_FALSE, "No Disk Cache Aval.  Some plugins wont work.");
         }
     }
-#endif
 
   char* aContentType = nsnull;
   rv = channel->GetContentType(&aContentType);
@@ -1498,15 +1493,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     char* urlString;
     nsCOMPtr<nsIFile> localFile;
 
-#if MOZ_NEW_CACHE
     nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel);
     if (cacheChannel)
         rv = cacheChannel->GetCacheFile(getter_AddRefs(localFile));
-#else
-    nsCOMPtr<nsIStreamAsFile> streamAsFile = do_QueryInterface(channel);
-    if (streamAsFile)
-        rv = streamAsFile->GetFile(getter_AddRefs(localFile));
-#endif
     if (NS_SUCCEEDED(rv) && localFile)
     {
       char* pathAndFilename;

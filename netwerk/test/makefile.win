@@ -31,14 +31,12 @@ PROG6 = .\$(OBJDIR)\urltest.exe
 PROG7 = .\$(OBJDIR)\TestFileInput2.exe
 PROG8 = .\$(OBJDIR)\TestFileTransport.exe
 PROG9 = .\$(OBJDIR)\TestRes.exe
-PROGA = .\$(OBJDIR)\TestRawCache.exe
-PROGB = .\$(OBJDIR)\TestCacheMgr.exe
 PROGC = .\$(OBJDIR)\TestWriteStream.exe
 PROGD = .\$(OBJDIR)\TestWriteSpeed.exe
 PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)\
-          $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE)
+          $(PROGC) $(PROGD) $(PROGE)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -77,10 +75,6 @@ $(PROG7): $(OBJDIR) TestFileInput2.cpp
 $(PROG8): $(OBJDIR) TestFileTransport.cpp
 
 $(PROG9): $(OBJDIR) TestRes.cpp
-
-$(PROGA): $(OBJDIR) TestRawCache.cpp
-
-$(PROGB): $(OBJDIR) TestCacheMgr.cpp
 
 $(PROGC): $(OBJDIR) TestWriteStream.cpp
 
