@@ -16,8 +16,13 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#ifdef XP_MAC
 #include "nsBrowserWindow.h"
 #define NS_IMPL_IDS
+#else
+#define NS_IMPL_IDS
+#include "nsBrowserWindow.h"
+#endif
 #include "nsIStreamListener.h"
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
