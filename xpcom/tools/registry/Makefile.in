@@ -33,6 +33,7 @@ endif
 LIBS		+= \
 		-lxpcom \
 		-lneckoutil_s \
+		-lmozjs \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \
