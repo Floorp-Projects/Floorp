@@ -1687,7 +1687,8 @@ namespace MetaData {
             break;
         case ExprNode::This:
             {
-                if (env->findThis(this, true) == JS2VAL_VOID)
+                js2val a;
+                if (!env->findThis(this, true, &a) || (a == JS2VAL_VOID))
                     reportError(Exception::syntaxError, "No 'this' available", p->pos);
             }
             break;
@@ -2628,21 +2629,20 @@ doUnary:
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
     // by either an instance member of a class or a prototype function. If allowPrototypeThis is 
     // false, allow this to be defined only by an instance member of a class.
-    js2val Environment::findThis(JS2Metadata *meta, bool allowPrototypeThis)
+    bool Environment::findThis(JS2Metadata *meta, bool allowPrototypeThis, js2val *result)
     {
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
             Frame *pf = *fi;
             if ((pf->kind == ParameterFrameKind)
                     && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
-                if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
-                    return checked_cast<ParameterFrame *>(pf)->thisObject;
-            // XXX for ECMA3, when we hit a package (read GlobalObject) return that as the 'this'
-            if ((pf->kind == PackageKind) && meta->cxt.E3compatibility)
-                return OBJECT_TO_JS2VAL(pf);
+                if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype) {
+                    *result = checked_cast<ParameterFrame *>(pf)->thisObject;
+                    return true;
+                }
             fi++;
         }
-        return JS2VAL_VOID;
+        return false;
     }
 
     // Read the value of a lexical reference - it's an error if that reference
@@ -2652,7 +2652,9 @@ doUnary:
     // an error.
     void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base)
     {
-        LookupKind lookup(true, findThis(meta, false));
+        js2val a = JS2VAL_VOID;
+        findThis(meta, false, &a);
+        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2697,7 +2699,9 @@ doUnary:
     // exists, then fine. Otherwise create the property there.
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing)
     {
-        LookupKind lookup(true, findThis(meta, false));
+        js2val a = JS2VAL_VOID;
+        findThis(meta, false, &a);
+        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2749,7 +2753,9 @@ doUnary:
     // but it had darn well better be in the environment somewhere.
     void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue)
     {
-        LookupKind lookup(true, findThis(meta, false));
+        js2val a = JS2VAL_VOID;
+        findThis(meta, false, &a);
+        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2798,7 +2804,9 @@ doUnary:
     // can't be found, or the result of the deleteProperty call if it was found.
     bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
-        LookupKind lookup(true, findThis(meta, false));
+        js2val a = JS2VAL_VOID;
+        findThis(meta, false, &a);
+        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {

@@ -711,7 +711,7 @@ public:
     void addFrame(Frame *f)                 { frameList.push_front(f); }
     void removeTopFrame()                   { frameList.pop_front(); }
 
-    js2val findThis(JS2Metadata *meta, bool allowPrototypeThis);
+    bool findThis(JS2Metadata *meta, bool allowPrototypeThis, js2val *result);
     void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing);
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
