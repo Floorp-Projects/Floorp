@@ -330,11 +330,20 @@ NS_IMETHODIMP
 nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
 {
   if (!aDefaultIdentity) return NS_ERROR_NULL_POINTER;
-  if (!m_defaultIdentity) return NS_ERROR_NULL_POINTER;
+  nsresult rv;
+  if (!m_identities) {
+    rv = Init();
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  nsISupports* idsupports;
+  rv = m_identities->GetElementAt(0, &idsupports);
+  if (NS_FAILED(rv)) return rv;
   
-  //  *aDefaultIdentity = m_defaultIdentity;
-  *aDefaultIdentity = nsnull;
-  return NS_OK;
+  rv = idsupports->QueryInterface(NS_GET_IID(nsIMsgIdentity),
+                                  (void **)aDefaultIdentity);
+  NS_RELEASE(idsupports);
+  return rv;
 }
 
 // todo - make sure this is in the identity array!
