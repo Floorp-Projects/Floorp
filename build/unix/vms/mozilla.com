@@ -127,7 +127,7 @@ $ define /user VMS_OPEN_ARGS_4 " ",-
 	"rfm=stmlf", "rat=cr"
 $!
 $ if f$trnlnm("USER") .eqs. "" then define /user user "''moz_user'"
-$ if f$trnlnm("LOGNAME") .eqs. "" then define /user logname "''moz_cwd'"
+$ if f$trnlnm("LOGNAME") .eqs. "" then define /user logname "''moz_user'"
 $ define /user MOZILLA_FIVE_HOME "''moz_unix'"
 $ define /user VMS_USE_VMS_DEF_PROT 1
 $ define /user VMS_ACCESS_FIX_WOK 1
