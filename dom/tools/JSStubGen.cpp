@@ -453,15 +453,15 @@ static const char *kSetCaseNonPrimaryStr =
 
 
 static const char *kObjectSetCaseStr = 
-"        if (JSVAL_IS_OBJECT(*vp)) {\n"
+"        if (JSVAL_IS_NULL(*vp)) {\n"
+"          prop = nsnull;\n"
+"        }\n"
+"        else if (JSVAL_IS_OBJECT(*vp)) {\n"
 "          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); \n"
 "          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);\n"
 "          if (NS_OK != supports->QueryInterface(kI%sIID, (void **)&prop)) {\n"
 "            return JS_FALSE;\n"
 "          }\n"
-"        }\n"
-"        else if (JSVAL_IS_NULL(*vp)) {\n"
-"          prop = nsnull;\n"
 "        }\n"
 "        else {\n"
 "          return JS_FALSE;\n"
