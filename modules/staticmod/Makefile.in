@@ -35,6 +35,9 @@ IS_COMPONENT	= 1
 
 include $(topsrcdir)/config/config.mk
 
+REQUIRES	= xpcom \
+		  $(NULL)
+
 ifdef MOZ_STATIC_COMPONENTS
 CPPSRCS		= nsStaticModule.cpp
 endif
