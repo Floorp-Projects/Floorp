@@ -234,9 +234,9 @@ typedef enum JSCharType {
 			  >> JS_CTYPE(c)) & 1)
 
 /*
-* 'IdentifierPart' from ECMA grammar, is Unicode letter or
-* combining mark or digit or connector punctuation.
-*/
+ * 'IdentifierPart' from ECMA grammar, is Unicode letter or combining mark or
+ * digit or connector punctuation.
+ */
 #define JS_ISID_PART(c) ((((1 << JSCT_UPPERCASE_LETTER) |                     \
 			   (1 << JSCT_LOWERCASE_LETTER) |                     \
 			   (1 << JSCT_TITLECASE_LETTER) |                     \
@@ -252,7 +252,12 @@ typedef enum JSCharType {
 /* Unicode control-format characters, ignored in input */
 #define JS_ISFORMAT(c) (((1 << JSCT_FORMAT) >> JS_CTYPE(c)) & 1)
 
-#define JS_ISWORD(c)    (JS_ISALNUM(c) || (c) == '_')
+/*
+ * Per ECMA-262 15.10.2.6, these characters are the only ones that make up a
+ * "word", as far as a RegExp is concerned.  If we want a Unicode-friendlier
+ * definition of "word", we should rename this macro to something regexp-y.
+ */
+#define JS_ISWORD(c)    ((c) < 128 && (isalnum(c) || (c) == '_'))
 
 /* XXXbe unify on A/X/Y tbls, avoid ctype.h? */
 #define JS_ISIDENT_START(c) (JS_ISUC_LETTER(c) || (c) == '_' || (c) == '$')
