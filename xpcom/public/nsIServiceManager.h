@@ -318,7 +318,11 @@ public:
 
 };
 
-#define NS_WITH_SERVICE(T, var, isupports, cid, rvAddr)      \
+#define NS_WITH_SERVICE(T, var, cid, rvAddr)      \
+  nsService _serv##var(cid, T::GetIID(), rvAddr); \
+  T* var = (T*)(nsISupports*)_serv##var;
+
+#define NS_WITH_SERVICE1(T, var, isupports, cid, rvAddr)     \
   nsService _serv##var(isupports, cid, T::GetIID(), rvAddr); \
   T* var = (T*)(nsISupports*)_serv##var;
 
