@@ -608,8 +608,8 @@ dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
@@ -767,8 +767,6 @@ case "$target" in
     CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS='-compatibility_version 1 -current_version 1'
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
     STRIP="$STRIP -x -S"
     case "${target_cpu}" in
     powerpc*)
@@ -840,8 +838,8 @@ case "$target" in
     dnl compile and link using -n32
     USE_N32=1
     DSO_LDOPTS='-elf -shared'
-    MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
@@ -1185,8 +1183,8 @@ alpha*-*-osf*)
 	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@ -update_registry $(DIST)/so_locations'
 	DSO_CFLAGS=
 	DSO_PIC_CFLAGS=
-	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
-	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
 	MKSHLIB_FORCE_ALL='-all'
 	MKSHLIB_UNFORCE_ALL='-none'
 	dnl Might fix the libxpcom.so breakage on this platform as well....
@@ -1229,8 +1227,8 @@ dnl the qsort routine under solaris is faulty
        NS_USE_NATIVE=1
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        LDFLAGS="-xildoff $LDFLAGS"
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-Qoption ld -z,allextract'
        MKSHLIB_UNFORCE_ALL=''
        DSO_LDOPTS='-G -Qoption ld -z,muldefs -h $@'
@@ -1244,8 +1242,6 @@ dnl the qsort routine under solaris is faulty
        AS_DASH_C_FLAG=''
     else
        ASFLAGS="$ASFLAGS -fPIC"
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
        DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
