@@ -95,7 +95,7 @@
 #define PREF_NEWS_CANCEL_CONFIRM	"news.cancel.confirm"
 #define PREF_NEWS_CANCEL_ALERT_ON_SUCCESS "news.cancel.alert_on_success"
 #define DEFAULT_NEWS_CHUNK_SIZE -1
-#define READ_NEWS_LIST_COUNT_MAX 20 /* number of groups to process at a time when reading the list from the server */
+#define READ_NEWS_LIST_COUNT_MAX 4 /* number of groups to process at a time when reading the list from the server */
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
@@ -2932,9 +2932,6 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 nsresult
 nsNNTPProtocol::PostReadNewsListEvent(nsNNTPProtocol * aNNTPProtocol, nsIInputStream *aInputStream, PLHandleEventProc aHandler)
 {
-#ifdef DEBUG_sspitzer
-	printf("PostReadNewsListEvent()\n");
-#endif
     nsresult rv;
 
     nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
@@ -2979,9 +2976,6 @@ nsNNTPProtocol::PostReadNewsListEvent(nsNNTPProtocol * aNNTPProtocol, nsIInputSt
 void*
 nsNNTPProtocol::HandleReadNewsListEvent(PLEvent* aEvent)
 {
-#ifdef DEBUG_sspitzer
-	printf("HandleReadNewsListEvent()\n");
-#endif
     ReadNewsListEvent* event = NS_REINTERPRET_CAST(ReadNewsListEvent*, aEvent);
     nsNNTPProtocol* aNNTPProtocol = event->mNNTPProtocol;
 
@@ -2994,9 +2988,6 @@ nsNNTPProtocol::HandleReadNewsListEvent(PLEvent* aEvent)
 void
 nsNNTPProtocol::DestroyReadNewsListEvent(PLEvent* aEvent)
 {
-#ifdef DEBUG_sspitzer
-	printf("DestroyReadNewsListEvent()\n");
-#endif
     ReadNewsListEvent* event = NS_REINTERPRET_CAST(ReadNewsListEvent*, aEvent);
     NS_RELEASE(event->mNNTPProtocol);
     NS_RELEASE(event->mInputStream);

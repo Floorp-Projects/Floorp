@@ -519,9 +519,6 @@ nsNntpIncomingServer::SetNewsgroupAsSubscribed(const char *aName)
 	NS_ASSERTION(aName,"newsgroup with no name");
 	if (!aName) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_sspitzer
-	printf("SetNewsgroupAsSubscribed(%s)\n",aName);
-#endif
 	nsXPIDLCString serverUri;
 
 	rv = GetServerURI(getter_Copies(serverUri));
@@ -604,9 +601,6 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 
 	nsCOMPtr<nsIRDFResource> newsgroupResource;
 	rv = rdfService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
-#ifdef DEBUG_sspitzer
-	printf("child=%s\n",(const char *)groupUri);
-#endif
 		
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
 	nsAutoString nameString; nameString.AssignWithConversion(aName);
@@ -647,16 +641,10 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	if (dotpos > slashpos) {
 		groupUri.Truncate(dotpos);
 
-#ifdef DEBUG_sspitzer
-		printf("parent=%s\n\n",(const char *)groupUri);
-#endif
 		rv = rdfService->GetResource((const char *)groupUri, getter_AddRefs(parent));
 		if(NS_FAILED(rv)) return rv;
 	}
 	else {
-#ifdef DEBUG_sspitzer
-		printf("parent=%s\n\n",(const char *)serverUri);
-#endif
 		rv = rdfService->GetResource((const char *)serverUri, getter_AddRefs(parent));
 		if(NS_FAILED(rv)) return rv;
 	}
