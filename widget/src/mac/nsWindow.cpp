@@ -772,8 +772,13 @@ NS_IMETHODIMP	nsWindow::Update()
 		::EndUpdate(mWindowPtr);
 
 		// restore the window update rgn
+#if TARGET_CARBON
 		//¥PINK - hrm, can't do this in Carbon for re-entrancy reasons
 		// ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
+		::InvalRgn(saveUpdateRgn);
+#else
+		::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
+#endif
 
 		// validate the rect of the widget we have just drawn
 		nsRect bounds = mBounds;
