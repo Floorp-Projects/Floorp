@@ -46,6 +46,7 @@
 #include "xcDll.h"
 #include "nsDebug.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentLoaderManager.h"
 #include "nsIModule.h"
 #include "nsILocalFile.h"
 #include "nsCOMPtr.h"
@@ -70,9 +71,6 @@ nsDll::nsDll(const char *codeDllName, int type)
     m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
-	m_modDate = LL_Zero();
-	m_size = LL_Zero();
-	
     if (!codeDllName || !*codeDllName)
     {
         m_status = DLL_INVALID_PARAM;
@@ -92,40 +90,10 @@ nsDll::nsDll(nsIFile *dllSpec, const char *registryLocation)
     m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
-	m_modDate = LL_Zero();
-	m_size = LL_Zero();
+    m_dllSpec = dllSpec;
 
     m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
-    // Populate m_modDate and m_size
-    if (NS_FAILED(Sync()))
-    {
-        m_status = DLL_INVALID_PARAM;
-    }
-}
-
-nsDll::nsDll(nsIFile *dllSpec, const char *registryLocation, PRInt64* modDate, PRInt64* fileSize)
-  : m_dllName(NULL),
-    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
-
-{
-    m_modDate = LL_Zero();
-    m_size = LL_Zero();
-
-    m_registryLocation = nsCRT::strdup(registryLocation);
-    Init(dllSpec);
-
-    if (modDate)
-        m_modDate = *modDate;
-    else
-        m_modDate = LL_Zero();
-    
-    if (fileSize)
-        m_size = *fileSize;
-    else
-        m_size = LL_Zero();
-
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor)
@@ -135,42 +103,9 @@ nsDll::nsDll(const char *libPersistentDescriptor)
     m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
-    m_modDate = LL_Zero();
-    m_size = LL_Zero();
-
     Init(libPersistentDescriptor);
-    // Populate m_modDate and m_size
-    if (NS_FAILED(Sync()))
-    {
-        m_status = DLL_INVALID_PARAM;
-    }
 }
 
-nsDll::nsDll(const char *libPersistentDescriptor, PRInt64* modDate, PRInt64* fileSize)
-  : m_dllName(NULL),
-    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL),
-    m_markForUnload(PR_FALSE), m_registryLocation(0)
-
-{
-    m_modDate = LL_Zero();
-    m_size = LL_Zero();
-
-    Init(libPersistentDescriptor);
-
-    // and overwrite the modData and fileSize
-	
-    if (modDate)
-        m_modDate = *modDate;
-    else
-        m_modDate = LL_Zero();
-    
-    if (fileSize)
-        m_size = *fileSize;
-    else
-        m_size = LL_Zero();
-}
- 
 void
 nsDll::Init(nsIFile *dllSpec)
 {
@@ -184,9 +119,7 @@ void
 nsDll::Init(const char *libPersistentDescriptor)
 {
     nsresult rv;
-    m_modDate = LL_Zero();
-    m_size = LL_Zero();
-	
+
 	if (libPersistentDescriptor == NULL)
 	{
 		m_status = DLL_INVALID_PARAM;
@@ -235,19 +168,6 @@ nsDll::~nsDll(void)
 
 }
 
-nsresult
-nsDll::Sync()
-{
-    if (!m_dllSpec)
-        return NS_ERROR_FAILURE;
-
-    // Populate m_modDate and m_size
-    nsresult rv = m_dllSpec->GetLastModifiedTime(&m_modDate);
-    if (NS_FAILED(rv)) return rv;
-    rv = m_dllSpec->GetFileSize(&m_size);
-    return rv;
-}
-
 
 const char *
 nsDll::GetDisplayPath()
@@ -277,25 +197,19 @@ nsDll::HasChanged()
     if (m_dllName)
         return PR_FALSE;
 
+    extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
+    nsCOMPtr<nsIComponentLoaderManager> manager;
+    NS_GetComponentLoaderManager(getter_AddRefs(manager));
+    if (!manager)
+        return PR_TRUE;
+
     // If mod date has changed, then dll has changed
     PRInt64 currentDate;
-
     nsresult rv = m_dllSpec->GetLastModifiedTime(&currentDate);
-    
-    if (NS_FAILED(rv) || LL_NE(currentDate, m_modDate))
-      return PR_TRUE;
-
-    // If size has changed, then dll has changed
-    PRInt64 aSize;
-    rv = m_dllSpec->GetFileSize(&aSize);
-    if (NS_FAILED(rv) || LL_NE(aSize, m_size))
-      return PR_TRUE;
-
-    return PR_FALSE;
+    PRBool changed = PR_TRUE;
+    manager->HasFileChanged(m_dllSpec, nsnull, currentDate, &changed); 
+    return changed;
 }
-
-
-
 
 PRBool nsDll::Load(void)
 {
@@ -314,7 +228,9 @@ PRBool nsDll::Load(void)
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
 #endif
-        m_dllSpec->Load(&m_instance);
+        nsCOMPtr<nsILocalFile> lf(do_QueryInterface(m_dllSpec));
+        NS_ASSERTION(lf, "nsIFile here must implement a nsILocalFile"); 
+        lf->Load(&m_instance);
         
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);

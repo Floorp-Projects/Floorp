@@ -28,6 +28,11 @@ REQUIRES	= \
 
 LIBRARY_NAME=xpcomxptinfo_s
 
+# For nsManifestLineReader class.
+LINCS =                    \
+        -I..\..\..\ds      \
+	$(NULL)
+
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTI_API -DEXPORT_XPT_API
 
 CPP_OBJS =	\

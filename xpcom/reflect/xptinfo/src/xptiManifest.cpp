@@ -40,8 +40,8 @@
 /* Implementation of xptiManifest. */
 
 #include "xptiprivate.h"
+#include "nsManifestLineReader.h"
 #include "nsString.h"
-
 
 #define g_MainManifestFilename NS_LITERAL_CSTRING("xpti.dat")
 #define g_TempManifestFilename NS_LITERAL_CSTRING("xptitemp.dat")
@@ -344,87 +344,8 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     return whole;    
 }
 
-/***************************************************/
-class ManifestLineReader
-{
-public:
-    ManifestLineReader() : mBase(nsnull) {} 
-    ~ManifestLineReader() {}
-
-    void Init(char* base, PRUint32 flen) 
-        {mBase = mCur = mNext = base; 
-         mLength = 0;
-         mLimit = base + flen;}
-
-    PRBool      NextLine();
-    char*       LinePtr() {return mCur;}    
-    PRUint32    LineLength() {return mLength;}    
-    int         ParseLine(char** chunks, int maxChunks);
-
-private:
-    char*       mCur;
-    PRUint32    mLength;
-    char*       mNext;
-    char*       mBase;
-    char*       mLimit;
-};
-
-inline static PRBool is_eol(char c) {return c == '\n' || c == '\r';}
-
-PRBool
-ManifestLineReader::NextLine()
-{
-    if(mNext >= mLimit)
-        return PR_FALSE;
-
-    mCur = mNext;
-    mLength = 0;
-
-    while(mNext < mLimit)
-    {
-        if(is_eol(*mNext))
-        {
-            *mNext = '\0';
-            for(++mNext; mNext < mLimit; ++mNext)
-                if(!is_eol(*mNext))
-                    break;
-            return PR_TRUE;
-        }
-        ++mNext;
-        ++mLength;
-    }
-    return PR_FALSE;        
-}
-
-int    
-ManifestLineReader::ParseLine(char** chunks, int maxChunks)
-{
-    NS_ASSERTION(mCur && maxChunks && chunks, "bad call to ParseLine");
-
-    int found = 0;
-
-    chunks[found++] = mCur;
-
-    if(found < maxChunks)
-    {
-        for(char* cur = mCur; *cur; cur++)
-        {
-            if(*cur == ',')
-            {
-                *cur = 0;
-                chunks[found++] = cur+1;
-                if(found == maxChunks)
-                    break;
-            }
-        }
-    }
-    return found;
-}
-
-/***************************************************/
-
 static
-PRBool ReadSectionHeader(ManifestLineReader& reader, 
+PRBool ReadSectionHeader(nsManifestLineReader& reader, 
                          const char *token, int minCount, int* count)
 {
     while(1)
@@ -464,7 +385,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     char* whole = nsnull;
     PRBool succeeded = PR_FALSE;
     PRUint32 flen;
-    ManifestLineReader reader;
+    nsManifestLineReader reader;
     xptiHashEntry* hashEntry;
     int headerCount = 0;
     int dirCount = 0;

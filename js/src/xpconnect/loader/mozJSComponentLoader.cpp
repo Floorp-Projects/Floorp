@@ -56,7 +56,7 @@
 #ifndef NO_SUBSCRIPT_LOADER
 #include "mozJSSubScriptLoader.h"
 #endif
-
+#include "nsIComponentLoaderManager.h"
 // For reporting errors with the console service
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
@@ -391,8 +391,7 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
 }
 
 mozJSComponentLoader::mozJSComponentLoader()
-    : mCompMgr(nsnull),
-      mRuntime(nsnull),
+    : mRuntime(nsnull),
       mModules(nsnull),
       mGlobals(nsnull),
       mXPCOMKey(0),
@@ -429,7 +428,8 @@ mozJSComponentLoader::~mozJSComponentLoader()
 {
     if (mInitialized) {
         mInitialized = PR_FALSE;
-        PL_HashTableEnumerateEntries(mModules, UnloadAndReleaseModules,
+        PL_HashTableEnumerateEntries(mModules, 
+                                     UnloadAndReleaseModules,
                                      mCompMgr);
         PL_HashTableDestroy(mModules);
         mModules = nsnull;
@@ -480,7 +480,11 @@ NS_IMETHODIMP
 mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
     mCompMgr = aCompMgr;
+         
     nsresult rv;
+    mLoaderManager = do_QueryInterface(mCompMgr, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     /* initialize registry handles */
     mRegistry = do_QueryInterface(aReg, &rv);
@@ -605,75 +609,29 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
                                       nsIFile *component)
 {
     nsresult rv;
-    if (!mRegistry.get())
-        return NS_OK;           // silent failure
-
-    PRUint32 length = strlen(registryLocation);
-    char* eRegistryLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eRegistryLocation == nsnull)    //  No escaping required
-    eRegistryLocation = (char*)registryLocation;
-
-
-    nsRegistryKey key;
-
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, eRegistryLocation, &key);
-    if (registryLocation != eRegistryLocation)
-        nsMemory::Free(eRegistryLocation);
-
-    if (NS_FAILED(rv))
-        return rv;
-
+    if (!mLoaderManager)
+        return NS_ERROR_FAILURE;
+    
     PRInt64 modDate;
-
-    if (NS_FAILED(rv = component->GetLastModifiedTime(&modDate)) ||
-        NS_FAILED(rv = mRegistry->SetLongLong(key, JSlastModValueName, &modDate)))
-        return rv;
-
-    PRInt64 fileSize;
-    if (NS_FAILED(rv = component->GetFileSize(&fileSize)) ||
-        NS_FAILED(rv = mRegistry->SetLongLong(key, JSfileSizeValueName, &fileSize)))
+    rv = component->GetLastModifiedTime(&modDate);
+    if (NS_FAILED(rv))
         return rv;
 
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "SetRegistryInfo(%s) => (%d,%d)\n", registryLocation,
             modDate, fileSize);
 #endif
-
-    return NS_OK;
+    return mLoaderManager->SaveFileInfo(component, registryLocation, modDate);                                                          
 }
 
 nsresult
-mozJSComponentLoader::RemoveRegistryInfo(const char *registryLocation)
+mozJSComponentLoader::RemoveRegistryInfo(nsIFile *component, const char *registryLocation)
 {
-    if (!mRegistry.get())
-        return NS_OK;           // silent failure
-
     nsresult rv;
-    if (!mRegistry.get())
-        return NS_OK;           // silent failure
-
-    PRUint32 length = strlen(registryLocation);
-    char* eRegistryLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eRegistryLocation == nsnull)    //  No escaping required
-    eRegistryLocation = (char*)registryLocation;
-
-
-    rv = mRegistry->RemoveSubtree(mXPCOMKey, eRegistryLocation);
-        
-    if (registryLocation != eRegistryLocation)
-            nsMemory::Free(eRegistryLocation);
-
-    return rv;
+    if (!mLoaderManager)
+        return NS_ERROR_FAILURE;
+    
+    return mLoaderManager->RemoveFileInfo(component, registryLocation);                                                          
 }
 
 
@@ -681,46 +639,16 @@ PRBool
 mozJSComponentLoader::HasChanged(const char *registryLocation,
                                  nsIFile *component)
 {
-
-    /* if we don't have a registry handle, force registration of component */
-    if (!mRegistry)
-        return PR_TRUE;
-
     nsresult rv;
-    PRUint32 length = strlen(registryLocation);
-    char* eRegistryLocation;
-    rv = mRegistry->EscapeKey((PRUint8*)registryLocation, 1, &length, (PRUint8**)&eRegistryLocation);
-    if (rv != NS_OK)
-    {
-        return rv;
-    }
-    if (eRegistryLocation == nsnull)    //  No escaping required
-        eRegistryLocation = (char*)registryLocation;
-
-    nsRegistryKey key;
-    int r = NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, eRegistryLocation, &key));
-    if (registryLocation != eRegistryLocation)
-        nsMemory::Free(eRegistryLocation);
-    if (r)
-        return PR_TRUE;
-
-    /* check modification date */
-    PRInt64 regTime, lastTime;
-    if (NS_FAILED(mRegistry->GetLongLong(key, JSlastModValueName, &regTime)))
-        return PR_TRUE;
+    if (!mLoaderManager)
+        return NS_ERROR_FAILURE;
     
-    if (NS_FAILED(component->GetLastModifiedTime(&lastTime)) || LL_NE(lastTime, regTime))
-        return PR_TRUE;
+    PRInt64 lastTime;
+    component->GetLastModifiedTime(&lastTime);
 
-    /* check file size */
-    PRInt64 regSize;
-    if (NS_FAILED(mRegistry->GetLongLong(key, JSfileSizeValueName, &regSize)))
-        return PR_TRUE;
-    PRInt64 size;
-    if (NS_FAILED(component->GetFileSize(&size)) || LL_NE(size,regSize) )
-        return PR_TRUE;
-
-    return PR_FALSE;
+    PRBool hasChanged = PR_TRUE;
+    mLoaderManager->HasFileChanged(component, registryLocation, lastTime, &hasChanged);                                                          
+    return hasChanged;
 }
 
 NS_IMETHODIMP
@@ -829,7 +757,7 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
     
     /* no need to check registry data on deferred reg */
     if (!deferred && !HasChanged(registryLocation, component))
-        goto out;
+        return NS_OK;
     
     module = ModuleForLocation(registryLocation, component);
     if (!module)
@@ -926,7 +854,7 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
     if (NS_SUCCEEDED(rv))
     {
         // Remove any autoreg specific info. Ignore error.
-        RemoveRegistryInfo(registryLocation);
+        RemoveRegistryInfo(component, registryLocation);
     }
         
     return rv;

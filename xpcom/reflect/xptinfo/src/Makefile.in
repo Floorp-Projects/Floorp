@@ -52,7 +52,11 @@ FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
 
+# For nsManifestLineReader class.
+LOCAL_INCLUDES	= -I$(srcdir)/../../../ds
+
 DEFINES += -DEXPORT_XPTI_API -DEXPORT_XPT_API
 ifeq ($(OS_ARCH), WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
+

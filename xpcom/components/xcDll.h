@@ -70,9 +70,7 @@ class nsDll
 private:
     char *m_dllName;			// Stores the dllName to load.
 
-    nsCOMPtr<nsILocalFile> m_dllSpec;	    // Filespec representing the component
-	PRInt64 m_modDate;		// last modified time at creation of this object
-	PRInt64 m_size;		// size of the dynamic library at creation of this object
+    nsCOMPtr<nsIFile> m_dllSpec;	    // Filespec representing the component
 
 	PRLibrary *m_instance;	// Load instance
 	nsDllStatus m_status;	// holds current status
@@ -93,15 +91,10 @@ private:
 public:
  
 	nsDll(nsIFile *dllSpec, const char *registryLocation);
-	nsDll(nsIFile *dllSpec, const char *registryLocation, PRInt64* modDate, PRInt64* fileSize);
 	nsDll(const char *persistentDescriptor);
-	nsDll(const char *persistentDescriptor, PRInt64* modDate, PRInt64* fileSize);
     nsDll(const char *dll, int type /* dummy */);
 
 	~nsDll(void);
-
-    // Sync : Causes update of file information
-    nsresult Sync(void);
 
 	// Status checking on operations completed
 	nsDllStatus GetStatus(void) { return (m_status); }
@@ -130,8 +123,6 @@ public:
     const char *GetPersistentDescriptorString(void);
     // WARNING: DONT FREE string returned.
     const char *GetRegistryLocation(void) { return m_registryLocation; }
-	void GetLastModifiedTime(PRInt64 *val) { *val = m_modDate; }
-	void GetSize(PRInt64 *val) { *val = m_size; }
 	PRLibrary *GetInstance(void) { return (m_instance); }
 
     // NS_RELEASE() is required to be done on objects returned

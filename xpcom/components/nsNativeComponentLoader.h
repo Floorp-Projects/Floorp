@@ -17,11 +17,9 @@
  */
 
 #include "nsISupports.h"
-#include "nsIRegistry.h"
 #include "nsIComponentLoader.h"
 #include "nsIComponentManager.h"
 #include "nsIFile.h"
-#include "nsIRegistry.h"
 #include "nsDirectoryService.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
@@ -39,32 +37,18 @@ class nsNativeComponentLoader : public nsIComponentLoader {
 
     nsNativeComponentLoader();
     virtual ~nsNativeComponentLoader();
-    nsresult RegistryNameForLib(const char *aLibName,
-                                char **aRegistryName);
-    nsresult RegistryNameForSpec(nsIFile *aSpec,
-                                 char **aRegistryName);
-
  protected:
-    nsCOMPtr<nsIRegistry> mRegistry;
     nsIComponentManager* mCompMgr;      // weak reference -- backpointer
     nsObjectHashtable*  mDllStore;
-    NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
-    nsRegistryKey mXPCOMKey;
     nsVoidArray mDeferredComponents;
 
+    NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
+
  private:
-    nsresult CreateDll(nsIFile *aSpec, const char *aLocation,
-                       PRInt64 *modifiedTime, PRInt64 *fileSize, nsDll **aDll);
+    nsresult CreateDll(nsIFile *aSpec, const char *aLocation, nsDll **aDll);
     nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation,
                              PRBool deferred);
     nsresult SelfUnregisterDll(nsDll *dll);
-    nsresult GetRegistryDllInfo(const char *aLocation, PRInt64 *lastModifiedTime,
-                                PRInt64 *fileSize);
-    nsresult GetRegistryDllInfo(nsRegistryKey key, PRInt64 *lastModifiedTime,
-                                PRInt64 *fileSize);
-    nsresult SetRegistryDllInfo(const char *aLocation, PRInt64 *lastModifiedTime,
-                                PRInt64 *fileSize);
-    nsresult RemoveRegistryDllInfo(const char *aLocation);
     nsresult GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
                                   nsIFactory **aFactory);
     /* obsolete! already! */
@@ -93,3 +77,4 @@ typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
 
 
 #endif /* nsNativeComponentLoader_h__ */
+

@@ -67,6 +67,7 @@ XPIDLSRCS	= \
 		nsICategoryHandler.idl \
 		nsICategoryManager.idl \
 		nsIComponentLoader.idl \
+		nsIComponentLoaderManager.idl \
 		nsIComponentManagerObsolete.idl \
 		nsIComponentRegistrar.idl \
 		nsIRegistry.idl \
@@ -82,7 +83,7 @@ SDK_XPIDLSRCS	= \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-LOCAL_INCLUDES	= -I$(srcdir)/../base -I$(srcdir)/../thread
+LOCAL_INCLUDES	= -I$(srcdir)/../base -I$(srcdir)/../thread -I$(srcdir)/../ds
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
@@ -91,8 +92,7 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE 
+DEFINES	+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
 ifeq ($(OS_ARCH), WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
