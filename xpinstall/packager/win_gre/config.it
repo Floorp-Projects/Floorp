@@ -513,6 +513,7 @@ Decrypt Name Value=FALSE
 Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
+Condition=DefaultApp
 
 [Windows Registry1]
 Root Key=HKEY_LOCAL_MACHINE
@@ -527,6 +528,7 @@ Decrypt Name Value=TRUE
 Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
+Condition=DefaultApp
 
 [Windows Registry2]
 Root Key=HKEY_LOCAL_MACHINE

@@ -9,6 +9,7 @@ Run Mode=Normal
 
 Company Name=$CompanyName$
 Product Name=$ProductName$
+Default AppID=$ProductName$User
 
 ; Valid Path values:
 ;   PROGRAMFILESDIR

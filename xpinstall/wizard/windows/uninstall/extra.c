@@ -1419,16 +1419,18 @@ BOOL ProcessAppItem(HKEY hkRootKey, LPSTR szAppID)
 {
   char szBuf[MAX_BUF];
   char szKey[MAX_BUF];
+  char szDefaultApp[MAX_BUF_TINY];
 
   wsprintf(szKey, "%s\\%s\\AppList\\%s", ugUninstall.szWrMainKey, ugUninstall.szUserAgent, szAppID);
+  GetPrivateProfileString("General", "Default AppID", "", szDefaultApp, MAX_BUF_TINY, szFileIniUninstall);
 
   GetWinReg(hkRootKey, szKey, "PathToExe", szBuf, sizeof(szBuf));
   if(FileExists(szBuf))    
     return TRUE;
-  // MREUser does not have a PathToExe, so we have to make a special check for it.
-  //   If we are looking at MREUser in the app list but uninstalling a real app we need
-  //   to return TRUE so it gets counted as an installed app.
-  else if( (lstrcmp(szAppID, "MREUser") == 0) && (ugUninstall.szAppID[0] != '\0') )
+  // The Default App does not have a PathToExe, so we have to make a special check for it.
+  //   If we are looking at the Default App in the app list but uninstalling a real app we
+  //   need to return TRUE so it gets counted as an installed app.
+  else if( (lstrcmp(szAppID, szDefaultApp) == 0) && (ugUninstall.szAppID[0] != '\0') )
     return TRUE;
   else
   {
