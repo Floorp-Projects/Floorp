@@ -400,7 +400,8 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
      *
      * So we set the cursor Bidi level to UNDEFINED here, and the caret code will set it correctly later
      */
-    if (action == nsEditor::kOpInsertText) {
+    if (action == nsEditor::kOpInsertText
+        || action == nsEditor::kOpInsertIMEText) {
       nsCOMPtr<nsIPresShell> shell;
       mEditor->GetPresShell(getter_AddRefs(shell));
       if (shell) {
