@@ -117,6 +117,7 @@ PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 ////////////////////////////////////////////////////
 
 PRBool gJustGotActivate = PR_FALSE;
+PRBool gJustGotDeactivate = PR_FALSE;
 
 ////////////////////////////////////////////////////
 // Mouse Clicks - static variable defintions 
@@ -1931,6 +1932,8 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           if( SHORT1FROMMP( mp2 ) || mWnd == WinQueryFocus(HWND_DESKTOP) )
           {
             result = DispatchStandardEvent( NS_GOTFOCUS );
+            // Only sending an Activate event when we get a WM_ACTIVATE message
+            // isn't good enough; need to do this every time we gain focus.
             if( !gJustGotActivate )
             {
               gJustGotActivate = PR_TRUE;
@@ -1941,6 +1944,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           else
           {
             result = DispatchStandardEvent( NS_LOSTFOCUS );
+            if( gJustGotDeactivate )
+            {
+              gJustGotDeactivate = PR_FALSE;
+              result = DispatchStandardEvent( NS_DEACTIVATE );
+            }
           }
           break;
     

@@ -43,6 +43,9 @@ extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 extern PRBool              gRollupConsumeRollupEvent;
 
+extern PRBool gJustGotDeactivate;
+
+
 nsFrameWindow::nsFrameWindow() : nsCanvas()
 {
    hwndFrame = 0;
@@ -291,6 +294,11 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       case WM_UPDATEFRAME:
          if( LONGFROMMP(mp1) & FCF_MENU)
             UpdateClientSize();
+         break;
+
+      case WM_ACTIVATE:
+         if( !mp1)
+            gJustGotDeactivate = PR_TRUE;
          break;
    }
 
