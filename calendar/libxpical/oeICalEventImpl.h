@@ -125,6 +125,7 @@ private:
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
     nsCOMPtr<nsISupportsArray> m_attachments;
+    nsCOMPtr<nsISupportsArray> m_contacts;
 };
 
 /*******************************************************************************************/

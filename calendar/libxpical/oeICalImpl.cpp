@@ -2537,3 +2537,23 @@ NS_IMETHODIMP oeICalFilter::GetAttachmentsArray(nsISupportsArray * *aAttachments
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalFilter::AddContact(nsIAbCard *contact)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::RemoveContact(nsIAbCard *contact)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::RemoveContacts()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetContactsArray(nsISupportsArray * *aContactsArray)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

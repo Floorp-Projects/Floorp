@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "plbase64.h"
 #include "nsMsgCompCID.h"
+#include "nsAbBaseCID.h"
 
 #define strcasecmp strcmp
 
@@ -197,6 +198,7 @@ oeICalEventImpl::oeICalEventImpl()
     SetRecurUnits( "weeks" );
     SetSyncId( "" );
     NS_NewISupportsArray(getter_AddRefs(m_attachments));
+    NS_NewISupportsArray(getter_AddRefs(m_contacts));
 }
 
 oeICalEventImpl::~oeICalEventImpl()
@@ -1352,6 +1354,83 @@ NS_IMETHODIMP oeICalEventImpl::RemoveAttachments()
   return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventImpl::GetContactsArray(nsISupportsArray * *aContactsArray)
+{
+  NS_ENSURE_ARG_POINTER(aContactsArray);
+  *aContactsArray = m_contacts;
+  NS_IF_ADDREF(*aContactsArray);
+  return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::AddContact(nsIAbCard *contact)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::AddContact()\n" );
+#endif
+  PRUint32 i;
+  PRUint32 contactCount = 0;
+  m_contacts->Count(&contactCount);
+
+  //Don't add twice the same contact.
+  nsCOMPtr<nsIAbCard> element;
+  PRBool samecontact;
+  for (i = 0; i < contactCount; i ++)
+  {
+    m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(element));
+    if (element)
+    {
+      element->Equals(contact, &samecontact);
+      if (samecontact)
+        return NS_OK;
+    }
+  }
+
+  return m_contacts->InsertElementAt(contact, contactCount);
+}
+
+NS_IMETHODIMP oeICalEventImpl::RemoveContact(nsIAbCard *contact)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::RemoveContact()\n" );
+#endif
+  PRUint32 i;
+  PRUint32 contactCount = 0;
+  m_contacts->Count(&contactCount);
+
+  nsCOMPtr<nsIAbCard> element;
+  PRBool samecontact;
+  for (i = 0; i < contactCount; i ++)
+  {
+    m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(element));
+    if (element)
+    {
+      element->Equals(contact, &samecontact);
+      if (samecontact)
+      {
+        m_contacts->DeleteElementAt(i);
+        break;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::RemoveContacts()\n" );
+#endif
+  PRUint32 i;
+  PRUint32 contactCount = 0;
+  m_contacts->Count(&contactCount);
+
+  for (i = 0; i < contactCount; i ++)
+    m_contacts->DeleteElementAt(0);
+
+  return NS_OK;
+}
+
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 {
 #ifdef ICAL_DEBUG_ALL
@@ -1801,6 +1880,21 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             }
     }
 
+    //contacts
+    for(prop = icalcomponent_get_first_property( vevent, ICAL_CONTACT_PROPERTY );
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_CONTACT_PROPERTY ) ) {
+        tmpstr = icalproperty_get_contact( prop );
+        nsresult rv;
+        nsCOMPtr<nsIAbCard> contact = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
+        if ( NS_SUCCEEDED(rv) && contact ) {
+            nsAutoString email;
+            email.AssignWithConversion( tmpstr );
+            contact->SetPrimaryEmail( email.get() );
+            AddContact( contact );
+        }
+    }
+
     return true;
 }
 
@@ -2175,6 +2269,21 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
                 icalcomponent_add_property( vevent, prop );
             }*/
             nsMemory::Free( url );
+        }
+    }
+
+    PRUint32 contactCount = 0;
+    m_contacts->Count(&contactCount);
+    nsCOMPtr<nsIAbCard> contact;
+    for (i = 0; i < contactCount; i ++) {
+        m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(contact));
+        if (contact)
+        {
+            nsXPIDLString email;
+            contact->GetPrimaryEmail( getter_Copies( email ) );
+            NS_ConvertUCS2toUTF8 aUtf8Str(email);
+            prop = icalproperty_new_contact( aUtf8Str.get() );
+            icalcomponent_add_property( vevent, prop );
         }
     }
 

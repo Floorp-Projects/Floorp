@@ -38,6 +38,7 @@
 
 #include "nsISupports.idl"
 #include "nsIMsgAttachment.idl"
+#include "nsIAbCard.idl"
 #include "nsISupportsArray.idl"
 interface nsISimpleEnumerator;
 
@@ -126,10 +127,17 @@ interface oeIICalEvent : nsISupports
     void setSnoozeTime( in PRTime exdate );
     oeIICalEvent clone();
 
+    //attachments
     readonly attribute nsISupportsArray attachmentsArray;
     void addAttachment(in nsIMsgAttachment attachment);
     void removeAttachment(in nsIMsgAttachment attachment);
     void removeAttachments();
+
+    //contacts
+    readonly attribute nsISupportsArray contactsArray;
+    void addContact(in nsIAbCard contact);
+    void removeContact(in nsIAbCard contact);
+    void removeContacts();
 };
 
 [scriptable, uuid(f95df40e-0d5f-49ec-9ba8-4b88d3eb53e0)]

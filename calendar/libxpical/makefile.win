@@ -48,6 +48,7 @@ REQUIRES        = xpcom \
 		  timer \
 		  necko \
 		  msgcompo \
+		  addrbook \
                   $(NULL)
 include <$(DEPTH)/config/config.mak>
 

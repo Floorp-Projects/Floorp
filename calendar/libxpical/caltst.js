@@ -241,6 +241,10 @@ function TestAddEvent()
 	Attachment.url = DEFAULT_ATTACHMENT;
 	iCalEvent.addAttachment( Attachment );
 
+	Contact = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance( Components.interfaces.nsIAbCard );
+	Contact.primaryEmail = DEFAULT_EMAIL;
+	iCalEvent.addContact( Contact );
+
     var id = iCalLib.addEvent( iCalEvent );
     
     if( id == null ){
