@@ -731,7 +731,9 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
   else
     rv = NS_ERROR_FAILURE;
 
-	return rv;
+  delete dbPath;
+
+  return rv;
 }
 
 NS_IMETHODIMP    

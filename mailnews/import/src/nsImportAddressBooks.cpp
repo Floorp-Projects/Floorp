@@ -839,6 +839,8 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 
 				parentDir->CreateNewDirectory((unsigned int )prefCount, (const char** )prefNames, (const PRUnichar** )prefValues);
 
+          delete dbPath;
+
 				if (fileName)
 					nsCRT::free(fileName);
 				if (prefNames[0])

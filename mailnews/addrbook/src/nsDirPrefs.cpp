@@ -1999,6 +1999,8 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 			dbPath->Delete(PR_FALSE);
 		}
 
+    delete dbPath;
+
 		nsVoidArray *dirList = DIR_GetDirectories();
 		DIR_SetServerPosition(dirList, server, DIR_POS_DELETE);
 		DIR_DeleteServer(server);
@@ -2814,6 +2816,8 @@ void DIR_SetFileName(char** fileName, const char* defaultName)
 		*fileName = PL_strdup(file);
 		if (file)
 			nsCRT::free(file);
+
+      delete dbPath;
 	}
 }
 

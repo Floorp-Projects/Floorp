@@ -191,7 +191,9 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 						{
 							listDatabase->GetMailingListsFromDB(childDir);
 						}
-					}		
+
+              delete dbPath;
+					}
 				}
 			}
 

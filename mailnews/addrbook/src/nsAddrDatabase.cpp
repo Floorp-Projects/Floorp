@@ -767,8 +767,10 @@ NS_IMETHODIMP nsAddrDatabase::OpenAnonymousDB(nsIAddrDatabase **pCardDB)
 
 		Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
 
-        *pCardDB = database;
+    *pCardDB = database;
 		NS_IF_ADDREF(*pCardDB);
+
+      delete dbPath;
 	}
 	return rv;
 }

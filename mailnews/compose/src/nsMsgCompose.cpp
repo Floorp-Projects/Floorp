@@ -20,6 +20,7 @@
  * Contributor(s): 
  *     Jean-Francois Ducarroz <ducarroz@netscaape.com>
  *     Ben Bucksch <mozilla@bucksch.org>
+ *     Håkan Waara <hwaara@chello.se>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -76,6 +77,12 @@
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
 #include "nsMsgMimeCID.h"
+#include "nsCOMPtr.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
+#include "nsILocaleService.h"
+#include "nsILocale.h"
+
 
 #include "nsMsgComposeService.h"
 #include "nsMsgUtils.h"
@@ -85,14 +92,24 @@ static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 static PRInt32 GetReplyOnTop()
 {
-	PRInt32 reply_on_top = 1;
-	nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+  PRInt32 reply_on_top = 1;
+  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
   if (prefs)
-		prefs->GetIntPref("mailnews.reply_on_top", &reply_on_top);
-	return reply_on_top;
+    prefs->GetIntPref("mailnews.reply_on_top", &reply_on_top);
+  return reply_on_top;
+}
+
+static PRInt32 GetReplyHeaderType()
+{
+  PRInt32 reply_header_type = 1;  
+  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)
+    prefs->GetIntPref("mailnews.reply_header_type", &reply_header_type); 
+  return reply_header_type;
 }
 
 static nsresult RemoveDuplicateAddresses(const char * addresses, const char * anothersAddresses, PRBool removeAliasesToMe, char** newAddress)
@@ -992,7 +1009,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           mQuotingToFollow = PR_TRUE;
 
           // HACK: if we are replying to a message and that message used a charset over ride
-          // (as speciifed in the top most window (assuming the reply originated from that window)
+          // (as specified in the top most window (assuming the reply originated from that window)
           // then use that over ride charset instead of the charset specified in the message
 	        nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(NS_MSGMAILSESSION_CONTRACTID));          
           if (mailSession)
@@ -1159,6 +1176,68 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       if (GetReplyOnTop() == 1) 
         mCitePrefix += NS_LITERAL_STRING("<br><br>");
 
+      
+      PRBool header, headerDate;
+
+      switch(GetReplyHeaderType())
+      {
+        case 0: // No reply header at all
+          header=PR_FALSE;
+          headerDate=PR_FALSE;
+          break;
+
+        case 2: // Insert both the original author and date in the reply header
+          header=PR_TRUE;
+          headerDate=PR_TRUE;
+          break;
+
+        case 3: // XXX implement user specified header
+        case 1: // Default is to only view the author. We will reconsider this decision when bug 75377 is fixed.
+        default:
+          header=PR_TRUE;
+          headerDate=PR_FALSE;
+          break;
+      }
+
+      if (header)
+      {
+        if (headerDate)
+        {
+          nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(kDateTimeFormatCID, &rv);
+
+          if (NS_SUCCEEDED(rv)) 
+          {  
+            PRTime originalMsgDate;
+            rv = originalMsgHdr->GetDate(&originalMsgDate); 
+                
+            if (NS_SUCCEEDED(rv)) 
+            {
+              nsAutoString formattedDateString;
+              nsCOMPtr<nsILocale> locale;
+              nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_CONTRACTID));
+
+              // We can't have this date localizable since we don't know if the recipent understands
+              // the samelanguage as the sender, so we will have to fallback on en-US until bug 75377 
+              // is fixed - which will make this (and the other hard-coded strings) localizable!
+              localeService->NewLocale(NS_LITERAL_STRING("en-US").get(), getter_AddRefs(locale));
+                
+              rv = dateFormatter->FormatPRTime(locale,
+                                               kDateFormatShort,
+                                               kTimeFormatNoSeconds,
+                                               originalMsgDate,
+                                               formattedDateString);
+
+              if (NS_SUCCEEDED(rv)) 
+              {
+                mCitePrefix += NS_LITERAL_STRING("On ") + // XXX see bug 75377 or read above, for why we hardcode this.
+                               formattedDateString + 
+                               NS_LITERAL_STRING(", ");
+              }
+            }
+          }
+        }
+
+
       nsXPIDLString author;
       rv = originalMsgHdr->GetMime2DecodedAuthor(getter_Copies(author));
       if (NS_SUCCEEDED(rv))
@@ -1184,13 +1263,17 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
             mCitePrefix.Append(authorStr);
           else
             mCitePrefix.Append(author);
-          mCitePrefix.Append(NS_LITERAL_STRING(" wrote:<br><html>"));  //XXX I18n?
+          
+          mCitePrefix.Append(NS_LITERAL_STRING(" wrote:<br><html>"));// XXX see bug bug 75377 for why we hardcode this.
+        }
+
+
         }
       }
     }
 
     if (mCitePrefix.IsEmpty())
-      mCitePrefix.Append(NS_LITERAL_STRING("<br><br>--- Original Message ---<br><html>"));  //XXX I18n?
+      mCitePrefix.Append(NS_LITERAL_STRING("<br><br>--- Original Message ---<br><html>"));
   }
   
   NS_INIT_REFCNT(); 

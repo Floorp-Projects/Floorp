@@ -315,6 +315,9 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
+
+      delete dbPath;
+
 		if (NS_SUCCEEDED(rv) && database)
 		{
 			*db = database;
@@ -344,6 +347,9 @@ nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **d
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
+
+      delete dbPath;
+
 		if (NS_SUCCEEDED(rv) && database)
 		{
 			*db = database;
@@ -512,6 +518,8 @@ nsresult AddressBookParser::ParseFile()
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 	}
 	NS_ENSURE_SUCCESS(rv, rv);
+
+    delete dbPath;
 
   NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	NS_ENSURE_SUCCESS(rv, rv);

@@ -224,7 +224,9 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 						{
 							listDatabase->GetMailingListsFromDB(childDir);
 						}
-					}		
+
+              delete dbPath;
+					}
 				}
 			}
 		}
@@ -561,6 +563,8 @@ nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Serv
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
+
+      delete dbPath;
 	}
 
 	/* delete cards */
