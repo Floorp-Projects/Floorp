@@ -200,12 +200,12 @@ nsMenuItem::CreateLocalized(const nsString& aLabel)
 
   if (converter) {
     char labelStr[128];
-    PRInt32 srcLen = aLabel.Length();
-    PRInt32 destLen = sizeof(labelStr) - 1;
+    labelStr[0] = 0;
+    PRInt32 srcLen = aLabel.Length() + 1;
+    PRInt32 destLen = sizeof(labelStr);
     result = converter->Convert(aLabel.GetUnicode(), &srcLen, labelStr,
       &destLen);
-    if ((destLen > 0) && (destLen < ((PRInt32) sizeof(labelStr)))) {
-      labelStr[destLen] = 0;
+    if (labelStr[0] && NS_SUCCEEDED(result)) {
       menuItem = gtk_menu_item_new_with_label(labelStr);
       if (menuItem && (!isLatin1)) {
         GtkWidget* label = GTK_BIN(menuItem)->child;
