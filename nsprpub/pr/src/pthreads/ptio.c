@@ -195,12 +195,8 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #endif
 #endif
 
-#ifdef DARWIN
+#ifdef _PR_IPV6_V6ONLY_PROBE
 static PRBool _pr_ipv6_v6only_on_by_default;
-/* The IPV6_V6ONLY socket option is not defined on Mac OS X 10.1. */
-#ifndef IPV6_V6ONLY
-#define IPV6_V6ONLY 27
-#endif
 #endif
 
 #if defined(SOLARIS)
@@ -1160,7 +1156,7 @@ void _PR_InitIO(void)
     _pr_stderr = pt_SetMethods(2, PR_DESC_FILE, PR_FALSE, PR_TRUE);
     PR_ASSERT(_pr_stdin && _pr_stdout && _pr_stderr);
 
-#ifdef DARWIN
+#ifdef _PR_IPV6_V6ONLY_PROBE
     /* In Mac OS X v10.3 Panther Beta the IPV6_V6ONLY socket option
      * is turned on by default, contrary to what RFC 3493, Section
      * 5.3 says.  So we have to turn it off.  Find out whether we
@@ -3480,7 +3476,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
     if (osfd == -1) pt_MapError(_PR_MD_MAP_SOCKET_ERROR, errno);
     else
     {
-#ifdef DARWIN
+#ifdef _PR_IPV6_V6ONLY_PROBE
         if ((domain == AF_INET6) && _pr_ipv6_v6only_on_by_default)
         {
             int on = 0;
