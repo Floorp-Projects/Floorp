@@ -131,11 +131,14 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
 
+  // XXX CONSTRUCTION
+#if 0
   NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInParent);
+#endif
   NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
                             nsIPresContext* aPresContext,
                             nsIContent*     aContainer,
@@ -1956,6 +1959,17 @@ nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
 {
+  // Get the inserted frame
+  nsIFrame* newFrame;
+  aState.reflowCommand->GetChildFrame(newFrame);
+
+  // Get the previous sibling frame
+  nsIFrame* prevSibling;
+  aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
+
+  // Insert the frame. This marks the line dirty...
+  InsertNewFrame(this, newFrame, prevSibling);
+
   LineData* line = mLines;
   while (nsnull != line->mNext) {
     if (line->IsDirty()) {
@@ -3210,6 +3224,8 @@ nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
   return NS_OK;
 }
 
+// XXX CONSTRUCTION
+#if 0
 // XXX we assume that the insertion is really an assertion and never an append
 // XXX what about zero lines case
 NS_IMETHODIMP
@@ -3293,6 +3309,7 @@ nsBlockFrame::ContentInserted(nsIPresShell*   aShell,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsBlockFrame::ContentDeleted(nsIPresShell*   aShell,

@@ -38,11 +38,14 @@ public:
    * Create a frame for a given piece of content using the style
    * as a guide for determining which frame to create.
    */
+  // XXX CONSTRUCTION
+#if 0
   static nsresult CreateFrame(nsIPresContext* aPresContext,
                               nsIFrame*       aParentFrame,
                               nsIContent*     aKid,
                               nsIFrame*       aKidPrevInFlow,
                               nsIFrame*&      aResult);
+#endif
 };
 
 #endif /* nsHTMLBase_h___ */

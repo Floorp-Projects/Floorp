@@ -37,83 +37,6 @@ extern void NS_QuoteForHTML(const nsString& aValue, nsString& aResult);
 
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
-// XXX temporary code until troy gets done whacking things
-
-#include "nsIContentDelegate.h"
-#include "nsFrame.h"
-#include "nsHTMLParts.h"
-static nsIContentDelegate* gContentDelegate;
-static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
-
-/**
- * THE html content delegate. There is exactly one instance of this
- * class and it's used for all html content. It just turns around
- * and asks the content object to create the frame.
- */
-class ZZContentDelegate : public nsIContentDelegate {
-public:
-  ZZContentDelegate();
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIContent* aContent,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
-protected:
-  ~ZZContentDelegate();
-};
-
-ZZContentDelegate::ZZContentDelegate()
-{
-  NS_INIT_REFCNT();
-}
-
-NS_IMPL_ISUPPORTS(ZZContentDelegate, kIContentDelegateIID);
-
-ZZContentDelegate::~ZZContentDelegate()
-{
-}
-
-NS_METHOD
-ZZContentDelegate::CreateFrame(nsIPresContext* aPresContext,
-                               nsIContent* aContent,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult)
-{
-  NS_PRECONDITION(nsnull != aContent, "null ptr");
-
-  // Make sure the content is html content
-  nsIDOMNode* dn;
-  nsIFrame* frame = nsnull;
-  nsresult rv = aContent->QueryInterface(kIDOMNodeIID, (void**) &dn);
-  if (NS_OK != rv) {
-    // This means that *somehow* somebody which is not an dom
-    // node object got ahold of this delegate and tried to
-    // create a frame with it. Give them back an nsFrame.
-    rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
-  }
-  else {
-    PRInt32 nodeType;
-    dn->GetNodeType(&nodeType);
-    switch (nodeType) {
-    case nsIDOMNode::TEXT:
-      rv = NS_NewTextFrame(aContent, aParentFrame, frame);
-      break;
-
-    case nsIDOMNode::COMMENT:
-      rv = NS_NewCommentFrame(aContent, aParentFrame, frame);
-      break;
-    }
-    NS_RELEASE(dn);
-  }
-  if (nsnull != frame) {
-    frame->SetStyleContext(aPresContext, aStyleContext);
-  }
-  aResult = frame;
-  return rv;
-}
-
 //----------------------------------------------------------------------
 
 nsGenericDOMDataNode::nsGenericDOMDataNode()
@@ -125,15 +48,6 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
   mListenerManager = nsnull;
   mText = nsnull;
   mTextLength = 0;
-
-  // Create shared content delegate if this is the first html content
-  // object being created.
-  if (nsnull == gContentDelegate) {
-    gContentDelegate = new ZZContentDelegate();
-  }
-
-  // Add a reference to the shared content delegate object
-  NS_ADDREF(gContentDelegate);
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
@@ -143,16 +57,6 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
   }
   NS_IF_RELEASE(mListenerManager);
   // XXX what about mScriptObject? its now safe to GC it...
-
-  NS_PRECONDITION(nsnull != gContentDelegate, "null content delegate");
-  if (nsnull != gContentDelegate) {
-    // Remove our reference to the shared content delegate object.  If
-    // the last reference just went away, null out gContentDelegate.
-    nsrefcnt rc = gContentDelegate->Release();
-    if (0 == rc) {
-      gContentDelegate = nsnull;
-    }
-  }
 }
 
 void
@@ -673,9 +577,3 @@ nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aHandler) const
   return NS_OK;
 }
 
-nsIContentDelegate*
-nsGenericDOMDataNode::GetDelegate(nsIPresContext* aCX)
-{
-  NS_ADDREF(gContentDelegate);
-  return gContentDelegate;
-}

@@ -118,9 +118,6 @@ public:
    */
   NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const = 0;
 
-  // XXX deprecated
-  virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX) = 0;
-
   /**
    * List the content (and anything it contains) out to the given
    * file stream. Use aIndent as the base indent during formatting.

@@ -140,6 +140,8 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+// XXX CONSTRUCTION
+#if 0
 NS_IMETHODIMP nsPlaceholderFrame::ContentInserted(nsIPresShell*   aShell,
                                                   nsIPresContext* aPresContext,
                                                   nsIContent*     aContainer,
@@ -156,6 +158,7 @@ NS_IMETHODIMP nsPlaceholderFrame::ContentInserted(nsIPresShell*   aShell,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsPlaceholderFrame::ContentReplaced(nsIPresShell*   aShell,
                                                   nsIPresContext* aPresContext,

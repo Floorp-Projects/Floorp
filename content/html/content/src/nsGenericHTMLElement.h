@@ -121,7 +121,6 @@ public:
   nsresult SetAttribute(const nsString& aName, const nsString& aValue,
                         PRBool aNotify);
   nsresult GetAttribute(const nsString& aName, nsString& aResult) const;
-  nsIContentDelegate* GetDelegate(nsIPresContext* aCX);
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult HandleDOMEvent(nsIPresContext& aPresContext,
                           nsEvent* aEvent,
@@ -666,9 +665,6 @@ public:
   NS_IMETHOD GetAttribute(const nsString& aName,                           \
                           nsString& aResult) const {                       \
     return _g.GetAttribute(aName, aResult);                                \
-  }                                                                        \
-  virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {           \
-    return _g.GetDelegate(aCX);                                            \
   }                                                                        \
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
     return _g.List(out, aIndent);                                          \

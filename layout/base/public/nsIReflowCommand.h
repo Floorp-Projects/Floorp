@@ -116,6 +116,12 @@ public:
    * Get the child frame associated with the reflow command.
    */
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const = 0;
+
+  /**
+   * Get the previous sibling frame associated with the reflow command.
+   * This is used for FrameInserted reflow commands.
+   */
+  NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const = 0;
 };
 
 #endif /* nsIReflowCommand_h___ */

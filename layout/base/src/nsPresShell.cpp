@@ -723,29 +723,10 @@ PresShell::ContentInserted(nsIDocument* aDocument,
                            nsIContent*  aChild,
                            PRInt32      aIndexInContainer)
 {
-#ifdef FRAME_CONSTRUCTION
   EnterReflowLock();
   nsresult  rv = mPresContext->ContentInserted(aDocument, aContainer, aChild, aIndexInContainer);
   ExitReflowLock();
   return rv;
-#else
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
-  EnterReflowLock();
-
-  nsIFrame* frame = FindFrameWithContent(aContainer);
-  NS_PRECONDITION(nsnull != frame, "null frame");
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("PresShell::ContentInserted: container=%p[%s] child=%p[%s][%d] frame=%p",
-      aContainer, ContentTag(aContainer, 0),
-      aChild, ContentTag(aChild, 1), aIndexInContainer,
-      frame));
-  frame->ContentInserted(this, mPresContext, aContainer, aChild,
-                         aIndexInContainer);
-
-  ExitReflowLock();
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP

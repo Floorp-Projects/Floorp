@@ -246,6 +246,12 @@ public:
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer);
 
+  NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInContainer);
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -1311,10 +1317,11 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
-                                                 nsIContent*      aContent,
-                                                 nsIFrame*        aParentFrame,
-                                                 nsIFrame*&       aFrameSubTree)
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
+                                   nsIContent*      aContent,
+                                   nsIFrame*        aParentFrame,
+                                   nsIFrame*&       aFrameSubTree)
 {
   nsresult  rv;
 
@@ -1354,10 +1361,11 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
-                                                  nsIDocument*    aDocument,
-                                                  nsIContent*     aContainer,
-                                                  PRInt32         aNewIndexInContainer)
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
+                                    nsIDocument*    aDocument,
+                                    nsIContent*     aContainer,
+                                    PRInt32         aNewIndexInContainer)
 {
   nsIPresShell* shell = aPresContext->GetShell();
   nsIFrame* parentFrame = shell->FindFrameWithContent(aContainer);
@@ -1421,6 +1429,73 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
 
   NS_RELEASE(shell);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
+                                    nsIDocument*    aDocument,
+                                    nsIContent*     aContainer,
+                                    nsIContent*     aChild,
+                                    PRInt32         aIndexInContainer)
+{
+  nsIPresShell* shell = aPresContext->GetShell();
+  nsresult      rv = NS_OK;
+
+  // Find the frame that precedes the insertion point.
+  nsIFrame* prevSibling = nsnull;
+
+  // Note: not all content objects are associated with a frame so
+  // keep looking until we find a previous frame
+  for (PRInt32 index = aIndexInContainer; index > 0; index--) {
+    nsIContent* precedingContent;
+    aContainer->ChildAt(index - 1, precedingContent);
+    prevSibling = shell->FindFrameWithContent(precedingContent);
+    NS_RELEASE(precedingContent);
+
+    if (nsnull != prevSibling) {
+      // The frame may have a next-in-flow. Get the last-in-flow
+      nsIFrame* nextInFlow;
+      do {
+        prevSibling->GetNextInFlow(nextInFlow);
+        if (nsnull != nextInFlow) {
+          prevSibling = nextInFlow;
+        }
+      } while (nsnull != nextInFlow);
+
+      break;
+    }
+  }
+
+  // Get the geometric parent.
+  // XXX Deal with frame moved out of the flow, e.g., floated and absolutely
+  // positioned frames...
+  nsIFrame* parentFrame;
+  if (nsnull == prevSibling) {
+    parentFrame = shell->FindFrameWithContent(aContainer);
+  } else {
+    prevSibling->GetGeometricParent(parentFrame);
+  }
+
+  // Construct a new frame
+  if (nsnull != parentFrame) {
+    nsIFrame* newFrame;
+    rv = ConstructFrame(aPresContext, aChild, parentFrame, newFrame);
+
+    // Notify the parent frame with a reflow command, passing it the
+    // new child frame
+    if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+      nsIReflowCommand* reflowCmd;
+
+      rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame, newFrame, prevSibling);
+      if (NS_SUCCEEDED(rv)) {
+        shell->AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
+    }
+  }
+
+  NS_RELEASE(shell);
+  return rv;
 }
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const

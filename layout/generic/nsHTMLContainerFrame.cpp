@@ -140,26 +140,8 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresConte
   return NS_OK;
 }
 
-NS_METHOD nsHTMLContainerFrame::ContentAppended(nsIPresShell*   aShell,
-                                                nsIPresContext* aPresContext,
-                                                nsIContent*     aContainer)
-{
-  // Get the last-in-flow
-  nsHTMLContainerFrame* lastInFlow = (nsHTMLContainerFrame*)GetLastInFlow();
-
-  // Generate a reflow command for the frame
-  nsIReflowCommand* cmd;
-  nsresult          result;
-                                                  
-  result = NS_NewHTMLReflowCommand(&cmd, lastInFlow, nsIReflowCommand::FrameAppended);
-  if (NS_OK == result) {
-    aShell->AppendReflowCommand(cmd);
-    NS_RELEASE(cmd);
-  }
-  
-  return NS_OK;
-}
-
+// XXX CONSTRUCTION
+#if 0
 NS_IMETHODIMP
 nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
                                       nsIPresContext* aPresContext,
@@ -239,6 +221,7 @@ nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   }
   return rv;
 }
+#endif
 
 NS_IMETHODIMP
 nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,

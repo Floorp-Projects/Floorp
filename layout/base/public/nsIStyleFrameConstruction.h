@@ -42,6 +42,12 @@ public:
                              nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer) = 0;
+
+  NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInContainer) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */

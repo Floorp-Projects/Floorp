@@ -607,6 +607,8 @@ void nsTableOuterFrame::PlaceChild( OuterTableReflowState& aState,
   }
 }
 
+// XXX CONSTRUCTION
+#if 0
 nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 {
   // Create the inner table frame
@@ -674,6 +676,7 @@ nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 
   return NS_OK;
 }
+#endif
 
 NS_METHOD
 nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,

@@ -85,26 +85,6 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 
-static nsIContentDelegate* gContentDelegate;
-
-/**
- * THE html content delegate. There is exactly one instance of this
- * class and it's used for all html content. It just turns around
- * and asks the content object to create the frame.
- */
-class ZContentDelegate : public nsIContentDelegate {
-public:
-  ZContentDelegate();
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIContent* aContent,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
-protected:
-  ~ZContentDelegate();
-};
-
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttribute and nsIDOMNode and
 // nsIScriptObjectOwner
@@ -215,50 +195,6 @@ private:
   nsVoidArray mArray;
   void *mScriptObject;
 };
-
-//----------------------------------------------------------------------
-
-ZContentDelegate::ZContentDelegate()
-{
-  NS_INIT_REFCNT();
-}
-
-NS_IMPL_ISUPPORTS(ZContentDelegate, kIContentDelegateIID);
-
-ZContentDelegate::~ZContentDelegate()
-{
-}
-
-NS_METHOD
-ZContentDelegate::CreateFrame(nsIPresContext* aPresContext,
-                             nsIContent* aContent,
-                             nsIFrame* aParentFrame,
-                             nsIStyleContext* aStyleContext,
-                             nsIFrame*& aResult)
-{
-  NS_PRECONDITION(nsnull != aContent, "null ptr");
-
-  // Make sure the content is html content
-  nsIHTMLContent* hc;
-  nsIFrame* frame = nsnull;
-  nsresult rv = aContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK != rv) {
-    // This means that *somehow* somebody which is not an html
-    // content object got ahold of this delegate and tried to
-    // create a frame with it. Give them back an nsFrame.
-    rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
-    if (NS_OK == rv) {
-      frame->SetStyleContext(aPresContext, aStyleContext);
-    }
-  }
-  else {
-    // Ask the content object to create the frame
-    rv = hc->CreateFrame(aPresContext, aParentFrame, aStyleContext, frame);
-    NS_RELEASE(hc);
-  }
-  aResult = frame;
-  return rv;
-}
 
 //----------------------------------------------------------------------
 
@@ -708,13 +644,6 @@ nsGenericHTMLElement::nsGenericHTMLElement()
   mContent = nsnull;
   mScriptObject = nsnull;
   mListenerManager = nsnull;
-
-  // Create shared content delegate if this is the first html content
-  // object being created.
-  if (nsnull == gContentDelegate) {
-    NS_NEWXPCOM(gContentDelegate, ZContentDelegate);
-    NS_ADDREF(gContentDelegate);
-  }
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
@@ -725,22 +654,6 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mListenerManager);
   // XXX what about mScriptObject? it's now safe to GC it...
-
-#if 0
-  // This code didn't work; and since content delegates are going
-  // away, I'm not going to fix it. So for now, we will leak a content
-  // delegate per address space. whoope doopie. -- kipp
-  NS_PRECONDITION(nsnull != gContentDelegate, "null content delegate");
-  if (nsnull != gContentDelegate) {
-    // Remove our reference to the shared content delegate object.  If
-    // the last reference just went away, null out gContentDelegate.
-    nsrefcnt rc;
-    NS_RELEASE2(gContentDelegate, rc);
-    if (0 == rc) {
-      gContentDelegate = nsnull;
-    }
-  }
-#endif
 }
 
 void
@@ -1531,13 +1444,6 @@ nsGenericHTMLElement::GetStyleRule(nsIStyleRule*& aResult)
   }
   aResult = result;
   return NS_OK;
-}
-
-nsIContentDelegate*
-nsGenericHTMLElement::GetDelegate(nsIPresContext* aCX)
-{
-  NS_ADDREF(gContentDelegate);
-  return gContentDelegate;
 }
 
 void

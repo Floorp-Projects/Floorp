@@ -682,11 +682,12 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
       // Resolve style for the child
       nsIStyleContext* colGroupStyleContext =
         aPresContext->ResolveStyleContextFor(lastColGroup, this, PR_TRUE);      // kidStyleContext: REFCNT++
-      nsIContentDelegate* kidDel = nsnull;
-      kidDel = lastColGroup->GetDelegate(aPresContext);                         // kidDel: REFCNT++
-      rv = kidDel->CreateFrame(aPresContext, lastColGroup, this,
-                                        colGroupStyleContext, (nsIFrame *&)lastColGroupFrame);
-      NS_RELEASE(kidDel);                                                       // kidDel: REFCNT--
+
+      // Create a col group frame
+      nsIFrame* newFrame;
+      NS_NewTableColGroupFrame(lastColGroup, this, newFrame);
+      lastColGroupFrame = (nsTableColGroupFrame*)newFrame;
+      lastColGroupFrame->SetStyleContext(aPresContext, colGroupStyleContext);
       NS_RELEASE(colGroupStyleContext);                                         // kidStyleContenxt: REFCNT--
 
       // hook lastColGroupFrame into child list
@@ -1555,7 +1556,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
   nsReflowReason  reflowReason = aReflowState.reason;
-  nsIContent * prevKid; // do NOT hold a reference for this temp pointer!
 
   for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
     nsSize maxKidElementSize(0,0);
@@ -2687,12 +2687,10 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       // Resolve style for the child
       nsIStyleContext* kidStyleContext =
         aPresContext.ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
-      nsIContentDelegate* kidDel = nsnull;
-      kidDel = content->GetDelegate(&aPresContext);                       // kidDel: REFCNT++
+
       nsIFrame* duplicateFrame;
-      nsresult rv = kidDel->CreateFrame(&aPresContext, content, cf,
-                                        kidStyleContext, duplicateFrame);
-      NS_RELEASE(kidDel);                                                // kidDel: REFCNT--
+      NS_NewTableRowGroupFrame(content, cf, duplicateFrame);
+      duplicateFrame->SetStyleContext(&aPresContext, kidStyleContext);
       NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
       
       if (nsnull==lastSib)

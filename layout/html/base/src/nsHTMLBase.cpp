@@ -125,6 +125,8 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
+// XXX CONSTRUCTION
+#if 0
 nsresult
 nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
                         nsIFrame*       aParentFrame,
@@ -206,3 +208,4 @@ nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
   NS_RELEASE(kidSC);
   return rv;
 }
+#endif
