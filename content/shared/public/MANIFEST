@@ -1,0 +1,19 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:content directory
+#
+nsCSSAtomList.h
+nsCSSAtoms.h
+nsCSSKeywordList.h
+nsCSSKeywords.h
+nsCSSPropList.h
+nsCSSProps.h
+nsHTMLAtomList.h
+nsHTMLAtoms.h
+nsHTMLValue.h
+nsLayoutAtomList.h
+nsLayoutAtoms.h
+nsStyleCoord.h
+nsStyleUtil.h
+nsTextFragment.h
+nsXULAtomList.h
+nsXULAtoms.h
