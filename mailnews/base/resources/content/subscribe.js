@@ -30,6 +30,8 @@ var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
 
 function SetServerTypeSpecificTextValues()
 {
+	if (!gServerURI) return;
+
 	var serverType = GetMsgFolderFromUri(gServerURI).server.type;
 	//dump("serverType="+serverType+"\n");
 	
@@ -102,6 +104,8 @@ function SetUpTree(forceToServer)
 	
 	gSubscribeTree.setAttribute('ref',null);
 
+	if (!gServerURI) return;
+
 	var folder = GetMsgFolderFromUri(gServerURI);
 	var server = folder.server;
 
@@ -141,22 +145,37 @@ function SubscribeOnLoad()
 		}
 	}
 	
+	gServerURI = null;
 	if (window.arguments[0].preselectedURI) {
 		var uri = window.arguments[0].preselectedURI;
 		//dump("subscribe: got a uri," + uri + "\n");
 		folder = GetMsgFolderFromUri(uri);
-		dump("xxx todo:  make sure this is a subscribable server\n");
 		//dump("folder="+folder+"\n");
 		//dump("folder.server="+folder.server+"\n");
-		gServerURI = folder.server.serverURI;
-		//dump("gServerURI="+gServerURI+"\n");
+		try {
+			subscribableServer = folder.server.QueryInterface(Components.interfaces.nsISubscribableServer);
+			gServerURI = folder.server.serverURI;
+		}
+		catch (ex) {
+			dump("not a subscribable server\n");
+			gServerURI = null;
+		}
 	}
-	else {
-		dump("subscribe: no uri\n");
-		dump("xxx todo:  use the default news server\n");
+
+	if (!gServerURI) {
+		//dump("subscribe: no uri\n");
+		dump("xxx todo:  use the default news server.  right now, I'm just using the first server\n");
 		var serverMenu = document.getElementById("serverMenu");
 		var menuitems = serverMenu.getElementsByTagName("menuitem");
-		gServerURI = menuitems[1].id;
+		
+		if (menuitems.length > 1) {
+			gServerURI = menuitems[1].id;
+		}
+		else {
+			dump("xxx todo none of your servers are subscribable\n");
+			dump("xxx todo fix this by disabling subscribe if no subscribable server or, add a CREATE SERVER button, like in 4.x\n");
+			return;
+		}
 	}
 
 	SetUpServerMenu();
