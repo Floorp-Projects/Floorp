@@ -21,9 +21,12 @@
 #include "nsIComponentManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+#include "nsIPlatformCharset.h"
 #include "nsIWin32Locale.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "prmem.h"
 
 #define NSDATETIMEFORMAT_BUFFER_LEN  80
 
@@ -33,6 +36,8 @@ static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
+
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatWin, kIDateTimeFormatIID);
 
@@ -58,7 +63,8 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   DWORD dwFlags_Date = 0, dwFlags_Time = 0;
   int dateLen, timeLen;
   PRUnichar dateBuffer[NSDATETIMEFORMAT_BUFFER_LEN], timeBuffer[NSDATETIMEFORMAT_BUFFER_LEN];
-  LCID lcid = GetUserDefaultLCID();
+  LCID lcid;
+  nsresult res;
 
   // Map tm to SYSTEMTIME
 	system_time.wYear = 1900 + tmTime->tm_year;
@@ -114,25 +120,60 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     mW_API = PR_FALSE;
   }
 
-  // store local charset name
-  mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
-  // Get LCID
-  if (locale != nsnull) {
-    PRUnichar *aLocaleUnichar;
+  // default charset name
+  mCharset.SetString("ISO-8859-1");
+  
+  // default LCID (en-US)
+  lcid = 1033;
+
+  PRUnichar *aLocaleUnichar = NULL;
+  nsString aCategory("NSILOCALE_TIME");
+
+  // get locale string, use app default if no locale specified
+  if (locale == nsnull) {
+    nsILocaleService *localeService;
+
+    res = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
+                                             nsILocaleService::GetIID(), (void**)&localeService);
+    if (NS_SUCCEEDED(res)) {
+      nsILocale *appLocale;
+      res = localeService->GetApplicationLocale(&appLocale);
+	    localeService->Release();
+      if (NS_SUCCEEDED(res)) {
+        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        appLocale->Release();
+      }
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+  }
+
+  // Get LCID and charset name from locale, if available
+  if (NS_SUCCEEDED(res)) {
     nsString aLocale;
-    nsString aCategory("NSILOCALE_TIME");
-    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-    if (NS_FAILED(res)) {
-      return res;
-    }
     aLocale.SetString(aLocaleUnichar);
-  	
-	  nsCOMPtr <nsIWin32Locale> win32Locale;
-	  res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, getter_AddRefs(win32Locale));
-    if (NS_FAILED(res)) {
-      return res;
+    if (NULL != aLocaleUnichar) {
+      nsAllocator::Free(aLocaleUnichar);
     }
-  	res = win32Locale->GetPlatformLocale(&aLocale, &lcid);
+
+    nsCOMPtr <nsIWin32Locale> win32Locale;
+    res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, getter_AddRefs(win32Locale));
+    if (NS_SUCCEEDED(res)) {
+  	  res = win32Locale->GetPlatformLocale(&aLocale, &lcid);
+    }
+
+    nsCOMPtr <nsIPlatformCharset> platformCharset;
+    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
+                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+    if (NS_SUCCEEDED(res)) {
+      PRUnichar* mappedCharset = NULL;
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+      if (NS_SUCCEEDED(res) && mappedCharset) {
+        mCharset.SetString(mappedCharset);
+        nsAllocator::Free(mappedCharset);
+      }
+    }
   }
 
   // Call GetDateFormatW
