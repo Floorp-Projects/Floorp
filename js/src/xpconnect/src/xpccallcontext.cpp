@@ -250,8 +250,11 @@ XPCCallContext::CanCallNow()
     if(!mTearOff)
     {
         mTearOff = mWrapper->FindTearOff(*this, mInterface, JS_FALSE, &rv);
-        if(!mTearOff)
+        if(!mTearOff || mTearOff->GetInterface() != mInterface)
+        {
+            mTearOff = nsnull;    
             return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;
+        }
     }
 
     // Refresh in case FindTearOff extended the set
