@@ -525,7 +525,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
     return;
   PRInt32* rowIndices = new PRInt32[numRows];
   if(!rowIndices) {
-    delete numColSpans;
+    delete [] numColSpans;
     return;
   }
   for (colX = numCols - 1; colX >= 0; colX--) { 
@@ -607,6 +607,8 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
       }
     }
   }
+  delete [] numColSpans;
+  delete [] rowIndices;
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eNonPctColspans, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
 #endif
