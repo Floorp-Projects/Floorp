@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdio.h>
+
 //locals
 #include "nsQABrowserView.h"
 #include "nsIQABrowserView.h"
@@ -52,7 +54,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
-
 
 nsQABrowserView::nsQABrowserView():mWebBrowser(nsnull)
 {
