@@ -75,6 +75,24 @@ void ProcessBValue(nsAReadableString * aInputString, nsAWritableString & aOutput
 }
 
 static
+void ProcessIValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+                   const char * aDefaultValueString,
+                   const char * aPrependString, const char* aAppendString)
+{
+  if (aInputString) {
+    if (aInputString->Equals(NS_LITERAL_STRING("-moz-editor-invert-value"))) {
+      aOutputString.Assign(NS_LITERAL_STRING("normal"));
+    }
+    else {
+      aOutputString.Assign(NS_LITERAL_STRING("italic"));
+    }
+  }
+  else {
+    aOutputString.Assign(NS_LITERAL_STRING("italic"));
+  }
+}
+
+static
 void ProcessDefaultValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
                          const char * aDefaultValueString,
                          const char * aPrependString, const char* aAppendString)
@@ -205,7 +223,7 @@ const nsHTMLCSSUtils::CSSEquivTable boldEquivTable[] = {
 };
 
 const nsHTMLCSSUtils::CSSEquivTable italicEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_style, ProcessDefaultValue, "italic", nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_style, ProcessIValue, nsnull, nsnull, nsnull, PR_TRUE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
@@ -643,7 +661,8 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, nsAR
 PRBool
 nsHTMLCSSUtils::IsCSSInvertable(nsIAtom *aProperty, const nsAReadableString *aAttribute)
 {
-  return PRBool(nsIEditProperty::b == aProperty);
+  return PRBool(nsIEditProperty::b == aProperty
+                || nsIEditProperty::i == aProperty);
 }
 
 // Get the default browser background color if we need it for GetCSSBackgroundColorState
