@@ -49,6 +49,7 @@
 
 #include "nsIDocumentLoader.h"
 
+// XXX: a copy exists in nsPresShell.cpp!!!
 #define UA_CSS_URL "resource:/res/ua.css"
 
 #define GET_OUTER() \
@@ -102,8 +103,12 @@ public:
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
 
-  NS_IMETHOD LoadURL(const nsString& aURL, nsIStreamObserver* aObserver,
-                     nsIPostData* aPostData);
+  NS_IMETHOD LoadURL(const nsString& aURLSpec, nsIStreamObserver* aObserver,
+                     nsIPostData* aPostData) {
+    NS_NOTREACHED("invalid call to WebWidget LoadURL");
+    return NS_ERROR_NULL_POINTER;
+  }
+
   virtual nsIDocument* GetDocument();
 
   virtual void DumpContent(FILE* out);
@@ -145,15 +150,57 @@ private:
 
 //----------------------------------------------------------------------
 
+#ifdef NS_DEBUG
+/**
+ * Note: the log module is created during initialization which
+ * means that you cannot perform logging before then.
+ */
+static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
+#endif
+
+#define WEB_TRACE_CALLS        0x1
+#define WEB_TRACE_PUSH_PULL    0x2
+#define WEB_TRACE_CHILD_REFLOW 0x4
+#define WEB_TRACE_NEW_FRAMES   0x8
+
+#define WEB_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
+
+#ifdef NS_DEBUG
+#define WEB_TRACE(_bit,_args)                              \
+  PR_BEGIN_MACRO                                           \
+    if (WEB_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+      PR_LogPrint _args;                                   \
+    }                                                      \
+  PR_END_MACRO
+#else
+#define WEB_TRACE(_bit,_args)
+#endif
+
+//----------------------------------------------------------------------
+
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-//nsIWebWidget* WebWidgetImpl::gRootWebWidget = nsnull;
+NS_WEB nsresult
+NS_NewWebWidget(nsIWebWidget** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  WebWidgetImpl* it = new WebWidgetImpl();
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIWebWidgetIID, (void **) aInstancePtrResult);
+}
 
 // Note: operator new zeros our memory
 WebWidgetImpl::WebWidgetImpl()
 {
-    NS_INIT_REFCNT();
+  WEB_TRACE(WEB_TRACE_CALLS,
+            ("WebWidgetImpl::WebWidgetImpl: this=%p"));
+  NS_INIT_REFCNT();
 }
 
 nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -185,7 +232,9 @@ NS_IMPL_RELEASE(WebWidgetImpl)
 
 WebWidgetImpl::~WebWidgetImpl()
 {
-printf("del %d ", this);
+  WEB_TRACE(WEB_TRACE_CALLS,
+            ("WebWidgetImpl::~WebWidgetImpl: this=%p"));
+
   ReleaseChildren();
   mContainer = nsnull;
 
@@ -220,22 +269,8 @@ printf("del %d ", this);
   NS_IF_RELEASE(mDeviceContext);
 }
 
-
-void Check(WebWidgetImpl* ww) 
-{
-  PRInt32 foo = ww->GetNumChildren();
-  for (int i = 0; i < foo; i++) {
-    nsIWebWidget* child;
-    ww->GetChildAt(i, &child);
-    if (child == 0) {
-      printf("hello");
-    }
-  }
-}
-
-
-
-void WebWidgetImpl::ReleaseChildren()
+void
+WebWidgetImpl::ReleaseChildren()
 {
   PRInt32 numChildren = GetNumChildren();
   for (PRInt32 i = 0; i < numChildren; i++) {
@@ -604,140 +639,15 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 NS_IMETHODIMP
-WebWidgetImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
+WebWidgetImpl::BindToDocument(nsISupports* aDoc, const char* aCommand)
 {
+  WEB_TRACE(WEB_TRACE_CALLS,
+            ("WebWidgetImpl::BindToDocument: this=%p aDoc=%p aCommand=%s",
+             this, aDoc, aCommand ? aCommand : ""));
+
   nsresult rv;
-
-#ifdef NS_DEBUG
-  printf("WebWidgetImpl::BindToDocument\n");
-#endif
-
   rv = aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
   return rv;
-
-}
-
-
-
-// XXX need to save old document in case of failure? Does caller do that?
-
-NS_IMETHODIMP
-WebWidgetImpl::LoadURL(const nsString& aURLSpec,
-                       nsIStreamObserver* aObserver,
-                       nsIPostData* aPostData)
-{
-    nsresult rv = NS_OK;
-///    nsIDocumentLoader* DocLoader;
-
-    NS_ASSERTION(0, "The Viewer container loads documents now...");
-
-///    rv = NS_NewDocumentLoader(&DocLoader);
-///    if (NS_OK == rv) {
-///        rv = DocLoader->LoadURL(aURLSpec, this, nsnull, aObserver, aPostData);
-///    }
-
-    return rv;
-#if 0
-
-#ifdef NS_DEBUG
-  printf("WebWidgetImpl::LoadURL: loadURL(");
-  fputs(aURLSpec, stdout);
-  printf(")\n");
-#endif
-
-  nsresult rv = ProvideDefaultHandlers();
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  nsIURL* url;
-  rv = NS_NewURL(&url, aURLSpec);
-  if (NS_OK != rv) {
-    return rv;
-  }
-      
-
-  if (nsnull != mPresShell) {
-    // Break circular reference first
-    mPresShell->EndObservingDocument();
-
-    // Then release the shell
-    NS_RELEASE(mPresShell);
-    mPresShell = nsnull;
-  }
-
-  // Create document
-  nsIDocument* doc;
-  rv = NS_NewHTMLDocument(&doc);
-
-  // set the root web widget to this if its container is not
-  // an embedded web webwidget
-  //nsISupports* parent;
-  //rv = GetContainer(&parent);
-  //if ((rv == NS_OK) && (nsnull != parent)) {
-  //  nsISupports* webFrame;
-  //  rv = parent->QueryInterface(kIWebWidgetIID, (void**)&webFrame);
-  //  if (rv == NS_OK) {
-  //    NS_RELEASE(webFrame);
-  //  } else {
-  //    SetRootWebWidget(this);
-  //  }
-  //}
-
-  ReleaseChildren();
-
-  // Create style set
-  nsIStyleSet* styleSet = nsnull;
-  rv = CreateStyleSet(doc, &styleSet);
-  if (NS_OK != rv) {
-    NS_RELEASE(doc);
-    return rv;
-  }
-
-  // Create presentation shell
-  rv = doc->CreateShell(mPresContext, mViewManager, styleSet, &mPresShell);
-  NS_RELEASE(styleSet);
-  if (NS_OK != rv) {
-    NS_RELEASE(doc);
-    return rv;
-  }
-
-  // Setup view manager's window
-  nsRect bounds;
-  mWindow->GetBounds(bounds);
-  if ((nsnull != mPresContext) && (nsnull != mViewManager)) {
-    float p2t = mPresContext->GetPixelsToTwips();
-    //reset scrolling offset to upper left
-    mViewManager->ResetScrolling();
-    nscoord width = NS_TO_INT_ROUND(bounds.width * p2t);
-    nscoord height = NS_TO_INT_ROUND(bounds.height * p2t);
-    mViewManager->SetWindowDimensions(width, height);
-  }
-
-  PRTime start = PR_Now();
-
-  // Now load the document
-  mPresShell->EnterReflowLock();
-  doc->LoadURL(url, aListener, this, aPostData);
-  mPresShell->ExitReflowLock();
-
-  PRTime end = PR_Now();
-  PRTime conversion, ustoms;
-  LL_I2L(ustoms, 1000);
-  LL_SUB(conversion, end, start);
-  LL_DIV(conversion, conversion, ustoms);
-  char buf[500];
-  PR_snprintf(buf, sizeof(buf),
-              "loading the document took %lldms\n",
-              conversion);
-  puts(buf);
-
-  NS_RELEASE(doc);
-
-  ForceRefresh();/* XXX temporary */
-
-  return NS_OK;
-#endif /* 0 */
 }
 
 nsIDocument* WebWidgetImpl::GetDocument()
@@ -846,15 +756,6 @@ NS_IMETHODIMP WebWidgetImpl::GetChildAt(PRInt32 aIndex, nsIWebWidget** aChild)
   NS_ADDREF(*aChild);
   return NS_OK;
 }
-
-//void WebWidgetImpl::SetRootWebWidget(nsIWebWidget* aWebWidget)
-//{
-//  if (aWebWidget != gRootWebWidget) {
-//    NS_IF_RELEASE(gRootWebWidget);
-//    gRootWebWidget = aWebWidget;
-//    NS_IF_ADDREF(gRootWebWidget);
-//  }
-//}
 
 nsIWebWidget* WebWidgetImpl::GetRootWebWidget()
 {
@@ -994,20 +895,6 @@ PRBool WebWidgetImpl::GetShowFrameBorders()
 void WebWidgetImpl::ForceRefresh()
 {
   mWindow->Invalidate(PR_TRUE);
-}
-
-NS_WEB nsresult
-NS_NewWebWidget(nsIWebWidget** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  WebWidgetImpl* it = new WebWidgetImpl();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIWebWidgetIID, (void **) aInstancePtrResult);
 }
 
 //----------------------------------------------------------------------
