@@ -56,7 +56,6 @@ nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), Repeater()
   SetControlType(kControlEditTextProc);
 	mIsPassword = PR_FALSE;
 	mIsReadOnly = PR_FALSE;
-	mTE = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -82,12 +81,6 @@ NS_IMETHODIMP nsTextWidget::Create(nsIWidget *aParent,
 	Inherited::Create(aParent, aRect, aHandleEventFunction,
 						aContext, aAppShell, aToolkit, aInitData);
 
-	// get the TEHandle
-	if (mControl)
-	{
-		Size dataSize = sizeof(mTE);
-		::GetControlData(mControl, kControlNoPart, kControlEditTextTEHandleTag, dataSize, (Ptr)&mTE, &dataSize);
-	}
 	return NS_OK;
 }
 
@@ -119,7 +112,7 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
 	PRBool eventHandled = nsWindow::DispatchMouseEvent(aEvent);	// we don't want the 'Inherited' nsMacControl behavior
 
-	if ((! eventHandled) && (mTE != nsnull))
+	if ((! eventHandled) && (mControl != nsnull))
 	{
 		if (aEvent.message == NS_MOUSE_LEFT_BUTTON_DOWN)
 		{
@@ -137,7 +130,7 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 			{
 				if (aEvent.isShift)		theModifiers = shiftKey;
 				if (aEvent.isControl)	theModifiers |= controlKey;
-				if (aEvent.isAlt)			theModifiers |= optionKey;
+				if (aEvent.isAlt)		theModifiers |= optionKey;
 			}
 			StartDraw();
 			::HandleControlClick(mControl, thePoint, theModifiers, nil);
@@ -176,7 +169,7 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 	PRBool eventHandled = Inherited::DispatchWindowEvent(aEvent);
 
 	// handle the message here if nobody else processed it already
-	if ((! eventHandled) && (mTE != nsnull))
+	if ((! eventHandled) && (mControl != nsnull))
 	{
 		switch (aEvent.message)
 		{
@@ -276,7 +269,6 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				case NS_GOTFOCUS:
 				{
 					StartDraw();
-					//::TEActivate(mTE);
 					ActivateControl(mControl);
 					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNextPart);
 						nsRect rect = mBounds;
@@ -294,7 +286,6 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				{
 					StopIdling();
 					StartDraw();
-					//::TEDeactivate(mTE);
 					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNoPart);
 						nsRect rect = mBounds;
 						rect.x = rect.y = 0;
@@ -381,7 +372,9 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
 		short newControlType = (aIsPassword ? kControlEditTextPasswordProc : kControlEditTextProc);
 		SetControlType(newControlType);
 		
+		StartDraw();
 		theResult = CreateOrReplaceMacControl(newControlType);
+		EndDraw();
 	}
 	return theResult;
 }
@@ -402,7 +395,9 @@ NS_METHOD  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 		short newControlType = (aReadOnlyFlag ? kControlStaticTextProc : kControlEditTextProc);
 		SetControlType(newControlType);
 
+		StartDraw();
 		theResult = CreateOrReplaceMacControl(newControlType);
+		EndDraw();
 	}
 	return theResult;
 }
@@ -615,14 +610,12 @@ NS_METHOD nsTextWidget::GetCaretPosition(PRUint32& aPos)
 //-------------------------------------------------------------------------
 void	nsTextWidget::RepeatAction(const EventRecord& inMacEvent)
 {
-	if (mTE)
+	if (mControl)
 	{
 		StartDraw();
-		//::TEIdle(mTE);
-		IdleControls(mWindowPtr);	// this should really live in the window
-									// but the problem is that we have to set
-									// the graphic environment with StartDraw/EndDraw
-									// in order to make the cursor blink
+		// This should really live in the window but
+		// we have to set the graphic environment
+		IdleControls(mWindowPtr);
 		EndDraw();
 	}
 }
