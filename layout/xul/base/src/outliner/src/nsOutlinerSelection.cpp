@@ -101,10 +101,15 @@ struct nsOutlinerRange
           mPrev->mNext = mNext;
         else
           mSelection->mFirstRange = mNext;
-        if (mNext)
-          mNext->mPrev = mPrev;
+        
+        nsOutlinerRange* next = mNext;
+        if (next)
+          next->mPrev = mPrev;
         mPrev = mNext = nsnull;
         delete this;
+        if (next)
+          next->RemoveRange(aStart, aEnd);
+        return;
       }
 
       if (mNext)
@@ -227,6 +232,8 @@ nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
   mOutliner = aOutliner;
   mSuppressed = PR_FALSE;
   mFirstRange = nsnull;
+  mShiftSelectPivot = -1;
+  mCurrentIndex = -1;
 }
 
 nsOutlinerSelection::~nsOutlinerSelection()
@@ -258,8 +265,46 @@ NS_IMETHODIMP nsOutlinerSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
+{
+  PRBool suppressSelect = mSuppressed;
+
+  if (aMsec != -1)
+    mSuppressed = PR_TRUE;
+
+  nsresult rv = Select(aIndex);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (aMsec != -1) {
+    mSuppressed = suppressSelect;
+    if (!mSuppressed) {
+      if (mSelectTimer)
+        mSelectTimer->Cancel();
+
+      mSelectTimer = do_CreateInstance("@mozilla.org/timer;1");
+      mSelectTimer->Init(SelectCallback, this, aMsec, NS_PRIORITY_HIGH);
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+nsOutlinerSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsOutlinerSelection* self = NS_STATIC_CAST(nsOutlinerSelection*, aClosure);
+  if (self) {
+    self->FireOnSelectHandler();
+    aTimer->Cancel();
+    self->mSelectTimer = nsnull;
+  }
+}
+
 NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
 {
+  mShiftSelectPivot = -1;
+
   if (mFirstRange) {
     PRBool alreadySelected = mFirstRange->Contains(aIndex);
 
@@ -279,6 +324,8 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
     }
   }
 
+  SetCurrentIndex(aIndex);
+  
   // Create our new selection.
   mFirstRange = new nsOutlinerRange(this, aIndex);
   mFirstRange->Invalidate();
@@ -298,6 +345,9 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
   // (4) The item is removed from an existing range.
   // (5) The addition of the item causes two ranges to be merged.
   // (6) The removal of the item causes two ranges to be split.
+  mShiftSelectPivot = -1;
+  SetCurrentIndex(aIndex);
+
   if (!mFirstRange)
     Select(aIndex);
   else {
@@ -322,9 +372,15 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
     delete mFirstRange;
   }
 
-  if (aStartIndex == -1)
-    aStartIndex = mCurrentIndex;
-    
+  if (aStartIndex == -1) {
+    if (mShiftSelectPivot != -1)
+      aStartIndex = mShiftSelectPivot;
+    else aStartIndex = mCurrentIndex;
+  }
+
+  mShiftSelectPivot = aStartIndex;
+  SetCurrentIndex(aEndIndex);
+  
   PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
   PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
 
@@ -352,6 +408,7 @@ NS_IMETHODIMP nsOutlinerSelection::ClearSelection()
   mFirstRange->Invalidate();
   delete mFirstRange;
   mFirstRange = nsnull;
+  mShiftSelectPivot = -1;
 
   FireOnSelectHandler();
 
@@ -365,6 +422,8 @@ NS_IMETHODIMP nsOutlinerSelection::InvertSelection()
 
 NS_IMETHODIMP nsOutlinerSelection::SelectAll()
 {
+  mShiftSelectPivot = -1;
+
   // Invalidate not necessary when clearing selection, since 
   // we're going to invalidate the world on the SelectAll.
   delete mFirstRange;
@@ -428,6 +487,8 @@ NS_IMETHODIMP nsOutlinerSelection::GetSelectEventsSuppressed(PRBool *aSelectEven
 NS_IMETHODIMP nsOutlinerSelection::SetSelectEventsSuppressed(PRBool aSelectEventsSuppressed)
 {
   mSuppressed = aSelectEventsSuppressed;
+  if (!mSuppressed)
+    FireOnSelectHandler();
   return NS_OK;
 }
 
@@ -437,9 +498,16 @@ NS_IMETHODIMP nsOutlinerSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aCurrentIndex)
+NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aIndex)
 {
-  mCurrentIndex = aCurrentIndex;
+  if (mCurrentIndex != -1)
+    mOutliner->InvalidateRow(mCurrentIndex);
+  
+  mCurrentIndex = aIndex;
+  
+  if (aIndex != -1)
+    mOutliner->InvalidateRow(aIndex);
+
   return NS_OK;
 }
 

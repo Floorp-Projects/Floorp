@@ -39,6 +39,9 @@ interface nsIOutlinerSelection : nsISecurityCheckedComponent
   // Deselect all rows and select the row at the specified index. 
   void select(in long index);
 
+  // Perform a timed select.
+  void timedSelect(in long index, in long delay);
+
   // Toggle the selection state of the row at the specified index.
   void toggleSelect(in long index);
 
