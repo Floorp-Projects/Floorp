@@ -1599,7 +1599,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
 
 static void
 SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
-        nscoord aMinFontSize, PRBool aUseDocumentFonts, PRBool aChromeOverride,
+        nscoord aMinFontSize, PRBool aUseDocumentFonts,
         PRBool aIsGeneric, const nsRuleDataFont& aFontData,
         const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
         nsStyleFont* aFont, PRBool& aInherited)
@@ -1613,7 +1613,7 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   if (eCSSUnit_String == aFontData.mFamily.GetUnit()) {
     // set the correct font if we are using DocumentFonts OR we are overriding for XUL
     // MJA: bug 31816
-    if (aChromeOverride || aUseDocumentFonts) {
+    if (aUseDocumentFonts) {
       if (!aIsGeneric) {
         // only bother appending fallback fonts if this isn't a fallback generic font itself
         aFont->mFont.name.Append((PRUnichar)',');
@@ -1831,13 +1831,7 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mSize = nsStyleFont::ZoomText(aPresContext, aFont->mSize);
 
   // enforce the user' specified minimum font-size on the value that we expose
-  if (aChromeOverride) {
-    // the chrome is unconstrained, it always uses our cascading size
-    aFont->mFont.size = aFont->mSize;
-  }
-  else {
-    aFont->mFont.size = PR_MAX(aFont->mSize, aMinFontSize);
-  }
+  aFont->mFont.size = PR_MAX(aFont->mSize, aMinFontSize);
 
   // font-size-adjust: number, none, inherit
   if (eCSSUnit_Number == aFontData.mSizeAdjust.GetUnit()) {
@@ -1863,7 +1857,7 @@ static void
 SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
                const nsRuleDataFont& aFontData, PRUint8 aGenericFontID,
                nscoord aMinFontSize, PRBool aUseDocumentFonts,
-               PRBool aChromeOverride, nsStyleFont* aFont)
+               nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
   nsAutoVoidArray contextPath;
@@ -1926,8 +1920,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     // Compute the delta from the information that the rules specified
     fontData.mFamily.Reset(); // avoid unnecessary operations in SetFont()
 
-    SetFont(aPresContext, context, aMinFontSize,
-            aUseDocumentFonts, aChromeOverride, PR_TRUE,
+    SetFont(aPresContext, context, aMinFontSize, aUseDocumentFonts, PR_TRUE,
             fontData, *defaultFont, &parentFont, aFont, dummy);
 
     // XXX Not sure if we need to do this here
@@ -1943,8 +1936,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   // Finish off by applying our own rules. In this case, aFontData
   // already has the current cascading information that we want. We
   // can just compute the delta from the parent.
-  SetFont(aPresContext, aContext, aMinFontSize,
-          aUseDocumentFonts, aChromeOverride, PR_TRUE,
+  SetFont(aPresContext, aContext, aMinFontSize, aUseDocumentFonts, PR_TRUE,
           aFontData, *defaultFont, &parentFont, aFont, dummy);
 }
 
@@ -1994,8 +1986,9 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   // See if there is a minimum font-size constraint to honor
   nscoord minimumFontSize = 0; // unconstrained by default
   mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize, minimumFontSize);
+  if (minimumFontSize < 0)
+    minimumFontSize = 0;
 
-  PRBool chromeOverride = PR_FALSE;
   PRBool useDocumentFonts = PR_TRUE;
 
   // Figure out if we are a generic font
@@ -2006,7 +1999,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
 
     // MJA: bug 31816
     // if we are not using document fonts, but this is a XUL document,
-    // then we set the chromeOverride flag to use the document fonts anyway
+    // then we use the document fonts anyway
     mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts, useDocumentFonts);
     if (!useDocumentFonts) {
       // check if the prefs have been disabled for this shell
@@ -2025,15 +2018,14 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   // We only need to know this to determine if we have to use the
   // document fonts (overriding the useDocumentFonts flag), or to
   // determine if we have to override the minimum font-size constraint.
-  if (!useDocumentFonts || minimumFontSize > 0) {
-    chromeOverride = IsChrome(mPresContext);
-    // XXXldb Just fix up |useDocumentFonts| here and drop the
-    // |chromeOverride| variable from here on!
+  if ((!useDocumentFonts || minimumFontSize > 0) && IsChrome(mPresContext)) {
+    useDocumentFonts = PR_TRUE;
+    minimumFontSize = 0;
   }
 
   // If we don't have to use document fonts, then we are only entitled
   // to use the user's default variable-width font and fixed-width font
-  if (!useDocumentFonts && !chromeOverride) {
+  if (!useDocumentFonts) {
     if (generic != kGenericFont_moz_fixed)
       generic = kGenericFont_NONE;
   }
@@ -2046,15 +2038,14 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
     const nsFont* defaultFont;
     mPresContext->GetDefaultFont(generic, &defaultFont);
     SetFont(mPresContext, aContext, minimumFontSize,
-            useDocumentFonts, chromeOverride, PR_FALSE,
+            useDocumentFonts, PR_FALSE,
             fontData, *defaultFont, parentFont, font, inherited);
   }
   else {
     // re-calculate the font as a generic font
     inherited = PR_TRUE;
     SetGenericFont(mPresContext, aContext, fontData,
-                   generic, minimumFontSize, useDocumentFonts,
-                   chromeOverride, font);
+                   generic, minimumFontSize, useDocumentFonts, font);
   }
   // Set our generic font's bit to inform our descendants
   font->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
