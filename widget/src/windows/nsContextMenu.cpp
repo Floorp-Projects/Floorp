@@ -402,25 +402,20 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 	  TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD, 
 	  mX, mY, 0, pWnd, NULL);
 
-  // Dispatch to MenuItemSelected
-  nsIContextMenu * menu;
-  QueryInterface(kIContextMenuIID, (void**) &menu);
-  nsIMenuItem * menuItem = FindMenuItem(menu, identifier);
-  NS_RELEASE(menu);
-  if (menuItem) {
-    nsIMenuListener * listener;
-    if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-      listener->MenuItemSelected(aMenuEvent);
-      NS_RELEASE(listener);
+  if (identifier > 0) {
+    // Dispatch to MenuItemSelected
+    nsIContextMenu * menu;
+    QueryInterface(kIContextMenuIID, (void**) &menu);
+    nsIMenuItem * menuItem = FindMenuItem(menu, identifier);
+    NS_RELEASE(menu);
+    if (menuItem) {
+      nsIMenuListener * listener;
+      if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+        listener->MenuItemSelected(aMenuEvent);
+        NS_RELEASE(listener);
+      }
     }
   }
-  
-  /*
-  if (nsnull != mListener) {
-    NS_ASSERTION(false, "get debugger");
-    mListener->MenuSelected(aMenuEvent);
-  }
-  */
   return nsEventStatus_eIgnore;
 }
 
