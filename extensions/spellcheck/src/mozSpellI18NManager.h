@@ -43,10 +43,9 @@
 
 #define MOZ_SPELLI18NMANAGER_CONTRACTID "@mozilla.org/spellchecker/i18nmanager;1"
 #define MOZ_SPELLI18NMANAGER_CID         \
-{ /* {F30F3CC0-840F-4a83-AC0E-FD343D3A44A0} */  \
-0xf30f3cc0, 0x840f, 0x4a83,                    \
-{ 0xac, 0xe, 0xfd, 0x34, 0x3d, 0x3a, 0x44, 0xa0} }
-
+{ /* {AEB8936F-219C-4D3C-8385-D9382DAA551A} */  \
+0xaeb8936f, 0x219c, 0x4d3c, \
+  { 0x83, 0x85, 0xd9, 0x38, 0x2d, 0xaa, 0x55, 0x1a } }
 
 class mozSpellI18NManager : public mozISpellI18NManager
 {

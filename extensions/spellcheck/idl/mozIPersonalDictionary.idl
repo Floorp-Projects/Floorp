@@ -38,51 +38,76 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(F4A02EFB-7823-465D-B459-C6C07A03D30F)]
+[scriptable, uuid(7EF52EAF-B7E1-462B-87E2-5D1DBACA9048)]
 
 /**
-  This interface represents a Personal Dictionary.
-*/
+ * This interface represents a Personal Dictionary.
+ */
 
 interface mozIPersonalDictionary : nsISupports {
 
-  /* Initialize the dictionary */
-  void Init();
+  /**
+   * Initialize the dictionary
+   */
+  void init();
 
-  /* Load the dictionary */
-  void Load();
+  /**
+   * Load the dictionary
+   */
+  void load();
 
-  /* Save the dictionary */
-  void Save();
+  /**
+   * Save the dictionary
+   */
+  void save();
 
-  /* Get the list of words */
-  void GetWordList([array, size_is(count)] out wstring words, out PRUint32 count);
+  /**
+   * Get the list of words
+   */
+  void getWordList([array, size_is(count)] out wstring words, out PRUint32 count);
 
-  /* Check a unicode string */
-  boolean Check(in wstring word, in wstring lang);
+  /**
+   * Check a unicode string
+   */
+  boolean check(in wstring word, in wstring lang);
 
-  /* Add a word to the personal dictionary */
-  void AddWord(in wstring word, in wstring lang);
+  /**
+   * Add a word to the personal dictionary
+   */
+  void addWord(in wstring word, in wstring lang);
 
-  /* Remove a word from the personal dictionary */
-  void RemoveWord(in wstring word, in wstring lang);
+  /**
+   * Remove a word from the personal dictionary
+   */
+  void removeWord(in wstring word, in wstring lang);
 
-  /* Add a word to the ignore all list */
-  void IgnoreWord(in wstring word);
+  /**
+   * Add a word to the ignore all list
+   */
+  void ignoreWord(in wstring word);
 
-  /* Clear the ignore list */
-  void EndSession();
+  /**
+   * Clear the ignore list
+   */
+  void endSession();
 
-  /** These three functions are here in case we want to store previous 
-   *  misspellings and return them at the head of the misspell list.
+  /** 
+   * These three functions are here in case we want to store previous 
+   * misspellings and return them at the head of the misspell list.
    */
  
-  /* Add a misspelling to the list of corrections */
-  void AddCorrection(in wstring word,in wstring correction, in wstring lang);
+  /**
+   * Add a misspelling to the list of corrections
+   */
+  void addCorrection(in wstring word,in wstring correction, in wstring lang);
 
-  /* Add a misspelling to the list of corrections */
-  void RemoveCorrection(in wstring word,in wstring correction, in wstring lang);
+  /**
+   * Remove a misspelling from the list of corrections
+   */
+  void removeCorrection(in wstring word,in wstring correction, in wstring lang);
 
-  /* Get a list of previous corrections for the word */
-  void GetCorrection(in wstring word, [array, size_is(count)] out wstring words, out PRUint32 count);
+  /**
+   * Get a list of previous corrections for the word
+   */
+  void getCorrection(in wstring word, [array, size_is(count)] out wstring words, out PRUint32 count);
 };

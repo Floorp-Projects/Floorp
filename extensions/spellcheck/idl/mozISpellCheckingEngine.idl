@@ -40,40 +40,60 @@
 
 interface mozIPersonalDictionary;
 
-[scriptable, uuid(4D3AF565-43AF-4B2E-A006-069A9F4EC6A8)]
+[scriptable, uuid(43987F7B-0FAA-4019-811E-42BECAC73FC5)]
 
 /**
-  This interface represents a SpellChecker.
-*/
+ * This interface represents a SpellChecker.
+ */
 
 interface mozISpellCheckingEngine : nsISupports {
-  /* The name of the current dictionary */
+  /**
+   * The name of the current dictionary
+   */
   attribute wstring dictionary;
 
-  /* The language we think that we're checking */
+  /**
+   * The language this spellchecker is using when checking
+   */
   readonly attribute wstring language;
 
-  /* Does the engine provide its own PD? */
+  /**
+   * Does the engine provide its own personal dictionary?
+   */
   readonly attribute boolean providesPersonalDictionary;
 
-  /* Does the engine provide its own word utils? */
+  /**
+   * Does the engine provide its own word utils?
+   */
   readonly attribute boolean providesWordUtils;
 
-  /* The name of the engine */
+  /**
+   * The name of the engine
+   */
   readonly attribute wstring name;
 
-  /* The name of the engine */
+  /** 
+   * a string indicating the copyright of the engine
+   */
   readonly attribute wstring copyright;
 
-  /* the personal dictionary */
+  /**
+   * the personal dictionary
+   */
   attribute mozIPersonalDictionary personalDictionary;
 
-  /* Get the list of dictionaries */
-  void GetDictionaryList([array, size_is(count)] out wstring dictionaries, out PRUint32 count);
+  /**
+   * Get the list of dictionaries
+   */
+  void getDictionaryList([array, size_is(count)] out wstring dictionaries, out PRUint32 count);
 
-  /* check a word */
-  boolean Check(in wstring word);
+  /**
+   * check a word
+   */
+  boolean check(in wstring word);
 
-  /* get a list of suggestions for a misspelled word */
-  void Suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out PRUint32 count);
+  /**
+   * get a list of suggestions for a misspelled word
+   */
+  void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out PRUint32 count);
 };

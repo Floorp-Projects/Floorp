@@ -39,12 +39,16 @@
 #include "nsISupports.idl"
 #include "mozISpellI18NUtil.idl"
 
-[scriptable, uuid(35D0B5E6-270A-4a95-92B2-384E1806AE83)]
+[scriptable, uuid(AEB8936F-219C-4D3C-8385-D9382DAA551A)]
 
 /**
-  This interface contains various I18N related code used in various places by the spell checker.
-*/
+ * This interface contains various I18N related code used in various places
+ * by the spell checker.
+ */
 
 interface mozISpellI18NManager : nsISupports {
-  mozISpellI18NUtil GetUtil(in wstring language);
+  /**
+   * Get a mozISpellI18NUtil interface that best matches the given language.
+   */
+  mozISpellI18NUtil getUtil(in wstring language);
 };
