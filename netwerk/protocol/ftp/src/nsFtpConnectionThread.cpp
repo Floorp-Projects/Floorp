@@ -541,7 +541,7 @@ nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 {
 #if defined(PR_LOGGING)
     nsCAutoString spec;
-    (void)mURL->GetAsciiSpec(spec);
+    (void)mURI->GetAsciiSpec(spec);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) nsFtpState::OnStartRequest() (spec =%s)\n",
         this, spec.get()));
@@ -579,7 +579,7 @@ nsFtpState::EstablishControlConnection()
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) trying cached control\n", this));
         
     nsFtpControlConnection* connection;
-    (void) gFtpHandler->RemoveConnection(mURL, &connection);
+    (void) gFtpHandler->RemoveConnection(mURI, &connection);
     
     if (connection) {
         mControlConnection = connection;
@@ -591,7 +591,6 @@ nsFtpState::EstablishControlConnection()
             // read cached variables into us. 
             mServerType = mControlConnection->mServerType;           
             mPassword   = mControlConnection->mPassword;
-            mPwd        = mControlConnection->mPwd;
             mTryingCachedControl = PR_TRUE;
             
             // we're already connected to this server, skip login.
@@ -619,7 +618,7 @@ nsFtpState::EstablishControlConnection()
     mNextState = FTP_S_USER;
     
     nsCAutoString host;
-    rv = mURL->GetAsciiHost(host);
+    rv = mURI->GetAsciiHost(host);
     if (NS_FAILED(rv)) return rv;
 
     mControlConnection = new nsFtpControlConnection(host.get(), mPort);
@@ -794,29 +793,13 @@ nsFtpState::Process()
                 mInternalError = NS_ERROR_FAILURE;
             
             break;
-// CWD            
-          case FTP_S_CWD:
-            rv = S_cwd();
-            
-            if (NS_FAILED(rv))
-                mInternalError = NS_ERROR_FTP_CWD;
-            
-            MoveToNextState(FTP_R_CWD);
-            break;
-            
-          case FTP_R_CWD:
-            mState = R_cwd();
-            
-            if (FTP_ERROR == mState)
-                mInternalError = NS_ERROR_FTP_CWD;
-            break;
        
 // LIST
           case FTP_S_LIST:
             rv = S_list();
             
             if (NS_FAILED(rv))
-                mInternalError = NS_ERROR_FTP_CWD;
+                mInternalError = NS_ERROR_FTP_LIST;
             
             MoveToNextState(FTP_R_LIST);
             break;
@@ -936,23 +919,6 @@ nsFtpState::Process()
 
             break;
             
-// PWD        
-          case FTP_S_PWD:
-            rv = S_pwd();
-
-            if (NS_FAILED(rv))
-                mInternalError = NS_ERROR_FTP_PWD;
-            
-            MoveToNextState(FTP_R_PWD);
-            break;
-            
-          case FTP_R_PWD:
-            mState = R_pwd();
-
-            if (FTP_ERROR == mState) 
-                mInternalError = NS_ERROR_FTP_PWD;
-
-            break;
             
           default:
             ;
@@ -979,11 +945,14 @@ nsFtpState::S_user() {
         usernameStr.Append("anonymous");
     } else {
         if (mUsername.IsEmpty()) {
-            if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
+            if (!mAuthPrompter) {
+                NS_WARNING("No Auth Prompt.");
+                return NS_ERROR_NOT_INITIALIZED;
+            }
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
             nsCAutoString prePath;
-            rv = mURL->GetPrePath(prePath);
+            rv = mURI->GetPrePath(prePath);
             if (NS_FAILED(rv)) return rv;
             NS_ConvertUTF8toUCS2 prePathU(prePath);
 
@@ -1074,13 +1043,16 @@ nsFtpState::S_pass() {
         }
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
-            if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
+            if (!mAuthPrompter) {
+                NS_WARNING("No Auth Prompt.");
+                return NS_ERROR_NOT_INITIALIZED;
+            }
 
             PRUnichar *passwd = nsnull;
             PRBool retval;
             
             nsCAutoString prePath;
-            rv = mURL->GetPrePath(prePath);
+            rv = mURI->GetPrePath(prePath);
             if (NS_FAILED(rv)) return rv;
             NS_ConvertUTF8toUCS2 prePathU(prePath);
             
@@ -1142,7 +1114,7 @@ nsFtpState::R_pass() {
             nsCOMPtr<nsIPasswordManager> pm = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
             if (pm) {
                 nsCAutoString prePath;
-                nsresult rv = mURL->GetPrePath(prePath);
+                nsresult rv = mURI->GetPrePath(prePath);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
                 if (NS_SUCCEEDED(rv)) {
                     pm->RemoveUser(prePath, NS_LITERAL_STRING(""));
@@ -1157,31 +1129,19 @@ nsFtpState::R_pass() {
     return FTP_ERROR;
 }
 
+
 nsresult
-nsFtpState::S_pwd() {
-    nsCString pwdStr("PWD" CRLF);
-    return SendFTPCommand(pwdStr);
+nsFtpState::S_acct() {
+    nsCString acctString("ACCT noaccount" CRLF);
+    return SendFTPCommand(acctString);
 }
 
 FTP_STATE
-nsFtpState::R_pwd() {
-    if (mResponseCode/100 != 2) 
+nsFtpState::R_acct() {
+    if (mResponseCode/100 == 2)
+        return FTP_S_SYST;
+    else
         return FTP_ERROR;
-    if (mServerType != FTP_VMS_TYPE) {
-        nsCAutoString respStr(mResponseMsg);
-        PRInt32 pos = respStr.FindChar('"');
-        if (pos > -1) {
-            respStr.Cut(0,pos+1);
-            pos = respStr.FindChar('"');
-            if (pos > -1) {
-                respStr.Truncate(pos);
-                if (respStr.Last() != '/')
-                    respStr.Append("/");
-                mPwd = respStr;
-            }
-        }
-    }
-    return FTP_S_TYPE;
 }
 
 nsresult
@@ -1215,39 +1175,11 @@ nsFtpState::R_syst() {
         }
         else
         {
-            NS_ASSERTION(0, "Server type list format unrecognized.");
-            // Guessing causes crashes.
-            // (Of course, the parsing code should be more robust...)
-            nsresult rv;
-            nsCOMPtr<nsIStringBundleService> bundleService =
-                do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            if (NS_FAILED(rv)) return FTP_ERROR;
-
-            nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NECKO_MSGS_URL,
-                                             getter_AddRefs(bundle));
-            if (NS_FAILED(rv)) return FTP_ERROR;
-            
-            nsXPIDLString formatedString;
-            PRUnichar* ucs2Response = ToNewUnicode(mResponseMsg);
-            const PRUnichar *formatStrings[1] = { ucs2Response };
-            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("UnsupportedFTPServer").get(),
-                                              formatStrings, 1,
-                                              getter_Copies(formatedString));
-            nsMemory::Free(ucs2Response);
-            if (NS_FAILED(rv)) return FTP_ERROR;
-
-            NS_ASSERTION(mPrompter, "no prompter!");
-            if (mPrompter)
-                (void) mPrompter->Alert(nsnull, formatedString.get());
-            
-            // since we just alerted the user, clear mResponseMsg,
-            // which is displayed to the user.
-            mResponseMsg = "";
-            return FTP_ERROR;
+            // All else fails, this is to be treated like a unix box.
+            mServerType = FTP_UNIX_TYPE;
         }
-        
-        return FTP_S_PWD;
+
+        return FTP_S_TYPE;
     }
 
     if (mResponseCode/100 == 5) {   
@@ -1255,23 +1187,9 @@ nsFtpState::R_syst() {
         // No clue.  We will just hope it is UNIX type server.
         mServerType = FTP_UNIX_TYPE;
 
-        return FTP_S_PWD;
+        return FTP_S_TYPE;
     }
     return FTP_ERROR;
-}
-
-nsresult
-nsFtpState::S_acct() {
-    nsCString acctString("ACCT noaccount" CRLF);
-    return SendFTPCommand(acctString);
-}
-
-FTP_STATE
-nsFtpState::R_acct() {
-    if (mResponseCode/100 == 2)
-        return FTP_S_SYST;
-    else
-        return FTP_ERROR;
 }
 
 nsresult
@@ -1289,45 +1207,17 @@ nsFtpState::R_type() {
 }
 
 nsresult
-nsFtpState::S_cwd() {
-    nsCAutoString cwdStr(mPath);
-    if (mServerType == FTP_VMS_TYPE)
-        ConvertDirspecToVMS(cwdStr);
-    else {
-        if (cwdStr.IsEmpty() || cwdStr.First() != '/')
-            cwdStr.Insert(mPwd,0);
-    }
-    cwdStr.Insert("CWD ",0);
-    cwdStr.Append(CRLF);
-
-    return SendFTPCommand(cwdStr);
-}
-
-FTP_STATE
-nsFtpState::R_cwd() {
-    if (mResponseCode/100 == 2) {
-        if (mAction == PUT)
-            return FTP_S_STOR;
-        
-        return FTP_S_LIST;
-    }
-    
-    return FTP_ERROR;
-}
-
-nsresult
 nsFtpState::S_size() {
-    nsCAutoString sizeBuf(mPath);
-    if (mServerType == FTP_VMS_TYPE)
-        ConvertFilespecToVMS(sizeBuf);
-    else {
-        if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
-            sizeBuf.Insert(mPwd,0);
+    nsCAutoString cmdString("SIZE ");
+    if (mPath.IsEmpty()) {
+        cmdString.Append("/");
     }
-    sizeBuf.Insert("SIZE ",0);
-    sizeBuf.Append(CRLF);
+    else {
+        cmdString.Append(mPath);
+    }
+    cmdString.Append(CRLF);
 
-    return SendFTPCommand(sizeBuf);
+    return SendFTPCommand(cmdString);
 }
 
 FTP_STATE
@@ -1343,17 +1233,15 @@ nsFtpState::R_size() {
 
 nsresult
 nsFtpState::S_mdtm() {
-    nsCAutoString mdtmBuf(mPath);
-    if (mServerType == FTP_VMS_TYPE)
-        ConvertFilespecToVMS(mdtmBuf);
-    else {
-        if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
-            mdtmBuf.Insert(mPwd,0);
+    nsCAutoString cmdString("MDTM ");
+    if (mPath.IsEmpty()) {
+        cmdString.Append("/");
     }
-    mdtmBuf.Insert("MDTM ",0);
-    mdtmBuf.Append(CRLF);
-
-    return SendFTPCommand(mdtmBuf);
+    else {
+        cmdString.Append(mPath);
+    }
+    cmdString.Append(CRLF);
+    return SendFTPCommand(cmdString);
 }
 
 FTP_STATE
@@ -1485,7 +1373,12 @@ nsFtpState::S_list() {
 
     mDRequestForwarder->SetEntityID(nsnull);
 
-    nsCAutoString listString("LIST" CRLF);
+    nsCAutoString listString("LIST");
+    if (!mPath.IsEmpty()) {
+        listString.Append(" ");
+        listString.Append(mPath);
+    }    
+    listString.Append(CRLF);
 
     return SendFTPCommand(listString);
 }
@@ -1512,20 +1405,20 @@ nsFtpState::R_list() {
 nsresult
 nsFtpState::S_retr() {
     nsresult rv = NS_OK;
-    nsCAutoString retrStr(mPath);
-    if (mServerType == FTP_VMS_TYPE)
-        ConvertFilespecToVMS(retrStr);
-    else {
-        if (retrStr.IsEmpty() || retrStr.First() != '/')
-            retrStr.Insert(mPwd,0);
+    nsCAutoString cmdString("RETR ");
+
+    if (mPath.IsEmpty()) {
+        cmdString.Append("/");
     }
-    retrStr.Insert("RETR ",0);
-    retrStr.Append(CRLF);
-    
+    else {
+        cmdString.Append(mPath);
+    }
+    cmdString.Append(CRLF);
+
     if (!mDRequestForwarder)
         return NS_ERROR_FAILURE;
     
-    rv = SendFTPCommand(retrStr);
+    rv = SendFTPCommand(cmdString);
     return rv;
 }
 
@@ -1554,15 +1447,9 @@ nsFtpState::R_retr() {
     }
     
     // These error codes are related to problems with the connection.  
-    // If we encounter any at this point, do not try CWD and abort.
+    // If we encounter any at this point, do not try again and abort.
     if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
         return FTP_ERROR;
-
-    if (mServerType == FTP_VMS_TYPE) {
-        // We don't handle VMS directory listings yet. If we continue, we get
-        // scs->AsyncConvertData failed (rv=80004005)
-        return FTP_ERROR;
-    }
 
     if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
@@ -1570,7 +1457,7 @@ nsFtpState::R_retr() {
         return FTP_S_PASV;
     }
 
-    return FTP_S_CWD;
+    return FTP_S_LIST;
 }
 
 
@@ -1608,28 +1495,17 @@ nsFtpState::S_stor() {
 
     NS_ASSERTION(mAction == PUT, "Wrong state to be here");
     
-    nsCAutoString storStr;
-    nsresult rv;
-    nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURL, &rv));
-    if (NS_FAILED(rv)) return rv;
+    nsCAutoString cmdString("STOR ");
 
-    rv = aURL->GetFilePath(storStr);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(!storStr.IsEmpty(), "What does it mean to store a empty path");
-        
-    if (storStr.First() == '/')
-    {
-        // kill the first slash since we want to be relative to CWD.
-        storStr.Cut(0,1);
+    if (mPath.IsEmpty()) {
+        NS_WARNING("Sending STOR without a path");       
     }
-    if (mServerType == FTP_VMS_TYPE) {
-        ConvertFilespecToVMS(storStr);
+    else {
+        cmdString.Append(mPath);
     }
-    NS_UnescapeURL(storStr);
-    storStr.Insert("STOR ",0);
-    storStr.Append(CRLF);
+    cmdString.Append(CRLF);
 
-    return SendFTPCommand(storStr);
+    return SendFTPCommand(cmdString);
 }
 
 FTP_STATE
@@ -1915,8 +1791,15 @@ nsFtpState::R_pasv() {
         }
     }
 
-    if (mRETRFailed)
-        return FTP_S_CWD;
+    if (mRETRFailed) {
+        return FTP_S_LIST;
+    }
+
+    // These next two line will break any FTP server the returns tar.gz when issuing 
+    // a RETR for a directory.
+    //    if (mPath.IsEmpty())
+    //    return FTP_S_LIST;
+
     return FTP_S_SIZE;
 }
 
@@ -1927,7 +1810,7 @@ nsFtpState::R_pasv() {
 NS_IMETHODIMP
 nsFtpState::GetName(nsACString &result)
 {
-    return mURL->GetSpec(result);
+    return mURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
@@ -1947,7 +1830,7 @@ nsFtpState::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsFtpState::GetStatus(nsresult *status)
+nsFtpState::GetStatus(nsresult *status)        
 {
     *status = mInternalError;
     return NS_OK;
@@ -1959,7 +1842,6 @@ nsFtpState::Cancel(nsresult status)
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) nsFtpState::Cancel() rv=%x\n", this, status));
 
-    // we should try to recover the control connection....
     if (NS_SUCCEEDED(mControlStatus))
         mControlStatus = status;
 
@@ -2172,7 +2054,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
 
     mChannel = aChannel; // a straight com ptr to the channel
 
-    rv = aChannel->GetURI(getter_AddRefs(mURL));
+    rv = aChannel->GetURI(getter_AddRefs(mURI));
     if (NS_FAILED(rv)) return rv;
         
     if (mCacheEntry) {
@@ -2189,7 +2071,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
             NS_ADDREF(mDRequestForwarder);
     
             rv = mDRequestForwarder->Init(mChannel);
-            
+                         
             nsXPIDLCString serverType;
             (void) mCacheEntry->GetMetaDataElement("servertype", getter_Copies(serverType));
             nsCAutoString serverNum(serverType.get());
@@ -2222,11 +2104,11 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     }
 
     nsCAutoString path;
-    nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURL));
+    nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURI));
     if (aURL)
         rv = aURL->GetFilePath(path);
     else
-        rv = mURL->GetPath(path);
+        rv = mURI->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     // Skip leading slash
@@ -2245,7 +2127,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
 
     // pull any username and/or password out of the uri
     nsCAutoString uname;
-    rv = mURL->GetUsername(uname);
+    rv = mURI->GetUsername(uname);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2259,7 +2141,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     }
 
     nsCAutoString password;
-    rv = mURL->GetPassword(password);
+    rv = mURI->GetPassword(password);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2272,7 +2154,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     // setup the connection cache key
 
     PRInt32 port;
-    rv = mURL->GetPort(&port);
+    rv = mURI->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
 
     if (port > 0)
@@ -2336,26 +2218,24 @@ nsFtpState::KillControlConnection() {
     // kill the reference to ourselves in the control connection.
     (void) mControlConnection->SetStreamListener(nsnull);
 
-    if (FTP_CACHE_CONTROL_CONNECTION && 
-        NS_SUCCEEDED(mInternalError) &&
+#ifdef FTP_CACHE_CONTROL_CONNECTION
+    if (NS_SUCCEEDED(mInternalError) &&
         NS_SUCCEEDED(mControlStatus) &&
         mControlConnection->IsAlive()) {
 
         PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState caching control connection", this));
 
         // Store connection persistant data
-        mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
-        mControlConnection->mPwd = mPwd;
-        nsresult rv = gFtpHandler->InsertConnection(mURL, mControlConnection);
+        nsresult rv = gFtpHandler->InsertConnection(mURI, mControlConnection);
         // Can't cache it?  Kill it then.  
         mControlConnection->Disconnect(rv);
     } 
     else
+#endif
         mControlConnection->Disconnect(NS_BINDING_ABORTED);
-
+    
     NS_RELEASE(mControlConnection);
- 
     return;
 }
 
@@ -2371,7 +2251,6 @@ nsFtpState::StopProcessing() {
     {
         // check to see if the control status is bad.
         // web shell wont throw an alert.  we better:
-        
         NS_ASSERTION(mPrompter, "no prompter!");
         if (mPrompter)
             (void) mPrompter->Alert(nsnull, NS_ConvertASCIItoUCS2(mResponseMsg).get());
@@ -2392,7 +2271,6 @@ nsFtpState::StopProcessing() {
     else
     {
         // The forwarding object was never created which  means that we never sent our notifications.
-        
         nsCOMPtr<nsIRequestObserver> asyncObserver = do_QueryInterface(mChannel);
         nsCOMPtr<nsIRequestObserver> arg = do_QueryInterface(mChannel);
 
@@ -2403,8 +2281,6 @@ nsFtpState::StopProcessing() {
             (void) asyncObserver->OnStartRequest(this, nsnull);
             (void) asyncObserver->OnStopRequest(this, nsnull, broadcastErrorCode);
         }
-
-
     }
 
     // Clean up the event loop
@@ -2460,13 +2336,13 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
             rv = scs->AsyncConvertData(NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
                                        NS_LITERAL_STRING(TEXT_HTML).get(),
                                        listener, 
-                                       mURL, 
+                                       mURI, 
                                        getter_AddRefs(tmpListener));
             if (NS_FAILED(rv)) break;
             rv = scs->AsyncConvertData(fromStr.get(),
                                        NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
                                        tmpListener,
-                                       mURL,
+                                       mURI,
                                        getter_AddRefs(converterListener));
                                        
         }
@@ -2475,7 +2351,7 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
         rv = scs->AsyncConvertData(fromStr.get(), 
                                    NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
                                    listener, 
-                                   mURL, 
+                                   mURI, 
                                    getter_AddRefs(converterListener));
         break;
     }
@@ -2533,33 +2409,4 @@ nsFtpState::SendFTPCommand(nsCString& command)
         return mControlConnection->Write(command, mWaitingForDConn);
     }
     return NS_ERROR_FAILURE;
-}
-
-// Convert a relative unix-style filespec to VMS format
-void 
-nsFtpState::ConvertFilespecToVMS(nsCString& fileSpec)
-{
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS %s\n", this, fileSpec.get())); 
-    if (fileSpec.IsEmpty()) {
-        fileSpec.Insert("[]",0);
-    }
-    else {
-        PRInt32 endDir = fileSpec.RFindChar('/');
-        if (endDir > -1) {
-            fileSpec.Cut(endDir,1);
-            fileSpec.Insert(']',endDir);
-            fileSpec.Insert("[.",0);
-            fileSpec.ReplaceChar('/','.');
-        }
-    }
-}
-
-// Convert a relative unix-style dirspec to VMS format
-void 
-nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
-{
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecToVMS %s\n", this, dirSpec.get())); 
-    dirSpec.ReplaceChar('/','.');
-    dirSpec.Insert("[.",0);
-    dirSpec.Append(']');
 }
