@@ -95,6 +95,7 @@ protected:
   nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidMakeBasicBlock(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
   nsresult AlignTableElement(nsIDOMNode *aNode, const nsString *alignType);
   nsresult AlignTableCellContents(nsIDOMNode *aNode, const nsString *alignType);
@@ -160,7 +161,8 @@ protected:
   nsresult ConvertWhitespace(const nsString & inString, nsString & outString);
   nsresult ConfirmSelectionInBody();
 
-  PRBool IsDescendantOfBody(nsIDOMNode *inNode) ;
+  PRBool   IsDescendantOfBody(nsIDOMNode *inNode);
+  nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
 
 // data members
 protected:

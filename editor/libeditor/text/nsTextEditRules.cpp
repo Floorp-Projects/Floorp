@@ -588,10 +588,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // fixes bug 21032 
   // *** there's some debate about whether we should replace CRLF with spaces, or
   //     truncate the string at the first CRLF.  Here, we replace with spaces.
-  // Hack: I stripped out this test for IME inserts - it screws up double byte chars
-  // that happen to end in the same values as CR or LF.  Bug 27699
-  if (inString->IsEmpty() && (aAction != kInsertTextIME))
-  if ((nsIHTMLEditor::eEditorSingleLineMask & mFlags) && (aAction != kInsertTextIME))
+  if (nsIHTMLEditor::eEditorSingleLineMask & mFlags)
   {
     outString->ReplaceChar(CRLF, ' ');
   }
