@@ -24,7 +24,6 @@
 #include "nsDOMEvent.h"
 #include "nsGUIEvent.h"
 
-#include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
