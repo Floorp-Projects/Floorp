@@ -237,8 +237,12 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
     else {
       DoSetLocale();
       // call strxfrm to generate a key 
-      int len = strxfrm((char *) key, str, strlen(str));
+      int len = strxfrm((char *) key, str, *outLen);
       DoRestoreLocale();
+      if (len >= *outLen) {
+	res = NS_ERROR_FAILURE;
+	len = -1;
+      }
       *outLen = (len == -1) ? 0 : (PRUint32)len;
     }
     PR_Free(str);
