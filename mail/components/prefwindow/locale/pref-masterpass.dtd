@@ -1,5 +1,10 @@
 <!ENTITY  dialog.title    "Master Password">
 
+<!ENTITY  encryptHeader.label         "Encrypting versus Obscuring">
+<!ENTITY  encryptDescription.label    "Saved e-mail passwords can be encrypted using a master password to prevent the data from being read by an intruder.">
+<!ENTITY  encryptEnabled.label        "Use a master password to encrypt stored passwords">
+<!ENTITY  encryptEnabled.accesskey    "m">
+
 <!ENTITY  managepassword.label    "Master Password Timeout">
 <!ENTITY  managepassword.text     "&brandShortName; will ask for your master password:">
 <!ENTITY  managepassword.askfirsttime "The first time it is needed">

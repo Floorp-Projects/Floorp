@@ -288,7 +288,7 @@ pref("javascript.options.showInConsole",    true);
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("wallet.captureForms",                 true);
 pref("wallet.enabled",                      true);
-pref("wallet.crypto",                       true); // needs to be enabled for the master password to work
+pref("wallet.crypto",                       false); 
 pref("wallet.crypto.autocompleteoverride",  false); // Ignore 'autocomplete=off' - available only when wallet.crypto is enabled. 
 pref("wallet.namePanel.hide",               false);
 pref("wallet.addressPanel.hide",            false);

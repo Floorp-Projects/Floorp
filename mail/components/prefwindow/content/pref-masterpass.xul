@@ -13,6 +13,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&dialog.title;"
         onload="onLoad();"
+        style="width: 40em;"
         ondialogaccept="return onAccept();">
 
   <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
@@ -22,6 +23,9 @@
 
     function onLoad()
     {
+      var el = document.getElementById('encryptEnabled');
+      el.checked = gPrefService.getBoolPref(el.getAttribute("prefstring"));
+
       var el = document.getElementById('passwordTimeout');
       el.setAttribute("value", gPrefService.getIntPref(el.getAttribute("prefstring")) );
 
@@ -33,19 +37,40 @@
 
     function onAccept()
     {
+      var el = document.getElementById('encryptEnabled');
+      gPrefService.setBoolPref(el.getAttribute("prefstring"), el.checked);
+
       var el = document.getElementById('passwordAskTimes');
       gPrefService.setIntPref(el.getAttribute("prefstring"), parseInt(el.value));
       
       var el = document.getElementById('passwordTimeout');
       gPrefService.setIntPref(el.getAttribute("prefstring"), parseInt(el.value) );
     }
+
+    function initReencryptCallback()
+    {
+      var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
+      wallet = wallet.getService();
+      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+      wallet.WALLET_InitReencryptCallback(window);
+    }
   ]]>
   </script>  
+ 
+  <groupbox>
+    <caption label="&encryptHeader.label;"/>
+    <description width="1">&encryptDescription.label;</description>
+    <vbox align="start">
+      <checkbox id="encryptEnabled" label="&encryptEnabled.label;" accesskey="&encryptEnabled.accesskey;"
+                prefstring="wallet.crypto"
+                oncommand="initReencryptCallback();"/>
+    </vbox>
+  </groupbox>
  
   <!-- Change Password -->
   <groupbox>
     <caption label="&changepassword.label;"/>
-    <description wdith="1">&changepassword.text;</description>
+    <description width="1">&changepassword.text;</description>
     <hbox align="center">
       <button label="&changepassword.button;"
               oncommand="ChangePW();"
