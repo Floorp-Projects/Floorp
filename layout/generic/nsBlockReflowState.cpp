@@ -630,7 +630,9 @@ BulletFrame::Reflow(nsIPresContext& aPresContext,
   const nsStyleSpacing* space =(const nsStyleSpacing*)
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
-  space->CalcBorderPaddingFor(this, borderPadding);
+  nsHTMLReflowState::ComputeBorderPaddingFor(this,
+                                             aReflowState.parentReflowState,
+                                             borderPadding);
   aMetrics.width += borderPadding.left + borderPadding.right;
   aMetrics.height += borderPadding.top + borderPadding.bottom;
   aMetrics.ascent += borderPadding.top;
@@ -1865,7 +1867,7 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
 }
 
 void
-nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
+nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
                                nsHTMLReflowMetrics& aMetrics)
 {
   // Compute final width
@@ -2014,7 +2016,11 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
                                   (const nsStyleStruct*&)floaterDisplay);
             floater->GetStyleData(eStyleStruct_Spacing,
                                   (const nsStyleStruct*&)floaterSpacing);
-            floaterSpacing->CalcMarginFor(floater, floaterMargin);
+
+            // Compute the margin for the floater (again!)
+            nsHTMLReflowState::ComputeMarginFor(floater, &aState,
+                                                floaterMargin);
+
             nscoord width = r.width + floaterMargin.left + floaterMargin.right;
             NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
                          (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
@@ -2267,7 +2273,7 @@ nsBlockFrame::RecoverLineMargins(nsBlockReflowState& aState,
       if (nsnull != spacing) {
         nsMargin margin;
         nsInlineReflow::CalculateBlockMarginsFor(aState.mPresContext, frame,
-                                                 spacing, margin);
+                                                 &aState, spacing, margin);
         childsTopMargin = margin.top;
         childsBottomMargin = margin.bottom;
       }
@@ -3310,8 +3316,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         rv = compactWithFrame->GetStyleData(eStyleStruct_Spacing,
                                             (const nsStyleStruct*&) spacing);
         if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
-          // XXX % margins
-          spacing->CalcMarginFor(compactWithFrame, margin);
+          nsHTMLReflowState::ComputeMarginFor(compactWithFrame, &aState,
+                                              margin);
           compactMarginWidth = margin.left;
         }
         isCompactFrame = PR_TRUE;
@@ -4093,12 +4099,8 @@ nsBlockFrame::PlaceBullet(nsBlockReflowState& aState,
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
   nsMargin margin;
-  const nsStyleSpacing* spacing;
-  mBullet->GetStyleData(eStyleStruct_Spacing,
-                        (const nsStyleStruct*&) spacing);
-  spacing->CalcMarginFor(mBullet, margin);
-  nscoord x = aState.mBorderPadding.left - margin.right -
-    metrics.width;
+  nsHTMLReflowState::ComputeMarginFor(mBullet, &aState, margin);
+  nscoord x = aState.mBorderPadding.left - margin.right - metrics.width;
   // XXX This calculation may be wrong, especially if
   // vertical-alignment occurs on the line!
   nscoord y = aState.mBorderPadding.top + aMaxAscent -
@@ -4527,11 +4529,7 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   nsMargin bp(0, 0, 0, 0);
   if (aFloaterReflowState.HaveFixedContentWidth() ||
       aFloaterReflowState.HaveFixedContentHeight()) {
-    const nsStyleSpacing* spacing;
-    if (NS_OK == aFloaterFrame->GetStyleData(eStyleStruct_Spacing,
-                                             (const nsStyleStruct*&)spacing)) {
-      spacing->CalcBorderPaddingFor(aFloaterFrame, bp);
-    }
+    nsHTMLReflowState::ComputeBorderPaddingFor(aFloaterFrame, &aState, bp);
   }
 
   // Compute the available width for the floater
@@ -4716,13 +4714,13 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
 {
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
 
+  // XXX the choice of constructors is confusing and non-obvious
+  nsSize kidAvailSize(0, 0);
+  nsHTMLReflowState reflowState(mPresContext, floater, *this, kidAvailSize);
+
   // Reflow the floater if it's targetted for a reflow
   if (nsnull != reflowCommand) {
     if (floater == mNextRCFrame) {
-      nsSize kidAvailSize(0, 0);
-      // XXX the choice of constructors is confusing and non-obvious
-      nsHTMLReflowState reflowState(mPresContext, floater, *this,
-                                    kidAvailSize);
       reflowState.lineLayout = nsnull;
       mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
     }
@@ -4749,7 +4747,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   nsRect region;
   floater->GetRect(region);
   nsMargin floaterMargin;
-  floaterSpacing->CalcMarginFor(floater, floaterMargin);
+  ComputeMarginFor(floater, this, floaterMargin);
 
   // Adjust the floater size by its margin. That's the area that will
   // impact the space manager.
