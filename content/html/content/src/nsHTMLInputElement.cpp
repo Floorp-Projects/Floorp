@@ -943,7 +943,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             case NS_FORM_INPUT_BUTTON:
             case NS_FORM_INPUT_RESET:
             case NS_FORM_INPUT_SUBMIT:
-//            case NS_FORM_INPUT_IMAGE: // XXX should we do this for images too?
+            case NS_FORM_INPUT_IMAGE: // Bug 34418
             {
               nsEventStatus status = nsEventStatus_eIgnore;
               nsMouseEvent event;
