@@ -822,7 +822,7 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   }
 
 	if ((mSelfEncryptionCert == nsnull) && aEncrypt) {
-    res = GetSMIMEBundleString(NS_LITERAL_STRING("NoSenderEncriptionCert").get(),
+    res = GetSMIMEBundleString(NS_LITERAL_STRING("NoSenderEncryptionCert").get(),
                                getter_Copies(errorString));
     if ( NS_SUCCEEDED(res) ) {
       res = NS_ERROR_FAILURE;
