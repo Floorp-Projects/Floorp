@@ -192,20 +192,20 @@ typedef struct AFM_Single_Char_Metrics  AFMscm;
 struct fontInformation
 {
   double  mFontVersion;
-  const char *mFontName;
-  const char *mFullName;
-  const char *mFamilyName;
-  const char *mWeight;
+  char    *mFontName;
+  char    *mFullName;
+  char    *mFamilyName;
+  char    *mWeight;
   double  mFontBBox_llx;
   double  mFontBBox_lly;
   double  mFontBBox_urx;
   double  mFontBBox_ury;
-  const char *mVersion;
-  const char *mNotice;
-  const char *mEncodingScheme;
+  char    *mVersion;
+  char    *mNotice;
+  char    *mEncodingScheme;
   PRInt32 mMappingScheme;
   PRInt32 mEscChar;
-  const char *mCharacterSet;
+  char    *mCharacterSet;
   PRInt32 mCharacters;
   PRBool  mIsBaseFont;
   double  mVVector_0;
