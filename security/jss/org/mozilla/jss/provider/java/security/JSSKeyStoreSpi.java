@@ -54,6 +54,7 @@ import org.mozilla.jss.pkcs11.TokenProxy;
 import org.mozilla.jss.crypto.CryptoToken;
 import org.mozilla.jss.crypto.TokenSupplierManager;
 import org.mozilla.jss.crypto.SecretKeyFacade;
+import org.mozilla.jss.crypto.SymmetricKey;
 import org.mozilla.jss.crypto.X509Certificate;
 import org.mozilla.jss.crypto.TokenException;
 import org.mozilla.jss.crypto.TokenRuntimeException;
@@ -217,7 +218,15 @@ public class JSSKeyStoreSpi extends java.security.KeyStoreSpi {
         return null;
     }
 
-    public native Key engineGetKey(String alias, char[] password);
+    public Key engineGetKey(String alias, char[] password) {
+        Object o = engineGetKeyNative(alias, password);
+        if( o instanceof SymmetricKey ) {
+            return new SecretKeyFacade((SymmetricKey)o);
+        } else {
+            return (Key) o;
+        }
+    }
+    public native Object engineGetKeyNative(String alias, char[] password);
 
     /**
      * Returns true if there is a cert with this nickname but there is no
