@@ -68,6 +68,8 @@
 #include "nsEscape.h"
 #include "nsIJSContextStack.h"
 #include "nsIWebNavigation.h"
+#include "nsIDocShell.h"
+#include "nsIContentViewer.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -534,10 +536,34 @@ nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
         mStreamChannel->GetLoadFlags(&loadFlags);
 
         if (loadFlags & LOAD_DOCUMENT_URI) {
-            // We're loaded as the document channel. Stop all pending
-            // network loads.
+            // We're loaded as the document channel. If we go on,
+            // we'll blow away the current document. Make sure that's
+            // ok. If so, stop all pending network loads.
 
-            rv = StopAll();
+            nsCOMPtr<nsIInterfaceRequestor> cb;
+            mStreamChannel->GetNotificationCallbacks(getter_AddRefs(cb));
+
+            nsCOMPtr<nsIDocShell> docShell(do_GetInterface(cb));
+            if (docShell) {
+                nsCOMPtr<nsIContentViewer> cv;
+                docShell->GetContentViewer(getter_AddRefs(cv));
+
+                if (cv) {
+                    PRBool okToUnload;
+
+                    if (NS_SUCCEEDED(cv->PermitUnload(&okToUnload)) &&
+                        !okToUnload) {
+                        // The user didn't want to unload the current
+                        // page, translate this into an undefined
+                        // return from the javascript: URL...
+                        rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
+                    }
+                }
+            }
+
+            if (NS_SUCCEEDED(rv)) {
+                rv = StopAll();
+            }
         }
 
         if (NS_SUCCEEDED(rv)) {
@@ -549,7 +575,9 @@ nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
                 rv = mStreamChannel->Open(aResult);
             }
         }
-    } else {
+    }
+
+    if (NS_FAILED(rv)) {
         // Propagate the failure down to the underlying channel...
         mStreamChannel->Cancel(rv);
     }

@@ -228,6 +228,7 @@ nsDocShell::nsDocShell():
     mAllowMetaRedirects(PR_TRUE),
     mAllowImages(PR_TRUE),
     mFocusDocFirst(PR_FALSE),
+    mHasFocus(PR_FALSE),
     mCreatingDocument(PR_FALSE),
     mUseErrorPages(PR_FALSE),
     mAllowAuth(PR_TRUE),
@@ -236,15 +237,15 @@ nsDocShell::nsDocShell():
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
-    mUseExternalProtocolHandler(PR_FALSE),
     mDisallowPopupWindows(PR_FALSE),
+    mUseExternalProtocolHandler(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
     mIsExecutingOnLoadHandler(PR_FALSE),
+    mIsPrintingOrPP(PR_FALSE),
     mEditorData(nsnull),
     mParent(nsnull),
     mTreeOwner(nsnull),
-    mChromeEventHandler(nsnull),
-    mIsPrintingOrPP(PR_FALSE)
+    mChromeEventHandler(nsnull)
 {
 #ifdef PR_LOGGING
     if (! gDocShellLog)
@@ -816,21 +817,18 @@ nsDocShell::PrepareForNewContentModel()
 NS_IMETHODIMP
 nsDocShell::FireUnloadNotification()
 {
-    nsresult rv;
-
     if (mContentViewer && !mFiredUnloadEvent) {
         mFiredUnloadEvent = PR_TRUE;
 
-        rv = mContentViewer->Unload();
+        mContentViewer->Unload();
 
         PRInt32 i, n = mChildren.Count();
         for (i = 0; i < n; i++) {
             nsIDocShellTreeItem* item = (nsIDocShellTreeItem*) mChildren.ElementAt(i);
-            if(item) {
-                nsCOMPtr<nsIDocShell> shell(do_QueryInterface(item));
-                if (shell) {
-                    rv = shell->FireUnloadNotification();
-                }
+
+            nsCOMPtr<nsIDocShell> shell(do_QueryInterface(item));
+            if (shell) {
+                shell->FireUnloadNotification();
             }
         }
     }
@@ -2996,20 +2994,27 @@ nsDocShell::Create()
     mPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    PRBool tmpbool;
+
     // i don't want to read this pref in every time we load a url
     // so read it in once here and be done with it...
     mPrefs->GetBoolPref("network.protocols.useSystemDefaults",
-                        &mUseExternalProtocolHandler);
-    mPrefs->GetBoolPref("browser.block.target_new_window", &mDisallowPopupWindows);
-    mPrefs->GetBoolPref("browser.frames.enabled", &mAllowSubframes);
+                        &tmpbool);
+    mUseExternalProtocolHandler = tmpbool;
+
+    mPrefs->GetBoolPref("browser.block.target_new_window", &tmpbool);
+    mDisallowPopupWindows = tmpbool;
+
+    mPrefs->GetBoolPref("browser.frames.enabled", &tmpbool);
+    mAllowSubframes = tmpbool;
 
     // Check pref to see if we should prevent frameset spoofing
-    mPrefs->GetBoolPref("browser.frame.validate_origin", &mValidateOrigin);
+    mPrefs->GetBoolPref("browser.frame.validate_origin", &tmpbool);
+    mValidateOrigin = tmpbool;
 
     // Should we use XUL error pages instead of alerts if possible?
-    PRBool useErrorPages = PR_FALSE;
-    mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &useErrorPages);
-    mUseErrorPages = useErrorPages;
+    mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
+    mUseErrorPages = tmpbool;
 
     return NS_OK;
 }
@@ -4464,6 +4469,8 @@ nsDocShell::CreateContentViewer(const char *aContentType,
                                 nsIRequest * request,
                                 nsIStreamListener ** aContentHandler)
 {
+    *aContentHandler = nsnull;
+
     // Can we check the content type of the current content viewer
     // and reuse it without destroying it and re-creating it?
 
@@ -5093,6 +5100,19 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             }
         }
         return rv;
+    }
+
+    // Check if the page doesn't want to be unloaded. The javascript:
+    // protocol handler deals with this for javascript: URLs.
+    if (!bIsJavascript && mContentViewer) {
+        PRBool okToUnload;
+        rv = mContentViewer->PermitUnload(&okToUnload);
+
+        if (NS_SUCCEEDED(rv) && !okToUnload) {
+            // The user chose not to unload the page, interrupt the
+            // load.
+            return NS_OK;
+        }
     }
 
     //
@@ -6867,8 +6887,8 @@ nsDocShell::SetLayoutHistoryState(nsILayoutHistoryState *aLayoutHistoryState)
 //***    nsRefreshTimer: Object Management
 //*****************************************************************************
 
-nsRefreshTimer::nsRefreshTimer():mRepeat(PR_FALSE), mDelay(0),
-mMetaRefresh(PR_FALSE)
+nsRefreshTimer::nsRefreshTimer()
+    : mDelay(0), mRepeat(PR_FALSE), mMetaRefresh(PR_FALSE)
 {
 }
 

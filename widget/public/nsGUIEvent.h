@@ -44,6 +44,7 @@
 #include "nsRect.h"
 #include "nsEvent.h"
 #include "nsHashtable.h"
+#include "nsString.h"
 
 // nsIDOMEvent contains a long enum which includes a member called ERROR,
 // which conflicts with something that Windows defines somewhere.
@@ -60,33 +61,34 @@ class nsIMenuItem;
 class nsIAccessible;
 class nsIContent;
 class nsIURI;
-
+           
 /**
  * Event Struct Types
  */
-#define NS_EVENT               1
-#define NS_GUI_EVENT           2
-#define NS_SIZE_EVENT          3
-#define NS_SIZEMODE_EVENT      4
-#define NS_ZLEVEL_EVENT        5
-#define NS_PAINT_EVENT         6
-#define NS_SCROLLBAR_EVENT     7
-#define NS_INPUT_EVENT         8
-#define NS_KEY_EVENT           9
-#define NS_MOUSE_EVENT        10
-#define NS_MENU_EVENT         11
-#define NS_SCRIPT_ERROR_EVENT 12
-#define NS_TEXT_EVENT         13
-#define NS_COMPOSITION_EVENT  14
-#define NS_RECONVERSION_EVENT 15
-#define NS_MOUSE_SCROLL_EVENT 16
-#define NS_SCROLLPORT_EVENT   18
-#define NS_ACCESSIBLE_EVENT   20
-#define NS_FORM_EVENT         21
-#define NS_FOCUS_EVENT        22
-#define NS_POPUP_EVENT        23
-#define NS_APPCOMMAND_EVENT   24
-#define NS_POPUPBLOCKED_EVENT 25
+#define NS_EVENT                           1
+#define NS_GUI_EVENT                       2
+#define NS_SIZE_EVENT                      3
+#define NS_SIZEMODE_EVENT                  4
+#define NS_ZLEVEL_EVENT                    5
+#define NS_PAINT_EVENT                     6
+#define NS_SCROLLBAR_EVENT                 7
+#define NS_INPUT_EVENT                     8
+#define NS_KEY_EVENT                       9
+#define NS_MOUSE_EVENT                    10
+#define NS_MENU_EVENT                     11
+#define NS_SCRIPT_ERROR_EVENT             12
+#define NS_TEXT_EVENT                     13
+#define NS_COMPOSITION_EVENT              14
+#define NS_RECONVERSION_EVENT             15
+#define NS_MOUSE_SCROLL_EVENT             16
+#define NS_SCROLLPORT_EVENT               18
+#define NS_ACCESSIBLE_EVENT               20
+#define NS_FORM_EVENT                     21
+#define NS_FOCUS_EVENT                    22
+#define NS_POPUP_EVENT                    23
+#define NS_APPCOMMAND_EVENT               24
+#define NS_POPUPBLOCKED_EVENT             25
+#define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 
 
 #define NS_EVENT_FLAG_NONE                0x0000
@@ -203,6 +205,16 @@ struct nsScriptErrorEvent : public nsEvent
   PRInt32           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
+};
+
+struct nsBeforePageUnloadEvent : public nsEvent
+{
+  nsBeforePageUnloadEvent(PRUint32 msg)
+    : nsEvent(msg, NS_BEFORE_PAGE_UNLOAD_EVENT)
+  {
+  }
+
+  nsString text;
 };
 
 /**
@@ -723,6 +735,7 @@ enum nsDragDropEventStatus {
 #define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
 #define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
 #define NS_SCRIPT_LOAD                  (NS_STREAM_EVENT_START + 5)
+#define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
  
 #define NS_FORM_EVENT_START             1200
 #define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)

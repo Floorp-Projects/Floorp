@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsJSEventListener.h"
+#include "nsJSUtils.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
@@ -52,9 +53,9 @@
  */
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext, 
                                      nsISupports *aObject)
-  : nsIJSEventListener(aContext, aObject)
+  : nsIJSEventListener(aContext, aObject),
+    mReturnResult(nsReturnResult_eNotSet)
 {
-  mReturnResult = nsReturnResult_eNotSet;
 }
 
 nsJSEventListener::~nsJSEventListener() 
@@ -168,21 +169,46 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     argc = 1;
   }
 
-  PRBool jsBoolResult;
+  jsval rval;
   rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), argc, argv,
-                                  &jsBoolResult);
+                                  &rval);
 
   if (argv != &arg) {
     ::JS_PopArguments(cx, stackPtr);
   }
 
   if (NS_SUCCEEDED(rv)) {
-    // if the handler returned false and its sense is not reversed, or
-    // the handler returned true and its sense is reversed from the
-    // usual (false means cancel), then prevent default.
+    if (eventString.Equals(NS_LITERAL_STRING("onbeforeunload"))) {
+      nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
+      NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
-    if (!(jsBoolResult ^ (mReturnResult == nsReturnResult_eReverseReturnResult)))
-      aEvent->PreventDefault();
+      nsEvent* event;
+      priv->GetInternalNSEvent(&event);
+      NS_ENSURE_TRUE(event && event->message == NS_BEFORE_PAGE_UNLOAD,
+                     NS_ERROR_UNEXPECTED);
+
+      nsBeforePageUnloadEvent *beforeUnload =
+        NS_STATIC_CAST(nsBeforePageUnloadEvent *, event);
+
+      if (!JSVAL_IS_VOID(rval)) {
+        aEvent->PreventDefault();
+
+        if (JSVAL_IS_STRING(rval)) {
+          beforeUnload->text = nsDependentJSString(JSVAL_TO_STRING(rval));
+        }
+      }
+    } else {
+      // if the handler returned false and its sense is not reversed,
+      // or the handler returned true and its sense is reversed from
+      // the usual (false means cancel), then prevent default.
+
+      PRBool jsBoolResult = !JSVAL_IS_BOOLEAN(rval) || JSVAL_TO_BOOLEAN(rval);
+
+      if (jsBoolResult ==
+          (mReturnResult == nsReturnResult_eReverseReturnResult)) {
+        aEvent->PreventDefault();
+      }
+    }
   }
 
   return rv;

@@ -229,7 +229,8 @@ static const EventDispatchData sLoadEvents[] = {
   {NS_SCRIPT_LOAD, HANDLER(&nsIDOMLoadListener::Load),  NS_EVENT_BITS_LOAD_LOAD},
   {NS_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::Unload),NS_EVENT_BITS_LOAD_UNLOAD},
   {NS_IMAGE_ERROR, HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
-  {NS_SCRIPT_ERROR,HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR}
+  {NS_SCRIPT_ERROR,HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
+  {NS_BEFORE_PAGE_UNLOAD,HANDLER(&nsIDOMLoadListener::BeforeUnload), NS_EVENT_BITS_LOAD_BEFORE_UNLOAD}
 };
 
 static const EventDispatchData sPaintEvents[] = {
@@ -841,6 +842,10 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
   else if (aType == nsLayoutAtoms::onload) {
     *aArrayType = eEventArrayType_Load;
     *aFlags = NS_EVENT_BITS_LOAD_LOAD;
+  }
+  else if (aType == nsLayoutAtoms::onbeforeunload) {
+    *aArrayType = eEventArrayType_Load;
+    *aFlags = NS_EVENT_BITS_LOAD_BEFORE_UNLOAD;
   }
   else if (aType == nsLayoutAtoms::onunload) {
     *aArrayType = eEventArrayType_Load;
@@ -1465,7 +1470,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
      keys which cause window deletion, can destroy this object
      before we're ready. */
   nsCOMPtr<nsIEventListenerManager> kungFuDeathGrip(this);
-  nsString empty;
   nsVoidArray *listeners = nsnull;
 
   if (aEvent->message == NS_CONTEXTMENU || aEvent->message == NS_CONTEXTMENU_KEY) {
@@ -1475,6 +1479,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       ret = NS_OK;
     }
   }
+
 
   const EventTypeData* typeData = nsnull;
   const EventDispatchData* dispData = nsnull;
@@ -1500,7 +1505,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       if (aEvent->eventStructType == NS_MUTATION_EVENT)
         ret = NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
       else
-        ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
+        ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, EmptyString(), aEvent);
     }
 
     if (NS_SUCCEEDED(ret)) {
@@ -1590,225 +1595,119 @@ nsresult
 nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes,
                                        PRBool aInitCapture)
 {
-  EventArrayType arrayType;
-  nsListenerStruct *ls;
+  EventArrayType arrayType = eEventArrayType_None;
+  PRUint8 bits;
 
   if (aEventTypes & nsIDOMNSEvent::MOUSEDOWN) {
     arrayType = eEventArrayType_Mouse;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEDOWN;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
   }
   if (aEventTypes & nsIDOMNSEvent::MOUSEUP) {
     arrayType = eEventArrayType_Mouse;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEUP; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEUP;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_MOUSEUP; 
   }
   if (aEventTypes & nsIDOMNSEvent::MOUSEOVER) {
     arrayType = eEventArrayType_Mouse;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEOVER; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEOVER;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_MOUSEOVER; 
   }
   if (aEventTypes & nsIDOMNSEvent::MOUSEOUT) {
     arrayType = eEventArrayType_Mouse;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEOUT; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEOUT;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_MOUSEOUT; 
   }
   if (aEventTypes & nsIDOMNSEvent::MOUSEMOVE) {
     arrayType = eEventArrayType_MouseMotion;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE; 
   }
   if (aEventTypes & nsIDOMNSEvent::CLICK) {
     arrayType = eEventArrayType_Mouse;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_CLICK; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_CLICK;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_CLICK; 
   }
   if (aEventTypes & nsIDOMNSEvent::DBLCLICK) {
     arrayType = eEventArrayType_Mouse;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_DBLCLICK; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_DBLCLICK;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_DBLCLICK; 
   }
   if (aEventTypes & nsIDOMNSEvent::KEYDOWN) {
     arrayType = eEventArrayType_Key;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_KEY_KEYDOWN; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_KEY_KEYDOWN;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_KEY_KEYDOWN; 
   }
   if (aEventTypes & nsIDOMNSEvent::KEYUP) {
     arrayType = eEventArrayType_Key;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_KEY_KEYUP; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_KEY_KEYUP;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_KEY_KEYUP; 
   }
   if (aEventTypes & nsIDOMNSEvent::KEYPRESS) {
     arrayType = eEventArrayType_Key;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_KEY_KEYPRESS; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_KEY_KEYPRESS;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_KEY_KEYPRESS; 
   }
   if (aEventTypes & nsIDOMNSEvent::DRAGDROP) {
     arrayType = eEventArrayType_Drag;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_DRAG_ENTER; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_DRAG_ENTER;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_DRAG_ENTER; 
   }
   /*if (aEventTypes & nsIDOMNSEvent::MOUSEDRAG) {
     arrayType = kIDOMMouseListenerarrayType;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEDOWN;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
   }*/
   if (aEventTypes & nsIDOMNSEvent::FOCUS) {
     arrayType = eEventArrayType_Focus;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FOCUS_FOCUS; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FOCUS_FOCUS;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_FOCUS_FOCUS; 
   }
   if (aEventTypes & nsIDOMNSEvent::BLUR) {
     arrayType = eEventArrayType_Focus;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FOCUS_BLUR; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FOCUS_BLUR;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_FOCUS_BLUR; 
   }
   if (aEventTypes & nsIDOMNSEvent::SELECT) {
     arrayType = eEventArrayType_Form;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_SELECT; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_SELECT;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_FORM_SELECT; 
   }
   if (aEventTypes & nsIDOMNSEvent::CHANGE) {
     arrayType = eEventArrayType_Form;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_CHANGE; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_CHANGE;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_FORM_CHANGE; 
   }
   if (aEventTypes & nsIDOMNSEvent::RESET) {
     arrayType = eEventArrayType_Form;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_RESET; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_RESET;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_FORM_RESET; 
   }
   if (aEventTypes & nsIDOMNSEvent::SUBMIT) {
     arrayType = eEventArrayType_Form;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_SUBMIT; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_SUBMIT;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_FORM_SUBMIT; 
   }
   if (aEventTypes & nsIDOMNSEvent::LOAD) {
     arrayType = eEventArrayType_Load;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_LOAD; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_LOAD;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_LOAD_LOAD; 
   }
   if (aEventTypes & nsIDOMNSEvent::UNLOAD) {
     arrayType = eEventArrayType_Load;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_UNLOAD; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_UNLOAD;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_LOAD_UNLOAD; 
   }
   if (aEventTypes & nsIDOMNSEvent::ABORT) {
     arrayType = eEventArrayType_Load;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_ABORT; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_ABORT;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_LOAD_ABORT; 
   }
   if (aEventTypes & nsIDOMNSEvent::ERROR) {
     arrayType = eEventArrayType_Load;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_ERROR; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_ERROR;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_LOAD_ERROR; 
   }
   if (aEventTypes & nsIDOMNSEvent::RESIZE) {
     arrayType = eEventArrayType_Paint;
-    ls = FindJSEventListener(arrayType);
-    if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_PAINT_RESIZE; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_PAINT_RESIZE;
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
+    bits = NS_EVENT_BITS_PAINT_RESIZE; 
   }
   if (aEventTypes & nsIDOMNSEvent::SCROLL) {
     arrayType = eEventArrayType_Scroll;
-    ls = FindJSEventListener(arrayType);
+    bits = NS_EVENT_BITS_PAINT_RESIZE; 
+  }
+
+  if (arrayType != eEventArrayType_None) {
+    nsListenerStruct *ls = FindJSEventListener(arrayType);
+
     if (ls) {
-      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_PAINT_RESIZE; 
-      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_PAINT_RESIZE;
+      if (aInitCapture)
+        ls->mSubTypeCapture |= bits;
+      else
+        ls->mSubTypeCapture &= ~bits;
+
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
+
   return NS_OK;
 }
 
@@ -2002,7 +1901,6 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDOMElement> currentFocus;
   nsCOMPtr<nsIDocument> doc;
   nsIPresShell* shell = aPresContext->PresShell();
-  nsString empty;
 
   if (aEvent->message == NS_CONTEXTMENU_KEY) {
     shell->GetDocument(getter_AddRefs(doc));
@@ -2027,7 +1925,7 @@ nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
     // the client X/Y will be 0,0. We can make use of that if the widget is null.
     if (aEvent->message == NS_CONTEXTMENU_KEY)
       NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget
-    ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
+    ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, EmptyString(), aEvent);
   }
 
   if (NS_SUCCEEDED(ret)) {

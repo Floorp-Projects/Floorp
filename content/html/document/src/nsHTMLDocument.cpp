@@ -2020,14 +2020,27 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI)
   }
 
   nsCOMPtr<nsIDocShell> docshell = do_QueryReferent(mDocumentContainer);
+  nsresult rv = NS_OK;
 
   // Stop current loads targeted at the window this document is in.
   if (mScriptGlobalObject && docshell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    docshell->GetContentViewer(getter_AddRefs(cv));
+
+    if (cv) {
+      PRBool okToUnload;
+      rv = cv->PermitUnload(&okToUnload);
+
+      if (NS_SUCCEEDED(rv) && !okToUnload) {
+        // We don't want to unload, so stop here, but don't throw an
+        // exception.
+        return NS_OK;
+      }
+    }
+
     nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(docshell));
     webnav->Stop(nsIWebNavigation::STOP_NETWORK);
   }
-
-  nsresult rv = NS_OK;
 
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
@@ -2242,7 +2255,11 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 
   if (!mParser) {
     rv = Open();
-    if (NS_FAILED(rv)) {
+
+    // If Open() fails, or if it didn't create a parser (as it won't
+    // if the user chose to not discard the current document through
+    // onbeforeunload), don't write anything.
+    if (NS_FAILED(rv) || !mParser) {
       return rv;
     }
   } else if (IsXHTML()) {

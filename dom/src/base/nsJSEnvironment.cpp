@@ -1195,10 +1195,10 @@ nsJSContext::CompileFunction(void* aTarget,
 }
 
 nsresult
-nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
-                              void *argv, PRBool *aBoolResult)
+nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
+                              uintN argc, jsval *argv, jsval *rval)
 {
-  *aBoolResult = PR_TRUE;
+  *rval = JSVAL_VOID;
 
   if (!mScriptsEnabled) {
     return NS_OK;
@@ -1226,21 +1226,21 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   rv = sSecurityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
 
   if (NS_SUCCEEDED(rv)) {
-    jsval val;
     jsval funval = OBJECT_TO_JSVAL(aHandler);
-    PRBool ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
-                                       argc, (jsval *)argv, &val);
+    PRBool ok = ::JS_CallFunctionValue(mContext, aTarget, funval, argc, argv,
+                                       rval);
 
     ScriptEvaluated(PR_TRUE);
 
-    if (ok) {
-      *aBoolResult = !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val);
-    } else {
+    if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
       // to avoid dropping JS exceptions in case we got here through
       // nested calls through XPConnect.
 
       NotifyXPCIfExceptionPending(mContext);
+
+      // Don't pass back results from failed calls.
+      *rval = JSVAL_VOID;
     }
   }
 

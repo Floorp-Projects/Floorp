@@ -3563,6 +3563,7 @@ GlobalWindowImpl::Close()
               }
             }
           }
+
           return NS_OK;
         }
       }
@@ -3578,8 +3579,13 @@ GlobalWindowImpl::Close()
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
     PRBool canClose;
-    cv->RequestWindowClose(&canClose);
-    if (!canClose)
+
+    rv = cv->PermitUnload(&canClose);
+    if (NS_SUCCEEDED(rv) && !canClose)
+      return NS_OK;
+
+    rv = cv->RequestWindowClose(&canClose);
+    if (NS_SUCCEEDED(rv) && !canClose)
       return NS_OK;
   }
 
@@ -5133,7 +5139,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       lateness = PR_IntervalToMilliseconds(lateness);
       timeout->mArgv[timeout->mArgc] = INT_TO_JSVAL((jsint) lateness);
 
-      PRBool dummy;
+      jsval dummy;
       rv = mContext->CallEventHandler(mJSObject, timeout->mFunObj,
                                       timeout->mArgc + 1, timeout->mArgv,
                                       &dummy);
