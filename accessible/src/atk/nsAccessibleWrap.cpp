@@ -330,15 +330,19 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     }
 
     //nsIAccessibleHypertext
+    PRInt32 linkCount = 0;
     nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
     QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
                    getter_AddRefs(accessInterfaceHypertext));
     if (accessInterfaceHypertext) {
-        MaiInterfaceHypertext *maiInterfaceHypertext =
-            new MaiInterfaceHypertext(this, mWeakShell);
-        NS_ENSURE_TRUE(maiInterfaceHypertext, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceHypertext);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = accessInterfaceHypertext->GetLinks(&linkCount);
+        if (NS_SUCCEEDED(rv) && (linkCount > 0)) {
+            MaiInterfaceHypertext *maiInterfaceHypertext =
+                new MaiInterfaceHypertext(this, mWeakShell);
+            NS_ENSURE_TRUE(maiInterfaceHypertext, NS_ERROR_OUT_OF_MEMORY);
+            rv = AddMaiInterface(maiInterfaceHypertext);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
     }
 
     //nsIAccessibleTable
