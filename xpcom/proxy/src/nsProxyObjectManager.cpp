@@ -45,7 +45,7 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
     NS_IMETHOD CreateInstanceByProgID(const char *aProgID, nsISupports *aOuter, const nsIID & iid, void * *result);
 
     nsProxyCreateInstance();
-    ~nsProxyCreateInstance();
+    virtual ~nsProxyCreateInstance();
 
 };
 
@@ -58,8 +58,8 @@ nsProxyCreateInstance::nsProxyCreateInstance()
 nsProxyCreateInstance::~nsProxyCreateInstance()
 {
 }
-
-NS_IMPL_ISUPPORTS(nsProxyCreateInstance,NS_IPROXYCREATEINSTANCE_IID)
+static NS_DEFINE_IID(kIProxyCreateInstanceIID,NS_IPROXYCREATEINSTANCE_IID);
+NS_IMPL_ISUPPORTS(nsProxyCreateInstance, kIProxyCreateInstanceIID);
 
 NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result)
 {
@@ -94,8 +94,8 @@ NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByProgID(const char *aProgID,
 
 nsProxyObjectManager* nsProxyObjectManager::mInstance = nsnull;
 
-
-NS_IMPL_ISUPPORTS(nsProxyObjectManager, NS_IPROXYEVENT_MANAGER_IID)
+static NS_DEFINE_IID(kIProxyEventManager, NS_IPROXYEVENT_MANAGER_IID);
+NS_IMPL_ISUPPORTS(nsProxyObjectManager, kIProxyEventManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
 {
@@ -318,7 +318,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
     printf("*** nsProxyObjectManager is being unregistered.  Na na na na hey hey\n");
 #endif
     
-    rv = compMgr->UnregisterFactory(kProxyObjectManagerCID, path);
+    rv = compMgr->UnregisterComponent(kProxyObjectManagerCID, path);
     if (NS_FAILED(rv)) goto done;
 
   done:
