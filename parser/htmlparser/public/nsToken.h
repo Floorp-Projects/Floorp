@@ -173,7 +173,7 @@ class CToken {
      * @update	gess5/11/98
      * @return  reference to string containing string value
      */
-    virtual const nsAString& GetStringValue(void) = 0;
+    virtual const nsSubstring& GetStringValue(void) = 0;
 
     /**
      * Get string of full contents, suitable for debug dump.

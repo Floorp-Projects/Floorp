@@ -230,7 +230,7 @@ class nsScannerSubstring
       void Rebind( const nsScannerSubstring&, const nsScannerIterator&, const nsScannerIterator& );
       void Rebind( const nsAString& );
 
-      const nsString& AsString() const;
+      const nsSubstring& AsString() const;
 
       PRBool GetNextFragment( nsScannerFragment& ) const;
       PRBool GetPrevFragment( nsScannerFragment& ) const;
