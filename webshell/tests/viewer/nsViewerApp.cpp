@@ -774,7 +774,7 @@ nsViewerApp::ViewSource(nsString& aURL)
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->mDocShell->SetViewMode(nsIDocShell::viewSource);
-  bw->SetTitle(L"View Source");
+  bw->SetTitle(nsAutoString("View Source").GetUnicode());
   bw->Show();
   bw->GoTo(aURL.GetUnicode(),"view-source");
   NS_RELEASE(bw);
