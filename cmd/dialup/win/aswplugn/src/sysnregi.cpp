@@ -222,7 +222,8 @@ extern JRI_PUBLIC_API(void)
 native_netscape_npasw_SetupPlugin_SECURE_0005fQuitNavigator(JRIEnv* env,
 											 struct netscape_npasw_SetupPlugin* self)
 {
-	PostMessage(HWND_BROADCAST, WM_COMMAND, ID_APP_SUPER_EXIT, 0L);
+	HWND hWnd = FindWindowEx(NULL, NULL, "aHiddenFrameClass", "Netscape's Hidden Frame");
+	PostMessage(/*HWND_BROADCAST*/ hWnd, WM_COMMAND, ID_APP_SUPER_EXIT, 0L);
 }
 
 
