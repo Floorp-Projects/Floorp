@@ -418,9 +418,9 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result)
   // mailnews urls aren't like http or file urls...
   // we don't have relative urls you can resolve against other urls.
   // in fact, trying to do so leads to very bad things!! so instead
-  // of trying to resolve the url, return about:blank as a dummy place holder
-  // I tried returning just an error code but too many callers always
-  // assume they get back a url =(
+  // of trying to resolve the url, return the input string as a dummy 
+  // place holder. I tried returning just an error code but too many 
+  // callers always assume they get back a url =(
   *result = nsCRT::strdup(relativePath);
   return NS_OK;
 }
@@ -443,22 +443,22 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileBaseName(char * *aFileBaseName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->GetFileBaseName(aFileBaseName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileBaseName(const char * aFileBaseName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->SetFileBaseName(aFileBaseName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->GetFileExtension(aFileExtension);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileExtension(const char * aFileExtension)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->SetFileExtension(aFileExtension);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const char * aFileName)
