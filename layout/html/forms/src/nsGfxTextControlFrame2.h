@@ -35,6 +35,7 @@
 #include "nsHTMLValue.h" //for nsHTMLValue
 #include "nsIFontMetrics.h"
 #include "nsWeakReference.h" //for service and presshell pointers
+#include "nsIScrollableViewProvider.h"
 
 class nsIPresState;
 class nsGfxTextControlFrame;
@@ -53,7 +54,8 @@ class nsGfxTextControlFrame2 : public nsStackFrame,
                                public nsIAnonymousContentCreator,
                                public nsIFormControlFrame,
                                public nsIGfxTextControlFrame2,
-                               public nsIStatefulFrame
+                               public nsIStatefulFrame,
+                               public nsIScrollableViewProvider
 
 {
 public:
@@ -220,6 +222,8 @@ protected:
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
+  // nsIScrollableViewProvider
+  NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
 
 private:
   //helper methods

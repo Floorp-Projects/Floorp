@@ -71,6 +71,7 @@
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsITreeFrame.h"
+#include "nsIScrollableViewProvider.h"
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
@@ -806,6 +807,179 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   return NS_OK;
 }
 
+nsresult
+nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
+                                   nsIFrame* aTargetFrame,
+                                   nsMouseScrollEvent* msEvent,
+                                   PRInt32 numLines, PRBool scrollPage,
+                                   PRBool aUseTargetFrame)
+{
+  nsIView* focusView = nsnull;
+  nsIScrollableView* sv = nsnull;
+  nsIFrame* focusFrame = nsnull;
+  
+  // Special case for tree/list frames - they handle their own scrolling
+  nsITreeFrame* treeFrame = nsnull;
+  nsIFrame* curFrame = aTargetFrame;
+  
+  while (curFrame) {
+    if (NS_OK == curFrame->QueryInterface(NS_GET_IID(nsITreeFrame),
+                                          (void**) &treeFrame))
+      break;
+    curFrame->GetParent(&curFrame);
+  }
+  
+  if (treeFrame) {
+    PRInt32 scrollIndex, visibleRows;
+    treeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
+    treeFrame->GetNumberOfVisibleRows(&visibleRows);
+
+    if (scrollPage)
+      scrollIndex += ((numLines > 0) ? visibleRows : -visibleRows);
+    else
+      scrollIndex += numLines;
+    
+    if (scrollIndex < 0)
+      scrollIndex = 0;
+    else {
+      PRInt32 numRows, lastPageTopRow;
+      treeFrame->GetRowCount(&numRows);
+      lastPageTopRow = numRows - visibleRows;
+      if (scrollIndex > lastPageTopRow)
+        scrollIndex = lastPageTopRow;
+    }
+    
+    treeFrame->ScrollToIndex(scrollIndex);
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  // Otherwise, check for a focused content element
+  nsCOMPtr<nsIContent> focusContent;
+  if (mCurrentFocus) {
+    focusContent = mCurrentFocus;
+  }
+  else {
+    // If there is no focused content, get the document content
+    EnsureDocument(presShell);
+    focusContent = dont_AddRef(mDocument->GetRootContent());
+  }
+  
+  if (!focusContent)
+    return NS_ERROR_FAILURE;
+
+  if (aUseTargetFrame)
+    focusFrame = aTargetFrame;
+  else
+    presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
+
+  if (!focusFrame)
+    return NS_ERROR_FAILURE;
+
+  // Now check whether this frame wants to provide us with an
+  // nsIScrollableView to use for scrolling.
+
+  nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(focusFrame);
+  if (svp) {
+    svp->GetScrollableView(&sv);
+    sv->QueryInterface(NS_GET_IID(nsIView), (void**) &focusView);
+  } else {
+    focusFrame->GetView(aPresContext, &focusView);
+    if (!focusView) {
+      nsIFrame* frameWithView;
+      focusFrame->GetParentWithView(aPresContext, &frameWithView);
+      if (frameWithView)
+        frameWithView->GetView(aPresContext, &focusView);
+      else
+        return NS_ERROR_FAILURE;
+    }
+    
+    sv = GetNearestScrollingView(focusView);
+  }
+
+  if (sv) {
+    if (scrollPage)
+      sv->ScrollByPages((numLines > 0) ? 1 : -1);
+    else
+      sv->ScrollByLines(0, numLines);
+
+    if (focusView)
+      ForceViewUpdate(focusView);
+  } else {
+    nsresult rv;
+    nsIFrame* newFrame = nsnull;
+    nsCOMPtr<nsIPresContext> newPresContext;
+
+    rv = GetParentScrollingView(msEvent, aPresContext, newFrame,
+                                *getter_AddRefs(newPresContext));
+    if (NS_SUCCEEDED(rv))
+      return DoWheelScroll(newPresContext, newFrame, msEvent, numLines,
+                           scrollPage, PR_TRUE);
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
+                                            nsIPresContext* aPresContext,
+                                            nsIFrame* &targetOuterFrame,
+                                            nsIPresContext* &presCtxOuter)
+{
+  if (!aEvent) return NS_ERROR_FAILURE;
+  if (!aPresContext) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsISupports> shell;
+  aPresContext->GetContainer(getter_AddRefs(shell));
+  if (!shell) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(shell);
+  if (!treeItem) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  treeItem->GetParent(getter_AddRefs(parent));
+  if (!parent) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDocShell> pDocShell = do_QueryInterface(parent);
+  if (!pDocShell) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIPresShell> presShell;
+  pDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell) return NS_ERROR_FAILURE;
+  
+  nsIFrame* rootFrame = nsnull;
+  presShell->GetRootFrame(&rootFrame);   
+  if (!rootFrame) return NS_ERROR_FAILURE;
+  
+  presShell->GetPresContext(&presCtxOuter); //addrefs
+  
+  nsPoint eventPoint;
+  rootFrame->GetOrigin(eventPoint);
+  eventPoint += aEvent->point;
+
+  nsresult rv;
+  rv = rootFrame->GetFrameForPoint(presCtxOuter, eventPoint,
+                                   NS_FRAME_PAINT_LAYER_FOREGROUND,
+                                   &targetOuterFrame);
+  if (rv != NS_OK) {
+    rv = rootFrame->GetFrameForPoint(presCtxOuter, eventPoint,
+                                     NS_FRAME_PAINT_LAYER_FLOATERS,
+                                     &targetOuterFrame);
+    if (rv != NS_OK) {
+      rv = rootFrame->GetFrameForPoint(presCtxOuter, eventPoint,
+                                       NS_FRAME_PAINT_LAYER_BACKGROUND,
+                                       &targetOuterFrame);
+      if (rv != NS_OK) return NS_ERROR_FAILURE;
+    }
+  }
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext, 
                                      nsEvent *aEvent,
@@ -976,82 +1150,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       case MOUSE_SCROLL_N_LINES:
       case MOUSE_SCROLL_PAGE:
         {
-          nsIView* focusView = nsnull;
-          nsIScrollableView* sv = nsnull;
-          nsIFrame* focusFrame = nsnull;
+          nsresult rv = DoWheelScroll(aPresContext, aTargetFrame, msEvent,
+                                      numLines,
+                                      (action == MOUSE_SCROLL_PAGE),
+                                      PR_FALSE);
 
-          // Special case for tree frames - they handle their own scrolling
-          nsITreeFrame* treeFrame = nsnull;
-          nsIFrame* curFrame = aTargetFrame;
-
-          while (curFrame) {
-            if (NS_OK == curFrame->QueryInterface(NS_GET_IID(nsITreeFrame), (void**) &treeFrame))
-              break;
-            curFrame->GetParent(&curFrame);
-          }
-
-          if (treeFrame) {
-            PRInt32 scrollIndex, visibleRows;
-            treeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
-            treeFrame->GetNumberOfVisibleRows(&visibleRows);
-
-            if (action == MOUSE_SCROLL_N_LINES)
-              scrollIndex += numLines;
-            else
-              scrollIndex += ((numLines > 0) ? visibleRows : -visibleRows);
-
-            if (scrollIndex < 0)
-              scrollIndex = 0;
-            else {
-              PRInt32 numRows, lastPageTopRow;
-              treeFrame->GetRowCount(&numRows);
-              lastPageTopRow = numRows - visibleRows;
-              if (scrollIndex > lastPageTopRow)
-                scrollIndex = lastPageTopRow;
-            }
-
-            treeFrame->ScrollToIndex(scrollIndex);
-            break;
-          }
-
-          nsCOMPtr<nsIPresShell> presShell;
-          aPresContext->GetShell(getter_AddRefs(presShell));
-
-          // Otherwise, check for a focused content element
-          nsCOMPtr<nsIContent> focusContent;
-          if (mCurrentFocus)
-            focusContent = mCurrentFocus;
-          else {
-            // If there is no focused content, get the document content
-            EnsureDocument(presShell);
-            focusContent = dont_AddRef(mDocument->GetRootContent());
-          }
-
-          if (!focusContent)
-            break;
-          
-          presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
-          if (!focusFrame)
-              break;
-
-          focusFrame->GetView(aPresContext, &focusView);
-          if (!focusView) {
-            nsIFrame* frameWithView;
-            focusFrame->GetParentWithView(aPresContext, &frameWithView);
-            if (frameWithView)
-              frameWithView->GetView(aPresContext, &focusView);
-            else
-              break;
-          }
-
-          sv = GetNearestScrollingView(focusView);
-          if (sv) {
-            if (action == MOUSE_SCROLL_N_LINES)
-              sv->ScrollByLines(0, numLines);
-            else
-              sv->ScrollByPages((numLines > 0) ? 1 : -1);
-            ForceViewUpdate(focusView);
-          }
         }
 
         break;

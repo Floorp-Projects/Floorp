@@ -1850,7 +1850,7 @@ nsWidget :: IsMouseInWindow ( GdkWindow* inWindow, PRInt32 inMouseX, PRInt32 inM
 // Deal with rollup of popups (xpmenus, etc)
 // 
 PRBool
-nsWidget :: HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY )
+nsWidget::HandlePopup(PRInt32 inMouseX, PRInt32 inMouseY, PRBool isWheel)
 {
   PRBool retVal = PR_FALSE;
   nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
@@ -1859,6 +1859,10 @@ nsWidget :: HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY )
     GdkWindow *currentPopup = (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if ( !IsMouseInWindow(currentPopup, inMouseX, inMouseY) ) {
       PRBool rollup = PR_TRUE;
+      if (isWheel) {
+        gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+        retVal = PR_TRUE;
+      }
       // if we're dealing with menus, we probably have submenus and we don't
       // want to rollup if the clickis in a parent menu of the current submenu
       nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
@@ -1906,7 +1910,9 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-  if ( HandlePopup(aGdkButtonEvent->x_root, aGdkButtonEvent->y_root) )
+  PRBool isWheel = (aGdkButtonEvent->button == 4 ||
+                    aGdkButtonEvent->button == 5);
+  if (HandlePopup(aGdkButtonEvent->x_root, aGdkButtonEvent->y_root, isWheel))
     return;
    
   // Switch on single, double, triple click.

@@ -299,6 +299,9 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIRollupListener))) {
     *aInstancePtr = (void*)(nsIRollupListener*)this;
     return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
+    *aInstancePtr = (void*)(nsIScrollableViewProvider*)this;
+    return NS_OK;
   }
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
@@ -2485,4 +2488,21 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
   return nsFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 }
 
+//----------------------------------------------------------------------
+  //nsIScrollableViewProvider
+//----------------------------------------------------------------------
+NS_METHOD
+nsComboboxControlFrame::GetScrollableView(nsIScrollableView** aView)
+{
+  *aView = nsnull;
+  nsIView* view = nsnull;
+  mDropdownFrame->GetView(mPresContext, &view);
+  if (view) {
+    nsIScrollableView* sv = nsnull;
+    nsresult rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sv);
+    if (NS_SUCCEEDED(rv) && sv)
+      *aView = sv;
+  }
+  return NS_OK;
+}
 

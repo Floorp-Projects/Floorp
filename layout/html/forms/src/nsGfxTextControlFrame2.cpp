@@ -1072,6 +1072,10 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
+    *aInstancePtr = (void*)(nsIScrollableViewProvider*) this;
+    return NS_OK;
+  }
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -3176,6 +3180,13 @@ nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState*
   aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
   nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
   return res;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetScrollableView(nsIScrollableView** aView)
+{
+  *aView = mScrollableView;
+  return NS_OK;
 }
 
 #endif

@@ -46,12 +46,14 @@
 #include "nsIPresState.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsITextContent.h"
+#include "nsIScrollableViewProvider.h"
 
 class nsFormFrame;
 class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
 class nsIListControlFrame;
+class nsIScrollableView;
 
 /**
  * Child list name indices
@@ -65,7 +67,8 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
 			                         public nsIStatefulFrame,
-                               public nsIRollupListener
+                               public nsIRollupListener,
+                               public nsIScrollableViewProvider
 {
 public:
   friend nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags);
@@ -180,13 +183,19 @@ public:
   //nsIRollupListener
   // NS_DECL_NSIROLLUPLISTENER
   NS_IMETHOD Rollup();
-  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup) { *aShouldRollup = PR_FALSE; return NS_OK;}
+   // a combobox should roll up if a mousewheel event happens outside of
+   // the popup area
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup)
+    { *aShouldRollup = PR_TRUE; return NS_OK;}
 
   //NS_IMETHOD ShouldRollupOnMouseWheelEvent(nsIWidget *aWidget, PRBool *aShouldRollup) 
   //{ *aShouldRollup = PR_FALSE; return NS_OK;}
 
   NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
     { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!
+
+  // nsIScrollableViewProvider
+  NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
 
 protected:
   NS_IMETHOD CreateDisplayFrame(nsIPresContext* aPresContext);

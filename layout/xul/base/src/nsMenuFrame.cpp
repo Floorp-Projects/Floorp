@@ -64,6 +64,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIPref.h"
+#include "nsIScrollableView.h"
  
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -115,6 +116,7 @@ nsMenuFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsMenuFrame)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIMenuFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 //
@@ -1638,6 +1640,25 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMenuFrame::GetScrollableView(nsIScrollableView** aView)
+{
+  *aView = nsnull;
+  if (!mPopupFrames.FirstChild())
+    return NS_OK;
+
+  nsMenuPopupFrame* popup = (nsMenuPopupFrame*) mPopupFrames.FirstChild();
+  nsIFrame* childFrame = nsnull;
+  popup->FirstChild(mPresContext, nsnull, &childFrame);
+  if (childFrame) {
+    *aView = popup->GetScrollableView(childFrame);
+    nsRect itemRect;
+    childFrame->GetRect(itemRect);
+    (*aView)->SetLineHeight(itemRect.height);
+  }
+
+  return NS_OK;
+}
 
 /* Need to figure out what this does.
 NS_IMETHODIMP

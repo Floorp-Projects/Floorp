@@ -43,16 +43,19 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
 #include "nsIContent.h"
+#include "nsIScrollableViewProvider.h"
 
 nsresult NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags) ;
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
 class nsCSSFrameConstructor;
+class nsIScrollableView;
 
 class nsMenuFrame : public nsBoxFrame, 
                     public nsIMenuFrame,
-                    public nsITimerCallback
+                    public nsITimerCallback,
+                    public nsIScrollableViewProvider
 {
 public:
   nsMenuFrame(nsIPresShell* aShell);
@@ -144,6 +147,10 @@ public:
   NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; };
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkAsGenerated();
+
+  // nsIScrollableViewProvider methods
+
+  NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
 
   // nsMenuFrame methods 
 
