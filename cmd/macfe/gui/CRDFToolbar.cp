@@ -22,6 +22,7 @@
 
 #include <cassert>
 #include "htrdf.h"
+#include "CPaneEnabler.h"
 
 #include "vocab.h"							// provides tokens needed in lookup functions
 	// ...and because vocab.h mistakenly does not declare these, we must
@@ -48,7 +49,7 @@ pane_params_from( HT_View /*ht_view*/, LView* pp_superview )
 
 		info.height			= 55; // NO! Get this value from the |HT_View|.
 		info.visible		= false;		// we'll get shown when bar is added.
-		info.enabled		= true;
+		info.enabled		= false;
 		
 		SBooleanRect bindings = { true, true, true, false };
 		info.bindings	= bindings;
@@ -121,6 +122,13 @@ CRDFToolbar::CRDFToolbar( HT_View ht_view, LView* pp_superview )
 		// and then fill in our toolbars from the contents.
 		HT_SetOpenState(TopNode(), PR_TRUE);
 		FillInToolbar();
+		
+		// when the toolbars stream in, we need to create them as invisible, disabled, and
+		// inactive. The first two are handled above in pane_params_from() so we need to
+		// make sure it is deactivated. All three properties will be adjusted to their
+		// correct settings in EnableSelf() below, which is called when the toolbar is
+		// added to the container.
+		Deactivate();
 	}
 
 CRDFToolbar::~CRDFToolbar()
@@ -333,3 +341,12 @@ CRDFToolbar::notice_background_changed()
 			SetImageURL(string(cp));
 	}
 
+
+void
+CRDFToolbar::ShowSelf ( )
+{
+	CDragBar::ShowSelf();
+	Enable();
+	Activate();
+	
+} // ShowSelf
