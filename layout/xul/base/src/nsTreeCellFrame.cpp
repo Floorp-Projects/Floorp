@@ -126,7 +126,7 @@ NS_IMETHODIMP nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   nsresult rv = nsTableCellFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   if (mAnonymousContent && (aAttribute == nsHTMLAtoms::align || aAttribute == nsXULAtoms::crop 
-          || aAttribute == nsHTMLAtoms::value))
+                 || aAttribute == nsHTMLAtoms::value || aAttribute == nsHTMLAtoms::src))
   {
     nsAutoString value;
     // XXX should check if attribute has been removed
