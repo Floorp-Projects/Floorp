@@ -70,7 +70,7 @@ CAdvancedPrefs::InitDialog()
 	CheckIfLockedPref("browser.enable_style_sheets", IDC_CHECK4);
 	CheckIfLockedPref("security.email_as_ftp_password", IDC_CHECK6);
         CheckIfLockedPref("network.signon.rememberSignons", IDC_CHECK7);
-        CheckIfLockedPref("network.privacy_policy", IDC_CHECK8);
+        CheckIfLockedPref("privacy.warn_no_policy", IDC_CHECK8);
 
 	if (PREF_PrefIsLocked("network.cookie.cookieBehavior")) {
 		// Disable all the radio buttons in the group
@@ -99,7 +99,7 @@ CAdvancedPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
 		m_nCookieAcceptance = (int)n;
 
                 PREF_GetBoolPref("network.signon.rememberSignons", &m_bRememberSignons);
-                PREF_GetBoolPref("network.privacy_policy", &m_bPrivacyPolicy);
+                PREF_GetBoolPref("privacy.warn_no_policy", &m_bPrivacyPolicy);
 		PREF_GetBoolPref("network.cookie.warnAboutCookies", &m_bWarnAboutCookies);
 	}
 
@@ -132,7 +132,7 @@ CAdvancedPrefs::ApplyChanges()
 	PREF_SetBoolPref("security.email_as_ftp_password", m_bSendEmailAddressForFTPPassword);
 	PREF_SetIntPref("network.cookie.cookieBehavior", (int32)m_nCookieAcceptance);
         PREF_SetBoolPref("network.signon.rememberSignons", m_bRememberSignons);
-        PREF_SetBoolPref("network.privacy_policy", m_bPrivacyPolicy);
+        PREF_SetBoolPref("privacy.warn_no_policy", m_bPrivacyPolicy);
 	PREF_SetBoolPref("network.cookie.warnAboutCookies", m_bWarnAboutCookies);
 	return TRUE;
 }
