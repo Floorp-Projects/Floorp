@@ -22,6 +22,7 @@
 #include "nsString2.h"
 #include "nsMIMEInfoImpl.h"
 #include "nsIMIMEInfo.h"
+#include "nsIFileSpec.h"
 
 
 // nsISupports methods
@@ -55,6 +56,25 @@ nsMIMEService::InitFromURI(nsIURI *aUri) {
 }
 
 nsresult
+nsMIMEService::InitFromFile(const char *aFileName) {
+#if 0
+    nsFileSpec dirSpec;
+    nsIFileSpec* spec = NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
+    if (!spec) return NS_ERROR_FAILURE;
+    spec->GetFileSpec(&dirSpec);
+
+    nsInputFileStream inStream(dirSpec + aFileName);
+    if (!inStream.is_open()) {
+        return NS_OK;
+    }
+
+    // digest the file.
+#endif
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+}
+
+nsresult
 nsMIMEService::InitFromHack() {
 
     nsMIMEInfoImpl* anInfo = nsnull;
@@ -78,6 +98,82 @@ nsMIMEService::InitFromHack() {
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
     mInfoArray->AppendElement(anInfo);
 
+    anInfo = new nsMIMEInfoImpl("application/x-javascript", "js", "Javascript Source File");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+
+    /////////////////
+    // Images
+    /////////////////
+
+    anInfo = new nsMIMEInfoImpl("image/gif", "gif", "GIF Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+
+    anInfo = new nsMIMEInfoImpl("image/jpeg", "jpeg,jpg,jpe,jfif,pjpeg,pjp", "JPEG Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+
+    anInfo = new nsMIMEInfoImpl("image/png", "png", "PNG Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+
+    anInfo = new nsMIMEInfoImpl("image/tiff", "tiff,tif", "TIFF Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-cmu-raster", "ras", "CMU Raster Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-xbitmap", "xbm", "X Bitmap");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-xpixmap", "xpm", "X Pixmap");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-xwindowdump", "xwd", "X Window Dump Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-portable-anymap", "pnm", "PBM Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-portable-bitmap", "pbm", "PBM Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-portable-graymap", "pgm", "PGM Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-portable-pixmap", "ppm", "PPM Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-rgb", "rgb", "RGB Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+    anInfo = new nsMIMEInfoImpl("image/x-MS-bmp", "bmp", "Windows Bitmap");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+     anInfo = new nsMIMEInfoImpl("image/x-photo-cd", "pcd", "PhotoCD Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+     anInfo = new nsMIMEInfoImpl("image/ief", "ief", "");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
+     anInfo = new nsMIMEInfoImpl("application/fractals", "fif", "Fractal Image Format");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+    
     return NS_OK;
 }
 
