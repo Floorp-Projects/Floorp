@@ -77,7 +77,7 @@ struct SECMODModuleStr {
     void	*functionList; /* The PKCS #11 function table */
     void	*refLock;	/* only used pk11db.c */
     int		refCount;	/* Module reference count */
-    PK11SlotInfo **slots;	/* array of slot points attatched to this mod*/
+    PK11SlotInfo **slots;	/* array of slot points attached to this mod*/
     int		slotCount;	/* count of slot in above array */
     PK11PreSlotInfo *slotInfo;	/* special info about slots default settings */
     int		slotInfoCount;  /* count */
