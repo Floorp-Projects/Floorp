@@ -23,6 +23,12 @@ classic.jar:
 +   skin/classic/messenger/threadPane.css           (skin/threadPane.css)
 +   skin/classic/messenger/messageHeader.css        (skin/messageHeader.css)
 
+comm.jar:
++   content/navigator/viewSource.xul                (content/viewSource.xul)
++   content/navigator/contents.rdf                  (content/navigator.rdf)
+    content/help/contents.rdf                       (content/help.rdf)
+    content/help/contextHelp.js                     (content/contextHelp.js)
+
 toolkit.jar:
 +   content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
 +   content/global/customizeToolbar.js              (content/customizeToolbar.js)
