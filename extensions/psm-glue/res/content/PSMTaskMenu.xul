@@ -6,7 +6,16 @@
 xmlns:html="http://www.w3.org/TR/REC-html40"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://global/content/psm.js" />
+<html:script language="JavaScript">
+
+function displaySecurityAdvisor()
+{
+    var psm = Components.classes["component://netscape/psm"].getService();
+    psm = psm.QueryInterface(Components.interfaces.nsIPSMComponent);
+    psm.displaySecurityAdvisor( null, null );
+}
+
+</html:script>
 
 <menupopup id="personalManagers">
     <menuitem id="PSMMentItem" position="1" value="&PSMCmd.label;" oncommand="displaySecurityAdvisor()"/>
