@@ -775,6 +775,10 @@ nsPresContext::Observe(nsISupports* aSubject,
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
     UpdateCharSet(aData);
+    if (mDeviceContext) {
+      mDeviceContext->FlushFontCache();
+      ClearStyleDataAndReflow();
+    }
     return NS_OK;
   }
 
