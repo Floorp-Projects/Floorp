@@ -1822,7 +1822,7 @@ sub BuildDist()
     mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
     
     #make default plugins folder so that apprunner won't go looking for 3.0 and 4.0 plugins.
-    mkpath([ ":mozilla:dist:viewer:Plugins", ":mozilla:dist:viewer_debug:Plugins"]);
+    mkpath([ ":mozilla:dist:viewer:Plug-ins", ":mozilla:dist:viewer_debug:Plug-ins"]);
     mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
     
     BuildRuntimeDist();
@@ -2693,7 +2693,7 @@ sub BuildPluginsProjects()
         BuildProject($project_path, "MRJPlugin.jar");
     }
     # Copy MRJPlugin, MRJPlugin.jar to appropriate plugins folder.
-    my($plugin_dist) = _getDistDirectory() . "Plugins:";
+    my($plugin_dist) = _getDistDirectory() . "Plug-ins:";
     MakeAlias($plugin_path . "MRJPlugin", $plugin_dist);
     MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
 }
