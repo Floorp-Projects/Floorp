@@ -66,6 +66,7 @@ bin\components\caps.xpt
 bin\components\chardet.xpt
 bin\components\chrome.xpt
 bin\components\commandhandler.xpt
+bin\components\composer.xpt
 bin\components\content_base.xpt
 bin\components\content_html.xpt
 bin\components\content_htmldoc.xpt
