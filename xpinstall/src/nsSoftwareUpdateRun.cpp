@@ -147,7 +147,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         else
             logMessage.AppendWithConversion( message ); 
 
-        listener->LogComment( logMessage.GetUnicode() );
+        listener->LogComment( logMessage.get() );
     }
 }
 

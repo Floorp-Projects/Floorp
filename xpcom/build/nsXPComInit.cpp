@@ -448,7 +448,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             {
                 nsAutoString topic;
                 topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-                (void) observerService->Notify(mgr, topic.GetUnicode(), nsnull);
+                (void) observerService->Notify(mgr, topic.get(), nsnull);
             }
         }
     }

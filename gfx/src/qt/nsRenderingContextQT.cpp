@@ -1021,7 +1021,7 @@ NS_IMETHODIMP nsRenderingContextQT::GetWidth(PRUnichar aC,nscoord &aWidth,
 NS_IMETHODIMP nsRenderingContextQT::GetWidth(const nsString &aString,
                                              nscoord &aWidth,PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(),aString.Length(),aWidth,aFontID);
+  return GetWidth(aString.get(),aString.Length(),aWidth,aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextQT::GetWidth(const char *aString,
@@ -1263,7 +1263,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const nsString &aString,
                                                PRInt32 aFontID,
                                                const nscoord *aSpacing)
 {
-  return DrawString(aString.GetUnicode(),aString.Length(),aX,aY,aFontID,
+  return DrawString(aString.get(),aString.Length(),aX,aY,aFontID,
                     aSpacing);
 }
 

@@ -195,7 +195,7 @@ nsLocaleService::nsLocaleService(void)
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-		result = NewLocale(xpLocale.GetUnicode(), &mSystemLocale);
+		result = NewLocale(xpLocale.get(), &mSystemLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 
 		//
@@ -205,7 +205,7 @@ nsLocaleService::nsLocaleService(void)
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-		result = NewLocale(xpLocale.GetUnicode(), &mApplicationLocale);
+		result = NewLocale(xpLocale.get(), &mApplicationLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 	
 		win32Converter->Release();
@@ -253,8 +253,8 @@ nsLocaleService::nsLocaleService(void)
                 nsCRT::free(lc_temp);
                 return;
             }
-            resultLocale->AddCategory(category.GetUnicode(),xpLocale.GetUnicode());
-            resultLocale->AddCategory(category_platform.GetUnicode(),platformLocale.GetUnicode());
+            resultLocale->AddCategory(category.get(),xpLocale.get());
+            resultLocale->AddCategory(category_platform.get(),platformLocale.get());
             nsCRT::free(lc_temp);
         }
         (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
@@ -307,7 +307,7 @@ nsLocaleService::nsLocaleService(void)
                 nsCRT::free(lc_temp);
                 return;
             }
-            resultLocale->AddCategory(category.GetUnicode(),xpLocale.GetUnicode());
+            resultLocale->AddCategory(category.get(),xpLocale.get());
             UniFreeMem(lc_temp);
         }
         UniFreeLocaleObject(locale_object);
@@ -328,7 +328,7 @@ nsLocaleService::nsLocaleService(void)
 		nsString xpLocale;
 		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
 		if (NS_SUCCEEDED(result)) {
-			result = NewLocale(xpLocale.GetUnicode(),&mSystemLocale);
+			result = NewLocale(xpLocale.get(),&mSystemLocale);
 			if (NS_SUCCEEDED(result)) {
 				mApplicationLocale = mSystemLocale;
 				mApplicationLocale->AddRef();
@@ -359,7 +359,7 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 
 	for(i=0;i<LocaleListLength;i++) {
 		nsString category; category.AssignWithConversion(LocaleList[i]);
-		result = resultLocale->AddCategory(category.GetUnicode(),aLocale);
+		result = resultLocale->AddCategory(category.get(),aLocale);
 		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
 
@@ -520,7 +520,7 @@ nsLocaleService::GetLocaleComponentForUserAgent(PRUnichar **_retval)
 	if (NS_SUCCEEDED(result))
 	{
 		nsString	lc_messages; lc_messages.AssignWithConversion(NSILOCALE_MESSAGE);
-		result = system_locale->GetCategory(lc_messages.GetUnicode(),_retval);
+		result = system_locale->GetCategory(lc_messages.get(),_retval);
 		return result;
 	}
 

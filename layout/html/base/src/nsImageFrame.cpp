@@ -681,7 +681,7 @@ nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
   // XXX It would be nice if there was a way to have the font metrics tell
   // use where to break the text given a maximum width. At a minimum we need
   // to be able to get the break character...
-  const PRUnichar* str = aAltText.GetUnicode();
+  const PRUnichar* str = aAltText.get();
   PRInt32          strLen = aAltText.Length();
   nscoord          y = aRect.y;
   while ((strLen > 0) && ((y + maxDescent) < aRect.YMost())) {
@@ -988,10 +988,10 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       // Only pass off the click event if the script security manager
       // says it's ok.
       if (NS_SUCCEEDED(proceed))
-        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.get(), aTargetSpec.get());
     }
     else {
-      handler->OnOverLink(mContent, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+      handler->OnOverLink(mContent, aURLSpec.get(), aTargetSpec.get());
     }
     NS_RELEASE(handler);
   }

@@ -395,7 +395,7 @@ NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, 
 NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(const nsString aSrc, nsString & aDst)
 {
   aDst = aSrc;
-  return HandleNumbers((PRUnichar *)aDst.GetUnicode(),aDst.Length(),mNumflag);
+  return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(),mNumflag);
 }
 
 NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
@@ -406,7 +406,7 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
   // real code get check in.
 #ifdef FULL_ARABIC_SHAPING
   // Start Unreview Code
-  PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.GetUnicode();
+  PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRUint32 i, size = aSrc.Length();
   aDst = NS_ConvertToString("");
   for (i=0;i<size;i++) { // i : Source
@@ -441,7 +441,7 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsStri
   // real code get check in.
 #ifdef FULL_ARABIC_SHAPING
   // Start Unreview Code
-  PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.GetUnicode();
+  PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRBool foundArabic = PR_FALSE;
   PRUint32 i,endArabic, beginArabic, size = aSrc.Length();
   aDst = NS_ConvertToString("");
@@ -499,7 +499,7 @@ nsString & aDst,PRUint32 aDir)
   // real code get check in.
 #ifdef FULL_ARABIC_SHAPING
   // Start Unreview Code
-  PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.GetUnicode();
+  PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRUint32 i,beginArabic, endArabic, size = aSrc.Length();
   aDst = NS_ConvertToString("");
   PRBool foundArabic = PR_FALSE;

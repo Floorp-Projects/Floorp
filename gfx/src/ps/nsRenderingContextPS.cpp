@@ -1019,7 +1019,7 @@ nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& a
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+  return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 /** ---------------------------------------------------
@@ -1168,7 +1168,7 @@ NS_IMETHODIMP
 nsRenderingContextPS :: DrawString(const nsString& aString,nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+  return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 /** ---------------------------------------------------

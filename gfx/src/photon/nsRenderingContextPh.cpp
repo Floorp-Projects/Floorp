@@ -970,7 +970,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLe
 
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const nsString& aString, nscoord& aWidth, PRInt32 *aFontID ) {
-  return GetWidth( aString.GetUnicode(), aString.Length(), aWidth, aFontID );  
+  return GetWidth( aString.get(), aString.Length(), aWidth, aFontID );  
 	}
 
 
@@ -1027,7 +1027,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString( const PRUnichar *aString, PRUi
 	}
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawString( const nsString& aString, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
-	NS_ConvertUCS2toUTF8 theUnicodeString( aString.GetUnicode(), aString.Length() );
+	NS_ConvertUCS2toUTF8 theUnicodeString( aString.get(), aString.Length() );
 	const char *p = theUnicodeString.get();
 	return DrawString( p, strlen( p ), aX, aY, aSpacing );
 	}

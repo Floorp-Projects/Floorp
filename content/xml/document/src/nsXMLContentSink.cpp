@@ -758,7 +758,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
         nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(mDocument));
         if (xmlDoc) {
           mTitleText.CompressWhitespace();
-          xmlDoc->SetTitle(mTitleText.GetUnicode());
+          xmlDoc->SetTitle(mTitleText.get());
         }        
         mInTitle = PR_FALSE;
       }

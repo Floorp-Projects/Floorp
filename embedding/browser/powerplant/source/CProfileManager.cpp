@@ -238,7 +238,7 @@ void CProfileManager::DoManageProfilesDialog()
    		        table->GetCellData(selectedCell, dataBuf, dataSize);
    		        dataBuf[dataSize] = '\0';
                 CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
-   		        rv = profileService->SetCurrentProfile(unicodeStr.GetUnicode());
+   		        rv = profileService->SetCurrentProfile(unicodeStr.get());
             }
   		    break;
   		}
@@ -251,7 +251,7 @@ void CProfileManager::DoManageProfilesDialog()
    		    if (DoNewProfileDialog(dataBuf, sizeof(dataBuf)))
    		    {
    		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
-   		        rv = profileService->CreateNewProfile(unicodeStr.GetUnicode(), nsnull, nsnull, PR_FALSE);
+   		        rv = profileService->CreateNewProfile(unicodeStr.get(), nsnull, nsnull, PR_FALSE);
    		        if (NS_FAILED(rv))
    		            break;
    		        
@@ -273,7 +273,7 @@ void CProfileManager::DoManageProfilesDialog()
    		        dataBuf[dataSize] = '\0';
    		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
    		        
-   		        rv = profileService->DeleteProfile(unicodeStr.GetUnicode(), PR_TRUE);
+   		        rv = profileService->DeleteProfile(unicodeStr.get(), PR_TRUE);
    		        if (NS_FAILED(rv))
    		            break;
    		        
@@ -300,7 +300,7 @@ void CProfileManager::DoManageProfilesDialog()
    		    if (DoNewProfileDialog(dataBuf, sizeof(dataBuf)))
    		    {
    		        CPlatformUCSConversion::GetInstance()->PlatformToUCS(nsDependentCString(dataBuf), unicodeStr);
-                profileService->RenameProfile(oldName.GetUnicode(), unicodeStr.GetUnicode());
+                profileService->RenameProfile(oldName.get(), unicodeStr.get());
                 table->SetCellData(selectedCell, dataBuf, strlen(dataBuf)); 		        
    		    }
    		}

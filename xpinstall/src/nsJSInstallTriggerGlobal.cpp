@@ -308,8 +308,8 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
     if ( chromeType & CHROME_ALL )
     {
         // there's at least one known chrome type
-        nsXPITriggerItem* item = new nsXPITriggerItem(name.GetUnicode(),
-                                                      sourceURL.GetUnicode());
+        nsXPITriggerItem* item = new nsXPITriggerItem(name.get(),
+                                                      sourceURL.get());
 
         if (item && item->IsRelativeURL())
             item->mURL.Insert( baseURL, 0 );

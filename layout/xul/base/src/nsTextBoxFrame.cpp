@@ -367,7 +367,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
         if (bidiEngine) {
           const nsStyleVisibility* vis;
           GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-          PRUnichar* buffer = (PRUnichar*) mCroppedTitle.GetUnicode();
+          PRUnichar* buffer = (PRUnichar*) mCroppedTitle.get();
           PRInt32 runCount;
           nsBidiDirection direction =
                                     (NS_STYLE_DIRECTION_RTL == vis->mDirection)
@@ -470,7 +470,7 @@ nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
 
          // XXX are attribute values always two byte?
          const PRUnichar *titleString;
-         titleString = mCroppedTitle.GetUnicode();
+         titleString = mCroppedTitle.get();
          if (mAccessKeyInfo->mAccesskeyIndex > 0)
              aRenderingContext.GetWidth(titleString, mAccessKeyInfo->mAccesskeyIndex,
                                         mAccessKeyInfo->mBeforeWidth);

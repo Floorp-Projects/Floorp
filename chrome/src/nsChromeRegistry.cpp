@@ -773,8 +773,8 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
         if (packageName.Equals("global") || packageName.Equals("communicator"))
           useProfile = PR_FALSE; // Always force the auto-selection to be in the
                                  // install dir for the packages required to bring up the profile UI.
-        rv = SelectProviderForPackage(aProvider, providerNameUC.GetUnicode(),
-                                      packageNameUC.GetUnicode(), aArc, useProfile, PR_TRUE);
+        rv = SelectProviderForPackage(aProvider, providerNameUC.get(),
+                                      packageNameUC.get(), aArc, useProfile, PR_TRUE);
         if (NS_FAILED(rv))
           return NS_ERROR_FAILURE;
 
@@ -1344,7 +1344,7 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
 
   nsAutoString unistr(aOverlayURI);
   nsCOMPtr<nsIRDFLiteral> literal;
-  rv = mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
+  rv = mRDFService->GetLiteral(unistr.get(), getter_AddRefs(literal));
   if (NS_FAILED(rv)) return rv;
 
   if (aRemove) {
@@ -1503,7 +1503,7 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
 
   nsString packageStr(aPackageName);
   nsCAutoString resourceStr("urn:mozilla:package:");
-  resourceStr += NS_ConvertUCS2toUTF8(packageStr.GetUnicode());
+  resourceStr += NS_ConvertUCS2toUTF8(packageStr.get());
 
   // Obtain the resource.
   nsresult rv = NS_OK;
@@ -1525,7 +1525,7 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
   }
 
   if (!selectedProvider) {
-    rv = FindProvider(NS_ConvertUCS2toUTF8(packageStr.GetUnicode()), nsCAutoString("locale"), mSelectedLocale, getter_AddRefs(selectedProvider));
+    rv = FindProvider(NS_ConvertUCS2toUTF8(packageStr.get()), nsCAutoString("locale"), mSelectedLocale, getter_AddRefs(selectedProvider));
     if (!selectedProvider)
       return rv;
   }
@@ -1547,7 +1547,7 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
   nsString urn;
   ustr.Left(urn, pos);
 
-  rv = GetResource(NS_ConvertUCS2toUTF8(urn.GetUnicode()), getter_AddRefs(resource));
+  rv = GetResource(NS_ConvertUCS2toUTF8(urn.get()), getter_AddRefs(resource));
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to obtain the provider resource.");
     return rv;
@@ -2062,14 +2062,14 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
     locstr.AssignWithConversion("profile");
   else locstr.AssignWithConversion("install");
   nsCOMPtr<nsIRDFLiteral> locLiteral;
-  rv = mRDFService->GetLiteral(locstr.GetUnicode(), getter_AddRefs(locLiteral));
+  rv = mRDFService->GetLiteral(locstr.get(), getter_AddRefs(locLiteral));
   if (NS_FAILED(rv)) return rv;
 
   // Get the literal for our script access.
   nsAutoString scriptstr;
   scriptstr.AssignWithConversion("false");
   nsCOMPtr<nsIRDFLiteral> scriptLiteral;
-  rv = mRDFService->GetLiteral(scriptstr.GetUnicode(), getter_AddRefs(scriptLiteral));
+  rv = mRDFService->GetLiteral(scriptstr.get(), getter_AddRefs(scriptLiteral));
   if (NS_FAILED(rv)) return rv;
 
   // Build the prefix string. Only resources with this prefix string will have their
@@ -2127,7 +2127,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
         
         nsAutoString unistr;unistr.AssignWithConversion(baseURL);
         nsCOMPtr<nsIRDFLiteral> baseLiteral;
-        mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(baseLiteral));
+        mRDFService->GetLiteral(unistr.get(), getter_AddRefs(baseLiteral));
   
         rv = nsChromeRegistry::UpdateArc(installSource, resource, mBaseURL, baseLiteral, aRemove);
         if (NS_FAILED(rv)) return rv;
@@ -2245,7 +2245,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
               
               nsAutoString unistr;unistr.AssignWithConversion(baseURL);
               nsCOMPtr<nsIRDFLiteral> baseLiteral;
-              mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(baseLiteral));
+              mRDFService->GetLiteral(unistr.get(), getter_AddRefs(baseLiteral));
   
               rv = nsChromeRegistry::UpdateArc(installSource, entry, mBaseURL, baseLiteral, aRemove);
               if (NS_FAILED(rv)) return rv;
@@ -2312,7 +2312,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                 // We're relative. Prepend the base URL of the package.
                 nsAutoString fullURL; fullURL.AssignWithConversion(aBaseURL);
                 fullURL += imageURL;
-                mRDFService->GetLiteral(fullURL.GetUnicode(), getter_AddRefs(literal));
+                mRDFService->GetLiteral(fullURL.get(), getter_AddRefs(literal));
                 newTarget = do_QueryInterface(literal);
               }
             }
@@ -3149,7 +3149,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
     if (skin.Equals(chromeType)) {
       if (isSelection) {
         nsAutoString name; name.AssignWithConversion(chromeLocation);
-        rv = SelectSkin(name.GetUnicode(), isProfile);
+        rv = SelectSkin(name.get(), isProfile);
 #ifdef DEBUG
         printf("***** Chrome Registration: Selecting skin %s as default\n", (const char*)chromeLocation);
 #endif
@@ -3162,7 +3162,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
     else if (locale.Equals(chromeType)) {
       if (isSelection) {
         nsAutoString name; name.AssignWithConversion(chromeLocation);
-        rv = SelectLocale(name.GetUnicode(), isProfile);
+        rv = SelectLocale(name.get(), isProfile);
 #ifdef DEBUG
         printf("***** Chrome Registration: Selecting locale %s as default\n", (const char*)chromeLocation);
 #endif

@@ -862,7 +862,7 @@ static PRBool
 IsASCIIFontName(const nsString& aName)
 {
   PRUint32 len = aName.Length();
-  const PRUnichar* str = aName.GetUnicode();
+  const PRUnichar* str = aName.get();
   for (PRUint32 i = 0; i < len; i++) {
     /*
      * X font names are printable ASCII, ignore others (for now)
@@ -882,7 +882,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     return PR_TRUE;
     
   nsCAutoString name;
-  name.AssignWithConversion(aFamily.GetUnicode());
+  name.AssignWithConversion(aFamily.get());
   name.ToLowerCase();
   
   nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) aData;
@@ -2063,7 +2063,7 @@ nsFontXlibSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
     nsAutoString tmp(aSrc, aSrcLen);
     char* conv = nsnull;
 
-    res = gConverter->Convert(tmp.GetUnicode(), &conv);
+    res = gConverter->Convert(tmp.get(), &conv);
     if (NS_SUCCEEDED(res) && conv) {
       char* p = conv;
       PRUint32 i;
@@ -3149,7 +3149,7 @@ nsFontMetricsXlib::FamilyExists(const nsString& aName)
     return NS_ERROR_FAILURE;
 
   nsCAutoString name;
-  name.AssignWithConversion(aName.GetUnicode());
+  name.AssignWithConversion(aName.get());
   name.ToLowerCase();
   
   nsFontFamilyXlib* family = FindFamily(&name);

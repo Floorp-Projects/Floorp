@@ -2167,11 +2167,11 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do
   // the conversion.
   PRInt32 len = (PRInt32)aTitle.Length();
-  encoder->GetMaxLength(aTitle.GetUnicode(), len, &platformLen);
+  encoder->GetMaxLength(aTitle.get(), len, &platformLen);
   if (platformLen) {
     platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
     if (platformText) {
-      rv = encoder->Convert(aTitle.GetUnicode(), &len, platformText, &platformLen);
+      rv = encoder->Convert(aTitle.get(), &len, platformText, &platformLen);
       (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
     }
   } // if valid length

@@ -889,7 +889,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aC
       rv = MakeContentObject(eHTMLTag_unknown, aNodeInfo, nsnull, nsnull, aResult);      
     }
     else {
-      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.GetUnicode())));
+      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.get())));
       nsCOMPtr<nsINodeInfo> newName;
       aNodeInfo->NameChanged(atom, *getter_AddRefs(newName));
 
@@ -3894,7 +3894,7 @@ static nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRe
   nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = ccm2->GetCharsetAtom(aDocCharset.GetUnicode(), getter_AddRefs(docCharsetAtom));
+    rv = ccm2->GetCharsetAtom(aDocCharset.get(), getter_AddRefs(docCharsetAtom));
     if (NS_SUCCEEDED(rv))
     {
       nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -4150,7 +4150,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
   
   stringList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.get();
   PRUnichar* end   = start;
   PRUnichar* last  = start;
   PRUnichar  endCh;

@@ -573,7 +573,7 @@ InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsva
     return JS_TRUE;
   }
 
-  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, nativeRet.GetUnicode()), nativeRet.Length()));
+  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, nativeRet.get()), nativeRet.Length()));
 
   return JS_TRUE;
 }
@@ -1098,7 +1098,7 @@ InstallFileOpFileWindowsGetShortName(JSContext *cx, JSObject *obj, uintN argc, j
   }
 
   if(shortPathName.Length() != 0)
-    *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, shortPathName.GetUnicode()), shortPathName.Length()));
+    *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, shortPathName.get()), shortPathName.Length()));
 
   return JS_TRUE;
 }

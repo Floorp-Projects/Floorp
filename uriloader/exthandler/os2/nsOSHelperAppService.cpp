@@ -273,7 +273,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
     else
       mimeInfo->AppendExtension(aFileExt);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-    mimeInfo->SetApplicationDescription(description.GetUnicode());
+    mimeInfo->SetApplicationDescription(description.get());
     // if we got here, then set our return variable and be sure to add this new mime Info object to the hash
     // table so we don't hit the registry the next time we look up this content type.
     *_retval = mimeInfo;

@@ -664,7 +664,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
         // Check if this host is already present in the result array
         // If not add it to the result array
         PRBool itemAvailable = PR_TRUE;
-        CheckItemAvailability(hostName.GetUnicode(), aResultArray, &itemAvailable);
+        CheckItemAvailability(hostName.get(), aResultArray, &itemAvailable);
         if (!itemAvailable) {
             // Insert the host name to the result array at the top
             //Create an AutoComplete Item 

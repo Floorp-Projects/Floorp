@@ -404,7 +404,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return result;
   }
 
-  result = stream->Write(streamData.GetUnicode());
+  result = stream->Write(streamData.get());
   if (NS_FAILED(result)) {
     fprintf(stderr, "mozXMLTerminal::Activate: Failed to write to stream\n");
     return result;
@@ -507,9 +507,9 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   anObserver = nsnull;
 #endif
   nsAutoString cookie;
-  result = mLineTermAux->OpenAux(mCommand.GetUnicode(),
-                                 mInitInput.GetUnicode(),
-                                 mPromptExpr.GetUnicode(),
+  result = mLineTermAux->OpenAux(mCommand.get(),
+                                 mInitInput.get(),
+                                 mPromptExpr.get(),
                                  options, LTERM_DETERMINE_PROCESS,
                                  nRows, nCols, xPixels, yPixels,
                                  domDoc, anObserver, cookie);
@@ -678,7 +678,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32& rows, PRInt32& cols,
 // Transmit string to LineTerm (use saved cookie)
 NS_IMETHODIMP mozXMLTerminal::SendTextAux(const nsString& aString)
 {
-  return SendText(aString, mCookie.GetUnicode());
+  return SendText(aString, mCookie.get());
 }
 
 
@@ -707,7 +707,7 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   }
 
   if (!consumed) {
-    result = mLineTermAux->Write(sendStr.GetUnicode(), aCookie);
+    result = mLineTermAux->Write(sendStr.get(), aCookie);
     if (NS_FAILED(result)) {
       // Abort XMLterm session
       nsAutoString abortCode;

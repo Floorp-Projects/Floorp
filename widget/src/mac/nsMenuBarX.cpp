@@ -365,7 +365,7 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
         }
       }
 
-      CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.GetUnicode(), label.Length());
+      CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(), label.Length());
       ::InsertMenuItemTextWithCFString(appleMenu, labelRef, 1, 0, 0);
       ::CFRelease(labelRef);
 

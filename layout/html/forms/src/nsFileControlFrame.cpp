@@ -291,7 +291,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  result = filePicker->Init(parentWindow, title.GetUnicode(), nsIFilePicker::modeOpen);
+  result = filePicker->Init(parentWindow, title.get(), nsIFilePicker::modeOpen);
   if (NS_FAILED(result))
     return result;
 
@@ -304,7 +304,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
   if (currentFile && !defaultName.IsEmpty()) {
-    result = currentFile->InitWithUnicodePath(defaultName.GetUnicode());
+    result = currentFile->InitWithUnicodePath(defaultName.get());
     if (NS_SUCCEEDED(result)) {
       PRUnichar *leafName = nsnull;
       currentFile->GetUnicodeLeafName(&leafName);

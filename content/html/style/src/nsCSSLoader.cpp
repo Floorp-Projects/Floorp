@@ -630,7 +630,7 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
             } else {
               // make space for the decoding
               strUnicodeBuffer->SetCapacity(unicodeLength);
-              unicodeString = (PRUnichar *) strUnicodeBuffer->GetUnicode();
+              unicodeString = (PRUnichar *) strUnicodeBuffer->get();
               result = decoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
               if (NS_SUCCEEDED(result)) {
                 strUnicodeBuffer->SetLength(unicodeLength);
@@ -936,7 +936,7 @@ static nsresult EnumerateMediaString(const nsString& aStringList, nsStringEnumFu
 
   stringList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.get();
   PRUnichar* end   = start;
 
   while (NS_SUCCEEDED(status) && (kNullCh != *start)) {

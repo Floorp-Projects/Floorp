@@ -114,14 +114,14 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
         NS_ASSERTION(NS_SUCCEEDED(res), "failed to get app locale info");
         appLocale->Release();
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to get locale info");
   }
 
@@ -150,7 +150,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset = mappedCharset;
         nsMemory::Free(mappedCharset);

@@ -477,7 +477,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
       rv = trans->SetConverter(htmlConverter);
       if (NS_FAILED(rv)) return rv;
 
-      rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.GetUnicode()) );
+      rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
       if (NS_FAILED(rv)) return rv;
 
       // QI the data object an |nsISupports| so that when the transferable holds

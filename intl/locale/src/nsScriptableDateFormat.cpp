@@ -96,7 +96,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
   // get locale service 
   NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = localeName.Length() ? localeService->NewLocale(localeName.GetUnicode(), &aLocale) :
+    rv = localeName.Length() ? localeService->NewLocale(localeName.get(), &aLocale) :
                                localeService->GetApplicationLocale(&aLocale);
 
     if (NS_SUCCEEDED(rv) && aLocale) {

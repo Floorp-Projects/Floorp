@@ -659,7 +659,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         if (spOther)
         {
             // tack in the viewsource command
-            CComBSTR bstrURL(strURI.GetUnicode());
+            CComBSTR bstrURL(strURI.get());
             CComVariant vURL(bstrURL);
             VARIANT vNull;
             vNull.vt = VT_NULL;
@@ -746,7 +746,7 @@ LRESULT CMozillaBrowser::OnLinkOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
     if (uri.Length() > 0)
     {
-        CComBSTR bstrURI(uri.GetUnicode());
+        CComBSTR bstrURI(uri.get());
         CComVariant vFlags(0);
         Navigate(bstrURI, &vFlags, NULL, NULL, NULL);
     }
@@ -767,7 +767,7 @@ LRESULT CMozillaBrowser::OnLinkOpenInNewWindow(WORD wNotifyCode, WORD wID, HWND 
 
     if (uri.Length() > 0)
     {
-        CComBSTR bstrURI(uri.GetUnicode());
+        CComBSTR bstrURI(uri.get());
         CComVariant vFlags(navOpenInNewWindow);
         Navigate(bstrURI, &vFlags, NULL, NULL, NULL);
     }
@@ -1614,7 +1614,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
         }
     }
     // Navigate to the home page
-    CComBSTR bstrUrl(sUrl.GetUnicode());
+    CComBSTR bstrUrl(sUrl.get());
     Navigate(bstrUrl , NULL, NULL, NULL, NULL);
     
     return S_OK;
@@ -1759,7 +1759,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
     nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
     if (spIWebNavigation)
     {
-        res = spIWebNavigation->LoadURI(sUrl.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+        res = spIWebNavigation->LoadURI(sUrl.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
     }
 
     return res;

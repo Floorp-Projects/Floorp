@@ -182,7 +182,7 @@ nsXULContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
     if (NS_FAILED(rv)) return rv;
 
 
-    rv = text->SetText(s.GetUnicode(), s.Length(), PR_FALSE);
+    rv = text->SetText(s.get(), s.Length(), PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     // hook it up to the child
@@ -299,7 +299,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         // the protocol), uriStr will be untouched.
         NS_MakeAbsoluteURI(uri, uri, url);
 
-        rv = gRDF->GetUnicodeResource(uri.GetUnicode(), aResult);
+        rv = gRDF->GetUnicodeResource(uri.get(), aResult);
     }
     else {
         rv = GetElementResource(aElement, aResult);
@@ -670,7 +670,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aA
 
     uri.Append(aAttribute);
 
-    rv = gRDF->GetUnicodeResource(uri.GetUnicode(), aResult);
+    rv = gRDF->GetUnicodeResource(uri.get(), aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     if (NS_FAILED(rv)) return rv;
 

@@ -584,7 +584,7 @@ NS_METHOD CBrowserShell::LoadURL(const char* urlText, SInt32 urlTextLen)
 
 NS_METHOD CBrowserShell::LoadURL(const nsString& urlText)
 {
-   return mWebBrowserAsWebNav->LoadURI(urlText.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+   return mWebBrowserAsWebNav->LoadURI(urlText.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 
@@ -616,7 +616,7 @@ Boolean CBrowserShell::Find()
     {
         PRBool  didFind;
 
-        finder->SetSearchString(searchString.GetUnicode());
+        finder->SetSearchString(searchString.get());
         finder->SetFindBackwards(findBackwards);    
         finder->SetWrapFind(wrapFind);    
         finder->SetEntireWord(entireWord);    
@@ -643,7 +643,7 @@ Boolean CBrowserShell::Find(const nsString& searchString,
     nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
     if (!finder) return FALSE;
 
-    finder->SetSearchString(searchString.GetUnicode());
+    finder->SetSearchString(searchString.get());
     finder->SetFindBackwards(findBackwards);    
     finder->SetWrapFind(wrapFind);    
     finder->SetEntireWord(entireWord);    

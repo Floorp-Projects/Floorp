@@ -194,7 +194,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
   while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
     aURI.Mid(part, start, (end-start));
     if (textToSubURI && !part.IsASCII()) {
-      rv = textToSubURI->ConvertAndEscape(documentCharset, part.GetUnicode(), getter_Copies(escapedURI));
+      rv = textToSubURI->ConvertAndEscape(documentCharset, part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -212,7 +212,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
     // Escape the remaining part.
     aURI.Mid(part, start, aURI.Length()-start);
     if (textToSubURI) {
-      rv = textToSubURI->ConvertAndEscape(documentCharset, part.GetUnicode(), getter_Copies(escapedURI));
+      rv = textToSubURI->ConvertAndEscape(documentCharset, part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {

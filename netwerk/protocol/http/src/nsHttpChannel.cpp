@@ -1415,7 +1415,7 @@ nsHttpChannel::PromptForUserPass(const char *host,
     // figure out what message to display...
     nsXPIDLString message;
     if (proxyAuth) {
-        const PRUnichar *strings[] = { hostU.GetUnicode() };
+        const PRUnichar *strings[] = { hostU.get() };
         rv = bundle->FormatStringFromName(
                         NS_LITERAL_STRING("EnterUserPasswordForProxy").get(),
                         strings, 1,
@@ -1427,7 +1427,7 @@ nsHttpChannel::PromptForUserPass(const char *host,
         realmU.AppendWithConversion(realm);
         realmU.Append(NS_LITERAL_STRING("\""));
 
-        const PRUnichar *strings[] = { realmU.GetUnicode(), hostU.GetUnicode() };
+        const PRUnichar *strings[] = { realmU.get(), hostU.get() };
         rv = bundle->FormatStringFromName(
                         NS_LITERAL_STRING("EnterUserPasswordForRealm").get(),
                         strings, 2,

@@ -747,7 +747,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
       if (promptLine) {
         // Count prompt characters
-        const PRUnichar *styleVals = bufStyle.GetUnicode();
+        const PRUnichar *styleVals = bufStyle.get();
         const PRInt32 bufLength = bufStyle.Length();
 
         for (promptLength=0; promptLength<bufLength; promptLength++) {
@@ -1633,7 +1633,7 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
         if (newline)
           str.AppendWithConversion("\n");
 
-        result = mXMLTermStream->Write(str.GetUnicode());
+        result = mXMLTermStream->Write(str.get());
         if (NS_FAILED(result)) {
           fprintf(stderr, "mozXMLTermSession::ProcessOutput: Failed to write to stream\n");
           return result;
@@ -1814,7 +1814,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
 
   const PRInt32   strLength   = aString.Length();
   const PRInt32   styleLength = aStyle.Length();
-  const PRUnichar *strStyle   = aStyle.GetUnicode();
+  const PRUnichar *strStyle   = aStyle.get();
 
   XMLT_LOG(mozXMLTermSession::AppendOutput,70,("strLength=%d\n", strLength));
 
@@ -2079,7 +2079,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
 
   const PRInt32   strLength   = aString.Length();
   const PRInt32   styleLength = aStyle.Length();
-  const PRUnichar *strStyle   = aStyle.GetUnicode();
+  const PRUnichar *strStyle   = aStyle.get();
 
   // Check if line has uniform style
   PRUnichar allStyles = LTERM_STDOUT_STYLE;
@@ -3542,7 +3542,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayRow(const nsString& aString,
 
   const PRInt32   strLength   = aString.Length();
   const PRInt32   styleLength = aStyle.Length();
-  const PRUnichar *strStyle   = aStyle.GetUnicode();
+  const PRUnichar *strStyle   = aStyle.get();
 
   XMLT_LOG(mozXMLTermSession::DisplayRow,70,
            ("aRow=%d, strLength=%d, styleLength=%d\n",

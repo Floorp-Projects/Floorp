@@ -550,7 +550,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     // seems like a better solution.
     if(!mInWhitespace) {
       // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
-      AddToLine(kSpace.GetUnicode(), 1);
+      AddToLine(kSpace.get(), 1);
       mInWhitespace = PR_TRUE;
     }
   }
@@ -1066,7 +1066,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
           if(MayWrap()) {
             mCurrentLineWidth += GetUnicharWidth(' ');
 #ifdef DEBUG_wrapping
-            NS_ASSERTION(GetUnicharStringWidth(mCurrentLine.GetUnicode(),
+            NS_ASSERTION(GetUnicharStringWidth(mCurrentLine.get(),
                                                mCurrentLine.Length()) ==
                          (PRInt32)mCurrentLineWidth,
                          "mCurrentLineWidth and reality out of sync!");
@@ -1082,7 +1082,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
     mCurrentLineWidth += GetUnicharStringWidth(aLineFragment,
                                                aLineFragmentLength);
 #ifdef DEBUG_wrapping
-    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.GetUnicode(),
+    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.get(),
                                        mCurrentLine.Length()) ==
                  (PRInt32)mCurrentLineWidth,
                  "mCurrentLineWidth and reality out of sync!");
@@ -1096,7 +1096,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
   if(MayWrap())
   {
 #ifdef DEBUG_wrapping
-    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.GetUnicode(),
+    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.get(),
                                   mCurrentLine.Length()) ==
                  (PRInt32)mCurrentLineWidth,
                  "mCurrentLineWidth and reality out of sync!");
@@ -1125,7 +1125,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
       
       PRBool oNeedMoreText;
       if (nsnull != mLineBreaker) {
-        result = mLineBreaker->Prev(mCurrentLine.GetUnicode(), 
+        result = mLineBreaker->Prev(mCurrentLine.get(), 
                                     mCurrentLine.Length(), goodSpace,
                                     (PRUint32 *) &goodSpace, &oNeedMoreText);
         if (oNeedMoreText) {
@@ -1151,7 +1151,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
         result = NS_OK;
         if (nsnull != mLineBreaker) {
-          result = mLineBreaker->Next(mCurrentLine.GetUnicode(), 
+          result = mLineBreaker->Next(mCurrentLine.get(), 
                                       mCurrentLine.Length(), goodSpace,
                                       (PRUint32 *) &goodSpace, &oNeedMoreText);
         }
@@ -1198,7 +1198,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
           }
         }
         mCurrentLine.Append(restOfLine);
-        mCurrentLineWidth = GetUnicharStringWidth(mCurrentLine.GetUnicode(),
+        mCurrentLineWidth = GetUnicharStringWidth(mCurrentLine.get(),
                                                   mCurrentLine.Length());
         linelength = mCurrentLine.Length();
         mEmptyLines = -1;
@@ -1475,7 +1475,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
 
     if(nextpos == kNotFound) {
       // The rest of the string
-      offsetIntoBuffer = str.GetUnicode() + bol;
+      offsetIntoBuffer = str.get() + bol;
       AddToLine(offsetIntoBuffer, totLen-bol);
       bol=totLen;
       mInWhitespace=PR_FALSE;
@@ -1494,7 +1494,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
       if(nextpos == bol) {
         // Note that we are in whitespace.
         mInWhitespace = PR_TRUE;
-        offsetIntoBuffer = str.GetUnicode() + nextpos;
+        offsetIntoBuffer = str.get() + nextpos;
         AddToLine(offsetIntoBuffer, 1);
         bol++;
         continue;
@@ -1502,7 +1502,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
       
       mInWhitespace = PR_TRUE;
       
-      offsetIntoBuffer = str.GetUnicode() + bol;
+      offsetIntoBuffer = str.get() + bol;
       if(mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
         // Preserve the real whitespace character
         nextpos++;
@@ -1512,7 +1512,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
       else {
         // Replace the whitespace with a space
         AddToLine(offsetIntoBuffer, nextpos-bol);
-        AddToLine(kSpace.GetUnicode(),1);
+        AddToLine(kSpace.get(),1);
         bol = nextpos + 1; // Let's eat the whitespace
       }
     }

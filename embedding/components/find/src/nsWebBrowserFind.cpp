@@ -396,7 +396,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
     if (NS_FAILED(rv))
         return rv;
 
-    rv =  mTSFind->Find(mSearchString.GetUnicode(), aDidFind);
+    rv =  mTSFind->Find(mSearchString.get(), aDidFind);
 
     mTSFind->SetTsDoc(nsnull);
 

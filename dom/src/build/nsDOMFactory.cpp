@@ -96,7 +96,7 @@ nsDOMSOFactory::nsDOMSOFactory()
   if (observerService) {
     nsAutoString topic;
     topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.GetUnicode());
+    observerService->AddObserver(this, topic.get());
   }
 }
 

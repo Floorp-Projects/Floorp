@@ -150,7 +150,7 @@ nsresult BasicTest::AppendSimpleSpan(nsIContent* aContainer, const char* aTag, c
   if (NS_OK == rv) {
     nsStringBuf tmp;
     tmp.Append(aText);
-    rv = NS_NewHTMLText(&text, tmp.GetUnicode(), tmp.Length());
+    rv = NS_NewHTMLText(&text, tmp.get(), tmp.Length());
     if (NS_OK == rv) {
       span->AppendChildTo(text);
       NS_RELEASE(text);

@@ -705,7 +705,7 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 		nsAutoString unicodeName; unicodeName.AssignWithConversion(aName);
 
 		PRUnichar *ptrv = nsnull;
-		res = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
+		res = m_stringBundle->GetStringFromName(unicodeName.get(), &ptrv);
 
 		if (NS_FAILED(res)) 
 		{

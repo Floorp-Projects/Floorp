@@ -328,7 +328,7 @@ nsNetDiskCache::InitDB(void)
     nsAutoString topic;
     topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     (void) observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, this),
-                                        topic.GetUnicode());
+                                        topic.get());
   }
 
   // Set size to 0 to detect if we didnt shutdown properly.

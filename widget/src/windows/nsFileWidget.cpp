@@ -102,7 +102,7 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 PRBool nsFileWidget::Show()
 {
   char fileBuffer[MAX_PATH+1] = "";
-  char *converted = ConvertToFileSystemCharset(mDefault.GetUnicode());
+  char *converted = ConvertToFileSystemCharset(mDefault.get());
   if (nsnull == converted) {
     mDefault.ToCString(fileBuffer,MAX_PATH);
   }
@@ -118,8 +118,8 @@ PRBool nsFileWidget::Show()
 
   nsString filterList;
   GetFilterListArray(filterList);
-  char *filterBuffer = ConvertToFileSystemCharset(filterList.GetUnicode(), filterList.Length());
-  char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
+  char *filterBuffer = ConvertToFileSystemCharset(filterList.get(), filterList.Length());
+  char *title = ConvertToFileSystemCharset(mTitle.get());
   if (nsnull == title)
     title = mTitle.ToNewCString();
   const char *initialDir = mDisplayDirectory.GetNativePathCString();
@@ -310,7 +310,7 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
 {
   Create(aParent, promptString, eMode_load, nsnull, nsnull);
   TCHAR buffer[MAX_PATH];
-  char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
+  char *title = ConvertToFileSystemCharset(mTitle.get());
   if (nsnull == title)
     title = mTitle.ToNewCString();
 

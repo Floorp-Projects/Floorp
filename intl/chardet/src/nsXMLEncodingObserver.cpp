@@ -201,7 +201,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->AddObserver(this, xmlTopic.GetUnicode());
+    res = anObserverService->AddObserver(this, xmlTopic.get());
 
     bXMLEncodingObserverStarted = PR_TRUE;
 done:
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->RemoveObserver(this, xmlTopic.GetUnicode());
+    res = anObserverService->RemoveObserver(this, xmlTopic.get());
 
     bXMLEncodingObserverStarted = PR_FALSE;
 done:

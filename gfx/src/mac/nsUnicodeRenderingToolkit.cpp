@@ -392,7 +392,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
   if(LoadTransliterator()) {
     nsAutoString tmp(aCharPt, 1);
     char* conv = nsnull;
-    if(NS_SUCCEEDED(mTrans->Convert(tmp.GetUnicode(), &conv)) && conv) {
+    if(NS_SUCCEEDED(mTrans->Convert(tmp.get(), &conv)) && conv) {
 	    GrafPtr thePort;
 	    ::GetPort(&thePort);
 	    short aSize = ::GetPortTextSize(thePort);		 		
@@ -452,7 +452,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
   if(LoadTransliterator()) {
     nsAutoString tmp(aCharPt, 1);
     char* conv = nsnull;
-    if(NS_SUCCEEDED(mTrans->Convert(tmp.GetUnicode(), &conv)) && conv) {
+    if(NS_SUCCEEDED(mTrans->Convert(tmp.get(), &conv)) && conv) {
 	    GrafPtr thePort;
 	    ::GetPort(&thePort);
 	    short aSize = ::GetPortTextSize(thePort);		

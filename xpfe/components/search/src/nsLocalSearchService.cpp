@@ -228,7 +228,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 //			rv = GetURL(source, &array);
 			nsAutoString	url;
 			nsIRDFLiteral	*literal;
-			gRDFService->GetLiteral(url.GetUnicode(), &literal);
+			gRDFService->GetLiteral(url.get(), &literal);
 			*target = literal;
 			return(NS_OK);
 		}
@@ -240,7 +240,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 
 			nsAutoString	url; url.AssignWithConversion(uri);
 			nsIRDFLiteral	*literal;
-			gRDFService->GetLiteral(url.GetUnicode(), &literal);
+			gRDFService->GetLiteral(url.get(), &literal);
 
 			*target = literal;
 			return(NS_OK);
@@ -249,7 +249,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 		{
 			nsAutoString	pulse; pulse.AssignWithConversion("15");
 			nsIRDFLiteral	*pulseLiteral;
-			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+			rv = gRDFService->GetLiteral(pulse.get(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;
 
 			*target = pulseLiteral;
@@ -544,7 +544,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
       continue;
 
     nsCOMPtr<nsIRDFResource> property;
-    rv = gRDFService->GetUnicodeResource(tokens[1].value.GetUnicode(),
+    rv = gRDFService->GetUnicodeResource(tokens[1].value.get(),
     getter_AddRefs(property));
 
     if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !property)
@@ -679,7 +679,7 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 
 			nsAutoString	url; url.AssignWithConversion(uri);
 			nsIRDFLiteral	*literal;
-			rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
+			rv = gRDFService->GetLiteral(url.get(), &literal);
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(literal);
@@ -697,7 +697,7 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 		{
 			nsAutoString	pulse; pulse.AssignWithConversion("15");
 			nsIRDFLiteral	*pulseLiteral;
-			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+			rv = gRDFService->GetLiteral(pulse.get(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);

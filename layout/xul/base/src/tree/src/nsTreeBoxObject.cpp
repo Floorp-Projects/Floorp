@@ -63,7 +63,7 @@ nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
   // Drop the view's ref to us.
   nsAutoString view; view.AssignWithConversion("view");
   nsCOMPtr<nsISupports> suppView;
-  GetPropertyAsSupports(view.GetUnicode(), getter_AddRefs(suppView));
+  GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
   nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
   if (outlinerView)
     outlinerView->SetOutliner(nsnull); // Break the circular ref between the view and us.
@@ -120,7 +120,7 @@ nsOutlinerBoxObject::GetOutlinerBody()
   nsAutoString outlinerbody; outlinerbody.AssignWithConversion("outlinerbody");
 
   nsCOMPtr<nsISupports> supp;
-  GetPropertyAsSupports(outlinerbody.GetUnicode(), getter_AddRefs(supp));
+  GetPropertyAsSupports(outlinerbody.get(), getter_AddRefs(supp));
 
   if (supp) {
     nsCOMPtr<nsIOutlinerBoxObject> body(do_QueryInterface(supp));
@@ -143,7 +143,7 @@ nsOutlinerBoxObject::GetOutlinerBody()
   // It's a frame. Refcounts are irrelevant.
   nsCOMPtr<nsIOutlinerBoxObject> body;
   frame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), getter_AddRefs(body));
-  SetPropertyAsSupports(outlinerbody.GetUnicode(), body);
+  SetPropertyAsSupports(outlinerbody.get(), body);
   return body;
 }
 

@@ -117,7 +117,7 @@ nsresult CProfileMgr::DoManageProfilesDialog(PRBool bAtStartUp)
          
         NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
-               rv = profileService->SetCurrentProfile(dialog.m_SelectedProfile.GetUnicode());
+               rv = profileService->SetCurrentProfile(dialog.m_SelectedProfile.get());
     }
     return NS_OK;
 }

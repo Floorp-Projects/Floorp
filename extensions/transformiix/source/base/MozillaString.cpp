@@ -682,14 +682,14 @@ char* String::toCharArray(char* dest) const
  * Returns the internal UNICODE_CHAR array so the caller can have access to the
  * to the UNICODE_CHAR representation of the string. Will not place a null
  * terminator at the end of the array, as in a call to toChar will do.
- * Use ( nsString::GetUnicode() ) to retreive the nsString's buffer, then
+ * Use ( nsString::get() ) to retreive the nsString's buffer, then
  * copy it to dest.
 **/
 UNICODE_CHAR* String::toUnicode(UNICODE_CHAR* dest) const
 {
   PRInt32 copyLoop;
   PRInt32 strLength = ptrNSString->Length();
-  const UNICODE_CHAR* strBuffer = (PRUnichar *)ptrNSString->GetUnicode();
+  const UNICODE_CHAR* strBuffer = (PRUnichar *)ptrNSString->get();
 
   for (copyLoop=0;copyLoop<strLength;copyLoop++)
    dest[copyLoop] = strBuffer[copyLoop];
@@ -704,7 +704,7 @@ UNICODE_CHAR* String::toUnicode(UNICODE_CHAR* dest) const
 //
 const UNICODE_CHAR* String::toUnicode() const
 {
-  return (PRUnichar *)ptrNSString->GetUnicode();
+  return (PRUnichar *)ptrNSString->get();
 }
 
 //

@@ -198,7 +198,7 @@ factory_new_locale(void)
 		category = new nsString(localeCategoryList[i]);
 		value = new nsString();
 
-		result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
+		result = locale->GetCategory(category->get(),&lc_name_unichar);
 		NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_new_interface failed");
 	
     value->SetString(lc_name_unichar);
@@ -224,7 +224,7 @@ factory_new_locale(void)
 	for(i=0;i<6;i++)
 	{
 		value = new nsString();
-		result = locale->GetCategory(categoryList[i]->GetUnicode(),&lc_name_unichar);
+		result = locale->GetCategory(categoryList[i]->get(),&lc_name_unichar);
 		NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_new_interface failed");
 
     value->SetString(lc_name_unichar);
@@ -277,7 +277,7 @@ factory_get_locale(void)
 	category = new nsString("NSILOCALE_CTYPE");
 	value = new nsString();
 
-	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
+	result = locale->GetCategory(category->get(),&lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 
   value->SetString(lc_name_unichar);
@@ -302,7 +302,7 @@ factory_get_locale(void)
 	category = new nsString("NSILOCALE_CTYPE");
 	value = new nsString();
 
-	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
+	result = locale->GetCategory(category->get(),&lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 
   value->SetString(lc_name_unichar);
@@ -327,7 +327,7 @@ factory_get_locale(void)
 	category = new nsString("NSILOCALE_CTYPE");
 	value = new nsString();
 
-	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
+	result = locale->GetCategory(category->get(),&lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 
   value->SetString(lc_name_unichar);
@@ -651,7 +651,7 @@ win32_test_special_locales(void)
 
 	result = win32Locale->GetXPLocale(sys_lcid,locale);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_create_interface failed");
-	result = xp_locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
+	result = xp_locale->GetCategory(category->get(),&lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_create_interface failed");
 
   result_locale->SetString(lc_name_unichar);
@@ -672,7 +672,7 @@ win32_test_special_locales(void)
 
 	result = win32Locale->GetXPLocale(user_lcid,locale);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_create_interface failed");
-	result = xp_locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
+	result = xp_locale->GetCategory(category->get(),&lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_create_interface failed");
 
  result_locale->SetString(lc_name_unichar);
@@ -969,7 +969,7 @@ posixlocale_test_special(void)
   NS_ASSERTION(xp_locale!=NULL,"nsLocaleTest: GetSystemLocale failed.\n");
   NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetSystemLocale failed.\n");
   
-  result = xp_locale->GetCategory(lc_message->GetUnicode(),&lc_name_unichar);
+  result = xp_locale->GetCategory(lc_message->get(),&lc_name_unichar);
   NS_ASSERTION(*result_locale==*locale,"nsLocaleTest: GetSystemLocale failed.\n");
   NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetSystemLocale failed.\n");
   
@@ -981,7 +981,7 @@ posixlocale_test_special(void)
   NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetApplicationLocale failed.\n");
   
   
-  result = xp_locale->GetCategory(lc_message->GetUnicode(),&lc_name_unichar);
+  result = xp_locale->GetCategory(lc_message->get(),&lc_name_unichar);
   NS_ASSERTION(*result_locale==*locale,"nsLocaleTest: GetSystemLocale failed.\n");
   NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetSystemLocale failed.\n");
   result_locale->SetString(lc_name_unichar);

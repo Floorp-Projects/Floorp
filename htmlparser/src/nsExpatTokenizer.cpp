@@ -167,7 +167,7 @@ nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {
   mState->incdata = PR_FALSE;
 
   nsAutoString buffer; buffer.AssignWithConversion("UTF-16");
-  const PRUnichar* encoding = buffer.GetUnicode();
+  const PRUnichar* encoding = buffer.get();
   if (encoding) {
     mExpatParser = XML_ParserCreate((const XML_Char*) encoding);
     if (mExpatParser) {
@@ -175,7 +175,7 @@ nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {
       XML_SetParamEntityParsing(mExpatParser, XML_PARAM_ENTITY_PARSING_ALWAYS);
 #endif
       if (aURL)
-        XML_SetBase(mExpatParser, (const XML_Char*) aURL->GetUnicode());
+        XML_SetBase(mExpatParser, (const XML_Char*) aURL->get());
       
       SetupExpatParser();
     }
@@ -859,10 +859,10 @@ int Tokenizer_HandleExternalEntityRef(XML_Parser parser,
       XML_Parser entParser = nsnull;
 
       entParser = XML_ExternalEntityParserCreate(parser, 0, 
-        (const XML_Char*) encoding.GetUnicode());
+        (const XML_Char*) encoding.get());
 
       if (nsnull != entParser) {
-        XML_SetBase(entParser, (const XML_Char*) absURL.GetUnicode());
+        XML_SetBase(entParser, (const XML_Char*) absURL.get());
         result = XML_Parse(entParser, (char *)uniBuf,  retLen * sizeof(PRUnichar), 1);
         XML_ParserFree(entParser);
       }

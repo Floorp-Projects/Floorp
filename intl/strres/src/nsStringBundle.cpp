@@ -319,7 +319,7 @@ nsStringBundle::FormatStringFromID(PRInt32 aID,
   nsAutoString idStr;
   idStr.AppendInt(aID, 10);
 
-  return FormatStringFromName(idStr.GetUnicode(), aParams, aLength, aResult);
+  return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
 }
 
 // this function supports at most 10 parameters.. see below for why
@@ -337,7 +337,7 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
   rv = GetStringFromName(nsDependentString(aName), formatStr);
   if (NS_FAILED(rv)) return rv;
 
-  return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);
+  return FormatString(formatStr.get(), aParams, aLength, aResult);
 }
                                      
 
@@ -362,7 +362,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
   }
 
   *aResult = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
-  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), sizeof(PRUnichar)*len);
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.get(), sizeof(PRUnichar)*len);
   (*aResult)[len-1] = '\0';
   return ret;
 }
@@ -386,7 +386,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   }
 
   *aResult = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
-  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), sizeof(PRUnichar)*len);
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.get(), sizeof(PRUnichar)*len);
   (*aResult)[len-1] = '\0';
   
   return rv;
@@ -436,7 +436,7 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& cou
   PRUnichar *lc_name_unichar;
   nsAutoString	  lc_name;
   nsAutoString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
-  nsresult	  result	 = aLocale->GetCategory(category.GetUnicode(), &lc_name_unichar);
+  nsresult	  result	 = aLocale->GetCategory(category.get(), &lc_name_unichar);
   lc_name.Assign(lc_name_unichar);
   nsMemory::Free(lc_name_unichar);
 
@@ -655,7 +655,7 @@ nsExtensibleStringBundle::FormatStringFromID(PRInt32 aID,
 {
   nsAutoString idStr;
   idStr.AppendInt(aID, 10);
-  return FormatStringFromName(idStr.GetUnicode(), aParams, aLength, aResult);
+  return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
 }
 
 NS_IMETHODIMP
@@ -984,7 +984,7 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
   // first try looking up the error message with the string key:
   if (NS_SUCCEEDED(rv)) {
     nsAutoString name; name.AssignWithConversion(key);
-    rv = bundle->FormatStringFromName(name.GetUnicode(), (const PRUnichar**)argArray, 
+    rv = bundle->FormatStringFromName(name.get(), (const PRUnichar**)argArray, 
                                       argCount, result);
   }
 
@@ -999,7 +999,7 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
   if (NS_FAILED(rv)) {
     nsAutoString statusStr; statusStr.AppendInt(aStatus, 16);
     const PRUnichar* otherArgArray[1];
-    otherArgArray[0] = statusStr.GetUnicode();
+    otherArgArray[0] = statusStr.get();
     PRUint16 code = NS_ERROR_GET_CODE(NS_ERROR_FAILURE);
     rv = bundle->FormatStringFromID(code, otherArgArray, 1, result);
   }

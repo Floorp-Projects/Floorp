@@ -160,7 +160,7 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
                                  getter_AddRefs(lang));
     if (NS_SUCCEEDED(res)) {
       PRBool same = PR_FALSE;
-      NS_ENSURE_SUCCESS(lang->LanguageIs(lowered.GetUnicode(), &same),
+      NS_ENSURE_SUCCESS(lang->LanguageIs(lowered.get(), &same),
         NS_ERROR_FAILURE);
       if (same) {
         break;
@@ -279,7 +279,7 @@ nsLanguageAtomService::GetLocaleLanguageGroup(nsIAtom** aResult)
     nsAutoString category;
     category.AssignWithConversion(NSILOCALE_MESSAGE);
     nsXPIDLString loc;
-    res = locale->GetCategory(category.GetUnicode(), getter_Copies(loc));
+    res = locale->GetCategory(category.get(), getter_Copies(loc));
     NS_ENSURE_SUCCESS(res, res);
     nsCOMPtr<nsILanguageAtom> langAtom;
     res = LookupLanguage(loc, getter_AddRefs(langAtom));

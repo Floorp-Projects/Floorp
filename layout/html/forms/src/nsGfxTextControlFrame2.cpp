@@ -1791,7 +1791,7 @@ nsGfxTextControlFrame2::SetInitialValue()
   nsresult rv = NS_OK;
 
   if (mCachedState)
-    defaultValue = mCachedState->GetUnicode();
+    defaultValue = mCachedState->get();
   else
     rv = GetText(&defaultValue, PR_TRUE);
 

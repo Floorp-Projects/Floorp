@@ -776,7 +776,7 @@ void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
 }
 
 void nsCString::AssignWithConversion( const nsString& aString ) {
-  AssignWithConversion(aString.GetUnicode(), aString.Length());
+  AssignWithConversion(aString.get(), aString.Length());
 }
 
 void nsCString::AssignWithConversion( const nsAString& aString ) {
@@ -1297,7 +1297,7 @@ PRBool nsCString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCa
 }
 
  PRBool nsCString::EqualsWithConversion(const nsString& aString, PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=CompareWithConversion(aString.GetUnicode(),aIgnoreCase,aCount);
+  PRInt32 theAnswer=CompareWithConversion(aString.get(),aIgnoreCase,aCount);
   PRBool  result=PRBool(0==theAnswer);  
   return result;
 }

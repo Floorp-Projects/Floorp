@@ -73,7 +73,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.61 $ $Date: 2001/06/26 14:51:53 $
+ * @version $Revision: 1.62 $ $Date: 2001/06/30 10:59:41 $
 **/
 
 /**
@@ -1956,8 +1956,8 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                 nsDocElement = nsnull;
             }
 
-            anObserverService->AddObserver(aObserver, topic.GetUnicode());
-            anObserverService->Notify(nsDocElement, topic.GetUnicode(), nsnull);
+            anObserverService->AddObserver(aObserver, topic.get());
+            anObserverService->Notify(nsDocElement, topic.get(), nsnull);
         }
     }
 

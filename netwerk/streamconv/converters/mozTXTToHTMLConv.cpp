@@ -468,7 +468,7 @@ mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const 
       {
         nsAutoString temp = txtURL;
         txtURL.SetLength(0);
-        CompleteAbbreviatedURL(temp.GetUnicode(),temp.Length(), pos - start, txtURL);
+        CompleteAbbreviatedURL(temp.get(),temp.Length(), pos - start, txtURL);
       }
 
       if (!txtURL.IsEmpty() && CheckURLAndCreateHTML(txtURL, desc, check,
@@ -1024,7 +1024,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   // some common variables we were recalculating
   // every time inside the for loop...
   PRInt32 lengthOfInString = aInString.Length();
-  const PRUnichar * uniBuffer = aInString.GetUnicode();
+  const PRUnichar * uniBuffer = aInString.get();
 
 #ifdef DEBUG_BenB_Perf
   PRTime parsing_start = PR_IntervalNow();
@@ -1067,7 +1067,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
       nsString tempString;     
       tempString.SetCapacity(PRUint32((PRUint32(i) - start) * growthRate));
       UnescapeStr(uniBuffer, start, PRUint32(i) - start, tempString);
-      ScanTXT(tempString.GetUnicode(), tempString.Length(), whattodo, aOutString);
+      ScanTXT(tempString.get(), tempString.Length(), whattodo, aOutString);
     }
   }
 

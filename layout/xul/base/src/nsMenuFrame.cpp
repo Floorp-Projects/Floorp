@@ -1349,7 +1349,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 
         if (NS_SUCCEEDED(rv) && bundle) {
           nsXPIDLString keyName;
-          rv = bundle->GetStringFromName(keyCode.GetUnicode(), getter_Copies(keyName));
+          rv = bundle->GetStringFromName(keyCode.get(), getter_Copies(keyName));
           if (keyName)
             accelString = keyName;
         }

@@ -1848,7 +1848,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
               nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
               if (!cwP) return NS_ERROR_NOT_INITIALIZED;
 
-              res = dialog->Prompt(cwP, captionStr.GetUnicode(), msgStr1.GetUnicode(),
+              res = dialog->Prompt(cwP, captionStr.get(), msgStr1.get(),
                                    &titleUnicode, 0, 0, &retVal); 
               
               if( retVal == PR_FALSE)
@@ -1881,7 +1881,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
 
             // Initialize nsIFilePicker
             nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryReferent(mContentWindow));
-            res = filePicker->Init(parentWindow, promptString.GetUnicode(), nsIFilePicker::modeSave);
+            res = filePicker->Init(parentWindow, promptString.get(), nsIFilePicker::modeSave);
             if (NS_FAILED(res))
               return res;
             
@@ -1993,7 +1993,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
             }
             
             if (fileName.Length() > 0)
-              filePicker->SetDefaultString(fileName.GetUnicode());
+              filePicker->SetDefaultString(fileName.get());
 
             PRInt16 dialogResult;
             // Finally show the dialog
@@ -2034,7 +2034,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
               if (NS_FAILED(res)) return res;
             
               nsAutoString  fileURLUnicode; fileURLUnicode.AssignWithConversion(docURLSpec);      
-              res = webShell->SetURL(fileURLUnicode.GetUnicode());
+              res = webShell->SetURL(fileURLUnicode.get());
               if (NS_FAILED(res)) return res;
             }
           }
@@ -2127,7 +2127,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &res);
   if (filePicker)
   {
-    res = filePicker->Init(parent, title.GetUnicode(), nsIFilePicker::modeOpen);
+    res = filePicker->Init(parent, title.get(), nsIFilePicker::modeOpen);
     if (NS_FAILED(res)) return res;
     
     if (htmlFilter)
@@ -2248,7 +2248,7 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
     }
     nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaDocShell));
     NS_ASSERTION(contentAreaAsWin, "This object should implement nsIBaseWindow");
-    res = contentAreaAsWin->SetTitle(windowCaption.GetUnicode());
+    res = contentAreaAsWin->SetTitle(windowCaption.get());
   }
 
   // Rebuild Recent Pages menu and save any changed URLs or titles to editor prefs
@@ -2924,7 +2924,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
   if ( NS_SUCCEEDED(rv) )
   { 
     // Stuff in Parameters 
-    block->SetString( nsPIPromptService::eMsg, aQuestion.GetUnicode()); 
+    block->SetString( nsPIPromptService::eMsg, aQuestion.get()); 
     NS_NAMED_LITERAL_STRING(styleClass, "question-icon");
     block->SetString(nsPIPromptService::eIconClass, styleClass.get());
 
@@ -2940,7 +2940,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     if (aNoString && aNoString->Length() > 0)
     {
       noStr.Assign(*aNoString);
-      block->SetString( nsPIPromptService::eButton2Text, noStr.GetUnicode() ); 
+      block->SetString( nsPIPromptService::eButton2Text, noStr.get() ); 
     }
     else
     {
@@ -2952,10 +2952,10 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     nsAutoString cancelStr;
     GetBundleString(NS_LITERAL_STRING("Cancel"), cancelStr);
 
-    block->SetString( nsPIPromptService::eDialogTitle, aTitle.GetUnicode() );
+    block->SetString( nsPIPromptService::eDialogTitle, aTitle.get() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
-    block->SetString( nsPIPromptService::eButton0Text, yesStr.GetUnicode() ); 
-    block->SetString( nsPIPromptService::eButton1Text, cancelStr.GetUnicode() ); 
+    block->SetString( nsPIPromptService::eButton0Text, yesStr.get() ); 
+    block->SetString( nsPIPromptService::eButton1Text, cancelStr.get() ); 
 
     nsCOMPtr<nsPIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
     if (dialog)
@@ -2990,7 +2990,7 @@ nsEditorShell::Confirm(const nsString& aTitle, const nsString& aQuestion)
       return NS_ERROR_NOT_INITIALIZED;
     nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-    rv = dialog->Confirm(cwP, aTitle.GetUnicode(), aQuestion.GetUnicode(), &result);
+    rv = dialog->Confirm(cwP, aTitle.get(), aQuestion.get(), &result);
   }
   return result;
 }
@@ -3026,7 +3026,7 @@ nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
       return;
     nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return;
-    rv = dialog->Alert(cwP, aTitle.GetUnicode(), aMsg.GetUnicode());
+    rv = dialog->Alert(cwP, aTitle.get(), aMsg.get());
   }
 }
 

@@ -535,7 +535,7 @@ public:
 PRUint32 FontAliasKey::HashCode(void) const
 {
   PRUint32 hash = 0;
-  const PRUnichar* string = mString.GetUnicode();
+  const PRUnichar* string = mString.get();
   PRUnichar ch;
   while ((ch = *string++) != 0) {
     // FYI: hash = hash*37 + ch
@@ -734,7 +734,7 @@ DeviceContextImpl::GetLocalizedString(nsIStringBundle* aStrBundle, const char* a
   nsXPIDLString valUni;
   nsAutoString key; 
   key.AssignWithConversion(aKey);
-  nsresult rv = aStrBundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
+  nsresult rv = aStrBundle->GetStringFromName(key.get(), getter_Copies(valUni));
   if (NS_SUCCEEDED(rv) && valUni) {
     oVal.Assign(valUni);
   } else {

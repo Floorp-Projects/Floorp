@@ -2035,8 +2035,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         if (NS_SUCCEEDED(rv))
         {
             (void) observerService->Notify(mgr,
-                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
-                NS_ConvertASCIItoUCS2("Starting component registration").GetUnicode());
+                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+                NS_ConvertASCIItoUCS2("Starting component registration").get());
         }
     }
 
@@ -2108,8 +2108,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
   	if (NS_SUCCEEDED(rv))
   	{
       (void) observerService->Notify(mgr,
-          NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
-          NS_ConvertASCIItoUCS2("Component registration finished").GetUnicode());
+          NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+          NS_ConvertASCIItoUCS2("Component registration finished").get());
   	}
 
     return rv;

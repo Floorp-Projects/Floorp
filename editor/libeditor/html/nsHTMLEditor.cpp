@@ -1774,7 +1774,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
       nsAutoString name;
       parentSelectedNode->GetNodeName(name);
       printf("InsertElement: Anchor node of selection: ");
-      wprintf(name.GetUnicode());
+      wprintf(name.get());
       printf(" Offset: %d\n", offsetForInsert);
       }
 #endif
@@ -1928,12 +1928,12 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
       nsAutoString name;
       parent->GetNodeName(name);
       printf("SetCaretAfterElement: Parent node: ");
-      wprintf(name.GetUnicode());
+      wprintf(name.get());
       printf(" Offset: %d\n\nHTML:\n", offsetInParent+1);
       nsAutoString Format("text/html");
       nsAutoString ContentsAs;
       OutputToString(ContentsAs, Format, 2);
-      wprintf(ContentsAs.GetUnicode());
+      wprintf(ContentsAs.get());
       }
 #endif
     }
@@ -2713,11 +2713,11 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
         nsAutoString name;
         anchorNode->GetNodeName(name);
         printf("GetSelectedElement: Anchor node of selection: ");
-        wprintf(name.GetUnicode());
+        wprintf(name.get());
         printf(" Offset: %d\n", anchorOffset);
         focusNode->GetNodeName(name);
         printf("Focus node of selection: ");
-        wprintf(name.GetUnicode());
+        wprintf(name.get());
         printf(" Offset: %d\n", focusOffset);
         }
   #endif
@@ -2961,7 +2961,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
       nsAutoString href;
       res = anchor->GetHref(href);
       if (NS_FAILED(res)) return res;
-      if (href.GetUnicode() && href.Length() > 0)      
+      if (!href.IsEmpty())      
       {
         nsAutoEditBatch beginBatching(this);
         nsString attribute(NS_LITERAL_STRING("href")); 
@@ -3481,7 +3481,7 @@ nsHTMLEditor::GetReconversionString(nsReconversionEventReply* aReply)
   if (NS_FAILED(res))
     return res;
   
-  aReply->mReconversionString = (PRUnichar*) nsMemory::Clone(textValue.GetUnicode(),
+  aReply->mReconversionString = (PRUnichar*) nsMemory::Clone(textValue.get(),
                                                                 (textValue.Length() + 1) * sizeof(PRUnichar));
   if (!aReply->mReconversionString)
     return NS_ERROR_OUT_OF_MEMORY;

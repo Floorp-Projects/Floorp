@@ -254,7 +254,7 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
   nsFileURL fileURL(fileSpec);
   nsString urlString; urlString.AssignWithConversion(fileURL.GetURLString());
   nsresult rv;
-  rv = OpenWindow( "chrome://navigator/content", urlString.GetUnicode() );
+  rv = OpenWindow( "chrome://navigator/content", urlString.get() );
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
   return noErr;
@@ -308,7 +308,7 @@ OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 	if (mStartedUp)
 	{
 		nsresult rv;
-		rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).GetUnicode());
+		rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).get());
 		if (NS_FAILED(rv))
 			return errAEEventNotHandled;
 	}

@@ -94,13 +94,13 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
         appLocale->Release();
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
   }
 
   // Get LCID and charset name from locale, if available
@@ -123,7 +123,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset.Assign(mappedCharset);
         nsMemory::Free(mappedCharset);
@@ -143,7 +143,7 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
   // API returns number of bytes when LCMAP_SORTKEY is specified 
   if (mW_API) {
     *outLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
-                                (LPCWSTR) stringIn.GetUnicode(), (int) stringIn.Length(), NULL, 0);
+                                (LPCWSTR) stringIn.get(), (int) stringIn.Length(), NULL, 0);
   }
   else {
     char *Cstr = nsnull;
@@ -170,7 +170,7 @@ nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength,
 
   if (mW_API) {
     byteLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
-                          (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
+                          (LPCWSTR) stringNormalized.get(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
   }
   else {
     char *Cstr = nsnull;

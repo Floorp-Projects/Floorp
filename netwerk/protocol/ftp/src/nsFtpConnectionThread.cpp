@@ -851,14 +851,14 @@ nsFtpState::S_user() {
 
             
             nsXPIDLString formatedString;
-            const PRUnichar *formatStrings[1] = { hostU.GetUnicode()};
+            const PRUnichar *formatStrings[1] = { hostU.get()};
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
                                               formatStrings, 1,
                                               getter_Copies(formatedString));                   
 
             rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
                                                           formatedString,
-                                                          NS_ConvertASCIItoUCS2(host).GetUnicode(), // XXX i18n
+                                                          NS_ConvertASCIItoUCS2(host).get(), // XXX i18n
                                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                           &user, 
                                                           &passwd, 
@@ -943,7 +943,7 @@ nsFtpState::S_pass() {
             rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
 
             nsXPIDLString formatedString;
-            const PRUnichar *formatStrings[2] = { mUsername.GetUnicode(), hostU.GetUnicode() };
+            const PRUnichar *formatStrings[2] = { mUsername.get(), hostU.get() };
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterPasswordFor").get(),
                                               formatStrings, 2,
                                               getter_Copies(formatedString)); 
@@ -953,7 +953,7 @@ nsFtpState::S_pass() {
             if (NS_FAILED(rv)) return rv;
             rv = mAuthPrompter->PromptPassword(nsnull,
                                                formatedString,
-                                               NS_ConvertASCIItoUCS2(prePath).GetUnicode(), 
+                                               NS_ConvertASCIItoUCS2(prePath).get(), 
                                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                &passwd, &retval);
 
@@ -1743,7 +1743,7 @@ nsFtpState::StopProcessing() {
         
         NS_ASSERTION(mPrompter, "no prompter!");
         if (mPrompter)
-            (void) mPrompter->Alert(nsnull, text.GetUnicode());
+            (void) mPrompter->Alert(nsnull, text.get());
 #if DEBUG
         else
             printf("NO ALERT! FTP error: %s", text.get());
@@ -1828,7 +1828,7 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
         converterListener = listener;
     }
     else if (mGenerateHTMLContent) {
-        rv = scs->AsyncConvertData(fromStr.GetUnicode(), 
+        rv = scs->AsyncConvertData(fromStr.get(), 
                                    NS_LITERAL_STRING("text/html").get(),
                                    listener, 
                                    mURL, 
@@ -1836,7 +1836,7 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     } 
     else 
     {
-        rv = scs->AsyncConvertData(fromStr.GetUnicode(), 
+        rv = scs->AsyncConvertData(fromStr.get(), 
                                    NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
                                    listener, 
                                    mURL, 

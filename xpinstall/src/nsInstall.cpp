@@ -323,7 +323,7 @@ nsInstall::InternalAbort(PRInt32 errcode)
 {
     if (mListener)
     {
-        mListener->FinalStatus(mInstallURL.GetUnicode(), errcode);
+        mListener->FinalStatus(mInstallURL.get(), errcode);
         mStatusSent = PR_TRUE;
     }
 
@@ -779,7 +779,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         SaveError( *aReturn );
         if (mListener)
         {
-            mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mListener->FinalStatus(mInstallURL.get(), *aReturn);
             mStatusSent = PR_TRUE;
         }
         return NS_OK;
@@ -827,7 +827,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 char *objString = ie->toString();
                 if (objString)
                 {
-                    mListener->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).GetUnicode(),
+                    mListener->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).get(),
                                                (i+1), mInstalledFiles->Count());
                     delete [] objString;
                 }
@@ -867,7 +867,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
 
         if (mListener)
         {
-            mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mListener->FinalStatus(mInstallURL.get(), *aReturn);
             mStatusSent = PR_TRUE;
         }
     }
@@ -878,7 +878,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
 
         if (mListener)
         {
-            mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mListener->FinalStatus(mInstallURL.get(), *aReturn);
             mStatusSent = PR_TRUE;
         }
     }
@@ -1475,7 +1475,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     }
 
     if (mListener)
-            mListener->InstallStarted(mInstallURL.GetUnicode(), mUIName.GetUnicode());
+            mListener->InstallStarted(mInstallURL.get(), mUIName.get());
 
     mStartInstallCompleted = PR_TRUE;
     return NS_OK;
@@ -2141,7 +2141,7 @@ void
 nsInstall::LogComment(nsString& aComment)
 {
   if(mListener)
-    mListener->LogComment(aComment.GetUnicode());
+    mListener->LogComment(aComment.get());
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2164,7 +2164,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     // flash current item
 
     if (mListener)
-        mListener->ItemScheduled(NS_ConvertASCIItoUCS2(objString).GetUnicode());
+        mListener->ItemScheduled(NS_ConvertASCIItoUCS2(objString).get());
 
 
     // do any unpacking or other set-up
@@ -2194,7 +2194,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
             nsString errstr; errstr.AssignWithConversion(errprefix);
             errstr.AppendWithConversion(objString);
 
-            mListener->LogComment( errstr.GetUnicode() );
+            mListener->LogComment( errstr.get() );
 
             PR_smprintf_free(errprefix);
             nsCRT::free(errRsrc);
@@ -2497,7 +2497,7 @@ nsInstall::Alert(nsString& string)
 
     PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Alert").get());
 
-    return proxiedDialog->Alert(mParent, title, string.GetUnicode());
+    return proxiedDialog->Alert(mParent, title, string.get());
 }
 
 PRInt32    
@@ -2516,7 +2516,7 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 
     PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Confirm").get());
     
-    return proxiedDialog->Confirm(mParent, title, string.GetUnicode(), aReturn);
+    return proxiedDialog->Confirm(mParent, title, string.get(), aReturn);
 }
 
 
@@ -2669,7 +2669,7 @@ nsInstall::GetResourcedString(const nsString& aResName)
 
     if (mStringBundle)
     {   
-        const PRUnichar *ucResName = aResName.GetUnicode();
+        const PRUnichar *ucResName = aResName.get();
         PRUnichar *ucRscdStr = nsnull;
         nsresult rv = mStringBundle->GetStringFromName(ucResName, &ucRscdStr);
         if (NS_SUCCEEDED(rv))

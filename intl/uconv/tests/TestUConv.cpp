@@ -231,14 +231,14 @@ nsresult nsTestUConv::TestCharsetManager()
   // test alias resolving capability
   nsAutoString csAlias; csAlias.AssignWithConversion("iso-10646-ucs-basic");
   nsAutoString csName; csName.AssignWithConversion("UTF-16BE");
-  res = ccMan->GetCharsetAtom(csAlias.GetUnicode(), getter_AddRefs(csAtom));
+  res = ccMan->GetCharsetAtom(csAlias.get(), getter_AddRefs(csAtom));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetCharsetAtom()", res);
     return res;
   }
   res = csAtom->GetUnicode(&name);
   if (NS_FAILED(res)) {
-    mLog.PrintError("GetUnicode()", res);
+    mLog.PrintError("get()", res);
     return res;
   }
   if (!csName.EqualsWithConversion(name)) {
@@ -248,14 +248,14 @@ nsresult nsTestUConv::TestCharsetManager()
 
   // test self returning if alias was not found
   nsAutoString csAlias2; csAlias2.AssignWithConversion("Totally_dummy_charset_name");
-  res = ccMan->GetCharsetAtom(csAlias2.GetUnicode(), getter_AddRefs(csAtom));
+  res = ccMan->GetCharsetAtom(csAlias2.get(), getter_AddRefs(csAtom));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetCharsetAtom()", res);
     return res;
   }
   res = csAtom->GetUnicode(&name);
   if (NS_FAILED(res)) {
-    mLog.PrintError("GetUnicode()", res);
+    mLog.PrintError("get()", res);
     return res;
   }
   if (!csAlias2.EqualsWithConversion(name)) {
@@ -312,7 +312,7 @@ nsresult nsTestUConv::DisplayDetectors()
     const PRUnichar * name;
     res = cs->GetUnicode(&name);
     if (NS_FAILED(res)) {
-      mLog.PrintError("GetUnicode()", res);
+      mLog.PrintError("get()", res);
       return res;
     }
 
@@ -387,7 +387,7 @@ nsresult nsTestUConv::DisplayCharsets()
     const PRUnichar * name;
     res = cs->GetUnicode(&name);
     if (NS_FAILED(res)) {
-      mLog.PrintError("GetUnicode()", res);
+      mLog.PrintError("get()", res);
       return res;
     }
 
@@ -414,22 +414,22 @@ nsresult nsTestUConv::DisplayCharsets()
     printf(" ");
 
     prop.AssignWithConversion(".notForBrowser");
-    res = ccMan->GetCharsetData2(cs, prop.GetUnicode(), &str);
+    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("B"); 
     else printf("X");
 
     prop.AssignWithConversion(".notForComposer");
-    res = ccMan->GetCharsetData2(cs, prop.GetUnicode(), &str);
+    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("C"); 
     else printf("X");
 
     prop.AssignWithConversion(".notForMailView");
-    res = ccMan->GetCharsetData2(cs, prop.GetUnicode(), &str);
+    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("V"); 
     else printf("X");
 
     prop.AssignWithConversion(".notForMailEdit");
-    res = ccMan->GetCharsetData2(cs, prop.GetUnicode(), &str);
+    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
     else printf("X");
 

@@ -2849,8 +2849,8 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue.GetUnicode();
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList.GetUnicode();
+  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue.get();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList.get();
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {

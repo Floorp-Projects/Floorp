@@ -1757,7 +1757,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	}
 	// Prepare buffer....
 	mIMECompositionStr->SetCapacity(text_size+1);
-	ubuf = (PRUnichar*)mIMECompositionStr->GetUnicode();
+	ubuf = (PRUnichar*)mIMECompositionStr->get();
 	size_t len;
 
 	//====================================================================================================
@@ -2162,7 +2162,7 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 	printf("HandleTextEvent\n");
 	PRUint32 i;
 	printf("text event \n[");
-	const PRUnichar *ubuf = mIMECompositionStr->GetUnicode();
+	const PRUnichar *ubuf = mIMECompositionStr->get();
 	for(i=0; '\0' != *ubuf; i++)
 		printf("U+%04X ", *ubuf++);
 	printf("] len = %d\n",i);
@@ -2215,7 +2215,7 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 	textEvent.point.x = 0;
 	textEvent.point.y = 0;
 	textEvent.time = PR_IntervalNow();
-	textEvent.theText = (PRUnichar*)mIMECompositionStr->GetUnicode();
+	textEvent.theText = (PRUnichar*)mIMECompositionStr->get();
 	textEvent.rangeCount = textRangeCount;
 	textEvent.rangeArray = textRangeArray;
 

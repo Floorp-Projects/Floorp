@@ -107,7 +107,7 @@ NS_IMETHODIMP nsEditorParserObserver::Start()
   nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
    
-  return anObserverService->AddObserver(this, parserService.GetUnicode());
+  return anObserverService->AddObserver(this, parserService.get());
 }
 
 NS_IMETHODIMP nsEditorParserObserver::End() 
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsEditorParserObserver::End()
   nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
    
-  return anObserverService->RemoveObserver(this, parserService.GetUnicode());
+  return anObserverService->RemoveObserver(this, parserService.get());
 }
 
 NS_IMETHODIMP nsEditorParserObserver::GetBadTagFound(PRBool *aFound)

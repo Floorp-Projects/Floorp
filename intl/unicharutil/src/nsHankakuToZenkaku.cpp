@@ -137,7 +137,7 @@ nsHankakuToZenkaku::~nsHankakuToZenkaku()
 NS_IMETHODIMP nsHankakuToZenkaku::Change( nsString& aText, nsString& aResult)
 {
    aResult = aText;
-   const PRUnichar* u = aResult.GetUnicode();
+   const PRUnichar* u = aResult.get();
    PRUnichar* ou = (PRUnichar*) u;
    PRInt32 l = aResult.Length();
    PRInt32 ol;

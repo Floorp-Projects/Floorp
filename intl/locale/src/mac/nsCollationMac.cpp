@@ -154,13 +154,13 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
         appLocale->Release();
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
   }
 
   if (NS_SUCCEEDED(res)) {
@@ -178,7 +178,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset.Assign(mappedCharset);
         nsMemory::Free(mappedCharset);

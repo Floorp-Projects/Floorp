@@ -90,7 +90,7 @@ nsMenu::nsMenu() : nsIMenu()
     mDOMNode       = nsnull;
     mWebShell      = nsnull;
     mDOMElement    = nsnull;
-    mAccessKey     =  NS_ConvertASCIItoUCS2("_").GetUnicode();
+    mAccessKey     =  NS_ConvertASCIItoUCS2("_").get();
 }
 
 //-------------------------------------------------------------------------

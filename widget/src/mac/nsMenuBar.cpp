@@ -899,7 +899,7 @@ MenuHelpers :: ConvertToScriptRun ( const nsString & inStr, const UnicodeToTextR
   //
   // extract the Unicode text from the nsString and convert it into a single script run
   //
-  const PRUnichar* unicodeText = inStr.GetUnicode();
+  const PRUnichar* unicodeText = inStr.get();
   size_t unicodeTextLengthInBytes = inStr.Length() * sizeof(PRUnichar);
   size_t scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
   char* scriptRunText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(scriptRunTextSizeInBytes + sizeof(char)));

@@ -323,7 +323,7 @@ InstallVersionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     JSString *jsstring =
       JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
-                                                  nativeRet.GetUnicode()),
+                                                  nativeRet.get()),
                           nativeRet.Length());
 
     // set the return value

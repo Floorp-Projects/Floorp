@@ -57,7 +57,7 @@ static PRBool
 IsASCIIFontName(const nsString& aName) 
 { 
   PRUint32 len = aName.Length(); 
-  const PRUnichar* str = aName.GetUnicode(); 
+  const PRUnichar* str = aName.get(); 
   for (PRUint32 i = 0; i < len; i++) { 
     /* 
      * X font names are printable ASCII, ignore others (for now) 
@@ -331,7 +331,7 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
   } 
  
   nsCAutoString name; 
-  name.AssignWithConversion(aName.GetUnicode()); 
+  name.AssignWithConversion(aName.get()); 
   name.ToLowerCase(); 
   PRBool  isthere = PR_FALSE; 
  

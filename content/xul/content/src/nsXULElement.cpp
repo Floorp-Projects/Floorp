@@ -3843,7 +3843,7 @@ nsXULElement::GetResource(nsIRDFResource** aResource)
     }
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = gRDFService->GetUnicodeResource(id.GetUnicode(), aResource);
+        rv = gRDFService->GetUnicodeResource(id.get(), aResource);
         if (NS_FAILED(rv)) return rv;
     }
     else {

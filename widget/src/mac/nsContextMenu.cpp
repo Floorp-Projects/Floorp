@@ -619,7 +619,7 @@ void nsContextMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menu
 	//
 	// extract the Unicode text from the nsString and convert it into a single script run
 	//
-	unicodeText = menuString.GetUnicode();
+	unicodeText = menuString.get();
 	unicodeTextLengthInBytes = menuString.Length() * sizeof(PRUnichar);
 	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
 	scriptRunText = new char[scriptRunTextSizeInBytes];

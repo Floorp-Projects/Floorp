@@ -113,7 +113,7 @@ void CTests::OnTestsChangeUrl()
 	{
 		CQaUtils::QAOutput("Begin Change URL test.", 1);
 		strcpy(theUrl, myDialog.m_urlfield);
-		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).GetUnicode(), 
+		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
 	    CQaUtils::RvTestResult(rv, "rv LoadURI() test", 1);
 		CQaUtils::FormatAndPrintOutput("The url = ", theUrl, 2); 
@@ -261,7 +261,7 @@ void CTests::OnTestsCreateprofile()
 	   CQaUtils::QAOutput("Start Profile switch test.", 2);
 
 	   CQaUtils::QAOutput("Retrieved profile service.", 2);
-       rv = theProfServ->SetCurrentProfile(myDialog.m_SelectedProfile.GetUnicode());
+       rv = theProfServ->SetCurrentProfile(myDialog.m_SelectedProfile.get());
 	   CQaUtils::RvTestResult(rv, "SetCurrentProfile() (profile switching) test", 2);
 
 	   CQaUtils::QAOutput("End Profile switch test.", 2);
@@ -864,7 +864,7 @@ void CTests::LoadUriTest(char *theUrl, const unsigned long theFlag)
 	   break;
    }
 
-   rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).GetUnicode(), 
+   rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						theFlag);
    sprintf(theTotalString, "%s%s%s%s%s", "LoadURI(): ", theUrl, " w/ ", theFlagName, " test");
    CQaUtils::RvTestResult(rv, theTotalString, 2);
@@ -912,7 +912,7 @@ void CTests::StopUriTest(char *theUrl)
 {
    char theTotalString[200];
 
-   qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).GetUnicode(), 
+   qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_NONE);
    rv = qaWebNav->Stop();
    sprintf(theTotalString, "%s%s%s", "Stop(): ", theUrl, " test");

@@ -1256,7 +1256,7 @@ NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(const nsString& aString,
                                 nscoord& aWidth, PRInt32* aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+  return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP
@@ -1559,7 +1559,7 @@ nsRenderingContextGTK::DrawString(const nsString& aString,
                                   PRInt32 aFontID,
                                   const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(),
+  return DrawString(aString.get(), aString.Length(),
                     aX, aY, aFontID, aSpacing);
 }
 

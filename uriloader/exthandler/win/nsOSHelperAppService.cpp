@@ -324,7 +324,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
         // the format of the description usually looks like appname.version.something.
         // for now, let's try to make it pretty and just show you the appname.
 
-        mimeInfo->SetApplicationDescription(description.GetUnicode());
+        mimeInfo->SetApplicationDescription(description.get());
 
         // Get other nsIMIMEInfo fields from registry, if possible.
         if ( pFileDescription )

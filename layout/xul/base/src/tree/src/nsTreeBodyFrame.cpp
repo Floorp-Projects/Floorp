@@ -318,12 +318,12 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
       nsAutoString topRowStr; topRowStr.AssignWithConversion("topRow");
       nsAutoString topRow;
       topRow.AppendInt(mTopRowIndex);
-      box->SetProperty(topRowStr.GetUnicode(), topRow.GetUnicode());
+      box->SetProperty(topRowStr.get(), topRow.get());
     }
 
     // Always null out the cached outliner body frame.
     nsAutoString outlinerBody; outlinerBody.AssignWithConversion("outlinerbody");
-    box->RemoveProperty(outlinerBody.GetUnicode());
+    box->RemoveProperty(outlinerBody.get());
 
     mOutlinerBoxObject = nsnull; // Drop our ref here.
   }
@@ -354,13 +354,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
 
         nsAutoString view; view.AssignWithConversion("view");
         nsCOMPtr<nsISupports> suppView;
-        box->GetPropertyAsSupports(view.GetUnicode(), getter_AddRefs(suppView));
+        box->GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
         nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
 
         if (outlinerView) {
           nsAutoString topRow; topRow.AssignWithConversion("topRow");
           nsXPIDLString rowStr;
-          box->GetProperty(topRow.GetUnicode(), getter_Copies(rowStr));
+          box->GetProperty(topRow.get(), getter_Copies(rowStr));
           nsAutoString rowStr2(rowStr);
           PRInt32 error;
           PRInt32 rowIndex = rowStr2.ToInteger(&error);
@@ -373,7 +373,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
 
           // Clear out the property info for the top row, but we always keep the
           // view current.
-          box->RemoveProperty(topRow.GetUnicode());
+          box->RemoveProperty(topRow.get());
 
           return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
         }
@@ -441,7 +441,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
   if (mView) {
     mView->SetOutliner(nsnull);
     mView = nsnull;
-    box->RemoveProperty(view.GetUnicode());
+    box->RemoveProperty(view.get());
 
     // Only reset the top row index and delete the columns if we had an old non-null view.
     mTopRowIndex = 0;
@@ -460,7 +460,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     // View, meet the outliner.
     mView->SetOutliner(mOutlinerBoxObject);
  
-    box->SetPropertyAsSupports(view.GetUnicode(), mView);
+    box->SetPropertyAsSupports(view.get(), mView);
 
     // Give the view a new empty selection object to play with, but only if it
     // doesn't have one already.
@@ -2758,7 +2758,7 @@ nsOutlinerImageListener::Invalidate()
 {
   // Loop from min to max, invalidating each cell that was listening for this image.
   for (PRInt32 i = mMin; i <= mMax; i++) {
-    mOutliner->InvalidateCell(i, mColID.GetUnicode());
+    mOutliner->InvalidateCell(i, mColID.get());
   }
 
   return NS_OK;

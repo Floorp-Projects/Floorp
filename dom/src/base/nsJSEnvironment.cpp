@@ -269,7 +269,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   JSBool ret = JS_TRUE;
 
   // Open the dialog.
-  if (NS_FAILED(prompt->Confirm(title.GetUnicode(), msg.GetUnicode(), &ret)))
+  if (NS_FAILED(prompt->Confirm(title.get(), msg.get(), &ret)))
     return JS_TRUE;
 
   return !ret;
@@ -1476,7 +1476,7 @@ nsJSEnvironment::nsJSEnvironment()
   {
     nsAutoString topic;
     topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this,topic.GetUnicode());
+    observerService->AddObserver(this,topic.get());
   }
 
   mRuntimeService = nsnull;

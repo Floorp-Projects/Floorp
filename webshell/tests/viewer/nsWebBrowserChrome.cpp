@@ -285,7 +285,7 @@ NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 
    newTitle.AppendWithConversion(" - Raptor");
    
-   mBrowserWindow->SetTitle(newTitle.GetUnicode());
+   mBrowserWindow->SetTitle(newTitle.get());
    return NS_OK;
 }
 

@@ -3548,7 +3548,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             InitEvent(event, NS_DRAGDROP_EVENT);
             event.mType      = nsDragDropEventStatus_eDrop;
             event.mIsFileURL = PR_FALSE;
-            event.mURL       = (PRUnichar *)fileStr.GetUnicode();
+            event.mURL       = (PRUnichar *)fileStr.get();
             DispatchEvent(&event, status);
 	        }
 #endif
@@ -4506,7 +4506,7 @@ static char* GetACPString(const nsString& aStr)
    if(acp)
    {
       int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
-                      aStr.GetUnicode(), aStr.Length(),
+                      aStr.get(), aStr.Length(),
                       acp, acplen, NULL, NULL);
       if ( outlen > 0)
          acp[outlen] = '\0';  // null terminate
@@ -4550,20 +4550,20 @@ NS_METHOD nsWindow::SetIcon(const nsAReadableString& anIconSpec)
   // Convert / to \.
   nsAutoString slash(NS_LITERAL_STRING("/"));
   nsAutoString bslash(NS_LITERAL_STRING("\\"));
-  iconSpec.ReplaceChar( *(slash.GetUnicode()), *(bslash.GetUnicode()) );
+  iconSpec.ReplaceChar( *(slash.get()), *(bslash.get()) );
 
   // Append that to icon resource path.
-  iconPath.Append( iconSpec.GetUnicode() + n - 1 );
+  iconPath.Append( iconSpec.get() + n - 1 );
 
   ::SetLastError( 0 ); 
   HICON bigIcon = (HICON)::LoadImageW( NULL,
-                                       (LPCWSTR)iconPath.GetUnicode(),
+                                       (LPCWSTR)iconPath.get(),
                                        IMAGE_ICON,
                                        ::GetSystemMetrics(SM_CXICON),
                                        ::GetSystemMetrics(SM_CYICON),
                                        LR_LOADFROMFILE | LR_SHARED );
   HICON smallIcon = (HICON)::LoadImageW( NULL,
-                                         (LPCWSTR)iconPath.GetUnicode(),
+                                         (LPCWSTR)iconPath.get(),
                                          IMAGE_ICON,
                                          ::GetSystemMetrics(SM_CXSMICON),
                                          ::GetSystemMetrics(SM_CYSMICON),
@@ -4572,7 +4572,7 @@ NS_METHOD nsWindow::SetIcon(const nsAReadableString& anIconSpec)
   // See if unicode API not implemented and if not, try ascii version
   if ( ::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) {
       nsCOMPtr<nsILocalFile> pathConverter;
-      if ( NS_SUCCEEDED( NS_NewUnicodeLocalFile( iconPath.GetUnicode(),
+      if ( NS_SUCCEEDED( NS_NewUnicodeLocalFile( iconPath.get(),
                                                  PR_FALSE,
                                                  getter_AddRefs( pathConverter ) ) ) ) {
           // Now try the char* path.
@@ -4669,9 +4669,9 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
     unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
       mIMECompString->get(),
       mIMECompString->Length(),
-      (PRUnichar*)mIMECompUnicode->GetUnicode(),
+      (PRUnichar*)mIMECompUnicode->get(),
       mIMECompUnicode->mCapacity);
-    ((PRUnichar*)mIMECompUnicode->GetUnicode())[unicharSize] = (PRUnichar) 0;
+    ((PRUnichar*)mIMECompUnicode->get())[unicharSize] = (PRUnichar) 0;
     mIMECompUnicode->mLength = unicharSize;
   }
 
@@ -4687,7 +4687,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
      event.rangeArray = nsnull;
   }
 
-  event.theText = (PRUnichar*)mIMECompUnicode->GetUnicode();
+  event.theText = (PRUnichar*)mIMECompUnicode->get();
   event.isShift	= mIsShiftDown;
   event.isControl = mIsControlDown;
   event.isMeta	= PR_FALSE;
@@ -4970,9 +4970,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       mIMECompUnicode->SetCapacity((compStrLen / sizeof(WCHAR))+1);
 
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompUnicode->GetUnicode(), mIMECompString->mCapacity, compStrLen);
+        (LPVOID)mIMECompUnicode->get(), mIMECompString->mCapacity, compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
-      ((PRUnichar*)mIMECompUnicode->GetUnicode())[compStrLen] = '\0';
+      ((PRUnichar*)mIMECompUnicode->get())[compStrLen] = '\0';
       mIMECompUnicode->mLength = compStrLen;
     } else {
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR, NULL, 0, compStrLen);
@@ -5107,10 +5107,10 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext,
         GCS_COMPSTR,
-        (LPVOID)mIMECompUnicode->GetUnicode(),
+        (LPVOID)mIMECompUnicode->get(),
         mIMECompUnicode->mCapacity, compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
-      ((PRUnichar*)mIMECompUnicode->GetUnicode())[compStrLen] = '\0';
+      ((PRUnichar*)mIMECompUnicode->get())[compStrLen] = '\0';
       mIMECompUnicode->mLength = compStrLen;
     } else {
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPSTR, NULL, 0, compStrLen);
@@ -5147,7 +5147,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 			HandleStartComposition(hIMEContext);
 
     if (nsToolkit::mIsNT) {
-      ((PRUnichar*)mIMECompUnicode->GetUnicode())[0] = '\0';
+      ((PRUnichar*)mIMECompUnicode->get())[0] = '\0';
       mIMECompUnicode->mLength = 0;
     } else {
       ((char*)mIMECompString->get())[0] = '\0';
@@ -5193,7 +5193,7 @@ BOOL nsWindow::OnIMEEndComposition()
 		// we need to clear out the current composition string 
 		// in that case. 
     if (nsToolkit::mIsNT) {
-      ((PRUnichar*)mIMECompUnicode->GetUnicode())[0] = '\0';
+      ((PRUnichar*)mIMECompUnicode->get())[0] = '\0';
       mIMECompUnicode->mLength = 0;
     } else {
       ((char*)mIMECompString->get())[0] = '\0';

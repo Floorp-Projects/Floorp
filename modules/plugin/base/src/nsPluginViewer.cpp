@@ -1040,7 +1040,7 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
 
           if (NS_OK == rv) {
             nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
-            rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
+            rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.get(), unitarget.get(), nsnull);
           }
         }
       }
@@ -1078,7 +1078,7 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
         if(browserChrome)
           {
           nsAutoString  msg; msg.AssignWithConversion(aStatusMsg);
-          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, msg.GetUnicode());
+          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, msg.get());
           }
         }
       }

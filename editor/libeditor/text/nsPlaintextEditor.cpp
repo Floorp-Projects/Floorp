@@ -282,7 +282,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
           if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
             if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("content"), currentValue))) continue; 
 
-            PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE); 
+            PRInt32 offset = currentValue.Find(content.get(), PR_TRUE); 
             if (kNotFound != offset) {
               currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
               newMetaString.Append(content); 
@@ -1944,7 +1944,7 @@ nsPlaintextEditor::GetReconversionString(nsReconversionEventReply* aReply)
   if (NS_FAILED(res))
     return res;
   
-  aReply->mReconversionString = (PRUnichar*) nsMemory::Clone(textValue.GetUnicode(),
+  aReply->mReconversionString = (PRUnichar*) nsMemory::Clone(textValue.get(),
                                                                 (textValue.Length() + 1) * sizeof(PRUnichar));
   if (!aReply->mReconversionString)
     return NS_ERROR_OUT_OF_MEMORY;

@@ -248,7 +248,7 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   mDialogURL = aDialogURL;
   LoadURL(mDialogURL);
 
-  SetTitle(aTitle.GetUnicode());
+  SetTitle(aTitle.get());
 
   return NS_OK;
 }
@@ -376,7 +376,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 NS_IMETHODIMP nsXPBaseWindow::LoadURL(const nsString& aURL)
 {
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
-   webNav->LoadURI(aURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+   webNav->LoadURI(aURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
    return NS_OK;
 }
 

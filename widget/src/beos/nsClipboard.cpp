@@ -286,7 +286,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWh
         } else {
           nsString ucs2Str = NS_ConvertUTF8toUCS2((const char *)data, (PRUint32)size);
           nsCOMPtr<nsISupports> genericDataWrapper;
-          nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, (void *)ucs2Str.GetUnicode(), ucs2Str.Length() * 2, getter_AddRefs(genericDataWrapper));
+          nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, (void *)ucs2Str.get(), ucs2Str.Length() * 2, getter_AddRefs(genericDataWrapper));
           rv = aTransferable->SetTransferData(flavorStr, genericDataWrapper, ucs2Str.Length() * 2);
         }
       } else {

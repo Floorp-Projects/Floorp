@@ -910,7 +910,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         // if we didn't find the type, but we do have a src, we can
         // determine the mimetype based on the file extension
         const char* mimeType = mimeTypeStr.get();
-        if (!mimeType && src.GetUnicode()) {
+        if (!mimeType && src.get()) {
           nsXPIDLCString extension;
           PRInt32 offset = src.RFindChar(PRUnichar('.'));
           if (offset != kNotFound) {
@@ -2000,8 +2000,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
               }
             }
             rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
-                                 fullurl.GetUnicode(), 
-                                 unitarget.GetUnicode(), 
+                                 fullurl.get(), 
+                                 unitarget.get(), 
                                  postDataStream, headersDataStream);
             NS_IF_RELEASE(content);
           }
@@ -2043,7 +2043,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
         if(browserChrome)
           {
           nsAutoString  msg; msg.AssignWithConversion(aStatusMsg);
-          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, msg.GetUnicode());
+          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, msg.get());
           }
         }
       }

@@ -231,7 +231,7 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
     PRBool isNewProfile = PR_FALSE;
     ProfileStruct* profileItem;
 
-    index = FindProfileIndex(aProfile->profileName.GetUnicode());
+    index = FindProfileIndex(aProfile->profileName.get());
 
     if (index >= 0)
     {
@@ -683,7 +683,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
         rv = registry->SetString(profilesTreeKey, 
                                  kRegistryCurrentProfileString.get(), 
-                                 mCurrentProfile.GetUnicode());
+                                 mCurrentProfile.get());
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -696,7 +696,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     // Set preg info
     rv = registry->SetString(profilesTreeKey, 
                              kRegistryHavePREGInfoString.get(), 
-                             mHavePREGInfo.GetUnicode());
+                             mHavePREGInfo.get());
     if (NS_FAILED(rv)) return rv;
 
     rv = registry->EnumerateSubtrees(profilesTreeKey, getter_AddRefs(enumKeys));
@@ -753,19 +753,19 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
             registry->SetString(profKey, 
                                 kRegistryNCProfileNameString.get(),  
-                                profileItem->NCProfileName.GetUnicode());
+                                profileItem->NCProfileName.get());
 
             registry->SetString(profKey, 
                                 kRegistryNCServiceDenialString.get(), 
-                                profileItem->NCDeniedService.GetUnicode());
+                                profileItem->NCDeniedService.get());
 
             registry->SetString(profKey, 
                                 kRegistryNCUserEmailString.get(), 
-                                profileItem->NCEmailAddress.GetUnicode());
+                                profileItem->NCEmailAddress.get());
 
             registry->SetString(profKey, 
                                 kRegistryNCHavePREGInfoString.get(), 
-                                profileItem->NCHavePregInfo.GetUnicode());
+                                profileItem->NCHavePregInfo.get());
 
             rv = profileItem->ExternalizeLocation(registry, profKey);
             if (NS_FAILED(rv)) {
@@ -792,7 +792,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
             nsRegistryKey profKey;								
 
             rv = registry->AddKey(profilesTreeKey, 
-                                    profileItem->profileName.GetUnicode(), 
+                                    profileItem->profileName.get(), 
                                     &profKey);
             if (NS_FAILED(rv)) return rv;
 
@@ -803,19 +803,19 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
             registry->SetString(profKey, 
                                 kRegistryNCProfileNameString.get(), 
-                                profileItem->NCProfileName.GetUnicode());
+                                profileItem->NCProfileName.get());
 
             registry->SetString(profKey, 
                                 kRegistryNCServiceDenialString.get(), 
-                                profileItem->NCDeniedService.GetUnicode());
+                                profileItem->NCDeniedService.get());
 
             registry->SetString(profKey, 
                                 kRegistryNCUserEmailString.get(), 
-                                profileItem->NCEmailAddress.GetUnicode());
+                                profileItem->NCEmailAddress.get());
 
             registry->SetString(profKey, 
                                 kRegistryNCHavePREGInfoString.get(), 
-                                profileItem->NCHavePregInfo.GetUnicode());
+                                profileItem->NCHavePregInfo.get());
 
             rv = profileItem->ExternalizeLocation(registry, profKey);
             if (NS_FAILED(rv)) {
@@ -987,7 +987,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 #endif
 
         PRBool exists = PR_FALSE;
-        exists = ProfileExists(convertedProfName.GetUnicode());
+        exists = ProfileExists(convertedProfName.get());
         if (exists)
         {		
             rv = enumKeys->Next();
@@ -1036,7 +1036,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         }
 
         PRBool exists = PR_FALSE;;
-        exists = ProfileExists(NS_ConvertASCIItoUCS2(unixProfileName).GetUnicode());
+        exists = ProfileExists(NS_ConvertASCIItoUCS2(unixProfileName).get());
         if (exists)
         {		
             return NS_OK;
@@ -1066,7 +1066,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 
                 profileItem->updateProfileEntry = PR_TRUE;
 
-                profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).GetUnicode();
+                profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).get();
                 
                 nsCOMPtr<nsILocalFile> localFile;
                 rv = NS_NewLocalFile(profileLocation, PR_TRUE, getter_AddRefs(localFile));
@@ -1251,7 +1251,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 #endif
 
         // Now we have a unicode path - make it into a file
-        rv = NS_NewUnicodeLocalFile(convertedProfLoc.GetUnicode(), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewUnicodeLocalFile(convertedProfLoc.get(), PR_TRUE, getter_AddRefs(tempLocal));
     }
     else
     {
@@ -1322,7 +1322,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
             else
                 dirNameString = regData;
                 
-            rv = NS_NewUnicodeLocalFile(dirNameString.GetUnicode(), PR_TRUE, getter_AddRefs(tempLocal));
+            rv = NS_NewUnicodeLocalFile(dirNameString.get(), PR_TRUE, getter_AddRefs(tempLocal));
         }
         else
         {
@@ -1343,7 +1343,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
             }
             else
 #endif
-            rv = NS_NewUnicodeLocalFile(regLocationData.GetUnicode(), PR_TRUE, getter_AddRefs(tempLocal));
+            rv = NS_NewUnicodeLocalFile(regLocationData.get(), PR_TRUE, getter_AddRefs(tempLocal));
         }
     }
 
@@ -1394,7 +1394,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
         rv = aRegistry->SetString(profKey,
                                  kRegistryDirectoryString.get(),
-                                 regData.GetUnicode());
+                                 regData.get());
 
     }
     else if (regLocationData.Length() != 0)
@@ -1402,7 +1402,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         // Write the original data back out - maybe it can be resolved later. 
         rv = aRegistry->SetString(profKey, 
                                  kRegistryDirectoryString.get(), 
-                                 regLocationData.GetUnicode());
+                                 regLocationData.get());
     }
     else
     {

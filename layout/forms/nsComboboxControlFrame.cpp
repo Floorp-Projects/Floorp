@@ -442,7 +442,7 @@ nsComboboxControlFrame::InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate
   mListControlFrame->GetSelectedItem(mTextStr);
 
    // Update the display by setting the value attribute
-  mDisplayContent->SetText(mTextStr.GetUnicode(), mTextStr.Length(), aUpdate);
+  mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), aUpdate);
 }
 
 //--------------------------------------------------------------
@@ -2027,9 +2027,9 @@ nsComboboxControlFrame::SelectionChanged()
     if (shouldSetValue) {
       if (mTextStr.Length() == 0) {
         nsAutoString space; space.AssignWithConversion(" ");
-        rv = mDisplayContent->SetText(space.GetUnicode(), space.Length(), PR_TRUE);
+        rv = mDisplayContent->SetText(space.get(), space.Length(), PR_TRUE);
       } else {
-        rv = mDisplayContent->SetText(mTextStr.GetUnicode(), mTextStr.Length(), PR_TRUE);
+        rv = mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), PR_TRUE);
       }
       nsFrameState state;
       //mTextFrame->GetFrameState(&state);
@@ -2285,7 +2285,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(result) && labelContent) {
     // set the value of the text node
     mDisplayContent = do_QueryInterface(labelContent);
-    mDisplayContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+    mDisplayContent->SetText(value.get(), value.Length(), PR_TRUE);
 
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));

@@ -90,7 +90,7 @@ nsVixenShell::EncodeDocumentToString(nsIDOMDocument* aDocument,
     if (!len) return rv;
     
     *aResult = (PRUnichar*) PR_Calloc(len, sizeof(PRUnichar));
-    *aResult = (PRUnichar*) memcpy(*aResult, temp.GetUnicode(), sizeof(PRUnichar)*len);
+    *aResult = (PRUnichar*) memcpy(*aResult, temp.get(), sizeof(PRUnichar)*len);
 
     return NS_OK;
 }

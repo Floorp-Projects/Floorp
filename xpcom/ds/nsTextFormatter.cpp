@@ -393,7 +393,7 @@ static int cvt_S(SprintfState *ss, const PRUnichar *s, int width, int prec,
     nsAutoString nullstr;
     nullstr.AssignWithConversion("(null)");
 
-    return fill2(ss, s ? s : nullstr.GetUnicode(), slen, width, flags);
+    return fill2(ss, s ? s : nullstr.get(), slen, width, flags);
 }
 
 static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, PRUnichar* aDest, PRUint32 aDestLen)
@@ -970,7 +970,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	}
 
 	/* format */
-	hexp = hex.GetUnicode();
+	hexp = hex.get();
 	switch (c) {
 	  case 'd': case 'i':			/* decimal/integer */
 	    radix = 10;
@@ -993,7 +993,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
 	  case 'X':				/* unsigned HEX */
 	    radix = 16;
-	    hexp = HEX.GetUnicode();
+	    hexp = HEX.get();
 	    type |= 1;
 	    goto fetch_and_convert;
 
@@ -1408,11 +1408,11 @@ PRBool nsTextFormatter::SelfTest()
 
    PRUnichar buf[256];
    int ret;
-   ret = nsTextFormatter::snprintf(buf, 256, fmt.GetUnicode(), d, 333, utf8, ucs2);
+   ret = nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
    printf("ret = %d\n", ret);
    nsAutoString out(buf);
    printf("%s \n",out.ToNewCString());
-   const PRUnichar *uout = out.GetUnicode();
+   const PRUnichar *uout = out.get();
    for(PRUint32 i=0;i<out.Length();i++)
       printf("%2X ", uout[i]);
 

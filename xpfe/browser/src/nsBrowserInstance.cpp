@@ -330,7 +330,7 @@ public:
     PageCycler* self = NS_STATIC_CAST(PageCycler*, PL_GetEventOwner(aEvent));
 
     // load the URL
-    const PRUnichar* url = self->mLastRequest.GetUnicode();
+    const PRUnichar* url = self->mLastRequest.get();
     printf("########## PageCycler starting: %s\n", NS_ConvertUCS2toUTF8(url).get());
 
     self->mIntervalTime = PR_IntervalNow();
@@ -410,7 +410,7 @@ void TimesUp(nsITimer *aTimer, void *aClosure)
     pCycler->StopTimer();
     pCycler->GetLastRequest().ToCString( urlBuf, sizeof(urlBuf), 0 );
     fprintf(stderr,"########## PageCycler Timeout on URL: %s\n", urlBuf);
-    pCycler->Observe( pCycler, nsnull, (pCycler->GetLastRequest()).GetUnicode() );
+    pCycler->Observe( pCycler, nsnull, (pCycler->GetLastRequest()).get() );
   }
 }
 
@@ -673,7 +673,7 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
     if (!urlstr.IsEmpty()) {
       // A url was provided. Load it
       if (APP_DEBUG) printf("Got Command line URL to load %s\n", NS_ConvertUCS2toUTF8(urlstr).get());
-      rv = LoadUrl( urlstr.GetUnicode() );
+      rv = LoadUrl( urlstr.get() );
       sCmdLineURLUsed = PR_TRUE;
       return rv;
     }

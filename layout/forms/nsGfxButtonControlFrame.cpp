@@ -416,7 +416,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     // set the value of the text node and add it to the child list
     mTextContent = do_QueryInterface(labelContent, &result);
     if (NS_SUCCEEDED(result) && mTextContent) {
-      mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+      mTextContent->SetText(value.get(), value.Length(), PR_TRUE);
       aChildList.AppendElement(mTextContent);
     }
   }
@@ -546,7 +546,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
         value.SetLength(0);
       }
-      rv = mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+      rv = mTextContent->SetText(value.get(), value.Length(), PR_TRUE);
     } else {
       rv = NS_ERROR_UNEXPECTED;
     }

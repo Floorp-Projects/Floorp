@@ -80,7 +80,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   PRBool result = PR_FALSE;
   char fileBuffer[MAX_PATH+1] = "";
-  char *converted = ConvertToFileSystemCharset(mDefault.GetUnicode());
+  char *converted = ConvertToFileSystemCharset(mDefault.get());
   if (nsnull == converted) {
     mDefault.ToCString(fileBuffer,MAX_PATH);
   }
@@ -89,7 +89,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     nsMemory::Free( converted );
   }
 
-  char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
+  char *title = ConvertToFileSystemCharset(mTitle.get());
   if (nsnull == title)
     title = mTitle.ToNewCString();
   char *initialDir;
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     PRInt32 l = (mFilterList.Length()+2)*2;
     char *filterBuffer = (char*) nsMemory::Alloc(l);
     int len = gModuleData->WideCharToMultiByte(0,
-                                          mFilterList.GetUnicode(),
+                                          mFilterList.get(),
                                           mFilterList.Length(),
                                           filterBuffer,
                                           l);

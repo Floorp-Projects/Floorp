@@ -881,7 +881,7 @@ char* GetACPString(const nsString& aStr)
    if(acp)
    {
       int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
-                      aStr.GetUnicode(), aStr.Length(),
+                      aStr.get(), aStr.Length(),
                       acp, acplen, NULL, NULL);
       if (outlen >= 0)
          acp[outlen] = '\0';  // null terminate

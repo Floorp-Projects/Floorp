@@ -3832,7 +3832,7 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
 
         const nsString& theString=aNode->GetSkippedContent();
         PRInt32 theLen=theString.Length();
-        CBufDescriptor theBD(theString.GetUnicode(), PR_TRUE, theLen+1, theLen);
+        CBufDescriptor theBD(theString.get(), PR_TRUE, theLen+1, theLen);
         nsAutoString theString2(theBD);
 
         theString2.CompressWhitespace();

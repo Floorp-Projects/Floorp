@@ -429,7 +429,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     // we shouldn't install them again here. But chromeRegistry->GetSelectedLocale() doesn't
     // work here properly. It always returns global and global-region of default not current
     // profile
-    const PRUnichar* uilocale = mUILocaleName.GetUnicode() ;
+    const PRUnichar* uilocale = mUILocaleName.get() ;
     if (uilocale && uilocale[0]) {
 #ifdef DEBUG_profile_verbose
         nsCAutoString temp1; temp1.AssignWithConversion(uilocale);
@@ -440,7 +440,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
         if (NS_FAILED(rv)) return rv;
     }
 
-    const PRUnichar* contentlocale = mContentLocaleName.GetUnicode() ;
+    const PRUnichar* contentlocale = mContentLocaleName.get() ;
     if (contentlocale && contentlocale[0]) {
 #ifdef DEBUG_profile_verbose
         nsCAutoString temp2; temp2.AssignWithConversion(contentlocale);
@@ -683,7 +683,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             printf("ProfileName : %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
             PRBool exists;
-            rv = ProfileExists(currProfileName.GetUnicode(), &exists);
+            rv = ProfileExists(currProfileName.get(), &exists);
             if (NS_FAILED(rv)) return rv;            
             
             if (!exists) {
@@ -705,7 +705,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 *profileDirSet = PR_FALSE;
             }
             else {
-                rv = SetCurrentProfile(currProfileName.GetUnicode());
+                rv = SetCurrentProfile(currProfileName.get());
                 if (NS_SUCCEEDED(rv))
                     *profileDirSet = PR_TRUE;
             }
@@ -732,7 +732,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
-                rv = NS_NewUnicodeLocalFile(currProfileDirString.GetUnicode(), PR_TRUE, getter_AddRefs(currProfileDir));
+                rv = NS_NewUnicodeLocalFile(currProfileDirString.get(), PR_TRUE, getter_AddRefs(currProfileDir));
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             }
             else {
@@ -743,7 +743,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 NS_ENSURE_SUCCESS(rv, rv);
                 rv = tempResult->QueryInterface(NS_GET_IID(nsILocalFile), getter_AddRefs(currProfileDir));
                 NS_ENSURE_SUCCESS(rv, rv);
-                rv = currProfileDir->AppendUnicode(currProfileName.GetUnicode());
+                rv = currProfileDir->AppendUnicode(currProfileName.get());
                 NS_ENSURE_SUCCESS(rv, rv);
             }
 #ifdef DEBUG_profile_verbose
@@ -752,7 +752,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 
             nsXPIDLString currProfilePath;
             currProfileDir->GetUnicodePath(getter_Copies(currProfilePath));
-            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfilePath, nsnull, PR_TRUE);
+            rv = CreateNewProfile(currProfileName.get(), currProfilePath, nsnull, PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
                 mCurrentProfileAvailable = PR_TRUE;

@@ -667,7 +667,7 @@ HandleLocationEvent(nsGUIEvent *aEvent)
         nsAutoString text;
         PRUint32 size;
         bw->mLocation->GetText(text, 1000, size);
-        bw->GoTo(text.GetUnicode());
+        bw->GoTo(text.get());
       }
       break;
 
@@ -695,7 +695,7 @@ HandleLocationEvent(nsGUIEvent *aEvent)
 
       // Ask the Web widget to load the file URL
       nsString urlStr(lpszFileURL);
-      const PRUnichar * uniStr = fileURL.GetUnicode();
+      const PRUnichar * uniStr = fileURL.get();
       bw->GoTo(uniStr);
       //delete [] lpszFileURL;
       //delete [] str;*/
@@ -845,7 +845,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.AppendInt(ix, 10);
       url.AppendWithConversion(".html");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
     }
     break;
 
@@ -854,7 +854,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
       url.AppendWithConversion("/toolbarTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
@@ -862,7 +862,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
       url.AppendWithConversion("/treeTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
       break;
     }
   
@@ -905,7 +905,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     nsAutoString text;
     PRUint32 size;
     mLocation->GetText(text, 1000, size);
-    GoTo(text.GetUnicode());
+    GoTo(text.get());
     }
     break;
 
@@ -914,7 +914,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     nsAutoString text;
     PRUint32 size;
     mLocation->GetText(text, 1000, size);
-    GoTo(text.GetUnicode());
+    GoTo(text.get());
     }
     break;
 
@@ -925,7 +925,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     GetStringPref(pref, urlStr);
     PRUint32 size;
     mLocation->SetText(urlStr, size);
-    GoTo(urlStr.GetUnicode());
+    GoTo(urlStr.get());
 
     }
     break;
@@ -985,7 +985,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     nsBrowserWindow* bw = nsnull;
     mApp->OpenWindow(PRUint32(~0), bw);
     bw->SetVisibility(PR_TRUE);
-    bw->GoTo(url.GetUnicode());
+    bw->GoTo(url.get());
     NS_RELEASE(bw);
   }
 #endif
@@ -1018,7 +1018,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   /* invoke the javascript wallet editor */
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-  webNav->LoadURI(urlString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+  webNav->LoadURI(urlString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
   break;
 #endif
@@ -1122,7 +1122,7 @@ nsBrowserWindow::DoFileOpen()
     nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-    webNav->LoadURI(NS_ConvertASCIItoUCS2(fileURL.GetURLString()).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    webNav->LoadURI(NS_ConvertASCIItoUCS2(fileURL.GetURLString()).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
     SetVisibility(PR_TRUE);
   }
 }

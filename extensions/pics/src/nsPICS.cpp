@@ -465,7 +465,7 @@ nsPICS::Init()
                                 (nsISupports **)&anObserverService);
 
         if(rv == NS_OK) {
-          rv = anObserverService->AddObserver(mPICSElementObserver, aTopic.GetUnicode());
+          rv = anObserverService->AddObserver(mPICSElementObserver, aTopic.get());
           nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, anObserverService );
           if (NS_FAILED(rv))
               return rv;

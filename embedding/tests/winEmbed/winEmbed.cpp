@@ -290,7 +290,7 @@ nsresult OpenWebPage(const char *url)
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-        return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(),
+        return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
             nsIWebNavigation::LOAD_FLAGS_NONE);
     }
 
@@ -616,7 +616,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL,
                     sizeof(szURL) / sizeof(szURL[0]) - 1);
                 webNavigation->LoadURI(
-                    NS_ConvertASCIItoUCS2(szURL).GetUnicode(),
+                    NS_ConvertASCIItoUCS2(szURL).get(),
                     nsIWebNavigation::LOAD_FLAGS_NONE);
             }
             break;
@@ -970,7 +970,7 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
                 TCHAR *profileName = new TCHAR[profileNameLen + 1];
                 SendMessage(hwndProfileList, LB_GETTEXT, currentProfileIndex, (LPARAM) profileName);
                 nsAutoString newProfile; newProfile.AssignWithConversion(profileName);
-                rv = profileService->SetCurrentProfile(newProfile.GetUnicode());
+                rv = profileService->SetCurrentProfile(newProfile.get());
             }
 	        EndDialog(hDlg, IDOK);
         }

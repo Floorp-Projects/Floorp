@@ -94,7 +94,7 @@ TestConverter::OnDataAvailable(nsIRequest* request,
     // just make a syncronous call to the Convert() method.
     // Anything can happen here, I just happen to be using the sync call to 
     // do the actual conversion.
-    rv = Convert(inStr, fromType.GetUnicode(), toType.GetUnicode(), ctxt, getter_AddRefs(convertedStream));
+    rv = Convert(inStr, fromType.get(), toType.get(), ctxt, getter_AddRefs(convertedStream));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 len;

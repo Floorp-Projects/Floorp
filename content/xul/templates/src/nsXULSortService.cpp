@@ -1257,7 +1257,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 			if (NS_SUCCEEDED(rv = node1->GetAttribute(kNameSpaceID_None, kIdAtom, htmlID))
 				&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
-				if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID.GetUnicode(),
+				if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID.get(),
 					getter_AddRefs(res1))))
 				{
 					res1 = nsnull;
@@ -1303,7 +1303,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 					(rv != NS_RDF_NO_VALUE))
 				{
 					nsCOMPtr<nsIRDFLiteral>	nodeLiteral;
-					rv = gRDFService->GetLiteral(cellVal1.GetUnicode(), getter_AddRefs(nodeLiteral));
+					rv = gRDFService->GetLiteral(cellVal1.get(), getter_AddRefs(nodeLiteral));
 					if (NS_SUCCEEDED(rv))
 					{
 						*theNode = nodeLiteral;
@@ -1377,7 +1377,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 					                nsAutoString	zero; zero.AssignWithConversion("000000");
 					                if (cellPosVal1.Length() < zero.Length())
 					                {
-								cellPosVal1.Insert(zero.GetUnicode(), 0, PRInt32(zero.Length() - cellPosVal1.Length()));
+								cellPosVal1.Insert(zero.get(), 0, PRInt32(zero.Length() - cellPosVal1.Length()));
 					                }
 							hasMore = PR_FALSE;
 							hasMoreSrcs = PR_FALSE;
@@ -1390,7 +1390,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 		if (cellPosVal1.Length() > 0)
 		{
 			nsCOMPtr<nsIRDFLiteral>	nodePosLiteral;
-			gRDFService->GetLiteral(cellPosVal1.GetUnicode(), getter_AddRefs(nodePosLiteral));
+			gRDFService->GetLiteral(cellPosVal1.get(), getter_AddRefs(nodePosLiteral));
 			*theNode = nodePosLiteral;
 			NS_IF_ADDREF(*theNode);
 			isCollationKey = PR_FALSE;
@@ -1427,7 +1427,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
 			if (NS_SUCCEEDED(rv = node1->GetAttribute(kNameSpaceID_None, kIdAtom, htmlID))
 				&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
-				if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID.GetUnicode(),
+				if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID.get(),
 					getter_AddRefs(res1))))
 				{
 					res1 = nsnull;
@@ -1474,7 +1474,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
 					(rv != NS_RDF_NO_VALUE))
 				{
 					nsCOMPtr<nsIRDFLiteral>	nodeLiteral;
-					rv = gRDFService->GetLiteral(cellVal1.GetUnicode(), getter_AddRefs(nodeLiteral));
+					rv = gRDFService->GetLiteral(cellVal1.get(), getter_AddRefs(nodeLiteral));
 					if (NS_SUCCEEDED(rv))
 					{
 						*theNode = nodeLiteral;
@@ -1548,7 +1548,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
 					                nsAutoString	zero; zero.AssignWithConversion("000000");
 					                if (cellPosVal1.Length() < zero.Length())
 					                {
-								cellPosVal1.Insert(zero.GetUnicode(), 0, zero.Length() - cellPosVal1.Length());
+								cellPosVal1.Insert(zero.get(), 0, zero.Length() - cellPosVal1.Length());
 					                }
 							hasMore = PR_FALSE;
 							hasMoreSrcs = PR_FALSE;
@@ -1561,7 +1561,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
 		if (cellPosVal1.Length() > 0)
 		{
 			nsCOMPtr<nsIRDFLiteral>	nodePosLiteral;
-			gRDFService->GetLiteral(cellPosVal1.GetUnicode(), getter_AddRefs(nodePosLiteral));
+			gRDFService->GetLiteral(cellPosVal1.get(), getter_AddRefs(nodePosLiteral));
 			*theNode = nodePosLiteral;
 			NS_IF_ADDREF(*theNode);
 			isCollationKey = PR_FALSE;
@@ -2029,39 +2029,39 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			sortState->sortPropertyColl = nsnull;	sortState->sortPropertyColl2 = nsnull;
 			sortState->sortPropertySort = nsnull;	sortState->sortPropertySort2 = nsnull;
 
-			rv = gRDFService->GetUnicodeResource(sortResource.GetUnicode(), getter_AddRefs(sortInfo.sortProperty));
+			rv = gRDFService->GetUnicodeResource(sortResource.get(), getter_AddRefs(sortInfo.sortProperty));
 			if (NS_FAILED(rv))	return(rv);
 			sortState->sortResource = sortResource;
 			sortState->sortProperty = sortInfo.sortProperty;
 			
 			temp = sortResource;
 			temp.AppendWithConversion("?collation=true");
-			rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl));
+			rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl));
 			if (NS_FAILED(rv))	return(rv);
 			sortState->sortPropertyColl = sortInfo.sortPropertyColl;
 
 			temp = sortResource;
 			temp.AppendWithConversion("?sort=true");
-			rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort));
+			rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort));
 			if (NS_FAILED(rv))	return(rv);
 			sortState->sortPropertySort = sortInfo.sortPropertySort;
 
 			if (sortResource2.Length() > 0)
 			{
-				rv = gRDFService->GetUnicodeResource(sortResource2.GetUnicode(), getter_AddRefs(sortInfo.sortProperty2));
+				rv = gRDFService->GetUnicodeResource(sortResource2.get(), getter_AddRefs(sortInfo.sortProperty2));
 				if (NS_FAILED(rv))	return(rv);
 				sortState->sortResource2 = sortResource2;
 				sortState->sortProperty2 = sortInfo.sortProperty2;
 
 				temp = sortResource2;
 				temp.AppendWithConversion("?collation=true");
-				rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl2));
+				rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl2));
 				if (NS_FAILED(rv))	return(rv);
 				sortState->sortPropertyColl2 = sortInfo.sortPropertyColl2;
 
 				temp = sortResource2;
 				temp.AppendWithConversion("?sort=true");
-				rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort2));
+				rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort2));
 				if (NS_FAILED(rv))	return(rv);
 				sortState->sortPropertySort2 = sortInfo.sortPropertySort2;
 			}
@@ -2386,33 +2386,33 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, sortResource2,
 		sortInfo.inbetweenSeparatorSort, sortInfo.colIndex, found)))	return(rv);
 
-	rv = gRDFService->GetUnicodeResource(sortResource.GetUnicode(), getter_AddRefs(sortInfo.sortProperty));
+	rv = gRDFService->GetUnicodeResource(sortResource.get(), getter_AddRefs(sortInfo.sortProperty));
 	if (NS_FAILED(rv))	return(rv);
 
 	nsAutoString	temp;
 	temp.Assign(sortResource);
 	temp.AppendWithConversion("?collation=true");
-	rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl));
+	rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl));
 	if (NS_FAILED(rv))	return(rv);
 
 	temp.Assign(sortResource);
 	temp.AppendWithConversion("?sort=true");
-	rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort));
+	rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort));
 	if (NS_FAILED(rv))	return(rv);
 
 	if (sortResource2.Length() > 0)
 	{
-		rv = gRDFService->GetUnicodeResource(sortResource2.GetUnicode(), getter_AddRefs(sortInfo.sortProperty2));
+		rv = gRDFService->GetUnicodeResource(sortResource2.get(), getter_AddRefs(sortInfo.sortProperty2));
 		if (NS_FAILED(rv))	return(rv);
 
 		temp = sortResource2;
 		temp.AppendWithConversion("?collation=true");
-		rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl2));
+		rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl2));
 		if (NS_FAILED(rv))	return(rv);
 
 		temp = sortResource2;
 		temp.AppendWithConversion("?sort=true");
-		rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort2));
+		rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort2));
 		if (NS_FAILED(rv))	return(rv);
 	}
 

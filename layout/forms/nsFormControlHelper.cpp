@@ -907,7 +907,7 @@ nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const char* 
   if (NS_SUCCEEDED(rv) && bundle && aKey) {
     nsXPIDLString valUni;
     nsAutoString key; key.AssignWithConversion(aKey);
-    rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
+    rv = bundle->GetStringFromName(key.get(), getter_Copies(valUni));
     if (NS_SUCCEEDED(rv) && valUni) {
       oVal.Assign(valUni);
     } else {

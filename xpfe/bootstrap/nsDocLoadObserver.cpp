@@ -53,7 +53,7 @@ void nsDocLoadObserver::Register()
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->AddObserver(this, 
-				NS_ConvertASCIItoUCS2("EndDocumentLoad").GetUnicode())))
+				NS_ConvertASCIItoUCS2("EndDocumentLoad").get())))
 			{
 				mRegistered = PR_TRUE;
 			}
@@ -70,7 +70,7 @@ void nsDocLoadObserver::Unregister()
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->RemoveObserver(this, 
-				NS_ConvertASCIItoUCS2("EndDocumentLoad").GetUnicode())))
+				NS_ConvertASCIItoUCS2("EndDocumentLoad").get())))
 			{
 				mRegistered = PR_FALSE;
 			}

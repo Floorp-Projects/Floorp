@@ -183,7 +183,7 @@ void nsUnicodeFontMappingMac::InitByLANG(const nsString& aLANG)
 	// do not countinue if there are no difference to look at the lang tag
 	if( ScriptMapInitComplete() )
 		return;
-  	const PRUnichar *p = aLANG.GetUnicode();
+  	const PRUnichar *p = aLANG.get();
   	PRUint32 len = aLANG.Length();
   	char language[3];
   	char region[3];

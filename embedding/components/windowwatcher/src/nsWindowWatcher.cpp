@@ -514,11 +514,11 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
            we load a new one). not much to do but open the new window
            without a parent. */
         if (parentTreeOwner)
-          parentTreeOwner->FindItemWithName(name.GetUnicode(), nsnull,
+          parentTreeOwner->FindItemWithName(name.get(), nsnull,
                                             getter_AddRefs(newDocShellItem));
       }
     } else
-      FindItemWithName(name.GetUnicode(), getter_AddRefs(newDocShellItem));
+      FindItemWithName(name.get(), getter_AddRefs(newDocShellItem));
   }
 
   // no extant window? make a new one.
@@ -602,7 +602,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     }
   }
 
-  newDocShellItem->SetName(nameSpecified ? name.GetUnicode() : nsnull);
+  newDocShellItem->SetName(nameSpecified ? name.get() : nsnull);
 
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
 

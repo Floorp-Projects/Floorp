@@ -318,7 +318,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
 
    nsCOMPtr<nsISupports> xpConnectObj;
    nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
-   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(xulBrowserWinId.get(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if (xulBrowserWindow)
@@ -558,8 +558,8 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
       }
 
    // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
-   // return mXULWindow->SetTitle(title.GetUnicode());
-   return mXULWindow->nsXULWindow::SetTitle(title.GetUnicode());
+   // return mXULWindow->SetTitle(title.get());
+   return mXULWindow->nsXULWindow::SetTitle(title.get());
 }
 
 //*****************************************************************************

@@ -854,8 +854,8 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
           statusMsg.Append(fileName);
           
           (void) observerService->Notify(mgr,
-              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
-              statusMsg.GetUnicode());
+              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+              statusMsg.get());
         }
       }
     }
@@ -905,8 +905,8 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
         if (NS_SUCCEEDED(rv))
         {
           (void) observerService->Notify(mgr,
-              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
-              NS_ConvertASCIItoUCS2("Unregistering JS component").GetUnicode());
+              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+              NS_ConvertASCIItoUCS2("Unregistering JS component").get());
         }
       }
     }

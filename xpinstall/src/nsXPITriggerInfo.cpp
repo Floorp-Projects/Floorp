@@ -143,7 +143,7 @@ static void* handleTriggerEvent(XPITriggerEvent* event)
     jsval* args;
 
     args = JS_PushArguments( event->cx, &mark, "Wi", 
-                             event->URL.GetUnicode(), 
+                             event->URL.get(), 
                              event->status );
     if ( args )
     {

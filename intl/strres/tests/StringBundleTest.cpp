@@ -168,7 +168,7 @@ main(int argc, char *argv[])
   // file
   nsString strfile;
   strfile.AssignWithConversion("file");
-  const PRUnichar *ptrFile = strfile.GetUnicode();
+  const PRUnichar *ptrFile = strfile.get();
   ret = bundle->GetStringFromName(ptrFile, &ptrv);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");

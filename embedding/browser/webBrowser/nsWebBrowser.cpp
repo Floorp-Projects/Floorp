@@ -858,7 +858,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       docShellParentWidget, mInitInfo->x, mInitInfo->y, mInitInfo->cx,
       mInitInfo->cy), NS_ERROR_FAILURE);
 
-   mDocShellAsItem->SetName(mInitInfo->name.GetUnicode());
+   mDocShellAsItem->SetName(mInitInfo->name.get());
    if (mContentType == typeChromeWrapper)
    {
        mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);

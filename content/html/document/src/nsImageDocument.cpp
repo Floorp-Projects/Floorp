@@ -494,13 +494,13 @@ nsresult nsImageDocument::UpdateTitle( void )
         key.AssignWithConversion("ImageTitleWithDimensions");
         nsAutoString widthStr; widthStr.AppendInt(width);
         nsAutoString heightStr; heightStr.AppendInt(height);
-        const PRUnichar *formatStrings[2]  = {widthStr.GetUnicode(), heightStr.GetUnicode()};
-        rv = bundle->FormatStringFromName(key.GetUnicode(), formatStrings, 2, getter_Copies(valUni));
+        const PRUnichar *formatStrings[2]  = {widthStr.get(), heightStr.get()};
+        rv = bundle->FormatStringFromName(key.get(), formatStrings, 2, getter_Copies(valUni));
       }
     }
     if (!valUni || !valUni[0]) {
       key.AssignWithConversion("ImageTitleWithoutDimensions");
-      rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
+      rv = bundle->GetStringFromName(key.get(), getter_Copies(valUni));
     }
     if (NS_SUCCEEDED(rv) && valUni) {
       // set it on the document

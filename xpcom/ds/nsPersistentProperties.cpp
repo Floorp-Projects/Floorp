@@ -222,7 +222,7 @@ nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewVa
     return NS_ERROR_FAILURE;
   }
 
-  const PRUnichar *key = aKey.GetUnicode();  // returns internal pointer (not a copy)
+  const PRUnichar *key = aKey.get();  // returns internal pointer (not a copy)
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashCode(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
@@ -264,7 +264,7 @@ nsPersistentProperties::GetStringProperty(const nsString& aKey, nsString& aValue
   if (!mTable)
      return NS_ERROR_FAILURE;
 
-  const PRUnichar *key = aKey.GetUnicode();
+  const PRUnichar *key = aKey.get();
 
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashCode(key, &len);

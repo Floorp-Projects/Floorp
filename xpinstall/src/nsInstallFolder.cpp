@@ -541,7 +541,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
             start = curr+1;
         }
             
-        nsresult rv = mFileSpec->AppendUnicode(segment.GetUnicode());
+        nsresult rv = mFileSpec->AppendUnicode(segment.get());
         if (NS_FAILED(rv))
         {
             // Unicode converters not present (likely wizard case)

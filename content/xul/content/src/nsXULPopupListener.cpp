@@ -836,8 +836,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
         nsCOMPtr<nsIMenuBoxObject> menuObject(do_QueryInterface(boxObject));
         if (popupSetObject)
           popupSetObject->CreatePopup(mElement, mPopupContent, xPos, yPos, 
-                                     type.GetUnicode(), anchorAlignment.GetUnicode(), 
-                                     popupAlignment.GetUnicode());
+                                     type.get(), anchorAlignment.get(), 
+                                     popupAlignment.get());
         else if (menuObject)
           menuObject->OpenMenu(PR_TRUE);
       }

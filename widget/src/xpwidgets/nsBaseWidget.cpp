@@ -1054,7 +1054,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
   if (!debug_GetCachedBoolPref("nglayout.debug.event_dumping"))
     return;
 
-  nsCAutoString tempString; tempString.AssignWithConversion(debug_GuiEventToString(aGuiEvent).GetUnicode());
+  nsCAutoString tempString; tempString.AssignWithConversion(debug_GuiEventToString(aGuiEvent).get());
   
   fprintf(aFileOut,
           "%4d %-26s widget=%-8p name=%-12s id=%-8p pos=%d,%d\n",

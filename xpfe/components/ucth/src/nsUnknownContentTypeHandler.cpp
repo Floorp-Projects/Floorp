@@ -242,7 +242,7 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
     nsAutoString wildCardExtension (NS_LITERAL_STRING("*").get());
     if (aSuggestedFileExtension) {
       wildCardExtension.Append(aSuggestedFileExtension);
-      filePicker->AppendFilter(wildCardExtension.GetUnicode(), wildCardExtension.GetUnicode());
+      filePicker->AppendFilter(wildCardExtension.get(), wildCardExtension.get());
     }
 
     filePicker->AppendFilters(nsIFilePicker::filterAll);

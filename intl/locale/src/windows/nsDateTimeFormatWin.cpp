@@ -56,7 +56,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
       if (mLocale.Length() && mLocale.EqualsIgnoreCase(nsString(aLocaleUnichar))) {
         nsMemory::Free(aLocaleUnichar);
@@ -88,7 +88,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
         if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
           mAppLocale.Assign(aLocaleUnichar); // cache app locale name
         }
@@ -97,7 +97,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
   }
 
   // Get LCID and charset name from locale, if available
@@ -278,7 +278,7 @@ int nsDateTimeFormatWin::nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTim
 
   if (mW_API) {
     nsString formatString; if (format) formatString.AssignWithConversion(format);
-    LPCWSTR wstr = format ? (LPCWSTR) formatString.GetUnicode() : NULL;
+    LPCWSTR wstr = format ? (LPCWSTR) formatString.get() : NULL;
     len = GetTimeFormatW(mLCID, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
   }
   else {
@@ -301,7 +301,7 @@ int nsDateTimeFormatWin::nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDat
 
   if (mW_API) {
     nsString formatString; if (format) formatString.AssignWithConversion(format);
-    LPCWSTR wstr = format ? (LPCWSTR) formatString.GetUnicode() : NULL;
+    LPCWSTR wstr = format ? (LPCWSTR) formatString.get() : NULL;
     len = GetDateFormatW(mLCID, dwFlags, lpDate, wstr, (LPWSTR) dateStr, cchDate);
   }
   else {

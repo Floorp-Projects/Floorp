@@ -54,7 +54,7 @@ static nsresult MakeMIMEInfo( ICMapEntry &entry, nsIMIMEInfo*& info )
 	nsCString description( (char*)&entry.entryName[1], entry.entryName[0]);
 	nsString  unicodeDescription;
 	unicodeDescription.AssignWithConversion ( description );
-	info->SetDescription( unicodeDescription.GetUnicode() );
+	info->SetDescription( unicodeDescription.get() );
 	
 
 	nsCString mimetype((char*) &entry.MIMEType[1], entry.MIMEType[0] );

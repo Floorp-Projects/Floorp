@@ -188,7 +188,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
     (NS_STYLE_DIRECTION_RTL == vis->mDirection)
     ? NSBIDI_RTL : NSBIDI_LTR;
 
-  mSuccess = mBidiEngine->SetPara(mBuffer.GetUnicode(), bufferLength, paraLevel, nsnull);
+  mSuccess = mBidiEngine->SetPara(mBuffer.get(), bufferLength, paraLevel, nsnull);
   if (NS_FAILED(mSuccess) ) {
       return mSuccess;
   }
@@ -896,7 +896,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
   }
 
   PRInt32 newLen;
-  PRUnichar* buffer = (PRUnichar*) mBuffer.GetUnicode();
+  PRUnichar* buffer = (PRUnichar*) mBuffer.get();
 // buffer can't be shorter than aText, since it was created from entire block
 
   PRBool doReverse = PR_FALSE;
@@ -922,7 +922,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       if (newLen < aTextLength << 1) {
         newLen = aTextLength << 1;
         mBuffer.SetLength(newLen);
-        buffer = (PRUnichar*) mBuffer.GetUnicode();
+        buffer = (PRUnichar*) mBuffer.get();
       }
 //ahmed
       PRUnichar aRevBuf [8192];

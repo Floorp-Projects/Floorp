@@ -150,9 +150,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     PRUnichar Ucharset[]={'c','h','a','r','s','e','t','\0'};
     
     NS_ASSERTION(numOfAttributes >= 3, "should have at least 3 private attribute");
-    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,(keys->StringAt(numOfAttributes-1))->GetUnicode()),"last name should be 'X_COMMAND'" );
-    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,(keys->StringAt(numOfAttributes-2))->GetUnicode()),"2nd last name should be 'charsetSource'" );
-    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,(keys->StringAt(numOfAttributes-3))->GetUnicode()),"3rd last name should be 'charset'" );
+    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,(keys->StringAt(numOfAttributes-1))->get()),"last name should be 'X_COMMAND'" );
+    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,(keys->StringAt(numOfAttributes-2))->get()),"2nd last name should be 'charsetSource'" );
+    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,(keys->StringAt(numOfAttributes-3))->get()),"3rd last name should be 'charset'" );
 
 #endif
     NS_ASSERTION(mAlias, "Didn't get nsICharsetAlias in constructor");
@@ -163,8 +163,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     // we need at least 5 - HTTP-EQUIV, CONTENT and 3 private
     if(numOfAttributes >= 5 ) 
     {
-      const PRUnichar *charset = (values->StringAt(numOfAttributes-3))->GetUnicode();
-      const PRUnichar *source =  (values->StringAt(numOfAttributes-2))->GetUnicode();
+      const PRUnichar *charset = (values->StringAt(numOfAttributes-3))->get();
+      const PRUnichar *source =  (values->StringAt(numOfAttributes-2))->get();
       PRInt32 err;
       nsAutoString srcStr(source);
       nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
@@ -181,10 +181,10 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       const PRUnichar *contentValue=nsnull;
       for(i=0;i<(numOfAttributes-3);i++)
       {
-        if(0 == nsCRT::strcasecmp((keys->StringAt(i))->GetUnicode(), "HTTP-EQUIV"))
-              httpEquivValue=((values->StringAt(i))->GetUnicode());
-        else if(0 == nsCRT::strcasecmp((keys->StringAt(i))->GetUnicode(), "content"))
-              contentValue=(values->StringAt(i))->GetUnicode();
+        if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "HTTP-EQUIV"))
+              httpEquivValue=((values->StringAt(i))->get());
+        else if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "content"))
+              contentValue=(values->StringAt(i))->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
       NS_NAMED_LITERAL_STRING(texthtml, "text/html");
@@ -280,9 +280,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
     // e.g. <META charset="ISO-8859-1">
     PRInt32 numOfAttributes = keys->Count();
     if ((numOfAttributes >= 3) &&
-        (0 == nsCRT::strcasecmp((keys->StringAt(0))->GetUnicode(), "charset")))
+        (0 == nsCRT::strcasecmp((keys->StringAt(0))->get(), "charset")))
     {
-      nsAutoString srcStr((values->StringAt(numOfAttributes-2))->GetUnicode());
+      nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;
       nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
       // if we cannot convert the string into nsCharsetSource, return error
@@ -293,14 +293,14 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
       if (kCharsetFromMetaTag > src)
       {
           // need nsString for GetPreferred
-          nsAutoString newCharset((values->StringAt(0))->GetUnicode());
+          nsAutoString newCharset((values->StringAt(0))->get());
           nsAutoString preferred;
           res = mAlias->GetPreferred(newCharset, preferred);
           if (NS_SUCCEEDED(res))
           {
               // compare against the current charset, 
               // also some charsets which should have been found in the BOM detection.
-              if (!preferred.Equals((values->StringAt(numOfAttributes-3))->GetUnicode()) &&
+              if (!preferred.Equals((values->StringAt(numOfAttributes-3))->get()) &&
                   !preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
                   !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
                   !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
@@ -347,7 +347,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
     
     // add self to ObserverService
-    res = anObserverService->AddObserver(this, htmlTopic.GetUnicode());
+    res = anObserverService->AddObserver(this, htmlTopic.get());
   }
 
   return res;
@@ -363,7 +363,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
     if (NS_FAILED(res)) return res;
      
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
-    res = anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
+    res = anObserverService->RemoveObserver(this, htmlTopic.get());
   }
   return res;
 }
