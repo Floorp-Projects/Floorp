@@ -57,15 +57,14 @@
    ondialogaccept="return onOKCommand();"
    ondialogcancel="return true;"
    onload="loadCalendarServerDialog()"
-   persist="screenX screenY width height"
+   persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    width="600"
-	height="470"
-	xmlns:nc="http://home.netscape.com/NC-rdf#">
+   xmlns:nc="http://home.netscape.com/NC-rdf#">
     
+   <!-- width 600 for long path names; height set by onload sizeToContent() -->
    
    <!-- Javascript includes -->
-   
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/localCalDialog.js"/>
    
