@@ -43,6 +43,7 @@ EXPORTS=						\
 	nsMsgBiffManager.h			\
 	nsMsgNotificationManager.h	\
 	nsCopyMessageStreamListener.h \
+	nsMsgCopyService.h \
 	$(NULL)
 
 
@@ -71,6 +72,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgServerDataSource.obj	\
 	.\$(OBJDIR)\nsMsgBiffManager.obj		\
 	.\$(OBJDIR)\nsMsgNotificationManager.obj \
+	.\$(OBJDIR)\nsMsgCopyService.obj		\
 	$(NULL)
 
 
