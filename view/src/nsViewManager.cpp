@@ -1283,7 +1283,6 @@ void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) cons
 {
   nsRect    pardamage;
   nsRect    bounds;
-  PRUint32   flags;
 
   aView->GetBounds(bounds);
 
@@ -2174,24 +2173,36 @@ NS_IMETHODIMP nsViewManager :: GetDeviceContext(nsIDeviceContext *&aContext)
   return NS_OK;
 }
 
+#ifndef max
+#define max(a, b) ((a) < (b) ? (b) : (a))
+#endif
+
 nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds)
 {
-  if ((nsnull == mDrawingSurface) ||
-      (mDSBounds.width < aBounds.width) || (mDSBounds.height < aBounds.height))
+  if ((nsnull == mDrawingSurface)
+  		|| (mDSBounds.width < aBounds.width)
+  		|| (mDSBounds.height < aBounds.height))
   {
-	if (aBounds.width < mDSBounds.width)
-		aBounds.width = mDSBounds.width;
-	if (aBounds.height < mDSBounds.height)
-		aBounds.height = mDSBounds.height;
+		nsRect newBounds;
+		newBounds.MoveTo(aBounds.x, aBounds.y);
+		newBounds.width = max(aBounds.width, mDSBounds.width);
+		newBounds.height = max(aBounds.height, mDSBounds.height);
 
-    if (nsnull != mDrawingSurface)
-    {
+    if (mDrawingSurface) {
       //destroy existing DS
       aContext.DestroyDrawingSurface(mDrawingSurface);
       mDrawingSurface = nsnull;
     }
-    aContext.CreateDrawingSurface(&aBounds, 0, mDrawingSurface);
-    mDSBounds = aBounds;
+
+    nsresult rv = aContext.CreateDrawingSurface(&newBounds, 0, mDrawingSurface);
+
+		if (NS_SUCCEEDED(rv)) {
+	    mDSBounds = newBounds;
+	  }
+	  else {
+	  	mDSBounds.SetRect(0,0,0,0);
+	  	mDrawingSurface = nsnull;
+	  }
   }
 
   return mDrawingSurface;
