@@ -865,11 +865,11 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
   nscoord frmHeight = visibleHeight+dspBorderPadding.top+dspBorderPadding.bottom+
                       aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
-#if 1
+#if 0
   aDesiredSize.width  = frmWidth;
   aDesiredSize.height = frmHeight;
 #else
-  printf("Size %d,%d   %d,%d   %d,%d  %d,%d\n", 
+  printf("Size frm:%d,%d   DS:%d,%d   DIF:%d,%d(tp)  %d,%d(px)\n", 
          frmWidth, frmHeight, 
          aDesiredSize.width, aDesiredSize.height,
          frmWidth-aDesiredSize.width, frmHeight-aDesiredSize.height,
@@ -1039,7 +1039,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
 
   ///////////////////////////////////////////////////////////////////
   // This is an experimental reflow that is turned off in the build
-#ifdef DO_NEW_REFLOW_X
+#ifdef DO_NEW_REFLOW
   ReflowItems(aPresContext, aReflowState, aDesiredSize);
 #endif
   ///////////////////////////////////////////////////////////////////
@@ -1149,6 +1149,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     UNCONSTRAINED_CHECK();
 #endif
     REFLOW_DEBUG_MSG3("^** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
+    NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+    NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+    aDesiredSize.mOverflowArea.x      = 0;
+    aDesiredSize.mOverflowArea.y      = 0;
+    aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+    aDesiredSize.mOverflowArea.height = aDesiredSize.height;
     return NS_OK;
   }
 
@@ -1254,6 +1260,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("&** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
+        NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+        NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+        aDesiredSize.mOverflowArea.x      = 0;
+        aDesiredSize.mOverflowArea.y      = 0;
+        aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+        aDesiredSize.mOverflowArea.height = aDesiredSize.height;
         return rv;
       }
       // Nope, something changed that affected our size 
@@ -1271,60 +1283,6 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
       // shown or hidden.
       if (targetFrame == dropdownFrame) {
         REFLOW_DEBUG_MSG("---------Target is Dropdown (Clearing Unc DD Size)---\n");
-        PRBool bail = PR_FALSE;
-
-        // Let's start by checking to see if this is a reflow ro showing or hiding.
-        nsIView * view;
-        dropdownFrame->GetView(aPresContext, &view);
-        nsViewVisibility vis = nsViewVisibility_kHide;
-        NS_ASSERTION(view != nsnull, "The dropdown frame doesn't have a view!");
-        if (view != nsnull) {
-          view->GetVisibility(vis);
-        }
-        // If the view is hidden, but the combobox thinks the it is dropped down
-        // then it look like we are suppose to be showing the dropdown
-        // XXX - It is really to bad we have to reflow at all 
-        // just to get it to show up or be hidden
-        nsIFrame * incrementalChild;
-        aReflowState.reflowCommand->GetNext(incrementalChild);
-        if (nsViewVisibility_kHide == vis && mDroppedDown) {
-          bail = PR_TRUE;
-          // Do a constrained reflow at a predetermined size
-          // to have the dropdown shown
-          nscoord width = mCacheSize.width > kSizeNotSet?PR_MAX(mCacheSize.width, dropdownRect.width):NS_UNCONSTRAINEDSIZE;
-          ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, aReflowState, aStatus, width, NS_UNCONSTRAINEDSIZE);  
-        } else if (nsViewVisibility_kShow == vis && !mDroppedDown) {
-          bail = PR_TRUE;
-          nscoord width = mCacheSize.width > kSizeNotSet?PR_MAX(mCacheSize.width, dropdownRect.width):NS_UNCONSTRAINEDSIZE;
-          ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, aReflowState, aStatus, width, NS_UNCONSTRAINEDSIZE);  
-          // cache the values here also, 
-          // since we just did an unconstrained reflow
-          mCachedUncDropdownSize.width  = dropdownDesiredSize.width;
-          mCachedUncDropdownSize.height = dropdownDesiredSize.height;
-          REFLOW_DEBUG_MSG3("---2 Caching mCachedUncDropdownSize %d,%d\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
-        }
-
-        // Ok, we get to bail because it was either being shown or hidden
-        if (bail) {
-          if (fullyUnconstrained) {
-            aDesiredSize.width  = mCachedUncComboSize.width;
-            aDesiredSize.height = mCachedUncComboSize.height;
-          } else {
-            aDesiredSize.width  = mCacheSize.width;
-            aDesiredSize.height = mCacheSize.height;
-          }
-
-          if (aDesiredSize.maxElementSize != nsnull) {
-            aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
-            aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
-          }
-          aDesiredSize.ascent = aDesiredSize.height;
-          aDesiredSize.descent = 0;
-          REFLOW_DEBUG_MSG3("|** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-          REFLOW_DEBUG_MSG("---- Setting Cached values and then bailing out\n\n");
-          UNCONSTRAINED_CHECK();
-          return NS_OK;
-        }
         // Nope, we were unlucky so now we do a full reflow
         mCachedUncDropdownSize.width  = kSizeNotSet;
         mCachedUncDropdownSize.height = kSizeNotSet;       
@@ -1350,6 +1308,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                               aReflowState, aStatus,
                                               aReflowState.availableWidth, 
                                               aReflowState.availableHeight);
+          NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+          NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+          aDesiredSize.mOverflowArea.x      = 0;
+          aDesiredSize.mOverflowArea.y      = 0;
+          aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+          aDesiredSize.mOverflowArea.height = aDesiredSize.height;
           return rv;
         }
 
@@ -1363,6 +1327,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_DEBUG_MSG3("+** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
+        NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+        NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+        aDesiredSize.mOverflowArea.x      = 0;
+        aDesiredSize.mOverflowArea.y      = 0;
+        aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+        aDesiredSize.mOverflowArea.height = aDesiredSize.height;
         return rv;
       } else {
         nsIFrame * plainLstFrame;
@@ -1384,6 +1354,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
               aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
               aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
             }
+            NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+            NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+            aDesiredSize.mOverflowArea.x      = 0;
+            aDesiredSize.mOverflowArea.y      = 0;
+            aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+            aDesiredSize.mOverflowArea.height = aDesiredSize.height;
             return NS_OK;
           }
         }
@@ -1406,7 +1382,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   //
   // This next section is the Current implementation
   // the else contains the new reflow code
-#ifndef DO_NEW_REFLOW 
+#ifndef DO_NEW_REFLOW_X
 
   // Here is another special optimization
   // Only reflow the dropdown if it has never been reflowed unconstrained
@@ -1465,6 +1441,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.descent = 0;
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("#** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
+        NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+        NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+        aDesiredSize.mOverflowArea.x      = 0;
+        aDesiredSize.mOverflowArea.y      = 0;
+        aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+        aDesiredSize.mOverflowArea.height = aDesiredSize.height;
         return NS_OK;
       }
     } else {
@@ -1532,7 +1514,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     REFLOW_DEBUG_MSG2("*  mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
 
     // subtract off the display's BorderPadding
-    mItemDisplayWidth -= dspBorderPadding.left + dspBorderPadding.right;
+    // XXX unclear why I have to mulitple by two?
+    mItemDisplayWidth -= (dspBorderPadding.left + dspBorderPadding.right)*2;
 
     REFLOW_DEBUG_MSG2("*A mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
 
@@ -1560,7 +1543,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // than for any particular item in the dropdown. So, if the new size of combobox
   // is smaller than the dropdown, that is OK, The dropdown MUST always be either the same
   //size as the combo or larger if necessary
-#if 0
+#if 1
   if (aDesiredSize.width > dropdownDesiredSize.width) {
     if (eReflowReason_Initial == firstPassState.reason) {
       firstPassState.reason = eReflowReason_Resize;
@@ -1642,6 +1625,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     mCachedUncComboSize.height = aDesiredSize.height;
   }
 
+  NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
+  NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
+  aDesiredSize.mOverflowArea.x      = 0;
+  aDesiredSize.mOverflowArea.y      = 0;
+  aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
+  aDesiredSize.mOverflowArea.height = aDesiredSize.height;
   return rv;
 
 }
