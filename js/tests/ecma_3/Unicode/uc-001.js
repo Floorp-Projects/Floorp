@@ -31,7 +31,7 @@ function test()
     printStatus ("Unicode format-control character (Category Cf) test.");
     printBugNumber (23610);
 
-    reportCompare ("no error", "'no\u200E error'",
+    reportCompare ("no error", eval('no\u200E4 error'),
                    "Unicode format-control character test (Category Cf.)");
     
     exitFunc ("test");
