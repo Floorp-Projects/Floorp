@@ -113,6 +113,10 @@ if ($cgi->param("field")) {
     @fieldlist = $cgi->param("field");
 }
 
+unless (UserInGroup(Param("timetrackinggroup"))) {
+    @fieldlist = grep($_ !~ /_time$/, @fieldlist);
+}
+
 foreach (@fieldlist) {
     $displayfields{$_} = 1;
 }

@@ -53,6 +53,7 @@
 
       [% IF displayfields.long_desc %]
         [% FOREACH c = bug.longdescs %]
+          [% NEXT IF c.isprivate && !UserInGroup(Param("insidergroup")) %]
           <long_desc>
             <who>[% c.email FILTER xml %]</who>
             <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
@@ -63,6 +64,7 @@
       
       [% IF displayfields.attachment %]
         [% FOREACH a = bug.attachments %]
+          [% NEXT IF a.isprivate && !UserInGroup(Param("insidergroup")) %]
           <attachment>
             <attachid>[% a.attachid %]</attachid>
             <date>[% a.date FILTER time FILTER xml %]</date>
