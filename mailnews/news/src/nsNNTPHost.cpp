@@ -963,7 +963,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 			if (NS_SUCCEEDED(rv)) {
 				nsINNTPNewsgroupList *newsgroupList = nsnull;
 
-				rv = NS_NewNewsgroupList(&newsgroupList, this, info, line, "foobar");
+				rv = NS_NewNewsgroupList(&newsgroupList, this, info, line, m_hostname);
 				if (NS_SUCCEEDED(rv) && (newsgroupList != nsnull)) {
 					//add newsgroupList to host's list of newsgroups
 					if (m_newsgrouplists != nsnull) 

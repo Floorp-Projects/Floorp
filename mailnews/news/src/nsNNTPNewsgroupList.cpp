@@ -27,20 +27,14 @@
 #include "msgCore.h"    // precompiled header...
 #include "MailNewsTypes.h"
 
-//#define HAVE_NEWSDB
-
 #ifdef HAVE_PANES
 class MSG_Master;
-#endif
-#ifdef HAVE_NEWSDB
-class nsNewsDatabase;
 #endif
 #ifdef HAVE_DBVIEW
 class MessageDBView;
 #endif
 
 // we have a HAVE_XPGETSTRING in this file which needs fixed once we have XP_GetString
-
 
 #include "nsNNTPNewsgroupList.h"
 
@@ -59,10 +53,12 @@ class MessageDBView;
 #include "prmem.h"
 #include "prprf.h"
 
-#ifdef HAVE_NEWSDB
+#include "nsCRT.h"
+#include "xp_mcom.h"
+
 #include "nsNewsDatabase.h"
-#include "nsDBFolderInfo.h"
-#endif
+
+//#include "nsDBFolderInfo.h"
 
 #ifdef HAVE_DBVIEW
 #include "msgdbvw.h"
@@ -73,15 +69,10 @@ class MessageDBView;
 #include "msgpane.h"
 #endif
 
-#if 0
-extern "C"
-{
-	extern int MK_OUT_OF_MEMORY;
-	extern int MK_DISK_FULL;
-	extern int MK_HDR_DOWNLOAD_COUNT;
-	extern int MK_NO_NEW_DISC_MSGS;
-}
-#endif
+#include "nsNewsUtils.h"
+
+#include "nsMsgDBCID.h"
+static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -95,7 +86,7 @@ class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
 #endif
 {
 public:
-  nsNNTPNewsgroupList(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char*url);
+  nsNNTPNewsgroupList(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname);
   nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
   NS_DECL_ISUPPORTS
@@ -142,14 +133,14 @@ private:
 #ifdef HAVE_CHANGELISTENER
   virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
 #endif
-  void			SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
+  void				SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
   PRBool			GetGetOldMessages() {return m_getOldMessages;}
   nsresult			ParseLine(char *line, PRUint32 *message_number);
+  PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
+  nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
 
 protected:
-#ifdef HAVE_NEWSDB
-  nsNewsDatabase	*m_newsDB;
-#endif
+  nsIMsgDatabase	*m_newsDB;
 #ifdef HAVE_DBVIEW
   MessageDBView	*m_msgDBView;		// open view on current download, if any
 #endif
@@ -185,10 +176,10 @@ protected:
 nsNNTPNewsgroupList::nsNNTPNewsgroupList(nsINNTPHost* host,
                                          nsINNTPNewsgroup *newsgroup,
 										 const char *name,
-										 const char *url)
+										 const char *hostname)
 {
     NS_INIT_REFCNT();
-    Init(host, newsgroup, name, url);
+    Init(host, newsgroup, name, hostname);
 }
 
 
@@ -200,17 +191,15 @@ NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 
 
 void 
-nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url)
+nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname)
 {
-#ifdef HAVE_NEWSDB
-	m_newsDB = NULL;
-#endif
+	m_newsDB = nsnull;
 #ifdef HAVE_DBVIEW
 	m_msgDBView = NULL;
 #endif
 	m_groupName = PL_strdup(name);
 	m_host = NULL;
-	m_url = PL_strdup(url);
+	m_url = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,name);
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
 	m_set = NULL;
@@ -246,10 +235,11 @@ nsNNTPNewsgroupList::CleanUp() {
 		m_msgDBView->Remove(this);
 #endif
 
-#ifdef HAVE_NEWSDB
-	if (m_newsDB)
-		m_newsDB->Close();
-#endif
+	if (m_newsDB) {
+		m_newsDB->Commit(kSessionCommit);
+		m_newsDB->Close(PR_TRUE);
+	}
+
 	if (m_knownArts.set) {
 		delete m_knownArts.set;
 		m_knownArts.set = nsnull;
@@ -281,6 +271,42 @@ void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 }
 #endif
 
+nsresult 
+nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
+{
+    if (*db == nsnull) {
+        nsNativeFileSpec path;
+		nsresult rv = nsNewsURI2Path(kNewsRootURI, uri, path);
+		if (NS_FAILED(rv)) return rv;
+
+        nsresult newsDBOpen = NS_OK;
+        nsIMsgDatabase *newsDBFactory = nsnull;
+
+        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
+        if (NS_SUCCEEDED(rv) && newsDBFactory) {
+                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) db, PR_FALSE);
+#ifdef DEBUG_sspitzer
+                if (NS_SUCCEEDED(newsDBOpen)) {
+                    printf ("newsDBFactory->Open() succeeded\n");
+                }
+                else {
+                    printf ("newsDBFactory->Open() failed\n");
+                }
+#endif
+                NS_RELEASE(newsDBFactory);
+                newsDBFactory = nsnull;
+                return rv;
+        }
+#ifdef DEBUG_sspitzer
+        else {
+            printf("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
+        }
+#endif
+    }
+    
+    return NS_OK;
+}
+
 nsresult
 nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
                                               /*nsINNTPHost* host,
@@ -308,16 +334,16 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	}
 #endif
 
-#ifdef HAVE_NEWSDB
 	if (!m_newsDB)
 	{
 		nsresult err;
-		if ((err = nsNewsDatabase::Open(m_url, NULL/* m_master */, &m_newsDB)) != NS_OK)
+		if ((err = GetDatabase(GetURL(), &m_newsDB)) != NS_OK)
             {
                 return err;
             }
 		else
 		{
+#ifdef NOT_READY_YET
 			m_set = m_newsDB->GetNewsArtSet();
 			m_set->SetLastMember(last_possible);	// make sure highwater mark is valid.
 			nsDBFolderInfo *newsGroupInfo = m_newsDB->GetDBFolderInfo();
@@ -344,7 +370,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 			m_pane->StartingUpdate(MSG_NotifyNone, 0, 0);
 			m_newsDB->ExpireUpTo(first_possible, m_pane->GetContext());
 			m_pane->EndingUpdate(MSG_NotifyNone, 0, 0);
-#endif
+#endif /* HAVE_PANES */
 			if (m_knownArts.set->IsMember(last_possible))	// will this be progress pane?
 			{
 #ifdef HAVE_PANES
@@ -355,11 +381,11 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				if (parentpane)
 					context = parentpane->GetContext();
 				FE_Progress (context, noNewMsgs);
-#endif
+#endif /* HAVE_PANES */
 			}
+#endif /* NOT_READY_YET */
 		}
 	}
-#endif
     
 	if (maxextra <= 0 || last_possible < first_possible || last_possible < 1) 
 	{
@@ -548,11 +574,83 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 
 #define NEWS_ART_DISPLAY_FREQ		10
 
+/* Given a string and a length, removes any "Re:" strings from the front.
+   It also deals with that "Re[2]:" thing that some mailers do.
+
+   Returns TRUE if it made a change, FALSE otherwise.
+
+   The string is not altered: the pointer to its head is merely advanced,
+   and the length correspondingly decreased.
+ */
+PRBool 
+nsNNTPNewsgroupList::msg_StripRE(const char **stringP, PRUint32 *lengthP)
+{
+  const char *s, *s_end;
+  const char *last;
+  PRUint32 L;
+  PRBool result = PR_FALSE;
+
+  if (!stringP) return PR_FALSE;
+  s = *stringP;
+  L = lengthP ? *lengthP : PL_strlen(s);
+  
+  s_end = s + L;
+  last = s;
+
+ AGAIN:
+
+  while (s < s_end && XP_IS_SPACE(*s))
+	s++;
+
+  if (s < (s_end-2) &&
+	  (s[0] == 'r' || s[0] == 'R') &&
+	  (s[1] == 'e' || s[1] == 'E'))
+	{
+	  if (s[2] == ':')
+		{
+		  s = s+3;			/* Skip over "Re:" */
+		  result = PR_TRUE;	/* Yes, we stripped it. */
+		  goto AGAIN;		/* Skip whitespace and try again. */
+		}
+	  else if (s[2] == '[' || s[2] == '(')
+		{
+		  const char *s2 = s+3;		/* Skip over "Re[" */
+
+		  /* Skip forward over digits after the "[". */
+		  while (s2 < (s_end-2) && XP_IS_DIGIT(*s2))
+			s2++;
+
+		  /* Now ensure that the following thing is "]:"
+			 Only if it is do we alter `s'.
+		   */
+		  if ((s2[0] == ']' || s2[0] == ')') && s2[1] == ':')
+			{
+			  s = s2+2;			/* Skip over "]:" */
+			  result = TRUE;	/* Yes, we stripped it. */
+			  goto AGAIN;		/* Skip whitespace and try again. */
+			}
+		}
+	}
+
+  /* Decrease length by difference between current ptr and original ptr.
+	 Then store the current ptr back into the caller. */
+  if (lengthP) *lengthP -= (s - (*stringP));
+  *stringP = s;
+
+  return result;
+}
+
+
 nsresult
 nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number) 
 {
-	PRUint32 lines;
-	PRUint32 msgSize = 0;
+	nsresult rv = NS_OK;
+	nsIMsgDBHdr		*newMsgHdr = nsnull;
+    
+	if (!line || !message_number) {
+		return NS_ERROR_NULL_POINTER;
+	}
+
 	char *next = line;
 
 #define GET_TOKEN()								\
@@ -560,86 +658,130 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   next = (line ? PL_strchr (line, '\t') : 0);	\
   if (next) *next++ = 0
 
-	GET_TOKEN ();											/* message number */
+	GET_TOKEN ();
+#ifdef DEBUG_sspitzer											/* message number */
 	printf("message number = %d\n", atol(line));
+#endif
 	*message_number = atol(line);
  
 	if (atol(line) == 0)					/* bogus xover data */
 	return NS_ERROR_UNEXPECTED;
 
-	GET_TOKEN ();											/* subject */
+	m_newsDB->CreateNewHdr(*message_number, &newMsgHdr);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+	GET_TOKEN (); /* subject */
 	if (line)
+
 	{
-		printf("subject = %s\n", line);
-#if 0
-		const char *key = line;  /* #### const evilness */
-
-		PRUint32 subjectLen = PR_strlen(line);
-
+		const char *subject = line;  /* #### const evilness */
+		PRUint32 subjectLen = nsCRT::strlen(line);
 
 		/* strip "Re: " */
-		if (msg_StripRE(&key, &subjectLen))
+		if (msg_StripRE(&subject, &subjectLen))
 		{
-			msgHdr->SetFlags(msgHdr->GetFlags() | kHasRe);
+			PRUint32 flags;
+			// todo:
+			// use OrFlags()?
+			// I don't think I need to get flags, since
+			// this is a new header.
+			(void)newMsgHdr->GetFlags(&flags);
+			(void)newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
 		}
 
-		msgHdr->SetSubject(key, db);
-#endif /* 0 */
+#ifdef DEBUG_sspitzer
+		printf("subject = %s\n",subject);
+#endif
+		newMsgHdr->SetSubject(subject);
 	}
 
-  GET_TOKEN ();											/* sender */
+  GET_TOKEN ();											/* author */
   if (line) {
-	printf("sender = %s\n", line);
-#if 0
-	msgHdr->SetAuthor(line, db);
-#endif /* 0 */
+#ifdef DEBUG_spitzer
+	printf("author = %s\n", line);
+#endif
+	newMsgHdr->SetAuthor(line);
   }
 
   GET_TOKEN ();	
   if (line) {
-	printf("date = %s, %d\n", line, 0);
-#if 0
-	msgHdr->SetDate(XP_ParseTimeString (line, FALSE));										/* date */
-#endif /* 0 */
+	time_t  resDate = 0;
+	PRTime resultTime, intermediateResult, microSecondsPerSecond;
+	PRStatus status = PR_ParseTimeString (line, PR_FALSE, &resultTime);
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+	LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
+	LL_L2I(resDate, intermediateResult);
+	if (resDate < 0) 
+		resDate = 0;
+	
+	// no reason to store milliseconds, since they aren't specified
+	if (PR_SUCCESS == status) {
+#ifdef DEBUG_sspitzer
+		printf("date = %s, %d\n", line, resDate);
+#endif
+		newMsgHdr->SetDate(resDate);		/* date */
+	}
   }
 
   GET_TOKEN ();											/* message id */
   if (line) {
+#ifdef DEBUG_sspitzer
 	printf("message id = %s\n", line);
-#if 0
-	msgHdr->SetUnstrippedMessageId(line, db);
-#endif /* 0 */
+#endif
+	char *strippedId = line;
+
+	if (strippedId[0] == '<')
+		strippedId++;
+
+	char * lastChar = strippedId + PL_strlen(strippedId) -1;
+
+	if (*lastChar == '>')
+		*lastChar = '\0';
+
+	newMsgHdr->SetMessageId(strippedId);
   }
 
   GET_TOKEN ();											/* references */
   if (line) {
+#ifdef DEBUG_sspitzer
 	printf("references = %s\n",line);
-#if 0
-	msgHdr->SetReferences(line, db);
 #endif
+	newMsgHdr->SetReferences(line);
   }
 
   GET_TOKEN ();											/* bytes */
   if (line) {
-	  printf("bytes = %s\n", line);
+	PRUint32 msgSize = 0;
+	msgSize = (line) ? atol (line) : 0;
 
-//  msgSize = (line) ? atol (line) : 0;
-//  msgHdr->SetMessageSize(msgSize);
-  /* ignored */
+#ifdef DEBUG_sspitzer
+	printf("bytes = %d\n", msgSize);
+#endif
+	newMsgHdr->SetMessageSize(msgSize);
   }
 
   GET_TOKEN ();											/* lines */
-  lines = line ? atol (line) : 0;
-  if (!msgSize) {
-	printf("lines = %d\n", lines);
-#if 0
-	msgHdr->SetMessageSize(lines);
+  if (line) {
+	PRUint32 numLines = 0;
+	numLines = line ? atol (line) : 0;
+#ifdef DEBUG_sspitzer	
+	printf("lines = %d\n", numLines);
 #endif
+	newMsgHdr->SetLineCount(numLines);
   }
 
-	GET_TOKEN ();											/* xref */
+  GET_TOKEN ();											/* xref */
+  
+  rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
+  if (NS_FAILED(rv)) {
+        return rv;           
+  }
 
-	return NS_OK;
+  NS_IF_RELEASE(newMsgHdr);
+  newMsgHdr = nsnull;
+  return NS_OK;
 }
 
 nsresult
@@ -653,14 +795,15 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	PR_ASSERT (line);
 	if (!line)
       return NS_ERROR_NULL_POINTER;
-  
-	char *xoverline = PL_strdup(line);
-	rv = ParseLine(xoverline, &message_number);
-	PL_strfree(xoverline);
 
-	if (NS_FAILED(rv)) {
-		return rv;
+	if (m_newsDB != nsnull)
+	{
+		char *xoverline = PL_strdup(line);
+		rv = ParseLine(xoverline, &message_number);
+		PL_strfree(xoverline);
 	}
+	else
+		return NS_ERROR_NOT_INITIALIZED;
 
 #ifdef HAVE_DBVIEW
 	if (m_msgDBView != NULL)
@@ -678,15 +821,6 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 		}
 	}
 	else 
-#endif
-#ifdef HAVE_NEWSDB
-    if (m_newsDB != NULL)
-	{
-		int result = ConvertMsgErrToMKErr(m_newsDB->AddHdrFromXOver(line, &message_number));
-        if (status) *status=result;
-	}
-	else
-		return NS_ERROR_NOT_INITIALIZED;
 #endif
 
 	PR_ASSERT(message_number > m_lastProcessedNumber ||
@@ -804,13 +938,14 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 		m_msgDBView = NULL;
 	}
 #endif
-#ifdef HAVE_NEWSDB
+
 	if (m_newsDB)
 	{
-		m_newsDB->Close();
-		m_newsDB = NULL;
+		m_newsDB->Commit(kSessionCommit);
+		m_newsDB->Close(PR_TRUE);
+		m_newsDB = nsnull;
 	}
-#endif
+
 
 	k = &m_knownArts;
 
@@ -913,10 +1048,10 @@ extern "C" nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResul
                     nsINNTPHost *newsHost,
                     nsINNTPNewsgroup *newsgroup,
 					const char *name,
-					const char *url)
+					const char *hostname)
 {
 	nsNNTPNewsgroupList *list = nsnull;
-	list = new nsNNTPNewsgroupList(newsHost, newsgroup, name, url);
+	list = new nsNNTPNewsgroupList(newsHost, newsgroup, name, hostname);
 	if (list == nsnull) {
 			return NS_ERROR_OUT_OF_MEMORY;
 	}

@@ -45,6 +45,8 @@
 
 #include "nsString2.h"
 
+#include "nsNNTPNewsgroup.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -118,7 +120,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     uri = aMessageURI;
   }
   else if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0) {
-    rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri);
+	rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri);
   }
   else {
     return NS_ERROR_UNEXPECTED;
@@ -196,6 +198,16 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   nsString messageId;
   rv = msgHdr->GetMessageId(messageId);
 
+#ifdef DEBUG_sspitzer
+  PRUint32 bytes;
+  PRUint32 lines;
+  rv = msgHdr->GetMessageSize(&bytes);
+  rv = msgHdr->GetLineCount(&lines);
+
+  printf("bytes = %u\n",bytes);
+  printf("lines = %u\n",lines);
+#endif
+
   NS_IF_RELEASE(msgHdr);
   msgHdr = nsnull;
 
@@ -272,7 +284,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
   return rv;
 }
 
-nsresult nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
+nsresult 
+nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
 										nsIUrlListener *aUrlListener, nsIURL ** aURL)
 {
 #ifdef DEBUG_sspitzer
@@ -290,31 +303,30 @@ nsresult nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aCon
 
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
-
 		rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **)
 												&nntpUrl);
 
-		if (NS_SUCCEEDED(rv) && nntpUrl)
-		{
+		if (NS_SUCCEEDED(rv) && nntpUrl) {
 			char * urlSpec = urlString.ToNewCString();
 			nntpUrl->SetSpec(urlSpec);
-			if (urlSpec)
+			if (urlSpec) {
 				delete [] urlSpec;
-			
-			const char * host;
-			PRUint32 port;
+			}
+
+			const char * hostname = nsnull;
+			PRUint32 port = NEWS_PORT;
 			
 			if (aUrlListener) // register listener if there is one...
 				nntpUrl->RegisterListener(aUrlListener);
 
 			nntpUrl->GetHostPort(&port);
-			nntpUrl->GetHost(&host);
+			nntpUrl->GetHost(&hostname);
 			// okay now create a transport to run the url in...
 
 #ifdef DEBUG_sspitzer
-            printf("nsNntpService::RunNewsUrl(): host = %s port = %d\n", host, port);
+            printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
 #endif
-			pNetService->CreateSocketTransport(&transport, port, host);
+			pNetService->CreateSocketTransport(&transport, port, hostname);
 			if (NS_SUCCEEDED(rv) && transport)
 			{
 				// almost there...now create a nntp protocol instance to run the url in...
