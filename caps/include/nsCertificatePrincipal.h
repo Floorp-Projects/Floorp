@@ -47,9 +47,9 @@ public:
 
     NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
 
-    nsresult Init(const char* data);
+    NS_IMETHOD Init(const char* data);
 
-    nsresult Init(const char* aIssuerName, const char* aSerialNumber);
+    NS_IMETHOD Init(const char* aIssuerName, const char* aSerialNumber);
 
     nsCertificatePrincipal();
 
