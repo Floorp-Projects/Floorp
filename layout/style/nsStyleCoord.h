@@ -23,18 +23,20 @@
 class nsString;
 
 enum nsStyleUnit {
-  eStyleUnit_Twips        = 0,      // (nscoord) value is twips
-  eStyleUnit_Percent      = 1,      // (float) 1.0 == 100%
-  eStyleUnit_Normal       = 2,      // (no value)
-  eStyleUnit_Auto         = 3,      // (no value)
-  eStyleUnit_Inherit      = 4,      // (no value) value should be inherited
-  eStyleUnit_Proportional = 5,      // (int) value has proportional meaning
-  eStyleUnit_Enumerated   = 6,      // (int) value has enumerated meaning
+  eStyleUnit_Null         = 0,      // (no value) value is not specified
+  eStyleUnit_Normal       = 1,      // (no value)
+  eStyleUnit_Auto         = 2,      // (no value)
+  eStyleUnit_Inherit      = 3,      // (no value) value should be inherited
+  eStyleUnit_Percent      = 10,     // (float) 1.0 == 100%
+  eStyleUnit_Coord        = 20,     // (nscoord) value is twips
+  eStyleUnit_Integer      = 30,     // (int) value is simple integer
+  eStyleUnit_Proportional = 31,     // (int) value has proportional meaning
+  eStyleUnit_Enumerated   = 32      // (int) value has enumerated meaning
 };
 
 class nsStyleCoord {
 public:
-  nsStyleCoord(void); // sets to 0 twips
+  nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
   nsStyleCoord(nscoord aValue);
   nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit);
   nsStyleCoord(float aValue);
@@ -46,14 +48,15 @@ public:
   nsStyleUnit GetUnit(void) const { return mUnit; }
   nscoord     GetCoordValue(void) const;
   PRInt32     GetIntValue(void) const;
-  float       GetFloatValue(void) const;
+  float       GetPercentValue(void) const;
 
-  void  Set(nscoord aValue);
-  void  Set(PRInt32 aValue, nsStyleUnit aUnit);
-  void  Set(float aValue);
-  void  SetNormal(void);
-  void  SetAuto(void);
-  void  SetInherit(void);
+  void  Reset(void);  // sets to null
+  void  SetCoordValue(nscoord aValue);
+  void  SetIntValue(PRInt32 aValue, nsStyleUnit aUnit);
+  void  SetPercentValue(float aValue);
+  void  SetNormalValue(void);
+  void  SetAutoValue(void);
+  void  SetInheritValue(void);
 
   void  AppendToString(nsString& aBuffer) const;
   void  ToString(nsString& aBuffer) const;
@@ -68,8 +71,8 @@ protected:
 
 inline PRInt32 nsStyleCoord::GetCoordValue(void) const
 {
-  NS_ASSERTION((mUnit == eStyleUnit_Twips), "not a coord value");
-  if (mUnit == eStyleUnit_Twips) {
+  NS_ASSERTION((mUnit == eStyleUnit_Coord), "not a coord value");
+  if (mUnit == eStyleUnit_Coord) {
     return mValue.mInt;
   }
   return 0;
@@ -78,17 +81,19 @@ inline PRInt32 nsStyleCoord::GetCoordValue(void) const
 inline PRInt32 nsStyleCoord::GetIntValue(void) const
 {
   NS_ASSERTION((mUnit == eStyleUnit_Proportional) ||
-               (mUnit == eStyleUnit_Enumerated), "not an int value");
+               (mUnit == eStyleUnit_Enumerated) ||
+               (mUnit == eStyleUnit_Integer), "not an int value");
   if ((mUnit == eStyleUnit_Proportional) ||
-      (mUnit == eStyleUnit_Enumerated)) {
+      (mUnit == eStyleUnit_Enumerated) ||
+      (mUnit == eStyleUnit_Integer)) {
     return mValue.mInt;
   }
   return 0;
 }
 
-inline float nsStyleCoord::GetFloatValue(void) const
+inline float nsStyleCoord::GetPercentValue(void) const
 {
-  NS_ASSERTION(mUnit == eStyleUnit_Percent, "not a float value");
+  NS_ASSERTION(mUnit == eStyleUnit_Percent, "not a percent value");
   if (mUnit == eStyleUnit_Percent) {
     return mValue.mFloat;
   }
