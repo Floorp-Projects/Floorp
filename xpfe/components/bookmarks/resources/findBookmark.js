@@ -21,12 +21,17 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  */
 
+var gOKButton;
+var gSearchField;
 function Startup()
 {
   doSetOKCancel(find);
   var bundle = document.getElementById("bookmarksBundle");
-  document.getElementById("ok").label = bundle.getString("search_button_label");
-  document.getElementById("searchField").focus();
+  gOKButton = document.getElementById("ok");
+  gOKButton.label = bundle.getString("search_button_label");
+  gOKButton.disabled = true;
+  gSearchField = document.getElementById("searchField");
+  gSearchField.focus();
 }
 
 function find()
@@ -35,11 +40,10 @@ function find()
   // rooted on the URI. 
   var match = document.getElementById("matchList");
   var method = document.getElementById("methodList");
-  var field = document.getElementById("searchField");
   var searchURI = "find:datasource=rdf:bookmarks"
   searchURI += "&match=" + match.selectedItem.value;
   searchURI += "&method=" + method.selectedItem.value;
-  searchURI += "&text=" + escape(field.value);
+  searchURI += "&text=" + escape(gSearchField.value);
   var bmWindow = findMostRecentWindow("bookmarks:searchresults", "chrome://communicator/content/bookmarks/bookmarks.xul", searchURI);
   
   // Update the root of the tree if we're using an existing search window. 
@@ -61,3 +65,7 @@ function findMostRecentWindow(aType, aURI, aParam)
                                  "", "chrome,all,dialog=no", aParam);
 }
 
+function doEnabling()
+{
+  gOKButton.disabled = !gSearchField.value;
+}

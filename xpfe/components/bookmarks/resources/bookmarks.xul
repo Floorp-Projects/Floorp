@@ -90,6 +90,7 @@
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
     <command id="cmd_close" oncommand="close()"/>
+    <command id="Browser:SendLink" oncommand="sendBookmarksLink();"/>
     <command id="cmd_quit"/>
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
@@ -129,7 +130,7 @@
   <toolbox id="bookmarks-toolbox">
     <menubar id="main-menubar" grippy="false">
       <menu id="menu_File">
-        <menupopup id="menu_FilePopup">
+        <menupopup id="menu_FilePopup" onpopupshowing="updateSendLinkItem();">
           <menuitem label="&command.newBookmark.label;" 
                     accesskey="&command.newBookmark.accesskey;"
                     observes="cmd_newbookmark"/>
@@ -152,6 +153,7 @@
           <menuitem observes="cmd_properties" key="bm_key_properties" 
                     label="&command.properties.label;" 
                     accesskey="&command.properties.accesskey;" />
+          <menuitem id="menu_sendPage" hidden="true"/>
           <menuseparator/>
         </menupopup>
       </menu>
@@ -403,4 +405,5 @@
   </statusbar>
 
 </window>
+
 
