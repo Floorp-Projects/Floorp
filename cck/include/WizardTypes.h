@@ -47,6 +47,7 @@ typedef struct WIDGET
 {
 	CString type;
 	CString name;
+	CString attrib;
 	CString value;
 	CString title;
 	CString group;
