@@ -98,7 +98,7 @@ BM_CVS_NS_psm	= $(BM_CVS_NS_dbm) $(BM_CVS_NS_xpcom) $(BM_CVS_NS_js) intl/locale/
 #
 # psm2
 #
-BM_DIRS_psm2	= $(BM_DIRS_dbm) $(BM_DIRS_js) $(BM_DIRS_xpcom) security security/manager
+BM_DIRS_psm2	= $(BM_DIRS_dbm) $(BM_DIRS_js) $(BM_DIRS_xpcom) security/manager
 BM_DEP_DIRS_psm2= \
 	$(BM_DEP_DIRS_xpcom) \
 	netwerk/base/public netwerk/protocol/http/public netwerk/build \
