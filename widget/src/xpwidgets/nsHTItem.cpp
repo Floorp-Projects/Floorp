@@ -23,6 +23,10 @@
 #include "nsHTItem.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
+#include "nsINameSpaceManager.h"
+
+static nsIAtom* kOpenAtom;
+static nsIAtom* kSelectedAtom;
 
 nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
 {
@@ -30,18 +34,31 @@ nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
     mContentNode = pContent;
 	mDataModel = pDataModel;
 	mIndentationLevel = 0;
+
+  if (nsnull == kOpenAtom) {
+    kOpenAtom = NS_NewAtom("open");
+    kSelectedAtom = NS_NewAtom("open");
+  }
+  else {
+    NS_ADDREF(kOpenAtom);
+    NS_ADDREF(kSelectedAtom);
+  }
 }
 
 //--------------------------------------------------------------------
 nsHTItem::~nsHTItem()
 {
 	NS_IF_RELEASE(mContentNode);
+
+  nsrefcnt refCnt;
+  NS_RELEASE2(kOpenAtom, refCnt);
+  NS_RELEASE2(kSelectedAtom, refCnt);
 }
 
 PRBool nsHTItem::IsExpandedDelegate() const
 {
 	nsString attrValue;
-	nsresult result = mContentNode->GetAttribute("open", attrValue);
+	nsresult result = mContentNode->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue);
     attrValue.ToLowerCase();
 	return (result == NS_CONTENT_ATTR_NO_VALUE ||
 	        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));	
@@ -56,7 +73,7 @@ void nsHTItem::ToggleOpenStateDelegate()
 	else attrValue = "true";
 
 	// Set it and wait for the callback.
-	mContentNode->SetAttribute("open", attrValue, PR_TRUE);
+	mContentNode->SetAttribute(kNameSpaceID_None, kOpenAtom, attrValue, PR_TRUE);
 
 	// TODO: Remove this and put it in the callback instead.
 	FinishToggle();
@@ -117,7 +134,7 @@ nsIContent* nsHTItem::GetNthChildContentNode(PRUint32 n) const
 PRBool nsHTItem::IsSelectedDelegate() const
 {
 	nsString attrValue;
-	nsresult result = mContentNode->GetAttribute("selected", attrValue);
+	nsresult result = mContentNode->GetAttribute(kNameSpaceID_None, kSelectedAtom, attrValue);
     attrValue.ToLowerCase();
 	return (result == NS_CONTENT_ATTR_NO_VALUE ||
 	        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));	
