@@ -145,10 +145,15 @@
   display: inherit;
   -moz-box-orient: inherit;
   -moz-counter-reset: inherit;
+  /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
+     blocks with overflow: scroll; */
+  unicode-bidi: inherit;
 }
 
 *|*::-moz-column-content { 
   /* the column boxes inside a column-flowed block */
+  /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
+  unicode-bidi: inherit;
 }
 
 *|*::-moz-page, *|*::-moz-page-sequence {
