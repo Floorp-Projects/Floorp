@@ -75,6 +75,13 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS		+= \
+		nsCP869ToUnicode.cpp \
+		nsUnicodeToCP869.cpp \
+		$(NULL)
+endif
+
 EXPORTS		= nsUCvIBMCID.h
 
 LOCAL_INCLUDES = -I$(srcdir)/../util
