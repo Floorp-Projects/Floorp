@@ -272,7 +272,8 @@ protected:
 
    PRBool  ConvertStatus( nsEventStatus aStatus);
    void    InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint *pt = 0);
-   PRBool  DispatchWindowEvent( struct nsGUIEvent *event);
+   virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
+   virtual PRBool DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
    PRBool  DispatchStandardEvent( PRUint32 aMsg, PRUint8 aStructType = NS_GUI_EVENT);
    virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
@@ -280,12 +281,12 @@ protected:
 
    // Enumeration of the methods which are accessable on the PM thread
    enum {
-      W_CREATE,
-      W_DESTROY,
-      W_SET_FOCUS,
-      W_UPDATE_WINDOW,
-      W_SET_TITLE,
-      W_GET_TITLE
+      CREATE,
+      DESTROY,
+      SET_FOCUS,
+      UPDATE_WINDOW,
+      SET_TITLE,
+      GET_TITLE
    };
    friend MRESULT EXPENTRY fnwpNSWindow( HWND, ULONG, MPARAM, MPARAM);
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);

@@ -1,20 +1,21 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
  * The Original Code is the Mozilla OS/2 libraries.
  *
  * The Initial Developer of the Original Code is John Fairhurst,
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * Copyright (C) 1999 John Fairhurst. All 
+ * Rights Reserved.
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
@@ -167,14 +168,14 @@ nsWindow::nsWindow() : nsBaseWidget()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-   // How destruction works: A call of Destroy() destroys the PM window.  This
-   // triggers an OnDestroy(), which frees resources.  If not Destroy'd at
-   // delete time, Destroy() gets called anyway.
-   
-   // NOTE: Calling virtual functions from destructors is bad; they always
-   //       bind in the current object (ie. as if they weren't virtual).  It
-   //       may even be illegal to call them from here.
-   //
+  // How destruction works: A call of Destroy() destroys the PM window.  This
+  // triggers an OnDestroy(), which frees resources.  If not Destroy'd at
+  // delete time, Destroy() gets called anyway.
+  
+  // NOTE: Calling virtual functions from destructors is bad; they always
+  //       bind in the current object (ie. as if they weren't virtual).  It
+  //       may even be illegal to call them from here.
+  //
   mIsDestroying = PR_TRUE;
   if (gCurrentWindow == this) {
     gCurrentWindow = nsnull;
@@ -256,31 +257,31 @@ NS_METHOD nsWindow::EndResizingChildren(void)
 
 NS_METHOD nsWindow::WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect)
 {
-   POINTL pt = { aOldRect.x, aOldRect.y };
-   NS2PM( pt);
+  POINTL point = { aOldRect.x, aOldRect.y };
+  NS2PM( point);
 
-   WinMapWindowPoints( mWnd, HWND_DESKTOP, &pt, 1);
+  WinMapWindowPoints( mWnd, HWND_DESKTOP, &point, 1);
 
-   aNewRect.x = pt.x;
-   aNewRect.y = WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - pt.y - 1;
-   aNewRect.width = aOldRect.width;
-   aNewRect.height = aOldRect.height;
-   return NS_OK;
+  aNewRect.x = point.x;
+  aNewRect.y = WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - point.y - 1;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::ScreenToWidget( const nsRect &aOldRect, nsRect &aNewRect)
 {
-   POINTL pt = { aOldRect.x,
-                 WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - aOldRect.y - 1 };
-   WinMapWindowPoints( HWND_DESKTOP, mWnd, &pt, 1);
+  POINTL point = { aOldRect.x,
+                   WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - aOldRect.y - 1 };
+  WinMapWindowPoints( HWND_DESKTOP, mWnd, &point, 1);
 
-   PM2NS( pt);
+  PM2NS( point);
 
-   aNewRect.x = pt.x;
-   aNewRect.y = pt.y;
-   aNewRect.width = aOldRect.width;
-   aNewRect.height = aOldRect.height;
-   return NS_OK;
+  aNewRect.x = point.x;
+  aNewRect.y = point.y;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -312,13 +313,12 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //-------------------------------------------------------------------------
 void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
-   event.widget = this;
-// OS2TODO   NS_ADDREF(event.widget);
-   event.nativeMsg = nsnull;
+    event.widget = this;
+// OS2TODO    NS_ADDREF(event.widget);
+    event.nativeMsg = nsnull;
 
-   if (nsnull == aPoint)       // use the point from the event
-   {
-      // get the message position in client coordinates
+    if (nsnull == aPoint) {     // use the point from the event
+      // get the message position in client coordinates and in twips
       POINTL ptl;
       WinQueryMsgPos( 0/*hab*/, &ptl);
       WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
@@ -356,18 +356,6 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 }
 
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
-{
-   PRBool result = PR_FALSE;
-
-   nsEventStatus status;
-   DispatchEvent( event, status);
-   result = ConvertStatus( status);
-
-   return result;
-}
-
-//-------------------------------------------------------------------------
 //
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
@@ -379,25 +367,39 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   DebugPrintEvent(*event, mWnd);
 #endif
 
-   aStatus = nsEventStatus_eIgnore;
+  aStatus = nsEventStatus_eIgnore;
 
-   // Filters: if state is eInCreate, only send out NS_CREATE
-   //          if state is eDoingDelete, don't send out anything because,
-   //                                    well, the object's being deleted...
-   if( (mWindowState == nsWindowState_eInCreate && event->message == NS_CREATE)
-       || (mWindowState == nsWindowState_eLive))
-   {
-      if( mEventCallback)
-         aStatus = (*mEventCallback)( event);
+  // Filters: if state is eInCreate, only send out NS_CREATE
+  //          if state is eDoingDelete, don't send out anything because,
+  //                                    well, the object's being deleted...
+  if( (mWindowState == nsWindowState_eInCreate && event->message == NS_CREATE)
+      || (mWindowState == nsWindowState_eLive))
+  {
+    if (nsnull != mEventCallback) {
+      aStatus = (*mEventCallback)( event);
+    }
    
-      // Dispatch to event listener if event was not consumed
-      if( (aStatus != nsEventStatus_eIgnore) && mEventListener)
-         aStatus = mEventListener->ProcessEvent(*event);
-   }
+    // Dispatch to event listener if event was not consumed
+    if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+      aStatus = mEventListener->ProcessEvent(*event);
+    }
+  }
 
-   return NS_OK;
+  return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
+}
+
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus) {
+  DispatchEvent(event, aStatus);
+  return ConvertStatus(aStatus);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -405,16 +407,15 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 //
 //-------------------------------------------------------------------------
 
-PRBool nsWindow::DispatchStandardEvent( PRUint32 aMsg, PRUint8 aEST)
+PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg, PRUint8 aEST)
 {
-   PRBool result;
+  nsGUIEvent event;
+  event.eventStructType = aEST;
+  InitEvent(event, aMsg);
 
-   nsGUIEvent event;
-   event.eventStructType = aEST;
-   InitEvent( event, aMsg);
-   result = DispatchWindowEvent( &event);
-// OS2TODO   NS_RELEASE(event.widget);
-   return result;
+  PRBool result = DispatchWindowEvent(&event);
+// OS2TODO  NS_RELEASE(event.widget);
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -479,7 +480,6 @@ static PCSZ GetNSWindowPropName() {
   if (!atom) {
     atom = WinAddAtom(WinQuerySystemAtomTable(), "nsWindowPtr");
   }
-
   return (PCSZ)atom;
 }
 
@@ -686,11 +686,13 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 //-------------------------------------------------------------------------
-void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell, nsIToolkit *aToolkit,
-                         nsWidgetInitData *aInitData)
+void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
 {
    mWindowState = nsWindowState_eInCreate;
 
@@ -722,7 +724,7 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
                         (ULONG) aHandleEventFunction,
                         (ULONG) aContext, (ULONG) aAppShell,
                         (ULONG) aInitData };
-      MethodInfo info( this, nsWindow::W_CREATE, 7, args);
+      MethodInfo info( this, nsWindow::CREATE, 7, args);
       mOS2Toolkit->CallMethod( &info);
    }
    else
@@ -854,8 +856,9 @@ void nsWindow::RealDoCreate( HWND              hwndP,
       mParent->AddChild( this);
 
    // call the event callback to notify about creation
-   DispatchStandardEvent( NS_CREATE);
-   SubclassWindow( PR_TRUE);
+
+   DispatchStandardEvent(NS_CREATE);
+   SubclassWindow(TRUE);
    PostCreateWidget();
 }
 
@@ -880,6 +883,13 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
 
    return NS_OK;
 }
+
+
+//-------------------------------------------------------------------------
+//
+// create with a native parent
+//
+//-------------------------------------------------------------------------
 
 NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                          const nsRect &aRect,
@@ -916,10 +926,12 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Destroy()
 {
+  // Switch to the "main gui thread" if necessary... This method must
+  // be executed on the "gui thread"...
    // Switch to the PM thread if necessary...
    if( mToolkit && !mOS2Toolkit->IsGuiThread())
    {
-      MethodInfo info( this, nsWindow::W_DESTROY);
+      MethodInfo info( this, nsWindow::DESTROY);
       mOS2Toolkit->CallMethod( &info);
    }
    else
@@ -1047,49 +1059,48 @@ NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
 NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                      PRBool *aForWindow)
 {
-   if( PR_FALSE == aRealEvent)
-      *aForWindow = PR_FALSE;
-   else
-   {
-      // Set aForWindow if either:
-      //   * the message is for a descendent of the given window
-      //   * the message is for another window, but is a message which
-      //     should be allowed for a disabled window.
+  if( PR_FALSE == aRealEvent) {
+    *aForWindow = PR_FALSE;
+    return NS_OK;
+  }
+  // Set aForWindow if either:
+  //   * the message is for a descendent of the given window
+  //   * the message is for another window, but is a message which
+  //     should be allowed for a disabled window.
+ 
+  PRBool isMouseEvent = PR_FALSE;
+  PRBool isInWindow = PR_FALSE;
+ 
+  // Examine the target window & find the frame
+  // XXX should GetNativeData() use GetMainWindow() ?
+  HWND hwnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+  hwnd = WinQueryWindow(hwnd, QW_PARENT);
+ 
+  if( hwnd == mQmsg.hwnd || WinIsChild( mQmsg.hwnd, hwnd))
+     isInWindow = PR_TRUE;
+  else if (!isInWindow && gRollupWidget &&
+           EventIsInsideWindow((nsWindow*)gRollupWidget))
+     // include for consideration any popup menu which may be active at the moment
+     isInWindow = PR_TRUE;
+ 
+  // XXX really ought to do something about focus here
+ 
+  if( !isInWindow)
+  {
+     // Block mouse messages for non-modal windows
+     if( mQmsg.msg >= WM_MOUSEFIRST && mQmsg.msg <= WM_MOUSELAST)
+        isMouseEvent = PR_TRUE;
+     else if( mQmsg.msg >= WM_MOUSETRANSLATEFIRST &&
+              mQmsg.msg <= WM_MOUSETRANSLATELAST)
+        isMouseEvent = PR_TRUE;
+     else if( mQmsg.msg == WMU_MOUSEENTER || mQmsg.msg == WMU_MOUSELEAVE)
+        isMouseEvent = PR_TRUE;
+  }
+ 
+  // set dispatch indicator
+  *aForWindow = isInWindow || !isMouseEvent;
 
-      PRBool isMouseEvent = PR_FALSE;
-      PRBool isInWindow = PR_FALSE;
-
-      // Examine the target window & find the frame
-      // XXX should GetNativeData() use GetMainWindow() ?
-      HWND hwnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
-      hwnd = WinQueryWindow(hwnd, QW_PARENT);
-
-      if( hwnd == mQmsg.hwnd || WinIsChild( mQmsg.hwnd, hwnd))
-         isInWindow = PR_TRUE;
-      else if (!isInWindow && gRollupWidget &&
-               EventIsInsideWindow((nsWindow*)gRollupWidget))
-         // include for consideration any popup menu which may be active at the moment
-         isInWindow = PR_TRUE;
-
-      // XXX really ought to do something about focus here
-
-      if( !isInWindow)
-      {
-         // Block mouse messages for non-modal windows
-         if( mQmsg.msg >= WM_MOUSEFIRST && mQmsg.msg <= WM_MOUSELAST)
-            isMouseEvent = PR_TRUE;
-         else if( mQmsg.msg >= WM_MOUSETRANSLATEFIRST &&
-                  mQmsg.msg <= WM_MOUSETRANSLATELAST)
-            isMouseEvent = PR_TRUE;
-         else if( mQmsg.msg == WMU_MOUSEENTER || mQmsg.msg == WMU_MOUSELEAVE)
-            isMouseEvent = PR_TRUE;
-      }
-
-      // set dispatch indicator
-      *aForWindow = isInWindow || !isMouseEvent;
-   }
-
-   return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1184,6 +1195,7 @@ NS_METHOD nsWindow::Enable(PRBool bState)
    return NS_OK;
 }
 
+
 //-------------------------------------------------------------------------
 //
 // Give the focus to this component
@@ -1191,15 +1203,21 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFocus(void)
 {
-   // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsGuiThread())
-   {
-      MethodInfo info(this, nsWindow::W_SET_FOCUS);
-      mOS2Toolkit->CallMethod(&info);
-   }
-   else if( mWnd)
-      WinSetFocus( HWND_DESKTOP, mWnd);
-   return NS_OK;
+    //
+    // Switch to the "main gui thread" if necessary... This method must
+    // be executed on the "gui thread"...
+    //
+    // Switch to the PM thread if necessary...
+    if( !mOS2Toolkit->IsGuiThread())
+    {
+        MethodInfo info(this, nsWindow::SET_FOCUS);
+        mOS2Toolkit->CallMethod(&info);
+    }
+    else
+    if (mWnd) {
+        WinSetFocus( HWND_DESKTOP, mWnd);
+    }
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1209,6 +1227,7 @@ NS_METHOD nsWindow::SetFocus(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
 {
+
    // nsFrameWindow overrides this...
    aRect.x = 0;
    aRect.y = 0;
@@ -1304,6 +1323,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
    return NS_OK;
 }
 
+
 //-------------------------------------------------------------------------
 //
 // Set this component cursor
@@ -1312,58 +1332,62 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
-   ULONG sptr = 0;
-   switch( aCursor)
-   {
-      // builtins
-      case eCursor_standard: sptr = SPTR_ARROW;    break;
-      case eCursor_wait:     sptr = SPTR_WAIT;     break;
-      case eCursor_select:   sptr = SPTR_TEXT;     break;
-      case eCursor_sizeWE:   sptr = SPTR_SIZEWE;   break;
-      case eCursor_sizeNS:   sptr = SPTR_SIZENS;   break;
-      case eCursor_sizeNW:   sptr = SPTR_SIZENWSE; break;
-      case eCursor_sizeSE:   sptr = SPTR_SIZENWSE; break;
-      case eCursor_sizeNE:   sptr = SPTR_SIZENESW; break;
-      case eCursor_sizeSW:   sptr = SPTR_SIZENESW; break;
-      case eCursor_move:     sptr = SPTR_MOVE;     break;
-      // custom
-      case eCursor_hyperlink:
-      case eCursor_arrow_north:
-      case eCursor_arrow_north_plus:
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-      case eCursor_arrow_west:
-      case eCursor_arrow_west_plus:
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
-      case eCursor_crosshair:
-      case eCursor_help:
-      case eCursor_copy:
-      case eCursor_alias:
-      case eCursor_context_menu:
-      case eCursor_cell:
-      case eCursor_grab:
-      case eCursor_grabbing:
-      case eCursor_spinning:
-      case eCursor_count_up:
-      case eCursor_count_down:
-      case eCursor_count_up_down:
-         break;
+  // Only change cursor if it's changing
 
-      default:
-         NS_ASSERTION( 0, "Unknown cursor type");
-         break;
-   }
-
-   if( sptr)
-      mPointer = WinQuerySysPointer( HWND_DESKTOP, sptr, FALSE);
-   else
-      mPointer = gModuleData.GetPointer( aCursor);
-
-   WinSetPointer( HWND_DESKTOP, mPointer);
-   mCursor = aCursor;
-
-   return NS_OK;
+  //XXX mCursor isn't always right.  Scrollbars and others change it, too.
+  //XXX If we want this optimization we need a better way to do it.
+  //if (aCursor != mCursor) {
+    ULONG sptr = 0;
+    switch(aCursor) {
+       // builtins
+       case eCursor_standard: sptr = SPTR_ARROW;    break;
+       case eCursor_wait:     sptr = SPTR_WAIT;     break;
+       case eCursor_select:   sptr = SPTR_TEXT;     break;
+       case eCursor_sizeWE:   sptr = SPTR_SIZEWE;   break;
+       case eCursor_sizeNS:   sptr = SPTR_SIZENS;   break;
+       case eCursor_sizeNW:   sptr = SPTR_SIZENWSE; break;
+       case eCursor_sizeSE:   sptr = SPTR_SIZENWSE; break;
+       case eCursor_sizeNE:   sptr = SPTR_SIZENESW; break;
+       case eCursor_sizeSW:   sptr = SPTR_SIZENESW; break;
+       case eCursor_move:     sptr = SPTR_MOVE;     break;
+       // custom
+       case eCursor_hyperlink:
+       case eCursor_arrow_north:
+       case eCursor_arrow_north_plus:
+       case eCursor_arrow_south:
+       case eCursor_arrow_south_plus:
+       case eCursor_arrow_west:
+       case eCursor_arrow_west_plus:
+       case eCursor_arrow_east:
+       case eCursor_arrow_east_plus:
+       case eCursor_crosshair:
+       case eCursor_help:
+       case eCursor_copy:
+       case eCursor_alias:
+       case eCursor_context_menu:
+       case eCursor_cell:
+       case eCursor_grab:
+       case eCursor_grabbing:
+       case eCursor_spinning:
+       case eCursor_count_up:
+       case eCursor_count_down:
+       case eCursor_count_up_down:
+          break;
+ 
+       default:
+          NS_ASSERTION(0, "Invalid cursor type");
+          break;
+    }
+ 
+    if( sptr)
+       mPointer = WinQuerySysPointer( HWND_DESKTOP, sptr, FALSE);
+    else
+       mPointer = gModuleData.GetPointer( aCursor);
+ 
+    WinSetPointer( HWND_DESKTOP, mPointer);
+    mCursor = aCursor;
+  //}
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1373,15 +1397,17 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-   if( mWnd)
-   {
+    if (mWnd)
+    {
       WinInvalidateRect( mWnd, 0, FALSE);
 #if 0
-      if( PR_TRUE == aIsSynchronous)
+      if( PR_TRUE == aIsSynchronous) {
          Update();
+      }
 #endif
-   }
-   return NS_OK;
+    }
+
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1391,49 +1417,51 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 {
-   if( mWnd)
-   {
-      RECTL rcl = { aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height };
-      NS2PM( rcl);
+  if (mWnd)
+  {
+    RECTL rcl = { aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height };
+    NS2PM( rcl);
 
-      WinInvalidateRect( mWnd, &rcl, FALSE);
+    WinInvalidateRect( mWnd, &rcl, FALSE);
 #if 0
-      if( PR_TRUE == aIsSynchronous)
-         Update();
+    if( PR_TRUE == aIsSynchronous) {
+      Update();
+    }
 #endif
-   }
-   return NS_OK;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 
 {
-   nsresult rv = NS_OK;
-   if( mWnd) {
-      HRGN nativeRegion;
-      rv = aRegion->GetNativeRegion( (void *&)nativeRegion);
-      if( nativeRegion) {
-         if( NS_SUCCEEDED(rv)) {
-            RECTL rcl;
-            HPS hps = WinGetScreenPS( HWND_DESKTOP);
-            /* LONG lComplexity = */ GpiQueryRegionBox( hps, nativeRegion, &rcl);
-            WinReleasePS( hps);
-            NS2PM( rcl);
+  nsresult rv = NS_OK;
+  if (mWnd) {
+    HRGN nativeRegion;
+    rv = aRegion->GetNativeRegion((void *&)nativeRegion);
+    if (nativeRegion) {
+      if (NS_SUCCEEDED(rv)) {
+        RECTL rcl;
+        HPS hps = WinGetScreenPS( HWND_DESKTOP);
+        /* LONG lComplexity = */ GpiQueryRegionBox( hps, nativeRegion, &rcl);
+        WinReleasePS( hps);
+        NS2PM( rcl);
 
-            WinInvalidateRect( mWnd, &rcl, FALSE);
+        WinInvalidateRect( mWnd, &rcl, FALSE);
 
-//            WinInvalidateRegion( mWnd, nativeRegion, TRUE);
+//        WinInvalidateRegion( mWnd, nativeRegion, TRUE);
 #if 0
-            if( PR_TRUE == aIsSynchronous)
-               Update();
+        if( PR_TRUE == aIsSynchronous) {
+          Update();
+        }
 #endif
-         }
-      } else {
-         rv = NS_ERROR_FAILURE;
       }
-   }
-   return rv;  
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  return rv;  
 }
 
 //-------------------------------------------------------------------------
@@ -1443,15 +1471,16 @@ nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Update()
 {
-   // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsGuiThread())
-   {
-      MethodInfo info(this, nsWindow::W_UPDATE_WINDOW);
-      mOS2Toolkit->CallMethod(&info);
-   }
-   else if( mWnd)
-      WinUpdateWindow( mWnd);
-   return NS_OK;
+  // Switch to the PM thread if necessary...
+  if( !mOS2Toolkit->IsGuiThread())
+  {
+    MethodInfo info(this, nsWindow::UPDATE_WINDOW);
+    mOS2Toolkit->CallMethod(&info);
+  }
+  else 
+  if (mWnd)
+    WinUpdateWindow( mWnd);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1461,78 +1490,72 @@ NS_IMETHODIMP nsWindow::Update()
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
-   void *rc = 0;
+  void *rc = NULL;
 
-   switch( aDataType)
-   {
-      case NS_NATIVE_WIDGET:
-      case NS_NATIVE_WINDOW:
-      case NS_NATIVE_PLUGIN_PORT:
-         rc = (void*) mWnd;
-         break;
-
-      case NS_NATIVE_GRAPHIC:
-         if( !mPS)
-         {
-            if( mDragInside) mPS = DrgGetPS( mWnd);
-            else mPS = WinGetPS( mWnd);
-         }
-         mPSRefs++;
-         rc = (void*) mPS;
-         break;
-
-      case NS_NATIVE_COLORMAP:
-      case NS_NATIVE_DISPLAY:
-      case NS_NATIVE_REGION:
-      case NS_NATIVE_OFFSETX:
-      case NS_NATIVE_OFFSETY: // could do this, I suppose; but why?
-                              // OTOH, this might make plugins work!
-         break;
-
-      default: 
+    switch(aDataType) {
+        case NS_NATIVE_WIDGET:
+        case NS_NATIVE_WINDOW:
+        case NS_NATIVE_PLUGIN_PORT:
+            rc = (void*) mWnd;
+            break;
+        case NS_NATIVE_GRAPHIC:
+            if( !mPS)
+            {
+                if( mDragInside) mPS = DrgGetPS( mWnd);
+                else mPS = WinGetPS( mWnd);
+            }
+            mPSRefs++;
+            rc = (void*) mPS;
+            break;
+        case NS_NATIVE_COLORMAP:
+        case NS_NATIVE_DISPLAY:
+        case NS_NATIVE_REGION:
+        case NS_NATIVE_OFFSETX:
+        case NS_NATIVE_OFFSETY: // could do this, I suppose; but why?
+                                // OTOH, this might make plugins work!
+            break;
+        default: 
 #ifdef DEBUG
-         printf( "*** Someone's added a new NS_NATIVE value...\n");
+            printf( "*** Someone's added a new NS_NATIVE value...\n");
 #endif
-         break;
-   }
+            break;
+    }
 
-   return rc;
+    return rc;
 }
 
 //~~~
 void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
 {
-   switch( aDataType)
-   {
-      case NS_NATIVE_GRAPHIC:
-         mPSRefs--;
-         if( !mPSRefs)
-         {
-            BOOL rc;
-            if( mDragInside) rc = DrgReleasePS( mPS);
-            else rc = WinReleasePS( mPS);
-            if( !rc)
-               printf( "Error from {Win/Drg}ReleasePS()\n");
-            mPS = 0;
-         }
-         break;
-
-      case NS_NATIVE_COLORMAP:
-      case NS_NATIVE_DISPLAY:
-      case NS_NATIVE_REGION:
-      case NS_NATIVE_OFFSETX:
-      case NS_NATIVE_OFFSETY:
-      case NS_NATIVE_WIDGET:
-      case NS_NATIVE_WINDOW:
-      case NS_NATIVE_PLUGIN_PORT:
-         break;
-
-      default: 
+  switch(aDataType)
+  {
+    case NS_NATIVE_GRAPHIC:
+      mPSRefs--;
+      if( !mPSRefs)
+      {
+        BOOL rc;
+        if( mDragInside) rc = DrgReleasePS( mPS);
+        else rc = WinReleasePS( mPS);
+        if( !rc)
+          printf( "Error from {Win/Drg}ReleasePS()\n");
+        mPS = 0;
+      }
+      break;
+    case NS_NATIVE_DISPLAY:
+    case NS_NATIVE_REGION:
+    case NS_NATIVE_OFFSETX:
+    case NS_NATIVE_OFFSETY:
+    case NS_NATIVE_WIDGET:
+    case NS_NATIVE_WINDOW:
+    case NS_NATIVE_PLUGIN_PORT:
+    case NS_NATIVE_COLORMAP:
+      break;
+    default: 
 #ifdef DEBUG
-         printf( "*** Someone's added a new NS_NATIVE value...\n");
+      printf( "*** Someone's added a new NS_NATIVE value...\n");
 #endif
-         break;
-   }
+      break;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -1557,22 +1580,22 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 //XXX Scroll is obsolete and should go away soon
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-   RECTL rcl;
+  RECTL rcl;
 
-   if( aClipRect)
-   {
-      rcl.xLeft = aClipRect->x;
-      rcl.yBottom = aClipRect->y + aClipRect->height;
-      rcl.xRight = rcl.xLeft + aClipRect->width;
-      rcl.yTop = rcl.yBottom + aClipRect->height;
-      NS2PM( rcl);
-      // this rect is inex
-   }
+  if (nsnull != aClipRect)
+  {
+    rcl.xLeft = aClipRect->x;
+    rcl.yBottom = aClipRect->y + aClipRect->height;
+    rcl.xRight = rcl.xLeft + aClipRect->width;
+    rcl.yTop = rcl.yBottom + aClipRect->height;
+    NS2PM( rcl);
+    // this rect is inex
+  }
 
-   WinScrollWindow( mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
-                    0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
-   Update();
-   return NS_OK;
+  WinScrollWindow( mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
+                   0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
+  Update();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
@@ -1613,81 +1636,51 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 {
     BOOL bRet = TRUE;
 
-   switch( info->methodId)
-   {
+    switch (info->methodId) {
+        case nsWindow::CREATE:
+            NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod Create");
+            DoCreate( (HWND)               info->args[0],
+                      (nsWindow*)          info->args[1],
+                      (const nsRect&)*(nsRect*) (info->args[2]),
+                      (EVENT_CALLBACK)    (info->args[3]), 
+                      (nsIDeviceContext*) (info->args[4]),
+                      (nsIAppShell*)      (info->args[5]),
+                      nsnull, /* toolkit */
+                      (nsWidgetInitData*) (info->args[6]));
+            break;
 
-      case nsWindow::W_CREATE:
-  	 NS_ASSERTION(info->nArgs == 7, "Bad args to Create");
-         DoCreate( (HWND)               info->args[0],
-		   (nsWindow*)          info->args[1],
-		   (const nsRect&)*(nsRect*) (info->args[2]),
-		   (EVENT_CALLBACK)    (info->args[3]), 
-		   (nsIDeviceContext*) (info->args[4]),
-		   (nsIAppShell*)      (info->args[5]),
-		   nsnull, /* toolkit */
-		   (nsWidgetInitData*) (info->args[6]));
-	 bRet = TRUE;
-	 break;
-#if 0
-      case nsWindow::W_CREATE:
-         Create((nsIWidget*)(info->args[0]), 
-		(nsRect&)*(nsRect*)(info->args[1]), 
-		(EVENT_CALLBACK)(info->args[2]), 
-		(nsIDeviceContext*)(info->args[3]),
-		(nsIAppShell *)(info->args[4]),
-		(nsIToolkit*)(info->args[5]),
-		(nsWidgetInitData*)(info->args[6]));
-	 bRet = TRUE;
-         break;
+        case nsWindow::DESTROY:
+            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod Destroy");
+            Destroy();
+            break;
 
-      case nsWindow::W_CREATE_NATIVE:
-	 Create((nsNativeWidget)(info->args[0]), 
-		(nsRect&)*(nsRect*)(info->args[1]), 
-		(EVENT_CALLBACK)(info->args[2]), 
-		(nsIDeviceContext*)(info->args[3]),
-		(nsIAppShell *)(info->args[4]),
-		(nsIToolkit*)(info->args[5]),
-		(nsWidgetInitData*)(info->args[6]));
-	 bRet = TRUE;
-         break;
-#endif
-      case nsWindow::W_DESTROY:
-         NS_ASSERTION(info->nArgs == 0, "Bad args to Destroy");
-         Destroy();
-	 bRet = TRUE;
-         break;
+        case nsWindow::SET_FOCUS:
+            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod SetFocus");
+            SetFocus();
+            break;
 
-      case nsWindow::W_SET_FOCUS:
-         NS_ASSERTION(info->nArgs == 0, "Bad args to SetFocus");
-         SetFocus();
-	 bRet = TRUE;
-         break;
+        case nsWindow::UPDATE_WINDOW:
+            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod UpdateWindow");
+            Update();
+            break;
 
-      case nsWindow::W_UPDATE_WINDOW:
-         NS_ASSERTION(info->nArgs == 0, "Bad args to UpdateWindow");
-         Update();
-	 bRet = TRUE;
-         break;
+        case nsWindow::SET_TITLE:
+            NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod SetTitle");
+            SetTitle( (const nsString &) info->args[0]);
+            break;
 
-      case nsWindow::W_SET_TITLE:
-         NS_ASSERTION(info->nArgs == 1, "Bad args to SetTitle");
-         SetTitle( (const nsString &) info->args[0]);
-	 bRet = TRUE;
-         break;
+        case nsWindow::GET_TITLE:
+            NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod GetTitle");
+            GetWindowText( *((nsString*) info->args[0]),
+                           (PRUint32*)info->args[1]);
+            break;
 
-      case nsWindow::W_GET_TITLE:
-         NS_ASSERTION(info->nArgs == 2, "Bad args to GetTitle");
-         GetWindowText( *((nsString*) info->args[0]),
-                        (PRUint32*)info->args[1]);
-	 bRet = TRUE;
-         break;
-
-      default:
+        default:
             bRet = FALSE;
-         break;
-   }
+            break;
+    }
 
-   return bRet;
+    return bRet;
 }
 
 //-------------------------------------------------------------------------
@@ -2089,7 +2082,6 @@ void nsWindow::OnDestroy()
    mWindowState = nsWindowState_eDead;
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Move
@@ -2097,16 +2089,16 @@ void nsWindow::OnDestroy()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 {            
-   // Params here are in XP-space for the desktop
-   PRBool result;
-   nsGUIEvent event;
-   InitEvent( event, NS_MOVE);
-   event.point.x = aX;
-   event.point.y = aY;
-   event.eventStructType = NS_GUI_EVENT;
-   result = DispatchWindowEvent( &event);
+  // Params here are in XP-space for the desktop
+  nsGUIEvent event;
+  InitEvent( event, NS_MOVE);
+  event.point.x = aX;
+  event.point.y = aY;
+  event.eventStructType = NS_GUI_EVENT;
+
+  PRBool result = DispatchWindowEvent( &event);
 // OS2TODO  NS_RELEASE(event.widget);
-   return result;
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -2152,242 +2144,243 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 
 //-------------------------------------------------------------------------
 //
-// Deal with scrollbar messages (actually implemented only in nsScrollbar)
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::OnScroll( MPARAM mp1, MPARAM mp2)
-{
-   return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2)
 {
-   PRBool result = PR_FALSE;
+  PRBool result = PR_FALSE;
 
-   if (nsnull == mEventCallback && nsnull == mMouseListener) {
-      return result;
-   }
+  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+    return result;
+  }
 
-   nsMouseEvent event;
+  nsMouseEvent event;
 
-   // Stop multiple messages for the same PM action
-   if( g_bHandlingMouseClick)
-      return result;
+  // Stop multiple messages for the same PM action
+  if( g_bHandlingMouseClick)
+    return result;
 
-   // Mouse leave & enter messages don't seem to have position built in.
-   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
-   {
-      POINTL ptl = { SHORT1FROMMP( mp1), SHORT2FROMMP( mp1) };
-      PM2NS( ptl);
-      nsPoint pt( ptl.x, ptl.y);
-      InitEvent( event, aEventType, &pt);
+  // Mouse leave & enter messages don't seem to have position built in.
+  if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
+  {
+    POINTL ptl = { SHORT1FROMMP( mp1), SHORT2FROMMP( mp1) };
+    PM2NS( ptl);
+    nsPoint pt( ptl.x, ptl.y);
+    InitEvent( event, aEventType, &pt);
 
-      USHORT usFlags = SHORT2FROMMP( mp2);
-      event.isShift = (usFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
-      event.isControl = (usFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
-      event.isAlt = (usFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
-   }
-   else
-   {
-      if( !aEventType) aEventType = NS_MOUSE_MIDDLE_BUTTON_DOWN; // WM_CHORD hack
+    USHORT usFlags = SHORT2FROMMP( mp2);
+    event.isShift = (usFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
+    event.isControl = (usFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
+    event.isAlt = (usFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
+  }
+  else
+  {
+    if( !aEventType) aEventType = NS_MOUSE_MIDDLE_BUTTON_DOWN; // WM_CHORD hack
 
-      InitEvent( event, aEventType, nsnull);
-      event.isShift = WinIsKeyDown( VK_SHIFT);
-      event.isControl = WinIsKeyDown( VK_CTRL);
-      event.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
-   }
+    InitEvent( event, aEventType, nsnull);
+    event.isShift = WinIsKeyDown( VK_SHIFT);
+    event.isControl = WinIsKeyDown( VK_CTRL);
+    event.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
+  }
 
-   event.isMeta    = PR_FALSE;
-   event.eventStructType = NS_MOUSE_EVENT;
+  event.isMeta    = PR_FALSE;
+  event.eventStructType = NS_MOUSE_EVENT;
 
-   //Dblclicks are used to set the click count, then changed to mousedowns
-   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
-       aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
-      event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
-                      NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
-      event.clickCount = 2;
-   }
-   else {
-      event.clickCount = 1;
-   }
+  //Dblclicks are used to set the click count, then changed to mousedowns
+  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
+      aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
+    event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
+                    NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
+    event.clickCount = 2;
+  }
+  else {
+    event.clickCount = 1;
+  }
 
-   nsPluginEvent pluginEvent;
+  nsPluginEvent pluginEvent;
 
-   switch (aEventType)//~~~
-   {
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-         pluginEvent.event = WM_BUTTON1DOWN;
-         break;
-      case NS_MOUSE_LEFT_BUTTON_UP:
-         pluginEvent.event = WM_BUTTON1UP;
-         break;
-      case NS_MOUSE_LEFT_DOUBLECLICK:
-         pluginEvent.event = WM_BUTTON1DBLCLK;
-         break;
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-         pluginEvent.event = WM_BUTTON2DOWN;
-         break;
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-         pluginEvent.event = WM_BUTTON2UP;
-         break;
-      case NS_MOUSE_RIGHT_DOUBLECLICK:
-         pluginEvent.event = WM_BUTTON2DBLCLK;
-         break;
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-         pluginEvent.event = WM_BUTTON3DOWN;
-         break;
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-         pluginEvent.event = WM_BUTTON3UP;
-         break;
-      case NS_MOUSE_MIDDLE_DOUBLECLICK:
-         pluginEvent.event = WM_BUTTON3DBLCLK;
-         break;
-      case NS_MOUSE_MOVE:
-         pluginEvent.event = WM_MOUSEMOVE;
-         break;
-      default:
-         break;
-   }
+  switch (aEventType)//~~~
+  {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      pluginEvent.event = WM_BUTTON1DOWN;
+      break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      pluginEvent.event = WM_BUTTON1UP;
+      break;
+    case NS_MOUSE_LEFT_DOUBLECLICK:
+      pluginEvent.event = WM_BUTTON1DBLCLK;
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      pluginEvent.event = WM_BUTTON2DOWN;
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      pluginEvent.event = WM_BUTTON2UP;
+      break;
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
+      pluginEvent.event = WM_BUTTON2DBLCLK;
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      pluginEvent.event = WM_BUTTON3DOWN;
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+      pluginEvent.event = WM_BUTTON3UP;
+      break;
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      pluginEvent.event = WM_BUTTON3DBLCLK;
+      break;
+    case NS_MOUSE_MOVE:
+      pluginEvent.event = WM_MOUSEMOVE;
+      break;
+    default:
+      break;
+  }
 
-   pluginEvent.wParam = 0;
+  pluginEvent.wParam = 0;
 /* OS2TODO
-   pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
-   pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
+  pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
+  pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
 */
-   pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
+  pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
 
-   event.nativeMsg = (void *)&pluginEvent;
+  event.nativeMsg = (void *)&pluginEvent;
 
-   // call the event callback 
-   if (nsnull != mEventCallback) {
+  // call the event callback 
+  if (nsnull != mEventCallback) {
 
     result = DispatchWindowEvent(&event);
 
 #if 0  // OS2TODO
-      if (aEventType == NS_MOUSE_MOVE) {
+    if (aEventType == NS_MOUSE_MOVE) {
 
-         // if we are not in mouse capture mode (mouse down and hold)
-         // then use "this" window
-         // if we are in mouse capture, then all events are being directed
-         // back to the nsWindow doing the capture. So therefore, the detection
-         // of whether we are in a new nsWindow is wrong. Meaning this MOUSE_MOVE
-         // event hold the captured windows pointer not the one the mouse is over.
-         //
-         // So we use "WindowFromPoint" to find what window we are over and 
-         // set that window into the mouse trailer timer.
-         if (!mIsInMouseCapture) {
-            MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-            MouseTrailer::SetMouseTrailerWindow(this);
-            mouseTrailer->CreateTimer();
-         } else {
-            POINT mp;
-            DWORD pos = ::GetMessagePos();
-            mp.x      = LOWORD(pos);
-            mp.y      = HIWORD(pos);
+      // if we are not in mouse capture mode (mouse down and hold)
+      // then use "this" window
+      // if we are in mouse capture, then all events are being directed
+      // back to the nsWindow doing the capture. So therefore, the detection
+      // of whether we are in a new nsWindow is wrong. Meaning this MOUSE_MOVE
+      // event hold the captured windows pointer not the one the mouse is over.
+      //
+      // So we use "WindowFromPoint" to find what window we are over and 
+      // set that window into the mouse trailer timer.
+      if (!mIsInMouseCapture) {
+        MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+        MouseTrailer::SetMouseTrailerWindow(this);
+        mouseTrailer->CreateTimer();
+      } else {
+        POINT mp;
+        DWORD pos = ::GetMessagePos();
+        mp.x      = LOWORD(pos);
+        mp.y      = HIWORD(pos);
 
-            // OK, now find out if we are still inside
-            // the captured native window
-            POINT cpos;
-            cpos.x = LOWORD(pos);
-            cpos.y = HIWORD(pos);
+        // OK, now find out if we are still inside
+        // the captured native window
+        POINT cpos;
+        cpos.x = LOWORD(pos);
+        cpos.y = HIWORD(pos);
 
-            nsWindow * someWindow = NULL;
-            HWND hWnd = ::WindowFromPoint(mp);
-            if (hWnd != NULL) {
-               ::ScreenToClient(hWnd, &cpos);
-               RECT r;
-               VERIFY(::GetWindowRect(hWnd, &r));
-               if (cpos.x >= r.left && cpos.x <= r.right &&
-                   cpos.y >= r.top && cpos.y <= r.bottom) {
-                  // yes we are so we should be able to get a valid window
-                  // although, strangley enough when we are on the frame part of the
-                  // window we get right here when in capture mode
-                  // but this window won't match the capture mode window so
-                  // we are ok
-                  someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
-               } 
-            }
-            // only set the window into the mouse trailer if we have a good window
-            if (nsnull != someWindow)  {
-               MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-               MouseTrailer::SetMouseTrailerWindow(someWindow);
-               mouseTrailer->CreateTimer();
-            }
-         }
-
-         nsRect rect;
-         GetBounds(rect);
-         rect.x = 0;
-         rect.y = 0;
-
-         if (rect.Contains(event.point.x, event.point.y)) {
-            if (gCurrentWindow == NULL || gCurrentWindow != this) {
-               if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
-                  MouseTrailer::IgnoreNextCycle();
-                  gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, gCurrentWindow->GetLastPoint());
-               }
-               gCurrentWindow = this;
-               if (!mIsDestroying) {
-                  gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
-               }
-            }
-         } 
-      } else if (aEventType == NS_MOUSE_EXIT) {
-         if (gCurrentWindow == this) {
-            gCurrentWindow = nsnull;
-         }
+        nsWindow * someWindow = NULL;
+        HWND hWnd = ::WindowFromPoint(mp);
+        if (hWnd != NULL) {
+          ::ScreenToClient(hWnd, &cpos);
+          RECT r;
+          VERIFY(::GetWindowRect(hWnd, &r));
+          if (cpos.x >= r.left && cpos.x <= r.right &&
+              cpos.y >= r.top && cpos.y <= r.bottom) {
+            // yes we are so we should be able to get a valid window
+            // although, strangley enough when we are on the frame part of the
+            // window we get right here when in capture mode
+            // but this window won't match the capture mode window so
+            // we are ok
+            someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+          } 
+        }
+        // only set the window into the mouse trailer if we have a good window
+        if (nsnull != someWindow)  {
+          MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+          MouseTrailer::SetMouseTrailerWindow(someWindow);
+          mouseTrailer->CreateTimer();
+        }
       }
+
+      nsRect rect;
+      GetBounds(rect);
+      rect.x = 0;
+      rect.y = 0;
+
+      if (rect.Contains(event.point.x, event.point.y)) {
+        if (gCurrentWindow == NULL || gCurrentWindow != this) {
+          if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
+            MouseTrailer::IgnoreNextCycle();
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, gCurrentWindow->GetLastPoint());
+          }
+          gCurrentWindow = this;
+          if (!mIsDestroying) {
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
+          }
+        }
+      } 
+    } else if (aEventType == NS_MOUSE_EXIT) {
+      if (gCurrentWindow == this) {
+        gCurrentWindow = nsnull;
+      }
+    }
 #endif //OS2TODO
-      g_bHandlingMouseClick = TRUE;
+    g_bHandlingMouseClick = TRUE;
 // OS2TODO   NS_RELEASE(event.widget);
-      return result;
-   }
+    return result;
+  }
 
-   if (nsnull != mMouseListener) {
-      switch (aEventType) {
-         case NS_MOUSE_MOVE: 
-         {
-            result = ConvertStatus( mMouseListener->MouseMoved( event));
-            nsRect rect;
-            GetBounds(rect);
-            if (rect.Contains(event.point.x, event.point.y)) {
-               if (gCurrentWindow == NULL || gCurrentWindow != this) {
-                  gCurrentWindow = this;
-               }
-            } else {
-               //printf("Mouse exit");
-            }
-         } break;
+  if (nsnull != mMouseListener) {
+    switch (aEventType) {
+      case NS_MOUSE_MOVE: {
+        result = ConvertStatus(mMouseListener->MouseMoved(event));
+        nsRect rect;
+        GetBounds(rect);
+        if (rect.Contains(event.point.x, event.point.y)) {
+          if (gCurrentWindow == NULL || gCurrentWindow != this) {
+            gCurrentWindow = this;
+          }
+        } else {
+          //printf("Mouse exit");
+        }
 
-         case NS_MOUSE_LEFT_BUTTON_DOWN:
-         case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-         case NS_MOUSE_RIGHT_BUTTON_DOWN:
-            result = ConvertStatus( mMouseListener->MousePressed( event));
-            break;
+      } break;
 
-         case NS_MOUSE_LEFT_BUTTON_UP:
-         case NS_MOUSE_MIDDLE_BUTTON_UP:
-         case NS_MOUSE_RIGHT_BUTTON_UP:
-            result = ConvertStatus( mMouseListener->MouseReleased( event));
-//            result = ConvertStatus( mMouseListener->MouseClicked( event));
-            break;
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+        result = ConvertStatus(mMouseListener->MousePressed(event));
+        break;
 
-         case NS_MOUSE_LEFT_CLICK:
-         case NS_MOUSE_MIDDLE_CLICK:
-         case NS_MOUSE_RIGHT_CLICK:
-            result = ConvertStatus( mMouseListener->MouseClicked( event));
-            break;
-      } // switch
-   } 
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+        result = ConvertStatus(mMouseListener->MouseReleased(event));
+//        result = ConvertStatus(mMouseListener->MouseClicked(event));
+        break;
 
-   g_bHandlingMouseClick = TRUE;
-// OS2TODO   NS_RELEASE(event.widget);
-   return result;
+      case NS_MOUSE_LEFT_CLICK:
+      case NS_MOUSE_MIDDLE_CLICK:
+      case NS_MOUSE_RIGHT_CLICK:
+        result = ConvertStatus(mMouseListener->MouseClicked(event));
+        break;
+    } // switch
+  } 
+
+  g_bHandlingMouseClick = TRUE;
+// OS2TODO  NS_RELEASE(event.widget);
+  return result;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Deal with scrollbar messages (actually implemented only in nsScrollbar)
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::OnScroll( MPARAM mp1, MPARAM mp2)
+{
+    return PR_FALSE;
 }
 
 
@@ -2397,7 +2390,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
    if( mOS2Toolkit && !mOS2Toolkit->IsGuiThread())
    {
       ULONG ulong = (ULONG) &aTitle;
-      MethodInfo info( this, nsWindow::W_SET_TITLE, 1, &ulong);
+      MethodInfo info( this, nsWindow::SET_TITLE, 1, &ulong);
       mOS2Toolkit->CallMethod( &info);
    }
    else if( mWnd)
@@ -2410,27 +2403,29 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
-   aWidth = mPreferredWidth;
-   aHeight = mPreferredHeight;
-   return NS_OK;
+  aWidth = mPreferredWidth;
+  aHeight = mPreferredHeight;
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
-   mPreferredWidth = aWidth;
-   mPreferredHeight = aHeight;
-   return NS_OK;
+  mPreferredWidth = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
 }
 
 // We don' wan' no steekin' borda!
 NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-   aWidth = 0;
-   aHeight = 0;
-   return NS_OK;
+  aWidth = 0;
+  aHeight = 0;
+  return NS_OK;
 }
 
 
+// --------------------------------------------------------------------------
+// OS2-specific routines to emulate Windows behaviors
 // --------------------------------------------------------------------------
 
 BOOL nsWindow::SetWindowPos( HWND ib, long x, long y, long cx, long cy, ULONG flags)
@@ -2498,7 +2493,7 @@ nsresult nsWindow::GetWindowText( nsString &aStr, PRUint32 *rc)
    if( !mOS2Toolkit->IsGuiThread())
    {
       ULONG args[] = { (ULONG) &aStr, (ULONG) rc };
-      MethodInfo info( this, nsWindow::W_GET_TITLE, 2, args);
+      MethodInfo info( this, nsWindow::GET_TITLE, 2, args);
       mOS2Toolkit->CallMethod( &info);
    }
    else if( mWnd)
