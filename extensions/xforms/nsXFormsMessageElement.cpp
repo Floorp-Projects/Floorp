@@ -86,7 +86,7 @@
   "position:absolute;z-index:2147483647;visibility:hidden;"
 
 #define MESSAGE_WINDOW_PROPERTIES \
-  "location=false,scrollbars=yes"
+  "location=false,scrollbars=yes,centerscreen"
 
 
 // Defining a simple dialog for modeless and modal messages.
