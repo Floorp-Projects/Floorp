@@ -2233,8 +2233,7 @@ nsHTMLDocument::ImportNode(nsIDOMNode* aImportedNode,
                            PRBool aDeep,
                            nsIDOMNode** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsDocument::ImportNode(aImportedNode, aDeep, aReturn);
 }
 
 NS_IMETHODIMP

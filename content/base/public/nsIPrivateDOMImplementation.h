@@ -25,7 +25,7 @@
 
 #include "nsISupports.h"
 
-class nsIDocument;
+class nsIURI;
 
 /*
  * Event listener manager interface.
@@ -40,7 +40,7 @@ class nsIPrivateDOMImplementation : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATEDOMIMPLEMENTATION_IID; return iid; }
 
-  NS_IMETHOD Init(nsIDocument* aDoc) = 0;
+  NS_IMETHOD Init(nsIURI* aBaseURI) = 0;
 };
 
 NS_LAYOUT nsresult

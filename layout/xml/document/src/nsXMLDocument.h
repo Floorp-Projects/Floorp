@@ -59,6 +59,9 @@ public:
 
   NS_IMETHOD EndLoad();
 
+  // nsIDOMNode interface
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+
   // nsIDOMDocument interface
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
   NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
