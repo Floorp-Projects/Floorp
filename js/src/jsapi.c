@@ -73,6 +73,12 @@
 #include "jsfile.h"
 #endif
 
+#ifdef HAVE_VA_LIST_AS_ARRAY
+#define JS_ADDRESSOF_VA_LIST(ap) (ap)
+#else
+#define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
+#endif
+
 #if defined(JS_PARANOID_REQUEST) && defined(JS_THREADSAFE)
 #define CHECK_REQUEST(cx)	JS_ASSERT(cx->requestDepth)
 #else
@@ -239,7 +245,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 	    break;
 	  default:
 	    format--;
-	    if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp, &ap))
+	    if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp, JS_ADDRESSOF_VA_LIST(ap)))
 		return JS_FALSE;
 	    /* NB: the formatter already updated sp, so we continue here. */
 	    continue;
@@ -339,7 +345,7 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 	    break;
 	  default:
 	    format--;
-	    if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, &ap))
+	    if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, JS_ADDRESSOF_VA_LIST(ap)))
 		goto bad;
 	    /* NB: the formatter already updated sp, so we continue here. */
 	    continue;
