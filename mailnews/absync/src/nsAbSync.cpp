@@ -103,7 +103,7 @@ nsAbSync::CleanServerTable(nsVoidArray *aArray)
   if (!aArray)
     return NS_OK;
 
-  for (PRInt32 i; i<aArray->Count(); i++)
+  for (PRInt32 i=0; i<aArray->Count(); i++)
   {
     syncMappingRecord *tRec = (syncMappingRecord *)aArray->ElementAt(i);
     if (!tRec)
