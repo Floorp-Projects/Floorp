@@ -136,7 +136,8 @@ nsFSStringConversion::PrepareFSCharset()
    if(!mFSCharset)
    { 
      // lazy eval of the file system charset
-     NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_CONTRACTID, &res);
+     nsCOMPtr<nsIPlatformCharset> pcharset = 
+              do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
      if (NS_SUCCEEDED(res) && !pcharset) res = NS_ERROR_NULL_POINTER;
      if (NS_SUCCEEDED(res)) {
         mFSCharset = new nsString();
@@ -163,8 +164,8 @@ nsFSStringConversion::PrepareEncoder()
    {
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
-           NS_WITH_SERVICE(nsICharsetConverterManager,
-                ucmgr, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
+                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 
@@ -186,8 +187,8 @@ nsFSStringConversion::PrepareDecoder()
    {
        res = PrepareFSCharset();
        if(NS_SUCCEEDED(res)) {
-           NS_WITH_SERVICE(nsICharsetConverterManager,
-                ucmgr, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
+                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 
@@ -423,7 +424,7 @@ nsresult nsLocalFile::ParseURL(const char* inURL, char **outHost, char **outDire
         }
     }
 
-    NS_WITH_SERVICE(nsIURLParser, parser, kStdURLParserCID, &rv);
+    nsCOMPtr<nsIURLParser> parser(do_GetService(kStdURLParserCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString ePath;

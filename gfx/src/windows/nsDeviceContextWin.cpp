@@ -64,7 +64,7 @@ nsDeviceContextWin :: nsDeviceContextWin()
   mCachedFullRect = PR_FALSE;
 
   nsresult res = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
   if (NS_SUCCEEDED(res)) {
     static PRBool roundingInitialized = PR_FALSE;
     if (!roundingInitialized) {
@@ -94,7 +94,7 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
   NS_IF_RELEASE(mSpec);
 
   nsresult res = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
   if (NS_SUCCEEDED(res)) {
     prefs->UnregisterCallback(nav4rounding, PrefChanged, this);
   }
@@ -901,7 +901,7 @@ int
 nsDeviceContextWin :: PrefChanged(const char* aPref, void* aClosure)
 {
   nsresult res = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
   if (NS_SUCCEEDED(res)) {
     prefs->GetBoolPref(nav4rounding, &gRound);
     nsDeviceContextWin* deviceContext = (nsDeviceContextWin*) aClosure;

@@ -285,10 +285,8 @@ ConvertWStringToStream(const PRUnichar* aStr,
   char* charBuf;
 
   // We want to encode the string as utf-8, so get the right encoder
-  NS_WITH_SERVICE(nsICharsetConverterManager,
-                  charsetConv, 
-                  kCharsetConverterManagerCID,
-                  &rv);
+  nsCOMPtr<nsICharsetConverterManager> charsetConv = 
+           do_GetService(kCharsetConverterManagerCID, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   
   charsetStr.AssignWithConversion("UTF-8");
@@ -381,7 +379,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // First try to find a base URI for the document we're creating
   nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
   if(NS_SUCCEEDED(rv)) {
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
   }
@@ -391,8 +389,8 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {

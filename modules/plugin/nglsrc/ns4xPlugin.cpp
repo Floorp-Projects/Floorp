@@ -1089,7 +1089,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   {
     *(NPBool*)result = PR_TRUE; 
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
     if(NS_SUCCEEDED(res) && (nsnull != prefs))
     {
       PRBool js;

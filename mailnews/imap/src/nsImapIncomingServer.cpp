@@ -130,7 +130,8 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 	// host session list!! 
 
 	nsresult rv;
-	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
+	nsCOMPtr<nsIImapHostSessionList> hostSession = 
+	         do_GetService(kCImapHostSessionList, &rv);
     if (NS_FAILED(rv)) return rv;
 
 	hostSession->AddHostToList(aKey, this);
@@ -182,8 +183,8 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
   nsXPIDLCString hostName;
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (NS_FAILED(rv)) return rv;
@@ -252,8 +253,8 @@ nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
     nsresult rv = GetKey(getter_Copies(serverKey));
     if (NS_SUCCEEDED(rv))
     {
-        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                        kCImapHostSessionList, &rv);
+        nsCOMPtr<nsIImapHostSessionList> hostSession = 
+                 do_GetService(kCImapHostSessionList, &rv);
         if (NS_SUCCEEDED(rv))
             hostSession->SetOnlineDirForHost(serverKey, dirString.get());
     }
@@ -275,8 +276,8 @@ nsImapIncomingServer::SetOverrideNamespaces(PRBool bVal)
     if (serverKey)
     {
         nsresult rv;
-        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                        kCImapHostSessionList, &rv);
+        nsCOMPtr<nsIImapHostSessionList> hostSession = 
+                 do_GetService(kCImapHostSessionList, &rv);
         if (NS_SUCCEEDED(rv))
             hostSession->SetNamespacesOverridableForHost(serverKey, bVal);
     }
@@ -297,8 +298,8 @@ nsImapIncomingServer::SetUsingSubscription(PRBool bVal)
     if (serverKey)
     {
         nsresult rv;
-        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                        kCImapHostSessionList, &rv);
+        nsCOMPtr<nsIImapHostSessionList> hostSession = 
+                 do_GetService(kCImapHostSessionList, &rv);
         if (NS_SUCCEEDED(rv))
             hostSession->SetHostIsUsingSubscription(serverKey, bVal);
     }
@@ -729,8 +730,8 @@ nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue,
                                             (void **) &protocolInstance);
 	if (NS_SUCCEEDED(rv) && protocolInstance)
     {
-        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                        kCImapHostSessionList, &rv);
+        nsCOMPtr<nsIImapHostSessionList> hostSession = 
+                 do_GetService(kCImapHostSessionList, &rv);
         if (NS_SUCCEEDED(rv))
             rv = protocolInstance->Initialize(hostSession, aEventQueue);
     }
@@ -848,7 +849,8 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
     if (!imapService) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIEventQueue> queue;
     // get the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 	if (!pEventQService) return NS_ERROR_FAILURE;
  
@@ -947,7 +949,7 @@ NS_IMETHODIMP nsImapIncomingServer::GetPFC(PRBool createIfMissing, nsIMsgFolder 
 			// get the URI from the incoming server
 	    nsCOMPtr<nsIRDFResource> res;
       nsCOMPtr<nsIFileSpec> pfcFileSpec;
-	    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
 	    rv = rdf->GetResource((const char *)folderUri, getter_AddRefs(res));
 	    NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
@@ -998,7 +1000,7 @@ nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32
   {
 		// get the URI from the incoming server
 	  nsCOMPtr<nsIRDFResource> res;
-	  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
 	  rv = rdf->GetResource((const char *)pfcMailUri, getter_AddRefs(res));
 	  NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
@@ -1368,7 +1370,7 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
             nsAutoString uriAutoString; uriAutoString.AssignWithConversion(uri);
             uriAutoString.AppendWithConversion('/');
             uriAutoString.AppendWithConversion(name);
-            NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+            nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
             if (NS_FAILED(rv)) return rv;
             char* uriString = uriAutoString.ToNewCString();
             nsCOMPtr<nsIRDFResource> res;
@@ -2187,7 +2189,8 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 {
 
 	nsresult rv;
-	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
+	nsCOMPtr<nsIImapHostSessionList> hostSession = 
+	         do_GetService(kCImapHostSessionList, &rv);
     if (NS_FAILED(rv)) 
 		return rv;
 
@@ -2435,7 +2438,8 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 		  nsCOMPtr <nsIImapProtocol> imapProtocol;
 		  nsCOMPtr <nsIEventQueue> aEventQueue;
 		  // Get current thread envent queue
-		  NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+		  nsCOMPtr<nsIEventQueueService> pEventQService = 
+		           do_GetService(kEventQueueServiceCID, &rv); 
 		  if (NS_SUCCEEDED(rv) && pEventQService)
 			  pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
 												getter_AddRefs(aEventQueue));
@@ -2477,7 +2481,8 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 	nsCOMPtr <nsIEventQueue> aEventQueue;
 	nsCAutoString cookie(pCookieData, pCookieSize);
     // Get current thread envent queue
-	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+	nsCOMPtr<nsIEventQueueService> pEventQService = 
+	         do_GetService(kEventQueueServiceCID, &rv); 
   if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                             getter_AddRefs(aEventQueue));
@@ -2822,7 +2827,8 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
 
 	nsCOMPtr<nsIEventQueue> queue;
     // get the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));

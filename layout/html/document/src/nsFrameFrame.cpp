@@ -1190,8 +1190,8 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
     NS_NewURI(getter_AddRefs(uri), absURL, nsnull);
 
     // Check for security
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Get base URL

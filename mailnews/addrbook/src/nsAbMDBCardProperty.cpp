@@ -507,7 +507,8 @@ nsresult nsAbMDBCardProperty::GetCardDatabase(const char *uri)
 {
 	nsresult rv = NS_OK;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if (NS_SUCCEEDED(rv))
 	{
 		nsFileSpec* dbPath;
@@ -519,7 +520,8 @@ nsresult nsAbMDBCardProperty::GetCardDatabase(const char *uri)
 		
 		if (dbPath->Exists())
 		{
-			NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+			nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+			         do_GetService(kAddressBookDBCID, &rv);
 
 			if (NS_SUCCEEDED(rv) && addrDBFactory)
 				rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mCardDatabase), PR_TRUE);

@@ -163,7 +163,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 {
 	nsresult rv;
 
-	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+	nsCOMPtr<nsIPop3Service> pop3Service(do_GetService(kCPop3ServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIMsgFolder> inbox;
@@ -183,7 +183,8 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 	}
 
 	//Biff just needs to give status in one of the windows. so do it in topmost window.
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+	nsCOMPtr<nsIMsgMailSession> mailSession = 
+	         do_GetService(kCMsgMailSessionCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
 	

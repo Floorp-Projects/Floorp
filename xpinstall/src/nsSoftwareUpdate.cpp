@@ -125,7 +125,8 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProperties> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     
     if(!directoryService) return;
     
@@ -144,8 +145,8 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
     /* Add this as a shutdown observer     */
     /***************************************/
-    NS_WITH_SERVICE(nsIObserverService, observerService, 
-                    NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 
     if (NS_SUCCEEDED(rv))
         observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
@@ -196,7 +197,8 @@ nsSoftwareUpdate::Shutdown()
         nsresult rv;
         nsCOMPtr<nsILocalFile> pathToCleanupUtility;
         //Get the program directory
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> directoryService = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
                               NS_GET_IID(nsIFile), 
                               getter_AddRefs(pathToCleanupUtility));

@@ -138,7 +138,8 @@ ConvertStringToUnicode(nsAutoString& aCharset, const char* inString, nsAutoStrin
 {
     nsresult rv;
     // convert result to unicode
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
+    nsCOMPtr<nsICharsetConverterManager> ccm = 
+             do_GetService(kCharsetConverterManagerCID, &rv);
 
     if(NS_SUCCEEDED(rv)) {
         nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached

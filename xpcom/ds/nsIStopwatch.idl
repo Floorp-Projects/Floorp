@@ -125,7 +125,8 @@ interface nsIStopwatch : nsISupports
     if (_stopwatch == nsnull) {                                                  \
         nsresult _rv;                                                            \
         static NS_DEFINE_CID(kStopwatchServiceCID, NS_STOPWATCHSERVICE_CID);     \
-        NS_WITH_SERVICE(nsIStopwatchService, _serv, kStopwatchServiceCID, &_rv); \
+        nsCOMPtr<nsIStopwatchService> _serv =                                    \
+                 do_GetService(kStopwatchServiceCID, &_rv);                      \
         if (NS_SUCCEEDED(_rv)) {                                                 \
             _rv = _serv->CreateStopwatch(#_stopwatch,  _countUnits, _perThread,  \
                                          &_stopwatch);                           \

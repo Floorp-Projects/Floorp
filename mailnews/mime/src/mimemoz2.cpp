@@ -605,7 +605,7 @@ nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
   
-  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
+  nsCOMPtr<nsIIOService> pService(do_GetService(kIOServiceCID, &res));
   if (NS_FAILED(res)) 
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 
@@ -1825,7 +1825,8 @@ MimeGetStringByID(PRInt32 stringID)
 
 		propertyURL = MIME_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		nsCOMPtr<nsIStringBundleService> sBundleService = 
+		         do_GetService(kStringBundleServiceCID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));

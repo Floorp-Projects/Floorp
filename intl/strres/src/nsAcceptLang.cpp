@@ -79,7 +79,8 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 
   nsresult res;
 
-	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
+	nsCOMPtr<nsIStringBundleService> sBundleService = 
+	         do_GetService(kStringBundleServiceCID, &res);
  	if (NS_FAILED(res) || (nsnull == sBundleService)) {
     return NS_ERROR_FAILURE;
   }
@@ -173,7 +174,8 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
   }
   /* lang only 
    */
-  NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
+  nsCOMPtr<nsIStringBundleService> sBundleService = 
+           do_GetService(kStringBundleServiceCID, &res);
   if (NS_FAILED(res) || (nsnull == sBundleService)) {
 #ifdef DEBUG
     printf("\n** nsAcceptLang::GetLocaleFromAcceptLang: failed to get nsIStringBundleService!! **\n");

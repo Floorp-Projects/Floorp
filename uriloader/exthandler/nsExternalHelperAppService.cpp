@@ -868,7 +868,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
   NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsITransport> fileTransport;

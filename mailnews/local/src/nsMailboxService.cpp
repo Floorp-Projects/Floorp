@@ -468,7 +468,8 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 	nsresult rv = NS_OK;
   if (PL_strstr(aSpec, "?uidl=") || PL_strstr(aSpec, "&uidl="))
   {
-    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+    nsCOMPtr<nsIPop3Service> pop3Service = 
+             do_GetService(kCPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIProtocolHandler> handler = do_QueryInterface(pop3Service,
                                                              &rv);

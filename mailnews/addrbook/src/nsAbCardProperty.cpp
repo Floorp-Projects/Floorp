@@ -629,7 +629,7 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
     nsresult rv = NS_OK;
 	// get name depend on "mail.addr_book.lastnamefirst" 
 	// 0= displayname, 1= lastname first, 2=firstname first
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     NS_ENSURE_SUCCESS(rv, rv);
 
 	PRInt32 lastNameFirst = 0;
@@ -777,7 +777,7 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri, nsIAbCard **_retval)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> res;
@@ -798,7 +798,7 @@ NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri, nsIAbCard **_
 NS_IMETHODIMP nsAbCardProperty::DropCardToDatabase(const char *uri, nsIAbCard **_retval)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> res;

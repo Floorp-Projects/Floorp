@@ -50,8 +50,8 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
   nsUnescape(NS_CONST_CAST(char*,username));
   nsUnescape(NS_CONST_CAST(char*,hostname));
   // retrieve the AccountManager
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // find all local mail "no servers" matching the given hostname

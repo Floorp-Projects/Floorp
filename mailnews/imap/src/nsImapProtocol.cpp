@@ -182,7 +182,7 @@ static PRBool gUseEnvelopeCmd = PR_FALSE;
 nsresult nsImapProtocol::GlobalInitialization()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     prefs->GetIntPref("mail.imap.chunk_fast", &gTooFastTime);   // secs we read too little too fast
@@ -599,7 +599,8 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       
       nsXPIDLCString hostName;
             
-      NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+      nsCOMPtr<nsISocketTransportService> socketService = 
+               do_GetService(kSocketTransportServiceCID, &rv);
       if (NS_SUCCEEDED(rv) && aURL)
       {
         aURL->GetPort(&port);
@@ -716,7 +717,8 @@ NS_IMETHODIMP nsImapProtocol::Run()
     }
 
 
-  NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
+  nsCOMPtr<nsIEventQueueService> pEventQService = 
+           do_GetService(kEventQueueServiceCID, &result); 
   
   if (NS_FAILED(result)) return result;
 
@@ -4201,7 +4203,8 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
   PRUnichar *convertedString = NULL;
   nsresult res;
   
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
@@ -4375,7 +4378,7 @@ void nsImapProtocol::Language()
 
     // extract the desired language attribute from prefs
     nsresult rv = NS_OK; 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     nsXPIDLString acceptLanguages;
     if (NS_SUCCEEDED(rv) && prefs) 
         prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(acceptLanguages));
@@ -6579,7 +6582,7 @@ PRBool nsImapProtocol::TryToLogon()
 
       PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
       GetServerStateParser().SetReportingErrors(PR_FALSE);  // turn off errors - we'll put up our own.
-        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
         if (NS_SUCCEEDED(rv) && prefs) 
         prefs->GetBoolPref("mail.auth_login", &prefBool);
 

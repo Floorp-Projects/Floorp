@@ -897,10 +897,8 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aC
 {
   nsresult rv = NS_OK;
 
-  NS_WITH_SERVICE(nsIParserService,
-                  parserService, 
-                  kParserServiceCID,
-                  &rv);
+  nsCOMPtr<nsIParserService> parserService = 
+           do_GetService(kParserServiceCID, &rv);
 
   if (NS_SUCCEEDED(rv)) {
     nsAutoString tmpName;
@@ -4076,8 +4074,8 @@ HTMLContentSink::ProcessBaseHref(const nsAReadableString& aBaseHref)
     }
   }
   else {  // NAV compatibility quirk
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return;
 
     rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, nsIScriptSecurityManager::STANDARD);

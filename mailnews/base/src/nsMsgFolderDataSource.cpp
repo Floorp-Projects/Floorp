@@ -245,7 +245,8 @@ nsresult nsMsgFolderDataSource::Init()
   if (NS_FAILED(rv))
     return rv;
 
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+  nsCOMPtr<nsIMsgMailSession> mailSession = 
+           do_GetService(kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
 
@@ -1742,7 +1743,8 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 
 	}
 	//Call copyservice with dstFolder, srcFolder, messages, isMove, and txnManager
-	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
+	nsCOMPtr<nsIMsgCopyService> copyService = 
+	         do_GetService(kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
 		rv = copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 

@@ -310,7 +310,8 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 nsCOMPtr<nsIDOMWindow> domWindow;
                 nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
 
-                NS_WITH_SERVICE(nsIWalletService, walletService, NS_WALLETSERVICE_CONTRACTID, &rv);
+                nsCOMPtr<nsIWalletService> walletService = 
+                         do_GetService(NS_WALLETSERVICE_CONTRACTID, &rv);
                 ThrowIfError_(rv);
                 rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
                 ThrowIfError_(rv);
@@ -326,7 +327,8 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 nsCOMPtr<nsIDOMWindow> domWindow;
                 nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
 
-                NS_WITH_SERVICE(nsIWalletService, walletService, NS_WALLETSERVICE_CONTRACTID, &rv);
+                nsCOMPtr<nsIWalletService> walletService = 
+                         do_GetService(NS_WALLETSERVICE_CONTRACTID, &rv);
                 ThrowIfError_(rv);
                 rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
                 ThrowIfError_(rv);

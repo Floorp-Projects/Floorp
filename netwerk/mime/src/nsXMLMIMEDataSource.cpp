@@ -290,7 +290,8 @@ nsXMLMIMEDataSource::Serialize() {
   nsresult rv = NS_OK;
   nsCOMPtr<nsITransport> transport;
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv) ;
   if(NS_FAILED(rv)) return rv ;
  
   rv = fts->CreateTransport(mFile, PR_WRONLY|PR_CREATE_FILE, PR_IRWXU, getter_AddRefs(transport)) ;
@@ -688,7 +689,8 @@ nsXMLMIMEDataSource::InitFromFile( nsIFile*  aFile  )
  nsresult rv;
  nsCOMPtr<nsITransport> transport;
 
- NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
+ nsCOMPtr<nsIFileTransportService> fts = 
+          do_GetService(kFileTransportServiceCID, &rv) ;
  if(NS_FAILED(rv)) return rv ;
  // Made second parameter 0 since I really don't know what it is used for
  rv = fts->CreateTransport(aFile, PR_RDONLY, PR_IRWXU, getter_AddRefs(transport)) ;

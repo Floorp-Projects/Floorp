@@ -439,7 +439,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     {
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
-        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIObserverService> observerService = 
+                 do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -456,8 +457,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // grab the event queue so that we can process events one last time before exiting
     nsCOMPtr <nsIEventQueue> currentQ;
     {
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
-                         kEventQueueServiceCID, &rv);
+        nsCOMPtr<nsIEventQueueService> eventQService = 
+                 do_GetService(kEventQueueServiceCID, &rv);
         
         if (eventQService) {
             eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentQ));

@@ -1326,7 +1326,7 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   mMaxNumCharsDetect = maxNumCharsDetect;
 
   // Resolve charset alias
-  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
   if (NS_SUCCEEDED(res)) {
     nsString aAlias(mInputCharset);
     if (aAlias.Length()) {
@@ -1349,7 +1349,7 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     PRUnichar* detector_name = nsnull;
     PL_strcpy(detector_contractid, NS_STRCDETECTOR_CONTRACTID_BASE);
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
     if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(prefs->CopyUnicharPref("mail.charset.detector", &detector_name))) {
         PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get());
@@ -1383,7 +1383,8 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   }
 
   // Set up charset converters.
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if (NS_SUCCEEDED(res)) {
     // create a decoder (conv to unicode), ok if failed if we do auto detection
@@ -1443,7 +1444,8 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
         return -1;
       }
       else {
-        NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+        nsCOMPtr<nsICharsetConverterManager> ccm = 
+                 do_GetService(kCharsetConverterManagerCID, &res); 
         if (NS_SUCCEEDED(res)) {
           NS_IF_RELEASE(mDecoderDetected);
           mDecoderDetected = nsnull;

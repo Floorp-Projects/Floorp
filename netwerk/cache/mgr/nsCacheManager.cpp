@@ -52,7 +52,7 @@ const char* CACHE_DISK_CAPACITY = "browser.cache.disk_cache_size";
 static int PR_CALLBACK diskCacheSizeChanged(const char *pref, void *closure)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 	PRInt32 capacity = DEFAULT_DISK_CACHE_CAPACITY;
 	if ( NS_SUCCEEDED (rv ) )
 	{
@@ -65,7 +65,7 @@ static int PR_CALLBACK memCacheSizeChanged(const char *pref, void *closure)
 {
 	nsresult rv;
 	PRInt32 capacity = DEFAULT_MEMORY_CACHE_CAPACITY ;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 	if ( NS_SUCCEEDED (rv ) )
 	{
 		rv = prefs->GetIntPref(CACHE_MEM_CAPACITY, &capacity   );
@@ -99,14 +99,15 @@ nsCacheManager::~nsCacheManager()
     delete mMemSpaceManager;
     delete mDiskSpaceManager;
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if ( NS_SUCCEEDED (rv ) )
     {
         prefs->UnregisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
         prefs->UnregisterCallback( CACHE_MEM_CAPACITY, memCacheSizeChanged, this); 
     }
     // Unregister this memory pressure observer
-    NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> os = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = os->RemoveObserver(this, NS_MEMORY_PRESSURE_TOPIC);
     }
@@ -117,7 +118,7 @@ nsCacheManager::~nsCacheManager()
 nsresult nsCacheManager::InitPrefs()
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 	if ( NS_FAILED (rv ) )
 		return rv; 
 	rv = prefs->RegisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
@@ -143,7 +144,8 @@ nsCacheManager::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Register as a memory pressure observer
-    NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> os = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
     }

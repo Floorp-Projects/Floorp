@@ -63,8 +63,8 @@ static char *nsMailboxGetURI(const char *nativepath)
     nsresult rv;
     char *uri = nsnull;
 
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return nsnull;
 
     nsCOMPtr<nsISupportsArray> serverArray;

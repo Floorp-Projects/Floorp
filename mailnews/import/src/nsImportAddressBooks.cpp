@@ -449,7 +449,7 @@ void nsImportGenericAddressBooks::GetDefaultFieldMap( void)
 	NS_IF_RELEASE( m_pFieldMap);
 	
 	nsresult	rv;
-	NS_WITH_SERVICE(nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Unable to get nsIImportService.\n");
 		return;
@@ -764,7 +764,8 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	
 	IMPORT_LOG0( "In GetAddressBook\n");
 
-	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+	         do_GetService(kProxyObjectManagerCID, &rv);
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error: Unable to get proxy manager\n");
 		return( nsnull);

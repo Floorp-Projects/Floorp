@@ -465,7 +465,7 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
     nsCOMPtr<nsIRDFResource> res;
     nsCOMPtr<nsIMsgFolder> folder;
     PRUint32 folderflag;
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     
     if (nsCRT::strcmp(prefname, "fcc_folder") == 0)
         folderflag = MSG_FOLDER_FLAG_SENTMAIL;

@@ -217,7 +217,8 @@ nsresult nsWalletlibService::Init()
 {
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> svc = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && svc) {
     // Register as an observer of form submission
     nsAutoString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
@@ -229,7 +230,8 @@ nsresult nsWalletlibService::Init()
     NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
 
   // Get the global document loader service...  
-  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv)
+  nsCOMPtr<nsIDocumentLoader> docLoaderService = 
+           do_GetService(kDocLoaderServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && docLoaderService) {
     nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService, &rv));
     if (NS_SUCCEEDED(rv))

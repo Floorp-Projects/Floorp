@@ -335,7 +335,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     if (offset)
         folderUri.Truncate(offset);
 
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
     if (NS_FAILED(rv)) return rv;
     rv = rdfService->GetResource(folderUri.get(),
                                  getter_AddRefs(resource));
@@ -439,7 +439,7 @@ NS_IMETHODIMP
 nsPop3Service::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_POP3, aPath, PR_FALSE /* set default */);
@@ -453,7 +453,7 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;

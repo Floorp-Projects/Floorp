@@ -84,8 +84,8 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
 */
     // Get the cache manager service
-    NS_WITH_SERVICE(nsICacheService, cacheService,
-                    NS_CACHESERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsICacheService> cacheService = 
+             do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStorageStream> storageStream;

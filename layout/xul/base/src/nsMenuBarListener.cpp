@@ -102,7 +102,7 @@ void nsMenuBarListener::InitAccessKey()
 
   // Get the menu access key value from prefs, overriding the default:
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && prefs)
   {
     rv = prefs->GetIntPref("ui.key.menuAccessKey", &mAccessKey);

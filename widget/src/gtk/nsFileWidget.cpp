@@ -438,7 +438,8 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
       }
 
       // get an unicode converter
-      NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+      nsCOMPtr<nsICharsetConverterManager> ccm = 
+               do_GetService(kCharsetConverterManagerCID, &rv); 
       if (NS_SUCCEEDED(rv)) {
         rv = ccm->GetUnicodeEncoder(&localeCharset, &gUnicodeEncoder);
       }

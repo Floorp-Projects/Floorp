@@ -39,7 +39,8 @@ CreateUtf7ConvertedString(const char * aSourceString,
   PRInt32 dstLength = 0;
   char *convertedString = NULL;
   
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
@@ -119,7 +120,8 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
   char *dstPtr = nsnull;
   PRInt32 dstLength = 0;
   
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
@@ -167,7 +169,8 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
 
   PRUnichar *convertedString = NULL;
   nsresult res;
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {

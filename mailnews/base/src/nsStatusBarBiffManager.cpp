@@ -77,7 +77,8 @@ nsresult nsStatusBarBiffManager::Init()
 
     kBiffStateAtom               = NS_NewAtom("BiffState");
 
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	nsCOMPtr<nsIMsgMailSession> mailSession = 
+	         do_GetService(kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
 
@@ -154,7 +155,8 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
         }
       }
     
-	NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	nsCOMPtr<nsIWindowMediator> windowMediator = 
+	         do_GetService(kWindowMediatorCID, &rv);
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
 	// why use DOM window enumerator instead of XUL window...????

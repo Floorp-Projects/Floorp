@@ -169,8 +169,8 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
     {
         if (nsCRT::strcmp((const char *)scheme, "pop") == 0)
             scheme.Adopt(nsCRT::strdup("pop3"));
-        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                        NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+        nsCOMPtr<nsIMsgAccountManager> accountManager = 
+                 do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         
         nsCOMPtr<nsIMsgIncomingServer> server;
@@ -197,7 +197,8 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgWindow(nsIMsgWindow **aMsgWindow)
 	// it's possible the url really doesn't have msg window
 	if (!m_msgWindow)
 	{
-//		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+//		nsCOMPtr<nsIMsgMailSession> mailSession = 
+//		         do_GetService(kMsgMailSessionCID, &rv); 
 
 //		if(NS_SUCCEEDED(rv))
 //		mailSession->GetTemporaryMsgStatusFeedback(getter_AddRefs(m_statusFeedback));

@@ -1863,7 +1863,8 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 
 		propertyURL = VCARD_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		nsCOMPtr<nsIStringBundleService> sBundleService = 
+		         do_GetService(kStringBundleServiceCID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));

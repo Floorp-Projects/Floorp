@@ -408,7 +408,8 @@ char * nsFileWidget::ConvertToFileSystemCharset(const PRUnichar *inString, PRInt
     nsAutoString fileSystemCharset;
     GetFileSystemCharset(fileSystemCharset);
 
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+    nsCOMPtr<nsICharsetConverterManager> ccm = 
+             do_GetService(kCharsetConverterManagerCID, &rv); 
     if (NS_SUCCEEDED(rv)) {
       rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
     }
@@ -446,7 +447,8 @@ PRUnichar * nsFileWidget::ConvertFromFileSystemCharset(const char *inString)
     nsAutoString fileSystemCharset;
     GetFileSystemCharset(fileSystemCharset);
 
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+    nsCOMPtr<nsICharsetConverterManager> ccm = 
+             do_GetService(kCharsetConverterManagerCID, &rv); 
     if (NS_SUCCEEDED(rv)) {
       rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
     }

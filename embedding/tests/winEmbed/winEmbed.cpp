@@ -855,7 +855,8 @@ LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly, const char *szDefaultProfile)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
         return FALSE;
@@ -917,7 +918,8 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
         {
             HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
 
-            NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+            nsCOMPtr<nsIProfile> profileService = 
+                     do_GetService(NS_PROFILE_CONTRACTID, &rv);
 
             // Get the list of profile names and add them to the list box
             PRUint32 listLen = 0;
@@ -965,7 +967,8 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
             INT currentProfileIndex = SendMessage(hwndProfileList, LB_GETCURSEL, 0, 0);
             if (currentProfileIndex != LB_ERR)
             {
-                NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+                nsCOMPtr<nsIProfile> profileService = 
+                         do_GetService(NS_PROFILE_CONTRACTID, &rv);
                 // Convert TCHAR name to unicode and make it current
                 INT profileNameLen = SendMessage(hwndProfileList, LB_GETTEXTLEN, currentProfileIndex, 0);
                 TCHAR *profileName = new TCHAR[profileNameLen + 1];

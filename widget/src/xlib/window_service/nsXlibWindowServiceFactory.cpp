@@ -132,7 +132,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
     serviceManager(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIComponentManager> compMgr = 
+           do_GetService(kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   rv = compMgr->RegisterComponent(kCXlibWindowServiceCID,
@@ -152,7 +153,8 @@ NSUnregisterSelf(nsISupports *aServMgr, const char *fullpath)
     serviceManager(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
   
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIComponentManager> compMgr = 
+           do_GetService(kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   compMgr->UnregisterComponent(kCXlibWindowServiceCID, fullpath);

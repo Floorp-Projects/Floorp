@@ -112,7 +112,7 @@ MimeInlineText_initialize (MimeObject *obj)
         {
           // New change for falling back to a default view charset
           nsresult        rv;
-          NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+          nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
           if ( NS_SUCCEEDED(rv) && prefs)
           {
             PRUnichar* value;

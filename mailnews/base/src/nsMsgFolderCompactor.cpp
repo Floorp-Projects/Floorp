@@ -209,8 +209,8 @@ nsresult nsFolderCompactState::GetStatusFromMsgName(const char *statusMsgName, P
   nsresult res = NS_OK;
   char    *propertyURL = MESSENGER_STRING_URL;
 
-  NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
-                      kStringBundleServiceCID, &res);
+  nsCOMPtr<nsIStringBundleService> sBundleService = 
+           do_GetService(kStringBundleServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
     res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));

@@ -185,7 +185,7 @@ NS_IMETHODIMP nsAbDirProperty::SetAddressLists(nsISupportsArray * aAddressLists)
 NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> res;

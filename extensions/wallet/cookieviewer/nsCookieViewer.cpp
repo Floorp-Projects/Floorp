@@ -58,7 +58,8 @@ CookieViewerImpl::GetCookieValue(char** aValue)
   }
 
   nsresult res;
-  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  nsCOMPtr<nsICookieService> cookieservice = 
+           do_GetService(kCookieServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString cookieList;
   res = cookieservice->Cookie_GetCookieListForViewer(cookieList);
@@ -77,7 +78,8 @@ CookieViewerImpl::GetPermissionValue(PRInt32 type, char** aValue)
   }
 
   nsresult res;
-  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  nsCOMPtr<nsICookieService> cookieservice = 
+           do_GetService(kCookieServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString PermissionList;
   res = cookieservice->Cookie_GetPermissionListForViewer(PermissionList, type);
@@ -96,7 +98,8 @@ CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindowInternal* win)
     return NS_ERROR_NULL_POINTER;
   }
   nsresult res;
-  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  nsCOMPtr<nsICookieService> cookieservice = 
+           do_GetService(kCookieServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString netList; netList.AssignWithConversion(aValue);
   res = cookieservice->Cookie_CookieViewerReturn(netList);
@@ -111,7 +114,8 @@ CookieViewerImpl::BlockImage(const char* imageURL)
     return NS_ERROR_NULL_POINTER;
   }
   nsresult res;
-  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
+  nsCOMPtr<nsICookieService> cookieservice = 
+           do_GetService(kCookieServiceCID, &res);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -172,7 +176,8 @@ CookieViewerImpl::AddPermission(nsIDOMWindowInternal* aWin, PRBool permission, P
 
   /* got the url at last, now pass it on to the Permission_Add routie */
 
-  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
+  nsCOMPtr<nsICookieService> cookieservice = 
+           do_GetService(kCookieServiceCID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }

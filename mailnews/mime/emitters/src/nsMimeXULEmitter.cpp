@@ -147,7 +147,8 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
   nsCOMPtr<nsIEnumerator> components;
   miscStatusType        *newInfo = nsnull;
 
-  NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &rv); 
+  nsCOMPtr<nsIRegistry> registry = 
+           do_GetService(NS_REGISTRY_CONTRACTID, &rv); 
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -211,7 +212,8 @@ nsMimeXULEmitter::GetStatusObjForContractID(nsCString aContractID)
   nsresult            rv = NS_OK;
   nsISupports         *obj = nsnull;
 
-  NS_WITH_SERVICE(nsIComponentManager, comMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIComponentManager> comMgr = 
+           do_GetService(kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) 
     return nsnull;
   
@@ -272,8 +274,8 @@ nsMimeXULEmitter::DoSpecialSenderProcessing(const char *field, const char *value
 	nsresult rv = NS_OK;
 	if (!nsCRT::strcmp(field, "From"))
 	{
-		NS_WITH_SERVICE(nsIAbAddressCollecter, addressCollecter,
-						kCAddressCollecter, &rv);
+		nsCOMPtr<nsIAbAddressCollecter> addressCollecter = 
+		         do_GetService(kCAddressCollecter, &rv);
 		if (NS_SUCCEEDED(rv) && addressCollecter)
 			addressCollecter->CollectAddress(value);
 	}

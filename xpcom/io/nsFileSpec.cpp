@@ -1193,7 +1193,8 @@ PRUnichar * nsFileSpec::ConvertFromFileSystemCharset(const char *inString)
   nsAutoString fileSystemCharset;
   GetFileSystemCharset(fileSystemCharset);
 
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &rv); 
   if (NS_SUCCEEDED(rv)) {
     rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &aUnicodeDecoder);
   }

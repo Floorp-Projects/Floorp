@@ -216,7 +216,8 @@ nsAddbookProtocolHandler::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -227,7 +228,8 @@ nsAddbookProtocolHandler::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
     else
       (*dbPath) += aAbName;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
@@ -324,7 +326,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
 
   rv = NS_OK;
   // Get the RDF service...
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
 
@@ -359,7 +361,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
     if (!charAb)
       goto EarlyExit;
 
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		  goto EarlyExit;
 

@@ -77,7 +77,8 @@ int main(PRInt32 argc, char *argv[])
     if (NS_FAILED(rv)) return -1;
 
     // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return -1;
 
     rv = eventQService->CreateThreadEventQueue();
@@ -85,7 +86,8 @@ int main(PRInt32 argc, char *argv[])
 
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
-    NS_WITH_SERVICE(nsIStringBundleService, bundleService, NS_STRINGBUNDLE_CONTRACTID, &rv);
+    nsCOMPtr<nsIStringBundleService> bundleService = 
+             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIStringBundle> stringBundle;
@@ -93,7 +95,8 @@ int main(PRInt32 argc, char *argv[])
         rv = bundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
     }
 
-    NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+    nsCOMPtr<nsICookieService> cookieService = 
+             do_GetService(kCookieServiceCID, &rv);
 	if (NS_FAILED(rv)) return -1;
  
     SetACookie(cookieService, "http://www.blah.com", "myCookie=yup; path=/");

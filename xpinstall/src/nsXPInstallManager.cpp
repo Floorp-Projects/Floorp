@@ -211,7 +211,8 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
                                       getter_AddRefs(Idlg) );
             if (NS_SUCCEEDED(rv))
             {
-                NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
+                nsCOMPtr<nsIProxyObjectManager> pmgr = 
+                         do_GetService(kProxyObjectManagerCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
                     rv = pmgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIXPIProgressDlg),
@@ -298,8 +299,8 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalOb
     nsXPIDLString confirmFormat;
     PRUnichar*    confirmText = nsnull;
     nsCOMPtr<nsIStringBundle> xpiBundle;
-    NS_WITH_SERVICE( nsIStringBundleService, bundleSvc,
-                     kStringBundleServiceCID, &rv );
+    nsCOMPtr<nsIStringBundleService> bundleSvc = 
+             do_GetService( kStringBundleServiceCID, &rv );
     if (NS_SUCCEEDED(rv) && bundleSvc)
     {
         rv = bundleSvc->CreateBundle( XPINSTALL_BUNDLE_URL,
@@ -462,7 +463,8 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
         if (mDlg)
             mDlg->StartInstallPhase();
 
-        NS_WITH_SERVICE(nsISoftwareUpdate, softupdate, nsSoftwareUpdate::GetCID(), &rv);
+        nsCOMPtr<nsISoftwareUpdate> softupdate = 
+                 do_GetService(nsSoftwareUpdate::GetCID(), &rv);
         if (NS_SUCCEEDED(rv))
         {
             for (PRUint32 i = 0; i < mTriggers->Size(); ++i)
@@ -623,8 +625,8 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
     PRInt32 pos = url.RFindChar('/');
     url.Mid( leaf, pos+1, url.Length() );
 
-    NS_WITH_SERVICE(nsIProperties, directoryService,
-                    NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProperties> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
 
     if (mChromeType == 0 )
     {
@@ -691,7 +693,8 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
         NS_ASSERTION( !mItem->mOutStream, "Received double OnStartRequest from Necko");
 
         NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-        NS_WITH_SERVICE( nsIFileTransportService, fts, kFileTransportServiceCID, &rv );
+        nsCOMPtr<nsIFileTransportService> fts = 
+                 do_GetService( kFileTransportServiceCID, &rv );
 
         if (NS_SUCCEEDED(rv) && !mItem->mOutStream)
         {

@@ -149,8 +149,8 @@ nsMsgAccount::createIncomingServer()
 #endif
     
   // get the server from the account manager
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
     
   nsCOMPtr<nsIMsgIncomingServer> server;
@@ -244,8 +244,8 @@ nsMsgAccount::createIdentities()
 #endif
   
   // get the server from the account manager
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
     
     

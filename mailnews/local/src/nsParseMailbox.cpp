@@ -86,7 +86,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
 	// we have an error.
 	nsresult rv = NS_OK;
 
-    NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
 
 	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
 
@@ -1736,7 +1736,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	nsresult err = 0;
 	nsIOFileStream *destFile;
 
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &err); 
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &err)); 
   nsCOMPtr<nsIRDFResource> res;
   err = rdf->GetResource(destFolderUri, getter_AddRefs(res));
   if (NS_FAILED(err))

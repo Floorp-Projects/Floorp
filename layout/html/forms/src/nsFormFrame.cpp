@@ -723,7 +723,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
    // Get a service to process the value part of the form data
    // If one doesn't exist, that fine. It's not required.
   nsresult result = NS_OK;
-  NS_WITH_SERVICE(nsIFormProcessor, formProcessor, kFormProcessorCID, &result)
+  nsCOMPtr<nsIFormProcessor> formProcessor = 
+           do_GetService(kFormProcessorCID, &result);
 
   nsString data; // this could be more efficient, by allocating a larger buffer
 
@@ -807,8 +808,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       }
     } else {
       // Get security manager, check to see if access to action URI is allowed.
-      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
+      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
       nsCOMPtr<nsIURI> actionURL;
       if (NS_FAILED(result)) return result;
 
@@ -882,7 +883,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     // Notify observers that the form is being submitted.
     result = NS_OK;
-    NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_CONTRACTID, &result);
+    nsCOMPtr<nsIObserverService> service = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &result);
     if (NS_FAILED(result)) return result;
 
     nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
@@ -1095,7 +1097,7 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
     PRInt32 offset=0;
     PRInt32 spPos=0;
     // get charset from charsets one by one
-    NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
     if(NS_SUCCEEDED(rv) && (nsnull != calias)) {
       do {
         spPos = acceptCharsetValue.FindChar(PRUnichar(' '),PR_TRUE, offset);
@@ -1198,7 +1200,8 @@ NS_IMETHODIMP nsFormFrame::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
      }
 
      // get unicode converter mgr
-     //NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+     //nsCOMPtr<nsICharsetConverterManager> ccm = 
+     //         do_GetService(kCharsetConverterManagerCID, &rv); 
 
      if (NS_SUCCEEDED(rv)) {
        rv = ccm->GetUnicodeEncoder(&localeCharset, encoder);

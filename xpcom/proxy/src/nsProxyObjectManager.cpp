@@ -182,7 +182,8 @@ nsProxyObjectManager::GetProxyForObject(nsIEventQueue *destQueue,
 
     //  check to see if the destination Q is a special case.
     
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) 
         return rv;
     

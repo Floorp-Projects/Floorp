@@ -201,7 +201,7 @@ nsNntpIncomingServer::SetNewsrcRootPath(nsIFileSpec *aNewsrcRootPath)
 {
     nsresult rv;
     
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
         rv = prefs->SetFilePref(PREF_MAIL_NEWSRC_ROOT,aNewsrcRootPath, PR_FALSE /* set default */);
         return rv;
@@ -218,7 +218,7 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
     *aNewsrcRootPath = nsnull;
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;

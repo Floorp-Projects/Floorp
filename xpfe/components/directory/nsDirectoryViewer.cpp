@@ -494,7 +494,7 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 
     // Using XPConnect, wrap the HTTP index object...
     static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(kXPConnectCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;

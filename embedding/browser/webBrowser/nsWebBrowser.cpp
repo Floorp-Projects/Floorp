@@ -291,7 +291,8 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
     if (NS_FAILED(rv)) return rv;
     
     if (aEnable) {
-       NS_WITH_SERVICE(nsIGlobalHistory, history, NS_GLOBALHISTORY_CONTRACTID, &rv);
+       nsCOMPtr<nsIGlobalHistory> history = 
+                do_GetService(NS_GLOBALHISTORY_CONTRACTID, &rv);
        if (NS_FAILED(rv)) return rv;  
        rv = dsHistory->SetGlobalHistory(history);
     }
@@ -1611,7 +1612,8 @@ NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow,
 NS_IMETHODIMP nsWebBrowser::Cancel(void)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
     return printService->SetIsCancelled(PR_TRUE);
   }

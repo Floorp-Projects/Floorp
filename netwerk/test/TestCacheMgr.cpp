@@ -255,7 +255,8 @@ nsresult
 InitQueue() {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get event queue service");
 
     rv = eventQService->CreateThreadEventQueue();

@@ -196,7 +196,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*  aURL,
   nsresult res;
 
   // Get a network service interface which we'll use to create a stream
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &res));
 
   if (NS_SUCCEEDED(res)) {
     nsIInputStream* stream = nsnull;

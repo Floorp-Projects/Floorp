@@ -210,7 +210,8 @@ PRBool OESettings::DoImport( nsIMsgAccount **ppAccount)
 
 	nsresult	rv;
 	
-	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
+	nsCOMPtr<nsIMsgAccountManager> accMgr = 
+	         do_GetService(kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
@@ -538,7 +539,7 @@ void OESettings::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 	nsresult	rv;
 
 
-	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
+	nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv)); 
 	if (NS_SUCCEEDED(rv) && smtpService) {
 		nsCOMPtr<nsISmtpServer>		foundServer;
 	

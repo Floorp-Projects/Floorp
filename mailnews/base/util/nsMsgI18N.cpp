@@ -235,7 +235,7 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
   nsresult res;
 
   // Resolve charset alias
-  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias(aCharset);
     if (aAlias.Length()) {
@@ -243,7 +243,8 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     }
   }
 
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res)) {
     nsIUnicodeEncoder* encoder = nsnull;
@@ -313,7 +314,7 @@ nsresult ConvertToUnicode(const nsString& aCharset,
   nsresult res;
 
   // Resolve charset alias
-  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias(aCharset);
     if (aAlias.Length()) {
@@ -326,7 +327,8 @@ nsresult ConvertToUnicode(const nsString& aCharset,
     res = NS_OK;
   }
 
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeDecoder* decoder = nsnull;
@@ -410,7 +412,7 @@ char * nsMsgI18NGetDefaultMailCharset()
 {
   nsresult res = NS_OK;
   char * retVal = nsnull;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
       PRUnichar *prefValue;
@@ -638,7 +640,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
 
   // Resolve charset alias
   nsAutoString aCharset; aCharset.AssignWithConversion(charset);
-  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias(aCharset);
     if (aAlias.Length()) {
@@ -674,7 +676,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
     if (NS_SUCCEEDED(res)) {
       // Mapping characters in a certain range (required for Japanese only)
       if (!nsCRT::strcasecmp("ISO-2022-JP", charset)) {
-        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
         if (nsnull != prefs && NS_SUCCEEDED(res)) {
           PRBool return_val;
 
@@ -719,7 +721,7 @@ nsMsgI18NGetAcceptLanguage(void)
   static char   lang[32];
   nsresult      res;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
     nsXPIDLString prefValue;

@@ -464,8 +464,8 @@ nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
       NS_FORM_INPUT_FILE == type) {
     if (NS_FORM_INPUT_FILE == type) {
       nsresult result;
-      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
+      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
       if (NS_FAILED(result)) 
         return result;
 

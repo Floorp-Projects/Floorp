@@ -648,7 +648,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
   nsString newURL;
   nsCString navChromeURL;
   nsXPIDLCString tempString;
-  NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
   if (NS_SUCCEEDED(rv))
     prefs->CopyCharPref("browser.chromeURL", getter_Copies(tempString));
   // make a copy for the auto string
@@ -767,8 +767,8 @@ nsGtkMozRemoteHelper::MailTo         (const PRUnichar *aToList)
 #ifdef MOZ_MAIL_NEWS
   nsresult rv;
   // get the messenger compose service
-  NS_WITH_SERVICE(nsIMsgComposeService, composeService,
-		  "@mozilla.org/messengercompose;1", &rv);
+  nsCOMPtr<nsIMsgComposeService> composeService = 
+           do_GetService("@mozilla.org/messengercompose;1", &rv);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   if (aToList)
@@ -833,7 +833,8 @@ NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindow **_retval)
   browserString.AssignWithConversion("navigator:browser");
   
   // get the window mediator service
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  nsCOMPtr<nsIWindowMediator> windowMediator = 
+           do_GetService(kWindowMediatorCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 

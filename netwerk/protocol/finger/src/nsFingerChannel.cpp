@@ -192,7 +192,8 @@ nsFingerChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv))
       return rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+    nsCOMPtr<nsISocketTransportService> socketService = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, BUFFER_SEG_SIZE,
@@ -214,7 +215,8 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv))
       return rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+    nsCOMPtr<nsISocketTransportService> socketService = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, BUFFER_SEG_SIZE,
@@ -364,8 +366,8 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
         mActAsObserver = PR_FALSE;
         nsCOMPtr<nsIStreamListener> converterListener;
 
-        NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService,
-                         kStreamConverterServiceCID, &rv);
+        nsCOMPtr<nsIStreamConverterService> StreamConvService = 
+                 do_GetService(kStreamConverterServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString fromStr; fromStr.AssignWithConversion("text/plain");

@@ -153,7 +153,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
         char *label = theValue2.ToNewCString();
         if (valueArray[numOfAttributes]) {
           const nsString& theURLValue=valueArray[numOfAttributes];
-          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+          nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));
           if (NS_FAILED(rv)) return rv;
 
           nsIURI *uri = nsnull;

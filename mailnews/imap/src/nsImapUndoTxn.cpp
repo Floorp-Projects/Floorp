@@ -148,7 +148,7 @@ NS_IMETHODIMP
 nsImapMoveCopyMsgTxn::UndoTransaction(void)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove || !m_dstFolder)
     {
@@ -203,7 +203,7 @@ NS_IMETHODIMP
 nsImapMoveCopyMsgTxn::RedoTransaction(void)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
     {
@@ -378,8 +378,8 @@ PRBool nsImapMoveCopyMsgTxn::DeleteIsMoveToTrash(nsIMsgFolder *folder)
     rv = server->GetKey(getter_Copies(serverKey));
     if (NS_FAILED(rv) || !serverKey) return PR_FALSE;
     
-    NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                    kCImapHostSessionList, &rv);
+    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+             do_GetService(kCImapHostSessionList, &rv);
     if (NS_FAILED(rv) || !hostSession) return PR_FALSE;
     rv = hostSession->GetDeleteIsMoveToTrashForHost((const char*) serverKey,
                                                     retVal);

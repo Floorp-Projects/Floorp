@@ -37,7 +37,7 @@ NS_IMETHODIMP
 mzAboutMozilla::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv))
         return rv;
     rv = ioService->NewChannel(kCreditsPage, nsnull, result);

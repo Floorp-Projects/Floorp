@@ -291,7 +291,8 @@ nsProfile::nsProfile()
          sApp_MessengerFolderCache50   = NS_NewAtom(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
          
          nsresult rv;
-         NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+         nsCOMPtr<nsIDirectoryService> directoryService = 
+                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
          if (NS_SUCCEEDED(rv))
             directoryService->RegisterProvider(this);
     }
@@ -468,7 +469,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     PRInt32 numProfiles=0;
     nsXPIDLString currentProfileStr;
   
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     GetProfileCount(&numProfiles);
@@ -561,7 +562,8 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         if (NS_FAILED(rv)) return rv;
     }
 
-    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsICategoryManager> catman = 
+             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
 
     if(NS_SUCCEEDED(rv) && catman) 
     {
@@ -828,7 +830,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
             else if (num4xProfiles == 1 && numProfiles == 0) {
                 PRBool confirmAutomigration = PR_FALSE;
-                NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv)
+                nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
                 if (NS_SUCCEEDED(rv) && prefs) {
                     rv = prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, 
                                             &confirmAutomigration);
@@ -1001,7 +1003,8 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     else
         isSwitch = PR_FALSE;
     
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);
@@ -1025,7 +1028,8 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     }
 
     // Flush the stringbundle cache
-    NS_WITH_SERVICE(nsIStringBundleService, bundleService, NS_STRINGBUNDLE_CONTRACTID, &rv);
+    nsCOMPtr<nsIStringBundleService> bundleService = 
+             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = bundleService->FlushBundles();
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to flush bundle cache");
@@ -1080,7 +1084,8 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
 {
     nsresult rv;
     
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);
@@ -1732,7 +1737,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
 nsresult nsProfile::LoadNewProfilePrefs()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     prefs->ResetUserPrefs();
@@ -1844,14 +1849,16 @@ nsProfile::DefineLocaleDefaultsDir()
 {
     nsresult rv;
     
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProperties> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     NS_ENSURE_TRUE(directoryService, NS_ERROR_FAILURE);    
 
     nsCOMPtr<nsIFile> localeDefaults;
     rv = directoryService->Get(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(localeDefaults));
     if (NS_SUCCEEDED(rv))
     {
-        NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, kChromeRegistryCID, &rv);
+        nsCOMPtr<nsIChromeRegistry> chromeRegistry = 
+                 do_GetService(kChromeRegistryCID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLString localeName;
@@ -1869,7 +1876,8 @@ nsresult nsProfile::UndefineFileLocations()
 {
     nsresult rv;
     
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProperties> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     NS_ENSURE_TRUE(directoryService, NS_ERROR_FAILURE);
 
     (void) directoryService->Undefine(NS_APP_PREFS_50_DIR);

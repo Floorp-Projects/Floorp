@@ -1325,7 +1325,8 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    nsCOMPtr<nsIWalletService> walletservice = 
+             do_GetService(kWalletServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetGroupUsername(nsnull);
@@ -1342,7 +1343,8 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    nsCOMPtr<nsIWalletService> walletservice = 
+             do_GetService(kWalletServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetGroupPassword(nsnull);

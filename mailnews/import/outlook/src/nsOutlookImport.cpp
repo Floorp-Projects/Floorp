@@ -246,7 +246,7 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 		nsIImportGeneric *pGeneric = nsnull;
 		rv = ImportOutlookMailImpl::Create( &pMail);
 		if (NS_SUCCEEDED( rv)) {
-			NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericMail( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -269,7 +269,7 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportOutlookAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {

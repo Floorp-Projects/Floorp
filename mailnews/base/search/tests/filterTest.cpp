@@ -276,8 +276,9 @@ int main()
 {
     nsresult rv = NS_OK;
 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+	nsCOMPtr<nsIMsgFilterService> filterService = 
+	         do_GetService(kMsgFilterServiceCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 

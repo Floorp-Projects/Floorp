@@ -159,8 +159,8 @@ nsSOAPUtils::GetSafeContext()
 {
   // Get the "safe" JSContext: our JSContext of last resort
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
-                  &rv);
+  nsCOMPtr<nsIJSContextStack> stack = 
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv))
     return nsnull;
   nsCOMPtr<nsIThreadJSContextStack> tcs = do_QueryInterface(stack);
@@ -176,8 +176,8 @@ nsSOAPUtils::GetCurrentContext()
 {
   // Get JSContext from stack.
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
-                  &rv);
+  nsCOMPtr<nsIJSContextStack> stack = 
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv))
     return nsnull;
   JSContext *cx;

@@ -312,7 +312,8 @@ nsXPConnect::CreateRuntime()
 {
     NS_ASSERTION(!mRuntime,"CreateRuntime called but mRuntime already init'd");
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, XPC_RUNTIME_CONTRACTID, &rv);
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+             do_GetService(XPC_RUNTIME_CONTRACTID, &rv);
     if(NS_SUCCEEDED(rv) && rtsvc)
     {
         mRuntime = XPCJSRuntime::newXPCJSRuntime(this, rtsvc);
@@ -1058,7 +1059,8 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs,
 #ifdef DEBUG
     JSContext* cx;
     nsresult rv;
-    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, XPC_CONTEXT_STACK_CONTRACTID, &rv);
+    nsCOMPtr<nsIThreadJSContextStack> stack = 
+             do_GetService(XPC_CONTEXT_STACK_CONTRACTID, &rv);
     if(NS_FAILED(rv) || !stack)
         printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
@@ -1078,7 +1080,8 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
 #ifdef DEBUG
     JSContext* cx;
     nsresult rv;
-    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, XPC_CONTEXT_STACK_CONTRACTID, &rv);
+    nsCOMPtr<nsIThreadJSContextStack> stack = 
+             do_GetService(XPC_CONTEXT_STACK_CONTRACTID, &rv);
     if(NS_FAILED(rv) || !stack)
         printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
@@ -1097,7 +1100,7 @@ JS_BEGIN_EXTERN_C
 void DumpJSStack()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv) && xpc)
         xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
     else
@@ -1107,7 +1110,7 @@ void DumpJSStack()
 void DumpJSEval(PRUint32 frameno, const char* text)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv) && xpc)
         xpc->DebugDumpEvalInJSStackFrame(frameno, text);
     else

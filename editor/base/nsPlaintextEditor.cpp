@@ -1588,7 +1588,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
 {
   // Get Clipboard Service
   nsresult rv;
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   // Create generic Transferable for getting the data
@@ -1650,7 +1650,7 @@ static nsICiter* MakeACiter()
   // Make a citer of an appropriate type
   nsICiter* citer = 0;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (NS_FAILED(rv)) return 0;
 
   char *citationType = 0;

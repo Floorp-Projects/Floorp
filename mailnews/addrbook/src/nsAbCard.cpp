@@ -165,7 +165,8 @@ nsresult nsAbCard::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PR
 	{
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		nsCOMPtr<nsIAddrBookSession> abSession = 
+		         do_GetService(kAddrBookSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->NotifyItemPropertyChanged(supports, property, oldValue, newValue);
 	}
@@ -179,7 +180,7 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString uri;

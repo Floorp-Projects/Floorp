@@ -35,7 +35,7 @@ nsMsgCompPrefs::nsMsgCompPrefs()
 
 	m_wrapColumn = 72;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (NS_SUCCEEDED(res) && prefs) 
     {
       res = prefs->GetIntPref("mail.wraplength", &m_wrapColumn);

@@ -105,7 +105,8 @@ static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
         nsresult rv;
-        NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
+        nsCOMPtr<nsIPref> prefs = 
+                 do_GetService("@mozilla.org/preferences;1", &rv);
         PRUnichar* detector_name = nsnull;
         if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(
              rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",
@@ -270,8 +271,8 @@ nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 {
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
 
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -311,7 +312,8 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   if (NS_FAILED(rv)) return rv;
 
   // Get security manager, check to see if we're allowed to load this URI
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "XMLDocument", "load")))
     return NS_ERROR_FAILURE;

@@ -75,7 +75,8 @@ nsSaveAsCharset::Init(const char *charset, PRUint32 attr, PRUint32 entityVersion
   mEntityVersion = entityVersion;
 
   // set up unicode encoder
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = ccm->GetUnicodeEncoder(&aCharset, &mEncoder);

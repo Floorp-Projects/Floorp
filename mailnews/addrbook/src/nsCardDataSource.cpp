@@ -128,7 +128,8 @@ nsAbCardDataSource::~nsAbCardDataSource (void)
 	}
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	abSession->RemoveAddressBookListener(this);
 
@@ -205,7 +206,8 @@ nsresult nsAbCardDataSource::Init()
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+           do_GetService(kAddrBookSessionCID, &rv); 
   if (NS_SUCCEEDED(rv))
     abSession->AddAddressBookListener(this);
 

@@ -109,7 +109,8 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     RandomStream *randomStream;
     char buf[500];
     
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv) ;
     if (NS_FAILED(rv)) return rv ;
   
     nsCOMPtr<nsILocalFile> fs;

@@ -224,7 +224,7 @@ PageGrabber::Grab(const nsString& aURL)
   nsIURI* url = NULL;
   nsresult rv;
 
-  rv = NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+  rv = nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   nsIChannel *channel = nsnull;

@@ -529,7 +529,8 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 			PpPrintContext_t *pc = moz_construct_print_context( pPageInfo );
 
 			nsresult rv;
-			NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+			nsCOMPtr<nsIPrintOptions> printService = 
+			         do_GetService(kPrintOptionsCID, &rv);
 			printService->SetEndPageRange( (PRInt32) pc ); /* use SetEndPageRange/GetEndPageRange to convey the print context */
 			print->Print( window, printService, moz->MyBrowser->WebBrowserContainer );
 			}

@@ -1082,8 +1082,8 @@ nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
 
     // Otherwise, generate a proxied event sink
     nsresult rv;
-    NS_WITH_SERVICE(nsIProxyObjectManager,
-                    proxyMgr, kProxyObjectManagerCID, &rv);
+    nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+             do_GetService(kProxyObjectManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
         
     return proxyMgr->GetProxyForObject(NS_CURRENT_EVENTQ, // calling thread

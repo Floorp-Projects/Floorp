@@ -3089,7 +3089,8 @@ nsresult nsLocalFile::SetOSTypeAndCreatorFromExtension(const char* extension)
             ++extPtr;
     }
     
-    NS_WITH_SERVICE(nsIInternetConfigService, icService, NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIInternetConfigService> icService = 
+             do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIMIMEInfo> mimeInfo;

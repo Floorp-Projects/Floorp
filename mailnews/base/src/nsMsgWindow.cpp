@@ -76,12 +76,14 @@ nsresult nsMsgWindow::Init()
 {
   // register ourselves as a content listener with the uri dispatcher service
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
+  nsCOMPtr<nsIURILoader> dispatcher = 
+           do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->RegisterContentListener(this);
 
   // create Undo/Redo Transaction Manager
-  NS_WITH_SERVICE (nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIComponentManager> compMgr = 
+           do_GetService(kComponentManagerCID, &rv);
 
   if (NS_SUCCEEDED(rv))
   {
@@ -136,7 +138,8 @@ NS_IMETHODIMP nsMsgWindow::SelectMessage(const char *messageUri)
 NS_IMETHODIMP nsMsgWindow::CloseWindow()
 {
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
+  nsCOMPtr<nsIURILoader> dispatcher = 
+           do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->UnRegisterContentListener(this);
 

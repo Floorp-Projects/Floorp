@@ -472,7 +472,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
     if (NS_SUCCEEDED(rv))
     {
       // Before we really get started...lets let sync know who is doing this...
-	    NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
+	    nsCOMPtr<nsIAbSync> sync(do_GetService(kAbSync, &rv)); 
 	    if (NS_SUCCEEDED(rv) || sync) 
         sync->SetAbSyncUser(mUser);
 
@@ -673,7 +673,7 @@ nsEngineNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
   
-  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
+  nsCOMPtr<nsIIOService> pService(do_GetService(kIOServiceCID, &res));
   if (NS_FAILED(res)) 
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 

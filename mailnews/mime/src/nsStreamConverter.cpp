@@ -686,7 +686,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   PRBool enable_emoticons = PR_TRUE;
   PRBool enable_structs = PR_TRUE;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);

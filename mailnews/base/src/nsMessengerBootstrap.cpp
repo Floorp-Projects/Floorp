@@ -62,7 +62,7 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
 { 
     if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+	nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
 	if (NS_SUCCEEDED(rv))
 	{
 		PRInt32 layout;

@@ -55,7 +55,8 @@ SignonViewerImpl::GetNopreviewValue(PRUnichar** aValue)
     return NS_ERROR_NULL_POINTER;
   }
   nsresult res;
-  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  nsCOMPtr<nsIWalletService> walletservice = 
+           do_GetService(kWalletServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString nopreviewList;
   res = walletservice->WALLET_GetNopreviewListForViewer(nopreviewList);
@@ -73,7 +74,8 @@ SignonViewerImpl::GetNocaptureValue(PRUnichar** aValue)
     return NS_ERROR_NULL_POINTER;
   }
   nsresult res;
-  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  nsCOMPtr<nsIWalletService> walletservice = 
+           do_GetService(kWalletServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString nocaptureList;
   res = walletservice->WALLET_GetNocaptureListForViewer(nocaptureList);
@@ -92,7 +94,8 @@ SignonViewerImpl::SetValue(const PRUnichar* aValue, nsIDOMWindowInternal* win)
     return NS_ERROR_NULL_POINTER;
   }
   nsresult res;
-  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  nsCOMPtr<nsIWalletService> walletservice = 
+           do_GetService(kWalletServiceCID, &res);
   if (NS_FAILED(res)) return res;
   nsAutoString walletList( aValue );
   res = walletservice->SI_SignonViewerReturn(walletList);

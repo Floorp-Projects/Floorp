@@ -139,7 +139,8 @@ nsPref::nsPref()
   PR_AtomicIncrement(&g_InstanceCount);
   NS_INIT_REFCNT();
 
-  NS_WITH_SERVICE(nsIPrefService, pService, NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefService> pService = 
+           do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   mPrefService = pService;
 
   mPrefService->GetDefaultBranch("", &pBranch);

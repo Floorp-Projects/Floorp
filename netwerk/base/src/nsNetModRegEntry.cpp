@@ -145,7 +145,8 @@ nsNetModRegEntry::nsNetModRegEntry(const char *aTopic,
     mSyncProxy = nsnull;
     mRealNotifier = aNotify;
 
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, result); 
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, result); 
     
     if (NS_FAILED(*result)) return;
     
@@ -162,7 +163,8 @@ nsNetModRegEntry::BuildProxy(PRBool sync)
 
     nsresult result;
     
-    NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &result);
+    nsCOMPtr<nsIProxyObjectManager> proxyManager = 
+             do_GetService(kProxyObjectManagerCID, &result);
     
     if (NS_FAILED(result)) 
         return result;

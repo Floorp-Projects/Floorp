@@ -242,7 +242,7 @@ extern "C" NS_EXPORT int DebugRobot(
     // Create url
     nsIURI* url;
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsIURI *uri = nsnull;

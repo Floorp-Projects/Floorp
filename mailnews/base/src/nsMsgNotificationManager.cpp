@@ -130,14 +130,15 @@ nsresult nsMsgNotificationManager::Init()
 	if(NS_FAILED(rv))
 		return rv;
 
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	nsCOMPtr<nsIMsgMailSession> mailSession = 
+	         do_GetService(kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		rv = mailSession->AddFolderListener(this);
 
 	if(NS_FAILED(rv))
 		return rv;
 
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -260,7 +261,7 @@ nsMsgNotificationManager::OnItemEvent(nsIFolder *folder, nsIAtom *aEvent)
 nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -352,7 +353,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 nsresult nsMsgNotificationManager::RemoveNewMailNotification(nsIMsgFolder *folder)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
 	if(NS_FAILED(rv))
 		return rv;
 

@@ -614,7 +614,8 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
     (void)mLoader->SetCharset(strHTTPHeaderData, strStyleDataUndecoded); // bug 66190: ignore errors
     {
       // now get the decoder
-      NS_WITH_SERVICE(nsICharsetConverterManager,ccm,kCharsetConverterManagerCID,&result);
+      nsCOMPtr<nsICharsetConverterManager> ccm = 
+               do_GetService(kCharsetConverterManagerCID, &result);
       if (NS_SUCCEEDED(result) && ccm) {
         nsString charset;
         mLoader->GetCharset(charset);
@@ -1318,7 +1319,8 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   }
   if (!isForViewSource) {
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsIURI* docURI;
     rv = mDocument->GetBaseURL(docURI);
@@ -1587,7 +1589,7 @@ NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsString &aCharsetSrc)
   if (aCharsetSrc.Length() == 0) {
     mCharset.AssignWithConversion("ISO-8859-1");
   } else {
-    NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
     NS_ASSERTION(calias, "cannot find charset alias");
     nsAutoString charsetName(aCharsetSrc);
     if( NS_SUCCEEDED(rv) && (nsnull != calias))

@@ -238,7 +238,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
     nsCOMPtr<nsIEventQueueService> eventQService;
   
     nsCOMPtr<nsIXPCNativeCallContext> cc;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv)) {
         rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
     }
@@ -249,7 +249,8 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     }
     else {
-        NS_WITH_SERVICE(nsIAppShellService, appshellSvc, kAppShellServiceCID, &rv);
+        nsCOMPtr<nsIAppShellService> appshellSvc = 
+                 do_GetService(kAppShellServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIDOMWindowInternal> junk;
         rv = appshellSvc->GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);

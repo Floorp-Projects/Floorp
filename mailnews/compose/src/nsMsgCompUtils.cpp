@@ -117,7 +117,7 @@ nsMsgMIMESetConformToStandard (PRBool conform_p)
 		mime_headers_use_quoted_printable_p = PR_TRUE;
   else {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) && prefs) {
       rv = prefs->GetBoolPref("mail.strictly_mime_headers", &mime_headers_use_quoted_printable_p);
     }
@@ -211,7 +211,7 @@ mime_generate_headers (nsMsgCompFields *fields,
   nsresult rv;
   *status = 0;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   if (NS_FAILED(rv)) {
 	*status = rv;
     return nsnull;
@@ -433,7 +433,8 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 
-	NS_WITH_SERVICE(nsIHttpProtocolHandler, pHTTPHandler, kHTTPHandlerCID, &rv); 
+	nsCOMPtr<nsIHttpProtocolHandler> pHTTPHandler = 
+	         do_GetService(kHTTPHandlerCID, &rv); 
 	if (NS_SUCCEEDED(rv) && pHTTPHandler)
 	{
         nsXPIDLCString userAgentString;
@@ -762,7 +763,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
                   PRBool      aBodyDocument)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
 
 	PRInt32 buffer_size = 2048 + (base_url ? 2*PL_strlen(base_url) : 0);
 	char *buffer = (char *) PR_Malloc (buffer_size);
@@ -1487,7 +1488,7 @@ void
 msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   const char *s, *s2;
   char *s3;
   nsXPIDLCString url;
@@ -1634,7 +1635,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   nsresult rv = NS_OK;
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
+  nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv)); 
   if (NS_SUCCEEDED(rv) && pNetService)
   {
   	if (PL_strstr(aSpec, "://") == nsnull)
@@ -1866,7 +1867,7 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
 
   if (aMode == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !prefs) 
       return nsnull;
     rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
@@ -2065,7 +2066,7 @@ PRBool UseFormatFlowed(const char *charset)
   PRBool disableForCertainCharsets = PR_TRUE;
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_FAILED(rv))
     return PR_FALSE;
 

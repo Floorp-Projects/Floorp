@@ -43,7 +43,8 @@ IMAPGetStringByID(PRInt32 stringID)
 
 	propertyURL = IMAP_MSGS_URL;
 
-	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+	nsCOMPtr<nsIStringBundleService> sBundleService = 
+	         do_GetService(kStringBundleServiceCID, &res); 
 	if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 	{
 		nsIStringBundle* sBundle = nsnull;

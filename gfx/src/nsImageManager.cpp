@@ -77,7 +77,7 @@ ImageManagerImpl::ImageManagerImpl()
   PRInt32 cacheSize  = (1024L * 2048L);
   
   nsresult res = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
   if (prefs)
   {
       PRInt32 tempSize;

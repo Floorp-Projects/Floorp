@@ -86,7 +86,8 @@ nsresult nsAbRDFResource::GetAbDatabase()
 	{
 		nsFileSpec* dbPath = nsnull;
 
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		nsCOMPtr<nsIAddrBookSession> abSession = 
+		         do_GetService(kAddrBookSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
@@ -96,7 +97,8 @@ nsresult nsAbRDFResource::GetAbDatabase()
 			file.Truncate(pos);
 		(*dbPath) += file;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);

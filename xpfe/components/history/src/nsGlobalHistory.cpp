@@ -1095,7 +1095,7 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 
   if (!aURL) return NS_ERROR_FAILURE;
   
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   rv = prefs->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
@@ -1110,7 +1110,7 @@ nsGlobalHistory::GetLastPageVisited(char **_retval)
 
   if (!_retval) return NS_ERROR_NULL_POINTER;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString lastPageVisited;
@@ -2054,7 +2054,7 @@ nsGlobalHistory::Init()
   // we'd like to get this pref when we need it, but at that point,
   // we can't get the pref service. This means if the user changes
   // this pref, we won't notice until the next time we run.
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_SUCCEEDED(rv))
     rv = prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
 
@@ -2094,7 +2094,8 @@ nsGlobalHistory::Init()
   }
 
   // register to observe profile changes
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ASSERTION(observerService, "failed to get observer service");
   if (observerService) {
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
@@ -3597,7 +3598,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
       
   nsresult rv = NS_OK;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   PRBool enabled = PR_FALSE;

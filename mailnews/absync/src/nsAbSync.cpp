@@ -607,7 +607,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindowInternal *aDOMWindow, PRInt32 
   // this request as well as the local address book we will be 
   // syncing with...
   //
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
   prefs->CopyCharPref("mail.absync.address_book",     &mAbSyncAddressBook);
@@ -712,7 +712,8 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -723,7 +724,8 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
     else
       (*dbPath) += aAbName;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
@@ -1542,7 +1544,7 @@ nsAbSync::AnalyzeTheLocalAddressBook()
     return rv;
 
   // Get the RDF service...
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
 
@@ -1801,7 +1803,7 @@ nsAbSync::DeleteCardByServerID(PRInt32 aServerID)
     return rv;
 
   // Get the RDF service...
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
 
@@ -2254,7 +2256,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 ExitEarly:
   if (mLastChangeNum > 1)
   {
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) && prefs) 
     {
       prefs->SetIntPref("mail.absync.last_change", mLastChangeNum);
@@ -2562,7 +2564,7 @@ nsAbSync::AddNewUsers()
     return rv;
 
   // Get the RDF service...
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
 
@@ -2995,7 +2997,8 @@ nsAbSync::GetString(const PRUnichar *aStringName)
 	{
 		char    *propertyURL = AB_STRING_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		nsCOMPtr<nsIStringBundleService> sBundleService = 
+		         do_GetService(kStringBundleServiceCID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));

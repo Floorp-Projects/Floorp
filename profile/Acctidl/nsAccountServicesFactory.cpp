@@ -177,7 +177,8 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+    nsCOMPtr<nsIComponentManager> compMgr = 
+             do_GetService(kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->RegisterComponent(kAccountServicesCID,
@@ -199,7 +200,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+    nsCOMPtr<nsIComponentManager> compMgr = 
+             do_GetService(kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kAccountServicesCID, aPath);

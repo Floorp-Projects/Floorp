@@ -2164,7 +2164,8 @@ DocumentViewerImpl::PrintPage(nsIPresContext*  aPresContext,
   PRINT_DEBUG_MSG3("------ In DV::PrintPage PO: %p (%s)\n", aPO, gFrameTypesStr[aPO->mFrameType]);
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
     PRBool isCancelled;
     printService->GetIsCancelled(&isCancelled);
@@ -2445,7 +2446,8 @@ void DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
     // The PageFrame or Seq frame has the margins set
     // these need to be removed
     nsresult rv;
-    NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+    nsCOMPtr<nsIPrintOptions> printService = 
+             do_GetService(kPrintOptionsCID, &rv);
     if (NS_SUCCEEDED(rv) && printService) {
       nsMargin margin(0,0,0,0);
       printService->GetMarginInTwips(margin);
@@ -2791,7 +2793,8 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   // put it keeps it from page breaking in the middle of your print of the selection
   // (see also nsSimplePageSequence.cpp)
   PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     printService->GetPrintRange(&printRangeType);
   }
@@ -3011,7 +3014,8 @@ DocumentViewerImpl::EnablePOsForPrinting()
   mPrt->mSelectedPO = nsnull;
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3325,7 +3329,8 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
 
     PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages;
     nsresult rv;
-    NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+    nsCOMPtr<nsIPrintOptions> printService = 
+             do_GetService(kPrintOptionsCID, &rv);
     if (NS_SUCCEEDED(rv) && printService) {
       printService->GetPrintRange(&printRangeType);
     }
@@ -3692,7 +3697,8 @@ void DocumentViewerImpl::Notify(nsIImageGroup *aImageGroup,
     nsCOMPtr<nsIEventQueue> eventQ;
 
     // Get the event queue of the current thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueService, &rv);
     if (NS_FAILED(rv)) return;
 
     rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, 
@@ -3791,7 +3797,8 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
       }
     }
 
-    NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "@mozilla.org/chrome/chrome-registry;1", &rv);
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = 
+             do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
     if (NS_SUCCEEDED(rv) && chromeRegistry) {
       nsCOMPtr<nsISupportsArray> sheets;
 
@@ -4394,7 +4401,8 @@ nsresult rv;
 
   // Setup print options for UI
   rv = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
     if (mPrt->mIsParentAFrameSet) {
       if (mPrt->mCurrentFocusWin) {

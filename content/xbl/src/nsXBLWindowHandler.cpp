@@ -101,7 +101,8 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
     return;
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+  nsCOMPtr<nsIXBLService> xblService = 
+           do_GetService("@mozilla.org/xbl;1", &rv);
   if (NS_FAILED(rv) || !xblService)
     return;
 

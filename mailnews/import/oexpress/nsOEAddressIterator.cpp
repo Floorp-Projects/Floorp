@@ -262,7 +262,7 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
 	nsresult	rv;
 	// Create a field map
 
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_SUCCEEDED( rv)) {
 		nsIImportFieldMap *		pFieldMap = nsnull;
 		rv = impSvc->CreateNewFieldMap( &pFieldMap);

@@ -415,7 +415,7 @@ void CMfcEmbedApp::OnEditPreferences()
 
         // Save these changes to disk now
         nsresult rv;
-        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv)) 
         {
             prefs->SetIntPref("browser.startup.page", m_iStartupPage);
@@ -435,7 +435,8 @@ BOOL CMfcEmbedApp::InitializeProfiles()
         return FALSE;
 
 	  nsresult rv;
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
@@ -466,7 +467,7 @@ BOOL CMfcEmbedApp::CreateHiddenWindow()
 nsresult CMfcEmbedApp::InitializePrefs()
 {
    nsresult rv;
-   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
    if (NS_SUCCEEDED(rv)) {	  
 
 		// We are using the default prefs from mozilla. If you were

@@ -263,7 +263,8 @@ FileSystemDataSource::FileSystemDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
 		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder", &kNC_IEFavoriteFolder);
 /*
-		NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
+		nsCOMPtr<nsIPlatformCharset> platformCharset = 
+		         do_GetService(kPlatformCharsetCID, &rv);
 		if (NS_SUCCEEDED(rv) && (platformCharset))
 		{
 			nsAutoString	defaultCharset;
@@ -272,8 +273,8 @@ FileSystemDataSource::FileSystemDataSource(void)
 				{
 					// found the default platform charset
 					// now try and get a decoder from it to Unicode
-					NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv,
-						kCharsetConverterManagerCID, &rv);
+					nsCOMPtr<nsICharsetConverterManager> charsetConv = 
+					         do_GetService(kCharsetConverterManagerCID, &rv);
 					if (NS_SUCCEEDED(rv) && (charsetConv))
 					{
 						rv = charsetConv->GetUnicodeDecoder(&defaultCharset,

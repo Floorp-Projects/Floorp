@@ -141,7 +141,8 @@ nsMsgAccountManager::~nsMsgAccountManager()
     Shutdown();
 	  //Don't remove from Observer service in Shutdown because Shutdown also gets called
 	  //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-	  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+	  nsCOMPtr<nsIObserverService> observerService = 
+	           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
 	  {    
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -164,7 +165,8 @@ nsresult nsMsgAccountManager::Init()
 
   rv = NS_NewISupportsArray(getter_AddRefs(mFolderListeners));
 
-  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {    
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -930,11 +932,11 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                         nsCRT::strlen((const char*) passwd)))))
          {
            nsCOMPtr<nsIUrlListener> urlListener;
-           NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                           kMsgAccountManagerCID, &rv);
+           nsCOMPtr<nsIMsgAccountManager> accountManager = 
+                    do_GetService(kMsgAccountManagerCID, &rv);
            if (NS_FAILED(rv)) return rv;
-           NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                           kEventQueueServiceCID, &rv);
+           nsCOMPtr<nsIEventQueueService> pEventQService = 
+                    do_GetService(kEventQueueServiceCID, &rv);
            if (NS_FAILED(rv)) return rv;
            nsCOMPtr<nsIEventQueue> eventQueue;
            pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
@@ -1198,7 +1200,8 @@ nsMsgAccountManager::LoadAccounts()
   kDefaultServerAtom = NS_NewAtom("DefaultServer");
   
   //Ensure biff service has started
-  NS_WITH_SERVICE(nsIMsgBiffManager, biffService, kMsgBiffManagerCID, &rv);
+  nsCOMPtr<nsIMsgBiffManager> biffService = 
+           do_GetService(kMsgBiffManagerCID, &rv);
   
   // mail.accountmanager.accounts is the main entry point for all accounts
 
@@ -1286,7 +1289,7 @@ NS_IMETHODIMP
 nsMsgAccountManager::SetSpecialFoldersForIdentities()
 {
   nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   
 	if(NS_FAILED(rv)) return rv;
 

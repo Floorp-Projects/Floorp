@@ -903,7 +903,8 @@ HRESULT CMozillaBrowser::Initialize()
     }
 
     // Set the profile which the control will use
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
         return E_FAIL;
@@ -1329,7 +1330,8 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
     nsresult rv;
 
     PRBool oldPrintSilent = PR_FALSE;
-    NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+    nsCOMPtr<nsIPrintOptions> printService = 
+             do_GetService(kPrintOptionsCID, &rv);
     if (printService)
     {
         printService->GetPrintSilent(&oldPrintSilent);

@@ -25,7 +25,8 @@ static void ValidateProfileName(const CString& profileName, CDataExchange* pDX)
     PRBool exists = FALSE;
 
     {
-        NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProfile> profileService = 
+                 do_GetService(NS_PROFILE_CONTRACTID, &rv);
         rv = profileService->ProfileExists(T2W(profileName), &exists);
     }
 
@@ -183,7 +184,8 @@ BOOL CProfilesDlg::OnInitDialog()
 
     // Fill the list of profiles
     nsresult rv;
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     profileService->GetCurrentProfile(getter_Copies(curProfileName));
 
     PRInt32     selectedRow = 0;
@@ -218,7 +220,8 @@ void CProfilesDlg::OnNewProfile()
     {
         nsresult rv;
 
-        NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProfile> profileService = 
+                 do_GetService(NS_PROFILE_CONTRACTID, &rv);
         ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv))
         {
@@ -253,7 +256,8 @@ void CProfilesDlg::OnRenameProfile()
 
         nsresult rv;
 
-        NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProfile> profileService = 
+                 do_GetService(NS_PROFILE_CONTRACTID, &rv);
         ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv))
         {
@@ -274,7 +278,8 @@ void CProfilesDlg::OnDeleteProfile()
     m_ProfileList.GetText(itemIndex, selectedProfile);
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     ASSERT(NS_SUCCEEDED(rv));
     if (NS_SUCCEEDED(rv))
     {

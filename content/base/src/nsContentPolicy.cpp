@@ -48,7 +48,8 @@ nsContentPolicy::nsContentPolicy()
 {
     NS_INIT_REFCNT();
     nsresult rv;
-    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsICategoryManager> catman = 
+             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
 	/* log an error? */
 	return;

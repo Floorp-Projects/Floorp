@@ -44,7 +44,7 @@ nsKeywordProtocolHandler::nsKeywordProtocolHandler() {
 nsresult
 nsKeywordProtocolHandler::Init() {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString url;
@@ -169,7 +169,7 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     char *httpSpec = MangleKeywordIntoHTTPURL(path, mKeywordURL.get());
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     // now we have an HTTP url, give the user an HTTP channel

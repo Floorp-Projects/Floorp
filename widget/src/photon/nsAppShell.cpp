@@ -144,7 +144,8 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 
   nsresult rv;
 
-  NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+  nsCOMPtr<nsICmdLineService> cmdLineArgs = 
+           do_GetService(kCmdLineServiceCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     rv = cmdLineArgs->GetArgc(&argc);

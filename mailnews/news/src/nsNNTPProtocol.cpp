@@ -4278,7 +4278,8 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	  NNTP_LOG_NOTE("CANCELCHK not supported");
       
       // get the current identity from the news session....
-      NS_WITH_SERVICE(nsIMsgAccountManager,accountManager,kCMsgAccountManagerCID,&rv);
+      nsCOMPtr<nsIMsgAccountManager> accountManager = 
+               do_GetService(kCMsgAccountManagerCID, &rv);
       if (NS_SUCCEEDED(rv) && accountManager) {
           nsCOMPtr<nsISupportsArray> identities;
           rv = accountManager->GetAllIdentities(getter_AddRefs(identities));

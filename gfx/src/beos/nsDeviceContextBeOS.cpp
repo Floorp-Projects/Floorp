@@ -107,7 +107,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
     PRInt32 prefVal = -1; 
     nsresult res; 
  
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
     if (NS_SUCCEEDED(res) && prefs) { 
       res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal); 
       if (! NS_SUCCEEDED(res)) { 
@@ -474,7 +474,7 @@ int nsDeviceContextBeOS::prefChanged(const char *aPref, void *aClosure)
   
   if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) { 
     PRInt32 dpi; 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     rv = prefs->GetIntPref(aPref, &dpi); 
     if (NS_SUCCEEDED(rv)) 
       context->SetDPI(dpi); 

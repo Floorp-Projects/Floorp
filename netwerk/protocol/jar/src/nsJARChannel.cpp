@@ -329,7 +329,8 @@ nsJARChannel::AsyncReadJARElement()
 
     nsAutoMonitor monitor(mMonitor);
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> jarTransport;
@@ -482,8 +483,8 @@ nsJARChannel::GetOwner(nsISupports* *aOwner)
         if (NS_FAILED(rv)) return rv;
         if (certificate)
         {   // Get the codebase principal
-            NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, 
-                            kScriptSecurityManagerCID, &rv);
+            nsCOMPtr<nsIScriptSecurityManager> secMan = 
+                     do_GetService(kScriptSecurityManagerCID, &rv);
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
             nsCOMPtr<nsIPrincipal> codebase;
             rv = secMan->GetCodebasePrincipal(mJARBaseURI, 

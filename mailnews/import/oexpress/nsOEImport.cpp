@@ -244,7 +244,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 		nsIImportGeneric *pGeneric = nsnull;
 		rv = ImportOEMailImpl::Create( &pMail);
 		if (NS_SUCCEEDED( rv)) {
-			NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericMail( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -267,7 +267,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportOEAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -583,7 +583,7 @@ NS_IMETHODIMP ImportOEAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISu
 	
 	if (m_pWab->Loaded()) {
 		// create a new nsIImportABDescriptor and add it to the array
-		NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+		nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 		if (NS_SUCCEEDED( rv)) {
 			rv = impSvc->CreateNewABDescriptor( &pID);
 			if (NS_SUCCEEDED( rv)) {

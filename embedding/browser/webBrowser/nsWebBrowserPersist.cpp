@@ -160,7 +160,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     }
 
     NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv);
     
     if (NS_FAILED(rv))
     {

@@ -715,7 +715,8 @@ NS_IMETHODIMP nsAddrDatabase::OpenAnonymousDB(nsIAddrDatabase **pCardDB)
 	nsresult rv = NS_OK;
     nsCOMPtr<nsIAddrDatabase> database;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if (NS_SUCCEEDED(rv))
 	{
 		nsFileSpec* dbPath;
@@ -1715,7 +1716,8 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 					if (file)
 					{
 						cardURI = PR_smprintf("%s%s/Card%ld", kMDBCardRoot, file, cardOid.mOid_Id);
-						NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &err);
+						nsCOMPtr<nsIRDFService> rdfService = 
+						         do_GetService(kRDFServiceCID, &err);
 						if (NS_SUCCEEDED(err) && cardURI)
 						{
 							nsCOMPtr<nsIRDFResource> cardResource;
@@ -2486,7 +2488,7 @@ NS_IMETHODIMP nsAddrDatabase::EditMailList(nsIAbDirectory *mailList, PRBool noti
 		char* file = nsnull;
 		file = m_dbName.GetLeafName();
 		listCardURI = PR_smprintf("%s%s/ListCard%ld", kMDBCardRoot, file, rowOid.mOid_Id);
-		NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &err);
+		nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &err));
 		if(NS_FAILED(err))
 			return err;
 		nsCOMPtr<nsIRDFResource> listCardResource;
@@ -3931,7 +3933,8 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
 	{
 		nsCOMPtr<nsILocale> locale; 
 
-		NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
+		nsCOMPtr<nsILocaleService> localeSvc = 
+		         do_GetService(kLocaleServiceCID, &rv);
 		NS_ENSURE_SUCCESS(rv, rv);
 
 		rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
@@ -3997,7 +4000,8 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 {
 	nsresult rv = NS_OK;
 
-	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+	         do_GetService(kProxyObjectManagerCID, &rv);
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);

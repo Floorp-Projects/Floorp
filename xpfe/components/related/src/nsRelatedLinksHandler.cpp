@@ -622,7 +622,7 @@ RelatedLinksHandlerImpl::Init()
 		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksTopic", &kNC_RelatedLinksTopic);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 
-		NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+		nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
 		mRLServerURL = new nsString();
 		if (NS_SUCCEEDED(rv) && (prefServ))
 		{

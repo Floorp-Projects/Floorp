@@ -1075,8 +1075,8 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 		GetEnv()->ClearErrors();
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && accountManager)
   {
     nsCOMPtr<nsIMsgFolderCache> folderCache;
@@ -3460,7 +3460,7 @@ nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 {
 	PRBool prefValue = PR_FALSE;
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) && prefs)
 	{
 		rv = prefs->GetBoolPref(prefName, &prefValue);

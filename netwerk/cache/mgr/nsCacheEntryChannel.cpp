@@ -253,7 +253,7 @@ nsCacheEntryChannel::GetURI(nsIURI * *aURI)
     rv = mCacheEntry->GetUriSpec(&spec);
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     rv = serv->NewURI(spec, nsnull, aURI);

@@ -2875,7 +2875,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
     // notify Java DOM component 
     nsresult res;
-    NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "@mozilla.org/blackwood/java-dom;1", &res);
+    nsCOMPtr<nsIPluginInstanceOwner> javaDOM = 
+             do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
     if (NS_SUCCEEDED(res) && javaDOM)
       javaDOM->SetInstance(instance);
 
@@ -2961,7 +2962,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
       // notify Java DOM component 
       nsresult res;
-      NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "@mozilla.org/blackwood/java-dom;1", &res);
+      nsCOMPtr<nsIPluginInstanceOwner> javaDOM = 
+               do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
       if (NS_SUCCEEDED(res) && javaDOM)
         javaDOM->SetInstance(instance);
 
@@ -3262,7 +3264,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
       }
       if (NS_FAILED(result)) 
       {
-        NS_WITH_SERVICE(nsIPlugin, bwPlugin, "@mozilla.org/blackwood/pluglet-engine;1",&result);
+        nsCOMPtr<nsIPlugin> bwPlugin = 
+                 do_GetService("@mozilla.org/blackwood/pluglet-engine;1", &result);
         if (NS_SUCCEEDED(result)) 
         {
           result = bwPlugin->CreatePluginInstance(NULL,
@@ -3763,7 +3766,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
         // should we also look for a 'carb' resource?
         if (PR_FindSymbol(pluginTag->mLibrary, "mainRD") != NULL) 
         {
-          NS_WITH_SERVICE(nsIClassicPluginFactory, factory, NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID, &rv);
+          nsCOMPtr<nsIClassicPluginFactory> factory = 
+                   do_GetService(NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv)) 
             rv = factory->CreatePlugin(serviceManager, 
                                        pluginTag->mFileName, 
@@ -4826,13 +4830,14 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
     return NS_ERROR_INVALID_ARG;
   }
 
-  NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
   
   if (NS_FAILED(rv) || (nsnull == ioService)) {
     return rv;
   }
 
-  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  nsCOMPtr<nsICookieService> cookieService = 
+           do_GetService(kCookieServiceCID, &rv);
   
   if (NS_FAILED(rv) || (nsnull == cookieService)) {
     return NS_ERROR_INVALID_ARG;
@@ -4868,13 +4873,14 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
     return NS_ERROR_INVALID_ARG;
   }
   
-  NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
   
   if (NS_FAILED(rv) || (nsnull == ioService)) {
     return rv;
   }
   
-  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  nsCOMPtr<nsICookieService> cookieService = 
+           do_GetService(kCookieServiceCID, &rv);
   
   if (NS_FAILED(rv) || (nsnull == cookieService)) {
     return NS_ERROR_FAILURE;

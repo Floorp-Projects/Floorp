@@ -243,7 +243,8 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	if (!m_pMsgSend) {
 		rv = nsComponentManager::CreateInstance( kMsgSendCID, nsnull, NS_GET_IID( nsIMsgSend), (void **) &m_pMsgSend); 
 		if (NS_SUCCEEDED( rv) && m_pMsgSend) {
-			NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+			nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+			         do_GetService(kProxyObjectManagerCID, &rv);
 			if (NS_SUCCEEDED(rv)) {
 				rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgSend),
 										m_pMsgSend, PROXY_SYNC, (void **)&m_pSendProxy);

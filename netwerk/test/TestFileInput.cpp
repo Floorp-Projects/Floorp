@@ -92,7 +92,8 @@ public:
         PRThread* prthread;
         thread->GetPRThread(&prthread);
         PR_EnterMonitor(mMonitor);
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+        nsCOMPtr<nsIEventQueueService> eventQService = 
+                 do_GetService(kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) {
           rv = eventQService->CreateThreadEventQueue();
 
@@ -397,7 +398,8 @@ main(int argc, char* argv[])
     rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     SerialReadTest(dirName);

@@ -379,7 +379,7 @@ nsresult StartLoadingURL(const char* aUrlString)
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> pService(do_GetService(kIOServiceCID, &rv));
     if (pService) {
         nsCOMPtr<nsIURI> pURL;
 
@@ -526,7 +526,8 @@ main(int argc, char* argv[])
 
     
     // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = eventQService->CreateThreadEventQueue();
@@ -539,7 +540,8 @@ main(int argc, char* argv[])
     // I'm doing this using the serviceManager for convenience's sake.
     // Presumably an application will init it's own cookie service a 
     // different way (this way works too though).
-    NS_WITH_SERVICE(nsICookieService, cookieService, nsCookieServiceCID, &rv);
+    nsCOMPtr<nsICookieService> cookieService = 
+             do_GetService(nsCookieServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 #endif // NECKO
 

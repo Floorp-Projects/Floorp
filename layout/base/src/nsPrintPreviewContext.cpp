@@ -101,7 +101,8 @@ PrintPreviewContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 
   // XXX maybe we get the size of the default printer instead
   nsresult rv;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   // Setting what would be the "default" case here, because
   // getting the PrintService could fail
   aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(8.5);

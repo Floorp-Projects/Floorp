@@ -330,7 +330,7 @@ nsresult DIR_GetDirServers()
 
 	if (!dir_ServerList)
 	{
-        NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+        nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
         if (NS_FAILED(rv) || !pPref) 
     		return NS_ERROR_FAILURE;
 
@@ -408,7 +408,7 @@ static nsresult dir_ConvertToMabFileName()
 nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 	if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
 	pPref->SavePrefFile(nsnull);
@@ -483,7 +483,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 
 		// save new address book into pref file 
 		nsresult rv = NS_OK;
-		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
 		pPref->SavePrefFile(nsnull);
@@ -1050,7 +1050,7 @@ PRBool DIR_SortServersByPosition(nsVoidArray *wholeList)
 PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return PR_FALSE;
 
@@ -1305,7 +1305,7 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *inst_data)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
 
@@ -1981,7 +1981,8 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -1992,7 +1993,8 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		(*dbPath) += server->fileName;
 
 		// close file before delete it
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
@@ -2009,7 +2011,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		DIR_DeleteServer(server);
 
 		rv = NS_OK;
-		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
 		pPref->SavePrefFile(nsnull);
@@ -2151,7 +2153,7 @@ nsresult DIR_GetPersonalAddressBook(nsVoidArray *wholeList, DIR_Server **pab)
 static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return nsnull;
 
@@ -2193,7 +2195,7 @@ static char *DIR_GetLocalizedStringPref
 (const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return nsnull;
 
@@ -2220,7 +2222,7 @@ static char *DIR_GetLocalizedStringPref
 static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return defaultValue;
 
@@ -2239,7 +2241,7 @@ static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *
 static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRBool defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return defaultValue;
 
@@ -2549,7 +2551,7 @@ nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** id
 static nsresult dir_CreateTokenListFromWholePref(const char *pref, char ***outList, PRInt32 *outCount)
 {
     nsresult result = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &result); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &result)); 
     if (NS_FAILED(result)) 
 		return result;
 
@@ -2657,7 +2659,7 @@ static void dir_GetReplicationInfo(const char *prefstring, DIR_Server *server, c
 static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *server, char *scratch)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
 
@@ -2720,7 +2722,7 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
 static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *server, char *scratch)
 {
     nsresult status = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &status); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &status)); 
     if (NS_FAILED(status) || !pPref) 
 		return NS_ERROR_FAILURE;
 
@@ -2807,7 +2809,8 @@ void DIR_SetFileName(char** fileName, const char* defaultName)
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	if (dbPath)
@@ -2955,7 +2958,7 @@ void DIR_GetServerFileName(char** filename, const char* leafName)
 char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return nsnull;
 
@@ -3011,7 +3014,7 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3150,7 +3153,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return -1;
 
@@ -3201,7 +3204,7 @@ static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsoleteList)
 {
     nsresult result = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &result); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &result)); 
     if (NS_FAILED(result) || !pPref) 
 		return NS_ERROR_FAILURE;
 
@@ -3267,7 +3270,7 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
 nsresult DIR_GetServerPreferences(nsVoidArray** list)
 {
     nsresult err = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &err); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &err)); 
     if (NS_FAILED(err) || !pPref) 
 		return NS_ERROR_FAILURE;
 
@@ -3468,7 +3471,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 void DIR_ClearPrefBranch(const char *branch)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 	if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3479,7 +3482,7 @@ void DIR_ClearPrefBranch(const char *branch)
 static void DIR_ClearIntPref (const char *pref)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3494,7 +3497,7 @@ static void DIR_ClearIntPref (const char *pref)
 static void DIR_ClearStringPref (const char *pref)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3510,7 +3513,7 @@ static void DIR_ClearStringPref (const char *pref)
 static void DIR_ClearBoolPref (const char *pref)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3525,7 +3528,7 @@ static void DIR_ClearBoolPref (const char *pref)
 static void DIR_SetStringPref (const char *prefRoot, const char *prefLeaf, char *scratch, const char *value, const char *defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3577,7 +3580,7 @@ static void DIR_SetStringPref (const char *prefRoot, const char *prefLeaf, char 
 static void DIR_SetIntPref (const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 value, PRInt32 defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3617,7 +3620,7 @@ static void DIR_SetIntPref (const char *prefRoot, const char *prefLeaf, char *sc
 static void DIR_SetBoolPref (const char *prefRoot, const char *prefLeaf, char *scratch, PRBool value, PRBool defaultValue)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !pPref) 
 		return;
 
@@ -3958,7 +3961,7 @@ nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
 	if (wholeList)
 	{
 		nsresult rv = NS_OK;
-		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
 

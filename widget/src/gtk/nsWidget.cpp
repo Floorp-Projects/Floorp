@@ -2606,7 +2606,7 @@ static void      debugSetupWindow   (void)
   nsresult rv;
   
   debugCheckedDebugWindow = PR_TRUE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (!NS_FAILED(rv) && (prefs)) {
     rv = prefs->GetBoolPref(debugPrefName, &enable_window);
     if (!NS_FAILED(rv) && enable_window) {
@@ -2643,7 +2643,7 @@ static int debugWindowPrefChanged (const char *newpref, void *data)
 {
   PRBool enable_window;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (!NS_FAILED(rv) && (prefs)) {
     rv = prefs->GetBoolPref(debugPrefName, &enable_window);
     if (!NS_FAILED(rv) && enable_window) {
@@ -2668,7 +2668,7 @@ static void      debugRegisterCallback  (void)
   
   // make sure we don't call in here again
   debugCallbackRegistered = PR_TRUE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (!NS_FAILED(rv)) {
     rv = prefs->RegisterCallback(debugPrefName, debugWindowPrefChanged, NULL);
   }

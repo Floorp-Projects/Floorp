@@ -526,7 +526,7 @@ NS_IMETHODIMP
 nsMovemailService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_MOVEMAIL, aPath, PR_FALSE /* set default */);
@@ -540,7 +540,7 @@ nsMovemailService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;

@@ -3741,7 +3741,8 @@ wallet_IsFromCartman(nsIURI* aURL) {
     if (PL_strncasecmp(host, "127.0.0.1",  9) == 0) {
       /* submit is to server on local machine */
       nsresult res;
-      NS_WITH_SERVICE(nsISecurityManagerComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
+      nsCOMPtr<nsISecurityManagerComponent> psm = 
+               do_GetService(PSM_COMPONENT_CONTRACTID, &res);
       if (NS_SUCCEEDED(res)) { 
         nsXPIDLCString password;
         if (NS_SUCCEEDED(aURL->GetPassword(getter_Copies(password))) && password) {

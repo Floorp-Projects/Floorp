@@ -149,7 +149,7 @@ nsresult TestMCTransport(const char *filename)
     if (NS_FAILED(rv))
         return rv;
 #else
-    NS_WITH_SERVICE(nsICacheService, serv, kCacheServiceCID, &rv);
+    nsCOMPtr<nsICacheService> serv(do_GetService(kCacheServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = serv->CreateSession("TestMCTransport",
@@ -216,7 +216,8 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    NS_WITH_SERVICE(nsIEventQueueService, eqs, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eqs = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) {
         printf("failed to create event queue service: rv=%x\n", rv);
         return -1;

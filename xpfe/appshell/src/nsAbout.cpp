@@ -38,15 +38,15 @@ NS_IMETHODIMP
 nsAbout::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
     if ( NS_FAILED(rv) )
         return rv;
 
     nsCOMPtr<nsIChannel> tempChannel;
    	rv = ioService->NewChannel(kURI, nsnull, getter_AddRefs(tempChannel));
 
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
 

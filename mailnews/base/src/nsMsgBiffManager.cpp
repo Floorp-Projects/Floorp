@@ -69,7 +69,8 @@ nsMsgBiffManager::~nsMsgBiffManager()
 		Shutdown();
 		//Don't remove from Observer service in Shutdown because Shutdown also gets called
 		//from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-		NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+		nsCOMPtr<nsIObserverService> observerService = 
+		         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{    
 			nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -86,13 +87,15 @@ nsresult nsMsgBiffManager::Init()
 	if(!mBiffArray)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+	nsCOMPtr<nsIMsgAccountManager> accountManager = 
+	         do_GetService(kMsgAccountManagerCID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
 		accountManager->AddIncomingServerListener(this);
 	}
 
-	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+	nsCOMPtr<nsIObserverService> observerService = 
+	         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{    
 		nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -101,7 +104,8 @@ nsresult nsMsgBiffManager::Init()
 
 
 	//Ensure status bar biff service has started
-	NS_WITH_SERVICE(nsStatusBarBiffManager, statusBarBiffService, kStatusBarBiffManagerCID, &rv);
+	nsCOMPtr<nsStatusBarBiffManager> statusBarBiffService = 
+	         do_GetService(kStatusBarBiffManagerCID, &rv);
 
 	return NS_OK;
 }
@@ -109,7 +113,8 @@ nsresult nsMsgBiffManager::Init()
 nsresult nsMsgBiffManager::Shutdown()
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+	nsCOMPtr<nsIMsgAccountManager> accountManager = 
+	         do_GetService(kMsgAccountManagerCID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
 		accountManager->RemoveIncomingServerListener(this);

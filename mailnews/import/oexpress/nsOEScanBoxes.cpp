@@ -694,7 +694,7 @@ void nsOEScanBoxes::BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PR
 	nsISupports *					pInterface;
 	PRUint32						size;
 	
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED( rv))
 		return;
 	

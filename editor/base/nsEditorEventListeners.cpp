@@ -382,7 +382,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (button == 1)
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv) && prefService)
     {
       PRBool doMiddleMousePaste = PR_FALSE;;
@@ -643,7 +643,8 @@ nsresult
 nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
   nsresult rv;
-  NS_WITH_SERVICE ( nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv );
+  nsCOMPtr<nsIDragService> dragService = 
+           do_GetService( "@mozilla.org/widget/dragservice;1", &rv );
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession;
     dragService->GetCurrentSession(getter_AddRefs(dragSession));
@@ -690,7 +691,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   if ( mEditor )
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
+    nsCOMPtr<nsIDragService> dragService = 
+             do_GetService("@mozilla.org/widget/dragservice;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 flags;
@@ -1075,7 +1077,8 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
             PRInt32 pixelWidth;
             nsresult result;
 
-            NS_WITH_SERVICE(nsILookAndFeel, look, kLookAndFeelCID, &result);
+            nsCOMPtr<nsILookAndFeel> look = 
+                     do_GetService(kLookAndFeelCID, &result);
 
             if (NS_SUCCEEDED(result) && look)
             {

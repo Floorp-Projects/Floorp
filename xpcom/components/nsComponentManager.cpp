@@ -2001,7 +2001,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         dir = inDirSpec;
     
         // Set components' directory for AutoRegisterInterfces to query
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> directoryService = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         // Don't care if undefining fails
@@ -2012,7 +2013,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     else 
     {
         // Do default components directory
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> directoryService = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
@@ -2026,7 +2028,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         return NS_ERROR_UNEXPECTED;    
     
     // Notify observers of xpcom autoregistration start
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
 

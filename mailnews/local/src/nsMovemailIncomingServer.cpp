@@ -168,8 +168,8 @@ nsMovemailIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow,
 {
     nsresult rv;
     
-    NS_WITH_SERVICE(nsIMovemailService, movemailService,
-                    kCMovemailServiceCID, &rv);
+    nsCOMPtr<nsIMovemailService> movemailService = 
+             do_GetService(kCMovemailServiceCID, &rv);
     
     if (NS_FAILED(rv)) return rv;
     

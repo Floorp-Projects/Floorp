@@ -355,10 +355,8 @@ PyXPCOMMethod_GetProxyForObject(PyObject *self, PyObject *args)
 	nsresult rv_proxy;
 	nsISupports *presult = nsnull;
 	Py_BEGIN_ALLOW_THREADS;
-	NS_WITH_SERVICE(nsIProxyObjectManager,
-		  proxyMgr, 
-		  kProxyObjectManagerCID,
-		  &rv_proxy);
+	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+	         do_GetService(kProxyObjectManagerCID, &rv_proxy);
 
 	if ( NS_SUCCEEDED(rv_proxy) ) {
 		rv_proxy = proxyMgr->GetProxyForObject(pQueue,

@@ -320,7 +320,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
@@ -332,7 +332,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
@@ -344,7 +344,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
     n = COOKIE_Normal;
   }
@@ -356,7 +356,7 @@ MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
   }
@@ -371,7 +371,7 @@ COOKIE_RegisterPrefCallbacks(void) {
   PRInt32 n;
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 
   // Initialize for cookie_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
@@ -841,7 +841,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
        *
        */
       nsresult rv;
-      NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
       if (NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
         pref_scd = PR_FALSE;
       }

@@ -228,10 +228,11 @@ public:
         mContext = aContext;
         mDownstreamListener = aListener;
 
-        NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+        nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
 
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        nsCOMPtr<nsIEventQueueService> eventQService = 
+                 do_GetService(kEventQueueService, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);

@@ -46,7 +46,8 @@ nsIStringBundle *nsImportStringBundle::GetStringBundle( void)
 	nsIStringBundle*	sBundle = nsnull;
 
 
-	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &rv); 
+	nsCOMPtr<nsIStringBundleService> sBundleService = 
+	         do_GetService(kStringBundleServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) {
 		rv = sBundleService->CreateBundle(propertyURL, &sBundle);
 	}
@@ -63,7 +64,8 @@ nsIStringBundle *nsImportStringBundle::GetStringBundleProxy( void)
 	nsIStringBundle *strProxy = nsnull;
 	nsresult rv;
 	// create a proxy object if we aren't on the same thread?
-	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+	         do_GetService(kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
 		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
 										m_pBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) &strProxy);

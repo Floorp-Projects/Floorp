@@ -712,8 +712,8 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
     nsCOMPtr<nsIMsgIncomingServer> server;
     char *newOnlineName = nsnull;
     
-    NS_WITH_SERVICE(nsIImapHostSessionList, hostSessionList,
-                    kCImapHostSessionListCID, &rv);
+    nsCOMPtr<nsIImapHostSessionList> hostSessionList = 
+             do_GetService(kCImapHostSessionListCID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = GetServer(getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
@@ -900,8 +900,8 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
   char *onlineDir = nsnull;
 	nsCOMPtr<nsIMsgIncomingServer> server;
 
-    NS_WITH_SERVICE(nsIImapHostSessionList, hostSessionList,
-                    kCImapHostSessionListCID, &rv);    
+    nsCOMPtr<nsIImapHostSessionList> hostSessionList = 
+             do_GetService(kCImapHostSessionListCID, &rv);
 
     *allocatedPath = nsnull;
 

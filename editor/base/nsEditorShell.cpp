@@ -2158,7 +2158,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
     
 #if 0
     // get default directory from preference
-    NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_CONTRACTID, &res );
+    nsCOMPtr<nsIPref> prefs( do_GetService( NS_PREF_CONTRACTID, &res ) );
     if (prefs)
     {
       nsCOMPtr<nsILocalFile> defaultDir;
@@ -2815,7 +2815,8 @@ nsEditorShell::DoFind(PRBool aFindNext)
   
   // Get find component.
   nsresult rv;
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
+  nsCOMPtr<nsIFindComponent> findComponent = 
+           do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
   NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
   if (NS_FAILED(rv)) { return rv; }
 
@@ -2860,7 +2861,8 @@ nsEditorShell::Replace()
 
   // Get find component.
   nsresult rv;
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
+  nsCOMPtr<nsIFindComponent> findComponent = 
+           do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
   NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
   if (NS_FAILED(rv)) { return rv; }
 
@@ -4508,7 +4510,7 @@ nsEditorShell::InitSpellChecker()
 
     PRUnichar *dictName = nsnull;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
 
     if (NS_SUCCEEDED(result) && prefs)
       result = prefs->CopyUnicharPref("spellchecker.dictionary", &dictName);
@@ -4795,7 +4797,7 @@ nsEditorShell::UninitSpellChecker()
   if (mEditor)
   {
     // Save the last used dictionary to the user's preferences.
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
 
     if (NS_SUCCEEDED(result) && prefs)
     {
@@ -5341,7 +5343,7 @@ nsEditorShell::CheckPrefAndNormalizeTable()
 
   if (htmlEditor)
   {
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
     if (NS_FAILED(res)) return NS_OK;
 
     PRBool normalizeTable = PR_FALSE;

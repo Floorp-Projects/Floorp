@@ -57,7 +57,8 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
 	
 	if( aQuiet ) {
 	    // no dialogs
-	    NS_WITH_SERVICE( nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+	    nsCOMPtr<nsIPrintOptions> printService = 
+	             do_GetService(kPrintOptionsCID, &rv);
 	    PRInt32 value;
 	    printService->GetEndPageRange( &value ); /* use SetEndPageRange/GetEndPageRange to convey the print context */
 	    mPC = ( PpPrintContext_t * ) value;

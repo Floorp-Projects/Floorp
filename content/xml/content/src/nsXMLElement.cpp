@@ -163,7 +163,7 @@ static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
 {
   nsresult rv;
   static NS_DEFINE_CID(ioServCID,NS_IOSERVICE_CID);
-  NS_WITH_SERVICE(nsIIOService,service,ioServCID,&rv);
+  nsCOMPtr<nsIIOService> service(do_GetService(ioServCID, &rv));
   if (NS_FAILED(rv))
     return rv;
 
@@ -308,10 +308,8 @@ static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI,
   nsresult rv;
   rv = MakeURI(str,aBaseURI,aAbsURI);
   if (NS_SUCCEEDED(rv)) {
-    NS_WITH_SERVICE(nsIScriptSecurityManager,
-                    securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                    &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv= securityManager->CheckLoadURI(aBaseURI,
                                          *aAbsURI,
@@ -619,8 +617,8 @@ nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                   // We have a binding that must be installed.
                   nsresult rv;
                   PRBool dummy;
-                  NS_WITH_SERVICE(nsIXBLService, xblService,
-                                  "@mozilla.org/xbl;1", &rv);
+                  nsCOMPtr<nsIXBLService> xblService = 
+                           do_GetService("@mozilla.org/xbl;1", &rv);
                   xblService->LoadBindings(this, value, PR_FALSE,
                                            getter_AddRefs(binding), &dummy);
                   if (binding) {

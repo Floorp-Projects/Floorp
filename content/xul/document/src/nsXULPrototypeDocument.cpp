@@ -358,10 +358,8 @@ nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
 {
     if (!mDocumentPrincipal) {
         nsresult rv;
-        NS_WITH_SERVICE(nsIScriptSecurityManager,
-                        securityManager,
-                        NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                        &rv);
+        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
 
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;

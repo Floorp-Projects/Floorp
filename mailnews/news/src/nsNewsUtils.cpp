@@ -49,8 +49,8 @@ nsGetNewsServer(const char* username, const char *hostname,
   nsresult rv = NS_OK;
 
   // retrieve the AccountManager
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   // find the news host
@@ -205,7 +205,7 @@ nsresult nsGetNewsGroupFromUri(const char *uri, nsIMsgNewsFolder **aFolder)
   NS_ENSURE_ARG(uri);
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) return(rv);
 
   nsCOMPtr<nsIRDFResource> resource;

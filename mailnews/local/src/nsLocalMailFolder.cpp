@@ -244,7 +244,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 
   PRInt32 flags = 0;
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   
 	if(NS_FAILED(rv)) return rv;
 
@@ -329,8 +329,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
 	if (NS_FAILED(rv)) return rv;
 
 
-	NS_WITH_SERVICE(nsIMailboxService, mailboxService,
-                  kMailboxServiceCID, &rv);
+	nsCOMPtr<nsIMailboxService> mailboxService = 
+	         do_GetService(kMailboxServiceCID, &rv);
   
 	if (NS_FAILED(rv)) return rv; 
 	nsMsgMailboxParser *parser = new nsMsgMailboxParser;
@@ -706,7 +706,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlLi
       parentName.Truncate(leafPos);
       // get the corresponding RDF resource
       // RDF will create the folder resource if it doesn't already exist
-      NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &status);
+      nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &status));
       if (NS_FAILED(status)) return status;
       nsCOMPtr<nsIRDFResource> resource;
       status = rdf->GetResource(parentName, getter_AddRefs(resource));
@@ -1494,8 +1494,8 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       rv = GetTrashFolder(getter_AddRefs(trashFolder));
       if (NS_SUCCEEDED(rv))
       {
-          NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,
-                          &rv);
+          nsCOMPtr<nsIMsgCopyService> copyService = 
+                   do_GetService(kMsgCopyServiceCID, &rv);
           if (NS_SUCCEEDED(rv))
           {
             return copyService->CopyMessages(this, messages, trashFolder,
@@ -2456,8 +2456,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         if (mCopyState->m_isFolder)
           DoNextSubFolder(this, srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
         
-        NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
-						    kMsgCopyServiceCID, &result); 
+        nsCOMPtr<nsIMsgCopyService> copyService = 
+                 do_GetService(kMsgCopyServiceCID, &result);
         
         if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
           mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
@@ -2898,8 +2898,8 @@ nsMsgLocalMailFolder::GetIncomingServerType()
   if ((const char *) hostName)
 	nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
 
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return "";
 
   nsCOMPtr<nsIMsgIncomingServer> server;
@@ -2989,7 +2989,8 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
         rv = popurl->GetMessageUri(getter_Copies(messageuri));
         if (NS_SUCCEEDED(rv))
         {
-          NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+          nsCOMPtr<nsIRDFService> rdfService = 
+                   do_GetService(kRDFServiceCID, &rv); 
           if(NS_SUCCEEDED(rv))
           {
             nsCOMPtr <nsIMsgDBHdr> msgDBHdr;

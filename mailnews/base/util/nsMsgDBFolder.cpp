@@ -354,7 +354,8 @@ nsresult nsMsgDBFolder::GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, ns
 	PRBool exists;
 	NS_ASSERTION(NS_SUCCEEDED(fileSpec->Exists(&exists)) && exists, "whoops, file doesn't exist, mac will break");
 #endif
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
+	nsCOMPtr<nsIMsgAccountManager> accountMgr = 
+	         do_GetService(kMsgAccountManagerCID, &result); 
 	if(NS_SUCCEEDED(result))
 	{
 		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
@@ -517,7 +518,8 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
     if (NS_SUCCEEDED(rv) && localStore)
     {
       NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-      NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+      nsCOMPtr<nsIFileTransportService> fts = 
+               do_GetService(kFileTransportServiceCID, &rv);
     
       if (NS_FAILED(rv))
         return rv;
@@ -963,8 +965,8 @@ nsresult nsMsgDBFolder::GetFolderCacheKey(nsIFileSpec **aFileSpec)
 nsresult nsMsgDBFolder::FlushToFolderCache()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && accountManager)
   {
     nsCOMPtr<nsIMsgFolderCache> folderCache;

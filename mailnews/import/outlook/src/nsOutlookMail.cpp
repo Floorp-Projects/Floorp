@@ -135,7 +135,7 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 		return( rv);
 	}
 
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 
@@ -239,7 +239,7 @@ nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
 		return( rv);
 	}
 
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 
@@ -900,7 +900,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 
 	nsCOMPtr<nsIImportFieldMap>		pFieldMap;
 
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_SUCCEEDED( rv)) {
 		rv = impSvc->CreateNewFieldMap( getter_AddRefs( pFieldMap));
 	}

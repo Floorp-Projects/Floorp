@@ -752,7 +752,7 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   PRInt32 pixelWidth;
   nsresult result;
 
-  NS_WITH_SERVICE(nsILookAndFeel, look, kLookAndFeelCID, &result);
+  nsCOMPtr<nsILookAndFeel> look(do_GetService(kLookAndFeelCID, &result));
 
   if (NS_SUCCEEDED(result) && look) {
     look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
@@ -791,7 +791,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   XMLT_LOG(mozXMLTerminal::Paste,20,("\n"));
 
   // Get Clipboard service
-  NS_WITH_SERVICE (nsIClipboard, clipboard, kCClipboardCID, &result);
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &result));
   if ( NS_FAILED(result) )
     return result;
     

@@ -397,7 +397,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       //
       // Now delete the message from the outbox folder.
       //
-      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
       if (NS_SUCCEEDED(rv) && prefs)
     		prefs->GetBoolPref("mail.really_delete_draft", &deleteMsgs);
 
@@ -624,7 +624,7 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFold
   char        *uri = nsnull;
   nsresult    rv;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   if (NS_FAILED(rv) || !prefs) 
     return nsnull;
 
@@ -1184,7 +1184,8 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
   if (mIdentityKey)
   {
     // get the account manager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
       return rv;
 
@@ -1235,7 +1236,8 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
   if ( (!tIdentity) && (!identity) )
   {
     // get the account manager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
       return rv;
 

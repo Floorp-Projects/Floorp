@@ -275,8 +275,7 @@ nsMsgIncomingServer::CreateRootFolder()
   rv = GetServerURI(getter_Copies(serverUri));
   if (NS_FAILED(rv)) return rv;
 
-  NS_WITH_SERVICE(nsIRDFService, rdf,
-                        kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
 
   // get the corresponding RDF resource
   // RDF will create the server resource if it doesn't already exist
@@ -747,7 +746,8 @@ nsMsgIncomingServer::StorePassword()
     rv = GetPassword(getter_Copies(pwd));
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    nsCOMPtr<nsIWalletService> walletservice = 
+             do_GetService(kWalletServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString serverUri;
@@ -763,7 +763,8 @@ NS_IMETHODIMP
 nsMsgIncomingServer::ForgetPassword()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    nsCOMPtr<nsIWalletService> walletservice = 
+             do_GetService(kWalletServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     

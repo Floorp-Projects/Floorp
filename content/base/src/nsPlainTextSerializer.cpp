@@ -154,7 +154,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 
   // Only create a linebreaker if we will handle wrapping.
   if(MayWrap()) {
-    NS_WITH_SERVICE(nsILineBreakerFactory, lf, kLWBrkCID, &rv);
+    nsCOMPtr<nsILineBreakerFactory> lf(do_GetService(kLWBrkCID, &rv));
     if (NS_SUCCEEDED(rv)) {
       nsAutoString lbarg;
       rv = lf->GetBreaker(lbarg, getter_AddRefs(mLineBreaker));
@@ -176,7 +176,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   
   if(mFlags & nsIDocumentEncoder::OutputFormatted) {
     // Get some prefs that controls how we do formatted output
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
       prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
       prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);

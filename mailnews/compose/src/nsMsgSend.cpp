@@ -1301,7 +1301,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     {
       PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
       PRBool enable_structs = PR_FALSE;
-      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
       if (NS_SUCCEEDED(rv) && prefs)
       {
         rv = prefs->GetBoolPref(PREF_MAIL_SEND_STRUCT,&enable_structs);
@@ -2727,7 +2727,7 @@ nsMsgComposeAndSend::Init(
   // Needed for mime encoding!
   //
   PRBool strictly_mime = PR_TRUE; 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     rv = prefs->GetBoolPref(PREF_MAIL_STRICTLY_MIME, &strictly_mime);
@@ -2934,15 +2934,15 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 	nsresult rv;
 
 	PRBool collectOutgoingAddresses = PR_TRUE;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
 	if (NS_SUCCEEDED(rv) && prefs)
 	{
 		prefs->GetBoolPref(PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING,&collectOutgoingAddresses);
 	}
  
 
-	NS_WITH_SERVICE(nsIAbAddressCollecter, addressCollecter,
-					kCAddressCollecter, &rv);
+	nsCOMPtr<nsIAbAddressCollecter> addressCollecter = 
+	         do_GetService(kCAddressCollecter, &rv);
 
 	if (!NS_SUCCEEDED(rv))
 		addressCollecter = nsnull;
@@ -2989,7 +2989,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       buf = convbuf;
   }
   
-  NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
+  nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && smtpService)
   {
     nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsMailDelivery, this);
@@ -3041,7 +3041,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   nsCOMPtr<nsIPrompt> promptObject;
   GetDefaultPrompt(getter_AddRefs(promptObject));
 
-  NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
+  nsCOMPtr<nsINntpService> nntpService(do_GetService(kNntpServiceCID, &rv));
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {

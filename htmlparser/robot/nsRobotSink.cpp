@@ -347,7 +347,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
   if (nsnull != docURL) {
     nsIURI* absurl;
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return;
 
     nsIURI *uri = nsnull, *baseUri = nsnull;

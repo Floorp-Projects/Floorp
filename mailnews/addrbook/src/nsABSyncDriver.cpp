@@ -69,7 +69,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
 NS_IMETHODIMP nsAbSyncDriver::KickIt()
 {
   nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
+	nsCOMPtr<nsIAbSync> sync(do_GetService(kAbSync, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add ourselves to the party!

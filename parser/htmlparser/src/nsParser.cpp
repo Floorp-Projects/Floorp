@@ -357,7 +357,8 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   nsresult rv = NS_OK;
   if (mEventQueue == nsnull) {
     // Cache the event queue of the current UI thread
-    NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_SUCCEEDED(rv) && (eventService)) {                  // XXX this implies that the UI is the current thread.
       rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
     }

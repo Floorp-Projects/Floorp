@@ -64,7 +64,7 @@ nsAbMDBDirectory::~nsAbMDBDirectory(void)
 		nsresult rv = NS_OK;
 
 		nsCOMPtr<nsIAddrDatabase> database;
-		NS_WITH_SERVICE(nsIAddressBook, addressBook, kAddrBookCID, &rv); 
+		nsCOMPtr<nsIAddressBook> addressBook(do_GetService(kAddrBookCID, &rv)); 
 		if (NS_SUCCEEDED(rv) && addressBook)
 		{
 			rv = addressBook->GetAbDatabaseFromURI(mURI, getter_AddRefs(database));
@@ -96,7 +96,7 @@ nsresult nsAbMDBDirectory::AddMailList(const char *uriName)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 	
 	nsCOMPtr<nsIRDFResource> res;
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteDirectory(nsIAbDirectory *directory)
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIAddrDatabase> database;
-	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+	nsCOMPtr<nsIAddressBook> addresBook(do_GetService(kAddrBookCID, &rv)); 
 	if (NS_SUCCEEDED(rv))
 	{
 		rv = addresBook->GetAbDatabaseFromURI((const char *)uri, getter_AddRefs(database));				
@@ -189,7 +189,8 @@ nsresult nsAbMDBDirectory::NotifyPropertyChanged(char *property, PRUnichar* oldV
 	{
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		nsCOMPtr<nsIAddrBookSession> abSession = 
+		         do_GetService(kAddrBookSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->NotifyItemPropertyChanged(supports, property, oldValue, newValue);
 	}
@@ -200,7 +201,8 @@ nsresult nsAbMDBDirectory::NotifyPropertyChanged(char *property, PRUnichar* oldV
 nsresult nsAbMDBDirectory::NotifyItemAdded(nsISupports *item)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->NotifyDirectoryItemAdded(this, item);
 	return NS_OK;
@@ -209,7 +211,8 @@ nsresult nsAbMDBDirectory::NotifyItemAdded(nsISupports *item)
 nsresult nsAbMDBDirectory::NotifyItemDeleted(nsISupports *item)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->NotifyDirectoryItemDeleted(this, item);
 
@@ -267,7 +270,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddChildCards(const char *uriName, nsIAbCard **c
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> res;
@@ -295,7 +298,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddDirectory(const char *uriName, nsIAbDirectory
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 	
 	nsCOMPtr<nsIRDFResource> res;
@@ -376,7 +379,8 @@ nsresult nsAbMDBDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_S
 	nsCOMPtr<nsIAddrDatabase> database;
 
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -385,7 +389,8 @@ nsresult nsAbMDBDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_S
 		(*dbPath) += server->fileName;
 
 		// close file before delete it
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
@@ -506,7 +511,8 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
 						if (listUri)
 						{
 							nsresult rv = NS_OK;
-							NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+							nsCOMPtr<nsIRDFService> rdfService = 
+							         do_GetService(kRDFServiceCID, &rv);
 
 							if(NS_SUCCEEDED(rv))
 								{
@@ -585,7 +591,7 @@ NS_IMETHODIMP nsAbMDBDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir
 		rv = dbdir->GetDirUri(getter_Copies(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 		nsCOMPtr<nsIAddrDatabase> database;
-		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		nsCOMPtr<nsIAddressBook> addresBook(do_GetService(kAddrBookCID, &rv)); 
 		if (NS_SUCCEEDED(rv))
 		{
 			rv = addresBook->GetAbDatabaseFromURI((const char *)uri, getter_AddRefs(database));				
@@ -689,7 +695,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddCard(nsIAbCard* card, nsIAbCard **_retval)
 	// Return the RDF resource instance of the card
 	// which was added to the database
 	//
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsXPIDLCString uri;
@@ -749,7 +755,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* card, nsIAbCard **_retval)
 	// Return the RDF resource instance of the card
 	// which was added to the database
 	//
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsXPIDLCString uri;
@@ -786,7 +792,7 @@ NS_IMETHODIMP nsAbMDBDirectory::OnCardEntryChange
 	nsresult rv = NS_OK;
 	if (abCode == AB_NotifyInserted && card)
 	{ 
-		NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+		nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
 		nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv));

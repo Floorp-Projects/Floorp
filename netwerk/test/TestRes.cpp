@@ -41,7 +41,7 @@ SetupMapping()
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIProtocolHandler> ph;
@@ -67,7 +67,7 @@ TestOpenInputStream(const char* url)
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
@@ -189,7 +189,8 @@ TestAsyncRead(const char* url)
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = eventQService->CreateThreadEventQueue();
@@ -198,7 +199,7 @@ TestAsyncRead(const char* url)
     rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;

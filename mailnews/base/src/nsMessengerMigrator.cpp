@@ -347,7 +347,8 @@ nsMessengerMigrator::~nsMessengerMigrator()
     Shutdown();
     //Don't remove from Observer service in Shutdown because Shutdown also gets called
     //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -360,7 +361,8 @@ nsresult nsMessengerMigrator::Init()
 {
   nsresult rv;
 
-  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -489,7 +491,8 @@ NS_IMETHODIMP
 nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // create the account
@@ -618,7 +621,8 @@ nsMessengerMigrator::UpgradePrefs()
     }
 #endif 
 
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(kMsgAccountManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // create a dummy identity, for migration only
@@ -631,7 +635,8 @@ nsMessengerMigrator::UpgradePrefs()
     if (NS_FAILED(rv)) return rv;    
     
     nsCOMPtr<nsISmtpServer> smtpServer;
-    NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
+    nsCOMPtr<nsISmtpService> smtpService = 
+             do_GetService(kSmtpServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;    
 
     rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
@@ -1063,7 +1068,8 @@ nsresult
 nsMessengerMigrator::MigrateLocalMailAccount() 
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // create the account
@@ -1183,7 +1189,8 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   nsCOMPtr<nsIMsgAccount> account;
   nsCOMPtr<nsIMsgIncomingServer> server;
   
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = accountManager->CreateAccount(getter_AddRefs(account));
@@ -1292,7 +1299,8 @@ nsresult
 nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIMsgAccount> account;
@@ -1555,7 +1563,8 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 {
   nsresult rv;  
 
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (!hostAndPort) return NS_ERROR_NULL_POINTER;
@@ -2213,7 +2222,8 @@ nsresult
 nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec & newsrcfile, nsFileSpec & newsHostsDir, PRBool isSecure)
 {  
 	nsresult rv;
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(kMsgAccountManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
 	nsFileSpec thisNewsHostsDir = newsHostsDir;

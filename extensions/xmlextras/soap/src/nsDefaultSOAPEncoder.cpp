@@ -304,7 +304,7 @@ nsDefaultSOAPEncoder::SerializeJavaScriptArray(JSObject* arrayobj,
 {
   nsresult rv;
   nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   // Add a SOAP-ENC:arrayType parameter. We always assume it's a

@@ -125,7 +125,8 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
     nsIXPIListener *listener;
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
-    NS_WITH_SERVICE(nsISoftwareUpdate, softwareUpdate, kSoftwareUpdateCID, &rv );
+    nsCOMPtr<nsISoftwareUpdate> softwareUpdate = 
+             do_GetService(kSoftwareUpdateCID, &rv);
 
     if (!NS_SUCCEEDED(rv))
 
@@ -372,14 +373,16 @@ extern "C" void RunInstallOnThread(void *data)
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
     nsCOMPtr<nsIEventQueue> eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) 
     {   
         eventQService->CreateMonitoredThreadEventQueue();
         eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     }
 
-    NS_WITH_SERVICE(nsISoftwareUpdate, softwareUpdate, kSoftwareUpdateCID, &rv );
+    nsCOMPtr<nsISoftwareUpdate> softwareUpdate = 
+             do_GetService(kSoftwareUpdateCID, &rv);
 
     if (!NS_SUCCEEDED(rv))
     {
@@ -405,7 +408,8 @@ extern "C" void RunInstallOnThread(void *data)
         {
             PRBool ownRuntime = PR_FALSE;
 
-            NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
+            nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+                     do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
             if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
             {
                 // service not available (wizard context?)

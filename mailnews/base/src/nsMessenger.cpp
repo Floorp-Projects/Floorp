@@ -999,7 +999,7 @@ nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 
 	nsresult rv;
 
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -1143,7 +1143,7 @@ nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
   folderArray->AppendElement(folderResource);
   rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
   if (NS_FAILED(rv)) return rv;
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
   if(NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIRDFLiteral> nameLiteral;
@@ -1510,7 +1510,7 @@ nsSaveMsgListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
     m_fileSpec->CloseStream();
     if (NS_FAILED(rv)) goto done;
     if (m_templateUri) { // ** save as template goes here
-        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
         if (NS_FAILED(rv)) goto done;
         nsCOMPtr<nsIRDFResource> res;
         rv = rdf->GetResource(m_templateUri, getter_AddRefs(res));
@@ -1785,8 +1785,8 @@ nsMessenger::InitStringBundle()
     {
 		char    *propertyURL = MESSENGER_STRING_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
-                        kStringBundleServiceCID, &res);
+		nsCOMPtr<nsIStringBundleService> sBundleService = 
+		         do_GetService(kStringBundleServiceCID, &res);
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL,

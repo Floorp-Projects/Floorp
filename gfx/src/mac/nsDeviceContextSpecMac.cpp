@@ -344,7 +344,8 @@ PDlgInitUPP theInitProcPtr;
 
       // about to put up the dialog, so get the initial settings
       nsresult  rv = NS_ERROR_FAILURE;
-      NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+      nsCOMPtr<nsIPrintOptions> printService = 
+               do_GetService(kPrintOptionsCID, &rv);
       if (printService) {
         gCurrOptions = printService;
       } else {

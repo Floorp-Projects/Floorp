@@ -98,7 +98,8 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 	{
 		nsCOMPtr <nsISupports> destSupports = getter_AddRefs(m_destFolders->ElementAt(i));
 		nsCOMPtr <nsIMsgFolder> destFolder(do_QueryInterface(destSupports));
-        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        nsCOMPtr<nsIImapService> imapService = 
+                 do_GetService(kCImapService, &rv);
         if (NS_SUCCEEDED(rv) && imapService)
 		{
 			nsMsgKeyArray *keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(i);

@@ -523,7 +523,7 @@ nsSmtpService::loadSmtpServers()
     if (mSmtpServersLoaded) return NS_OK;
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     nsXPIDLCString serverList;
@@ -553,7 +553,7 @@ nsresult
 nsSmtpService::saveKeyList()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     return prefs->SetCharPref("mail.smtpservers", mServerKeyList);
@@ -576,7 +576,7 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
     server->SetKey(NS_CONST_CAST(char *,key));
     mSmtpServers->AppendElement(server);
 
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
         if (mServerKeyList.IsEmpty())
             mServerKeyList = key;
@@ -625,7 +625,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
   *aServer = nsnull;
   // always returns NS_OK, just leaving *aServer at nsnull
   if (!mDefaultSmtpServer) {
-      NS_WITH_SERVICE(nsIPref, pref, NS_PREF_CONTRACTID, &rv);
+      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
       if (NS_FAILED(rv)) return rv;
 
       // try to get it from the prefs
@@ -685,7 +685,7 @@ nsSmtpService::SetDefaultServer(nsISmtpServer *aServer)
     rv = aServer->GetKey(getter_Copies(serverKey));
     if (NS_FAILED(rv)) return rv;
     
-    NS_WITH_SERVICE(nsIPref, pref, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
     pref->SetCharPref("mail.smtp.defaultserver", serverKey);
     return NS_OK;
 }

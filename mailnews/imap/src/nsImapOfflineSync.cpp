@@ -101,8 +101,8 @@ nsresult nsImapOfflineSync::AdvanceToNextServer()
 
   if (!m_allServers)
   {
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                      NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     NS_ASSERTION(accountManager && NS_SUCCEEDED(rv), "couldn't get account mgr");
     if (!accountManager || NS_FAILED(rv)) return rv;
 
@@ -351,7 +351,7 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
   nsresult rv;
   
   nsCOMPtr<nsIRDFResource> res;
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) return ; // ### return error code.
   rv = rdf->GetResource(moveDestination, getter_AddRefs(res));
   if (NS_SUCCEEDED(rv))
@@ -432,7 +432,7 @@ void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *current
   nsresult rv;
 
   nsCOMPtr<nsIRDFResource> res;
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) return ; // ### return error code.
   rv = rdf->GetResource(copyDestination, getter_AddRefs(res));
   if (NS_SUCCEEDED(rv))
@@ -864,7 +864,8 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
     m_mailboxupdatesStarted = PR_TRUE;
     // Update the INBOX first so the updates on the remaining
     // folders pickup the results of any filter moves.
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(kMsgAccountManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsISupportsArray> servers;
   

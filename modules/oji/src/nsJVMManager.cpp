@@ -260,7 +260,8 @@ NS_METHOD
 nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIEventQueue> eventQueue = NULL;
@@ -572,7 +573,8 @@ nsJVMManager::StartupJVM(void)
 
 	// beard:  Now uses the nsIPluginHost to load the plugin factory for NS_JVM_MIME_TYPE.
     nsresult err;
-    NS_WITH_SERVICE(nsIPluginHost, pluginHost, kPluginManagerCID, &err);
+    nsCOMPtr<nsIPluginHost> pluginHost = 
+             do_GetService(kPluginManagerCID, &err);
     if (NS_FAILED(err)) {
         fStatus = nsJVMStatus_Failed;
 
@@ -595,9 +597,8 @@ nsJVMManager::StartupJVM(void)
 
     nsIPlugin* pluginFactory = NULL;
      // this code is the correct way to obtain pluggable JVM
-    NS_WITH_SERVICE(nsIPlugin, f,  
-                    NS_INLINE_PLUGIN_CONTRACTID_PREFIX NS_JVM_MIME_TYPE, 
-                    &err);
+    nsCOMPtr<nsIPlugin> f = 
+             do_GetService(NS_INLINE_PLUGIN_CONTRACTID_PREFIX NS_JVM_MIME_TYPE, &err);
     if (NS_FAILED(err) || !f) {
         err = pluginHost->GetPluginFactory(NS_JVM_MIME_TYPE, &pluginFactory);
     } 
@@ -849,8 +850,8 @@ nsJVMManager::IsAllPermissionGranted(
   
     // Get the Script Security Manager.
 
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
     // Ask the Script Security Manager to make a Certificate Principal.
@@ -892,14 +893,15 @@ nsJVMManager::IsAppletTrusted(
     nsresult rv      = NS_OK;
 
     //-- Get the signature verifier service
-    NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
+    nsCOMPtr<nsISignatureVerifier> verifier = 
+             do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) // No signature verifier available
         return NS_OK;
 
     // Get the Script Security Manager.
 
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 

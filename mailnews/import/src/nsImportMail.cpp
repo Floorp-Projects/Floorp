@@ -826,7 +826,8 @@ ImportMailThread( void *stuff)
 	nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsImportStringBundle::GetStringBundleProxy()));
 
 	// Initialize the curFolder proxy object
-	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+	         do_GetService(kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
 		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 										curFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));

@@ -33,10 +33,12 @@
 // Now you can replace this:
 // {
 //      nsresult rv;
-//      NS_WITH_SERVICE(nsIMyService, pIMyService, kMyServiceCID, &rv);
+//      nsCOMPtr<nsIMyService> pIMyService = 
+//               do_GetService(kMyServiceCID, &rv);
 //      if(NS_FAILED(rv))
 //          return;
-//      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+//      nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+//               do_GetService(kProxyObjectManagerCID, &rv);
 //      if(NS_FAILED(rv))
 //          return;
 //      nsIMyService pIProxiedObject = NULL;
@@ -90,8 +92,8 @@ class nsProxiedService
                                           getter_AddRefs(mService));
        if (NS_FAILED(*rv)) return;
 
-       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-                       kProxyObjectManagerCID, rv);
+       nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+                do_GetService(kProxyObjectManagerCID, rv);
        if (NS_FAILED(*rv)) return;
 
        PRInt32 proxyType = PROXY_SYNC;

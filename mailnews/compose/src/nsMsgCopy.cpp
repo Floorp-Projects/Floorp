@@ -276,8 +276,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     {
         nsCOMPtr<nsIMsgImapMailFolder> imapFolder =
             do_QueryInterface(dstFolder);
-        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                        NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+        nsCOMPtr<nsIMsgAccountManager> accountManager = 
+                 do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         PRBool shutdownInProgress = PR_FALSE;
         rv = accountManager->GetShutdownInProgress(&shutdownInProgress);
@@ -288,8 +288,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
           // process
             mCopyListener->mCopyObject = do_QueryInterface(tPtr);
             mCopyListener->mCopyInProgress = PR_TRUE;
-            NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                            kEventQueueServiceCID, &rv);
+            nsCOMPtr<nsIEventQueueService> pEventQService = 
+                     do_GetService(kEventQueueServiceCID, &rv);
             if (NS_FAILED(rv)) return rv;
             pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                                 getter_AddRefs(eventQueue)); 
@@ -419,7 +419,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   
   // as long as it doesn't start with anyfolder://
   if (PL_strncasecmp(ANY_SERVER, aFolderURI, PL_strlen(aFolderURI)) != 0) {
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     // get the corresponding RDF resource
@@ -448,8 +448,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       return NS_ERROR_INVALID_ARG;
 
     // get the account manager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // if anyfolder will do, go look for one.

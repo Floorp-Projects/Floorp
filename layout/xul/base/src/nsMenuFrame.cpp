@@ -837,7 +837,8 @@ void
 nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+  nsCOMPtr<nsIXBLService> xblService = 
+           do_GetService("@mozilla.org/xbl;1", &rv);
   PRInt32 dummy;
   PRInt32 count;
   mContent->ChildCount(count);
@@ -1379,7 +1380,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 
     // Get the accelerator key value from prefs, overriding the default:
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && prefs)
       rv = prefs->GetIntPref("ui.key.accelKey", &accelKey);
   }

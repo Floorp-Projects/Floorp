@@ -294,7 +294,8 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     }
 
     if (mFileTransport == nsnull) {
-        NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+        nsCOMPtr<nsIFileTransportService> fts = 
+                 do_GetService(kFileTransportServiceCID, &rv);
         if (NS_FAILED(rv)) goto done;
 
         rv = fts->CreateTransportFromStreamIO(mStreamIO, getter_AddRefs(mFileTransport));

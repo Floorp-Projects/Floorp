@@ -162,7 +162,8 @@ nsDateTimeChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv))
       return rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+    nsCOMPtr<nsISocketTransportService> socketService = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> transport;
@@ -183,7 +184,8 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv))
       return rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+    nsCOMPtr<nsISocketTransportService> socketService = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> transport;

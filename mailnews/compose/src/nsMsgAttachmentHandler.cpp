@@ -199,7 +199,7 @@ int
 nsMsgAttachmentHandler::PickEncoding(const char *charset, nsIMsgSend *mime_delivery_state)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
   
   // use the boolean so we only have to test for uuencode vs base64 once
   PRBool needsB64 = PR_FALSE;
@@ -989,7 +989,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 	    //
       PRInt32       width = 72;
       nsresult      rv;
-      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
       if (NS_SUCCEEDED(rv) && prefs) 
         prefs->GetIntPref("mailnews.wraplength", &width);
       // Let sanity reign!

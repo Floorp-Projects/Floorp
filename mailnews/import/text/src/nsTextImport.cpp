@@ -206,7 +206,7 @@ NS_IMETHODIMP nsTextImport::GetImportInterface( const char *pImportType, nsISupp
 		nsIImportGeneric *		pGeneric = nsnull;
 		rv = ImportAddressImpl::Create( &pAddress);
 		if (NS_SUCCEEDED( rv)) {
-			NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+			nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 			if (NS_SUCCEEDED( rv)) {
 				rv = impSvc->CreateNewGenericAddressBooks( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
@@ -340,7 +340,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		return( rv);
 	}
 		
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Failed to obtain the import service\n");
 		return( rv);
@@ -633,7 +633,7 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 	PRInt32	bufSz = 10240;
 	char	*pLine = new char[bufSz];
 	
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 
 	rv = nsTextAddress::ReadRecordNumber( m_fileLoc, pLine, bufSz, m_delim, &lineLen, index);
 	if (NS_SUCCEEDED( rv)) {
@@ -702,7 +702,7 @@ NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIFileSpec *location, nsIImportFi
 	// from the same file format.
 	
 	nsresult rv;
-	NS_WITH_SERVICE( nsIPref, prefs, kPrefServiceCID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	prefStr;
 		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
@@ -781,7 +781,7 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 	PRBool	done = PR_FALSE;
 	nsresult rv;
 	// NS_WITH_PROXIED_SERVICE( nsIPref, prefs, kPrefServiceCID, NS_UI_THREAD_EVENTQ, &rv);
-	NS_WITH_SERVICE( nsIPref, prefs, kPrefServiceCID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
 
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	prefStr;

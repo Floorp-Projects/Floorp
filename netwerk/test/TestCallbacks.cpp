@@ -237,8 +237,8 @@ int main(int argc, char *argv[]) {
     if (NS_FAILED(rv)) return rv;
 
     // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService,
-                    kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = eventQService->CreateThreadEventQueue();

@@ -91,7 +91,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 	nsresult rv;
 
 
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
 	if(sizeLimitEnabled == -1){
@@ -217,7 +217,8 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -225,13 +226,14 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 	{
 		(*dbPath) += kCollectedAddressbook;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
 		delete dbPath;
 	}
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr <nsIRDFResource> resource;
@@ -352,7 +354,7 @@ int PR_CALLBACK
 nsAbAddressCollecter::collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data){
 	nsresult rv;
 	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 	if(NS_FAILED(pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &adCol->sizeLimitEnabled))){
 		adCol->sizeLimitEnabled = PR_TRUE;
 	}
@@ -366,7 +368,7 @@ nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpre
 	nsresult rv;
 	PRInt32 max = 0;
 	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 	if(NS_FAILED(pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &max))){
 		adCol->maxCABsize = 0;
 	} else 
@@ -377,7 +379,7 @@ nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpre
 
 void nsAbAddressCollecter::setupPrefs(void){
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+	nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 
 	if (NS_FAILED(rv)) 
 		return;

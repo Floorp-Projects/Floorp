@@ -184,7 +184,7 @@ nsresult nsMsgOfflineManager::AdvanceToNextState(nsresult exitStatus)
 nsresult nsMsgOfflineManager::SynchronizeOfflineImapChanges()
 {
   nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   return imapService->PlaybackAllOfflineOperations(m_window, this);
 }
@@ -196,7 +196,8 @@ nsresult nsMsgOfflineManager::SendUnsentMessages()
   ShowStatus("sendingUnsent");
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater = do_CreateInstance(kMsgSendLaterCID, &rv); 
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_WITH_SERVICE(nsIMsgAccountManager,accountManager,kCMsgAccountManagerCID,&rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(kCMsgAccountManagerCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   // now we have to iterate over the identities, finding the *unique* unsent messages folder
   // for each one, determine if they have unsent messages, and if so, add them to the list
@@ -261,8 +262,8 @@ nsresult nsMsgOfflineManager::ShowStatus(const char *statusMsgName)
   {
     char    *propertyURL = MESSENGER_STRING_URL;
 
-    NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
-                        kStringBundleServiceCID, &res);
+    nsCOMPtr<nsIStringBundleService> sBundleService = 
+             do_GetService(kStringBundleServiceCID, &res);
     if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
     {
       res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));
@@ -283,7 +284,7 @@ nsresult nsMsgOfflineManager::DownloadOfflineNewsgroups()
 {
 	nsresult rv;
   ShowStatus("downloadingNewsgroups");
-  NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
+  nsCOMPtr<nsINntpService> nntpService(do_GetService(kNntpServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && nntpService)
     rv = nntpService->DownloadNewsgroupsForOffline(m_window, this);
 
@@ -296,7 +297,7 @@ nsresult nsMsgOfflineManager::DownloadMail()
 {
   nsresult rv = NS_OK;
   ShowStatus("downloadingMail");
-	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   return imapService->DownloadAllOffineImapFolders(m_window, this);
   // ### we should do get new mail on pop servers, and download imap messages for offline use.
@@ -342,7 +343,7 @@ NS_IMETHODIMP nsMsgOfflineManager::SynchronizeForOffline(PRBool downloadNews, PR
 nsresult nsMsgOfflineManager::SetOnlineState(PRBool online)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> netService(do_GetService(kIOServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && netService)
   {
     rv = netService->SetOffline(!online);

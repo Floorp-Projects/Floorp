@@ -321,7 +321,8 @@ nsInstallTrigger::InitRegistry(void)
     nsresult rv;
 
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProperties> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     
     if(!directoryService)
         return NS_ERROR_FAILURE;

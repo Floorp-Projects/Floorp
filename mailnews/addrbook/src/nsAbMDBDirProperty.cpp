@@ -147,7 +147,7 @@ NS_IMETHODIMP nsAbMDBDirProperty::EditMailListToDatabase(const char *uri)
 
 	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
 
-	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+	nsCOMPtr<nsIAddressBook> addresBook(do_GetService(kAddrBookCID, &rv)); 
 	if (NS_SUCCEEDED(rv))
 		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
 

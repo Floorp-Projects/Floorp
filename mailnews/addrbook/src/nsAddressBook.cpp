@@ -164,7 +164,7 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> parentResource;
@@ -189,7 +189,7 @@ NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsISupportsArray> resourceArray;
@@ -206,7 +206,7 @@ nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 
 	nsresult rv;
 
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> commandResource;
@@ -297,7 +297,8 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 	{
 		nsFileSpec* dbPath = nsnull;
 
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		nsCOMPtr<nsIAddrBookSession> abSession = 
+		         do_GetService(kAddrBookSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
@@ -307,7 +308,8 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 			file.Truncate(pos);
 		(*dbPath) += file;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
@@ -333,14 +335,16 @@ nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **d
 	{
 		nsFileSpec* dbPath = nsnull;
 
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		nsCOMPtr<nsIAddrBookSession> abSession = 
+		         do_GetService(kAddrBookSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
 		nsAutoString file; file.AssignWithConversion(pDbFile);
 		(*dbPath) += file;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
 
@@ -531,7 +535,8 @@ nsresult AddressBookParser::ParseFile()
 	nsFileSpec* dbPath = nsnull;
 	char* fileName = PR_smprintf("%s.mab", leafName);
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -539,7 +544,8 @@ nsresult AddressBookParser::ParseFile()
 	if (dbPath)
 	{
 		(*dbPath) += fileName;
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+		         do_GetService(kAddressBookDBCID, &rv);
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 	}
@@ -547,7 +553,7 @@ nsresult AddressBookParser::ParseFile()
 
     delete dbPath;
 
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
 	NS_ENSURE_SUCCESS(rv, rv);
 	nsCOMPtr<nsIRDFResource> parentResource;
 	char *parentUri = PR_smprintf("%s", kAllDirectoryRoot);
@@ -561,7 +567,7 @@ nsresult AddressBookParser::ParseFile()
 	if (PL_strcmp(fileName, kPersonalAddressbook) == 0)
 	{
 		// This is the personal address book, get name from prefs
-		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
 		if (NS_FAILED(rv) || !pPref) 
 			return nsnull;
 		PRUnichar *dirName = nsnull;

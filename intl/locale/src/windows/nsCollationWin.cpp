@@ -89,7 +89,8 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
-    NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &res);
+    nsCOMPtr<nsILocaleService> localeService = 
+             do_GetService(kLocaleServiceCID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);

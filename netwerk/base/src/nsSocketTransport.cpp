@@ -613,10 +613,7 @@ nsresult nsSocketTransport::doResolveHost(void)
         //
         mNetAddress.ipv6.port = PR_htons(((mProxyPort != -1 && !mProxyTransparent) ? mProxyPort : mPort));
 
-        NS_WITH_SERVICE(nsIDNSService,
-                        pDNSService,
-                        kDNSService,
-                        &rv);
+        nsCOMPtr<nsIDNSService> pDNSService(do_GetService(kDNSService, &rv));
         if (NS_FAILED(rv)) return rv;
 
         //
@@ -696,10 +693,8 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         if (!mSocketTypeCount) 
             mSocketFD = PR_OpenTCPSocket(PR_AF_INET6);
         else {
-            NS_WITH_SERVICE(nsISocketProviderService,
-                            pProviderService,
-                            kSocketProviderService,
-                            &rv);
+            nsCOMPtr<nsISocketProviderService> pProviderService = 
+                     do_GetService(kSocketProviderService, &rv);
 
             char * destHost = mHostName;
             PRInt32 destPort = mPort;
@@ -886,10 +881,7 @@ nsSocketTransport::doBlockingConnection()
     // The hostname has not been resolved yet...
     //
     if (PR_IsNetAddrType(&mNetAddress, PR_IpAddrAny)) {
-        NS_WITH_SERVICE(nsIDNSService,
-                        pDNSService,
-                        kDNSService,
-                        &rv);
+        nsCOMPtr<nsIDNSService> pDNSService(do_GetService(kDNSService, &rv));
         if (NS_FAILED(rv)) return rv;
 
         nsXPIDLCString result;
@@ -1269,8 +1261,8 @@ nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
 
     // Otherwise, generate a proxied event sink
     nsresult rv;
-    NS_WITH_SERVICE(nsIProxyObjectManager, 
-                    proxyMgr, kProxyObjectManagerCID, &rv);
+    nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
+             do_GetService(kProxyObjectManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     return proxyMgr->GetProxyForObject(NS_CURRENT_EVENTQ, // calling thread

@@ -384,7 +384,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
 nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIRDFResource> resource;
@@ -501,7 +501,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     
     PRBool enableAutocomplete = PR_TRUE;
 
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     NS_ENSURE_SUCCESS(rv, rv);
 
     pPref->GetBoolPref("mail.enable_autocomplete", &enableAutocomplete);

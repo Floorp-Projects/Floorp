@@ -1857,7 +1857,7 @@ nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aR
   contractID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);
+  nsCOMPtr<nsIElementFactory> elementFactory(do_GetService(contractID, &rv));
 
   *aResult = elementFactory;
   NS_IF_ADDREF(*aResult);

@@ -184,7 +184,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindow
 {
   nsresult rv = NS_OK;
   PRInt32  stateVar;
-	NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
+	nsCOMPtr<nsIAbSync> sync(do_GetService(kAbSync, &rv)); 
 	if (NS_FAILED(rv) || !sync) 
 		return rv;
 
@@ -230,7 +230,8 @@ nsAbSyncDriver::GetString(const PRUnichar *aStringName)
 	{
 		char    *propertyURL = AB_STRING_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		nsCOMPtr<nsIStringBundleService> sBundleService = 
+		         do_GetService(kStringBundleServiceCID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));
@@ -255,7 +256,7 @@ NS_IMETHODIMP nsAbSyncDriver::CancelIt()
   PRInt32  stateVar;
 
   mCancelled = PR_TRUE;
-  NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
+  nsCOMPtr<nsIAbSync> sync(do_GetService(kAbSync, &rv)); 
 	if (NS_FAILED(rv) || !sync) 
 		return rv;
 

@@ -2211,7 +2211,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     platformCharset.AssignWithConversion("ISO-8859-1");
 
   // get the encoder
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
   rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
 
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do

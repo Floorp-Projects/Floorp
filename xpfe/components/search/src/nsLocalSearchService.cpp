@@ -301,8 +301,8 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 				{
 				    if (!strcmp(token, "text"))
 				    {
-            			NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
-            				kTextToSubURICID, &rv);
+            			nsCOMPtr<nsITextToSubURI> textToSubURI = 
+            			         do_GetService(kTextToSubURICID, &rv);
             			if (NS_SUCCEEDED(rv) && (textToSubURI))
             			{
             				PRUnichar	*uni = nsnull;

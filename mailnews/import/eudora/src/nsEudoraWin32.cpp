@@ -182,7 +182,7 @@ nsresult nsEudoraWin32::FindMailboxes( nsIFileSpec *pRoot, nsISupportsArray **pp
 		return( rv);
 	}
 		
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 	
@@ -551,7 +551,8 @@ PRBool nsEudoraWin32::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **loc
 	PRBool		result = PR_FALSE;
 	nsresult	rv;
 
-	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
+	nsCOMPtr<nsIMsgAccountManager> accMgr = 
+	         do_GetService(kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
@@ -883,7 +884,7 @@ void nsEudoraWin32::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pA
 {
 	nsresult	rv;
 	
-	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
+	nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv)); 
 	if (NS_SUCCEEDED(rv) && smtpService) {
 		nsCOMPtr<nsISmtpServer>		foundServer;
 	
@@ -1179,7 +1180,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 		return( rv);
 	}
 		
-	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(kImportServiceCID, &rv));
 	if (NS_FAILED( rv))
 		return( rv);
 	

@@ -107,8 +107,8 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
     // Get the Script Security Manager.
 
     nsresult rv      = NS_OK;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
 
@@ -180,8 +180,8 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
     // Get the Script Security Manager.
 
     nsresult rv      = NS_OK;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
 
@@ -227,8 +227,8 @@ nsCSecurityContext::nsCSecurityContext(JSContext* cx)
       // Get the Script Security Manager.
 
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return;
 
     
@@ -271,8 +271,8 @@ nsCSecurityContext::nsCSecurityContext(nsIPrincipal *principal)
       // Get the Script Security Manager.
 
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !secMan) return;
 
     nsCOMPtr<nsIPrincipal> sysprincipal;

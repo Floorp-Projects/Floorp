@@ -342,7 +342,8 @@ nsDiskCacheRecordChannel::OpenInputStream(PRUint32 offset, PRUint32 count, PRUin
   if(mFileTransport)
     return NS_ERROR_IN_PROGRESS;
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);
   if(NS_FAILED(rv)) return rv;
   
   rv = fts->CreateTransport(mSpec, PR_RDONLY, PR_IRUSR | PR_IWUSR,
@@ -371,7 +372,8 @@ nsDiskCacheRecordChannel::OpenOutputStream(PRUint32 offset, PRUint32 count, PRUi
 
   nsCOMPtr<nsIOutputStream> outputStream;
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);
   if(NS_FAILED(rv)) return rv;
   
   rv = fts->CreateTransport(mSpec, PR_WRONLY | PR_CREATE_FILE, PR_IRUSR | PR_IWUSR,
@@ -410,7 +412,8 @@ nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *a
   }
 
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
  
   rv = fts->CreateTransport(mSpec, PR_RDONLY, PR_IRUSR | PR_IWUSR,

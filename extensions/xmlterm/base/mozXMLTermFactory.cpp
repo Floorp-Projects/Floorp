@@ -252,7 +252,8 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &result));
   if (NS_FAILED(result)) return result;
 
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &result);
+  nsCOMPtr<nsIComponentManager> compMgr = 
+           do_GetService(kComponentManagerCID, &result);
   if (NS_FAILED(result)) return result;
 
   printf("Registering lineterm interface\n");
@@ -285,7 +286,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &result));
   if (NS_FAILED(result)) return result;
 
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &result);
+  nsCOMPtr<nsIComponentManager> compMgr = 
+           do_GetService(kComponentManagerCID, &result);
   if (NS_FAILED(result)) return result;
 
   result = compMgr->UnregisterComponent(kLineTermCID, aPath);

@@ -127,7 +127,8 @@ nsresult nsMailboxProtocol::OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStar
 
   NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);    
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);    
   NS_ENSURE_SUCCESS(rv, rv);
     
   nsCOMPtr<nsIFileInputStream>     fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);

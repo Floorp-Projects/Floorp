@@ -59,7 +59,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prevInstance, LPSTR lpszCmdLine,
       
 		nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
-		NS_WITH_SERVICE(nsINativeApp, nativeAppService, kNativeAppCID, &rv);
+		nsCOMPtr<nsINativeApp> nativeAppService(do_GetService(kNativeAppCID, &rv));
 
 		if(NS_FAILED(rv))
 			{
@@ -131,7 +131,8 @@ LRESULT CALLBACK WndProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 			{
 			nsresult rv;
-			NS_WITH_SERVICE(nsINativeApp, nativeAppService, kNativeAppCID, &rv);
+			nsCOMPtr<nsINativeApp> nativeAppService = 
+			         do_GetService(kNativeAppCID, &rv);
 			if(NS_FAILED(rv))
 				{
 				ErrorBox("Could not get NativeAppService");

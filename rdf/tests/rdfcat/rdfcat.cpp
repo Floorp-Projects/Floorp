@@ -152,7 +152,8 @@ main(int argc, char** argv)
     NS_SetupRegistry();
 
     // Get netlib off the floor...
-    NS_WITH_SERVICE(nsIEventQueueService, theEventQueueService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> theEventQueueService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = theEventQueueService->CreateThreadEventQueue();

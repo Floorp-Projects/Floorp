@@ -182,7 +182,7 @@ nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
   }
   else if (JSVAL_IS_OBJECT(aValue)) {
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(kXPConnectCID, &rv));
     if (NS_FAILED(rv))
       return JS_FALSE;
 
@@ -330,8 +330,8 @@ nsJSUtils::GetSecurityManager(JSContext *cx, JSObject *obj)
 {
   if (!mCachedSecurityManager) {
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       nsJSUtils::ReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
       return nsnull;

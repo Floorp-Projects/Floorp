@@ -170,7 +170,7 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
   char* separator;
   nsresult res;
 
-  NS_WITH_SERVICE(nsIIOService, netservice, kIOServiceCID, &res);
+  nsCOMPtr<nsIIOService> netservice(do_GetService(kIOServiceCID, &res));
 
   if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
     const nsAutoString html_dlgs = nsAutoString(HTML_DLGS_URL);

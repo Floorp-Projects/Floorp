@@ -178,7 +178,8 @@ nsImapMailFolder::nsImapMailFolder() :
 
     // Get current thread envent queue
 
-  NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+  nsCOMPtr<nsIEventQueueService> pEventQService = 
+           do_GetService(kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                             getter_AddRefs(m_eventQueue));
@@ -274,7 +275,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv)); 
 
   if(NS_FAILED(rv))
     return rv;
@@ -573,7 +574,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   nsresult rv = NS_ERROR_NULL_POINTER;
   PRBool selectFolder = PR_FALSE;
 
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv)); 
 
   if (NS_FAILED(rv)) return rv;
 
@@ -619,7 +620,8 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
   {
     nsCOMPtr <nsIEventQueue> eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+             do_GetService(kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                         getter_AddRefs(eventQ));
@@ -668,7 +670,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
         return NS_MSG_FOLDER_EXISTS;
     }
 
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
         rv = imapService->CreateFolder(m_eventQueue, this, 
                                        folderName, this, nsnull);
@@ -723,7 +725,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     PRInt32 folderStart = leafName.FindChar('/');
     if (folderStart > 0)
     {
-        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
         nsCOMPtr<nsIRDFResource> res;
         nsCOMPtr<nsIMsgImapMailFolder> parentFolder;
         nsCAutoString uri (mURI);
@@ -832,7 +834,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 NS_IMETHODIMP nsImapMailFolder::List()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   if (NS_FAILED(rv)) 
     return rv;
   rv = imapService->ListFolder(m_eventQueue, this, nsnull, nsnull);
@@ -879,7 +881,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
       parentName.Truncate(leafPos);
       // get the corresponding RDF resource
       // RDF will create the folder resource if it doesn't already exist
-      NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &status);
+      nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &status));
       if (NS_FAILED(status)) return status;
       nsCOMPtr<nsIRDFResource> resource;
       status = rdf->GetResource(parentName, getter_AddRefs(resource));
@@ -893,7 +895,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
     nsXPIDLString folderName;
     GetName(getter_Copies(folderName));
     nsresult rv;
-	  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
+	  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv)); 
 	  if (NS_SUCCEEDED(rv) && imapService)
     {
       nsCOMPtr <nsIURI> uri;
@@ -1023,7 +1025,7 @@ NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow 
   }
   else
   {
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv) && imapService)
     {
         rv = imapService->Expunge(m_eventQueue, this, aListener, nsnull);
@@ -1045,7 +1047,8 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
     rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_SUCCEEDED(rv))
     {
-       NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+       nsCOMPtr<nsIMsgAccountManager> accountManager = 
+                do_GetService(kMsgAccountManagerCID, &rv);
        if (accountManager)
        {
          // if we are emptying trash on exit and we are an aol server then don't perform
@@ -1090,7 +1093,8 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         rv = trashFolder->Delete(); // delete summary spec
         rv = trashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(trashDB));
 
-        NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+        nsCOMPtr<nsIImapService> imapService = 
+                 do_GetService(kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
         {
             if (aListener)
@@ -1180,7 +1184,7 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName, nsIMsgWindow *
     if (incomingImapServer)
       RecursiveCloseActiveConnections(incomingImapServer);
 
-    NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
         rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
                                      nsnull);
@@ -1945,7 +1949,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     PRBool deleteNoTrash = TrashOrDescendentOfTrash(this);;
     PRBool confirmed = PR_FALSE;
 
-    NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
     {
         rv = folders->Count(&folderCount);
@@ -2606,7 +2610,8 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
         nsCOMPtr<nsIUrlListener> urlListener;
         m_copyState->m_tmpFileSpec->Flush();
         m_copyState->m_tmpFileSpec->CloseStream();
-        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        nsCOMPtr<nsIImapService> imapService = 
+                 do_GetService(kCImapService, &rv);
         if (NS_FAILED(rv)) return rv;
         rv = QueryInterface(NS_GET_IID(nsIUrlListener),
                             getter_AddRefs(urlListener));
@@ -2803,7 +2808,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 NS_IMETHODIMP nsImapMailFolder::SetImapFlags(const char *uids, PRInt32 flags, nsIURI **url)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   if (NS_SUCCEEDED(rv))
   {
     rv = imapService->SetMessageFlags(m_eventQueue, this, this,
@@ -2817,7 +2822,7 @@ NS_IMETHODIMP nsImapMailFolder::PlaybackOfflineFolderCreate(const PRUnichar *fol
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!folderName) return rv;
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
         rv = imapService->CreateFolder(m_eventQueue, this, 
                                        folderName, this, url);
@@ -2828,7 +2833,7 @@ NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRInt32
                          nsIUrlListener *aUrlListener, nsIMsgWindow *aWindow)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString uids;
@@ -2851,7 +2856,7 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
   nsresult rv = NS_OK;
   if (!WeAreOffline())
   {
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
     {
       nsCAutoString msgIds;
@@ -2929,7 +2934,7 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
 NS_IMETHODIMP nsImapMailFolder::LiteSelect(nsIUrlListener *aUrlListener)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   if (NS_SUCCEEDED(rv))
     rv = imapService->LiteSelectFolder(m_eventQueue, this, aUrlListener, nsnull);
   return rv;
@@ -2945,7 +2950,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   if (m_moveCoalescer)
   {
 
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &err); 
+    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &err)); 
     nsCOMPtr<nsIRDFResource> res;
     err = rdf->GetResource(destFolderUri, getter_AddRefs(res));
     if (NS_FAILED(err))
@@ -3252,7 +3257,7 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
 #endif
   nsresult rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
   if (NS_FAILED(rv) || messageIds.Length() == 0) return rv;
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   if (NS_FAILED(rv)) return rv;
 
   SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
@@ -3276,7 +3281,7 @@ NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, 
     m_downloadingFolderForOfflineUse = PR_TRUE;
 
     SetNotifyDownloadedLines(PR_TRUE); 
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_FAILED(rv)) return rv;
     // selecting the folder with m_downloadingFolderForOfflineUse true will cause
     // us to fetch any message bodies we don't have.
@@ -3403,15 +3408,16 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIEventQueue> queue;  
         // get the Event Queue for this thread...
-        NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                        kEventQueueServiceCID, &rv);
+        nsCOMPtr<nsIEventQueueService> pEventQService = 
+                 do_GetService(kEventQueueServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                                  getter_AddRefs(queue));
         if (NS_FAILED(rv)) return rv;
         
-        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        nsCOMPtr<nsIImapService> imapService = 
+                 do_GetService(kCImapService, &rv);
         if (NS_FAILED(rv)) return rv;
    
         rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
@@ -3592,8 +3598,8 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
 PRBool nsImapMailFolder::ShowDeletedMessages()
 {
   nsresult err;
-    NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                    kCImapHostSessionList, &err);
+    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+             do_GetService(kCImapHostSessionList, &err);
   PRBool showDeleted = PR_FALSE;
 
   if (NS_SUCCEEDED(err) && hostSession)
@@ -3636,8 +3642,8 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
 PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 {
   nsresult err;
-    NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                    kCImapHostSessionList, &err);
+    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+             do_GetService(kCImapHostSessionList, &err);
   PRBool rv = PR_TRUE;
 
     if (NS_SUCCEEDED(err) && hostSession)
@@ -3774,7 +3780,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   m_urlRunning = PR_FALSE;
   m_downloadingFolderForOfflineUse = PR_FALSE;
   SetNotifyDownloadedLines(PR_FALSE);
-  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+  nsCOMPtr<nsIMsgMailSession> session = 
+           do_GetService(kMsgMailSessionCID, &rv); 
   nsCOMPtr <nsIMsgCopyServiceListener> listener;
   if (aUrl)
   {
@@ -4287,7 +4294,8 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
   if (m_moveCoalescer)
   {
     nsCOMPtr <nsIEventQueue> eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+             do_GetService(kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                         getter_AddRefs(eventQ));
@@ -4698,7 +4706,7 @@ nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, 
   nsCOMPtr<nsIRDFResource> res;
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     return rv; 
   rv = rdf->GetResource(sourceFolderURI, getter_AddRefs(res));
@@ -4746,7 +4754,7 @@ nsresult nsImapMailFolder::GetOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgO
   nsCOMPtr<nsIRDFResource> res;
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     return rv; 
   rv = rdf->GetResource(sourceFolderURI, getter_AddRefs(res));
@@ -5124,7 +5132,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   if (WeAreOffline())
     return CopyMessagesOffline(srcFolder, messages, isMove, msgWindow, listener);
 
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
 
   if (!srcFolder || !messages) return NS_ERROR_NULL_POINTER;
   nsCOMPtr <nsIMsgIncomingServer> srcServer;
@@ -5261,7 +5269,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     rv = NS_NewISupportsArray(getter_AddRefs(messages));
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
@@ -5426,8 +5434,8 @@ nsImapMailFolder::ClearCopyState(nsresult rv)
         nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(m_copyState->m_srcSupport);
         m_copyState = null_nsCOMPtr();
         nsresult result;
-        NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
-                        kMsgCopyServiceCID, &result); 
+        nsCOMPtr<nsIMsgCopyService> copyService = 
+                 do_GetService(kMsgCopyServiceCID, &result);
         if (NS_SUCCEEDED(result))
             copyService->NotifyCompletion(srcSupport, this, rv);    
     }
@@ -5590,7 +5598,8 @@ NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
     rv = imapServer->GetUsingSubscription(&usingSubscription);
     if (NS_SUCCEEDED(rv) && !usingSubscription)
     {
-        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        nsCOMPtr<nsIImapService> imapService = 
+                 do_GetService(kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
             rv = imapService->DiscoverChildren(m_eventQueue, this, this,
                                                m_onlineFolderName,

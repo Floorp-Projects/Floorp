@@ -630,7 +630,8 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 	// load the component and get all of the info we need from it....
 	// then call AddModule
 	nsresult	rv;
-   	NS_WITH_SERVICE( nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+   	nsCOMPtr<nsIComponentManager> compMgr = 
+   	         do_GetService(kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 	
 	nsCID				clsId;
@@ -675,7 +676,8 @@ nsIImportModule *ImportModuleDesc::GetModule( PRBool keepLoaded)
 	}
 	
 	nsresult	rv;
-   	NS_WITH_SERVICE( nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+   	nsCOMPtr<nsIComponentManager> compMgr = 
+   	         do_GetService(kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return nsnull;
 	
 	rv = compMgr->CreateInstance( m_cid, nsnull, NS_GET_IID(nsIImportModule), (void **) &m_pModule);

@@ -164,7 +164,8 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
                                                 getter_AddRefs(mPref));  
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> service = 
+             do_GetService(kCStringBundleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, getter_AddRefs(mStringBundle));
@@ -205,7 +206,8 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::DisplayPageInfoUI()
 {
     nsresult res;
-    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
+    nsCOMPtr<nsIPSMComponent> psm = 
+             do_GetService(PSM_COMPONENT_CONTRACTID, &res);
     if (NS_FAILED(res)) 
         return res;
     
@@ -563,7 +565,8 @@ nsSecureBrowserUIImpl::IsURLfromPSM(nsIURI* aURL, PRBool* value)
 
     if ( PL_strncasecmp(host, "127.0.0.1",  9) == 0 ) {
 	    nsresult res;
-	    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
+	    nsCOMPtr<nsIPSMComponent> psm = 
+	             do_GetService(PSM_COMPONENT_CONTRACTID, &res);
 	    if (NS_FAILED(res)) 
 		    return res;
 
@@ -648,7 +651,8 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSi
                 
             if (!outCheckValue) {
                 mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
+                nsCOMPtr<nsIPSMComponent> psm = 
+                         do_GetService(PSM_COMPONENT_CONTRACTID, &res);
                 if (NS_FAILED(res)) 
                     return res;
                 psm->PassPrefs();
@@ -686,7 +690,8 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSi
             if (!outCheckValue)
             {
                 mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
+                nsCOMPtr<nsIPSMComponent> psm = 
+                         do_GetService(PSM_COMPONENT_CONTRACTID, &res);
                 if (NS_FAILED(res)) 
                     return res;
                 psm->PassPrefs();
@@ -759,7 +764,8 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink, nsIReq
 
             if (!outCheckValue) {
                 mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &rv);
+                nsCOMPtr<nsIPSMComponent> psm = 
+                         do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
                 if (NS_FAILED(rv)) 
                     return rv;
                 psm->PassPrefs();
@@ -833,7 +839,8 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         
         if (!outCheckValue) {
             mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
-            NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &rv);
+            nsCOMPtr<nsIPSMComponent> psm = 
+                     do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
             if (NS_FAILED(rv)) 
                 return rv;
             return psm->PassPrefs();

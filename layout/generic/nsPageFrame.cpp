@@ -444,7 +444,8 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     if (printOptBits & nsIPrintOptions::kOptPrintDatePrinted) {
       // Get Locale for Formating DateTime
       nsCOMPtr<nsILocale> locale; 
-      NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
+      nsCOMPtr<nsILocaleService> localeSvc = 
+               do_GetService(kLocaleServiceCID, &rv);
       if (NS_SUCCEEDED(rv)) {
 
         rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));

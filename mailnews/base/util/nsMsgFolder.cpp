@@ -346,7 +346,7 @@ NS_IMETHODIMP
 nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   
 	if(NS_FAILED(rv)) 
 		return rv;
@@ -536,7 +536,7 @@ nsMsgFolder::parseURI(PRBool needServer)
   rv = url->SetSpec(mURI);
   if (NS_FAILED(rv)) return rv;
 
-  NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
 
   //
   // pull some info out of the URI
@@ -605,8 +605,8 @@ nsMsgFolder::parseURI(PRBool needServer)
       
       // turn it back into a server:
       
-      NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                      NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+      nsCOMPtr<nsIMsgAccountManager> accountManager = 
+               do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_alecf
@@ -1453,11 +1453,11 @@ NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
   // same uri will get us the cached rdf resouce which should have the folder
   // flag set appropriately.
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   
 	if(NS_FAILED(rv)) return rv;
 
@@ -2211,7 +2211,8 @@ nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
 
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+		nsCOMPtr<nsIFolderListener> folderListenerManager = 
+		         do_GetService(kMsgFolderListenerManagerCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			folderListenerManager->OnItemPropertyChanged(supports, property, oldValue, newValue);
 
@@ -2240,7 +2241,8 @@ nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
   }
 
   // Notify listeners who listen to every folder
-  NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv);
+  nsCOMPtr<nsIFolderListener> folderListenerManager = 
+           do_GetService(kMsgFolderListenerManagerCID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = folderListenerManager->OnItemUnicharPropertyChanged(supports,
                                                    property,
@@ -2268,7 +2270,8 @@ nsresult nsMsgFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldVal
 
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+		nsCOMPtr<nsIFolderListener> folderListenerManager = 
+		         do_GetService(kMsgFolderListenerManagerCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			folderListenerManager->OnItemIntPropertyChanged(supports, property, oldValue, newValue);
 
@@ -2295,7 +2298,8 @@ nsMsgFolder::NotifyBoolPropertyChanged(nsIAtom* property,
 
 		//Notify listeners who listen to every folder
 		nsresult rv;
-		NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+		nsCOMPtr<nsIFolderListener> folderListenerManager = 
+		         do_GetService(kMsgFolderListenerManagerCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			folderListenerManager->OnItemBoolPropertyChanged(supports, property, oldValue, newValue);
 
@@ -2319,7 +2323,8 @@ nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property,
 
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+	nsCOMPtr<nsIFolderListener> folderListenerManager = 
+	         do_GetService(kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		folderListenerManager->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
 
@@ -2343,7 +2348,8 @@ nsresult nsMsgFolder::NotifyItemAdded(nsISupports *parentItem, nsISupports *item
 
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+	nsCOMPtr<nsIFolderListener> folderListenerManager = 
+	         do_GetService(kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		folderListenerManager->OnItemAdded(parentItem, item, viewString);
 
@@ -2363,7 +2369,8 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *parentItem, nsISupports *it
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
-  NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+  nsCOMPtr<nsIFolderListener> folderListenerManager = 
+           do_GetService(kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		folderListenerManager->OnItemRemoved(parentItem, item, viewString);
 
@@ -2383,7 +2390,8 @@ nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
 	}
 	//Notify listeners who listen to every folder
 	nsresult rv;
-	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
+	nsCOMPtr<nsIFolderListener> folderListenerManager = 
+	         do_GetService(kMsgFolderListenerManagerCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		folderListenerManager->OnItemEvent(this, aEvent);
 

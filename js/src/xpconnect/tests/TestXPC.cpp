@@ -509,7 +509,8 @@ TestThreadJSContextStack(JSContext* jscontext)
     printf("ThreadJSContextStack tests...\n");
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
+    nsCOMPtr<nsIJSContextStack> stack = 
+             do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
 
     if(NS_SUCCEEDED(rv))
     {
@@ -564,7 +565,7 @@ TestThreadJSContextStack(JSContext* jscontext)
 static void ShowXPCException()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv) && xpc)
     {
         nsCOMPtr<nsIException> e;
@@ -619,7 +620,8 @@ static void TestCategoryManmager()
     printf("\n");    
 
     nsresult rv;
-    NS_WITH_SERVICE(nsICategoryManager, catman, "@mozilla.org/categorymanager;1", &rv);
+    nsCOMPtr<nsICategoryManager> catman = 
+             do_GetService("@mozilla.org/categorymanager;1", &rv);
     if(NS_SUCCEEDED(rv) && catman)
     {
         printf("got category manager\n");    
@@ -678,7 +680,8 @@ int main()
     SetupRegistry();
 
     // get the JSRuntime from the runtime svc, if possible
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+             do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
     if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt)
         DIE("FAILED to get a JSRuntime");
 
@@ -688,11 +691,12 @@ int main()
 
     JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(!xpc) 
         DIE("FAILED to get xpconnect service\n");
 
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
+    nsCOMPtr<nsIJSContextStack> cxstack = 
+             do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
     if(NS_FAILED(rv)) 
         DIE("FAILED to get the nsThreadJSContextStack service!\n");
 

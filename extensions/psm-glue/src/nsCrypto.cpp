@@ -583,8 +583,8 @@ cryptojs_DestroyCRMFRequests(PCMT_CONTROL control, CMUint32 *rsrcids,
 nsIEventQueue* getUIEventQueue()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
-                  NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIEventQueueService> eventQService = 
+           do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
     return nsnull;
   

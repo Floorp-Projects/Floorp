@@ -693,7 +693,8 @@ nsresult nsPrefBranch::QueryObserver(const char *aPrefName)
     PL_strncasecmp(aPrefName, capabilityPrefix, sizeof(capabilityPrefix)-1) == 0)
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, kSecurityManagerCID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(kSecurityManagerCID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     PRBool enabled;
     rv = secMan->IsCapabilityEnabled("CapabilityPreferencesAccess", &enabled);

@@ -164,7 +164,7 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
         // XXX Ignore return values.
         prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);

@@ -912,14 +912,15 @@ nsSelection::nsSelection()
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
 	if (NS_SUCCEEDED(rv) && prefs)
   {
     static char pref[] = "clipboard.autocopy";
 	  PRBool autoCopy = PR_FALSE;
     if (NS_SUCCEEDED(prefs->GetBoolPref(pref, &autoCopy)) && autoCopy)
     {
-      NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "@mozilla.org/autocopy;1", &rv);
+      nsCOMPtr<nsIAutoCopyService> autoCopyService = 
+               do_GetService("@mozilla.org/autocopy;1", &rv);
 
       if (NS_SUCCEEDED(rv) && autoCopyService)
       {

@@ -598,7 +598,7 @@ NS_IMETHODIMP nsSOAPCall::SetParameters()
   }
 
   nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
   if(NS_SUCCEEDED(rv)) {
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
   }
@@ -739,7 +739,7 @@ nsSOAPCall::GetScriptListener(nsISupports* aObject,
   nsresult rv;
 
   nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
   if(NS_SUCCEEDED(rv)) {
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
   }

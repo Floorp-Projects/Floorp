@@ -95,7 +95,8 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
   // XXX this code and the object data member "mIsPrintingSelection" is only needed
   // for the hack for printing selection where we make the page the max size
   nsresult rv;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printService = 
+           do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
     PRInt16 printType;
     printService->GetPrintRange(&printType);

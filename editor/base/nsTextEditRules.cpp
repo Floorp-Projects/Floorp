@@ -529,7 +529,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   };
   PRInt32 singleLineNewlineBehavior = 1;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && prefs)
     rv = prefs->GetIntPref("editor.singleLine.pasteNewlines",
                            &singleLineNewlineBehavior);

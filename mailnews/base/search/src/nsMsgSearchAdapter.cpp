@@ -341,7 +341,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 
 	PRBool forceAscii = PR_FALSE;
 
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
 
 	if (NS_SUCCEEDED(rv))
 	{

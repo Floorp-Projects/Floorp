@@ -78,7 +78,7 @@ nsresult nsAbBSDirectory::AddDirectory(const char *uriName, nsIAbDirectory **chi
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 	
 	nsCOMPtr<nsIRDFResource> res;
@@ -98,7 +98,8 @@ nsresult nsAbBSDirectory::AddDirectory(const char *uriName, nsIAbDirectory **chi
 nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->NotifyDirectoryItemAdded(this, item);
 	return NS_OK;
@@ -107,7 +108,8 @@ nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
 nsresult nsAbBSDirectory::NotifyItemDeleted(nsISupports *item)
 {
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsCOMPtr<nsIAddrBookSession> abSession = 
+	         do_GetService(kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->NotifyDirectoryItemDeleted(this, item);
 
@@ -173,7 +175,8 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 					nsresult rv = NS_OK;
 					nsCOMPtr<nsIAddrDatabase>  listDatabase;  
 
-					NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+					nsCOMPtr<nsIAddrBookSession> abSession = 
+					         do_GetService(kAddrBookSessionCID, &rv); 
 					if (NS_SUCCEEDED(rv))
 					{
 						nsFileSpec* dbPath;
@@ -182,7 +185,8 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 						nsAutoString file; file.AssignWithConversion(server->fileName);
 						(*dbPath) += file;
 
-						NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+						nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+						         do_GetService(kAddressBookDBCID, &rv);
 
 						if (NS_SUCCEEDED(rv) && addrDBFactory)
 							rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);

@@ -150,7 +150,8 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
     nsresult rv = NS_ERROR_FAILURE;
     if (m_srcIsImap4)
     {
-        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        nsCOMPtr<nsIImapService> imapService = 
+                 do_GetService(kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIUrlListener> urlListener;
@@ -166,8 +167,8 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                 msgIds.AppendInt((PRInt32) keyArray.GetAt(i));
             }
             nsCOMPtr<nsIEventQueue> eventQueue;
-            NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                            kEventQueueServiceCID, &rv);  
+            nsCOMPtr<nsIEventQueueService> pEventQService = 
+                     do_GetService(kEventQueueServiceCID, &rv);
             if (NS_SUCCEEDED(rv) && pEventQService)
             {
                 pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,

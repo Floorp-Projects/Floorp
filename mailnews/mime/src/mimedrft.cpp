@@ -238,8 +238,8 @@ mime_dump_attachments ( attachmentList );
 	}
   }
 
-  NS_WITH_SERVICE(nsIMsgComposeService, msgComposeService,
-				  kCMsgComposeServiceCID, &rv); 
+  nsCOMPtr<nsIMsgComposeService> msgComposeService = 
+           do_GetService(kCMsgComposeServiceCID, &rv);
   if ((NS_FAILED(rv)) || (!msgComposeService))
     return rv; 
   
@@ -370,7 +370,7 @@ GetMailXlateionPreference(void)
   nsresult res;
   PRBool   xlate = PR_FALSE; 
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (NS_SUCCEEDED(res) && prefs)
     res = prefs->GetBoolPref("mail.unknown", &xlate);
   
@@ -385,7 +385,7 @@ GetMailSigningPreference(void)
   nsresult  res;
   PRBool    signit = PR_FALSE;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (NS_SUCCEEDED(res) && prefs)
     res = prefs->GetBoolPref("mail.unknown", &signit);
 
@@ -1111,7 +1111,7 @@ mime_insert_forwarded_message_headers(char            **body,
       }
     }
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
     if (NS_SUCCEEDED(res) && prefs)
       res = prefs->GetIntPref("mail.show_headers", &show_headers);
 

@@ -301,7 +301,8 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   mOutStream = nsnull;
 
   // Create a socket transport...
-  NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+  nsCOMPtr<nsISocketTransportService> sts = 
+           do_GetService(kSocketTransportServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = sts->CreateTransport(aHostName, aPort, nsnull, -1, 0, 0, &mTransport);
     if (NS_SUCCEEDED(rv)) {
@@ -353,7 +354,8 @@ TestConnection::Run(void)
   nsresult rv = NS_OK;
 
   // Create the Event Queue for this thread...
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  nsCOMPtr<nsIEventQueueService> eventQService = 
+           do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = eventQService->CreateThreadEventQueue();
@@ -622,7 +624,8 @@ main(int argc, char* argv[])
   if (NS_FAILED(rv)) return rv;
 
   // Create the Event Queue for this thread...
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  nsCOMPtr<nsIEventQueueService> eventQService = 
+           do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = eventQService->CreateThreadEventQueue();

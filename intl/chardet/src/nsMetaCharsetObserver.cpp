@@ -45,7 +45,7 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
   bMetaCharsetObserverStarted = PR_FALSE;
   nsresult res;
   mAlias = nsnull;
-  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
   if(NS_SUCCEEDED(res)) {
      mAlias = calias;
   }
@@ -341,7 +341,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
     bMetaCharsetObserverStarted = PR_TRUE;
 
     // get the observer service
-    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_CONTRACTID, &res);
+    nsCOMPtr<nsIObserverService> anObserverService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
     if (NS_FAILED(res)) return res;
 
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
@@ -359,7 +360,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
   if (bMetaCharsetObserverStarted == PR_TRUE)  {
     bMetaCharsetObserverStarted = PR_FALSE;
 
-    NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_CONTRACTID, &res);
+    nsCOMPtr<nsIObserverService> anObserverService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
     if (NS_FAILED(res)) return res;
      
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);

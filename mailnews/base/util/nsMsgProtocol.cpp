@@ -169,7 +169,8 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, P
   rv = GetFileFromURL(aURL, getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);    
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);    
   if (NS_FAILED(rv)) return rv;
 
   rv = fts->CreateTransport(file, PR_RDWR | PR_CREATE_FILE,
@@ -804,7 +805,8 @@ nsresult nsMsgFilePostHelper::Init(nsIOutputStream * aOutStream, nsMsgAsyncWrite
   mProtInstance = aProtInstance; // mscott work out ref counting issue
 
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);    
+  nsCOMPtr<nsIFileTransportService> fts = 
+           do_GetService(kFileTransportServiceCID, &rv);    
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsITransport> transport;
@@ -1190,7 +1192,8 @@ PRUnichar *GetStringByID(PRInt32 stringID)
    nsresult rv;
    nsCOMPtr <nsIStringBundle> sBundle = nsnull;
 
-   NS_WITH_SERVICE (nsIStringBundleService, sBundleService, kStringBundleServiceCID, &rv);
+   nsCOMPtr<nsIStringBundleService> sBundleService = 
+            do_GetService(kStringBundleServiceCID, &rv);
    if (NS_FAILED(rv) || (nsnull == sBundleService)) 
       return nsnull;
 

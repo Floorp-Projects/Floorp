@@ -1105,7 +1105,7 @@ PRBool nsNntpService::WeAreOffline()
 	nsresult rv = NS_OK;
   PRBool offline = PR_FALSE;
 
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> netService(do_GetService(kIOServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && netService)
   {
     netService->GetOffline(&offline);
@@ -1275,7 +1275,7 @@ NS_IMETHODIMP
 nsNntpService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_NNTP, aPath, PR_FALSE /* set default */);
@@ -1289,7 +1289,7 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;
@@ -1521,7 +1521,7 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 { 
     if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefService, kCPrefServiceCID, &rv);
+	nsCOMPtr<nsIPref> prefService(do_GetService(kCPrefServiceCID, &rv));
 	if (NS_SUCCEEDED(rv))
 	{
 		PRInt32 layout;

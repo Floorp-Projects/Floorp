@@ -235,7 +235,7 @@ CanvasFrame::Init(nsIPresContext*  aPresContext,
 
   // Get the prefs service
   nsresult result;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
   if (NS_SUCCEEDED(result)) {
     prefs->GetBoolPref("layout.reflow.showframecounts", &mShowFocusPrefOn);
   }

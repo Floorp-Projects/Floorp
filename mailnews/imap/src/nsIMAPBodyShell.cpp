@@ -66,7 +66,7 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	if (gMaxDepth == 0)
 	{
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) && prefs) 
 		// one-time initialization
       prefs->GetIntPref("mail.imap.mime_parts_on_demand_max_depth", &gMaxDepth);   

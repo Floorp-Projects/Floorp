@@ -379,8 +379,8 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer(PRBool *done)
   *done = PR_TRUE;
   if (!m_allServers)
   {
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                      NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     NS_ASSERTION(accountManager && NS_SUCCEEDED(rv), "couldn't get account mgr");
     if (!accountManager || NS_FAILED(rv)) return rv;
 

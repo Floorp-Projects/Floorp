@@ -172,7 +172,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   nsCAutoString modifiedUrlSpec(urlSpec);
 
   PRBool bAutoQuote = PR_TRUE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_SUCCEEDED(rv))
     prefs->GetBoolPref("mail.auto_quote", &bAutoQuote);
 
@@ -203,13 +203,14 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
 
   // now we want to create a necko channel for this url and we want to open it
   mQuoteChannel = null_nsCOMPtr();
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> netService(do_GetService(kIOServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
   rv = netService->NewChannelFromURI(aURL, getter_AddRefs(mQuoteChannel));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsISupports> ctxt = do_QueryInterface(aURL);
 
-  NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
+  nsCOMPtr<nsIStreamConverterService> streamConverterService = 
+           do_GetService(kIStreamConverterServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStreamListener> convertedListener;

@@ -102,7 +102,7 @@ nsImapService::nsImapService()
   if (!gInitialized)
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) && prefs) 
     {
 	    prefs->GetBoolPref("mail.imap.mime_parts_on_demand", &gMIMEOnDemand);
@@ -678,7 +678,8 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
 #endif
           nsCOMPtr<nsIEventQueue> queue;	
           // get the Event Queue for this thread...
-	        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+	        nsCOMPtr<nsIEventQueueService> pEventQService = 
+	                 do_GetService(kEventQueueServiceCID, &rv);
 
           if (NS_FAILED(rv)) return rv;
 
@@ -834,7 +835,8 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     {
       nsCOMPtr<nsIEventQueue> queue;	
       // get the Event Queue for this thread...
-	    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+	    nsCOMPtr<nsIEventQueueService> pEventQService = 
+	             do_GetService(kEventQueueServiceCID, &rv);
 
       if (NS_FAILED(rv)) return rv;
 
@@ -1060,7 +1062,8 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 #endif
       nsCOMPtr<nsIEventQueue> queue;	
       // get the Event Queue for this thread...
-	    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+	    nsCOMPtr<nsIEventQueueService> pEventQService = 
+	             do_GetService(kEventQueueServiceCID, &rv);
 
       if (NS_FAILED(rv)) return rv;
 
@@ -3022,8 +3025,8 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
     if (NS_FAILED(rv)) return rv;
     
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = 
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIMsgIncomingServer> server;
@@ -3107,7 +3110,7 @@ NS_IMETHODIMP
 nsImapService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_IMAP, aPath, PR_FALSE /* set default */);
@@ -3121,7 +3124,7 @@ nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;
@@ -3268,7 +3271,8 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
 
 	nsCOMPtr<nsIEventQueue> queue;
     // get the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
@@ -3302,7 +3306,8 @@ nsImapService::GetListOfFoldersOnServer(nsIImapIncomingServer *aServer, nsIMsgWi
 
 	nsCOMPtr<nsIEventQueue> queue;
         // get the Event Queue for this thread...
-        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+        nsCOMPtr<nsIEventQueueService> pEventQService = 
+                 do_GetService(kEventQueueServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));

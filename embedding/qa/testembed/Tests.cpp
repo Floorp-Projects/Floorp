@@ -251,7 +251,8 @@ void CTests::OnTestsCreateprofile()
 
 	if (myDialog.DoModal() == IDOK)
     {       
-//      NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+//      nsCOMPtr<nsIProfile> profileService = 
+//               do_GetService(NS_PROFILE_CONTRACTID, &rv);
 		nsCOMPtr<nsIProfile> theProfServ(do_GetService(NS_PROFILE_CONTRACTID));
 		if (!theProfServ)
 		{
