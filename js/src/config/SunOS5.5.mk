@@ -36,7 +36,7 @@
 # Config stuff for SunOS5.5
 #
 
-AS = as
+AS = /usr/ccs/bin/as
 ifndef NS_USE_NATIVE
 CC = gcc
 CCC = g++
