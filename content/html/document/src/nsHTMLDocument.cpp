@@ -302,11 +302,11 @@ nsHTMLDocument::~nsHTMLDocument()
     mBaseTarget = nsnull;
   }
   if (nsnull != mLastModified) {
-    nsString::Recycle(mLastModified);
+    delete mLastModified;
     mLastModified = nsnull;
   }
   if (nsnull != mReferrer) {
-    nsString::Recycle(mReferrer);
+    delete mReferrer;
     mReferrer = nsnull;
   }
   NS_IF_RELEASE(mParser);
@@ -1183,7 +1183,7 @@ nsHTMLDocument::SetLastModified(const nsAReadableString& aLastModified)
     }
   }
   else if (nsnull != mLastModified) {
-    nsString::Recycle(mLastModified);
+    delete mLastModified;
     mLastModified = nsnull;
   }
 
@@ -1202,7 +1202,7 @@ nsHTMLDocument::SetReferrer(const nsAReadableString& aReferrer)
     }
   }
   else if (nsnull != mReferrer) {
-    nsString::Recycle(mReferrer);
+    delete mReferrer;
     mReferrer = nsnull;
   }
 

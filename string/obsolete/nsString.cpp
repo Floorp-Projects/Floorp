@@ -545,7 +545,8 @@ nsCString* nsCString::ToNewString() const {
 
 /**
  * Creates an ascii clone of this string
- * Note that calls to this method should be matched with calls to Recycle().
+ * Note that calls to this method should be matched with calls to
+ * |nsMemory::Free|.
  * @update  gess 02/24/00
  * @return  ptr to new ascii string
  */
@@ -555,7 +556,8 @@ char* nsCString::ToNewCString() const {
 
 /**
  * Creates an unicode clone of this string
- * Note that calls to this method should be matched with calls to Recycle().
+ * Note that calls to this method should be matched with calls to
+ * |nsMemory::Free|.
  * @update  gess 01/04/99
  * @return  ptr to new ascii string
  */
@@ -1311,94 +1313,6 @@ PRBool nsCString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCa
   return result;
 }
    
-
-/**************************************************************
-  Define the string deallocator class...
- **************************************************************/
-#ifndef RICKG_TESTBED
-class nsCStringDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    nsCString* aString= (nsCString*)anObject;
-    if(aString){
-      delete aString;
-    }
-    return 0;
-  }
-};
-#endif
-
-/****************************************************************************
- * This class, appropriately enough, creates and recycles nsCString objects..
- ****************************************************************************/
-
-
-
-#ifndef RICKG_TESTBED
-class nsCStringRecycler {
-public:
-  nsCStringRecycler() : mDeque(0) {
-  }
-
-  ~nsCStringRecycler() {
-    nsCStringDeallocator theDeallocator;
-    mDeque.ForEach(theDeallocator); //now delete the strings
-  }
-
-  void Recycle(nsCString* aString) {
-    mDeque.Push(aString);
-  }
-
-  nsCString* CreateString(void){
-    nsCString* result=(nsCString*)mDeque.Pop();
-    if(!result)
-      result=new nsCString();
-    return result;
-  }
-  nsDeque mDeque;
-};
-static nsCStringRecycler& GetRecycler(void);
-
-
-/**
- * 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-nsCStringRecycler& GetRecycler(void){
-  static nsCStringRecycler gCRecycler;
-  return gCRecycler;
-}
-
-#endif
-
-/**
- * Call this mehod when you're done 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-nsCString* nsCString::CreateString(void){
-  nsCString* result=0;
-#ifndef RICKG_TESTBED
-  result=GetRecycler().CreateString();
-#endif
-  return result;
-}
-
-/**
- * Call this mehod when you're done 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-void nsCString::Recycle(nsCString* aString){
-#ifndef RICKG_TESTBED
-  GetRecycler().Recycle(aString);
-#endif
-}
-
 #if 0
 
 /**

@@ -517,9 +517,9 @@ nsWindow::~nsWindow()
   // delete any of the IME structures that we allocated
   //
   if (mIMECompString!=NULL) 
-	nsCString::Recycle(mIMECompString);
+	delete mIMECompString;
   if (mIMECompUnicode!=NULL) 
-	nsString::Recycle(mIMECompUnicode);
+	delete mIMECompUnicode;
   if (mIMEAttributeString!=NULL) 
 	delete [] mIMEAttributeString;
   if (mIMECompClauseString!=NULL) 

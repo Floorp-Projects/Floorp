@@ -246,14 +246,16 @@ public:
 
   /**
    * Creates an ISOLatin1 clone of this string
-   * Note that calls to this method should be matched with calls to Recycle().
+   * Note that calls to this method should be matched with calls to
+   * |nsMemory::Free|.
    * @return  ptr to new isolatin1 string
    */
   char* ToNewCString() const;
 
   /**
    * Creates a unicode clone of this string
-   * Note that calls to this method should be matched with calls to Recycle().
+   * Note that calls to this method should be matched with calls to
+   * |nsMemory::Free|.
    * @return  ptr to new unicode string
    */
   PRUnichar* ToNewUnicode() const;
@@ -434,10 +436,6 @@ public:
 
 
   void    DebugDump(void) const;
-
-
-  static  void        Recycle(nsCString* aString);
-  static  nsCString*  CreateString(void);
 
 private:
     // NOT TO BE IMPLEMENTED

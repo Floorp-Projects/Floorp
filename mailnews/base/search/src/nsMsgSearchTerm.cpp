@@ -778,9 +778,6 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
 
 	res = MatchString(stringToMatch, charset, pResult);
 
-//	if (mimedecode == PR_TRUE)
-//		nsString::Recycle(&decodedString);
-
 	return res;
 }
 

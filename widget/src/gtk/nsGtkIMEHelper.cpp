@@ -168,8 +168,8 @@ nsIMEPreedit::nsIMEPreedit()
 nsIMEPreedit::~nsIMEPreedit()
 {
   mCaretPosition = 0;
-  nsString::Recycle(mIMECompUnicode);
-  nsCString::Recycle(mIMECompAttr);
+  delete mIMECompUnicode;
+  delete mIMECompAttr;
   if (mCompositionUniString) {
     delete[] mCompositionUniString;
   }
