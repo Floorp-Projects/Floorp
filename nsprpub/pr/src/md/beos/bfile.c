@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; c-basic-offset: 8 -*- */
 /* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -600,15 +600,18 @@ _MD_pr_poll (PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 
 			
 			n = select(maxfd + 1, &rd, &wr, 0, tvp);
-			/*printf("POLL: maxfd = %d, select returns %d\n", maxfd, n);*/
-		    if ((n <= 0) && (timeout != PR_INTERVAL_NO_TIMEOUT))
+			/*printf("POLL: maxfd = %d, select returns %d, errno = %d %s\n", maxfd, n, errno, strerror(errno));*/
+			if (n == 0 || (n < 0 && errno == EINTR))
 			{
+			    if (timeout != PR_INTERVAL_NO_TIMEOUT)
+			    {
 				timeout -= PR_IntervalNow() - start;
 				if(timeout <= 0)
 				{
 					/* timed out */
 					n = 0;
 				}
+			    }
 			}
 			
 		} while(n < 0 && errno == EINTR);
@@ -697,10 +700,13 @@ _MD_pr_poll (PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 				}
 				
 			}
+		} else if (n < 0) {
+			/* hit error that's not EINTR. */
+			rc = -1;
 		}
 	}
 
-	/*printf("POLL: exiting _MD_pr_poll\n");*/
+	/*printf("POLL: exiting _MD_pr_poll with %d\n", rc);*/
 	return rc;
 }
 
