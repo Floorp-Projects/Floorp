@@ -36,7 +36,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.7 $ $Date: 2003/01/16 00:43:57 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.8 $ $Date: 2003/01/22 03:13:04 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -146,6 +146,10 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.7 $ 
  *
  */
 #define CKM_NETSCAPE (CKM_VENDOR_DEFINED|NSSCK_VENDOR_NETSCAPE)
+
+#define CKM_NETSCAPE_AES_KEY_WRAP      (CKM_NETSCAPE + 1)
+#define CKM_NETSCAPE_AES_KEY_WRAP_PAD  (CKM_NETSCAPE + 2)
+
 /*
  * HISTORICAL:
  * Do not attempt to use these. They are only used by NETSCAPE's internal

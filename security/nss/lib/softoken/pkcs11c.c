@@ -170,11 +170,6 @@ pk11_cdmf2des(unsigned char *cdmfkey, unsigned char *deskey)
 }
 
 
-static CK_RV
-pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
-		 CK_OBJECT_HANDLE hKey, CK_ATTRIBUTE_TYPE etype,
-		 PK11ContextType contextType, PRBool isEncrypt);
-
 /* NSC_DestroyObject destroys an object. */
 CK_RV
 NSC_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
@@ -651,8 +646,37 @@ finish_des:
 	}
 	context->update = (PK11Cipher) (isEncrypt ? AES_Encrypt : AES_Decrypt);
 	context->destroy = (PK11Destroy) AES_DestroyContext;
-
 	break;
+
+    case CKM_NETSCAPE_AES_KEY_WRAP_PAD:
+    	context->doPad = PR_TRUE;
+	/* fall thru */
+    case CKM_NETSCAPE_AES_KEY_WRAP:
+	context->multi = PR_FALSE;
+	context->blockSize = 8;
+	if (key_type != CKK_AES) {
+	    crv = CKR_KEY_TYPE_INCONSISTENT;
+	    break;
+	}
+	att = pk11_FindAttribute(key,CKA_VALUE);
+	if (att == NULL) {
+	    crv = CKR_KEY_HANDLE_INVALID;
+	    break;
+	}
+	context->cipherInfo = AESKeyWrap_CreateContext(
+	    (unsigned char*)att->attrib.pValue,
+	    (unsigned char*)pMechanism->pParameter,
+	    isEncrypt, att->attrib.ulValueLen);
+	pk11_FreeAttribute(att);
+	if (context->cipherInfo == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    break;
+	}
+	context->update = (PK11Cipher) (isEncrypt ? AESKeyWrap_Encrypt 
+	                                          : AESKeyWrap_Decrypt);
+	context->destroy = (PK11Destroy) AESKeyWrap_DestroyContext;
+	break;
+
     default:
 	crv = CKR_MECHANISM_INVALID;
 	break;
