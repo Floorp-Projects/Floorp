@@ -34,9 +34,11 @@
 #include "nsIRDFService.h"
 #include "nsIDBFolderInfo.h"
 #include "nsRDFCID.h"
+#include "nsIDocShell.h"
 #include "nsMsgFolderCompactor.h"
-#include "nsIStringBundle.h"
 #include "nsTextFormatter.h"
+#include "nsIPrompt.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -202,20 +204,28 @@ nsFolderCompactState::CompactHelper(nsIMsgFolder *folder)
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
-nsresult nsFolderCompactState::GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval)
+nsresult nsFolderCompactState::GetStringBundle(nsIStringBundle **aBundle)
 {
   nsCOMPtr<nsIStringBundle> stringBundle;
-
   nsresult res = NS_OK;
-  char    *propertyURL = MESSENGER_STRING_URL;
 
   nsCOMPtr<nsIStringBundleService> sBundleService = 
            do_GetService(kStringBundleServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
-    res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
+    res = sBundleService->CreateBundle(MESSENGER_STRING_URL, getter_AddRefs(stringBundle));
   }
-  if (stringBundle)
+  *aBundle = stringBundle;
+  NS_IF_ADDREF(*aBundle);
+  return res;
+  }
+
+nsresult nsFolderCompactState::GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval)
+  {
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsresult res = NS_OK;
+  res = GetStringBundle(getter_AddRefs(stringBundle));
+  if (stringBundle && NS_SUCCEEDED(res))
   {
 		res = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(statusMsgName).get(), retval);
   }
@@ -288,6 +298,37 @@ void nsFolderCompactState::ShowCompactingStatusMsg()
     }
 }
 
+void nsFolderCompactState::ThrowAlertMsg(const char *alertMsgName)
+{
+  nsresult rv=NS_OK;
+  nsXPIDLString folderName;
+  m_folder->GetName(getter_Copies(folderName));
+  nsCOMPtr<nsIDocShell> docShell;
+  if (m_window)
+    m_window->GetRootDocShell(getter_AddRefs(docShell));
+  if (docShell)
+  {
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = GetStringBundle(getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv) && bundle)
+    {
+      const PRUnichar *formatStrings[] =
+      {
+        folderName
+      };
+      nsXPIDLString alertString;
+      nsAutoString alertTemplate;
+      alertTemplate.AssignWithConversion(alertMsgName);
+      rv = bundle->FormatStringFromName(alertTemplate.get(),
+                                    formatStrings, 1,
+                                    getter_Copies(alertString));
+      nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (dialog && alertString)
+        dialog->Alert(nsnull, alertString);
+    }
+  }
+}
+
 NS_IMETHODIMP nsFolderCompactState::StartCompacting()
 {
   nsresult rv = NS_OK;
@@ -300,6 +341,7 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
   {
     NS_ASSERTION(0, "Some other operation is in progress on this folder");
     m_folder->NotifyCompactCompleted();
+    ThrowAlertMsg("compactFolderDeniedLock");
     if (m_compactAll)
       CompactNextFolder();
     else
@@ -524,7 +566,10 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
       NS_ASSERTION (writeCount == readCount, 
                     "Oops, write fail, folder can be corrupted!\n");
       if (writeCount != readCount)
+      {
+        ThrowAlertMsg("compactFolderWriteFailed");
         return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
+      }
     }
   }
   return rv;
