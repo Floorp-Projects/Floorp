@@ -94,6 +94,7 @@ class nsFileSpec;
 class nsString;
 class nsIInputStream;
 class nsIOutputStream;
+class nsIFileSpec;
 
 //========================================================================================
 //                          Compiler-specific macros, as needed
@@ -471,6 +472,7 @@ public:
                                           const nsFileSpec& inFile,
                                           int nsprMode = kDefaultMode,
                                           PRIntn accessMode = 00700); // <- OCTAL
+                                      nsInputFileStream(nsIFileSpec* inFile);
 
     void                              Open(
                                           const nsFileSpec& inFile,
@@ -486,6 +488,9 @@ public:
                                          { return nsInputStream::operator >>(ch); }
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
+
+protected:
+    void                              AssignFrom(nsISupports* stream);
 
 // DATA
 protected:
@@ -577,27 +582,22 @@ public:
                                       nsOutputFileStream() {}
                                       nsOutputFileStream(nsIOutputStream* inStream)
                                       {
-                                          mFile = nsQueryInterface(inStream);
-                                          mOutputStream = nsQueryInterface(inStream);
-                                          mStore = nsQueryInterface(inStream);
-                                          mFileOutputStream = nsQueryInterface(inStream);
+                                          AssignFrom(inStream);
                                       }
                                       nsOutputFileStream(
                                            const nsFileSpec& inFile,
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
-                                       {
+                                      {
                                           nsISupports* stream;
                                           if (NS_FAILED(NS_NewIOFileStream(
                                               &stream,
                                               inFile, nsprMode, accessMode)))
                                               return;
-                                          mFile = nsQueryInterface(stream);
-                                          mOutputStream = nsQueryInterface(stream);
-                                          mStore = nsQueryInterface(stream);
-                                          mFileOutputStream = nsQueryInterface(stream);
+                                          AssignFrom(stream);
                                           NS_RELEASE(stream);
                                       }
+                                      nsOutputFileStream(nsIFileSpec* inFile);
  
     virtual void                      flush();
     virtual void					  abort();
@@ -621,6 +621,9 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
+
+protected:
+    void                              AssignFrom(nsISupports* stream);
 
 // DATA
 protected:
@@ -690,7 +693,7 @@ public:
                                            const nsFileSpec& inFile,
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
-                                      :  nsInputFileStream(nsnull)
+                                      :  nsInputFileStream((nsIInputStream*)nsnull)
                                       ,  nsOutputStream(nsnull)
                                       {
                                           nsISupports* stream;

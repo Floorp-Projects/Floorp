@@ -23,6 +23,7 @@
 #include "nsFileStream.h"
 
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsIStringStream.h"
 
 #include <string.h>
@@ -291,16 +292,55 @@ nsInputFileStream::nsInputFileStream(
 	nsISupports* stream;
 	if (NS_FAILED(NS_NewIOFileStream(&stream, inFile, nsprMode, accessMode)))
         return;
+	AssignFrom(stream);
+	NS_RELEASE(stream);
+} // nsInputFileStream::nsInputFileStream
+
+//----------------------------------------------------------------------------------------
+nsInputFileStream::nsInputFileStream(nsIFileSpec* inSpec)
+//----------------------------------------------------------------------------------------
+{
+	nsIInputStream* stream;
+	if (NS_FAILED(inSpec->GetInputStream(&stream)))
+        return;
+	AssignFrom(stream);
+	NS_RELEASE(stream);
+} // nsInputFileStream::nsInputFileStream
+
+//----------------------------------------------------------------------------------------
+void nsInputFileStream::AssignFrom(nsISupports* stream)
+//----------------------------------------------------------------------------------------
+{
 	mFile = nsQueryInterface(stream);
 	mInputStream = nsQueryInterface(stream);
 	mStore = nsQueryInterface(stream);
 	mFileInputStream = nsQueryInterface(stream);
-	NS_RELEASE(stream);
-} // nsInputFileStream::nsInputFileStream
+}
 
 //========================================================================================
 //          nsOutputFileStream
 //========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream::nsOutputFileStream(nsIFileSpec* inSpec)
+//----------------------------------------------------------------------------------------
+{
+	nsIOutputStream* stream;
+	if (NS_FAILED(inSpec->GetOutputStream(&stream)))
+	  return;
+	AssignFrom(stream);
+	NS_RELEASE(stream);
+}
+
+//----------------------------------------------------------------------------------------
+void nsOutputFileStream::AssignFrom(nsISupports* stream)
+//----------------------------------------------------------------------------------------
+{
+    mFile = nsQueryInterface(stream);
+    mOutputStream = nsQueryInterface(stream);
+    mStore = nsQueryInterface(stream);
+    mFileOutputStream = nsQueryInterface(stream);
+}
 
 //----------------------------------------------------------------------------------------
 void nsOutputFileStream::flush()
