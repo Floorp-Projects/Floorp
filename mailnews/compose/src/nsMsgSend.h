@@ -130,6 +130,7 @@
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgCompFields.h"
 #include "nsIMsgSendListener.h"
+#include "nsIMessage.h"
 #if 0
 #include "nsMsgCopy.h"
 #endif
