@@ -195,7 +195,7 @@ var historyDNDObserver = {
     aXferData.data = new TransferData();
     aXferData.data.addDataForFlavour("text/unicode", uri);
     aXferData.data.addDataForFlavour("text/html", htmlString);
-    aXferData.data.addDataForFlavour("text/x-moz-url", url + "\n" + title);
+    aXferData.data.addDataForFlavour("text/x-moz-url", uri + "\n" + title);
   }
 };
 
