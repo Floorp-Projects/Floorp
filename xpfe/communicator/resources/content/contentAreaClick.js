@@ -149,7 +149,7 @@
         break;
     }
     if (linkNode) {
-      handleLinkClick(event, linkNode.href);
+      handleLinkClick(event, linkNode.href, linkNode);
       return true;
     } else {
       // Try simple XLink
@@ -164,7 +164,7 @@
       }
       if (href && href != "") {
         href = makeURLAbsolute(target.baseURI,href);
-        handleLinkClick(event, href);
+        handleLinkClick(event, href, null);
         return true;
       }
     }
@@ -178,7 +178,7 @@
     return true;
   }
 
-  function handleLinkClick(event, href)
+  function handleLinkClick(event, href, linkNode)
   {
     var theTab, loadInBackground;
     switch (event.button) {                                   
@@ -214,7 +214,7 @@
         saveModifier = saveModifier ? event.shiftKey : event.altKey;
           
         if (saveModifier) {                                           // if saveModifier is down
-          saveURL(href, gatherTextUnder(event.target));
+          saveURL(href, linkNode ? gatherTextUnder(linkNode) : "");
           return true;
         }
         if (event.altKey)                                             // if alt is down
