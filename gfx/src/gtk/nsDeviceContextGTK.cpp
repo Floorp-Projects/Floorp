@@ -971,6 +971,8 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
   PangoFontDescription *desc;
   desc = pango_font_description_from_string(fontname);
 
+  g_free(fontname);
+
   aFont->name.Truncate();
 #ifdef MOZ_ENABLE_XFT
   if (NS_IsXftEnabled()) {
