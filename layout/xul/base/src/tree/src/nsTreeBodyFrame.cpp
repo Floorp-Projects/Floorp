@@ -841,11 +841,11 @@ nsresult nsOutlinerBodyFrame::CheckVerticalOverflow()
 
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
-  if (!mVerticalOverflow && rowCount >= mPageCount) {
+  if (!mVerticalOverflow && rowCount > mPageCount) {
     mVerticalOverflow = PR_TRUE;
     verticalOverflowChanged = PR_TRUE;
   }
-  else if (mVerticalOverflow && rowCount < mPageCount) {
+  else if (mVerticalOverflow && rowCount <= mPageCount) {
     mVerticalOverflow = PR_FALSE;
     verticalOverflowChanged = PR_TRUE;
   }
