@@ -807,7 +807,7 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   // XXX This is a hack to keep Java around, see bug 76936
   nsCOMPtr<nsIJVMPlugin> isJava = do_QueryInterface(mEntryPoint);
 
-  if (isJava) return;
+  if (isJava && !aForceShutdown) return;
 
   if (mEntryPoint)
   {
