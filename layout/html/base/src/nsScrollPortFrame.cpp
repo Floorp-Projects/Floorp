@@ -36,10 +36,25 @@
 #include "nsIWebShell.h"
 #include "nsIBox.h"
 
+/*
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+
+static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
+
+
+*/
+
+
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+static NS_DEFINE_IID(kScrollPortViewCID, NS_SCROLL_PORT_VIEW_CID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
@@ -65,6 +80,8 @@ NS_NewScrollPortFrame(nsIFrame** aNewFrame)
 
 nsScrollPortFrame::nsScrollPortFrame()
 {
+    mIncremental = PR_FALSE;
+    mNeedsRecalc = PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -234,12 +251,16 @@ nsScrollPortFrame::CreateScrollingView(nsIPresContext& aPresContext)
   nsIViewManager* viewManager;
   parentView->GetViewManager(viewManager);
 
+ 
   // Create the scrolling view
-  nsresult rv = nsComponentManager::CreateInstance(kScrollingViewCID, 
+  nsresult rv = nsComponentManager::CreateInstance(kScrollPortViewCID, 
                                              nsnull, 
                                              kIViewIID, 
                                              (void **)&view);
 
+
+ 
+  
   
 
   if (NS_OK == rv) {
@@ -381,6 +402,22 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
 
+  const nsMargin& border = aReflowState.mComputedBorderPadding;
+
+  // we only worry about our border. Out scrolled frame worries about the padding.
+  // so lets remove the padding and add it to our computed size.
+  nsMargin padding = aReflowState.mComputedPadding;
+
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
+     ((nscoord&)aReflowState.mComputedWidth) += padding.left + padding.right;
+  
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
+     ((nscoord&)aReflowState.mComputedHeight) += padding.top + padding.bottom;
+
+
+  ((nsMargin&)aReflowState.mComputedPadding) = nsMargin(0,0,0,0);
+  ((nsMargin&)aReflowState.mComputedBorderPadding) -= padding;
+ 
   nscoord theHeight;
   nsIBox* box;
   nsresult result = kidFrame->QueryInterface(kIBoxIID, (void**)&box);
@@ -394,24 +431,14 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
                                      kidFrame, kidReflowSize);
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
 
-  /*
   if (mIncremental) {
       kidReflowState.reason = eReflowReason_Incremental; 
       mIncremental = PR_FALSE;
   }
-  */
 
   kidReflowState.mComputedWidth = aReflowState.mComputedWidth;
-
-  // if the computed width is not intrinsic make sure we subtract out the child's borders.
- // if (kidReflowState.mComputedWidth != NS_INTRINSICSIZE)
- //     kidReflowState.mComputedWidth -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-     
-
   kidReflowState.mComputedHeight = theHeight;
  
-  //if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE)
-  //    kidReflowState.mComputedHeight -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
  
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
               aStatus);
@@ -419,10 +446,9 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   CalculateChildTotalSize(kidFrame, kidDesiredSize);
 
-  
   // Place and size the child.
-  nscoord x = aReflowState.mComputedBorderPadding.left;
-  nscoord y = aReflowState.mComputedBorderPadding.top;
+  nscoord x = border.left;
+  nscoord y = border.top;
 
   // Compute our desired size
   if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
@@ -433,7 +459,7 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
   if (aDesiredSize.width > kidDesiredSize.width)
      kidDesiredSize.width = aDesiredSize.width;
 
-  aDesiredSize.width += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  aDesiredSize.width += border.left + border.right;
   
   // Compute our desired size
   if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
@@ -444,10 +470,12 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
   if (aDesiredSize.height > kidDesiredSize.height)
      kidDesiredSize.height = aDesiredSize.height;
 
-  aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-  
+  aDesiredSize.height += border.top + border.bottom;
+
   nsRect rect(x, y, kidDesiredSize.width, kidDesiredSize.height);
   kidFrame->SetRect(rect);
+  //printf("width=%d, height=%d\n", kidDesiredSize.width, kidDesiredSize.height);
+
 
   if (nsnull != aDesiredSize.maxElementSize) {
     nscoord maxWidth = aDesiredSize.maxElementSize->width;
@@ -461,6 +489,17 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
+  /*
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
+     ((nscoord&)aReflowState.mComputedWidth) -= (padding.left + padding.right);
+
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
+     ((nscoord&)aReflowState.mComputedHeight) -= (padding.top + padding.bottom);
+
+  ((nsMargin&)aReflowState.mComputedPadding) = padding;
+  ((nsMargin&)aReflowState.mComputedBorderPadding) += padding;
+  */
+
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
     ("exit nsScrollPortFrame::Reflow: status=%d width=%d height=%d",
      aStatus, aDesiredSize.width, aDesiredSize.height));
@@ -473,7 +512,7 @@ nsScrollPortFrame::Paint(nsIPresContext&      aPresContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Only paint the border and background if we're visible
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -490,8 +529,10 @@ nsScrollPortFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   // Paint our children
-  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+  nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                                  aWhichLayer);
+
+  return rv;
 }
 
 PRIntn
@@ -515,19 +556,119 @@ nsScrollPortFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Scroll", aResult);
 }
 
-/*
+/**
+ * Goes though each child asking for its size to determine our size. Returns our box size minus our border.
+ * This method is defined in nsIBox interface.
+ */
 NS_IMETHODIMP
 nsScrollPortFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
-  nsresult rv;
-  nsIBox ibox = nsnull;
-  rv = mScrollAreaFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox))
-  ibox->GetBoxInfo(aPresContext, aReflowState, aSize);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollport must implement box!!");
+   nsresult rv;
+
+   aSize.clear();
+ 
+   if (mNeedsRecalc) {
+       nsIFrame* childFrame = mFrames.FirstChild(); 
+        // get the size of the child. This is the min, max, preferred, and spring constant
+        // it does not include its border.
+        rv = GetChildBoxInfo(aPresContext, aReflowState, childFrame, mSpring);
+        NS_ASSERTION(rv == NS_OK,"failed to child box info");
+        if (NS_FAILED(rv))
+         return rv;
+
+        // add in the child's margin and border/padding if there is one.
+        const nsStyleSpacing* spacing;
+        rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                                      (const nsStyleStruct*&) spacing);
+
+        NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
+        if (NS_FAILED(rv))
+           return rv;
+
+        nsMargin margin(0,0,0,0);
+        spacing->GetMargin(margin);
+        nsSize m(margin.left+margin.right,margin.top+margin.bottom);
+        mSpring.minSize += m;
+        mSpring.prefSize += m;
+        if (mSpring.maxSize.width != NS_INTRINSICSIZE)
+           mSpring.maxSize.width += m.width;
+
+        if (mSpring.maxSize.height != NS_INTRINSICSIZE)
+           mSpring.maxSize.height += m.height;
+
+        spacing->GetBorderPadding(margin);
+        nsSize b(margin.left+margin.right,margin.top+margin.bottom);
+        mSpring.minSize += b;
+        mSpring.prefSize += b;
+        if (mSpring.maxSize.width != NS_INTRINSICSIZE)
+           mSpring.maxSize.width += b.width;
+
+        if (mSpring.maxSize.height != NS_INTRINSICSIZE)
+           mSpring.maxSize.height += b.height;
+      
+
+      // ok we don't need to calc this guy again
+      mNeedsRecalc = PR_FALSE;
+    } 
+
+  aSize = mSpring;
 
   return rv;
 }
 
+nsresult
+nsScrollPortFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize)
+{
+  aSize.clear();
+
+  // see if the frame has IBox interface
+
+  // if it does ask it for its BoxSize and we are done
+  nsIBox* ibox;
+  if (NS_SUCCEEDED(aFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
+     ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
+     return NS_OK;
+  }   
+
+ // start the preferred size as intrinsic
+  aSize.prefSize.width = NS_INTRINSICSIZE;
+  aSize.prefSize.height = NS_INTRINSICSIZE;
+
+    nsSize              kidReflowSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
+                                     aFrame, kidReflowSize);
+    nsHTMLReflowMetrics kidDesiredSize(nsnull);
+
+    kidReflowState.reason = eReflowReason_Resize; 
+
+    kidReflowState.mComputedWidth = NS_INTRINSICSIZE;
+    kidReflowState.mComputedHeight = NS_INTRINSICSIZE;
+ 
+    nsReflowStatus status = NS_FRAME_COMPLETE;
+
+    ReflowChild(aFrame, aPresContext, kidDesiredSize, kidReflowState,
+                status);
+
+    NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+
+    const nsStyleSpacing* spacing;
+    nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                   (const nsStyleStruct*&) spacing);
+
+    nsMargin border(0,0,0,0);;
+    spacing->GetBorderPadding(border);
+    
+
+    // remove border
+    kidDesiredSize.width -= (border.left + border.right);
+    kidDesiredSize.height -= (border.top + border.bottom);
+    
+    // get the size returned and the it as the preferredsize.
+    aSize.prefSize.width = kidDesiredSize.width;
+    aSize.prefSize.height = kidDesiredSize.height;
+ 
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsScrollPortFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -550,7 +691,7 @@ nsScrollPortFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsScrollPortFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
-  mIncrementalChild = PR_FALSE;
+  mIncremental = PR_FALSE;
   incrementalChild = nsnull;
 
   nsIFrame* frame;
@@ -562,28 +703,13 @@ nsScrollPortFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incre
   nsIBox* ibox;
   if (NS_SUCCEEDED(childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
       ibox->Dirty(aReflowState, incrementalChild);
-  else
+  else {
       incrementalChild = frame;
-
-  // if we found a leaf. Then mark it as being incremental. So when we
-  // flow it we will flow it incrementally
-  if (incrementalChild == childFrame)
-      mIncrementalChild = PR_TRUE;
+  // if we found a leaf that is not a box. Then mark it as being incremental. So if we are ever
+  // flowed incremental then we will flow our child incrementally.
+      mIncremental = PR_TRUE;
+  }
 
   return NS_OK;
 }
-
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsScrollPortFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsScrollPortFrame::Release(void)
-{
-    return NS_OK;
-}
-*/
 

@@ -22,6 +22,7 @@
 #include "nslayout.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
+#include "nsIStyleContext.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -544,46 +545,43 @@ protected:
   nsIFrame* GetFloaterContainingBlock(nsIPresContext* aPresContext,
                                       nsIFrame*       aFrame);
 
-  nsresult BuildBlockScrollFrame    (nsIPresContext*          aPresContext,
-                                  nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParentFrame,
-                                  nsIStyleContext*         aStyleContext,
-                                  nsIFrame*&               aNewFrame,
-                                  PRBool                   aProcessChildren,
-                                  PRBool                   aIsAbsolutelyPositioned,
-                                  PRBool                   aIsFixedPositioned,
-                                  PRBool                   aCreateBlock);
-
-
-  nsresult BuildBoxScrollFrame      (nsIPresContext*          aPresContext,
-                                  nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParentFrame,
-                                  nsIStyleContext*         aStyleContext,
-                                  nsIFrame*&               aNewFrame,
-                                  PRBool                   aProcessChildren,
-                                  PRBool                   aIsAbsolutelyPositioned,
-                                  PRBool                   aIsFixedPositioned,
-                                  PRBool                   aCreateBlock);
 
 nsresult
-BuildScrollFrame      (nsIPresContext*          aPresContext,
+BuildScrollFrame       (nsIPresContext*        aPresContext,
                                                nsFrameConstructorState& aState,
                                                nsIContent*              aContent,
+                                               nsIStyleContext*         aContentStyle,
                                                nsIFrame*                aScrolledFrame,
                                                nsIFrame*                aParentFrame,
-                                               nsIStyleContext*         aStyleContext,
                                                nsIFrame*&               aNewFrame,
-                                               PRBool                   aProcessChildren,
-                                               PRBool                   aIsAbsolutelyPositioned,
-                                               PRBool                   aIsFixedPositioned,
-                                               PRBool                   aCreateBlock);
+                                               nsIStyleContext*&        aScrolledChildStyle);
+                                    
+nsresult
+BeginBuildingScrollFrame  (nsIPresContext*        aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIStyleContext*         aContentStyle,
+                                               nsIFrame*                aParentFrame,
+                                               nsIAtom*                 aScrolledPseudo,
+                                               nsIDocument*             aDocument,
+                                               nsIFrame*&               aNewFrame, 
+                                               nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
+                                               nsIFrame*&               aScrollableFrame);
+
+
+nsresult 
+FinishBuildingScrollFrame(nsIPresContext*          aPresContext,
+                               nsFrameConstructorState& aState,
+                               nsIContent*              aContent,
+                               nsIFrame*                aScrollFrame,
+                               nsIFrame*                aScrolledFrame,
+                               nsIStyleContext*         scrolledPseudoStyle);
 
 nsresult
-BuildGfxScrollFrame (nsIPresContext*          aPresContext,
+BuildGfxScrollFrame (nsIPresContext*         PresContext,
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aContent,
+                                             nsIDocument*             aDocument,
                                              nsIFrame*                aParentFrame,
                                              nsIStyleContext*         aStyleContext,
                                              nsIFrame*&               aNewFrame,
@@ -591,14 +589,13 @@ BuildGfxScrollFrame (nsIPresContext*          aPresContext,
 
 
 nsresult
-InitializeScrollFrame(nsIPresContext*          aPresContext,
+InitializeSelectFrame(nsIPresContext*          aPresContext,
                                              nsFrameConstructorState& aState,
                                              nsIFrame*                scrollFrame,
                                              nsIFrame*                scrolledFrame,
                                              nsIContent*              aContent,
                                              nsIFrame*                aParentFrame,
                                              nsIStyleContext*         aStyleContext,
-                                             PRBool                   aProcessChildren,
                                              PRBool                   aIsAbsolutelyPositioned,
                                              PRBool                   aIsFixedPositioned,
                                              PRBool                   aCreateBlock);

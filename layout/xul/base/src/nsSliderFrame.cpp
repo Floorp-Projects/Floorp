@@ -55,6 +55,8 @@
 #include "nsIScrollableView.h"
 #include "nsRepeatService.h"
 
+#define DEBUG_SLIDER PR_FALSE
+
 nscoord            nsSliderFrame::gChange = 0;
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
@@ -190,7 +192,28 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
      CurrentPositionChanged(aPresContext);
-  } else if ((aHint != NS_STYLE_HINT_REFLOW) && 
+  } else if (aAttribute == nsXULAtoms::maxpos) {
+      // bounds check it.
+
+      nsIContent* scrollbar = GetScrollBar();
+      PRInt32 current = GetCurrentPosition(scrollbar);      
+      PRInt32 max = GetMaxPosition(scrollbar);
+      if (current < 0 || current > max)
+      {
+          if (current < 0)
+              current = 0;
+          else if (current > max) 
+              current = max;
+
+          char ch[100];
+          sprintf(ch,"%d", current);
+ 
+          // set the new position but don't notify anyone. We already know
+          scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_FALSE);
+      }
+  }
+  
+  if ((aHint != NS_STYLE_HINT_REFLOW) && 
              (aAttribute == nsXULAtoms::maxpos || 
              aAttribute == nsXULAtoms::pageincrement ||
              aAttribute == nsXULAtoms::increment)) {
@@ -202,6 +225,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                    nsIReflowCommand::StyleChanged);
       if (NS_SUCCEEDED(rv)) 
         shell->AppendReflowCommand(reflowCmd);
+
   }
 
   return rv;
@@ -410,6 +434,12 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
 
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
+
+  if (DEBUG_SLIDER) {
+     PRInt32 c = GetCurrentPosition(scrollbar);
+     PRInt32 m = GetMaxPosition(scrollbar);
+     printf("Current=%d, max=%d\n",c,m);
+  }
   
   return NS_OK;
 }
@@ -485,6 +515,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
 
        // set it
        SetCurrentPosition(scrollbar, thumbFrame, pospx);
+       //CurrentPositionChanged(&aPresContext);
 
     } 
     break;
@@ -553,6 +584,10 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
 
     // get the current position
     PRInt32 curpos = GetCurrentPosition(scrollbar);
+
+    // do nothing if the position did not change
+    if (mCurPos == curpos)
+        return;
 
     // get our current position and max position from our content node
     PRInt32 maxpos = GetMaxPosition(scrollbar);
@@ -627,7 +662,8 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
   // set the new position
   scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_TRUE);
 
- // printf("Current Pos=%s\n",ch);
+  if (DEBUG_SLIDER)
+     printf("Current Pos=%s\n",ch);
   
 }
 

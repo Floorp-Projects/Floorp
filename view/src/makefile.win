@@ -28,6 +28,7 @@ DEFINES =-D_IMPL_NS_VIEW -DWIN32_LEAN_AND_MEAN
 
 OBJS =                              \
     .\$(OBJDIR)\nsView.obj          \
+    .\$(OBJDIR)\nsScrollPortView.obj \
     .\$(OBJDIR)\nsScrollingView.obj \
     .\$(OBJDIR)\nsViewManager.obj   \
     .\$(OBJDIR)\nsViewFactory.obj   \
