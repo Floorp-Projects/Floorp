@@ -447,9 +447,6 @@ void nsMacEventDispatchHandler::SetGlobalPoint(Point inPoint)
 
 #pragma mark -
 
-static PRBool gUseUnicodeAPI = PR_FALSE;
-static PRBool gInitUseUnicodeAPI = PR_FALSE;
- 
 //-------------------------------------------------------------------------
 //
 // nsMacEventHandler constructor/destructor
@@ -1275,17 +1272,37 @@ PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, Event
   if (!focusedWidget)
     focusedWidget = mTopLevelWidget;
   
-  // nsEvent
   nsKeyEvent keyEvent;
   PRBool isCharacter = PR_FALSE;
+
+  // simulate key down event if this isn't an autoKey event
+  if (aOSEvent.what == keyDown)
+  {
+    InitializeKeyEvent(keyEvent, aOSEvent, focusedWidget, NS_KEY_DOWN, &isCharacter, PR_FALSE);
+    result = focusedWidget->DispatchWindowEvent(keyEvent);
+    NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent keydown");
+
+    // check if focus changed; see also HandleKeyEvent above
+    nsWindow *checkFocusedWidget = gEventDispatchHandler.GetActive();
+    if (!checkFocusedWidget)
+      checkFocusedWidget = mTopLevelWidget;
+    if (checkFocusedWidget != focusedWidget)
+      return result;
+  }
+
+  // simulate key press events
   InitializeKeyEvent(keyEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, &isCharacter, PR_FALSE);
+
   if (isCharacter) 
   {
     // it is a message with text, send all the unicode characters
-    PRUint32 i;
+    PRInt32 i;
     for (i = 0; i < charCount; i++)
     {
       keyEvent.charCode = text[i];
+
+      // this block of code is triggered when user presses
+      // a combination such as command-shift-M
       if (keyEvent.isShift && keyEvent.charCode <= 'z' && keyEvent.charCode >= 'a') 
         keyEvent.charCode -= 32;
 
