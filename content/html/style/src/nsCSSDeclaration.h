@@ -608,8 +608,10 @@ protected:
   nsresult RemoveProperty(nsCSSProperty aProperty);
 
 private:
+  nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue);
   void     AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult);
+  PRBool   AppendValueOrImportantValueToString(nsCSSProperty aProperty, nsAString& aResult);
   PRBool   AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult);
   nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
   PRBool operator==(const nsCSSDeclaration& aCopy) const;
