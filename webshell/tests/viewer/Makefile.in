@@ -88,6 +88,10 @@ TOOLKIT_CPPSRCS		= nsPhMain.cpp nsPhMenu.cpp
 endif
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
+GTK_GLUE		= -lgtksuperwin
+endif
+
 ifdef MOZ_OJI
 JSJ_LIB			= -ljsj
 endif
@@ -117,6 +121,7 @@ endif
 
 LIBS			= \
 			$(UNIX_VIEWER_TK_LIBS) \
+			$(GTK_GLUE) \
 			$(XP_LIBS) \
 			$(TK_LIBS) \
 			$(NULL)
@@ -124,7 +129,7 @@ LIBS			= \
 MOTIF_LIBS		= -lviewer_motif_s $(XP_LIBS) $(MOZ_MOTIF_LDFLAGS)
 QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
 XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
-GTK_LIBS		= -lviewer_gtk_s $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
+GTK_LIBS		= -lviewer_gtk_s -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
 EXTRA_DEPS		= \
 			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
