@@ -1625,7 +1625,6 @@ nsHttpHandler::Observe(nsISupports *subject,
         // XXX should probably shutdown and init the conn mgr.
     }
     else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
-             strcmp(topic, "session-logout")                 == 0 ||
              strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
 
         // kill off the "prune dead connections" timer
@@ -1637,6 +1636,14 @@ nsHttpHandler::Observe(nsISupports *subject,
         // ensure connection manager is shutdown
         if (mConnMgr)
             mConnMgr->Shutdown();
+
+        // need to reset the session start time since cache validation may
+        // depend on this value.
+        mSessionStartTime = NowInSeconds();
+    }
+    else if (strcmp(topic, "session-logout") == 0) {
+        // clear cache of all authentication credentials.
+        mAuthCache.ClearAll();
 
         // need to reset the session start time since cache validation may
         // depend on this value.
