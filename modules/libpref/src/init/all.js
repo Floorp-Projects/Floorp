@@ -427,6 +427,7 @@ pref("security.xpconnect.plugin.unrestricted", true);
 // menu access key = alt, accelerator key = control.
 pref("ui.key.acceleratorKey", 17);
 pref("ui.key.menuAccessKey", 18);
+pref("ui.key.menuAccessKeyFocuses", false);
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);

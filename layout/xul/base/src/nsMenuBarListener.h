@@ -68,6 +68,7 @@ protected:
 
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
+  PRBool mAccessKeyFocuses;      // Does the access key by itself focus the menubar?
   PRInt32 mAccessKey;            // See nsIDOMKeyEvent.h for sample values
 };
 
