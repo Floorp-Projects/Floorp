@@ -1024,7 +1024,11 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     } else {
         leafCert = CERT_FindCertByIssuerAndSN(certdb, &issuerAndSN);
     }
-    PR_ASSERT( leafCert != NULL );
+    if( leafCert == NULL ) {
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
+            "Failed to find certificate that was just imported");
+        goto finish;
+    }
     leafObject = JSS_PK11_wrapCert(env, &leafCert);
 
 finish:
