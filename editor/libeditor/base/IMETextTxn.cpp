@@ -200,7 +200,7 @@ NS_IMETHODIMP IMETextTxn::GetUndoString(nsString *aString)
   	
   if (nsnull!=aString)
   {
-    *aString="Remove Text: ";
+    aString->AssignWithConversion("Remove Text: ");
     *aString += mStringToInsert;
   }
   return NS_OK;
@@ -214,7 +214,7 @@ NS_IMETHODIMP IMETextTxn::GetRedoString(nsString *aString)
   	
   if (nsnull!=aString)
   {
-    *aString="Insert Text: ";
+    aString->AssignWithConversion("Insert Text: ");
     *aString += mStringToInsert;
   }
   return NS_OK;

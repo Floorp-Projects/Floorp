@@ -168,7 +168,7 @@ NS_IMETHODIMP JoinElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Join Element";
+    aString->AssignWithConversion("Join Element");
   }
   return NS_OK;
 }
@@ -177,7 +177,7 @@ NS_IMETHODIMP JoinElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Split Element";
+    aString->AssignWithConversion("Split Element");
   }
   return NS_OK;
 }

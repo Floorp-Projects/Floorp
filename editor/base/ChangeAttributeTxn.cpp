@@ -50,7 +50,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
   mValue = aValue;
   mRemoveAttribute = aRemoveAttribute;
   mAttributeWasSet=PR_FALSE;
-  mUndoValue="";
+  mUndoValue.SetLength(0);
   return NS_OK;
 }
 
@@ -62,7 +62,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Do(void)
   // need to get the current value of the attribute and save it, and set mAttributeWasSet
   nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, mAttributeWasSet);
   // XXX: hack until attribute-was-set code is implemented
-      if (PR_FALSE==mUndoValue.Equals(""))
+      if (PR_FALSE==mUndoValue.IsEmpty())
         mAttributeWasSet=PR_TRUE;
   // XXX: end hack
   
@@ -121,9 +121,9 @@ NS_IMETHODIMP ChangeAttributeTxn::GetUndoString(nsString *aString)
   if (nsnull!=aString)
   {
     if (PR_FALSE==mRemoveAttribute)
-      *aString="Change Attribute: ";
+      aString->AssignWithConversion("Change Attribute: ");
     else
-      *aString="Remove Attribute: ";
+      aString->AssignWithConversion("Remove Attribute: ");
     *aString += mAttribute;
   }
   return NS_OK;
@@ -134,9 +134,9 @@ NS_IMETHODIMP ChangeAttributeTxn::GetRedoString(nsString *aString)
   if (nsnull!=aString)
   {
     if (PR_FALSE==mRemoveAttribute)
-      *aString="Change Attribute: ";
+      aString->AssignWithConversion("Change Attribute: ");
     else
-      *aString="Add Attribute: ";
+      aString->AssignWithConversion("Add Attribute: ");
     *aString += mAttribute;
   }
   return NS_OK;

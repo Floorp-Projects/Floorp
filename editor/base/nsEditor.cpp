@@ -1277,7 +1277,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    nsAutoString bodyTag = "body";
+    nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
     nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
     if (!doc) return NS_ERROR_NOT_INITIALIZED;
     result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
@@ -1336,7 +1336,7 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    nsAutoString bodyTag = "body";
+    nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
     nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
     if (!doc) return NS_ERROR_NOT_INITIALIZED;
     result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
@@ -1461,7 +1461,7 @@ nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveC
   if (!diskDoc)
     return NS_ERROR_NO_INTERFACE;
 
-  nsAutoString useDocCharset("");
+  nsAutoString useDocCharset;
 
   res = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
                           aSaveFileType, useDocCharset);
@@ -1526,7 +1526,7 @@ nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
   //  mark the node dirty.
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(aNode));
   if (element)
-    element->SetAttribute("_moz_dirty", "");
+    element->SetAttribute(NS_ConvertASCIItoUCS2("_moz_dirty"), nsAutoString());
   return NS_OK;
 }
 
@@ -2125,7 +2125,7 @@ nsEditor::DebugDumpContent() const
 {
   nsCOMPtr<nsIContent>content;
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString bodyTag = "body";
+  nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
   doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
@@ -2332,7 +2332,7 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString bodyTag = "body"; 
+  nsAutoString bodyTag; bodyTag.AssignWithConversion("body"); 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
@@ -2478,14 +2478,13 @@ NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 /** static helper method */
 nsresult nsEditor::GetTextNodeTag(nsString& aOutString)
 {
-  aOutString = "";
+  aOutString.SetLength(0);
   static nsString *gTextNodeTag=nsnull;
   if (!gTextNodeTag)
   {
-    gTextNodeTag = new nsString("special text node tag");
-    if (!gTextNodeTag) {
+    if ( (gTextNodeTag = new nsString) == 0 )
       return NS_ERROR_OUT_OF_MEMORY;
-    }
+    gTextNodeTag->AssignWithConversion("special text node tag");
   }
   aOutString = *gTextNodeTag;
   return NS_OK;
@@ -2512,7 +2511,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert,
     {
       // create a text node
       nsCOMPtr<nsIDOMNode> newNode;
-      res = aDoc->CreateTextNode("", getter_AddRefs(nodeAsText));
+      res = aDoc->CreateTextNode(nsAutoString(), getter_AddRefs(nodeAsText));
       if (NS_FAILED(res)) return res;
       if (!nodeAsText) return NS_ERROR_NULL_POINTER;
       newNode = do_QueryInterface(nodeAsText);
@@ -3642,7 +3641,7 @@ nsEditor::TagCanContain(const nsString &aParentTag, nsIDOMNode* aChild)
   
   if (IsTextNode(aChild)) 
   {
-    childStringTag = "__moz_text";
+    childStringTag.AssignWithConversion("__moz_text");
   }
   else
   {
@@ -3750,10 +3749,10 @@ nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
   element = do_QueryInterface(aNode);
   if (element)
   {
-    nsAutoString att(kMOZEditorBogusNodeAttr);
+    nsAutoString att; att.AssignWithConversion(kMOZEditorBogusNodeAttr);
     nsAutoString val;
     (void)element->GetAttribute(att, val);
-    if (val.Equals(kMOZEditorBogusNodeValue)) {
+    if (val.EqualsWithConversion(kMOZEditorBogusNodeValue)) {
       return PR_TRUE;
     }
   }

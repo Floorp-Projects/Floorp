@@ -202,7 +202,7 @@ NS_IMETHODIMP InsertTextTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Remove Text: ";
+    aString->AssignWithConversion("Remove Text: ");
     *aString += mStringToInsert;
   }
   return NS_OK;
@@ -212,7 +212,7 @@ NS_IMETHODIMP InsertTextTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    *aString="Insert Text: ";
+    aString->AssignWithConversion("Insert Text: ");
     *aString += mStringToInsert;
   }
   return NS_OK;

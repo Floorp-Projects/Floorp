@@ -44,8 +44,7 @@ static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, c
 NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
 { \
     if (!aDefaultArgs) return NS_ERROR_FAILURE; \
-    nsString args(macro_default_args); \
-    *aDefaultArgs = args.ToNewUnicode(); \
+    *aDefaultArgs = NS_ConvertASCIItoUCS2(macro_default_args).ToNewUnicode(); \
     return NS_OK; \
 }
 

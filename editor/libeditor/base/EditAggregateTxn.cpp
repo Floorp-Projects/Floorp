@@ -142,14 +142,14 @@ NS_IMETHODIMP EditAggregateTxn::Write(nsIOutputStream *aOutputStream)
 NS_IMETHODIMP EditAggregateTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
-    *aString="";
+    aString->SetLength(0);
   return NS_OK;
 }
 
 NS_IMETHODIMP EditAggregateTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
-    *aString="";
+    aString->SetLength(0);
   return NS_OK;
 }
 

@@ -557,7 +557,7 @@ nsTextEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
     if (htmlEditor)
     {
       nsCOMPtr<nsIDOMElement> selectedElement;
-      if (NS_SUCCEEDED(htmlEditor->GetSelectedElement("", getter_AddRefs(selectedElement)))
+      if (NS_SUCCEEDED(htmlEditor->GetSelectedElement(nsAutoString(), getter_AddRefs(selectedElement)))
            && selectedElement)
       {
         nsAutoString TagName;
