@@ -116,13 +116,13 @@ sub show_graphs {
   while($i < @tbox_array) {
     print "<tr>\n";
     print "<td>\n";
-    print "<img src=\"http://tegu.mozilla.org/graph/graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&size=.6&autoscale=1&days=7&avg=1\" alt=\"$tbox_array[$i] $TESTNAME graph\">";
+    print "<a href=\"http://tegu.mozilla.org/graph/query.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&autoscale=1&days=7&avg=1\"><img src=\"http://tegu.mozilla.org/graph/graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&size=.6&autoscale=1&days=7&avg=1\" alt=\"$tbox_array[$i] $TESTNAME graph\" border=0></a>";
     print "</td>\n";
     $i++;
 
     if($i < @tbox_array) {
     print "<td>\n";
-    print "<img src=\"http://tegu.mozilla.org/graph/graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&size=.6&autoscale=1&days=7&avg=1\" alt=\"$tbox_array[$i] $TESTNAME graph\">";
+    print "<a href=\"http://tegu.mozilla.org/graph/query.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&autoscale=1&days=7&avg=1\"><img src=\"http://tegu.mozilla.org/graph/graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&size=.6&autoscale=1&days=7&avg=1\" alt=\"$tbox_array[$i] $TESTNAME graph\" border=0></a>";
     print "</td>\n";
     $i++;
 
