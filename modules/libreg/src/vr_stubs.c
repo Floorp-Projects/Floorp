@@ -276,7 +276,7 @@ extern void vr_findGlobalRegName()
             err = FSpGetFullPath(&regSpec, &pathLen, &thePath);
             if (err == noErr && thePath)
             {
-                // we have no idea if this moves memory, so better lock the handle
+                /* we have no idea if this moves memory, so better lock the handle */
             #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
                 HLock(thePath);
                 globalRegName = (char *)XP_ALLOC(pathLen + 1);
@@ -335,7 +335,7 @@ extern char* vr_findVerRegName()
             err = FSpGetFullPath(&regSpec, &pathLen, &thePath);
             if (err == noErr && thePath)
             {
-               // we have no idea if this moves memory, so better lock the handle
+                /* we have no idea if this moves memory, so better lock the handle */
              #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
                 HLock(thePath);
                 verRegName = (char *)XP_ALLOC(pathLen + 1);

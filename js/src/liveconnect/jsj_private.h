@@ -657,7 +657,7 @@ enum JSJErrNum {
 
 #ifdef __cplusplus
 } 
-// end extern "C"
+/* end extern "C" */
 #endif
 
 #endif   /* _JSJAVA_PVT_H */
