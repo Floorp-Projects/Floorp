@@ -64,7 +64,7 @@ function SetFields(id, value)
         dump("    Trying to find it in the ispbox \n");
         var ispBox = document.getElementById("ispBox");
         var fields = document.getElementsByAttribute("id", id);
-        if (!fields) {
+        if (!fields || fields.length == 0) {
             dump("still couldn't find it!\n");
             return;
         } else

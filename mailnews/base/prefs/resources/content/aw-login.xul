@@ -24,7 +24,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-login.dtd" >
-<window id="loginpage" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="loginpage" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
@@ -32,6 +32,7 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
   <box class="box-header" value="&loginTitle.label;"/>
 
@@ -39,29 +40,26 @@ Rights Reserved.
     <html>&usernameDesc.label; &usernameExample.label;</html>
     <box>
       <text class="label" value="&usernameLabel.label;"/>
-      <html:input type="text" name="username" id="username"/>
+      <textfield id="username" wsm_persist="true"/>
     </box>
   </box>
   <spring class="spacer"/>
+<!--
   <box align="vertical">
     <text class="title" value="&passwordTitle.label;"/>
     <html>&savePasswordDesc.label;</html>
     <spring class="spacer"/>
     <html>&savePasswordLabel.label;</html>
-    <box>
-      <html:input type="checkbox" name="rememberPassword"
-                  onchange="onSavePassword(event.target);"
-                  id="rememberPassword"/>
-      <html:label for="rememberPassword">&savePasswordCheckbox.label;</html:label>
-    </box>
+    <checkbox wsm_persist="true" oncommand="onSavePassword(event.target)"
+              id="rememberPassword"/>
     <spring class="spacer"/>
     <box orient="vertical" style="padding-left: 20px">
       <text class="label" value="&passwordDesc.label;"/>
       <box>
         <text class="label" value="&passwordLabel.label;"/>
-        <html:input type="password"
-                    name="password" id="password"/>
+        <textfield type="password" id="password" wsm_persist="true"/>
       </box>
     </box>
   </box>
+-->
 </window>

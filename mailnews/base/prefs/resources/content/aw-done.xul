@@ -23,7 +23,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-done.dtd" >
-<window id="done" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="done" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
@@ -46,7 +46,7 @@ Rights Reserved.
   <text id="identity.email.text"/>
 </box>
 <spring class="spacer"/>
-<!-- <html:div>&setupAnother.label;</html:div> -->
+<!-- <html>&setupAnother.label;</html> -->
 <spring class="spacer"/>
 <html>&clickFinish.label;</html>
 <spring class="spacer"/>

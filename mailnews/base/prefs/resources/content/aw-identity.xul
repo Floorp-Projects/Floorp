@@ -24,7 +24,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-identity.dtd" >
-<window id="identitypage" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="identitypage" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
@@ -32,6 +32,7 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
+<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/> 
 
   <box class="box-header" value="&identityTitle.label;"/>
   <html>&identityDesc.label;</html>
@@ -43,7 +44,7 @@ Rights Reserved.
 
   <box>
       <text class="label" for="fullName" value="&fullnameLabel.label;"/>
-      <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
+      <textfield mailtype="identity" wsm_persist="true" name="fullName" id="fullName"/>
   </box>
   
   <spring class="spacer"/>
@@ -55,7 +56,7 @@ Rights Reserved.
 
   <box>
       <text class="label" for="email" value="&emailLabel.label;"/>
-      <html:input type="text" mailtype="identity" name="email" id="email"/>
+      <textfield wsm_persist="true" mailtype="identity" name="email" id="email"/>
       <text id="postEmailText"/>
   </box>
 </window>

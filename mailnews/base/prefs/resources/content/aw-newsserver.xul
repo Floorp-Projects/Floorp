@@ -24,7 +24,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
-<window id="serverpage" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="serverpage" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
@@ -32,6 +32,7 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
   <box class="box-header" value="&serverTitle.label;"/>
 
@@ -39,7 +40,7 @@ Rights Reserved.
     <html>&newsServerNameDesc.label;</html>
     <box>
       <text class="label" for="hostname" value="&incomingServerLabel.label;"/>
-      <html:input type="text" id="hostname" name="hostname"/>
+      <textfield id="hostname" wsm_persist="true"/>
     </box>
   </box>
 

@@ -24,7 +24,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
-<window id="serverpage" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="serverpage" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
@@ -32,6 +32,7 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
   <box class="box-header" value="&serverTitle.label;"/>
 
@@ -42,20 +43,19 @@ Rights Reserved.
     <spring class="spacer"/>
     <box>
       <text class="label" value="&incomingServerTypeLabel.label;"/>
-      <menulist id="servertypeMenulist" oncommand="onTypeChanged(event)">
+      <menulist id="servertype" wsm_persist="true">
         <menupopup>
           <menuitem data="pop3" value="&popType.label;"/>
           <menuitem data="imap" value="&imapType.label;"/>
         </menupopup>
       </menulist>
-      <html:input type="hidden" id="servertype" name="servertype"/>
     </box>
     <spring class="spacer"/>
     <html>&incomingServerNameDesc.label;</html>
     <spring class="spacer"/>
     <box>
       <text class="label" value="&incomingServerLabel.label;"/>
-      <html:input type="text" id="hostname" name="hostname"/>
+      <textfield wsm_persist="true" id="hostname"/>
     </box>
   </box>
 
@@ -68,7 +68,7 @@ Rights Reserved.
     <spring class="spacer"/>
     <box>
       <text class="label" value="&smtpServerLabel.label;"/>
-      <html:input type="text" id="smtphostname" name="smtphostname"/>
+      <textfield id="smtphostname" wsm_persist="true"/>
     </box>
   </box>
 

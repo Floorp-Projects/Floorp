@@ -1,6 +1,6 @@
 <!-- extracted from aw-login.xul -->
 
-<!ENTITY loginTitle.label "Name and Password">
+<!ENTITY loginTitle.label "User Name">
 <!ENTITY usernameDesc.label "Enter the user name given to you by your email provider.">
 <!-- LOCALIZATION NOTE (usernameExample.label) : do not translate "&quot;jsmith&quot;" in below line -->
 <!ENTITY usernameExample.label "(For example, &quot;jsmith&quot;)">

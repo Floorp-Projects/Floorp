@@ -25,7 +25,7 @@ Rights Reserved.
 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accname.dtd" >
-<window id="accnamepage" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="accnamepage" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     class="dialog"
     align="vertical"
@@ -33,13 +33,14 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-accname.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
   <box class="box-header" value="&accnameTitle.label;"/>
   <html>&accnameDesc.label;</html>
   <spring class="spacer"/>
   <box>
     <text class="label" value="&accnameLabel.label;"/>
-    <html:input type="text" name="prettyName" id="prettyName" size="40"/>
+    <textfield id="prettyName" size="40" wsm_persist="true"/>
   </box>
 
 </window>

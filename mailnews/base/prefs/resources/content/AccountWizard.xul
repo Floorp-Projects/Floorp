@@ -44,7 +44,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/ispUtils.js"/>
 <box align="vertical" flex="100%">
   <box id="contentsink" flex="100%">
-  <html:iframe flex="100%" style="margin: 5px; border: none"
+  <iframe flex="100%" 
           name="wizardContents" scrolling="auto" id="wizardContents"/>
   </box>
   <box id="wizardButtons"/>
