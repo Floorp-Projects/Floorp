@@ -208,15 +208,16 @@ NS_IMETHODIMP nsPrinterEnumeratorPh::GetDefaultPrinterName(PRUnichar * *aDefault
 
   NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
 
+	*aDefaultPrinterName = nsnull;
+
 	PpPrintContext_t *pc = PpCreatePC();
 	if( pc ) {
 		PpLoadDefaultPrinter( pc );
 		PpGetPC( pc, Pp_PC_NAME, &printer );
-
-  	*aDefaultPrinterName = ToNewUnicode( NS_LITERAL_STRING( printer ) );
+  	if( printer ) *aDefaultPrinterName = ToNewUnicode( NS_LITERAL_STRING( printer ) );
 		PpReleasePC( pc );
 		}
-	else *aDefaultPrinterName = nsnull;
+
   return NS_OK;
 }
 

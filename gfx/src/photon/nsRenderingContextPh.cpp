@@ -844,7 +844,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLe
       nscoord yy = y;
       mTranMatrix->TransformCoord(&xx, &yy);
       PhPoint_t pos = { xx, yy };
-			PgDrawText( ch, charlen, &pos, Pg_TEXT_LEFT);
+			PgDrawTextCx( mSurfaceDC, ch, charlen, &pos, Pg_TEXT_LEFT);
 			x += *aSpacing++;
 			}
 		}
