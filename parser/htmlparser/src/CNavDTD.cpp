@@ -319,8 +319,9 @@ CNavDTD::CNavDTD() : nsIDTD(){
   mParser=0;       
   mDTDDebug=0;   
   mLineNumber=1;  
-  mHasOpenBody=PR_FALSE;
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
+  mHasOpenBody=PR_FALSE;
+  mHasOpenHead=PR_FALSE;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
   mAllowUnknownTags=PR_FALSE;

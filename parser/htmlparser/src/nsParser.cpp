@@ -94,13 +94,12 @@ public:
 
   CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
     /*
-      nsIDTD* theDTD;
       NS_NewWellFormed_DTD(&theDTD);
       RegisterDTD(theDTD);
-
-      NS_NewViewSourceHTML(&theDTD);
-      RegisterDTD(theDTD);
     */
+      nsIDTD* theDTD;
+      NS_NewViewSourceHTML(&theDTD);  //do this so all html files can be viewed...
+      RegisterDTD(theDTD);
   }
 
   ~CSharedParserObjects() {
