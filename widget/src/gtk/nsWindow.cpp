@@ -1615,6 +1615,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gtk_container_add(GTK_CONTAINER(mShell), mMozArea);
     gtk_widget_realize(GTK_WIDGET(mMozArea));
     mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
+    // set the back pixmap to None so that we don't get a flash of
+    // black
+    gdk_window_set_back_pixmap(mShell->window, NULL, FALSE);
+
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "delete_event",
                        GTK_SIGNAL_FUNC(handle_delete_event),
@@ -1630,6 +1634,9 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gtk_container_add(GTK_CONTAINER(mShell), mMozArea);
     gtk_widget_realize(GTK_WIDGET(mMozArea));
     mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
+    // set the back pixmap to None so that we don't get a flash of
+    // black
+    gdk_window_set_back_pixmap(mShell->window, NULL, FALSE);
     break;
 
   case eWindowType_toplevel:
@@ -1644,6 +1651,9 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gtk_container_add(GTK_CONTAINER(mShell), mMozArea);
     gtk_widget_realize(GTK_WIDGET(mMozArea));
     mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
+    // set the back pixmap to None so that we don't get a flash of
+    // black
+    gdk_window_set_back_pixmap(mShell->window, NULL, FALSE);
 
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "delete_event",
@@ -1742,6 +1752,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
 
+  // unset the back pixmap on this window.
   gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
   if (mShell) {
@@ -1878,18 +1889,8 @@ NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
   mUpdateArea->Offset(aDx, aDy);
 
   if (mSuperWin) {
-    // save the old backing color
-    nscolor currentColor = GetBackgroundColor();
-    // this isn't too painful to do right before a scroll.
-    // as owen says "it's just 12 bytes sent to the server."
-    // and it makes scrolling look a lot better while still
-    // preserving the gray color when you drag another window
-    // on top or when just creating a window
-    gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
     // scroll baby, scroll!
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
-    // reset the color
-    SetBackgroundColor(currentColor);
   }
   return NS_OK;
 }
