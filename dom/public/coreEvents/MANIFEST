@@ -22,5 +22,5 @@ nsIDOMEventTarget.h
 nsIDOMTextListener.h
 nsIDOMCompositionListener.h
 nsIDOMMenuListener.h
-
+nsIDOMScrollListener.h
 
