@@ -146,17 +146,10 @@ RDFContainerImpl::Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer
     rv = gRDFContainerUtils->IsContainer(aDataSource, aContainer, &isContainer);
     if (NS_FAILED(rv)) return rv;
 
-    if (! isContainer) {
-#ifdef DEBUG
-        nsCAutoString msg;
-        nsXPIDLCString uri;
-        aContainer->GetValue(getter_Copies(uri));
-        msg += uri;
-        msg += " is not an RDF container";
-        NS_WARNING((const char*) msg);
-#endif
-        return NS_ERROR_UNEXPECTED;
-    }
+    // ``throw'' if we can't create a container on the specified
+    // datasource/resource combination.
+    if (! isContainer)
+        return NS_ERROR_FAILURE;
 
     NS_IF_RELEASE(mDataSource);
     mDataSource = aDataSource;
