@@ -1,9 +1,0 @@
-- scriptable in jsref
-  - exposed w/o java in js
-- immutable scopes
-  - so can revive SCOPE_TABLE stuff
-- fast-as-prop-cache inline scopes for native objects
-  so elim prop-cache
-- views
-  - global vars in ssjs object model
-  - html object model
