@@ -31,7 +31,7 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToISO2022JP : public nsTableEncoderSupport
+class nsUnicodeToISO2022JP : public nsEncoderSupport
 {
 public:
 
@@ -41,17 +41,32 @@ public:
   nsUnicodeToISO2022JP();
 
   /**
+   * Class destructor.
+   */
+  virtual ~nsUnicodeToISO2022JP();
+
+  /**
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
 
+  PRInt32                   mCharset;       // current character set
+  nsIUnicodeEncodeHelper    * mHelper;      // encoder helper object
+
+  nsresult ChangeCharset(PRInt32 aCharset, char * aDest, 
+      PRInt32 * aDestLength);
+
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
 
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+      char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD FinishNoBuff(char * aDest, PRInt32 * aDestLength);
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
 };
 
 #endif /* nsUnicodeToISO2022JP_h___ */

@@ -20,13 +20,7 @@
 #ifndef nsISO2022JPToUnicode_h___
 #define nsISO2022JPToUnicode_h___
 
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeDecodeUtil.h"
-
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-#define BUFFSIZE 2      // the size of the buffer for partial conversions
+#include "nsUCvJa2Support.h"
 
 //----------------------------------------------------------------------
 // Class nsISO2022JPToUnicode [declaration]
@@ -51,10 +45,8 @@
  * @created         09/Feb/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO2022JPToUnicode : public nsIUnicodeDecoder
+class nsISO2022JPToUnicode : public nsBufferDecoderSupport
 {
-  NS_DECL_ISUPPORTS
-
 public:
 
   /**
@@ -70,22 +62,9 @@ public:
   /**
    * Static class constructor.
    */
-  static nsresult CreateInstance(nsISupports **aResult);
+  static nsresult CreateInstance(nsISupports ** aResult);
 
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecoder [declaration]
-
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength);
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Reset();
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
-
-private:
+protected:
 
   enum {
     kASCII, 
@@ -97,13 +76,19 @@ private:
   PRInt32   mState;             // current state of the state machine
   PRInt32   mCharset;           // current character set
 
-  char      mBuff[BUFFSIZE];    // buffer for the partial conversions
-  PRInt32   mBuffLen;
+  nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
 
-  nsIUnicodeDecodeUtil  * mHelper;  // decoder helper object
-
-  nsresult ConvertBuffer(const char ** aSrc, const char * aSrcEnd, 
+  NS_IMETHOD ConvertBuffer(const char ** aSrc, const char * aSrcEnd, 
       PRUnichar ** aDest, PRUnichar * aDestEnd);
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsBufferDecoderSupport class [declaration]
+
+  NS_IMETHOD ConvertNoBuff(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
 };
 
 #endif /* nsISO2022JPToUnicode_h___ */

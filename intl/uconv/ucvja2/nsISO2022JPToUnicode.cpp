@@ -17,41 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
 #include "nsIComponentManager.h"
 #include "nsISO2022JPToUnicode.h"
 #include "nsUCVJA2Dll.h"
 
 //----------------------------------------------------------------------
-// Class nsISO2022JPToUnicode [implementation]
+// Global functions and data [declaration]
 
-NS_IMPL_ISUPPORTS(nsISO2022JPToUnicode, kIUnicodeDecoderIID);
-
-nsISO2022JPToUnicode::nsISO2022JPToUnicode() 
-{
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-
-  mHelper = nsnull;
-  Reset();
-}
-
-nsISO2022JPToUnicode::~nsISO2022JPToUnicode() 
-{
-  NS_IF_RELEASE(mHelper);
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-nsresult nsISO2022JPToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsISO2022JPToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-// XXX quick hack so I don't have to include nsICharsetConverterManager
-extern "C" const nsID kCharsetConverterManagerCID;
-
-// XXX find a better place for this shift tables
+// XXX renames
 static PRInt16 cs0201ShiftTable[] =  {
   2, u1ByteCharset ,
   ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
@@ -59,12 +32,31 @@ static PRInt16 cs0201ShiftTable[] =  {
 };
 
 static PRInt16 cs0208ShiftTable[] =  {
-  0, u2BytesGRCharset,
+  0, u2BytesCharset,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-// XXX verify validity of tables and charset specs
-// XXX 0201 seems to be wrong for the ASCII- roman
+//----------------------------------------------------------------------
+// Class nsISO2022JPToUnicode [implementation]
+
+nsISO2022JPToUnicode::nsISO2022JPToUnicode() 
+: nsBufferDecoderSupport()
+{
+  mHelper = nsnull;
+
+  Reset();
+}
+
+nsISO2022JPToUnicode::~nsISO2022JPToUnicode() 
+{
+  NS_IF_RELEASE(mHelper);
+}
+
+nsresult nsISO2022JPToUnicode::CreateInstance(nsISupports ** aResult) 
+{
+  *aResult = new nsISO2022JPToUnicode();
+  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
 
 nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc, 
                                              const char * aSrcEnd,
@@ -80,11 +72,10 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
   nsresult res;
 
   if (mHelper == nsnull) {
-    // XXX change the helper object to have its own CID!
-    res = nsComponentManager::CreateInstance(kCharsetConverterManagerCID, NULL, 
-        kIUnicodeDecodeUtilIID, (void**) & mHelper);
+    res = nsComponentManager::CreateInstance(kUnicodeDecodeHelperCID, NULL, 
+        kIUnicodeDecodeHelperIID, (void**) & mHelper);
     
-    if (NS_FAILED(res)) return res;
+    if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
   }
 
   if (mCharset == kASCII) {
@@ -105,7 +96,7 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
       res = NS_PARTIAL_MORE_OUTPUT;
     } else res = NS_OK;
 
-    res = mHelper->Convert(dest, 0, &destLen, src, 0, &srcLen, kOnError_Signal, 
+    res = mHelper->ConvertByTable(src, &srcLen, dest, &destLen, 
         (uShiftTable*) &cs0201ShiftTable, (uMappingTable*)&g_ut0201Mapping);
     *aSrc = src + srcLen;
     *aDest = dest + destLen;
@@ -121,7 +112,7 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
       res = NS_PARTIAL_MORE_INPUT;
     } else res = NS_OK;
 
-    res = mHelper->Convert(dest, 0, &destLen, src, 0, &srcLen, kOnError_Signal, 
+    res = mHelper->ConvertByTable(src, &srcLen, dest, &destLen, 
         (uShiftTable*) &cs0208ShiftTable, (uMappingTable*)&g_ut0208Mapping);
     *aSrc = src + srcLen;
     *aDest = dest + destLen;
@@ -134,18 +125,13 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
 }
 
 //----------------------------------------------------------------------
-// Interface nsICharsetConverter [implementation]
+// Subclassing of nsBufferDecoderSupport class [implementation]
 
-NS_IMETHODIMP nsISO2022JPToUnicode::Convert(PRUnichar * aDest, 
-                                            PRInt32 aDestOffset,
-                                            PRInt32 * aDestLength, 
-                                            const char * aSrc, 
-                                            PRInt32 aSrcOffset, 
-                                            PRInt32 * aSrcLength)
+NS_IMETHODIMP nsISO2022JPToUnicode::ConvertNoBuff(const char * aSrc, 
+                                                  PRInt32 * aSrcLength, 
+                                                  PRUnichar * aDest, 
+                                                  PRInt32 * aDestLength)
 {
-  aSrc += aSrcOffset;
-  aDest += aDestOffset;
-
   const char * srcEnd = aSrc + (*aSrcLength);
   const char * src = aSrc;
   PRUnichar * destEnd = aDest + (*aDestLength);
@@ -158,31 +144,15 @@ NS_IMETHODIMP nsISO2022JPToUnicode::Convert(PRUnichar * aDest,
 
       case 0:
         if (*src == 27) {
-          if (mBuffLen > 0) res = NS_ERROR_ILLEGAL_INPUT;
-          else mState = 1;
+          mState = 1;
         } else if (dest >= destEnd) {
           res = NS_PARTIAL_MORE_OUTPUT;
           src--; // don't advance!
         } else {
           // here: src < srcEnd, dest < destEnd
-          if (mBuffLen > 0) {
-            // fill internal buffer
-            mBuffLen = 0;
-            mBuff[1] = *src++;
-            p = mBuff;
-            res = ConvertBuffer(&p, p+2, &dest, destEnd);
-            if (res != NS_OK) res = NS_ERROR_UNEXPECTED;
-          } else {
-            // find the end of this run
-            for (p=src; ((p < srcEnd) && (*p != 27)); p++) {;}
-            res = ConvertBuffer(&src, p, &dest, destEnd);
-            if (res == NS_PARTIAL_MORE_INPUT) if (p == srcEnd) {
-              mBuff[0] = *src++;
-              mBuffLen = 1;
-            } else {
-              res = NS_ERROR_ILLEGAL_INPUT;
-            }
-          }
+          // find the end of this run
+          for (p=src; ((p < srcEnd) && (*p != 27)); p++) {}
+          res = ConvertBuffer(&src, p, &dest, destEnd);
           src--; // we did our own advance here
         }
         break;
@@ -242,36 +212,18 @@ NS_IMETHODIMP nsISO2022JPToUnicode::Convert(PRUnichar * aDest,
   return res;
 }
 
-NS_IMETHODIMP nsISO2022JPToUnicode::Finish(PRUnichar * aDest, 
-                                           PRInt32 aDestOffset,
-                                           PRInt32 * aDestLength)
+NS_IMETHODIMP nsISO2022JPToUnicode::GetMaxLength(const char * aSrc, 
+                                                 PRInt32 aSrcLength, 
+                                                 PRInt32 * aDestLength)
 {
-  // not much to write
-  *aDestLength = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsISO2022JPToUnicode::Length(const char * aSrc, 
-                                           PRInt32 aSrcOffset, 
-                                           PRInt32 aSrcLength, 
-                                           PRInt32 * aDestLength)
-{
-  // approximation for the worst case
+  // worst case
   *aDestLength = aSrcLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsISO2022JPToUnicode::Reset()
 {
-  mBuffLen = 0;
   mState = 0;
   mCharset = kASCII;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsISO2022JPToUnicode::SetInputErrorBehavior(PRInt32 aBehavior)
-{
-  // we are supporting only the kOnError_Signal behavior in this implementation
-  return NS_OK;
+  return nsBufferDecoderSupport::Reset();
 }
