@@ -85,47 +85,25 @@ struct nsStyleColor : public nsStyleStruct {
     (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE);}
 };
 
-
-struct nsStyleMargin: public nsStyleStruct {
-  nsStyleMargin(void);
+struct nsStyleSpacing: public nsStyleStruct {
+  nsStyleSpacing(void);
 
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
-
-  PRBool GetMargin(nsMargin& aMargin) const;
-
-// XXX this is a deprecated method
-  void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
-
-protected:
-  PRPackedBool  mHasCachedMargin;
-  nsMargin      mCachedMargin;
-};
-
-
-struct nsStylePadding: public nsStyleStruct {
-  nsStylePadding(void);
-
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
-
-  PRBool GetPadding(nsMargin& aPadding) const;
-
-// XXX this is a deprecated method
-  void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
-
-protected:
-  PRPackedBool  mHasCachedPadding;
-  nsMargin      mCachedPadding;
-};
-
-
-struct nsStyleBorder: public nsStyleStruct {
-  nsStyleBorder(void);
-
   nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
+
   nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
+  nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
+  																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
+
+  nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
+
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
 
+  PRBool GetMargin(nsMargin& aMargin) const;
+  PRBool GetPadding(nsMargin& aPadding) const;
   PRBool GetBorder(nsMargin& aBorder) const;
+  PRBool GetBorderPadding(nsMargin& aBorderPadding) const;
 
   PRUint8 GetBorderStyle(PRUint8 aSide) const; 
   void    SetBorderStyle(PRUint8 aSide, PRUint8 aStyle); 
@@ -134,37 +112,6 @@ struct nsStyleBorder: public nsStyleStruct {
   void    SetBorderTransparent(PRUint8 aSide); 
   void    UnsetBorderColor(PRUint8 aSide);
 
-// XXX these are deprecated methods
-  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
-
-protected:
-  PRPackedBool  mHasCachedBorder;
-  nsMargin      mCachedBorder;
-
-  PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
-  nscolor       mBorderColor[4];  // [reset] 
-};
-
-
-struct nsStyleBorderPadding: public nsStyleStruct {
-  nsStyleBorderPadding(void);
-
-  PRBool GetBorderPadding(nsMargin& aBorderPadding) const;
-  void   SetBorderPadding(nsMargin aBorderPadding);
-protected:
-  nsMargin      mCachedBorderPadding;
-  PRPackedBool  mHasCachedBorderPadding;
-};
-
-
-struct nsStyleOutline: public nsStyleStruct {
-  nsStyleOutline(void);
-
-  nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
-  																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
-
-  nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
-
   PRBool  GetOutlineWidth(nscoord& aWidth) const; // PR_TRUE if pre-computed
   PRUint8 GetOutlineStyle(void) const;
   void    SetOutlineStyle(PRUint8 aStyle);
@@ -172,15 +119,28 @@ struct nsStyleOutline: public nsStyleStruct {
   void    SetOutlineColor(nscolor aColor); 
   void    SetOutlineInvert(void); 
 
+// XXX these are deprecated methods
+  void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
+  void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
+  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
+  void CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const;
 
 protected:
-  PRPackedBool  mHasCachedOutline;
-  nscoord       mCachedOutlineWidth;
+  PRPackedBool    mHasCachedMargin;
+  PRPackedBool    mHasCachedPadding;
+  PRPackedBool    mHasCachedBorder;
+  PRPackedBool    mHasCachedOutline;
+  nsMargin  mCachedMargin;
+  nsMargin  mCachedPadding;
+  nsMargin  mCachedBorder;
+  nsMargin  mCachedBorderPadding;
+  nscoord   mCachedOutlineWidth;
 
-  PRUint8       mOutlineStyle;    // [reset] See nsStyleConsts.h
-  nscolor       mOutlineColor;    // [reset] 
+  PRUint8   mBorderStyle[4];  // [reset] See nsStyleConsts.h
+  nscolor   mBorderColor[4];  // [reset] 
+  PRUint8   mOutlineStyle;    // [reset] See nsStyleConsts.h
+  nscolor   mOutlineColor;    // [reset] 
 };
-
 
 struct nsStyleList : public nsStyleStruct {
   nsStyleList(void);
@@ -492,9 +452,6 @@ public:
 
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
-
-  // utility function: more convenient than 2 calls to GetStyleData to get border and padding
-  virtual void    CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const = 0;
 };
 
 // this is private to nsStyleSet, don't call it

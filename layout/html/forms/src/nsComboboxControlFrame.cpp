@@ -830,8 +830,11 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
   delete [] str;
 
   // get the borderPadding for the display area
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
+  const nsStyleSpacing* dspSpacing;
+  mDisplayFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dspSpacing);
+  nsMargin dspBorderPadding;
+  dspBorderPadding.SizeTo(0, 0, 0, 0);
+  dspSpacing->CalcBorderPaddingFor(mDisplayFrame, dspBorderPadding);
 
   nscoord frmWidth  = maxWidth+dspBorderPadding.left+dspBorderPadding.right+
                       aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
@@ -883,8 +886,11 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   REFLOW_NOISY_MSG3("mCacheSize.height:%d - %d\n", PX(mCacheSize.height), PX((aBorderPadding.top + aBorderPadding.bottom)));
 
   // get the border and padding for the DisplayArea (block frame & textframe)
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
+  const nsStyleSpacing* dspSpacing;
+  aDisplayFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dspSpacing);
+  nsMargin dspBorderPadding;
+  dspBorderPadding.SizeTo(0, 0, 0, 0);
+  dspSpacing->CalcBorderPaddingFor(aDisplayFrame, dspBorderPadding);
 
   // adjust the height
   if (mCacheSize.height == kSizeNotSet) {
@@ -1148,8 +1154,11 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                        bailOnWidth, bailOnHeight);
   if (bailOnWidth) {
 #ifdef DO_REFLOW_DEBUG // check or size
-    nsMargin borderPadding(0, 0, 0, 0);
-    CalcBorderPadding(borderPadding);
+    const nsStyleSpacing* spacing;
+    GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+    nsMargin borderPadding;
+    borderPadding.SizeTo(0, 0, 0, 0);
+    spacing->CalcBorderPaddingFor(this, borderPadding);
     UNCONSTRAINED_CHECK();
 #endif
     REFLOW_DEBUG_MSG3("^** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
@@ -1190,8 +1199,11 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // get our border and padding, 
   // XXX - should be the same mComputedBorderPadding?
   // maybe we should use that?
-  nsMargin borderPadding(0, 0, 0, 0);
-  CalcBorderPadding(borderPadding);
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  spacing->CalcBorderPaddingFor(this, borderPadding);
 
    // Get the current sizes of the combo box child frames
   mDisplayFrame->GetRect(displayRect);
@@ -1468,12 +1480,18 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Get the border and padding for the dropdown
-  nsMargin dropBorderPadding(0, 0, 0, 0);
-  mDropdownFrame->CalcBorderPadding(dropBorderPadding);
+  const nsStyleSpacing* dropSpacing;
+  mDropdownFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dropSpacing);
+  nsMargin dropBorderPadding;
+  dropBorderPadding.SizeTo(0, 0, 0, 0);
+  dropSpacing->CalcBorderPaddingFor(mDropdownFrame, dropBorderPadding);
 
   // get the borderPadding for the display area
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
+  const nsStyleSpacing* dspSpacing;
+  mDisplayFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dspSpacing);
+  nsMargin dspBorderPadding;
+  dspBorderPadding.SizeTo(0, 0, 0, 0);
+  dspSpacing->CalcBorderPaddingFor(mDisplayFrame, dspBorderPadding);
 
   // Substract dropdown's borderPadding from the width of the dropdown rect
   // to get the size of the content area
@@ -1553,8 +1571,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // get the borderPadding for the display area
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
+  const nsStyleSpacing* dspSpacing;
+  mDisplayFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dspSpacing);
+  nsMargin dspBorderPadding;
+  dspBorderPadding.SizeTo(0, 0, 0, 0);
+
+  dspSpacing->CalcBorderPaddingFor(mDisplayFrame, dspBorderPadding);
 
   if (NS_UNCONSTRAINEDSIZE == firstPassState.mComputedWidth) {
     mItemDisplayWidth = aDesiredSize.width - (dspBorderPadding.left + dspBorderPadding.right);

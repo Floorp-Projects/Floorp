@@ -41,7 +41,7 @@ public:
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          const nsStyleBorder& aBorderStyle,
+                          const nsStyleSpacing& aBorderStyle,
                           nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0,
@@ -61,8 +61,7 @@ public:
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          const nsStyleBorder& aBorderStyle,
-                          const nsStyleOutline& aOutlineStyle,
+                          const nsStyleSpacing& aBorderStyle,
                           nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0);
@@ -102,7 +101,7 @@ public:
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
                               const nsStyleColor& aColor,
-                              const nsStyleBorder& aBorder,
+                              const nsStyleSpacing& aStyle,
                               nscoord aDX,
                               nscoord aDY);
 
@@ -119,8 +118,7 @@ public:
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
                               const nsRect& aDirtyRect,
-                              const nsStyleBorder* aBorderStyle,  
-                              const nsStyleOutline* aOutlineStyle,  
+                              const nsStyleSpacing& aSpacing,  
                               PRBool aDoOutline,
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
@@ -149,8 +147,7 @@ protected:
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          const nsStyleBorder* aBorderStyle,
-                          const nsStyleOutline* aOutlineStyle,
+                          const nsStyleSpacing& aBorderStyle,
                           nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           PRInt16 aBorderRadius[4],nsRect* aGap = 0,
@@ -158,7 +155,7 @@ protected:
 
 
   static void RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderingContext,
-                        const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsIStyleContext* aStyleContext,
+                        const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline=PR_FALSE);
 
@@ -168,6 +165,7 @@ protected:
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
                               const nsStyleColor& aColor,
+                              const nsStyleSpacing& aStyle,
                               nscoord aDX,
                               nscoord aDY,
                               PRInt16 aTheRadius[4]);

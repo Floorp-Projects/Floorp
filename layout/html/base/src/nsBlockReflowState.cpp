@@ -800,10 +800,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     if (mBand.GetFloaterCount()) {
       // Use the float-edge property to determine how the child block
       // will interact with the floater.
-      const nsStyleBorder* borderStyle;
-      aFrame->GetStyleData(eStyleStruct_Border,
-                           (const nsStyleStruct*&) borderStyle);
-      switch (borderStyle->mFloatEdge) {
+      const nsStyleSpacing* spacing;
+      aFrame->GetStyleData(eStyleStruct_Spacing,
+                           (const nsStyleStruct*&) spacing);
+      switch (spacing->mFloatEdge) {
         default:
         case NS_STYLE_FLOAT_EDGE_CONTENT:  // content and only content does runaround of floaters
           // The child block will flow around the floater. Therefore
@@ -819,14 +819,11 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
             // The child block's border should be placed adjacent to,
             // but not overlap the floater(s).
             nsMargin m(0, 0, 0, 0);
-            const nsStyleMargin* styleMargin;
-            aFrame->GetStyleData(eStyleStruct_Margin,
-                                 (const nsStyleStruct*&) styleMargin);
-            styleMargin->GetMargin(m); // XXX percentage margins
-            if (NS_STYLE_FLOAT_EDGE_PADDING == borderStyle->mFloatEdge) {
+            spacing->GetMargin(m); // XXX percentage margins
+            if (NS_STYLE_FLOAT_EDGE_PADDING == spacing->mFloatEdge) {
               // Add in border too
               nsMargin b;
-              borderStyle->GetBorder(b);
+              spacing->GetBorder(b);
               m += b;
             }
 
@@ -1490,7 +1487,7 @@ CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
 
     // Containing block is relative to the padding edge
     nsMargin  border;
-    if (!aReflowState.mStyleBorder->GetBorder(border)) {
+    if (!aReflowState.mStyleSpacing->GetBorder(border)) {
       NS_NOTYETIMPLEMENTED("percentage border");
     }
     aContainingBlockWidth -= border.left + border.right;
@@ -2021,32 +2018,15 @@ HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 static PRBool
 IsPercentageAwareChild(const nsIFrame* aFrame)
 {
-  nsresult rv;
-
-  const nsStyleMargin* margin;
-  rv = aFrame->GetStyleData(eStyleStruct_Margin,(const nsStyleStruct*&) margin);
+  const nsStyleSpacing* space;
+  nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct*&) space);
   if (NS_FAILED(rv)) {
     return PR_TRUE; // just to be on the safe side
   }
-  if (nsLineLayout::IsPercentageUnitSides(&margin->mMargin)) {
-    return PR_TRUE;
-  }
 
-  const nsStylePadding* padding;
-  rv = aFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct*&) padding);
-  if (NS_FAILED(rv)) {
-    return PR_TRUE; // just to be on the safe side
-  }
-  if (nsLineLayout::IsPercentageUnitSides(&padding->mPadding)) {
-    return PR_TRUE;
-  }
-
-  const nsStyleBorder* border;
-  rv = aFrame->GetStyleData(eStyleStruct_Border,(const nsStyleStruct*&) border);
-  if (NS_FAILED(rv)) {
-    return PR_TRUE; // just to be on the safe side
-  }
-  if (nsLineLayout::IsPercentageUnitSides(&border->mBorder)) {
+  if (nsLineLayout::IsPercentageUnitSides(&space->mMargin)
+    || nsLineLayout::IsPercentageUnitSides(&space->mPadding)
+    || nsLineLayout::IsPercentageUnitSides(&space->mBorderRadius)) {
     return PR_TRUE;
   }
 
@@ -5715,7 +5695,6 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
     mes.SizeBy(aMarginResult.left + aMarginResult.right, 
                aMarginResult.top  + aMarginResult.bottom);
     aState.StoreMaxElementSize(floater, mes);
-    aState.UpdateMaxElementSize(mes); // fix for bug 13553
   }
 #ifdef NOISY_FLOATER
   printf("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);
@@ -5950,9 +5929,12 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
 
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
+  const nsStyleSpacing* floaterSpacing;
   const nsStylePosition* floaterPosition;
   floater->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&)floaterDisplay);
+  floater->GetStyleData(eStyleStruct_Spacing,
+                        (const nsStyleStruct*&)floaterSpacing);
   floater->GetStyleData(eStyleStruct_Position,
                         (const nsStyleStruct*&)floaterPosition);
 
@@ -6272,20 +6254,18 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleBorder* border = (const nsStyleBorder*)
-      mStyleContext->GetStyleData(eStyleStruct_Border);
-    const nsStyleOutline* outline = (const nsStyleOutline*)
-      mStyleContext->GetStyleData(eStyleStruct_Outline);
+    const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+      mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
     // Paint background, border and outline
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *color, *border, 0, 0);
+                                    aDirtyRect, rect, *color, *spacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *border, mStyleContext,
+                                aDirtyRect, rect, *spacing, mStyleContext,
                                 skipSides);
     nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                 aDirtyRect, rect, *border, *outline, mStyleContext, 0);
+                                 aDirtyRect, rect, *spacing, mStyleContext, 0);
   }
 
   // If overflow is hidden then set the clip rect so that children don't

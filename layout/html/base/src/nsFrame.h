@@ -173,8 +173,6 @@ public:
                               nsIStyleContext* aContext);
   NS_IMETHOD  GetStyleData(nsStyleStructID aSID,
                            const nsStyleStruct*& aStyleStruct) const;
-  NS_IMETHOD  GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const;
-  NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const;
   NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 

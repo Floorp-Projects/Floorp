@@ -304,7 +304,7 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     nsMargin      border;
     nsFrameState  kidState;
 
-    if (!kidReflowState.mStyleBorder->GetBorder(border)) {
+    if (!kidReflowState.mStyleSpacing->GetBorder(border)) {
       NS_NOTYETIMPLEMENTED("percentage border");
     }
     kidFrame->GetFrameState(&kidState);

@@ -381,7 +381,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsMargin  border;
 
   // Get the border values
-  if (!aReflowState.mStyleBorder->GetBorder(border)) {
+  if (!aReflowState.mStyleSpacing->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
   }
   

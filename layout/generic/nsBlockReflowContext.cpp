@@ -58,9 +58,7 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
     mComputeMaximumWidth(aComputeMaximumWidth),
     mBlockShouldInvalidateItself(PR_FALSE)
 {
-  mStyleBorder = nsnull;
-  mStyleMargin = nsnull;
-  mStylePadding = nsnull;
+  mStyleSpacing = nsnull;
   if (mComputeMaximumWidth)
     mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
 }
@@ -139,11 +137,11 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
   aAlign.mRightMargin = mMargin.right;
 
   // Get style unit associated with the left and right margins
-  nsStyleUnit leftUnit = mStyleMargin->mMargin.GetLeftUnit();
+  nsStyleUnit leftUnit = mStyleSpacing->mMargin.GetLeftUnit();
   if (eStyleUnit_Inherit == leftUnit) {
     leftUnit = GetRealMarginLeftUnit();
   }
-  nsStyleUnit rightUnit = mStyleMargin->mMargin.GetRightUnit();
+  nsStyleUnit rightUnit = mStyleSpacing->mMargin.GetRightUnit();
   if (eStyleUnit_Inherit == rightUnit) {
     rightUnit = GetRealMarginRightUnit();
   }
@@ -337,25 +335,25 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 }
 
 static void
-ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth, nsMargin& aMargin, nscoord& aXToUpdate) {
+ComputeShrinkwrapMargins(const nsStyleSpacing* aStyleSpacing, nscoord aWidth, nsMargin& aMargin, nscoord& aXToUpdate) {
   nscoord boxWidth = aWidth;
   float   leftPct = 0.0;
   float   rightPct = 0.0;
   
-  if (eStyleUnit_Percent == aStyleMargin->mMargin.GetLeftUnit()) {
+  if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetLeftUnit()) {
     nsStyleCoord  leftCoord;
     
-    aStyleMargin->mMargin.GetLeft(leftCoord);
+    aStyleSpacing->mMargin.GetLeft(leftCoord);
     leftPct = leftCoord.GetPercentValue();
     
   } else {
     boxWidth += aMargin.left;
   }
   
-  if (eStyleUnit_Percent == aStyleMargin->mMargin.GetRightUnit()) {
+  if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetRightUnit()) {
     nsStyleCoord  rightCoord;
     
-    aStyleMargin->mMargin.GetRight(rightCoord);
+    aStyleSpacing->mMargin.GetRight(rightCoord);
     rightPct = rightCoord.GetPercentValue();
     
   } else {
@@ -381,11 +379,11 @@ ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth, nsMa
   if ((marginPct > 0.0) && (marginPct < 1.0)) {
     double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
     
-    if (eStyleUnit_Percent == aStyleMargin->mMargin.GetLeftUnit()) {
+    if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetLeftUnit()) {
       aMargin.left = NSToCoordFloor((float)(shrinkWrapWidth * leftPct));
       aXToUpdate += aMargin.left;
     }
-    if (eStyleUnit_Percent == aStyleMargin->mMargin.GetRightUnit()) {
+    if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetRightUnit()) {
       aMargin.right = NSToCoordFloor((float)(shrinkWrapWidth * rightPct));
     }
   }
@@ -444,9 +442,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   // from 10.3.3 to determine what to apply. At this point in the
   // reflow auto left/right margins will have a zero value.
   mMargin = aReflowState.mComputedMargin;
-  mStyleBorder = aReflowState.mStyleBorder;
-  mStyleMargin = aReflowState.mStyleMargin;
-  mStylePadding = aReflowState.mStylePadding;
+  mStyleSpacing = aReflowState.mStyleSpacing;
   nscoord x;
   nscoord y = aSpace.y + topMargin;
 
@@ -662,7 +658,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   // based margins. If so, we can calculate them now that we know the shrink
   // wrap width
   if (NS_SHRINKWRAPWIDTH == aReflowState.mComputedWidth) {
-    ComputeShrinkwrapMargins(aReflowState.mStyleMargin, mMetrics.width, mMargin, mX);
+    ComputeShrinkwrapMargins(aReflowState.mStyleSpacing, mMetrics.width, mMargin, mX);
   }
 
   return rv;
@@ -775,15 +771,15 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
         if (NS_SHRINKWRAPWIDTH == mComputedWidth) {
           nscoord dummyXOffset;
           // Base the margins on the max-element size
-          ComputeShrinkwrapMargins(mStyleMargin, m->width, maxElemMargin, dummyXOffset);
+          ComputeShrinkwrapMargins(mStyleSpacing, m->width, maxElemMargin, dummyXOffset);
         }
 
         // Do not allow auto margins to impact the max-element size
         // since they are springy and don't really count!
-        if (eStyleUnit_Auto != mStyleMargin->mMargin.GetLeftUnit()) {
+        if (eStyleUnit_Auto != mStyleSpacing->mMargin.GetLeftUnit()) {
           m->width += maxElemMargin.left;
         }
-        if (eStyleUnit_Auto != mStyleMargin->mMargin.GetRightUnit()) {
+        if (eStyleUnit_Auto != mStyleSpacing->mMargin.GetRightUnit()) {
           m->width += maxElemMargin.right;
         }
 
@@ -821,9 +817,9 @@ nsBlockReflowContext::GetRealMarginLeftUnit()
     NS_RELEASE(sc);
     sc = psc;
     if (nsnull != sc) {
-      const nsStyleMargin* margin = (const nsStyleMargin*)
-        sc->GetStyleData(eStyleStruct_Margin);
-      unit = margin->mMargin.GetLeftUnit();
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        sc->GetStyleData(eStyleStruct_Spacing);
+      unit = spacing->mMargin.GetLeftUnit();
     }
   }
   NS_IF_RELEASE(sc);
@@ -846,9 +842,9 @@ nsBlockReflowContext::GetRealMarginRightUnit()
     NS_RELEASE(sc);
     sc = psc;
     if (nsnull != sc) {
-      const nsStyleMargin* margin = (const nsStyleMargin*)
-        sc->GetStyleData(eStyleStruct_Margin);
-      unit = margin->mMargin.GetRightUnit();
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        sc->GetStyleData(eStyleStruct_Spacing);
+      unit = spacing->mMargin.GetRightUnit();
     }
   }
   NS_IF_RELEASE(sc);

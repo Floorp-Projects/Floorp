@@ -492,11 +492,11 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
   // but the real problem is the FirstChild (the AreaFrame)
   // isn't being constrained properly
   // Bug #17474
-  const nsStyleBorder* borderStyle;
-  GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
-  borderStyle->CalcBorderFor(this, border);
+  spacing->CalcBorderFor(this, border);
 
   nsRect rect;
   GetRect(rect);

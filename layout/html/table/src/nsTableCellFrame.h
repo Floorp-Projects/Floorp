@@ -28,6 +28,7 @@
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 #include "nsIStyleContext.h"
 
+struct nsStyleSpacing;
 class nsTableFrame;
 class nsHTMLValue;
 
@@ -256,7 +257,7 @@ protected:
   void      MapBorderPadding(nsIPresContext* aPresContext);
 
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
-                               nsStyleBorder&  aBorderStyle,
+                               nsStyleSpacing& aSpacingStyle,
                                nsTableFrame*   aTableFrame);
 
   void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);

@@ -268,10 +268,13 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  nsMargin borderPadding(0,0,0,0);
-  CalcBorderPadding(borderPadding);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
   nsRect checkRect(0,0, mRect.width, mRect.height);
+
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
   checkRect.Deflate(borderPadding);
 
   const nsStyleColor* color = (const nsStyleColor*)
@@ -379,8 +382,8 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
           mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Color);
 
       if (myColor->mBackgroundImage.Length() > 0) {
-        const nsStyleBorder* myBorder = (const nsStyleBorder*)
-            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Border);
+        const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Spacing);
         const nsStylePosition* myPosition = (const nsStylePosition*)
             mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Position);
 
@@ -392,9 +395,9 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
         nsRect rect(x, y, width, height); 
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                          aDirtyRect, rect, *myColor, *myBorder, 0, 0);
+                                          aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
+                                    aDirtyRect, rect, *mySpacing, mCheckButtonFaceStyle, 0);
         doDefaultPainting = PR_FALSE;
       }
     } 

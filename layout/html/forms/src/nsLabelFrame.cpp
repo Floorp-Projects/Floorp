@@ -589,8 +589,10 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   // get border and padding
-  nsMargin borderPadding(0,0,0,0);
-  CalcBorderPadding(borderPadding);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
 
   if (NS_INTRINSICSIZE != availSize.width) {
     availSize.width -= borderPadding.left + borderPadding.right;

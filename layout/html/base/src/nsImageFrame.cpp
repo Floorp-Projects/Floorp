@@ -491,9 +491,9 @@ nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
   NS_RELEASE(fm);
 }
 
-struct nsRecessedBorder : public nsStyleBorder {
+struct nsRecessedBorder : public nsStyleSpacing {
   nsRecessedBorder(nscoord aBorderWidth)
-    : nsStyleBorder()
+    : nsStyleSpacing()
   {
     nsStyleCoord  styleCoord(aBorderWidth);
 
@@ -512,7 +512,7 @@ struct nsRecessedBorder : public nsStyleBorder {
     mBorderColor[2] = 0;  
     mBorderColor[3] = 0;  
 
-    mHasCachedBorder = PR_FALSE;
+    mHasCachedMargin = mHasCachedPadding = mHasCachedBorder = PR_FALSE;
   }
 };
 

@@ -112,11 +112,11 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleBorder* borderStyleData =
-        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleSpacing* spacing =
+        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
        
         nsMargin border;
-        if (!borderStyleData->GetBorder(border)) {
+        if (!spacing->GetBorder(border)) {
           NS_NOTYETIMPLEMENTED("percentage border");
         }
 
@@ -131,12 +131,12 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
 
             // if the border is smaller than the legend. Move the border down
             // to be centered on the legend. 
-            const nsStyleMargin* titleMarginData;
-            titleFrame->GetStyleData(eStyleStruct_Margin,
-                                    (const nsStyleStruct*&) titleMarginData);
+            const nsStyleSpacing* titleSpacing;
+            titleFrame->GetStyleData(eStyleStruct_Spacing,
+                                    (const nsStyleStruct*&) titleSpacing);
 
             nsMargin titleMargin;
-            titleMarginData->GetMargin(titleMargin);
+            titleSpacing->GetMargin(titleMargin);
             titleRect.Inflate(titleMargin);
          
             if (border.top < titleRect.height)
@@ -146,7 +146,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
         nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *borderStyleData, 0, 0);
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
 
 
         if (titleBox) {
@@ -163,7 +163,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
           aRenderingContext.PushState();
           aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *borderStyleData, mStyleContext, skipSides);
+                                      aDirtyRect, rect, *spacing, mStyleContext, skipSides);
   
           aRenderingContext.PopState(clipState);
 
@@ -177,7 +177,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
           aRenderingContext.PushState();
           aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *borderStyleData, mStyleContext, skipSides);
+                                      aDirtyRect, rect, *spacing, mStyleContext, skipSides);
   
           aRenderingContext.PopState(clipState);
 
@@ -192,7 +192,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
           aRenderingContext.PushState();
           aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *borderStyleData, mStyleContext, skipSides);
+                                      aDirtyRect, rect, *spacing, mStyleContext, skipSides);
   
           aRenderingContext.PopState(clipState);
           
@@ -200,7 +200,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
 
           
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, nsRect(0,0,mRect.width, mRect.height), *borderStyleData, mStyleContext, skipSides);
+                                      aDirtyRect, nsRect(0,0,mRect.width, mRect.height), *spacing, mStyleContext, skipSides);
         }
     }
   }

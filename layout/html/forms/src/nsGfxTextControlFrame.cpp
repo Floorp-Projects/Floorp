@@ -1022,12 +1022,10 @@ nsGfxTextControlFrame::RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext
             nsMargin padding;
             border.SizeTo(0, 0, 0, 0);
             padding.SizeTo(0, 0, 0, 0);
-            const nsStyleBorder* borderStyle;
-            const nsStylePadding* paddingStyle;
-            GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
-            GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)paddingStyle);
-            borderStyle->CalcBorderFor(this, border);
-            paddingStyle->CalcPaddingFor(this, padding);
+            const nsStyleSpacing* spacing;
+            GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+            spacing->CalcBorderFor(this, border);
+            spacing->CalcPaddingFor(this, padding);
             CalcSizeOfSubDocInTwips(border, padding, size, subBounds);
             event.point.x -= (border.left + padding.left);
             if (0>event.point.x) {
@@ -1345,12 +1343,10 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
         border.SizeTo(0, 0, 0, 0);
         padding.SizeTo(0, 0, 0, 0);
         // Get the CSS border
-        const nsStyleBorder* borderStyle;
-        const nsStylePadding* paddingStyle;
-        GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
-        GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)paddingStyle);
-        borderStyle->CalcBorderFor(this, border);
-        paddingStyle->CalcPaddingFor(this, padding);
+        const nsStyleSpacing* spacing;
+        GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderFor(this, border);
+        spacing->CalcPaddingFor(this, padding);
         CalcSizeOfSubDocInTwips(border, padding, size, subBounds);
         float t2p;
         mFramePresContext->GetTwipsToPixels(&t2p);
@@ -1624,14 +1620,14 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
   {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
-    const nsStyleBorder* myBorder = (const nsStyleBorder*)aStyleContext->GetStyleData(eStyleStruct_Border);
+    const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     PRIntn skipSides = 0;
     nsRect rect(0, 0, mRect.width, mRect.height);
     const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 	  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect,  *color, *myBorder, 0, 0);
+                                    aDirtyRect, rect,  *color, *mySpacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *myBorder, aStyleContext, skipSides);
+                                aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
     if (!mDocShell)
     {
       if (mDisplayFrame) {
@@ -1965,10 +1961,10 @@ nsGfxTextControlFrame::CreateDocShell(nsIPresContext* aPresContext,
     view->SetVisibility(nsViewVisibility_kHide);
   }
 
-  const nsStyleBorder* borderStyle;
-  GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
   nsMargin border;
-  borderStyle->CalcBorderFor(this, border);
+  spacing->CalcBorderFor(this, border);
 
   nsCOMPtr<nsIWidget> widget;
   view->GetWidget(*getter_AddRefs(widget));
@@ -2095,6 +2091,12 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext*           aPresContext,
                                         nsMargin&                aBorder,
                                         nsMargin&                aPadding)
 {
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  // Get the CSS border
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+
   // This calculates the reflow size
   // get the css size and let the frame use or override it
   nsSize styleSize;
@@ -2144,10 +2146,9 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext*           aPresContext,
   }
 
   // In Nav Quirks mode we only add in extra size for padding
-  nsMargin padding(0, 0, 0, 0);
-  const nsStylePadding* paddingStyle;
-  GetStyleData(nsStylePadding,  (const nsStyleStruct *&)paddingStyle);
-  paddingStyle->CalcPaddingFor(this, padding);
+  nsMargin padding;
+  padding.SizeTo(0, 0, 0, 0);
+  spacing->CalcPaddingFor(this, padding);
 
   // Check to see if style was responsible 
   // for setting the height or the width
@@ -2164,9 +2165,9 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext*           aPresContext,
   if (addBorder) {
     if (CSS_NOTSET != styleSize.width || 
         CSS_NOTSET != styleSize.height) {  // css provides width
-      nsMargin border(0, 0, 0, 0);
-      GetStyleData(nsStyleBorder,  (const nsStyleStruct *&)borderStyle);
-      borderStyle->CalcBorderFor(this, border);
+      nsMargin border;
+      border.SizeTo(0, 0, 0, 0);
+      spacing->CalcBorderFor(this, border);
       if (CSS_NOTSET != styleSize.width) {  // css provides width
         aDesiredSize.width  += border.left + border.right;
       }
@@ -2455,12 +2456,10 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   nsMargin padding;
   padding.SizeTo(0, 0, 0, 0);
   // Get the CSS border
-  const nsStyleBorder* borderStyle;
-  const nsStylePadding* paddingStyle;
-  GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
-  GetStyleData(eStyleStruct_Padding,  (const nsStyleStruct *&)paddingStyle);
-  borderStyle->CalcBorderFor(this, border);
-  paddingStyle->CalcPaddingFor(this, padding);
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  spacing->CalcBorderFor(this, border);
+  spacing->CalcPaddingFor(this, padding);
 
   // calculate the the desired size for the text control
   // use the suggested size if it has been set

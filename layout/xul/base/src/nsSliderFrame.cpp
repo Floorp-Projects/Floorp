@@ -296,13 +296,13 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
       if (disp->IsVisibleOrCollapsed()) {
         const nsStyleColor* myColor = (const nsStyleColor*)
         mStyleContext->GetStyleData(eStyleStruct_Color);
-        const nsStyleBorder* myBorder = (const nsStyleBorder*)
-        mStyleContext->GetStyleData(eStyleStruct_Border);
+        const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor, *myBorder, 0, 0);
+                                    aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *myBorder, mStyleContext, 0);
+                                aDirtyRect, rect, *mySpacing, mStyleContext, 0);
         }
       }
       return NS_OK;
@@ -690,6 +690,15 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     nsIFrame* thumbFrame = mFrames.FirstChild();
     nsRect thumbRect;
     thumbFrame->GetRect(thumbRect);
+
+    // get our border and padding
+    const nsStyleSpacing* spacing;
+    nsresult rv = GetStyleData(eStyleStruct_Spacing,
+                   (const nsStyleStruct*&) spacing);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get spacing");
+    if (NS_FAILED(rv))
+        return rv;
 
     nsRect clientRect;
     GetClientRect(clientRect);

@@ -309,14 +309,14 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color = (const nsStyleColor*)
         mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleBorder* border = (const nsStyleBorder*)
-        mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *border, 0, 0);
+                                      aDirtyRect, rect, *color, *spacing, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext, skipSides);
+                                  aDirtyRect, rect, *spacing, mStyleContext, skipSides);
     }
   }
 
