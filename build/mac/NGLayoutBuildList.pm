@@ -503,7 +503,6 @@ sub MakeResourceAliases()
 	my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
 	my($messenger_content_chrome_dir) = "$messenger_chrome_dir" . "content:";
 	my($messenger_locale_chrome_dir) = "$messenger_chrome_dir" . "locale:";
-	my($messenger_skin_chrome_dir) = "$messenger_chrome_dir" . "skin:";
 
 	my($editor_chrome_dir) = "$chrome_dir" . "editor:";
 	my($editor_content_chrome_dir) = "$editor_chrome_dir" . "content:";
@@ -610,7 +609,6 @@ sub MakeResourceAliases()
 		my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
 		my($messenger_content_chrome_dir) = "$messenger_chrome_dir" . "content:";
 		my($messenger_locale_chrome_dir) = "$messenger_chrome_dir" . "locale:";
-		my($messenger_skin_chrome_dir) = "$messenger_chrome_dir" . "skin:";
 
 		# messenger compose resides within messenger
 		my($messengercompose_content_chrome_dir) = "$messenger_content_chrome_dir" . "messengercompose:";
@@ -622,20 +620,14 @@ sub MakeResourceAliases()
 
 		_InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",			"$messenger_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:resources:content:mac:MANIFEST",		"$messenger_content_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",				"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:resources:locale:en-US:MANIFEST",		"$messenger_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",	"$messenger_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_locale_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",		"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",	"$messenger_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",		"$messenger_locale_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",				"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",				"$messenger_content_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",	"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:mime:emitters:resources:content:MANIFEST",		"$messenger_content_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",			"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:local:resources:locale:en-US:MANIFEST",	"$messenger_locale_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",				"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:news:resources:content:MANIFEST",			"$messenger_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:news:resources:locale:en-US:MANIFEST",		"$messenger_locale_chrome_dir", 0);
 
@@ -655,7 +647,6 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_locale_chrome_dir", 0);
 
 		_InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST",		"$messenger_content_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:import:resources:skin:MANIFEST",			"$messenger_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",	"$messenger_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:import:eudora:resources:locale:en-US:MANIFEST",	"$messenger_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:import:text:resources:locale:en-US:MANIFEST",	"$messenger_locale_chrome_dir", 0);
