@@ -47,7 +47,7 @@ function getIspDefaultsForUri(domainURI)
     if (!ispDefaults) 
         ispDefaults = rdf.GetDataSource("rdf:ispdefaults");
     
-    domainRes = rdf.GetResource(domainURI);
+    var domainRes = rdf.GetResource(domainURI);
 
     var result = dataSourceToObject(ispDefaults, domainRes);
 

@@ -57,10 +57,6 @@ function getInvalidAccounts(accounts)
         }
     }
 
-    dump("getInvalidAccounts found: \n");
-    for (var i=0; i<invalidAccounts.length; i++) {
-        
-    }
     return invalidAccounts;
 }
 
