@@ -1,10 +1,9 @@
 #include <stdio.h>
-#include "nscore.h"
 #include "ipcModule.h"
 #include "ipcMessage.h"
 #include "ipcd.h"
 
-extern "C" NS_EXPORT ipcModule **IPC_GetModuleList();
+IPC_EXPORT ipcModule **IPC_GetModuleList();
 
 static const nsID TestModuleID =
 { /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */
