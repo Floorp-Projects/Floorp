@@ -2226,6 +2226,41 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                     }
                 }
             }
+
+            PRInt32 count;
+            GetAttributeCount(count);
+
+            for (PRInt32 i = 0; i < count; ++i) {
+                PRInt32 nameSpaceID;
+                nsCOMPtr<nsIAtom> attr;
+                GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
+
+                PRBool reset = PR_FALSE;
+
+                if (nameSpaceID == kNameSpaceID_None) {
+                    nsIID iid;
+                    rv = gXULUtils->GetEventHandlerIID(attr, &iid, &reset);
+                    if (NS_FAILED(rv)) return rv;
+
+                    if (! reset) {
+                        if ((attr.get() == kPopupAtom) ||
+                            (attr.get() == kTooltipAtom) ||
+                            (attr.get() == kContextAtom) ||
+                            (attr.get() == kStyleAtom)) {
+                            reset = PR_TRUE;
+                        }
+                    }
+                }
+
+                if (reset) {
+                    nsAutoString value;
+                    rv = GetAttribute(nameSpaceID, attr, value);
+                    if (NS_FAILED(rv)) return rv;
+
+                    rv = SetAttribute(nameSpaceID, attr, value, PR_FALSE);
+                    if (NS_FAILED(rv)) return rv;
+                }
+            }
         }
     }
 
@@ -2830,6 +2865,10 @@ nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
             }
         }
     }
+    else {
+        aResult.Truncate();
+    }
+
     return rv;
 }
 
@@ -3798,6 +3837,9 @@ nsXULElement::GetClasses(nsVoidArray& aArray) const
     }
     else if (mPrototype) {
         rv = nsClassList::GetClasses(mPrototype->mClassList, aArray);
+    }
+    else {
+        aArray.Clear();
     }
     return rv;
 }
