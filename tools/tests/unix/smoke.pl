@@ -6,7 +6,7 @@ use Benchmark;
 
 #some vars that depend on the location of apprunner.
 $layout_time = 4; # seconds after document is loaded successfully before apprunner is killed
-$test_duration = 120; # seconds before i deem this url timed out
+$test_duration = 30; # seconds before i deem this url timed out
 
 # TODO: get apprunner working with relative paths. the problem with 
 #       this is LD_LIBRARY_PATH and MOZILLA_FIVE_HOME want absolute
