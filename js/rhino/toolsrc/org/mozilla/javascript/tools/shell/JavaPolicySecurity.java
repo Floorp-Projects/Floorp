@@ -190,8 +190,8 @@ public class JavaPolicySecurity extends SecurityProxy
         return contextDomain;
     }
 
-    public Object execWithDomain(final Context cx, final Scriptable scope,
-                                 final Script script, Object securityDomain)
+    public Object execWithDomain(final Context cx, Object securityDomain,
+                                 final CodeBlock code, final Object[] args)
         throws JavaScriptException
     {
         ProtectionDomain staticDomain = (ProtectionDomain)securityDomain;
@@ -216,7 +216,7 @@ public class JavaPolicySecurity extends SecurityProxy
 
         PrivilegedExceptionAction action = new PrivilegedExceptionAction() {
             public Object run() throws JavaScriptException {
-                return script.exec(cx, scope);
+                return code.exec(cx, args);
             }
         };
 

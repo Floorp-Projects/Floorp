@@ -84,7 +84,7 @@ public abstract class SecurityController {
     public abstract Object getDynamicSecurityDomain(Object securityDomain);
 
     /**
-     * Call {@link Script#exec(Context cx, Scriptable scope)} of
+     * Call {@link CodeBlock#run(Context cx, Object[] args)} of
      * <i>script</i> under restricted security domain where an action is
      * allowed only if it is allowed according to the Java stack on the
      * moment of the <i>execWithDomain</i> call and <i>securityDomain</i>.
@@ -93,7 +93,7 @@ public abstract class SecurityController {
      * should return a domain incorporate restrictions imposed by
      * <i>securityDomain</i>.
      */
-    public abstract Object execWithDomain(Context cx, Scriptable scope,
-                                          Script script, Object securityDomain)
+    public abstract Object execWithDomain(Context cx, Object securityDomain,
+                                          CodeBlock code, Object[] args)
         throws JavaScriptException;
 }

@@ -3020,7 +3020,8 @@ public class Interpreter
         activation.put(name, activation, value);
     }
 
-    private static Object execWithNewDomain(Context cx, Scriptable scope,
+    private static Object execWithNewDomain(Context cx,
+                                            final Scriptable scope,
                                             final Scriptable thisObj,
                                             final Object[] args,
                                             final double[] argsDbl,
@@ -3033,8 +3034,8 @@ public class Interpreter
         if (cx.interpreterSecurityDomain == idata.securityDomain)
             Kit.codeBug();
 
-        Script code = new Script() {
-            public Object exec(Context cx, Scriptable scope)
+        CodeBlock code = new CodeBlock() {
+            public Object exec(Context cx, Object[] args)
                 throws JavaScriptException
             {
                 return interpret(cx, scope, thisObj,
@@ -3047,7 +3048,7 @@ public class Interpreter
         cx.interpreterSecurityDomain = idata.securityDomain;
         try {
             return cx.getSecurityController().
-                    execWithDomain(cx, scope, code, idata.securityDomain);
+                    execWithDomain(cx, idata.securityDomain, code, args);
         } finally {
             cx.interpreterSecurityDomain = savedDomain;
         }
