@@ -60,7 +60,6 @@ EX_LIBS = \
 	$(DIST)/bin/libjsdom.so \
 	$(DIST)/bin/libjsj.so \
 	$(DIST)/bin/libmimetype.so \
-	$(DIST)/bin/libmsgc21.so \
 	$(DIST)/bin/libnetcache.so \
 	$(DIST)/bin/libnetcnvts.so \
 	$(DIST)/bin/libnetlib.so \
