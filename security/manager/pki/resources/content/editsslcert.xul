@@ -44,14 +44,14 @@
     <html id="issuer"/>
     <separator />
     <html>&certmgr.editsslcert.edittrust;</html>
-    <hbox orient = "vertical">
+    <vbox>
       <radiogroup id="sslTrustGroup" orient="vertical" flex="1">
         <radio label="&certmgr.editsslcert.dotrust;"
           id="trustSSLCert" group="sslTrustGroup"/>
         <radio label="&certmgr.editsslcert.donttrust;"
           id="dontTrustSSLCert" group="sslTrustGroup"/>
       </radiogroup>
-    </hbox>
+    </vbox>
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
            style="width: 8ex" oncommand="doSSLOK();"/> 
