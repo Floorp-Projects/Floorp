@@ -219,17 +219,20 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       // Map align attribute into auto side margins
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
-      nsStyleCoord c(eStyleUnit_Auto);
+      nsStyleCoord otto(eStyleUnit_Auto);
+      nsStyleCoord zero(nscoord(0));
       switch (value.GetIntValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
-        spacing->mMargin.SetRight(c);
+        spacing->mMargin.SetLeft(zero);
+        spacing->mMargin.SetRight(otto);
         break;
       case NS_STYLE_TEXT_ALIGN_RIGHT:
-        spacing->mMargin.SetLeft(c);
+        spacing->mMargin.SetLeft(otto);
+        spacing->mMargin.SetRight(zero);
         break;
       case NS_STYLE_TEXT_ALIGN_CENTER:
-        spacing->mMargin.SetLeft(c);
-        spacing->mMargin.SetRight(c);
+        spacing->mMargin.SetLeft(otto);
+        spacing->mMargin.SetRight(otto);
         break;
       }
     }
