@@ -24,3 +24,5 @@ lc3/JSObject/ToJSObject-001.js
 # getter and setters are non-ECMA and not implemented in Rhino.
 ecma_3/GetSet/getset-001.js
 ecma_3/GetSet/getset-002.js
+# the const keyword is non-ECMA and  not currently implemented in Rhino (2000-11-01)
+js1_5/Scope/scope-001.js
