@@ -591,7 +591,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                                           PRUint32 count,
                                           PRUint32 *writeCount)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
     {
         nsAutoCMonitor mon(pipe);
