@@ -30,7 +30,7 @@ DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
  nsWebWidget.cpp			\
-# nsLinkHandler.cpp			\
+ nsLinkHandler.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
