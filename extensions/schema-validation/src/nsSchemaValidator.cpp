@@ -560,9 +560,9 @@ nsresult nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNod
     /* http://w3.org/TR/xmlschema-2/#nonPositiveInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER: {
       rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits,
-             maxExclusive.IsEmpty() ? NS_LITERAL_STRING("1") : maxExclusive, 
+             maxExclusive.IsEmpty() ? (const nsAString&)NS_LITERAL_STRING("1") : (const nsAString&)maxExclusive,
              minExclusive,
-             maxInclusive.IsEmpty() ? NS_LITERAL_STRING("0") : maxInclusive, 
+             maxInclusive.IsEmpty() ? (const nsAString&)NS_LITERAL_STRING("0") : (const nsAString&)maxInclusive,
              minInclusive, &isValid);
       break;
     }
@@ -570,8 +570,8 @@ nsresult nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNod
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
       rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits, 
-        maxExclusive.IsEmpty() ? NS_LITERAL_STRING("0") : maxExclusive, minExclusive, 
-        maxInclusive.IsEmpty() ? NS_LITERAL_STRING("-1") : maxInclusive, minInclusive, 
+        maxExclusive.IsEmpty() ? (const nsAString&)NS_LITERAL_STRING("0") : (const nsAString&)maxExclusive, minExclusive, 
+        maxInclusive.IsEmpty() ? (const nsAString&)NS_LITERAL_STRING("-1") : (const nsAString&) maxInclusive, minInclusive, 
         &isValid);
       break;
     }
